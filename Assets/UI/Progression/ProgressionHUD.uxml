@@ -1,0 +1,78 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="ProgressionHUD.uss" />
+    <ui:VisualElement name="game-ui" picking-mode="Ignore">
+        <ui:VisualElement name="summary" class="panel blocks-world">
+            <ui:Label text="KRYTICAL NOVA II" class="eyebrow" />
+            <ui:VisualElement class="row"><ui:Label name="level-label" text="LEVEL 1" class="heading" /><ui:Label name="mode-label" text="WALK · 5.0 m/s" class="accent" /></ui:VisualElement>
+            <ui:ProgressBar name="hp-bar" class="resource-bar" title="HP 200 / 200" value="100" low-value="0" high-value="100" />
+            <ui:ProgressBar name="chi-bar" class="resource-bar" title="CHI 100 / 100" value="100" low-value="0" high-value="100" />
+            <ui:ProgressBar name="xp-bar" title="0 / 100 XP" value="0" low-value="0" high-value="100" />
+            <ui:Label name="points-summary" text="5 stat points  |  1 skill point" class="muted" />
+        </ui:VisualElement>
+        <ui:VisualElement name="menu" class="row blocks-world">
+            <ui:Button name="open-character" text="CHARACTER  [C]" />
+            <ui:Button name="open-skills" text="SKILLS  [K]" />
+        </ui:VisualElement>
+        <ui:VisualElement name="character-window" class="panel window blocks-world">
+            <ui:VisualElement class="row"><ui:Label text="CHARACTER" class="heading" /><ui:Button name="close-character" text="X" class="close" /></ui:VisualElement>
+            <ui:ScrollView name="character-body" class="window-body" horizontal-scroller-visibility="Hidden">
+            <ui:Label text="ATTRIBUTES" class="eyebrow section" />
+            <ui:Label name="stat-points" text="5 points available" class="accent" />
+            <ui:VisualElement class="stat-row"><ui:Label text="Strength" /><ui:Label name="stat-0" text="10" class="stat-value" /><ui:Button name="allocate-0" text="+" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row"><ui:Label text="Vitality" /><ui:Label name="stat-1" text="10" class="stat-value" /><ui:Button name="allocate-1" text="+" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row"><ui:Label text="Agility" /><ui:Label name="stat-2" text="10" class="stat-value" /><ui:Button name="allocate-2" text="+" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row"><ui:Label text="Spirit" /><ui:Label name="stat-3" text="10" class="stat-value" /><ui:Button name="allocate-3" text="+" /></ui:VisualElement>
+            <ui:Label name="resource-values" text="HP 200 / 200    Chi 100 / 100" class="accent section" />
+            <ui:Label name="resource-formula" text="Vitality: +10 HP each. Spirit: +5 Chi each." class="help" />
+            <ui:Label name="stat-note" text="Spend 1 point per increase. Vitality raises HP; Spirit raises Chi. New capacity also increases current resources." class="help section" />
+            <ui:VisualElement name="development-tools" class="section">
+                <ui:Label text="PLAYTEST TOOLS" class="eyebrow" />
+                <ui:Button name="grant-xp" text="Grant XP to next level" />
+                <ui:Button name="test-damage" text="Test: take 25 damage" />
+                <ui:Button name="test-chi" text="Test: spend 25 Chi" />
+                <ui:Button name="restore-resources" text="Restore HP and Chi" />
+                <ui:Label text="Editor / development builds only. Progress resets when Play ends." class="help" />
+            </ui:VisualElement>
+            </ui:ScrollView>
+        </ui:VisualElement>
+        <ui:VisualElement name="skills-window" class="panel window blocks-world">
+            <ui:VisualElement class="row"><ui:Label text="MOVEMENT SKILLS" class="heading" /><ui:Button name="close-skills" text="X" class="close" /></ui:VisualElement>
+            <ui:ScrollView name="skills-body" class="window-body" horizontal-scroller-visibility="Hidden">
+            <ui:Label name="skill-points" text="1 skill point available" class="accent section" />
+            <ui:VisualElement class="skill-card">
+                <ui:VisualElement name="run-drag" class="skill-token"><ui:Label text="RUN" class="skill-icon" /><ui:Label name="run-rank" text="UNLEARNED · 0 / 20" /></ui:VisualElement>
+                <ui:Label name="run-description" text="Select Run, then left-click destinations. Each accepted destination costs Chi. Select Run again to walk." class="help" />
+                <ui:Label name="run-values" text="Next rank: 7.0 m/s · 5 Chi / destination" class="section" />
+                <ui:Label name="run-requirement" text="Requires level 1 · Cost: 1 skill point" class="muted" />
+                <ui:Button name="upgrade-run" text="LEARN RUN" />
+                <ui:Label name="run-drag-hint" text="Learn Run, then drag the RUN tile to a hotbar slot." class="help" />
+            </ui:VisualElement>
+            <ui:VisualElement class="skill-card">
+                <ui:VisualElement name="jump-drag" class="skill-token jump-token"><ui:Label text="JUMP" class="skill-icon" /><ui:Label name="jump-rank" text="UNLEARNED · 0 / 20" /></ui:VisualElement>
+                <ui:Label name="jump-description" text="Select Jump, then left-click a landing point. Flip forward at the apex and bounce on landing." class="help" />
+                <ui:Label name="jump-values" text="Next: 2.0 m range / +1.5 m height — 12 Chi" class="section skill-values" />
+                <ui:Label name="jump-requirement" text="Requires level 1 · Upgrade: 1 skill point" class="muted" />
+                <ui:Button name="upgrade-jump" text="LEARN JUMP" />
+                <ui:Label name="jump-drag-hint" text="Learn Jump, then drag its tile to a hotbar slot." class="help" />
+            </ui:VisualElement>
+            </ui:ScrollView>
+        </ui:VisualElement>
+        <ui:VisualElement name="bottom-region" picking-mode="Ignore">
+            <ui:Label name="feedback" text="Open Skills [K] to learn Run and assign it to your hotbar." class="feedback" picking-mode="Ignore" />
+            <ui:VisualElement name="hotbar" class="blocks-world">
+                <ui:VisualElement name="slot-0" class="hotbar-slot"><ui:Label text="1" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-1" class="hotbar-slot"><ui:Label text="2" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-2" class="hotbar-slot"><ui:Label text="3" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-3" class="hotbar-slot"><ui:Label text="4" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-4" class="hotbar-slot"><ui:Label text="5" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-5" class="hotbar-slot"><ui:Label text="6" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-6" class="hotbar-slot"><ui:Label text="7" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-7" class="hotbar-slot"><ui:Label text="8" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-8" class="hotbar-slot"><ui:Label text="9" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-9" class="hotbar-slot"><ui:Label text="0" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label text="1–0 select skill   ·   Drag to rearrange   ·   Right-click a slot to clear   ·   Esc closes windows" class="controls" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:Label name="drag-ghost" text="RUN" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

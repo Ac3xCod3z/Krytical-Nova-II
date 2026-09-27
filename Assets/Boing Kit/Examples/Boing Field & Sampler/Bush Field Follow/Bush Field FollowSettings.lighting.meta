@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8a18e01567b34bb43885d298ed5659cd
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 135594
+  packageName: 'Boing Kit: Dynamic Bouncy Bones, Grass, and More'
+  packageVersion: 1.2.49
+  assetPath: Assets/Boing Kit/Examples/Boing Field & Sampler/Bush Field Follow/Bush Field FollowSettings.lighting
+  uploadId: 993728

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d1afd923b3a95f748955f9349b5feb5a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 135594
+  packageName: 'Boing Kit: Dynamic Bouncy Bones, Grass, and More'
+  packageVersion: 1.2.49
+  assetPath: Assets/Boing Kit/Examples/Boing Bones/Squash & Stretch Comparison/Squash & Stretch ComparisonSettings.lighting
+  uploadId: 993728

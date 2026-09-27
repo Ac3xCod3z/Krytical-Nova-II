@@ -1,0 +1,314 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9021af6346a8d844abb1128b2e1e4ad4, type: 3}
+  m_Name: CharacterProgression
+  m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.CharacterProgressionData
+  startingStatPoints: 5
+  startingSkillPoints: 1
+  levels:
+  - experienceRequired: 100
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 283
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 520
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 800
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 1118
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 1470
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 1852
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 2263
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 2700
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 3162
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 3648
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 4157
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 4687
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 5238
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 5809
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 6400
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 7009
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 7637
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 8282
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 8944
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 9623
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 10319
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 11030
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 11758
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 12500
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 13257
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 14030
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 14816
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 15617
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 16432
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 17260
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 18102
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 18957
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 19825
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 20706
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 21600
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 22506
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 23425
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 24355
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 25298
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 26253
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 27219
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 28197
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 29186
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 30187
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 31199
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 32222
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 33255
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 34300
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 35355
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 36421
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 37498
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 38585
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 39682
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 40789
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 41907
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 43034
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 44171
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 45319
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 46476
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 47643
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 48819
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 50005
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 51200
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 52405
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 53619
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 54842
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 56074
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 57316
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 58566
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 59826
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 61094
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 62371
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 63657
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 64952
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 66255
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 67567
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 68888
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 70217
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 71554
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 72900
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 74254
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 75617
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 76987
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 78366
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 79753
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 81148
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 82551
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 83962
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 85381
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 86808
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 88243
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 89686
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 91136
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 92595
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 94060
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 95534
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 97015
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 98504
+    statPointReward: 5
+    skillPointReward: 1

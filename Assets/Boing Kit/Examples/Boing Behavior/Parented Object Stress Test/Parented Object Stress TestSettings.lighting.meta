@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 58a728936a24e9b47b258a91d287bb05
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 135594
+  packageName: 'Boing Kit: Dynamic Bouncy Bones, Grass, and More'
+  packageVersion: 1.2.49
+  assetPath: Assets/Boing Kit/Examples/Boing Behavior/Parented Object Stress Test/Parented Object Stress TestSettings.lighting
+  uploadId: 993728

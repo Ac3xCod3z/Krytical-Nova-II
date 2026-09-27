@@ -834,7 +834,25 @@ PlayerSettings:
   webWasm2023: 1
   webEnableSubmoduleStrippingCompatibility: 0
   webProgressiveAssetLoading: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    Android: DOTWEEN;DOTWEEN_UITOOLKIT
+    EmbeddedLinux: DOTWEEN;DOTWEEN_UITOOLKIT
+    GameCoreScarlett: DOTWEEN;DOTWEEN_UITOOLKIT
+    GameCoreXboxOne: DOTWEEN;DOTWEEN_UITOOLKIT
+    Kepler: DOTWEEN;DOTWEEN_UITOOLKIT
+    LinuxHeadlessSimulation: DOTWEEN;DOTWEEN_UITOOLKIT
+    Nintendo Switch: DOTWEEN;DOTWEEN_UITOOLKIT
+    Nintendo Switch 2: DOTWEEN;DOTWEEN_UITOOLKIT
+    PS4: DOTWEEN;DOTWEEN_UITOOLKIT
+    PS5: DOTWEEN;DOTWEEN_UITOOLKIT
+    QNX: DOTWEEN;DOTWEEN_UITOOLKIT
+    Standalone: SENTIS_ANALYTICS_ENABLED;APP_UI_EDITOR_ONLY;DOTWEEN;DOTWEEN_UITOOLKIT
+    VisionOS: DOTWEEN;DOTWEEN_UITOOLKIT
+    WebGL: DOTWEEN;DOTWEEN_UITOOLKIT
+    Windows Store Apps: DOTWEEN;DOTWEEN_UITOOLKIT
+    XboxOne: DOTWEEN;DOTWEEN_UITOOLKIT
+    iPhone: DOTWEEN;DOTWEEN_UITOOLKIT
+    tvOS: DOTWEEN;DOTWEEN_UITOOLKIT
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
@@ -912,7 +930,13 @@ PlayerSettings:
   XboxOneXTitleMemory: 8
   XboxOneOverrideIdentityName: 
   XboxOneOverrideIdentityPublisher: 
-  cloudServicesEnabled: {}
+  cloudServicesEnabled:
+    Build: 0
+    Game Performance: 0
+    Legacy Analytics: 0
+    Purchasing: 0
+    UDP: 0
+    Unity Ads: 0
   luminIcon:
     m_Name: 
     m_ModelFolderPath: 
@@ -935,11 +959,11 @@ PlayerSettings:
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
   enableDirectStorage: 0
-  cloudProjectId: 
+  cloudProjectId: f2ed0dbf-063b-4143-9e21-0f4bb3b3aa81
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: 
-  organizationId: 
+  projectName: Krytical Nova II
+  organizationId: ac3xanimuslabs
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}

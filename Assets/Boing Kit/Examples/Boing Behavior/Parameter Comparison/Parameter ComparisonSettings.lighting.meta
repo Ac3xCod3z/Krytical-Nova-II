@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f8031a388f77f744cb12e4e5a95e8642
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 135594
+  packageName: 'Boing Kit: Dynamic Bouncy Bones, Grass, and More'
+  packageVersion: 1.2.49
+  assetPath: Assets/Boing Kit/Examples/Boing Behavior/Parameter Comparison/Parameter ComparisonSettings.lighting
+  uploadId: 993728

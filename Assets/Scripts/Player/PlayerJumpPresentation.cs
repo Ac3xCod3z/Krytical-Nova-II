@@ -1,0 +1,124 @@
+using System.Collections.Generic;
+using Animancer;
+using BoingKit;
+using KryticalNova.Progression;
+using UnityEngine;
+
+namespace KryticalNova.Player
+{
+    /// <summary>Animancer owns flip rotation; Boing owns scale on a separate visual transform. Navigation never flips.</summary>
+    [DisallowMultipleComponent]
+    public sealed class PlayerJumpPresentation : MonoBehaviour, IAnimationClipSource
+    {
+        private const float MinimumScale = 0.25f;
+        private const float MaximumScale = 1.75f;
+        private const float MinimumDuration = 0.01f;
+        private const float DefaultVisualPivotHeight = 1f;
+        [SerializeField] private JumpMotionData motionData;
+        [SerializeField] private AnimancerComponent animancer;
+        [SerializeField] private Transform squashRoot;
+        [Tooltip("Distance from the visual pivot to its feet. Keeps takeoff/landing squash planted on the ground.")]
+        [SerializeField, Min(0f)] private float visualPivotHeight = DefaultVisualPivotHeight;
+        private Vector3Spring scaleSpring;
+        private Vector3 targetScale = Vector3.one;
+        private Vector3 originalScale = Vector3.one;
+        private Vector3 originalPosition;
+        private AnimancerState flipState;
+        public bool IsReady => motionData != null && animancer != null && squashRoot != null
+            && motionData.frontFlip != null && motionData.restPose != null;
+
+        private void Awake()
+        {
+            if (!IsReady)
+            {
+                Debug.LogError("Jump presentation needs Animancer, a squash root, and flip/rest clips in JumpMotionData.", this);
+                enabled = false;
+                return;
+            }
+            originalScale = squashRoot.localScale;
+            originalPosition = squashRoot.localPosition;
+            scaleSpring.Reset(Vector3.one);
+        }
+
+        private void LateUpdate()
+        {
+            if (!IsReady) return;
+            Vector3 scale = scaleSpring.TrackHalfLife(targetScale, motionData.springFrequency, motionData.springHalfLife, Time.deltaTime);
+            scale = Vector3.Min(Vector3.one * MaximumScale, Vector3.Max(Vector3.one * MinimumScale, scale));
+            squashRoot.localScale = Vector3.Scale(originalScale, scale);
+            squashRoot.localPosition = originalPosition + Vector3.up * ((scale.y - 1f) * visualPivotHeight);
+        }
+
+        /// <summary>Sets a squashed anticipation target before takeoff.</summary>
+        public void Anticipate()
+        {
+            if (!IsReady) return;
+            PlayRestPose();
+            targetScale = motionData.anticipationScale;
+        }
+
+        /// <summary>Stretches the body at launch, then lets the Boing spring settle naturally.</summary>
+        public void TakeOff()
+        {
+            if (!IsReady) return;
+            scaleSpring.Reset(motionData.takeoffScale);
+            targetScale = Vector3.one;
+        }
+
+        /// <summary>Starts the full forward flip exactly at the apex, fitting it into the remaining flight time.</summary>
+        public void PlayApexFlip(float availableDuration)
+        {
+            if (!IsReady) return;
+            float duration = Mathf.Max(MinimumDuration, Mathf.Min(motionData.flipDuration, availableDuration));
+            flipState = animancer.Play(motionData.frontFlip);
+            flipState.Time = 0f;
+            flipState.Speed = motionData.frontFlip.length / duration;
+        }
+
+        /// <summary>Returns to an upright pose and kicks the Boing spring into a landing bounce.</summary>
+        public void Land()
+        {
+            if (!IsReady) return;
+            PlayRestPose();
+            targetScale = Vector3.one;
+            scaleSpring.Reset(motionData.landingScale, motionData.landingScaleVelocity);
+        }
+
+        /// <summary>Restores visual pose and scale after an interrupted jump.</summary>
+        public void ResetPresentation()
+        {
+            if (!IsReady) return;
+            PlayRestPose();
+            targetScale = Vector3.one;
+            scaleSpring.Reset(Vector3.one);
+            squashRoot.localScale = originalScale;
+            squashRoot.localPosition = originalPosition;
+        }
+
+        private void PlayRestPose()
+        {
+            // Never recreate an Animancer graph while its object is being disabled or destroyed.
+            if (!animancer.isActiveAndEnabled)
+            {
+                flipState = null;
+                return;
+            }
+            flipState?.Stop();
+            flipState = null;
+            animancer.Play(motionData.restPose).Time = 0f;
+        }
+
+        /// <summary>Exposes the data-owned clips to Unity and Animancer animation previews.</summary>
+        public void GetAnimationClips(List<AnimationClip> results)
+        {
+            if (motionData == null || results == null) return;
+            if (motionData.frontFlip != null) results.Add(motionData.frontFlip);
+            if (motionData.restPose != null) results.Add(motionData.restPose);
+        }
+
+        private void OnDisable()
+        {
+            if (Application.isPlaying) ResetPresentation();
+        }
+    }
+}

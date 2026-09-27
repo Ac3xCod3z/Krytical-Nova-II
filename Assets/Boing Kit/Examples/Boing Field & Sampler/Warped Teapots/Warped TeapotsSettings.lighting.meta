@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d7ac9e6a7fae3ef4396af2d299ae18ae
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 135594
+  packageName: 'Boing Kit: Dynamic Bouncy Bones, Grass, and More'
+  packageVersion: 1.2.49
+  assetPath: Assets/Boing Kit/Examples/Boing Field & Sampler/Warped Teapots/Warped TeapotsSettings.lighting
+  uploadId: 993728

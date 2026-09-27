@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adb26998bf135e14f88e63d1a4d0b145, type: 3}
+  m_Name: CharacterResources
+  m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.CharacterResourceData
+  baseHealth: 100
+  healthPerVitality: 100
+  baseChi: 50
+  chiPerSpirit: 5
+  fillGainedCapacity: 1
+  healthRegenerationPerSecond: 0
+  chiRegenerationPerSecond: 5
+  healthRegenerationDelay: 2
+  chiRegenerationDelay: 2

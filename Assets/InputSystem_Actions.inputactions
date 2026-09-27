@@ -2,6 +2,38 @@
     "name": "InputSystem_Actions",
     "maps": [
         {
+            "name": "SkillCommands",
+            "id": "be130f34-0a84-4f93-8831-e4daa4de528a",
+            "actions": [
+                { "name": "Slot1", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000001", "expectedControlType": "Button" },
+                { "name": "Slot2", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000002", "expectedControlType": "Button" },
+                { "name": "Slot3", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000003", "expectedControlType": "Button" },
+                { "name": "Slot4", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000004", "expectedControlType": "Button" },
+                { "name": "Slot5", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000005", "expectedControlType": "Button" },
+                { "name": "Slot6", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000006", "expectedControlType": "Button" },
+                { "name": "Slot7", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000007", "expectedControlType": "Button" },
+                { "name": "Slot8", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000008", "expectedControlType": "Button" },
+                { "name": "Slot9", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000009", "expectedControlType": "Button" },
+                { "name": "Slot10", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000010", "expectedControlType": "Button" },
+                { "name": "CharacterWindow", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000011", "expectedControlType": "Button" },
+                { "name": "SkillsWindow", "type": "Button", "id": "772bd0a0-88a1-4bfe-9388-011000000012", "expectedControlType": "Button" }
+            ],
+            "bindings": [
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000001", "path": "<Keyboard>/1", "groups": "Keyboard&Mouse", "action": "Slot1" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000002", "path": "<Keyboard>/2", "groups": "Keyboard&Mouse", "action": "Slot2" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000003", "path": "<Keyboard>/3", "groups": "Keyboard&Mouse", "action": "Slot3" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000004", "path": "<Keyboard>/4", "groups": "Keyboard&Mouse", "action": "Slot4" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000005", "path": "<Keyboard>/5", "groups": "Keyboard&Mouse", "action": "Slot5" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000006", "path": "<Keyboard>/6", "groups": "Keyboard&Mouse", "action": "Slot6" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000007", "path": "<Keyboard>/7", "groups": "Keyboard&Mouse", "action": "Slot7" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000008", "path": "<Keyboard>/8", "groups": "Keyboard&Mouse", "action": "Slot8" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000009", "path": "<Keyboard>/9", "groups": "Keyboard&Mouse", "action": "Slot9" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000010", "path": "<Keyboard>/0", "groups": "Keyboard&Mouse", "action": "Slot10" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000011", "path": "<Keyboard>/c", "groups": "Keyboard&Mouse", "action": "CharacterWindow" },
+                { "id": "282bd0a0-88a1-4bfe-9388-011000000012", "path": "<Keyboard>/k", "groups": "Keyboard&Mouse", "action": "SkillsWindow" }
+            ]
+        },
+        {
             "name": "Player",
             "id": "df70fa95-8a34-4494-b137-73ab6b9c7d37",
             "actions": [
@@ -470,6 +502,156 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "PointAndClick",
+            "id": "cdb7dbfa-c8a8-4c7f-8889-3ec2a43ce321",
+            "actions": [
+                {
+                    "name": "PointerPosition",
+                    "type": "Value",
+                    "id": "a1f57977-b18d-4454-92ea-bbcc7634b805",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "MoveToPoint",
+                    "type": "Button",
+                    "id": "916cfa83-8576-4db7-9799-54cb472afcc0",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "OrbitHeld",
+                    "type": "Button",
+                    "id": "fb9a8099-a4e2-419d-bef4-841fe13159c3",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "OrbitDelta",
+                    "type": "Value",
+                    "id": "512e8432-0b7a-4248-8ae4-e005823414b8",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "CancelOrbit",
+                    "type": "Button",
+                    "id": "6e7771c8-27a6-401a-ac4a-b12ca1c7e5a2",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Zoom",
+                    "type": "Value",
+                    "id": "be1159a2-b1fa-499d-b16b-2e7e7a289937",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "1ea18d04-d2e6-42e0-9862-8a221322c723",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "PointerPosition",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9842d158-966f-48c4-8260-0ca915f3bf3b",
+                    "path": "<Touchscreen>/primaryTouch/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Touch",
+                    "action": "PointerPosition",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a4a941d0-cc13-4577-a47c-7327759a7a3f",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "MoveToPoint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fbfe0f3b-b122-44d5-983f-e1a8d14790cb",
+                    "path": "<Touchscreen>/primaryTouch/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Touch",
+                    "action": "MoveToPoint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "dece6d0b-7e32-44d2-b3a4-a92270797942",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "OrbitHeld",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "30aef253-ec23-4603-bcd9-b1b931b57549",
+                    "path": "<Mouse>/delta",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "OrbitDelta",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "930ac29d-0c71-4409-a667-73c49f4a7b92",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "CancelOrbit",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "99c3e66a-c4e0-43ae-9366-fc1f3e03a8c0",
+                    "path": "<Mouse>/scroll/y",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Zoom",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
