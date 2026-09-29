@@ -10,7 +10,7 @@ namespace KryticalNova.Progression
         private const float DefaultHealthPerVitality = 10f;
         private const float DefaultBaseChi = 50f;
         private const float DefaultChiPerSpirit = 5f;
-        private const float DefaultChiRecovery = 5f;
+        private const float DefaultChiRecovery = 0f;
         private const float DefaultRecoveryDelay = 2f;
         [Header("Maximums: base + total attribute × bonus")]
         [Min(1f)] public float baseHealth = DefaultBaseHealth;
@@ -21,6 +21,7 @@ namespace KryticalNova.Progression
         public bool fillGainedCapacity = true;
         [Header("Recovery (zero disables regeneration)")]
         [Min(0f)] public float healthRegenerationPerSecond;
+        [Tooltip("Chi regeneration per second (0 by default in Twelve Sky 2; Chi is recovered via Heavenly Serenity skill)")]
         [Min(0f)] public float chiRegenerationPerSecond = DefaultChiRecovery;
         [Min(0f)] public float healthRegenerationDelay = DefaultRecoveryDelay;
         [Min(0f)] public float chiRegenerationDelay = DefaultRecoveryDelay;

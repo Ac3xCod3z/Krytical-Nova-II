@@ -82,7 +82,8 @@ namespace KryticalNova.Player
             collisionLayers = obstacleLayers.value & ~(1 << gameObject.layer);
             facingOffset = modelForwardOffset;
             takeoffRootPosition = transform.position;
-            peakHeight = Mathf.Max(startFeet.y, landingFeet.y) + motionData.apexClearance;
+            float clearanceApex = Mathf.Max(startFeet.y, landingFeet.y) + motionData.apexClearance;
+            peakHeight = Mathf.Max(clearanceApex, startFeet.y + rank.jumpHeight);
             ascentTime = Mathf.Sqrt(2f * (peakHeight - startFeet.y) / motionData.gravity);
             descentTime = Mathf.Sqrt(2f * (peakHeight - landingFeet.y) / motionData.gravity);
             flightTime = ascentTime + motionData.apexHoldDuration + descentTime;

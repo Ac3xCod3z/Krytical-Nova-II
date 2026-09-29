@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 58d88ba2c05b81745a46c081f0435f32
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 183370
+  packageName: Feel
+  packageVersion: 6.1
+  assetPath: Assets/Feel/MMTools/Demos/MMOrbitalCamera/PostProcessing/MMOrbitalCameraPPProfile_URP.asset
+  uploadId: 985420

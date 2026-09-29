@@ -71,6 +71,8 @@ namespace KryticalNova.Player
         private PlayerMovementSkills movementSkills;
         private PlayerResources resources;
         private PlayerJumpMotor jumpMotor;
+        private CharacterCombatStats combatStats;
+        private CharacterBuffManager buffManager;
         private MovementSkillId previousMovementMode;
         public event Action<string> CommandMessage;
         private NavMeshPath requestedPath;
@@ -115,6 +117,8 @@ namespace KryticalNova.Player
             movementSkills = GetComponent<PlayerMovementSkills>();
             resources = GetComponent<PlayerResources>();
             jumpMotor = GetComponent<PlayerJumpMotor>();
+            combatStats = GetComponent<CharacterCombatStats>();
+            buffManager = GetComponent<CharacterBuffManager>();
             requestedPath = new NavMeshPath();
             agent.updateRotation = false;
         }
@@ -256,8 +260,83 @@ namespace KryticalNova.Player
             Ray ray = gameplayCamera.ScreenPointToRay(screenPosition);
             if (!Physics.Raycast(ray, out RaycastHit hit, maximumRayDistance, raycastLayers, QueryTriggerInteraction.Ignore))
                 return;
+
+            var targetEntity = hit.collider.GetComponentInParent<IDamageable>();
+            if (targetEntity != null && targetEntity.Transform != transform)
+            {
+                if (!targetEntity.IsAlive)
+                {
+                    CommandMessage?.Invoke($"{targetEntity.EntityName} is defeated.");
+                    return;
+                }
+
+                if (agent.isActiveAndEnabled && agent.isOnNavMesh)
+                {
+                    agent.isStopped = true;
+                    agent.ResetPath();
+                }
+
+                Vector3 targetDir = targetEntity.Transform.position - transform.position;
+                targetDir.y = 0f;
+                if (targetDir.sqrMagnitude > 0.01f)
+                {
+                    transform.rotation = Quaternion.LookRotation(targetDir, Vector3.up) * Quaternion.AngleAxis(modelForwardOffset, Vector3.up);
+                }
+
+                var attackerStats = combatStats != null ? combatStats : GetComponent<CharacterCombatStats>();
+                if (attackerStats != null && targetEntity.CombatStats != null)
+                {
+                    if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
+                    var defenderBuffs = targetEntity.Transform.GetComponent<CharacterBuffManager>();
+
+                    float refChance = 0f;
+                    float shatChance = 0f;
+                    float dispelChance = 0f;
+                    bool defenderReflect = defenderBuffs != null && defenderBuffs.HasReflection(out refChance, out _);
+                    bool attackerShatter = buffManager != null && buffManager.HasShieldShatter(out shatChance, out dispelChance);
+
+                    var result = CombatCalculator.CalculateAttack(
+                        attackerStats,
+                        targetEntity.CombatStats,
+                        1.0f,
+                        defenderReflect,
+                        refChance,
+                        attackerShatter,
+                        shatChance);
+
+                    targetEntity.TakeDamage(result, attackerStats);
+
+                    if (attackerShatter && dispelChance > 0f && defenderBuffs != null)
+                    {
+                        if (UnityEngine.Random.Range(0f, 100f) <= dispelChance)
+                        {
+                            defenderBuffs.DispelStanceBuffs();
+                        }
+                    }
+
+                    CombatFeedbackManager.Instance?.ShowCombatFeedback(targetEntity.Transform.position, result);
+
+                    if (result.IsEvaded)
+                        CommandMessage?.Invoke($"Attack EVADED by {targetEntity.EntityName}!");
+                    else if (result.IsReflected)
+                        CommandMessage?.Invoke($"Attack REFLECTED by {targetEntity.EntityName}'s Heavenly Repulsion!");
+                    else if (result.IsCritical)
+                        CommandMessage?.Invoke($"CRITICAL HIT on {targetEntity.EntityName} for {result.DamageDealt:0} dmg! (HP: {targetEntity.CurrentHealth:0}/{targetEntity.MaxHealth:0})");
+                    else
+                        CommandMessage?.Invoke($"Hit {targetEntity.EntityName} for {result.DamageDealt:0} dmg! (HP: {targetEntity.CurrentHealth:0}/{targetEntity.MaxHealth:0})");
+                }
+                return;
+            }
+
             if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
+
+            // Moving interrupts channeled skills (e.g. Heavenly Serenity meditation)
+            if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
+            if (buffManager != null && buffManager.IsChanneling)
+            {
+                buffManager.InterruptChanneled();
+            }
 
             if (movementSkills != null && movementSkills.IsJumpSelected)
             {

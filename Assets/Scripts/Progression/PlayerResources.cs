@@ -13,6 +13,7 @@ namespace KryticalNova.Progression
         private const float ComparisonTolerance = 0.0001f;
         [SerializeField] private CharacterResourceData resourceData;
         private PlayerCharacterProgression progression;
+        private CharacterCombatStats combatStats;
         private float health;
         private float chi;
         private float maxHealth;
@@ -26,12 +27,21 @@ namespace KryticalNova.Progression
         public float Chi => chi;
         public float MaxHealth => maxHealth;
         public float MaxChi => maxChi;
-        public bool IsAlive => initialized && health > 0f;
+        public bool IsAlive
+        {
+            get
+            {
+                if (!initialized && Application.isEditor && !Application.isPlaying) EnsureInitialized();
+                return initialized && health > 0f;
+            }
+        }
         public CharacterResourceData Data => resourceData;
 
-        private void Awake()
+        public void EnsureInitialized()
         {
+            if (initialized) return;
             progression = GetComponent<PlayerCharacterProgression>();
+            combatStats = GetComponent<CharacterCombatStats>();
             if (resourceData == null)
             {
                 Debug.LogError("PlayerResources requires CharacterResourceData.", this);
@@ -44,14 +54,21 @@ namespace KryticalNova.Progression
             initialized = true;
         }
 
+        private void Awake()
+        {
+            EnsureInitialized();
+        }
+
         private void OnEnable()
         {
             if (progression != null) progression.Changed += RecalculateMaximums;
+            if (combatStats != null) combatStats.OnStatsRecalculated += RecalculateMaximums;
         }
 
         private void OnDisable()
         {
             if (progression != null) progression.Changed -= RecalculateMaximums;
+            if (combatStats != null) combatStats.OnStatsRecalculated -= RecalculateMaximums;
         }
 
         private void Update()
@@ -61,23 +78,33 @@ namespace KryticalNova.Progression
             RecalculateMaximums();
             if (!IsAlive) return;
             float previousHealth = health;
-            float previousChi = chi;
             if (Time.time >= healthRecoveryTime)
                 health = Mathf.Min(maxHealth, health + resourceData.healthRegenerationPerSecond * Time.deltaTime);
-            if (Time.time >= chiRecoveryTime)
-                chi = Mathf.Min(maxChi, chi + resourceData.chiRegenerationPerSecond * Time.deltaTime);
-            if (!Mathf.Approximately(previousHealth, health) || !Mathf.Approximately(previousChi, chi)) Changed?.Invoke();
+            // In Twelve Sky 2, Chi does not passively regenerate. It is restored via Heavenly Serenity skill, items, or explicit commands.
+            if (!Mathf.Approximately(previousHealth, health)) Changed?.Invoke();
         }
 
         private void RecalculateMaximums()
         {
-            if (progression == null || resourceData == null) return;
-            float nextHealth = Mathf.Max(1f, resourceData.baseHealth
-                + progression.GetAttribute(CharacterAttribute.Vitality) * resourceData.healthPerVitality);
-            float nextChi = Mathf.Max(0f, resourceData.baseChi
-                + progression.GetAttribute(CharacterAttribute.Spirit) * resourceData.chiPerSpirit);
+            float nextHealth;
+            float nextChi;
+
+            if (combatStats != null)
+            {
+                nextHealth = Mathf.Max(1f, combatStats.GetStatValue(StatType.MaxHP));
+                nextChi = Mathf.Max(0f, combatStats.GetStatValue(StatType.MaxChi));
+            }
+            else
+            {
+                if (progression == null || resourceData == null) return;
+                nextHealth = Mathf.Max(1f, resourceData.baseHealth
+                    + progression.GetAttribute(CharacterAttribute.Vitality) * resourceData.healthPerVitality);
+                nextChi = Mathf.Max(0f, resourceData.baseChi
+                    + progression.GetAttribute(CharacterAttribute.Spirit) * resourceData.chiPerSpirit);
+            }
+
             if (Mathf.Approximately(nextHealth, maxHealth) && Mathf.Approximately(nextChi, maxChi)) return;
-            if (initialized && resourceData.fillGainedCapacity)
+            if (initialized && resourceData != null && resourceData.fillGainedCapacity)
             {
                 // Allocating stats must not revive a defeated character.
                 if (health > 0f) health += Mathf.Max(0f, nextHealth - maxHealth);

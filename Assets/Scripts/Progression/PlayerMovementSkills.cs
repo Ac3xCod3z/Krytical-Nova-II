@@ -97,12 +97,37 @@ namespace KryticalNova.Progression
         /// <summary>Purchases one Run or Jump rank after validating all requirements.</summary>
         public bool TryUpgrade(MovementSkillId skill)
         {
-            if (!CanUpgrade(skill, out _) || !GetDefinition(skill).TryGetRank(GetRank(skill) + 1, out var next)) return false;
-            if (!progression.TrySpendSkillPoints(next.skillPointCost)) return false;
-            if (skill == MovementSkillId.Run) runRank++;
-            else if (skill == MovementSkillId.Jump) jumpRank++;
-            Changed?.Invoke();
-            return true;
+            return TryUpgradeMultiple(skill, 1) > 0;
+        }
+
+        /// <summary>Purchases up to maxCount Run or Jump ranks after validating all requirements.</summary>
+        public int TryUpgradeMultiple(MovementSkillId skill, int maxCount)
+        {
+            if (maxCount <= 0 || !isActiveAndEnabled || progression == null) return 0;
+            MovementSkillData definition = GetDefinition(skill);
+            if (definition == null) return 0;
+
+            int upgraded = 0;
+            while (upgraded < maxCount)
+            {
+                int nextRank = GetRank(skill) + 1;
+                if (!definition.TryGetRank(nextRank, out var next))
+                    break;
+                if (progression.CurrentLevel < next.requiredCharacterLevel)
+                    break;
+                if (!progression.TrySpendSkillPoints(next.skillPointCost))
+                    break;
+
+                if (skill == MovementSkillId.Run) runRank++;
+                else if (skill == MovementSkillId.Jump) jumpRank++;
+                upgraded++;
+            }
+
+            if (upgraded > 0)
+            {
+                Changed?.Invoke();
+            }
+            return upgraded;
         }
 
         /// <summary>Selects a learned skill persistently. Selecting it again returns to walking; no Chi is charged here.</summary>

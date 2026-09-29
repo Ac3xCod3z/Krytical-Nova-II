@@ -1,4 +1,4 @@
-﻿// Author: Daniele Giardini - http://www.demigiant.com
+// Author: Daniele Giardini - http://www.demigiant.com
 // Created: 2018/07/13
 
 using System;
@@ -64,7 +64,7 @@ namespace DG.Tweening
         // Just used to preserve methods when building, never called
         static void Preserver()
         {
-            Assembly[] loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            Assembly[] loadedAssemblies = System.Linq.Enumerable.ToArray(UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies());
             MethodInfo mi = typeof(MonoBehaviour).GetMethod("Stub");
         }
 #pragma warning restore

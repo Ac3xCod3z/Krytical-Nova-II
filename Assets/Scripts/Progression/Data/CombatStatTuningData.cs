@@ -1,0 +1,80 @@
+using UnityEngine;
+
+namespace KryticalNova.Progression
+{
+    /// <summary>Designer-tunable formulas, scaling ratios, and baseline combat values for derived stats and combat checks.</summary>
+    [CreateAssetMenu(menuName = "Krytical Nova/Combat Stat Tuning")]
+    public sealed class CombatStatTuningData : ScriptableObject
+    {
+        [Header("Primary Attribute Multipliers")]
+        [Tooltip("Attack Power gained per point of Strength.")]
+        [Min(0f)] public float strengthToAttackPower = 1f;
+
+        [Tooltip("Attack Power gained per point of Spirit/Chi.")]
+        [Min(0f)] public float spiritToAttackPower = 1f;
+
+        [Tooltip("Hit Rate gained per point of Strength.")]
+        [Min(0f)] public float strengthToHitRate = 2f;
+
+        [Tooltip("Defense Power gained per point of Agility.")]
+        [Min(0f)] public float agilityToDefensePower = 1f;
+
+        [Tooltip("Evasion Rate gained per point of Agility.")]
+        [Min(0f)] public float agilityToEvasion = 2f;
+
+        [Tooltip("Evasion Rate gained per point of Vitality.")]
+        [Min(0f)] public float vitalityToEvasion = 1f;
+
+        [Tooltip("Max HP gained per point of Vitality.")]
+        [Min(0f)] public float vitalityToHealth = 20f;
+
+        [Tooltip("Max Chi gained per point of Spirit.")]
+        [Min(0f)] public float spiritToChi = 20f;
+
+        [Header("Baseline Combat Stats")]
+        [Tooltip("Baseline critical strike chance percentage (e.g. 15 for 15%).")]
+        [Range(0f, 100f)] public float baselineCriticalRate = 15f;
+
+        [Tooltip("Base critical damage multiplier before bonus critical damage % (e.g. 1.5 for 150% damage).")]
+        [Min(1f)] public float baseCriticalMultiplier = 1.5f;
+
+        [Tooltip("Baseline movement speed percentage.")]
+        [Min(0f)] public float baselineMoveSpeedPercent = 100f;
+
+        [Tooltip("Baseline elemental attack value.")]
+        [Min(0f)] public float baselineElementalAttack = 0f;
+
+        [Tooltip("Baseline elemental defense value.")]
+        [Min(0f)] public float baselineElementalDefense = 0f;
+
+        [Tooltip("Baseline Acupressure Stun Resistance percentage.")]
+        [Range(0f, 100f)] public float baselineStunResistance = 0f;
+
+        [Header("Hit & Evasion Roll Clamps")]
+        [Tooltip("Minimum guaranteed hit chance percentage regardless of target evasion.")]
+        [Range(0f, 50f)] public float minimumHitChance = 10f;
+
+        [Tooltip("Maximum hit chance percentage cap.")]
+        [Range(50f, 100f)] public float maximumHitChance = 95f;
+
+        private void OnValidate()
+        {
+            strengthToAttackPower = Mathf.Max(0f, strengthToAttackPower);
+            spiritToAttackPower = Mathf.Max(0f, spiritToAttackPower);
+            strengthToHitRate = Mathf.Max(0f, strengthToHitRate);
+            agilityToDefensePower = Mathf.Max(0f, agilityToDefensePower);
+            agilityToEvasion = Mathf.Max(0f, agilityToEvasion);
+            vitalityToEvasion = Mathf.Max(0f, vitalityToEvasion);
+            vitalityToHealth = Mathf.Max(0f, vitalityToHealth);
+            spiritToChi = Mathf.Max(0f, spiritToChi);
+            baselineCriticalRate = Mathf.Clamp(baselineCriticalRate, 0f, 100f);
+            baseCriticalMultiplier = Mathf.Max(1f, baseCriticalMultiplier);
+            baselineMoveSpeedPercent = Mathf.Max(0f, baselineMoveSpeedPercent);
+            baselineElementalAttack = Mathf.Max(0f, baselineElementalAttack);
+            baselineElementalDefense = Mathf.Max(0f, baselineElementalDefense);
+            baselineStunResistance = Mathf.Clamp(baselineStunResistance, 0f, 100f);
+            minimumHitChance = Mathf.Clamp(minimumHitChance, 0f, maximumHitChance);
+            maximumHitChance = Mathf.Clamp(maximumHitChance, minimumHitChance, 100f);
+        }
+    }
+}

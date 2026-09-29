@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7880cd63b45e28428e12567876538bb, type: 3}
+  m_Name: Skill_ReverseFlow
+  m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
+  skillId: ReverseFlow
+  displayName: Reverse Flow (RF)
+  description: Increases acupressure (stun) defense by 1% - 20% on top of heavenly finger.
+  category: 1
+  targetType: 0
+  executionType: 0
+  acquisitionMethod: 3
+  requiresSkillBook: 1
+  acquisitionNote: Lvl 80 Craftable / Drop Item
+  requiredCraftingArchives:
+  - Snow Legend
+  - Northern Wind Legend
+  - Gods Legend
+  - Moon Wolf's Legend
+  requiredCharacterLevel: 80
+  minRank: 1
+  maxRank: 100
+  skillPointsToLearn: 50
+  totalSkillPointsToMax: 100
+  minChiCost: 1417
+  maxChiCost: 1871
+  cooldown: 1
+  minDuration: 61
+  maxDuration: 180
+  channelTickInterval: 1
+  channelChiRecoveryPercent: 5
+  isAbsorptionShield: 0
+  minShieldPercent: 111
+  maxShieldPercent: 150
+  hasDeadlyBlowBoost: 0
+  minDeadlyBlowPercent: 12
+  maxDeadlyBlowPercent: 75
+  hasLuckBoost: 0
+  minLuckPercent: 13
+  maxLuckPercent: 100
+  hasAcupressureResistance: 1
+  minAcupressureResistance: 1
+  maxAcupressureResistance: 20
+  hasReflection: 0
+  minReflectionChance: 1
+  maxReflectionChance: 10
+  reflectionMultiplier: 1
+  hasShieldShatter: 0
+  minDestructionChance: 1
+  maxDestructionChance: 20
+  dispelBuffChance: 50
+  statModifiers: []

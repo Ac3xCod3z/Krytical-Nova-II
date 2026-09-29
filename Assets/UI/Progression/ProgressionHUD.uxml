@@ -17,17 +17,59 @@
             <ui:VisualElement class="row"><ui:Label text="CHARACTER" class="heading" /><ui:Button name="close-character" text="X" class="close" /></ui:VisualElement>
             <ui:ScrollView name="character-body" class="window-body" horizontal-scroller-visibility="Hidden">
             <ui:Label text="ATTRIBUTES" class="eyebrow section" />
-            <ui:Label name="stat-points" text="5 points available" class="accent" />
-            <ui:VisualElement class="stat-row"><ui:Label text="Strength" /><ui:Label name="stat-0" text="10" class="stat-value" /><ui:Button name="allocate-0" text="+" /></ui:VisualElement>
-            <ui:VisualElement class="stat-row"><ui:Label text="Vitality" /><ui:Label name="stat-1" text="10" class="stat-value" /><ui:Button name="allocate-1" text="+" /></ui:VisualElement>
-            <ui:VisualElement class="stat-row"><ui:Label text="Agility" /><ui:Label name="stat-2" text="10" class="stat-value" /><ui:Button name="allocate-2" text="+" /></ui:VisualElement>
-            <ui:VisualElement class="stat-row"><ui:Label text="Spirit" /><ui:Label name="stat-3" text="10" class="stat-value" /><ui:Button name="allocate-3" text="+" /></ui:VisualElement>
+            <ui:VisualElement class="row">
+                <ui:Label name="stat-points" text="5 points available" class="accent" />
+                <ui:VisualElement class="step-options-row">
+                    <ui:Button name="stat-step-1" text="+1" class="step-option active-step" />
+                    <ui:Button name="stat-step-5" text="+5" class="step-option" />
+                    <ui:Button name="stat-step-10" text="+10" class="step-option" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="stat-row"><ui:Label text="Strength" /><ui:Label name="stat-0" text="10" class="stat-value" /><ui:Button name="allocate-0" text="+1" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row"><ui:Label text="Vitality" /><ui:Label name="stat-1" text="10" class="stat-value" /><ui:Button name="allocate-1" text="+1" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row"><ui:Label text="Agility" /><ui:Label name="stat-2" text="10" class="stat-value" /><ui:Button name="allocate-2" text="+1" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row"><ui:Label text="Spirit" /><ui:Label name="stat-3" text="10" class="stat-value" /><ui:Button name="allocate-3" text="+1" /></ui:VisualElement>
             <ui:Label name="resource-values" text="HP 200 / 200    Chi 100 / 100" class="accent section" />
-            <ui:Label name="resource-formula" text="Vitality: +10 HP each. Spirit: +5 Chi each." class="help" />
-            <ui:Label name="stat-note" text="Spend 1 point per increase. Vitality raises HP; Spirit raises Chi. New capacity also increases current resources." class="help section" />
+            <ui:Label name="resource-formula" text="STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evade | AGI: +2 Evade, +1 DP | CHI: +20 Chi, +1 AP" class="help" />
+            <ui:Label name="stat-note" text="Spend 1 point per increase. Allocating stat points or equipping gear scales both Primary and Secondary sub-stats dynamically." class="help section" />
+            <ui:Label text="DERIVED COMBAT STATS" class="eyebrow section" />
+            <ui:VisualElement class="combat-stats-container">
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Attack Power (AP)" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-ap" text="35" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Defense Power (DP)" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-dp" text="15" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Hit Rate" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-hit" text="20" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Evasion Rate" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-evade" text="30" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Critical Rate" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-crit" text="15.0%" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Stun Resistance" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-stun-res" text="0.0%" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Move Speed" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-speed" text="100%" class="combat-stat-value" />
+                </ui:VisualElement>
+            </ui:VisualElement>
             <ui:VisualElement name="development-tools" class="section">
                 <ui:Label text="PLAYTEST TOOLS" class="eyebrow" />
                 <ui:Button name="grant-xp" text="Grant XP to next level" />
+                <ui:Button name="toggle-test-gear" text="Test: Equip Gear (+10 All Stats)" />
+                <ui:Button name="attack-dummy" text="Test: Strike Combat Dummy" />
+                <ui:Button name="reset-dummy" text="Test: Reset Dummy Health" />
+                <ui:Button name="toggle-drop-skills" text="Test: Unlock Drop Book Skills" />
                 <ui:Button name="test-damage" text="Test: take 25 damage" />
                 <ui:Button name="test-chi" text="Test: spend 25 Chi" />
                 <ui:Button name="restore-resources" text="Restore HP and Chi" />
@@ -36,9 +78,19 @@
             </ui:ScrollView>
         </ui:VisualElement>
         <ui:VisualElement name="skills-window" class="panel window blocks-world">
-            <ui:VisualElement class="row"><ui:Label text="MOVEMENT SKILLS" class="heading" /><ui:Button name="close-skills" text="X" class="close" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="SKILLS &amp; MARTIAL ARTS" class="heading" /><ui:Button name="close-skills" text="X" class="close" /></ui:VisualElement>
             <ui:ScrollView name="skills-body" class="window-body" horizontal-scroller-visibility="Hidden">
-            <ui:Label name="skill-points" text="1 skill point available" class="accent section" />
+            <ui:VisualElement class="row section">
+                <ui:Label name="skill-points" text="1 skill point available" class="accent" />
+                <ui:VisualElement class="step-options-row">
+                    <ui:Button name="skill-step-1" text="+1" class="step-option active-step" />
+                    <ui:Button name="skill-step-5" text="+5" class="step-option" />
+                    <ui:Button name="skill-step-10" text="+10" class="step-option" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- Category: Movement Skills -->
+            <ui:Label text="MOVEMENT SKILLS" class="category-header eyebrow" />
             <ui:VisualElement class="skill-card">
                 <ui:VisualElement name="run-drag" class="skill-token"><ui:Label text="RUN" class="skill-icon" /><ui:Label name="run-rank" text="UNLEARNED · 0 / 20" /></ui:VisualElement>
                 <ui:Label name="run-description" text="Select Run, then left-click destinations. Each accepted destination costs Chi. Select Run again to walk." class="help" />
@@ -55,10 +107,95 @@
                 <ui:Button name="upgrade-jump" text="LEARN JUMP" />
                 <ui:Label name="jump-drag-hint" text="Learn Jump, then drag its tile to a hotbar slot." class="help" />
             </ui:VisualElement>
+
+            <!-- Category: Tier 1 Utility Buffs (Trainer) -->
+            <ui:Label text="TIER 1 UTILITY BUFFS (TRAINER)" class="category-header eyebrow section" />
+            <ui:VisualElement class="skill-card">
+                <ui:VisualElement name="spiritual-rage-drag" class="skill-token rage-token"><ui:Label text="SPIRITUAL RAGE" class="skill-icon" /><ui:Label name="spiritual-rage-rank" text="UNLEARNED" /></ui:VisualElement>
+                <ui:Label name="spiritual-rage-description" text="Ignites spiritual fervor, granting +30% Critical Rate for 180s." class="help" />
+                <ui:Label name="spiritual-rage-values" text="+30% Critical Rate · 180s duration · 1s CD · 15 Chi · Self" class="section" />
+                <ui:Label name="spiritual-rage-requirement" text="Requires Level 1 · Cost: 1 skill point" class="muted" />
+                <ui:Button name="upgrade-spiritual-rage" text="LEARN SPIRITUAL RAGE" />
+                <ui:Label name="spiritual-rage-drag-hint" text="Learn Spiritual Rage, then drag to a hotbar slot." class="help" />
+            </ui:VisualElement>
+            <ui:VisualElement class="skill-card">
+                <ui:VisualElement name="heavenly-serenity-drag" class="skill-token serenity-token"><ui:Label text="HEAVENLY SERENITY" class="skill-icon" /><ui:Label name="heavenly-serenity-rank" text="UNLEARNED" /></ui:VisualElement>
+                <ui:Label name="heavenly-serenity-description" text="Meditate in tranquil focus, restoring Chi over 20s (5% Max Chi/sec). Interrupts upon taking damage or moving." class="help" />
+                <ui:Label name="heavenly-serenity-values" text="Channeled Chi Restore · 20s duration · 1s CD · 0 Chi · Self" class="section" />
+                <ui:Label name="heavenly-serenity-requirement" text="Requires Level 1 · Cost: 1 skill point" class="muted" />
+                <ui:Button name="upgrade-heavenly-serenity" text="LEARN HEAVENLY SERENITY" />
+                <ui:Label name="heavenly-serenity-drag-hint" text="Learn Heavenly Serenity, then drag to a hotbar slot." class="help" />
+            </ui:VisualElement>
+
+            <!-- Category: Tier 1 Master / Rare Drop Skills -->
+            <ui:Label text="TIER 1 MASTER SKILLS (RARE DROP BOOKS)" class="category-header eyebrow section rare-header" />
+            <ui:Label text="Secret techniques locked until rare martial arts drop books are discovered." class="drop-book-note" />
+
+            <!-- Heavenly Shield -->
+            <ui:VisualElement class="skill-card rare-skill-card">
+                <ui:VisualElement name="heavenly-shield-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY SHIELD" class="skill-icon" /><ui:Label name="heavenly-shield-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+                <ui:Label name="heavenly-shield-description" text="Forms an impenetrable celestial barrier absorbing incoming damage up to 150% Max HP for 60s." class="help" />
+                <ui:Label name="heavenly-shield-values" text="150% Max HP Shield · 60s duration · 2s CD · 30 Chi · Self" class="section" />
+                <ui:Label name="heavenly-shield-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Button name="upgrade-heavenly-shield" text="REQUIRES SKILL BOOK" />
+                <ui:Label name="heavenly-shield-drag-hint" text="Available once the Heavenly Shield skill book is acquired." class="help" />
+            </ui:VisualElement>
+
+            <!-- Heavenly Blow -->
+            <ui:VisualElement class="skill-card rare-skill-card">
+                <ui:VisualElement name="heavenly-blow-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY BLOW" class="skill-icon" /><ui:Label name="heavenly-blow-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+                <ui:Label name="heavenly-blow-description" text="Channels lethal spiritual force, granting +75% Critical / Deadly Blow chance for 180s." class="help" />
+                <ui:Label name="heavenly-blow-values" text="+75% Critical Rate · 180s duration · 1s CD · 25 Chi · Self" class="section" />
+                <ui:Label name="heavenly-blow-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Button name="upgrade-heavenly-blow" text="REQUIRES SKILL BOOK" />
+                <ui:Label name="heavenly-blow-drag-hint" text="Available once the Heavenly Blow skill book is acquired." class="help" />
+            </ui:VisualElement>
+
+            <!-- Garuda's Prayer -->
+            <ui:VisualElement class="skill-card rare-skill-card">
+                <ui:VisualElement name="garudas-prayer-drag" class="skill-token rare-token"><ui:Label text="GARUDA'S PRAYER" class="skill-icon" /><ui:Label name="garudas-prayer-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+                <ui:Label name="garudas-prayer-description" text="Invokes the divine favor of Garuda, bestowing +100% Luck for 240s." class="help" />
+                <ui:Label name="garudas-prayer-values" text="+100% Luck · 240s duration · 1s CD · 20 Chi · Self" class="section" />
+                <ui:Label name="garudas-prayer-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Button name="upgrade-garudas-prayer" text="REQUIRES SKILL BOOK" />
+                <ui:Label name="garudas-prayer-drag-hint" text="Available once the Garuda's Prayer skill book is acquired." class="help" />
+            </ui:VisualElement>
+
+            <!-- Heavenly Repulsion -->
+            <ui:VisualElement class="skill-card rare-skill-card">
+                <ui:VisualElement name="heavenly-repulsion-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY REPULSION" class="skill-icon" /><ui:Label name="heavenly-repulsion-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+                <ui:Label name="heavenly-repulsion-description" text="Envelops the body in a reactive mirror aura. 10% chance on incoming hit to take 0 damage and reflect 100% damage back for 180s." class="help" />
+                <ui:Label name="heavenly-repulsion-values" text="10% Reflect · 100% Dmg Reflected · 180s duration · 1s CD · 25 Chi · Self" class="section" />
+                <ui:Label name="heavenly-repulsion-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Button name="upgrade-heavenly-repulsion" text="REQUIRES SKILL BOOK" />
+                <ui:Label name="heavenly-repulsion-drag-hint" text="Available once the Heavenly Repulsion skill book is acquired." class="help" />
+            </ui:VisualElement>
+
+            <!-- Heavenly Destruction -->
+            <ui:VisualElement class="skill-card rare-skill-card">
+                <ui:VisualElement name="heavenly-destruction-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY DESTRUCTION" class="skill-icon" /><ui:Label name="heavenly-destruction-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+                <ui:Label name="heavenly-destruction-description" text="Infuses attacks with devastating force. 10% chance per hit to instantly shatter enemy Heavenly Shield and 50% chance to dispel stance buffs for 180s." class="help" />
+                <ui:Label name="heavenly-destruction-values" text="10% Shield Shatter · 50% Dispel · 180s duration · 1s CD · 25 Chi · Self" class="section" />
+                <ui:Label name="heavenly-destruction-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Button name="upgrade-heavenly-destruction" text="REQUIRES SKILL BOOK" />
+                <ui:Label name="heavenly-destruction-drag-hint" text="Available once the Heavenly Destruction skill book is acquired." class="help" />
+            </ui:VisualElement>
+
+            <!-- Reverse Flow -->
+            <ui:VisualElement class="skill-card rare-skill-card">
+                <ui:VisualElement name="reverse-flow-drag" class="skill-token rare-token"><ui:Label text="REVERSE FLOW" class="skill-icon" /><ui:Label name="reverse-flow-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+                <ui:Label name="reverse-flow-description" text="Reverses internal meridian flow, granting +20% Stun (Acupressure) resistance for 180s." class="help" />
+                <ui:Label name="reverse-flow-values" text="+20% Stun Resistance · 180s duration · 1s CD · 20 Chi · Self" class="section" />
+                <ui:Label name="reverse-flow-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Button name="upgrade-reverse-flow" text="REQUIRES SKILL BOOK" />
+                <ui:Label name="reverse-flow-drag-hint" text="Available once the Reverse Flow skill book is acquired." class="help" />
+            </ui:VisualElement>
+
             </ui:ScrollView>
         </ui:VisualElement>
         <ui:VisualElement name="bottom-region" picking-mode="Ignore">
-            <ui:Label name="feedback" text="Open Skills [K] to learn Run and assign it to your hotbar." class="feedback" picking-mode="Ignore" />
+            <ui:VisualElement name="active-buffs-bar" class="active-buffs-bar" picking-mode="Ignore" />
+            <ui:Label name="feedback" text="Open Skills [K] to learn skills and assign them to your hotbar." class="feedback" picking-mode="Ignore" />
             <ui:VisualElement name="hotbar" class="blocks-world">
                 <ui:VisualElement name="slot-0" class="hotbar-slot"><ui:Label text="1" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
                 <ui:VisualElement name="slot-1" class="hotbar-slot"><ui:Label text="2" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
@@ -71,7 +208,7 @@
                 <ui:VisualElement name="slot-8" class="hotbar-slot"><ui:Label text="9" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
                 <ui:VisualElement name="slot-9" class="hotbar-slot"><ui:Label text="0" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
             </ui:VisualElement>
-            <ui:Label text="1–0 select skill   ·   Drag to rearrange   ·   Right-click a slot to clear   ·   Esc closes windows" class="controls" picking-mode="Ignore" />
+            <ui:Label text="1–0 select / cast skill   ·   Drag to rearrange   ·   Right-click a slot to clear   ·   Esc closes windows" class="controls" picking-mode="Ignore" />
         </ui:VisualElement>
         <ui:Label name="drag-ghost" text="RUN" picking-mode="Ignore" />
     </ui:VisualElement>

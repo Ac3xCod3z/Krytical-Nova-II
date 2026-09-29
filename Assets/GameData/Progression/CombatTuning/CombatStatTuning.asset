@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ee7ff352546055409d60bf37a333abf, type: 3}
+  m_Name: CombatStatTuning
+  m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.CombatStatTuningData
+  strengthToAttackPower: 1
+  spiritToAttackPower: 1
+  strengthToHitRate: 2
+  agilityToDefensePower: 1
+  agilityToEvasion: 2
+  vitalityToEvasion: 1
+  vitalityToHealth: 20
+  spiritToChi: 20
+  baselineCriticalRate: 15
+  baseCriticalMultiplier: 1.5
+  baselineMoveSpeedPercent: 100
+  baselineElementalAttack: 0
+  baselineElementalDefense: 0
+  baselineStunResistance: 0
+  minimumHitChance: 10
+  maximumHitChance: 95

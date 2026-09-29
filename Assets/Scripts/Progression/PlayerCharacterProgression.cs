@@ -78,11 +78,29 @@ namespace KryticalNova.Progression
         /// <summary>Spends the configured stat-point cost and increases one attribute; no refunds are implied.</summary>
         public bool TryAllocate(CharacterAttribute attribute)
         {
-            if (!CanAllocate(attribute)) return false;
-            statPoints -= statData.allocationCost;
-            attributes[(int)attribute]++;
-            Changed?.Invoke();
-            return true;
+            return TryAllocateMultiple(attribute, 1) > 0;
+        }
+
+        /// <summary>Spends the configured stat-point cost for multiple points and increases the attribute atomically.</summary>
+        public int TryAllocateMultiple(CharacterAttribute attribute, int maxCount)
+        {
+            if (maxCount <= 0 || !isActiveAndEnabled || statData == null) return 0;
+            int index = (int)attribute;
+            if (index < 0 || index >= attributes.Length) return 0;
+
+            int cost = statData.allocationCost;
+            int allocated = 0;
+            while (allocated < maxCount && statPoints >= cost && attributes[index] < statData.maximumAttributeValue)
+            {
+                statPoints -= cost;
+                attributes[index]++;
+                allocated++;
+            }
+            if (allocated > 0)
+            {
+                Changed?.Invoke();
+            }
+            return allocated;
         }
 
         /// <summary>Atomically spends skill points if the requested positive cost is affordable.</summary>

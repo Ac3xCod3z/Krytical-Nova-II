@@ -1,0 +1,501 @@
+Twelve Sky 2 is best understood as a PvP-first MMORPG where your character is built from stats + combat discipline + skills + equipment, rather than a traditional fixed-class RPG. The developers explicitly described PvP, faction warfare, alliances, and social/economic systems as major design pillars.
+
+Below is the system structure I'd use if you wanted to study Twelve Sky 2 as a game-design reference.
+
+Twelve Sky 2 — Complete Combat & Battle System Breakdown
+1. Core Character System — THE FOUNDATION
+
+Everything ultimately feeds into your character's combat power.
+
+Character build
+
+There is no traditional permanent class. Instead:
+
+Faction → Combat Discipline → Stats → Skills → Equipment → Build
+
+Players can learn the combat skills available to their faction, with certain skills requiring the corresponding discipline/equipment.
+
+Four primary stats
+Stat	Main purpose
+Strength	Attack power / attack rate
+Vitality	HP / survivability
+Agility	Defense / evasion
+Chi/Spirit	Chi resource / additional attack
+
+One documented Classic configuration gives approximately:
+
+Strength → +Attack +Attack Rate
+Vitality → +HP +Evasion
+Agility → +Defense +Evasion
+Spirit → +Chi +Attack
+
+Exact values can vary between versions/servers.
+
+Design principle:
+Stats don't define a class. They define how you specialize your chosen combat discipline.
+
+2. Combat Discipline System
+
+This is essentially Twelve Sky 2's class system.
+
+Each faction has multiple combat disciplines, generally covering three broad roles:
+
+A. Offensive
+
+High damage / aggressive fighting.
+
+B. Defensive
+
+Higher survivability and defensive capabilities.
+
+C. Ranged
+
+Distance-based combat and area/control potential.
+
+The important part is that these aren't rigid MMO classes. A character's final role comes from combining their discipline, stats, skills and equipment.
+
+So the basic build formula becomes:
+
+Discipline + Stats + Skills + Equipment = Character Build
+
+3. Skill System — THE HEART OF COMBAT
+
+The skill system is much broader than simply "attack abilities."
+
+The major categories are:
+
+Attack skills
+
+Single Target
+
+One target
+Usually higher focused damage
+
+Multi-Hit
+
+Several strikes against a target
+Useful for sustained damage
+
+AoE
+
+Hits multiple targets
+Extremely important for grinding and large PvP battles
+
+Documented skill lists show this single-hit → multi-hit → AoE structure repeatedly across combat disciplines.
+
+Buff skills
+
+Temporary self-enhancement such as:
+
+Attack increases
+Defense increases
+Evasion
+Movement speed
+Attack speed
+Elemental damage
+Critical-related bonuses
+
+Combat utility skills
+
+These are particularly important because they create the game's PvP identity:
+
+Stun
+Anti-stun
+Sprint
+Leap
+Charge
+Mobility abilities
+Control/disable effects
+
+Some movement abilities are actually skills rather than simply movement mechanics.
+
+4. Skill Progression
+
+Skills are tied to character progression and combat discipline progression.
+
+The game uses progressively stronger skill tiers as characters advance, rather than giving the entire combat kit immediately. Examples from documented skill lists show early skills followed by stronger versions at higher levels.
+
+This creates:
+
+Level → New skills → Stronger combat options → New build possibilities
+
+That is one of the game's primary progression loops.
+
+5. Chi / Resource System
+
+Combat isn't just HP + cooldowns.
+
+Skills consume a Chi/Spirit-type resource, creating a secondary combat resource that has to be maintained.
+
+This creates the basic combat loop:
+
+Attack → Spend Chi → Recover Chi → Continue fighting
+
+Chi can also become part of character specialization through stats and equipment.
+
+6. Status & Combat Effect System
+
+A major part of PvP is controlling the opponent rather than simply dealing damage.
+
+Important effects include:
+
+Offensive
+Damage
+Critical hits
+Elemental damage
+Attack speed
+Defensive
+Defense
+Evasion
+Critical defense
+Elemental defense
+Control
+Stun
+Anti-stun
+Movement effects
+Knockback
+Mobility
+
+The result is that PvP becomes:
+
+Damage + positioning + buffs + debuffs + control
+
+rather than simply comparing Attack values.
+
+7. Equipment System
+
+Equipment is the other half of character progression.
+
+The major equipment loop is:
+
+Loot → Equip → Enhance → Upgrade → Optimize Build
+
+Equipment contributes things such as:
+
+Attack
+Defense
+HP
+Chi
+Evasion
+Critical
+Elemental damage
+Elemental defense
+Other combat modifiers
+
+The game contains a substantial weapon/armor enhancement system rather than treating equipment as disposable level-based gear.
+
+8. Enhancement / Enchantment
+
+This is one of the major long-term progression systems.
+
+Equipment can be:
+
+Enhanced
+Upgraded
+Downgraded
+Combined
+Specialized through enhancement materials
+
+Higher enhancement levels increase item power, while higher-risk enhancement creates an additional progression gamble.
+
+Classic documentation describes enhancement thresholds that change the item's visual glow and notes that sufficiently high enhancement can become dangerous to the item.
+
+So:
+
+Gear acquisition isn't the end of progression — improving the gear is another progression tree.
+
+9. PvE Combat
+
+PvE primarily exists to build your character for the larger PvP ecosystem.
+
+Core PvE loop:
+
+Kill monsters → Gain EXP → Gain loot → Improve character → Access harder content
+
+Monsters have level-relative difficulty indicators, making enemy selection part of progression.
+
+PvE also includes:
+
+Normal monsters
+Stronger/field champions
+Bosses
+Special monsters
+Event enemies
+
+Field champions can provide uncommon equipment/rewards.
+
+10. PvP — THE PRIMARY ENDGAME
+
+This is where Twelve Sky 2 differs most from a traditional MMORPG.
+
+The game was explicitly designed around large-scale PvP and multiple forms of warfare, rather than making PvP something players only encounter at endgame.
+
+PvP exists at several scales:
+
+1v1
+
+Individual player combat.
+
+Small-scale
+
+Groups fighting other groups.
+
+Faction PvP
+
+Players representing their faction.
+
+Large-scale war
+
+Hundreds of players participating in faction objectives.
+
+Territory/Siege warfare
+
+Players attack or defend strategic structures and faction territory.
+
+11. Faction System — THE SECOND FOUNDATION
+
+The game is fundamentally organized around competing factions.
+
+The original structure contains three major factions, with a fourth faction becoming available later in progression.
+
+This changes the player's motivation from:
+
+"I want to make my character stronger."
+
+into:
+
+"I want my character to make my faction stronger."
+
+That distinction is extremely important to the game's design.
+
+12. Alliance System
+
+Two factions can establish an alliance.
+
+Allied players can cooperate during warfare and are treated differently from enemy factions while the alliance exists.
+
+This creates a strategic layer above individual combat:
+
+Player → Guild → Faction → Alliance
+
+13. Faction Leadership / Political System
+
+Twelve Sky 2 adds actual player leadership to the faction structure.
+
+Faction leaders are elected, and leadership positions can provide responsibilities and benefits.
+
+The leader can coordinate major faction activities and appoint supporting leadership positions.
+
+This turns faction warfare into more than:
+
+"Everyone enters the battlefield and fights."
+
+Instead it becomes:
+
+Leadership → Strategy → Organization → Battlefield execution
+
+14. War System
+
+Wars are essentially structured PvP game modes.
+
+Different battles can have different objectives rather than simply being deathmatches.
+
+Documented examples include level-based wars and annihilation-style battles where factions attempt to eliminate opposing participants.
+
+The general structure is:
+
+Registration → Battlefield entry → Preparation → Gates/objectives open → Combat → Objective → Rewards
+
+15. Holy/Heavenly Stone Battle
+
+This is one of the most important endgame faction systems.
+
+The basic concept is:
+
+Attack enemy territory → Break defenses → Enter enemy territory → Attack their strategic stone
+
+while simultaneously:
+
+Defend your own territory → Protect your stone
+
+The battle can therefore affect faction-wide power/rewards rather than merely determining who won a PvP match.
+
+This is basically the game's:
+
+large-scale faction siege system.
+
+16. Territory / Castle Defense
+
+Faction territory isn't purely decorative.
+
+Defensive structures, shields, guards and other battlefield infrastructure can control access to territory.
+
+This creates:
+
+Outer defense → Breach → Territory invasion → Strategic objective
+
+Faction leadership can also have responsibilities involving defensive structures and battlefield equipment.
+
+17. Contribution System
+
+PvP participation feeds into Contribution Points (CP).
+
+CP can be used for progression within faction/social systems and is connected to leadership eligibility and other progression systems.
+
+This creates another progression axis:
+
+Combat participation → Contribution → Faction status
+
+rather than making EXP the only measure of progression.
+
+18. Class/Rank System
+
+Some versions add another layer above normal character progression.
+
+Players can earn Class Points, particularly through faction warfare, and use those points toward additional classes/bonuses.
+
+So the progression structure can look like:
+
+CHARACTER
+│
+├── Level
+│
+├── Stats
+│
+├── Combat Discipline
+│   └── Skills
+│
+├── Equipment
+│   └── Enhancement
+│
+├── Faction Contribution
+│   └── Class/Rank progression
+│
+└── PvP/Warfare
+    └── Rewards
+19. Mount System
+
+Mounts aren't simply cosmetic transportation.
+
+They can provide combat modifiers such as:
+
+Damage
+HP
+Chi
+Attack rate
+Critical
+Defense
+Evasion
+Elemental bonuses
+
+Mounts can also be progressed through different quality tiers.
+
+Therefore:
+
+Mount = mobility + character stat modifier
+
+20. Pet System
+
+Pets/companions function as another layer of character customization.
+
+Depending on the version, they can provide additional combat-oriented bonuses and help specialize a build.
+
+This is another example of Twelve Sky 2 stacking multiple progression systems onto the same character.
+
+21. Economy
+
+The economy supports the combat progression loop.
+
+Players obtain currency and valuable items through:
+
+PvE
+PvP
+Wars
+Loot
+Equipment drops
+Trading
+Selling unwanted equipment
+Special events
+
+War participation itself can provide currency/rewards.
+
+22. Guild / Social Layer
+
+Above individual players sits the social organization:
+
+Player → Party → Guild → Faction → Alliance
+
+This is important because the game is designed around coordinated warfare rather than purely individual progression.
+
+Communication and organization become actual gameplay advantages during faction wars.
+
+23. Events / World Activities
+
+The game also has temporary activities that inject new rewards and reasons to return.
+
+Examples include:
+
+Special monsters
+Limited-time drops
+Special buffs
+Event currencies/items
+Treasure boxes
+Seasonal events
+
+Official Classic announcements demonstrate events affecting both PvE and PvP rewards.
+
+The Entire System in One Picture
+
+This is probably the most useful way to understand Twelve Sky 2:
+
+                         TWELVE SKY 2
+                              │
+               ┌──────────────┴──────────────┐
+               │                             │
+          CHARACTER                       FACTION
+               │                             │
+       ┌───────┼────────┐              ┌─────┴─────┐
+       │       │        │              │           │
+     STATS   SKILLS   EQUIPMENT      GUILD      ALLIANCE
+       │       │        │              │           │
+       │       │     ENHANCEMENT       │           │
+       │       │        │              │           │
+       └───────┴────────┴──────────────┴───────────┘
+                              │
+                           COMBAT
+                              │
+                ┌─────────────┴─────────────┐
+                │                           │
+               PvE                         PvP
+                │                           │
+          EXP + LOOT                  CONTRIBUTION
+                │                           │
+                └──────────┬────────────────┘
+                           │
+                      CHARACTER POWER
+                           │
+                  ┌────────┴────────┐
+                  │                 │
+                SMALL              LARGE
+                 PvP               WARFARE
+                  │                 │
+               Duels          Territory/Siege
+                                    │
+                              Stone Battles
+                                    │
+                              FACTION POWER
+                                    │
+                              LEADERSHIP
+                                    │
+                               ENDGAME LOOP
+The most important design insight
+
+Twelve Sky 2 isn't really built around:
+
+"Level up → beat stronger monsters → reach max level."
+
+Its deeper loop is:
+
+Build character → fight → earn resources → improve build → contribute to faction → participate in larger wars → earn more resources/status → improve build again.
+
+That's why PvP, faction warfare, skills, stats, equipment enhancement and contribution systems are interconnected instead of being separate features. The developers themselves identified PvP, faction alliances, and social/economic systems as central design pillars.

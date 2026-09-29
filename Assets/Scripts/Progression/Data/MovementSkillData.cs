@@ -14,7 +14,7 @@ namespace KryticalNova.Progression
         [Min(0f)] public float chiCost;
         [Tooltip("Absolute run speed in world units per second.")]
         [Min(0f)] public float runSpeed;
-        [Tooltip("Maximum upward landing height difference.")]
+        [Tooltip("Jump apex height above takeoff and maximum upward landing elevation difference.")]
         [Min(0f)] public float jumpHeight;
         [Tooltip("Maximum horizontal landing distance.")]
         [Min(0f)] public float jumpDistance;

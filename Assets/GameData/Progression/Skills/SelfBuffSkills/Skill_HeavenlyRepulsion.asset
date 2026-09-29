@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7880cd63b45e28428e12567876538bb, type: 3}
+  m_Name: Skill_HeavenlyRepulsion
+  m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
+  skillId: HeavenlyRepulsion
+  displayName: Heavenly Repulsion (HR)
+  description: 1% - 10% chance to return full physical damage back at the enemy and user receives 0 physical damage (no effect on elemental damage, returned damage bypasses Heavenly Shield).
+  category: 1
+  targetType: 0
+  executionType: 0
+  acquisitionMethod: 3
+  requiresSkillBook: 1
+  acquisitionNote: Lvl 80 Craftable / Drop Item
+  requiredCraftingArchives:
+  - Fire Dragon Archive
+  - Munro's Finale
+  - Torn Spirit Finale
+  - Sun Archive
+  requiredCharacterLevel: 80
+  minRank: 1
+  maxRank: 100
+  skillPointsToLearn: 50
+  totalSkillPointsToMax: 100
+  minChiCost: 1471
+  maxChiCost: 1871
+  cooldown: 1
+  minDuration: 61
+  maxDuration: 180
+  channelTickInterval: 1
+  channelChiRecoveryPercent: 5
+  isAbsorptionShield: 0
+  minShieldPercent: 111
+  maxShieldPercent: 150
+  hasDeadlyBlowBoost: 0
+  minDeadlyBlowPercent: 12
+  maxDeadlyBlowPercent: 75
+  hasLuckBoost: 0
+  minLuckPercent: 13
+  maxLuckPercent: 100
+  hasAcupressureResistance: 0
+  minAcupressureResistance: 1
+  maxAcupressureResistance: 20
+  hasReflection: 1
+  minReflectionChance: 1
+  maxReflectionChance: 10
+  reflectionMultiplier: 1
+  hasShieldShatter: 0
+  minDestructionChance: 1
+  maxDestructionChance: 20
+  dispelBuffChance: 50
+  statModifiers: []

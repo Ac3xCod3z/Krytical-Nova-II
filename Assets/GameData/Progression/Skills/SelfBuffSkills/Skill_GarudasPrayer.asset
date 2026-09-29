@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7880cd63b45e28428e12567876538bb, type: 3}
+  m_Name: Skill_GarudasPrayer
+  m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
+  skillId: GarudasPrayer
+  displayName: Garuda's Prayer (GP)
+  description: Invokes divine favor, increasing luck by 13% - 100% (e.g. 500 luck becomes 1000 at max rank).
+  category: 1
+  targetType: 0
+  executionType: 0
+  acquisitionMethod: 1
+  requiresSkillBook: 1
+  acquisitionNote: Lvl 70 Drop Item
+  requiredCraftingArchives: []
+  requiredCharacterLevel: 70
+  minRank: 1
+  maxRank: 30
+  skillPointsToLearn: 1
+  totalSkillPointsToMax: 30
+  minChiCost: 891
+  maxChiCost: 1136
+  cooldown: 1
+  minDuration: 66
+  maxDuration: 240
+  channelTickInterval: 1
+  channelChiRecoveryPercent: 5
+  isAbsorptionShield: 0
+  minShieldPercent: 111
+  maxShieldPercent: 150
+  hasDeadlyBlowBoost: 0
+  minDeadlyBlowPercent: 12
+  maxDeadlyBlowPercent: 75
+  hasLuckBoost: 1
+  minLuckPercent: 13
+  maxLuckPercent: 100
+  hasAcupressureResistance: 0
+  minAcupressureResistance: 1
+  maxAcupressureResistance: 20
+  hasReflection: 0
+  minReflectionChance: 1
+  maxReflectionChance: 10
+  reflectionMultiplier: 1
+  hasShieldShatter: 0
+  minDestructionChance: 1
+  maxDestructionChance: 20
+  dispelBuffChance: 50
+  statModifiers: []

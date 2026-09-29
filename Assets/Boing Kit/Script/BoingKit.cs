@@ -1,4 +1,4 @@
-﻿/******************************************************************************/
+/******************************************************************************/
 /*
   Project   - Boing Kit
   Publisher - Long Bunny Labs
@@ -17,6 +17,7 @@ namespace BoingKit
     public static readonly Version Version = new Version(1, 2, 49);
   }
 
+  [Serializable]
   public struct Version : IEquatable<Version>
   {
     public static readonly Version Invalid = new Version(-1, -1, -1);

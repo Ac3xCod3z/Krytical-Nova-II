@@ -1,4 +1,4 @@
-﻿/******************************************************************************/
+/******************************************************************************/
 /*
   Project   - Boing Kit
   Publisher - Long Bunny Labs
@@ -83,7 +83,7 @@ namespace BoingKit
         CollisionRadius = 0.0f;
       }
     }
-    [SerializeField] internal Bone [][] BoneData;
+    [NonSerialized] internal Bone [][] BoneData;
 
     [Serializable]
     public class Chain

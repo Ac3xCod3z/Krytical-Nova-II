@@ -1,4 +1,4 @@
-﻿/******************************************************************************/
+/******************************************************************************/
 /*
   Project   - Boing Kit
   Publisher - Long Bunny Labs
@@ -152,6 +152,7 @@ namespace BoingKit
       // bytes 112-351 (240 bytes)
       public InstanceData Instance;
 
+      [Serializable]
       [StructLayout(LayoutKind.Sequential, Pack = 0)]
       public struct InstanceData
       {

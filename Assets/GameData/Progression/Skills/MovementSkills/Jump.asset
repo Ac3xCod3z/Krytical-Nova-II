@@ -1,0 +1,138 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3abe121156b526448976906eaf1be68, type: 3}
+  m_Name: Jump
+  m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.MovementSkillData
+  skillId: 2
+  displayName: Jump
+  description: Select Jump, then left-click a nearby walkable landing point. Flip at the apex and bounce on landing. Jump stays selected.
+  ranks:
+  - requiredCharacterLevel: 1
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 20
+    jumpDistance: 60
+  - requiredCharacterLevel: 3
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 21
+    jumpDistance: 60.5
+  - requiredCharacterLevel: 5
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 22
+    jumpDistance: 61
+  - requiredCharacterLevel: 7
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 23
+    jumpDistance: 61.5
+  - requiredCharacterLevel: 9
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 24
+    jumpDistance: 62
+  - requiredCharacterLevel: 11
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 25
+    jumpDistance: 62.5
+  - requiredCharacterLevel: 13
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 26
+    jumpDistance: 63
+  - requiredCharacterLevel: 15
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 27
+    jumpDistance: 63.5
+  - requiredCharacterLevel: 17
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 28
+    jumpDistance: 64
+  - requiredCharacterLevel: 19
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 29
+    jumpDistance: 64.5
+  - requiredCharacterLevel: 21
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 30
+    jumpDistance: 65
+  - requiredCharacterLevel: 23
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 31
+    jumpDistance: 65.5
+  - requiredCharacterLevel: 25
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 32
+    jumpDistance: 66
+  - requiredCharacterLevel: 27
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 33
+    jumpDistance: 66.5
+  - requiredCharacterLevel: 29
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 34
+    jumpDistance: 67
+  - requiredCharacterLevel: 31
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 35
+    jumpDistance: 67.5
+  - requiredCharacterLevel: 33
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 36
+    jumpDistance: 68
+  - requiredCharacterLevel: 35
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 37
+    jumpDistance: 68.5
+  - requiredCharacterLevel: 37
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 38
+    jumpDistance: 69
+  - requiredCharacterLevel: 39
+    skillPointCost: 1
+    chiCost: 5
+    runSpeed: 0
+    jumpHeight: 39
+    jumpDistance: 69.5

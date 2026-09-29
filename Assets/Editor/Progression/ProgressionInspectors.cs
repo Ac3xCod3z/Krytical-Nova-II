@@ -146,7 +146,7 @@ namespace KryticalNova.EditorTools
             EditorGUILayout.PropertyField(serializedObject.FindProperty("displayName"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("description"));
             bool isRun = data.skillId == MovementSkillId.Run;
-            EditorGUILayout.HelpBox("Chi is charged per accepted destination. Skill selection is free; invalid targets never spend Chi. Jump height is the landing elevation limit, not the visual arc apex.", MessageType.Info);
+            EditorGUILayout.HelpBox("Chi is charged per accepted destination. Skill selection is free; invalid targets never spend Chi. Jump height sets the jump apex height and maximum landing elevation difference.", MessageType.Info);
             EditorGUILayout.LabelField("Maximum rank", data.MaxRank.ToString());
             BalancePreview.DrawGraph(data.MaxRank, index => isRun ? data.ranks[index].runSpeed : data.ranks[index].jumpDistance, Color.green);
             if (data.MaxRank == 0) EditorGUILayout.HelpBox("This skill has no purchasable ranks.", MessageType.Warning);

@@ -4,7 +4,24 @@ using UnityEngine.InputSystem;
 
 namespace KryticalNova.Progression
 {
-    /// <summary>Owns ten assignable skill slots and routes their Input System shortcuts.</summary>
+    public enum HotbarItemType
+    {
+        None,
+        Movement,
+        CombatSkill
+    }
+
+    [Serializable]
+    public struct HotbarSlotEntry
+    {
+        public HotbarItemType itemType;
+        public MovementSkillId movementSkill;
+        public SkillDefinitionSO combatSkill;
+
+        public bool IsEmpty => itemType == HotbarItemType.None;
+    }
+
+    /// <summary>Owns ten assignable skill slots and routes their Input System shortcuts for movement and combat skills.</summary>
     [DefaultExecutionOrder(InputExecutionOrder)]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInput), typeof(PlayerMovementSkills))]
@@ -18,9 +35,10 @@ namespace KryticalNova.Progression
         private const string CharacterActionName = "CharacterWindow";
         private const string SkillsActionName = "SkillsWindow";
         private const string CancelActionName = "CancelOrbit";
-        private readonly MovementSkillId[] slots = new MovementSkillId[SlotCount];
+        private readonly HotbarSlotEntry[] slots = new HotbarSlotEntry[SlotCount];
         private readonly InputAction[] slotActions = new InputAction[SlotCount];
         private PlayerMovementSkills skills;
+        private PlayerCombatSkills combatSkills;
         private PlayerInput playerInput;
         private InputActionMap commandMap;
         private InputActionMap gameplayMap;
@@ -36,6 +54,7 @@ namespace KryticalNova.Progression
         private void Awake()
         {
             skills = GetComponent<PlayerMovementSkills>();
+            combatSkills = GetComponent<PlayerCombatSkills>();
             playerInput = GetComponent<PlayerInput>();
         }
 
@@ -66,14 +85,40 @@ namespace KryticalNova.Progression
                 if (slotActions[index].WasPressedThisFrame()) { ActivateSlot(index); break; }
         }
 
-        /// <summary>Reads the skill in a zero-based hotbar slot.</summary>
-        public MovementSkillId GetSlot(int index) => IsValidSlot(index) ? slots[index] : MovementSkillId.None;
+        /// <summary>Reads the movement skill in a zero-based hotbar slot for backwards compatibility.</summary>
+        public MovementSkillId GetSlot(int index) => IsValidSlot(index) && slots[index].itemType == HotbarItemType.Movement
+            ? slots[index].movementSkill : MovementSkillId.None;
 
-        /// <summary>Assigns a learned executable skill from the skill page, replacing any existing assignment.</summary>
+        /// <summary>Reads the full entry in a zero-based hotbar slot.</summary>
+        public HotbarSlotEntry GetSlotEntry(int index) => IsValidSlot(index) ? slots[index] : default;
+
+        /// <summary>Assigns a learned movement skill to a hotbar slot.</summary>
         public bool AssignSkill(int index, MovementSkillId skill)
         {
             if (!IsValidSlot(index) || !skills.CanUse(skill)) return false;
-            slots[index] = skill;
+            slots[index] = new HotbarSlotEntry
+            {
+                itemType = HotbarItemType.Movement,
+                movementSkill = skill,
+                combatSkill = null
+            };
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>Assigns a combat / buff skill to a hotbar slot.</summary>
+        public bool AssignSkill(int index, SkillDefinitionSO skill)
+        {
+            if (!IsValidSlot(index) || skill == null) return false;
+            if (combatSkills == null) combatSkills = GetComponent<PlayerCombatSkills>();
+            if (combatSkills != null && !combatSkills.IsLearned(skill)) return false;
+
+            slots[index] = new HotbarSlotEntry
+            {
+                itemType = HotbarItemType.CombatSkill,
+                movementSkill = MovementSkillId.None,
+                combatSkill = skill
+            };
             Changed?.Invoke();
             return true;
         }
@@ -90,16 +135,43 @@ namespace KryticalNova.Progression
         public void ClearSlot(int index)
         {
             if (!IsValidSlot(index)) return;
-            MovementSkillId removed = slots[index];
-            slots[index] = MovementSkillId.None;
-            if (skills.SelectedSkill == removed && Array.IndexOf(slots, removed) < 0) skills.SelectWalk();
+            HotbarSlotEntry removed = slots[index];
+            slots[index] = default;
+            if (removed.itemType == HotbarItemType.Movement && skills.SelectedSkill == removed.movementSkill)
+            {
+                bool stillAssigned = false;
+                for (int i = 0; i < SlotCount; i++)
+                {
+                    if (slots[i].itemType == HotbarItemType.Movement && slots[i].movementSkill == removed.movementSkill)
+                    {
+                        stillAssigned = true;
+                        break;
+                    }
+                }
+                if (!stillAssigned) skills.SelectWalk();
+            }
             Changed?.Invoke();
         }
 
         /// <summary>Activates a slot using the same selection behavior for pointer clicks and number keys.</summary>
         public bool ActivateSlot(int index)
         {
-            return isActiveAndEnabled && !InputSuppressed && IsValidSlot(index) && skills.ToggleSelection(slots[index]);
+            if (!isActiveAndEnabled || InputSuppressed || !IsValidSlot(index)) return false;
+
+            var entry = slots[index];
+            if (entry.itemType == HotbarItemType.Movement)
+            {
+                return skills.ToggleSelection(entry.movementSkill);
+            }
+            else if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null)
+            {
+                if (combatSkills == null) combatSkills = GetComponent<PlayerCombatSkills>();
+                if (combatSkills != null)
+                {
+                    return combatSkills.TryCastSkill(entry.combatSkill, out _);
+                }
+            }
+            return false;
         }
 
         private static bool IsValidSlot(int index) => index >= 0 && index < SlotCount;
