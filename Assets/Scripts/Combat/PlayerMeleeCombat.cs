@@ -35,8 +35,9 @@ namespace KryticalNova.Combat
         [Header("Swing Hitbox Windows (Normalized Clip Time)")]
         [SerializeField, Range(0f, 1f)] private float swing1Start = 0.22f;
         [SerializeField, Range(0f, 1f)] private float swing1End = 0.65f;
-        [SerializeField, Range(0f, 1f)] private float swing2Start = 0.22f;
-        [SerializeField, Range(0f, 1f)] private float swing2End = 0.65f;
+        // Strike 2's forward slash lands early (~16-20% of the clip); the rest is recovery behind the body.
+        [SerializeField, Range(0f, 1f)] private float swing2Start = 0.10f;
+        [SerializeField, Range(0f, 1f)] private float swing2End = 0.30f;
         [SerializeField, Range(0f, 1f)] private float swing3Start = 0.20f;
         [SerializeField, Range(0f, 1f)] private float swing3End = 0.70f;
 
@@ -46,7 +47,8 @@ namespace KryticalNova.Combat
         [SerializeField, Range(1.0f, 2.5f)] private float strike3Speed = 1.00f;
 
         [Header("Combat Ranges")]
-        [SerializeField, Min(0.5f)] private float meleeStrikingRange = 2.2f;
+        [Tooltip("Distance at which the combo starts. Strike 2 only reaches ~1.8m, so keep this below that.")]
+        [SerializeField, Min(0.5f)] private float meleeStrikingRange = 1.6f;
         [SerializeField, Min(0.5f)] private float serverMaxValidationRange = 2.7f;
         [SerializeField] private float modelForwardOffset;
 
