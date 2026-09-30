@@ -106,13 +106,21 @@ namespace KryticalNova.Progression
             result.RawPhysicalDamage = rawAP;
             result.MitigatedPhysicalDamage = physicalDamage;
 
-            // 5. Critical Damage Roll
-            float critChance = attacker.GetStatValue(StatType.CriticalRate);
+            // 5. Critical Damage Roll (Boosted by Luck)
+            float critChance = attacker.GetStatValue(StatType.CriticalRate) + (attacker.GetStatValue(StatType.Luck) * 0.1f);
             if (critRoll <= critChance)
             {
                 result.IsCritical = true;
                 float critBonusMult = baseCritMult + (attacker.GetStatValue(StatType.CriticalDamagePercent) / 100f);
                 physicalDamage *= critBonusMult;
+
+                // Acupressure Resistance mitigates fatal/critical trauma
+                float stunRes = defender.GetStatValue(StatType.AcupressureStunResistance);
+                if (stunRes > 0f)
+                {
+                    physicalDamage *= Mathf.Max(0.7f, 1f - (stunRes / 100f * 0.5f));
+                }
+
                 result.MitigatedPhysicalDamage = physicalDamage;
             }
 

@@ -1,11 +1,12 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace KryticalNova.Progression
 {
     /// <summary>Concrete combat participant (Player or NPC/Monster/Dummy) that can receive and process damage.</summary>
     [DisallowMultipleComponent]
-    public sealed class CombatEntity : MonoBehaviour, IDamageable
+    public sealed class CombatEntity : NetworkBehaviour, IDamageable
     {
         [Header("Identity & Tuning (ScriptableObjects)")]
         [SerializeField] private string entityName = "Combat Dummy";
@@ -21,6 +22,9 @@ namespace KryticalNova.Progression
         private CharacterBuffManager buffManager;
         private float standaloneHealth;
         private bool initialized;
+
+        private readonly NetworkVariable<float> netStandaloneHealth = new NetworkVariable<float>(
+            writePerm: NetworkVariableWritePermission.Server);
 
         public event Action<DamageResult, CharacterCombatStats> Damaged;
         public event Action Died;
@@ -55,6 +59,46 @@ namespace KryticalNova.Progression
         private void Awake()
         {
             InitializeEntity();
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (playerResources == null)
+            {
+                if (IsServer)
+                {
+                    netStandaloneHealth.Value = standaloneHealth;
+                }
+                else
+                {
+                    standaloneHealth = netStandaloneHealth.Value;
+                    HealthChanged?.Invoke();
+                }
+
+                netStandaloneHealth.OnValueChanged += OnNetStandaloneHealthChanged;
+            }
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (playerResources == null)
+            {
+                netStandaloneHealth.OnValueChanged -= OnNetStandaloneHealthChanged;
+            }
+            base.OnNetworkDespawn();
+        }
+
+        private void OnNetStandaloneHealthChanged(float previous, float current)
+        {
+            if (IsServer) return;
+            standaloneHealth = current;
+            HealthChanged?.Invoke();
+            if (previous > 0f && current <= 0f)
+            {
+                Died?.Invoke();
+            }
         }
 
         public void InitializeEntity()
@@ -92,13 +136,14 @@ namespace KryticalNova.Progression
             initialized = true;
         }
 
-        private void OnDestroy()
+        public override void OnDestroy()
         {
             if (playerResources != null)
             {
                 playerResources.Changed -= OnResourcesChanged;
                 playerResources.Depleted -= OnResourcesDepleted;
             }
+            base.OnDestroy();
         }
 
         private void OnResourcesChanged() => HealthChanged?.Invoke();
@@ -168,6 +213,10 @@ namespace KryticalNova.Progression
                 else
                 {
                     standaloneHealth = Mathf.Max(0f, standaloneHealth - totalDamageToLife);
+                    if (IsSpawned && IsServer)
+                    {
+                        netStandaloneHealth.Value = standaloneHealth;
+                    }
                     HealthChanged?.Invoke();
                     if (standaloneHealth <= 0f)
                     {
@@ -189,6 +238,10 @@ namespace KryticalNova.Progression
             else
             {
                 standaloneHealth = MaxHealth;
+                if (IsSpawned && IsServer)
+                {
+                    netStandaloneHealth.Value = standaloneHealth;
+                }
                 HealthChanged?.Invoke();
             }
         }

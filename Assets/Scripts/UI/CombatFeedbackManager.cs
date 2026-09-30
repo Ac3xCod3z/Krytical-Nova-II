@@ -143,6 +143,32 @@ namespace KryticalNova.UI
             activeLabels.Add(entry);
         }
 
+        /// <summary>Spawns floating text over a character (e.g. skill activations, buffs, level ups).</summary>
+        public void ShowFloatingText(Vector3 worldPosition, string text, string styleClass = "crit")
+        {
+            if (rootContainer == null || rootContainer.panel == null) return;
+
+            Label label = new Label(text);
+            label.AddToClassList("floating-combat-text");
+            if (!string.IsNullOrEmpty(styleClass))
+            {
+                label.AddToClassList(styleClass);
+            }
+            label.pickingMode = PickingMode.Ignore;
+
+            rootContainer.Add(label);
+
+            var entry = new ActiveCombatLabel
+            {
+                Label = label,
+                OriginWorldPosition = worldPosition + Vector3.up * BaseWorldYOffset,
+                ElapsedTime = 0f,
+                Lifetime = FloatDuration * 1.3f,
+                JitterOffset = new Vector3(Random.Range(-0.1f, 0.1f), 0f, 0f)
+            };
+            activeLabels.Add(entry);
+        }
+
         private void OnDisable()
         {
             for (int i = 0; i < activeLabels.Count; i++)

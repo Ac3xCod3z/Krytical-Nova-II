@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using KryticalNova.Progression;
 using KryticalNova.UI;
 using Unity.Cinemachine;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.EventSystems;
@@ -13,7 +14,7 @@ namespace KryticalNova.Player
     /// <summary>Moves to clicked ground, orbits during right-button drags, and zooms with the mouse wheel.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerInput))]
-    public sealed class PointAndClickPlayer : MonoBehaviour
+    public sealed class PointAndClickPlayer : NetworkBehaviour
     {
         private const string ActionMapName = "PointAndClick";
         private const string PointerActionName = "PointerPosition";
@@ -73,6 +74,8 @@ namespace KryticalNova.Player
         private PlayerJumpMotor jumpMotor;
         private CharacterCombatStats combatStats;
         private CharacterBuffManager buffManager;
+        private PlayerAnimancerMotor animancerMotor;
+        private KryticalNova.Combat.PlayerMeleeCombat meleeCombat;
         private MovementSkillId previousMovementMode;
         public event Action<string> CommandMessage;
         private NavMeshPath requestedPath;
@@ -119,8 +122,58 @@ namespace KryticalNova.Player
             jumpMotor = GetComponent<PlayerJumpMotor>();
             combatStats = GetComponent<CharacterCombatStats>();
             buffManager = GetComponent<CharacterBuffManager>();
+            animancerMotor = GetComponent<PlayerAnimancerMotor>();
+            meleeCombat = GetComponent<KryticalNova.Combat.PlayerMeleeCombat>();
+            if (meleeCombat != null)
+            {
+                meleeCombat.OnCombatMessage += msg => CommandMessage?.Invoke(msg);
+            }
             requestedPath = new NavMeshPath();
             agent.updateRotation = false;
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (!IsOwner)
+            {
+                // Disable input and camera controls on remote player proxies
+                if (playerInput != null) playerInput.enabled = false;
+                if (!IsServer && agent != null)
+                {
+                    // Proxies on clients follow NetworkTransform; disable NavMeshAgent so it does not fight replication
+                    agent.enabled = false;
+                }
+                return;
+            }
+
+            // For the local owner player:
+            if (playerInput != null) playerInput.enabled = true;
+            SetupLocalCamera();
+        }
+
+        private void SetupLocalCamera()
+        {
+            if (orbitCamera == null)
+            {
+                orbitCamera = FindAnyObjectByType<CinemachineOrbitalFollow>();
+            }
+            if (orbitCamera != null)
+            {
+                var cameraTarget = transform.Find("Camera Target");
+                Transform targetTransform = cameraTarget != null ? cameraTarget : transform;
+                var cinemachineCamera = orbitCamera.GetComponent<CinemachineCamera>();
+                if (cinemachineCamera != null)
+                {
+                    cinemachineCamera.Target.TrackingTarget = targetTransform;
+                }
+            }
+
+            if (progressionUI == null)
+            {
+                progressionUI = FindAnyObjectByType<ProgressionHUD>();
+            }
         }
 
         private void Start()
@@ -128,9 +181,17 @@ namespace KryticalNova.Player
             if (gameplayCamera == null)
                 gameplayCamera = Camera.main;
 
-            if (gameplayCamera == null || orbitCamera == null || playerInput.actions == null)
+            if (IsSpawned && !IsOwner)
             {
-                Debug.LogError("PointAndClickPlayer requires a gameplay camera, Cinemachine orbital follow, and PlayerInput actions.", this);
+                // Remote proxy does not need input action maps or camera handling
+                return;
+            }
+
+            SetupLocalCamera();
+
+            if (playerInput == null || playerInput.actions == null)
+            {
+                Debug.LogError("PointAndClickPlayer requires PlayerInput with configured actions.", this);
                 enabled = false;
                 return;
             }
@@ -143,21 +204,27 @@ namespace KryticalNova.Player
             cancelOrbitAction = gameplayActions.FindAction(CancelOrbitActionName, true);
             zoomAction = gameplayActions.FindAction(ZoomActionName, true);
 
-            // No recentering or input acceleration: releasing RMB keeps the chosen orbit angles.
-            orbitCamera.HorizontalAxis.Recentering.Enabled = false;
-            orbitCamera.VerticalAxis.Recentering.Enabled = false;
-            orbitCamera.RadialAxis.Recentering.Enabled = false;
+            if (orbitCamera != null)
+            {
+                // No recentering or input acceleration: releasing RMB keeps the chosen orbit angles.
+                orbitCamera.HorizontalAxis.Recentering.Enabled = false;
+                orbitCamera.VerticalAxis.Recentering.Enabled = false;
+                orbitCamera.RadialAxis.Recentering.Enabled = false;
 
-            // Control distance through Radius, with a fixed multiplier so limits use world units.
-            ValidateZoomSettings();
-            orbitCamera.RadialAxis.Range = Vector2.one * FixedRadialMultiplier;
-            orbitCamera.RadialAxis.Value = FixedRadialMultiplier;
-            orbitCamera.RadialAxis.Center = FixedRadialMultiplier;
-            orbitCamera.RadialAxis.Wrap = false;
-            orbitCamera.Radius = Mathf.Clamp(orbitCamera.Radius, minimumZoomDistance, maximumZoomDistance);
+                // Control distance through Radius, with a fixed multiplier so limits use world units.
+                ValidateZoomSettings();
+                orbitCamera.RadialAxis.Range = Vector2.one * FixedRadialMultiplier;
+                orbitCamera.RadialAxis.Value = FixedRadialMultiplier;
+                orbitCamera.RadialAxis.Center = FixedRadialMultiplier;
+                orbitCamera.RadialAxis.Wrap = false;
+                orbitCamera.Radius = Mathf.Clamp(orbitCamera.Radius, minimumZoomDistance, maximumZoomDistance);
+            }
 
-            if (!PlaceAgentOnNavigation())
-                enabled = false;
+            if (!IsSpawned || IsServer)
+            {
+                if (!PlaceAgentOnNavigation())
+                    enabled = false;
+            }
         }
 
         private bool PlaceAgentOnNavigation()
@@ -185,8 +252,17 @@ namespace KryticalNova.Player
 
         private void Update()
         {
-            ApplyMovementSettings();
-            TurnTowardsTravel();
+            if (IsSpawned && !IsOwner && !IsServer)
+                return;
+
+            if (!IsSpawned || IsServer)
+            {
+                ApplyMovementSettings();
+                TurnTowardsTravel();
+            }
+
+            if (IsSpawned && !IsOwner)
+                return;
 
             if (gameplayActions == null || !gameplayActions.enabled || !playerInput.inputIsActive
                 || !Application.isFocused || Time.timeScale <= PausedTimeScale)
@@ -202,7 +278,10 @@ namespace KryticalNova.Player
             }
 
             Vector2 screenPosition = pointerAction.ReadValue<Vector2>();
-            ApplyZoom(screenPosition);
+            if (orbitCamera != null)
+            {
+                ApplyZoom(screenPosition);
+            }
 
             if (isOrbiting)
             {
@@ -224,6 +303,18 @@ namespace KryticalNova.Player
                 return;
             }
 
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.rightShiftKey.wasPressedThisFrame)
+                {
+                    animancerMotor?.RequestToggleWeaponDraw();
+                }
+                if (Keyboard.current.escapeKey.wasPressedThisFrame)
+                {
+                    meleeCombat?.CancelAttack();
+                }
+            }
+
             if (!orbitHeldAction.IsPressed() && moveAction.WasPressedThisFrame()
                 && !IsPointerOverUi(screenPosition))
                 TryMoveToPointer(screenPosition);
@@ -231,6 +322,8 @@ namespace KryticalNova.Player
 
         private void ApplyZoom(Vector2 screenPosition)
         {
+            if (orbitCamera == null || gameplayCamera == null) return;
+
             orbitCamera.Radius = Mathf.Clamp(orbitCamera.Radius, minimumZoomDistance, maximumZoomDistance);
             float scrollDelta = zoomAction.ReadValue<float>();
             if (Mathf.Approximately(scrollDelta, 0f))
@@ -254,7 +347,7 @@ namespace KryticalNova.Player
         {
             if (resources != null && !resources.IsAlive) { CommandMessage?.Invoke("No HP remaining. Restore HP before moving."); return; }
             if (jumpMotor != null && jumpMotor.IsBusy) { CommandMessage?.Invoke("Finish this jump before choosing another destination."); return; }
-            if (!agent.isActiveAndEnabled || !agent.isOnNavMesh || !gameplayCamera.pixelRect.Contains(screenPosition))
+            if (gameplayCamera == null || !gameplayCamera.pixelRect.Contains(screenPosition))
                 return;
 
             Ray ray = gameplayCamera.ScreenPointToRay(screenPosition);
@@ -270,63 +363,36 @@ namespace KryticalNova.Player
                     return;
                 }
 
-                if (agent.isActiveAndEnabled && agent.isOnNavMesh)
+                if (meleeCombat != null)
                 {
-                    agent.isStopped = true;
-                    agent.ResetPath();
-                }
-
-                Vector3 targetDir = targetEntity.Transform.position - transform.position;
-                targetDir.y = 0f;
-                if (targetDir.sqrMagnitude > 0.01f)
-                {
-                    transform.rotation = Quaternion.LookRotation(targetDir, Vector3.up) * Quaternion.AngleAxis(modelForwardOffset, Vector3.up);
-                }
-
-                var attackerStats = combatStats != null ? combatStats : GetComponent<CharacterCombatStats>();
-                if (attackerStats != null && targetEntity.CombatStats != null)
-                {
-                    if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
-                    var defenderBuffs = targetEntity.Transform.GetComponent<CharacterBuffManager>();
-
-                    float refChance = 0f;
-                    float shatChance = 0f;
-                    float dispelChance = 0f;
-                    bool defenderReflect = defenderBuffs != null && defenderBuffs.HasReflection(out refChance, out _);
-                    bool attackerShatter = buffManager != null && buffManager.HasShieldShatter(out shatChance, out dispelChance);
-
-                    var result = CombatCalculator.CalculateAttack(
-                        attackerStats,
-                        targetEntity.CombatStats,
-                        1.0f,
-                        defenderReflect,
-                        refChance,
-                        attackerShatter,
-                        shatChance);
-
-                    targetEntity.TakeDamage(result, attackerStats);
-
-                    if (attackerShatter && dispelChance > 0f && defenderBuffs != null)
+                    meleeCombat.StartAttackTarget(targetEntity);
+                    if (IsSpawned && !IsServer)
                     {
-                        if (UnityEngine.Random.Range(0f, 100f) <= dispelChance)
+                        var targetNetObj = targetEntity.Transform.GetComponent<NetworkObject>();
+                        if (targetNetObj != null)
                         {
-                            defenderBuffs.DispelStanceBuffs();
+                            RequestAttackEntityServerRpc(targetNetObj.NetworkObjectId);
                         }
                     }
-
-                    CombatFeedbackManager.Instance?.ShowCombatFeedback(targetEntity.Transform.position, result);
-
-                    if (result.IsEvaded)
-                        CommandMessage?.Invoke($"Attack EVADED by {targetEntity.EntityName}!");
-                    else if (result.IsReflected)
-                        CommandMessage?.Invoke($"Attack REFLECTED by {targetEntity.EntityName}'s Heavenly Repulsion!");
-                    else if (result.IsCritical)
-                        CommandMessage?.Invoke($"CRITICAL HIT on {targetEntity.EntityName} for {result.DamageDealt:0} dmg! (HP: {targetEntity.CurrentHealth:0}/{targetEntity.MaxHealth:0})");
-                    else
-                        CommandMessage?.Invoke($"Hit {targetEntity.EntityName} for {result.DamageDealt:0} dmg! (HP: {targetEntity.CurrentHealth:0}/{targetEntity.MaxHealth:0})");
+                    return;
                 }
+
+                if (IsSpawned && !IsServer)
+                {
+                    var targetNetObj = targetEntity.Transform.GetComponent<NetworkObject>();
+                    if (targetNetObj != null)
+                    {
+                        RequestAttackEntityServerRpc(targetNetObj.NetworkObjectId);
+                        return;
+                    }
+                }
+
+                ExecuteAttackOnTarget(targetEntity);
                 return;
             }
+
+            // Clicking ground or platform clears active combat attack
+            meleeCombat?.CancelAttack();
 
             if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
@@ -345,8 +411,22 @@ namespace KryticalNova.Player
                 return;
             }
 
+            if (IsSpawned && !IsServer)
+            {
+                bool isRunning = movementSkills != null && movementSkills.IsRunning;
+                RequestMoveDestinationServerRpc(hit.point, isRunning);
+                return;
+            }
+
+            ExecuteLocalMove(hit.point);
+        }
+
+        private void ExecuteLocalMove(Vector3 destinationPoint)
+        {
+            if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
-            if (!NavMesh.SamplePosition(hit.point, out NavMeshHit destination, destinationSampleRadius, filter)
+            if (!NavMesh.SamplePosition(destinationPoint, out NavMeshHit destination, destinationSampleRadius, filter)
                 || !agent.CalculatePath(destination.position, requestedPath) || requestedPath.status != NavMeshPathStatus.PathComplete)
             { CommandMessage?.Invoke("No complete walking path to that point."); return; }
             if (Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance)
@@ -361,6 +441,120 @@ namespace KryticalNova.Player
             {
                 resources?.RestoreChi(paidCost);
                 CommandMessage?.Invoke("The path changed. Chi was not consumed.");
+            }
+        }
+
+        [ServerRpc]
+        private void RequestMoveDestinationServerRpc(Vector3 destinationPoint, bool isRunning)
+        {
+            if (resources != null && !resources.IsAlive) return;
+            if (jumpMotor != null && jumpMotor.IsBusy) return;
+            if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+
+            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            if (!NavMesh.SamplePosition(destinationPoint, out NavMeshHit destination, destinationSampleRadius, filter))
+                return;
+
+            if (!agent.CalculatePath(destination.position, requestedPath) || requestedPath.status != NavMeshPathStatus.PathComplete)
+                return;
+
+            if (Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance)
+                return;
+
+            float paidCost = 0f;
+            if (isRunning && movementSkills != null
+                && !movementSkills.TryPayForCommand(MovementSkillId.Run, out paidCost, out _))
+            {
+                return;
+            }
+
+            agent.isStopped = false;
+            if (!agent.SetPath(requestedPath))
+            {
+                resources?.RestoreChi(paidCost);
+            }
+        }
+
+        [ServerRpc]
+        private void RequestAttackEntityServerRpc(ulong targetNetworkObjectId)
+        {
+            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetNetworkObjectId, out var targetNetObj))
+                return;
+
+            var targetEntity = targetNetObj.GetComponent<IDamageable>();
+            if (targetEntity == null || !targetEntity.IsAlive) return;
+
+            if (meleeCombat != null)
+            {
+                meleeCombat.StartAttackTarget(targetEntity);
+                return;
+            }
+
+            ExecuteAttackOnTarget(targetEntity);
+        }
+
+        private void ExecuteAttackOnTarget(IDamageable targetEntity)
+        {
+            if (meleeCombat != null)
+            {
+                meleeCombat.StartAttackTarget(targetEntity);
+                return;
+            }
+
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+            {
+                agent.isStopped = true;
+                agent.ResetPath();
+            }
+
+            Vector3 targetDir = targetEntity.Transform.position - transform.position;
+            targetDir.y = 0f;
+            if (targetDir.sqrMagnitude > 0.01f)
+            {
+                transform.rotation = Quaternion.LookRotation(targetDir, Vector3.up) * Quaternion.AngleAxis(modelForwardOffset, Vector3.up);
+            }
+
+            var attackerStats = combatStats != null ? combatStats : GetComponent<CharacterCombatStats>();
+            if (attackerStats != null && targetEntity.CombatStats != null)
+            {
+                if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
+                var defenderBuffs = targetEntity.Transform.GetComponent<CharacterBuffManager>();
+
+                float refChance = 0f;
+                float shatChance = 0f;
+                float dispelChance = 0f;
+                bool defenderReflect = defenderBuffs != null && defenderBuffs.HasReflection(out refChance, out _);
+                bool attackerShatter = buffManager != null && buffManager.HasShieldShatter(out shatChance, out dispelChance);
+
+                var result = CombatCalculator.CalculateAttack(
+                    attackerStats,
+                    targetEntity.CombatStats,
+                    1.0f,
+                    defenderReflect,
+                    refChance,
+                    attackerShatter,
+                    shatChance);
+
+                targetEntity.TakeDamage(result, attackerStats);
+
+                if (attackerShatter && dispelChance > 0f && defenderBuffs != null)
+                {
+                    if (UnityEngine.Random.Range(0f, 100f) <= dispelChance)
+                    {
+                        defenderBuffs.DispelStanceBuffs();
+                    }
+                }
+
+                CombatFeedbackManager.Instance?.ShowCombatFeedback(targetEntity.Transform.position, result);
+
+                if (result.IsEvaded)
+                    CommandMessage?.Invoke($"Attack EVADED by {targetEntity.EntityName}!");
+                else if (result.IsReflected)
+                    CommandMessage?.Invoke($"Attack REFLECTED by {targetEntity.EntityName}'s Heavenly Repulsion!");
+                else if (result.IsCritical)
+                    CommandMessage?.Invoke($"CRITICAL HIT on {targetEntity.EntityName} for {result.DamageDealt:0} dmg! (HP: {targetEntity.CurrentHealth:0}/{targetEntity.MaxHealth:0})");
+                else
+                    CommandMessage?.Invoke($"Hit {targetEntity.EntityName} for {result.DamageDealt:0} dmg! (HP: {targetEntity.CurrentHealth:0}/{targetEntity.MaxHealth:0})");
             }
         }
 
@@ -405,10 +599,13 @@ namespace KryticalNova.Player
                 previousMovementMode = movementSkills.SelectedSkill;
             }
             MovementSettings settings = movementSkills.MovementSettings;
-            agent.speed = movementSkills.CurrentSpeed;
-            agent.acceleration = settings.acceleration;
-            agent.angularSpeed = settings.turnSpeed;
-            agent.stoppingDistance = settings.stoppingDistance;
+            if (agent != null && agent.isActiveAndEnabled)
+            {
+                agent.speed = movementSkills.CurrentSpeed;
+                agent.acceleration = settings.acceleration;
+                agent.angularSpeed = settings.turnSpeed;
+                agent.stoppingDistance = settings.stoppingDistance;
+            }
         }
 
         private bool IsPointerOverUi(Vector2 screenPosition)
@@ -455,6 +652,7 @@ namespace KryticalNova.Player
 
         private void ApplyOrbitDelta()
         {
+            if (orbitCamera == null) return;
             Vector2 delta = orbitDeltaAction.ReadValue<Vector2>() * orbitSensitivity;
             orbitCamera.HorizontalAxis.Value = orbitCamera.HorizontalAxis.ClampValue(orbitCamera.HorizontalAxis.Value + delta.x);
             float verticalDelta = invertVerticalOrbit ? delta.y : -delta.y;
@@ -474,10 +672,16 @@ namespace KryticalNova.Player
                 Mouse.current.WarpCursorPosition(previousCursorPosition);
         }
 
-        private void OnApplicationFocus(bool hasFocus)
+        public void OnApplicationFocus(bool hasFocus)
         {
             if (!hasFocus)
                 EndOrbit();
+        }
+
+        public override void OnDestroy()
+        {
+            EndOrbit();
+            base.OnDestroy();
         }
 
         private void OnDisable()
@@ -489,3 +693,4 @@ namespace KryticalNova.Player
         }
     }
 }
+

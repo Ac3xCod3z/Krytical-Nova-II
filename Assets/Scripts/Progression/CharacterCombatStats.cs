@@ -55,10 +55,19 @@ namespace KryticalNova.Progression
             }
         }
 
-        public int BaseStrength => progression != null ? progression.GetAttribute(CharacterAttribute.Strength) : fallbackStrength;
-        public int BaseVitality => progression != null ? progression.GetAttribute(CharacterAttribute.Vitality) : fallbackVitality;
-        public int BaseAgility => progression != null ? progression.GetAttribute(CharacterAttribute.Agility) : fallbackAgility;
-        public int BaseSpirit => progression != null ? progression.GetAttribute(CharacterAttribute.Spirit) : fallbackSpirit;
+        public int BaseStrength => Progression != null ? Progression.GetAttribute(CharacterAttribute.Strength) : fallbackStrength;
+        public int BaseVitality => Progression != null ? Progression.GetAttribute(CharacterAttribute.Vitality) : fallbackVitality;
+        public int BaseAgility => Progression != null ? Progression.GetAttribute(CharacterAttribute.Agility) : fallbackAgility;
+        public int BaseSpirit => Progression != null ? Progression.GetAttribute(CharacterAttribute.Spirit) : fallbackSpirit;
+
+        public PlayerCharacterProgression Progression
+        {
+            get
+            {
+                if (progression == null) EnsureInitialized();
+                return progression;
+            }
+        }
 
         public float TotalStrength => GetStatValue(StatType.Strength);
         public float TotalVitality => GetStatValue(StatType.Vitality);
@@ -70,9 +79,12 @@ namespace KryticalNova.Progression
         public int Agility => Mathf.RoundToInt(TotalAgility);
         public int Spirit => Mathf.RoundToInt(TotalSpirit);
 
-        private void Awake()
+        public void EnsureInitialized()
         {
-            progression = GetComponent<PlayerCharacterProgression>();
+            if (progression == null)
+            {
+                progression = GetComponent<PlayerCharacterProgression>();
+            }
             if (characterClass != null && progression == null)
             {
                 fallbackStrength = characterClass.baseStrength;
@@ -82,10 +94,19 @@ namespace KryticalNova.Progression
             }
         }
 
+        private void Awake()
+        {
+            EnsureInitialized();
+        }
+
         private void OnEnable()
         {
+            EnsureInitialized();
             if (progression != null)
+            {
+                progression.Changed -= RecalculateStats;
                 progression.Changed += RecalculateStats;
+            }
         }
 
         private void OnDisable()
@@ -206,16 +227,20 @@ namespace KryticalNova.Progression
 
                 case StatType.MaxHP:
                 {
-                    // Vitality: Primary (+20 Max HP)
+                    // Vitality: Primary (+20 Max HP) + Level scaling (+15 HP per level above 1)
                     float baseHP = characterClass != null ? characterClass.baseHealthPool : 100f;
-                    return baseHP + (TotalVitality * vitToHp);
+                    int level = Progression != null ? Progression.CurrentLevel : 1;
+                    float levelHP = Mathf.Max(0, level - 1) * 15f;
+                    return baseHP + levelHP + (TotalVitality * vitToHp);
                 }
 
                 case StatType.MaxChi:
                 {
-                    // Spirit: Primary (+20 Max Chi)
+                    // Spirit: Primary (+20 Max Chi) + Level scaling (+10 Chi per level above 1)
                     float baseChi = characterClass != null ? characterClass.baseChiPool : 50f;
-                    return baseChi + (TotalSpirit * spiritToChi);
+                    int level = Progression != null ? Progression.CurrentLevel : 1;
+                    float levelChi = Mathf.Max(0, level - 1) * 10f;
+                    return baseChi + levelChi + (TotalSpirit * spiritToChi);
                 }
 
                 // Secondary & Advanced Stats
@@ -224,7 +249,7 @@ namespace KryticalNova.Progression
                 case StatType.ElementalAttack: return eleAtk;
                 case StatType.ElementalDefense: return eleDef;
                 case StatType.AcupressureStunResistance: return stunRes;
-                case StatType.Luck: return 0f;
+                case StatType.Luck: return 50f;
                 case StatType.MoveSpeedPercent: return moveSpeed;
 
                 default: return 0f;

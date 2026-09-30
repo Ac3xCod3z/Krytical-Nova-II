@@ -861,7 +861,7 @@ namespace KryticalNova.UI
                         : "Assignment failed.");
                 }
             }
-            else if (!wasDrag && sourceSlot != NoSlot && targetSlot == sourceSlot)
+            else if (!wasDrag && sourceSlot != NoSlot)
             {
                 hotbar.ActivateSlot(sourceSlot);
             }
