@@ -1,0 +1,27 @@
+{
+    "name": "KryticalNova.Runtime",
+    "rootNamespace": "KryticalNova",
+    "references": [
+        "Unity.Netcode.Runtime",
+        "Unity.Networking.Transport",
+        "Unity.Collections",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication",
+        "Unity.Services.Multiplayer",
+        "Unity.Services.Multiplayer.Server",
+        "Unity.AI.Navigation",
+        "Unity.InputSystem",
+        "Unity.Cinemachine",
+        "Kybernetik.Animancer",
+        "BoingKit"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

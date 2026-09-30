@@ -3,7 +3,7 @@
 - **High-Level Concept**: A martial-arts action MMORPG featuring point-and-click movement, fluid vertical traversal jumps, martial arts skill progression, and real-time stance/buff-driven combat across shared persistent zones.
 - **Players**: Massively Multiplayer Online (Designed from day one for large-scale world scaling with hundreds+ concurrent players across partitioned zone shards down the road, while utilizing lightweight local host/client prototyping for zero-cost rapid development today).
 - **Inspiration / Reference Games**: Lineage II, Diablo, Albion Online, Ragnarok Online.
-- **Tone / Art Direction**: Stylized Eastern fantasy / Wuxia action RPG with vibrant combat feedback, fluid motion, and dynamic visual effects.
+- **Tone / Art Direction**: Western comic-book action RPG — bold ink outlines, cel-shaded color blocking, dramatic comic-panel framing, and punchy onomatopoeia-style combat feedback with fluid motion and dynamic visual effects. Twelve Sky 2 is used as a mechanics/systems reference only, not as an art reference.
 - **Target Platform**: PC (Standalone Windows 64-bit).
 - **Screen Orientation / Resolution**: Landscape 1920x1080 (and arbitrary desktop widescreen resolutions).
 - **Render Pipeline**: Universal Render Pipeline (URP 17.6.0).

@@ -19,12 +19,17 @@ namespace KryticalNova.Networking
         [SerializeField] private string currentZoneId = "Central_Plains_01";
         [SerializeField] private string currentZoneDisplayName = "Central Plains";
 
+        [Header("Feature Gate")]
+        [Tooltip("Zone transitions disconnect the current session. Keep disabled until a second zone server/scene exists.")]
+        [SerializeField] private bool allowZoneTransitions;
+
         public event Action<string> ZoneTransitionStarted;
         public event Action<string> ZoneTransitionCompleted;
         public event Action<string> ZoneTransitionFailed;
 
         public string CurrentZoneId => currentZoneId;
         public string CurrentZoneDisplayName => currentZoneDisplayName;
+        public bool AllowZoneTransitions => allowZoneTransitions;
 
         private void Awake()
         {
@@ -47,6 +52,14 @@ namespace KryticalNova.Networking
         /// </summary>
         public async Task<bool> TransitionToZoneAsync(string targetZoneId)
         {
+            if (!allowZoneTransitions)
+            {
+                string disabled = $"Zone transition to {targetZoneId} blocked: zone transitions are disabled on {nameof(ZoneSessionManager)} (enable 'Allow Zone Transitions' once a second zone exists).";
+                Debug.LogError($"[ZoneSessionManager] {disabled}", this);
+                ZoneTransitionFailed?.Invoke(disabled);
+                return false;
+            }
+
             if (string.Equals(currentZoneId, targetZoneId, StringComparison.OrdinalIgnoreCase))
             {
                 Debug.LogWarning($"[ZoneSessionManager] Already in zone {targetZoneId}.");

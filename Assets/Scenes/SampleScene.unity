@@ -651,10 +651,10 @@ GameObject:
   - component: {fileID: 784644387}
   - component: {fileID: 784644386}
   - component: {fileID: 784644385}
+  - component: {fileID: 784644390}
   - component: {fileID: 784644384}
   - component: {fileID: 784644383}
   - component: {fileID: 784644389}
-  - component: {fileID: 784644390}
   m_Layer: 0
   m_Name: Combat Dummy
   m_TagString: Untagged
@@ -1324,6 +1324,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Networking.ZoneSessionManager
   currentZoneId: Central_Plains_01
   currentZoneDisplayName: Central Plains
+  allowZoneTransitions: 0
 --- !u!114 &1592048075
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1336,7 +1337,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a23edfe1dcb9304ea1f5b4a97935965, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Networking.NetworkCombatVFXPool
-  predefinedPools: []
+  predefinedPools:
+  - poolKey: hit_impact
+    prefab: {fileID: 1879769179923522, guid: 65932b7368590234d8163da03c2055d8, type: 3}
+    initialCount: 12
 --- !u!114 &1592048076
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1351,6 +1355,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Networking.SpatialInterestManager
   interestRadius: 75
   updateInterval: 0.5
+  logCulling: 0
 --- !u!114 &1869201660
 MonoBehaviour:
   m_ObjectHideFlags: 0

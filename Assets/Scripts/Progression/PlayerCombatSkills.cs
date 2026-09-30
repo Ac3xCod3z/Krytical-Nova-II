@@ -303,7 +303,7 @@ namespace KryticalNova.Progression
                 Changed?.Invoke();
             }
 
-            KryticalNova.UI.CombatFeedbackManager.Instance?.ShowFloatingText(transform.position, $"[{skill.displayName}]");
+            KryticalNova.Core.ClientPresentationRegistry.Feedback?.ShowFloatingText(transform.position, $"[{skill.displayName}]");
         }
 
         private bool ExecuteCastInternal(SkillDefinitionSO skill, out string reason)
@@ -332,7 +332,7 @@ namespace KryticalNova.Progression
 
             SkillCast?.Invoke(skill);
             SkillMessage?.Invoke($"Activated {skill.displayName} (Rank {rank})!");
-            KryticalNova.UI.CombatFeedbackManager.Instance?.ShowFloatingText(transform.position, $"[{skill.displayName}]");
+            KryticalNova.Core.ClientPresentationRegistry.Feedback?.ShowFloatingText(transform.position, $"[{skill.displayName}]");
             Changed?.Invoke();
             return true;
         }

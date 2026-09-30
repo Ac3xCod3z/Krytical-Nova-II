@@ -31,6 +31,13 @@ namespace KryticalNova.Progression
         [Tooltip("Max Chi gained per point of Spirit.")]
         [Min(0f)] public float spiritToChi = 20f;
 
+        [Header("Level Scaling")]
+        [Tooltip("Max HP gained per character level above 1.")]
+        [Min(0f)] public float healthPerLevel = 15f;
+
+        [Tooltip("Max Chi gained per character level above 1.")]
+        [Min(0f)] public float chiPerLevel = 10f;
+
         [Header("Baseline Combat Stats")]
         [Tooltip("Baseline critical strike chance percentage (e.g. 15 for 15%).")]
         [Range(0f, 100f)] public float baselineCriticalRate = 15f;
@@ -67,6 +74,8 @@ namespace KryticalNova.Progression
             vitalityToEvasion = Mathf.Max(0f, vitalityToEvasion);
             vitalityToHealth = Mathf.Max(0f, vitalityToHealth);
             spiritToChi = Mathf.Max(0f, spiritToChi);
+            healthPerLevel = Mathf.Max(0f, healthPerLevel);
+            chiPerLevel = Mathf.Max(0f, chiPerLevel);
             baselineCriticalRate = Mathf.Clamp(baselineCriticalRate, 0f, 100f);
             baseCriticalMultiplier = Mathf.Max(1f, baseCriticalMultiplier);
             baselineMoveSpeedPercent = Mathf.Max(0f, baselineMoveSpeedPercent);

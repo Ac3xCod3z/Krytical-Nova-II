@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KryticalNova.Core;
 using KryticalNova.Progression;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,7 +9,7 @@ namespace KryticalNova.UI
     /// <summary>Displays animated floating combat numbers and status banners in UI Toolkit projected from world coordinates.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
-    public sealed class CombatFeedbackManager : MonoBehaviour
+    public sealed class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackSink
     {
         private const float FloatDuration = 1.0f;
         private const float RiseSpeed = 1.5f;
@@ -41,6 +42,13 @@ namespace KryticalNova.UI
             }
             instance = this;
             uiDocument = GetComponent<UIDocument>();
+            ClientPresentationRegistry.RegisterFeedback(this);
+        }
+
+        private void OnDestroy()
+        {
+            ClientPresentationRegistry.UnregisterFeedback(this);
+            if (instance == this) instance = null;
         }
 
         private void Start()

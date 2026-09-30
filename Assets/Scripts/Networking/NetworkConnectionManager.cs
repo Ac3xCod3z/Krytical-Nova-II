@@ -7,9 +7,8 @@ using Unity.Services.Core;
 using Unity.Services.Multiplayer;
 using UnityEngine;
 
-#if UNITY_SERVER
-using Unity.Services.Multiplayer.Server;
-#endif
+// Server-only multiplayer types (assembly Unity.Services.Multiplayer.Server) live in the
+// Unity.Services.Multiplayer namespace imported above; there is no ".Server" namespace.
 
 namespace KryticalNova.Networking
 {
@@ -250,7 +249,7 @@ namespace KryticalNova.Networking
                 {
                     MaxPlayers = defaultMaxPlayers,
                     Name = $"ZoneServer_{Environment.MachineName}"
-                }.WithDirectNetwork(defaultListenAddress, defaultPort);
+                }.WithDirectNetwork(defaultListenAddress, defaultListenAddress, defaultPort); // (listenIp, publishIp, port)
 
                 var serverSession = await MultiplayerServerService.Instance.CreateSessionAsync(options);
                 activeSession = serverSession;

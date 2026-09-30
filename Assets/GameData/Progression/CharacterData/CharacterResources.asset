@@ -12,10 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: adb26998bf135e14f88e63d1a4d0b145, type: 3}
   m_Name: CharacterResources
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.CharacterResourceData
-  baseHealth: 100
-  healthPerVitality: 20
-  baseChi: 50
-  chiPerSpirit: 20
   fillGainedCapacity: 1
   healthRegenerationPerSecond: 0
   chiRegenerationPerSecond: 0

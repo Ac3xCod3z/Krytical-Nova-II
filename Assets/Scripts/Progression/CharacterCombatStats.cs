@@ -183,6 +183,8 @@ namespace KryticalNova.Progression
             float vitToEvade = tuningData != null ? tuningData.vitalityToEvasion : 1f;
             float vitToHp = tuningData != null ? tuningData.vitalityToHealth : 20f;
             float spiritToChi = tuningData != null ? tuningData.spiritToChi : 20f;
+            float hpPerLevel = tuningData != null ? tuningData.healthPerLevel : 15f;
+            float chiPerLevel = tuningData != null ? tuningData.chiPerLevel : 10f;
             float critRate = tuningData != null ? tuningData.baselineCriticalRate : BaselineCriticalRate;
             float moveSpeed = tuningData != null ? tuningData.baselineMoveSpeedPercent : BaselineMoveSpeedPercent;
             float eleAtk = tuningData != null ? tuningData.baselineElementalAttack : 0f;
@@ -227,19 +229,19 @@ namespace KryticalNova.Progression
 
                 case StatType.MaxHP:
                 {
-                    // Vitality: Primary (+20 Max HP) + Level scaling (+15 HP per level above 1)
+                    // Vitality: Primary (+20 Max HP) + Level scaling (tuning: healthPerLevel per level above 1)
                     float baseHP = characterClass != null ? characterClass.baseHealthPool : 100f;
                     int level = Progression != null ? Progression.CurrentLevel : 1;
-                    float levelHP = Mathf.Max(0, level - 1) * 15f;
+                    float levelHP = Mathf.Max(0, level - 1) * hpPerLevel;
                     return baseHP + levelHP + (TotalVitality * vitToHp);
                 }
 
                 case StatType.MaxChi:
                 {
-                    // Spirit: Primary (+20 Max Chi) + Level scaling (+10 Chi per level above 1)
+                    // Spirit: Primary (+20 Max Chi) + Level scaling (tuning: chiPerLevel per level above 1)
                     float baseChi = characterClass != null ? characterClass.baseChiPool : 50f;
                     int level = Progression != null ? Progression.CurrentLevel : 1;
-                    float levelChi = Mathf.Max(0, level - 1) * 10f;
+                    float levelChi = Mathf.Max(0, level - 1) * chiPerLevel;
                     return baseChi + levelChi + (TotalSpirit * spiritToChi);
                 }
 
@@ -249,6 +251,7 @@ namespace KryticalNova.Progression
                 case StatType.ElementalAttack: return eleAtk;
                 case StatType.ElementalDefense: return eleDef;
                 case StatType.AcupressureStunResistance: return stunRes;
+                // Luck is a self-buff stat reserved for gear enhancement / loot systems. It is NOT read by combat resolution.
                 case StatType.Luck: return 50f;
                 case StatType.MoveSpeedPercent: return moveSpeed;
 

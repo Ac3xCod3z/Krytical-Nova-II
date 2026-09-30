@@ -197,20 +197,15 @@ namespace KryticalNova.Progression
             if (combatStats == null)
                 combatStats = GetComponent<CharacterCombatStats>();
 
-            if (combatStats != null)
+            if (combatStats == null)
             {
-                nextHealth = Mathf.Max(1f, combatStats.GetStatValue(StatType.MaxHP));
-                nextChi = Mathf.Max(0f, combatStats.GetStatValue(StatType.MaxChi));
+                // CharacterCombatStats (tuned by CombatStatTuningData) is the single owner of Max HP/Chi formulas.
+                Debug.LogError($"{nameof(PlayerResources)} on '{name}' requires a {nameof(CharacterCombatStats)} to derive Max HP/Chi.", this);
+                return;
             }
-            else
-            {
-                if (progression == null) progression = GetComponent<PlayerCharacterProgression>();
-                if (progression == null || resourceData == null) return;
-                nextHealth = Mathf.Max(1f, resourceData.baseHealth
-                    + progression.GetAttribute(CharacterAttribute.Vitality) * resourceData.healthPerVitality);
-                nextChi = Mathf.Max(0f, resourceData.baseChi
-                    + progression.GetAttribute(CharacterAttribute.Spirit) * resourceData.chiPerSpirit);
-            }
+
+            nextHealth = Mathf.Max(1f, combatStats.GetStatValue(StatType.MaxHP));
+            nextChi = Mathf.Max(0f, combatStats.GetStatValue(StatType.MaxChi));
 
             if (Mathf.Approximately(nextHealth, maxHealth) && Mathf.Approximately(nextChi, maxChi)) return;
             if (initialized && resourceData != null && resourceData.fillGainedCapacity)

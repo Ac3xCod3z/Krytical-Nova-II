@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Animancer;
+using KryticalNova.Core;
+using KryticalNova.Networking;
 using KryticalNova.Player;
 using KryticalNova.Progression;
-using KryticalNova.UI;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
@@ -48,12 +50,30 @@ namespace KryticalNova.Combat
         [SerializeField, Min(0.5f)] private float serverMaxValidationRange = 2.7f;
         [SerializeField] private float modelForwardOffset;
 
+        [Header("Server Strike Validation")]
+        [Tooltip("Fraction of a strike's clip duration that must elapse before the server accepts the next strike.")]
+        [SerializeField, Range(0.3f, 1f)] private float minCadenceTolerance = 0.7f;
+        [Tooltip("Extra seconds after a strike's clip ends during which its hit may still arrive (network latency).")]
+        [SerializeField, Min(0f)] private float hitLatencyGrace = 0.35f;
+
+        [Header("Impact VFX (NetworkCombatVFXPool)")]
+        [SerializeField] private string impactVfxPoolKey = "hit_impact";
+        [SerializeField, Min(0.1f)] private float impactVfxLifetime = 3f;
+        [SerializeField] private float impactVfxHeight = 1.1f;
+
         private NavMeshAgent agent;
         private CharacterCombatStats combatStats;
         private CharacterBuffManager buffManager;
         private IDamageable currentTarget;
         private Coroutine comboRoutine;
         private bool isAttacking;
+
+        // Server-only combo state: the server, not the client, decides which strike step is currently live.
+        private int serverSwingStep;
+        private bool serverSwingOpen;
+        private float serverSwingTime = float.NegativeInfinity;
+        private float serverSwingMinInterval;
+        private readonly HashSet<Transform> serverSwingHitTargets = new HashSet<Transform>();
 
         public bool IsAttacking => isAttacking;
         public IDamageable CurrentTarget => currentTarget;
@@ -222,7 +242,8 @@ namespace KryticalNova.Combat
             {
                 if (IsServer)
                 {
-                    PlayComboStrikeClientRpc(step);
+                    if (ServerTryBeginSwing(step))
+                        PlayComboStrikeClientRpc(step);
                 }
                 else
                 {
@@ -281,7 +302,77 @@ namespace KryticalNova.Combat
         [ServerRpc]
         private void RequestPlayComboStrikeServerRpc(int step)
         {
-            PlayComboStrikeClientRpc(step);
+            if (ServerTryBeginSwing(step))
+                PlayComboStrikeClientRpc(step);
+        }
+
+        private float GetStrikeDuration(int step)
+        {
+            AnimationClip clip = step == 1 ? combo1Clip : step == 2 ? combo2Clip : combo3Clip;
+            float speed = step == 1 ? strike1Speed : step == 2 ? strike2Speed : strike3Speed;
+            return clip != null ? clip.length / Mathf.Max(0.01f, speed) : 0f;
+        }
+
+        /// <summary>Server-side combo sequencing: validates order (1→2→3, or restart at 1) and cadence before opening a strike.</summary>
+        private bool ServerTryBeginSwing(int step)
+        {
+            float now = Time.time;
+
+            if (step < 1 || step > 3)
+            {
+                serverSwingOpen = false;
+                RejectStrike($"Melee strike rejected: invalid combo step {step}.");
+                return false;
+            }
+
+            if (step != 1 && step != serverSwingStep + 1)
+            {
+                serverSwingOpen = false;
+                RejectStrike($"Melee strike rejected: combo step {step} out of order (last accepted step {serverSwingStep}).");
+                return false;
+            }
+
+            float sinceLast = now - serverSwingTime;
+            if (serverSwingStep != 0 && sinceLast < serverSwingMinInterval)
+            {
+                serverSwingOpen = false;
+                RejectStrike($"Melee strike rejected: step {step} too fast ({sinceLast:0.00}s < {serverSwingMinInterval:0.00}s).");
+                return false;
+            }
+
+            serverSwingStep = step;
+            serverSwingOpen = true;
+            serverSwingTime = now;
+            serverSwingMinInterval = GetStrikeDuration(step) * minCadenceTolerance;
+            serverSwingHitTargets.Clear();
+            return true;
+        }
+
+        /// <summary>Validates a damage request against the currently open server-side swing.</summary>
+        private bool ServerValidateHit(IDamageable target, int comboStep)
+        {
+            if (!serverSwingOpen || comboStep != serverSwingStep)
+            {
+                RejectStrike($"Melee strike rejected: no open swing for combo step {comboStep}.");
+                return false;
+            }
+
+            float sinceSwing = Time.time - serverSwingTime;
+            float maxWindow = GetStrikeDuration(comboStep) + hitLatencyGrace;
+            if (sinceSwing > maxWindow)
+            {
+                RejectStrike($"Melee strike rejected: step {comboStep} hit arrived after its window ({sinceSwing:0.00}s > {maxWindow:0.00}s).");
+                return false;
+            }
+
+            // One damage application per target per swing.
+            return serverSwingHitTargets.Add(target.Transform);
+        }
+
+        private void RejectStrike(string message)
+        {
+            Debug.LogWarning($"[{nameof(PlayerMeleeCombat)}:{name}] {message}", this);
+            OnCombatMessage?.Invoke(message);
         }
 
         [ClientRpc]
@@ -350,6 +441,9 @@ namespace KryticalNova.Combat
         {
             if (target == null || !target.IsAlive) return;
 
+            // Server-authoritative combo order / cadence validation (networked sessions only)
+            if (IsSpawned && !ServerValidateHit(target, comboStep)) return;
+
             // Server-authoritative distance anti-cheat validation
             float distance = Vector3.Distance(transform.position, target.Transform.position);
             if (distance > serverMaxValidationRange)
@@ -392,7 +486,14 @@ namespace KryticalNova.Combat
                 }
             }
 
-            CombatFeedbackManager.Instance?.ShowCombatFeedback(target.Transform.position, result);
+            ClientPresentationRegistry.Feedback?.ShowCombatFeedback(target.Transform.position, result);
+
+            if (!result.IsEvaded)
+            {
+                Vector3 impactPos = target.Transform.position + Vector3.up * impactVfxHeight;
+                if (IsSpawned) SpawnImpactVfxClientRpc(impactPos);
+                else SpawnImpactVfxLocal(impactPos);
+            }
 
             string stepLabel = comboStep == 3 ? "Combo Finisher" : $"Strike {comboStep}";
             if (result.IsEvaded)
@@ -403,6 +504,19 @@ namespace KryticalNova.Combat
                 OnCombatMessage?.Invoke($"CRITICAL {stepLabel} on {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
             else
                 OnCombatMessage?.Invoke($"{stepLabel} hit {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
+        }
+
+        [ClientRpc]
+        private void SpawnImpactVfxClientRpc(Vector3 position)
+        {
+            SpawnImpactVfxLocal(position);
+        }
+
+        private void SpawnImpactVfxLocal(Vector3 position)
+        {
+            var pool = NetworkCombatVFXPool.Instance;
+            if (pool == null || string.IsNullOrEmpty(impactVfxPoolKey)) return;
+            pool.Spawn(impactVfxPoolKey, position, Quaternion.identity, impactVfxLifetime);
         }
     }
 }

@@ -1,0 +1,19 @@
+{
+    "name": "KryticalNova.UI",
+    "rootNamespace": "KryticalNova.UI",
+    "references": [
+        "KryticalNova.Runtime",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "!UNITY_SERVER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

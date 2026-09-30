@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Core;
 using KryticalNova.Progression;
-using KryticalNova.UI;
 using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
@@ -23,6 +23,7 @@ namespace KryticalNova.Player
         private const string OrbitDeltaActionName = "OrbitDelta";
         private const string CancelOrbitActionName = "CancelOrbit";
         private const string ZoomActionName = "Zoom";
+        private const string ToggleWeaponActionName = "ToggleWeapon";
         private const string GroundLayerName = "Ground";
         private const float DefaultRayDistance = 1000f;
         private const float DefaultSampleRadius = 1f;
@@ -40,7 +41,6 @@ namespace KryticalNova.Player
         [Header("Scene References")]
         [SerializeField] private Camera gameplayCamera;
         [SerializeField] private CinemachineOrbitalFollow orbitCamera;
-        [SerializeField] private ProgressionHUD progressionUI;
 
         [Header("Click Movement")]
         [Tooltip("Only the first raycast hit on these layers can be a destination.")]
@@ -86,6 +86,8 @@ namespace KryticalNova.Player
         private InputAction orbitDeltaAction;
         private InputAction cancelOrbitAction;
         private InputAction zoomAction;
+        private InputAction toggleWeaponAction;
+        private PlayerSkillHotbar hotbar;
         private EventSystem pointerEventSystem;
         private PointerEventData pointerEventData;
         private bool isOrbiting;
@@ -124,6 +126,7 @@ namespace KryticalNova.Player
             buffManager = GetComponent<CharacterBuffManager>();
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
             meleeCombat = GetComponent<KryticalNova.Combat.PlayerMeleeCombat>();
+            hotbar = GetComponent<PlayerSkillHotbar>();
             if (meleeCombat != null)
             {
                 meleeCombat.OnCombatMessage += msg => CommandMessage?.Invoke(msg);
@@ -170,10 +173,6 @@ namespace KryticalNova.Player
                 }
             }
 
-            if (progressionUI == null)
-            {
-                progressionUI = FindAnyObjectByType<ProgressionHUD>();
-            }
         }
 
         private void Start()
@@ -203,6 +202,7 @@ namespace KryticalNova.Player
             orbitDeltaAction = gameplayActions.FindAction(OrbitDeltaActionName, true);
             cancelOrbitAction = gameplayActions.FindAction(CancelOrbitActionName, true);
             zoomAction = gameplayActions.FindAction(ZoomActionName, true);
+            toggleWeaponAction = gameplayActions.FindAction(ToggleWeaponActionName, true);
 
             if (orbitCamera != null)
             {
@@ -271,9 +271,13 @@ namespace KryticalNova.Player
                 return;
             }
 
+            bool inputSuppressed = hotbar != null && hotbar.InputSuppressed;
+
+            // Escape (CancelOrbit action) is the single cancel source: ends orbit and stops any melee attack.
             if (cancelOrbitAction.WasPressedThisFrame())
             {
                 EndOrbit();
+                if (!inputSuppressed) meleeCombat?.CancelAttack();
                 return;
             }
 
@@ -303,16 +307,9 @@ namespace KryticalNova.Player
                 return;
             }
 
-            if (Keyboard.current != null)
+            if (!inputSuppressed && toggleWeaponAction.WasPressedThisFrame())
             {
-                if (Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.rightShiftKey.wasPressedThisFrame)
-                {
-                    animancerMotor?.RequestToggleWeaponDraw();
-                }
-                if (Keyboard.current.escapeKey.wasPressedThisFrame)
-                {
-                    meleeCombat?.CancelAttack();
-                }
+                animancerMotor?.RequestToggleWeaponDraw();
             }
 
             if (!orbitHeldAction.IsPressed() && moveAction.WasPressedThisFrame()
@@ -545,7 +542,7 @@ namespace KryticalNova.Player
                     }
                 }
 
-                CombatFeedbackManager.Instance?.ShowCombatFeedback(targetEntity.Transform.position, result);
+                ClientPresentationRegistry.Feedback?.ShowCombatFeedback(targetEntity.Transform.position, result);
 
                 if (result.IsEvaded)
                     CommandMessage?.Invoke($"Attack EVADED by {targetEntity.EntityName}!");
@@ -610,7 +607,8 @@ namespace KryticalNova.Player
 
         private bool IsPointerOverUi(Vector2 screenPosition)
         {
-            if (progressionUI != null && progressionUI.BlocksWorldPointer(screenPosition))
+            var pointerBlock = ClientPresentationRegistry.PointerBlock;
+            if (pointerBlock != null && pointerBlock.BlocksWorldPointer(screenPosition))
                 return true;
             EventSystem currentEventSystem = EventSystem.current;
             if (currentEventSystem == null)

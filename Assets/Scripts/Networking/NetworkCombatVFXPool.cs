@@ -25,6 +25,16 @@ namespace KryticalNova.Networking
         private readonly Dictionary<string, Queue<GameObject>> pools = new Dictionary<string, Queue<GameObject>>();
         private readonly Dictionary<string, GameObject> prefabMap = new Dictionary<string, GameObject>();
 
+        private struct PendingReturn
+        {
+            public string poolKey;
+            public GameObject instance;
+            public float returnTime;
+        }
+
+        // Timed auto-returns processed in Update (no per-spawn coroutine/WaitForSeconds allocations).
+        private readonly List<PendingReturn> pendingReturns = new List<PendingReturn>();
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -85,6 +95,37 @@ namespace KryticalNova.Networking
             }
 
             return null;
+        }
+
+        /// <summary>Spawns a pooled instance and automatically returns it to the pool after <paramref name="lifetime"/> seconds.</summary>
+        public GameObject Spawn(string poolKey, Vector3 position, Quaternion rotation, float lifetime)
+        {
+            var instance = Spawn(poolKey, position, rotation);
+            if (instance != null)
+            {
+                pendingReturns.Add(new PendingReturn
+                {
+                    poolKey = poolKey,
+                    instance = instance,
+                    returnTime = Time.time + Mathf.Max(0f, lifetime)
+                });
+            }
+            return instance;
+        }
+
+        private void Update()
+        {
+            if (pendingReturns.Count == 0) return;
+
+            float now = Time.time;
+            for (int i = pendingReturns.Count - 1; i >= 0; i--)
+            {
+                var pending = pendingReturns[i];
+                if (now < pending.returnTime) continue;
+
+                pendingReturns.RemoveAt(i);
+                Despawn(pending.poolKey, pending.instance);
+            }
         }
 
         /// <summary>Recycles an instance back into the pool.</summary>

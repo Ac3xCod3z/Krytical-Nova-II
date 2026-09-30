@@ -106,8 +106,9 @@ namespace KryticalNova.Progression
             result.RawPhysicalDamage = rawAP;
             result.MitigatedPhysicalDamage = physicalDamage;
 
-            // 5. Critical Damage Roll (Boosted by Luck)
-            float critChance = attacker.GetStatValue(StatType.CriticalRate) + (attacker.GetStatValue(StatType.Luck) * 0.1f);
+            // 5. Critical Damage Roll. Luck is intentionally excluded: it is a self-buff stat reserved for
+            //    gear enhancement / loot systems and must never influence combat resolution.
+            float critChance = attacker.GetStatValue(StatType.CriticalRate);
             if (critRoll <= critChance)
             {
                 result.IsCritical = true;
