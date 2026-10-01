@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Core;
 using KryticalNova.Player;
 using KryticalNova.Progression;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace KryticalNova.UI
     /// <summary>Displays progression and handles runtime skill drag/drop without editor-only drag APIs.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
-    public sealed class ProgressionHUD : MonoBehaviour
+    public sealed class ProgressionHUD : MonoBehaviour, IPointerBlockQuery
     {
         private const int AttributeCount = 4;
         private const int LeftButton = 0;
@@ -83,6 +84,7 @@ namespace KryticalNova.UI
         private void OnEnable()
         {
             if (!Application.isPlaying) return;
+            ClientPresentationRegistry.RegisterPointerBlock(this);
             root = GetComponent<UIDocument>().rootVisualElement;
             if (progression == null || skills == null || hotbar == null || movement == null || resources == null || jumpMotor == null || root == null)
             {
@@ -240,6 +242,7 @@ namespace KryticalNova.UI
 
         private void OnDisable()
         {
+            ClientPresentationRegistry.UnregisterPointerBlock(this);
             if (!initialized) return;
             StopHold();
             CancelDrag();
@@ -861,7 +864,7 @@ namespace KryticalNova.UI
                         : "Assignment failed.");
                 }
             }
-            else if (!wasDrag && sourceSlot != NoSlot && targetSlot == sourceSlot)
+            else if (!wasDrag && sourceSlot != NoSlot)
             {
                 hotbar.ActivateSlot(sourceSlot);
             }
@@ -1106,7 +1109,7 @@ namespace KryticalNova.UI
                 }
             }
 
-            CombatFeedbackManager.Instance?.ShowCombatFeedback(target.Transform.position, result);
+            ClientPresentationRegistry.Feedback?.ShowCombatFeedback(target.Transform.position, result);
 
             if (result.IsEvaded)
                 Feedback($"Test: Dummy EVADED your attack! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");

@@ -1,5 +1,7 @@
 # Twelve Sky 2 — Master System Map
 
+> **Art direction (Krytical Nova II):** Western comic-book style. Twelve Sky 2 is referenced here for systems and numbers only — not for art, setting, or visual theme.
+
 ## Core hierarchy
 
 CHARACTER

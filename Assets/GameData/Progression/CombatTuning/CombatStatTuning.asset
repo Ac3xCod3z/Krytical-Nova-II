@@ -20,6 +20,8 @@ MonoBehaviour:
   vitalityToEvasion: 1
   vitalityToHealth: 20
   spiritToChi: 20
+  healthPerLevel: 15
+  chiPerLevel: 10
   baselineCriticalRate: 15
   baseCriticalMultiplier: 1.5
   baselineMoveSpeedPercent: 100

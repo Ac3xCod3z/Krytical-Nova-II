@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96762b59b6d6426458c1b7f31903b4e8, type: 3}
+  m_Name: WP_Blizzard
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.WeatherProfile
+  coverageMin: 1
+  coverageMax: 1
+  cloudDensity: 0.9
+  cloudSoftness: 0.18
+  cloudDarkness: 0.35
+  cloudTint: {r: 0.85, g: 0.87, b: 0.92, a: 1}
+  cirrusAmount: 0
+  skyDesaturation: 0.75
+  skyDarkening: 0.25
+  sunIntensityMultiplier: 0.2
+  ambientMultiplier: 1.1
+  shadowMultiplier: 0
+  cloudShadowStrength: 0
+  fogDensity: 0.025
+  fogTint: {r: 0.88, g: 0.9, b: 0.94, a: 0.8}
+  windHeading: 60
+  windSpeed: 18
+  precipitation: 2
+  precipitationIntensity: 1
+  mist: 0.3
+  lightningPerMinute: 0
+  saturation: -45
+  contrast: -10
+  ambienceLoop: {fileID: 0}
+  ambienceVolume: 0.6
+  transitionSeconds: 90
+  durationMin: 150
+  durationMax: 300
+  next:
+  - profile: {fileID: 11400000, guid: 6c03354b00db91742a0d405e11bbd59e, type: 2}
+    weight: 3

@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96762b59b6d6426458c1b7f31903b4e8, type: 3}
+  m_Name: WP_Snow
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.WeatherProfile
+  coverageMin: 0.9
+  coverageMax: 1
+  cloudDensity: 0.9
+  cloudSoftness: 0.3
+  cloudDarkness: 0.2
+  cloudTint: {r: 0.9, g: 0.92, b: 0.95, a: 1}
+  cirrusAmount: 0
+  skyDesaturation: 0.6
+  skyDarkening: 0.12
+  sunIntensityMultiplier: 0.4
+  ambientMultiplier: 1.15
+  shadowMultiplier: 0.12
+  cloudShadowStrength: 0
+  fogDensity: 0.007
+  fogTint: {r: 0.85, g: 0.88, b: 0.92, a: 0.6}
+  windHeading: 60
+  windSpeed: 3
+  precipitation: 2
+  precipitationIntensity: 0.6
+  mist: 0
+  lightningPerMinute: 0
+  saturation: -30
+  contrast: -8
+  ambienceLoop: {fileID: 0}
+  ambienceVolume: 0.6
+  transitionSeconds: 90
+  durationMin: 240
+  durationMax: 480
+  next:
+  - profile: {fileID: 11400000, guid: d3c115db958a967418f444865d2987de, type: 2}
+    weight: 2
+  - profile: {fileID: 11400000, guid: b4de021546bf49644b1fbca9c37be32d, type: 2}
+    weight: 1

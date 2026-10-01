@@ -17,6 +17,7 @@ namespace KryticalNova.Player
         [SerializeField] private JumpMotionData motionData;
         [SerializeField] private AnimancerComponent animancer;
         [SerializeField] private Transform squashRoot;
+        [SerializeField] private PlayerAnimancerMotor animancerMotor;
         [Tooltip("Distance from the visual pivot to its feet. Keeps takeoff/landing squash planted on the ground.")]
         [SerializeField, Min(0f)] private float visualPivotHeight = DefaultVisualPivotHeight;
         private Vector3Spring scaleSpring;
@@ -24,25 +25,34 @@ namespace KryticalNova.Player
         private Vector3 originalScale = Vector3.one;
         private Vector3 originalPosition;
         private AnimancerState flipState;
-        public bool IsReady => motionData != null && animancer != null && squashRoot != null
-            && motionData.frontFlip != null && motionData.restPose != null;
+        public bool IsReady => (animancerMotor != null) || (motionData != null && animancer != null && squashRoot != null
+            && motionData.frontFlip != null && motionData.restPose != null);
 
         private void Awake()
         {
+            if (animancerMotor == null)
+            {
+                animancerMotor = GetComponentInParent<PlayerAnimancerMotor>();
+            }
+
             if (!IsReady)
             {
                 Debug.LogError("Jump presentation needs Animancer, a squash root, and flip/rest clips in JumpMotionData.", this);
                 enabled = false;
                 return;
             }
-            originalScale = squashRoot.localScale;
-            originalPosition = squashRoot.localPosition;
+
+            if (squashRoot != null)
+            {
+                originalScale = squashRoot.localScale;
+                originalPosition = squashRoot.localPosition;
+            }
             scaleSpring.Reset(Vector3.one);
         }
 
         private void LateUpdate()
         {
-            if (!IsReady) return;
+            if (!IsReady || squashRoot == null || motionData == null) return;
             Vector3 scale = scaleSpring.TrackHalfLife(targetScale, motionData.springFrequency, motionData.springHalfLife, Time.deltaTime);
             scale = Vector3.Min(Vector3.one * MaximumScale, Vector3.Max(Vector3.one * MinimumScale, scale));
             squashRoot.localScale = Vector3.Scale(originalScale, scale);
@@ -53,15 +63,25 @@ namespace KryticalNova.Player
         public void Anticipate()
         {
             if (!IsReady) return;
+            if (animancerMotor != null)
+            {
+                // Humanoid jump starts on takeoff
+                return;
+            }
             PlayRestPose();
-            targetScale = motionData.anticipationScale;
+            if (motionData != null) targetScale = motionData.anticipationScale;
         }
 
         /// <summary>Stretches the body at launch, then lets the Boing spring settle naturally.</summary>
         public void TakeOff()
         {
             if (!IsReady) return;
-            scaleSpring.Reset(motionData.takeoffScale);
+            if (animancerMotor != null)
+            {
+                animancerMotor.PlayJumpTakeoff();
+                return;
+            }
+            if (motionData != null) scaleSpring.Reset(motionData.takeoffScale);
             targetScale = Vector3.one;
         }
 
@@ -69,30 +89,51 @@ namespace KryticalNova.Player
         public void PlayApexFlip(float availableDuration)
         {
             if (!IsReady) return;
-            float duration = Mathf.Max(MinimumDuration, Mathf.Min(motionData.flipDuration, availableDuration));
-            flipState = animancer.Play(motionData.frontFlip);
-            flipState.Time = 0f;
-            flipState.Speed = motionData.frontFlip.length / duration;
+            if (animancerMotor != null)
+            {
+                animancerMotor.PlayJumpAirborne();
+                return;
+            }
+            if (motionData != null && animancer != null && motionData.frontFlip != null)
+            {
+                float duration = Mathf.Max(MinimumDuration, Mathf.Min(motionData.flipDuration, availableDuration));
+                flipState = animancer.Play(motionData.frontFlip);
+                flipState.Time = 0f;
+                flipState.Speed = motionData.frontFlip.length / duration;
+            }
         }
 
         /// <summary>Returns to an upright pose and kicks the Boing spring into a landing bounce.</summary>
         public void Land()
         {
             if (!IsReady) return;
+            if (animancerMotor != null)
+            {
+                animancerMotor.PlayJumpLanding();
+                return;
+            }
             PlayRestPose();
             targetScale = Vector3.one;
-            scaleSpring.Reset(motionData.landingScale, motionData.landingScaleVelocity);
+            if (motionData != null) scaleSpring.Reset(motionData.landingScale, motionData.landingScaleVelocity);
         }
 
         /// <summary>Restores visual pose and scale after an interrupted jump.</summary>
         public void ResetPresentation()
         {
             if (!IsReady) return;
+            if (animancerMotor != null)
+            {
+                animancerMotor.ResetJumpAnimation();
+                return;
+            }
             PlayRestPose();
             targetScale = Vector3.one;
             scaleSpring.Reset(Vector3.one);
-            squashRoot.localScale = originalScale;
-            squashRoot.localPosition = originalPosition;
+            if (squashRoot != null)
+            {
+                squashRoot.localScale = originalScale;
+                squashRoot.localPosition = originalPosition;
+            }
         }
 
         private void PlayRestPose()

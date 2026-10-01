@@ -1,6 +1,7 @@
 using System;
 using DG.Tweening;
 using KryticalNova.Progression;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -9,7 +10,7 @@ namespace KryticalNova.Player
     /// <summary>Validated click-to-jump traversal with DOTween timing, Animancer flip, and safe NavMesh restoration.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerMovementSkills), typeof(PlayerResources))]
-    public sealed class PlayerJumpMotor : MonoBehaviour
+    public sealed class PlayerJumpMotor : NetworkBehaviour
     {
         private const float MinimumTravelDistance = 0.15f;
         private const float MinimumTime = 0.01f;
@@ -58,39 +59,75 @@ namespace KryticalNova.Player
         /// <summary>Validates a clicked landing point before interrupting the current path. Chi is charged at takeoff.</summary>
         public bool TryJump(Vector3 clickedPoint, LayerMask obstacleLayers, float modelForwardOffset, out string reason)
         {
+            if (IsSpawned && !IsServer)
+            {
+                reason = string.Empty;
+                RequestJumpServerRpc(clickedPoint, obstacleLayers.value, modelForwardOffset);
+                return true;
+            }
+
+            return ExecuteJumpInternal(clickedPoint, obstacleLayers.value, modelForwardOffset, out reason);
+        }
+
+        [ServerRpc]
+        private void RequestJumpServerRpc(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset)
+        {
+            if (ExecuteJumpInternal(clickedPoint, obstacleLayersValue, modelForwardOffset, out _))
+            {
+                TriggerJumpClientRpc(clickedPoint, obstacleLayersValue, modelForwardOffset);
+            }
+        }
+
+        [ClientRpc]
+        private void TriggerJumpClientRpc(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset)
+        {
+            if (IsServer) return; // Server already running it
+            ExecuteJumpInternal(clickedPoint, obstacleLayersValue, modelForwardOffset, out _);
+        }
+
+        private bool ExecuteJumpInternal(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset, out string reason)
+        {
             reason = string.Empty;
             if (IsBusy) { reason = "Finish this jump before choosing another destination."; return false; }
             if (Time.time < cooldownUntil) { reason = "Let the landing settle before jumping again."; return false; }
             if (!isActiveAndEnabled || motionData == null || presentation == null || !presentation.IsReady)
             { reason = "Jump animation is not configured."; return false; }
-            if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) { reason = "Jump must start on walkable ground."; return false; }
-            if (!skills.TryGetLearnedRank(MovementSkillId.Jump, out var rank)) { reason = "Learn Jump first."; return false; }
-            if (!skills.CanPayForCommand(MovementSkillId.Jump, out reason)) return false;
-            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            if (agent != null && agent.isActiveAndEnabled && !agent.isOnNavMesh) { reason = "Jump must start on walkable ground."; return false; }
+            MovementSkillRank rank = default;
+            if (skills != null && !skills.TryGetLearnedRank(MovementSkillId.Jump, out rank)) { reason = "Learn Jump first."; return false; }
+            if (skills != null && !skills.CanPayForCommand(MovementSkillId.Jump, out reason)) return false;
+            
+            float agentOffset = agent != null ? agent.baseOffset : 0f;
+            var filter = new NavMeshQueryFilter { agentTypeID = agent != null ? agent.agentTypeID : 0, areaMask = agent != null ? agent.areaMask : -1 };
             if (!NavMesh.SamplePosition(clickedPoint, out var landing, motionData.landingSampleRadius, filter)
                 || Mathf.Abs(landing.position.y - clickedPoint.y) > LandingHeightTolerance)
             { reason = "Choose a walkable landing surface."; return false; }
-            startFeet = transform.position - Vector3.up * agent.baseOffset;
+            startFeet = transform.position - Vector3.up * agentOffset;
             landingFeet = landing.position;
             Vector3 displacement = landingFeet - startFeet;
             float horizontalDistance = new Vector2(displacement.x, displacement.z).magnitude;
             if (horizontalDistance < MinimumTravelDistance) { reason = "Choose a landing point farther away."; return false; }
-            if (horizontalDistance > rank.jumpDistance)
-            { reason = $"Too far: Jump rank {skills.GetRank(MovementSkillId.Jump)} reaches {rank.jumpDistance:0.0} m."; return false; }
-            if (displacement.y > rank.jumpHeight || -displacement.y > rank.jumpHeight * motionData.maximumDropMultiplier)
-            { reason = $"Landing height is outside this rank's limits (+{rank.jumpHeight:0.0} m / -{rank.jumpHeight * motionData.maximumDropMultiplier:0.0} m)."; return false; }
-            collisionLayers = obstacleLayers.value & ~(1 << gameObject.layer);
+            float maxDist = skills != null ? rank.jumpDistance : 20f;
+            if (horizontalDistance > maxDist)
+            { reason = $"Too far: Jump rank reaches {maxDist:0.0} m."; return false; }
+            float jumpH = skills != null ? rank.jumpHeight : 5f;
+            if (displacement.y > jumpH || -displacement.y > jumpH * motionData.maximumDropMultiplier)
+            { reason = $"Landing height is outside this rank's limits (+{jumpH:0.0} m / -{jumpH * motionData.maximumDropMultiplier:0.0} m)."; return false; }
+            collisionLayers = obstacleLayersValue & ~(1 << gameObject.layer);
             facingOffset = modelForwardOffset;
             takeoffRootPosition = transform.position;
             float clearanceApex = Mathf.Max(startFeet.y, landingFeet.y) + motionData.apexClearance;
-            peakHeight = Mathf.Max(clearanceApex, startFeet.y + rank.jumpHeight);
+            peakHeight = Mathf.Max(clearanceApex, startFeet.y + jumpH);
             ascentTime = Mathf.Sqrt(2f * (peakHeight - startFeet.y) / motionData.gravity);
             descentTime = Mathf.Sqrt(2f * (peakHeight - landingFeet.y) / motionData.gravity);
             flightTime = ascentTime + motionData.apexHoldDuration + descentTime;
             if (!ValidateTrajectory()) { reason = "The jump arc or landing area is blocked."; return false; }
 
-            agent.isStopped = true;
-            agent.ResetPath();
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+            {
+                agent.isStopped = true;
+                agent.ResetPath();
+            }
             IsBusy = true;
             inFlight = false;
             apexPlayed = false;

@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96762b59b6d6426458c1b7f31903b4e8, type: 3}
+  m_Name: WP_MostlyCloudy
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.WeatherProfile
+  coverageMin: 0.6
+  coverageMax: 0.78
+  cloudDensity: 0.92
+  cloudSoftness: 0.18
+  cloudDarkness: 0.15
+  cloudTint: {r: 1, g: 1, b: 1, a: 1}
+  cirrusAmount: 0.1
+  skyDesaturation: 0.15
+  skyDarkening: 0.1
+  sunIntensityMultiplier: 0.75
+  ambientMultiplier: 0.95
+  shadowMultiplier: 0.6
+  cloudShadowStrength: 0.55
+  fogDensity: 0.0022
+  fogTint: {r: 0.7, g: 0.72, b: 0.75, a: 0}
+  windHeading: 60
+  windSpeed: 6
+  precipitation: 0
+  precipitationIntensity: 0
+  mist: 0
+  lightningPerMinute: 0
+  saturation: -10
+  contrast: 0
+  ambienceLoop: {fileID: 0}
+  ambienceVolume: 0.6
+  transitionSeconds: 90
+  durationMin: 240
+  durationMax: 500
+  next:
+  - profile: {fileID: 11400000, guid: 1f3c7d185826afe40bd002b9e097f155, type: 2}
+    weight: 2
+  - profile: {fileID: 11400000, guid: d3c115db958a967418f444865d2987de, type: 2}
+    weight: 2
+  - profile: {fileID: 11400000, guid: 9832740c89d5b9749b94b880a421af43, type: 2}
+    weight: 1

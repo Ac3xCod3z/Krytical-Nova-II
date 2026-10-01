@@ -1,4 +1,5 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace KryticalNova.Progression
@@ -7,7 +8,7 @@ namespace KryticalNova.Progression
     [DefaultExecutionOrder(InitializationOrder)]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacterProgression))]
-    public sealed class PlayerResources : MonoBehaviour
+    public sealed class PlayerResources : NetworkBehaviour
     {
         private const int InitializationOrder = -150;
         private const float ComparisonTolerance = 0.0001f;
@@ -21,6 +22,16 @@ namespace KryticalNova.Progression
         private float healthRecoveryTime;
         private float chiRecoveryTime;
         private bool initialized;
+
+        private readonly NetworkVariable<float> netHealth = new NetworkVariable<float>(
+            writePerm: NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<float> netChi = new NetworkVariable<float>(
+            writePerm: NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<float> netMaxHealth = new NetworkVariable<float>(
+            writePerm: NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<float> netMaxChi = new NetworkVariable<float>(
+            writePerm: NetworkVariableWritePermission.Server);
+
         public event Action Changed;
         public event Action Depleted;
         public float Health => health;
@@ -59,10 +70,85 @@ namespace KryticalNova.Progression
             EnsureInitialized();
         }
 
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (IsServer)
+            {
+                netHealth.Value = health;
+                netChi.Value = chi;
+                netMaxHealth.Value = maxHealth;
+                netMaxChi.Value = maxChi;
+            }
+            else
+            {
+                health = netHealth.Value;
+                chi = netChi.Value;
+                maxHealth = netMaxHealth.Value;
+                maxChi = netMaxChi.Value;
+                Changed?.Invoke();
+            }
+
+            netHealth.OnValueChanged += OnNetHealthChanged;
+            netChi.OnValueChanged += OnNetChiChanged;
+            netMaxHealth.OnValueChanged += OnNetMaxHealthChanged;
+            netMaxChi.OnValueChanged += OnNetMaxChiChanged;
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            netHealth.OnValueChanged -= OnNetHealthChanged;
+            netChi.OnValueChanged -= OnNetChiChanged;
+            netMaxHealth.OnValueChanged -= OnNetMaxHealthChanged;
+            netMaxChi.OnValueChanged -= OnNetMaxChiChanged;
+            base.OnNetworkDespawn();
+        }
+
+        private void OnNetHealthChanged(float previous, float current)
+        {
+            if (IsServer) return;
+            health = current;
+            Changed?.Invoke();
+            if (previous > 0f && current <= 0f) Depleted?.Invoke();
+        }
+
+        private void OnNetChiChanged(float previous, float current)
+        {
+            if (IsServer) return;
+            chi = current;
+            Changed?.Invoke();
+        }
+
+        private void OnNetMaxHealthChanged(float previous, float current)
+        {
+            if (IsServer) return;
+            maxHealth = current;
+            Changed?.Invoke();
+        }
+
+        private void OnNetMaxChiChanged(float previous, float current)
+        {
+            if (IsServer) return;
+            maxChi = current;
+            Changed?.Invoke();
+        }
+
         private void OnEnable()
         {
-            if (progression != null) progression.Changed += RecalculateMaximums;
-            if (combatStats != null) combatStats.OnStatsRecalculated += RecalculateMaximums;
+            if (progression == null) progression = GetComponent<PlayerCharacterProgression>();
+            if (combatStats == null) combatStats = GetComponent<CharacterCombatStats>();
+
+            if (progression != null)
+            {
+                progression.Changed -= RecalculateMaximums;
+                progression.Changed += RecalculateMaximums;
+            }
+            if (combatStats != null)
+            {
+                combatStats.OnStatsRecalculated -= RecalculateMaximums;
+                combatStats.OnStatsRecalculated += RecalculateMaximums;
+            }
         }
 
         private void OnDisable()
@@ -74,6 +160,8 @@ namespace KryticalNova.Progression
         private void Update()
         {
             if (!initialized || resourceData == null) return;
+            if (IsSpawned && !IsServer) return; // Only server handles passive regeneration and capacity calculations
+
             // Also reflects live Inspector balance edits without changing the shared asset.
             RecalculateMaximums();
             if (!IsAlive) return;
@@ -81,27 +169,43 @@ namespace KryticalNova.Progression
             if (Time.time >= healthRecoveryTime)
                 health = Mathf.Min(maxHealth, health + resourceData.healthRegenerationPerSecond * Time.deltaTime);
             // In Twelve Sky 2, Chi does not passively regenerate. It is restored via Heavenly Serenity skill, items, or explicit commands.
-            if (!Mathf.Approximately(previousHealth, health)) Changed?.Invoke();
+            if (!Mathf.Approximately(previousHealth, health))
+            {
+                SyncNetworkState();
+                Changed?.Invoke();
+            }
+        }
+
+        private void SyncNetworkState()
+        {
+            if (IsSpawned && IsServer)
+            {
+                netHealth.Value = health;
+                netChi.Value = chi;
+                netMaxHealth.Value = maxHealth;
+                netMaxChi.Value = maxChi;
+            }
         }
 
         private void RecalculateMaximums()
         {
+            if (IsSpawned && !IsServer) return;
+
             float nextHealth;
             float nextChi;
 
-            if (combatStats != null)
+            if (combatStats == null)
+                combatStats = GetComponent<CharacterCombatStats>();
+
+            if (combatStats == null)
             {
-                nextHealth = Mathf.Max(1f, combatStats.GetStatValue(StatType.MaxHP));
-                nextChi = Mathf.Max(0f, combatStats.GetStatValue(StatType.MaxChi));
+                // CharacterCombatStats (tuned by CombatStatTuningData) is the single owner of Max HP/Chi formulas.
+                Debug.LogError($"{nameof(PlayerResources)} on '{name}' requires a {nameof(CharacterCombatStats)} to derive Max HP/Chi.", this);
+                return;
             }
-            else
-            {
-                if (progression == null || resourceData == null) return;
-                nextHealth = Mathf.Max(1f, resourceData.baseHealth
-                    + progression.GetAttribute(CharacterAttribute.Vitality) * resourceData.healthPerVitality);
-                nextChi = Mathf.Max(0f, resourceData.baseChi
-                    + progression.GetAttribute(CharacterAttribute.Spirit) * resourceData.chiPerSpirit);
-            }
+
+            nextHealth = Mathf.Max(1f, combatStats.GetStatValue(StatType.MaxHP));
+            nextChi = Mathf.Max(0f, combatStats.GetStatValue(StatType.MaxChi));
 
             if (Mathf.Approximately(nextHealth, maxHealth) && Mathf.Approximately(nextChi, maxChi)) return;
             if (initialized && resourceData != null && resourceData.fillGainedCapacity)
@@ -114,6 +218,7 @@ namespace KryticalNova.Progression
             maxChi = nextChi;
             health = Mathf.Clamp(health, 0f, maxHealth);
             chi = Mathf.Clamp(chi, 0f, maxChi);
+            SyncNetworkState();
             if (initialized) Changed?.Invoke();
         }
 
@@ -128,6 +233,7 @@ namespace KryticalNova.Progression
             if (amount <= 0f) return true;
             chi = Mathf.Max(0f, chi - amount);
             chiRecoveryTime = Time.time + resourceData.chiRegenerationDelay;
+            SyncNetworkState();
             Changed?.Invoke();
             return true;
         }
@@ -137,6 +243,7 @@ namespace KryticalNova.Progression
         {
             if (!initialized || !float.IsFinite(amount) || amount <= 0f) return;
             chi = Mathf.Min(maxChi, chi + amount);
+            SyncNetworkState();
             Changed?.Invoke();
         }
 
@@ -146,6 +253,7 @@ namespace KryticalNova.Progression
             if (!isActiveAndEnabled || !IsAlive || !float.IsFinite(amount) || amount <= 0f) return;
             health = Mathf.Max(0f, health - amount);
             healthRecoveryTime = Time.time + resourceData.healthRegenerationDelay;
+            SyncNetworkState();
             Changed?.Invoke();
             if (health <= 0f) Depleted?.Invoke();
         }
@@ -155,6 +263,7 @@ namespace KryticalNova.Progression
         {
             if (!IsAlive || !float.IsFinite(amount) || amount <= 0f) return;
             health = Mathf.Min(maxHealth, health + amount);
+            SyncNetworkState();
             Changed?.Invoke();
         }
 
@@ -164,7 +273,9 @@ namespace KryticalNova.Progression
             if (!initialized) return;
             health = maxHealth;
             chi = maxChi;
+            SyncNetworkState();
             Changed?.Invoke();
         }
     }
 }
+

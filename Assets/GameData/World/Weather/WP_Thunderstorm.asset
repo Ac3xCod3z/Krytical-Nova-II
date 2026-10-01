@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96762b59b6d6426458c1b7f31903b4e8, type: 3}
+  m_Name: WP_Thunderstorm
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.WeatherProfile
+  coverageMin: 1
+  coverageMax: 1
+  cloudDensity: 0.9
+  cloudSoftness: 0.18
+  cloudDarkness: 0.7
+  cloudTint: {r: 0.55, g: 0.58, b: 0.68, a: 1}
+  cirrusAmount: 0
+  skyDesaturation: 0.65
+  skyDarkening: 0.55
+  sunIntensityMultiplier: 0.1
+  ambientMultiplier: 0.65
+  shadowMultiplier: 0
+  cloudShadowStrength: 0
+  fogDensity: 0.01
+  fogTint: {r: 0.4, g: 0.43, b: 0.52, a: 0.7}
+  windHeading: 60
+  windSpeed: 16
+  precipitation: 1
+  precipitationIntensity: 1
+  mist: 0
+  lightningPerMinute: 8
+  saturation: -40
+  contrast: 10
+  ambienceLoop: {fileID: 0}
+  ambienceVolume: 0.6
+  transitionSeconds: 90
+  durationMin: 180
+  durationMax: 360
+  next:
+  - profile: {fileID: 11400000, guid: 58a6883fd3a881249b16036e32f178c1, type: 2}
+    weight: 3
+  - profile: {fileID: 11400000, guid: 9832740c89d5b9749b94b880a421af43, type: 2}
+    weight: 1

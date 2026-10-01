@@ -1,3 +1,5 @@
+ART DIRECTION (Krytical Nova II): Western comic-book style — bold ink outlines, cel-shaded color blocking, dramatic comic-panel framing, and punchy comic-style combat feedback. The Twelve Sky 2 material in these docs is a systems/numbers reference only; it does not define the game's art, setting, or visual theme.
+
 Twelve Sky 2 is best understood as a PvP-first MMORPG where your character is built from stats + combat discipline + skills + equipment, rather than a traditional fixed-class RPG. The developers explicitly described PvP, faction warfare, alliances, and social/economic systems as major design pillars.
 
 Below is the system structure I'd use if you wanted to study Twelve Sky 2 as a game-design reference.

@@ -31,8 +31,8 @@ MonoBehaviour:
   maxRank: 100
   skillPointsToLearn: 50
   totalSkillPointsToMax: 100
-  minChiCost: 1417
-  maxChiCost: 1871
+  minChiCost: 60
+  maxChiCost: 90
   cooldown: 1
   minDuration: 61
   maxDuration: 180

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KryticalNova.Core;
 using KryticalNova.Progression;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,7 +9,7 @@ namespace KryticalNova.UI
     /// <summary>Displays animated floating combat numbers and status banners in UI Toolkit projected from world coordinates.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
-    public sealed class CombatFeedbackManager : MonoBehaviour
+    public sealed class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackSink
     {
         private const float FloatDuration = 1.0f;
         private const float RiseSpeed = 1.5f;
@@ -41,6 +42,13 @@ namespace KryticalNova.UI
             }
             instance = this;
             uiDocument = GetComponent<UIDocument>();
+            ClientPresentationRegistry.RegisterFeedback(this);
+        }
+
+        private void OnDestroy()
+        {
+            ClientPresentationRegistry.UnregisterFeedback(this);
+            if (instance == this) instance = null;
         }
 
         private void Start()
@@ -139,6 +147,32 @@ namespace KryticalNova.UI
                 ElapsedTime = 0f,
                 Lifetime = FloatDuration,
                 JitterOffset = new Vector3(Random.Range(-RandomSpread, RandomSpread), 0f, RandomSpread * 0.5f)
+            };
+            activeLabels.Add(entry);
+        }
+
+        /// <summary>Spawns floating text over a character (e.g. skill activations, buffs, level ups).</summary>
+        public void ShowFloatingText(Vector3 worldPosition, string text, string styleClass = "crit")
+        {
+            if (rootContainer == null || rootContainer.panel == null) return;
+
+            Label label = new Label(text);
+            label.AddToClassList("floating-combat-text");
+            if (!string.IsNullOrEmpty(styleClass))
+            {
+                label.AddToClassList(styleClass);
+            }
+            label.pickingMode = PickingMode.Ignore;
+
+            rootContainer.Add(label);
+
+            var entry = new ActiveCombatLabel
+            {
+                Label = label,
+                OriginWorldPosition = worldPosition + Vector3.up * BaseWorldYOffset,
+                ElapsedTime = 0f,
+                Lifetime = FloatDuration * 1.3f,
+                JitterOffset = new Vector3(Random.Range(-0.1f, 0.1f), 0f, 0f)
             };
             activeLabels.Add(entry);
         }

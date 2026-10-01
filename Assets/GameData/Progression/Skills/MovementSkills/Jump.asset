@@ -21,118 +21,118 @@ MonoBehaviour:
     chiCost: 5
     runSpeed: 0
     jumpHeight: 20
-    jumpDistance: 60
+    jumpDistance: 20
   - requiredCharacterLevel: 3
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 21
-    jumpDistance: 60.5
+    jumpHeight: 22.5
+    jumpDistance: 22.5
   - requiredCharacterLevel: 5
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 22
-    jumpDistance: 61
+    jumpHeight: 25
+    jumpDistance: 25
   - requiredCharacterLevel: 7
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 23
-    jumpDistance: 61.5
+    jumpHeight: 27.5
+    jumpDistance: 27.5
   - requiredCharacterLevel: 9
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 24
-    jumpDistance: 62
+    jumpHeight: 30
+    jumpDistance: 30
   - requiredCharacterLevel: 11
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 25
-    jumpDistance: 62.5
+    jumpHeight: 32.5
+    jumpDistance: 32.5
   - requiredCharacterLevel: 13
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 26
-    jumpDistance: 63
+    jumpHeight: 35
+    jumpDistance: 35
   - requiredCharacterLevel: 15
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 27
-    jumpDistance: 63.5
+    jumpHeight: 37.5
+    jumpDistance: 37.5
   - requiredCharacterLevel: 17
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 28
-    jumpDistance: 64
+    jumpHeight: 40
+    jumpDistance: 40
   - requiredCharacterLevel: 19
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 29
-    jumpDistance: 64.5
+    jumpHeight: 42.5
+    jumpDistance: 42.5
   - requiredCharacterLevel: 21
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 30
-    jumpDistance: 65
+    jumpHeight: 45
+    jumpDistance: 45
   - requiredCharacterLevel: 23
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 31
-    jumpDistance: 65.5
+    jumpHeight: 47.5
+    jumpDistance: 47.5
   - requiredCharacterLevel: 25
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 32
-    jumpDistance: 66
+    jumpHeight: 50
+    jumpDistance: 50
   - requiredCharacterLevel: 27
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 33
-    jumpDistance: 66.5
+    jumpHeight: 52.5
+    jumpDistance: 52.5
   - requiredCharacterLevel: 29
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 34
-    jumpDistance: 67
+    jumpHeight: 55
+    jumpDistance: 55
   - requiredCharacterLevel: 31
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 35
-    jumpDistance: 67.5
+    jumpHeight: 57.5
+    jumpDistance: 57.5
   - requiredCharacterLevel: 33
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 36
-    jumpDistance: 68
+    jumpHeight: 60
+    jumpDistance: 60
   - requiredCharacterLevel: 35
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 37
-    jumpDistance: 68.5
+    jumpHeight: 62.5
+    jumpDistance: 62.5
   - requiredCharacterLevel: 37
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 38
-    jumpDistance: 69
+    jumpHeight: 65
+    jumpDistance: 65
   - requiredCharacterLevel: 39
     skillPointCost: 1
     chiCost: 5
     runSpeed: 0
-    jumpHeight: 39
-    jumpDistance: 69.5
+    jumpHeight: 67.5
+    jumpDistance: 67.5
