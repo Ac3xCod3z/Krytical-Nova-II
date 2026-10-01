@@ -54,6 +54,8 @@ namespace KryticalNova.Player
         [SerializeField] private Transform katanaTransform;
         [SerializeField, Range(0.1f, 0.9f)] private float equipReparentNormalizedTime = 0.38f;
         [SerializeField, Range(0.1f, 0.9f)] private float unequipReparentNormalizedTime = 0.45f;
+        [Tooltip("Humanoid foot IK on the draw/sheath clips. They come from the Big Sword set and hover or sink on this rig without it.")]
+        [SerializeField] private bool weaponDrawFootIK = true;
 
         [Header("Components")]
         [SerializeField] private NavMeshAgent agent;
@@ -70,7 +72,11 @@ namespace KryticalNova.Player
         private Vector3 lastPosition;
         private float currentSpeed;
 
-        public bool IsWeaponDrawn => isWeaponDrawn.Value;
+        // Stance this instance is presenting. Leads the NetworkVariable while a draw/sheath plays
+        // (the owner predicts it locally) and follows it otherwise.
+        private bool presentedWeaponDrawn;
+
+        public bool IsWeaponDrawn => presentedWeaponDrawn;
         public CharacterAnimState CurrentState => currentState;
         public bool IsActionBusy => currentState == CharacterAnimState.Equipping ||
                                      currentState == CharacterAnimState.Unequipping ||
@@ -88,7 +94,17 @@ namespace KryticalNova.Player
         public override void OnNetworkSpawn()
         {
             isWeaponDrawn.OnValueChanged += HandleWeaponStanceChanged;
-            AttachKatanaToSocket(isWeaponDrawn.Value);
+            if (IsServer)
+            {
+                // Carry over a stance chosen before the session started (e.g. drawn while offline)
+                isWeaponDrawn.Value = presentedWeaponDrawn;
+            }
+            else
+            {
+                presentedWeaponDrawn = isWeaponDrawn.Value;
+                AttachKatanaToSocket(presentedWeaponDrawn);
+                currentLocomotionClip = null;
+            }
         }
 
         public override void OnNetworkDespawn()
@@ -98,10 +114,10 @@ namespace KryticalNova.Player
 
         private void Start()
         {
-            AttachKatanaToSocket(isWeaponDrawn.Value);
+            AttachKatanaToSocket(presentedWeaponDrawn);
             if (animancer != null)
             {
-                bool drawn = isWeaponDrawn.Value;
+                bool drawn = presentedWeaponDrawn;
                 AnimationClip initialIdle = (drawn && drawnIdleClip != null) ? drawnIdleClip : idleClip;
                 if (initialIdle != null)
                 {
@@ -139,7 +155,7 @@ namespace KryticalNova.Player
         {
             if (animancer == null) return;
 
-            bool drawn = isWeaponDrawn.Value;
+            bool drawn = presentedWeaponDrawn;
             AnimationClip targetIdle = (drawn && drawnIdleClip != null) ? drawnIdleClip : idleClip;
             AnimationClip targetWalk = (drawn && drawnWalkClip != null) ? drawnWalkClip : walkClip;
             AnimationClip targetRun = (drawn && drawnRunClip != null) ? drawnRunClip : runClip;
@@ -161,54 +177,74 @@ namespace KryticalNova.Player
 
         public void RequestToggleWeaponDraw()
         {
-            RequestSetWeaponDraw(!isWeaponDrawn.Value);
+            RequestSetWeaponDraw(!presentedWeaponDrawn);
         }
 
         public void RequestSetWeaponDraw(bool draw, Action onComplete = null)
         {
-            if (isWeaponDrawn.Value == draw)
+            if (presentedWeaponDrawn == draw)
             {
                 onComplete?.Invoke();
                 return;
             }
 
-            if (IsSpawned && !IsServer)
+            // Offline, host and owning client all play the draw/sheath immediately;
+            // remote observers get it from PlayWeaponDrawClientRpc.
+            PlayWeaponDrawAnimation(draw);
+
+            if (!IsSpawned)
             {
-                RequestToggleWeaponDrawServerRpc(draw);
+                isWeaponDrawn.Value = draw;
+            }
+            else if (IsServer)
+            {
+                ServerApplyWeaponDraw(draw);
             }
             else
             {
-                ExecuteToggleWeaponDraw(draw);
+                RequestToggleWeaponDrawServerRpc(draw);
             }
         }
 
         [ServerRpc]
         private void RequestToggleWeaponDrawServerRpc(bool draw)
         {
-            ExecuteToggleWeaponDraw(draw);
+            if (isWeaponDrawn.Value == draw) return;
+
+            // The server's own view of this remote player
+            PlayWeaponDrawAnimation(draw);
+            ServerApplyWeaponDraw(draw);
         }
 
-        private void ExecuteToggleWeaponDraw(bool draw)
+        private void ServerApplyWeaponDraw(bool draw)
         {
             isWeaponDrawn.Value = draw;
-            if (IsSpawned)
-            {
-                PlayWeaponDrawClientRpc(draw);
-            }
-            else
-            {
-                PlayWeaponDrawAnimation(draw);
-            }
+            PlayWeaponDrawClientRpc(draw);
         }
 
         [ClientRpc]
         private void PlayWeaponDrawClientRpc(bool draw)
         {
-            if (IsServer) return; // Server already ran or triggered it
+            if (IsServer) return;  // server/host already played it in RequestSetWeaponDraw or the ServerRpc
+            if (IsOwner) return;   // owner predicted it locally when requesting
             PlayWeaponDrawAnimation(draw);
         }
 
         private void PlayWeaponDrawAnimation(bool draw)
+        {
+            StopActiveActionRoutine();
+
+            bool changed = presentedWeaponDrawn != draw;
+            presentedWeaponDrawn = draw;
+            activeActionRoutine = StartCoroutine(WeaponDrawRoutine(draw));
+            if (changed) OnWeaponStanceChanged?.Invoke(draw);
+        }
+
+        /// <summary>
+        /// Stops the running action coroutine. An interrupted draw/sheath (jump, attack) still
+        /// finishes its katana swap so the blade is never left on the wrong socket.
+        /// </summary>
+        private void StopActiveActionRoutine()
         {
             if (activeActionRoutine != null)
             {
@@ -216,8 +252,16 @@ namespace KryticalNova.Player
                 activeActionRoutine = null;
             }
 
-            activeActionRoutine = StartCoroutine(WeaponDrawRoutine(draw));
+            if (IsWeaponDrawActionPlaying)
+            {
+                AttachKatanaToSocket(presentedWeaponDrawn);
+                currentState = CharacterAnimState.Locomotion;
+                currentLocomotionClip = null;
+            }
         }
+
+        private bool IsWeaponDrawActionPlaying =>
+            currentState == CharacterAnimState.Equipping || currentState == CharacterAnimState.Unequipping;
 
         private IEnumerator WeaponDrawRoutine(bool draw)
         {
@@ -226,8 +270,12 @@ namespace KryticalNova.Player
 
             if (animancer != null && clip != null)
             {
+                // The katana starts on the socket it is being taken from and only swaps at the reparent point
+                AttachKatanaToSocket(!draw);
+
                 var state = animancer.Play(clip, 0.15f);
                 state.Time = 0f;
+                state.ApplyFootIK = weaponDrawFootIK;
 
                 float reparentNorm = draw ? equipReparentNormalizedTime : unequipReparentNormalizedTime;
                 float reparentTime = clip.length * reparentNorm;
@@ -263,6 +311,12 @@ namespace KryticalNova.Player
 
         private void HandleWeaponStanceChanged(bool oldVal, bool newVal)
         {
+            // A draw/sheath animation that is playing owns the katana and presented stance; it finishes on its own.
+            if (IsWeaponDrawActionPlaying) return;
+            if (presentedWeaponDrawn == newVal) return;
+
+            // Authoritative correction (late join, rejected prediction, missed RPC): snap to the server's stance
+            presentedWeaponDrawn = newVal;
             AttachKatanaToSocket(newVal);
             currentLocomotionClip = null;
             if (currentState == CharacterAnimState.Locomotion)
@@ -300,11 +354,7 @@ namespace KryticalNova.Player
 
         public void PlayJumpTakeoff()
         {
-            if (activeActionRoutine != null)
-            {
-                StopCoroutine(activeActionRoutine);
-                activeActionRoutine = null;
-            }
+            StopActiveActionRoutine();
 
             activeActionRoutine = StartCoroutine(JumpTakeoffRoutine());
         }
@@ -334,11 +384,7 @@ namespace KryticalNova.Player
 
         public void PlayJumpLanding()
         {
-            if (activeActionRoutine != null)
-            {
-                StopCoroutine(activeActionRoutine);
-                activeActionRoutine = null;
-            }
+            StopActiveActionRoutine();
 
             activeActionRoutine = StartCoroutine(JumpLandingRoutine());
         }
@@ -358,11 +404,7 @@ namespace KryticalNova.Player
 
         public void ResetJumpAnimation()
         {
-            if (activeActionRoutine != null)
-            {
-                StopCoroutine(activeActionRoutine);
-                activeActionRoutine = null;
-            }
+            StopActiveActionRoutine();
             FinishJump();
         }
 
@@ -380,11 +422,7 @@ namespace KryticalNova.Player
         {
             if (attacking)
             {
-                if (activeActionRoutine != null)
-                {
-                    StopCoroutine(activeActionRoutine);
-                    activeActionRoutine = null;
-                }
+                StopActiveActionRoutine();
                 currentState = CharacterAnimState.Attacking;
             }
             else if (currentState == CharacterAnimState.Attacking)

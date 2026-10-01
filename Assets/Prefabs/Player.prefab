@@ -322,7 +322,6 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   gameplayCamera: {fileID: 0}
   orbitCamera: {fileID: 0}
-  progressionUI: {fileID: 0}
   groundLayers:
     serializedVersion: 2
     m_Bits: 8
@@ -604,6 +603,7 @@ MonoBehaviour:
   katanaTransform: {fileID: 7878109879836969979}
   equipReparentNormalizedTime: 0.38
   unequipReparentNormalizedTime: 0.45
+  weaponDrawFootIK: 1
   agent: {fileID: 376469485258568685}
 --- !u!114 &6427914725768415556
 MonoBehaviour:
@@ -638,6 +638,18 @@ MonoBehaviour:
   meleeStrikingRange: 2.2
   serverMaxValidationRange: 2.7
   modelForwardOffset: 0
+  minCadenceTolerance: 0.7
+  hitLatencyGrace: 0.35
+  slashVfxPrefab: {fileID: 5140124070320025897, guid: 80853f457753da54ca8715d3ca382bc7, type: 3}
+  slashVfxOffset: {x: 0, y: 1.1, z: 0.2}
+  slashStepRotations:
+  - {x: 0, y: 0, z: 15}
+  - {x: 0, y: 0, z: 165}
+  - {x: 0, y: 0, z: 70}
+  slashVfxScale: 1
+  hitVfxPrefab: {fileID: 1473356317183098, guid: 16b154ffbfe6c5841b0a46456345a632, type: 3}
+  impactVfxHeight: 1.1
+  impactVfxTowardAttacker: 0.35
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0
@@ -1218,6 +1230,11 @@ MonoBehaviour:
   hitboxCollider: {fileID: 0}
   ownerRoot: {fileID: 489573667355231182}
   autoConfigureCollider: 1
+  sweepLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  sweepStepDistance: 0.15
+  maxSweepSamples: 12
 --- !u!54 &7389240347603564037
 Rigidbody:
   m_ObjectHideFlags: 0

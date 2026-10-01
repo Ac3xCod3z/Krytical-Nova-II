@@ -58,10 +58,24 @@ namespace KryticalNova.Combat
         [Tooltip("Extra seconds after a strike's clip ends during which its hit may still arrive (network latency).")]
         [SerializeField, Min(0f)] private float hitLatencyGrace = 0.35f;
 
-        [Header("Impact VFX (NetworkCombatVFXPool)")]
-        [SerializeField] private string impactVfxPoolKey = "hit_impact";
-        [SerializeField, Min(0.1f)] private float impactVfxLifetime = 3f;
+        [Header("Slash VFX (every swing, cosmetic)")]
+        [SerializeField] private GameObject slashVfxPrefab;
+        [Tooltip("Slash origin relative to the character (x = right, y = up, z = forward).")]
+        [SerializeField] private Vector3 slashVfxOffset = new Vector3(0f, 1.1f, 0.2f);
+        [Tooltip("Per-strike rotation of the slash arc relative to the character's facing (Z tilts the arc).")]
+        [SerializeField] private Vector3[] slashStepRotations =
+        {
+            new Vector3(0f, 0f, 15f),   // Strike 1: forehand sweep
+            new Vector3(0f, 0f, 165f),  // Strike 2: mirrored backhand
+            new Vector3(0f, 0f, 70f),   // Strike 3: steep diagonal finisher
+        };
+        [SerializeField, Min(0.1f)] private float slashVfxScale = 1f;
+
+        [Header("Hit VFX (confirmed, non-evaded hits)")]
+        [SerializeField] private GameObject hitVfxPrefab;
         [SerializeField] private float impactVfxHeight = 1.1f;
+        [Tooltip("Pulls the impact out of the target's body toward the attacker so it isn't hidden inside the mesh.")]
+        [SerializeField, Min(0f)] private float impactVfxTowardAttacker = 0.35f;
 
         private NavMeshAgent agent;
         private CharacterCombatStats combatStats;
@@ -93,22 +107,22 @@ namespace KryticalNova.Combat
             if (animancer == null) animancer = GetComponentInChildren<AnimancerComponent>();
         }
 
-        public override void OnNetworkSpawn()
+        // Hits are handled whether or not a network session is running: offline they apply locally,
+        // online HandleHitboxRegisteredHit routes them through the server.
+        private void OnEnable()
         {
-            base.OnNetworkSpawn();
             if (weaponHitbox != null)
             {
                 weaponHitbox.OnHitRegistered += HandleHitboxRegisteredHit;
             }
         }
 
-        public override void OnNetworkDespawn()
+        private void OnDisable()
         {
             if (weaponHitbox != null)
             {
                 weaponHitbox.OnHitRegistered -= HandleHitboxRegisteredHit;
             }
-            base.OnNetworkDespawn();
         }
 
         private void Start()
@@ -116,7 +130,7 @@ namespace KryticalNova.Combat
             if (weaponHitbox == null)
             {
                 weaponHitbox = GetComponentInChildren<WeaponHitbox>(true);
-                if (weaponHitbox != null)
+                if (weaponHitbox != null && isActiveAndEnabled)
                 {
                     weaponHitbox.OnHitRegistered += HandleHitboxRegisteredHit;
                 }
@@ -268,6 +282,7 @@ namespace KryticalNova.Combat
                 if (!swingActive && elapsed >= swingStart && elapsed < swingEnd)
                 {
                     swingActive = true;
+                    SpawnSlashVfxLocal(step);
                     if (weaponHitbox != null)
                     {
                         weaponHitbox.BeginSwing(step, IsSpawned ? NetworkObjectId : 0);
@@ -389,7 +404,34 @@ namespace KryticalNova.Combat
                 var state = animancer.Play(clip, comboCrossFade);
                 state.Speed = speed;
                 state.Time = 0f;
+
+                // Proxies don't run the swing windows, so time the slash to the same window start.
+                float swingStartNorm = step == 1 ? swing1Start : step == 2 ? swing2Start : swing3Start;
+                StartCoroutine(SpawnSlashVfxDelayed(step, clip.length * swingStartNorm / Mathf.Max(0.01f, speed)));
             }
+        }
+
+        private IEnumerator SpawnSlashVfxDelayed(int step, float delay)
+        {
+            if (delay > 0f) yield return new WaitForSeconds(delay);
+            SpawnSlashVfxLocal(step);
+        }
+
+        private void SpawnSlashVfxLocal(int step)
+        {
+            var pool = NetworkCombatVFXPool.Instance;
+            if (pool == null || slashVfxPrefab == null) return;
+
+            Quaternion stepRotation = Quaternion.identity;
+            if (slashStepRotations != null && step >= 1 && step <= slashStepRotations.Length)
+                stepRotation = Quaternion.Euler(slashStepRotations[step - 1]);
+
+            // Character rotation includes modelForwardOffset; undo it so the slash follows the true facing.
+            Quaternion facing = transform.rotation * Quaternion.AngleAxis(-modelForwardOffset, Vector3.up);
+            Vector3 position = transform.position + facing * slashVfxOffset;
+
+            var instance = pool.Spawn(slashVfxPrefab, position, facing * stepRotation);
+            if (instance != null) instance.transform.localScale = Vector3.one * slashVfxScale;
         }
 
         private bool IsWithinStrikingRange(IDamageable target)
@@ -492,9 +534,13 @@ namespace KryticalNova.Combat
 
             if (!result.IsEvaded)
             {
-                Vector3 impactPos = target.Transform.position + Vector3.up * impactVfxHeight;
-                if (IsSpawned) SpawnImpactVfxClientRpc(impactPos);
-                else SpawnImpactVfxLocal(impactPos);
+                Vector3 toAttacker = transform.position - target.Transform.position;
+                toAttacker.y = 0f;
+                toAttacker = toAttacker.sqrMagnitude > 0.0001f ? toAttacker.normalized : -target.Transform.forward;
+
+                Vector3 impactPos = target.Transform.position + Vector3.up * impactVfxHeight + toAttacker * impactVfxTowardAttacker;
+                if (IsSpawned) SpawnImpactVfxClientRpc(impactPos, toAttacker);
+                else SpawnImpactVfxLocal(impactPos, toAttacker);
             }
 
             string stepLabel = comboStep == 3 ? "Combo Finisher" : $"Strike {comboStep}";
@@ -509,16 +555,17 @@ namespace KryticalNova.Combat
         }
 
         [ClientRpc]
-        private void SpawnImpactVfxClientRpc(Vector3 position)
+        private void SpawnImpactVfxClientRpc(Vector3 position, Vector3 towardAttacker)
         {
-            SpawnImpactVfxLocal(position);
+            SpawnImpactVfxLocal(position, towardAttacker);
         }
 
-        private void SpawnImpactVfxLocal(Vector3 position)
+        private void SpawnImpactVfxLocal(Vector3 position, Vector3 towardAttacker)
         {
             var pool = NetworkCombatVFXPool.Instance;
-            if (pool == null || string.IsNullOrEmpty(impactVfxPoolKey)) return;
-            pool.Spawn(impactVfxPoolKey, position, Quaternion.identity, impactVfxLifetime);
+            if (pool == null || hitVfxPrefab == null) return;
+            // Burst faces back toward the attacker, i.e. sparks fly off the struck surface.
+            pool.Spawn(hitVfxPrefab, position, Quaternion.LookRotation(towardAttacker, Vector3.up));
         }
     }
 }

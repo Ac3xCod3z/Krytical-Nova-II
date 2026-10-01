@@ -24,6 +24,7 @@ namespace KryticalNova.Networking
 
         private readonly Dictionary<string, Queue<GameObject>> pools = new Dictionary<string, Queue<GameObject>>();
         private readonly Dictionary<string, GameObject> prefabMap = new Dictionary<string, GameObject>();
+        private readonly Dictionary<GameObject, string> prefabKeys = new Dictionary<GameObject, string>();
 
         private struct PendingReturn
         {
@@ -84,6 +85,7 @@ namespace KryticalNova.Networking
                 {
                     instance.transform.SetPositionAndRotation(position, rotation);
                     instance.SetActive(true);
+                    RestartParticles(instance);
                     return instance;
                 }
             }
@@ -113,6 +115,51 @@ namespace KryticalNova.Networking
             return instance;
         }
 
+        /// <summary>
+        /// Spawns a pooled instance of <paramref name="prefab"/> without needing a predefined pool entry.
+        /// The prefab is registered on first use. A non-positive <paramref name="lifetime"/> uses the
+        /// prefab's own particle duration so effects are never cut off early.
+        /// </summary>
+        public GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation, float lifetime = 0f)
+        {
+            if (prefab == null) return null;
+
+            if (!prefabKeys.TryGetValue(prefab, out var key))
+            {
+                key = "prefab:" + prefab.name + ":" + prefabKeys.Count;
+                prefabKeys[prefab] = key;
+                prefabMap[key] = prefab;
+            }
+
+            if (lifetime <= 0f) lifetime = GetParticleDuration(prefab);
+            return Spawn(key, position, rotation, lifetime);
+        }
+
+        /// <summary>Longest duration + start delay + particle lifetime across the prefab's particle systems.</summary>
+        public static float GetParticleDuration(GameObject prefab)
+        {
+            float max = 0f;
+            foreach (var ps in prefab.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                float t = main.startDelay.constantMax + main.startLifetime.constantMax + (main.loop ? 0f : main.duration);
+                if (t > max) max = t;
+            }
+            return max > 0f ? max : 2f;
+        }
+
+        // Reused instances must replay from t=0; re-enabling alone can resume a half-finished system,
+        // whose one-shot bursts have already fired, so the effect silently shows nothing.
+        private static void RestartParticles(GameObject instance)
+        {
+            if (!instance.TryGetComponent<ParticleSystem>(out var root))
+                root = instance.GetComponentInChildren<ParticleSystem>();
+            if (root == null) return;
+
+            root.Clear(true);
+            root.Play(true);
+        }
+
         private void Update()
         {
             if (pendingReturns.Count == 0) return;
@@ -133,6 +180,8 @@ namespace KryticalNova.Networking
         {
             if (instance == null) return;
 
+            foreach (var ps in instance.GetComponentsInChildren<ParticleSystem>())
+                ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
             instance.SetActive(false);
             instance.transform.SetParent(transform);
 
