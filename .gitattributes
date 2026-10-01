@@ -169,3 +169,8 @@ Packages/packages-lock.json linguist-generated
 
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary
+# Terrain and NavMesh data are always serialized binary, even in Force Text mode.
+# Treating them as text lets git strip CR bytes and corrupt them.
+*TerrainData*.asset     binary
+/Assets/New?Terrain.asset binary
+NavMesh*.asset          binary
