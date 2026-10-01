@@ -105,6 +105,8 @@ namespace KryticalNova.Player
         private bool presentedWeaponDrawn;
 
         public bool IsWeaponDrawn => presentedWeaponDrawn;
+        /// <summary>Sheathed idle, also used by the equipment preview doll.</summary>
+        public AnimationClip IdleClip => idleClip;
         public CharacterAnimState CurrentState => currentState;
         public bool IsActionBusy => currentState == CharacterAnimState.Equipping ||
                                      currentState == CharacterAnimState.Unequipping ||

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3622be29843aeb149be9b3196ff71071, type: 3}
+  m_Name: Weapon_SciFiSword
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
+  itemId: 1006
+  displayName: Plasma Edge
+  description: A humming blade from the city foundries.
+  icon: {fileID: 21300000, guid: 1c159983bb546b3479f520d4dc0ccd3d, type: 3}
+  rarity: 3
+  equipSlot: 1
+  maxStack: 1
+  statModifiers: []
+  appearanceParts: []
+  weaponPrefab: {fileID: 5697607361418871401, guid: f13f3777d0068df4ea984afc5316f8ef, type: 3}
+  weaponLocalPosition: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalScale: {x: 1, y: 1, z: 1}
+  hitboxCenter: {x: 0, y: -0.038293123, z: 0.6120743}
+  hitboxSize: {x: 0.18, y: 0.26275033, z: 1.1241486}
+  petPrefab: {fileID: 0}
+  petScale: 1
+  petOffset: {x: 0.7, y: 0.95, z: -0.5}

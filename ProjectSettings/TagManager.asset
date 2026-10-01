@@ -11,9 +11,9 @@ TagManager:
   - Ground
   - Water
   - UI
+  - Interactable
   - 
-  - 
-  - 
+  - UIPreview
   - 
   - 
   - 
@@ -49,5 +49,5 @@ TagManager:
   - Light Layer 4
   - Light Layer 5
   - Light Layer 6
-  - Light Layer 7
+  - UI Preview
   m_MigratedRenderPipelines: []

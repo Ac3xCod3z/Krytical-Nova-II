@@ -61,6 +61,10 @@ GameObject:
   - component: {fileID: 4114703204651377223}
   - component: {fileID: 8773836844876603563}
   - component: {fileID: 6427914725768415556}
+  - component: {fileID: 6246808998396067757}
+  - component: {fileID: 6013858044858887643}
+  - component: {fileID: 3738633918761511803}
+  - component: {fileID: 5668717879715690075}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -264,7 +268,7 @@ MonoBehaviour:
     m_Bits: 8
   raycastLayers:
     serializedVersion: 2
-    m_Bits: 9
+    m_Bits: 73
   maximumRayDistance: 1000
   destinationSampleRadius: 1
   modelForwardOffset: 0
@@ -274,6 +278,10 @@ MonoBehaviour:
   minimumZoomDistance: 3
   maximumZoomDistance: 18
   zoomSensitivity: 1
+  minimumPitch: -35
+  maximumPitch: 75
+  groundClearance: 0.4
+  occluderDitherShader: {fileID: 4800000, guid: 6a9231234ae1c9842a5ce7af8c7fdcc5, type: 3}
 --- !u!114 &6374771762735267548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -446,14 +454,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3994649078
+  GlobalObjectIdHash: 1718997538
   InScenePlacedSourceGlobalObjectIdHash: 1718997538
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  m_InScenePlaced: 1
+  m_InScenePlaced: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -602,6 +610,68 @@ MonoBehaviour:
   hitVfxPrefab: {fileID: 1473356317183098, guid: 16b154ffbfe6c5841b0a46456345a632, type: 3}
   impactVfxHeight: 1.1
   impactVfxTowardAttacker: 0.35
+--- !u!114 &6246808998396067757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87b72656a9917de4092086117331454d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.PlayerEquipment
+  ShowTopMostFoldoutHeaderGroup: 1
+  catalog: {fileID: 11400000, guid: e1c1b71ec31a0334586d7dae8888309c, type: 2}
+--- !u!114 &6013858044858887643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3d528baf1e859d48b6ed4950cab8eb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.PlayerInventory
+  ShowTopMostFoldoutHeaderGroup: 1
+  catalog: {fileID: 11400000, guid: e1c1b71ec31a0334586d7dae8888309c, type: 2}
+  grantStarterLoadout: 1
+--- !u!114 &3738633918761511803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d40bdbb7912a65f48a3f2d45bf3908bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.PetFollower
+  followSmoothTime: 0.35
+  bobAmplitude: 0.12
+  bobFrequency: 1.4
+  turnSpeed: 6
+  snapDistance: 8
+  normalizedSize: 0.55
+--- !u!114 &5668717879715690075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c5591fdc9c906f4793d8a0ae30667d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.EquipmentVisualBinder
+  appearance: {fileID: 0}
+  weaponMount: {fileID: 0}
+  petFollower: {fileID: 0}
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,7 +3,8 @@
     "rootNamespace": "KryticalNova.UI",
     "references": [
         "KryticalNova.Runtime",
-        "Unity.Netcode.Runtime"
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

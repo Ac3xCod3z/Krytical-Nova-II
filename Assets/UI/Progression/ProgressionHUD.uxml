@@ -1,20 +1,56 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Shared/KryticalTheme.uss" />
     <Style src="ProgressionHUD.uss" />
-    <ui:VisualElement name="game-ui" picking-mode="Ignore">
-        <ui:VisualElement name="summary" class="panel blocks-world">
-            <ui:Label text="KRYTICAL NOVA II" class="eyebrow" />
-            <ui:VisualElement class="row"><ui:Label name="level-label" text="LEVEL 1" class="heading" /><ui:Label name="mode-label" text="WALK · 5.0 m/s" class="accent" /></ui:VisualElement>
+    <ui:Template name="ItemWindows" src="../Items/ItemWindows.uxml" />
+    <ui:Template name="Minimap" src="../Minimap/Minimap.uxml" />
+    <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
+        <!-- Player status frame -->
+        <ui:VisualElement name="summary" class="panel blocks-world hud-movable">
+            <ui:VisualElement class="row summary-top">
+                <ui:VisualElement class="level-badge" picking-mode="Ignore" />
+                <ui:VisualElement class="summary-titles" picking-mode="Ignore">
+                    <ui:Label text="KRYTICAL NOVA II" class="eyebrow" />
+                    <ui:Label name="level-label" text="LEVEL 1" class="heading" />
+                </ui:VisualElement>
+                <ui:Label name="mode-label" text="WALK · 5.0 m/s" class="accent mode-chip" />
+            </ui:VisualElement>
             <ui:ProgressBar name="hp-bar" class="resource-bar" title="HP 200 / 200" value="100" low-value="0" high-value="100" />
             <ui:ProgressBar name="chi-bar" class="resource-bar" title="CHI 100 / 100" value="100" low-value="0" high-value="100" />
             <ui:ProgressBar name="xp-bar" title="0 / 100 XP" value="0" low-value="0" high-value="100" />
             <ui:Label name="points-summary" text="5 stat points  |  1 skill point" class="muted" />
         </ui:VisualElement>
-        <ui:VisualElement name="menu" class="row blocks-world">
+
+        <!-- Top-right menu -->
+        <ui:VisualElement name="menu" class="row blocks-world hud-movable">
+            <ui:Button name="open-inventory" text="INVENTORY  [I]" />
+            <ui:Button name="open-equipment" text="EQUIPMENT  [E]" />
             <ui:Button name="open-character" text="CHARACTER  [C]" />
             <ui:Button name="open-skills" text="SKILLS  [K]" />
+            <ui:Button name="open-settings" text="SETTINGS  [O]" />
         </ui:VisualElement>
-        <ui:VisualElement name="character-window" class="panel window blocks-world">
-            <ui:VisualElement class="row"><ui:Label text="CHARACTER" class="heading" /><ui:Button name="close-character" text="X" class="close" /></ui:VisualElement>
+
+        <!-- Bottom HUD (before the windows so open windows draw on top): each piece moves independently -->
+        <ui:VisualElement name="active-buffs-bar" class="active-buffs-bar hud-movable" picking-mode="Ignore" />
+        <ui:Label name="feedback" text="Open Skills [K] to learn skills and assign them to your hotbar." class="feedback hud-movable" picking-mode="Ignore" />
+        <ui:VisualElement name="hotbar-dock" class="hud-movable" picking-mode="Ignore">
+            <ui:VisualElement name="hotbar" class="panel blocks-world">
+                <ui:VisualElement name="slot-0" class="hotbar-slot"><ui:Label text="1" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-1" class="hotbar-slot"><ui:Label text="2" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-2" class="hotbar-slot"><ui:Label text="3" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-3" class="hotbar-slot"><ui:Label text="4" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-4" class="hotbar-slot"><ui:Label text="5" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-5" class="hotbar-slot"><ui:Label text="6" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-6" class="hotbar-slot"><ui:Label text="7" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-7" class="hotbar-slot"><ui:Label text="8" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-8" class="hotbar-slot"><ui:Label text="9" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-9" class="hotbar-slot"><ui:Label text="0" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label name="controls-hint" text="1–0 select / cast skill   ·   Drag to rearrange   ·   Right-click a slot to clear   ·   Esc closes windows" class="controls" picking-mode="Ignore" />
+        </ui:VisualElement>
+
+        <!-- Character window -->
+        <ui:VisualElement name="character-window" class="panel window blocks-world hud-movable">
+            <ui:VisualElement class="row kn-header"><ui:Label text="CHARACTER" class="heading" /><ui:Button name="close-character" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button></ui:VisualElement>
             <ui:ScrollView name="character-body" class="window-body" horizontal-scroller-visibility="Hidden">
             <ui:Label text="ATTRIBUTES" class="eyebrow section" />
             <ui:VisualElement class="row">
@@ -25,15 +61,15 @@
                     <ui:Button name="stat-step-10" text="+10" class="step-option" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement class="stat-row"><ui:Label text="Strength" /><ui:Label name="stat-0" text="10" class="stat-value" /><ui:Button name="allocate-0" text="+1" /></ui:VisualElement>
-            <ui:VisualElement class="stat-row"><ui:Label text="Vitality" /><ui:Label name="stat-1" text="10" class="stat-value" /><ui:Button name="allocate-1" text="+1" /></ui:VisualElement>
-            <ui:VisualElement class="stat-row"><ui:Label text="Agility" /><ui:Label name="stat-2" text="10" class="stat-value" /><ui:Button name="allocate-2" text="+1" /></ui:VisualElement>
-            <ui:VisualElement class="stat-row"><ui:Label text="Spirit" /><ui:Label name="stat-3" text="10" class="stat-value" /><ui:Button name="allocate-3" text="+1" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row kn-card"><ui:Label text="Strength" /><ui:Label name="stat-0" text="10" class="stat-value" /><ui:Button name="allocate-0" text="+1" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row kn-card"><ui:Label text="Vitality" /><ui:Label name="stat-1" text="10" class="stat-value" /><ui:Button name="allocate-1" text="+1" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row kn-card"><ui:Label text="Agility" /><ui:Label name="stat-2" text="10" class="stat-value" /><ui:Button name="allocate-2" text="+1" /></ui:VisualElement>
+            <ui:VisualElement class="stat-row kn-card"><ui:Label text="Spirit" /><ui:Label name="stat-3" text="10" class="stat-value" /><ui:Button name="allocate-3" text="+1" /></ui:VisualElement>
             <ui:Label name="resource-values" text="HP 200 / 200    Chi 100 / 100" class="accent section" />
             <ui:Label name="resource-formula" text="STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evade | AGI: +2 Evade, +1 DP | CHI: +20 Chi, +1 AP" class="help" />
             <ui:Label name="stat-note" text="Spend 1 point per increase. Allocating stat points or equipping gear scales both Primary and Secondary sub-stats dynamically." class="help section" />
             <ui:Label text="DERIVED COMBAT STATS" class="eyebrow section" />
-            <ui:VisualElement class="combat-stats-container">
+            <ui:VisualElement class="combat-stats-container kn-card">
                 <ui:VisualElement class="combat-stat-row">
                     <ui:Label text="Attack Power (AP)" class="combat-stat-label" />
                     <ui:Label name="combat-stat-ap" text="35" class="combat-stat-value" />
@@ -77,8 +113,10 @@
             </ui:VisualElement>
             </ui:ScrollView>
         </ui:VisualElement>
-        <ui:VisualElement name="skills-window" class="panel window blocks-world">
-            <ui:VisualElement class="row"><ui:Label text="SKILLS &amp; MARTIAL ARTS" class="heading" /><ui:Button name="close-skills" text="X" class="close" /></ui:VisualElement>
+
+        <!-- Skills window -->
+        <ui:VisualElement name="skills-window" class="panel window blocks-world hud-movable">
+            <ui:VisualElement class="row kn-header"><ui:Label text="SKILLS &amp; MARTIAL ARTS" class="heading" /><ui:Button name="close-skills" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button></ui:VisualElement>
             <ui:ScrollView name="skills-body" class="window-body" horizontal-scroller-visibility="Hidden">
             <ui:VisualElement class="row section">
                 <ui:Label name="skill-points" text="1 skill point available" class="accent" />
@@ -91,16 +129,16 @@
 
             <!-- Category: Movement Skills -->
             <ui:Label text="MOVEMENT SKILLS" class="category-header eyebrow" />
-            <ui:VisualElement class="skill-card">
-                <ui:VisualElement name="run-drag" class="skill-token"><ui:Label text="RUN" class="skill-icon" /><ui:Label name="run-rank" text="UNLEARNED · 0 / 20" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card">
+                <ui:VisualElement name="run-drag" class="skill-token"><ui:Label text="RUN" class="skill-icon" /><ui:Label name="run-rank" text="UNLEARNED · 0 / 20" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="run-description" text="Select Run, then left-click destinations. Each accepted destination costs Chi. Select Run again to walk." class="help" />
                 <ui:Label name="run-values" text="Next rank: 7.0 m/s · 5 Chi / destination" class="section" />
                 <ui:Label name="run-requirement" text="Requires level 1 · Cost: 1 skill point" class="muted" />
                 <ui:Button name="upgrade-run" text="LEARN RUN" />
                 <ui:Label name="run-drag-hint" text="Learn Run, then drag the RUN tile to a hotbar slot." class="help" />
             </ui:VisualElement>
-            <ui:VisualElement class="skill-card">
-                <ui:VisualElement name="jump-drag" class="skill-token jump-token"><ui:Label text="JUMP" class="skill-icon" /><ui:Label name="jump-rank" text="UNLEARNED · 0 / 20" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card">
+                <ui:VisualElement name="jump-drag" class="skill-token jump-token"><ui:Label text="JUMP" class="skill-icon" /><ui:Label name="jump-rank" text="UNLEARNED · 0 / 20" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="jump-description" text="Select Jump, then left-click a landing point. Flip forward at the apex and bounce on landing." class="help" />
                 <ui:Label name="jump-values" text="Next: 2.0 m range / +1.5 m height — 12 Chi" class="section skill-values" />
                 <ui:Label name="jump-requirement" text="Requires level 1 · Upgrade: 1 skill point" class="muted" />
@@ -110,16 +148,16 @@
 
             <!-- Category: Tier 1 Utility Buffs (Trainer) -->
             <ui:Label text="TIER 1 UTILITY BUFFS (TRAINER)" class="category-header eyebrow section" />
-            <ui:VisualElement class="skill-card">
-                <ui:VisualElement name="spiritual-rage-drag" class="skill-token rage-token"><ui:Label text="SPIRITUAL RAGE" class="skill-icon" /><ui:Label name="spiritual-rage-rank" text="UNLEARNED" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card">
+                <ui:VisualElement name="spiritual-rage-drag" class="skill-token rage-token"><ui:Label text="SPIRITUAL RAGE" class="skill-icon" /><ui:Label name="spiritual-rage-rank" text="UNLEARNED" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="spiritual-rage-description" text="Ignites spiritual fervor, granting +30% Critical Rate for 180s." class="help" />
                 <ui:Label name="spiritual-rage-values" text="+30% Critical Rate · 180s duration · 1s CD · 15 Chi · Self" class="section" />
                 <ui:Label name="spiritual-rage-requirement" text="Requires Level 1 · Cost: 1 skill point" class="muted" />
                 <ui:Button name="upgrade-spiritual-rage" text="LEARN SPIRITUAL RAGE" />
                 <ui:Label name="spiritual-rage-drag-hint" text="Learn Spiritual Rage, then drag to a hotbar slot." class="help" />
             </ui:VisualElement>
-            <ui:VisualElement class="skill-card">
-                <ui:VisualElement name="heavenly-serenity-drag" class="skill-token serenity-token"><ui:Label text="HEAVENLY SERENITY" class="skill-icon" /><ui:Label name="heavenly-serenity-rank" text="UNLEARNED" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card">
+                <ui:VisualElement name="heavenly-serenity-drag" class="skill-token serenity-token"><ui:Label text="HEAVENLY SERENITY" class="skill-icon" /><ui:Label name="heavenly-serenity-rank" text="UNLEARNED" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="heavenly-serenity-description" text="Meditate in tranquil focus, restoring Chi over 20s (5% Max Chi/sec). Interrupts upon taking damage or moving." class="help" />
                 <ui:Label name="heavenly-serenity-values" text="Channeled Chi Restore · 20s duration · 1s CD · 0 Chi · Self" class="section" />
                 <ui:Label name="heavenly-serenity-requirement" text="Requires Level 1 · Cost: 1 skill point" class="muted" />
@@ -132,8 +170,8 @@
             <ui:Label text="Secret techniques locked until rare martial arts drop books are discovered." class="drop-book-note" />
 
             <!-- Heavenly Shield -->
-            <ui:VisualElement class="skill-card rare-skill-card">
-                <ui:VisualElement name="heavenly-shield-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY SHIELD" class="skill-icon" /><ui:Label name="heavenly-shield-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card rare-skill-card">
+                <ui:VisualElement name="heavenly-shield-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY SHIELD" class="skill-icon" /><ui:Label name="heavenly-shield-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="heavenly-shield-description" text="Forms an impenetrable celestial barrier absorbing incoming damage up to 150% Max HP for 60s." class="help" />
                 <ui:Label name="heavenly-shield-values" text="150% Max HP Shield · 60s duration · 2s CD · 30 Chi · Self" class="section" />
                 <ui:Label name="heavenly-shield-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
@@ -142,8 +180,8 @@
             </ui:VisualElement>
 
             <!-- Heavenly Blow -->
-            <ui:VisualElement class="skill-card rare-skill-card">
-                <ui:VisualElement name="heavenly-blow-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY BLOW" class="skill-icon" /><ui:Label name="heavenly-blow-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card rare-skill-card">
+                <ui:VisualElement name="heavenly-blow-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY BLOW" class="skill-icon" /><ui:Label name="heavenly-blow-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="heavenly-blow-description" text="Channels lethal spiritual force, granting +75% Critical / Deadly Blow chance for 180s." class="help" />
                 <ui:Label name="heavenly-blow-values" text="+75% Critical Rate · 180s duration · 1s CD · 25 Chi · Self" class="section" />
                 <ui:Label name="heavenly-blow-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
@@ -152,8 +190,8 @@
             </ui:VisualElement>
 
             <!-- Garuda's Prayer -->
-            <ui:VisualElement class="skill-card rare-skill-card">
-                <ui:VisualElement name="garudas-prayer-drag" class="skill-token rare-token"><ui:Label text="GARUDA'S PRAYER" class="skill-icon" /><ui:Label name="garudas-prayer-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card rare-skill-card">
+                <ui:VisualElement name="garudas-prayer-drag" class="skill-token rare-token"><ui:Label text="GARUDA'S PRAYER" class="skill-icon" /><ui:Label name="garudas-prayer-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="garudas-prayer-description" text="Invokes the divine favor of Garuda, bestowing +100% Luck for 240s." class="help" />
                 <ui:Label name="garudas-prayer-values" text="+100% Luck · 240s duration · 1s CD · 20 Chi · Self" class="section" />
                 <ui:Label name="garudas-prayer-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
@@ -162,8 +200,8 @@
             </ui:VisualElement>
 
             <!-- Heavenly Repulsion -->
-            <ui:VisualElement class="skill-card rare-skill-card">
-                <ui:VisualElement name="heavenly-repulsion-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY REPULSION" class="skill-icon" /><ui:Label name="heavenly-repulsion-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card rare-skill-card">
+                <ui:VisualElement name="heavenly-repulsion-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY REPULSION" class="skill-icon" /><ui:Label name="heavenly-repulsion-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="heavenly-repulsion-description" text="Envelops the body in a reactive mirror aura. 10% chance on incoming hit to take 0 damage and reflect 100% damage back for 180s." class="help" />
                 <ui:Label name="heavenly-repulsion-values" text="10% Reflect · 100% Dmg Reflected · 180s duration · 1s CD · 25 Chi · Self" class="section" />
                 <ui:Label name="heavenly-repulsion-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
@@ -172,8 +210,8 @@
             </ui:VisualElement>
 
             <!-- Heavenly Destruction -->
-            <ui:VisualElement class="skill-card rare-skill-card">
-                <ui:VisualElement name="heavenly-destruction-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY DESTRUCTION" class="skill-icon" /><ui:Label name="heavenly-destruction-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card rare-skill-card">
+                <ui:VisualElement name="heavenly-destruction-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY DESTRUCTION" class="skill-icon" /><ui:Label name="heavenly-destruction-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="heavenly-destruction-description" text="Infuses attacks with devastating force. 10% chance per hit to instantly shatter enemy Heavenly Shield and 50% chance to dispel stance buffs for 180s." class="help" />
                 <ui:Label name="heavenly-destruction-values" text="10% Shield Shatter · 50% Dispel · 180s duration · 1s CD · 25 Chi · Self" class="section" />
                 <ui:Label name="heavenly-destruction-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
@@ -182,8 +220,8 @@
             </ui:VisualElement>
 
             <!-- Reverse Flow -->
-            <ui:VisualElement class="skill-card rare-skill-card">
-                <ui:VisualElement name="reverse-flow-drag" class="skill-token rare-token"><ui:Label text="REVERSE FLOW" class="skill-icon" /><ui:Label name="reverse-flow-rank" text="LOCKED (BOOK REQUIRED)" /></ui:VisualElement>
+            <ui:VisualElement class="skill-card kn-card rare-skill-card">
+                <ui:VisualElement name="reverse-flow-drag" class="skill-token rare-token"><ui:Label text="REVERSE FLOW" class="skill-icon" /><ui:Label name="reverse-flow-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="reverse-flow-description" text="Reverses internal meridian flow, granting +20% Stun (Acupressure) resistance for 180s." class="help" />
                 <ui:Label name="reverse-flow-values" text="+20% Stun Resistance · 180s duration · 1s CD · 20 Chi · Self" class="section" />
                 <ui:Label name="reverse-flow-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
@@ -193,23 +231,77 @@
 
             </ui:ScrollView>
         </ui:VisualElement>
-        <ui:VisualElement name="bottom-region" picking-mode="Ignore">
-            <ui:VisualElement name="active-buffs-bar" class="active-buffs-bar" picking-mode="Ignore" />
-            <ui:Label name="feedback" text="Open Skills [K] to learn skills and assign them to your hotbar." class="feedback" picking-mode="Ignore" />
-            <ui:VisualElement name="hotbar" class="blocks-world">
-                <ui:VisualElement name="slot-0" class="hotbar-slot"><ui:Label text="1" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-                <ui:VisualElement name="slot-1" class="hotbar-slot"><ui:Label text="2" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-                <ui:VisualElement name="slot-2" class="hotbar-slot"><ui:Label text="3" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-                <ui:VisualElement name="slot-3" class="hotbar-slot"><ui:Label text="4" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-                <ui:VisualElement name="slot-4" class="hotbar-slot"><ui:Label text="5" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-                <ui:VisualElement name="slot-5" class="hotbar-slot"><ui:Label text="6" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-                <ui:VisualElement name="slot-6" class="hotbar-slot"><ui:Label text="7" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-                <ui:VisualElement name="slot-7" class="hotbar-slot"><ui:Label text="8" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-                <ui:VisualElement name="slot-8" class="hotbar-slot"><ui:Label text="9" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-                <ui:VisualElement name="slot-9" class="hotbar-slot"><ui:Label text="0" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
-            </ui:VisualElement>
-            <ui:Label text="1–0 select / cast skill   ·   Drag to rearrange   ·   Right-click a slot to clear   ·   Esc closes windows" class="controls" picking-mode="Ignore" />
+
+        <!-- Settings window (HudSettingsController) -->
+        <ui:VisualElement name="settings-window" class="panel window blocks-world hud-movable">
+            <ui:VisualElement class="row kn-header"><ui:Label text="SETTINGS" class="heading" /><ui:Button name="close-settings" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button></ui:VisualElement>
+            <ui:ScrollView name="settings-body" class="window-body" horizontal-scroller-visibility="Hidden">
+                <ui:Label text="HUD LAYOUT" class="eyebrow section" />
+                <ui:Label text="Move and resize HUD panels. Drag a panel to move it, drag the gold corner to resize, right-click a panel to put it back. Your layout is saved on this computer." class="help" />
+                <ui:Button name="settings-edit-layout" text="CUSTOMIZE HUD LAYOUT" class="kn-button-primary section" />
+                <ui:Button name="settings-reset-layout" text="RESET HUD LAYOUT" class="kn-button-danger" />
+                <ui:Label text="WORLD MARKERS" class="eyebrow section" />
+                <ui:Toggle name="setting-move-marker" label="Ring at move destination" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-target-ring" label="Ring under selected target" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-nameplates" label="NPC nameplates" value="true" class="kn-toggle kn-card" />
+                <ui:Label text="INTERFACE" class="eyebrow section" />
+                <ui:Toggle name="setting-controls-hint" label="Show hotbar controls hint" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-minimap-rotate" label="Rotate minimap with camera" value="true" class="kn-toggle kn-card" />
+                <ui:Label text="KEYS" class="eyebrow section" />
+                <ui:Label text="I  Inventory     E  Equipment     C  Character     K  Skills     O  Settings&#10;1–0  Hotbar     Esc  Close / cancel     F1 or ~  Network panel" class="help keys-help" />
+            </ui:ScrollView>
         </ui:VisualElement>
+
+        <!-- Network panel (NetworkSessionPanel) -->
+        <ui:VisualElement name="network-panel" class="panel blocks-world hud-movable">
+            <ui:VisualElement class="row kn-header"><ui:Label text="NETWORK" class="heading" /><ui:Button name="network-close" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button></ui:VisualElement>
+            <ui:Label name="network-status" text="Idle" class="accent network-status" />
+            <ui:VisualElement name="network-offline">
+                <ui:Label text="LOCAL / DIRECT" class="eyebrow section" />
+                <ui:VisualElement class="row network-fields">
+                    <ui:TextField name="network-ip" label="IP" value="127.0.0.1" class="kn-textfield network-ip" />
+                    <ui:TextField name="network-port" label="Port" value="7777" class="kn-textfield network-port" />
+                </ui:VisualElement>
+                <ui:VisualElement class="row network-buttons">
+                    <ui:Button name="network-host" text="HOST" class="kn-button-primary" />
+                    <ui:Button name="network-join" text="JOIN" />
+                    <ui:Button name="network-server" text="SERVER" />
+                </ui:VisualElement>
+                <ui:Label text="ONLINE SESSIONS" class="eyebrow section" />
+                <ui:Button name="network-host-online" text="HOST ONLINE SESSION" class="kn-button-primary" />
+                <ui:VisualElement class="row network-fields">
+                    <ui:TextField name="network-code" label="Code" class="kn-textfield network-code" />
+                    <ui:Button name="network-join-code" text="JOIN" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="network-online">
+                <ui:Label name="network-role" text="Role" class="section" />
+                <ui:Label name="network-clients" text="Connected Clients: 0" class="muted" />
+                <ui:VisualElement name="network-session-row" class="row section">
+                    <ui:Label name="network-session-code" text="Session Code: —" class="accent" />
+                    <ui:Button name="network-copy-code" text="COPY" />
+                </ui:VisualElement>
+                <ui:Button name="network-disconnect" text="DISCONNECT" class="kn-button-danger section" />
+            </ui:VisualElement>
+            <ui:Label text="F1 or ~ toggles this panel" class="help" />
+        </ui:VisualElement>
+
+        <!-- HUD layout edit mode banner (HudSettingsController) -->
+        <ui:VisualElement name="hud-edit-banner" class="panel blocks-world" picking-mode="Position">
+            <ui:VisualElement class="hud-edit-banner-text" picking-mode="Ignore">
+                <ui:Label text="HUD LAYOUT EDITOR" class="heading" />
+                <ui:Label text="Drag panels to move   ·   Drag the gold corner to resize   ·   Right-click a panel to reset it" class="help" />
+            </ui:VisualElement>
+            <ui:Button name="hud-edit-reset" text="RESET ALL" class="kn-button-danger" />
+            <ui:Button name="hud-edit-done" text="DONE" class="kn-button-primary" />
+        </ui:VisualElement>
+
+        <!-- Minimap (MinimapController) -->
+        <ui:Instance template="Minimap" name="minimap-layer" class="minimap-layer" picking-mode="Ignore" />
+
+        <!-- Inventory + Equipment windows, tooltip, context menu (GearUIController) -->
+        <ui:Instance template="ItemWindows" name="item-layer" class="item-layer" picking-mode="Ignore" />
+
         <ui:Label name="drag-ghost" text="RUN" picking-mode="Ignore" />
     </ui:VisualElement>
 </ui:UXML>

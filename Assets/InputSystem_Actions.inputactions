@@ -335,6 +335,15 @@
                     "interactions": "",
                     "initialStateCheck": false,
                     "priority": 0
+                },
+                {
+                    "name": "FlipCamera",
+                    "type": "Button",
+                    "id": "15865aa7-c125-40ad-9a60-6abcb63d310e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -445,6 +454,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "ToggleWeapon",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "022a2720-327b-4620-86c6-6f5312b55c09",
+                    "path": "<Mouse>/middleButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "FlipCamera",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

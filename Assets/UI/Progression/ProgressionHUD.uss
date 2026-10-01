@@ -1,138 +1,248 @@
 /*
-2026-09-28 AI-Tag
-This was created with the help of Assistant, a Unity Artificial Intelligence product.
-*/
-/*
-2026-09-28 AI-Tag
-This was created with the help of Assistant, a Unity Artificial Intelligence product.
-*/
-#game-ui { flex-grow: 1; color: rgb(231, 235, 240); font-size: 14px; }
-.panel { background-color: rgba(16, 22, 31, 0.96); border-color: rgb(65, 77, 90); border-width: 1px; border-radius: 7px; padding: 16px; }
+ * Progression HUD layout + component looks. Shared skin (fonts, panels, buttons, bars, scrollbars)
+ * lives in ../Shared/KryticalTheme.uss. Positions below are the defaults; players can override
+ * them per element from Settings > Customize HUD Layout (HudLayoutEditor writes inline styles).
+ */
+
+#game-ui { flex-grow: 1; }
+
 .row { flex-direction: row; align-items: center; justify-content: space-between; }
-.heading { font-size: 19px; -unity-font-style: bold; color: rgb(244, 238, 223); }
-.eyebrow { font-size: 11px; -unity-font-style: bold; color: rgb(184, 154, 94); letter-spacing: 1px; }
-.accent { color: rgb(114, 222, 196); font-size: 13px; }
-.muted { color: rgb(155, 166, 181); font-size: 12px; margin-top: 5px; }
-.help { white-space: normal; color: rgb(163, 176, 191); font-size: 12px; margin-top: 8px; }
+.heading { font-size: 17px; color: rgb(244, 238, 223); }
+.accent { font-size: 13px; }
+.muted { font-size: 12px; margin-top: 5px; }
+.help { white-space: normal; color: rgb(156, 172, 188); font-size: 12px; margin-top: 8px; }
 .section { margin-top: 12px; }
-#summary { position: absolute; top: 18px; left: 20px; width: 330px; }
-#summary .row { margin-top: 4px; margin-bottom: 6px; }
-#xp-bar { height: 20px; margin: 4px 0; }
-#xp-bar .unity-progress-bar__background { background-color: rgb(33, 43, 57); border-radius: 3px; }
-#xp-bar .unity-progress-bar__progress { background-color: rgb(39, 131, 120); }
-#xp-bar .unity-progress-bar__title { font-size: 11px; color: white; }
-#menu { position: absolute; right: 20px; top: 20px; }
-Button { min-height: 30px; background-color: rgb(40, 53, 67); color: rgb(226, 233, 240); border-color: rgb(74, 92, 105); border-width: 1px; border-radius: 4px; margin: 4px 0; padding: 5px 10px; -unity-font-style: bold; }
-Button:hover { background-color: rgb(59, 78, 94); border-color: rgb(162, 188, 192); }
-Button:active { background-color: rgb(34, 105, 94); }
-Button:disabled { color: rgb(120, 131, 144); background-color: rgb(31, 38, 48); border-color: rgb(50, 61, 72); }
-#menu Button { margin-left: 8px; }
-.window { position: absolute; width: 328px; top: 165px; }
-#character-window { left: 20px; width: 330px; top: 240px; }
-#skills-window { right: 20px; width: 320px; top: 80px; }
-#character-body { max-height: 380px; }
+
+/* ------------------------------------------------------------------ player status frame */
+
+#summary { position: absolute; top: 16px; left: 16px; width: 330px; padding: 14px 18px 12px 18px; }
+.summary-top { justify-content: flex-start; margin-bottom: 8px; }
+.summary-titles { flex-grow: 1; margin-left: 10px; }
+.summary-titles .eyebrow { font-size: 10px; }
+.level-badge {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Map_Ring_01_Clean.png#SPR_HUD_SciFiSoldier_Map_Ring_01_Clean");
+    -unity-background-image-tint-color: rgb(214, 178, 104);
+}
+.mode-chip {
+    font-size: 11px;
+    padding: 3px 8px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_04.png#SPR_HUD_SciFiSoldier_Box_04");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.14);
+    -unity-slice-scale: 0.12px;
+}
+
+.resource-bar { height: 22px; margin: 3px 0; }
+#xp-bar { height: 16px; margin: 5px 0 2px 0; }
+#hp-bar .unity-progress-bar__progress { -unity-background-image-tint-color: rgb(196, 58, 74); }
+#chi-bar .unity-progress-bar__progress { -unity-background-image-tint-color: rgb(46, 132, 210); }
+#xp-bar .unity-progress-bar__progress { -unity-background-image-tint-color: rgb(214, 178, 104); }
+#xp-bar .unity-progress-bar__title { font-size: 10px; }
+
+/* ------------------------------------------------------------------ top-right menu */
+
+#menu { position: absolute; right: 16px; top: 16px; }
+#menu Button { margin-left: 8px; min-height: 34px; padding: 6px 16px; font-size: 12px; }
+
+/* ------------------------------------------------------------------ windows */
+
+.window { position: absolute; width: 330px; }
+#character-window { left: 16px; top: 236px; }
+#skills-window { right: 222px; top: 72px; } /* sits left of the minimap */
+#settings-window { left: 50%; top: 72px; width: 360px; translate: -50% 0; display: none; }
+#character-body { max-height: 340px; }
 #skills-body { max-height: 480px; }
-.window-body .unity-scroll-view__content-container { padding-right: 4px; }
-.close { width: 28px; min-height: 26px; padding: 0; margin: 0; }
+#settings-body { max-height: 380px; }
+.window .kn-header .heading { flex-shrink: 1; }
+
 .step-options-row { flex-direction: row; align-items: center; }
-.step-option { min-height: 22px; height: 22px; min-width: 32px; padding: 0 4px; margin: 0 2px; font-size: 11px; background-color: rgb(28, 38, 50); border-color: rgb(55, 68, 82); border-radius: 3px; -unity-font-style: bold; }
-.step-option:hover { background-color: rgb(45, 62, 78); border-color: rgb(114, 222, 196); }
-.step-option.active-step { background-color: rgb(34, 105, 94); border-color: rgb(114, 222, 196); color: rgb(244, 238, 223); }
-.stat-row { flex-direction: row; align-items: center; margin-top: 10px; background-color: rgb(24, 32, 43); padding: 4px 9px; border-radius: 4px; }
+.step-option { min-height: 22px; height: 22px; min-width: 34px; padding: 0 6px; margin: 0 2px; font-size: 11px; -unity-background-image-tint-color: rgb(28, 40, 54); }
+.step-option.active-step { -unity-background-image-tint-color: rgb(30, 112, 98); color: rgb(255, 255, 255); }
+
+.stat-row { flex-direction: row; align-items: center; margin-top: 8px; padding: 4px 6px 4px 12px; }
 .stat-row > Label { flex-grow: 1; }
-.stat-row .stat-value { flex-grow: 0; width: 42px; -unity-text-align: middle-center; color: rgb(229, 204, 147); }
-.stat-row Button { min-width: 38px; padding: 0 4px; font-size: 12px; }
-.combat-stats-container { margin-top: 6px; background-color: rgb(24, 32, 43); border-radius: 4px; padding: 8px 10px; }
-.combat-stat-row { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 2px; margin-bottom: 2px; }
-.combat-stat-label { font-size: 12px; color: rgb(175, 188, 202); }
+.stat-row .stat-value { flex-grow: 0; width: 64px; -unity-text-align: middle-center; color: rgb(236, 206, 140); }
+.stat-row Button { min-width: 42px; min-height: 26px; margin: 0; padding: 0 6px; font-size: 12px; }
+
+.combat-stats-container { margin-top: 6px; padding: 8px 12px; }
+.combat-stat-row { flex-direction: row; justify-content: space-between; align-items: center; margin: 2px 0; }
+.combat-stat-label { font-size: 12px; color: rgb(172, 188, 202); }
 .combat-stat-value { font-size: 12px; -unity-font-style: bold; color: rgb(114, 222, 196); }
-.skill-card { background-color: rgb(24, 32, 43); padding: 12px; border-radius: 4px; margin-top: 12px; }
-.skill-token { padding: 8px; background-color: rgb(30, 64, 63); border-radius: 4px; border-color: rgb(62, 132, 119); border-width: 1px; }
-.skill-token:hover { background-color: rgb(40, 87, 82); }
-.skill-icon { font-size: 18px; -unity-font-style: bold; color: rgb(125, 230, 205); }
-#run-rank { font-size: 11px; margin-top: 3px; }
-.future-skill { opacity: 0.65; }
-.future-skill .skill-icon { color: rgb(164, 179, 201); }
-#development-tools { padding-top: 6px; border-top-width: 1px; border-top-color: rgb(58, 70, 84); }
-#bottom-region { position: absolute; bottom: 12px; left: 0; right: 0; align-items: center; }
-.feedback { background-color: rgba(14, 20, 28, 0.88); border-radius: 4px; padding: 7px 14px; margin-bottom: 8px; color: rgb(229, 213, 173); font-size: 12px; }
-#hotbar { flex-direction: row; background-color: rgba(11, 16, 23, 0.96); padding: 7px; border-radius: 7px; border-color: rgb(77, 85, 92); border-width: 1px; }
-.hotbar-slot { width: 56px; height: 72px; margin: 0 3px; padding: 4px; background-color: rgb(28, 37, 49); border-width: 1px; border-color: rgb(66, 80, 95); border-radius: 3px; }
-.hotbar-slot:hover { border-color: rgb(170, 193, 208); background-color: rgb(42, 56, 69); }
-.hotbar-slot.selected { border-color: rgb(112, 229, 188); background-color: rgb(24, 83, 68); }
-.hotbar-slot.drop-target { border-color: rgb(238, 201, 125); background-color: rgb(87, 76, 42); }
-.hotbar-slot.on-cooldown { opacity: 0.55; }
-.hotbar-slot Label { margin: 0; padding: 0; min-height: 0; }
-.slot-key { height: 14px; flex-shrink: 0; font-size: 11px; color: rgb(222, 202, 161); }
-.slot-name { height: 24px; flex-shrink: 0; -unity-text-align: middle-center; -unity-font-style: bold; font-size: 11px; white-space: normal; }
-.slot-rank { height: 14px; flex-shrink: 0; -unity-text-align: middle-center; font-size: 9px; color: rgb(147, 165, 183); }
-.controls { font-size: 11px; color: rgb(215, 225, 235); background-color: rgba(14, 20, 28, 0.8); margin-top: 6px; padding: 3px 8px; border-radius: 3px; }
-#drag-ghost { display: none; position: absolute; width: 80px; height: 48px; -unity-text-align: middle-center; -unity-font-style: bold; font-size: 14px; background-color: rgba(32, 122, 99, 0.94); border-color: rgb(184, 242, 213); border-width: 2px; border-radius: 4px; }
 
-.window-body .unity-scroller--vertical { width: 8px; min-width: 8px; margin-left: 5px; }
-.window-body .unity-scroller__low-button, .window-body .unity-scroller__high-button { display: none; }
-.window-body .unity-base-slider__tracker { background-color: rgb(29, 40, 53); border-width: 0; }
+#development-tools { padding-top: 6px; border-top-width: 1px; border-top-color: rgba(114, 222, 196, 0.2); }
 
-.resource-bar { height: 22px; margin: 4px 0; }
-.resource-bar .unity-progress-bar__background { background-color: rgb(33, 43, 57); border-radius: 3px; }
-.resource-bar .unity-progress-bar__title { color: white; font-size: 12px; -unity-font-style: bold; }
-#hp-bar .unity-progress-bar__progress { background-color: rgb(161, 56, 72); }
-#chi-bar .unity-progress-bar__progress { background-color: rgb(45, 118, 182); }
+/* ------------------------------------------------------------------ skill cards */
+
+.skill-card { padding: 12px; margin-top: 10px; }
+.skill-token {
+    padding: 9px 12px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_03.png#SPR_HUD_SciFiSoldier_Box_03");
+    -unity-background-image-tint-color: rgb(28, 76, 70);
+    -unity-slice-scale: 0.14px;
+    transition-property: -unity-background-image-tint-color, scale;
+    transition-duration: 0.12s;
+}
+.skill-token:hover { -unity-background-image-tint-color: rgb(38, 104, 94); scale: 1.02 1.02; }
+.skill-icon { font-size: 17px; color: rgb(140, 238, 212); letter-spacing: 1px; }
+.skill-rank { font-size: 11px; margin-top: 3px; color: rgb(214, 228, 236); }
+
+.jump-token { -unity-background-image-tint-color: rgb(36, 54, 102); }
+.jump-token:hover { -unity-background-image-tint-color: rgb(48, 72, 136); }
+.jump-token .skill-icon { color: rgb(150, 190, 255); }
+.rage-token { -unity-background-image-tint-color: rgb(92, 30, 38); }
+.rage-token:hover { -unity-background-image-tint-color: rgb(122, 40, 50); }
+.rage-token .skill-icon { color: rgb(255, 146, 156); }
+.serenity-token { -unity-background-image-tint-color: rgb(22, 64, 84); }
+.serenity-token:hover { -unity-background-image-tint-color: rgb(30, 88, 112); }
+.serenity-token .skill-icon { color: rgb(136, 224, 255); }
+.rare-token { -unity-background-image-tint-color: rgb(74, 58, 26); }
+.rare-token:hover { -unity-background-image-tint-color: rgb(100, 78, 34); }
+.rare-token .skill-icon { color: rgb(248, 210, 120); }
+
 #run-values, #jump-values, #resource-values { white-space: normal; font-size: 12px; }
-.jump-token { background-color: rgb(38, 51, 86); border-color: rgb(93, 124, 196); }
-.jump-token .skill-icon { color: rgb(140, 183, 250); }
-#jump-rank { font-size: 11px; margin-top: 3px; }
+.category-header { padding-bottom: 4px; border-bottom-width: 1px; border-bottom-color: rgba(214, 178, 104, 0.3); margin-top: 16px; }
+.rare-header { color: rgb(240, 186, 84); }
+.drop-book-note { color: rgb(226, 178, 84); font-size: 11px; -unity-font-style: italic; white-space: normal; margin-top: 3px; }
+.rare-skill-card { -unity-background-image-tint-color: rgba(42, 36, 24, 0.95); }
+.future-skill { opacity: 0.65; }
 
-.rage-token { background-color: rgb(78, 30, 36); border-color: rgb(180, 68, 80); }
-.rage-token .skill-icon { color: rgb(255, 140, 150); }
-.serenity-token { background-color: rgb(24, 60, 75); border-color: rgb(55, 145, 180); }
-.serenity-token .skill-icon { color: rgb(130, 220, 255); }
+/* ------------------------------------------------------------------ settings + network */
 
-.category-header { font-size: 11px; -unity-font-style: bold; color: rgb(184, 154, 94); letter-spacing: 1px; padding-bottom: 3px; border-bottom-width: 1px; border-bottom-color: rgb(45, 55, 68); margin-top: 14px; }
-.rare-header { color: rgb(235, 180, 80); }
-.drop-book-note { color: rgb(225, 175, 80); font-size: 11px; -unity-font-style: italic; white-space: normal; margin-top: 3px; }
+.kn-toggle { margin-top: 6px; }
+.keys-help { -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf"); color: rgb(196, 210, 222); }
 
-.rare-skill-card { border-width: 1px; border-color: rgb(110, 85, 35); background-color: rgb(26, 30, 38); }
-.rare-token { background-color: rgb(60, 48, 24); border-color: rgb(160, 128, 60); }
-.rare-token .skill-icon { color: rgb(245, 205, 115); }
-.rare-token:hover { background-color: rgb(85, 68, 32); }
+#network-panel { position: absolute; left: 16px; bottom: 16px; width: 290px; padding: 12px 16px; }
+.network-status { margin-top: 4px; white-space: normal; font-size: 12px; }
+.network-fields { justify-content: flex-start; }
+.network-ip { flex-grow: 1; margin-right: 6px; }
+.network-port { width: 104px; }
+.network-code { flex-grow: 1; margin-right: 6px; }
+.network-buttons Button { flex-grow: 1; margin: 4px 2px; padding: 5px 6px; }
 
-.active-buffs-bar { flex-direction: row; justify-content: center; align-items: center; margin-bottom: 6px; }
-.buff-badge { flex-direction: row; align-items: center; background-color: rgba(18, 25, 36, 0.92); border-width: 1px; border-color: rgb(85, 140, 160); border-radius: 4px; padding: 2px 7px; margin: 0 3px; }
-.buff-badge.shield-badge { border-color: rgb(220, 180, 70); }
-.buff-badge.channeled-badge { border-color: rgb(60, 190, 220); }
-.buff-badge-name { font-size: 11px; -unity-font-style: bold; color: rgb(230, 240, 250); margin-right: 4px; }
+
+/* ------------------------------------------------------------------ bottom HUD */
+
+#hotbar-dock { position: absolute; bottom: 10px; left: 50%; translate: -50% 0; align-items: center; }
+#hotbar { flex-direction: row; padding: 9px 12px; -unity-background-image-tint-color: rgba(7, 12, 19, 0.9); }
+
+.hotbar-slot {
+    width: 58px;
+    height: 70px;
+    margin: 0 3px;
+    padding: 5px 4px 4px 4px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_Glass_04.png#SPR_HUD_SciFiSoldier_Box_Glass_04");
+    -unity-background-image-tint-color: rgba(64, 86, 106, 0.85);
+    -unity-slice-scale: 0.14px;
+    transition-property: -unity-background-image-tint-color, scale, opacity;
+    transition-duration: 0.1s;
+}
+.hotbar-slot > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Frame_04.png#SPR_HUD_SciFiSoldier_Frame_04");
+    -unity-background-image-tint-color: rgba(150, 176, 196, 0.45);
+    -unity-slice-scale: 0.12px;
+}
+.hotbar-slot:hover { -unity-background-image-tint-color: rgba(90, 124, 148, 0.95); scale: 1.04 1.04; }
+.hotbar-slot:hover > .kn-frame { -unity-background-image-tint-color: rgba(200, 222, 236, 0.8); }
+.hotbar-slot.selected { -unity-background-image-tint-color: rgba(40, 150, 124, 0.95); }
+.hotbar-slot.selected > .kn-frame { -unity-background-image-tint-color: rgb(140, 255, 220); }
+.hotbar-slot.drop-target { -unity-background-image-tint-color: rgba(150, 120, 50, 0.95); }
+.hotbar-slot.drop-target > .kn-frame { -unity-background-image-tint-color: rgb(255, 214, 92); }
+.hotbar-slot.on-cooldown { opacity: 0.5; }
+.hotbar-slot.insufficient-chi > .kn-frame { -unity-background-image-tint-color: rgb(220, 80, 88); }
+
+.hotbar-slot Label { margin: 0; padding: 0; min-height: 0; }
+.slot-key { height: 14px; flex-shrink: 0; font-size: 11px; color: rgb(236, 206, 140); -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/Orbitron/Orbitron-ExtraBold.ttf"); }
+.slot-name { height: 26px; flex-shrink: 0; -unity-text-align: middle-center; font-size: 10px; white-space: normal; color: rgb(236, 244, 248); }
+.slot-rank { height: 14px; flex-shrink: 0; -unity-text-align: middle-center; font-size: 9px; color: rgb(156, 180, 198); }
+
+.controls {
+    font-size: 11px;
+    color: rgb(200, 214, 226);
+    margin-top: 6px;
+    padding: 3px 12px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Gradient_Outwards_Smooth_01.png#SPR_HUD_SciFiSoldier_Gradient_Outwards_Smooth_01");
+    -unity-background-image-tint-color: rgba(6, 12, 18, 0.85);
+    -unity-slice-scale: 0.1px;
+}
+
+.feedback {
+    position: absolute;
+    bottom: 132px;
+    left: 50%;
+    translate: -50% 0;
+    max-width: 640px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    padding: 6px 28px;
+    color: rgb(240, 222, 176);
+    font-size: 12px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Gradient_Outwards_Smooth_01.png#SPR_HUD_SciFiSoldier_Gradient_Outwards_Smooth_01");
+    -unity-background-image-tint-color: rgba(6, 12, 18, 0.9);
+    -unity-slice-scale: 0.14px;
+}
+
+.active-buffs-bar { position: absolute; bottom: 166px; left: 50%; translate: -50% 0; flex-direction: row; justify-content: center; align-items: center; }
+.buff-badge {
+    flex-direction: row;
+    align-items: center;
+    padding: 3px 10px;
+    margin: 0 3px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_04.png#SPR_HUD_SciFiSoldier_Box_04");
+    -unity-background-image-tint-color: rgba(16, 40, 50, 0.92);
+    -unity-slice-scale: 0.12px;
+}
+.buff-badge.shield-badge { -unity-background-image-tint-color: rgba(70, 56, 18, 0.95); }
+.buff-badge.channeled-badge { -unity-background-image-tint-color: rgba(14, 56, 72, 0.95); }
+.buff-badge-name { font-size: 11px; -unity-font-style: bold; color: rgb(232, 242, 250); margin-right: 5px; }
 .buff-badge-timer { font-size: 11px; color: rgb(114, 222, 196); }
 
-.hotbar-slot.insufficient-chi { border-color: rgb(177, 70, 77); }
+#drag-ghost {
+    display: none;
+    position: absolute;
+    width: 90px;
+    height: 48px;
+    -unity-text-align: middle-center;
+    font-size: 12px;
+    color: rgb(255, 255, 255);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
+    white-space: normal;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_03.png#SPR_HUD_SciFiSoldier_Box_03");
+    -unity-background-image-tint-color: rgba(30, 128, 108, 0.95);
+    -unity-slice-scale: 0.14px;
+}
 
-.window-body .unity-base-slider__dragger { background-color: rgb(74, 103, 112); border-width: 0; border-radius: 3px; min-width: 6px; }
+/* ------------------------------------------------------------------ HUD edit banner */
+
+#hud-edit-banner {
+    display: none;
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    translate: -50% 0;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 18px;
+    -unity-background-image-tint-color: rgba(9, 15, 23, 0.96);
+}
+.hud-edit-banner-text { margin-right: 14px; }
+.hud-edit-banner-text .help { margin-top: 2px; }
+#hud-edit-banner Button { margin-left: 8px; }
+
+/* ------------------------------------------------------------------ floating combat text (CombatFeedbackManager) */
 
 .floating-combat-text {
     position: absolute;
-    -unity-font-style: bold;
-    font-size: 17px;
-    color: rgb(255, 105, 95);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/Orbitron/Orbitron-ExtraBold.ttf");
+    font-size: 18px;
+    color: rgb(255, 112, 100);
     -unity-text-align: middle-center;
-    background-color: rgba(15, 20, 28, 0.85);
-    padding: 3px 8px;
-    border-radius: 4px;
-    border-width: 1px;
-    border-color: rgba(255, 105, 95, 0.6);
+    -unity-text-outline-width: 1.2px;
+    -unity-text-outline-color: rgb(16, 6, 6);
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.7);
+    padding: 2px 6px;
 }
-.floating-combat-text.crit {
-    font-size: 22px;
-    color: rgb(255, 220, 80);
-    border-color: rgb(255, 220, 80);
-    background-color: rgba(35, 28, 12, 0.92);
-}
-.floating-combat-text.evade {
-    font-size: 15px;
-    color: rgb(130, 215, 245);
-    border-color: rgba(130, 215, 245, 0.6);
-}
-.floating-combat-text.reflected {
-    font-size: 16px;
-    color: rgb(190, 150, 255);
-    border-color: rgba(190, 150, 255, 0.6);
-}
+.floating-combat-text.crit { font-size: 24px; color: rgb(255, 222, 84); -unity-text-outline-color: rgb(48, 26, 0); }
+.floating-combat-text.evade { font-size: 15px; color: rgb(140, 220, 250); -unity-text-outline-color: rgb(4, 18, 30); }
+.floating-combat-text.reflected { font-size: 16px; color: rgb(196, 156, 255); -unity-text-outline-color: rgb(18, 8, 34); }

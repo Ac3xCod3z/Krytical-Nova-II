@@ -1,0 +1,292 @@
+/*
+ * Krytical Nova shared UI theme, skinned with the Synty INTERFACE - SciFi Soldier HUD pack.
+ * The HUD sprites are white masks: every image is tinted with -unity-background-image-tint-color,
+ * and the 9-slice borders authored on each sprite are honoured (-unity-slice-scale shrinks them to UI size).
+ *
+ * Shared vocabulary used by every document:
+ *   .kn-panel    chamfered glass panel (fill)      .kn-frame   chamfered outline, added at runtime by SyntySkin
+ *   .kn-title    Orbitron header text               .kn-eyebrow small caps label
+ *   .hud-movable element the player may move/resize from Settings > Customize HUD Layout
+ */
+
+/* ------------------------------------------------------------------ fonts & base text */
+
+.kn-root {
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-Regular.otf");
+    color: rgb(222, 233, 240);
+    font-size: 14px;
+}
+
+.kn-title, .heading, .npc-heading {
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/Orbitron/Orbitron-ExtraBold.ttf");
+    -unity-font-style: normal;
+    letter-spacing: 1px;
+}
+
+.kn-bold, Button, .eyebrow, .npc-eyebrow, .category-header, .slot-name, .skill-icon, .nameplate-name {
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
+}
+
+/* ------------------------------------------------------------------ panels */
+
+.kn-panel, .panel {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_02.png#SPR_HUD_SciFiSoldier_Box_02");
+    -unity-background-image-tint-color: rgba(9, 15, 23, 0.93);
+    -unity-slice-scale: 0.22px;
+    padding: 16px 18px;
+}
+
+/* Outline drawn over the panel fill. Added as the last child by SyntySkin so it never affects layout. */
+.kn-frame {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Frame_02.png#SPR_HUD_SciFiSoldier_Frame_02");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.55);
+    -unity-slice-scale: 0.22px;
+}
+
+/* Small hexagon pip in the top-left of framed panels. */
+.kn-pip {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    width: 9px;
+    height: 9px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active.png#SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active");
+    -unity-background-image-tint-color: rgb(114, 222, 196);
+}
+
+/* Inset card inside a panel (stat rows, skill cards). */
+.kn-card {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_04.png#SPR_HUD_SciFiSoldier_Box_04");
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.95);
+    -unity-slice-scale: 0.18px;
+    border-width: 0;
+    border-radius: 0;
+}
+
+/* Header strip: a thin Synty line under window titles. */
+.kn-header {
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(114, 222, 196, 0.28);
+}
+
+/* ------------------------------------------------------------------ text roles */
+
+.kn-eyebrow, .eyebrow {
+    font-size: 11px;
+    color: rgb(214, 178, 104);
+    letter-spacing: 2px;
+}
+
+.kn-accent, .accent { color: rgb(114, 222, 196); }
+.kn-muted, .muted { color: rgb(146, 162, 178); }
+
+/* ------------------------------------------------------------------ buttons */
+
+Button {
+    min-height: 30px;
+    margin: 4px 0;
+    padding: 5px 14px;
+    color: rgb(226, 236, 242);
+    font-size: 13px;
+    -unity-font-style: normal;
+    letter-spacing: 1px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_04.png#SPR_HUD_SciFiSoldier_Box_04");
+    -unity-background-image-tint-color: rgb(34, 52, 66);
+    -unity-slice-scale: 0.2px;
+    transition-property: -unity-background-image-tint-color, color, scale;
+    transition-duration: 0.12s;
+}
+
+Button:hover {
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(46, 78, 92);
+    color: rgb(255, 255, 255);
+}
+
+Button:active {
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(34, 128, 112);
+    scale: 0.97 0.97;
+}
+
+Button:disabled {
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(26, 34, 44);
+    color: rgb(104, 118, 132);
+}
+
+.kn-button-primary {
+    -unity-background-image-tint-color: rgb(30, 112, 98);
+}
+.kn-button-primary:hover { -unity-background-image-tint-color: rgb(40, 150, 130); }
+
+.kn-button-danger { -unity-background-image-tint-color: rgb(118, 40, 48); }
+.kn-button-danger:hover { -unity-background-image-tint-color: rgb(160, 56, 64); }
+
+/* Square close button with the Synty "X" glyph. */
+.kn-close, .close, .npc-close {
+    width: 26px;
+    height: 26px;
+    min-height: 26px;
+    padding: 0;
+    margin: 0;
+    flex-shrink: 0;
+}
+.kn-close-glyph {
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    right: 7px;
+    bottom: 7px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Icon_InactiveItem_01.png#SPR_HUD_SciFiSoldier_Icon_InactiveItem_01");
+    -unity-background-image-tint-color: rgb(222, 233, 240);
+}
+Button:hover > .kn-close-glyph { -unity-background-image-tint-color: rgb(255, 120, 120); }
+
+/* ------------------------------------------------------------------ progress bars (angled Synty bars) */
+
+.kn-bar .unity-progress-bar__background, .resource-bar .unity-progress-bar__background, #xp-bar .unity-progress-bar__background {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Bar_Angled_01.png#SPR_HUD_SciFiSoldier_Bar_Angled_01");
+    -unity-background-image-tint-color: rgba(30, 42, 56, 0.95);
+    -unity-slice-scale: 0.16px;
+}
+
+.kn-bar .unity-progress-bar__progress, .resource-bar .unity-progress-bar__progress, #xp-bar .unity-progress-bar__progress {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Bar_Angled_01.png#SPR_HUD_SciFiSoldier_Bar_Angled_01");
+    -unity-slice-scale: 0.16px;
+    border-radius: 0;
+}
+
+.kn-bar .unity-progress-bar__title, .resource-bar .unity-progress-bar__title, #xp-bar .unity-progress-bar__title {
+    color: rgb(255, 255, 255);
+    font-size: 11px;
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
+    -unity-text-outline-width: 0.6px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.85);
+    letter-spacing: 1px;
+}
+
+/* ------------------------------------------------------------------ scroll views */
+
+.unity-scroller--vertical {
+    width: 6px;
+    min-width: 6px;
+    margin-left: 6px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+.unity-scroller__low-button, .unity-scroller__high-button { display: none; }
+.unity-scroller--vertical .unity-base-slider__tracker {
+    background-color: rgba(26, 38, 52, 0.9);
+    border-width: 0;
+    border-radius: 3px;
+}
+.unity-scroller--vertical .unity-base-slider__dragger {
+    background-color: rgba(114, 222, 196, 0.55);
+    border-width: 0;
+    border-radius: 3px;
+    min-width: 6px;
+}
+.unity-scroll-view__content-container { padding-right: 4px; }
+
+/* ------------------------------------------------------------------ toggles, sliders, text fields (settings page) */
+
+.kn-toggle {
+    margin: 4px 0;
+    padding: 6px 10px;
+}
+.kn-toggle > .unity-toggle__input { flex-grow: 0; flex-shrink: 0; flex-basis: 24px; width: 24px; min-width: 24px; justify-content: center; align-items: flex-end; }
+.kn-toggle .unity-label { color: rgb(208, 220, 230); min-width: 0; flex-grow: 1; font-size: 13px; }
+.kn-toggle .unity-toggle__checkmark {
+    width: 18px;
+    height: 18px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Inactive.png#SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Inactive");
+    -unity-background-image-tint-color: rgb(58, 74, 90);
+}
+.kn-toggle:checked .unity-toggle__checkmark {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active.png#SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active");
+    -unity-background-image-tint-color: rgb(114, 222, 196);
+}
+
+.kn-textfield { margin: 2px 0; }
+.kn-textfield .unity-label { min-width: 40px; color: rgb(170, 186, 200); font-size: 12px; }
+.kn-textfield > .unity-text-field__input, .kn-textfield .unity-base-text-field__input {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_04.png#SPR_HUD_SciFiSoldier_Box_04");
+    -unity-background-image-tint-color: rgb(20, 30, 42);
+    -unity-slice-scale: 0.16px;
+    color: rgb(230, 240, 245);
+    padding: 3px 8px;
+    min-height: 24px;
+}
+
+/* ------------------------------------------------------------------ HUD layout editing */
+
+.hud-edit-overlay {
+    position: absolute;
+    left: -3px;
+    top: -3px;
+    right: -3px;
+    bottom: -3px;
+    background-color: rgba(30, 140, 120, 0.16);
+    border-width: 1px;
+    border-color: rgba(114, 222, 196, 0.9);
+    align-items: center;
+    justify-content: center;
+}
+.hud-edit-overlay:hover { background-color: rgba(30, 160, 135, 0.28); }
+.hud-edit-overlay.dragging { background-color: rgba(214, 178, 104, 0.25); border-color: rgb(255, 214, 92); }
+
+.hud-edit-label {
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
+    font-size: 12px;
+    color: rgb(255, 255, 255);
+    letter-spacing: 1px;
+    padding: 3px 9px;
+    background-color: rgba(6, 12, 18, 0.88);
+    -unity-text-outline-width: 0.5px;
+    -unity-text-outline-color: rgb(0, 0, 0);
+}
+.hud-edit-scale {
+    font-size: 10px;
+    color: rgb(114, 222, 196);
+    background-color: rgba(6, 12, 18, 0.88);
+    padding: 1px 6px;
+    margin-top: 2px;
+}
+
+.hud-resize-handle {
+    position: absolute;
+    right: -6px;
+    bottom: -6px;
+    width: 20px;
+    height: 20px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Triangle_02.png#SPR_HUD_SciFiSoldier_Triangle_02");
+    -unity-background-image-tint-color: rgb(255, 214, 92);
+    rotate: 135deg;
+}
+.hud-resize-handle:hover { -unity-background-image-tint-color: rgb(255, 255, 255); scale: 1.2 1.2; }
+
+/* Gives empty movables (e.g. the buff bar) something to grab while editing. */
+.hud-movable.hud-editing { min-width: 140px; min-height: 30px; }

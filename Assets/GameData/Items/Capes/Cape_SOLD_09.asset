@@ -1,0 +1,178 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3622be29843aeb149be9b3196ff71071, type: 3}
+  m_Name: Cape_SOLD_09
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
+  itemId: 7009
+  displayName: Raider Cape
+  description: Worn across the back.
+  icon: {fileID: 21300000, guid: 92cb9c1ffccf7554fa592e812672e61c, type: 3}
+  rarity: 4
+  equipSlot: 7
+  maxStack: 1
+  statModifiers: []
+  appearanceParts:
+  - region: 24
+    mesh: {fileID: 5566156291428838617, guid: 4e7926b8920167c48a306863fe3bf56e, type: 3}
+    boneNames:
+    - abac_dyn_01_01_01_l
+    - abac_dyn_01_01_01_r
+    - abac_dyn_01_01_c
+    - abac_dyn_01_02_01_r
+    - abac_dyn_01_02_c
+    - abac_dyn_01_03_01_l
+    - abac_dyn_01_03_01_r
+    - abac_dyn_01_03_02_r
+    - abac_dyn_01_03_c
+    - backAttach
+    - ball_l
+    - ball_r
+    - calf_l
+    - calf_r
+    - calf_twist_01_l
+    - calf_twist_01_r
+    - clavicle_l
+    - clavicle_r
+    - elbowAttach_l
+    - elbowAttach_r
+    - eyeLight_l
+    - eyeLight_r
+    - eye_l
+    - eye_r
+    - faceAttach
+    - foot_l
+    - foot_r
+    - hand_l
+    - hand_r
+    - head
+    - headAttach
+    - hipAttachBack
+    - hipAttachFront
+    - hipAttach_l
+    - hipAttach_r
+    - ik_foot_l
+    - ik_foot_r
+    - ik_foot_root
+    - ik_hand_gun
+    - ik_hand_l
+    - ik_hand_r
+    - ik_hand_root
+    - index_01_l
+    - index_01_r
+    - index_02_l
+    - index_02_r
+    - index_03_l
+    - index_03_r
+    - jaw
+    - kneeAttach_l
+    - kneeAttach_r
+    - lowerarm_l
+    - lowerarm_r
+    - lowerarm_twist_01_l
+    - lowerarm_twist_01_r
+    - middle_01_l
+    - middle_01_r
+    - middle_02_l
+    - middle_02_r
+    - middle_03_l
+    - middle_03_r
+    - neck_01
+    - pelvis
+    - pinky_01_l
+    - pinky_01_r
+    - pinky_02_l
+    - pinky_02_r
+    - pinky_03_l
+    - pinky_03_r
+    - prop_l
+    - prop_r
+    - ring_01_l
+    - ring_01_r
+    - ring_02_l
+    - ring_02_r
+    - ring_03_l
+    - ring_03_r
+    - root
+    - shoulderAttach_l
+    - shoulderAttach_r
+    - spine_01
+    - spine_02
+    - spine_03
+    - thigh_l
+    - thigh_r
+    - thigh_twist_01_l
+    - thigh_twist_01_r
+    - thumb_01_l
+    - thumb_01_r
+    - thumb_02_l
+    - thumb_02_r
+    - thumb_03_l
+    - thumb_03_r
+    - upperarm_l
+    - upperarm_r
+    - upperarm_twist_01_l
+    - upperarm_twist_01_r
+    extraBones:
+    - name: abac_dyn_01_01_c
+      parent: backAttach
+      localPosition: {x: -1.02426824e-16, y: 1.5347723e-13, z: -0.05682851}
+      localRotation: {x: 5.343604e-17, y: -0.7071068, z: 5.343604e-17, w: 0.7071068}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_01_01_l
+      parent: abac_dyn_01_01_c
+      localPosition: {x: -0.12144529, y: -0.13808204, z: 0.102518335}
+      localRotation: {x: 0.64466774, y: 0.69831204, z: -0.17708665, w: 0.25574228}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_01_01_r
+      parent: abac_dyn_01_01_c
+      localPosition: {x: -0.12144529, y: -0.13808204, z: -0.102518335}
+      localRotation: {x: 0.64466774, y: 0.69831204, z: 0.17708665, w: -0.25574228}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_02_c
+      parent: abac_dyn_01_01_c
+      localPosition: {x: -0.1231086, y: 3.3139713e-13, z: -3.3181e-13}
+      localRotation: {x: 8.4265445e-13, y: -1.0519442e-12, z: -0.6253307, w: 0.78035986}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_02_01_r
+      parent: abac_dyn_01_02_c
+      localPosition: {x: 0.04074768, y: 0.0745643, z: -0.051942613}
+      localRotation: {x: -0.24924913, y: -0.33611205, z: 0.08374199, w: 0.90437317}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_c
+      parent: abac_dyn_01_02_c
+      localPosition: {x: -0.082019776, y: -2.3980816e-16, z: -4.8232584e-14}
+      localRotation: {x: 1.2814073e-12, y: -4.1781034e-13, z: 0.094583176, w: 0.99551696}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_01_l
+      parent: abac_dyn_01_03_c
+      localPosition: {x: -0.082431056, y: 0.02934246, z: 0.016027484}
+      localRotation: {x: 0.012711086, y: 0.111469954, z: -0.20840484, w: 0.97158647}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_01_r
+      parent: abac_dyn_01_03_c
+      localPosition: {x: -0.08264591, y: 0.029318122, z: -0.010980646}
+      localRotation: {x: 0.009330314, y: -0.008421678, z: -0.20858355, w: 0.9779238}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_02_r
+      parent: abac_dyn_01_02_01_r
+      localPosition: {x: -0.082019776, y: -3.1086244e-16, z: 2.842171e-16}
+      localRotation: {x: 3.3678506e-16, y: 1.0287428e-15, z: 0.078331955, w: 0.9969274}
+      localScale: {x: 1, y: 1, z: 1}
+  weaponPrefab: {fileID: 0}
+  weaponLocalPosition: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalScale: {x: 1, y: 1, z: 1}
+  hitboxCenter: {x: 0, y: 0.01, z: 0.55}
+  hitboxSize: {x: 0.18, y: 0.18, z: 1.15}
+  petPrefab: {fileID: 0}
+  petScale: 1
+  petOffset: {x: 0.7, y: 0.95, z: -0.5}

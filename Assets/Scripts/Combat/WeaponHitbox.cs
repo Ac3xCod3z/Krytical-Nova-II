@@ -62,6 +62,15 @@ namespace KryticalNova.Combat
             }
         }
 
+        /// <summary>Resize the blade volume for the equipped weapon (local space of this mount).</summary>
+        public void Configure(Vector3 center, Vector3 size)
+        {
+            if (hitboxCollider == null) hitboxCollider = GetComponent<BoxCollider>();
+            if (hitboxCollider == null) return;
+            hitboxCollider.center = center;
+            hitboxCollider.size = size;
+        }
+
         public void SetOwnerRoot(Transform owner)
         {
             ownerRoot = owner;

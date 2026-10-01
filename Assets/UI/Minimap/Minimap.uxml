@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Minimap.uss" />
+    <!-- Instanced into ProgressionHUD.uxml; driven by MinimapController. Markers + the player arrow are added in code. -->
+    <ui:VisualElement name="minimap" class="minimap blocks-world hud-movable">
+        <ui:VisualElement class="minimap-frame" picking-mode="Ignore" />
+        <ui:VisualElement class="minimap-backdrop" picking-mode="Ignore" />
+        <ui:VisualElement name="minimap-mask" class="minimap-mask" picking-mode="Ignore">
+            <ui:VisualElement name="minimap-map" class="minimap-map" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement class="minimap-ring" picking-mode="Ignore" />
+        <ui:Label name="minimap-north" text="N" class="minimap-north" picking-mode="Ignore" />
+        <ui:Button name="minimap-zoom-in" text="+" class="minimap-zoom minimap-zoom-in" />
+        <ui:Button name="minimap-zoom-out" text="−" class="minimap-zoom minimap-zoom-out" />
+    </ui:VisualElement>
+</ui:UXML>
