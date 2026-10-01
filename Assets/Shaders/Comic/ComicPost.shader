@@ -30,6 +30,7 @@ Shader "Hidden/KryticalNova/ComicPost"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareNormalsTexture.hlsl"
             #include "ComicHalftone.hlsl"
+            #include "../Sky/SkyCommon.hlsl"
 
             // Outlines
             half4  _OutlineColor;
@@ -100,7 +101,14 @@ Shader "Hidden/KryticalNova/ComicPost"
                     rim = saturate((maxS - minS) * 2.0) * shadow;
                 }
 
-                if (shadow <= 0.001)
+                // Soft cloud shadows: one sample, no ink rim or dots, own strength (not faded with
+                // cast-shadow opacity). Shares the sky's cloud field so they line up with the sky.
+                half cloud = 0.0;
+                UNITY_BRANCH
+                if (_KN_CloudShadow.x > 0.0)
+                    cloud = KN_CloudShadowAt(posWS) * (1.0 - shadow);
+
+                if (shadow <= 0.001 && cloud <= 0.001)
                     return color;
 
                 half3 shaded = lerp(color, color * _ShadowColor.rgb, _ShadowOpacity);
@@ -113,6 +121,7 @@ Shader "Hidden/KryticalNova/ComicPost"
                 shaded = lerp(shaded, shaded * _ComicInkColor.rgb, pattern * _ShadowPatternOpacity);
 
                 color = lerp(color, shaded, shadow);
+                color = lerp(color, color * _ShadowColor.rgb, cloud);
                 return lerp(color, _ShadowOutlineColor.rgb, rim * _ShadowOutlineColor.a);
             }
 

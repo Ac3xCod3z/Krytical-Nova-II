@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48a8f91953fa35640b137ea008117097, type: 3}
+  m_Name: WeatherCatalog
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.WeatherCatalog
+  profiles:
+  - {fileID: 11400000, guid: 6eb56a3525e68b84ea754246683459dd, type: 2}
+  - {fileID: 11400000, guid: 6c9b9d0296dfc1643b8e8b9edcb7d19b, type: 2}
+  - {fileID: 11400000, guid: 1f3c7d185826afe40bd002b9e097f155, type: 2}
+  - {fileID: 11400000, guid: 9708d7171ae85ca4c8a0cd0588a445f8, type: 2}
+  - {fileID: 11400000, guid: d3c115db958a967418f444865d2987de, type: 2}
+  - {fileID: 11400000, guid: 82cd6a34f6c280f4cba3ac82861dff81, type: 2}
+  - {fileID: 11400000, guid: 9832740c89d5b9749b94b880a421af43, type: 2}
+  - {fileID: 11400000, guid: 58a6883fd3a881249b16036e32f178c1, type: 2}
+  - {fileID: 11400000, guid: 3eef8a34d323cb2489a8a7ef05b73bbb, type: 2}
+  - {fileID: 11400000, guid: 6c03354b00db91742a0d405e11bbd59e, type: 2}
+  - {fileID: 11400000, guid: b4de021546bf49644b1fbca9c37be32d, type: 2}

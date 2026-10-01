@@ -89,9 +89,13 @@ namespace KryticalNova.Networking
             }
         }
 
-        /// <summary>Nested NetworkObjects follow their root's visibility, so only root objects are culled.</summary>
+        /// <summary>
+        /// Nested NetworkObjects follow their root's visibility, so only root objects are culled.
+        /// Objects marked <see cref="AlwaysRelevantNetworkObject"/> (world state) are never culled.
+        /// </summary>
         private static bool IsCullable(NetworkObject netObj)
         {
+            if (netObj.TryGetComponent<AlwaysRelevantNetworkObject>(out _)) return false;
             Transform parent = netObj.transform.parent;
             return parent == null || parent.GetComponentInParent<NetworkObject>() == null;
         }

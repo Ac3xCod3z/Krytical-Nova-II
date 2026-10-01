@@ -11,6 +11,29 @@ namespace KryticalNova.Rendering
     /// so lit-driven dots on materials and post-process dots share one screen grid.
     /// Add to the URP Renderer asset (e.g. Assets/Settings/PC_Renderer.asset).
     /// </summary>
+    /// <summary>
+    /// Runtime modifiers applied on top of the renderer asset's serialized comic settings (the feature
+    /// re-publishes its settings every frame, so direct global writes would be overwritten).
+    /// Driven by the day/night + weather presenter; identity values leave the authored look unchanged.
+    /// </summary>
+    public static class ComicStyleRuntime
+    {
+        public static float ShadowOpacityMultiplier = 1f;
+        public static Color ShadowTint = Color.white;
+        public static float ShadowTintWeight;
+        public static float ShadowBrightnessMultiplier = 1f;
+        public static float DotStartOffset;
+
+        public static void Reset()
+        {
+            ShadowOpacityMultiplier = 1f;
+            ShadowTint = Color.white;
+            ShadowTintWeight = 0f;
+            ShadowBrightnessMultiplier = 1f;
+            DotStartOffset = 0f;
+        }
+    }
+
     public class ComicStyleFeature : ScriptableRendererFeature
     {
         [System.Serializable]
@@ -152,8 +175,8 @@ namespace KryticalNova.Rendering
             Shader.SetGlobalFloat(ShaderIds.DotOpacity, halftone.opacity);
             Shader.SetGlobalFloat(ShaderIds.ShadowThreshold, halftone.shadowThreshold);
             Shader.SetGlobalFloat(ShaderIds.ShadowSoftness, halftone.shadowSoftness);
-            Shader.SetGlobalFloat(ShaderIds.ShadowBrightness, halftone.shadowBrightness);
-            Shader.SetGlobalFloat(ShaderIds.DotStart, halftone.dotStart);
+            Shader.SetGlobalFloat(ShaderIds.ShadowBrightness, halftone.shadowBrightness * ComicStyleRuntime.ShadowBrightnessMultiplier);
+            Shader.SetGlobalFloat(ShaderIds.DotStart, Mathf.Clamp01(halftone.dotStart + ComicStyleRuntime.DotStartOffset));
         }
 
         protected override void Dispose(bool disposing)
@@ -231,8 +254,8 @@ namespace KryticalNova.Rendering
                 material.SetVector(ShaderIds.CreaseFade, new Vector4(o.creaseFadeStart, o.creaseFadeEnd, 0f, 0f));
 
                 material.SetFloat(ShaderIds.ShadowEnabled, sh.enabled ? 1f : 0f);
-                material.SetColor(ShaderIds.ShadowColor, sh.color);
-                material.SetFloat(ShaderIds.ShadowOpacity, sh.opacity);
+                material.SetColor(ShaderIds.ShadowColor, Color.Lerp(sh.color, ComicStyleRuntime.ShadowTint, ComicStyleRuntime.ShadowTintWeight));
+                material.SetFloat(ShaderIds.ShadowOpacity, sh.opacity * ComicStyleRuntime.ShadowOpacityMultiplier);
                 material.SetFloat(ShaderIds.ShadowEdgeSoftness, sh.edgeSoftness);
                 material.SetFloat(ShaderIds.ShadowPatternId, (float)sh.pattern);
                 material.SetFloat(ShaderIds.ShadowPatternCoverage, sh.patternCoverage);
