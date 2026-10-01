@@ -39,6 +39,31 @@ namespace KryticalNova.Player
         [Header("Locomotion Tuning")]
         [SerializeField, Min(0.1f)] private float walkSpeedThreshold = 2.5f;
         [SerializeField, Min(0.01f)] private float locomotionFadeDuration = 0.2f;
+        [Tooltip("Speed below which the character counts as stopped.")]
+        [SerializeField, Min(0.01f)] private float moveSpeedThreshold = 0.15f;
+        [Tooltip("Run only drops to walk once speed is this far below Walk Speed Threshold, so braking doesn't flash the walk clip.")]
+        [SerializeField, Min(0f)] private float runToWalkHysteresis = 0.6f;
+        [Tooltip("How long a slower gait must persist before switching to it.")]
+        [SerializeField, Min(0f)] private float gaitChangeDelay = 0.15f;
+
+        [Header("Stop Transitions (Move -> Idle)")]
+        [SerializeField] private AnimationClip runStopClip;
+        [SerializeField] private AnimationClip walkStopClip;
+        [SerializeField] private AnimationClip drawnRunStopClip;
+        [SerializeField] private AnimationClip drawnWalkStopClip;
+        [SerializeField, Min(0.01f)] private float stopFadeDuration = 0.12f;
+        [Tooltip("Idle fades in over this many seconds once the stop clip reaches its end time.")]
+        [SerializeField, Min(0.01f)] private float stopToIdleFadeDuration = 0.2f;
+        [Tooltip("Run stop plays only this window (seconds into the clip). The Run_Fast_To_Idle clips open with ~0.45s of " +
+                 "full in-place running strides and are fully settled by ~0.95s.")]
+        [SerializeField] private Vector2 runStopWindow = new Vector2(0.45f, 0.95f);
+        [Tooltip("Walk stop window (seconds into the clip); the last step lands at ~0.52s.")]
+        [SerializeField] private Vector2 walkStopWindow = new Vector2(0f, 0.52f);
+        [SerializeField, Range(0.5f, 2f)] private float stopPlaybackSpeed = 1.25f;
+        [Tooltip("Humanoid foot IK on the stop clips; without it the feet dip ~6cm below the ground on this rig.")]
+        [SerializeField] private bool stopFootIK = true;
+        [Tooltip("Start the stop clip this far (m) before a NavMesh destination, so the stopping steps line up with arrival.")]
+        [SerializeField, Min(0f)] private float stopLeadDistance = 0.35f;
 
         [Header("Jump Clips")]
         [SerializeField] private AnimationClip jumpStartClip;
@@ -68,6 +93,9 @@ namespace KryticalNova.Player
 
         private CharacterAnimState currentState = CharacterAnimState.Locomotion;
         private AnimationClip currentLocomotionClip;
+        private AnimancerState stopState;
+        private Vector2 stopWindow;
+        private float slowerGaitTimer;
         private Coroutine activeActionRoutine;
         private Vector3 lastPosition;
         private float currentSpeed;
@@ -160,17 +188,92 @@ namespace KryticalNova.Player
             AnimationClip targetWalk = (drawn && drawnWalkClip != null) ? drawnWalkClip : walkClip;
             AnimationClip targetRun = (drawn && drawnRunClip != null) ? drawnRunClip : runClip;
 
-            AnimationClip targetClip = targetIdle;
-            if (currentSpeed > 0.15f)
+            // --- Moving: pick a gait, with hysteresis so braking doesn't flash run -> walk -> idle ---
+            if (IsMoving())
             {
-                targetClip = currentSpeed >= walkSpeedThreshold ? targetRun : targetWalk;
+                AnimationClip targetClip = currentSpeed >= walkSpeedThreshold ? targetRun : targetWalk;
+
+                bool wasRunning = currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip;
+                if (wasRunning && targetClip == targetWalk)
+                {
+                    slowerGaitTimer += Time.deltaTime;
+                    if (currentSpeed > walkSpeedThreshold - runToWalkHysteresis || slowerGaitTimer < gaitChangeDelay)
+                        targetClip = targetRun;
+                }
+                else
+                {
+                    slowerGaitTimer = 0f;
+                }
+
+                stopState = null;
+                PlayLocomotionClip(targetClip, locomotionFadeDuration);
+                return;
             }
 
-            if (targetClip != null && targetClip != currentLocomotionClip)
+            slowerGaitTimer = 0f;
+
+            // --- Stopping: play the move -> idle clip for the gait we were in, then settle into idle ---
+            if (stopState == null && currentLocomotionClip != targetIdle && currentLocomotionClip != null)
             {
-                currentLocomotionClip = targetClip;
-                animancer.Play(targetClip, locomotionFadeDuration);
+                AnimationClip stopClip = GetStopClip(currentLocomotionClip, out stopWindow);
+                if (stopClip != null)
+                {
+                    stopState = animancer.Play(stopClip, stopFadeDuration);
+                    stopState.Time = Mathf.Clamp(stopWindow.x, 0f, stopClip.length);
+                    stopState.Speed = stopPlaybackSpeed;
+                    stopState.ApplyFootIK = stopFootIK;
+                    currentLocomotionClip = stopClip;
+                    return;
+                }
             }
+
+            if (stopState != null)
+            {
+                float endTime = Mathf.Min(stopWindow.y > stopWindow.x ? stopWindow.y : stopState.Length, stopState.Length);
+                if (stopState.IsPlaying && stopState.Time < endTime)
+                    return;
+
+                stopState = null;
+                PlayLocomotionClip(targetIdle, stopToIdleFadeDuration);
+                return;
+            }
+
+            PlayLocomotionClip(targetIdle, locomotionFadeDuration);
+        }
+
+        private void PlayLocomotionClip(AnimationClip clip, float fade)
+        {
+            if (clip == null || clip == currentLocomotionClip) return;
+            currentLocomotionClip = clip;
+            animancer.Play(clip, fade);
+        }
+
+        private AnimationClip GetStopClip(AnimationClip fromClip, out Vector2 window)
+        {
+            bool fromRun = fromClip == runClip || fromClip == drawnRunClip;
+            window = fromRun ? runStopWindow : walkStopWindow;
+            if (fromClip == runClip) return runStopClip;
+            if (fromClip == drawnRunClip) return drawnRunStopClip;
+            if (fromClip == walkClip) return walkStopClip;
+            if (fromClip == drawnWalkClip) return drawnWalkStopClip;
+            return null;
+        }
+
+        /// <summary>
+        /// Moving = actual speed above threshold. When this instance drives a NavMeshAgent, arrival is
+        /// predicted from the remaining path so the stop clip begins just before the agent halts.
+        /// </summary>
+        private bool IsMoving()
+        {
+            if (currentSpeed <= moveSpeedThreshold) return false;
+
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh && !agent.pathPending && agent.hasPath)
+            {
+                if (agent.remainingDistance <= agent.stoppingDistance + stopLeadDistance)
+                    return false;
+            }
+
+            return true;
         }
 
         #region Weapon Draw & Sheath

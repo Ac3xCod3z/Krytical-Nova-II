@@ -1676,6 +1676,7 @@ GameObject:
   - component: {fileID: 2737288886518641306}
   - component: {fileID: 5838475559772051871}
   - component: {fileID: 1620825261229728301}
+  - component: {fileID: 6205866357027811024}
   m_Layer: 0
   m_Name: Player_01
   m_TagString: Untagged
@@ -1737,6 +1738,32 @@ MonoBehaviour:
   _Animator: {fileID: 5838475559772051871}
   _Transitions: {fileID: 0}
   _ActionOnDisable: 0
+--- !u!114 &6205866357027811024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3933595338312819546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0856984fad16a6344ab91866e80adb15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.FootGroundingIK
+  animancer: {fileID: 1620825261229728301}
+  motor: {fileID: 0}
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967291
+  rayStartHeight: 0.5
+  maxStepDown: 0.5
+  plantedHeight: 0.05
+  liftedHeight: 0.2
+  maxSlopeAngle: 40
+  maxPelvisDrop: 0.35
+  maxPelvisRaise: 0.15
+  pelvisSmoothing: 12
+  weightBlendSpeed: 6
 --- !u!1 &4149163464626883883
 GameObject:
   m_ObjectHideFlags: 0

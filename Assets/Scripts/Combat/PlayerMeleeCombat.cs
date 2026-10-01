@@ -30,6 +30,8 @@ namespace KryticalNova.Combat
         [SerializeField] private AnimationClip combo2Clip;
         [SerializeField] private AnimationClip combo3Clip;
         [SerializeField, Min(0.01f)] private float comboCrossFade = 0.12f;
+        [Tooltip("Humanoid foot IK on the strike clips. They come from the Grruzam set and sink/hover ~8cm on this rig without it.")]
+        [SerializeField] private bool strikeFootIK = true;
         [SerializeField, Min(0f)] private float postComboDelay = 0.45f;
 
         [Header("Swing Hitbox Windows (Normalized Clip Time)")]
@@ -308,12 +310,17 @@ namespace KryticalNova.Combat
 
         private void PlayStrikeAnimationLocal(int step, AnimationClip clip, float speed = 1f)
         {
-            if (animancer != null && clip != null)
-            {
-                var state = animancer.Play(clip, comboCrossFade);
-                state.Speed = speed;
-                state.Time = 0f;
-            }
+            PlayStrikeState(clip, speed);
+        }
+
+        private void PlayStrikeState(AnimationClip clip, float speed)
+        {
+            if (animancer == null || clip == null) return;
+
+            var state = animancer.Play(clip, comboCrossFade);
+            state.Speed = speed;
+            state.Time = 0f;
+            state.ApplyFootIK = strikeFootIK;
         }
 
         [ServerRpc]
@@ -401,9 +408,7 @@ namespace KryticalNova.Combat
             float speed = step == 1 ? strike1Speed : step == 2 ? strike2Speed : strike3Speed;
             if (clip != null && animancer != null)
             {
-                var state = animancer.Play(clip, comboCrossFade);
-                state.Speed = speed;
-                state.Time = 0f;
+                PlayStrikeState(clip, speed);
 
                 // Proxies don't run the swing windows, so time the slash to the same window start.
                 float swingStartNorm = step == 1 ? swing1Start : step == 2 ? swing2Start : swing3Start;

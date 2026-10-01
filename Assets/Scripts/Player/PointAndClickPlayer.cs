@@ -151,7 +151,9 @@ namespace KryticalNova.Player
                 return;
             }
 
-            // For the local owner player:
+            // For the local owner player: free the keyboard/mouse from the offline scene avatar first.
+            // (PlayerInput ships disabled on the prefab so it never pairs before this point.)
+            KryticalNova.Networking.OfflinePlayerHandoff.ReleaseOfflineAvatar();
             if (playerInput != null) playerInput.enabled = true;
             SetupLocalCamera();
         }
@@ -187,6 +189,10 @@ namespace KryticalNova.Player
             }
 
             SetupLocalCamera();
+
+            // Offline avatar: PlayerInput ships disabled on the prefab, so the local, unspawned player enables it.
+            if (!IsSpawned && playerInput != null)
+                playerInput.enabled = true;
 
             if (playerInput == null || playerInput.actions == null)
             {
@@ -680,6 +686,13 @@ namespace KryticalNova.Player
         {
             EndOrbit();
             base.OnDestroy();
+        }
+
+        private void OnEnable()
+        {
+            // Re-enabled offline avatar (e.g. after leaving a network session): reclaim the camera.
+            if (didStart && !IsSpawned)
+                SetupLocalCamera();
         }
 
         private void OnDisable()
