@@ -125,6 +125,9 @@ namespace KryticalNova.Rendering
         public ShadowSettings shadows = new ShadowSettings();
         public HalftoneSettings halftone = new HalftoneSettings();
         [SerializeField] Shader postShader;
+        [Tooltip("Apply ComicStyleRuntime (day/night + weather) modifiers. Off for isolated cameras such as the " +
+                 "equipment preview and icon capture, which should always look the same.")]
+        public bool applyEnvironmentModifiers = true;
 
         Material _material;
         ComicPass _pass;
@@ -161,7 +164,7 @@ namespace KryticalNova.Rendering
             _pass.renderPassEvent = renderPassEvent;
             _pass.requiresIntermediateTexture = true;
             _pass.ConfigureInput(ScriptableRenderPassInput.Depth | ScriptableRenderPassInput.Normal);
-            _pass.Setup(_material, outlines, shadows, halftone);
+            _pass.Setup(_material, outlines, shadows, halftone, applyEnvironmentModifiers);
             renderer.EnqueuePass(_pass);
         }
 
@@ -175,8 +178,10 @@ namespace KryticalNova.Rendering
             Shader.SetGlobalFloat(ShaderIds.DotOpacity, halftone.opacity);
             Shader.SetGlobalFloat(ShaderIds.ShadowThreshold, halftone.shadowThreshold);
             Shader.SetGlobalFloat(ShaderIds.ShadowSoftness, halftone.shadowSoftness);
-            Shader.SetGlobalFloat(ShaderIds.ShadowBrightness, halftone.shadowBrightness * ComicStyleRuntime.ShadowBrightnessMultiplier);
-            Shader.SetGlobalFloat(ShaderIds.DotStart, Mathf.Clamp01(halftone.dotStart + ComicStyleRuntime.DotStartOffset));
+            float brightnessMul = applyEnvironmentModifiers ? ComicStyleRuntime.ShadowBrightnessMultiplier : 1f;
+            float dotOffset = applyEnvironmentModifiers ? ComicStyleRuntime.DotStartOffset : 0f;
+            Shader.SetGlobalFloat(ShaderIds.ShadowBrightness, halftone.shadowBrightness * brightnessMul);
+            Shader.SetGlobalFloat(ShaderIds.DotStart, Mathf.Clamp01(halftone.dotStart + dotOffset));
         }
 
         protected override void Dispose(bool disposing)
@@ -239,7 +244,7 @@ namespace KryticalNova.Rendering
                 profilingSampler = new ProfilingSampler("Comic Style");
             }
 
-            public void Setup(Material material, OutlineSettings o, ShadowSettings sh, HalftoneSettings h)
+            public void Setup(Material material, OutlineSettings o, ShadowSettings sh, HalftoneSettings h, bool environment)
             {
                 _material = material;
                 material.SetFloat(ShaderIds.OutlineEnabled, o.enabled ? 1f : 0f);
@@ -254,8 +259,9 @@ namespace KryticalNova.Rendering
                 material.SetVector(ShaderIds.CreaseFade, new Vector4(o.creaseFadeStart, o.creaseFadeEnd, 0f, 0f));
 
                 material.SetFloat(ShaderIds.ShadowEnabled, sh.enabled ? 1f : 0f);
-                material.SetColor(ShaderIds.ShadowColor, Color.Lerp(sh.color, ComicStyleRuntime.ShadowTint, ComicStyleRuntime.ShadowTintWeight));
-                material.SetFloat(ShaderIds.ShadowOpacity, sh.opacity * ComicStyleRuntime.ShadowOpacityMultiplier);
+                material.SetColor(ShaderIds.ShadowColor, environment
+                    ? Color.Lerp(sh.color, ComicStyleRuntime.ShadowTint, ComicStyleRuntime.ShadowTintWeight) : sh.color);
+                material.SetFloat(ShaderIds.ShadowOpacity, sh.opacity * (environment ? ComicStyleRuntime.ShadowOpacityMultiplier : 1f));
                 material.SetFloat(ShaderIds.ShadowEdgeSoftness, sh.edgeSoftness);
                 material.SetFloat(ShaderIds.ShadowPatternId, (float)sh.pattern);
                 material.SetFloat(ShaderIds.ShadowPatternCoverage, sh.patternCoverage);

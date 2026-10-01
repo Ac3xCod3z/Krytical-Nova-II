@@ -1,0 +1,340 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3622be29843aeb149be9b3196ff71071, type: 3}
+  m_Name: Cape_SOLD_10
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
+  itemId: 7010
+  displayName: Commander Cape
+  description: Worn across the back.
+  icon: {fileID: 21300000, guid: f1f19092a5330a345b237259053b3d16, type: 3}
+  rarity: 4
+  equipSlot: 7
+  maxStack: 1
+  statModifiers: []
+  appearanceParts:
+  - region: 24
+    mesh: {fileID: -5311993438658855337, guid: 9737df48275d7844ebbeb8e898330c78, type: 3}
+    boneNames:
+    - abac_dyn_01_01_l
+    - abac_dyn_01_01_r
+    - abac_dyn_01_02_l
+    - abac_dyn_01_02_r
+    - abac_dyn_01_03_01_01_l
+    - abac_dyn_01_03_01_01_r
+    - abac_dyn_01_03_01_02_l
+    - abac_dyn_01_03_01_02_r
+    - abac_dyn_01_03_01_l
+    - abac_dyn_01_03_01_r
+    - abac_dyn_01_03_02_01_02_l
+    - abac_dyn_01_03_02_01_02_r
+    - abac_dyn_01_03_02_01_l
+    - abac_dyn_01_03_02_01_r
+    - abac_dyn_01_03_02_l
+    - abac_dyn_01_03_02_r
+    - abac_dyn_01_03_03_01_l
+    - abac_dyn_01_03_03_01_r
+    - abac_dyn_01_03_03_02_l
+    - abac_dyn_01_03_03_02_r
+    - abac_dyn_01_03_03_l
+    - abac_dyn_01_03_03_r
+    - abac_dyn_01_03_04_01_l
+    - abac_dyn_01_03_04_01_r
+    - abac_dyn_01_03_04_02_l
+    - abac_dyn_01_03_04_02_r
+    - abac_dyn_01_03_04_l
+    - abac_dyn_01_03_04_r
+    - abac_dyn_01_03_05_01_l
+    - abac_dyn_01_03_05_01_r
+    - abac_dyn_01_03_05_02_l
+    - abac_dyn_01_03_05_02_r
+    - abac_dyn_01_03_05_l
+    - abac_dyn_01_03_05_r
+    - abac_dyn_01_03_l
+    - abac_dyn_01_03_r
+    - backAttach
+    - ball_l
+    - ball_r
+    - calf_l
+    - calf_r
+    - calf_twist_01_l
+    - calf_twist_01_r
+    - clavicle_l
+    - clavicle_r
+    - elbowAttach_l
+    - elbowAttach_r
+    - eyeLight_l
+    - eyeLight_r
+    - eye_l
+    - eye_r
+    - faceAttach
+    - foot_l
+    - foot_r
+    - hand_l
+    - hand_r
+    - head
+    - headAttach
+    - hipAttachBack
+    - hipAttachFront
+    - hipAttach_l
+    - hipAttach_r
+    - ik_foot_l
+    - ik_foot_r
+    - ik_foot_root
+    - ik_hand_gun
+    - ik_hand_l
+    - ik_hand_r
+    - ik_hand_root
+    - index_01_l
+    - index_01_r
+    - index_02_l
+    - index_02_r
+    - index_03_l
+    - index_03_r
+    - jaw
+    - kneeAttach_l
+    - kneeAttach_r
+    - lowerarm_l
+    - lowerarm_r
+    - lowerarm_twist_01_l
+    - lowerarm_twist_01_r
+    - middle_01_l
+    - middle_01_r
+    - middle_02_l
+    - middle_02_r
+    - middle_03_l
+    - middle_03_r
+    - neck_01
+    - pelvis
+    - pinky_01_l
+    - pinky_01_r
+    - pinky_02_l
+    - pinky_02_r
+    - pinky_03_l
+    - pinky_03_r
+    - prop_l
+    - prop_r
+    - ring_01_l
+    - ring_01_r
+    - ring_02_l
+    - ring_02_r
+    - ring_03_l
+    - ring_03_r
+    - root
+    - shoulderAttach_l
+    - shoulderAttach_r
+    - spine_01
+    - spine_02
+    - spine_03
+    - thigh_l
+    - thigh_r
+    - thigh_twist_01_l
+    - thigh_twist_01_r
+    - thumb_01_l
+    - thumb_01_r
+    - thumb_02_l
+    - thumb_02_r
+    - thumb_03_l
+    - thumb_03_r
+    - upperarm_l
+    - upperarm_r
+    - upperarm_twist_01_l
+    - upperarm_twist_01_r
+    extraBones:
+    - name: abac_dyn_01_01_l
+      parent: backAttach
+      localPosition: {x: -0.13883719, y: -0.014404116, z: -0.115020566}
+      localRotation: {x: 0.96043646, y: -0.19869557, z: 0.19109918, w: 0.03953469}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_01_r
+      parent: backAttach
+      localPosition: {x: 0.13883719, y: -0.014404116, z: -0.115020566}
+      localRotation: {x: 0.19109918, y: 0.03953469, z: 0.96043646, w: -0.19869557}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_02_l
+      parent: abac_dyn_01_01_l
+      localPosition: {x: -0.27272165, y: 2.4158453e-15, z: -5.251355e-16}
+      localRotation: {x: -0.19880018, y: -0.388542, z: 0.1688323, w: 0.8837473}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_02_r
+      parent: abac_dyn_01_01_r
+      localPosition: {x: -0.27272165, y: 1.7053025e-15, z: 7.0388136e-16}
+      localRotation: {x: 0.19880018, y: 0.388542, z: 0.1688323, w: 0.8837473}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_l
+      parent: abac_dyn_01_02_l
+      localPosition: {x: -0.26524922, y: -2.842171e-16, z: -1.3500312e-15}
+      localRotation: {x: 0.1650746, y: -0.06328138, z: 0.18256591, w: 0.9671688}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_01_l
+      parent: abac_dyn_01_03_l
+      localPosition: {x: -0.056097552, y: -0.058692288, z: -0.033140473}
+      localRotation: {x: 0.7212168, y: 0.48446727, z: 0.22768116, w: -0.43965805}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_01_01_l
+      parent: abac_dyn_01_03_01_l
+      localPosition: {x: -0.04342721, y: 1.9895197e-15, z: 3.5527135e-16}
+      localRotation: {x: 0.050556015, y: 0.13979888, z: 0.040588446, w: 0.98805517}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_r
+      parent: abac_dyn_01_02_r
+      localPosition: {x: -0.26524922, y: 9.947598e-16, z: 1.2789769e-15}
+      localRotation: {x: -0.1650746, y: 0.06328138, z: 0.18256591, w: 0.9671688}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_01_r
+      parent: abac_dyn_01_03_r
+      localPosition: {x: -0.056097552, y: -0.058692288, z: 0.033140473}
+      localRotation: {x: 0.7212168, y: 0.48446727, z: -0.22768116, w: 0.43965805}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_01_01_r
+      parent: abac_dyn_01_03_01_r
+      localPosition: {x: -0.04342721, y: 2.5579537e-15, z: -5.684342e-16}
+      localRotation: {x: -0.050556015, y: -0.13979888, z: 0.040588446, w: 0.98805517}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_01_02_l
+      parent: abac_dyn_01_03_01_01_l
+      localPosition: {x: -0.03645018, y: 1.4779288e-14, z: 9.592326e-16}
+      localRotation: {x: 1.2597229e-15, y: 0.08729128, z: -8.6265626e-16, w: 0.99618286}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_01_02_r
+      parent: abac_dyn_01_03_01_01_r
+      localPosition: {x: -0.03645018, y: 1.3926637e-14, z: -6.0396133e-16}
+      localRotation: {x: -7.043982e-16, y: -0.08729128, z: -8.958536e-17, w: 0.99618286}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_02_l
+      parent: abac_dyn_01_03_l
+      localPosition: {x: -0.14670488, y: -0.049927294, z: -0.0031206969}
+      localRotation: {x: 0.9438186, y: 0.2138737, z: 0.15088838, w: -0.20173533}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_02_01_l
+      parent: abac_dyn_01_03_02_l
+      localPosition: {x: -0.050548486, y: 3.2684964e-15, z: 3.694822e-15}
+      localRotation: {x: -0.030201318, y: 0.26364318, z: -0.08159173, w: 0.96068877}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_02_01_02_l
+      parent: abac_dyn_01_03_02_01_l
+      localPosition: {x: -0.031457447, y: 1.4210854e-15, z: 8.5265126e-16}
+      localRotation: {x: -0.0392886, y: 0.08473877, z: 0.0033439046, w: 0.99562275}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_02_r
+      parent: abac_dyn_01_03_r
+      localPosition: {x: -0.14670488, y: -0.049927294, z: 0.0031206969}
+      localRotation: {x: 0.9438186, y: 0.2138737, z: -0.15088838, w: 0.20173533}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_02_01_r
+      parent: abac_dyn_01_03_02_r
+      localPosition: {x: -0.050548486, y: 3.126388e-15, z: -3.5527137e-15}
+      localRotation: {x: 0.030201318, y: -0.26364318, z: -0.08159173, w: 0.96068877}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_02_01_02_r
+      parent: abac_dyn_01_03_02_01_r
+      localPosition: {x: -0.031457447, y: 1.2789769e-15, z: -1.7053025e-15}
+      localRotation: {x: 0.0392886, y: -0.08473877, z: 0.0033439046, w: 0.99562275}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_03_l
+      parent: abac_dyn_01_03_l
+      localPosition: {x: -0.15758269, y: -0.010826919, z: 0.0027967324}
+      localRotation: {x: 0.9910067, y: 0.079879574, z: -0.102231115, w: -0.032770313}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_03_01_l
+      parent: abac_dyn_01_03_03_l
+      localPosition: {x: -0.04839586, y: -3.907985e-16, z: 2.344791e-15}
+      localRotation: {x: 0.047780927, y: 0.34716696, z: -0.009776111, w: 0.93653435}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_03_r
+      parent: abac_dyn_01_03_r
+      localPosition: {x: -0.15758269, y: -0.010826919, z: -0.0027967324}
+      localRotation: {x: 0.9910067, y: 0.079879574, z: 0.102231115, w: 0.032770313}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_03_01_r
+      parent: abac_dyn_01_03_03_r
+      localPosition: {x: -0.04839586, y: -7.105427e-17, z: -2.9132252e-15}
+      localRotation: {x: -0.047780927, y: -0.34716696, z: -0.009776111, w: 0.93653435}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_03_02_l
+      parent: abac_dyn_01_03_03_01_l
+      localPosition: {x: -0.036779653, y: -3.5527135e-16, z: 1.9895197e-15}
+      localRotation: {x: 0.020986017, y: 0.19640265, z: -0.004204583, w: 0.9802897}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_03_02_r
+      parent: abac_dyn_01_03_03_01_r
+      localPosition: {x: -0.036779653, y: -5.684342e-16, z: -8.5265126e-16}
+      localRotation: {x: -0.020986017, y: -0.19640265, z: -0.004204583, w: 0.9802897}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_04_l
+      parent: abac_dyn_01_03_l
+      localPosition: {x: -0.1578359, y: 0.028834848, z: 0.0016652101}
+      localRotation: {x: 0.99478805, y: -0.028772753, z: 0.079284616, w: -0.057296835}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_04_01_l
+      parent: abac_dyn_01_03_04_l
+      localPosition: {x: -0.04156615, y: 6.217249e-17, z: 8.5265126e-16}
+      localRotation: {x: -0.039594907, y: 0.335466, z: 0.014113852, w: 0.94111407}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_04_r
+      parent: abac_dyn_01_03_r
+      localPosition: {x: -0.1578359, y: 0.028834848, z: -0.0016652101}
+      localRotation: {x: 0.99478805, y: -0.028772753, z: -0.079284616, w: 0.057296835}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_04_01_r
+      parent: abac_dyn_01_03_04_r
+      localPosition: {x: -0.04156615, y: 2.0872193e-16, z: -9.947598e-16}
+      localRotation: {x: 0.039594907, y: -0.335466, z: 0.014113852, w: 0.94111407}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_04_02_l
+      parent: abac_dyn_01_03_04_01_l
+      localPosition: {x: -0.031413756, y: -7.105427e-16, z: 3.694822e-15}
+      localRotation: {x: -0.0048881057, y: 0.14540859, z: 0.033239882, w: 0.98880106}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_04_02_r
+      parent: abac_dyn_01_03_04_01_r
+      localPosition: {x: -0.031413756, y: -1.1013412e-15, z: -4.263256e-15}
+      localRotation: {x: 0.0048881057, y: -0.14540859, z: 0.033239882, w: 0.98880106}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_05_l
+      parent: abac_dyn_01_03_l
+      localPosition: {x: -0.14671206, y: 0.06093545, z: 0.0004892521}
+      localRotation: {x: 0.91961676, y: -0.2672082, z: 0.27520353, w: -0.084662944}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_05_01_l
+      parent: abac_dyn_01_03_05_l
+      localPosition: {x: -0.023645947, y: -6.3948843e-16, z: -1.7053025e-15}
+      localRotation: {x: 3.1167072e-16, y: 0.39880422, z: -7.8627273e-16, w: 0.9170361}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_05_r
+      parent: abac_dyn_01_03_r
+      localPosition: {x: -0.14671206, y: 0.06093545, z: -0.0004892521}
+      localRotation: {x: 0.91961676, y: -0.2672082, z: -0.27520353, w: 0.084662944}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_05_01_r
+      parent: abac_dyn_01_03_05_r
+      localPosition: {x: -0.023645947, y: -4.2632563e-16, z: 2.842171e-16}
+      localRotation: {x: -1.0159133e-15, y: -0.39880422, z: -4.5693764e-16, w: 0.9170361}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_05_02_l
+      parent: abac_dyn_01_03_05_01_l
+      localPosition: {x: -0.022715444, y: -4.973799e-16, z: 1.7053025e-15}
+      localRotation: {x: -0.019256191, y: 0.14331388, z: -0.002789003, w: 0.989486}
+      localScale: {x: 1, y: 1, z: 1}
+    - name: abac_dyn_01_03_05_02_r
+      parent: abac_dyn_01_03_05_01_r
+      localPosition: {x: -0.022715444, y: -4.2632563e-16, z: -2.842171e-16}
+      localRotation: {x: 0.019256191, y: -0.14331388, z: -0.002789003, w: 0.989486}
+      localScale: {x: 1, y: 1, z: 1}
+  weaponPrefab: {fileID: 0}
+  weaponLocalPosition: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalScale: {x: 1, y: 1, z: 1}
+  hitboxCenter: {x: 0, y: 0.01, z: 0.55}
+  hitboxSize: {x: 0.18, y: 0.18, z: 1.15}
+  petPrefab: {fileID: 0}
+  petScale: 1
+  petOffset: {x: 0.7, y: 0.95, z: -0.5}

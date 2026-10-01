@@ -1,0 +1,229 @@
+/* Inventory + Equipment windows. Builds on KryticalTheme.uss / ProgressionHUD.uss (.panel, .window, .kn-*). */
+
+.item-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.header-key { font-size: 11px; margin-left: 6px; -unity-text-align: middle-left; }
+.header-spacer { flex-grow: 1; }
+
+/* ------------------------------------------------------------------ windows */
+
+#equipment-window { left: 96px; top: 84px; width: 548px; display: none; }
+#inventory-window { left: 656px; top: 84px; width: 372px; display: none; }
+
+.equipment-body { flex-direction: row; align-items: stretch; margin-top: 6px; }
+.equip-column { width: 84px; justify-content: space-between; align-items: center; padding: 2px 0; }
+
+/* ------------------------------------------------------------------ slots (shared by grid cells and equip slots) */
+
+.item-cell, .equip-slot {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_Glass_04.png#SPR_HUD_SciFiSoldier_Box_Glass_04");
+    -unity-background-image-tint-color: rgba(44, 62, 80, 0.85);
+    -unity-slice-scale: 0.12px;
+    transition-property: scale, -unity-background-image-tint-color, opacity;
+    transition-duration: 0.1s;
+}
+
+.item-cell {
+    width: 50px;
+    height: 50px;
+    margin: 2px;
+}
+
+.equip-slot {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 18px;
+}
+
+.item-frame {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Frame_04.png#SPR_HUD_SciFiSoldier_Frame_04");
+    -unity-background-image-tint-color: rgba(150, 176, 196, 0.35);
+    -unity-slice-scale: 0.12px;
+}
+
+.item-icon {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    right: 4px;
+    bottom: 4px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* Empty equip slot: a faint silhouette of that slot's gear */
+.equip-slot .item-icon.silhouette { -unity-background-image-tint-color: rgba(170, 200, 220, 0.14); }
+
+.item-count {
+    position: absolute;
+    right: 4px;
+    bottom: 1px;
+    font-size: 11px;
+    color: rgb(240, 236, 220);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
+}
+
+.equip-label {
+    position: absolute;
+    bottom: -17px;
+    left: -8px;
+    right: -8px;
+    -unity-text-align: middle-center;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgb(146, 162, 178);
+}
+
+.item-cell:hover, .equip-slot:hover { -unity-background-image-tint-color: rgba(70, 100, 124, 0.95); scale: 1.05 1.05; }
+.item-cell:hover > .item-frame, .equip-slot:hover > .item-frame { -unity-background-image-tint-color: rgba(220, 236, 246, 0.85); }
+
+/* Rarity: tinted frame + a soft glow inside the slot */
+.rarity-0 > .item-frame { -unity-background-image-tint-color: rgba(176, 186, 196, 0.75); }
+.rarity-1 > .item-frame { -unity-background-image-tint-color: rgb(96, 210, 112); }
+.rarity-2 > .item-frame { -unity-background-image-tint-color: rgb(84, 150, 255); }
+.rarity-3 > .item-frame { -unity-background-image-tint-color: rgb(186, 104, 255); }
+.rarity-4 > .item-frame { -unity-background-image-tint-color: rgb(255, 162, 48); }
+.rarity-1 { -unity-background-image-tint-color: rgba(34, 70, 46, 0.9); }
+.rarity-2 { -unity-background-image-tint-color: rgba(30, 50, 86, 0.9); }
+.rarity-3 { -unity-background-image-tint-color: rgba(58, 34, 86, 0.9); }
+.rarity-4 { -unity-background-image-tint-color: rgba(86, 54, 20, 0.9); }
+
+/* Drag feedback */
+.drag-source { opacity: 0.35; }
+.drop-valid > .item-frame { -unity-background-image-tint-color: rgb(140, 255, 220); }
+.drop-valid { -unity-background-image-tint-color: rgba(30, 112, 98, 0.95); }
+.drop-invalid { opacity: 0.35; }
+.drop-hover { scale: 1.1 1.1; }
+.drop-hover > .item-frame { -unity-background-image-tint-color: rgb(255, 214, 92); }
+.reject-flash > .item-frame { -unity-background-image-tint-color: rgb(230, 70, 80); }
+
+/* ------------------------------------------------------------------ inventory */
+
+.inventory-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 324px;
+    margin: 8px auto 4px auto;
+}
+.inventory-count { font-size: 12px; margin-right: 8px; -unity-text-align: middle-right; }
+.inventory-sort { min-height: 24px; height: 24px; margin: 0 8px 0 0; padding: 0 10px; font-size: 11px; }
+
+/* ------------------------------------------------------------------ 3D preview */
+
+.preview-frame {
+    flex-grow: 1;
+    height: 420px;
+    margin: 0 6px;
+    overflow: hidden;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_04.png#SPR_HUD_SciFiSoldier_Box_04");
+    -unity-background-image-tint-color: rgba(12, 22, 32, 0.95);
+    -unity-slice-scale: 0.18px;
+}
+.preview-backdrop {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Background_Hexagons_01.png#SPR_HUD_SciFiSoldier_Background_Hexagons_01");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.06);
+    -unity-background-scale-mode: scale-and-crop;
+}
+/* Platform ring under the model's feet (squashed circle reads as a floor disc in perspective). */
+.preview-floor {
+    position: absolute;
+    left: 18%; right: 18%; bottom: 30px; height: 46px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Map_Ring_01_Clean.png#SPR_HUD_SciFiSoldier_Map_Ring_01_Clean");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.45);
+    -unity-background-scale-mode: stretch-to-fill;
+}
+.preview-viewport {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+}
+.preview-hint {
+    position: absolute;
+    left: 0; right: 0; bottom: 6px;
+    -unity-text-align: middle-center;
+    font-size: 10px;
+    color: rgba(146, 162, 178, 0.8);
+}
+.preview-reset {
+    position: absolute;
+    right: 6px; top: 6px;
+    min-height: 22px; height: 22px;
+    padding: 0 8px; margin: 0;
+    font-size: 10px;
+}
+.try-on-chip {
+    position: absolute;
+    left: 6px; top: 6px;
+    flex-direction: row;
+    align-items: center;
+    padding: 2px 4px 2px 10px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_04.png#SPR_HUD_SciFiSoldier_Box_04");
+    -unity-background-image-tint-color: rgba(150, 120, 50, 0.95);
+    -unity-slice-scale: 0.16px;
+    display: none;
+}
+.try-on-chip Label { font-size: 11px; color: rgb(255, 240, 210); }
+.try-on-clear { min-height: 20px; height: 20px; width: 22px; padding: 0; margin: 0 0 0 6px; font-size: 11px; }
+
+/* ------------------------------------------------------------------ tooltip / menu / confirm / ghost */
+
+.item-tooltip {
+    position: absolute;
+    width: 250px;
+    padding: 10px 12px;
+    display: none;
+}
+.tooltip-name { font-size: 15px; -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf"); white-space: normal; }
+.tooltip-type { font-size: 11px; color: rgb(214, 178, 104); letter-spacing: 1px; margin-bottom: 6px; }
+.tooltip-desc { font-size: 12px; white-space: normal; color: rgb(200, 212, 222); }
+.tooltip-stats { font-size: 11px; margin-top: 6px; color: rgb(146, 162, 178); white-space: normal; }
+.tooltip-hint { font-size: 10px; margin-top: 8px; color: rgb(114, 222, 196); white-space: normal; }
+
+.rarity-text-0 { color: rgb(220, 226, 232); }
+.rarity-text-1 { color: rgb(110, 225, 126); }
+.rarity-text-2 { color: rgb(110, 170, 255); }
+.rarity-text-3 { color: rgb(200, 128, 255); }
+.rarity-text-4 { color: rgb(255, 176, 64); }
+
+.item-menu {
+    position: absolute;
+    min-width: 150px;
+    padding: 8px 10px;
+    display: none;
+}
+.item-menu-title { font-size: 12px; margin-bottom: 4px; white-space: normal; max-width: 200px; }
+.item-menu Button { margin: 2px 0; min-height: 26px; -unity-text-align: middle-left; }
+
+.item-confirm {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    width: 300px;
+    translate: -50% -50%;
+    display: none;
+}
+.item-confirm-text { font-size: 14px; white-space: normal; margin-bottom: 4px; }
+.item-confirm-buttons { justify-content: flex-end; margin-top: 8px; }
+.item-confirm-buttons Button { margin-left: 8px; }
+
+.item-drag-ghost {
+    position: absolute;
+    width: 54px;
+    height: 54px;
+    opacity: 0.9;
+    display: none;
+    -unity-background-scale-mode: scale-to-fit;
+}

@@ -1,0 +1,237 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace KryticalNova.Items.Visuals
+{
+    /// <summary>
+    /// Owns a Sidekick character's visible body: fixed parts (head, face, hair...) plus one set of parts per visual
+    /// equip slot (Armor, Gloves, Boots, Cape), falling back to base-body defaults when a slot is empty. Changes are
+    /// batched and rebuilt once in LateUpdate into the single existing SkinnedMeshRenderer, so a character stays one
+    /// skinned draw no matter what it wears.
+    /// </summary>
+    [DisallowMultipleComponent]
+    public sealed class CharacterAppearance : MonoBehaviour
+    {
+        private static readonly EquipSlot[] VisualSlots = { EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape };
+
+        [Tooltip("The character's single skinned renderer. Its original mesh supplies the reference bones/bindposes.")]
+        [SerializeField] private SkinnedMeshRenderer targetRenderer;
+        [Tooltip("Always worn: head, hair, face and any recipe part that no equip slot owns.")]
+        [SerializeField] private List<SidekickPartRef> fixedParts = new List<SidekickPartRef>();
+        [Tooltip("Shown for a slot's regions while that slot is empty (Sidekick SK_HUMN_BASE body).")]
+        [SerializeField] private List<SidekickPartRef> defaultParts = new List<SidekickPartRef>();
+        [SerializeField] private BodyShapeWeights bodyShape = new BodyShapeWeights { buff = 90f, heavy = 10f };
+        [Tooltip("Bone order + bindposes of the original baked mesh, captured by the setup tool. Keeps merges exact and lets clones (the preview doll) merge without reading the live mesh.")]
+        [SerializeField] private string[] referenceBoneNames = System.Array.Empty<string>();
+        [SerializeField] private Matrix4x4[] referenceBindposes = System.Array.Empty<Matrix4x4>();
+        [Tooltip("Debug: render one SkinnedMeshRenderer per part instead of merging (more draw calls).")]
+        [SerializeField] private bool mergeParts = true;
+
+        private readonly Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>> slotParts = new Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>>();
+        private readonly SortedDictionary<BodyRegion, SidekickPartRef> resolved = new SortedDictionary<BodyRegion, SidekickPartRef>();
+        private readonly List<SidekickPartRef> partList = new List<SidekickPartRef>(48);
+        private readonly List<Transform> boneBuffer = new List<Transform>(160);
+        private readonly List<string> boneNames = new List<string>(160);
+        private readonly List<SkinnedMeshRenderer> debugRenderers = new List<SkinnedMeshRenderer>();
+        private SkinnedMeshMerger merger;
+        private Mesh ownedMesh;
+        private CharacterAppearance sharedSource;
+        private bool dirty;
+
+        /// <summary>Raised after every rebuild, so mirrors (the equipment preview doll) can re-share the mesh.</summary>
+        public event Action Rebuilt;
+
+        public bool IsConfigured => fixedParts.Count > 0 || defaultParts.Count > 0;
+        public SkinnedMeshRenderer Renderer => targetRenderer;
+        public Mesh CurrentMesh => ownedMesh;
+        public IReadOnlyList<string> CurrentBoneNames => boneNames;
+        public IReadOnlyList<SidekickPartRef> CurrentParts => partList;
+
+        private void Awake()
+        {
+            if (targetRenderer == null) targetRenderer = GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (targetRenderer == null) return;
+            if (referenceBoneNames.Length > 0)
+            {
+                merger = new SkinnedMeshMerger(transform, null, null);
+                var bones = new Transform[referenceBoneNames.Length];
+                for (int i = 0; i < bones.Length; i++) bones[i] = merger.FindBone(referenceBoneNames[i]);
+                merger = new SkinnedMeshMerger(transform, bones, referenceBindposes);
+            }
+            else if (targetRenderer.sharedMesh != null && targetRenderer.sharedMesh.isReadable)
+                merger = new SkinnedMeshMerger(transform, targetRenderer.bones, targetRenderer.sharedMesh.bindposes);
+            else return;
+            // Keep the baked mesh until the first LateUpdate, by which time the equipment binder has applied the
+            // loadout, so spawning costs exactly one merge.
+            dirty = IsConfigured;
+        }
+
+        private void OnDestroy()
+        {
+            if (sharedSource != null) sharedSource.Rebuilt -= OnSourceRebuilt;
+            if (ownedMesh != null) Destroy(ownedMesh);
+        }
+
+        /// <summary>Show <paramref name="item"/>'s parts for <paramref name="slot"/>; null shows the default body.</summary>
+        public void SetSlot(EquipSlot slot, ItemDefinition item)
+        {
+            if (Array.IndexOf(VisualSlots, slot) < 0) return;
+            IReadOnlyList<SidekickPartRef> parts = item != null && item.appearanceParts.Count > 0 ? item.appearanceParts : null;
+            if (slotParts.TryGetValue(slot, out var existing) && ReferenceEquals(existing, parts)) return;
+            if (parts == null) slotParts.Remove(slot); else slotParts[slot] = parts;
+            StopSharing();
+            dirty = true;
+        }
+
+        /// <summary>Apply every visual slot from a loadout in one rebuild.</summary>
+        public void ApplyLoadout(EquipmentLoadout loadout, IItemLookup lookup)
+        {
+            foreach (var slot in VisualSlots) SetSlot(slot, lookup?.Get(loadout[slot]));
+        }
+
+        /// <summary>
+        /// Mirror another appearance's merged mesh instead of merging again (same rig, bones matched by name).
+        /// Stays in sync until this appearance gets its own <see cref="SetSlot"/> (e.g. a try-on).
+        /// </summary>
+        public void ShareFrom(CharacterAppearance source)
+        {
+            if (source == null || source == this) return;
+            if (sharedSource != source)
+            {
+                StopSharing();
+                sharedSource = source;
+                source.Rebuilt += OnSourceRebuilt;
+            }
+            slotParts.Clear();
+            foreach (var kv in source.slotParts) slotParts[kv.Key] = kv.Value;
+            dirty = false;
+            OnSourceRebuilt();
+        }
+
+        public void RebuildNow()
+        {
+            dirty = false;
+            if (merger == null || !IsConfigured) return;
+            ResolveParts();
+            if (mergeParts) RebuildMerged(); else RebuildSeparate();
+            Rebuilt?.Invoke();
+        }
+
+        private void LateUpdate()
+        {
+            if (dirty) RebuildNow();
+        }
+
+        private void ResolveParts()
+        {
+            resolved.Clear();
+            foreach (var p in fixedParts) if (p.IsValid) resolved[p.region] = p;
+            foreach (var slot in VisualSlots)
+            {
+                var regions = EquipSlots.RegionsFor(slot);
+                if (slotParts.TryGetValue(slot, out var parts))
+                {
+                    foreach (var p in parts) if (p.IsValid) resolved[p.region] = p;
+                }
+                else
+                {
+                    foreach (var p in defaultParts)
+                        if (p.IsValid && Array.IndexOf(regions, p.region) >= 0) resolved[p.region] = p;
+                }
+            }
+            partList.Clear();
+            partList.AddRange(resolved.Values); // region order => deterministic bone order for sharing
+        }
+
+        private void RebuildMerged()
+        {
+            ClearDebugRenderers();
+            var mesh = merger.Merge(partList, bodyShape, boneBuffer, name + "_Merged");
+            if (mesh == null) return;
+            var old = ownedMesh;
+            ownedMesh = mesh;
+            boneNames.Clear();
+            foreach (var b in boneBuffer) boneNames.Add(b.name);
+            ApplyToRenderer(targetRenderer, mesh, boneBuffer.ToArray());
+            if (old != null) Destroy(old);
+        }
+
+        private void ApplyToRenderer(SkinnedMeshRenderer smr, Mesh mesh, Transform[] bones)
+        {
+            smr.enabled = true;
+            smr.sharedMesh = null; // force the skinning buffers to rebind to the new bone count
+            smr.bones = bones;
+            smr.sharedMesh = mesh;
+            for (int i = 0; i < mesh.blendShapeCount; i++) smr.SetBlendShapeWeight(i, 0f);
+        }
+
+        private void OnSourceRebuilt()
+        {
+            if (sharedSource == null || sharedSource.CurrentMesh == null || merger == null) return;
+            merger.EnsureBones(sharedSource.CurrentParts);
+            var names = sharedSource.CurrentBoneNames;
+            var bones = new Transform[names.Count];
+            for (int i = 0; i < names.Count; i++) bones[i] = merger.FindBone(names[i]) ?? transform;
+            ClearDebugRenderers();
+            if (ownedMesh != null) { Destroy(ownedMesh); ownedMesh = null; }
+            boneNames.Clear();
+            boneNames.AddRange(names);
+            ApplyToRenderer(targetRenderer, sharedSource.CurrentMesh, bones);
+            Rebuilt?.Invoke();
+        }
+
+        private void StopSharing()
+        {
+            if (sharedSource == null) return;
+            sharedSource.Rebuilt -= OnSourceRebuilt;
+            sharedSource = null;
+        }
+
+        // ---- Debug path: one renderer per part (keeps blendshapes live instead of baking them) ----
+
+        private void RebuildSeparate()
+        {
+            ClearDebugRenderers();
+            targetRenderer.enabled = false;
+            foreach (var part in partList)
+            {
+                var go = new GameObject(part.mesh.name);
+                go.layer = targetRenderer.gameObject.layer;
+                go.transform.SetParent(targetRenderer.transform.parent, false);
+                var smr = go.AddComponent<SkinnedMeshRenderer>();
+                var bones = new Transform[part.boneNames.Length];
+                for (int i = 0; i < bones.Length; i++) bones[i] = merger.FindBone(part.boneNames[i]) ?? transform;
+                smr.bones = bones;
+                smr.rootBone = targetRenderer.rootBone;
+                smr.sharedMesh = part.mesh;
+                var mats = new Material[part.mesh.subMeshCount];
+                for (int i = 0; i < mats.Length; i++) mats[i] = targetRenderer.sharedMaterial;
+                smr.sharedMaterials = mats;
+                smr.localBounds = targetRenderer.localBounds;
+                for (int i = 0; i < part.mesh.blendShapeCount; i++)
+                    smr.SetBlendShapeWeight(i, bodyShape.WeightFor(part.mesh.GetBlendShapeName(i)));
+                debugRenderers.Add(smr);
+            }
+        }
+
+        private void ClearDebugRenderers()
+        {
+            foreach (var r in debugRenderers) if (r != null) Destroy(r.gameObject);
+            debugRenderers.Clear();
+        }
+
+#if UNITY_EDITOR
+        /// <summary>Editor setup tool entry point.</summary>
+        public void EditorConfigure(SkinnedMeshRenderer renderer, List<SidekickPartRef> fixedList, List<SidekickPartRef> defaults, BodyShapeWeights shape)
+        {
+            targetRenderer = renderer;
+            referenceBoneNames = System.Array.ConvertAll(renderer.bones, b => b != null ? b.name : string.Empty);
+            referenceBindposes = renderer.sharedMesh.bindposes;
+            fixedParts = fixedList;
+            defaultParts = defaults;
+            bodyShape = shape;
+        }
+#endif
+    }
+}

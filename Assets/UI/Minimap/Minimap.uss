@@ -1,0 +1,106 @@
+/* HUD minimap, skinned with the Synty SciFi Soldier HUD map sprites. */
+
+.minimap-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.minimap {
+    position: absolute;
+    right: 16px;
+    top: 62px;
+    width: 190px;
+    height: 190px;
+}
+
+/* Dark disc behind the map (shows at the zone edge / outside the baked area). */
+.minimap-backdrop {
+    position: absolute;
+    left: 8px; top: 8px; right: 8px; bottom: 8px;
+    border-radius: 50%;
+    background-color: rgba(9, 15, 23, 0.93);
+}
+
+/* Circular clip: overflow hidden + full border radius. */
+.minimap-mask {
+    position: absolute;
+    left: 8px; top: 8px; right: 8px; bottom: 8px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.minimap-map {
+    position: absolute;
+    left: 0;
+    top: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+    -unity-background-image-tint-color: rgb(210, 222, 228);
+}
+
+.minimap-ring {
+    position: absolute;
+    left: 2px; top: 2px; right: 2px; bottom: 2px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Ring_Large_01.png#SPR_HUD_SciFiSoldier_Ring_Large_01");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.85);
+}
+
+.minimap-frame {
+    position: absolute;
+    left: -6px; top: -6px; right: -6px; bottom: -6px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Map_Circle_Large_01_Clean.png#SPR_HUD_SciFiSoldier_Map_Circle_Large_01_Clean");
+    -unity-background-image-tint-color: rgba(9, 15, 23, 0.85); /* filled disc: sits behind the map as a halo */
+}
+
+.minimap-north {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    -unity-text-align: middle-center;
+    font-size: 12px;
+    color: rgb(236, 206, 140);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/Orbitron/Orbitron-ExtraBold.ttf");
+    background-color: rgba(9, 15, 23, 0.9);
+    border-radius: 10px;
+}
+
+.minimap-zoom {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    min-height: 24px;
+    margin: 0;
+    padding: 0;
+    font-size: 15px;
+    -unity-text-align: middle-center;
+}
+.minimap-zoom-in { right: -4px; bottom: 20px; }
+.minimap-zoom-out { right: -4px; bottom: -6px; }
+
+/* Markers (children of the map layer, positioned in map pixels). */
+.minimap-marker {
+    position: absolute;
+    border-radius: 50%;
+}
+.minimap-marker.npc {
+    width: 9px; height: 9px;
+    background-color: rgb(236, 196, 92);
+    border-width: 1.5px;
+    border-color: rgb(20, 18, 30);
+}
+.minimap-marker.ally {
+    width: 9px; height: 9px;
+    background-color: rgb(114, 222, 196);
+    border-width: 1.5px;
+    border-color: rgb(20, 18, 30);
+}
+.minimap-marker.portal {
+    width: 22px; height: 22px;
+    border-radius: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Objective_01_Clean.png#ICON_SciFiSoldier_Map_Objective_01_Clean");
+    -unity-background-image-tint-color: rgb(186, 120, 255);
+}

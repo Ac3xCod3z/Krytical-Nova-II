@@ -1,0 +1,98 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a71bf794afeda9548a7803514dbdc871, type: 3}
+  m_Name: ZTP_Zone01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.ZoneTerrainProfile
+  size: 600
+  baseHeight: -20
+  heightRange: 80
+  heightmapResolution: 513
+  alphamapResolution: 512
+  seed: 1337
+  hillAmplitude: 7
+  hillScale: 0.012
+  hillFadeDistance: {x: 85, y: 170}
+  rimWidth: 50
+  rimHeight: 42
+  townHeight: 0
+  townHalfSize: 62
+  townFalloff: 25
+  waterLevel: -1.2
+  riverWidth: 14
+  riverBankWidth: 7
+  riverBedHeight: -4
+  rivers:
+  - name: "North river (NE source \u2192 NW lake)"
+    points:
+    - {x: 310, y: 178}
+    - {x: 230, y: 152}
+    - {x: 140, y: 130}
+    - {x: 60, y: 112}
+    - {x: 0, y: 108}
+    - {x: -60, y: 112}
+    - {x: -140, y: 142}
+    - {x: -205, y: 188}
+    - {x: -236, y: 214}
+  - name: "East branch (\u2192 SE lake)"
+    points:
+    - {x: 140, y: 130}
+    - {x: 182, y: 78}
+    - {x: 202, y: 0}
+    - {x: 196, y: -84}
+    - {x: 182, y: -148}
+  lakeBedHeight: -5
+  lakeShoreWidth: 12
+  lakes:
+  - center: {x: -236, y: 218}
+    radius: 40
+  - center: {x: -228, y: 38}
+    radius: 34
+  - center: {x: -72, y: -228}
+    radius: 40
+  - center: {x: 176, y: -176}
+    radius: 36
+  pathWidth: 8
+  pathShoulder: 8
+  pathHeight: 0.2
+  paths:
+  - name: "North gate \u2192 bridge \u2192 portal"
+    points:
+    - {x: 0, y: 48}
+    - {x: 0, y: 150}
+    - {x: 70, y: 178}
+    - {x: 140, y: 205}
+    - {x: 215, y: 232}
+  - name: South gate
+    points:
+    - {x: 0, y: -48}
+    - {x: 0, y: -120}
+    - {x: -18, y: -170}
+  - name: East gate
+    points:
+    - {x: 48, y: 0}
+    - {x: 120, y: 4}
+    - {x: 168, y: 10}
+  - name: West gate
+    points:
+    - {x: -48, y: 0}
+    - {x: -120, y: -6}
+    - {x: -172, y: -2}
+  portalCenter: {x: 215, y: 232}
+  portalPadRadius: 14
+  portalPadHeight: 0.4
+  treeCount: 450
+  rockCount: 140
+  grassCount: 700
+  scatterClearance: 6
+  maxScatterSlope: 32
+  rockSlopeStart: 30
+  rockSlopeFull: 42

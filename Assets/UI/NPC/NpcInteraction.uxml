@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="../Shared/KryticalTheme.uss" />
+    <Style src="NpcInteraction.uss" />
+    <ui:VisualElement name="npc-ui" class="kn-root" picking-mode="Ignore">
+        <ui:VisualElement name="nameplates" picking-mode="Ignore" />
+        <ui:Label name="zone-toast" text="" class="hud-movable" picking-mode="Ignore" />
+        <ui:VisualElement name="npc-dialogue" class="panel blocks-world hud-movable">
+            <ui:VisualElement class="npc-header kn-header">
+                <ui:VisualElement class="npc-header-text">
+                    <ui:Label name="npc-title" text="TITLE" class="npc-eyebrow" />
+                    <ui:Label name="npc-name" text="Name" class="npc-heading" />
+                </ui:VisualElement>
+                <ui:Button name="npc-close" class="npc-close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+            </ui:VisualElement>
+            <ui:Label name="npc-greeting" text="" class="npc-greeting" />
+            <ui:Label name="npc-services" text="" class="npc-services" />
+            <ui:VisualElement class="npc-actions">
+                <ui:Button name="npc-shop" text="SHOP / QUESTS — COMING SOON" enabled="false" class="npc-action" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

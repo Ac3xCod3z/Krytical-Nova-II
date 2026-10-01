@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3622be29843aeb149be9b3196ff71071, type: 3}
+  m_Name: Weapon_Knife
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
+  itemId: 1007
+  displayName: Combat Knife
+  description: Short, quick, reliable.
+  icon: {fileID: 21300000, guid: 59d5471d3cbbb8743ad539665c2de6b2, type: 3}
+  rarity: 0
+  equipSlot: 1
+  maxStack: 1
+  statModifiers: []
+  appearanceParts: []
+  weaponPrefab: {fileID: 4557668404966008159, guid: 3316474499b86c743a9475de8bfc4a4e, type: 3}
+  weaponLocalPosition: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalScale: {x: 1, y: 1, z: 1}
+  hitboxCenter: {x: 0, y: -0.011049803, z: 0.24806668}
+  hitboxSize: {x: 0.18, y: 0.18, z: 0.39613336}
+  petPrefab: {fileID: 0}
+  petScale: 1
+  petOffset: {x: 0.7, y: 0.95, z: -0.5}

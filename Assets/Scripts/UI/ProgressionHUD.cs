@@ -33,6 +33,9 @@ namespace KryticalNova.UI
         [SerializeField] private CharacterBuffManager buffManager;
         private VisualElement root;
         private VisualElement characterWindow;
+
+        /// <summary>The local hotbar, shared with the settings/network panels so they can suppress its keys while typing.</summary>
+        public PlayerSkillHotbar Hotbar => hotbar;
         private VisualElement skillsWindow;
         private VisualElement runTile;
         private VisualElement jumpTile;
@@ -92,6 +95,7 @@ namespace KryticalNova.UI
                 return;
             }
             root.pickingMode = PickingMode.Ignore;
+            SyntySkin.Decorate(root);
             characterWindow = root.Q("character-window");
             skillsWindow = root.Q("skills-window");
             runTile = root.Q("run-drag");
@@ -1042,7 +1046,9 @@ namespace KryticalNova.UI
             movement.ReleaseCameraControl();
             StopHold();
             CancelDrag();
-            SetVisible(window, window.resolvedStyle.display == DisplayStyle.None);
+            bool show = window.resolvedStyle.display == DisplayStyle.None;
+            SetVisible(window, show);
+            if (show) window.BringToFront();
         }
         private void CloseWindows() { HideCharacter(); HideSkills(); }
 

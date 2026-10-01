@@ -641,6 +641,10 @@ GameObject:
   - component: {fileID: 546974344}
   - component: {fileID: 546974345}
   - component: {fileID: 546974346}
+  - component: {fileID: 546974348}
+  - component: {fileID: 546974347}
+  - component: {fileID: 546974349}
+  - component: {fileID: 546974350}
   m_Layer: 0
   m_Name: Progression UI
   m_TagString: Untagged
@@ -719,6 +723,56 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cede8f9e27bc69749bcee7a184e98066, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.UI.CombatFeedbackManager
+--- !u!114 &546974347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 126f452262fe14648be026d917ea1cc1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.NetworkSessionPanel
+  visibleOnStart: 1
+--- !u!114 &546974348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4a4221cd07c2a64ba51388afce7e10b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.HudSettingsController
+  hotbar: {fileID: 0}
+--- !u!114 &546974349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4a9d9960d9878746952b8ae658a6e18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.GearUIController
+--- !u!114 &546974350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57693b489e173cc4783cce590139ff37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.MinimapController
 --- !u!114 &590200685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1018,7 +1072,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineDeoccluder
   CollideAgainst:
     serializedVersion: 2
-    m_Bits: 9
+    m_Bits: 8
   IgnoreTag: Player
   TransparentLayers:
     serializedVersion: 2
@@ -2330,6 +2384,61 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f2451ee8852dcd4fbf31145a4df6047, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.CharacterCombatStats
+--- !u!1 &2033275108
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2033275110}
+  - component: {fileID: 2033275109}
+  m_Layer: 2
+  m_Name: World Markers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2033275109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2033275108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a7a20fd046b76f4a8299bc20e37ee15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.WorldMarkerPresenter
+  markerShader: {fileID: 4800000, guid: 3c86f143734d36045a01e7347c170ba4, type: 3}
+  moveOuterRing: {fileID: 2800000, guid: f90a9c21b917b094e8e081f28bb4aed4, type: 3}
+  moveInnerRing: {fileID: 2800000, guid: f63b856aff19059429013d499eab70d3, type: 3}
+  targetRing: {fileID: 2800000, guid: fbe211612a4b3124d8be2904cecdcdf0, type: 3}
+  targetOuterRing: {fileID: 2800000, guid: 7f8499bcb46e6fa488392b8485e3996c, type: 3}
+  moveMarkerDiameter: 1.6
+  moveColor: {r: 0.3, g: 1.4, b: 1.15, a: 1}
+  hostileColor: {r: 1.7, g: 0.18, b: 0.14, a: 1}
+  friendlyColor: {r: 1.6, g: 1.1, b: 0.2, a: 1}
+  moveSpinDegreesPerSecond: 90
+  targetSpinDegreesPerSecond: 25
+--- !u!4 &2033275110
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2033275108}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2044624805
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2669,3 +2778,4 @@ SceneRoots:
   - {fileID: 1592048072}
   - {fileID: 480647910}
   - {fileID: 1523991252}
+  - {fileID: 2033275110}

@@ -24,6 +24,7 @@ namespace KryticalNova.Player
         private const string CancelOrbitActionName = "CancelOrbit";
         private const string ZoomActionName = "Zoom";
         private const string ToggleWeaponActionName = "ToggleWeapon";
+        private const string FlipCameraActionName = "FlipCamera";
         private const string GroundLayerName = "Ground";
         private const float DefaultRayDistance = 1000f;
         private const float DefaultSampleRadius = 1f;
@@ -37,6 +38,7 @@ namespace KryticalNova.Player
         private const float MinimumPositiveValue = 0.01f;
         private const float PausedTimeScale = 0f;
         private const int InitialUiHitCapacity = 8;
+        private const float PendingInteractTimeout = 20f;
 
         [Header("Scene References")]
         [SerializeField] private Camera gameplayCamera;
@@ -66,6 +68,17 @@ namespace KryticalNova.Player
         [Tooltip("World units per normalized scroll increment. Positive scroll zooms in. Uses the Input System's default uniform scroll range.")]
         [SerializeField, Min(MinimumPositiveValue)] private float zoomSensitivity = DefaultZoomSensitivity;
 
+        [Header("Camera Pitch")]
+        [Tooltip("Lowest orbit pitch (negative looks up at the sky). The ground stop below still applies.")]
+        [SerializeField, Range(-80f, 0f)] private float minimumPitch = -35f;
+        [SerializeField, Range(10f, 89f)] private float maximumPitch = 75f;
+        [Tooltip("The camera never orbits closer than this to the ground beneath it.")]
+        [SerializeField, Min(0f)] private float groundClearance = 0.4f;
+
+        [Header("Occlusion")]
+        [Tooltip("Props between the camera and the player dither-fade with this shader (KryticalNova/Occluder Dither).")]
+        [SerializeField] private Shader occluderDitherShader;
+
         private readonly List<RaycastResult> uiHits = new List<RaycastResult>(InitialUiHitCapacity);
         private NavMeshAgent agent;
         private PlayerInput playerInput;
@@ -87,6 +100,9 @@ namespace KryticalNova.Player
         private InputAction cancelOrbitAction;
         private InputAction zoomAction;
         private InputAction toggleWeaponAction;
+        private InputAction flipCameraAction;
+        private Transform cameraTrackingTarget;
+        private readonly RaycastHit[] groundHit = new RaycastHit[1];
         private PlayerSkillHotbar hotbar;
         private EventSystem pointerEventSystem;
         private PointerEventData pointerEventData;
@@ -95,6 +111,8 @@ namespace KryticalNova.Player
         private CursorLockMode previousCursorLock;
         private bool previousCursorVisibility;
         private Vector2 previousCursorPosition;
+        private IInteractable pendingInteract;
+        private float pendingInteractExpiry;
 
         private void Reset()
         {
@@ -168,11 +186,21 @@ namespace KryticalNova.Player
             {
                 var cameraTarget = transform.Find("Camera Target");
                 Transform targetTransform = cameraTarget != null ? cameraTarget : transform;
+                cameraTrackingTarget = targetTransform;
                 var cinemachineCamera = orbitCamera.GetComponent<CinemachineCamera>();
                 if (cinemachineCamera != null)
                 {
                     cinemachineCamera.Target.TrackingTarget = targetTransform;
                 }
+            }
+
+            // Fade props that block the view of this (local) player.
+            var cam = gameplayCamera != null ? gameplayCamera : Camera.main;
+            if (cam != null)
+            {
+                if (!cam.TryGetComponent<KryticalNova.Rendering.OccluderFader>(out var fader))
+                    fader = cam.gameObject.AddComponent<KryticalNova.Rendering.OccluderFader>();
+                fader.Configure(transform, occluderDitherShader);
             }
 
         }
@@ -209,6 +237,7 @@ namespace KryticalNova.Player
             cancelOrbitAction = gameplayActions.FindAction(CancelOrbitActionName, true);
             zoomAction = gameplayActions.FindAction(ZoomActionName, true);
             toggleWeaponAction = gameplayActions.FindAction(ToggleWeaponActionName, true);
+            flipCameraAction = gameplayActions.FindAction(FlipCameraActionName, false);
 
             if (orbitCamera != null)
             {
@@ -216,6 +245,7 @@ namespace KryticalNova.Player
                 orbitCamera.HorizontalAxis.Recentering.Enabled = false;
                 orbitCamera.VerticalAxis.Recentering.Enabled = false;
                 orbitCamera.RadialAxis.Recentering.Enabled = false;
+                orbitCamera.VerticalAxis.Range = new Vector2(minimumPitch, maximumPitch);
 
                 // Control distance through Radius, with a fixed multiplier so limits use world units.
                 ValidateZoomSettings();
@@ -270,6 +300,8 @@ namespace KryticalNova.Player
             if (IsSpawned && !IsOwner)
                 return;
 
+            UpdatePendingInteract();
+
             if (gameplayActions == null || !gameplayActions.enabled || !playerInput.inputIsActive
                 || !Application.isFocused || Time.timeScale <= PausedTimeScale)
             {
@@ -283,7 +315,11 @@ namespace KryticalNova.Player
             if (cancelOrbitAction.WasPressedThisFrame())
             {
                 EndOrbit();
-                if (!inputSuppressed) meleeCombat?.CancelAttack();
+                if (!inputSuppressed)
+                {
+                    meleeCombat?.CancelAttack();
+                    ClientPresentationRegistry.Markers?.ClearTarget();
+                }
                 return;
             }
 
@@ -291,6 +327,9 @@ namespace KryticalNova.Player
             if (orbitCamera != null)
             {
                 ApplyZoom(screenPosition);
+                if (flipCameraAction != null && flipCameraAction.WasPressedThisFrame() && !IsPointerOverUi(screenPosition))
+                    FlipCamera();
+                ClampPitchAboveGround();
             }
 
             if (isOrbiting)
@@ -357,6 +396,9 @@ namespace KryticalNova.Player
             if (!Physics.Raycast(ray, out RaycastHit hit, maximumRayDistance, raycastLayers, QueryTriggerInteraction.Ignore))
                 return;
 
+            // Any new click replaces a walk-to-talk in progress.
+            pendingInteract = null;
+
             var targetEntity = hit.collider.GetComponentInParent<IDamageable>();
             if (targetEntity != null && targetEntity.Transform != transform)
             {
@@ -365,6 +407,9 @@ namespace KryticalNova.Player
                     CommandMessage?.Invoke($"{targetEntity.EntityName} is defeated.");
                     return;
                 }
+
+                ClientPresentationRegistry.Markers?.HideMoveMarker();
+                ClientPresentationRegistry.Markers?.SetTarget(targetEntity.Transform, WorldTargetKind.Hostile);
 
                 if (meleeCombat != null)
                 {
@@ -394,8 +439,20 @@ namespace KryticalNova.Player
                 return;
             }
 
+            var interactable = hit.collider.GetComponentInParent<IInteractable>();
+            if (interactable != null)
+            {
+                meleeCombat?.CancelAttack();
+                ClientPresentationRegistry.Markers?.HideMoveMarker();
+                if (interactable is Component interactableComponent)
+                    ClientPresentationRegistry.Markers?.SetTarget(interactableComponent.transform, WorldTargetKind.Friendly);
+                BeginInteract(interactable);
+                return;
+            }
+
             // Clicking ground or platform clears active combat attack
             meleeCombat?.CancelAttack();
+            ClientPresentationRegistry.Markers?.ClearTarget();
 
             if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
@@ -411,6 +468,7 @@ namespace KryticalNova.Player
             {
                 if (jumpMotor == null) { CommandMessage?.Invoke("Jump controller is missing."); return; }
                 if (!jumpMotor.TryJump(hit.point, raycastLayers, modelForwardOffset, out string reason)) CommandMessage?.Invoke(reason);
+                else ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
                 return;
             }
 
@@ -418,33 +476,85 @@ namespace KryticalNova.Player
             {
                 bool isRunning = movementSkills != null && movementSkills.IsRunning;
                 RequestMoveDestinationServerRpc(hit.point, isRunning);
+                // The server validates the path; the marker is the client's best guess at the destination.
+                ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
                 return;
             }
 
-            ExecuteLocalMove(hit.point);
+            if (ExecuteLocalMove(hit.point, out Vector3 acceptedDestination))
+                ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, acceptedDestination, hit.normal);
         }
 
-        private void ExecuteLocalMove(Vector3 destinationPoint)
+        /// <summary>Talks right away when in range; otherwise walks over and talks on arrival.</summary>
+        private void BeginInteract(IInteractable interactable)
         {
-            if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+            if (IsWithinInteractRange(interactable))
+            {
+                interactable.Interact(gameObject);
+                return;
+            }
+
+            pendingInteract = interactable;
+            pendingInteractExpiry = Time.time + PendingInteractTimeout;
+            Vector3 destination = interactable.InteractPoint;
+            if (IsSpawned && !IsServer)
+            {
+                bool isRunning = movementSkills != null && movementSkills.IsRunning;
+                RequestMoveDestinationServerRpc(destination, isRunning);
+                return;
+            }
+
+            ExecuteLocalMove(destination, out _);
+        }
+
+        private void UpdatePendingInteract()
+        {
+            if (pendingInteract == null) return;
+            if (Time.time > pendingInteractExpiry || (resources != null && !resources.IsAlive))
+            {
+                pendingInteract = null;
+                return;
+            }
+
+            if (!IsWithinInteractRange(pendingInteract)) return;
+            IInteractable target = pendingInteract;
+            pendingInteract = null;
+            target.Interact(gameObject);
+        }
+
+        private bool IsWithinInteractRange(IInteractable interactable)
+        {
+            Vector3 offset = interactable.Position - transform.position;
+            offset.y = 0f;
+            return offset.sqrMagnitude <= interactable.InteractRange * interactable.InteractRange;
+        }
+
+        /// <summary>Returns true when the agent accepted a new path; <paramref name="acceptedDestination"/> is the NavMesh point.</summary>
+        private bool ExecuteLocalMove(Vector3 destinationPoint, out Vector3 acceptedDestination)
+        {
+            acceptedDestination = destinationPoint;
+            if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
 
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
             if (!NavMesh.SamplePosition(destinationPoint, out NavMeshHit destination, destinationSampleRadius, filter)
                 || !agent.CalculatePath(destination.position, requestedPath) || requestedPath.status != NavMeshPathStatus.PathComplete)
-            { CommandMessage?.Invoke("No complete walking path to that point."); return; }
+            { CommandMessage?.Invoke("No complete walking path to that point."); return false; }
             if (Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance)
-                return;
+                return false;
 
             float paidCost = 0f;
             if (movementSkills != null && movementSkills.IsRunning
                 && !movementSkills.TryPayForCommand(MovementSkillId.Run, out paidCost, out string paymentReason))
-            { CommandMessage?.Invoke(paymentReason); return; }
+            { CommandMessage?.Invoke(paymentReason); return false; }
             agent.isStopped = false;
             if (!agent.SetPath(requestedPath))
             {
                 resources?.RestoreChi(paidCost);
                 CommandMessage?.Invoke("The path changed. Chi was not consumed.");
+                return false;
             }
+            acceptedDestination = destination.position;
+            return true;
         }
 
         [ServerRpc]
@@ -613,8 +723,7 @@ namespace KryticalNova.Player
 
         private bool IsPointerOverUi(Vector2 screenPosition)
         {
-            var pointerBlock = ClientPresentationRegistry.PointerBlock;
-            if (pointerBlock != null && pointerBlock.BlocksWorldPointer(screenPosition))
+            if (ClientPresentationRegistry.BlocksWorldPointer(screenPosition))
                 return true;
             EventSystem currentEventSystem = EventSystem.current;
             if (currentEventSystem == null)
@@ -654,6 +763,44 @@ namespace KryticalNova.Player
             Cursor.visible = false;
         }
 
+        /// <summary>Middle mouse: look the opposite way instantly (the rotation composer has no damping).</summary>
+        private void FlipCamera()
+        {
+            orbitCamera.HorizontalAxis.Value = orbitCamera.HorizontalAxis.ClampValue(orbitCamera.HorizontalAxis.Value + 180f);
+        }
+
+        /// <summary>
+        /// Lets the orbit dip below the target to look up at the sky, but stops where the camera would meet the ground:
+        /// with a sphere orbit the camera sits radius·sin(pitch) above the target, so the lowest allowed pitch is
+        /// asin((groundY + clearance − targetY) / radius), sampled at the camera's ground position.
+        /// </summary>
+        private void ClampPitchAboveGround()
+        {
+            if (cameraTrackingTarget == null || gameplayCamera == null) return;
+            float radius = Mathf.Max(orbitCamera.Radius, MinimumPositiveValue);
+            Vector3 target = cameraTrackingTarget.position;
+            Vector3 flat = gameplayCamera.transform.position - target;
+            flat.y = 0f;
+            if (flat.sqrMagnitude < 1e-4f) return;
+            flat.Normalize();
+
+            float pitch = orbitCamera.VerticalAxis.Value;
+            for (int i = 0; i < 2; i++) // the ground sample moves a little with pitch; two passes settle it
+            {
+                Vector3 probe = target + flat * (radius * Mathf.Cos(pitch * Mathf.Deg2Rad));
+                probe.y = target.y + radius + 50f;
+                if (Physics.RaycastNonAlloc(probe, Vector3.down, groundHit, radius + 200f, groundLayers,
+                        QueryTriggerInteraction.Ignore) == 0)
+                    return; // no ground under the camera (off the map edge): leave it be
+                float sin = Mathf.Clamp((groundHit[0].point.y + groundClearance - target.y) / radius, -1f, 1f);
+                float lowest = Mathf.Asin(sin) * Mathf.Rad2Deg;
+                if (pitch >= lowest) break;
+                pitch = lowest;
+            }
+            if (pitch > orbitCamera.VerticalAxis.Value)
+                orbitCamera.VerticalAxis.Value = Mathf.Min(pitch, maximumPitch);
+        }
+
         private void ApplyOrbitDelta()
         {
             if (orbitCamera == null) return;
@@ -688,8 +835,13 @@ namespace KryticalNova.Player
             base.OnDestroy();
         }
 
+        private static readonly List<PointAndClickPlayer> ActivePlayers = new List<PointAndClickPlayer>(16);
+        /// <summary>Enabled player characters (local, remote proxies and the offline avatar), for map markers.</summary>
+        public static IReadOnlyList<PointAndClickPlayer> Active => ActivePlayers;
+
         private void OnEnable()
         {
+            ActivePlayers.Add(this);
             // Re-enabled offline avatar (e.g. after leaving a network session): reclaim the camera.
             if (didStart && !IsSpawned)
                 SetupLocalCamera();
@@ -697,6 +849,7 @@ namespace KryticalNova.Player
 
         private void OnDisable()
         {
+            ActivePlayers.Remove(this);
             EndOrbit();
             jumpMotor?.CancelJump();
             if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
