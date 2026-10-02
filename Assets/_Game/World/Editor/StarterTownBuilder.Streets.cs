@@ -342,6 +342,41 @@ namespace KryticalNova.EditorTools
 
         // ---------------------------------------------------------------- wall
 
+        private const double WallBreachChance = 0.18;     // share of wall spans swapped for a baked breach / rubble
+        private const double WallTowerRuinChance = 0.3;   // share of mid-wall towers standing broken
+
+        private static bool RChance(double p) => ruinRng.NextDouble() < p;
+
+        private static Vector2 WallOutward(int side) =>
+            side == 0 ? Vector2.up : side == 1 ? Vector2.down : side == 2 ? Vector2.right : Vector2.left;
+
+        /// <summary>
+        /// Swaps an intact wall piece for a baked Quick Destruction ruin of the same source at the same transform (both
+        /// share the Synty pivot). The ruin is turned so its fallen chunks spill outside the city, keeping the Wall Ring
+        /// road clear, then the chunks are settled onto the ground.
+        /// </summary>
+        private static void ReplaceWithRuin(Transform parent, GameObject intact, string source, RuinBaker.Tier tier, Vector2 outward)
+        {
+            if (!TryPickRuin(source, tier, out var prefab)) return;
+            var t = intact.transform;
+            TryGetBounds(intact, out var intactBounds);
+            var ruin = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+            ruin.transform.SetPositionAndRotation(t.position, t.rotation);
+            ruin.transform.localScale = t.localScale;
+            ruin.name = intact.name + " (Ruined)";
+
+            var fallen = ruin.transform.Find(RuinBaker.FallenName);
+            if (fallen != null && fallen.childCount > 0 && TryGetBounds(fallen.gameObject, out var fb))
+            {
+                Vector3 d = fb.center - intactBounds.center;
+                if (Vector2.Dot(new Vector2(d.x, d.z), outward) < 0f)
+                    ruin.transform.RotateAround(intactBounds.center, Vector3.up, 180f);
+            }
+            SettleFallen(ruin, 0.2f);
+            GameObjectUtility.SetStaticEditorFlags(ruin, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic | StaticEditorFlags.OccluderStatic);
+            Object.DestroyImmediate(intact);
+        }
+
         private static void BuildWalls(Transform parent)
         {
             const string wall = "SM_Bld_City_Wall_01";
@@ -367,11 +402,22 @@ namespace KryticalNova.EditorTools
                         int count = Mathf.CeilToInt((b - a) / wallLength);
                         float segment = (b - a) / count;
                         for (int k = 0; k < count; k++)
-                            Spawn(parent, wall, Point(sign * (a + segment * (k + 0.5f))), Quaternion.Euler(0f, yaw, 0f),
+                        {
+                            var span = Spawn(parent, wall, Point(sign * (a + segment * (k + 0.5f))), Quaternion.Euler(0f, yaw, 0f),
                                   new Vector3(segment / wallLength, 1f, 1f));
+                            // Breached spans: never the one beside a gate tower, so every gate keeps its frame.
+                            bool besideGate = t == 0 && k == 0;
+                            if (span != null && !besideGate && RChance(WallBreachChance))
+                                ReplaceWithRuin(parent, span, RuinBaker.Wall, PickTier(0.15f, 0.6f, 0.25f), WallOutward(side));
+                        }
                     }
                     for (int t = 0; t + 1 < towerAt.Length; t++)
-                        Spawn(parent, tower, Point(sign * towerAt[t]), Quaternion.Euler(0f, yaw, 0f), Vector3.one);
+                    {
+                        var tw = Spawn(parent, tower, Point(sign * towerAt[t]), Quaternion.Euler(0f, yaw, 0f), Vector3.one);
+                        // Mid-wall towers (not gate towers) sometimes stand broken.
+                        if (tw != null && t > 0 && RChance(WallTowerRuinChance))
+                            ReplaceWithRuin(parent, tw, RuinBaker.WallTower, PickTier(0.2f, 0.5f, 0.3f), WallOutward(side));
+                    }
                 }
             }
 

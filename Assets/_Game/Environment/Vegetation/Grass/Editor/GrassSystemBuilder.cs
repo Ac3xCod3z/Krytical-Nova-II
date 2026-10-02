@@ -18,7 +18,7 @@ namespace KryticalNova.EditorTools
         public const string Folder = "Assets/_Game/Environment/Vegetation/Grass/Data/Assets";
         private const string RulesPath = Folder + "/GRS_Zone01.asset";
         private const string MaskPath = ZoneTerrainGenerator.ZoneFolder + "/T_GrassMask_Zone01.png";
-        private const string MaterialPath = Folder + "/M_GrassBlades.mat";
+        private const string MaterialPath = "Assets/_Game/Environment/Vegetation/Grass/Materials/M_GrassBlades.mat";
         private const string ComputePath = "Assets/_Game/Environment/Vegetation/Grass/Compute/GrassGenerate.compute";
         private const string RendererName = "GPU Grass";
 

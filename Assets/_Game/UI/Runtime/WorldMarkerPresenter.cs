@@ -100,6 +100,7 @@ namespace KryticalNova.UI
 
         public void ShowMoveMarker(Transform moverTransform, Vector3 point, Vector3 normal)
         {
+            if (isActiveAndEnabled) ClientPresentationRegistry.Feel?.MoveCommand(point, normal);
             if (!isActiveAndEnabled || !HudPreferences.ShowMoveMarker) return;
             mover = moverTransform;
             if (normal.sqrMagnitude < 0.01f || Vector3.Angle(normal, Vector3.up) > 50f) normal = Vector3.up;
@@ -118,6 +119,7 @@ namespace KryticalNova.UI
         public void SetTarget(Transform newTarget, WorldTargetKind kind)
         {
             if (!isActiveAndEnabled || newTarget == null) return;
+            if (newTarget != target) ClientPresentationRegistry.Feel?.TargetSelected(newTarget, kind);
             target = newTarget;
             targetHealth = newTarget.GetComponentInParent<IDamageable>();
             MeasureTarget(newTarget, out targetFootOffset, out targetDiameter);

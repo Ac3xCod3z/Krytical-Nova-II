@@ -438,6 +438,7 @@ namespace KryticalNova.Combat
 
             var instance = pool.Spawn(slashVfxPrefab, position, facing * stepRotation);
             if (instance != null) instance.transform.localScale = Vector3.one * slashVfxScale;
+            ClientPresentationRegistry.Feel?.Swing(transform, step, IsLocalPlayerPresentation);
         }
 
         private bool IsWithinStrikingRange(IDamageable target)
@@ -564,8 +565,10 @@ namespace KryticalNova.Combat
                 toAttacker = toAttacker.sqrMagnitude > 0.0001f ? toAttacker.normalized : -target.Transform.forward;
 
                 Vector3 impactPos = target.Transform.position + Vector3.up * impactVfxHeight + toAttacker * impactVfxTowardAttacker;
-                if (IsSpawned) SpawnImpactVfxClientRpc(impactPos, toAttacker);
-                else SpawnImpactVfxLocal(impactPos, toAttacker);
+                var targetNetObj = target.Transform.GetComponent<NetworkObject>();
+                ulong targetId = targetNetObj != null && targetNetObj.IsSpawned ? targetNetObj.NetworkObjectId : ulong.MaxValue;
+                if (IsSpawned) SpawnImpactVfxClientRpc(impactPos, toAttacker, comboStep, result.IsCritical, targetId);
+                else SpawnImpactVfxLocal(impactPos, toAttacker, comboStep, result.IsCritical, target.Transform);
             }
 
             string stepLabel = comboStep == 3 ? "Combo Finisher" : $"Strike {comboStep}";
@@ -580,17 +583,39 @@ namespace KryticalNova.Combat
         }
 
         [ClientRpc]
-        private void SpawnImpactVfxClientRpc(Vector3 position, Vector3 towardAttacker)
+        private void SpawnImpactVfxClientRpc(Vector3 position, Vector3 towardAttacker, int comboStep, bool isCritical, ulong targetNetworkObjectId)
         {
-            SpawnImpactVfxLocal(position, towardAttacker);
+            Transform target = null;
+            if (targetNetworkObjectId != ulong.MaxValue && NetworkManager != null &&
+                NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(targetNetworkObjectId, out var targetNetObj))
+                target = targetNetObj.transform;
+            SpawnImpactVfxLocal(position, towardAttacker, comboStep, isCritical, target);
         }
 
-        private void SpawnImpactVfxLocal(Vector3 position, Vector3 towardAttacker)
+        private void SpawnImpactVfxLocal(Vector3 position, Vector3 towardAttacker, int comboStep, bool isCritical, Transform target)
         {
             var pool = NetworkCombatVFXPool.Instance;
-            if (pool == null || hitVfxPrefab == null) return;
             // Burst faces back toward the attacker, i.e. sparks fly off the struck surface.
-            pool.Spawn(hitVfxPrefab, position, Quaternion.LookRotation(towardAttacker, Vector3.up));
+            if (pool != null && hitVfxPrefab != null)
+                pool.Spawn(hitVfxPrefab, position, Quaternion.LookRotation(towardAttacker, Vector3.up));
+
+            var feel = ClientPresentationRegistry.Feel;
+            if (feel == null) return;
+            var targetNet = target != null ? target.GetComponent<NetworkObject>() : null;
+            feel.Hit(new HitFeel
+            {
+                Point = position,
+                TowardAttacker = towardAttacker,
+                Attacker = transform,
+                Target = target,
+                ComboStep = comboStep,
+                IsCritical = isCritical,
+                AttackerIsLocalPlayer = IsLocalPlayerPresentation,
+                TargetIsLocalPlayer = targetNet != null && targetNet.IsSpawned && targetNet.IsLocalPlayer,
+            });
         }
+
+        /// <summary>True on the machine whose player this is (or offline), i.e. where camera-level feedback belongs.</summary>
+        private bool IsLocalPlayerPresentation => !IsSpawned || IsOwner;
     }
 }

@@ -16,6 +16,14 @@ namespace KryticalNova.Core
         public static INpcDialogueSink Dialogue { get; private set; }
         public static IGameMessageSink Messages { get; private set; }
         public static IWorldMarkerSink Markers { get; private set; }
+        public static IGameFeelSink Feel { get; private set; }
+
+        public static void RegisterFeel(IGameFeelSink sink) => Feel = sink;
+
+        public static void UnregisterFeel(IGameFeelSink sink)
+        {
+            if (ReferenceEquals(Feel, sink)) Feel = null;
+        }
 
         public static void RegisterMarkers(IWorldMarkerSink sink) => Markers = sink;
 

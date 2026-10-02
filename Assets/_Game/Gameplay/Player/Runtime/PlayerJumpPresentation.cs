@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Animancer;
 using BoingKit;
+using KryticalNova.Core;
 using KryticalNova.Progression;
 using UnityEngine;
 
@@ -76,6 +77,7 @@ namespace KryticalNova.Player
         public void TakeOff()
         {
             if (!IsReady) return;
+            ClientPresentationRegistry.Feel?.JumpTakeoff(transform, IsLocalPlayer());
             if (animancerMotor != null)
             {
                 animancerMotor.PlayJumpTakeoff();
@@ -107,6 +109,7 @@ namespace KryticalNova.Player
         public void Land()
         {
             if (!IsReady) return;
+            ClientPresentationRegistry.Feel?.Landed(transform, IsLocalPlayer());
             if (animancerMotor != null)
             {
                 animancerMotor.PlayJumpLanding();
@@ -115,6 +118,12 @@ namespace KryticalNova.Player
             PlayRestPose();
             targetScale = Vector3.one;
             if (motionData != null) scaleSpring.Reset(motionData.landingScale, motionData.landingScaleVelocity);
+        }
+
+        private bool IsLocalPlayer()
+        {
+            var net = GetComponentInParent<Unity.Netcode.NetworkObject>();
+            return net == null || !net.IsSpawned || net.IsOwner;
         }
 
         /// <summary>Restores visual pose and scale after an interrupted jump.</summary>

@@ -86,8 +86,8 @@ namespace KryticalNova.EditorTools
             PortalVfxBuilder.BuildAll();
             ColorBible.ApplyAll();
             PostProcessSetup.Apply();
-            if (RuinDemolisher.Library().Count == 0)
-                Debug.LogWarning("[Zone01] No demolished ruins baked yet: run Krytical Nova > Zone > Bake Demolished Ruin Library, then Build Starter Town.");
+            if (RuinBaker.Library().Count == 0)
+                Debug.LogWarning("[Zone01] No ruins baked yet: run Krytical Nova > Zone > Bake Ruin Library (Quick Destruction), then Build Starter Town.");
             StarterTownBuilder.Build();
             CityTrafficBuilder.Build();
             // Wind materials on town foliage, then grow grass now that roads/sidewalks/buildings exist to mask it.

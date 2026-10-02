@@ -34,10 +34,11 @@ namespace KryticalNova.EditorTools.Organization
         /// Vendor folders that hard-code their own install path and break if moved. Never moved.
         /// Synty: SidekickCharacters reads "Assets/Synty/SidekickCharacters/Database/Side_Kick_Data.db".
         /// DownloadCache: Synty's ToolDownloader caches its .unitypackage files there.
+        /// QuickDestruction: BakePipeline/QuickDestructionWindow/QDUI hard-code "Assets/QuickDestruction/...".
         /// </summary>
         public static readonly HashSet<string> PinnedVendorRoots = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "Synty", "DownloadCache",
+            "Synty", "DownloadCache", "QuickDestruction",
         };
 
         /// <summary>Root-level files that tools expect at a fixed path.</summary>

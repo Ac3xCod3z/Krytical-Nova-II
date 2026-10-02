@@ -365,6 +365,7 @@ namespace KryticalNova.World
 
             RenderSettings.fogColor = fog;
             RenderSettings.fogDensity = w.fogDensity;
+            VolumetricAtmosphereDriver.Publish(fog, w.fogDensity);
 
             // ---- ambient (trilight → SH probe, rebuilt by Unity when the colours change)
             ambientTimer -= dt;

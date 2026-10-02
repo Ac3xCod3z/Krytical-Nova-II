@@ -1,0 +1,163 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a9752b0c8e144801967e6897679604b, type: 3}
+  m_Name: vHierarchy Data
+  m_EditorClassIdentifier: VHierarchy::VHierarchy.VHierarchyData
+  sceneDatas_byGuid:
+    keys:
+    - ece2c8e05f782e54181534a6388e7af1
+    values:
+    - goDatas_byGlobalId:
+        keys:
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-471149882-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-8116682471423442828-1592048072
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1973029265-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1031651069-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-933006976-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-47516084-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-3071671160467358554-8165765776436295871
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1933475102-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1195705964-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1197665971-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-881350545-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-688226134-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1731791612-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-184406839-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-387698977-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-903270376-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-525737665-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1335941546-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1560093109-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1394729829-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1387116990-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1256038173-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1911983983-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1166384926-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1130870996-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1038395622-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-902918251-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1134661677-0
+        values:
+        - colorIndex: 1
+          iconNameOrGuid: d_Settings
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 1
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 7
+          iconNameOrGuid: Camera Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 4
+          iconNameOrGuid: Light Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 8
+          iconNameOrGuid: Canvas Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 2
+          iconNameOrGuid: d_PlayButton On
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 2
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: d_AvatarPivot
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 6
+          iconNameOrGuid: d_AvatarSelector
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: d_SceneViewFx
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 5
+          iconNameOrGuid: Terrain Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 3
+          iconNameOrGuid: d_PreMatCube
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 3
+          iconNameOrGuid: d_PreMatCylinder
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 1
+          iconNameOrGuid: NavMeshAgent Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 1
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 2
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 4
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: d_AvatarPivot
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 6
+          iconNameOrGuid: d_AvatarSelector
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: d_SceneViewFx
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 3
+          iconNameOrGuid: d_PreMatCube
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 3
+          iconNameOrGuid: d_PreMatCylinder
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 1
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 2
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+  bookmarks: []
+  bookmarkedScenePaths: []

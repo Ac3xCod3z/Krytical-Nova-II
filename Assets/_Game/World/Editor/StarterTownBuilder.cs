@@ -68,7 +68,8 @@ namespace KryticalNova.EditorTools
             buildings.Clear();
             buildingOcc = new bool[OccSize, OccSize];
             paletteOptions.Clear();
-            ruinLibrary = RuinDemolisher.Library();
+            ruinLibrary = RuinBaker.Library();
+            ruinRng = new System.Random(profile.seed + 303);
 
             var town = FreshRoot(TownRootName);
             BuildWalls(Group(town, "Walls"));
@@ -86,6 +87,7 @@ namespace KryticalNova.EditorTools
 
             var outskirts = FreshRoot(OutskirtsRootName);
             BuildBridges(Group(outskirts, "Bridges"), profile);
+            BuildWallBand(Group(outskirts, "Wall Ruins"), profile);
             BuildRuins(Group(outskirts, "Ruins"), profile);
             BuildSkyline(Group(outskirts, "Skyline"), profile);
             BuildPortal(FreshRoot(PortalRootName).transform, profile);

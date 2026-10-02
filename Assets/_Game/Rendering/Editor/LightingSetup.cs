@@ -87,8 +87,13 @@ namespace KryticalNova.EditorTools
 
         private static Transform EnsureLightingRoot(UnityEngine.SceneManagement.Scene scene)
         {
+            // Found anywhere: the hierarchy organizer nests it under "--- Lighting & FX ---".
             foreach (var go in scene.GetRootGameObjects())
+            {
                 if (go.name == LightingRootName) return go.transform;
+                var nested = go.transform.Find(LightingRootName);
+                if (nested != null) return nested;
+            }
             var root = new GameObject(LightingRootName);
             Undo.RegisterCreatedObjectUndo(root, "Create Lighting Root");
             return root.transform;

@@ -1,8 +1,8 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <Style src="../Shared/KryticalTheme.uss" />
+    <Style src="../Common/KryticalTheme.uss" />
     <Style src="ProgressionHUD.uss" />
-    <ui:Template name="ItemWindows" src="../Items/ItemWindows.uxml" />
-    <ui:Template name="Minimap" src="../Minimap/Minimap.uxml" />
+    <ui:Template name="ItemWindows" src="../Inventory/ItemWindows.uxml" />
+    <ui:Template name="Minimap" src="Minimap/Minimap.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
         <!-- Player status frame -->
         <ui:VisualElement name="summary" class="panel blocks-world hud-movable">
@@ -264,6 +264,7 @@
                 <ui:Toggle name="setting-move-marker" label="Ring at move destination" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-target-ring" label="Ring under selected target" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-nameplates" label="NPC nameplates" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-screen-shake" label="Screen shake &amp; impact effects" value="true" class="kn-toggle kn-card" />
                 <ui:Label text="INTERFACE" class="eyebrow section" />
                 <ui:Toggle name="setting-controls-hint" label="Show hotbar controls hint" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-minimap-rotate" label="Rotate minimap with camera" value="true" class="kn-toggle kn-card" />

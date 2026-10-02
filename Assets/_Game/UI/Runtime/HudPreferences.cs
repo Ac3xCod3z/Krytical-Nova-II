@@ -12,6 +12,7 @@ namespace KryticalNova.UI
         private const string ControlsHintKey = Prefix + "controlsHint";
         private const string NameplatesKey = Prefix + "nameplates";
         private const string MinimapRotatesKey = Prefix + "minimapRotates";
+        private const string ScreenShakeKey = Prefix + "screenShake";
         private const string LayoutKey = Prefix + "layout.v1";
 
         public static event Action Changed;
@@ -45,6 +46,13 @@ namespace KryticalNova.UI
         {
             get => GetBool(MinimapRotatesKey, true);
             set => SetBool(MinimapRotatesKey, value);
+        }
+
+        /// <summary>Camera shake, FOV kicks and screen pulses from GameFeel (accessibility / comfort toggle).</summary>
+        public static bool ScreenShake
+        {
+            get => GetBool(ScreenShakeKey, true);
+            set => SetBool(ScreenShakeKey, value);
         }
 
         public static string LayoutJson

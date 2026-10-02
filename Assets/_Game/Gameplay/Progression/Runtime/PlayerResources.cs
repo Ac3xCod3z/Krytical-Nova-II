@@ -108,6 +108,8 @@ namespace KryticalNova.Progression
 
         private void OnNetHealthChanged(float previous, float current)
         {
+            if (IsOwner && current < previous - 0.01f)
+                ClientPresentationRegistry.Feel?.LocalPlayerDamaged((previous - current) / Mathf.Max(1f, netMaxHealth.Value));
             if (IsServer) return;
             health = current;
             Changed?.Invoke();

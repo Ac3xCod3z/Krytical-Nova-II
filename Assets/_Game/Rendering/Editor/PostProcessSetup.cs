@@ -61,6 +61,8 @@ namespace KryticalNova.EditorTools
             var motion = Get<MotionBlur>(profile);
             motion.active = false;
 
+            ApplyBeautify(profile);
+
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();
 
@@ -77,6 +79,46 @@ namespace KryticalNova.EditorTools
             }
             Debug.Log("[PostProcess] Post look applied to " + ProfilePath + (cam != null ? " and SMAA set on the main camera." : "."));
         }
+
+        /// <summary>
+        /// Beautify 3 runs after URP post (Rendering-Bible.md, "Post stack order"): it only adds what URP lacks —
+        /// a depth-aware sharpen that crisps the ink lines and halftone dots, a vibrance lift, a whisper of anamorphic
+        /// streak on HDR highlights and dithering against fog banding. URP keeps tonemapping, bloom, vignette and
+        /// grain; Beautify's copies stay off so nothing runs twice. Depth of field is banned by the Bible.
+        /// Chromatic aberration is left at 0 here; GameFeel punches it through a runtime volume on big hits.
+        /// </summary>
+        private static void ApplyBeautify(VolumeProfile profile)
+        {
+            var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(PcRendererPath);
+            if (renderer != null) RendererFeatureUtil.Ensure<Beautify.Universal.BeautifyRendererFeature>(renderer, "Beautify", f => { });
+
+            var b = Get<Beautify.Universal.Beautify>(profile);
+            b.disabled.Override(false);
+            b.sharpenIntensity.Override(1.6f);
+            b.sharpenDepthThreshold.Override(0.035f);
+            b.sharpenClamp.Override(0.3f);
+            b.sharpenRelaxation.Override(0.1f);
+            b.sharpenMotionSensibility.Override(0.6f);
+            b.saturate.Override(0.35f);           // vibrance: lifts muted tones, leaves saturated ones
+            b.contrast.Override(1.03f);
+            b.brightness.Override(1f);
+            b.tonemap.Override(Beautify.Universal.Beautify.TonemapOperator.Linear); // URP Neutral owns tonemapping
+            b.bloomIntensity.Override(0f);
+            b.anamorphicFlaresIntensity.Override(0.12f);
+            b.anamorphicFlaresThreshold.Override(0.9f);
+            b.anamorphicFlaresSpread.Override(1.2f);
+            b.anamorphicFlaresTint.Override(new Color(1f, 0.82f, 0.6f, 0f));
+            b.sunFlaresIntensity.Override(0f);    // EnvironmentPresenter's LensFlare owns the sun
+            b.depthOfField.Override(false);
+            b.vignettingOuterRing.Override(0f);
+            b.filmGrainEnabled.Override(false);
+            b.chromaticAberrationIntensity.Override(0f);
+            b.outline.Override(false);            // ComicStyleFeature owns the ink outlines
+            b.ditherIntensity.Override(0.005f);
+            b.eyeAdaptation.Override(false);
+        }
+
+        private const string PcRendererPath = "Assets/_Game/Rendering/Settings/PC_Renderer.asset";
 
         private static T Get<T>(VolumeProfile profile) where T : VolumeComponent
         {

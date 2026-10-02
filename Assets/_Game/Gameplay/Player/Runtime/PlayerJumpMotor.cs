@@ -66,7 +66,10 @@ namespace KryticalNova.Player
                 return true;
             }
 
-            return ExecuteJumpInternal(clickedPoint, obstacleLayers.value, modelForwardOffset, out reason);
+            bool started = ExecuteJumpInternal(clickedPoint, obstacleLayers.value, modelForwardOffset, out reason);
+            // Host jumping: remote clients only saw the transform move; replay the jump presentation there.
+            if (started && IsSpawned && IsServer) TriggerJumpClientRpc(clickedPoint, obstacleLayers.value, modelForwardOffset);
+            return started;
         }
 
         [ServerRpc]

@@ -199,6 +199,7 @@ namespace KryticalNova.UI
             BindToggle("setting-nameplates", HudPreferences.ShowNameplates, v => HudPreferences.ShowNameplates = v);
             BindToggle("setting-controls-hint", HudPreferences.ShowControlsHint, v => HudPreferences.ShowControlsHint = v);
             BindToggle("setting-minimap-rotate", HudPreferences.MinimapRotates, v => HudPreferences.MinimapRotates = v);
+            BindToggle("setting-screen-shake", HudPreferences.ScreenShake, v => HudPreferences.ScreenShake = v);
         }
 
         private void Bind(string elementName, System.Action callback)

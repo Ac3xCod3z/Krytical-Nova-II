@@ -46,8 +46,11 @@ namespace KryticalNova.EditorTools
         private static readonly string[] MobAreaIds = { "mob-ne", "mob-nw", "mob-sw", "mob-se" };
 
         private static readonly List<(Vector2 Pos, float Radius)> outskirtsTaken = new List<(Vector2, float)>();
-        private static Dictionary<string, List<GameObject>> ruinLibrary = new Dictionary<string, List<GameObject>>();
-        private const double DemolishedShare = 0.6; // share of ruin towers that use a baked Mesh Demolisher variant
+        private static Dictionary<string, Dictionary<RuinBaker.Tier, List<GameObject>>> ruinLibrary =
+            new Dictionary<string, Dictionary<RuinBaker.Tier, List<GameObject>>>();
+        private const double BakedShare = 0.7; // share of ruin towers that use a baked Quick Destruction variant
+        // Separate stream for ruin tiers / wall damage, so tuning destruction never reshuffles the rest of the town.
+        private static System.Random ruinRng = new System.Random(0);
 
         // ---------------------------------------------------------------- bridges
 
@@ -194,19 +197,11 @@ namespace KryticalNova.EditorTools
             string tower = Pick(RuinTowers);
             float scale = Range(0.7f, 1.05f);
             float ground = GroundHeight(c.x, c.y);
-            if (ruinLibrary.TryGetValue(tower, out var variants) && variants.Count > 0 && Chance(DemolishedShare))
+            if (Chance(BakedShare) && TryPickRuin(tower, OutskirtsTier(c), out var baked))
             {
-                // A baked broken tower: jagged stump plus toppled chunks, each chunk settled onto the terrain.
-                var ruin = (GameObject)PrefabUtility.InstantiatePrefab(Pick(variants), parent);
-                ruin.transform.SetPositionAndRotation(new Vector3(c.x, ground - 0.3f, c.y),
-                    Quaternion.Euler(Range(-3f, 3f), Range(0f, 360f), Range(-3f, 3f)));
-                ruin.transform.localScale = Vector3.one * scale;
-                var fallenRoot = ruin.transform.Find(RuinDemolisher.FallenName);
-                if (fallenRoot != null)
-                    foreach (Transform piece in fallenRoot)
-                        SnapBottom(piece.gameObject, GroundHeight(piece.position.x, piece.position.z) - 0.25f * scale);
-                GameObjectUtility.SetStaticEditorFlags(ruin, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic | StaticEditorFlags.OccluderStatic);
-                ApplyPalette(ruin, c);
+                // A baked Quick Destruction ruin: damaged / collapsed / rubble, fallen chunks settled onto the terrain.
+                PlaceRuin(parent, baked, new Vector3(c.x, ground - 0.3f, c.y),
+                    Quaternion.Euler(RRange(-3f, 3f), RRange(0f, 360f), RRange(-3f, 3f)), Vector3.one * scale, c);
             }
             else
             {
@@ -275,6 +270,107 @@ namespace KryticalNova.EditorTools
             float a = Range(0f, Mathf.PI * 2f);
             float r = exact ? radius : radius * Mathf.Sqrt((float)rng.NextDouble());
             return new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+        }
+
+        // ---------------------------------------------------------------- baked ruin tiers (Quick Destruction)
+
+        private static float RRange(float min, float max) => min + (float)ruinRng.NextDouble() * (max - min);
+        private static T RPick<T>(IReadOnlyList<T> list) => list[ruinRng.Next(list.Count)];
+
+        /// <summary>Weighted tier: mostly damaged/collapsed near the wall, more rubble out toward the rim.</summary>
+        private static RuinBaker.Tier OutskirtsTier(Vector2 c)
+        {
+            float far = Mathf.InverseLerp(WallHalf + 20f, 450f, Square(c));
+            return PickTier(0.43f - 0.15f * far, 0.36f, 0.21f + 0.15f * far);
+        }
+
+        private static RuinBaker.Tier PickTier(float damaged, float collapsed, float rubble)
+        {
+            float roll = (float)ruinRng.NextDouble() * (damaged + collapsed + rubble);
+            if (roll < damaged) return RuinBaker.Tier.Damaged;
+            return roll < damaged + collapsed ? RuinBaker.Tier.Collapsed : RuinBaker.Tier.Rubble;
+        }
+
+        /// <summary>A baked variant of <paramref name="source"/> at <paramref name="tier"/> (another tier if that one is missing).</summary>
+        private static bool TryPickRuin(string source, RuinBaker.Tier tier, out GameObject prefab)
+        {
+            prefab = null;
+            if (!ruinLibrary.TryGetValue(source, out var byTier)) return false;
+            foreach (var t in new[] { tier, RuinBaker.Tier.Collapsed, RuinBaker.Tier.Rubble, RuinBaker.Tier.Damaged })
+                if (byTier.TryGetValue(t, out var list) && list.Count > 0) { prefab = RPick(list); return true; }
+            return false;
+        }
+
+        /// <summary>Instantiates a baked ruin and settles every fallen chunk onto the terrain under it.</summary>
+        private static GameObject PlaceRuin(Transform parent, GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale, Vector2 palettePos)
+        {
+            var ruin = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+            ruin.transform.SetPositionAndRotation(position, rotation);
+            ruin.transform.localScale = scale;
+            SettleFallen(ruin, 0.25f * scale.y);
+            GameObjectUtility.SetStaticEditorFlags(ruin, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic | StaticEditorFlags.OccluderStatic);
+            ApplyPalette(ruin, palettePos);
+            return ruin;
+        }
+
+        private static void SettleFallen(GameObject ruin, float sink)
+        {
+            var fallenRoot = ruin.transform.Find(RuinBaker.FallenName);
+            if (fallenRoot == null) return;
+            foreach (Transform piece in fallenRoot)
+                if (TryGetBounds(piece.gameObject, out var b))
+                    SnapBottom(piece.gameObject, GroundHeight(b.center.x, b.center.z) - sink);
+        }
+
+        /// <summary>
+        /// The siege band just outside the wall: collapsed towers and rubble heaps hugging the wall, never in the gate
+        /// corridors, on paths or in water. Runs before the outskirts scatter so the two never overlap.
+        /// </summary>
+        private static void BuildWallBand(Transform parent, ZoneTerrainProfile profile)
+        {
+            int made = 0;
+            for (int side = 0; side < 4; side++)
+            {
+                Vector2 outward = side == 0 ? Vector2.up : side == 1 ? Vector2.down : side == 2 ? Vector2.right : Vector2.left;
+                Vector2 across = new Vector2(outward.y, -outward.x);
+                for (int attempt = 0, n = 0; attempt < 200 && n < 7; attempt++)
+                {
+                    float along = RRange(-WallHalf - 15f, WallHalf + 15f);
+                    if (Mathf.Abs(along) < RoadHalf + 14f) continue; // keep the gate approach open
+                    Vector2 p = outward * RRange(WallHalf + 7f, WallHalf + 26f) + across * along;
+                    if (!BandClear(profile, p, 7f)) continue;
+                    string tower = RPick(RuinBaker.TowerSources);
+                    if (!TryPickRuin(tower, PickTier(0.2f, 0.45f, 0.35f), out var prefab)) continue;
+                    outskirtsTaken.Add((p, 8f));
+                    var cluster = Group(parent, $"Wall Ruin {++made}");
+                    float ground = GroundHeight(p.x, p.y);
+                    PlaceRuin(cluster, prefab, new Vector3(p.x, ground - 0.3f, p.y),
+                        Quaternion.Euler(RRange(-2f, 2f), RRange(0f, 360f), RRange(-2f, 2f)), Vector3.one * RRange(0.6f, 0.9f), p);
+                    for (int k = ruinRng.Next(2, 5); k > 0; k--)
+                    {
+                        float a = RRange(0f, Mathf.PI * 2f), r = RRange(3f, 7f);
+                        Vector2 q = p + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+                        float g = GroundHeight(q.x, q.y);
+                        var piece = Spawn(cluster, RPick(Rubble), new Vector3(q.x, g, q.y),
+                            Quaternion.Euler(RRange(-8f, 8f), RRange(0f, 360f), RRange(-8f, 8f)), Vector3.one * RRange(0.8f, 1.4f));
+                        SnapBottom(piece, g - 0.25f);
+                    }
+                    n++;
+                }
+            }
+        }
+
+        private static bool BandClear(ZoneTerrainProfile p, Vector2 pos, float radius)
+        {
+            if (Square(pos) < WallHalf + 4f + radius * 0.5f) return false;
+            if (ZoneTerrainGenerator.DistanceToLines(p.paths, pos) < p.pathWidth * 0.5f + 4f + radius) return false;
+            if (ZoneTerrainGenerator.DistanceToLines(p.rivers, pos) < p.riverWidth * 0.5f + p.riverBankWidth + 3f + radius) return false;
+            foreach (var lake in p.lakes)
+                if (Vector2.Distance(pos, lake.center) < lake.radius * 1.35f + p.lakeShoreWidth + radius) return false;
+            if (GroundHeight(pos.x, pos.y) < p.waterLevel + 0.6f) return false;
+            foreach (var (other, r) in outskirtsTaken)
+                if (Vector2.Distance(pos, other) < r + radius) return false;
+            return true;
         }
 
         // ---------------------------------------------------------------- skyline
@@ -405,9 +501,11 @@ namespace KryticalNova.EditorTools
         /// <summary>Moves the offline avatar to the plaza and the combat dummy into the training yard.</summary>
         private static void PlaceExistingActors()
         {
-            var scene = EditorSceneManager.GetActiveScene();
-            foreach (var root in scene.GetRootGameObjects())
+            // Search the whole scene: the hierarchy organizer may group actors under "--- Gameplay ---".
+            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
+                var root = t.gameObject;
+                if (root.scene != EditorSceneManager.GetActiveScene()) continue;
                 if (root.name == "Player")
                 {
                     Undo.RecordObject(root.transform, "Move player");

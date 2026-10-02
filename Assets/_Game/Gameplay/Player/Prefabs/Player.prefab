@@ -619,7 +619,7 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 165}
   - {x: 0, y: 0, z: 70}
   slashVfxScale: 1
-  hitVfxPrefab: {fileID: 1473356317183098, guid: 16b154ffbfe6c5841b0a46456345a632, type: 3}
+  hitVfxPrefab: {fileID: 6574001917749984924, guid: b914bee9668d96845b90f15e3e19ddff, type: 3}
   impactVfxHeight: 1.1
   impactVfxTowardAttacker: 0.35
 --- !u!114 &6246808998396067757

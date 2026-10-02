@@ -48,6 +48,7 @@ Assets/
 ├── TextMesh Pro/         TMP essentials (TMP writes into this path)
 ├── Synty/                Sidekick hard-codes Assets/Synty/SidekickCharacters/... paths
 ├── DownloadCache/        Synty's ToolDownloader cache
+├── QuickDestruction/     RipVertices Quick Destruction hard-codes Assets/QuickDestruction/... (bake output, icons)
 ├── _Recovery/            Unity crash-recovery scenes (Unity-generated)
 └── DefaultNetworkPrefabs.asset   Netcode for GameObjects regenerates it at this path
 ```
@@ -89,19 +90,20 @@ _Game/
 │   ├── Vegetation/        Shaders/ (shared wind/foliage)  Materials/  Prefabs/  Editor/
 │   │   └── Grass/         Runtime/ Data/ Data/Assets/ Rendering/ Compute/ Materials/ Editor/  (own assembly)
 │   ├── Buildings/         Materials/BuildingPalette/
-│   ├── Ruins/             Meshes/  Prefabs/  Editor/
+│   ├── Ruins/             Meshes/  Prefabs/  Profiles/ (Quick Destruction profile)  Editor/ (RuinBaker)
 │   ├── Water/             Shaders/
 │   └── (future) Rocks/ Props/ Architecture/
+├── GameFeel/              Runtime/ (KryticalNova.GameFeel, client-only)  Editor/ (GameFeelBuilder)  Prefabs/ (PFX_GameFeel)
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
 ├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI)  Editor/  Common/  HUD/  Inventory/  NPC/  Shaders/
 │                          (future: Menus/ Skills/ Character/ World/ Settings/)
-├── VFX/                   Gameplay/  Environment/{City,Portals,Vehicles,Weather}/  Materials/ (shared FX mats)
+├── VFX/                   Gameplay/  GameFeel/  Environment/{City,Portals,Vehicles,Weather}/  Materials/ (shared FX mats)
 ├── Input/Actions/         InputSystem_Actions.inputactions (project-wide actions)
 ├── Scenes/                World/Towns/ (Zone01_StarterTown + its lighting/APV/navmesh data)  Development/
 │                          (future: Bootstrap/ MainMenu/ World/Overworld/ Dungeons/ Cinematics/)
 ├── Settings/              Project-level config assets for packages (Animancer Settings)
-├── Tools/                 Editor/ (KryticalNova.Editor.asmdef, Organization/, GM/)  Debug/ (QC commands)
+├── Tools/                 Editor/ (KryticalNova.Editor.asmdef, Organization/, GM/, Hierarchy/ = vHierarchy data)  Debug/ (QC commands)
 │                          (future: Profiling/ Importers/)
 └── (future) Audio/{Music,SFX,Ambience,Voice}/  Art/ (shared-only art)  Tests/ (cross-system tests)
 ```
@@ -140,8 +142,9 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression}/Runtime, Progression/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime. Excluded from dedicated server (`!UNITY_SERVER`)      |
+| `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
 | `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
-| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, UI, World, Rendering, Vegetation, Grass, Ruins) |
+| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel) |
 | `KryticalNova.Editor.GM`          | `Tools/Editor/GM/`                             | GM tools window                                                           |
 | `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
 
@@ -219,6 +222,8 @@ with its own `.asmdef`:
 | `NPC_`  | NPC definition / prefab    | `LF_`  | Lens flare data                    |
 | `LS_` / `APV_` | Lighting settings / probe volume data (scene-generated) | `TL_`  | Terrain layer |
 | `UI_`   | UI element/screen asset (e.g. `UI_HUD_Target`) | `VFX_` | Future VFX Graph assets (`VFX_Combat_Hit`) |
+| `RUIN_` | Baked ruin prefab/mesh (`RUIN_<src>_<Tier>_v<n>`) | `DP_` | Quick Destruction profile          |
+| `VF_`   | Volumetric Fog & Mist 2 profile | | |
 
 ---
 
@@ -248,8 +253,19 @@ Menu **Krytical Nova ▸ Project**:
 | Quarantine Root Folders Into _ThirdParty...  | Same, on demand, for folders dropped in through Explorer. Asks first                   |
 | Validate Project Organization                | Audits root entries, loose files, asset names, script folders, assembly coverage, `UnityEditor` usage in runtime code |
 
+| Organize Scene Hierarchy                     | Files a zone scene's loose root objects under `--- X ---` headers and colours/icons every header with vHierarchy 2 |
+
+### Scene hierarchy
+
+Zone scenes are grouped under `--- X ---` headers, in this order: Systems, Cameras, Lighting & FX, UI, Gameplay, Spawn,
+NPCs, Portals, Environment, Town, Outskirts, Traffic. Builders own their headers; `SceneHierarchyOrganizer` files
+everything hand-placed and applies the vHierarchy colours (Systems grey, Cameras blue, Lighting yellow, UI violet,
+Gameplay red, Spawn/Portals magenta, NPCs cyan, Environment green, Town/Outskirts orange). `NetworkManager` and the
+offline `Player` stay at the root (DontDestroyOnLoad / handoff), directly under their header. Headers are never
+`EditorOnly`: they parent runtime objects. vHierarchy's data asset lives in `Tools/Editor/Hierarchy/`.
+
 Code: `_Game/Tools/Editor/Organization/` (`ProjectOrganizationRules`, `ThirdPartyImportEnforcer`,
-`ProjectOrganizationValidator`). Generic type-bucket folders created by a package (`Scripts/`, `Materials/`…) are
+`ProjectOrganizationValidator`, `SceneHierarchyOrganizer`). Generic type-bucket folders created by a package (`Scripts/`, `Materials/`…) are
 **flagged, not moved**: they might be ours, so a human decides.
 
 ---

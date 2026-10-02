@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    <Style src="../Shared/KryticalTheme.uss" />
+    <Style src="../Common/KryticalTheme.uss" />
     <Style src="NpcInteraction.uss" />
     <ui:VisualElement name="npc-ui" class="kn-root" picking-mode="Ignore">
         <ui:VisualElement name="nameplates" picking-mode="Ignore" />

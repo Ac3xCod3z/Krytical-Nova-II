@@ -1,0 +1,23 @@
+{
+    "name": "KryticalNova.GameFeel",
+    "rootNamespace": "KryticalNova.GameFeel",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.UI",
+        "MoreMountains.Tools",
+        "Unity.Cinemachine",
+        "Unity.Netcode.Runtime",
+        "Kybernetik.Animancer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "!UNITY_SERVER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

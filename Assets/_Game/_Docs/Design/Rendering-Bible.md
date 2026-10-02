@@ -18,10 +18,11 @@ The sky is painterly but physically motivated (real rainbow geometry, real sunse
 | HDR | on | on |
 | MSAA / render scale | off / 1.0 | off / 0.8 |
 | Light probes | **Adaptive Probe Volumes** | legacy light probes |
-| Renderer features | SSAO, ComicStyle, SunShafts | none |
+| Renderer features | SSAO, ComicStyle, SunShafts, Volumetric Fog 2, Volumetric Lights, Beautify | none |
 | Main light shadows | 4096, 4 cascades, 50 m | 1024, 1 cascade |
 
-**PC-only effects** (they need the depth texture): comic outlines and shadows, SSAO, sun shafts. Every new effect must
+**PC-only effects** (they need the depth texture): comic outlines and shadows, SSAO, sun shafts, volumetric mist,
+Beautify. Every new effect must
 degrade cleanly on Mobile, either by skipping its pass or with a cheaper fallback. The sky shader has a `_KN_SKY_LOW`
 keyword for Mobile.
 
@@ -34,9 +35,17 @@ Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights d
 3. **Skybox**: `Skybox/KryticalNova/Stylized Sky`. Sky gradient, stars, sun/moon art, clouds, rainbow.
 4. Transparents (weather particles, VFX)
 5. **ComicStyle** (BeforeRenderingPostProcessing): cast-shadow restyle, cloud shadows, Sobel outlines. Skips sky pixels.
-6. **SunShafts** (BeforeRenderingPostProcessing + 1): god rays, added before post so Bloom catches them.
+4b. **Volumetric Fog & Mist 2** (`VF_GroundMist`, half-res raymarch + 1 blur pass): the terrain-fitted ground mist;
+   it samples the sun's shadow map, so buildings cut shadowed shafts through it at street level.
+   **Volumetric Lights** is registered for local lamps (add a `VolumetricLight` next to a point/spot light).
+6. **SunShafts** (BeforeRenderingPostProcessing + 1): sky / cloud god rays, added before post so Bloom catches them.
+   Kept alongside the mist: the shafts own the sky, the mist owns the streets.
 7. URP post: **Bloom** → **Tonemapping (Neutral)** → **Split Toning / Lift Gamma Gain** → **Color Adjustments** (runtime) →
-   **Vignette** → **Film Grain** → **SMAA** → **Lens Flare** (data-driven, on the sun light).
+   **Chromatic Aberration** (0 at rest; GameFeel pulses it on heavy hits) → **Vignette** → **Film Grain** → **SMAA** →
+   **Lens Flare** (data-driven, on the sun light).
+8. **Beautify 3** (after post): depth-aware sharpen (1.6), vibrance (+0.35), contrast 1.03, a faint warm anamorphic
+   streak on HDR highlights, dither 0.005. Its bloom, tonemapping, vignette, grain, outline, sun flare, eye adaptation
+   and depth of field stay **off**: URP / ComicStyle / the lens flare own those.
 
 ## 3. Lighting rules
 
@@ -187,9 +196,13 @@ Clouds crossing the sun or moon get a bright rim (`_BodyRimGlow`), HDR for the s
   | Motion Blur | off | |
 
 - Main camera anti-aliasing: **SMAA High**. FXAA smears the ink outlines; TAA ghosts the halftone dots.
-- No depth of field: a far blur would also blur the sky (sun art, clouds).
+- No depth of field: a far blur would also blur the sky (sun art, clouds). This includes Beautify's DoF.
+- Beautify lives in the same profile (`Beautify` override, written by `PostProcessSetup.ApplyBeautify`).
 - **Never write the profile asset at runtime.** `EnvironmentPresenter` writes Color Adjustments (saturation, contrast,
-  colour filter) on `postVolume.profile`, the runtime instance.
+  colour filter) on `postVolume.profile`, the runtime instance. FEEL's vignette / chromatic-aberration shakers on the
+  Global Volume also work on that runtime instance.
+- Volumetric mist density and tint follow the weather through `VolumetricAtmosphereDriver` (on Environment Presenter),
+  which edits the fog's instanced profile (`VolumetricFog.settings`), never `VF_GroundMist.asset`.
 - Renderer features re-publish their serialized settings every frame. Modulate them only through their runtime classes:
   `ComicStyleRuntime` (shadow tint, opacity, dots) and `SunShaftRuntime` (shaft strength).
 - New screen-space features: Render Graph only (`RecordRenderGraph`). Skip Preview and Reflection cameras. Read
@@ -329,6 +342,7 @@ farther away than the original 0.065 / 0.1.
 | SSAO | < 0.5 ms | |
 | Lens flare | ~0.05 ms | 6 elements, depth occlusion |
 | Environment CPU | < 0.1 ms, 0 B GC | presenter, flare cloud sample |
+| Volumetric mist + Beautify | < 2 ms together | mist at half res, 0.6 m min step, 300 m max distance |
 
 Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Editor. Look for each feature's
 `ProfilingSampler` name ("Comic Style", "Sun Shafts").
@@ -336,15 +350,27 @@ Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Ed
 ## 8. Roadmap
 
 - **APV lighting scenarios** (Day/Night): turn baked lamps off at noon and on at night, blended by the clock.
-- **Surface Cache GI**: fully dynamic bounce lighting for high-end PCs. Experimental and expensive. Evaluate only as an
-  optional Ultra setting.
-- **Volumetric fog / local fog volumes**: give the sun shafts something to scatter in at ground level.
+- **Dynamic GI**: evaluated 2026-10-02 (the "Fast Dynamic GI" asset, `_ThirdParty/GI`) against APV and **rejected**.
+  An A/B in Zone01 roughly doubled frame cost (+2–5 ms at street and vista views) and added no visible bounce, because
+  its SDF tracing needs Read/Write enabled on every Synty mesh (memory cost, importer churn). APV + sky occlusion stays.
+  Revisit only as an optional Ultra tier.
+- **Local fog volumes / lamp volumetrics**: Volumetric Lights is wired; add `VolumetricLight` to hand-placed lamps.
 - **Screen-space reflections**: URP has none built in, so it would be a custom Render Graph pass. Wet streets after rain
   would pair with the rainbow and moisture state.
 - **Auto-exposure / eye adaptation** for interiors.
 - **Shadowmask mixed lighting** for interiors once indoor zones exist: crisp baked shadows far away, realtime up close.
 
 ## Changelog
+
+- **2026-10-02 (atmosphere, destruction, game feel)**:
+  - Volumetric Fog & Mist 2 ground mist (terrain-fitted, shadowed sun scattering, weather-driven density/tint).
+  - Volumetric Lights feature registered for future lamp volumetrics.
+  - Beautify 3 after post (sharpen, vibrance, anamorphic streak); duplicate effects left off.
+  - Dynamic GI A/B: rejected, APV stays (see Roadmap).
+  - Ruins re-baked with Quick Destruction: Damaged / Collapsed / Rubble tiers settled by an edit-mode physics pass,
+    breached wall spans and broken mid-wall towers, a siege band of ruins just outside the wall.
+  - GameFeel: FEEL camera impulses, FOV kick, hurt vignette, chromatic punch, target squash/flash, POLYGON FX dust and
+    sparks (URP copies).
 
 - **2026-10-02 (GPU grass)**:
   - Compute-generated, indirect-drawn stylized grass with a baked placement mask, biomes, distance LOD, debug views
@@ -370,7 +396,8 @@ Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Ed
   - Sun and moon read farther away (smaller).
   - Building palette: neighbouring buildings never share a colour.
   - URP exhaust trails and booster glows on the flying traffic (Synty legacy particle shaders converted).
-  - Mesh Demolisher ruin library: fractured towers in the outer ring (`Assets/_Game/Environment/Ruins/Prefabs`).
+  - Ruin library: fractured towers in the outer ring (`Assets/_Game/Environment/Ruins/Prefabs`); replaced on
+    2026-10-02 (atmosphere) by the Quick Destruction library below.
 
 - **2026-10-01**:
   - Stylized sun/moon art with glare, ink lift and haze. Heat-shimmering, mostly hidden sun spikes.

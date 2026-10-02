@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Animancer;
+using KryticalNova.Core;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
@@ -299,6 +300,10 @@ namespace KryticalNova.Player
         private void PlayLocomotionClip(AnimationClip clip, float fade)
         {
             if (clip == null || clip == currentLocomotionClip) return;
+            bool wasRunning = currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip;
+            bool nowRunning = clip == runClip || clip == drawnRunClip;
+            if (nowRunning && !wasRunning)
+                ClientPresentationRegistry.Feel?.RunStarted(transform, !IsSpawned || IsOwner);
             currentLocomotionClip = clip;
             currentLocomotionState = animancer.Layers[0].Play(clip, fade);
             currentLocomotionState.ApplyFootIK = locomotionFootIK;

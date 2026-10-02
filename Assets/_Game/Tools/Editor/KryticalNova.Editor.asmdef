@@ -11,8 +11,12 @@
         "Unity.AI.Navigation",
         "Unity.Splines",
         "Unity.Mathematics",
-        "Hanzzz.MeshDemolisher",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "VHierarchy",
+        "RipVertices.QuickDestruction.Runtime",
+        "KryticalNova.GameFeel",
+        "MoreMountains.Tools",
+        "Unity.Cinemachine"
     ],
     "includePlatforms": [
         "Editor"
