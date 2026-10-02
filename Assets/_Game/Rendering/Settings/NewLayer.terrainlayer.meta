@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 98da22e2b0de949d7b290e14bfe943e9
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 8574412962073106934
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/_Game/Rendering/Settings/NewLayer.terrainlayer
+  uploadId: 889012

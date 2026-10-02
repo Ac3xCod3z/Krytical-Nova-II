@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3b1fdaceeb443254297dedea47e211ca
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/AABB.hlsl
+  uploadId: 889012

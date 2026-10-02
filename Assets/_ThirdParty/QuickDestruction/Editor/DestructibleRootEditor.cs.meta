@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 3500a658b2eef2c4f91ba116292a11c0
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Editor/DestructibleRootEditor.cs
+  uploadId: 991852

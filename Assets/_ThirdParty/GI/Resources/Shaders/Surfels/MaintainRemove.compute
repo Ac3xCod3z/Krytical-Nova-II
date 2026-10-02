@@ -1,0 +1,28 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer SurfelCounts;
+
+RWByteAddressBuffer SurfelArraysRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint index = dispatch_thread_id.x;
+
+	[branch]
+	if (index < SurfelCounts.Load(SURFEL_COUNT_REMOVE * 4))
+	{
+		uint entry_index = SurfelArraysRW.Load((SURFEL_ARRAY_REMOVE + index) * 4);
+
+		uint cursor = SurfelCounts.Load(SURFEL_COUNT_POOL * 4);
+		SurfelArraysRW.Store((SURFEL_ARRAY_POOL + cursor + index) * 4, entry_index);
+	}
+}

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 954bc5c7ee93b4371ad8ec5143d530ac
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scenes/Demo/SDF/11bda2e5-c109-4f18-8b14-66d8ba4693d6.asset
+  uploadId: 889012

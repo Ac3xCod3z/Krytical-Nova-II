@@ -1,0 +1,38 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer ProbeCountsRW;
+
+RWBuffer<uint> ArgumentsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint count = min(ProbeCountsRW.Load(PROBE_COUNT_ENTRY * 4), PROBE_MAX_ENTRIES);
+
+	ArgumentsRW[0] = (count + GROUP - 1) / GROUP;
+	ArgumentsRW[1] = 1;
+	ArgumentsRW[2] = 1;
+	ArgumentsRW[3] = 0;
+
+	ProbeCountsRW.InterlockedMax(PROBE_COUNT_MAX * 4, count);
+
+	ProbeCountsRW.Store(PROBE_COUNT_TEMP * 4, 0);
+	ProbeCountsRW.Store(PROBE_COUNT_REMOVE * 4, 0);
+	ProbeCountsRW.Store(PROBE_COUNT_REQUESTS * 4, 0);
+
+	static const uint HALF_ENTRIES = PROBE_MAX_ENTRIES / 2;
+	static const uint ENTRIES_PER_LIFE = HALF_ENTRIES / PROBE_LIVES;
+
+	uint entries_left = PROBE_MAX_ENTRIES - min(count, PROBE_MAX_ENTRIES);
+	uint lives_limit = min(max((entries_left + ENTRIES_PER_LIFE - 1) / ENTRIES_PER_LIFE, 2), PROBE_LIVES);
+
+	ProbeCountsRW.Store(PROBE_COUNT_LIVES * 4, lives_limit);
+}

@@ -1,0 +1,37 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer FarProbeCountsRW;
+
+RWBuffer<uint> ArgumentsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint maintain_count = min(FarProbeCountsRW.Load(FAR_PROBE_COUNT_TEMP * 4), FAR_PROBE_MAX_ENTRIES);
+    uint remove_count   = min(FarProbeCountsRW.Load(FAR_PROBE_COUNT_REMOVE * 4), FAR_PROBE_MAX_ENTRIES);
+
+    ArgumentsRW[0] = (maintain_count + GROUP - 1) / GROUP;
+    ArgumentsRW[1] = 1;
+    ArgumentsRW[2] = 1;
+    ArgumentsRW[3] = 0;
+
+    ArgumentsRW[4] = (remove_count + GROUP - 1) / GROUP;
+    ArgumentsRW[5] = 1;
+    ArgumentsRW[6] = 1;
+    ArgumentsRW[7] = 0;
+
+    FarProbeCountsRW.Store(FAR_PROBE_COUNT_ENTRY * 4, maintain_count);
+
+    uint pool_count = FarProbeCountsRW.Load(FAR_PROBE_COUNT_POOL * 4);
+    FarProbeCountsRW.Store(FAR_PROBE_COUNT_POOL * 4, max(pool_count, remove_count) - remove_count); // assume it's ok, no overflow?
+
+    FarProbeCountsRW.Store(FAR_PROBE_COUNT_TEMP * 4, 0);
+}

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3b8a5a5e4e4bf834cb1c8be960a4cfee
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/ScreenProbes/Place.compute
+  uploadId: 889012

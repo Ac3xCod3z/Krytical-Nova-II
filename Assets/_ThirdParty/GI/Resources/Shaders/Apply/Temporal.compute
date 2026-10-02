@@ -1,0 +1,115 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ MOTION_VECTORS
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Input.hlsl"
+#include "../Shared/Depth.hlsl"
+#include "../Shared/Probes.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint2 Viewport;
+float2 ViewportScale;
+
+float4x4 PreviousViewProjection;
+float4x4 PreviousViewProjectionInverse;
+
+Texture2D Convergence;
+Texture2D PreviousDiffuse;
+
+SamplerState _linear_clamp_sampler;
+
+Texture2D<float4> DiffuseBuffer;
+
+Texture2D _MotionVectorTexture;
+
+RWTexture2D<float4> CurrentDiffuseRW;
+RWTexture2D<float> ConvergenceRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 1)]
+void Main(uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint2 coord = dispatch_thread_id.xy;
+
+    [branch]
+    if (all(coord < Viewport))
+    {
+        float2 uv = float2(coord) / _ScaledScreenParams.xy;
+
+        float sampled_depth = sampleSceneDepth(uv);
+        float depth = actualDepth(sampled_depth);
+
+        #if UNITY_REVERSED_Z
+        if (depth > DEPTH_EPSILON_ZERO)
+        #else
+        if (depth < DEPTH_EPSILON_ONE)
+        #endif
+        {
+            float3 position = worldSpacePosition(uv, depth, unity_MatrixInvVP);
+
+            #if MOTION_VECTORS
+
+                float2 motion = _MotionVectorTexture.SampleLevel(_linear_clamp_sampler, uv, 0).rg;
+                float2 previous_coord_f = uv - motion;
+
+            #else
+
+                float4 previous_projection = mul(PreviousViewProjection, float4(position, 1));
+                float2 previous_position_ps = (previous_projection.xy / previous_projection.w) * 0.5 + 0.5;
+
+                float2 previous_coord_f = float2(previous_position_ps.x, 1 - previous_position_ps.y);
+
+            #endif
+
+            float effective_convergence_weight = 0.8f;
+            float new_convergence = 1.0f;
+            float effective_history_weight = 0.94f;
+
+            [flatten]
+            if (any(previous_coord_f < 0) || any(previous_coord_f > 1))
+            {
+                effective_convergence_weight = 0;
+                effective_history_weight = 0;
+                new_convergence = 0;
+            }
+
+            uint2 dim;
+            DiffuseBuffer.GetDimensions(dim.x, dim.y);
+
+            float2 texel = 0.5f / float2(dim.x, dim.y); // need to add half texel
+
+            float2 previous_uv = saturate(previous_coord_f * ViewportScale + texel);
+
+            float previous_sampled_depth = sampleLastSceneDepth(previous_uv);
+            float previous_depth = actualDepth(previous_sampled_depth);
+            float3 previous_position = worldSpacePosition(previous_uv, previous_depth, PreviousViewProjectionInverse);
+
+            float linear_depth = LinearEyeDepth(sampled_depth, _ZBufferParams);
+            float movement = distance(previous_position, position) / linear_depth;
+            float position_weight = movement > 0.05 ? 0 : 1;
+
+            effective_convergence_weight *= position_weight;
+            new_convergence *= position_weight;
+
+            float convergence_history = Convergence.SampleLevel(_linear_clamp_sampler, previous_uv, 0).x;
+            float updated_convergence = lerp(new_convergence, convergence_history, effective_convergence_weight);
+
+            effective_history_weight *= updated_convergence;
+            effective_history_weight *= position_weight; // use position_weight again
+
+            float3 diffuse = DiffuseBuffer[coord].rgb;
+            float3 previous_diffuse = PreviousDiffuse.SampleLevel(_linear_clamp_sampler, previous_uv, 0).rgb;
+
+            diffuse = max(lerp(diffuse, previous_diffuse, effective_history_weight), 0);
+
+            // CurrentDiffuseRW[coord] = float4(lerp(float3(1, 0, 0), float3(0, 1, 0), effective_history_weight), 1);
+            CurrentDiffuseRW[coord] = float4(diffuse, 1);
+            ConvergenceRW[coord] = updated_convergence;
+        }
+    }
+}

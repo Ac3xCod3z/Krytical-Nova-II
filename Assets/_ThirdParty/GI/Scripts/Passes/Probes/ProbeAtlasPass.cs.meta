@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: a21fecf34e27ccf4bb311104ca6d186c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Passes/Probes/ProbeAtlasPass.cs
+  uploadId: 889012

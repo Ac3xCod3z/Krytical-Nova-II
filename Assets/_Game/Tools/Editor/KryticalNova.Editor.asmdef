@@ -1,0 +1,28 @@
+{
+    "name": "KryticalNova.Editor",
+    "rootNamespace": "KryticalNova.EditorTools",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Vegetation.Grass",
+        "Unity.Netcode.Runtime",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.Editor",
+        "Unity.AI.Navigation",
+        "Unity.Splines",
+        "Unity.Mathematics",
+        "Hanzzz.MeshDemolisher",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

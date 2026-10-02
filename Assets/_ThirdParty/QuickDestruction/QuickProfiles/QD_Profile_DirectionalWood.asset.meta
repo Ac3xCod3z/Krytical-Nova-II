@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9ed067891a0046a4298ce48f1fc539bc
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/QuickProfiles/QD_Profile_DirectionalWood.asset
+  uploadId: 991852

@@ -1,0 +1,20 @@
+{
+    "name": "KryticalNova.DevTools",
+    "rootNamespace": "KryticalNova.DevTools",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Vegetation.Grass",
+        "QFSW.QC",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

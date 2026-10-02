@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 31e2a5f897a299b4b994bc82acedca10
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Universal/LitGI.shader
+  uploadId: 889012

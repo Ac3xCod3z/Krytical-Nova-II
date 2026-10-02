@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 006e09fc458f944bd823a8ca1de099b5
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scenes/Demo/Materials/Glass.mat
+  uploadId: 889012

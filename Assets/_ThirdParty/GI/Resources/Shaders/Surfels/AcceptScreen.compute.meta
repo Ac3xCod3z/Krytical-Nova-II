@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 001a4c5ff9a2d394daae9c1df302f6d3
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Surfels/AcceptScreen.compute
+  uploadId: 889012

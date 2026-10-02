@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c7a80f2f3f47e724ead2e0fdd441e141
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Surfels/LightProbe.compute
+  uploadId: 889012

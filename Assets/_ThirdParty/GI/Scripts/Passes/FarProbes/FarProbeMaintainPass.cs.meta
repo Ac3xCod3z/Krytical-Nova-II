@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 77f0e44bb44b7fd418f78bf68e6410ef
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Passes/FarProbes/FarProbeMaintainPass.cs
+  uploadId: 889012

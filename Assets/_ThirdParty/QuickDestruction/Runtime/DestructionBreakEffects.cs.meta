@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 3b7bd591ec394dd0a841f519a6a3d7c4
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Runtime/DestructionBreakEffects.cs
+  uploadId: 991852

@@ -1,0 +1,107 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint ScreenProbeCountX;
+uint ScreenProbeCountY;
+
+ByteAddressBuffer ScreenProbes;
+ByteAddressBuffer ScreenProbeCounts;
+
+Texture2D<float4> ScreenProbeRadianceAtlas;
+
+RWTexture2D<float4> ScreenProbeRadianceAtlasRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void performNeighbour(int2 cell_coord,
+                      uint2 texel,
+                      float3 position,
+                      float3 direction,
+                      float hit_distance,
+
+                      inout float3 total_radiance,
+
+                      inout float total_weight)
+{
+    static const float MAX_HIT_ANGLE = 30.0f * GI_PI / 180.0f;
+
+    [branch]
+    if (all(cell_coord >= 0) && uint(cell_coord.x) < ScreenProbeCountX && uint(cell_coord.y) < ScreenProbeCountY)
+    {
+        uint entry_index = cell_coord.x + cell_coord.y * ScreenProbeCountX;
+        uint2 atlas_coord = uint2(cell_coord) * SCREEN_PROBE_RES + texel;
+
+        float4 radiance_and_depth = ScreenProbeRadianceAtlas[atlas_coord];
+        float3 neighbour_radiance = radiance_and_depth.xyz;
+        float  neighbour_depth = radiance_and_depth.w;
+
+        float neighbour_hit_distance = min(neighbour_depth, hit_distance);
+
+        float3 neighbour_position = asfloat(ScreenProbes.Load3(entry_index * SCREEN_PROBE_STRIDE + SCREEN_PROBE_POSITION));
+        float3 neighbour_hit_position = neighbour_position + direction * neighbour_hit_distance;
+        float3 hit_vector = neighbour_hit_position - position;
+
+        float angle = acosFast(dot(hit_vector, direction) / length(hit_vector));
+        float weight = 1.0f - saturate(angle / MAX_HIT_ANGLE);
+
+        total_radiance += neighbour_radiance * weight;
+        total_weight += weight;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(SCREEN_PROBE_RES, SCREEN_PROBE_RES, 1)]
+void Main(in uint3 group_thread_id : SV_GroupThreadID,
+          in uint3 group_id : SV_GroupID)
+{
+    uint probe_index = group_id.x;
+    uint2 coord = uint2(probe_index % ScreenProbeCountX, probe_index / ScreenProbeCountX);
+    uint2 texel = group_thread_id.xy;
+
+    uint entry_index = coord.x + coord.y * ScreenProbeCountX;
+    uint2 atlas_coord = coord * SCREEN_PROBE_RES + texel;
+
+    float4 radiance_and_depth = ScreenProbeRadianceAtlas[atlas_coord];
+    float3 radiance = radiance_and_depth.xyz;
+    float  depth = radiance_and_depth.w;
+
+    [branch]
+    if (probe_index < ScreenProbeCounts.Load(SCREEN_PROBE_COUNT_BASE * 4))
+    {
+        float3 direction = screenTexelToDirection(group_thread_id.xy);
+
+        float3 probe_position = asfloat(ScreenProbes.Load3(entry_index * SCREEN_PROBE_STRIDE + SCREEN_PROBE_POSITION));
+
+        float3 total_radiance = radiance.xyz;
+        float total_weight = 1.0f;
+
+        int2 offsets[4];
+        offsets[0] = int2(-1, 0);
+        offsets[1] = int2(1, 0);
+        offsets[2] = int2(0, -1);
+        offsets[3] = int2(0, 1);
+
+        [loop]
+        for (uint i = 0; i < 4; i++)
+        {
+            performNeighbour(int2(coord) + offsets[i],
+                             texel,
+                             probe_position,
+                             direction,
+                             depth,
+                             total_radiance,
+                             total_weight);
+        }
+
+        radiance = total_radiance / total_weight;
+    }
+
+    ScreenProbeRadianceAtlasRW[atlas_coord] = float4(radiance, depth);
+}

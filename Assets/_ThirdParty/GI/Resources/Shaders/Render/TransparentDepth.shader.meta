@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: f18d19876d30c3e4e842b6328b62a1c5
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Render/TransparentDepth.shader
+  uploadId: 889012

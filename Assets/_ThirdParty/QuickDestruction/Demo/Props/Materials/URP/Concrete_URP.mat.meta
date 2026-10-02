@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ee5b7785fad49e44cbc0e2d28087f5cd
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Demo/Props/Materials/URP/Concrete_URP.mat
+  uploadId: 991852

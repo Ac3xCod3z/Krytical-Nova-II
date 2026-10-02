@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: d3affbf726bb03c489c15ea3b188e9db
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Util/ShowFPS.cs
+  uploadId: 889012

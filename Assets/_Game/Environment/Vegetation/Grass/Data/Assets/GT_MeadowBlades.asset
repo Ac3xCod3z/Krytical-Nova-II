@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4edfb03abffeac4cabb723a64e00bb4, type: 3}
+  m_Name: GT_MeadowBlades
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.Grass.GrassType
+  mesh: {fileID: 4300000, guid: 74d1fb4f3f5944d46a9c80896f7ff8e0, type: 2}
+  heightRange: {x: 0.28, y: 0.7}
+  widthRange: {x: 1.3, y: 1.8}
+  density: 0.7
+  rootColor: {r: 0.1, g: 0.21, b: 0.09, a: 1}
+  midColor: {r: 0.27, g: 0.44, b: 0.17, a: 1}
+  tipColor: {r: 0.56, g: 0.66, b: 0.31, a: 1}
+  midPoint: 0.45
+  brightnessVariation: 0.1
+  patchTint: {r: 0.92, g: 0.95, b: 0.62, a: 0.25}
+  wetTint: {r: 0.75, g: 1, b: 0.82, a: 0.35}
+  rootOcclusion: 0.55
+  windStrength: 1.15
+  flutter: 0.45
+  playerBend: 1.2
+  normalUp: 0.8

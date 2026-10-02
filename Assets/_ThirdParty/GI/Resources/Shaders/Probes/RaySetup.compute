@@ -1,0 +1,92 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ RETRACE_ALL
+#pragma multi_compile_local __ RETRACE_PARTIAL
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint FrameIndex;
+
+ByteAddressBuffer ProbeArrays;
+ByteAddressBuffer ProbeEntries;
+
+RWByteAddressBuffer TraceArrayRW;
+RWByteAddressBuffer TraceCountsRW;
+RWByteAddressBuffer TraceHitsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+groupshared uint group_base_index;
+groupshared uint group_count;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 group_thread_id : SV_GroupThreadID,
+          in uint3 group_id : SV_GroupID)
+{
+    uint array_index = group_id.x / GROUPS_PER_PROBE;
+    uint local_group_index = group_id.x % GROUPS_PER_PROBE;
+    uint local_thread_index = group_thread_id.x;
+    uint local_sampler_index = local_group_index * GROUP + local_thread_index;
+
+    [branch]
+    if (local_thread_index == 0)
+        group_count = 0;
+
+    uint entry_index = ProbeArrays.Load((PROBE_ARRAY_ENTRY + array_index) * 4);
+    uint life = ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_LIFE);
+
+    GroupMemoryBarrierWithGroupSync();
+
+    bool trace = false;
+
+    #if RETRACE_ALL
+
+        trace = true;
+
+    #else
+
+        trace = life < 8; // retrace ALL for the first 8 frames of existance
+
+        #if RETRACE_PARTIAL
+
+            [flatten]
+            if ((local_sampler_index % 4) == (FrameIndex % 4))
+                trace = true;
+
+        #endif
+
+        uint cell_value = ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL);
+
+        [flatten]
+        if (cell_value & FLAG_NEW)
+            trace = true;
+
+    #endif
+
+    if (trace)
+        InterlockedAdd(group_count, 1);
+
+    GroupMemoryBarrierWithGroupSync();
+
+    [branch]
+    if (local_thread_index == 0)
+        TraceCountsRW.InterlockedAdd(TRACE_COUNT_PROBE * 4, group_count, group_base_index);
+
+    GroupMemoryBarrierWithGroupSync();
+
+    [branch]
+    if (trace)
+    {
+        uint trace_index = group_base_index + local_thread_index;
+        uint sampler_index = entry_index * PROBE_RAY_COUNT + local_sampler_index;
+
+        TraceArrayRW.Store((TRACE_ARRAY_PROBE + trace_index) * TRACE_STRIDE, sampler_index);
+        TraceHitsRW.Store4((TRACE_ARRAY_PROBE + trace_index) * HIT_STRIDE, uint4(INVALID_ID, 0, 0, INVALID_ID));
+    }
+}

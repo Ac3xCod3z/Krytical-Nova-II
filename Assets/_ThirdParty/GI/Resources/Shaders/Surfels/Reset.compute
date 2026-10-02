@@ -1,0 +1,46 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer SurfelArraysRW;
+RWByteAddressBuffer SurfelCountsRW;
+RWByteAddressBuffer SurfelGridRW;
+RWByteAddressBuffer SurfelRequestMapRW;
+RWByteAddressBuffer SurfelRadianceRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint index = dispatch_thread_id.x;
+
+	[branch]
+	if (index < PROBE_COUNT_ALL)
+	{
+		SurfelCountsRW.Store(index * 4, 0);
+	}
+
+	[branch]
+	if (index < SURFEL_MAX_ENTRIES)
+	{
+		SurfelArraysRW.Store((SURFEL_ARRAY_ENTRY   + index) * 4, 0);
+		SurfelArraysRW.Store((SURFEL_ARRAY_TEMP    + index) * 4, 0);
+		SurfelArraysRW.Store((SURFEL_ARRAY_REMOVE  + index) * 4, 0);
+		SurfelArraysRW.Store((SURFEL_ARRAY_VERSION + index) * 4, 0);
+		SurfelArraysRW.Store((SURFEL_ARRAY_POOL    + index) * 4, index);
+
+		SurfelRadianceRW.Store3(index * RADIANCE_STRIDE, asuint(float3(0, 0, 0)));
+	}
+
+	[branch]
+	if (index < PROBE_CASCADE_CELL_COUNT * PROBE_MAX_CASCADES)
+	{
+		SurfelGridRW.Store(index * 4, INVALID_ID);
+		SurfelRequestMapRW.Store(index * 4, 0);
+	}
+}

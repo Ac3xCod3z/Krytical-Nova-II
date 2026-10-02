@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 243a71c3588bcd0499d859960c041428
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/Noise.hlsl
+  uploadId: 889012

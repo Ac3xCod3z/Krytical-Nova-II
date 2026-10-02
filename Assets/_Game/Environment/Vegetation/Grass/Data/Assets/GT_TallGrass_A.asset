@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4edfb03abffeac4cabb723a64e00bb4, type: 3}
+  m_Name: GT_TallGrass_A
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.Grass.GrassType
+  mesh: {fileID: -8637130277511605199, guid: e25f4107d5321a240872043b3cdd4733, type: 3}
+  heightRange: {x: 0.55, y: 1.3}
+  widthRange: {x: 0.85, y: 1.2}
+  density: 0.28
+  rootColor: {r: 0.1, g: 0.21, b: 0.09, a: 1}
+  midColor: {r: 0.27, g: 0.44, b: 0.17, a: 1}
+  tipColor: {r: 0.56, g: 0.66, b: 0.31, a: 1}
+  midPoint: 0.45
+  brightnessVariation: 0.1
+  patchTint: {r: 0.92, g: 0.95, b: 0.62, a: 0.25}
+  wetTint: {r: 0.75, g: 1, b: 0.82, a: 0.35}
+  rootOcclusion: 0.55
+  windStrength: 1
+  flutter: 0.35
+  playerBend: 1.1
+  normalUp: 0.8

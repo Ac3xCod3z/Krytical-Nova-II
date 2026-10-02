@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4edfb03abffeac4cabb723a64e00bb4, type: 3}
+  m_Name: GT_LawnBlades
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.Grass.GrassType
+  mesh: {fileID: 4300000, guid: c49e478e31119de458b3ccf8bd31cfda, type: 2}
+  heightRange: {x: 0.12, y: 0.17}
+  widthRange: {x: 5.5, y: 7}
+  density: 0.95
+  rootColor: {r: 0.14, g: 0.3, b: 0.12, a: 1}
+  midColor: {r: 0.32, g: 0.58, b: 0.22, a: 1}
+  tipColor: {r: 0.58, g: 0.78, b: 0.34, a: 1}
+  midPoint: 0.45
+  brightnessVariation: 0.06
+  patchTint: {r: 0.95, g: 1, b: 0.8, a: 0.12}
+  wetTint: {r: 0.75, g: 1, b: 0.82, a: 0.35}
+  rootOcclusion: 0.65
+  windStrength: 0.6
+  flutter: 0.25
+  playerBend: 1.2
+  normalUp: 0.8

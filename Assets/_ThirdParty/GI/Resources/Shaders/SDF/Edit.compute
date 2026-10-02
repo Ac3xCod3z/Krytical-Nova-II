@@ -1,0 +1,87 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint Count;
+
+ByteAddressBuffer Edits;
+ByteAddressBuffer Values;
+
+RWByteAddressBuffer BufferRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint edit_index = dispatch_thread_id.x;
+
+    [branch]
+    if (edit_index < Count)
+    {
+        uint index = Edits.Load(edit_index * 4);
+
+        uint read_offset = edit_index * 160;
+
+        uint asset = Values.Load(read_offset);
+        read_offset += 4;
+
+        uint hash_id = Values.Load(read_offset);
+        read_offset += 4;
+
+        // empty space
+        read_offset += 8;
+
+        float3 scale = asfloat(Values.Load3(read_offset));
+        read_offset += 12;
+
+        read_offset += 4; // empty space
+
+        float4x4 transform = transpose(float4x4(
+            asfloat(Values.Load4(read_offset + 0)),
+            asfloat(Values.Load4(read_offset + 16)),
+            asfloat(Values.Load4(read_offset + 32)),
+            asfloat(Values.Load4(read_offset + 48))
+        ));
+
+        read_offset += 64;
+
+        float4x4 transform_inverse = transpose(float4x4(
+            asfloat(Values.Load4(read_offset + 0)),
+            asfloat(Values.Load4(read_offset + 16)),
+            asfloat(Values.Load4(read_offset + 32)),
+            asfloat(Values.Load4(read_offset + 48))
+        ));
+
+        uint write_offset = index * 160;
+
+        BufferRW.Store(write_offset, asset);
+        write_offset += 4;
+
+        BufferRW.Store(write_offset, hash_id);
+        write_offset += 4;
+
+        // empty space
+        write_offset += 8;
+
+        BufferRW.Store3(write_offset, asuint(scale));
+        write_offset += 12;
+
+        write_offset += 4; // empty space
+
+        BufferRW.Store4(write_offset +  0, asuint(transform[0]));
+        BufferRW.Store4(write_offset + 16, asuint(transform[1]));
+        BufferRW.Store4(write_offset + 32, asuint(transform[2]));
+        BufferRW.Store4(write_offset + 48, asuint(transform[3]));
+        write_offset += 64;
+
+        BufferRW.Store4(write_offset +  0, asuint(transform_inverse[0]));
+        BufferRW.Store4(write_offset + 16, asuint(transform_inverse[1]));
+        BufferRW.Store4(write_offset + 32, asuint(transform_inverse[2]));
+        BufferRW.Store4(write_offset + 48, asuint(transform_inverse[3]));
+    }
+}

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: cc812dad4ae722e4396ce930f250bf14
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/GDF/Scroll.compute
+  uploadId: 889012

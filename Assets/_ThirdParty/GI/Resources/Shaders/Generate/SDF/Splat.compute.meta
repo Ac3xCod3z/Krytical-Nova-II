@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 90dbfad170965244a9e206fc922b6131
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Generate/SDF/Splat.compute
+  uploadId: 889012

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 8f9925e155dcae64581fc510b630e30e
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Probes/ResetAtlas.compute
+  uploadId: 889012

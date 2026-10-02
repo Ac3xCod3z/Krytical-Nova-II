@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 68f176ddb1178e141b9a5555b642cbd3
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/SDF/RenderManual.shader
+  uploadId: 889012

@@ -1,0 +1,35 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "Flip.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint3 Resolution;
+float Distance;
+uint BrickCount;
+
+RWByteAddressBuffer PositiveRW;
+RWByteAddressBuffer BufferRW;
+RWByteAddressBuffer MappingRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 8)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint3 coord = dispatch_thread_id;
+	uint index = coord.x + coord.y * Resolution.x + coord.z * Resolution.x * Resolution.y;
+
+	[branch]
+	if (all(coord < Resolution))
+	{
+		PositiveRW.Store(index * 4, 0);
+		BufferRW.Store(index * 4, rotateSign(Distance));
+	}
+
+	[branch]
+	if (index < BrickCount)
+		MappingRW.Store(index * 4, 0);
+}

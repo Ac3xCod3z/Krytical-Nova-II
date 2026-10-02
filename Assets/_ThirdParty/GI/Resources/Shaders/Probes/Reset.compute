@@ -1,0 +1,42 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer ProbeArraysRW;
+RWByteAddressBuffer ProbeCountsRW;
+RWByteAddressBuffer ProbeGridRW;
+RWByteAddressBuffer ProbeRequestMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint index = dispatch_thread_id.x;
+
+	[branch]
+	if (index < PROBE_COUNT_ALL)
+	{
+		ProbeCountsRW.Store(index * 4, 0);
+	}
+
+	[branch]
+	if (index < PROBE_MAX_ENTRIES)
+	{
+		ProbeArraysRW.Store((PROBE_ARRAY_ENTRY  + index) * 4, 0);
+		ProbeArraysRW.Store((PROBE_ARRAY_TEMP   + index) * 4, 0);
+		ProbeArraysRW.Store((PROBE_ARRAY_REMOVE + index) * 4, 0);
+		ProbeArraysRW.Store((PROBE_ARRAY_POOL   + index) * 4, index);
+	}
+
+	[branch]
+	if (index < PROBE_CASCADE_CELL_COUNT * PROBE_MAX_CASCADES)
+	{
+		ProbeGridRW.Store(index * 4, INVALID_ID);
+		ProbeRequestMapRW.Store(index * 4, 0);
+	}
+}

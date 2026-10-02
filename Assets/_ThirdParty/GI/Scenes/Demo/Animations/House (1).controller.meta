@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3778765276f5548f58c3d07918f5c6cb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scenes/Demo/Animations/House (1).controller
+  uploadId: 889012

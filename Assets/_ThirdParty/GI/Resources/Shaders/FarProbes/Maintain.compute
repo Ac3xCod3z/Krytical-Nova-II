@@ -1,0 +1,85 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float4 FarProbeCascadeOffsets[FAR_PROBE_MAX_CASCADES];
+
+RWByteAddressBuffer FarProbeArraysRW;
+RWByteAddressBuffer FarProbeCountsRW;
+RWByteAddressBuffer FarProbeEntriesRW;
+RWByteAddressBuffer FarProbeGridRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint array_index = dispatch_thread_id.x;
+
+    [branch]
+    if (array_index < FarProbeCountsRW.Load(FAR_PROBE_COUNT_ENTRY * 4))
+    {
+        uint entry_index = FarProbeArraysRW.Load((FAR_PROBE_ARRAY_ENTRY + array_index) * 4);
+
+        uint3 cell_age_life = FarProbeEntriesRW.Load3(entry_index * FAR_PROBE_ENTRY_STRIDE + FAR_PROBE_ENTRY_CELL);
+
+        uint current_cell_index = cell_age_life.x & UNFLAG;
+        FarProbeGridRW.Store(current_cell_index * 4, INVALID_ID);
+
+        uint cascade = current_cell_index / FAR_PROBE_CASCADE_CELL_COUNT;
+        uint cascade_cell = current_cell_index % FAR_PROBE_CASCADE_CELL_COUNT;
+
+        uint3 current_cell_coord = uint3(cascade_cell,
+                                         cascade_cell / FAR_PROBE_CASCADE_DIM,
+                                         cascade_cell / (FAR_PROBE_CASCADE_DIM * FAR_PROBE_CASCADE_DIM)) % FAR_PROBE_CASCADE_DIM;
+
+        int3 new_cell_coord = int3(current_cell_coord) + int3(round(FarProbeCascadeOffsets[cascade].xyz));
+
+        uint new_cell_index = new_cell_coord.x +
+                              (new_cell_coord.y * FAR_PROBE_CASCADE_DIM) +
+                              (new_cell_coord.z * FAR_PROBE_CASCADE_DIM * FAR_PROBE_CASCADE_DIM) +
+                              cascade * FAR_PROBE_CASCADE_CELL_COUNT;
+
+        uint age = cell_age_life.y + 1;
+
+        cell_age_life.x = new_cell_index;
+        cell_age_life.y = age;
+        cell_age_life.z = cell_age_life.z + 1;
+
+        FarProbeEntriesRW.Store3(entry_index * FAR_PROBE_ENTRY_STRIDE + FAR_PROBE_ENTRY_CELL, cell_age_life);
+
+        static const int INNER_THRESHOLD = FAR_PROBE_CASCADE_DIM / 16;
+        static const int THRESHOLD_LOW = FAR_PROBE_CASCADE_DIM / 4 + INNER_THRESHOLD;
+        static const int THRESHOLD_HIGH = FAR_PROBE_CASCADE_DIM * 3 / 4 - INNER_THRESHOLD;
+
+        bool inner = cascade > 0 && all(new_cell_coord > THRESHOLD_LOW) && all(new_cell_coord < THRESHOLD_HIGH);
+
+        uint counti;
+        uint arrayi;
+
+        uint lives = FarProbeCountsRW.Load(FAR_PROBE_COUNT_LIVES * 4);
+
+        [flatten]
+        if (age < lives &&
+            all(new_cell_coord >= 0) &&
+            all(new_cell_coord < int(FAR_PROBE_CASCADE_DIM)) &&
+            !inner)
+        {
+            counti = FAR_PROBE_COUNT_TEMP;
+            arrayi = FAR_PROBE_ARRAY_TEMP;
+        }
+        else
+        {
+            counti = FAR_PROBE_COUNT_REMOVE;
+            arrayi = FAR_PROBE_ARRAY_REMOVE;
+        }
+
+        uint index;
+        FarProbeCountsRW.InterlockedAdd(counti * 4, 1, index);
+        FarProbeArraysRW.Store((arrayi + index) * 4, entry_index);
+    }
+}

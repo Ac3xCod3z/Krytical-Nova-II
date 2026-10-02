@@ -1,0 +1,61 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 GDFBasePosition;
+float4 GDFCascadeOrigins[GDF_MAX_CASCADES];
+float4 GDFCascadePositions[GDF_MAX_CASCADES];
+
+StructuredBuffer<uint> Changes;
+
+RWByteAddressBuffer CountRW;
+RWByteAddressBuffer UpdatesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const uint GROUP_SIZE = 4;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint sdfCell(uint3 coord)
+{
+    return coord.x + coord.y * GDF_GRID_DIM + coord.z * GDF_GRID_DIM * GDF_GRID_DIM;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(4, 4, 4)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint cascade = (dispatch_thread_id.x * GROUP_SIZE) / GDF_CASCADE_DIM;
+    uint3 coord = dispatch_thread_id.xyz * GROUP_SIZE;
+    coord.x = coord.x % GDF_CASCADE_DIM;
+
+    float cell_dim = GDF_SDF_CELL_DIM * (1 << cascade);
+    float cell_step = GDF_BASE_STEP * (1 << cascade);
+    float cell_frac = float(GDF_CASCADE_DIM + 1) / (float)GDF_CASCADE_DIM;
+    float3 position_ws = GDFCascadePositions[cascade].xyz + coord * cell_dim * cell_frac;
+
+    uint3 instance_cell_coord = uint3(clamp((position_ws - GDFBasePosition) / GDF_CELL_DIM, 0, GDF_GRID_DIM - 1));
+
+    uint cell = sdfCell(instance_cell_coord);
+    uint change = Changes[cell];
+
+    [branch]
+    if (change != 0)
+    {
+        uint value = (cascade & 0xFF) |
+                     ((coord.x & 0xFF) << 8) |
+                     ((coord.y & 0xFF) << 16) |
+                     ((coord.z & 0xFF) << 24);
+
+        uint index;
+        CountRW.InterlockedAdd(0, 1, index);
+
+        UpdatesRW.Store(index * 4, value);
+    }
+}

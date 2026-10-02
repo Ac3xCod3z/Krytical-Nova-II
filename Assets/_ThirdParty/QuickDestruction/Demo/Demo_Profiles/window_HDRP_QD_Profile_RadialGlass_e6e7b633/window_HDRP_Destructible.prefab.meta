@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: fd0dcbdb902b44a469594b53eeb2aba0
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Demo/Demo_Profiles/window_HDRP_QD_Profile_RadialGlass_e6e7b633/window_HDRP_Destructible.prefab
+  uploadId: 991852

@@ -1,0 +1,147 @@
+#pragma kernel Main
+#pragma kernel Manual
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Instances.hlsl"
+#include "../Shared/Rays.hlsl"
+#include "../Shared/SDF.hlsl"
+#include "../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint Cascade;
+uint WriteIndex;
+int3 Offset;
+
+float3 GDFBasePosition;
+
+uint4 GDFCascades;
+float4 GDFCascadePositions[GDF_MAX_CASCADES];
+
+ByteAddressBuffer SDFGridCells;
+
+ByteAddressBuffer Updates;
+
+sampler3D SDFAtlas;
+sampler3D VoxelAtlas;
+
+ByteAddressBuffer SDFAssets;
+ByteAddressBuffer SDFBricks;
+
+ByteAddressBuffer DFInstances;
+
+RWTexture3D<float> GDFSDFRW;
+RWTexture3D<uint>  GDFMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const uint GROUP_SIZE = 4;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void update(uint3 coord, uint cascade, uint write_index)
+{
+    float cell_dim = GDF_SDF_CELL_DIM * (1 << cascade);
+    float cell_step = GDF_BASE_STEP * (1 << cascade);
+    float cell_frac = float(GDF_CASCADE_DIM + 1) / (float)GDF_CASCADE_DIM;
+    float3 position_ws = GDFCascadePositions[cascade].xyz + coord * cell_dim * cell_frac;
+
+    float distance_field = cell_step;
+
+    uint3 instance_cell_coord = uint3(clamp((position_ws - GDFBasePosition) / GDF_CELL_DIM, 0, GDF_GRID_DIM - 1));
+    uint instance_cell = instance_cell_coord.x + instance_cell_coord.y * GDF_GRID_DIM + instance_cell_coord.z * GDF_GRID_DIM * GDF_GRID_DIM;
+
+    uint2 instances = SDFGridCells.Load2((instance_cell * SDF_GRID_STRIDE) + SDF_GRID_OFFSET);
+
+    float3 closest_uvw = 0;
+    float closest_dist = 999999;
+
+    float base_step = GDF_BASE_STEP * (1 << cascade);
+
+    [loop]
+    for (uint instance_index = 0; instance_index < instances.x; instance_index++)
+    {
+        uint instance_id = SDFGridCells.Load(SDF_GRID_INSTANCES + (instances.y + instance_index) * 4);
+
+        uint sdf_asset = loadAssetMapping(DFInstances, instance_id);
+        float4x4 transform = loadTransform(DFInstances, instance_id);
+        float4x4 transform_inverted = loadInverseTransform(DFInstances, instance_id);
+
+        float3 volume_position = mul(transform_inverted, float4(position_ws, 1)).xyz;
+
+        uint mip_index = 0;
+        SDF sdf = loadSDF(SDFAssets, sdf_asset);
+
+        float3 sdf_position_clamped = clamp(volume_position, sdf.volume_min, sdf.volume_max - 0.0001);
+        float3 normalized_volume_position = (sdf_position_clamped - sdf.volume_min) / (sdf.volume_max - sdf.volume_min);
+
+        float3 position_clamped = mul(transform, float4(sdf_position_clamped, 1)).xyz;
+        float outside_d = distance(position_ws, position_clamped);
+
+        float d = outside_d;
+
+        [branch]
+        if (outside_d <= base_step * 0.5f)
+        {
+            d = sampleDistanceField(SDFBricks, SDFAtlas, normalized_volume_position, sdf);
+
+            if (outside_d <= 0.001f)
+            {
+                float3 volume_scale = loadScale(DFInstances, instance_id);
+                d -= sdf.bias;
+                d *= volume_scale.x * 0.333f + volume_scale.y * 0.333f + volume_scale.z * 0.333f;
+            }
+            else
+                d = max(d, 0);
+
+            d += outside_d;
+        }
+
+        distance_field = min(distance_field, d);
+
+        [branch]
+        if (d < closest_dist)
+        {
+            closest_uvw = sdfAtlasUVW(SDFBricks, normalized_volume_position, sdf);
+            closest_dist = d;
+        }
+    }
+
+    coord.x += write_index * GDF_CASCADE_DIM;
+
+    float adjusted_d = saturate((distance_field / cell_step) * 0.5 + 0.5);
+
+    GDFSDFRW[coord] = adjusted_d;
+    GDFMapRW[coord] = packR11G11B10(closest_uvw);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP_SIZE, GROUP_SIZE, GROUP_SIZE)]
+void Main(in uint3 group_thread_id : SV_GroupThreadID,
+          in uint3 group_id : SV_GroupID)
+{
+    uint group_index = group_id.x;
+    uint order = Updates.Load(group_index * 4);
+
+    uint cascade = order & 0xFF;
+
+    uint3 coord;
+    coord.x = (order >>  8) & 0xFF;
+    coord.y = (order >> 16) & 0xFF;
+    coord.z = (order >> 24) & 0xFF;
+
+    coord += group_thread_id;
+
+    update(coord, cascade, GDFCascades[cascade]);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(4, 4, 4)]
+void Manual(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    update(Offset + dispatch_thread_id.xyz, Cascade, WriteIndex);
+}

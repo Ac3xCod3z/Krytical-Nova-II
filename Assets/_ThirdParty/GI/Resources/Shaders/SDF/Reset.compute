@@ -1,0 +1,33 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint3 BrickCounts;
+
+RWByteAddressBuffer PoolRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint index = dispatch_thread_id.x;
+
+	[branch]
+	if (index < MAX_BRICKS)
+	{
+		uint atlas_x = index % BrickCounts.x;
+		uint atlas_y = (index / BrickCounts.x) % BrickCounts.y;
+		uint atlas_z = index / (BrickCounts.x * BrickCounts.y);
+
+		uint value = ((atlas_x & 0xFF)     )  |
+					 ((atlas_y & 0xFF) << 8)  |
+					 ((atlas_z & 0xFF) << 16);
+
+		PoolRW.Store(index * 4, value);
+	}
+}

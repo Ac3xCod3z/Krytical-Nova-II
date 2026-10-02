@@ -1,0 +1,29 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer ProbeCounts;
+ByteAddressBuffer ProbeArrays;
+
+RWByteAddressBuffer ProbeRequestMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint index = dispatch_thread_id.x;
+
+	[branch]
+	if (index < ProbeCounts.Load(PROBE_COUNT_REQUESTS * 4))
+	{
+		// filled in ProbeRequest
+		uint cell_index = ProbeArrays.Load((PROBE_ARRAY_TEMP + index) * 4);
+
+		ProbeRequestMapRW.Store(cell_index * 4, 0);
+	}
+}

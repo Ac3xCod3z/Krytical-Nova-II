@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 96370751aba06704aa0b48f29264708c
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Apply/ProbesDeferred.shader
+  uploadId: 889012

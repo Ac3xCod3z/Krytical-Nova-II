@@ -1,0 +1,33 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint3 InputResolution;
+uint3 OutputResolution;
+
+ByteAddressBuffer Splat;
+
+RWByteAddressBuffer VolumeRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(BRICK_DIM, BRICK_DIM, BRICK_DIM)]
+void Main(in uint3 group_id : SV_GroupID, in uint3 group_thread_id : SV_GroupThreadID)
+{
+	uint3 input_coord = group_id * BRICK_PAYLOAD + group_thread_id;
+
+	[branch]
+	if (all(input_coord < InputResolution))
+	{
+		uint input_index = input_coord.x + input_coord.y * InputResolution.x + input_coord.z * InputResolution.x * InputResolution.y;
+
+		uint3 output_coord = group_id * BRICK_DIM + group_thread_id;
+		uint output_index = output_coord.x + output_coord.y * OutputResolution.x + output_coord.z * OutputResolution.x * OutputResolution.y;
+
+		VolumeRW.Store(output_index * 4, Splat.Load(input_index * 4));
+	}
+}

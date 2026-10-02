@@ -1,0 +1,60 @@
+#pragma kernel Forward
+#pragma kernel Backward
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint Count;
+uint InputBase;
+uint OutputBase;
+
+ByteAddressBuffer Input;
+ByteAddressBuffer Mapping;
+
+RWByteAddressBuffer OutputRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Forward(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint index = dispatch_thread_id.x;
+
+	[branch]
+	if (index < Count)
+	{
+		uint mapping = Mapping.Load(index * 4);
+
+		uint value = INVALID_ID;
+
+		[branch]
+		if (mapping < INVALID_ID)
+			value = Input.Load((InputBase + mapping) * 4);
+		
+		OutputRW.Store((OutputBase + index) * 4, value);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Backward(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint index = dispatch_thread_id.x;
+
+	[branch]
+	if (index < Count)
+	{
+		uint mapping = Mapping.Load(index * 4);
+
+		[branch]
+		if (mapping < INVALID_ID)
+		{
+			uint value = Input.Load((InputBase + index) * 4);
+			OutputRW.Store((OutputBase + mapping) * 4, value);
+		}
+	}
+}

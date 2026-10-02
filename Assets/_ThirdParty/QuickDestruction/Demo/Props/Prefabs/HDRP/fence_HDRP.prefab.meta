@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 455945ff918b23e468e9818e9e9e2f3d
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Demo/Props/Prefabs/HDRP/fence_HDRP.prefab
+  uploadId: 991852

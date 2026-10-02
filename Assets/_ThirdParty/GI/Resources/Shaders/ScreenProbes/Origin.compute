@@ -1,0 +1,130 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ TERRAIN
+#pragma multi_compile_local __ LOCAL_TRACING
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Rays.hlsl"
+#include "../Shared/Instances.hlsl"
+#include "../Shared/SDF.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint ScreenProbeCountX;
+uint ScreenProbeCountY;
+
+float3 GDFBasePosition;
+
+float3 ReferencePosition;
+float4 ProbeCascadeOrigins[PROBE_MAX_CASCADES];
+
+ByteAddressBuffer SDFGridCells;
+
+ByteAddressBuffer DFInstances;
+
+sampler3D SDFAtlas;
+ByteAddressBuffer SDFAssets;
+ByteAddressBuffer SDFBricks;
+
+ByteAddressBuffer ScreenProbeCounts;
+
+RWByteAddressBuffer ScreenProbesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/GDF.hlsl"
+#include "../Shared/Terrain.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float sampleDistance(float3 position)
+{
+    float distance_field = sampleGDF(position, gdfCascade(position));
+
+    #if LOCAL_TRACING
+
+        uint3 cell_coord = uint3(clamp((position - GDFBasePosition) / GDF_CELL_DIM, 0, GDF_GRID_DIM - 1));
+        uint cell_index = cell_coord.x + cell_coord.y * GDF_GRID_DIM + cell_coord.z * GDF_GRID_DIM * GDF_GRID_DIM;
+
+        uint2 instances = SDFGridCells.Load2((cell_index * SDF_GRID_STRIDE) + SDF_GRID_OFFSET);
+
+        [loop]
+        for (uint instance_index = 0; instance_index < instances.x; instance_index++)
+        {
+            uint instance_value = SDFGridCells.Load(SDF_GRID_INSTANCES + (instances.y + instance_index) * 4);
+            uint instance_id = (instance_value & 0xFFFFFF);
+
+            uint sdf_asset = loadAssetMapping(DFInstances, instance_id);
+            float3 volume_scale = loadScale(DFInstances, instance_id);
+            float4x4 transform = loadTransform(DFInstances, instance_id);
+            float4x4 transform_inverted = loadInverseTransform(DFInstances, instance_id);
+
+            float3 volume_position = mul(transform_inverted, float4(position, 1)).xyz;
+
+            uint mip_index = 0;
+            SDF sdf = loadSDF(SDFAssets, sdf_asset);
+
+            float3 sdf_position_clamped = clamp(volume_position, sdf.volume_min, sdf.volume_max - 0.0001);
+            float3 normalized_volume_position = (sdf_position_clamped - sdf.volume_min) / (sdf.volume_max - sdf.volume_min);
+
+            float d = sampleDistanceField(SDFBricks, SDFAtlas, normalized_volume_position, sdf);
+            d *= volume_scale.x * 0.333f + volume_scale.y * 0.333f + volume_scale.z * 0.333f;
+            d -= sdf.bias;
+
+            float3 position_clamped = mul(transform, float4(sdf_position_clamped, 1)).xyz;
+            d += distance(position, position_clamped);
+
+            distance_field = min(distance_field, d);
+        }
+
+    #endif
+
+    #if TERRAIN
+
+    float t = distanceToTerrain(position);
+    distance_field = min(distance_field, t);
+
+    #endif
+
+    return distance_field;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint probe_index = dispatch_thread_id.x;
+
+    uint probe_count = ScreenProbeCountX * ScreenProbeCountY;
+
+    [branch]
+    if (probe_index < ScreenProbeCounts.Load(SCREEN_PROBE_COUNT_TOTAL * 4))
+    {
+        uint4 data = ScreenProbesRW.Load4(probe_index * SCREEN_PROBE_STRIDE);
+
+        float3 position = asfloat(data.xyz);
+
+        float3 vec = ReferencePosition - position;
+        float dist = length(vec);
+
+        float3 direction = normalize(vec);
+
+        float find_step = 0.01f + 0.03f * dist;
+        float threshold = 0.01f + 0.01f * dist;
+
+        for (int i = 0; i < 8; i++)
+        {
+            float d = sampleDistance(position);
+
+            if (d >= threshold)
+                break;
+
+            position += direction * max(-d, find_step);
+        }
+
+        ScreenProbesRW.Store3(probe_index * SCREEN_PROBE_STRIDE + SCREEN_PROBE_ORIGIN, asuint(position));
+    }
+}

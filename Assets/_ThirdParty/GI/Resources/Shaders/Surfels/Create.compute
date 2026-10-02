@@ -1,0 +1,50 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer SurfelCounts;
+
+ByteAddressBuffer TraceHits;
+
+RWByteAddressBuffer SurfelArraysRW;
+RWByteAddressBuffer SurfelEntriesRW;
+
+RWByteAddressBuffer SurfelGridRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint request_index = dispatch_thread_id.x;
+
+	[branch]
+	if (request_index < SurfelCounts.Load(SURFEL_COUNT_NEW * 4))
+	{
+		uint cell_index = SurfelArraysRW.Load((SURFEL_ARRAY_TEMP + request_index) * 4);
+		uint address    = SurfelArraysRW.Load((SURFEL_ARRAY_HIT + request_index) * 4);
+
+		uint pool_index  = SurfelCounts.Load(SURFEL_COUNT_POOL  * 4) - request_index - 1;
+		uint array_index = SurfelCounts.Load(SURFEL_COUNT_ENTRY * 4) - request_index - 1;
+
+		uint entry_index = SurfelArraysRW.Load((SURFEL_ARRAY_POOL + pool_index) * 4);
+
+		SurfelGridRW.Store(cell_index * 4, entry_index);
+
+		SurfelArraysRW.Store((SURFEL_ARRAY_ENTRY + array_index) * 4, entry_index);
+		SurfelArraysRW.InterlockedAdd((SURFEL_ARRAY_VERSION + entry_index) * 4, 1);
+
+		uint2 cell_age = uint2(cell_index | FLAG_NEW, 255);
+
+		uint3 position = TraceHits.Load3(address);
+		SurfelEntriesRW.Store3(entry_index * SURFEL_ENTRY_STRIDE + SURFEL_ENTRY_POSITION, position);
+
+		SurfelEntriesRW.Store2(entry_index * SURFEL_ENTRY_STRIDE + SURFEL_ENTRY_CELL, cell_age);
+
+		// normal and color set in SurfelAccept
+	}
+}

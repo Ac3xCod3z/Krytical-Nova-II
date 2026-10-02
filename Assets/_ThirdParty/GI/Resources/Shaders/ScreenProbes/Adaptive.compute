@@ -1,0 +1,186 @@
+#pragma kernel Main
+#pragma kernel Setup
+
+#pragma multi_compile_local __ CAMERA_NORMALS
+
+#pragma multi_compile_local _ _GBUFFER_NORMALS_OCT
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Input.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Depth.hlsl"
+#include "../Shared/Normals.hlsl"
+#include "../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint AdaptiveDim;
+uint ScreenProbeCountX;
+uint ScreenProbeCountY;
+uint MaxAdaptiveCount;
+uint2 Viewport;
+uint FrameIndex;
+
+RWByteAddressBuffer ScreenProbesRW;
+RWByteAddressBuffer ScreenProbeCountsRW;
+RWTexture2D<uint> ScreenProbeAdaptiveMappingRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint probeIndex(uint2 coord)
+{
+    coord = min(coord, uint2(ScreenProbeCountX, ScreenProbeCountY) - 1);
+    return coord.x + coord.y * ScreenProbeCountX;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 probePositionAt(uint entry)
+{
+    return asfloat(ScreenProbesRW.Load3(entry * SCREEN_PROBE_STRIDE + SCREEN_PROBE_POSITION));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const uint GROUP_DIM = 8;
+
+groupshared uint4 group_data[GROUP_DIM * GROUP_DIM];
+groupshared uint2 group_coords[GROUP_DIM * GROUP_DIM];
+
+groupshared uint group_adaptive_count;
+groupshared uint group_base_index;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Setup(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    ScreenProbeCountsRW.Store(SCREEN_PROBE_COUNT_BASE * 4, ScreenProbeCountX * ScreenProbeCountY);
+    ScreenProbeCountsRW.Store(SCREEN_PROBE_COUNT_ADAPTIVE * 4, 0);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 1)]
+void Main(uint3 group_thread_id    : SV_GroupThreadID,
+          uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint thread_index = group_thread_id.x + group_thread_id.y * GROUP_DIM;
+
+    if (thread_index == 0)
+        group_adaptive_count = 0;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    GroupMemoryBarrierWithGroupSync();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    uint2 thread_coord = dispatch_thread_id.xy * AdaptiveDim;
+
+    [branch]
+    if (all(thread_coord < Viewport))
+    {
+        float2 local_noise = uniformNoise2d(dispatch_thread_id.xy, FrameIndex);
+        uint2 offset = uint2(local_noise.x, local_noise.y) * AdaptiveDim;
+        uint2 coord = min(thread_coord + offset, Viewport - 1);
+
+        uint2 adaptive_coord = coord / SCREEN_PROBE_ADAPTIVE_DIM;
+
+        [branch]
+        if (ScreenProbeAdaptiveMappingRW[adaptive_coord] == 0)
+        {
+            float2 uv = float2(coord) / _ScaledScreenParams.xy;
+
+            float sampled_depth = sampleSceneDepth(uv);
+            float depth = actualDepth(sampled_depth);
+
+            [branch]
+            #if UNITY_REVERSED_Z
+                if (depth > DEPTH_EPSILON_ZERO)
+            #else
+                if (depth < DEPTH_EPSILON_ONE)
+            #endif
+            {
+                uint2 local_coord = coord % SCREEN_PROBE_DIM;
+                uint2 probe_coord = coord / SCREEN_PROBE_DIM;
+
+                static const float DIM_INV = 1.0f / SCREEN_PROBE_DIM;
+                float2 bilinear_weights = local_coord * DIM_INV;
+
+                float4 bilinear_interpolation_weights = float4((1 - bilinear_weights.x) * (1 - bilinear_weights.y),
+                                                               bilinear_weights.x * (1 - bilinear_weights.y),
+                                                               (1 - bilinear_weights.x) * bilinear_weights.y,
+                                                               bilinear_weights.x * bilinear_weights.y);
+
+                uint4 entries;
+                entries.x = probeIndex(uint2(probe_coord.x,     probe_coord.y));
+                entries.y = probeIndex(uint2(probe_coord.x + 1, probe_coord.y));
+                entries.z = probeIndex(uint2(probe_coord.x,     probe_coord.y + 1));
+                entries.w = probeIndex(uint2(probe_coord.x + 1, probe_coord.y + 1));
+
+                float3 probe_position_00 = probePositionAt(entries.x);
+                float3 probe_position_10 = probePositionAt(entries.y);
+                float3 probe_position_01 = probePositionAt(entries.z);
+                float3 probe_position_11 = probePositionAt(entries.w);
+
+                float3 position = worldSpacePosition(uv, depth, unity_MatrixInvVP);
+                float3 normal = loadNormals(uv);
+
+                float4 scene_plane = float4(normal, dot(position, normal));
+
+                float4 plane_distances;
+                plane_distances.x = abs(dot(float4(probe_position_00, -1), scene_plane));
+                plane_distances.y = abs(dot(float4(probe_position_10, -1), scene_plane));
+                plane_distances.z = abs(dot(float4(probe_position_01, -1), scene_plane));
+                plane_distances.w = abs(dot(float4(probe_position_11, -1), scene_plane));
+
+                float4 relative_depth_difference = plane_distances / LinearEyeDepth(sampled_depth, _ZBufferParams);
+
+                float4 depth_weights = exp2(-1000.0f * (relative_depth_difference * relative_depth_difference));
+
+                float4 interpolation_weights = bilinear_interpolation_weights;
+                interpolation_weights *= depth_weights;
+                interpolation_weights /= max(dot(interpolation_weights, 1), 0.0001f);
+
+                [branch]
+                if (dot(interpolation_weights, 1) < 0.1)
+                {
+                    uint index;
+                    InterlockedAdd(group_adaptive_count, 1, index);
+
+                    uint encoded_normal = packR11G11B10(normal * 0.5 + 0.5);
+                    group_data[index] = uint4(asuint(position), encoded_normal);
+                    group_coords[index] = adaptive_coord;
+                }
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    GroupMemoryBarrierWithGroupSync();
+
+    if (thread_index == 0)
+        ScreenProbeCountsRW.InterlockedAdd(SCREEN_PROBE_COUNT_ADAPTIVE * 4, group_adaptive_count, group_base_index);
+
+    GroupMemoryBarrierWithGroupSync();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    uint base_count = ScreenProbeCountX * ScreenProbeCountY;
+    uint adaptive_probe_index = group_base_index + thread_index;
+
+    [branch]
+    if (thread_index < group_adaptive_count && adaptive_probe_index < MaxAdaptiveCount)
+    {
+        uint probe_index = base_count + adaptive_probe_index;
+
+        ScreenProbesRW.Store4(probe_index * SCREEN_PROBE_STRIDE, group_data[thread_index]);
+
+        uint2 adaptive_coord = group_coords[thread_index];
+        ScreenProbeAdaptiveMappingRW[adaptive_coord] = probe_index; // 0 means no adaptive probe
+    }
+}

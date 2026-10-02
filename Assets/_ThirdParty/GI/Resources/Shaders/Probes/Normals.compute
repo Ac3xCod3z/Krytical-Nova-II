@@ -1,0 +1,89 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer ProbeArrays;
+ByteAddressBuffer ProbeCounts;
+
+RWByteAddressBuffer ProbeEntriesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(64, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint array_index = dispatch_thread_id.x;
+
+    [branch]
+    if (array_index < ProbeCounts.Load(PROBE_COUNT_ENTRY * 4))
+    {
+        uint entry_index = ProbeArrays.Load((PROBE_ARRAY_ENTRY + array_index) * 4);
+        uint age = ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_AGE);
+
+        [branch]
+        if (age == 0) // probes that weren't queried don't have set normals
+        {
+            uint cell_value = ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL);
+            bool is_new = (cell_value & FLAG_NEW) == FLAG_NEW;
+
+            uint3 v0 = ProbeEntriesRW.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL_VALUES);
+            uint3 v1 = ProbeEntriesRW.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL_VALUES + 12);
+
+            float3 f0 = float3(v0) / float(NORMAL_STEP);
+            float3 f1 = float3(v1) / float(NORMAL_STEP);
+
+            float3 normal = float3(f0.x - f0.y,
+                                   f0.z - f1.x,
+                                   f1.y - f1.z);
+
+            [flatten]
+            if (length(normal) > 0.01f)
+                normal = normalize(normal);
+
+            [branch]
+            if (!is_new)
+            {
+                float3 previous = unpackR11G11B10(ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL)) * 2 - 1;
+                normal = lerp(normal, previous, 0.6f);
+            }
+
+            [flatten]
+            if (length(normal) > 0.01f)
+                normal = normalize(normal);
+
+            ProbeEntriesRW.Store(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL, packR11G11B10(normal * 0.5 + 0.5));
+
+            //
+
+            v0 = ProbeEntriesRW.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET_VALUES);
+            v1 = ProbeEntriesRW.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET_VALUES + 12);
+
+            f0 = float3(v0) / float(OFFSET_STEP);
+            f1 = float3(v1) / float(OFFSET_STEP);
+
+            float3 offset = float3(f0.x - f0.y,
+                                   f0.z - f1.x,
+                                   f1.y - f1.z);
+
+            uint count = ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET_COUNT);
+
+            [flatten]
+            if (count > 0)
+                offset /= count;
+
+            [branch]
+            if (!is_new)
+            {
+                float3 previous = unpackR11G11B10(ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET)) * 2 - 1;
+                offset = lerp(offset, previous, 0.6f);
+            }
+
+            ProbeEntriesRW.Store(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET, packR11G11B10(saturate(offset * 0.5 + 0.5)));
+        }
+    }
+}

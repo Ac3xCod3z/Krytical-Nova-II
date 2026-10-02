@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5787355c82b2d6b4cbb970592a979a49
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/SDF/Asset.compute
+  uploadId: 889012

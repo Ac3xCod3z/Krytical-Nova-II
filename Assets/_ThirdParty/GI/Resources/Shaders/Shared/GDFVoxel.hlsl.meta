@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7ebbe7568f397c0449755dccf619facf
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/GDFVoxel.hlsl
+  uploadId: 889012

@@ -1,0 +1,33 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer ProbeCounts;
+ByteAddressBuffer ProbeEntries;
+
+RWByteAddressBuffer ProbeArraysRW;
+RWByteAddressBuffer ProbeGridRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint index = dispatch_thread_id.x;
+
+	[branch]
+	if (index < ProbeCounts.Load(PROBE_COUNT_ENTRY * 4))
+	{
+		uint entry_index = ProbeArraysRW.Load((PROBE_ARRAY_TEMP + index) * 4);
+		ProbeArraysRW.Store((PROBE_ARRAY_ENTRY + index) * 4, entry_index);
+
+		uint cell_index = ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL) & UNFLAG;
+
+		// all probes move by the same offset, so there shouldn't be any contention
+		ProbeGridRW.Store(cell_index * 4, entry_index);
+	}
+}

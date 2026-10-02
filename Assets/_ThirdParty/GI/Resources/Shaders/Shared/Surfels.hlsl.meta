@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5427686402f295a419aa8e5fd2f4783f
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/Surfels.hlsl
+  uploadId: 889012

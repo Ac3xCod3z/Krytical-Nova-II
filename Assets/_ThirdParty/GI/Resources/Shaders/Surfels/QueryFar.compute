@@ -1,0 +1,77 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 ReferencePosition;
+float4 SurfelCascadeOrigins[SURFEL_CASCADE_COUNT];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Surfels.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer TraceArray;
+ByteAddressBuffer TraceCounts;
+ByteAddressBuffer TraceHits;
+
+ByteAddressBuffer FarProbeEntries;
+
+ByteAddressBuffer SurfelGrid;
+
+RWByteAddressBuffer SurfelArraysRW;
+RWByteAddressBuffer SurfelCountsRW;
+RWByteAddressBuffer SurfelRequestMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_FAR * 4))
+    {
+        uint sampler_index = TraceArray.Load((TRACE_ARRAY_FAR + ray_index) * TRACE_STRIDE);
+        uint hit_cell = TraceHits.Load((TRACE_ARRAY_FAR + ray_index) * HIT_STRIDE + 3 * 4);
+
+        uint probe_entry = sampler_index / FAR_PROBE_RAY_COUNT;
+        uint age = FarProbeEntries.Load(probe_entry * FAR_PROBE_ENTRY_STRIDE + FAR_PROBE_ENTRY_AGE);
+
+        [branch]
+        if (age < SURFEL_LIVES && hit_cell != INVALID_ID)
+        {
+            uint current_cell_value = SurfelGrid.Load(hit_cell * 4);
+
+            [branch]
+            if (current_cell_value == INVALID_ID)
+            {
+                uint original_value;
+                SurfelRequestMapRW.InterlockedAdd(hit_cell * 4, 1, original_value);
+
+                [branch]
+                if (original_value == 0)
+                {
+                    uint request_index;
+                    SurfelCountsRW.InterlockedAdd(SURFEL_COUNT_REQUESTS * 4, 1, request_index);
+
+                    [branch]
+                    if (request_index < SURFEL_MAX_REQUESTS)
+                    {
+                        SurfelArraysRW.Store((SURFEL_ARRAY_TEMP + request_index) * 4, hit_cell);
+
+                        uint address = (TRACE_ARRAY_FAR + ray_index) * HIT_STRIDE + HIT_POSITION;
+                        SurfelArraysRW.Store((SURFEL_ARRAY_HIT + request_index) * 4, address);
+                    }
+                    else
+                        SurfelRequestMapRW.InterlockedMin(hit_cell * 4, 0);
+                }
+            }
+        }
+    }
+}

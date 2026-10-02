@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 069e6915716ba5c4a902127efc492b7d
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/ScreenProbes/Adaptive.compute
+  uploadId: 889012

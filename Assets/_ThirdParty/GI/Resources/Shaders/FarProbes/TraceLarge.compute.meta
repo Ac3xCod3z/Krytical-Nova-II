@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4bcbb66a0d790ea40bc6693d0dfde7ec
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/FarProbes/TraceLarge.compute
+  uploadId: 889012

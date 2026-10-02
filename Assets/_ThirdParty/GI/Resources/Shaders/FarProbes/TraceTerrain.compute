@@ -1,0 +1,110 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ TERRAIN_NORMALS
+#pragma multi_compile_local __ TERRAIN_COLORS
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Rays.hlsl"
+#include "../Shared/Packing.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint FrameIndex;
+
+float3 ReferencePosition;
+float4 SurfelCascadeOrigins[SURFEL_CASCADE_COUNT];
+
+float FarProbeCell;
+uint FarProbeCascadeCount;
+float4 FarProbeCascadeOrigins[FAR_PROBE_MAX_CASCADES];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Surfels.hlsl"
+#include "../Shared/Terrain.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer TraceArray;
+ByteAddressBuffer TraceCounts;
+
+ByteAddressBuffer FarProbeEntries;
+
+RWByteAddressBuffer TraceHitsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/FarProbeGrid.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_FAR * 4))
+    {
+        uint current_hit = TraceHitsRW.Load((TRACE_ARRAY_FAR + ray_index) * HIT_STRIDE);
+
+        [branch]
+        if (current_hit == INVALID_ID) // don't compare depths since the previous trace was local
+        {
+            uint sampler_index = TraceArray.Load((TRACE_ARRAY_FAR + ray_index) * TRACE_STRIDE);
+
+            uint sampler_value = sampler_index % FAR_PROBE_RAY_COUNT;
+            uint entry_index = sampler_index / FAR_PROBE_RAY_COUNT;
+
+            uint2 texel = uint2(sampler_value % FAR_PROBE_RES, sampler_value / FAR_PROBE_RES);
+
+            uint2 atlas_coord = uint2(entry_index % FAR_PROBE_ATLAS_COUNT_X,
+                                      entry_index / FAR_PROBE_ATLAS_COUNT_X);
+
+            float2 local_noise = uniformNoise2d(atlas_coord.xy * FAR_PROBE_RES + texel, FrameIndex);
+            float3 direction = farTexelToDirection(texel, local_noise);
+
+            float3 probe_position = asfloat(FarProbeEntries.Load3(entry_index * FAR_PROBE_ENTRY_STRIDE + FAR_PROBE_ENTRY_POSITION));
+
+            float3 sample_position = probe_position + float3(0, 1, 0) * GDF_SAMPLE_BIAS;
+            float sample_bias = distance(probe_position, sample_position);
+
+            float min_trace_distance = minFarProbeTraceDistance(probe_position);
+            float max_trace_distance = 512;
+
+            Hit hit;
+            hit.has_hit = false;
+            hit.dist = max_trace_distance;
+
+            HitSurface surface = (HitSurface)0;
+
+            [branch]
+            if (traceTerrain(sample_position,
+                             direction,
+                             min_trace_distance,
+                             max_trace_distance,
+
+                             32,
+
+                             hit,
+                             surface))
+            {
+                float3 hit_position = sample_position + hit.dist * direction;
+                uint cascade = positionToSurfelCascade(hit_position);
+                uint cell_index = positionToSurfelCell(hit_position, surface.normal, cascade);
+
+                uint4 payload = uint4(asuint(hit.dist + sample_bias),
+                                      packR11G11B10(surface.normal * 0.5 + 0.5),
+                                      packR8G8B8A8(float4(surface.color, saturate(surface.emission / MAX_EMISSION))),
+                                      cell_index);
+
+                TraceHitsRW.Store4((TRACE_ARRAY_FAR + ray_index) * HIT_STRIDE, payload);
+                TraceHitsRW.Store3((TRACE_ARRAY_FAR + ray_index) * HIT_STRIDE + HIT_POSITION, asuint(hit_position));
+            }
+        }
+    }
+}

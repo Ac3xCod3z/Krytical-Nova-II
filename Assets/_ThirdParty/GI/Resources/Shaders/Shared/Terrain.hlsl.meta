@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7b9e1056d89228d4b8249bbfbf49e7ab
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/Terrain.hlsl
+  uploadId: 889012

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9d3e78c0fca7389488d749393f5ea751
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Probes/MaintainArguments2.compute
+  uploadId: 889012

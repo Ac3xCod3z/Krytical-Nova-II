@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 268be8abdb48e454a8b488d9e7f7e26a
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/ScreenProbes/Debug.shader
+  uploadId: 889012

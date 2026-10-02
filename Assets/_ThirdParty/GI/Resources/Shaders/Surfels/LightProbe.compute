@@ -1,0 +1,205 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ MAINTAIN_PROBES
+#pragma multi_compile_local __ PROBES_OCCLUSION
+
+#if !SHADER_API_GLES3 && !SHADER_API_GLES
+    #pragma multi_compile_local __ PROBES_SH3
+#endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Probes.hlsl"
+#include "../Shared/Packing.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float ProbeCell;
+uint ProbeCascadeCount;
+float3 ReferencePosition;
+float4 ProbeCascadeOrigins[PROBE_MAX_CASCADES];
+
+ByteAddressBuffer ProbeGrid;
+ByteAddressBuffer ProbeEntries;
+ByteAddressBuffer ProbeSH;
+
+ByteAddressBuffer SurfelCounts;
+ByteAddressBuffer SurfelArrays;
+ByteAddressBuffer SurfelEntries;
+
+#if PROBES_OCCLUSION
+    sampler2D ProbeDepthAtlas;
+#endif
+
+RWByteAddressBuffer SurfelRadianceRW;
+RWByteAddressBuffer ProbeEntriesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/ProbeGrid.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float sqr(float x)
+{
+    return x * x;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint array_index = dispatch_thread_id.x;
+
+    [branch]
+    if (array_index < SurfelCounts.Load(SURFEL_COUNT_ENTRY * 4))
+    {
+        uint entry_index = SurfelArrays.Load((SURFEL_ARRAY_ENTRY + array_index) * 4);
+
+        #if MAINTAIN_PROBES
+
+            uint surfel_age = SurfelEntries.Load(SURFEL_ENTRY_STRIDE * entry_index + SURFEL_ENTRY_AGE);
+
+        #endif
+
+        uint2 normal_color = SurfelEntries.Load2(SURFEL_ENTRY_STRIDE * entry_index + SURFEL_ENTRY_NORMAL);
+        float3 normal = normalize(unpackR11G11B10(normal_color.x) * 2 - 1);
+        float4 color = unpackR8G8B8A8(normal_color.y);
+
+        float3 world_position = asfloat(SurfelEntries.Load3(SURFEL_ENTRY_STRIDE * entry_index + SURFEL_ENTRY_POSITION));
+
+        uint probe_cascade = positionToProbeCascade(world_position);
+        float cell_dim = ProbeCell * (1u << probe_cascade);
+        float bias = cell_dim * PROBE_QUERY_BIAS;
+
+        float3 direction = normalize(ReferencePosition - world_position);
+        float3 query_normal = normalize(normal + direction);
+
+        float3 query_position = world_position + query_normal * bias;
+
+        static const float NORMAL_BIAS = 0.25f;
+        float3 normal_bias = (normal + 3.0f * direction) * NORMAL_BIAS;
+
+        float3 cell_coord_f = positionToProbeCellCoordFloat(query_position, probe_cascade);
+        int3 cell_coord_i = int3(cell_coord_f);
+
+
+        //
+
+        float3 cell_f = frac(cell_coord_f);
+
+        static const float2 UV_SCALE = float2(1.0f / float(PROBE_RES + 2),
+            1.0f / float(PROBE_RES + 2));
+
+        static const float2 UV_OFFSET = float2(1.0 / float(PROBE_ATLAS_COUNT_X),
+            1.0 / float(PROBE_ATLAS_COUNT_Y));
+
+        float3 irradiance_sum = 0;
+        float weight_sum = 0;
+
+        for (uint i = 0; i < 8; i++)
+        {
+            int3 offset = int3(i, i >> 1, i >> 2) & 0x1;
+            int3 cell_coord = cell_coord_i + offset;
+
+            if (all(cell_coord >= 0) && all(cell_coord < int(PROBE_CASCADE_DIM)))
+            {
+                uint cell_index = cell_coord.x +
+                                  (cell_coord.y * PROBE_CASCADE_DIM) +
+                                  (cell_coord.z * PROBE_CASCADE_DIM * PROBE_CASCADE_DIM) +
+                                  probe_cascade * PROBE_CASCADE_CELL_COUNT;
+
+                uint probe_entry_index = ProbeGrid.Load(cell_index * 4);
+
+                [branch]
+                if (probe_entry_index != INVALID_ID)
+                {
+                    #if MAINTAIN_PROBES
+
+                        #define Probes ProbeEntriesRW
+
+                    #else
+
+                        #define Probes ProbeEntries
+
+                    #endif
+
+                    uint entry_cell = Probes.Load(probe_entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL);
+
+                    [branch]
+                    if ((entry_cell & FLAG_NEW) != FLAG_NEW)
+                    {
+                        #if MAINTAIN_PROBES
+
+                            Probes.InterlockedMin(probe_entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_AGE, surfel_age + 2);
+
+                        #endif
+
+                        #if PROBES_SH3
+
+                            SH3 probe = loadProbeSH3(ProbeSH, probe_entry_index);
+                            float3 irradiance_probe = evaluateSH3(probe, normal);
+
+                        #else
+
+                            SH2 probe = loadProbeSH2(ProbeSH, probe_entry_index);
+                            float3 irradiance_probe = evaluateSH2(probe, normal);
+
+                        #endif
+
+                        static const float NORMAL_BIAS = 0.25f;
+                        float3 probe_position = asfloat(Probes.Load3(probe_entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_POSITION));
+
+                        float weight = 1.0f;
+
+                        float3 true_direction = normalize(probe_position - world_position);
+                        float backface_weight = max(0.0001, (dot(true_direction, normal) + 1.0) * 0.5);
+                        weight *= backface_weight * backface_weight;
+
+                        #if PROBES_OCCLUSION
+                        {
+                            float3 probe_to_position = world_position - probe_position + normal_bias;
+
+                            float2 local_uv = (directionToOctahedralMap(normalize(probe_to_position)) * PROBE_RES + 1) * UV_SCALE;
+
+                            uint probe_atlas_x = probe_entry_index % PROBE_ATLAS_COUNT_X;
+                            uint probe_atlas_y = probe_entry_index / PROBE_ATLAS_COUNT_X;
+
+                            float2 uv = float2(float(probe_atlas_x) + local_uv.x,
+                                               float(probe_atlas_y) + local_uv.y) * UV_OFFSET;
+
+                            float d = length(probe_to_position);
+                            float2 temp = tex2Dlod(ProbeDepthAtlas, float4(uv, 0, 0)).xy;
+                            float mean = temp.x;
+                            float variance = abs(sqr(temp.x) - temp.y);
+
+                            float chebyshev = variance / (variance + sqr(max(d - mean, 0)));
+                            chebyshev = max(pow(chebyshev, 1), 0);
+
+                            weight *= (d <= mean) ? 1 : chebyshev;
+                        }
+                        #endif
+
+                        float3 trilinear = lerp(1.0f - cell_f, cell_f, offset);
+                        weight *= trilinear.x * trilinear.y * trilinear.z;
+
+                        irradiance_sum += sqrt(irradiance_probe * 0.5) * weight;
+                        weight_sum += weight;
+                    }
+                }
+            }
+        }
+
+        float3 irradiance = irradiance_sum / max(0.0001, weight_sum);
+        float3 diffuse = irradiance * irradiance;
+
+        float3 light = diffuse * min(color.rgb, 0.9) * 0.9f; // prevent too much bounce
+        light += color.a * color.rgb * MAX_EMISSION;
+
+        SurfelRadianceRW.Store3(entry_index * RADIANCE_STRIDE, asuint(light));
+    }
+}

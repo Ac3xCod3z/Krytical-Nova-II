@@ -1,0 +1,215 @@
+// Krytical Nova GPU grass: generates this frame's grass instances around one camera.
+// A world-snapped jittered grid (so grass never swims as the camera moves) is tested against the baked grass
+// mask (density / biome / moisture), runtime exclusion volumes, distance LOD and the camera frustum.
+// Dispatched twice per camera with the same rules:
+//   near pass  - real clumps on a fine grid, thinning with distance and fading out across the hand-off band;
+//   far pass   - cheap tufts on a coarse grid that fade in across the same band and carry the field to the
+//                horizon (smoke and mirrors: same mask, biomes, types and colours, ~1/20th the triangles).
+// Survivors go into one shared instance buffer (a region per draw); the draw's instance count is accumulated
+// straight into the indirect-args buffer, then clamped to the region size by ClampArgs.
+#pragma kernel Generate
+#pragma kernel ClampArgs
+
+#include "Assets/_Game/Environment/Vegetation/Grass/Rendering/GrassCommon.hlsl"
+
+#define MAX_TYPES 8
+#define MAX_ENTRIES 6
+
+Texture2D<float> _Heightmap;
+Texture2D<float4> _GrassMask;
+SamplerState sampler_linear_clamp;
+
+float4 _TerrainPos;     // xyz terrain origin, w = height scale (terrainData.size.y * 2, heightmapTexture stores 0..0.5)
+float4 _TerrainSize;    // x size X, y size Z, z heightmap resolution, w mask resolution
+int2   _GridOrigin;     // world cell index of grid (0,0)
+float4 _Grid;           // x cell size, y grid dimension, z pass max distance, w density scale
+float4 _CamPos;         // xyz camera position
+float4 _Lod;            // x full-density distance, y mid distance, z mid keep, w far keep (near pass)
+float4 _Fade;           // x hand-off start, y hand-off end (= near max), z far max distance, w far keep at far max
+float4 _FarParams;      // x 1 = far pass, y far width scale
+float4 _Frustum[6];
+
+float4 _BiomeParams[4];                 // x density, y entry count
+float4 _BiomeSlots[4 * MAX_ENTRIES];    // x type index, y weight, z patchiness, w 1/patch size
+float4 _TypeA[MAX_TYPES];               // x density, y min height, z max height, w mesh height
+float4 _TypeB[MAX_TYPES];               // x min width, y max width, z far mesh height
+int    _TypeCount;
+
+float4 _Volumes[32];     // pairs: (center xz, yaw, shape) (half size xz | radius, falloff, -)
+int    _VolumeCount;
+int    _DebugMode;       // 0 off, 1 placement, 2 LOD bands, 3 biome / type
+
+uint   _DrawBase;        // first draw index of this pass (near 0, far MAX_TYPES)
+uint   _RegionBase;      // first instance slot of this pass
+uint   _RegionCapacity;  // slots per draw in this pass
+uint4  _ClampCaps;       // x near capacity, y far capacity, z draws per pass
+
+RWStructuredBuffer<GrassInstance> _Instances;
+RWByteAddressBuffer _Args;   // IndirectDrawIndexedArgs[], instanceCount at byte (draw * 5 + 1) * 4
+
+uint PcgHash(uint v)
+{
+    uint state = v * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
+float Rand(inout uint s) { s = PcgHash(s); return (s & 0x00FFFFFFu) / 16777216.0; }
+
+float ValueNoise(float2 p)
+{
+    float2 i = floor(p), f = frac(p);
+    f = f * f * (3.0 - 2.0 * f);
+    uint2 c = (uint2)(int2)i;
+    float a = PcgHash(c.x * 73856093u ^ c.y * 19349663u) / 4294967296.0;
+    float b = PcgHash((c.x + 1u) * 73856093u ^ c.y * 19349663u) / 4294967296.0;
+    float d = PcgHash(c.x * 73856093u ^ (c.y + 1u) * 19349663u) / 4294967296.0;
+    float e = PcgHash((c.x + 1u) * 73856093u ^ (c.y + 1u) * 19349663u) / 4294967296.0;
+    return lerp(lerp(a, b, f.x), lerp(d, e, f.x), f.y);
+}
+
+float VolumeMask(float2 p)
+{
+    float m = 1.0;
+    for (int i = 0; i < _VolumeCount; i++)
+    {
+        float4 a = _Volumes[i * 2];
+        float4 b = _Volumes[i * 2 + 1];
+        float2 d = p - a.xy;
+        float dist;
+        if (a.w > 0.5)
+        {
+            dist = length(d) - b.x;
+        }
+        else
+        {
+            float s = sin(a.z), c = cos(a.z);
+            float2 local = float2(c * d.x - s * d.y, s * d.x + c * d.y);
+            float2 q = abs(local) - b.xy;
+            dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
+        }
+        m *= saturate(dist / max(b.z, 0.001));
+    }
+    return m;
+}
+
+uint PackColor(float3 c) { c = saturate(c); return ((uint)(c.r * 255) << 16) | ((uint)(c.g * 255) << 8) | (uint)(c.b * 255); }
+
+[numthreads(8, 8, 1)]
+void Generate(uint3 id : SV_DispatchThreadID)
+{
+    uint dim = (uint)_Grid.y;
+    if (id.x >= dim || id.y >= dim) return;
+    bool far = _FarParams.x > 0.5;
+
+    int2 cell = _GridOrigin + int2(id.xy);
+    uint seed = PcgHash((uint)cell.x * 1597334677u ^ (uint)cell.y * 3812015801u ^ (far ? 0x9E3779B9u : 0u));
+    float jx = Rand(seed), jz = Rand(seed);
+    float2 p = (float2(cell) + float2(jx, jz)) * _Grid.x;
+
+    float camDist = distance(p, _CamPos.xz);
+    float passMax = _Grid.z;
+    if (camDist > passMax) return;
+    if (far && camDist < _Fade.x) return;
+
+    float2 uv = (p - _TerrainPos.xz) / _TerrainSize.xy;
+    if (any(uv < 0.0) || any(uv > 1.0)) return;
+
+    float4 mask = _GrassMask.SampleLevel(sampler_linear_clamp, uv, 0);
+    int2 maskTexel = min((int2)(uv * _TerrainSize.w), (int)_TerrainSize.w - 1);
+    int biome = clamp((int)round(_GrassMask.Load(int3(maskTexel, 0)).g * 3.0), 0, 3);
+    float moisture = mask.b;
+
+    // Distance LOD. Near: full → mid → far bands, then fades out across the hand-off band.
+    // Far: fades in across the hand-off band, then thins toward the far edge.
+    float handOff = smoothstep(_Fade.x, _Fade.y, camDist);
+    float lod;
+    if (far)
+        lod = handOff * lerp(1.0, _Fade.w, smoothstep(_Fade.y, _Fade.z, camDist));
+    else
+        lod = (camDist < _Lod.x ? 1.0
+            : camDist < _Lod.y ? lerp(1.0, _Lod.z, smoothstep(_Lod.x, _Lod.y, camDist))
+            : lerp(_Lod.z, _Lod.w, smoothstep(_Lod.y, _Fade.y, camDist))) * (1.0 - handOff);
+
+    // Pick a grass type from the biome, weighted and optionally clumped into stands. The far pass also weighs by
+    // each type's density so the tuft mix matches what the near field shows.
+    float4 bp = _BiomeParams[biome];
+    int entries = (int)bp.y;
+    float total = 0.0;
+    float weights[MAX_ENTRIES] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    for (int e = 0; e < entries; e++)
+    {
+        float4 slot = _BiomeSlots[biome * MAX_ENTRIES + e];
+        float n = ValueNoise(p * slot.w + e * 31.7);
+        float w = slot.y * lerp(1.0, saturate(n * 2.2 - 0.6) * 2.0, slot.z);
+        if (far) w *= _TypeA[(int)slot.x].x;
+        weights[e] = w;
+        total += w;
+    }
+    int type = -1;
+    float pick = Rand(seed) * total;
+    for (int k = 0; k < entries; k++)
+    {
+        pick -= weights[k];
+        if (pick <= 0.0 && type < 0) type = (int)_BiomeSlots[biome * MAX_ENTRIES + k].x;
+    }
+
+    float density = mask.r * bp.x * _Grid.w * VolumeMask(p);
+    float typeDensity = far ? 1.0 : _TypeA[max(type, 0)].x;
+    float keepRoll = Rand(seed);
+    bool keep = type >= 0 && type < _TypeCount && keepRoll < density * lod * typeDensity;
+
+    float3 debugColor = 0;
+    if (!keep)
+    {
+        // Placement debug: show forbidden ground as sparse red stubs (near pass only).
+        if (far || _DebugMode != 1 || mask.r > 0.02 || keepRoll > 0.08 || camDist > _Fade.y * 0.7) return;
+        type = 0;
+        debugColor = float3(1.0, 0.1, 0.05);
+    }
+    else if (_DebugMode == 1) debugColor = lerp(float3(1.0, 0.85, 0.1), float3(0.1, 0.9, 0.2), saturate(density));
+    else if (_DebugMode == 2) debugColor = far ? float3(0.35, 0.55, 1.0)
+        : camDist < _Lod.x ? float3(0.1, 0.9, 0.2) : camDist < _Lod.y ? float3(1.0, 0.85, 0.1) : float3(1.0, 0.45, 0.1);
+    else if (_DebugMode == 3) debugColor = biome == 0 ? float3(0.2, 0.8, 0.3) : biome == 1 ? float3(0.3, 0.5, 1.0) : float3(0.9, 0.3, 0.9);
+
+    // Size: random in range, lusher near water; far tufts shrink out at the far edge; thinned bands widen to fill.
+    float4 ta = _TypeA[type];
+    float4 tb = _TypeB[type];
+    float height = lerp(ta.y, ta.z, Rand(seed)) * (1.0 + moisture * 0.15);
+    if (far) height *= smoothstep(_Fade.z, _Fade.z * 0.85, camDist);
+    if (debugColor.r > 0.9 && debugColor.g < 0.2) height = 0.25;
+    float width = lerp(tb.x, tb.y, Rand(seed)) * pow(max(lod, 0.05), -0.35);
+    if (far) width = lerp(tb.x, tb.y, Rand(seed)) * _FarParams.y * pow(max(handOff, 0.3), -0.25);
+    float meshHeight = far ? tb.z : ta.w;
+
+    float2 hmUv = uv * (_TerrainSize.z - 1.0) / _TerrainSize.z + 0.5 / _TerrainSize.z;
+    float y = _TerrainPos.y + _Heightmap.SampleLevel(sampler_linear_clamp, hmUv, 0) * _TerrainPos.w;
+    float3 pos = float3(p.x, y, p.y);
+
+    // Frustum cull (bounding sphere around the clump).
+    float3 center = pos + float3(0.0, height * 0.5, 0.0);
+    float radius = max(height, 0.4) * (far ? 1.5 : 0.8);
+    [unroll] for (int f = 0; f < 6; f++)
+        if (dot(_Frustum[f].xyz, center) + _Frustum[f].w < -radius) return;
+
+    GrassInstance inst;
+    inst.posRot = float4(pos, Rand(seed) * 6.2831853);
+    inst.size = float3(height / max(meshHeight, 0.01), width, Rand(seed));
+    inst.packed = ((uint)(saturate(moisture) * 255.0) << 24) | PackColor(debugColor);
+
+    uint draw = _DrawBase + (uint)type;
+    uint slot;
+    _Args.InterlockedAdd((draw * 5u + 1u) * 4u, 1u, slot);
+    if (slot < _RegionCapacity) _Instances[_RegionBase + (uint)type * _RegionCapacity + slot] = inst;
+}
+
+// Clamp each draw's instance count to its region (overflowing instances were never written).
+[numthreads(16, 1, 1)]
+void ClampArgs(uint3 id : SV_DispatchThreadID)
+{
+    uint draw = id.x;
+    if (draw >= _ClampCaps.z * 2u) return;
+    uint cap = draw < _ClampCaps.z ? _ClampCaps.x : _ClampCaps.y;
+    uint offset = (draw * 5u + 1u) * 4u;
+    _Args.Store(offset, min(_Args.Load(offset), cap));
+}

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9892a31984092ae4fb7e0213a8c6476c
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Generate/Voxels/Splat.compute
+  uploadId: 889012

@@ -1,0 +1,205 @@
+#pragma kernel MainBlack
+#pragma kernel MainSky
+
+#pragma multi_compile_local __ FAR_PROBES
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 ReferencePosition;
+
+uint ScreenProbeCountX;
+uint ScreenProbeCountY;
+
+float FarProbeCell;
+uint FarProbeCascadeCount;
+float4 FarProbeCascadeOrigins[FAR_PROBE_MAX_CASCADES];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/FarProbeGrid.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float BounceStrength;
+
+ByteAddressBuffer TraceArray;
+ByteAddressBuffer TraceCounts;
+ByteAddressBuffer TraceHits;
+
+ByteAddressBuffer FarProbeGrid;
+
+ByteAddressBuffer SurfelGrid;
+
+samplerCUBE Sky;
+ByteAddressBuffer SurfelRadiance;
+
+ByteAddressBuffer ScreenProbes;
+
+sampler2D FarProbeRadianceAtlas;
+
+RWTexture2D<float4> ScreenProbeRadianceAtlasRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 farProbeRadiance(float3 position, uint texel_index)
+{
+    uint cascade = positionToFarProbeCascade(position);
+    float3 cell_coord_f = positionToFarProbeCellCoordFloat(position, cascade);
+    int3 cell_coord_i = int3(cell_coord_f);
+    float3 cell_f = frac(cell_coord_f);
+
+    float3 radiance_sum = 0;
+    float weight_sum = 0;
+
+    uint2 texel = uint2(texel_index % SCREEN_PROBE_RES, texel_index / SCREEN_PROBE_RES);
+
+    static const float2 ATLAS_INV = float2(1.0f / float(FAR_PROBE_ATLAS_COUNT_X), 1.0f / float(FAR_PROBE_ATLAS_COUNT_Y));
+    static const float2 TEXEL_INV = ATLAS_INV / SCREEN_PROBE_RES;
+
+    float2 texel_noise = float2(0.5f, 0.5f);
+    float2 texel_uv = (texel + texel_noise) * TEXEL_INV;
+
+    for (uint i = 0; i < 8; i++)
+    {
+        int3 offset = int3(i, i >> 1, i >> 2) & 0x1;
+        int3 cell_coord = cell_coord_i + offset;
+
+        [branch]
+        if (all(cell_coord >= 0) && all(cell_coord < int(FAR_PROBE_CASCADE_DIM)))
+        {
+            uint cell_index = cell_coord.x +
+                              (cell_coord.y * FAR_PROBE_CASCADE_DIM) +
+                              (cell_coord.z * FAR_PROBE_CASCADE_DIM * FAR_PROBE_CASCADE_DIM) +
+                              (cascade * FAR_PROBE_CASCADE_CELL_COUNT);
+
+            uint entry_index = FarProbeGrid.Load(cell_index * 4);
+
+            [branch]
+            if (entry_index != INVALID_ID)
+            {
+                float3 trilinear = lerp(1.0f - cell_f, cell_f, offset);
+                float weight = 1.0;
+                weight *= trilinear.x * trilinear.y * trilinear.z;
+
+                uint atlas_x = entry_index % FAR_PROBE_ATLAS_COUNT_X;
+                uint atlas_y = entry_index / FAR_PROBE_ATLAS_COUNT_X;
+
+                float2 uv = float2(atlas_x, atlas_y) * ATLAS_INV + texel_uv;
+
+                float3 radiance = tex2Dlod(FarProbeRadianceAtlas, float4(uv, 0, 0)).rgb;
+
+                radiance_sum += radiance * weight;
+                weight_sum += weight;
+            }
+        }
+    }
+
+    return radiance_sum / max(weight_sum, 0.00001f);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void MainBlack(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_SCREEN * 4))
+    {
+        uint sampler_index = TraceArray.Load((TRACE_ARRAY_SCREEN + ray_index) * TRACE_STRIDE);
+        float hit_dist = asfloat(TraceHits.Load((TRACE_ARRAY_SCREEN + ray_index) * HIT_STRIDE));
+        uint hit_cell = TraceHits.Load((TRACE_ARRAY_SCREEN + ray_index) * HIT_STRIDE + 3 * 4);
+
+        uint entry_index = sampler_index / SCREEN_PROBE_RAY_COUNT;
+        uint texel_index = sampler_index % SCREEN_PROBE_RAY_COUNT;
+
+        uint probe_atlas_x = entry_index % ScreenProbeCountX;
+        uint probe_atlas_y = entry_index / ScreenProbeCountX;
+
+        uint rad_atlas_x = probe_atlas_x * SCREEN_PROBE_RES + texel_index % SCREEN_PROBE_RES;
+        uint rad_atlas_y = probe_atlas_y * SCREEN_PROBE_RES + texel_index / SCREEN_PROBE_RES;
+
+        uint surfel_id = INVALID_ID;
+
+        [branch]
+        if (hit_cell != INVALID_ID)
+            surfel_id = SurfelGrid.Load(hit_cell * 4);
+
+        float3 radiance = 0;
+
+        [branch]
+        if (surfel_id != INVALID_ID)
+            radiance = asfloat(SurfelRadiance.Load3(surfel_id * RADIANCE_STRIDE)) * BounceStrength;
+        else
+        {
+            #if FAR_PROBES
+
+                float3 probe_position = asfloat(ScreenProbes.Load3(entry_index * SCREEN_PROBE_STRIDE + SCREEN_PROBE_POSITION));
+                radiance = farProbeRadiance(probe_position, texel_index);
+
+            #endif
+        }
+
+        ScreenProbeRadianceAtlasRW[uint2(rad_atlas_x, rad_atlas_y)] = float4(radiance, hit_dist);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void MainSky(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_SCREEN * 4))
+    {
+        uint sampler_index = TraceArray.Load((TRACE_ARRAY_SCREEN + ray_index) * TRACE_STRIDE);
+        float hit_dist = asfloat(TraceHits.Load((TRACE_ARRAY_SCREEN + ray_index) * HIT_STRIDE));
+        uint hit_cell = TraceHits.Load((TRACE_ARRAY_SCREEN + ray_index) * HIT_STRIDE + 3 * 4);
+
+        uint entry_index = sampler_index / SCREEN_PROBE_RAY_COUNT;
+        uint texel_index = sampler_index % SCREEN_PROBE_RAY_COUNT;
+
+        uint probe_atlas_x = entry_index % ScreenProbeCountX;
+        uint probe_atlas_y = entry_index / ScreenProbeCountX;
+
+        uint rad_atlas_x = probe_atlas_x * SCREEN_PROBE_RES + texel_index % SCREEN_PROBE_RES;
+        uint rad_atlas_y = probe_atlas_y * SCREEN_PROBE_RES + texel_index / SCREEN_PROBE_RES;
+
+        uint surfel_id = INVALID_ID;
+
+        [branch]
+        if (hit_cell != INVALID_ID)
+            surfel_id = SurfelGrid.Load(hit_cell * 4);
+
+        float3 radiance = 0;
+
+        [branch]
+        if (surfel_id != INVALID_ID)
+            radiance = asfloat(SurfelRadiance.Load3(surfel_id * RADIANCE_STRIDE)) * BounceStrength;
+        else
+        {
+            #if FAR_PROBES
+
+                float3 probe_position = asfloat(ScreenProbes.Load3(entry_index * SCREEN_PROBE_STRIDE + SCREEN_PROBE_POSITION));
+                radiance = farProbeRadiance(probe_position, texel_index);
+
+            #else
+
+                uint2 texel = uint2(texel_index % SCREEN_PROBE_RES, texel_index / SCREEN_PROBE_RES);
+                float3 direction = screenTexelToDirection(texel);
+                radiance = texCUBElod(Sky, float4(direction, 0)).xyz;
+
+            #endif
+        }
+
+        ScreenProbeRadianceAtlasRW[uint2(rad_atlas_x, rad_atlas_y)] = float4(radiance, hit_dist);
+    }
+}

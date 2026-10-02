@@ -1,0 +1,139 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ FAR_PROBES
+#pragma multi_compile_local __ LOCAL_TRACING
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Rays.hlsl"
+#include "../Shared/Packing.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint FrameIndex;
+uint ScreenProbeCountX;
+
+float3 ReferencePosition;
+float4 SurfelCascadeOrigins[SURFEL_CASCADE_COUNT];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Surfels.hlsl"
+#include "../Shared/GDF.hlsl"
+#include "../Shared/GDFVoxel.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if FAR_PROBES
+
+    float FarProbeCell;
+    uint FarProbeCascadeCount;
+    float4 FarProbeCascadeOrigins[FAR_PROBE_MAX_CASCADES];
+
+    #include "../Shared/FarProbeGrid.hlsl"
+
+#endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer TraceArray;
+ByteAddressBuffer TraceCounts;
+
+ByteAddressBuffer ScreenProbes;
+
+sampler3D VoxelAtlas;
+
+RWByteAddressBuffer TraceHitsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_SCREEN * 4))
+    {
+        #if LOCAL_TRACING
+
+        uint current_hit = TraceHitsRW.Load((TRACE_ARRAY_SCREEN + ray_index) * HIT_STRIDE);
+
+        [branch]
+        if (current_hit == INVALID_ID) // don't compare depths since the previous trace was local
+        {
+
+        #endif
+            uint sampler_index = TraceArray.Load((TRACE_ARRAY_SCREEN + ray_index) * TRACE_STRIDE);
+
+            uint entry_index = sampler_index / SCREEN_PROBE_RAY_COUNT;
+            uint2 texel = uint2(sampler_index, sampler_index / SCREEN_PROBE_RES) % SCREEN_PROBE_RES;
+
+            uint2 atlas_coord = uint2(entry_index % ScreenProbeCountX,
+                                      entry_index / ScreenProbeCountX);
+
+            float2 local_noise = uniformNoise2d(atlas_coord.xy * SCREEN_PROBE_RES + texel, FrameIndex);
+            float3 direction = screenTexelToDirection(texel, local_noise);
+
+            float3 probe_position = asfloat(ScreenProbes.Load3(entry_index * SCREEN_PROBE_STRIDE + SCREEN_PROBE_ORIGIN));
+            float3 trace_position = probe_position + direction * GDF_SAMPLE_BIAS;
+
+            #if LOCAL_TRACING
+                float min_trace_distance = 2; // max_trace_distance in TraceLocal is 2
+            #else
+                float min_trace_distance = 0;
+            #endif
+
+            #if FAR_PROBES
+
+                float max_trace_distance = minFarProbeTraceDistance(trace_position);
+                uint steps = 16;
+
+            #else
+
+                float max_trace_distance = 128.0;
+                uint steps = 64;
+
+            #endif
+
+            Hit hit;
+            hit.has_hit = false;
+            hit.dist = max_trace_distance;
+
+            [branch]
+            if (traceGlobal(trace_position,
+                            direction,
+                            min_trace_distance,
+                            max_trace_distance,
+
+                            steps,
+
+                            hit))
+            {
+                float3 hit_position = trace_position + hit.dist * direction;
+                uint cascade = positionToSurfelCascade(hit_position);
+
+                uint gdf_cascade = gdfCascade(hit_position);
+                float3 uvw = gdfUVW(hit_position, gdf_cascade);
+                float3 normal = gdfNormalAtUVW(uvw, gdf_cascade);
+                float4 color_emission = gdfColorAndEmission(VoxelAtlas, hit_position, gdf_cascade);
+
+                uint cell_index = positionToSurfelCell(hit_position, normal, cascade);
+
+                uint4 payload = uint4(asuint(hit.dist + GDF_SAMPLE_BIAS),
+                                      packR11G11B10(normal * 0.5 + 0.5),
+                                      packR8G8B8A8(float4(color_emission.rgb, saturate(color_emission.a / MAX_EMISSION))),
+                                      cell_index);
+
+                TraceHitsRW.Store4((TRACE_ARRAY_SCREEN + ray_index) * HIT_STRIDE, payload);
+                TraceHitsRW.Store3((TRACE_ARRAY_SCREEN + ray_index) * HIT_STRIDE + HIT_POSITION, asuint(hit_position));
+            }
+
+        #if LOCAL_TRACING
+        }
+        #endif
+    }
+}

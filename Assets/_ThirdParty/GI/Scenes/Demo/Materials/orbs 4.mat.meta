@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7b5358d9593724d0fa05f04e3ec4852f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scenes/Demo/Materials/orbs 4.mat
+  uploadId: 889012

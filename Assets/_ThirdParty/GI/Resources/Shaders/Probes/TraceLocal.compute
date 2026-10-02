@@ -1,0 +1,156 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ FAR_PROBES
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Instances.hlsl"
+#include "../Shared/Rays.hlsl"
+#include "../Shared/SDF.hlsl"
+#include "../Shared/Packing.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 GDFBasePosition;
+uint FrameIndex;
+
+float3 ReferencePosition;
+float4 SurfelCascadeOrigins[SURFEL_CASCADE_COUNT];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Surfels.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if FAR_PROBES
+
+    float ProbeCell;
+    uint ProbeCascadeCount;
+    float4 ProbeCascadeOrigins[PROBE_MAX_CASCADES];
+
+    #include "../Shared/ProbeGrid.hlsl"
+
+    float FarProbeCell;
+    uint FarProbeCascadeCount;
+    float4 FarProbeCascadeOrigins[FAR_PROBE_MAX_CASCADES];
+
+    #include "../Shared/FarProbeGrid.hlsl"
+
+#endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer TraceArray;
+ByteAddressBuffer TraceCounts;
+
+ByteAddressBuffer ProbeEntries;
+
+ByteAddressBuffer SDFGridCells;
+
+ByteAddressBuffer SDFAssets;
+ByteAddressBuffer DFInstances;
+ByteAddressBuffer SDFBricks;
+
+sampler3D SDFAtlas;
+sampler3D VoxelAtlas;
+
+RWByteAddressBuffer TraceHitsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_PROBE * 4))
+    {
+        uint sampler_index = TraceArray.Load((TRACE_ARRAY_PROBE + ray_index) * TRACE_STRIDE);
+
+        uint entry_index = sampler_index / PROBE_RAY_COUNT;
+        uint2 texel = uint2(sampler_index, sampler_index / PROBE_RES) % PROBE_RES;
+
+        uint2 atlas_coord = uint2(entry_index % PROBE_ATLAS_COUNT_X,
+                                  entry_index / PROBE_ATLAS_COUNT_X);
+
+        float2 local_noise = uniformNoise2d(atlas_coord.xy * PROBE_RES + texel, FrameIndex);
+        float3 direction = probeTexelToDirection(texel, local_noise);
+
+        float3 probe_position = asfloat(ProbeEntries.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_POSITION));
+        float3 trace_position = probe_position + direction * SDF_SAMPLE_BIAS;
+
+        float min_trace_distance = 0.125;
+
+        #if FAR_PROBES
+
+            float max_trace_distance = min(2.0, minFarProbeTraceDistance(probe_position) + positionToProbeMaxCellOffset(probe_position));
+
+        #else
+
+            float max_trace_distance = 2.0;
+
+        #endif
+
+        uint3 cell_coord = uint3(clamp((trace_position - GDFBasePosition) / GDF_CELL_DIM, 0, GDF_GRID_DIM - 1));
+        uint cell_index = cell_coord.x + cell_coord.y * GDF_GRID_DIM + cell_coord.z * GDF_GRID_DIM * GDF_GRID_DIM;
+
+        uint2 instances = SDFGridCells.Load2((cell_index * SDF_GRID_STRIDE) + SDF_GRID_OFFSET);
+
+        Hit hit;
+        hit.has_hit = false;
+        hit.dist = max_trace_distance;
+
+        HitSurface surface;
+
+        [loop]
+        for (uint instance_index = 0; instance_index < instances.x; instance_index++)
+        {
+            uint instance_value = SDFGridCells.Load(SDF_GRID_INSTANCES + (instances.y + instance_index) * 4);
+
+            uint instance_id = (instance_value & 0xFFFFFF);
+            uint mip_index = (instance_value >> 24) & 0xFF;
+
+            uint asset_id = loadAssetMapping(DFInstances, instance_id);
+
+            [flatten]
+            if (traceInstance(SDFAssets,
+                              DFInstances,
+                              SDFBricks,
+                              SDFAtlas,
+                              VoxelAtlas,
+
+                              instance_id,
+                              asset_id,
+                              trace_position,
+                              direction,
+                              min_trace_distance,
+                              max_trace_distance,
+
+                              hit,
+                              surface))
+            {
+            }
+        }
+
+        [branch]
+        if (hit.has_hit)
+        {
+            float3 hit_position = trace_position + hit.dist * direction;
+            uint cascade = positionToSurfelCascade(hit_position);
+            uint surfel_cell_index = positionToSurfelCell(hit_position, surface.normal, cascade);
+
+            uint4 payload = uint4(asuint(hit.dist + SDF_SAMPLE_BIAS),
+                                  packR11G11B10(surface.normal * 0.5 + 0.5),
+                                  packR8G8B8A8(float4(surface.color, saturate(surface.emission / MAX_EMISSION))),
+                                  surfel_cell_index);
+
+            TraceHitsRW.Store4((TRACE_ARRAY_PROBE + ray_index) * HIT_STRIDE, payload);
+            TraceHitsRW.Store3((TRACE_ARRAY_PROBE + ray_index) * HIT_STRIDE + HIT_POSITION, asuint(hit_position));
+        }
+    }
+}

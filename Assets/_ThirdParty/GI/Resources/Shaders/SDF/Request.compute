@@ -1,0 +1,96 @@
+#pragma kernel Clear
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Instances.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint DFInstanceCount;
+float Influence;
+
+uint Limit;
+
+ByteAddressBuffer DFInstances;
+ByteAddressBuffer SDFAssets;
+
+RWByteAddressBuffer RequestsRW;
+RWByteAddressBuffer LargeRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Clear(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    RequestsRW.Store(SDF_REQUEST_COUNT, 0);
+    LargeRW.Store(SDF_LARGE_COUNT, 0);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(16, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    if (dispatch_thread_id.x < DFInstanceCount)
+    {
+        uint instance = dispatch_thread_id.x;
+        uint asset = loadAssetMapping(DFInstances, instance);
+
+        [branch]
+        if (asset != INVALID_ID)
+        {
+            float4x4 world = loadTransform(DFInstances, instance);
+
+            uint base_offset = ASSET_STRIDE * asset;
+
+            float3 local_min = asfloat(SDFAssets.Load3(base_offset + 16));
+            float3 local_max = asfloat(SDFAssets.Load3(base_offset + 32));
+
+            float4 corners[8];
+            corners[0] = mul(world, float4(local_min.x, local_min.y, local_min.z, 1));
+            corners[1] = mul(world, float4(local_max.x, local_min.y, local_min.z, 1));
+            corners[2] = mul(world, float4(local_min.x, local_min.y, local_max.z, 1));
+            corners[3] = mul(world, float4(local_max.x, local_min.y, local_max.z, 1));
+            corners[4] = mul(world, float4(local_min.x, local_max.y, local_min.z, 1));
+            corners[5] = mul(world, float4(local_max.x, local_max.y, local_min.z, 1));
+            corners[6] = mul(world, float4(local_min.x, local_max.y, local_max.z, 1));
+            corners[7] = mul(world, float4(local_max.x, local_max.y, local_max.z, 1));
+
+            float3 aabb_min = corners[0].xyz;
+            float3 aabb_max = corners[0].xyz;
+
+            [unroll]
+            for (uint corner_id = 1; corner_id < 8; corner_id++)
+            {
+                aabb_min = min(corners[corner_id].xyz, aabb_min);
+                aabb_max = max(corners[corner_id].xyz, aabb_max);
+            }
+
+            aabb_min -= Influence;
+            aabb_max += Influence;
+
+            int3 size = int3(ceil((aabb_max - aabb_min) / GDF_CELL_DIM) + 1);
+            uint count = size.x * size.y * size.z;
+
+            [branch]
+            if (count < Limit)
+            {
+                uint offset;
+                RequestsRW.InterlockedAdd(SDF_REQUEST_COUNT, count, offset);
+
+                RequestsRW.Store(SDF_REQUEST_OFFSETS + instance * 4, offset);
+
+                for (uint i = 0; i < count; i++)
+                    RequestsRW.Store(SDF_REQUEST_INDICES + (offset + i) * 4, instance);
+            }
+            else
+            {
+                uint index;
+                LargeRW.InterlockedAdd(SDF_LARGE_COUNT, 1, index);
+                LargeRW.Store(SDF_LARGE_INDICES + index * 4, instance);
+            }
+        }
+    }
+}

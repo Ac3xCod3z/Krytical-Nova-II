@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 383adfdc044db7f4680827db3a11e612
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Profiles/Plane__1__Concrete_Profile.asset
+  uploadId: 991852

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 34d104c26b47cfb4a9b6a69f57c54468
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Universal/UniversalGI.cs
+  uploadId: 889012

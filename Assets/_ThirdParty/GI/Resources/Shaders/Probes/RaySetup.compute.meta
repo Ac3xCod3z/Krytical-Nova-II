@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 37c264b6294a26844ba627b4eebcf202
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Probes/RaySetup.compute
+  uploadId: 889012

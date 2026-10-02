@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a2921d73b4c961e4abeb752ab7d76095
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Apply/ProbesIntegrate.shader
+  uploadId: 889012

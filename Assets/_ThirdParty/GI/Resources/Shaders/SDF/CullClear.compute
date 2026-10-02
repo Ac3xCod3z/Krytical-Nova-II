@@ -1,0 +1,25 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer SDFGridCellsRW;
+RWByteAddressBuffer SDFGridCursorRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint cell_index = dispatch_thread_id.x;
+
+    [branch]
+    if (cell_index == 0)
+        SDFGridCursorRW.Store(0, 0);
+
+    SDFGridCellsRW.Store((cell_index * SDF_GRID_STRIDE) + SDF_GRID_COUNT, 0);
+    SDFGridCellsRW.Store((cell_index * SDF_GRID_STRIDE) + SDF_GRID_HASH, 0);
+}

@@ -1,0 +1,46 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int3 Offset;
+
+ByteAddressBuffer SDFGridCells;
+StructuredBuffer<uint> Hashes;
+
+RWStructuredBuffer<uint> ChangesRW;
+RWStructuredBuffer<uint> HashesRW; // different buffer than Hashes (swap alternative)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint sdfCell(uint3 coord)
+{
+    return coord.x + coord.y * GDF_GRID_DIM + coord.z * GDF_GRID_DIM * GDF_GRID_DIM;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(4, 4, 4)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint3 coord = dispatch_thread_id.xyz;
+    uint cell_index = sdfCell(coord);
+
+    int3 read = coord + Offset;
+
+    uint new_hash = SDFGridCells.Load((cell_index * SDF_GRID_STRIDE) + SDF_GRID_HASH);
+    uint has_changed = 1;
+
+    [branch]
+    if (all(read >= 0) && all(read < int(GDF_GRID_DIM)))
+    {
+        uint old_hash = Hashes[sdfCell(read)];
+        has_changed = old_hash != new_hash;
+    }
+
+    HashesRW[cell_index] = new_hash;
+    ChangesRW[cell_index] = has_changed;
+}

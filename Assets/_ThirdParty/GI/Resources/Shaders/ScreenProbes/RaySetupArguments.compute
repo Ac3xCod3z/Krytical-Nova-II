@@ -1,0 +1,29 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint ScreenProbeCountX;
+uint ScreenProbeCountY;
+
+ByteAddressBuffer ScreenProbeCounts;
+
+RWByteAddressBuffer TraceCountsRW;
+
+RWBuffer<uint> ArgumentsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Main()
+{
+    ArgumentsRW[0] = min(ScreenProbeCounts.Load(SCREEN_PROBE_COUNT_TOTAL * 4), SCREEN_PROBE_SANITY_COUNT);
+    ArgumentsRW[1] = 1;
+    ArgumentsRW[2] = 1;
+    ArgumentsRW[3] = 0;
+
+    TraceCountsRW.Store(TRACE_COUNT_SCREEN * 4, 0);
+}

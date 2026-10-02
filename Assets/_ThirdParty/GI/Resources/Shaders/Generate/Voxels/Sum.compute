@@ -1,0 +1,50 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../../Shared/Defines.hlsl"
+#include "../../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint3 Resolution;
+
+ByteAddressBuffer Splat;
+ByteAddressBuffer Mark;
+
+RWByteAddressBuffer VolumeRW;
+RWByteAddressBuffer MarkRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(4, 4, 4)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint3 coord = dispatch_thread_id;
+
+	[branch]
+	if (all(coord < Resolution))
+	{
+		uint index = coord.x + coord.y * Resolution.x + coord.z * Resolution.x * Resolution.y;
+
+		// doing it in pages, because of shader translation bug on iOS.
+		uint page = Resolution.x * Resolution.y * Resolution.z * 4;
+
+		uint4 value_i;
+		value_i.x = Splat.Load(page * 0 + index * 4);
+		value_i.y = Splat.Load(page * 1 + index * 4);
+		value_i.z = Splat.Load(page * 2 + index * 4);
+		value_i.w = Splat.Load(page * 3 + index * 4);
+
+		float4 value = value_i / 255.0f;
+
+		uint mark = Mark.Load(index * 4);
+
+		[flatten]
+		if (mark > 0)
+			value /= (float)mark;
+
+		VolumeRW.Store(index * 4, packR8G8B8A8(value));
+		MarkRW.Store(index * 4, min(1, mark));
+	}
+}

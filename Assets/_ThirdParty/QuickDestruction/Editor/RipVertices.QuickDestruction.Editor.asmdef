@@ -1,0 +1,18 @@
+{
+    "name": "RipVertices.QuickDestruction.Editor",
+    "rootNamespace": "RipVertices.QuickDestruction.Editor",
+    "references": [
+        "RipVertices.QuickDestruction.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

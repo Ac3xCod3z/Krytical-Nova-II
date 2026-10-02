@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 8d5e0fd006f4a29498f7612df1256eb0
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Generate/Voxels/Sum.compute
+  uploadId: 889012

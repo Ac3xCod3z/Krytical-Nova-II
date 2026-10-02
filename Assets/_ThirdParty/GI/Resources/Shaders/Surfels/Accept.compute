@@ -1,0 +1,80 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ SURFEL_MAPPING
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer TraceArray;
+ByteAddressBuffer TraceCounts;
+ByteAddressBuffer TraceHits;
+
+ByteAddressBuffer ProbeEntries;
+ByteAddressBuffer SurfelGrid;
+
+RWByteAddressBuffer SurfelArraysRW;
+RWByteAddressBuffer SurfelEntriesRW;
+
+#if SURFEL_MAPPING
+	RWByteAddressBuffer ProbeSurfelMapRW;
+#endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+	if (ray_index < TraceCounts.Load(TRACE_COUNT_PROBE * 4))
+	{
+		uint sampler_index = TraceArray.Load((TRACE_ARRAY_PROBE + ray_index) * TRACE_STRIDE);
+		uint4 hit_payload = TraceHits.Load4((TRACE_ARRAY_PROBE + ray_index) * HIT_STRIDE);
+
+		uint probe_entry = sampler_index / PROBE_RAY_COUNT;
+
+		uint3 map_entry;
+		map_entry.x = INVALID_ID;
+		map_entry.z = 0;
+
+		[flatten]
+		if (hit_payload.x != INVALID_ID)
+			map_entry.y = hit_payload.x;
+		else
+			map_entry.y = asuint(MAX_HIT_DISTANCE);
+
+		[branch]
+		if (hit_payload.w != INVALID_ID) // known cell
+		{
+			uint cell_index = hit_payload.w;
+			uint surfel_id = SurfelGrid.Load(cell_index * 4);
+
+			[branch]
+			if (surfel_id != INVALID_ID)
+			{
+				map_entry.x = surfel_id;
+
+				// version
+				map_entry.z = SurfelArraysRW.Load((SURFEL_ARRAY_VERSION + surfel_id) * 4);
+
+				uint age = ProbeEntries.Load(probe_entry * PROBE_ENTRY_STRIDE + PROBE_ENTRY_AGE);
+
+				uint previous_age;
+		        SurfelEntriesRW.InterlockedMin(surfel_id * SURFEL_ENTRY_STRIDE + SURFEL_ENTRY_AGE, age, previous_age);
+
+		        [branch]
+		        if (age < previous_age)
+		            SurfelEntriesRW.Store2(surfel_id * SURFEL_ENTRY_STRIDE + SURFEL_ENTRY_NORMAL, hit_payload.yz);
+			}
+		}
+
+		#if SURFEL_MAPPING
+			ProbeSurfelMapRW.Store3(sampler_index * SURFEL_MAP_STRIDE, map_entry);
+		#endif
+	}
+}

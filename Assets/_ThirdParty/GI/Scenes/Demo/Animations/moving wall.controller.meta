@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e32726b765a7c44f187c54adc6078f6b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scenes/Demo/Animations/moving wall.controller
+  uploadId: 889012

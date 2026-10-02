@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b7a0a29571bda0749bfd0e61c5c5cd48
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/Input.hlsl
+  uploadId: 889012

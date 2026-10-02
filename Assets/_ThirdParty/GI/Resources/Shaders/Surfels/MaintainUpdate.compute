@@ -1,0 +1,84 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float4 SurfelCascadeOffsets[SURFEL_CASCADE_COUNT];
+
+RWByteAddressBuffer SurfelArraysRW;
+RWByteAddressBuffer SurfelCountsRW;
+RWByteAddressBuffer SurfelEntriesRW;
+RWByteAddressBuffer SurfelGridRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint array_index = dispatch_thread_id.x;
+
+	[branch]
+	if (array_index < SurfelCountsRW.Load(SURFEL_COUNT_ENTRY * 4))
+	{
+		uint entry_index = SurfelArraysRW.Load((SURFEL_ARRAY_ENTRY + array_index) * 4);
+
+		uint2 cell_age = SurfelEntriesRW.Load2(entry_index * SURFEL_ENTRY_STRIDE + SURFEL_ENTRY_CELL);
+
+		uint current_cell_index = cell_age.x & UNFLAG;
+		SurfelGridRW.Store(current_cell_index * 4, INVALID_ID);
+
+		uint cascade = current_cell_index / SURFEL_CASCADE_CELL_COUNT;
+		uint cascade_cell = current_cell_index % SURFEL_CASCADE_CELL_COUNT;
+
+		uint3 current_cell_coord = uint3(cascade_cell,
+										 (cascade_cell / SURFEL_CASCADE_DIM),
+										 cascade_cell / (SURFEL_CASCADE_DIM * SURFEL_CASCADE_DIM)) % SURFEL_CASCADE_DIM;
+
+		int3 new_cell_coord = int3(current_cell_coord) + int3(round(SurfelCascadeOffsets[cascade].xyz));
+
+		uint new_cell_index = new_cell_coord.x +
+							  (new_cell_coord.y * SURFEL_CASCADE_DIM) +
+							  (new_cell_coord.z * SURFEL_CASCADE_DIM * SURFEL_CASCADE_DIM) +
+							  cascade * SURFEL_CASCADE_CELL_COUNT;
+
+		uint age = cell_age.y + 1;
+
+		cell_age.x = new_cell_index;
+		cell_age.y = age;
+
+		SurfelEntriesRW.Store2(entry_index * SURFEL_ENTRY_STRIDE + SURFEL_ENTRY_CELL, cell_age);
+
+		static const int INNER_THRESHOLD = SURFEL_CASCADE_DIM / 16;
+		static const int THRESHOLD_LOW = SURFEL_CASCADE_DIM / 4 + INNER_THRESHOLD;
+		static const int THRESHOLD_HIGH = SURFEL_CASCADE_DIM * 3 / 4 - INNER_THRESHOLD;
+
+		bool inner = cascade > 0 && all(new_cell_coord >= THRESHOLD_LOW) && all(new_cell_coord < THRESHOLD_HIGH);
+
+		uint counti;
+		uint arrayi;
+
+		uint lives = SurfelCountsRW.Load(SURFEL_COUNT_LIVES * 4);
+
+		[flatten]
+		if (age < lives &&
+		    all(new_cell_coord >= 0) &&
+		    all(new_cell_coord < int(SURFEL_CASCADE_DIM)) &&
+		    !inner)
+		{
+			counti = SURFEL_COUNT_TEMP;
+			arrayi = SURFEL_ARRAY_TEMP;
+		}
+		else
+		{
+			counti = SURFEL_COUNT_REMOVE;
+			arrayi = SURFEL_ARRAY_REMOVE;
+		}
+
+		uint index;
+		SurfelCountsRW.InterlockedAdd(counti * 4, 1, index);
+		SurfelArraysRW.Store((arrayi + index) * 4, entry_index);
+	}
+}

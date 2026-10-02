@@ -1,0 +1,132 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Instances.hlsl"
+#include "../Shared/Rays.hlsl"
+#include "../Shared/SDF.hlsl"
+#include "../Shared/Packing.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint FrameIndex;
+float3 ReferencePosition;
+
+float FarProbeCell;
+uint FarProbeCascadeCount;
+float4 FarProbeCascadeOrigins[FAR_PROBE_MAX_CASCADES];
+
+float4 SurfelCascadeOrigins[SURFEL_CASCADE_COUNT];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Surfels.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer TraceCounts;
+ByteAddressBuffer TraceArray;
+
+ByteAddressBuffer FarProbeEntries;
+
+ByteAddressBuffer Large;
+
+ByteAddressBuffer SDFAssets;
+ByteAddressBuffer DFInstances;
+ByteAddressBuffer SDFBricks;
+
+sampler3D SDFAtlas;
+sampler3D VoxelAtlas;
+
+RWByteAddressBuffer TraceHitsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/FarProbeGrid.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_FAR * 4))
+    {
+        uint sampler_index = TraceArray.Load((TRACE_ARRAY_FAR + ray_index) * TRACE_STRIDE);
+
+        uint sampler_value = sampler_index % FAR_PROBE_RAY_COUNT;
+        uint entry_index = sampler_index / FAR_PROBE_RAY_COUNT;
+
+        uint2 texel = uint2(sampler_value % FAR_PROBE_RES, sampler_value / FAR_PROBE_RES);
+
+        uint2 atlas_coord = uint2(entry_index % FAR_PROBE_ATLAS_COUNT_X,
+                                  entry_index / FAR_PROBE_ATLAS_COUNT_X);
+
+        float2 local_noise = uniformNoise2d(atlas_coord.xy * FAR_PROBE_RES + texel, FrameIndex);
+        float3 direction = farTexelToDirection(texel, local_noise);
+
+        float3 probe_position = asfloat(FarProbeEntries.Load3(entry_index * FAR_PROBE_ENTRY_STRIDE + FAR_PROBE_ENTRY_POSITION));
+
+        float min_trace_distance = minFarProbeTraceDistance(probe_position);
+        float max_trace_distance = 8192;
+
+        Hit hit;
+        hit.has_hit = false;
+        hit.dist = max_trace_distance;
+
+        HitSurface surface;
+
+        uint instance_count = Large.Load(SDF_LARGE_COUNT);
+
+        [loop]
+        for (uint instance_index = 0; instance_index < instance_count; instance_index++)
+        {
+            uint instance_value = Large.Load(SDF_LARGE_INDICES + instance_index * 4);
+
+            uint instance_id = (instance_value & 0xFFFFFF);
+            uint mip_index = (instance_value >> 24) & 0xFF;
+
+            uint asset_id = loadAssetMapping(DFInstances, instance_id);
+
+            [flatten]
+            if (traceInstance(SDFAssets,
+                              DFInstances,
+                              SDFBricks,
+                              SDFAtlas,
+                              VoxelAtlas,
+
+                              instance_id,
+                              asset_id,
+                              probe_position,
+                              direction,
+                              min_trace_distance,
+                              max_trace_distance,
+
+                              hit,
+                              surface))
+            {
+            }
+        }
+
+        [branch]
+        if (hit.has_hit)
+        {
+            float3 hit_position = probe_position + hit.dist * direction;
+            uint cascade = positionToSurfelCascade(hit_position);
+            uint cell_index = positionToSurfelCell(hit_position, surface.normal, cascade);
+
+            uint4 payload = uint4(asuint(hit.dist),
+                                  packR11G11B10(surface.normal * 0.5 + 0.5),
+                                  packR8G8B8A8(float4(surface.color, saturate(surface.emission / MAX_EMISSION))),
+                                  cell_index);
+
+            TraceHitsRW.Store4((TRACE_ARRAY_FAR + ray_index) * HIT_STRIDE, payload);
+            TraceHitsRW.Store3((TRACE_ARRAY_FAR + ray_index) * HIT_STRIDE + HIT_POSITION, asuint(hit_position));
+        }
+    }
+}

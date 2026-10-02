@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 533730f44a2f37b4c864b130e99140f7
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Universal/UniversalApplyTemporalForwardPass.cs
+  uploadId: 889012

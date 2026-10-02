@@ -1,0 +1,97 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint3 Resolution;
+float MaxDistance;
+float Step;
+
+ByteAddressBuffer Input;
+
+RWByteAddressBuffer BufferRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float get(int x, int y, int z)
+{
+    int3 coord = int3(x, y, z);
+
+    [branch]
+    if (all(coord >= 0) && all(coord < int3(Resolution)))
+    {
+        uint index = x + (y + z * Resolution.y) * Resolution.x;
+        return asfloat(Input.Load(index * 4));
+    }
+    else
+        return MaxDistance;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void combine(inout float current, float value, float step_)
+{
+    if (value >= MaxDistance)
+        return;
+
+    if (value < 0)
+        value -= step_;
+    else
+        value += step_;
+
+    if (current >= MaxDistance)
+        current = value;
+    else
+    {
+        if (value < 0)
+            current = max(current, value);
+        else
+            current = min(current, value);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 8)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint3 coord = dispatch_thread_id;
+
+	[branch]
+	if (all(coord < Resolution))
+	{
+        int3 c = int3(coord);
+        float d = get(c.x, c.y, c.z);
+
+        [branch]
+        if (d >= MaxDistance)
+        {
+            float step1 = Step;
+
+            combine(d, get(c.x - 1, c.y, c.z), step1);
+            combine(d, get(c.x + 1, c.y, c.z), step1);
+            combine(d, get(c.x, c.y - 1, c.z), step1);
+            combine(d, get(c.x, c.y + 1, c.z), step1);
+            combine(d, get(c.x, c.y, c.z - 1), step1);
+            combine(d, get(c.x, c.y, c.z + 1), step1);
+
+            float step2 = Step * 1.4142135624f;
+
+            combine(d, get(c.x - 1, c.y - 1, c.z - 1), step2);
+            combine(d, get(c.x + 1, c.y - 1, c.z - 1), step2);
+            combine(d, get(c.x - 1, c.y + 1, c.z - 1), step2);
+            combine(d, get(c.x + 1, c.y + 1, c.z - 1), step2);
+            combine(d, get(c.x - 1, c.y - 1, c.z + 1), step2);
+            combine(d, get(c.x + 1, c.y - 1, c.z + 1), step2);
+            combine(d, get(c.x - 1, c.y + 1, c.z + 1), step2);
+            combine(d, get(c.x + 1, c.y + 1, c.z + 1), step2);
+        }
+
+        uint index = coord.x + coord.y * Resolution.x + coord.z * Resolution.x * Resolution.y;
+
+        BufferRW.Store(index * 4, asuint(d));
+	}
+}

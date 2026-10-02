@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 28f47aa3bb1866f47b12fc76b08bd3f7
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Editor/QuickDestructionWindow.BatchPreview.cs
+  uploadId: 991852

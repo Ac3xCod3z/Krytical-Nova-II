@@ -1,0 +1,233 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ CAMERA_NORMALS
+
+#pragma multi_compile_local _ _GBUFFER_NORMALS_OCT
+
+#pragma multi_compile_local _ REDFASTGI_VR
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Depth.hlsl"
+#include "../Shared/Normals.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint2 Viewport;
+uint FrameIndex;
+uint Repeats;
+uint RepeatWidth;
+float ProbeCell;
+uint ProbeCascadeCount;
+float3 ReferencePosition;
+float4 ProbeCascadeOrigins[PROBE_MAX_CASCADES];
+
+ByteAddressBuffer ProbeGrid;
+
+RWByteAddressBuffer ProbeEntriesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/ProbeGrid.hlsl"
+#include "../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void queryProbeAtCoord(uint cell_index, float3 normal, float3 offset)
+{
+    uint entry_index = ProbeGrid.Load(cell_index * 4);
+
+    [branch]
+    if (entry_index != INVALID_ID)
+    {
+        float fx, fy, fz;
+        uint ox, oy, oz;
+        uint ux, uy, uz;
+
+        [flatten]
+        if (normal.x >= 0)
+        {
+            ox = 0;
+            fx = normal.x;
+        }
+        else
+        {
+            ox = 1;
+            fx = -normal.x;
+        }
+
+        [flatten]
+        if (normal.y >= 0)
+        {
+            oy = 0;
+            fy = normal.y;
+        }
+        else
+        {
+            oy = 1;
+            fy = -normal.y;
+        }
+
+        [flatten]
+        if (normal.z >= 0)
+        {
+            oz = 0;
+            fz = normal.z;
+        }
+        else
+        {
+            oz = 1;
+            fz = -normal.z;
+        }
+
+        ux = uint(saturate(fx) * NORMAL_STEP);
+        uy = uint(saturate(fy) * NORMAL_STEP);
+        uz = uint(saturate(fz) * NORMAL_STEP);
+
+        ProbeEntriesRW.InterlockedAdd(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL_VALUES + (    ox) * 4, ux);
+        ProbeEntriesRW.InterlockedAdd(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL_VALUES + (2 + oy) * 4, uy);
+        ProbeEntriesRW.InterlockedAdd(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL_VALUES + (4 + oz) * 4, uz);
+
+        //
+
+        [flatten]
+        if (offset.x >= 0)
+        {
+            ox = 0;
+            fx = offset.x;
+        }
+        else
+        {
+            ox = 1;
+            fx = -offset.x;
+        }
+
+        [flatten]
+        if (offset.y >= 0)
+        {
+            oy = 0;
+            fy = offset.y;
+        }
+        else
+        {
+            oy = 1;
+            fy = -offset.y;
+        }
+
+        [flatten]
+        if (offset.z >= 0)
+        {
+            oz = 0;
+            fz = offset.z;
+        }
+        else
+        {
+            oz = 1;
+            fz = -offset.z;
+        }
+
+        ux = uint(saturate(fx) * OFFSET_STEP);
+        uy = uint(saturate(fy) * OFFSET_STEP);
+        uz = uint(saturate(fz) * OFFSET_STEP);
+
+        ProbeEntriesRW.InterlockedAdd(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET_COUNT, 1);
+
+        ProbeEntriesRW.InterlockedAdd(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET_VALUES + (    ox) * 4, ux);
+        ProbeEntriesRW.InterlockedAdd(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET_VALUES + (2 + oy) * 4, uy);
+        ProbeEntriesRW.InterlockedAdd(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET_VALUES + (4 + oz) * 4, uz);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint3 cellCoord(float3 cell_coord_f)
+{
+    return uint3(clamp(int3(round(cell_coord_f)), 0, PROBE_CASCADE_DIM - 1));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint cellIndex(uint3 cell_coord, uint cascade)
+{
+    return cell_coord.x +
+           (cell_coord.y * PROBE_CASCADE_DIM) +
+           (cell_coord.z * PROBE_CASCADE_DIM * PROBE_CASCADE_DIM) +
+           (cascade * PROBE_CASCADE_CELL_COUNT);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 cellOffset(float3 cell_coord_f, uint3 cell_coord_u)
+{
+    return cell_coord_f - cell_coord_u;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void queryProbesAt(float3 world_position, float3 normal)
+{
+    float3 direction = normalize(ReferencePosition - world_position);
+    float3 query_normal = normalize(normal + direction);
+
+    uint cascade = positionToProbeCascade(world_position);
+    float bias = ProbeCell * (1 << cascade) * PROBE_QUERY_BIAS;
+
+    float3 query_position = world_position + query_normal * bias;
+
+    float3 cell_coord_f = positionToProbeCellCoordFloat(query_position, cascade);
+    uint3 cell_coord_u = cellCoord(cell_coord_f);
+
+    queryProbeAtCoord(cellIndex(cell_coord_u, cascade), normal, cellOffset(cell_coord_f, cell_coord_u));
+
+    float3 r3 = abs(cell_coord_f - PROBE_BLEND_RANGE);
+    float r = max(r3.x, max(r3.y, r3.z)) / PROBE_BLEND_RANGE;
+    float d = saturate((max(r, 1 - PROBE_BLEND_BORDER) - PROBE_BLEND_BORDER) / PROBE_BLEND_THRESHOLD);
+
+    [branch]
+    if (d > 0.01 && cascade + 1 < ProbeCascadeCount)
+    {
+        uint new_cascade = cascade + 1;
+        float3 new_coord_f = positionToProbeCellCoordFloat(query_position, new_cascade);
+        uint3 new_coord_u = cellCoord(new_coord_f);
+
+        queryProbeAtCoord(cellIndex(new_coord_u, new_cascade), normal, cellOffset(new_coord_f, new_coord_u));
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint repeat = dispatch_thread_id.x / RepeatWidth;
+
+    uint2 query_coord = uint2(dispatch_thread_id.x % RepeatWidth, dispatch_thread_id.y);
+    uint2 cell_corner = query_coord * PROBE_SCREEN_CELL_DIM;
+
+    [branch]
+    if (all(cell_corner < Viewport))
+    {
+        float2 local_noise = uniformNoise2d(dispatch_thread_id.xy, FrameIndex * Repeats + repeat);
+        uint2 offset = uint2(local_noise * PROBE_SCREEN_CELL_DIM);
+        uint2 viewport_coord = min(cell_corner + offset, Viewport - 1);
+
+        float2 uv = float2(viewport_coord) / _ScaledScreenParams.xy;
+        float device_depth = sampleSceneDepth(uv);
+
+        float3 world_position = worldSpacePosition(uv, actualDepth(device_depth), unity_MatrixInvVP);
+
+        [branch]
+        #if UNITY_REVERSED_Z
+            if (device_depth > DEPTH_EPSILON_ZERO)
+        #else
+            if (device_depth < DEPTH_EPSILON_ONE)
+        #endif
+        {
+            float3 normal = loadNormals(uv);
+
+            queryProbesAt(world_position, normal);
+        }
+    }
+}

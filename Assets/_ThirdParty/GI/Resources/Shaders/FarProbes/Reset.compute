@@ -1,0 +1,42 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer FarProbeArraysRW;
+RWByteAddressBuffer FarProbeCountsRW;
+RWByteAddressBuffer FarProbeGridRW;
+RWByteAddressBuffer FarProbeRequestMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint index = dispatch_thread_id.x;
+
+    [branch]
+    if (index < FAR_PROBE_COUNT_ALL)
+    {
+        FarProbeCountsRW.Store(index * 4, 0);
+    }
+
+    [branch]
+    if (index < FAR_PROBE_MAX_ENTRIES)
+    {
+        FarProbeArraysRW.Store((FAR_PROBE_ARRAY_ENTRY  + index) * 4, 0);
+        FarProbeArraysRW.Store((FAR_PROBE_ARRAY_TEMP   + index) * 4, 0);
+        FarProbeArraysRW.Store((FAR_PROBE_ARRAY_REMOVE + index) * 4, 0);
+        FarProbeArraysRW.Store((FAR_PROBE_ARRAY_POOL   + index) * 4, index);
+    }
+
+    [branch]
+    if (index < FAR_PROBE_CASCADE_CELL_COUNT * FAR_PROBE_MAX_CASCADES)
+    {
+        FarProbeGridRW.Store(index * 4, INVALID_ID);
+        FarProbeRequestMapRW.Store(index * 4, 0);
+    }
+}

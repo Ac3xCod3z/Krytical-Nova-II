@@ -1,0 +1,98 @@
+#ifndef REDFASTGI_OCTAHEDRAL_INCLUDED
+#define REDFASTGI_OCTAHEDRAL_INCLUDED
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float2 directionToOctahedralMap(float3 vec)
+{
+    vec /= dot(1, abs(vec));
+
+    vec.xz = vec.y >= 0.0f ? vec.xz : ((1.0f - abs(vec.zx)) * (vec.xz >= 0.0f ? 1.0f : -1.0f));
+    vec.xz = vec.xz * 0.5f + 0.5f;
+
+    return vec.xz;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 octahedralMapToDirection(float2 uv)
+{
+    uv = uv * 2.0f - 1.0f;
+
+    float3 vec = float3(uv.x, 1.0 - dot(1, abs(uv)), uv.y);
+    float t = saturate(-vec.y);
+    vec.xz += vec.xz >= 0.0 ? -t : t;
+
+    return normalize(vec);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float2 probeTexelToUv(uint2 texel, float2 local_noise = 0.5)
+{
+    float2 coord = texel + local_noise;
+    return coord / (float)(PROBE_RES);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 probeTexelToDirection(uint2 texel, float2 local_noise = 0.5)
+{
+    return octahedralMapToDirection(probeTexelToUv(texel, local_noise));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float2 screenTexelToUv(uint2 texel, float2 local_noise = 0.5)
+{
+    float2 coord = texel + local_noise;
+    return coord / (float)(SCREEN_PROBE_RES);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 screenTexelToDirection(uint2 texel, float2 local_noise = 0.5)
+{
+    return octahedralMapToDirection(screenTexelToUv(texel, local_noise));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float2 farTexelToUv(uint2 texel, float2 local_noise = 0.5)
+{
+    float2 coord = texel + local_noise;
+    return coord / (float)(FAR_PROBE_RES);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 farTexelToDirection(uint2 texel, float2 local_noise = 0.5)
+{
+    return octahedralMapToDirection(farTexelToUv(texel, local_noise));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float acosFast(float in_x)
+{
+    float x = abs(in_x);
+    float res = -0.156583f * x + (0.5 * GI_PI);
+    res *= sqrt(1.0f - x);
+    return (in_x >= 0) ? res : GI_PI - res;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint normalToSampleIndex(float3 normal)
+{
+    float2 oct = directionToOctahedralMap(normal);
+
+    uint sample_index = uint(oct.x * PROBE_SAMPLE_RES) +
+                        uint(oct.y * PROBE_SAMPLE_RES) * PROBE_SAMPLE_RES;
+
+    return sample_index;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#endif

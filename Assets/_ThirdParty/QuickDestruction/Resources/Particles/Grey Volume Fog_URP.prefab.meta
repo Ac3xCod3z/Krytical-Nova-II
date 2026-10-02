@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ebe05dbc9df813b41bf461796a1cba17
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Resources/Particles/Grey Volume Fog_URP.prefab
+  uploadId: 991852

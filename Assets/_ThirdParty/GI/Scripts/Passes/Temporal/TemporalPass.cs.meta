@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f6f449fb3cf14ba45ad27f56bbfba718
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Passes/Temporal/TemporalPass.cs
+  uploadId: 889012

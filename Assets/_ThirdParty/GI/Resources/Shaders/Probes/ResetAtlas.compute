@@ -1,0 +1,39 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ PROBES_OCCLUSION
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWTexture2D<float4> ProbeRadianceAtlasRW;
+
+#if PROBES_OCCLUSION
+	RWTexture2D<float4> ProbeDepthAtlasRW;
+#endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint2 coord = dispatch_thread_id.xy;
+
+	uint2 dim;
+	ProbeRadianceAtlasRW.GetDimensions(dim.x, dim.y);
+
+	[branch]
+	if (coord.x < dim.x && coord.y < dim.y)
+		ProbeRadianceAtlasRW[coord] = float4(0, 0, 0, 0);
+
+	#if PROBES_OCCLUSION
+
+		ProbeDepthAtlasRW.GetDimensions(dim.x, dim.y);
+
+		[branch]
+		if (coord.x < dim.x && coord.y < dim.y)
+			ProbeDepthAtlasRW[coord] = float4(0, 0, 0, 0);
+	#endif
+}

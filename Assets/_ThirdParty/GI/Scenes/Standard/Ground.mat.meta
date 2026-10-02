@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b43488b75c7097a419ed51e26b58041e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scenes/Standard/Ground.mat
+  uploadId: 889012

@@ -1,0 +1,38 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer SurfelCountsRW;
+
+RWBuffer<uint> ArgumentsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint count = min(SurfelCountsRW.Load(SURFEL_COUNT_ENTRY * 4), SURFEL_MAX_ENTRIES);
+
+	ArgumentsRW[0] = (count + GROUP - 1) / GROUP;
+	ArgumentsRW[1] = 1;
+	ArgumentsRW[2] = 1;
+	ArgumentsRW[3] = 0;
+
+	SurfelCountsRW.InterlockedMax(SURFEL_COUNT_MAX * 4, count);
+
+	SurfelCountsRW.Store(SURFEL_COUNT_TEMP * 4, 0);
+	SurfelCountsRW.Store(SURFEL_COUNT_REMOVE * 4, 0);
+	SurfelCountsRW.Store(SURFEL_COUNT_REQUESTS * 4, 0);
+
+	static const uint HALF_ENTRIES = SURFEL_MAX_ENTRIES / 2;
+	static const uint ENTRIES_PER_LIFE = HALF_ENTRIES / SURFEL_LIVES;
+
+	uint entries_left = SURFEL_MAX_ENTRIES - min(count, SURFEL_MAX_ENTRIES);
+	uint lives_limit = min(max((entries_left + ENTRIES_PER_LIFE - 1) / ENTRIES_PER_LIFE, 2), SURFEL_LIVES);
+
+	SurfelCountsRW.Store(SURFEL_COUNT_LIVES * 4, lives_limit);
+}

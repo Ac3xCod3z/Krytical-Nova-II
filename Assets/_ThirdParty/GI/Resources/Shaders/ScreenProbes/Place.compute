@@ -1,0 +1,59 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ CAMERA_NORMALS
+
+#pragma multi_compile_local _ _GBUFFER_NORMALS_OCT
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Depth.hlsl"
+#include "../Shared/Normals.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint ScreenProbeCountX;
+uint2 Viewport;
+uint FrameIndex;
+
+RWByteAddressBuffer ScreenProbesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 1)]
+void Main(uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint2 probe_coord = dispatch_thread_id.xy;
+
+    [branch]
+    if (all(probe_coord * SCREEN_PROBE_DIM < Viewport))
+    {
+        float2 local_noise = uniformNoise2d(dispatch_thread_id.xy, FrameIndex);
+        uint2 offset = uint2(local_noise.x * SCREEN_PROBE_DIM, local_noise.y * SCREEN_PROBE_DIM);
+        uint2 viewport_coord = min(probe_coord * SCREEN_PROBE_DIM + offset, Viewport - 1);
+
+        float2 uv = float2(viewport_coord) / _ScaledScreenParams.xy;
+
+        float device_depth = sampleSceneDepth(uv);
+        float3 world_position = worldSpacePosition(uv, actualDepth(device_depth), unity_MatrixInvVP);
+
+        uint encoded_normal = 0; // value of 0 means invalid probe
+
+        [branch]
+        #if UNITY_REVERSED_Z
+            if (device_depth > DEPTH_EPSILON_ZERO)
+        #else
+            if (device_depth < DEPTH_EPSILON_ONE)
+        #endif
+        {
+            float3 normal = loadNormals(uv);
+            encoded_normal = packR11G11B10(normal * 0.5 + 0.5);
+        }
+
+        uint4 data = uint4(asuint(world_position), encoded_normal);
+
+        ScreenProbesRW.Store4((probe_coord.x + probe_coord.y * ScreenProbeCountX) * SCREEN_PROBE_STRIDE, data);
+        // don't need to store coord as it's only for adaptive probes
+    }
+}

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7512c349a9b11694b92da10c179bdbda
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/FarProbes/TraceTerrain.compute
+  uploadId: 889012

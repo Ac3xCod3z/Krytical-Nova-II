@@ -1,0 +1,40 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer Requests;
+
+ByteAddressBuffer SDFGridWrites;
+
+RWByteAddressBuffer SDFGridCellsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint index = dispatch_thread_id.x;
+
+    if (index < Requests.Load(SDF_REQUEST_COUNT))
+    {
+        uint write = SDFGridWrites.Load(index * 4);
+
+        [branch]
+        if (write != INVALID_ID)
+        {
+            uint cell_index = write;
+
+            uint offset = SDFGridCellsRW.Load((cell_index * SDF_GRID_STRIDE) + SDF_GRID_OFFSET + 4);
+
+            uint write_index;
+            SDFGridCellsRW.InterlockedAdd((cell_index * SDF_GRID_STRIDE) + SDF_GRID_COUNT, 1, write_index);
+
+            uint instance = Requests.Load(SDF_REQUEST_INDICES + index * 4);
+            SDFGridCellsRW.Store(SDF_GRID_INSTANCES + (offset + write_index) * 4, instance);
+        }
+    }
+}

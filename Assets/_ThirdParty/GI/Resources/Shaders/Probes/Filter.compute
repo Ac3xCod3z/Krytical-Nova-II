@@ -1,0 +1,142 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer ProbeGrid;
+ByteAddressBuffer ProbeArrays;
+ByteAddressBuffer ProbeEntries;
+
+Texture2D<float4> ProbeGatherAtlas;
+
+RWTexture2D<float4> ProbeFilterAtlasRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void performNeighbour(int3 cell_coord,
+                      uint cascade,
+                      uint2 thread_coord,
+                      float3 position,
+                      float3 direction,
+                      float3 hit_position,
+                      float hit_distance,
+
+                      inout float3 total_radiance,
+                      inout float total_weight)
+{
+    static const float MAX_HIT_ANGLE = 30.0f * GI_PI / 180.0f;
+
+    [branch]
+    if (all(cell_coord >= 0) && all(cell_coord < int(PROBE_CASCADE_DIM)))
+    {
+        uint cell_index = cell_coord.x +
+                          (cell_coord.y * PROBE_CASCADE_DIM) +
+                          (cell_coord.z * PROBE_CASCADE_DIM * PROBE_CASCADE_DIM) +
+                          (cascade * PROBE_CASCADE_CELL_COUNT);
+
+        uint entry_index = ProbeGrid.Load(cell_index * 4);
+
+        [branch]
+        if (entry_index != INVALID_ID)
+        {
+            uint probe_atlas_x = entry_index % PROBE_ATLAS_COUNT_X;
+            uint probe_atlas_y = entry_index / PROBE_ATLAS_COUNT_X;
+
+            uint rad_atlas_x = probe_atlas_x * PROBE_RES + thread_coord.x;
+            uint rad_atlas_y = probe_atlas_y * PROBE_RES + thread_coord.y;
+
+            float4 radiance_and_depth = ProbeGatherAtlas[uint2(rad_atlas_x, rad_atlas_y)];
+            float3 neighbour_radiance = radiance_and_depth.xyz;
+            float  neighbour_depth = radiance_and_depth.w;
+
+            float neighbour_hit_distance = min(neighbour_depth, hit_distance);
+
+            float3 neighbour_position = asfloat(ProbeEntries.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_POSITION));
+
+            float3 neighbour_hit_position = neighbour_position + direction * neighbour_hit_distance;
+            float3 neighbour_hit_vector = neighbour_hit_position - position;
+
+            // angle from us to neighbour hit position
+            float neighbour_angle = acosFast(dot(neighbour_hit_vector, direction) / length(neighbour_hit_vector));
+            float weight = 1.0f - saturate(neighbour_angle / MAX_HIT_ANGLE);
+
+            // angle from neighbour to OUR hit position
+            float3 hit_vector = hit_position - neighbour_position;
+            float angle = acosFast(dot(hit_vector, direction) / length(hit_vector));
+            weight *= 1.0f - saturate(angle / MAX_HIT_ANGLE);
+
+            total_radiance += neighbour_radiance * weight;
+            total_weight += weight;
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 group_thread_id : SV_GroupThreadID,
+          in uint3 group_id : SV_GroupID)
+{
+    uint array_index = group_id.x / GROUPS_PER_PROBE;
+    uint local_group = group_id.x % GROUPS_PER_PROBE;
+    uint thread_index = group_thread_id.x + local_group * GROUP;
+    uint2 texel = uint2(thread_index % PROBE_RES, thread_index / PROBE_RES);
+
+    uint entry_index = ProbeArrays.Load((PROBE_ARRAY_ENTRY + array_index) * 4);
+    uint cell_index  = ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL) & UNFLAG;
+
+    uint cascade = cell_index / PROBE_CASCADE_CELL_COUNT;
+    uint cascade_cell = cell_index % PROBE_CASCADE_CELL_COUNT;
+    uint3 cell_coord = uint3(cascade_cell % PROBE_CASCADE_DIM,
+                             (cascade_cell / PROBE_CASCADE_DIM) % PROBE_CASCADE_DIM,
+                             cascade_cell / (PROBE_CASCADE_DIM * PROBE_CASCADE_DIM));
+
+    uint probe_atlas_x = entry_index % PROBE_ATLAS_COUNT_X;
+    uint probe_atlas_y = entry_index / PROBE_ATLAS_COUNT_X;
+
+    uint rad_atlas_x = probe_atlas_x * PROBE_RES + texel.x;
+    uint rad_atlas_y = probe_atlas_y * PROBE_RES + texel.y;
+
+    float4 radiance_and_depth = ProbeGatherAtlas[uint2(rad_atlas_x, rad_atlas_y)];
+    float3 radiance = radiance_and_depth.xyz;
+    float  depth = radiance_and_depth.w;
+
+    float3 direction = probeTexelToDirection(texel);
+
+    float3 probe_position = asfloat(ProbeEntries.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_POSITION));
+
+    float3 total_radiance = radiance.xyz;
+    float total_weight = 1.0f;
+
+    int3 offsets[6];
+    offsets[0] = int3(-1,  0,  0);
+    offsets[1] = int3( 1,  0,  0);
+    offsets[2] = int3( 0, -1,  0);
+    offsets[3] = int3( 0,  1,  0);
+    offsets[4] = int3( 0,  0, -1);
+    offsets[5] = int3( 0,  0,  1);
+
+    float3 hit_position = probe_position + direction * depth;
+
+    [loop]
+    for (uint i = 0; i < 6; i++)
+    {
+        performNeighbour(cell_coord + offsets[i],
+                         cascade,
+                         texel,
+                         probe_position,
+                         direction,
+                         hit_position,
+                         depth,
+                         total_radiance,
+                         total_weight);
+    }
+
+    radiance = total_radiance / total_weight;
+
+    ProbeFilterAtlasRW[uint2(rad_atlas_x, rad_atlas_y)] = float4(radiance, depth);
+}

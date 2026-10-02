@@ -1,0 +1,44 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer SurfelCountsRW;
+
+RWBuffer<uint> ArgumentsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint request_count = min(SurfelCountsRW.Load(SURFEL_COUNT_REQUESTS * 4), SURFEL_MAX_REQUESTS);
+
+	uint pool_count = min(SurfelCountsRW.Load(SURFEL_COUNT_POOL * 4), SURFEL_MAX_ENTRIES);
+    uint next_pool_count = pool_count + request_count;
+
+    if (next_pool_count > SURFEL_MAX_ENTRIES)
+    	next_pool_count = SURFEL_MAX_ENTRIES;
+
+    uint count = next_pool_count - pool_count;
+
+    ArgumentsRW[0] = (count + GROUP - 1) / GROUP;
+    ArgumentsRW[1] = 1;
+    ArgumentsRW[2] = 1;
+    ArgumentsRW[3] = 0;
+
+    ArgumentsRW[4] = (request_count + GROUP - 1) / GROUP;
+    ArgumentsRW[5] = 1;
+    ArgumentsRW[6] = 1;
+    ArgumentsRW[7] = 0;
+
+    uint entry_count = SurfelCountsRW.Load(SURFEL_COUNT_ENTRY * 4);
+    entry_count = min(entry_count + count, SURFEL_MAX_ENTRIES);
+
+    SurfelCountsRW.Store(SURFEL_COUNT_ENTRY    * 4, entry_count);
+    SurfelCountsRW.Store(SURFEL_COUNT_POOL     * 4, next_pool_count);
+    SurfelCountsRW.Store(SURFEL_COUNT_NEW     * 4, count);
+}

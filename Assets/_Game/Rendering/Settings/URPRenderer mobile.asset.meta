@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b7c72a507cf6b4e108db8325537842d1
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/_Game/Rendering/Settings/URPRenderer mobile.asset
+  uploadId: 889012

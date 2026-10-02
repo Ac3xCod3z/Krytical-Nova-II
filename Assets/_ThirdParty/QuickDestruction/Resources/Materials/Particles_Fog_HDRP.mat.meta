@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 09925c3ff651a5846a138d1c581eca9c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Resources/Materials/Particles_Fog_HDRP.mat
+  uploadId: 991852

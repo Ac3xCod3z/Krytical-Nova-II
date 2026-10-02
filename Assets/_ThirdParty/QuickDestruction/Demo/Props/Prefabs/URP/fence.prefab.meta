@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: e02b5fe53cf408b4fa82e2613674b50b
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Demo/Props/Prefabs/URP/fence.prefab
+  uploadId: 991852

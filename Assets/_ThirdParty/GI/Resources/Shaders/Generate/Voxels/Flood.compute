@@ -1,0 +1,71 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../../Shared/Defines.hlsl"
+#include "../../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint3 Resolution;
+float MaxDistance;
+
+ByteAddressBuffer Input;
+ByteAddressBuffer Mark;
+
+RWByteAddressBuffer BufferRW;
+RWByteAddressBuffer MarkRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float4 get(int x, int y, int z, inout uint count)
+{
+    uint3 coord = uint3(clamp(int3(x, y, z), 0, Resolution - 1));
+    uint index = coord.x + coord.y * Resolution.x + coord.z * Resolution.x * Resolution.y;
+
+    float4 s = unpackR8G8B8A8(Input.Load(index * 4));
+    uint m = min(1, Mark.Load(index * 4));
+
+    count += m;
+    return s * (float)m;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 8)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint3 coord = dispatch_thread_id;
+
+	[branch]
+	if (all(coord < Resolution))
+	{
+        int3 c = int3(coord);
+
+        uint count = 0;
+        float4 d = get(c.x, c.y, c.z, count);
+
+        [branch]
+        if (count == 0)
+        {
+            d += get(c.x - 1, c.y, c.z, count);
+            d += get(c.x + 1, c.y, c.z, count);
+            d += get(c.x, c.y - 1, c.z, count);
+            d += get(c.x, c.y + 1, c.z, count);
+            d += get(c.x, c.y, c.z - 1, count);
+            d += get(c.x, c.y, c.z + 1, count);
+
+            [branch]
+            if (count > 0)
+            {
+                d /= (float)count;
+                count = 1;
+            }
+        }
+
+        uint index = coord.x + coord.y * Resolution.x + coord.z * Resolution.x * Resolution.y;
+
+        BufferRW.Store(index * 4, packR8G8B8A8(d));
+        MarkRW.Store(index * 4, min(1, count));
+	}
+}

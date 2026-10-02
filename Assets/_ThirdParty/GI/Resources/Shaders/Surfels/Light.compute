@@ -1,0 +1,98 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Rays.hlsl"
+#include "../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 ReferencePosition;
+
+float3 LightColor;
+float3 LightPosition;
+float LightRange;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/GDF.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer SurfelCounts;
+ByteAddressBuffer SurfelArrays;
+ByteAddressBuffer SurfelEntries;
+
+RWByteAddressBuffer SurfelRadianceRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint array_index = dispatch_thread_id.x;
+
+    [branch]
+    if (array_index < SurfelCounts.Load(SURFEL_COUNT_ENTRY * 4))
+    {
+        uint entry_index = SurfelArrays.Load((SURFEL_ARRAY_ENTRY + array_index) * 4);
+
+        uint2 normal_color = SurfelEntries.Load2(SURFEL_ENTRY_STRIDE * entry_index + SURFEL_ENTRY_NORMAL);
+        float3 normal = normalize(unpackR11G11B10(normal_color.x) * 2 - 1);
+        float4 color = unpackR8G8B8A8(normal_color.y);
+        float3 position = asfloat(SurfelEntries.Load3(SURFEL_ENTRY_STRIDE * entry_index + SURFEL_ENTRY_POSITION));
+
+        float3 vec = LightPosition - position;
+        float dist = length(vec);
+        float ndotl = 0;
+
+        [branch]
+        if (dist < LightRange)
+        {
+            float3 direction = vec / max(0.001, dist);
+
+            ndotl = saturate(dot(normal, direction));
+
+            float distance_squared = dist * dist;
+            float attenuation = rcp(distance_squared);
+            ndotl *= attenuation;
+
+            [branch]
+            if (ndotl > 0)
+            {
+                float3 sample_position = position + direction * GDF_SAMPLE_BIAS;
+
+                float min_trace_distance = 0;
+                float max_trace_distance = min(dist, 256);
+
+                Hit hit;
+                hit.has_hit = false;
+                hit.dist = max_trace_distance;
+
+                [flatten]
+                if (traceGlobal(sample_position,
+                                direction,
+                                min_trace_distance,
+                                max_trace_distance,
+
+                                32,
+
+                                hit))
+                {
+                    ndotl = 0;
+                }
+            }
+        }
+
+        [branch]
+        if (ndotl > 0)
+        {
+            float3 light = asfloat(SurfelRadianceRW.Load3(entry_index * RADIANCE_STRIDE));
+            light += LightColor * ndotl * min(color.rgb, 0.9);
+
+            SurfelRadianceRW.Store3(entry_index * RADIANCE_STRIDE, asuint(light));
+        }
+    }
+}

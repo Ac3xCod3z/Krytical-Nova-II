@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5365077cc9a442b4d991d32fe3fb91e7
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/Octahedral.hlsl
+  uploadId: 889012

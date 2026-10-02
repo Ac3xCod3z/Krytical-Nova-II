@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9774f82965da535478d89c1056011686
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Surfels/Reset.compute
+  uploadId: 889012

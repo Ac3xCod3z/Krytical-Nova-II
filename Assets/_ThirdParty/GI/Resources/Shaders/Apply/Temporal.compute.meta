@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 14fcc9b4d30eae24abb8488a490840b0
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Apply/Temporal.compute
+  uploadId: 889012

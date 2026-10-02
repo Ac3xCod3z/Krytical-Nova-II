@@ -1,0 +1,128 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Instances.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 GDFBasePosition;
+float Influence;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer Requests;
+
+ByteAddressBuffer DFInstances;
+
+ByteAddressBuffer SDFAssets;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer SDFGridCellsRW;
+RWByteAddressBuffer SDFGridWritesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint pair(uint n, uint m)
+{
+    return n + m;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint index = dispatch_thread_id.x;
+
+    if (index < Requests.Load(SDF_REQUEST_COUNT))
+    {
+        uint instance = Requests.Load(SDF_REQUEST_INDICES + index * 4);
+        uint instance_index = index - Requests.Load(SDF_REQUEST_OFFSETS + instance * 4);
+
+        uint asset = loadAssetMapping(DFInstances, instance);
+        float4x4 world = loadTransform(DFInstances, instance);
+
+        uint base_offset = ASSET_STRIDE * asset;
+
+        float3 local_min = asfloat(SDFAssets.Load3(base_offset + 16));
+        float3 local_max = asfloat(SDFAssets.Load3(base_offset + 32));
+
+        float4 corners[8];
+        corners[0] = mul(world, float4(local_min.x, local_min.y, local_min.z, 1));
+        corners[1] = mul(world, float4(local_max.x, local_min.y, local_min.z, 1));
+        corners[2] = mul(world, float4(local_min.x, local_min.y, local_max.z, 1));
+        corners[3] = mul(world, float4(local_max.x, local_min.y, local_max.z, 1));
+        corners[4] = mul(world, float4(local_min.x, local_max.y, local_min.z, 1));
+        corners[5] = mul(world, float4(local_max.x, local_max.y, local_min.z, 1));
+        corners[6] = mul(world, float4(local_min.x, local_max.y, local_max.z, 1));
+        corners[7] = mul(world, float4(local_max.x, local_max.y, local_max.z, 1));
+
+        float3 aabb_min = corners[0].xyz;
+        float3 aabb_max = corners[0].xyz;
+
+        [unroll]
+        for (uint corner_id = 0; corner_id < 8; corner_id++)
+        {
+            aabb_min = min(corners[corner_id].xyz, aabb_min);
+            aabb_max = max(corners[corner_id].xyz, aabb_max);
+        }
+
+        aabb_min -= Influence;
+        aabb_max += Influence;
+
+        int3 cell_min = max(int3((aabb_min - GDFBasePosition) / GDF_CELL_DIM), 0);
+        int3 cell_max = min(int3((aabb_max - GDFBasePosition) / GDF_CELL_DIM), GDF_GRID_DIM - 1);
+
+        uint write = INVALID_ID;
+
+        [branch]
+        if (all(cell_min < int3(GDF_GRID_DIM, GDF_GRID_DIM, GDF_GRID_DIM)) && all(cell_max >= 0) && all(cell_min <= cell_max))
+        {
+            int3 size = cell_max - cell_min + 1;
+
+            int3 instance_coord = int3(instance_index % size.x,
+                                       (instance_index / size.x) % size.y,
+                                       instance_index / (size.x * size.y));
+
+            [branch]
+            if (all(instance_coord < size))
+            {
+                int3 coord = cell_min + instance_coord;
+                uint cell_index = coord.x + coord.y * GDF_GRID_DIM + coord.z * GDF_GRID_DIM * GDF_GRID_DIM;
+
+                SDFGridCellsRW.InterlockedAdd((cell_index * SDF_GRID_STRIDE) + SDF_GRID_COUNT, 1);
+
+                write = cell_index;
+
+                //
+
+                uint hash = 1;
+
+                hash = pair(hash, asuint(world._m00));
+                hash = pair(hash, asuint(world._m01));
+                hash = pair(hash, asuint(world._m02));
+                hash = pair(hash, asuint(world._m03));
+
+                hash = pair(hash, asuint(world._m10));
+                hash = pair(hash, asuint(world._m11));
+                hash = pair(hash, asuint(world._m12));
+                hash = pair(hash, asuint(world._m13));
+
+                hash = pair(hash, asuint(world._m20));
+                hash = pair(hash, asuint(world._m21));
+                hash = pair(hash, asuint(world._m22));
+                hash = pair(hash, asuint(world._m23));
+
+                hash = pair(hash, instance);
+                hash = pair(hash, loadHashID(DFInstances, instance));
+
+                SDFGridCellsRW.InterlockedAdd((cell_index * SDF_GRID_STRIDE) + SDF_GRID_HASH, hash);
+            }
+        }
+
+        SDFGridWritesRW.Store(index * 4, write);
+    }
+}

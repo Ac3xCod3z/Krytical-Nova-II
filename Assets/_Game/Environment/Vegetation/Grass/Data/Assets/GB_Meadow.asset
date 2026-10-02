@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0dac3a6936af3074091facefeab84fe2, type: 3}
+  m_Name: GB_Meadow
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.Grass.GrassBiome
+  density: 1
+  entries:
+  - type: {fileID: 11400000, guid: c7fb623785047a646af250527e3cbb92, type: 2}
+    weight: 0.8
+    patchiness: 0.6
+    patchSize: 14
+  - type: {fileID: 11400000, guid: e6094e63398ab1c44b816c12e9ce7f3a, type: 2}
+    weight: 0.8
+    patchiness: 0.6
+    patchSize: 11
+  - type: {fileID: 11400000, guid: 6a8340c72526f05408f79857a09a5c59, type: 2}
+    weight: 1.2
+    patchiness: 0.45
+    patchSize: 12
+  - type: {fileID: 11400000, guid: 8e7633fdb2fbe5f49b3a09af49458cce, type: 2}
+    weight: 1.2
+    patchiness: 0.35
+    patchSize: 9
+  - type: {fileID: 11400000, guid: 99611d26a97602642b7030dd67970b18, type: 2}
+    weight: 0.9
+    patchiness: 0.2
+    patchSize: 8

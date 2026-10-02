@@ -1,0 +1,41 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int3 Offset;
+uint ReadIndex;
+uint WriteIndex;
+
+RWTexture3D<float> GDFSDFRW;
+RWTexture3D<uint> GDFMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(4, 4, 4)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint3 coord = dispatch_thread_id.xyz;
+
+    float sdf = 0;
+    uint instance = 0;
+
+    int3 read = coord + Offset;
+
+    [branch]
+    if (all(read >= 0) && all(read < int(GDF_CASCADE_DIM)))
+    {
+        uint3 read_coord = uint3(read.x + ReadIndex * GDF_CASCADE_DIM, read.y, read.z);
+
+        sdf = GDFSDFRW[read_coord];
+        instance = GDFMapRW[read_coord];
+    }
+
+    coord.x += WriteIndex * GDF_CASCADE_DIM;
+
+    GDFSDFRW[coord] = sdf;
+    GDFMapRW[coord] = instance;
+}

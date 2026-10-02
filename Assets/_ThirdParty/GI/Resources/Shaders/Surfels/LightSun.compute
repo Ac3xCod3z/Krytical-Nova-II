@@ -1,0 +1,117 @@
+#pragma kernel Main
+
+#pragma multi_compile_local __ TRACE_LARGE
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Instances.hlsl"
+#include "../Shared/Rays.hlsl"
+#include "../Shared/SDF.hlsl"
+#include "../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 LightColor;
+float3 LightDirection;
+float3 ReferencePosition;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/GDF.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer SurfelCounts;
+ByteAddressBuffer SurfelArrays;
+ByteAddressBuffer SurfelEntries;
+
+ByteAddressBuffer Large;
+
+ByteAddressBuffer SDFAssets;
+ByteAddressBuffer DFInstances;
+ByteAddressBuffer SDFBricks;
+
+sampler3D SDFAtlas;
+
+RWByteAddressBuffer SurfelRadianceRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint array_index = dispatch_thread_id.x;
+
+    [branch]
+    if (array_index < SurfelCounts.Load(SURFEL_COUNT_ENTRY * 4))
+    {
+        uint entry_index = SurfelArrays.Load((SURFEL_ARRAY_ENTRY + array_index) * 4);
+
+        uint2 normal_color = SurfelEntries.Load2(SURFEL_ENTRY_STRIDE * entry_index + SURFEL_ENTRY_NORMAL);
+        float3 normal = normalize(unpackR11G11B10(normal_color.x) * 2 - 1);
+        float4 color = unpackR8G8B8A8(normal_color.y);
+
+        float ndotl = saturate(dot(normal, -LightDirection));
+
+        float3 surfel_position = asfloat(SurfelEntries.Load3(SURFEL_ENTRY_STRIDE * entry_index + SURFEL_ENTRY_POSITION));
+        float3 sample_position = surfel_position - LightDirection * GDF_SAMPLE_BIAS;
+
+        [branch]
+        if (ndotl > 0)
+        {
+            float min_trace_distance = 0.25f;
+            float max_trace_distance = 256;
+
+            ndotl *= traceGlobalShadow(sample_position,
+                                       -LightDirection,
+                                       min_trace_distance,
+                                       max_trace_distance,
+
+                                       32);
+        }
+
+        #if TRACE_LARGE
+
+            uint instance_count = Large.Load(SDF_LARGE_COUNT);
+
+            [branch]
+            if (ndotl > 0 && instance_count > 0)
+            {
+                [loop]
+                for (uint instance_index = 0; instance_index < instance_count; instance_index++)
+                {
+                    uint instance_value = Large.Load(SDF_LARGE_INDICES + instance_index * 4);
+
+                    uint instance_id = (instance_value & 0xFFFFFF);
+                    uint mip_index = (instance_value >> 24) & 0xFF;
+
+                    uint asset_id = loadAssetMapping(DFInstances, instance_id);
+
+                    ndotl *= traceInstanceShadow(SDFAssets,
+                                                 DFInstances,
+                                                 SDFBricks,
+                                                 SDFAtlas,
+
+                                                 instance_id,
+                                                 asset_id,
+                                                 sample_position,
+                                                 -LightDirection,
+                                                 0.25f,
+                                                 8192.0f);
+                }
+            }
+
+        #endif
+
+        [branch]
+        if (ndotl > 0)
+        {
+            float3 light = asfloat(SurfelRadianceRW.Load3(entry_index * RADIANCE_STRIDE));
+            light += LightColor * ndotl * min(color.rgb, 0.9);
+
+            SurfelRadianceRW.Store3(entry_index * RADIANCE_STRIDE, asuint(light));
+        }
+    }
+}

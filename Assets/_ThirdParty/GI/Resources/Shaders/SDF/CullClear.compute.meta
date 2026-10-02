@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 62252769468e82d4a89a9383c148a9c3
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/SDF/CullClear.compute
+  uploadId: 889012

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 479555ba8c191467eb82b00d040acb4a
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scenes/Demo.unity
+  uploadId: 889012

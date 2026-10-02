@@ -1,0 +1,37 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer ProbeArrays;
+ByteAddressBuffer ProbeEntries;
+ByteAddressBuffer ProbeSurfelMap;
+
+RWByteAddressBuffer SurfelEntriesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 group_thread_id : SV_GroupThreadID,
+          in uint3 group_id : SV_GroupID)
+{
+    uint array_index = group_id.x / GROUPS_PER_PROBE;
+    uint local_group_index = group_id.x % GROUPS_PER_PROBE;
+    uint local_thread_index = group_thread_id.x;
+    uint local_sampler_index = local_group_index * GROUP + local_thread_index;
+
+    uint entry_index = ProbeArrays.Load((PROBE_ARRAY_ENTRY + array_index) * 4);
+    uint sampler_index = entry_index * PROBE_RAY_COUNT + local_sampler_index;
+
+    uint surfel_id = ProbeSurfelMap.Load(SURFEL_MAP_STRIDE * sampler_index);
+
+    [branch]
+    if (surfel_id < SURFEL_MAX_ENTRIES)
+    {
+        uint age = ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_AGE);
+        SurfelEntriesRW.InterlockedMin(surfel_id * SURFEL_ENTRY_STRIDE + SURFEL_ENTRY_AGE, age);
+    }
+}

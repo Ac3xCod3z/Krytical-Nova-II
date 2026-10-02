@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b8c01bd8eda0f4544b38b4e45fe33bf0
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/FarProbes/MaintainCollect.compute
+  uploadId: 889012

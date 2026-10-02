@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7c435d73bf548e64e8f3673f790344d7
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/QuickProfiles/Modules_WholeBuilding_Destructible_LocalProfile 2.asset
+  uploadId: 991852

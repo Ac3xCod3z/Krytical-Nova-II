@@ -1,0 +1,69 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Probes.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint ScreenProbeCountX;
+uint ScreenProbeCountY;
+
+Texture2D<float4> ScreenProbeRadianceAtlas;
+
+sampler2D OctahedralSolidAngle;
+
+RWByteAddressBuffer ScreenProbeSHRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+groupshared float4 group_sh2[SCREEN_PROBE_RES * SCREEN_PROBE_RES * 3];
+
+[numthreads(SCREEN_PROBE_RES, SCREEN_PROBE_RES, 1)]
+void Main(in uint3 group_thread_id : SV_GroupThreadID,
+          in uint3 group_id : SV_GroupID)
+{
+    uint thread_index = group_thread_id.x + group_thread_id.y * SCREEN_PROBE_RES;
+    uint entry_index = group_id.x;
+
+    float2 octahedral_uv = screenTexelToUv(group_thread_id.xy);
+    float3 direction = octahedralMapToDirection(octahedral_uv);
+
+    uint probe_atlas_x = entry_index % ScreenProbeCountX;
+    uint probe_atlas_y = entry_index / ScreenProbeCountX;
+
+    uint atlas_x = probe_atlas_x * SCREEN_PROBE_RES + group_thread_id.x;
+    uint atlas_y = probe_atlas_y * SCREEN_PROBE_RES + group_thread_id.y;
+
+    float3 radiance = ScreenProbeRadianceAtlas.Load(uint3(atlas_x, atlas_y, 0)).rgb;
+
+    float solid_angle = tex2Dlod(OctahedralSolidAngle, float4(octahedral_uv, 0, 0)).x;
+    radiance *= solid_angle;
+
+    float4 coeff = cosineSH2(direction);
+
+    group_sh2[thread_index * 3 + 0] = coeff * radiance.r;
+    group_sh2[thread_index * 3 + 1] = coeff * radiance.g;
+    group_sh2[thread_index * 3 + 2] = coeff * radiance.b;
+
+    GroupMemoryBarrierWithGroupSync();
+
+    [unroll]
+    for (uint i = SCREEN_PROBE_RES * SCREEN_PROBE_RES / 2; i > 0; i >>= 1)
+    {
+        if (thread_index < i)
+        {
+            group_sh2[thread_index * 3 + 0] += group_sh2[(thread_index + i) * 3 + 0];
+            group_sh2[thread_index * 3 + 1] += group_sh2[(thread_index + i) * 3 + 1];
+            group_sh2[thread_index * 3 + 2] += group_sh2[(thread_index + i) * 3 + 2];
+        }
+
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    [branch]
+    if (thread_index < 3)
+        ScreenProbeSHRW.Store4(SH2_STRIDE * entry_index + FLOAT4_STRIDE * thread_index, asuint(group_sh2[thread_index]));
+}

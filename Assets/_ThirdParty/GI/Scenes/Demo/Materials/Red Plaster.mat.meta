@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e9e35def367ebf3469b7f9691b222bd7
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scenes/Demo/Materials/Red Plaster.mat
+  uploadId: 889012

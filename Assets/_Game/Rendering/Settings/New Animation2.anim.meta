@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0a8003f040ce3428e96be66c71e44844
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/_Game/Rendering/Settings/New Animation2.anim
+  uploadId: 889012

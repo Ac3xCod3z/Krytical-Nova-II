@@ -1,0 +1,29 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer SurfelCounts;
+ByteAddressBuffer SurfelArrays;
+
+RWByteAddressBuffer SurfelRequestMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint index = dispatch_thread_id.x;
+
+	[branch]
+	if (index < SurfelCounts.Load(SURFEL_COUNT_REQUESTS * 4))
+	{
+		// filled in SurfelQuery
+		uint cell_index = SurfelArrays.Load((SURFEL_ARRAY_TEMP + index) * 4);
+
+		SurfelRequestMapRW.Store(cell_index * 4, 0);
+	}
+}

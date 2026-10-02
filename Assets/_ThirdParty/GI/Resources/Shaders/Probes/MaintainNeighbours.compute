@@ -1,0 +1,67 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer ProbeArrays;
+ByteAddressBuffer ProbeCounts;
+ByteAddressBuffer ProbeGrid;
+
+RWByteAddressBuffer ProbeEntriesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint array_index = dispatch_thread_id.x;
+
+	[branch]
+	if (array_index < ProbeCounts.Load(PROBE_COUNT_ENTRY * 4))
+	{
+		uint entry_index = ProbeArrays.Load((PROBE_ARRAY_ENTRY + array_index) * 4);
+
+		uint2 cell_age = ProbeEntriesRW.Load2(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL);
+		uint age = cell_age.y;
+
+		[branch]
+		if (age > 1)
+		{
+			uint cell_index = cell_age.x & UNFLAG;
+
+			uint cascade = cell_index / PROBE_CASCADE_CELL_COUNT;
+			uint cascade_cell = cell_index % PROBE_CASCADE_CELL_COUNT;
+
+			int3 cell_coord = int3(cascade_cell,
+				                   cascade_cell / PROBE_CASCADE_DIM,
+				                   cascade_cell / (PROBE_CASCADE_DIM * PROBE_CASCADE_DIM)) % PROBE_CASCADE_DIM;
+
+			for (uint i = 0; i < 27; i++)
+			{
+				int3 neighbour_coord = cell_coord + int3((i % 3) - 1, ((i / 3) % 3) - 1, (i / 9) - 1);
+
+				[branch]
+				if (any(neighbour_coord != cell_coord) && all(neighbour_coord >= 0) && all(neighbour_coord < int(PROBE_CASCADE_DIM)))
+				{
+					uint neighbour_index = neighbour_coord.x +
+										   (neighbour_coord.y * PROBE_CASCADE_DIM) +
+										   (neighbour_coord.z * PROBE_CASCADE_DIM * PROBE_CASCADE_DIM) +
+	  									   cascade * PROBE_CASCADE_CELL_COUNT;
+
+					uint neighbour_entry = ProbeGrid.Load(neighbour_index * 4);
+
+					if (neighbour_entry != INVALID_ID)
+					{
+						uint neighbour_age = ProbeEntriesRW.Load(neighbour_entry * PROBE_ENTRY_STRIDE + PROBE_ENTRY_AGE);
+						age = min(age, neighbour_age + 1);
+					}
+				}
+			}
+
+			ProbeEntriesRW.Store(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_AGE, age);
+		}
+	}
+}

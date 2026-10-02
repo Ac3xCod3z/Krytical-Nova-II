@@ -1,0 +1,34 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint Asset;
+uint BaseBrick;
+uint3 BrickCounts;
+float EmptyStep;
+float Bias;
+float ValueScale;
+float3 VolumeMin;
+float3 VolumeMax;
+
+RWByteAddressBuffer AssetsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint base = Asset * ASSET_STRIDE;
+
+	uint counts = ((BrickCounts.x & 0xFF)     )  |
+				  ((BrickCounts.y & 0xFF) << 8)  |
+			      ((BrickCounts.z & 0xFF) << 16);
+
+	AssetsRW.Store4(base, uint4(BaseBrick, counts, asuint(EmptyStep), asuint(Bias)));
+	AssetsRW.Store4(base + 16, uint4(asuint(VolumeMin), asuint(ValueScale)));
+	AssetsRW.Store4(base + 32, uint4(asuint(VolumeMax), 0));
+}

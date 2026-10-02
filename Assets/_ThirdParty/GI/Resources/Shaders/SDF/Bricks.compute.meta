@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: da5fdfc62c400e14189e550e5802a033
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/SDF/Bricks.compute
+  uploadId: 889012

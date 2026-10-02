@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 05dc49d33031b254b8c7d81a028866fd
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Passes/FarProbes/FarProbeRadiancePass.cs
+  uploadId: 889012

@@ -1,0 +1,310 @@
+#pragma kernel Main
+#pragma kernel MainUV
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../../Shared/Defines.hlsl"
+#include "../../Shared/Emission.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 BoundOrigin;
+float3 BoundSize;
+uint3 Resolution;
+float DoubleSided;
+
+float4x4 Transform;
+
+ByteAddressBuffer IndexBuffer;
+ByteAddressBuffer VertexBuffer;
+ByteAddressBuffer UVBuffer;
+
+float3 MaterialColor;
+float3 EmissionColor;
+float SplatThreshold;
+
+Texture2D<float4> MaterialTexture;
+SamplerState samplerMaterialTexture;
+
+Texture2D<float4> EmissionMap;
+SamplerState samplerEmissionMap;
+
+uint VertexStride;
+uint PositionOffset;
+
+uint UVStride;
+uint UVOffset;
+
+uint TriangleCount;
+float TriangleMargin;
+
+RWByteAddressBuffer BufferRW;
+RWByteAddressBuffer MarkRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint loadIndex(uint i)
+{
+	// 2 byte indices, Load() grabs 4 bytes at a time (4 byte aligned) so need to do some unpacking
+	uint entry_index = i >> 1u;
+	uint entry_offset = i & 1u;
+	uint read = IndexBuffer.Load(entry_index << 2);
+	return entry_offset == 1u ? ((read >> 16) & 0xffff) : read & 0xffff;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 loadPosition(uint i)
+{
+	return asfloat(VertexBuffer.Load3(i * VertexStride + PositionOffset));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float2 loadUV(uint i)
+{
+	return asfloat(UVBuffer.Load2(i * UVStride + UVOffset));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int3 meshToGrid(float3 p)
+{
+	return int3((p - BoundOrigin) * float3(Resolution + 1) / BoundSize);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 gridToMesh(int3 g)
+{
+	return BoundOrigin + float3(g + 0.5) * BoundSize / float3(Resolution + 1);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float distanceToEdge(float3 p, float3 x0, float3 x1, out float3 n)
+{
+	//demo-team-begin
+		// With finite numerical precision dist(P, AB) != dist(P, BA)
+		// The above causes lots of issues with negative distance to edges winning over
+		// positive distances to edges outside of the mesh, by being randomly ever so slightly smaller.
+		// Fix by making sure they have a stable ordering (simplified to testing .x only) and then relying on the fact,
+		// that the function encoding to uint gives preference to positive values.
+	if (x0.x > x1.x)
+	{
+		float3 temp = x0;
+		x0 = x1;
+		x1 = temp;
+	}
+	//demo-team-end
+
+	float3 x10 = x1 - x0;
+
+	float t = dot(x1 - p, x10) / dot(x10, x10);
+	t = max(0.0f, min(t, 1.0f));
+
+	float3 a = p - (t * x0 + (1.0f - t) * x1);
+	float d = length(a);
+	n = a / (d + 1e-30f);
+
+	return d;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Check if p is in the positive or negative side of triangle (x0, x1, x2)
+// Positive side is where the normal vector of triangle ( (x1-x0) x (x2-x0) ) is pointing to.
+float distanceToTriangle(float3 p, float3 x0, float3 x1, float3 x2)
+{
+	float d = 0;
+	float3 x02 = x0 - x2;
+	float l0 = length(x02) + 1e-30f;
+	x02 = x02 / l0;
+	float3 x12 = x1 - x2;
+	float l1 = dot(x12, x02);
+	x12 = x12 - l1 * x02;
+	float l2 = length(x12) + 1e-30f;
+	x12 = x12 / l2;
+	float3 px2 = p - x2;
+
+	float b = dot(x12, px2) / l2;
+	float a = (dot(x02, px2) - l1 * b) / l0;
+	float c = 1 - a - b;
+
+	// normal vector of triangle. Don't need to normalize this yet.
+	float3 nTri = cross((x1 - x0), (x2 - x0));
+	float3 n;
+
+	float tol = 1e-8f;
+
+	if (a >= -tol && b >= -tol && c >= -tol)
+	{
+		n = p - (a * x0 + b * x1 + c * x2);
+		d = length(n);
+
+		float3 n1 = n / d;
+		float3 n2 = nTri / (length(nTri) + 1e-30f);		// if d == 0
+
+		n = (d > 0) ? n1 : n2;
+	}
+	else
+	{
+		float3 n_12;
+		float3 n_02;
+		d = distanceToEdge(p, x0, x1, n);
+
+		float d12 = distanceToEdge(p, x1, x2, n_12);
+		float d02 = distanceToEdge(p, x0, x2, n_02);
+
+		d = min(d, d12);
+		d = min(d, d02);
+
+		n = (d == d12) ? n_12 : n;
+		n = (d == d02) ? n_02 : n;
+	}
+
+	d = (dot(p - x0, nTri) < 0.f) ? -d : d;
+
+	return d;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 calculateWeights(float3 p, float3 v0, float3 v1, float3 v2)
+{
+	float3 normal = cross(v1 - v0, v2 - v0);
+	float denom = dot(normal, normal);
+
+	float u = dot(normal, cross(v2 - v1, p - v1)) / denom;
+	float v = dot(normal, cross(v0 - v2, p - v2)) / denom;
+
+	return float3(u, v, 1 - u - v);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint triangle_index = dispatch_thread_id.x;
+
+	[branch]
+	if (triangle_index < TriangleCount)
+	{
+		uint base_index = triangle_index * 3;
+		uint i0 = loadIndex(base_index + 0);
+		uint i1 = loadIndex(base_index + 1);
+		uint i2 = loadIndex(base_index + 2);
+
+		float3 p0 = mul(Transform, float4(loadPosition(i0), 1)).xyz;
+		float3 p1 = mul(Transform, float4(loadPosition(i1), 1)).xyz;
+		float3 p2 = mul(Transform, float4(loadPosition(i2), 1)).xyz;
+
+		float3 p_min = min(p0, min(p1, p2));
+		float3 p_max = max(p0, max(p1, p2));
+
+		uint3 g_min = uint3(clamp(meshToGrid(p_min - TriangleMargin), 0, Resolution - 1));
+		uint3 g_max = uint3(clamp(meshToGrid(p_max + TriangleMargin), 0, Resolution - 1));
+
+		for (uint z = g_min.z; z <= g_max.z; z++)
+			for (uint y = g_min.y; y <= g_max.y; y++)
+				for (uint x = g_min.x; x <= g_max.x; x++)
+				{
+					uint3 g = uint3(x, y, z);
+					float3 p = gridToMesh(g);
+					float d = distanceToTriangle(p, p0, p1, p2);
+
+					[branch]
+					if (d < SplatThreshold)
+					{
+						uint index = x + y * Resolution.x + z * Resolution.x * Resolution.y;
+
+						uint4 result = uint4(colorAndEmission(MaterialColor, EmissionColor) * 255);
+
+						// doing it in pages, because of shader translation bug on iOS.
+						uint page = Resolution.x * Resolution.y * Resolution.z * 4;
+
+						BufferRW.InterlockedAdd(page * 0 + index * 4, result.x);
+						BufferRW.InterlockedAdd(page * 1 + index * 4, result.y);
+						BufferRW.InterlockedAdd(page * 2 + index * 4, result.z);
+						BufferRW.InterlockedAdd(page * 3 + index * 4, result.w);
+
+						MarkRW.InterlockedAdd(index * 4, 1);
+					}
+				}
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void MainUV(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint triangle_index = dispatch_thread_id.x;
+
+	[branch]
+	if (triangle_index < TriangleCount)
+	{
+		uint base_index = triangle_index * 3;
+		uint i0 = loadIndex(base_index + 0);
+		uint i1 = loadIndex(base_index + 1);
+		uint i2 = loadIndex(base_index + 2);
+
+		float3 p0 = mul(Transform, float4(loadPosition(i0), 1)).xyz;
+		float3 p1 = mul(Transform, float4(loadPosition(i1), 1)).xyz;
+		float3 p2 = mul(Transform, float4(loadPosition(i2), 1)).xyz;
+
+		float2 uv0 = loadUV(i0);
+		float2 uv1 = loadUV(i1);
+		float2 uv2 = loadUV(i2);
+
+		float3 p_min = min(p0, min(p1, p2));
+		float3 p_max = max(p0, max(p1, p2));
+
+		uint3 g_min = uint3(clamp(meshToGrid(p_min - TriangleMargin), 0, Resolution - 1));
+		uint3 g_max = uint3(clamp(meshToGrid(p_max + TriangleMargin), 0, Resolution - 1));
+
+		for (uint z = g_min.z; z <= g_max.z; z++)
+			for (uint y = g_min.y; y <= g_max.y; y++)
+				for (uint x = g_min.x; x <= g_max.x; x++)
+				{
+					uint3 g = uint3(x, y, z);
+					float3 p = gridToMesh(g);
+					float d = distanceToTriangle(p, p0, p1, p2);
+
+					d = lerp(d, abs(d), DoubleSided);
+
+					uint index = x + y * Resolution.x + z * Resolution.x * Resolution.y;
+
+					[branch]
+					if (abs(d) <= SplatThreshold)
+					{
+						float3 w = calculateWeights(p, p0, p1, p2);
+						float2 uv = uv0 * w.x + uv1 * w.y + uv2 * w.z;
+
+						float4 tex = MaterialTexture.SampleLevel(samplerMaterialTexture, uv, 0);
+
+						[branch]
+						if (tex.a >= 0.5f)
+						{
+							float3 color = MaterialColor * tex.rgb;
+
+							float3 tex_em = EmissionMap.SampleLevel(samplerMaterialTexture, uv, 0).rgb;
+							float3 emissive = EmissionColor * tex_em;
+
+							uint4 result = uint4(colorAndEmission(color, emissive) * 255);
+
+							// doing it in pages, because of shader translation bug on iOS.
+							uint page = Resolution.x * Resolution.y * Resolution.z * 4;
+
+							BufferRW.InterlockedAdd(page * 0 + index * 4, result.x);
+							BufferRW.InterlockedAdd(page * 1 + index * 4, result.y);
+							BufferRW.InterlockedAdd(page * 2 + index * 4, result.z);
+							BufferRW.InterlockedAdd(page * 3 + index * 4, result.w);
+
+							MarkRW.InterlockedAdd(index * 4, 1);
+						}
+					}
+				}
+	}
+}

@@ -1,0 +1,509 @@
+#pragma kernel Arguments
+#pragma kernel Push
+#pragma kernel Update
+#pragma kernel Visibility
+
+#pragma multi_compile_local __ TERRAIN
+#pragma multi_compile_local __ LOCAL_TRACING
+
+#pragma enable_d3d11_debug_symbols
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Rays.hlsl"
+#include "../Shared/Instances.hlsl"
+#include "../Shared/SDF.hlsl"
+#include "../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint FrameIndex;
+
+float ProbeCell;
+uint ProbeCascadeCount;
+
+float3 GDFBasePosition;
+
+float3 ReferencePosition;
+float4 ProbeCascadeOrigins[PROBE_MAX_CASCADES];
+
+ByteAddressBuffer ProbeArrays;
+ByteAddressBuffer ProbeCounts;
+ByteAddressBuffer ProbeEntries;
+
+ByteAddressBuffer SDFGridCells;
+
+ByteAddressBuffer DFInstances;
+
+sampler3D SDFAtlas;
+ByteAddressBuffer SDFAssets;
+ByteAddressBuffer SDFBricks;
+
+RWByteAddressBuffer ProbeEntriesRW;
+RWByteAddressBuffer ProbeArraysRW;
+RWByteAddressBuffer ProbeCountsRW;
+
+RWBuffer<uint> ArgumentsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const float VIEW_THRESHOLD = 0.5f;
+static const float OFFSET_THRESHOLD = 0.5f;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/GDF.hlsl"
+#include "../Shared/GDFVoxel.hlsl"
+#include "../Shared/ProbeGrid.hlsl"
+#include "../Shared/Terrain.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Arguments(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint count = min(ProbeCountsRW.Load(PROBE_COUNT_TEMP * 4), PROBE_MAX_ENTRIES);
+
+    ArgumentsRW[0] = count;
+    ArgumentsRW[1] = 1;
+    ArgumentsRW[2] = 1;
+    ArgumentsRW[3] = 0;
+
+    ArgumentsRW[4] = (count + GROUP - 1) / GROUP;
+    ArgumentsRW[5] = 1;
+    ArgumentsRW[6] = 1;
+    ArgumentsRW[7] = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float sampleDistance(float3 position)
+{
+    float distance_field = sampleGDF(position, gdfCascade(position));
+
+    #if TERRAIN
+
+    float t = distanceToTerrain(position);
+    distance_field = min(distance_field, t);
+
+    #endif
+
+    return distance_field;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float sampleDistanceFull(float3 position)
+{
+    float distance_field = sampleGDF(position, gdfCascade(position));
+
+    #if LOCAL_TRACING
+        uint3 cell_coord = uint3(clamp((position - GDFBasePosition) / GDF_CELL_DIM, 0, GDF_GRID_DIM - 1));
+        uint cell_index = cell_coord.x + cell_coord.y * GDF_GRID_DIM + cell_coord.z * GDF_GRID_DIM * GDF_GRID_DIM;
+
+        uint2 instances = SDFGridCells.Load2((cell_index * SDF_GRID_STRIDE) + SDF_GRID_OFFSET);
+
+        [loop]
+        for (uint instance_index = 0; instance_index < instances.x; instance_index++)
+        {
+            uint instance_value = SDFGridCells.Load(SDF_GRID_INSTANCES + (instances.y + instance_index) * 4);
+            uint instance_id = (instance_value & 0xFFFFFF);
+
+            uint sdf_asset = loadAssetMapping(DFInstances, instance_id);
+            float3 volume_scale = loadScale(DFInstances, instance_id);
+            float4x4 transform = loadTransform(DFInstances, instance_id);
+            float4x4 transform_inverted = loadInverseTransform(DFInstances, instance_id);
+
+            float3 volume_position = mul(transform_inverted, float4(position, 1)).xyz;
+
+            uint mip_index = 0;
+            SDF sdf = loadSDF(SDFAssets, sdf_asset);
+
+            float3 sdf_position_clamped = clamp(volume_position, sdf.volume_min, sdf.volume_max - 0.0001);
+            float3 normalized_volume_position = (sdf_position_clamped - sdf.volume_min) / (sdf.volume_max - sdf.volume_min);
+
+            float d = sampleDistanceField(SDFBricks, SDFAtlas, normalized_volume_position, sdf);
+            d *= volume_scale.x * 0.333f + volume_scale.y * 0.333f + volume_scale.z * 0.333f;
+            d -= sdf.bias;
+
+            float3 position_clamped = mul(transform, float4(sdf_position_clamped, 1)).xyz;
+            d += distance(position, position_clamped);
+
+            distance_field = min(distance_field, d);
+        }
+    #endif
+
+    #if TERRAIN
+
+    float t = distanceToTerrain(position);
+    distance_field = min(distance_field, t);
+
+    #endif
+
+    return distance_field;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 sampleNormal(float3 position)
+{
+    uint cascade = gdfCascade(position);
+    float3 normal = gdfNormalAtUVW(gdfUVW(position, cascade), cascade);
+
+    #if TERRAIN
+
+    float t = distanceToTerrain(position);
+
+    static const float THRESHOLD = 0.05f;
+    static const float INV_THRESHOLD = 1.0f / 0.05f;
+
+    if (t < 0.05f)
+    {
+        float3 n = terrainNormal(position);
+
+        normal = lerp(n, normal, saturate(t * INV_THRESHOLD));
+
+        float l = length(normal);
+        normal = l > 0.001f ? (normal / l) : normal;
+    }
+
+    #endif
+
+    return normal;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 viewVector(float3 view_vector, float3 normal)
+{
+    return normalize(view_vector + normal);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(64, 1, 1)]
+void Update(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint array_index = dispatch_thread_id.x;
+
+    [branch]
+    if (array_index < ProbeCountsRW.Load(PROBE_COUNT_ENTRY * 4))
+    {
+        uint entry_index = ProbeArraysRW.Load((PROBE_ARRAY_ENTRY + array_index) * 4);
+
+        uint age = ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_AGE);
+
+        uint cell_value = ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL);
+        bool is_new = (cell_value & FLAG_NEW) == FLAG_NEW;
+
+        bool is_ok;
+
+        [branch]
+        if (age == 0 && !is_new)
+        {
+            uint cell_index = cell_value & UNFLAG;
+            uint cascade = cell_index / PROBE_CASCADE_CELL_COUNT;
+            uint cascade_cell = cell_index % PROBE_CASCADE_CELL_COUNT;
+            uint3 cell_coord = uint3(cascade_cell % PROBE_CASCADE_DIM,
+                                     (cascade_cell / PROBE_CASCADE_DIM) % PROBE_CASCADE_DIM,
+                                     cascade_cell / (PROBE_CASCADE_DIM * PROBE_CASCADE_DIM));
+
+            float cell_dim = ProbeCell * (1u << cascade);
+
+            float3 corner_position = (ProbeCascadeOrigins[cascade].xyz + float3(cell_coord)) * cell_dim;
+            float3 view_vector = normalize(ReferencePosition - corner_position);
+
+            float3 normal = unpackR11G11B10(ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL)) * 2 - 1;
+            float3 offset = unpackR11G11B10(ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET)) * 2 - 1;
+
+            float3 previous_view = normalize(unpackR11G11B10(ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_USED_VIEW)) * 2 - 1);
+            float3 previous_offset = unpackR11G11B10(ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_USED_OFFSET)) * 2 - 1;
+
+            float3 view = viewVector(view_vector, normal);
+
+            float previous_d = asfloat(ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_DISTANCE));
+
+            float3 target_position = asfloat(ProbeEntries.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_POSITION));
+            float target_d = sampleDistanceFull(target_position);
+
+            float minimal = 0.1f * cell_dim;
+
+            is_ok = dot(previous_view, view) > VIEW_THRESHOLD &&
+                    distance(previous_offset, offset) < OFFSET_THRESHOLD &&
+                    target_d >= minimal &&
+                    target_d >= previous_d &&
+                    (target_d - previous_d) < 0.2f * cell_dim;
+        }
+        else
+            is_ok = age > 0 && !is_new;
+
+        [branch]
+        if (!is_ok)
+        {
+            uint index;
+            ProbeCountsRW.InterlockedAdd(PROBE_COUNT_TEMP * 4, 1, index);
+
+            ProbeArraysRW.Store((PROBE_ARRAY_TEMP + index) * 4, entry_index);
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+groupshared float4 group_positions[64];
+groupshared float group_distances[64];
+groupshared float4 group_positions2[8];
+groupshared float group_distances2[8];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(4, 4, 4)]
+void Push(in uint3 group_thread_id : SV_GroupThreadID,
+          in uint3 group_id : SV_GroupID)
+{
+    uint thread_index = group_thread_id.x +
+                        group_thread_id.y * 4 +
+                        group_thread_id.z * 16;
+
+    uint entry_index = ProbeArrays.Load((PROBE_ARRAY_TEMP + group_id.x) * 4);
+    uint cell_index = ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL) & UNFLAG;
+
+    uint cascade = cell_index / PROBE_CASCADE_CELL_COUNT;
+    float cell_dim = ProbeCell * (1u << cascade);
+
+    uint cascade_cell = cell_index % PROBE_CASCADE_CELL_COUNT;
+    uint3 cell_coord = uint3(cascade_cell % PROBE_CASCADE_DIM,
+                             (cascade_cell / PROBE_CASCADE_DIM) % PROBE_CASCADE_DIM,
+                             cascade_cell / (PROBE_CASCADE_DIM * PROBE_CASCADE_DIM));
+
+    float3 corner_position = (ProbeCascadeOrigins[cascade].xyz + float3(cell_coord)) * cell_dim;
+
+    float threshold = max(0.25f * cell_dim, GDF_SAMPLE_BIAS);
+
+    float3 previous_position = asfloat(ProbeEntriesRW.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_POSITION));
+
+    float3 offset = unpackR11G11B10(ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET)) * 2 - 1;
+    float3 normal = unpackR11G11B10(ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL)) * 2 - 1;
+
+    float3 random_offset = 0;//noise3d(uint2(entry_index % 64, entry_index / 64), FrameIndex) * 0.5f;
+
+    static const float SEARCH_WINDOW = 0.4f;
+
+    float3 query_position = corner_position + offset * cell_dim + normal * cell_dim * 0.5f;
+
+    float3 thread_offset = (float3(group_thread_id + random_offset) * 2.0f / 3.0f - 1.0f) * SEARCH_WINDOW * cell_dim;
+    float3 thread_position = query_position + thread_offset;
+    float thread_distance = sampleDistanceFull(thread_position);
+
+    group_positions[thread_index] = float4(thread_position, thread_distance);
+    group_distances[thread_index] = distance(thread_position, corner_position);
+
+    GroupMemoryBarrierWithGroupSync();
+
+    [branch]
+    if (thread_index < 8)
+    {
+        float4 best_position = group_positions[thread_index * 8];
+        float best_distance = group_distances[thread_index * 8];
+
+        for (uint i = 1; i < 8; i++)
+        {
+            float4 check = group_positions[thread_index * 8 + i];
+            float d = group_distances[thread_index * 8 + i];
+
+            bool is_ok = false;
+
+            if (check.w > threshold)
+            {
+                if (best_position.w > threshold)
+                    is_ok = d < best_distance;
+                else
+                    is_ok = true;
+            }
+            else
+            {
+                if (best_position.w < threshold)
+                    is_ok = check.w > best_position.w;
+            }
+
+            if (is_ok)
+            {
+                best_position = check;
+                best_distance = d;
+            }
+        }
+
+        group_positions2[thread_index] = best_position;
+        group_distances2[thread_index] = best_distance;
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+
+    [branch]
+    if (thread_index == 0)
+    {
+        float4 best_position = group_positions2[0];
+        float best_distance = group_distances2[0];
+
+        for (uint i = 1; i < 8; i++)
+        {
+            float4 check = group_positions2[i];
+            float d = group_distances2[i];
+
+            bool is_ok = false;
+
+            if (check.w > threshold)
+            {
+                if (best_position.w > threshold)
+                    is_ok = d < best_distance;
+                else
+                    is_ok = true;
+            }
+            else
+            {
+                if (best_position.w < threshold)
+                    is_ok = check.w > best_position.w;
+            }
+
+            if (is_ok)
+            {
+                best_position = check;
+                best_distance = d;
+            }
+        }
+
+        ProbeEntriesRW.Store3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_POSITION, asuint(best_position.xyz));
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(64, 1, 1)]
+void Visibility(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint array_index = dispatch_thread_id.x;
+
+    [branch]
+    if (array_index < ProbeCounts.Load(PROBE_COUNT_TEMP * 4))
+    {
+        uint entry_index = ProbeArrays.Load((PROBE_ARRAY_TEMP + array_index) * 4);
+
+        uint cell_value = ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL);
+        uint cell_index = cell_value & UNFLAG;
+        bool is_new = (cell_value & FLAG_NEW) == FLAG_NEW;
+
+        uint cascade = cell_index / PROBE_CASCADE_CELL_COUNT;
+        uint cascade_cell = cell_index % PROBE_CASCADE_CELL_COUNT;
+        uint3 cell_coord = uint3(cascade_cell % PROBE_CASCADE_DIM,
+                                 (cascade_cell / PROBE_CASCADE_DIM) % PROBE_CASCADE_DIM,
+                                 cascade_cell / (PROBE_CASCADE_DIM * PROBE_CASCADE_DIM));
+
+        float cell_dim = ProbeCell * (1u << cascade);
+
+        float3 corner_position = (ProbeCascadeOrigins[cascade].xyz + float3(cell_coord)) * cell_dim;
+        float3 view_vector = normalize(ReferencePosition - corner_position);
+
+        float3 normal = unpackR11G11B10(ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_NORMAL)) * 2 - 1;
+
+        float3 current_position = asfloat(ProbeEntriesRW.Load3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_POSITION));
+
+        float3 view = viewVector(view_vector, normal);
+
+        static const uint STEPS = 8;
+        float single_step = cell_dim * 1.0f / STEPS;
+
+        float3 last_best = current_position;
+        bool has_best = false;
+        bool has_minimal = false;
+
+        float ideal = max(0.1f * cell_dim, GDF_SAMPLE_BIAS);
+        float minimal = 0.1f * cell_dim;
+
+        float3 target_position = current_position + noise3d(uint2(entry_index % 64, entry_index / 64), FrameIndex) * single_step;
+
+        for (uint i = STEPS; i > 0; i--)
+        {
+            float3 position = target_position + (i - 1) * single_step * view;
+
+            float d = sampleDistanceFull(position);
+
+            bool is_ideal = d >= ideal;
+            bool is_minimal = d >= minimal && !has_best;
+
+            [flatten]
+            if (is_ideal || is_minimal)
+                last_best = position;
+
+            has_best = has_best || is_ideal;
+            has_minimal = has_minimal || is_minimal;
+
+            [branch]
+            if (d < ideal && has_best)
+                break;
+        }
+
+        [branch]
+        if (!has_best)
+        {
+            float3 position;
+
+            [flatten]
+            if (has_minimal)
+                position = last_best;
+            else
+                position = target_position + STEPS * single_step * view;
+
+            float3 gdf_normal = sampleNormal(position);
+
+            float3 dir;
+
+            [flatten]
+            if (dot(gdf_normal, view) < 0)
+                dir = view;
+            else
+                dir = normalize(gdf_normal + view);
+
+            for (uint i = 0; i < STEPS; i++)
+            {
+                float d = sampleDistanceFull(position);
+
+                bool is_ideal = d >= ideal;
+
+                [flatten]
+                if (is_ideal || (d >= minimal && !has_best))
+                    last_best = position;
+
+                has_best = has_best || is_ideal;
+
+                [branch]
+                if (d < ideal && has_best)
+                    break;
+
+                position += dir * (single_step - d);
+            }
+        }
+
+        float last_d = sampleDistanceFull(last_best);
+
+        ProbeEntriesRW.Store3(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_POSITION, asuint(last_best));
+        ProbeEntriesRW.Store(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_DISTANCE, asuint(last_d));
+
+        float3 offset = unpackR11G11B10(ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_OFFSET)) * 2 - 1;
+
+        float3 previous_view = normalize(unpackR11G11B10(ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_USED_VIEW)) * 2 - 1);
+        float3 previous_offset = unpackR11G11B10(ProbeEntriesRW.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_USED_OFFSET)) * 2 - 1;
+
+        [branch]
+        if (is_new ||
+            dot(previous_view, view) < VIEW_THRESHOLD ||
+            distance(previous_offset, offset) > OFFSET_THRESHOLD)
+        {
+            ProbeEntriesRW.Store(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_LIFE, 0);
+
+            ProbeEntriesRW.Store(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_USED_VIEW, packR11G11B10(view * 0.5 + 0.5));
+            ProbeEntriesRW.Store(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_USED_OFFSET, packR11G11B10(offset * 0.5 + 0.5));
+        }
+    }
+}

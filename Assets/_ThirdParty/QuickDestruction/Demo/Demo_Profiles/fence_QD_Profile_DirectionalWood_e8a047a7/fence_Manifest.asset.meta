@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a9a1c32ab6467a6488efec87a51191f8
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Demo/Demo_Profiles/fence_QD_Profile_DirectionalWood_e8a047a7/fence_Manifest.asset
+  uploadId: 991852

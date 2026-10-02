@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 16facb8b347fd4b71b5a954cbed65dce
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 48200
+  packageName: Dynamic Fog & Mist 2
+  packageVersion: 9.2.4
+  assetPath: Assets/DynamicFog/_README.txt
+  uploadId: 995802

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 015a04dec12f48f49a3f380de2d3ccc6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/_Game/Rendering/Settings/LightingSettings.lighting
+  uploadId: 889012

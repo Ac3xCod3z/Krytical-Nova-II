@@ -1,0 +1,283 @@
+# Krytical Nova II — Project Organization Rules
+
+**Status:** adopted 2026-10-02. Applies to everything created from now on, by people or by Claude.
+**Enforced by:** `Assets/_Game/Tools/Editor/Organization/` (see [Tooling](#8-tooling)). If you change a rule here, update
+`ProjectOrganizationRules.cs` too.
+
+---
+
+## 1. The golden rule
+
+> **Ask: "What system owns this?"** Put it in that system's folder, not in a folder named after its file type.
+
+| If it is…                                   | It goes in…                                         |
+|---------------------------------------------|-----------------------------------------------------|
+| Grass code, shader, compute, data, material | `_Game/Environment/Vegetation/Grass/…`              |
+| Player progression / skills / stats         | `_Game/Gameplay/Progression/…`                      |
+| Items, inventory, equipment                 | `_Game/Gameplay/Items/…`                            |
+| Weather, day cycle, sky, zones, portals     | `_Game/World/…`                                     |
+| A forest biome definition (world config)    | `_Game/World/Biomes/…`                              |
+| A tree / rock / building asset              | `_Game/Environment/<Category>/…`                    |
+| Player / NPC / enemy model, rig, anims      | `_Game/Characters/<Who>/…` (representation)         |
+| Player / NPC / enemy behavior code          | `_Game/Gameplay/<System>/Runtime/` (behavior)       |
+| Global service (save, pooling, events)      | `_Game/Core/Runtime/…` (keep Core tiny)             |
+| System-specific editor tool                 | `_Game/<System>/Editor/`                            |
+| Reusable / cross-system editor tool         | `_Game/Tools/Editor/`                               |
+| Dev console commands, debug overlays        | `_Game/Tools/Debug/`                                |
+| Asset Store / vendor package                | `_ThirdParty/<Vendor>/` (unmodified)                |
+| Our glue code for an external SDK           | `_Plugins/<Area>/`                                  |
+| PSD / Blender / Substance / concept art     | `_ArtSource/…`                                      |
+
+If the honest answer is "I don't know, put it in Core", **stop**. Find or create the owning system instead.
+Core is for things *every* system needs and that know nothing about gameplay.
+
+---
+
+## 2. Top level of `Assets/`
+
+```
+Assets/
+├── _Game/          Everything we make (only place for first-party content)
+├── _ThirdParty/    Vendor packages, untouched ("we didn't make this")
+├── _Plugins/       Our integration layers for external SDKs/services
+├── _ArtSource/     Source/working art files (PSD, .blend, concept, reference)
+│
+│   Allowed exceptions (tools require these exact paths; never move them):
+├── Plugins/              Unity-reserved: native libs & vendor DLLs (Odin, DOTween, QC, Maintainer)
+├── Resources/            DOTweenSettings.asset (DOTween looks for it here)
+├── TextMesh Pro/         TMP essentials (TMP writes into this path)
+├── Synty/                Sidekick hard-codes Assets/Synty/SidekickCharacters/... paths
+├── DownloadCache/        Synty's ToolDownloader cache
+├── _Recovery/            Unity crash-recovery scenes (Unity-generated)
+└── DefaultNetworkPrefabs.asset   Netcode for GameObjects regenerates it at this path
+```
+
+Nothing else goes at the root. No `Scripts/`, `Prefabs/`, `Materials/`, `Textures/`, `GameData/` buckets. The validator
+reports them as errors.
+
+---
+
+## 3. `_Game/` layout (current + where future things go)
+
+Folders marked *(future)* don't exist yet. Create them when the first asset needs them, never empty in advance.
+
+```
+_Game/
+├── _Docs/                 Design docs (Design/), plans (Plans/), this file
+├── Core/Runtime/          Cross-cutting interfaces & registries. Defines KryticalNova.Runtime.asmdef
+│                          (future: Architecture/ Events/ Services/ SaveSystem/ Pooling/ Utilities/ Extensions/)
+├── Gameplay/
+│   ├── Combat/            Runtime/
+│   ├── Items/             Runtime/ (+Visuals/)  Data/Assets/  Editor/  Tests/Editor/
+│   ├── NPC/               Runtime/  Data/Assets/
+│   ├── Player/            Runtime/  Prefabs/ (Player.prefab = the networked gameplay player)
+│   ├── Progression/       Runtime/  Data/ (SO classes)  Data/Assets/ (SO instances)  Editor/
+│   └── (future) Skills/ Quests/ Interaction/ StatusEffects/ Inventory/
+├── Characters/            Representation only: models, rigs, materials, animations, visual prefabs
+│   ├── Player/            Player_01/ (Sidekick character)  Animations/
+│   ├── NPC/               Prefabs/  Animations/
+│   └── (future) Enemies/ Shared/
+├── World/
+│   ├── Runtime/           Clock, weather, environment net state, Presentation/, Portals/, Minimap/, Navigation/, Ambience/
+│   ├── Data/              SO classes;  Data/Assets/ (day cycle, weather catalog, Weather/ profiles)
+│   ├── Sky/               Shaders/ Materials/ Textures/ LensFlare/
+│   ├── Terrain/           Materials/
+│   ├── Zones/<ZoneId>/    Per-zone terrain data, layers, masks, minimap data, water
+│   ├── Editor/            Zone/town builders, sky/weather setup, VFX builders
+│   └── (future) Biomes/ WorldGeneration/ WorldStreaming/ WorldEvents/
+├── Environment/
+│   ├── Vegetation/        Shaders/ (shared wind/foliage)  Materials/  Prefabs/  Editor/
+│   │   └── Grass/         Runtime/ Data/ Data/Assets/ Rendering/ Compute/ Materials/ Editor/  (own assembly)
+│   ├── Buildings/         Materials/BuildingPalette/
+│   ├── Ruins/             Meshes/  Prefabs/  Editor/
+│   ├── Water/             Shaders/
+│   └── (future) Rocks/ Props/ Architecture/
+├── Networking/            Runtime/  Prefabs/ (NetworkManager)
+├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
+├── UI/                    Runtime/ (KryticalNova.UI)  Editor/  Common/  HUD/  Inventory/  NPC/  Shaders/
+│                          (future: Menus/ Skills/ Character/ World/ Settings/)
+├── VFX/                   Gameplay/  Environment/{City,Portals,Vehicles,Weather}/  Materials/ (shared FX mats)
+├── Input/Actions/         InputSystem_Actions.inputactions (project-wide actions)
+├── Scenes/                World/Towns/ (Zone01_StarterTown + its lighting/APV/navmesh data)  Development/
+│                          (future: Bootstrap/ MainMenu/ World/Overworld/ Dungeons/ Cinematics/)
+├── Settings/              Project-level config assets for packages (Animancer Settings)
+├── Tools/                 Editor/ (KryticalNova.Editor.asmdef, Organization/, GM/)  Debug/ (QC commands)
+│                          (future: Profiling/ Importers/)
+└── (future) Audio/{Music,SFX,Ambience,Voice}/  Art/ (shared-only art)  Tests/ (cross-system tests)
+```
+
+### Anatomy of a system
+
+```
+<System>/
+├── Runtime/      MonoBehaviours, NetworkBehaviours, plain C# (player-build code)
+├── Data/         ScriptableObject *classes*
+│   └── Assets/   ScriptableObject *instances* (.asset), optionally grouped in subfolders
+├── Editor/       Inspectors, builders, windows for this system only
+├── Tests/
+│   ├── Editor/   EditMode tests
+│   └── Runtime/  PlayMode tests
+└── Prefabs/ Materials/ Shaders/ (or Rendering/) Compute/ Meshes/ Animations/ VFX/ Audio/  (as needed)
+```
+
+- Never mix runtime, editor, and test code in one folder. C# scripts in `_Game` live under a folder named
+  `Runtime`, `Editor`, `Data`, `Tests`, `Debug`, `Profiling` or `Importers`.
+- System-specific art lives **with the system** (`Grass/Rendering/GrassBlades.shader`), not in a global `Art/` bucket.
+  `Art/` is only for art genuinely shared by many systems.
+- Scenes keep their generated data (lighting, APV, navmesh) in a folder named after the scene, next to it.
+- Test/dev scenes go in `Scenes/Development/` as `Test_<Feature>.unity` (e.g. `Test_Grass.unity`).
+
+---
+
+## 4. Assemblies
+
+Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Nothing compiles into `Assembly-CSharp`.
+
+### Current assemblies
+
+| Assembly                          | Defined in                                     | Covers (via .asmref)                                                     |
+|-----------------------------------|------------------------------------------------|---------------------------------------------------------------------------|
+| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression}/Runtime, Progression/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
+| `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
+| `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime. Excluded from dedicated server (`!UNITY_SERVER`)      |
+| `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
+| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, UI, World, Rendering, Vegetation, Grass, Ruins) |
+| `KryticalNova.Editor.GM`          | `Tools/Editor/GM/`                             | GM tools window                                                           |
+| `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
+
+**Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
+**New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`
+(editor), or, if it has no dependencies on the monolith, give it its own `.asmdef` like Grass.
+
+### Dependency direction (arrows point at what you may depend on)
+
+```
+              Core  ◄──────────────────────────────┐
+               ▲                                   │
+   ┌───────────┼──────────────┬──────────────┐     │
+Gameplay     World       Environment     Characters│
+(Player→Combat→Skills→Progression)  (Vegetation→Grass)
+   ▲           ▲              ▲              ▲
+   └───────────┴──────┬───────┴──────────────┘
+              UI · Audio · VFX   (observe gameplay state/events; gameplay never references them)
+              Tools / Editor     (may reference anything)
+```
+
+- Core knows nothing about gameplay.
+- UI depends on gameplay, never the reverse. Gameplay exposes state and events; UI observes. (Existing pattern:
+  `Core/I*Sink` interfaces + `ClientPresentationRegistry`.)
+- Audio and VFX react to gameplay events. No `FindObjectOfType<AudioManager>()` in gameplay code.
+- No circular references. Assembly boundaries make cycles a compile error, which is the point.
+
+### Assembly roadmap: splitting `KryticalNova.Runtime`
+
+The monolith can't be split yet because of two cycles. Break them first, then replace each system's `.asmref`
+with its own `.asmdef`:
+
+1. **Core → Progression**: `Core/ICombatFeedbackSink` uses `Progression.DamageResult`. Move `DamageResult`
+   (or a slim struct) into Core, or move the sink interface into Progression.
+2. **Player ↔ Combat**: `PointAndClickPlayer` references `PlayerMeleeCombat` / `CombatHostility`, and Combat
+   references Player. Introduce an interface in the lower layer (e.g. `IMeleeAttacker` in Combat or Core).
+3. Then split: `KryticalNova.Core` → `.Networking` → `.Progression` → `.Combat` → `.Player` → `.Items`
+   → `.World` → `.Rendering`, verifying compile after each step.
+
+---
+
+## 5. Namespaces
+
+`KryticalNova.<System>[.<Subsystem>]`. The category layer (`Gameplay`, `Environment`) is **not** part of the namespace.
+
+| Folder                               | Namespace                          |
+|--------------------------------------|------------------------------------|
+| `Gameplay/Combat/Runtime`            | `KryticalNova.Combat`              |
+| `Gameplay/Items/Runtime/Visuals`     | `KryticalNova.Items.Visuals`       |
+| `World/Runtime/Portals`              | `KryticalNova.World.Portals`       |
+| `Environment/Vegetation/Grass/*`     | `KryticalNova.Vegetation.Grass`    |
+| Any `Editor/` folder                 | `KryticalNova.EditorTools[.<Area>]` |
+
+(Avoid a `KryticalNova.Environment` namespace: it would shadow `System.Environment` inside `KryticalNova.*` code.)
+
+---
+
+## 6. Naming
+
+- **C# types/files:** PascalCase, one public type per file, file name = type name. Interfaces `IName`
+  (`IDamageable`, `IInteractable`). ScriptableObject classes describe the thing (`GrassType`, `WeatherProfile`,
+  `ItemDefinition`). Don't suffix with `SO` in new code.
+- **Assets:** descriptive and searchable: `Type_Group_Variant` or `Group_Variant`. Never `grass1`, `newgrass`,
+  `grassFINAL_REAL`, `Copy of…`, `New Material`, `Untitled`, `… (1)`. The validator flags these.
+- **Prefixes already established in this project** (use them for these asset types, don't invent new ones casually):
+
+| Prefix  | Asset                      | Prefix | Asset                              |
+|---------|----------------------------|--------|------------------------------------|
+| `M_`    | Material                   | `GT_`  | GrassType                          |
+| `T_`    | Texture                    | `GB_`  | GrassBiome                         |
+| `SM_`   | Static mesh / mesh prefab  | `GRS_` | GrassRuleSet                       |
+| `PFX_`  | Particle-effect prefab     | `WP_`  | WeatherProfile                     |
+| `FX_`   | Effect prefab / FX material| `DC_`  | DayCycleProfile                    |
+| `AC_`   | Animator controller        | `ZTP_` | ZoneTerrainProfile                 |
+| `NPC_`  | NPC definition / prefab    | `LF_`  | Lens flare data                    |
+| `LS_` / `APV_` | Lighting settings / probe volume data (scene-generated) | `TL_`  | Terrain layer |
+| `UI_`   | UI element/screen asset (e.g. `UI_HUD_Target`) | `VFX_` | Future VFX Graph assets (`VFX_Combat_Hit`) |
+
+---
+
+## 7. Third-party policy
+
+- Import → it lands in `_ThirdParty/<Vendor>/` automatically. Never rearrange a vendor's internal folders and never
+  save our own assets inside them.
+- Vendor updates re-import into the original path; the enforcer merges new files into the existing
+  `_ThirdParty/<Vendor>/` folder (same GUIDs → existing files update in place).
+- If a vendor hardcodes its install path (check with a search for `"Assets/<Vendor>`), move it back to the root
+  and add it to `PinnedVendorRoots` in `ProjectOrganizationRules.cs` and to the exceptions list in section 2.
+- To customise vendor content: copy the asset into `_Game/<System>/` and own the copy (e.g. our `M_FoliageWind_*`
+  materials built from Synty atlases), or wrap the vendor API from our code.
+- UPM packages (`Packages/manifest.json`) are preferred over Asset Store `.unitypackage`s when available.
+- Our editor builders reference vendor source assets by path constants (e.g. `"Assets/Synty/PolygonSciFiCity/…"`,
+  `"Assets/_ThirdParty/KumaBeer/…"`). If a vendor moves, update those constants.
+
+---
+
+## 8. Tooling
+
+Menu **Krytical Nova ▸ Project**:
+
+| Item                                         | What it does                                                                           |
+|----------------------------------------------|----------------------------------------------------------------------------------------|
+| Auto-Quarantine Imported Packages (toggle)   | On by default. After any package import, new root folders move to `_ThirdParty/` (merging) |
+| Quarantine Root Folders Into _ThirdParty...  | Same, on demand, for folders dropped in through Explorer. Asks first                   |
+| Validate Project Organization                | Audits root entries, loose files, asset names, script folders, assembly coverage, `UnityEditor` usage in runtime code |
+
+Code: `_Game/Tools/Editor/Organization/` (`ProjectOrganizationRules`, `ThirdPartyImportEnforcer`,
+`ProjectOrganizationValidator`). Generic type-bucket folders created by a package (`Scripts/`, `Materials/`…) are
+**flagged, not moved**: they might be ours, so a human decides.
+
+---
+
+## 9. Moving or renaming assets
+
+- Move inside Unity (Project window, or `AssetDatabase.MoveAsset` from scripts), or move the file **and its `.meta`**
+  together. GUIDs are what keep references alive.
+- After moving, search code for the old path: editor builders use path constants
+  (`grep -rn '"Assets/' Assets/_Game --include=*.cs`).
+- Shaders `#include` across systems with absolute paths (`"Assets/_Game/World/Sky/Shaders/SkyCommon.hlsl"`).
+  Same-folder includes may stay relative.
+
+---
+
+## 10. Addressables (when adopted)
+
+The folder structure answers "who owns this?"; Addressables groups answer "what loads together?". They are different
+on purpose. Planned groups: `Bootstrap`, `MainMenu`, `World_Common`, `World_<Zone>`, `Characters_Common`,
+`Characters_Enemies`, `VFX_Common`, `Audio_Common`. Don't make every folder a group.
+
+---
+
+## 11. Checklist for anything new
+
+1. Which system owns it? → folder from section 1/3. Create the system's sub-folders only as needed.
+2. Code → `Runtime/`, `Editor/`, `Data/` or `Tests/` of that system; make sure an asmdef/asmref covers it.
+3. ScriptableObject class in `Data/`, instances in `Data/Assets/`.
+4. Name it per section 6.
+5. Editor builders that generate assets write into the owning system's folders, never a root bucket.
+6. Run **Krytical Nova ▸ Project ▸ Validate Project Organization** before committing big changes.

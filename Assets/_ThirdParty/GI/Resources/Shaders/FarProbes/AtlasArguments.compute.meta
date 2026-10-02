@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 05edd1a079243e0419d42662cf5be5d8
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/FarProbes/AtlasArguments.compute
+  uploadId: 889012

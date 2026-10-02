@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 7f7cf5be6c592c247b8fcf39ad771195
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Passes/SDF/SDFSelectionRenderPass.cs
+  uploadId: 889012

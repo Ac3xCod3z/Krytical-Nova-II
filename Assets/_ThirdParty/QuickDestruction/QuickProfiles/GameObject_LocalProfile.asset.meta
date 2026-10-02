@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ccf90f0cc9a110946950a0b4e8e4ada0
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/QuickProfiles/GameObject_LocalProfile.asset
+  uploadId: 991852

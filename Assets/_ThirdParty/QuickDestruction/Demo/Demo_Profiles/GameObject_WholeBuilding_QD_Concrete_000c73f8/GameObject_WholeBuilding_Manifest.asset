@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 006c77805d07de248a70696f22e7bf05, type: 3}
+  m_Name: GameObject_WholeBuilding_Manifest
+  m_EditorClassIdentifier: 
+  SchemaVersion: 2
+  BakedSolverVersion: 46
+  SourceGuid: 
+  SourceName: GameObject_WholeBuilding
+  InputHash: 1665015581
+  ProfileName: QD_Profile_UniformConcrete
+  BakeTimestampUtc: 2026-08-28 14:02:29
+  Entries:
+  - AssetPath: Assets/QuickDestruction/Generated/GameObject_WholeBuilding_QD_Profile_UniformConcrete_000c73f8/GameObject_WholeBuilding_Manifest.asset
+    Kind: manifest
+  - AssetPath: Assets/QuickDestruction/Generated/GameObject_WholeBuilding_QD_Profile_UniformConcrete_000c73f8/GameObject_WholeBuilding_Interior.mat
+    Kind: material
+  - AssetPath: Assets/QuickDestruction/Generated/GameObject_WholeBuilding_QD_Profile_UniformConcrete_000c73f8/GameObject_WholeBuilding_Destructible.prefab
+    Kind: prefab
+  FragmentCount: 53
+  SecondaryFragmentCount: 0
+  TotalTriangles: 11104
+  BakeSeconds: 0.5075163
+  Warnings:
+  - 'Shell breakdown (triangles, volume, watertight): #1 4 tri, vol 41,153, OPEN;
+    #2 4 tri, vol 41,153, OPEN'
+  - "Source has 2 separate mesh shells (0 closed, 2 found before preparation). Per-shell
+    fracture: OFF (shells fracture merged) \u2014 classified as one hollow shell
+    (an inner surface faces inward)."
+  - Kept 4 nested surface islands together as one hollow shell. Auto Axis and every
+    fracture plane are shared by the outer and inner walls so generated caps connect
+    them instead of closing the cavity separately.
+  - Concrete fracture safely exported 53 of the configured maximum of 55. The remaining
+    candidates would create an open boundary, an extreme needle or an invalid micro-fragment
+    merge, so they were not exported.
+  - 4 cut segment(s) could not be chained within the normal weld tolerance; affected
+    caps preserved their real edge order and closed the final numerical seam.
+  - Intact collision uses 2 compound convex parts because the source contains disconnected
+    mesh islands.

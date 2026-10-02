@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: c8bfc0f4ade1e2f47a996519df75151c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Passes/Probes/ProbeMaintainPass.cs
+  uploadId: 889012

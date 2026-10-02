@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5184b5a924b42454c83f4b0d0cb408f0
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/SDF/CullWrite.compute
+  uploadId: 889012

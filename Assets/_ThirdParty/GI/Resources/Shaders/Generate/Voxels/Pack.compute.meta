@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ef7884e8b93492346bd1ff1858c49bed
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Generate/Voxels/Pack.compute
+  uploadId: 889012

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: b2ab16ac399a2034d9a33a2cfea38354
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scripts/Passes/ScreenProbes/ScreenProbeDebugPass.cs
+  uploadId: 889012

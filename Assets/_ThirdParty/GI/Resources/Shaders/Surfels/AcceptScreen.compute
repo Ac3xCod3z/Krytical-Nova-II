@@ -1,0 +1,52 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer TraceArray;
+ByteAddressBuffer TraceCounts;
+ByteAddressBuffer TraceHits;
+
+ByteAddressBuffer SurfelGrid;
+
+RWByteAddressBuffer SurfelArraysRW;
+RWByteAddressBuffer SurfelEntriesRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_SCREEN * 4))
+    {
+        uint4 hit_payload = TraceHits.Load4((TRACE_ARRAY_SCREEN + ray_index) * HIT_STRIDE);
+
+        [branch]
+        if (hit_payload.w != INVALID_ID) // known cell
+        {
+            uint cell_index = hit_payload.w;
+            uint surfel_id = SurfelGrid.Load(cell_index * 4);
+
+            [branch]
+            if (surfel_id != INVALID_ID)
+            {
+                uint age = 0;
+
+                uint previous_age;
+                SurfelEntriesRW.InterlockedMin(surfel_id * SURFEL_ENTRY_STRIDE + SURFEL_ENTRY_AGE, age, previous_age);
+
+                [branch]
+                if (age < previous_age)
+                    SurfelEntriesRW.Store2(surfel_id * SURFEL_ENTRY_STRIDE + SURFEL_ENTRY_NORMAL, hit_payload.yz);
+            }
+        }
+
+    }
+}

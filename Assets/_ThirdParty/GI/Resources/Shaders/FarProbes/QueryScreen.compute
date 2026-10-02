@@ -1,0 +1,83 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint ScreenProbeCountX;
+uint ScreenProbeCountY;
+
+float3 ReferencePosition;
+float FarProbeCell;
+uint FarProbeCascadeCount;
+float4 FarProbeCascadeOrigins[FAR_PROBE_MAX_CASCADES];
+
+ByteAddressBuffer ScreenProbes;
+ByteAddressBuffer ScreenProbeCounts;
+
+ByteAddressBuffer FarProbeGrid;
+
+RWByteAddressBuffer FarProbeArraysRW;
+RWByteAddressBuffer FarProbeCountsRW;
+RWByteAddressBuffer FarProbeEntriesRW;
+RWByteAddressBuffer FarProbeRequestMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/FarProbeGrid.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint query_array_index = dispatch_thread_id.x;
+
+    [branch]
+    if (query_array_index < ScreenProbeCounts.Load(SCREEN_PROBE_COUNT_TOTAL * 4))
+    {
+        uint encoded_normal = ScreenProbes.Load(query_array_index * SCREEN_PROBE_STRIDE + SCREEN_PROBE_NORMAL);
+
+        [branch]
+        if (encoded_normal > 0)
+        {
+            float3 query_position = asfloat(ScreenProbes.Load3(query_array_index * SCREEN_PROBE_STRIDE + SCREEN_PROBE_POSITION));
+
+            uint cascade = positionToFarProbeCascade(query_position);
+            float3 cell_coord_f = positionToFarProbeCellCoordFloat(query_position, cascade);
+
+            int3 cell_coord = int3(round(cell_coord_f));
+
+            uint cell_index = cell_coord.x +
+                              (cell_coord.y * FAR_PROBE_CASCADE_DIM) +
+                              (cell_coord.z * FAR_PROBE_CASCADE_DIM * FAR_PROBE_CASCADE_DIM) +
+                              (cascade * FAR_PROBE_CASCADE_CELL_COUNT);
+
+            uint far_entry_index = FarProbeGrid.Load(cell_index * 4);
+
+            [branch]
+            if (far_entry_index != INVALID_ID)
+            {
+                FarProbeEntriesRW.Store(far_entry_index * FAR_PROBE_ENTRY_STRIDE + FAR_PROBE_ENTRY_AGE, 0);
+            }
+            else
+            {
+                uint original_d;
+                FarProbeRequestMapRW.InterlockedAdd(cell_index * 4, 1, original_d);
+
+                [branch]
+                if (original_d == 0)
+                {
+                    uint request_index;
+                    FarProbeCountsRW.InterlockedAdd(FAR_PROBE_COUNT_REQUESTS * 4, 1, request_index);
+
+                    [branch]
+                    if (request_index < FAR_PROBE_MAX_REQUESTS)
+                        FarProbeArraysRW.Store((FAR_PROBE_ARRAY_TEMP + request_index) * 4, cell_index);
+                }
+            }
+        }
+    }
+}

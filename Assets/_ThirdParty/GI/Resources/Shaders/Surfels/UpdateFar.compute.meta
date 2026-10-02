@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d8090021498007542882eb07f625deb8
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Surfels/UpdateFar.compute
+  uploadId: 889012

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a38480e3563756f4c820510e730c440a
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Apply/ProbesForward.shader
+  uploadId: 889012

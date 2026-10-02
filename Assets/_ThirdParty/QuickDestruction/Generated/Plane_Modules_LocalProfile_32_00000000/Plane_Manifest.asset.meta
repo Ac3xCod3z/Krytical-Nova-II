@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3eb473e523f353644a3500f63dc8aa00
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Generated/Plane_Modules_LocalProfile_32_00000000/Plane_Manifest.asset
+  uploadId: 991852

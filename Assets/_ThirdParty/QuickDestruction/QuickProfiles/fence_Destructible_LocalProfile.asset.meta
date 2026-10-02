@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e3bfc67579e78684c896ff4dcf4001d3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/QuickProfiles/fence_Destructible_LocalProfile.asset
+  uploadId: 991852

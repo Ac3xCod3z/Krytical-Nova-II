@@ -1,0 +1,14 @@
+{
+    "name": "KryticalNova.Vegetation.Grass",
+    "rootNamespace": "KryticalNova.Vegetation.Grass",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,113 @@
+#pragma kernel Clear
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint ClearCount;
+
+uint3 InputResolution;
+uint3 OutputResolution;
+uint3 BrickCounts;
+float ValueScale;
+float EmptyStep;
+float BrickThreshold;
+
+ByteAddressBuffer Splat;
+
+RWByteAddressBuffer VolumeRW;
+RWByteAddressBuffer MappingRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Clear(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint id = dispatch_thread_id.x;
+
+	[branch]
+	if (id < ClearCount)
+		VolumeRW.Store(id * 4, 0);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float loadInput(int3 coord)
+{
+	[branch]
+	if (all(coord >= 0) && all(coord < int3(InputResolution)))
+	{
+		uint index = coord.x + coord.y * InputResolution.x + coord.z * InputResolution.x * InputResolution.y;
+		return asfloat(Splat.Load(index * 4));
+	}
+	else
+		return EmptyStep;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 coordToInput(int3 g)
+{
+	float3 f = float3(InputResolution + 1) / float3(InputResolution);
+	return float3(g * f + 0.5);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float sampleAt(float3 p)
+{
+	int3 g = int3(p);
+	float3 f = frac(p);
+
+	float d000 = loadInput(int3(g.x,     g.y,     g.z));
+	float d100 = loadInput(int3(g.x + 1, g.y,     g.z));
+	float d010 = loadInput(int3(g.x,     g.y + 1, g.z));
+	float d110 = loadInput(int3(g.x + 1, g.y + 1, g.z));
+	float d001 = loadInput(int3(g.x,     g.y,     g.z + 1));
+	float d101 = loadInput(int3(g.x + 1, g.y,     g.z + 1));
+	float d011 = loadInput(int3(g.x,     g.y + 1, g.z + 1));
+	float d111 = loadInput(int3(g.x + 1, g.y + 1, g.z + 1));
+
+	float d00 = lerp(d000, d100, f.x);
+	float d10 = lerp(d010, d110, f.x);
+	float d01 = lerp(d001, d101, f.x);
+	float d11 = lerp(d011, d111, f.x);
+
+	float d0 = lerp(d00, d10, f.y);
+	float d1 = lerp(d01, d11, f.y);
+
+	float d = lerp(d0, d1, f.z);
+
+	return d;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(BRICK_DIM, BRICK_DIM, BRICK_DIM)]
+void Main(in uint3 group_id : SV_GroupID, in uint3 group_thread_id : SV_GroupThreadID)
+{
+	int3 input_coord = group_id * BRICK_PAYLOAD + group_thread_id;
+
+	float d = sampleAt(coordToInput(input_coord));
+	bool occupied = d >= -BrickThreshold && d <= BrickThreshold;
+
+	d = saturate((d / ValueScale) * 0.5 + 0.5);
+
+	uint value = clamp(uint(d * 255.0f), 0, 255);
+
+	uint3 output_coord = group_id * BRICK_DIM + group_thread_id;
+	uint output_index = output_coord.x + output_coord.y * OutputResolution.x + output_coord.z * OutputResolution.x * OutputResolution.y;
+
+	uint store_index = output_index / 4;
+	uint store_offset = output_index % 4;
+
+	uint store = (value & 0xFF) << (store_offset * 8);
+
+	VolumeRW.InterlockedOr(store_index * 4, store);
+
+	uint group_index = group_id.x + group_id.y * BrickCounts.x + group_id.z * BrickCounts.x * BrickCounts.y;
+	MappingRW.InterlockedAdd(group_index * 4, (uint)occupied);
+}

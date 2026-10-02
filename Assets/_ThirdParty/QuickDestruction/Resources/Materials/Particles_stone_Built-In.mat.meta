@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b08aa9a7c182f9645ba64d8c37dbe1e8
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Resources/Materials/Particles_stone_Built-In.mat
+  uploadId: 991852

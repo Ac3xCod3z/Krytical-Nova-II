@@ -1,0 +1,48 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float ValueScale;
+uint BaseBrick;
+uint3 BrickCounts;
+uint3 Resolution;
+
+ByteAddressBuffer Bricks;
+ByteAddressBuffer Volume;
+
+RWTexture3D<float> VolumeRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(BRICK_DIM, BRICK_DIM, BRICK_DIM)]
+void Main(in uint3 group_id : SV_GroupID, in uint3 group_thread_id : SV_GroupThreadID)
+{
+	uint3 brick_coord = group_id;
+	uint brick_index = brick_coord.x + brick_coord.y * BrickCounts.x + brick_coord.z * BrickCounts.x * BrickCounts.y;
+	uint brick_value = Bricks.Load((BaseBrick + brick_index) * 4);
+
+	[branch]
+	if (brick_value < INVALID_ID)
+	{
+		uint3 coord = group_id * BRICK_DIM + group_thread_id;
+
+		uint splat_index = coord.x + coord.y * Resolution.x + coord.z * Resolution.x * Resolution.y;
+		uint store_index = splat_index / 4;
+		uint store_offset = splat_index % 4;
+
+		uint stored = Volume.Load(store_index * 4);
+		uint stored_byte = (stored >> (store_offset * 8)) & 0xFF;
+
+		float value = stored_byte / 255.0f;
+
+		uint3 brick_offset = uint3(brick_value & 0xFF,
+									(brick_value >> 8) & 0xFF,
+				                    (brick_value >> 16) & 0xFF);
+
+		VolumeRW[brick_offset * BRICK_DIM + group_thread_id] = value;
+	}
+}

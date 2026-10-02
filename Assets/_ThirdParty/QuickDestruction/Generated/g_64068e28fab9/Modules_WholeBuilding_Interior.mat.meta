@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4394612614a55ed40997bc62ce20166d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/Generated/g_64068e28fab9/Modules_WholeBuilding_Interior.mat
+  uploadId: 991852

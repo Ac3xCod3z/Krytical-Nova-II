@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 919dc1d6d97e7d74a9ed1fec1520f1e5
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/FarProbeGrid.hlsl
+  uploadId: 889012

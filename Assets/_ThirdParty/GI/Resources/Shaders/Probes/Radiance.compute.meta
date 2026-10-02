@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f0b2c5546085b9f4d96a49fb1725c12b
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Probes/Radiance.compute
+  uploadId: 889012

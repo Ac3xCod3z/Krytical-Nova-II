@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9d23f63ddc4eba143a2555d66a37f198
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Generate/SDF/Flip.hlsl
+  uploadId: 889012

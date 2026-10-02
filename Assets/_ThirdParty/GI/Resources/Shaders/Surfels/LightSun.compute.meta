@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ba5eaca376eb0154eb250663daea1f66
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Surfels/LightSun.compute
+  uploadId: 889012

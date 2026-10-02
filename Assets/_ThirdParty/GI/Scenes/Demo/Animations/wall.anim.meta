@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2989355a5551a46bda05a6ad6a6ccebe
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Scenes/Demo/Animations/wall.anim
+  uploadId: 889012

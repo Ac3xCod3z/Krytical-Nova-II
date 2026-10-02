@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 91b45cb77f6ffe54ba08fbfbfe26fc63
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Generate/Voxels/Flood.compute
+  uploadId: 889012

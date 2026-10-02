@@ -1,0 +1,29 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer FarProbeCounts;
+ByteAddressBuffer FarProbeArrays;
+
+RWByteAddressBuffer FarProbeRequestMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint index = dispatch_thread_id.x;
+
+    [branch]
+    if (index < FarProbeCounts.Load(FAR_PROBE_COUNT_REQUESTS * 4))
+    {
+        // filled in FarProbeRequest
+        uint cell_index = FarProbeArrays.Load((FAR_PROBE_ARRAY_TEMP + index) * 4);
+
+        FarProbeRequestMapRW.Store(cell_index * 4, 0);
+    }
+}

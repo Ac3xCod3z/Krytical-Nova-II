@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f703f4ab11a2c0c4b9547d76dc3a534b
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/SDF.hlsl
+  uploadId: 889012

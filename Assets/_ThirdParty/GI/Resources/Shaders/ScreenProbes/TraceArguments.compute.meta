@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 75dd11f5d739a5d4f80be0a831bef41c
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/ScreenProbes/TraceArguments.compute
+  uploadId: 889012

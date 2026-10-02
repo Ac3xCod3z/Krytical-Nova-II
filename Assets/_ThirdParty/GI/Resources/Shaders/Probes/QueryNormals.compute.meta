@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5c15508e092d1604196b1a293e07fe92
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Probes/QueryNormals.compute
+  uploadId: 889012

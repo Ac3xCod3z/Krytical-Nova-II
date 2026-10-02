@@ -1,0 +1,33 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint ScreenProbeCountX;
+uint ScreenProbeCountY;
+uint MaxAdaptiveCount;
+
+RWByteAddressBuffer ScreenProbeCountsRW;
+
+RWBuffer<uint> ArgumentsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(1, 1, 1)]
+void Main()
+{
+    uint base_count = ScreenProbeCountX * ScreenProbeCountY;
+    uint adaptive_count = min(ScreenProbeCountsRW.Load(SCREEN_PROBE_COUNT_ADAPTIVE * 4), MaxAdaptiveCount);
+    uint total_count = base_count + adaptive_count;
+
+    ScreenProbeCountsRW.Store(SCREEN_PROBE_COUNT_BASE * 4, base_count);
+    ScreenProbeCountsRW.Store(SCREEN_PROBE_COUNT_TOTAL * 4, total_count);
+
+    ArgumentsRW[0] = (total_count + GROUP - 1) / GROUP;
+    ArgumentsRW[1] = 1;
+    ArgumentsRW[2] = 1;
+    ArgumentsRW[3] = 0;
+}

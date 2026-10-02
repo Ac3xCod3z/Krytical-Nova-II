@@ -1,0 +1,233 @@
+#pragma kernel MainSH2
+#pragma kernel MainSH3
+#pragma kernel MainSimple
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Probes.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float ProbeCell;
+
+ByteAddressBuffer ProbeArrays;
+ByteAddressBuffer ProbeEntries;
+
+Texture2D<float4> ProbeRadianceAtlas;
+
+sampler2D OctahedralSolidAngle;
+
+RWByteAddressBuffer ProbeSHRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+groupshared float4 group_sh2[PROBE_RES * PROBE_RES * 3];
+
+[numthreads(PROBE_RES, PROBE_RES, 1)]
+void MainSH2(in uint3 group_thread_id : SV_GroupThreadID,
+             in uint3 group_id : SV_GroupID)
+{
+    uint thread_index = group_thread_id.x + group_thread_id.y * PROBE_RES;
+    uint array_index = group_id.x;
+
+    uint entry_index = ProbeArrays.Load((PROBE_ARRAY_ENTRY + array_index) * 4);
+
+    float2 octahedral_uv = probeTexelToUv(group_thread_id.xy);
+    float3 direction = octahedralMapToDirection(octahedral_uv);
+
+    uint probe_atlas_x = entry_index % PROBE_ATLAS_COUNT_X;
+    uint probe_atlas_y = entry_index / PROBE_ATLAS_COUNT_X;
+
+    uint atlas_x = probe_atlas_x * PROBE_RES + group_thread_id.x;
+    uint atlas_y = probe_atlas_y * PROBE_RES + group_thread_id.y;
+
+    float3 radiance = ProbeRadianceAtlas.Load(uint3(atlas_x, atlas_y, 0)).rgb;
+
+    float solid_angle = tex2Dlod(OctahedralSolidAngle, float4(octahedral_uv, 0, 0)).x;
+    radiance *= solid_angle;
+
+    float4 coeff = cosineSH2(direction);
+
+    group_sh2[thread_index * 3 + 0] = coeff * radiance.r;
+    group_sh2[thread_index * 3 + 1] = coeff * radiance.g;
+    group_sh2[thread_index * 3 + 2] = coeff * radiance.b;
+
+    GroupMemoryBarrierWithGroupSync();
+
+    [unroll]
+    for (uint i = PROBE_RES * PROBE_RES / 2; i > 0; i >>= 1)
+    {
+        if (thread_index < i)
+        {
+            group_sh2[thread_index * 3 + 0] += group_sh2[(thread_index + i) * 3 + 0];
+            group_sh2[thread_index * 3 + 1] += group_sh2[(thread_index + i) * 3 + 1];
+            group_sh2[thread_index * 3 + 2] += group_sh2[(thread_index + i) * 3 + 2];
+        }
+
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    [branch]
+    if (thread_index < 3)
+        ProbeSHRW.Store4(SH2_STRIDE * entry_index + FLOAT4_STRIDE * thread_index, asuint(group_sh2[thread_index]));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+groupshared VectorSH3 group_sh3[GROUP * 3];
+
+[numthreads(GROUP, 1, 1)]
+void MainSH3(in uint3 group_thread_id : SV_GroupThreadID,
+             in uint3 group_id : SV_GroupID)
+{
+    uint array_index = group_id.x;
+    uint entry_index = ProbeArrays.Load((PROBE_ARRAY_ENTRY + array_index) * 4);
+
+    uint thread_index = group_thread_id.x;
+
+    [unroll]
+    for (uint group = 0; group < GROUPS_PER_PROBE; group++)
+    {
+        uint texel_index = thread_index + group * GROUP;
+        uint2 texel = uint2(texel_index % PROBE_RES, texel_index / PROBE_RES);
+
+        float2 octahedral_uv = probeTexelToUv(texel.xy);
+        float3 direction = octahedralMapToDirection(octahedral_uv);
+
+        uint probe_atlas_x = entry_index % PROBE_ATLAS_COUNT_X;
+        uint probe_atlas_y = entry_index / PROBE_ATLAS_COUNT_X;
+
+        uint atlas_x = probe_atlas_x * PROBE_RES + texel.x;
+        uint atlas_y = probe_atlas_y * PROBE_RES + texel.y;
+
+        float3 radiance = ProbeRadianceAtlas.Load(uint3(atlas_x, atlas_y, 0)).rgb;
+
+        float solid_angle = tex2Dlod(OctahedralSolidAngle, float4(octahedral_uv, 0, 0)).x;
+        radiance *= solid_angle;
+
+        VectorSH3 coeff = cosineSH3(direction);
+
+        [branch]
+        if (thread_index == 0 && group > 0)
+        {
+            appendSH3Vector(group_sh3[thread_index * 3 + 0], mulSH3Vector(coeff, radiance.r));
+            appendSH3Vector(group_sh3[thread_index * 3 + 1], mulSH3Vector(coeff, radiance.g));
+            appendSH3Vector(group_sh3[thread_index * 3 + 2], mulSH3Vector(coeff, radiance.b));
+        }
+        else
+        {
+            group_sh3[thread_index * 3 + 0] = mulSH3Vector(coeff, radiance.r);
+            group_sh3[thread_index * 3 + 1] = mulSH3Vector(coeff, radiance.g);
+            group_sh3[thread_index * 3 + 2] = mulSH3Vector(coeff, radiance.b);
+        }
+
+        GroupMemoryBarrierWithGroupSync();
+
+        [unroll]
+        for (uint i = GROUP / 2; i > 0; i >>= 1)
+        {
+            if (thread_index < i)
+            {
+                appendSH3Vector(group_sh3[thread_index * 3 + 0], group_sh3[(thread_index + i) * 3 + 0]);
+                appendSH3Vector(group_sh3[thread_index * 3 + 1], group_sh3[(thread_index + i) * 3 + 1]);
+                appendSH3Vector(group_sh3[thread_index * 3 + 2], group_sh3[(thread_index + i) * 3 + 2]);
+            }
+
+            GroupMemoryBarrierWithGroupSync();
+        }
+    }
+
+    [branch]
+    if (thread_index == 0)
+    {
+        SH3 probe;
+        probe.r = group_sh3[0];
+        probe.g = group_sh3[1];
+        probe.b = group_sh3[2];
+
+        storeProbeSH3(ProbeSHRW, entry_index, probe);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+groupshared float3 group_colors[PROBE_RES * PROBE_RES];
+groupshared float group_weights[PROBE_RES * PROBE_RES];
+
+[numthreads(PROBE_RES, PROBE_RES, 1)]
+void MainSimple(in uint3 group_thread_id : SV_GroupThreadID,
+                in uint3 group_id : SV_GroupID)
+{
+    uint thread_index = group_thread_id.x + group_thread_id.y * PROBE_RES;
+    uint array_index = group_id.x;
+
+    uint entry_index = ProbeArrays.Load((PROBE_ARRAY_ENTRY + array_index) * 4);
+
+    float2 octahedral_uv = probeTexelToUv(group_thread_id.xy);
+
+    uint probe_atlas_x = entry_index % PROBE_ATLAS_COUNT_X;
+    uint probe_atlas_y = entry_index / PROBE_ATLAS_COUNT_X;
+
+    uint atlas_x = probe_atlas_x * PROBE_RES + group_thread_id.x;
+    uint atlas_y = probe_atlas_y * PROBE_RES + group_thread_id.y;
+
+    float4 radiance_and_depth = ProbeRadianceAtlas.Load(uint3(atlas_x, atlas_y, 0));
+
+    float solid_angle = tex2Dlod(OctahedralSolidAngle, float4(octahedral_uv, 0, 0)).x;
+    float3 radiance = radiance_and_depth.rgb * solid_angle;
+
+    float3 direction = octahedralMapToDirection(octahedral_uv);
+
+    uint cell_value = ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_CELL);
+    uint cell_index = cell_value & UNFLAG;
+    uint cascade = cell_index / PROBE_CASCADE_CELL_COUNT;
+    float cell_threshold = 2 * ProbeCell * (1u << cascade);
+
+    float depth = radiance_and_depth.w;
+
+    float weight;
+
+    [flatten]
+    if (depth < cell_threshold)
+        weight = lerp(0.01f, 0.25f, depth / cell_threshold);
+    else
+        weight = lerp(0.25f, 1.0f, saturate(depth / cell_threshold - 1));
+
+    group_colors[thread_index] = radiance * weight;
+    group_weights[thread_index] = weight;
+
+    GroupMemoryBarrierWithGroupSync();
+
+    [unroll]
+    for (uint i = PROBE_RES * PROBE_RES / 2; i > 0; i >>= 1)
+    {
+        if (thread_index < i)
+        {
+            group_colors[thread_index] += group_colors[thread_index + i];
+            group_weights[thread_index] += group_weights[thread_index + i];
+        }
+
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    [branch]
+    if (thread_index == 0)
+    {
+        float3 color = PROBE_RES * PROBE_RES * group_colors[0] / (3.14f * group_weights[0]);
+
+        // since depth weights are changing too much (even with lerps), we need to interpolate the final result
+        {
+            float3 previous = asfloat(ProbeSHRW.Load3(entry_index * FLOAT4_STRIDE));
+            uint life = ProbeEntries.Load(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_LIFE);
+
+            float history_weight = 0.96f * saturate(life);
+            history_weight *= lerp(0.5f, 1.0f, saturate(life * 0.05f));
+
+            color = lerp(color, previous, history_weight);
+        }
+
+        ProbeSHRW.Store3(entry_index * FLOAT4_STRIDE, asuint(color));
+    }
+}

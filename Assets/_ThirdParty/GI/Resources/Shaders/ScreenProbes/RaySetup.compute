@@ -1,0 +1,46 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer ScreenProbes;
+
+RWByteAddressBuffer TraceArrayRW;
+RWByteAddressBuffer TraceCountsRW;
+RWByteAddressBuffer TraceHitsRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+groupshared uint group_base_index;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(SCREEN_PROBE_RAY_COUNT, 1, 1)]
+void Main(in uint3 group_thread_id : SV_GroupThreadID,
+          in uint3 group_id : SV_GroupID)
+{
+    uint entry_index = group_id.x;
+    uint local_index = group_thread_id.x;
+
+    uint encoded_normal = ScreenProbes.Load(entry_index * SCREEN_PROBE_STRIDE + SCREEN_PROBE_NORMAL);
+    bool trace = encoded_normal > 0;
+
+    [branch]
+    if (local_index == 0 && trace)
+        TraceCountsRW.InterlockedAdd(TRACE_COUNT_SCREEN * 4, SCREEN_PROBE_RAY_COUNT, group_base_index);
+
+    GroupMemoryBarrierWithGroupSync();
+
+    [branch]
+    if (trace)
+    {
+        uint trace_index = group_base_index + local_index;
+        uint ray_index = entry_index * SCREEN_PROBE_RAY_COUNT + local_index;
+
+        TraceArrayRW.Store((TRACE_ARRAY_SCREEN + trace_index) * TRACE_STRIDE, ray_index);
+        TraceHitsRW.Store4((TRACE_ARRAY_SCREEN + trace_index) * HIT_STRIDE, uint4(INVALID_ID, 0, 0, INVALID_ID));
+    }
+}

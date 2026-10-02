@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: fb93ba1616c5be848b4d106d7fcaf6cf
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Shared/Rays.hlsl
+  uploadId: 889012

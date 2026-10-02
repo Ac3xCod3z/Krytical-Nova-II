@@ -1,0 +1,68 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 ReferencePosition;
+float4 SurfelCascadeOrigins[SURFEL_CASCADE_COUNT];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Surfels.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ByteAddressBuffer TraceCounts;
+ByteAddressBuffer TraceHits;
+
+ByteAddressBuffer SurfelGrid;
+
+RWByteAddressBuffer SurfelArraysRW;
+RWByteAddressBuffer SurfelCountsRW;
+RWByteAddressBuffer SurfelRequestMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint array_index = dispatch_thread_id.x;
+
+    [branch]
+    if (array_index < TraceCounts.Load(TRACE_COUNT_SCREEN * 4))
+    {
+        uint hit_cell = TraceHits.Load((TRACE_ARRAY_SCREEN + array_index) * HIT_STRIDE + 3 * 4);
+
+        [branch]
+        if (hit_cell != INVALID_ID)
+        {
+            uint current_cell_value = SurfelGrid.Load(hit_cell * 4);
+
+            [branch]
+            if (current_cell_value == INVALID_ID)
+            {
+                uint original_value;
+                SurfelRequestMapRW.InterlockedAdd(hit_cell * 4, 1, original_value);
+
+                [branch]
+                if (original_value == 0)
+                {
+                    uint request_index;
+                    SurfelCountsRW.InterlockedAdd(SURFEL_COUNT_REQUESTS * 4, 1, request_index);
+
+                    [branch]
+                    if (request_index < SURFEL_MAX_REQUESTS)
+                    {
+                        SurfelArraysRW.Store((SURFEL_ARRAY_TEMP + request_index) * 4, hit_cell);
+
+                        uint address = (TRACE_ARRAY_SCREEN + array_index) * HIT_STRIDE + HIT_POSITION;
+                        SurfelArraysRW.Store((SURFEL_ARRAY_HIT + request_index) * 4, address);
+                    }
+                }
+            }
+        }
+    }
+}

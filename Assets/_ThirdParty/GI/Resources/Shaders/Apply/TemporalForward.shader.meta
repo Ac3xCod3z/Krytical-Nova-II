@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 9ab64a4460ff6694ab652c1ef43d93f0
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Apply/TemporalForward.shader
+  uploadId: 889012

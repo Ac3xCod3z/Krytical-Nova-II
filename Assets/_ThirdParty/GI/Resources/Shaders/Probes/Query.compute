@@ -1,0 +1,176 @@
+#pragma kernel MainOpaque
+#pragma kernel MainTransparent
+
+#pragma multi_compile_local __ CAMERA_NORMALS
+
+#pragma multi_compile_local _ _GBUFFER_NORMALS_OCT
+
+#pragma multi_compile_local _ REDFASTGI_VR
+
+#pragma enable_d3d11_debug_symbols
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Noise.hlsl"
+#include "../Shared/Depth.hlsl"
+#include "../Shared/Normals.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint2 Viewport;
+uint FrameIndex;
+uint Repeats;
+uint RepeatWidth;
+float ProbeCell;
+uint ProbeCascadeCount;
+float3 ReferencePosition;
+float4 ProbeCascadeOrigins[PROBE_MAX_CASCADES];
+
+Texture2D<float4> TransparentDepth;
+
+ByteAddressBuffer ProbeGrid;
+
+RWByteAddressBuffer ProbeArraysRW;
+RWByteAddressBuffer ProbeCountsRW;
+RWByteAddressBuffer ProbeEntriesRW;
+RWByteAddressBuffer ProbeRequestMapRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/ProbeGrid.hlsl"
+#include "../Shared/Packing.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void queryProbeAtCoord(uint cell_index)
+{
+    uint entry_index = ProbeGrid.Load(cell_index * 4);
+
+    [branch]
+    if (entry_index != INVALID_ID)
+    {
+        ProbeEntriesRW.Store(entry_index * PROBE_ENTRY_STRIDE + PROBE_ENTRY_AGE, 0);
+    }
+    else
+    {
+        uint original_d;
+        ProbeRequestMapRW.InterlockedAdd(cell_index * 4, 1, original_d);
+
+        [branch]
+        if (original_d == 0)
+        {
+            uint request_index;
+            ProbeCountsRW.InterlockedAdd(PROBE_COUNT_REQUESTS * 4, 1, request_index);
+
+            [branch]
+            if (request_index < PROBE_MAX_REQUESTS)
+                ProbeArraysRW.Store((PROBE_ARRAY_TEMP + request_index) * 4, cell_index);
+            else
+                ProbeRequestMapRW.InterlockedMin(cell_index * 4, 0);
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint cellCoordToCellIndex(float3 cell_coord_f, uint cascade)
+{
+    int3 cell_coord = clamp(int3(round(cell_coord_f)), 0, PROBE_CASCADE_DIM - 1);
+
+    uint cell_index = cell_coord.x +
+                      (cell_coord.y * PROBE_CASCADE_DIM) +
+                      (cell_coord.z * PROBE_CASCADE_DIM * PROBE_CASCADE_DIM) +
+                      (cascade * PROBE_CASCADE_CELL_COUNT);
+
+    return cell_index;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void queryProbesAt(float3 world_position, float3 normal)
+{
+    float3 direction = normalize(ReferencePosition - world_position);
+    float3 query_normal = normalize(normal + direction);
+
+    uint cascade = positionToProbeCascade(world_position);
+    float bias = ProbeCell * (1 << cascade) * PROBE_QUERY_BIAS;
+
+    float3 query_position = world_position + query_normal * bias;
+
+    float3 cell_coord = positionToProbeCellCoordFloat(query_position, cascade);
+
+    queryProbeAtCoord(cellCoordToCellIndex(cell_coord, cascade));
+
+    float3 r3 = abs(cell_coord - PROBE_BLEND_RANGE);
+    float r = max(r3.x, max(r3.y, r3.z)) / PROBE_BLEND_RANGE;
+    float d = saturate((max(r, 1 - PROBE_BLEND_BORDER) - PROBE_BLEND_BORDER) / PROBE_BLEND_THRESHOLD);
+
+    [branch]
+    if (d > 0.01 && cascade + 1 < ProbeCascadeCount)
+    {
+        uint new_cascade = cascade + 1;
+        float3 new_coord = positionToProbeCellCoordFloat(query_position, new_cascade);
+
+        queryProbeAtCoord(cellCoordToCellIndex(new_coord, new_cascade));
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 1)]
+void MainOpaque(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint repeat = dispatch_thread_id.x / RepeatWidth;
+
+	uint2 query_coord = uint2(dispatch_thread_id.x % RepeatWidth, dispatch_thread_id.y);
+	uint2 cell_corner = query_coord * PROBE_SCREEN_CELL_DIM;
+
+	[branch]
+	if (all(cell_corner < Viewport))
+	{
+		float2 local_noise = uniformNoise2d(dispatch_thread_id.xy, FrameIndex * Repeats + repeat);
+		uint2 offset = uint2(local_noise * PROBE_SCREEN_CELL_DIM);
+		uint2 viewport_coord = min(cell_corner + offset, Viewport - 1);
+
+		float2 uv = float2(viewport_coord) / _ScaledScreenParams.xy;
+		float device_depth = sampleSceneDepth(uv);
+
+		float3 world_position = worldSpacePosition(uv, actualDepth(device_depth), unity_MatrixInvVP);
+
+		[branch]
+		#if UNITY_REVERSED_Z
+			if (device_depth > DEPTH_EPSILON_ZERO)
+		#else
+			if (device_depth < DEPTH_EPSILON_ONE)
+		#endif
+		{
+			float3 normal = loadNormals(uv);
+
+			queryProbesAt(world_position, normal);
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(8, 8, 1)]
+void MainTransparent(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint2 coord = dispatch_thread_id.xy;
+
+	[branch]
+	if (all(coord < Viewport))
+	{
+		float4 td = TransparentDepth[coord];
+
+		uint r = unpackByte(td.r);
+		uint g = unpackByte(td.g);
+		uint b = unpackByte(td.b);
+		uint a = unpackByte(td.a);
+
+		uint cell_index = r | (g << 8) | (b << 16);
+
+		queryProbeAtCoord(cell_index);
+	}
+}

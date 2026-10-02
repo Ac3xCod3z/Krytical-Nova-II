@@ -1,0 +1,30 @@
+#pragma kernel Main
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RWByteAddressBuffer SDFGridCellsRW;
+RWByteAddressBuffer SDFGridCursorRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void Main(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint cell_index = dispatch_thread_id.x;
+
+    uint count = SDFGridCellsRW.Load((cell_index * SDF_GRID_STRIDE) + SDF_GRID_COUNT);
+    uint cursor = 0;
+
+    [branch]
+    if (count > 0)
+    {
+        SDFGridCellsRW.Store((cell_index * SDF_GRID_STRIDE) + SDF_GRID_COUNT, 0); // will be incremented in CullWrite
+        SDFGridCursorRW.InterlockedAdd(0, count, cursor);
+    }
+
+    SDFGridCellsRW.Store2((cell_index * SDF_GRID_STRIDE) + SDF_GRID_OFFSET, uint2(count, cursor));
+}

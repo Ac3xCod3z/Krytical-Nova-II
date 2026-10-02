@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 63ffadc192e898547a483fc7b25dce9a
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Surfels/MaintainArguments.compute
+  uploadId: 889012

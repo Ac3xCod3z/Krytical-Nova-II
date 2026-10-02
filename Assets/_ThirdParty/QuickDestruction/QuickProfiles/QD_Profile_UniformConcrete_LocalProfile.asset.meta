@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f3b215c4823dc3246807e170dc6214db
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 394904
+  packageName: Quick Destruction - Fracture & Collapse Toolkit
+  packageVersion: 1.9.0
+  assetPath: Assets/QuickDestruction/QuickProfiles/QD_Profile_UniformConcrete_LocalProfile.asset
+  uploadId: 991852

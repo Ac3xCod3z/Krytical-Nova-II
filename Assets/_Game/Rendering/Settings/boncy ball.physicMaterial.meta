@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 212361dadb18741fdaadc31dcf91105e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 13400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/_Game/Rendering/Settings/boncy ball.physicMaterial
+  uploadId: 889012

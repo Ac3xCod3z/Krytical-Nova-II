@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1832c8786e5f8f140b8fcab5d0baad8d
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Surfels/CreateClear.compute
+  uploadId: 889012

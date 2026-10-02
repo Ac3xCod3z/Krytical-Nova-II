@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4cf93d709cd21444b8d44946d846a5c4
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255873
+  packageName: Fast Dynamic Global Illumination
+  packageVersion: 1.0.1
+  assetPath: Assets/GI/Resources/Shaders/Probes/TraceGlobal.compute
+  uploadId: 889012

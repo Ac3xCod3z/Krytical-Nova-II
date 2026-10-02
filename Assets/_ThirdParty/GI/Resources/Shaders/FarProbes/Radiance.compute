@@ -1,0 +1,202 @@
+#pragma kernel MappedBlack
+#pragma kernel MappedSky
+#pragma kernel TracesBlack
+#pragma kernel TracesSky
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "../Shared/Defines.hlsl"
+#include "../Shared/Octahedral.hlsl"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float3 ReferencePosition;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float BounceStrength;
+
+ByteAddressBuffer TraceArray;
+ByteAddressBuffer TraceCounts;
+ByteAddressBuffer TraceHits;
+
+ByteAddressBuffer FarProbeSurfelMap;
+
+ByteAddressBuffer FarProbeArrays;
+ByteAddressBuffer FarProbeEntries;
+
+samplerCUBE Sky;
+ByteAddressBuffer SurfelRadiance;
+ByteAddressBuffer SurfelGrid;
+
+RWTexture2D<float4> FarProbeGatherAtlasRW;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void MappedBlack(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint compute_index = dispatch_thread_id.x;
+
+    uint array_index = compute_index / FAR_PROBE_RAY_COUNT;
+    uint texel_index = compute_index % FAR_PROBE_RAY_COUNT;
+
+    uint entry_index = FarProbeArrays.Load((FAR_PROBE_ARRAY_ENTRY + array_index) * 4);
+
+    uint probe_atlas_x = entry_index % FAR_PROBE_ATLAS_COUNT_X;
+    uint probe_atlas_y = entry_index / FAR_PROBE_ATLAS_COUNT_X;
+
+    uint rad_atlas_x = probe_atlas_x * FAR_PROBE_RES + texel_index % FAR_PROBE_RES;
+    uint rad_atlas_y = probe_atlas_y * FAR_PROBE_RES + texel_index / FAR_PROBE_RES;
+
+    uint sampler_index = entry_index * FAR_PROBE_RAY_COUNT + texel_index;
+
+    uint2 surfel_id_depth = FarProbeSurfelMap.Load2(sampler_index * SURFEL_MAP_STRIDE);
+    uint surfel_id = surfel_id_depth.x;
+
+    float depth = asfloat(surfel_id_depth.y);
+    float3 radiance = 0;
+
+    [branch]
+    if (surfel_id != INVALID_ID)
+        radiance = asfloat(SurfelRadiance.Load3(surfel_id * RADIANCE_STRIDE)) * BounceStrength;
+
+    FarProbeGatherAtlasRW[uint2(rad_atlas_x, rad_atlas_y)] = float4(radiance, depth);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void MappedSky(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint compute_index = dispatch_thread_id.x;
+
+    uint array_index = compute_index / FAR_PROBE_RAY_COUNT;
+    uint texel_index = compute_index % FAR_PROBE_RAY_COUNT;
+
+    uint entry_index = FarProbeArrays.Load((FAR_PROBE_ARRAY_ENTRY + array_index) * 4);
+
+    uint probe_atlas_x = entry_index % FAR_PROBE_ATLAS_COUNT_X;
+    uint probe_atlas_y = entry_index / FAR_PROBE_ATLAS_COUNT_X;
+
+    uint rad_atlas_x = probe_atlas_x * FAR_PROBE_RES + texel_index % FAR_PROBE_RES;
+    uint rad_atlas_y = probe_atlas_y * FAR_PROBE_RES + texel_index / FAR_PROBE_RES;
+
+    uint sampler_index = entry_index * FAR_PROBE_RAY_COUNT + texel_index;
+
+    uint2 surfel_id_depth = FarProbeSurfelMap.Load2(sampler_index * SURFEL_MAP_STRIDE);
+    uint surfel_id = surfel_id_depth.x;
+    float depth = asfloat(surfel_id_depth.y);
+
+    float3 radiance = 0;
+
+    [flatten]
+    if (depth > MAX_HIT_DISTANCE - 1.0f) // INVALID_ID could still be a hit, but missing surfel, use depth to determinte sky
+    {
+        uint2 texel = uint2(texel_index % FAR_PROBE_RES, texel_index / FAR_PROBE_RES);
+        float3 direction = farTexelToDirection(texel);
+        radiance = texCUBElod(Sky, float4(direction, 0)).xyz;
+    }
+    else [branch] if (surfel_id != INVALID_ID)
+        radiance = asfloat(SurfelRadiance.Load3(surfel_id * RADIANCE_STRIDE)) * BounceStrength;
+
+    FarProbeGatherAtlasRW[uint2(rad_atlas_x, rad_atlas_y)] = float4(radiance, depth);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void TracesBlack(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_FAR * 4))
+    {
+        uint sampler_index = TraceArray.Load((TRACE_ARRAY_FAR + ray_index) * TRACE_STRIDE);
+        uint4 hit_payload = TraceHits.Load4((TRACE_ARRAY_FAR + ray_index) * HIT_STRIDE);
+
+        uint entry_index = sampler_index / FAR_PROBE_RAY_COUNT;
+        uint texel_index = sampler_index % FAR_PROBE_RAY_COUNT;
+
+        uint probe_atlas_x = entry_index % FAR_PROBE_ATLAS_COUNT_X;
+        uint probe_atlas_y = entry_index / FAR_PROBE_ATLAS_COUNT_X;
+
+        uint rad_atlas_x = probe_atlas_x * FAR_PROBE_RES + texel_index % FAR_PROBE_RES;
+        uint rad_atlas_y = probe_atlas_y * FAR_PROBE_RES + texel_index / FAR_PROBE_RES;
+
+        float depth = MAX_HIT_DISTANCE;
+        uint surfel_id = INVALID_ID;
+
+        [flatten]
+        if (hit_payload.x != INVALID_ID)
+            depth = asfloat(hit_payload.x);
+
+        [branch]
+        if (hit_payload.w != INVALID_ID) // known cell
+        {
+            uint cell_index = hit_payload.w;
+            surfel_id = SurfelGrid.Load(cell_index * 4);
+        }
+
+        float3 radiance = 0;
+
+        [branch]
+        if (surfel_id != INVALID_ID)
+            radiance = asfloat(SurfelRadiance.Load3(surfel_id * RADIANCE_STRIDE)) * BounceStrength;
+
+        FarProbeGatherAtlasRW[uint2(rad_atlas_x, rad_atlas_y)] = float4(radiance, depth);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+[numthreads(GROUP, 1, 1)]
+void TracesSky(in uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint ray_index = dispatch_thread_id.x;
+
+    [branch]
+    if (ray_index < TraceCounts.Load(TRACE_COUNT_FAR * 4))
+    {
+        uint sampler_index = TraceArray.Load((TRACE_ARRAY_FAR + ray_index) * TRACE_STRIDE);
+        uint4 hit_payload = TraceHits.Load4((TRACE_ARRAY_FAR + ray_index) * HIT_STRIDE);
+
+        uint entry_index = sampler_index / FAR_PROBE_RAY_COUNT;
+        uint texel_index = sampler_index % FAR_PROBE_RAY_COUNT;
+
+        uint probe_atlas_x = entry_index % FAR_PROBE_ATLAS_COUNT_X;
+        uint probe_atlas_y = entry_index / FAR_PROBE_ATLAS_COUNT_X;
+
+        uint rad_atlas_x = probe_atlas_x * FAR_PROBE_RES + texel_index % FAR_PROBE_RES;
+        uint rad_atlas_y = probe_atlas_y * FAR_PROBE_RES + texel_index / FAR_PROBE_RES;
+
+        float depth = MAX_HIT_DISTANCE;
+        uint surfel_id = INVALID_ID;
+
+        [flatten]
+        if (hit_payload.x != INVALID_ID)
+            depth = asfloat(hit_payload.x);
+
+        [branch]
+        if (hit_payload.w != INVALID_ID) // known cell
+        {
+            uint cell_index = hit_payload.w;
+            surfel_id = SurfelGrid.Load(cell_index * 4);
+        }
+
+        float3 radiance = 0;
+
+        [branch]
+        if (surfel_id != INVALID_ID)
+            radiance = asfloat(SurfelRadiance.Load3(surfel_id * RADIANCE_STRIDE)) * BounceStrength;
+        else
+        {
+            uint2 texel = uint2(texel_index % FAR_PROBE_RES, texel_index / FAR_PROBE_RES);
+            float3 direction = farTexelToDirection(texel);
+            radiance = texCUBElod(Sky, float4(direction, 0)).xyz;
+        }
+
+        FarProbeGatherAtlasRW[uint2(rad_atlas_x, rad_atlas_y)] = float4(radiance, depth);
+    }
+}

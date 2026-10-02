@@ -1,0 +1,203 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b516793b976143241bef296f49e2eb8e, type: 3}
+  m_Name: modules_LocalProfile 13
+  m_EditorClassIdentifier: 
+  SchemaVersion: 44
+  Pattern: 0
+  FragmentCount: 250
+  Seed: 12345
+  Solidify: 1
+  SolidifyThickness: 0.39999995
+  SecondaryBreakup: 0
+  SecondaryEligibleFragments: 8
+  SecondaryPiecesPerFragment: 4
+  SecondaryMinParentVolumeRatio: 0.8
+  SecondaryIrregularity: 0.4
+  SecondaryStrength: 35
+  SecondaryMinImpactVelocity: 4.5
+  SecondaryImpulseToDamage:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 25
+      value: 50
+      inSlope: 2
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  SecondaryImpactGrace: 0.6
+  SecondaryDamageCooldown: 0.2
+  SecondarySeparationForce: 3
+  MaxActiveSecondaryBodies: 24
+  SecondaryInheritVelocity: 1
+  RuntimeFragmentSplitting: 1
+  RuntimeSplitPieces: 3
+  RuntimeSplitMaxDepth: 2
+  FragmentHealthFraction: 0.5
+  RuntimeSplitStrength: 25
+  RuntimeSplitMinVolume: 0.002
+  RuntimeSplitMaxActivePieces: 32
+  MaxSplitsPerFrame: 1
+  RuntimeSplitMaxSourceTriangles: 5000
+  RuntimeSplitMaxQueuedRequests: 16
+  RuntimeSplitCollisionCooldown: 0.2
+  RuntimeSplitConvexColliderDepth: 1
+  RuntimeSplitSeparationForce: 1.5
+  RuntimeSplitPiecesDisappear: 0
+  RuntimeSplitDisappearAfter: 8
+  MaxActiveTriangles: 80000
+  InteriorCutJaggedness: 0
+  UseDefaultHitParticles: 1
+  UseDefaultHitSound: 1
+  PlayHitEffectsOnEveryHit: 1
+  HitParticlePrefab: {fileID: 0}
+  HitParticleVariants: []
+  HitSound: {fileID: 8300000, guid: 9cebb94905741d041940d32dbefdba24, type: 3}
+  HitSoundVariants: []
+  GroundDustParticlePrefab: {fileID: 5726233490510221869, guid: ebe05dbc9df813b41bf461796a1cba17,
+    type: 3}
+  GroundDustParticleVariants: []
+  GroundDustSound: {fileID: 8300000, guid: 108272126a1a15249bba9d538baf17d5, type: 3}
+  GroundDustSoundVariants: []
+  FragmentImpactEffects: 1
+  FragmentImpactMinSpeed: 2.5
+  FragmentImpactMinDropHeight: 0.75
+  FragmentImpactStrength: 0.5
+  FragmentShapeIrregularity: 0.631
+  ConcreteIrregularity: 0.3
+  GlassNormalAxis: 0
+  RadialSpokes: 6
+  RadialRings: 2
+  RadialJitter: 0.35
+  ReleaseUnsupportedGlass: 1
+  DirectionalCutStrength: 0
+  WoodAxis: 0
+  FiberCutShare: 0.5
+  WoodSplitIrregularity: 0.35
+  WoodEndSharpness: 0.6
+  BrickUseCellSize: 1
+  BrickCellSize: {x: 0.5, y: 0.25, z: 0.25}
+  BrickJitter: 0.35
+  SlabNormalAxis: 0
+  SlabLayers: 6
+  SlabJitter: 0.25
+  PillarAxis: 0
+  ColumnJitter: 0.35
+  ImpactFocus: 0.65
+  ImpactPointOverride: 0
+  ImpactPointLocal: {x: 0.5, y: 0.5, z: 1}
+  InteriorScatterStyle: 0
+  InteriorScatterLength: 1.664
+  InteriorMaterial: {fileID: 0}
+  InteriorUseSourceMaterial: 1
+  CutSurfaceUVMode: 1
+  InteriorUVScale: 1
+  Colliders: 0
+  Density: 1400
+  MinFragmentMass: 0.05
+  MaxFragmentMass: 400
+  Drag: 0.05
+  AngularDrag: 0.3
+  UseGravity: 1
+  FragmentCollisionDetection: 3
+  FragmentInterpolation: 0
+  IntactBody: 2
+  IntactMassMultiplier: 1
+  SupportDetection: 0
+  RequiredSupportRatio: 0.5
+  SupportProbeDistance: 0.35
+  SupportProbeGrid: 3
+  SupportProbeInset: 0.08
+  SupportGraceTime: 0.15
+  SupportCheckInterval: 0.1
+  SupportLayers:
+    serializedVersion: 2
+    m_Bits: 55
+  DamageTrigger: 2
+  Health: 200
+  Brittleness: 0.15
+  CollisionDamage: 1
+  FallDamage: 1
+  MinCollisionVelocity: 7
+  ImpulseToDamage:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 10
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 20
+      value: 200
+      inSlope: 10
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  DamageCooldown: 0.15
+  ActivateAllOnFirstBreak: 0
+  PostFractureImpactRadius: 0.8
+  LocalImpactEjectSpeed: 4
+  DebrisImpactSignificance: 0.35
+  MaxFragmentLaunchSpeed: 20
+  MaxWholeBodyLaunchSpeed: 20
+  CollisionLayers:
+    serializedVersion: 2
+    m_Bits: 55
+  EnforceActiveBodyBudget: 0
+  MaxActiveFragments: 72
+  DegradeSmallestOverBudget: 0
+  MaxVisibleFragments: 160
+  MaxVisibleTriangles: 150000
+  LimitActiveTime: 0
+  CleanupLifetime: 8
+  CleanupSettledFragments: 0
+  SleepVelocity: 0.08
+  SleepDuration: 1.5
+  Cleanup: 1
+  SmoothDespawn: 1
+  DespawnDebris: 1
+  DespawnDebrisAfter: 60
+  BudgetGroup: Default
+  GroupMaxActiveBodies: 96
+  MaterialTag: concrete
+  DefaultExplosionForce: 35
+  DefaultExplosionRadius: 3
+  FragmentPushMultiplier: 1.35
+  DirectionalImpactMultiplier: 0
+  TallFragmentToppleSpeed: 1.25
+  ExplosionUpwardModifier: 0.25
+  ExplosionForceMode: 1
