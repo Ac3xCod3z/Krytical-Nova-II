@@ -43,14 +43,22 @@ namespace KryticalNova.Combat
         [SerializeField, Range(0f, 1f)] private float swing3Start = 0.20f;
         [SerializeField, Range(0f, 1f)] private float swing3End = 0.70f;
 
+        [Header("Slash VFX Timing (Normalized Clip Time)")]
+        [Tooltip("When each strike's slash VFX fires. Kept separate from the hitbox window so the trail can sit on the visible swing.")]
+        [SerializeField, Range(0f, 1f)] private float slash1VfxTime = 0.22f;
+        [SerializeField, Range(0f, 1f)] private float slash2VfxTime = 0.10f;
+        [SerializeField, Range(0f, 1f)] private float slash3VfxTime = 0.38f;
+
         [Header("Strike Speeds")]
         [SerializeField, Range(1.0f, 2.5f)] private float strike1Speed = 1.30f;
         [SerializeField, Range(1.0f, 2.5f)] private float strike2Speed = 1.30f;
         [SerializeField, Range(1.0f, 2.5f)] private float strike3Speed = 1.00f;
 
         [Header("Combat Ranges")]
-        [Tooltip("Distance at which the combo starts. Strike 2 only reaches ~1.8m, so keep this below that.")]
+        [Tooltip("Horizontal distance at which the combo starts. Strike 2 only reaches ~1.8m, so keep this below that.")]
         [SerializeField, Min(0.5f)] private float meleeStrikingRange = 1.6f;
+        [Tooltip("The approach stops this far inside the striking range, so the player halts on the ring instead of running into the target.")]
+        [SerializeField, Min(0f)] private float approachInset = 0.15f;
         [SerializeField, Min(0.5f)] private float serverMaxValidationRange = 2.7f;
         [SerializeField] private float modelForwardOffset;
 
@@ -203,19 +211,15 @@ namespace KryticalNova.Combat
                     if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
                     {
                         agent.isStopped = false;
-                        agent.SetDestination(currentTarget.Transform.position);
+                        agent.SetDestination(ApproachPoint(currentTarget.Transform.position));
                     }
                     yield return new WaitForSeconds(0.05f);
                 }
 
                 if (currentTarget == null || !currentTarget.IsAlive) break;
 
-                // Stop movement and face target
-                if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
-                {
-                    agent.isStopped = true;
-                    agent.ResetPath();
-                }
+                // Stop movement dead (no coasting into the swing) and face target
+                StopAgent();
                 FaceTarget(currentTarget.Transform.position);
 
                 // Wait for any active draw/sheath animation to finish before swinging
@@ -255,18 +259,12 @@ namespace KryticalNova.Combat
         {
             if (clip == null) yield break;
 
-            // Broadcast animation to proxies
-            if (IsSpawned)
+            // Broadcast animation to proxies. A remote owner's server copy runs this same loop (started by
+            // RequestAttackEntityServerRpc), so only the server sequences strikes; the client's loop is presentation.
+            if (IsSpawned && IsServer)
             {
-                if (IsServer)
-                {
-                    if (ServerTryBeginSwing(step))
-                        PlayComboStrikeClientRpc(step);
-                }
-                else
-                {
-                    RequestPlayComboStrikeServerRpc(step);
-                }
+                if (ServerTryBeginSwing(step))
+                    PlayComboStrikeClientRpc(step);
             }
 
             PlayStrikeAnimationLocal(step, clip, speed);
@@ -274,17 +272,24 @@ namespace KryticalNova.Combat
             float length = clip.length / speed;
             float swingStart = (clip.length * swingStartNorm) / speed;
             float swingEnd = (clip.length * swingEndNorm) / speed;
+            float slashTime = (clip.length * GetSlashVfxTime(step)) / speed;
             float elapsed = 0f;
             bool swingActive = false;
+            bool slashSpawned = false;
 
             while (elapsed < length)
             {
                 elapsed += Time.deltaTime;
 
+                if (!slashSpawned && elapsed >= slashTime)
+                {
+                    slashSpawned = true;
+                    SpawnSlashVfxLocal(step);
+                }
+
                 if (!swingActive && elapsed >= swingStart && elapsed < swingEnd)
                 {
                     swingActive = true;
-                    SpawnSlashVfxLocal(step);
                     if (weaponHitbox != null)
                     {
                         weaponHitbox.BeginSwing(step, IsSpawned ? NetworkObjectId : 0);
@@ -321,13 +326,6 @@ namespace KryticalNova.Combat
             state.Speed = speed;
             state.Time = 0f;
             state.ApplyFootIK = strikeFootIK;
-        }
-
-        [ServerRpc]
-        private void RequestPlayComboStrikeServerRpc(int step)
-        {
-            if (ServerTryBeginSwing(step))
-                PlayComboStrikeClientRpc(step);
         }
 
         private float GetStrikeDuration(int step)
@@ -375,9 +373,11 @@ namespace KryticalNova.Combat
         /// <summary>Validates a damage request against the currently open server-side swing.</summary>
         private bool ServerValidateHit(IDamageable target, int comboStep)
         {
+            // A remote owner's local hitbox runs slightly out of phase with the server's swing; the server's own
+            // hitbox lands the hit, so these mismatches are expected and only logged, not shown in the combat log.
             if (!serverSwingOpen || comboStep != serverSwingStep)
             {
-                RejectStrike($"Melee strike rejected: no open swing for combo step {comboStep}.");
+                Debug.Log($"[{nameof(PlayerMeleeCombat)}:{name}] Hit ignored: no open swing for combo step {comboStep}.", this);
                 return false;
             }
 
@@ -385,7 +385,7 @@ namespace KryticalNova.Combat
             float maxWindow = GetStrikeDuration(comboStep) + hitLatencyGrace;
             if (sinceSwing > maxWindow)
             {
-                RejectStrike($"Melee strike rejected: step {comboStep} hit arrived after its window ({sinceSwing:0.00}s > {maxWindow:0.00}s).");
+                Debug.Log($"[{nameof(PlayerMeleeCombat)}:{name}] Hit ignored: step {comboStep} arrived after its window ({sinceSwing:0.00}s > {maxWindow:0.00}s).", this);
                 return false;
             }
 
@@ -410,11 +410,12 @@ namespace KryticalNova.Combat
             {
                 PlayStrikeState(clip, speed);
 
-                // Proxies don't run the swing windows, so time the slash to the same window start.
-                float swingStartNorm = step == 1 ? swing1Start : step == 2 ? swing2Start : swing3Start;
-                StartCoroutine(SpawnSlashVfxDelayed(step, clip.length * swingStartNorm / Mathf.Max(0.01f, speed)));
+                // Proxies don't run the swing windows, so time the slash the same way the owner does.
+                StartCoroutine(SpawnSlashVfxDelayed(step, clip.length * GetSlashVfxTime(step) / Mathf.Max(0.01f, speed)));
             }
         }
+
+        private float GetSlashVfxTime(int step) => step == 1 ? slash1VfxTime : step == 2 ? slash2VfxTime : slash3VfxTime;
 
         private IEnumerator SpawnSlashVfxDelayed(int step, float delay)
         {
@@ -442,8 +443,27 @@ namespace KryticalNova.Combat
         private bool IsWithinStrikingRange(IDamageable target)
         {
             if (target == null) return false;
-            float dist = Vector3.Distance(transform.position, target.Transform.position);
-            return dist <= meleeStrikingRange;
+            Vector3 offset = target.Transform.position - transform.position;
+            offset.y = 0f;
+            return offset.sqrMagnitude <= meleeStrikingRange * meleeStrikingRange;
+        }
+
+        /// <summary>The point on the striking ring nearest the attacker, so arrival and autoBraking aim for the ring, not the target's centre.</summary>
+        private Vector3 ApproachPoint(Vector3 targetPos)
+        {
+            Vector3 fromTarget = transform.position - targetPos;
+            fromTarget.y = 0f;
+            if (fromTarget.sqrMagnitude < 0.0001f) return targetPos;
+            float ring = Mathf.Max(0.1f, meleeStrikingRange - approachInset);
+            return targetPos + fromTarget.normalized * ring;
+        }
+
+        private void StopAgent()
+        {
+            if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+            agent.isStopped = true;
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
         }
 
         private void FaceTarget(Vector3 targetPos)

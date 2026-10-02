@@ -25,6 +25,10 @@ namespace KryticalNova.World
         /// <summary>Shared seed for cloud-coverage drift and lightning, so every client sees the same sky.</summary>
         public int Seed;
 
+        /// <summary>Wind heading (degrees) rolled when FromWeather / ToWeather began. Held for the whole cycle.</summary>
+        public float FromWindHeading;
+        public float ToWindHeading;
+
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref CycleEpoch);
@@ -36,6 +40,8 @@ namespace KryticalNova.World
             serializer.SerializeValue(ref TransitionStart);
             serializer.SerializeValue(ref TransitionSeconds);
             serializer.SerializeValue(ref Seed);
+            serializer.SerializeValue(ref FromWindHeading);
+            serializer.SerializeValue(ref ToWindHeading);
         }
 
         public float TimeOfDay01(double now)
@@ -43,6 +49,13 @@ namespace KryticalNova.World
             if (DayLengthSeconds <= 0f) return TimeOffset01;
             double t = TimeOffset01 + (now - CycleEpoch) * TimeScale / DayLengthSeconds;
             return (float)(t - Math.Floor(t));
+        }
+
+        /// <summary>Whole days elapsed on the world clock (drives slow cycles such as moon phases).</summary>
+        public long DayCount(double now)
+        {
+            if (DayLengthSeconds <= 0f) return 0;
+            return (long)Math.Floor(TimeOffset01 + (now - CycleEpoch) * TimeScale / DayLengthSeconds);
         }
 
         /// <summary>Linear transition progress 0-1.</summary>
@@ -65,7 +78,8 @@ namespace KryticalNova.World
             CycleEpoch.Equals(o.CycleEpoch) && DayLengthSeconds.Equals(o.DayLengthSeconds) &&
             TimeOffset01.Equals(o.TimeOffset01) && TimeScale.Equals(o.TimeScale) &&
             FromWeather == o.FromWeather && ToWeather == o.ToWeather &&
-            TransitionStart.Equals(o.TransitionStart) && TransitionSeconds.Equals(o.TransitionSeconds) && Seed == o.Seed;
+            TransitionStart.Equals(o.TransitionStart) && TransitionSeconds.Equals(o.TransitionSeconds) && Seed == o.Seed &&
+            FromWindHeading.Equals(o.FromWindHeading) && ToWindHeading.Equals(o.ToWindHeading);
 
         public override bool Equals(object obj) => obj is WorldEnvironmentState o && Equals(o);
 

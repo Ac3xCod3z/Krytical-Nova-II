@@ -14,6 +14,7 @@ namespace KryticalNova.World
         public float cloudDarkness;
         public Color cloudTint;
         public float cirrus;
+        public float celestialDiffusion;
 
         public float skyDesaturation;
         public float skyDarkening;
@@ -25,7 +26,9 @@ namespace KryticalNova.World
         public float fogDensity;
         public Color fogTint;
 
-        public Vector2 wind;          // metres per second, world XZ
+        public Vector2 wind;          // metres per second, world XZ (includes the current gust)
+        public float gustiness;       // 0-1, blended from the profiles
+        public float gust;            // 0-1, how hard it is gusting right now (gustiness × shared gust noise)
 
         public float rain;
         public float snow;
@@ -39,7 +42,9 @@ namespace KryticalNova.World
         /// Blends two profiles. <paramref name="t"/> is already eased. <paramref name="coverageNoise"/> (0-1)
         /// picks where inside each profile's coverage range the sky currently sits.
         /// </summary>
-        public static WeatherBlend Evaluate(WeatherProfile from, WeatherProfile to, float t, float coverageNoise)
+        /// <paramref name="fromHeading"/> / <paramref name="toHeading"/> are the per-cycle rolled wind headings (NaN = profile heading).
+        public static WeatherBlend Evaluate(WeatherProfile from, WeatherProfile to, float t, float coverageNoise,
+            float fromHeading = float.NaN, float toHeading = float.NaN)
         {
             if (from == null) from = to;
             if (to == null) to = from;
@@ -54,6 +59,7 @@ namespace KryticalNova.World
             b.cloudDarkness = Mathf.Lerp(from.cloudDarkness, to.cloudDarkness, t);
             b.cloudTint = Color.Lerp(from.cloudTint, to.cloudTint, t);
             b.cirrus = Mathf.Lerp(from.cirrusAmount, to.cirrusAmount, t);
+            b.celestialDiffusion = Mathf.Lerp(from.celestialDiffusion, to.celestialDiffusion, t);
 
             b.skyDesaturation = Mathf.Lerp(from.skyDesaturation, to.skyDesaturation, t);
             b.skyDarkening = Mathf.Lerp(from.skyDarkening, to.skyDarkening, t);
@@ -65,7 +71,8 @@ namespace KryticalNova.World
             b.fogDensity = Mathf.Lerp(from.fogDensity, to.fogDensity, t);
             b.fogTint = Color.Lerp(from.fogTint, to.fogTint, t);
 
-            b.wind = Vector2.Lerp(from.WindVector, to.WindVector, t);
+            b.wind = Vector2.Lerp(from.WindVectorAt(fromHeading), to.WindVectorAt(toHeading), t);
+            b.gustiness = Mathf.Lerp(from.gustiness, to.gustiness, t);
 
             b.rain = Mathf.Lerp(from.RainIntensity, to.RainIntensity, t);
             b.snow = Mathf.Lerp(from.SnowIntensity, to.SnowIntensity, t);

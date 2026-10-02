@@ -22,6 +22,19 @@ namespace KryticalNova.Items.Visuals
         [Tooltip("Shown for a slot's regions while that slot is empty (Sidekick SK_HUMN_BASE body).")]
         [SerializeField] private List<SidekickPartRef> defaultParts = new List<SidekickPartRef>();
         [SerializeField] private BodyShapeWeights bodyShape = new BodyShapeWeights { buff = 90f, heavy = 10f };
+        [Tooltip("Resting face, baked into the merged mesh. Shape = Sidekick facial blendshape name after the last '.', " +
+                 "weight 0-100. Tune live with Sidekick's FacialController on a test head, then copy the values here.")]
+        [SerializeField] private List<FaceShapeWeight> idleFace = new List<FaceShapeWeight>
+        {
+            new FaceShapeWeight("mouthSmileLeft", 22f),
+            new FaceShapeWeight("mouthSmileRight", 22f),
+            new FaceShapeWeight("eyeSquintLeft", 12f),
+            new FaceShapeWeight("eyeSquintRight", 12f),
+            new FaceShapeWeight("cheekSquintLeft", 10f),
+            new FaceShapeWeight("cheekSquintRight", 10f),
+        };
+        [Tooltip("Adds a FaceBlinker; the eyelid blink shapes are kept live on the merged mesh.")]
+        [SerializeField] private bool blink = true;
         [Tooltip("Bone order + bindposes of the original baked mesh, captured by the setup tool. Keeps merges exact and lets clones (the preview doll) merge without reading the live mesh.")]
         [SerializeField] private string[] referenceBoneNames = System.Array.Empty<string>();
         [SerializeField] private Matrix4x4[] referenceBindposes = System.Array.Empty<Matrix4x4>();
@@ -65,6 +78,12 @@ namespace KryticalNova.Items.Visuals
             // Keep the baked mesh until the first LateUpdate, by which time the equipment binder has applied the
             // loadout, so spawning costs exactly one merge.
             dirty = IsConfigured;
+            // FaceBlinker normally lives on the prefab (tunable in the Inspector); add one only if it's missing.
+            if (blink && IsConfigured)
+            {
+                if (!TryGetComponent<FaceBlinker>(out var blinker)) blinker = gameObject.AddComponent<FaceBlinker>();
+                if (!blinker.HasTarget) blinker.Bind(targetRenderer);
+            }
         }
 
         private void OnDestroy()
@@ -147,7 +166,7 @@ namespace KryticalNova.Items.Visuals
         private void RebuildMerged()
         {
             ClearDebugRenderers();
-            var mesh = merger.Merge(partList, bodyShape, boneBuffer, name + "_Merged");
+            var mesh = merger.Merge(partList, bodyShape, boneBuffer, name + "_Merged", idleFace, blink ? FaceBlinker.LiveShapes : null);
             if (mesh == null) return;
             var old = ownedMesh;
             ownedMesh = mesh;
@@ -210,7 +229,11 @@ namespace KryticalNova.Items.Visuals
                 smr.sharedMaterials = mats;
                 smr.localBounds = targetRenderer.localBounds;
                 for (int i = 0; i < part.mesh.blendShapeCount; i++)
-                    smr.SetBlendShapeWeight(i, bodyShape.WeightFor(part.mesh.GetBlendShapeName(i)));
+                {
+                    string shapeName = part.mesh.GetBlendShapeName(i);
+                    smr.SetBlendShapeWeight(i, bodyShape.WeightFor(shapeName)
+                        + FaceShapeWeight.WeightFor(idleFace, FaceShapeWeight.Suffix(shapeName)));
+                }
                 debugRenderers.Add(smr);
             }
         }

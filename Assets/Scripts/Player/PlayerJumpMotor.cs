@@ -117,7 +117,8 @@ namespace KryticalNova.Player
             facingOffset = modelForwardOffset;
             takeoffRootPosition = transform.position;
             float clearanceApex = Mathf.Max(startFeet.y, landingFeet.y) + motionData.apexClearance;
-            peakHeight = Mathf.Max(clearanceApex, startFeet.y + jumpH);
+            // Short hops stay low; only a max-range jump climbs to the rank's full height.
+            peakHeight = Mathf.Max(clearanceApex, startFeet.y + motionData.RiseForDistance(horizontalDistance, maxDist, jumpH));
             ascentTime = Mathf.Sqrt(2f * (peakHeight - startFeet.y) / motionData.gravity);
             descentTime = Mathf.Sqrt(2f * (peakHeight - landingFeet.y) / motionData.gravity);
             flightTime = ascentTime + motionData.apexHoldDuration + descentTime;

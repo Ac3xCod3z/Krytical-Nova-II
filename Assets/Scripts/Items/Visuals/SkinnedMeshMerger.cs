@@ -21,7 +21,35 @@ namespace KryticalNova.Items.Visuals
             if (blendShapeName.Contains("defaultSkinny")) return skinny;
             if (blendShapeName.Contains("defaultHeavy")) return heavy;
             if (blendShapeName.Contains("defaultBuff")) return buff;
-            return 0f; // facial expressions etc. are dropped
+            return 0f; // facial expressions are handled by FaceShapeWeight / live shapes
+        }
+    }
+
+    /// <summary>
+    /// One Sidekick facial blendshape and its weight (0-100). <see cref="shape"/> is the name after the last '.',
+    /// e.g. "mouthSmileLeft", "eyeSquintRight", "browInnerUpLeft" (same names as Sidekick's FacialController).
+    /// </summary>
+    [Serializable]
+    public struct FaceShapeWeight
+    {
+        public string shape;
+        [Range(0, 100)] public float weight;
+
+        public FaceShapeWeight(string shape, float weight) { this.shape = shape; this.weight = weight; }
+
+        /// <summary>Sidekick names blendshapes "&lt;part&gt;.&lt;shape&gt;"; returns the part after the last '.'.</summary>
+        public static string Suffix(string blendShapeName)
+        {
+            int dot = blendShapeName.LastIndexOf('.');
+            return dot >= 0 ? blendShapeName.Substring(dot + 1) : blendShapeName;
+        }
+
+        public static float WeightFor(IReadOnlyList<FaceShapeWeight> face, string suffix)
+        {
+            if (face == null) return 0f;
+            for (int i = 0; i < face.Count; i++)
+                if (string.Equals(face[i].shape, suffix, StringComparison.Ordinal)) return face[i].weight;
+            return 0f;
         }
     }
 
@@ -29,7 +57,8 @@ namespace KryticalNova.Items.Visuals
     /// Merges Sidekick part meshes into ONE skinned mesh bound to an existing skeleton, in place (unlike Sidekick's
     /// Combiner, which builds a new GameObject + skeleton). Bones are matched by name; bindposes come from the reference
     /// (original baked) mesh or the source part, never the live pose, so merging while animating is safe. Body-shape
-    /// blendshapes are baked and dropped, so the result skins as cheaply as a plain mesh. Runs only on equip changes.
+    /// blendshapes and the resting face expression are baked; only the few shapes named as "live" (eye blinks) survive
+    /// as real blendshapes on the merged mesh, named by their short suffix. Runs only on equip changes.
     /// </summary>
     public sealed class SkinnedMeshMerger
     {
@@ -66,6 +95,18 @@ namespace KryticalNova.Items.Visuals
         private Vector3[] deltaT2 = Array.Empty<Vector3>();
         private int[] remap = Array.Empty<int>();
 
+        // Live (un-baked) blendshape deltas gathered per part, then stitched into full-mesh frames.
+        private sealed class LiveShapeChunk
+        {
+            public string name;
+            public int baseIndex;
+            public Vector3[] dv, dn, dt;
+        }
+        private readonly List<LiveShapeChunk> liveChunks = new List<LiveShapeChunk>();
+        private readonly List<string> liveNames = new List<string>();
+        private IReadOnlyList<FaceShapeWeight> currentFace;
+        private IReadOnlyList<string> currentLiveShapes;
+
         public SkinnedMeshMerger(Transform skeletonRoot, Transform[] referenceBones, Matrix4x4[] referenceBindposes)
         {
             this.referenceBones = referenceBones ?? Array.Empty<Transform>();
@@ -90,8 +131,13 @@ namespace KryticalNova.Items.Visuals
         }
 
         /// <summary>Builds a new mesh from <paramref name="parts"/>. Bones come back in <paramref name="outBones"/> (index-aligned with bindposes).</summary>
-        public Mesh Merge(IReadOnlyList<SidekickPartRef> parts, BodyShapeWeights shape, List<Transform> outBones, string meshName)
+        public Mesh Merge(IReadOnlyList<SidekickPartRef> parts, BodyShapeWeights shape, List<Transform> outBones, string meshName,
+            IReadOnlyList<FaceShapeWeight> face = null, IReadOnlyList<string> liveShapes = null)
         {
+            currentFace = face;
+            currentLiveShapes = liveShapes;
+            liveChunks.Clear();
+            liveNames.Clear();
             positions.Clear(); normals.Clear(); tangents.Clear(); boneWeights.Clear(); triangles.Clear();
             bindposes.Clear(); boneIndexByName.Clear(); outBones.Clear();
             for (int c = 0; c < MaxUvChannels; c++) { uvs[c].Clear(); uvDimensions[c] = 0; }
@@ -131,6 +177,7 @@ namespace KryticalNova.Items.Visuals
             mesh.boneWeights = boneWeights.ToArray();
             mesh.bindposes = bindposes.ToArray();
             mesh.SetTriangles(triangles, 0, true);
+            AddLiveShapes(mesh);
             // GPU skinning needs no CPU copy; frees ~100 bytes/vertex per character.
             mesh.UploadMeshData(true);
             return mesh;
@@ -152,6 +199,7 @@ namespace KryticalNova.Items.Visuals
             m.GetTangents(partTangents);
             if (partNormals.Count != vc) { partNormals.Clear(); for (int i = 0; i < vc; i++) partNormals.Add(Vector3.up); }
             if (partTangents.Count != vc) { partTangents.Clear(); for (int i = 0; i < vc; i++) partTangents.Add(new Vector4(1, 0, 0, 1)); }
+            CaptureLiveShapes(m, vc, baseIndex);
             BakeBlendShapes(m, shape, vc);
 
             positions.AddRange(partVerts);
@@ -258,7 +306,8 @@ namespace KryticalNova.Items.Visuals
             EnsureCapacity(vc);
             for (int s = 0; s < count; s++)
             {
-                float weight = shape.WeightFor(m.GetBlendShapeName(s));
+                string shapeName = m.GetBlendShapeName(s);
+                float weight = shape.WeightFor(shapeName) + FaceShapeWeight.WeightFor(currentFace, FaceShapeWeight.Suffix(shapeName));
                 if (weight <= 0f) continue;
                 int frames = m.GetBlendShapeFrameCount(s);
                 if (frames == 0) continue;
@@ -294,6 +343,46 @@ namespace KryticalNova.Items.Visuals
                 var dir = new Vector3(tan.x, tan.y, tan.z).normalized;
                 partTangents[i] = new Vector4(dir.x, dir.y, dir.z, tan.w);
             }
+        }
+
+        /// <summary>Copies this part's full-strength frame of every live shape (taken before baking, from the source mesh).</summary>
+        private void CaptureLiveShapes(Mesh m, int vc, int baseIndex)
+        {
+            if (currentLiveShapes == null || currentLiveShapes.Count == 0) return;
+            for (int s = 0; s < m.blendShapeCount; s++)
+            {
+                string suffix = FaceShapeWeight.Suffix(m.GetBlendShapeName(s));
+                bool live = false;
+                for (int i = 0; i < currentLiveShapes.Count; i++)
+                    if (string.Equals(currentLiveShapes[i], suffix, StringComparison.Ordinal)) { live = true; break; }
+                if (!live) continue;
+                int frames = m.GetBlendShapeFrameCount(s);
+                if (frames == 0) continue;
+                var chunk = new LiveShapeChunk { name = suffix, baseIndex = baseIndex, dv = new Vector3[vc], dn = new Vector3[vc], dt = new Vector3[vc] };
+                m.GetBlendShapeFrameVertices(s, frames - 1, chunk.dv, chunk.dn, chunk.dt);
+                liveChunks.Add(chunk);
+                if (!liveNames.Contains(suffix)) liveNames.Add(suffix);
+            }
+        }
+
+        private void AddLiveShapes(Mesh mesh)
+        {
+            int total = positions.Count;
+            foreach (var name in liveNames)
+            {
+                var dv = new Vector3[total];
+                var dn = new Vector3[total];
+                var dt = new Vector3[total];
+                foreach (var chunk in liveChunks)
+                {
+                    if (chunk.name != name) continue;
+                    Array.Copy(chunk.dv, 0, dv, chunk.baseIndex, chunk.dv.Length);
+                    Array.Copy(chunk.dn, 0, dn, chunk.baseIndex, chunk.dn.Length);
+                    Array.Copy(chunk.dt, 0, dt, chunk.baseIndex, chunk.dt.Length);
+                }
+                mesh.AddBlendShapeFrame(name, 100f, dv, dn, dt);
+            }
+            liveChunks.Clear();
         }
 
         private void Accumulate(int vc, float scale, Vector3[] dv, Vector3[] dn, Vector3[] dt)

@@ -33,6 +33,8 @@ namespace KryticalNova.World
         [Tooltip("Multiplied into cloud colours.")]
         public Color cloudTint = Color.white;
         [Range(0f, 1f)] public float cirrusAmount = 0.3f;
+        [Tooltip("How much the cloud deck diffuses the sun/moon: 0 = crisp stylized art, 1 = only a pale glow through cloud.")]
+        [Range(0f, 1f)] public float celestialDiffusion = 0f;
 
         [Header("Sky & light")]
         [Range(0f, 1f)] public float skyDesaturation = 0f;
@@ -55,6 +57,11 @@ namespace KryticalNova.World
         [Range(0f, 360f)] public float windHeading = 60f;
         [Tooltip("Metres per second. Drives cloud drift and precipitation slant.")]
         [Range(0f, 40f)] public float windSpeed = 4f;
+        [Tooltip("Roll a random heading each time this weather starts. It is held for the whole cycle and only changes " +
+                 "when the next weather begins. Off = always use Wind Heading.")]
+        public bool randomWindDirection = true;
+        [Tooltip("0 = steady wind, 1 = violent gusts (speed surges up to ~+80%). Also drives gust-streak VFX.")]
+        [Range(0f, 1f)] public float gustiness = 0.2f;
 
         [Header("Precipitation & effects")]
         public PrecipitationType precipitation = PrecipitationType.None;
@@ -84,13 +91,14 @@ namespace KryticalNova.World
         public float RainIntensity => precipitation == PrecipitationType.Rain ? precipitationIntensity : 0f;
         public float SnowIntensity => precipitation == PrecipitationType.Snow ? precipitationIntensity : 0f;
 
-        public Vector2 WindVector
+        public Vector2 WindVector => WindVectorAt(windHeading);
+
+        /// <summary>Wind vector at this profile's speed but an explicit heading (the per-cycle rolled one).</summary>
+        public Vector2 WindVectorAt(float heading)
         {
-            get
-            {
-                float r = windHeading * Mathf.Deg2Rad;
-                return new Vector2(Mathf.Sin(r), Mathf.Cos(r)) * windSpeed;
-            }
+            if (float.IsNaN(heading)) heading = windHeading;
+            float r = heading * Mathf.Deg2Rad;
+            return new Vector2(Mathf.Sin(r), Mathf.Cos(r)) * windSpeed;
         }
 
         private void OnValidate()

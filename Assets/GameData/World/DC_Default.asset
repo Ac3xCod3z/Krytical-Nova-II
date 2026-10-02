@@ -363,6 +363,11 @@ MonoBehaviour:
   sunDiscIntensity: 6
   sunGlowPower: 24
   sunGlowIntensity: 0.45
+  sunTextureSize: 0.065
+  moonTextureSize: 0.1
+  sunTextureIntensity: 1
+  moonTextureIntensity: 1.15
+  lunarCycleDays: 8
   starVisibility:
     serializedVersion: 2
     m_Curve:

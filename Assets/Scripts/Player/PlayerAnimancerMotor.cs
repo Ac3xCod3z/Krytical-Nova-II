@@ -45,6 +45,12 @@ namespace KryticalNova.Player
         [SerializeField, Min(0f)] private float runToWalkHysteresis = 0.6f;
         [Tooltip("How long a slower gait must persist before switching to it.")]
         [SerializeField, Min(0f)] private float gaitChangeDelay = 0.15f;
+        [Tooltip("Humanoid foot IK on idle/walk/run too. It must match the stop clips: blending an IK clip into a non-IK idle " +
+                 "drops the feet ~6cm at the end of the fade, which reads as the lower legs jerking down.")]
+        [SerializeField] private bool locomotionFootIK = true;
+        [Tooltip("Scale walk/run playback to the actual travel speed using each clip's root-motion speed (clips without root motion are left at 1x).")]
+        [SerializeField] private bool matchClipSpeedToVelocity = true;
+        [SerializeField] private Vector2 locomotionPlaybackRange = new Vector2(0.8f, 1.6f);
 
         [Header("Stop Transitions (Move -> Idle)")]
         [SerializeField] private AnimationClip runStopClip;
@@ -81,6 +87,9 @@ namespace KryticalNova.Player
         [SerializeField, Range(0.1f, 0.9f)] private float unequipReparentNormalizedTime = 0.45f;
         [Tooltip("Humanoid foot IK on the draw/sheath clips. They come from the Big Sword set and hover or sink on this rig without it.")]
         [SerializeField] private bool weaponDrawFootIK = true;
+        [Tooltip("Play draw/sheath on an upper-body layer so the legs keep walking/running underneath (no sliding when combat auto-draws mid-approach).")]
+        [SerializeField] private bool drawOnUpperBodyLayer = true;
+        [SerializeField, Min(0.01f)] private float weaponDrawFadeDuration = 0.15f;
 
         [Header("Components")]
         [SerializeField] private NavMeshAgent agent;
@@ -91,8 +100,13 @@ namespace KryticalNova.Player
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server);
 
+        private const int UpperBodyLayerIndex = 1;
+
         private CharacterAnimState currentState = CharacterAnimState.Locomotion;
         private AnimationClip currentLocomotionClip;
+        private AnimancerState currentLocomotionState;
+        private AvatarMask upperBodyMask;
+        private bool drawOnUpperBody;
         private AnimancerState stopState;
         private Vector2 stopWindow;
         private float slowerGaitTimer;
@@ -145,6 +159,7 @@ namespace KryticalNova.Player
         private void Start()
         {
             AttachKatanaToSocket(presentedWeaponDrawn);
+            SetupUpperBodyLayer();
             if (animancer != null)
             {
                 bool drawn = presentedWeaponDrawn;
@@ -157,14 +172,51 @@ namespace KryticalNova.Player
             }
         }
 
+        public override void OnDestroy()
+        {
+            if (upperBodyMask != null) Destroy(upperBodyMask);
+            base.OnDestroy();
+        }
+
+        /// <summary>Layer 1 masked to spine, head and arms; the base layer keeps driving the legs.</summary>
+        private void SetupUpperBodyLayer()
+        {
+            if (!drawOnUpperBodyLayer || animancer == null || animancer.Animator == null || !animancer.Animator.isHuman) return;
+
+            upperBodyMask = new AvatarMask { name = "Upper Body (runtime)" };
+            for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
+            {
+                var part = (AvatarMaskBodyPart)i;
+                bool upper = part == AvatarMaskBodyPart.Body || part == AvatarMaskBodyPart.Head
+                    || part == AvatarMaskBodyPart.LeftArm || part == AvatarMaskBodyPart.RightArm
+                    || part == AvatarMaskBodyPart.LeftFingers || part == AvatarMaskBodyPart.RightFingers
+                    || part == AvatarMaskBodyPart.LeftHandIK || part == AvatarMaskBodyPart.RightHandIK;
+                upperBodyMask.SetHumanoidBodyPartActive(part, upper);
+            }
+            animancer.Layers[UpperBodyLayerIndex].Mask = upperBodyMask;
+            drawOnUpperBody = true;
+        }
+
         private void Update()
         {
             UpdateSpeed();
 
-            if (currentState == CharacterAnimState.Locomotion)
+            // While a draw/sheath plays on the upper-body layer, the legs keep following movement.
+            if (currentState == CharacterAnimState.Locomotion || (drawOnUpperBody && IsWeaponDrawActionPlaying))
             {
                 UpdateLocomotion();
             }
+            UpdateLocomotionPlaybackSpeed();
+        }
+
+        private void UpdateLocomotionPlaybackSpeed()
+        {
+            if (!matchClipSpeedToVelocity || currentLocomotionState == null || stopState != null) return;
+            AnimationClip clip = currentLocomotionClip;
+            if (clip == null || clip == idleClip || clip == drawnIdleClip) return;
+            float nativeSpeed = clip.averageSpeed.magnitude;
+            if (nativeSpeed < 0.1f) return; // in-place clip: no reference speed
+            currentLocomotionState.Speed = Mathf.Clamp(currentSpeed / nativeSpeed, locomotionPlaybackRange.x, locomotionPlaybackRange.y);
         }
 
         private void UpdateSpeed()
@@ -220,11 +272,12 @@ namespace KryticalNova.Player
                 AnimationClip stopClip = GetStopClip(currentLocomotionClip, out stopWindow);
                 if (stopClip != null)
                 {
-                    stopState = animancer.Play(stopClip, stopFadeDuration);
+                    stopState = animancer.Layers[0].Play(stopClip, stopFadeDuration);
                     stopState.Time = Mathf.Clamp(stopWindow.x, 0f, stopClip.length);
                     stopState.Speed = stopPlaybackSpeed;
                     stopState.ApplyFootIK = stopFootIK;
                     currentLocomotionClip = stopClip;
+                    currentLocomotionState = stopState;
                     return;
                 }
             }
@@ -247,7 +300,9 @@ namespace KryticalNova.Player
         {
             if (clip == null || clip == currentLocomotionClip) return;
             currentLocomotionClip = clip;
-            animancer.Play(clip, fade);
+            currentLocomotionState = animancer.Layers[0].Play(clip, fade);
+            currentLocomotionState.ApplyFootIK = locomotionFootIK;
+            currentLocomotionState.Speed = 1f;
         }
 
         private AnimationClip GetStopClip(AnimationClip fromClip, out Vector2 window)
@@ -271,7 +326,11 @@ namespace KryticalNova.Player
 
             if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh && !agent.pathPending && agent.hasPath)
             {
-                if (agent.remainingDistance <= agent.stoppingDistance + stopLeadDistance)
+                // remainingDistance reads 0 for the first frame after SetPath; don't mistake that for arrival.
+                Vector3 toDestination = agent.destination - agent.nextPosition;
+                toDestination.y = 0f;
+                float remaining = Mathf.Max(agent.remainingDistance, toDestination.magnitude);
+                if (remaining <= agent.stoppingDistance + stopLeadDistance)
                     return false;
             }
 
@@ -362,7 +421,14 @@ namespace KryticalNova.Player
                 AttachKatanaToSocket(presentedWeaponDrawn);
                 currentState = CharacterAnimState.Locomotion;
                 currentLocomotionClip = null;
+                FadeOutUpperBody();
             }
+        }
+
+        private void FadeOutUpperBody()
+        {
+            if (!drawOnUpperBody || animancer == null) return;
+            animancer.Layers[UpperBodyLayerIndex].StartFade(0f, weaponDrawFadeDuration);
         }
 
         private bool IsWeaponDrawActionPlaying =>
@@ -378,9 +444,11 @@ namespace KryticalNova.Player
                 // The katana starts on the socket it is being taken from and only swaps at the reparent point
                 AttachKatanaToSocket(!draw);
 
-                var state = animancer.Play(clip, 0.15f);
+                var state = drawOnUpperBody
+                    ? animancer.Layers[UpperBodyLayerIndex].Play(clip, weaponDrawFadeDuration)
+                    : animancer.Play(clip, weaponDrawFadeDuration);
                 state.Time = 0f;
-                state.ApplyFootIK = weaponDrawFootIK;
+                state.ApplyFootIK = !drawOnUpperBody && weaponDrawFootIK;
 
                 float reparentNorm = draw ? equipReparentNormalizedTime : unequipReparentNormalizedTime;
                 float reparentTime = clip.length * reparentNorm;
@@ -409,6 +477,11 @@ namespace KryticalNova.Player
             }
 
             currentState = CharacterAnimState.Locomotion;
+            if (drawOnUpperBody)
+            {
+                // The legs never left locomotion; just hand the arms back. Re-pick the clip set for the new stance.
+                FadeOutUpperBody();
+            }
             currentLocomotionClip = null;
             UpdateLocomotion();
             activeActionRoutine = null;

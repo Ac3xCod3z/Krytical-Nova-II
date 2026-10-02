@@ -1,5 +1,7 @@
 # Stylized Sky, Day/Night, Clouds & Weather — Plan
 
+> Current rendering rules, sky globals, post stack and budgets live in **[Rendering-Bible.md](../Game%20Docs/Rendering-Bible.md)**. Keep that file up to date; this plan is the original design record.
+
 ## Context
 Krytical Nova II (Unity 6000.6.3f1, URP 17.6, NGO 2.13, PC-first, comic-book art style) has no sky or weather system. `SampleScene` still uses the default procedural skybox, Skybox ambient, fog off, and a static white directional light. The goal is a **very cheap**, art-directable system with:
 - a skydome with a stylized day/night cycle. The Synty Sci-Fi `SimpleSky_01.png` is a **color reference only**: its colors seed the default palette and the texture isn't sampled at runtime.

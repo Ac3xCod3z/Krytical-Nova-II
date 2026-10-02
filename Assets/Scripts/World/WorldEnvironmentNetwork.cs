@@ -27,6 +27,10 @@ namespace KryticalNova.World
         [SerializeField] private bool autoWeather = true;
         [Tooltip("Seconds for cloud coverage to drift from one random point in a profile's range to the next.")]
         [Min(10f)] [SerializeField] private float coverageDriftPeriod = 300f;
+        [Tooltip("Average seconds between gust peaks (shared noise, so every client feels the same gust).")]
+        [Range(1f, 20f)] [SerializeField] private float gustPeriod = 5f;
+        [Tooltip("Extra wind speed at a full gust in a gustiness-1 weather (0.8 = +80%).")]
+        [Range(0f, 2f)] [SerializeField] private float maxGustBoost = 0.8f;
 
         [Header("Debug (host / offline only)")]
         [SerializeField] [Range(0f, 24f)] private float debugHours = 12f;
@@ -167,7 +171,31 @@ namespace KryticalNova.World
 
             float p = state.TransitionProgress(now);
             WeatherBlendT = p * p * (3f - 2f * p);
-            Weather = to == null ? WeatherBlend.Clear() : WeatherBlend.Evaluate(from, to, WeatherBlendT, CoverageNoise(now));
+            var blend = to == null ? WeatherBlend.Clear()
+                : WeatherBlend.Evaluate(from, to, WeatherBlendT, CoverageNoise(now), state.FromWindHeading, state.ToWindHeading);
+
+            // Gusts: shared smooth noise, squared so calm stretches are long and surges are punchy.
+            float g = GustNoise(now);
+            blend.gust = blend.gustiness * g * g;
+            blend.wind *= 1f + blend.gust * maxGustBoost;
+            Weather = blend;
+        }
+
+        private float GustNoise(double now)
+        {
+            double x = now / gustPeriod;
+            long i = (long)Math.Floor(x);
+            float f = (float)(x - i);
+            float a = Hash01(state.Seed ^ 0x2F6B3A1, i);
+            float b = Hash01(state.Seed ^ 0x2F6B3A1, i + 1);
+            return Mathf.Lerp(a, b, f * f * (3f - 2f * f));
+        }
+
+        /// <summary>Server: the heading a weather cycle blows toward — random per cycle, or the profile's fixed heading.</summary>
+        private float RollWindHeading(WeatherProfile profile)
+        {
+            if (profile == null) return 60f;
+            return profile.randomWindDirection && rng != null ? (float)(rng.NextDouble() * 360.0) : profile.windHeading;
         }
 
         /// <summary>Smooth 1D value noise in [0,1], identical on every peer for the same seed and time.</summary>
@@ -213,6 +241,7 @@ namespace KryticalNova.World
                 TransitionSeconds = 0f,
                 Seed = seed,
             };
+            state.ToWindHeading = state.FromWindHeading = RollWindHeading(weatherCatalog != null ? weatherCatalog.Get(start) : null);
             lastNow = lastLocalNow = now;
             ScheduleNext(now, weatherCatalog != null ? weatherCatalog.Get(start) : null, 0f);
         }
@@ -250,10 +279,16 @@ namespace KryticalNova.World
         {
             // Interrupting a running blend: start from whichever side currently dominates.
             if (state.TransitionProgress(now) < 0.5f && state.TransitionSeconds > 0f)
+            {
                 state.ToWeather = state.FromWeather;
+                state.ToWindHeading = state.FromWindHeading;
+            }
 
             state.FromWeather = state.ToWeather;
             state.ToWeather = to;
+            // The outgoing weather keeps its heading; the new cycle rolls one and holds it until the next change.
+            state.FromWindHeading = state.ToWindHeading;
+            state.ToWindHeading = RollWindHeading(weatherCatalog.Get(to));
             state.TransitionStart = now;
             state.TransitionSeconds = Mathf.Max(0f, seconds);
             Commit();

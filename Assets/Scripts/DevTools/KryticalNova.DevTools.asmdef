@@ -4,7 +4,8 @@
     "references": [
         "KryticalNova.Runtime",
         "QFSW.QC",
-        "Unity.Netcode.Runtime"
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

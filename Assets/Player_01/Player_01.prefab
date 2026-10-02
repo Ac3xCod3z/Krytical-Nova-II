@@ -1693,6 +1693,7 @@ GameObject:
   - component: {fileID: 1620825261229728301}
   - component: {fileID: 6205866357027811024}
   - component: {fileID: 5088627385439411535}
+  - component: {fileID: 3207520345899935226}
   m_Layer: 0
   m_Name: Player_01
   m_TagString: Untagged
@@ -4020,6 +4021,20 @@ MonoBehaviour:
     skinny: 0
     heavy: 10
     buff: 90
+  idleFace:
+  - shape: mouthSmileLeft
+    weight: 22
+  - shape: mouthSmileRight
+    weight: 22
+  - shape: eyeSquintLeft
+    weight: 12
+  - shape: eyeSquintRight
+    weight: 12
+  - shape: cheekSquintLeft
+    weight: 10
+  - shape: cheekSquintRight
+    weight: 10
+  blink: 1
   referenceBoneNames:
   - root
   - ik_foot_root
@@ -5893,6 +5908,25 @@ MonoBehaviour:
     e32: 0
     e33: 1
   mergeParts: 1
+--- !u!114 &3207520345899935226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3933595338312819546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe3b3b040dcbd6e41a96716cdd80d858, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.FaceBlinker
+  target: {fileID: 2753361811603457171}
+  intervalRange: {x: 2.5, y: 6}
+  doubleBlinkChance: 0.15
+  closeDuration: 0.08
+  holdDuration: 0.1
+  openDuration: 0.14
+  jawRestBlend: 1
 --- !u!1 &4149163464626883883
 GameObject:
   m_ObjectHideFlags: 0

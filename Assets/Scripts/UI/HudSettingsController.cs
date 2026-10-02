@@ -28,6 +28,9 @@ namespace KryticalNova.UI
         private Button editLayoutButton;
         private bool initialized;
         private bool suppressingHotbar;
+        private ProgressionHUD hud;
+        // The HUD's hotbar follows the local player (offline avatar or networked player); fall back to the serialized one.
+        private PlayerSkillHotbar CurrentHotbar => hud != null && hud.Hotbar != null ? hud.Hotbar : hotbar;
         private VisualElement boundRoot;
 
         public bool IsSettingsOpen => settingsWindow != null && settingsWindow.resolvedStyle.display != DisplayStyle.None;
@@ -48,11 +51,7 @@ namespace KryticalNova.UI
                 Debug.LogError("HudSettingsController needs a 'settings-window' element in its UXML.", this);
                 return;
             }
-            if (hotbar == null)
-            {
-                var hud = GetComponent<ProgressionHUD>();
-                if (hud != null) hotbar = hud.Hotbar;
-            }
+            hud = GetComponent<ProgressionHUD>();
 
             if (boundRoot != root)
             {
@@ -179,9 +178,10 @@ namespace KryticalNova.UI
 
         private void SetHotbarSuppressed(bool suppressed)
         {
-            if (hotbar == null || suppressingHotbar == suppressed) return;
+            var current = CurrentHotbar;
+            if (current == null || suppressingHotbar == suppressed) return;
             suppressingHotbar = suppressed;
-            hotbar.InputSuppressed = suppressed;
+            current.InputSuppressed = suppressed;
         }
 
         // ------------------------------------------------------------------ helpers

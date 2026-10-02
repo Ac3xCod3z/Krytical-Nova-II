@@ -69,7 +69,7 @@ namespace KryticalNova.Items
         public GameObject petPrefab;
         public float petScale = 1f;
         [Tooltip("Hover point relative to the owner (x right, y up, z forward).")]
-        public Vector3 petOffset = new Vector3(0.7f, 0.95f, -0.5f); // player root is at capsule centre (~1 m)
+        public Vector3 petOffset = new Vector3(0.45f, 0.75f, -0.15f); // player root is at capsule centre (~1 m)
 
         public bool IsEquippable => equipSlot != EquipSlot.None;
         public bool IsStackable => maxStack > 1;

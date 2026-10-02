@@ -23,8 +23,6 @@
     font-size: 11px;
     color: rgb(150, 226, 236);
     letter-spacing: 1px;
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgb(0, 0, 0);
     padding: 0;
     margin: 0;
 }

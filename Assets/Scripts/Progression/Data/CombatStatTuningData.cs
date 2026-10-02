@@ -57,6 +57,9 @@ namespace KryticalNova.Progression
         [Tooltip("Baseline Acupressure Stun Resistance percentage.")]
         [Range(0f, 100f)] public float baselineStunResistance = 0f;
 
+        [Tooltip("Baseline Luck before gear, pets, mounts and buffs. Not read by combat resolution.")]
+        [Min(0f)] public float baseLuck = 50f;
+
         [Header("Hit & Evasion Roll Clamps")]
         [Tooltip("Minimum guaranteed hit chance percentage regardless of target evasion.")]
         [Range(0f, 50f)] public float minimumHitChance = 10f;
@@ -82,6 +85,7 @@ namespace KryticalNova.Progression
             baselineElementalAttack = Mathf.Max(0f, baselineElementalAttack);
             baselineElementalDefense = Mathf.Max(0f, baselineElementalDefense);
             baselineStunResistance = Mathf.Clamp(baselineStunResistance, 0f, 100f);
+            baseLuck = Mathf.Max(0f, baseLuck);
             minimumHitChance = Mathf.Clamp(minimumHitChance, 0f, maximumHitChance);
             maximumHitChance = Mathf.Clamp(maximumHitChance, minimumHitChance, 100f);
         }

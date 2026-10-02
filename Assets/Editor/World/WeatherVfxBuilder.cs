@@ -31,7 +31,63 @@ namespace KryticalNova.EditorTools
         public const string MistPath = OutputFolder + "/PFX_Mist.prefab";
         public const string LightningPath = OutputFolder + "/PFX_LightningStrike.prefab";
 
+        public const string WindGustsPath = OutputFolder + "/PFX_WindGusts.prefab";
+
         private static readonly Dictionary<Material, Material> ConvertedMaterials = new Dictionary<Material, Material>();
+
+        /// <summary>
+        /// Wind gust streaks (Polygon Particle FX "FX_Wind_Hard_01" trails), driven at runtime by PrecipitationController:
+        /// rotated to the storm's wind heading, emission and speed scaled by wind strength + gusts.
+        /// Separate from <see cref="BuildAll"/> so it can be (re)built without touching the existing weather prefabs.
+        /// </summary>
+        [MenuItem("Krytical Nova/World/Build Wind Gust VFX Prefab")]
+        public static void BuildWindGusts()
+        {
+            EnsureFolder(OutputFolder);
+            EnsureFolder(MaterialFolder);
+            Build(ParticleFx + "FX_Wind_Hard_01.prefab", WindGustsPath, root =>
+            {
+                root.transform.localRotation = Quaternion.identity;
+                var ps = root.GetComponent<ParticleSystem>();
+                var main = ps.main;
+                main.loop = true;
+                main.playOnAwake = true;
+                main.simulationSpace = ParticleSystemSimulationSpace.World; // streaks don't drag along with the camera
+                main.maxParticles = 300;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(1.2f, 2f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(10f, 14f); // runtime scales this to the wind speed
+                main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.16f); // trail width: thin wisps, not ribbons
+                var emission = ps.emission;
+                emission.rateOverTimeMultiplier = 15f;
+                var shape = ps.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Box;
+                shape.scale = new Vector3(30f, 3.5f, 2f); // a wide curtain upwind of the camera, blowing along +Z
+                shape.position = new Vector3(0f, 6.25f, -10f); // 4.5-8 m up: well above head height
+                shape.rotation = Vector3.zero;
+                var noise = ps.noise;
+                noise.enabled = true;
+                noise.strength = 0.35f; // a gentle curl, not ruler-straight
+                noise.frequency = 0.35f;
+                var trails = ps.trails;
+                trails.enabled = true;
+                trails.inheritParticleColor = true;
+                trails.lifetime = new ParticleSystem.MinMaxCurve(0.5f);
+                Fade(ps, new Color(0.72f, 0.76f, 0.82f), 0.15f); // muted grey-blue, 15% opacity
+                // The particle itself uses Synty's empty material (converted to URP); only the trail is visible.
+                var renderer = root.GetComponent<ParticleSystemRenderer>();
+                renderer.renderMode = ParticleSystemRenderMode.Billboard;
+                // Alpha-blend instead of Synty's additive: additive brightens everything behind it and read as glowing.
+                var trailMat = ToUrp(renderer.trailMaterial);
+                if (trailMat != null)
+                {
+                    SetupUrpParticle(trailMat, trailMat.GetTexture("_BaseMap"), Color.white, false);
+                    renderer.trailMaterial = trailMat;
+                }
+            });
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[WeatherVfxBuilder] Built {WindGustsPath}.");
+        }
 
         [MenuItem("Krytical Nova/World/Build Weather VFX Prefabs")]
         public static void BuildAll()
@@ -57,14 +113,16 @@ namespace KryticalNova.EditorTools
                 shape.position = Vector3.zero; // Synty bakes a 15 m offset; the controller owns the height
                 var sub = ps.subEmitters;
                 sub.enabled = false;
-                // Readable stylized streaks: cool white, ~5 cm wide, ~1.5 m long.
-                main.startSize = new ParticleSystem.MinMaxCurve(0.035f, 0.055f);
-                main.startLifetime = new ParticleSystem.MinMaxCurve(1.2f, 1.6f); // long enough to reach the ground
+                // Thin, short streaks at a believable fall speed (Synty's gravity 5 reaches ~60 m/s = metres-long lines).
+                // PrecipitationController applies the same values at runtime (and tints them by scene light).
+                main.startSize = new ParticleSystem.MinMaxCurve(0.012f, 0.02f);
+                main.gravityModifierMultiplier = 2.2f;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(2f, 2.4f); // safety cap; collision ends drops at the ground
                 var sizeOverLifetime = ps.sizeOverLifetime;
                 sizeOverLifetime.enabled = false;
                 Fade(ps, new Color(0.82f, 0.88f, 1f), 0.55f);
                 var renderer = root.GetComponent<ParticleSystemRenderer>();
-                renderer.velocityScale = 0.08f;
+                renderer.velocityScale = 0.03f;
                 renderer.lengthScale = 1f;
                 renderer.sharedMaterial = precipitationMat;
             });
@@ -98,7 +156,10 @@ namespace KryticalNova.EditorTools
                 shape.radiusThickness = 1f;
                 shape.scale = Vector3.one;
                 shape.rotation = Vector3.zero;
-                main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.05f);
+                // Tiny droplets with a short stretch (the Synty sub-emitter's 5× stretch read as big ovals).
+                main.startSize = new ParticleSystem.MinMaxCurve(0.006f, 0.012f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(1f, 3f);
+                root.GetComponent<ParticleSystemRenderer>().lengthScale = 2.5f;
                 Fade(ps, new Color(0.85f, 0.9f, 1f), 0.6f);
                 root.GetComponent<ParticleSystemRenderer>().sharedMaterial = precipitationMat;
             });
@@ -156,6 +217,7 @@ namespace KryticalNova.EditorTools
                 main.playOnAwake = false;
             });
 
+            BuildWindGusts();
             AssetDatabase.SaveAssets();
             Debug.Log($"[WeatherVfxBuilder] Built weather VFX into {OutputFolder}.");
         }

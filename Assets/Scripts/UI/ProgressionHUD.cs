@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
+using KryticalNova.Items;
 using KryticalNova.Player;
 using KryticalNova.Progression;
 using UnityEngine;
@@ -20,7 +21,6 @@ namespace KryticalNova.UI
         private const float DragThresholdSquared = 36f;
         private const float GhostOffset = 14f;
         private const float ProgressBarScale = 100f;
-        private const float TestResourceAmount = 25f;
         private const string BlockingClass = "blocks-world";
         [SerializeField] private PlayerCharacterProgression progression;
         [SerializeField] private PlayerMovementSkills skills;
@@ -50,7 +50,9 @@ namespace KryticalNova.UI
         private int dragPointerId;
         private Vector2 pointerStart;
         private bool dragMoved;
-        private bool initialized;
+        private bool initialized; // a player is bound
+        private bool uiReady;
+        private GameObject boundPlayer;
         private int suppressWorldInputFrame = -1;
         private Action activeHoldAction;
         private float nextRepeatTime;
@@ -89,9 +91,9 @@ namespace KryticalNova.UI
             if (!Application.isPlaying) return;
             ClientPresentationRegistry.RegisterPointerBlock(this);
             root = GetComponent<UIDocument>().rootVisualElement;
-            if (progression == null || skills == null || hotbar == null || movement == null || resources == null || jumpMotor == null || root == null)
+            if (root == null)
             {
-                Debug.LogError("ProgressionHUD needs player progression, skills, hotbar, movement and a UXML document.", this);
+                Debug.LogError("ProgressionHUD needs a UXML document.", this);
                 return;
             }
             root.pickingMode = PickingMode.Ignore;
@@ -103,21 +105,10 @@ namespace KryticalNova.UI
             activeBuffsBar = root.Q("active-buffs-bar");
             dragGhost = root.Q<Label>("drag-ghost");
 
-            if (combatSkills == null) combatSkills = skills.GetComponent<PlayerCombatSkills>();
-            if (buffManager == null) buffManager = skills.GetComponent<CharacterBuffManager>();
-
             BindButton("open-character", ToggleCharacter);
             BindButton("open-skills", ToggleSkills);
             BindButton("close-character", HideCharacter);
             BindButton("close-skills", HideSkills);
-            BindButton("grant-xp", GrantTestExperience);
-            BindButton("attack-dummy", TestAttackDummy);
-            BindButton("reset-dummy", TestResetDummy);
-            BindButton("toggle-drop-skills", ToggleDropSkills);
-            BindButton("toggle-test-gear", ToggleTestGear);
-            BindButton("test-damage", () => { if (Application.isEditor || Debug.isDebugBuild) resources.ApplyDamage(TestResourceAmount); });
-            BindButton("test-chi", () => { if (Application.isEditor || Debug.isDebugBuild) resources.TrySpendChi(Mathf.Min(TestResourceAmount, resources.Chi)); });
-            BindButton("restore-resources", () => { if (Application.isEditor || Debug.isDebugBuild) resources.RestoreAll(); });
 
             for (int i = 0; i < StepValues.Length; i++)
             {
@@ -163,18 +154,26 @@ namespace KryticalNova.UI
             {
                 string cardId = combatSkillCardIds[i];
                 string skillId = combatSkillAssetIds[i];
-                var skillDef = combatSkills != null ? combatSkills.GetSkill(skillId) : null;
+                // Resolved per use: the HUD rebinds to whichever player is local (offline avatar or networked player).
                 VisualElement tile = root.Q($"{cardId}-drag");
-                if (tile != null && skillDef != null)
+                if (tile != null)
                 {
-                    BindPointer<PointerDownEvent>(tile, evt => OnCombatSkillPointerDown(evt, skillDef, tile));
+                    BindPointer<PointerDownEvent>(tile, evt =>
+                    {
+                        var def = combatSkills != null ? combatSkills.GetSkill(skillId) : null;
+                        if (def != null) OnCombatSkillPointerDown(evt, def, tile);
+                    });
                     BindDragSource(tile);
                 }
 
                 Button upgradeBtn = root.Q<Button>($"upgrade-{cardId}");
-                if (upgradeBtn != null && skillDef != null)
+                if (upgradeBtn != null)
                 {
-                    BindHoldable(upgradeBtn, () => UpgradeCombatSkill(skillDef));
+                    BindHoldable(upgradeBtn, () =>
+                    {
+                        var def = combatSkills != null ? combatSkills.GetSkill(skillId) : null;
+                        if (def != null) UpgradeCombatSkill(def);
+                    });
                 }
             }
 
@@ -194,10 +193,47 @@ namespace KryticalNova.UI
             BindPointer<PointerDownEvent>(jumpTile, evt => OnSkillPointerDown(evt, MovementSkillId.Jump, jumpTile));
             BindDragSource(jumpTile);
 
+            SetVisible(characterWindow, false);
+            SetVisible(skillsWindow, false);
+            uiReady = true;
+
+            // Follow the local player: the scene's offline avatar, or this peer's networked player when hosting/joining.
+            PlayerInventory.LocalChanged += OnLocalPlayerChanged;
+            BindPlayer(PlayerInventory.Local != null ? PlayerInventory.Local.gameObject
+                : progression != null && progression.gameObject.activeInHierarchy ? progression.gameObject : null);
+        }
+
+        private void OnLocalPlayerChanged()
+        {
+            // Local is briefly null during the offline-to-networked handoff; keep the last player until the next one arrives.
+            if (PlayerInventory.Local != null) BindPlayer(PlayerInventory.Local.gameObject);
+        }
+
+        /// <summary>Points every player-facing reference at <paramref name="player"/> and moves the event subscriptions.</summary>
+        private void BindPlayer(GameObject player)
+        {
+            if (player != null && boundPlayer == player) return;
+            UnbindPlayer();
+            if (player == null) return;
+
+            progression = player.GetComponent<PlayerCharacterProgression>();
+            skills = player.GetComponent<PlayerMovementSkills>();
+            hotbar = player.GetComponent<PlayerSkillHotbar>();
+            movement = player.GetComponent<PointAndClickPlayer>();
+            resources = player.GetComponent<PlayerResources>();
+            jumpMotor = player.GetComponent<PlayerJumpMotor>();
+            combatStats = player.GetComponent<CharacterCombatStats>();
+            combatSkills = player.GetComponent<PlayerCombatSkills>();
+            buffManager = player.GetComponent<CharacterBuffManager>();
+            if (progression == null || skills == null || hotbar == null || movement == null || resources == null || jumpMotor == null)
+            {
+                Debug.LogError($"ProgressionHUD: '{player.name}' is missing progression, skills, hotbar, movement, resources or jump components.", this);
+                return;
+            }
+
             resources.Changed += RefreshResources;
             movement.CommandMessage += Feedback;
             jumpMotor.Message += Feedback;
-            if (combatStats == null && movement != null) combatStats = movement.GetComponent<CharacterCombatStats>();
             if (combatStats != null) combatStats.OnStatsRecalculated += Refresh;
             if (combatSkills != null)
             {
@@ -209,7 +245,6 @@ namespace KryticalNova.UI
                 buffManager.BuffsChanged += RefreshBuffs;
                 buffManager.BuffMessage += Feedback;
             }
-
             progression.Changed += Refresh;
             progression.LevelGained += OnLevelGained;
             skills.Changed += Refresh;
@@ -217,11 +252,40 @@ namespace KryticalNova.UI
             hotbar.CharacterWindowRequested += ToggleCharacter;
             hotbar.SkillsWindowRequested += ToggleSkills;
             hotbar.CancelRequested += CloseWindows;
-            SetVisible(characterWindow, false);
-            SetVisible(skillsWindow, true);
-            SetVisible(root.Q("development-tools"), Application.isEditor || Debug.isDebugBuild);
+
+            boundPlayer = player;
             initialized = true;
             Refresh();
+        }
+
+        private void UnbindPlayer()
+        {
+            if (!initialized) return;
+            StopHold();
+            CancelDrag();
+            resources.Changed -= RefreshResources;
+            movement.CommandMessage -= Feedback;
+            jumpMotor.Message -= Feedback;
+            if (combatStats != null) combatStats.OnStatsRecalculated -= Refresh;
+            if (combatSkills != null)
+            {
+                combatSkills.Changed -= Refresh;
+                combatSkills.SkillMessage -= Feedback;
+            }
+            if (buffManager != null)
+            {
+                buffManager.BuffsChanged -= RefreshBuffs;
+                buffManager.BuffMessage -= Feedback;
+            }
+            progression.Changed -= Refresh;
+            progression.LevelGained -= OnLevelGained;
+            skills.Changed -= Refresh;
+            hotbar.Changed -= Refresh;
+            hotbar.CharacterWindowRequested -= ToggleCharacter;
+            hotbar.SkillsWindowRequested -= ToggleSkills;
+            hotbar.CancelRequested -= CloseWindows;
+            initialized = false;
+            boundPlayer = null;
         }
 
         private void Start() => Refresh();
@@ -247,33 +311,12 @@ namespace KryticalNova.UI
         private void OnDisable()
         {
             ClientPresentationRegistry.UnregisterPointerBlock(this);
-            if (!initialized) return;
-            StopHold();
-            CancelDrag();
-            resources.Changed -= RefreshResources;
-            movement.CommandMessage -= Feedback;
-            jumpMotor.Message -= Feedback;
-            if (combatStats != null) combatStats.OnStatsRecalculated -= Refresh;
-            if (combatSkills != null)
-            {
-                combatSkills.Changed -= Refresh;
-                combatSkills.SkillMessage -= Feedback;
-            }
-            if (buffManager != null)
-            {
-                buffManager.BuffsChanged -= RefreshBuffs;
-                buffManager.BuffMessage -= Feedback;
-            }
-            progression.Changed -= Refresh;
-            progression.LevelGained -= OnLevelGained;
-            skills.Changed -= Refresh;
-            hotbar.Changed -= Refresh;
-            hotbar.CharacterWindowRequested -= ToggleCharacter;
-            hotbar.SkillsWindowRequested -= ToggleSkills;
-            hotbar.CancelRequested -= CloseWindows;
+            if (!uiReady) return;
+            PlayerInventory.LocalChanged -= OnLocalPlayerChanged;
+            UnbindPlayer();
             foreach (Action removeCallback in removeUiCallbacks) removeCallback();
             removeUiCallbacks.Clear();
-            initialized = false;
+            uiReady = false;
         }
 
         private void BindButton(string name, Action callback)
@@ -404,7 +447,6 @@ namespace KryticalNova.UI
                 allocBtn.text = $"+{statStep}";
                 allocBtn.tooltip = GetAttributeAllocationTooltip(attribute, statStep);
             }
-            root.Q<Button>("grant-xp").SetEnabled(!progression.IsAtLevelCap);
             root.Q<Label>("skill-points").text = $"{progression.SkillPoints} skill point(s) available";
 
             RefreshSkillCard(MovementSkillId.Run, "run", runTile);
@@ -464,6 +506,22 @@ namespace KryticalNova.UI
 
                 Label critLabel = root.Q<Label>("combat-stat-crit");
                 if (critLabel != null) critLabel.text = $"{combatStats.GetStatValue(StatType.CriticalRate):0.#}%";
+
+                Label critDmgLabel = root.Q<Label>("combat-stat-crit-dmg");
+                if (critDmgLabel != null)
+                {
+                    float baseCrit = combatStats.TuningData != null ? combatStats.TuningData.baseCriticalMultiplier * 100f : 150f;
+                    critDmgLabel.text = $"{baseCrit + combatStats.GetStatValue(StatType.CriticalDamagePercent):0.#}%";
+                }
+
+                Label eleAtkLabel = root.Q<Label>("combat-stat-ele-atk");
+                if (eleAtkLabel != null) eleAtkLabel.text = Mathf.RoundToInt(combatStats.GetStatValue(StatType.ElementalAttack)).ToString();
+
+                Label eleDefLabel = root.Q<Label>("combat-stat-ele-def");
+                if (eleDefLabel != null) eleDefLabel.text = Mathf.RoundToInt(combatStats.GetStatValue(StatType.ElementalDefense)).ToString();
+
+                Label luckLabel = root.Q<Label>("vital-luck");
+                if (luckLabel != null) luckLabel.text = Mathf.RoundToInt(combatStats.GetStatValue(StatType.Luck)).ToString();
 
                 Label stunLabel = root.Q<Label>("combat-stat-stun-res");
                 if (stunLabel != null) stunLabel.text = $"{combatStats.GetStatValue(StatType.AcupressureStunResistance):0.#}%";
@@ -683,6 +741,7 @@ namespace KryticalNova.UI
             chi.value = ProgressBarScale * resources.Chi / Mathf.Max(1f, resources.MaxChi);
             chi.title = $"CHI {resources.Chi:0} / {resources.MaxChi:0}";
             root.Q<Label>("resource-values").text = $"HP {resources.Health:0} / {resources.MaxHealth:0}    Chi {resources.Chi:0} / {resources.MaxChi:0}";
+            RefreshVitals();
             if (resources.Data != null)
             {
                 Label formulaLabel = root.Q<Label>("resource-formula");
@@ -705,6 +764,34 @@ namespace KryticalNova.UI
                 slotElements[index]?.EnableInClassList("insufficient-chi", unaffordable);
             }
         }
+
+        /// <summary>
+        /// Character-page vitals. Totals are the same server-synced maximums the HUD bars use; the breakdown splits them
+        /// into class/level base, the Vitality/Spirit contribution, and flat/percent pool bonuses (gear, pets, mounts, buffs).
+        /// </summary>
+        private void RefreshVitals()
+        {
+            Label hpLabel = root.Q<Label>("vital-hp");
+            if (hpLabel != null) hpLabel.text = $"{resources.Health:0} / {resources.MaxHealth:0}";
+            Label chiLabel = root.Q<Label>("vital-chi");
+            if (chiLabel != null) chiLabel.text = $"{resources.Chi:0} / {resources.MaxChi:0}";
+            if (combatStats == null) return;
+
+            Label hpBreakdown = root.Q<Label>("vital-hp-breakdown");
+            if (hpBreakdown != null)
+            {
+                combatStats.GetPoolBreakdown(StatType.MaxHP, out float hpBase, out float fromVit, out float hpBonus);
+                hpBreakdown.text = $"Base {hpBase:0} · Vitality {FormatSigned(fromVit)} · Gear/Pets/Mounts {FormatSigned(hpBonus)}";
+            }
+            Label chiBreakdown = root.Q<Label>("vital-chi-breakdown");
+            if (chiBreakdown != null)
+            {
+                combatStats.GetPoolBreakdown(StatType.MaxChi, out float chiBase, out float fromSpirit, out float chiBonus);
+                chiBreakdown.text = $"Base {chiBase:0} · Spirit {FormatSigned(fromSpirit)} · Gear/Pets/Mounts {FormatSigned(chiBonus)}";
+            }
+        }
+
+        private static string FormatSigned(float value) => value >= 0f ? $"+{value:0}" : $"{value:0}";
 
         private void RefreshSkillCard(MovementSkillId skill, string prefix, VisualElement tile)
         {
@@ -894,7 +981,7 @@ namespace KryticalNova.UI
         {
             VisualElement source = dragSource;
             dragSource = null;
-            hotbar.InputSuppressed = false;
+            if (hotbar != null) hotbar.InputSuppressed = false;
             suppressWorldInputFrame = Time.frameCount;
             if (source != null && source.HasPointerCapture(dragPointerId)) source.ReleasePointer(dragPointerId);
             SetVisible(dragGhost, false);
@@ -961,65 +1048,6 @@ namespace KryticalNova.UI
             }
         }
 
-        private void ToggleDropSkills()
-        {
-            if (combatSkills == null) return;
-            bool anyUnlocked = false;
-            foreach (var cardId in combatSkillAssetIds)
-            {
-                var s = combatSkills.GetSkill(cardId);
-                if (s != null && s.requiresSkillBook && combatSkills.IsDropSkillUnlocked(s.skillId))
-                {
-                    anyUnlocked = true;
-                    break;
-                }
-            }
-
-            if (anyUnlocked)
-            {
-                combatSkills.LockAllDropSkills();
-                Feedback("Locked all Rare Drop Book Skills.");
-            }
-            else
-            {
-                combatSkills.UnlockAllDropSkills();
-                Feedback("Unlocked all Rare Drop Book Skills for testing!");
-            }
-            Refresh();
-        }
-
-        private static readonly object TestGearSource = new object();
-        private bool hasTestGearEquipped = false;
-
-        private void ToggleTestGear()
-        {
-            if (combatStats == null && movement != null)
-                combatStats = movement.GetComponent<CharacterCombatStats>();
-            if (combatStats == null) return;
-
-            Button gearBtn = root.Q<Button>("toggle-test-gear");
-
-            if (hasTestGearEquipped)
-            {
-                combatStats.RemoveModifiersFromSource(TestGearSource);
-                hasTestGearEquipped = false;
-                if (gearBtn != null) gearBtn.text = "Test: Equip Gear (+10 All Stats)";
-                Feedback("Test Gear unequipped (-10 STR, VIT, AGI, CHI). Primary & Secondary sub-stats returned to base.");
-            }
-            else
-            {
-                // Equips gear granting +10 to all 4 primary attributes
-                combatStats.AddModifier(new StatModifier(StatType.Strength, ModifierType.Flat, 10f, TestGearSource));
-                combatStats.AddModifier(new StatModifier(StatType.Vitality, ModifierType.Flat, 10f, TestGearSource));
-                combatStats.AddModifier(new StatModifier(StatType.Agility, ModifierType.Flat, 10f, TestGearSource));
-                combatStats.AddModifier(new StatModifier(StatType.Spirit, ModifierType.Flat, 10f, TestGearSource));
-                hasTestGearEquipped = true;
-                if (gearBtn != null) gearBtn.text = "Test: Unequip Gear (+10 All Stats)";
-                Feedback("Test Gear equipped! (+10 STR, VIT, AGI, CHI). Primary & Secondary stats scaled dynamically!");
-            }
-            Refresh();
-        }
-
         private static string GetAttributeAllocationTooltip(CharacterAttribute attribute, int step)
         {
             switch (attribute)
@@ -1043,7 +1071,7 @@ namespace KryticalNova.UI
         private void HideSkills() { SetVisible(skillsWindow, false); StopHold(); CancelDrag(); }
         private void ToggleWindow(VisualElement window)
         {
-            movement.ReleaseCameraControl();
+            if (movement != null) movement.ReleaseCameraControl();
             StopHold();
             CancelDrag();
             bool show = window.resolvedStyle.display == DisplayStyle.None;
@@ -1053,94 +1081,6 @@ namespace KryticalNova.UI
         private void CloseWindows() { HideCharacter(); HideSkills(); }
 
         private void OnLevelGained(int level) => Feedback($"Level {level} reached. New stat and skill points awarded.");
-
-        private void GrantTestExperience()
-        {
-            if (progression == null || progression.IsAtLevelCap) return;
-            int needed = progression.ExperienceRequired - progression.Experience;
-            progression.GrantExperience(Mathf.Max(1, needed));
-        }
-
-        private void TestAttackDummy()
-        {
-            CombatEntity target = null;
-            var entities = FindObjectsByType<CombatEntity>(FindObjectsInactive.Exclude);
-            for (int i = 0; i < entities.Length; i++)
-            {
-                if (movement != null && entities[i].gameObject != movement.gameObject)
-                {
-                    target = entities[i];
-                    break;
-                }
-            }
-
-            if (target == null)
-            {
-                Feedback("No combat dummy found in scene.");
-                return;
-            }
-
-            if (combatStats == null && movement != null) combatStats = movement.GetComponent<CharacterCombatStats>();
-            if (combatStats == null || target.CombatStats == null)
-            {
-                Feedback("Combat stats missing on player or target.");
-                return;
-            }
-
-            if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
-            var defenderBuffs = target.GetComponent<CharacterBuffManager>();
-
-            float refChance = 0f;
-            float shatChance = 0f;
-            float dispelChance = 0f;
-            bool defenderReflect = defenderBuffs != null && defenderBuffs.HasReflection(out refChance, out _);
-            bool attackerShatter = buffManager != null && buffManager.HasShieldShatter(out shatChance, out dispelChance);
-
-            var result = CombatCalculator.CalculateAttack(
-                combatStats,
-                target.CombatStats,
-                1.0f,
-                defenderReflect,
-                refChance,
-                attackerShatter,
-                shatChance);
-
-            target.TakeDamage(result, combatStats);
-
-            if (attackerShatter && dispelChance > 0f && defenderBuffs != null)
-            {
-                if (UnityEngine.Random.Range(0f, 100f) <= dispelChance)
-                {
-                    defenderBuffs.DispelStanceBuffs();
-                }
-            }
-
-            ClientPresentationRegistry.Feedback?.ShowCombatFeedback(target.Transform.position, result);
-
-            if (result.IsEvaded)
-                Feedback($"Test: Dummy EVADED your attack! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
-            else if (result.IsReflected)
-                Feedback($"Test: Dummy REFLECTED attack! You took {result.ReflectedDamage:0} dmg.");
-            else if (result.IsCritical)
-                Feedback($"Test: CRITICAL HIT dummy for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
-            else
-                Feedback($"Test: Struck dummy for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
-        }
-
-        private void TestResetDummy()
-        {
-            var entities = FindObjectsByType<CombatEntity>(FindObjectsInactive.Exclude);
-            for (int i = 0; i < entities.Length; i++)
-            {
-                if (movement != null && entities[i].gameObject != movement.gameObject)
-                {
-                    entities[i].ResetHealth();
-                    Feedback($"{entities[i].EntityName} HP reset to {entities[i].CurrentHealth:0}/{entities[i].MaxHealth:0}.");
-                    return;
-                }
-            }
-            Feedback("No combat dummy found to reset.");
-        }
 
         private void Feedback(string message)
         {

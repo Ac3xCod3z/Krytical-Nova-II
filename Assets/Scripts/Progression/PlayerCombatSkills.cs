@@ -189,6 +189,7 @@ namespace KryticalNova.Progression
         public bool IsOnCooldown(SkillDefinitionSO skill)
         {
             if (skill == null) return false;
+            if (KryticalNova.Core.GmState.NoCooldowns && (!IsSpawned || IsOwner)) return false;
             return cooldownEndTimes.TryGetValue(skill.skillId, out float endTime) && Time.time < endTime;
         }
 

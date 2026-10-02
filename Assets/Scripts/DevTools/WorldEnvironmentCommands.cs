@@ -58,6 +58,17 @@ namespace KryticalNova.DevTools
             return env.ForceWeather(index, transitionSeconds) ? $"Weather → {env.Catalog.Get(index).name} over {transitionSeconds:0}s." : NoAuthority;
         }
 
+        [Command("weather.wind", "Print the current wind: heading (held for this weather cycle), speed and gust.")]
+        private static string Wind()
+        {
+            var env = WorldEnvironmentNetwork.Instance;
+            if (env == null) return NoWorld;
+            var w = env.Weather;
+            float heading = UnityEngine.Mathf.Repeat(UnityEngine.Mathf.Atan2(w.wind.x, w.wind.y) * UnityEngine.Mathf.Rad2Deg, 360f);
+            return $"Wind toward {heading:0}° at {w.wind.magnitude:0.0} m/s  ·  gustiness {w.gustiness:0.00}  gust now {w.gust:0.00}  " +
+                   $"(cycle heading {env.State.ToWindHeading:0}°, previous {env.State.FromWindHeading:0}°)";
+        }
+
         [Command("weather.lock", "Stop (true) or resume (false) automatic weather changes.")]
         private static string LockWeather(bool locked)
         {

@@ -19,6 +19,7 @@ MonoBehaviour:
   cloudDarkness: 0.35
   cloudTint: {r: 0.8, g: 0.82, b: 0.86, a: 1}
   cirrusAmount: 0
+  celestialDiffusion: 0.8
   skyDesaturation: 0.5
   skyDarkening: 0.25
   sunIntensityMultiplier: 0.3
@@ -29,6 +30,8 @@ MonoBehaviour:
   fogTint: {r: 0.62, g: 0.65, b: 0.7, a: 0.5}
   windHeading: 60
   windSpeed: 7
+  randomWindDirection: 1
+  gustiness: 0.25
   precipitation: 1
   precipitationIntensity: 0.35
   mist: 0

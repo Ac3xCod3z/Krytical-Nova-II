@@ -70,8 +70,8 @@
 .combat-stat-row { flex-direction: row; justify-content: space-between; align-items: center; margin: 2px 0; }
 .combat-stat-label { font-size: 12px; color: rgb(172, 188, 202); }
 .combat-stat-value { font-size: 12px; -unity-font-style: bold; color: rgb(114, 222, 196); }
+.vital-breakdown { font-size: 10px; margin-top: 0; margin-bottom: 4px; }
 
-#development-tools { padding-top: 6px; border-top-width: 1px; border-top-color: rgba(114, 222, 196, 0.2); }
 
 /* ------------------------------------------------------------------ skill cards */
 

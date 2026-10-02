@@ -1,5 +1,31 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8782367436617606617
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acef15da944adc54cbfec9aa77cdc319, type: 3}
+  m_Name: SunShafts
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Rendering.SunShaftsFeature
+  m_Active: 1
+  settings:
+    renderPassEvent: 551
+    downsample: 4
+    sourceTightness: 500
+    density: 1
+    decay: 0.95
+    weight: 0.06
+    intensity: 1.4
+    comicBands: 0
+    cloudOcclusion: 1.2
+    offscreenFade: 0.5
+    debugShaftsOnly: 0
+  shader: {fileID: 4800000, guid: f4b1ddc77d3f9c542b212936a41c85b4, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27,7 +53,8 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: 7833122117494664109}
   - {fileID: 1457218313982968485}
-  m_RendererFeatureMap: ad6b866f10d7b46ca50226fd55143914l
+  - {fileID: -8782367436617606617}
+  m_RendererFeatureMap: ad6b866f10d7b46ca50226fd55143914271a73ed58c31e86l
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3
@@ -111,6 +138,7 @@ MonoBehaviour:
     postProcessDots: 0
     luminanceThreshold: 0.05
   postShader: {fileID: 4800000, guid: d81906137cb37464cbe3ab18f9170cc0, type: 3}
+  applyEnvironmentModifiers: 1
 --- !u!114 &7833122117494664109
 MonoBehaviour:
   m_ObjectHideFlags: 1

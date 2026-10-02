@@ -68,6 +68,34 @@
             <ui:Label name="resource-values" text="HP 200 / 200    Chi 100 / 100" class="accent section" />
             <ui:Label name="resource-formula" text="STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evade | AGI: +2 Evade, +1 DP | CHI: +20 Chi, +1 AP" class="help" />
             <ui:Label name="stat-note" text="Spend 1 point per increase. Allocating stat points or equipping gear scales both Primary and Secondary sub-stats dynamically." class="help section" />
+            <ui:Label text="VITALS" class="eyebrow section" />
+            <ui:VisualElement class="combat-stats-container kn-card">
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Health" class="combat-stat-label" />
+                    <ui:Label name="vital-hp" text="200 / 200" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:Label name="vital-hp-breakdown" text="Base 100 · Vitality +200 · Gear/Pets/Mounts +0" class="help vital-breakdown" />
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Chi" class="combat-stat-label" />
+                    <ui:Label name="vital-chi" text="100 / 100" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:Label name="vital-chi-breakdown" text="Base 50 · Spirit +200 · Gear/Pets/Mounts +0" class="help vital-breakdown" />
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Luck" class="combat-stat-label" />
+                    <ui:Label name="vital-luck" text="50" class="combat-stat-value" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label text="ELEMENTAL" class="eyebrow section" />
+            <ui:VisualElement class="combat-stats-container kn-card">
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Elemental Attack" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-ele-atk" text="0" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Elemental Defense" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-ele-def" text="0" class="combat-stat-value" />
+                </ui:VisualElement>
+            </ui:VisualElement>
             <ui:Label text="DERIVED COMBAT STATS" class="eyebrow section" />
             <ui:VisualElement class="combat-stats-container kn-card">
                 <ui:VisualElement class="combat-stat-row">
@@ -91,6 +119,10 @@
                     <ui:Label name="combat-stat-crit" text="15.0%" class="combat-stat-value" />
                 </ui:VisualElement>
                 <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Critical Damage" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-crit-dmg" text="150%" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
                     <ui:Label text="Stun Resistance" class="combat-stat-label" />
                     <ui:Label name="combat-stat-stun-res" text="0.0%" class="combat-stat-value" />
                 </ui:VisualElement>
@@ -98,18 +130,6 @@
                     <ui:Label text="Move Speed" class="combat-stat-label" />
                     <ui:Label name="combat-stat-speed" text="100%" class="combat-stat-value" />
                 </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:VisualElement name="development-tools" class="section">
-                <ui:Label text="PLAYTEST TOOLS" class="eyebrow" />
-                <ui:Button name="grant-xp" text="Grant XP to next level" />
-                <ui:Button name="toggle-test-gear" text="Test: Equip Gear (+10 All Stats)" />
-                <ui:Button name="attack-dummy" text="Test: Strike Combat Dummy" />
-                <ui:Button name="reset-dummy" text="Test: Reset Dummy Health" />
-                <ui:Button name="toggle-drop-skills" text="Test: Unlock Drop Book Skills" />
-                <ui:Button name="test-damage" text="Test: take 25 damage" />
-                <ui:Button name="test-chi" text="Test: spend 25 Chi" />
-                <ui:Button name="restore-resources" text="Restore HP and Chi" />
-                <ui:Label text="Editor / development builds only. Progress resets when Play ends." class="help" />
             </ui:VisualElement>
             </ui:ScrollView>
         </ui:VisualElement>

@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.Core;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -224,11 +225,15 @@ namespace KryticalNova.Progression
 
         /// <summary>Checks affordability without consuming Chi. Selection and hotbar assignment are free.</summary>
         public bool CanSpendChi(float amount) => isActiveAndEnabled && IsAlive && float.IsFinite(amount)
-            && amount >= 0f && chi + ComparisonTolerance >= amount;
+            && amount >= 0f && (chi + ComparisonTolerance >= amount || (GmState.InfiniteChi && IsGmTarget));
+
+        /// <summary>GM toggles only apply to the local (owning) player, never to other players simulated on a host.</summary>
+        private bool IsGmTarget => !IsSpawned || IsOwner;
 
         /// <summary>Consumes Chi once for an accepted skill command and delays passive recovery.</summary>
         public bool TrySpendChi(float amount)
         {
+            if (GmState.InfiniteChi && IsGmTarget && IsAlive) return true;
             if (!CanSpendChi(amount)) return false;
             if (amount <= 0f) return true;
             chi = Mathf.Max(0f, chi - amount);
@@ -251,6 +256,7 @@ namespace KryticalNova.Progression
         public void ApplyDamage(float amount)
         {
             if (!isActiveAndEnabled || !IsAlive || !float.IsFinite(amount) || amount <= 0f) return;
+            if (GmState.GodMode && IsGmTarget) return;
             health = Mathf.Max(0f, health - amount);
             healthRecoveryTime = Time.time + resourceData.healthRegenerationDelay;
             SyncNetworkState();

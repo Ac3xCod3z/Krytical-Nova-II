@@ -34,7 +34,9 @@ namespace KryticalNova.UI
         private TextField ipField;
         private TextField portField;
         private TextField codeField;
-        private PlayerSkillHotbar hotbar;
+        private ProgressionHUD hud;
+        // Resolved live: the HUD rebinds to the networked player when hosting/joining.
+        private PlayerSkillHotbar hotbar => hud != null ? hud.Hotbar : null;
         private NetworkConnectionManager subscribedManager;
         private VisualElement boundRoot;
         private float nextRefresh;
@@ -58,8 +60,7 @@ namespace KryticalNova.UI
             portField = panel.Q<TextField>("network-port");
             codeField = panel.Q<TextField>("network-code");
 
-            var hud = GetComponent<ProgressionHUD>();
-            if (hud != null) hotbar = hud.Hotbar;
+            hud = GetComponent<ProgressionHUD>();
 
             if (boundRoot != root)
             {

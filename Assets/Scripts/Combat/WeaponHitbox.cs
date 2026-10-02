@@ -176,6 +176,7 @@ namespace KryticalNova.Combat
 
             if (hitEntitiesThisSwing.Contains(damageable)) return; // Hit once per swing
             if (!damageable.IsAlive) return;
+            if (!CombatHostility.IsHostile(ownerRoot, damageable)) return; // e.g. other players caught in the swing
 
             hitEntitiesThisSwing.Add(damageable);
             OnHitRegistered?.Invoke(damageable, currentComboStep);

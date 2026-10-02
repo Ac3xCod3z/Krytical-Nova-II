@@ -258,6 +258,11 @@ namespace KryticalNova.EditorTools
             pSo.FindProperty("skyMaterial").objectReferenceValue = skyMaterial;
             pSo.FindProperty("postVolume").objectReferenceValue = volume;
             pSo.FindProperty("cloudNoise").objectReferenceValue = noise;
+            // Stylized sun/moon art, when present (otherwise the shader keeps its procedural discs).
+            var sunArt = AssetDatabase.LoadAssetAtPath<Texture2D>(Root + "/Textures/T_Sun.png");
+            var moonArt = AssetDatabase.LoadAssetAtPath<Texture2D>(Root + "/Textures/T_Moon.png");
+            if (sunArt != null) pSo.FindProperty("sunTexture").objectReferenceValue = sunArt;
+            if (moonArt != null) pSo.FindProperty("moonTexture").objectReferenceValue = moonArt;
             pSo.FindProperty("lightning").objectReferenceValue = lightning;
             pSo.FindProperty("previewDayCycle").objectReferenceValue = dayCycle;
             if (pSo.FindProperty("previewWeather").objectReferenceValue == null)

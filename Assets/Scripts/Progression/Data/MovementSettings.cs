@@ -11,6 +11,11 @@ namespace KryticalNova.Progression
         private const float DefaultAcceleration = 25f;
         private const float DefaultTurnSpeed = 540f;
         private const float DefaultStoppingDistance = 0.2f;
+        private const float DefaultAccelerationPerSpeed = 8f;
+        private const float DefaultArrivalSlowdownTime = 0.3f;
+        private const float DefaultArrivalMinRadius = 1.5f;
+        private const float DefaultArrivalMaxRadius = 8f;
+        private const float DefaultArrivalMinSpeedFactor = 0.55f;
 
         [Tooltip("Base walk speed in world units per second.")]
         [Min(MinimumPositive)] public float walkSpeed = DefaultWalkSpeed;
@@ -19,12 +24,38 @@ namespace KryticalNova.Progression
         [Min(MinimumPositive)] public float turnSpeed = DefaultTurnSpeed;
         [Min(0f)] public float stoppingDistance = DefaultStoppingDistance;
 
+        [Header("Responsiveness")]
+        [Tooltip("Acceleration is at least speed x this, so fast run ranks change direction as crisply as walking.")]
+        [Min(0f)] public float accelerationPerSpeed = DefaultAccelerationPerSpeed;
+
+        [Header("Arrival")]
+        [Tooltip("The slowdown zone is this many seconds of travel at the current speed (clamped below).")]
+        [Min(0f)] public float arrivalSlowdownTime = DefaultArrivalSlowdownTime;
+        [Min(0f)] public float arrivalMinRadius = DefaultArrivalMinRadius;
+        [Min(0f)] public float arrivalMaxRadius = DefaultArrivalMaxRadius;
+        [Tooltip("Fraction of full speed kept when reaching the destination.")]
+        [Range(0.1f, 1f)] public float arrivalMinSpeedFactor = DefaultArrivalMinSpeedFactor;
+
+        /// <summary>Distance before the destination where the agent starts easing off.</summary>
+        public float ArrivalRadius(float speed) =>
+            Mathf.Clamp(speed * arrivalSlowdownTime, arrivalMinRadius, Mathf.Max(arrivalMinRadius, arrivalMaxRadius));
+
+        /// <summary>Speed multiplier for the given distance left: 1 outside the arrival zone, easing to the minimum at the end.</summary>
+        public float ArrivalSpeedFactor(float remainingDistance, float speed)
+        {
+            float radius = ArrivalRadius(speed);
+            if (radius <= 0f || remainingDistance >= radius) return 1f;
+            float t = Mathf.Clamp01(remainingDistance / radius);
+            return Mathf.Lerp(arrivalMinSpeedFactor, 1f, Mathf.Sqrt(t));
+        }
+
         private void OnValidate()
         {
             walkSpeed = Mathf.Max(MinimumPositive, walkSpeed);
             acceleration = Mathf.Max(MinimumPositive, acceleration);
             turnSpeed = Mathf.Max(MinimumPositive, turnSpeed);
             stoppingDistance = Mathf.Max(0f, stoppingDistance);
+            arrivalMaxRadius = Mathf.Max(arrivalMinRadius, arrivalMaxRadius);
         }
     }
 }

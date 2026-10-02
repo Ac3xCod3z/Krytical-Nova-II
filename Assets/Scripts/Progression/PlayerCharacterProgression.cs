@@ -112,6 +112,87 @@ namespace KryticalNova.Progression
             return true;
         }
 
+        #region Development / GM tools
+        /// <summary>GM: jumps to a level. Raising grants each skipped level's rewards; lowering rebuilds the character at that level (attributes reset, points re-granted).</summary>
+        public void SetLevel(int level)
+        {
+            if (!isActiveAndEnabled || progressionData == null) return;
+            level = Mathf.Clamp(level, FirstLevel, MaxLevel);
+            if (level < currentLevel)
+            {
+                ResetCharacter();
+            }
+            while (currentLevel < level && progressionData.TryGetStep(currentLevel, out var step))
+            {
+                currentLevel++;
+                statPoints = SaturatingAdd(statPoints, step.statPointReward);
+                skillPoints = SaturatingAdd(skillPoints, step.skillPointReward);
+                LevelGained?.Invoke(currentLevel);
+            }
+            experience = 0;
+            Changed?.Invoke();
+        }
+
+        /// <summary>GM: sets XP within the current level (clamped below the level-up threshold).</summary>
+        public void SetExperience(int amount)
+        {
+            if (!isActiveAndEnabled) return;
+            int required = ExperienceRequired;
+            experience = Mathf.Clamp(amount, 0, required > 0 ? required - 1 : 0);
+            Changed?.Invoke();
+        }
+
+        /// <summary>GM: adds (or with a negative value removes) unspent stat points.</summary>
+        public void AddStatPoints(int amount)
+        {
+            if (!isActiveAndEnabled) return;
+            statPoints = (int)Math.Max(0L, Math.Min((long)statPoints + amount, int.MaxValue));
+            Changed?.Invoke();
+        }
+
+        /// <summary>GM: adds (or with a negative value removes) unspent skill points.</summary>
+        public void AddSkillPoints(int amount)
+        {
+            if (!isActiveAndEnabled) return;
+            skillPoints = (int)Math.Max(0L, Math.Min((long)skillPoints + amount, int.MaxValue));
+            Changed?.Invoke();
+        }
+
+        /// <summary>GM: sets an attribute directly without spending points.</summary>
+        public void SetAttribute(CharacterAttribute attribute, int value)
+        {
+            int index = (int)attribute;
+            if (!isActiveAndEnabled || statData == null || index < 0 || index >= attributes.Length) return;
+            attributes[index] = Mathf.Clamp(value, 0, statData.maximumAttributeValue);
+            Changed?.Invoke();
+        }
+
+        /// <summary>GM: refunds every allocated attribute point back to the stat point pool.</summary>
+        public void ResetAllocations()
+        {
+            if (!isActiveAndEnabled || statData == null) return;
+            int cost = Mathf.Max(1, statData.allocationCost);
+            for (int index = 0; index < attributes.Length; index++)
+            {
+                int starting = statData.GetStartingValue((CharacterAttribute)index);
+                int spent = Mathf.Max(0, attributes[index] - starting);
+                statPoints = SaturatingAdd(statPoints, spent * cost);
+                attributes[index] = starting;
+            }
+            Changed?.Invoke();
+        }
+
+        private void ResetCharacter()
+        {
+            currentLevel = FirstLevel;
+            experience = 0;
+            statPoints = progressionData.startingStatPoints;
+            skillPoints = progressionData.startingSkillPoints;
+            for (int index = 0; index < attributes.Length; index++)
+                attributes[index] = statData.GetStartingValue((CharacterAttribute)index);
+        }
+        #endregion
+
         private static int SaturatingAdd(int current, int amount)
         {
             return (int)Math.Min((long)current + Math.Max(0, amount), int.MaxValue);

@@ -18,6 +18,8 @@ MonoBehaviour:
   anticipationDuration: 0.12
   landingCooldown: 0.25
   maximumDropMultiplier: 2
+  heightByDistanceExponent: 1.5
+  minimumRise: 0.8
   landingSampleRadius: 0.3
   collisionSkin: 0.04
   trajectorySamples: 64

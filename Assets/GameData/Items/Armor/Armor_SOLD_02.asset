@@ -1757,4 +1757,4 @@ MonoBehaviour:
   hitboxSize: {x: 0.18, y: 0.18, z: 1.15}
   petPrefab: {fileID: 0}
   petScale: 1
-  petOffset: {x: 0.7, y: 0.95, z: -0.5}
+  petOffset: {x: 0.45, y: 0.75, z: -0.15}

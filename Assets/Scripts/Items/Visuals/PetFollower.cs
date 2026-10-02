@@ -4,12 +4,13 @@ namespace KryticalNova.Items.Visuals
 {
     /// <summary>
     /// Client-side cosmetic pet. Spawned from the replicated loadout on every peer (no NetworkObject, no bandwidth),
-    /// floats at a shoulder offset with damped follow and a gentle bob. Lives unparented so it trails the owner.
+    /// floats at a shoulder offset with a gentle bob. Lives unparented; the damping is applied to the offset relative to
+    /// the owner, so the pet stays on the shoulder at any run speed and only lags on turns.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PetFollower : MonoBehaviour
     {
-        [SerializeField, Min(0.01f)] private float followSmoothTime = 0.35f;
+        [SerializeField, Min(0.01f)] private float followSmoothTime = 0.2f;
         [SerializeField] private float bobAmplitude = 0.12f;
         [SerializeField] private float bobFrequency = 1.4f;
         [SerializeField] private float turnSpeed = 6f;
@@ -56,25 +57,30 @@ namespace KryticalNova.Items.Visuals
             return any ? Mathf.Max(bounds.size.x, Mathf.Max(bounds.size.y, bounds.size.z)) : 0f;
         }
 
-        private Vector3 TargetPosition()
+        private Vector3 TargetOffset()
         {
-            Vector3 offset = current != null ? current.petOffset : new Vector3(0.7f, 0.95f, -0.5f);
-            return transform.position + transform.rotation * offset;
+            Vector3 offset = current != null ? current.petOffset : new Vector3(0.45f, 0.75f, -0.15f);
+            return transform.rotation * offset;
         }
+
+        private Vector3 TargetPosition() => transform.position + TargetOffset();
 
         private void LateUpdate()
         {
             if (pet == null) return;
             var t = pet.transform;
-            Vector3 target = TargetPosition();
-            target.y += Mathf.Sin((Time.time + bobPhase) * bobFrequency * Mathf.PI * 2f) * bobAmplitude;
+            Vector3 targetOffset = TargetOffset();
+            targetOffset.y += Mathf.Sin((Time.time + bobPhase) * bobFrequency * Mathf.PI * 2f) * bobAmplitude;
 
-            if ((t.position - target).sqrMagnitude > snapDistance * snapDistance)
+            // Damp in the owner's frame: travel speed never builds lag, only rotation/offset changes do.
+            Vector3 offset = t.position - transform.position;
+            if ((offset - targetOffset).sqrMagnitude > snapDistance * snapDistance)
             {
-                t.position = target;
+                offset = targetOffset;
                 velocity = Vector3.zero;
             }
-            else t.position = Vector3.SmoothDamp(t.position, target, ref velocity, followSmoothTime);
+            else offset = Vector3.SmoothDamp(offset, targetOffset, ref velocity, followSmoothTime);
+            t.position = transform.position + offset;
 
             Vector3 forward = transform.forward;
             forward.y = 0f;

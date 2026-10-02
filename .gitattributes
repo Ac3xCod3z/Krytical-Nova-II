@@ -174,3 +174,5 @@ LightingData.asset     binary
 *TerrainData*.asset     binary
 /Assets/New?Terrain.asset binary
 NavMesh*.asset          binary
+# Adaptive Probe Volume bake data (tens of MB per zone, binary).
+APV_*.bytes             lfs

@@ -23,8 +23,12 @@ namespace KryticalNova.Progression
         public MovementSkillId SelectedSkill => selectedSkill;
         public bool IsRunning => selectedSkill == MovementSkillId.Run && runRank > 0;
         public bool IsJumpSelected => selectedSkill == MovementSkillId.Jump && jumpRank > 0;
-        public float CurrentSpeed => movementSettings == null ? 0f : IsRunning && runSkill != null && runSkill.TryGetRank(runRank, out var rank)
+        public float CurrentSpeed => BaseSpeed * GmSpeedMultiplier;
+        private float BaseSpeed => movementSettings == null ? 0f : IsRunning && runSkill != null && runSkill.TryGetRank(runRank, out var rank)
             ? Mathf.Max(movementSettings.walkSpeed, rank.runSpeed) : movementSettings.walkSpeed;
+        // GM speed only affects the local (owning) player, never other players simulated on a host.
+        private float GmSpeedMultiplier => resources != null && (!resources.IsSpawned || resources.IsOwner)
+            ? Mathf.Max(0.1f, KryticalNova.Core.GmState.SpeedMultiplier) : 1f;
 
         private void Awake()
         {

@@ -297,7 +297,9 @@ namespace KryticalNova.EditorTools
                 normalMapTexture = normal != null ? AssetDatabase.LoadAssetAtPath<Texture2D>(normal) : null,
                 tileSize = new Vector2(tile, tile),
                 smoothness = 0f,
-                metallic = 0f
+                metallic = 0f,
+                // Synty diffuse alpha is opaque (=1); the default DiffuseAlphaChannel source made every layer glossy.
+                smoothnessSource = TerrainLayerSmoothnessSource.ConstantOnly
             };
             AssetDatabase.CreateAsset(layer, path);
             return layer;

@@ -62,6 +62,19 @@ namespace KryticalNova.World
         [Range(0f, 20f)] public float sunDiscIntensity = 6f;
         [Range(1f, 256f)] public float sunGlowPower = 24f;
         [Range(0f, 2f)] public float sunGlowIntensity = 0.45f;
+        [Tooltip("God-ray strength over the day: strongest at dawn and dusk, faint at noon, off at night.")]
+        public AnimationCurve sunShaftIntensity = Curve((0.22f, 0f), (0.26f, 1f), (0.34f, 0.35f), (0.5f, 0.2f), (0.66f, 0.35f), (0.74f, 1f), (0.78f, 0f));
+        [Tooltip("Comic lens flare strength over the day (sun only).")]
+        public AnimationCurve sunFlareIntensity = Curve((0.22f, 0f), (0.26f, 0.8f), (0.35f, 0.6f), (0.5f, 0.5f), (0.65f, 0.6f), (0.74f, 0.8f), (0.78f, 0f));
+        [Tooltip("Angular radius (radians) of the sun texture's square, used when the presenter has a Sun Texture. Includes the rays.")]
+        [Range(0.01f, 0.4f)] public float sunTextureSize = 0.065f;
+        [Tooltip("Angular radius (radians) of the moon texture's square, used when the presenter has a Moon Texture.")]
+        [Range(0.01f, 0.4f)] public float moonTextureSize = 0.1f;
+        [Tooltip("Brightness of the sun texture (above 1 lets Bloom halo it).")]
+        [Range(0f, 8f)] public float sunTextureIntensity = 1.0f;
+        [Range(0f, 8f)] public float moonTextureIntensity = 1.15f;
+        [Tooltip("In-game days from new moon to new moon.")]
+        [Min(1f)] public float lunarCycleDays = 8f;
 
         [Header("Night")]
         public AnimationCurve starVisibility = Curve((0f, 1f), (0.2f, 1f), (0.255f, 0f), (0.745f, 0f), (0.8f, 1f), (1f, 1f));

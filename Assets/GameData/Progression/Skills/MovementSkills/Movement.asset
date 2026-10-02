@@ -14,5 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.MovementSettings
   walkSpeed: 5
   acceleration: 25
-  turnSpeed: 540
+  turnSpeed: 1080
   stoppingDistance: 0.2
+  accelerationPerSpeed: 8
+  arrivalSlowdownTime: 0.3
+  arrivalMinRadius: 1.5
+  arrivalMaxRadius: 8
+  arrivalMinSpeedFactor: 0.55

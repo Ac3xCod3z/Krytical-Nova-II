@@ -139,6 +139,25 @@ namespace KryticalNova.Progression
             return removed;
         }
 
+        /// <summary>
+        /// Replaces every modifier owned by a source in one recalculation. Generic entry point for any stat
+        /// provider (mounts, pets, titles, GM tools): pass an empty/null list to clear the source.
+        /// </summary>
+        public void SetSourceModifiers(object source, IEnumerable<StatModifier> sourceModifiers)
+        {
+            if (source == null) return;
+            modifiers.RemoveAll(m => m.Source == source);
+            if (sourceModifiers != null)
+            {
+                foreach (var mod in sourceModifiers)
+                    if (mod != null) modifiers.Add(mod);
+            }
+            RecalculateStats();
+        }
+
+        /// <summary>Read-only view of active modifiers (debug / GM listing).</summary>
+        public IReadOnlyList<StatModifier> Modifiers => modifiers;
+
         public void ClearModifiers()
         {
             if (modifiers.Count == 0) return;
@@ -252,13 +271,40 @@ namespace KryticalNova.Progression
                 case StatType.ElementalDefense: return eleDef;
                 case StatType.AcupressureStunResistance: return stunRes;
                 // Luck is a self-buff stat reserved for gear enhancement / loot systems. It is NOT read by combat resolution.
-                case StatType.Luck: return 50f;
+                // Gear, pets, mounts and buffs raise it through modifiers.
+                case StatType.Luck: return tuningData != null ? tuningData.baseLuck : 50f;
                 case StatType.MoveSpeedPercent: return moveSpeed;
 
                 default: return 0f;
             }
         }
         #endregion
+
+        /// <summary>
+        /// Splits a resource pool (MaxHP or MaxChi) into its sources for display:
+        /// class base + level scaling, the attribute contribution (Vitality / Spirit, including gear on the attribute),
+        /// and everything else (flat/percent MaxHP or MaxChi modifiers from gear, pets, mounts, buffs).
+        /// </summary>
+        public void GetPoolBreakdown(StatType pool, out float baseAndLevel, out float fromAttribute, out float fromBonuses)
+        {
+            float total = GetStatValue(pool);
+            if (pool == StatType.MaxHP)
+            {
+                float perPoint = tuningData != null ? tuningData.vitalityToHealth : 20f;
+                fromAttribute = TotalVitality * perPoint;
+            }
+            else if (pool == StatType.MaxChi)
+            {
+                float perPoint = tuningData != null ? tuningData.spiritToChi : 20f;
+                fromAttribute = TotalSpirit * perPoint;
+            }
+            else
+            {
+                fromAttribute = 0f;
+            }
+            baseAndLevel = GetBaseStatValue(pool) - fromAttribute;
+            fromBonuses = total - baseAndLevel - fromAttribute;
+        }
 
         public void RecalculateStats()
         {

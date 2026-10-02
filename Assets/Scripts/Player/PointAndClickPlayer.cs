@@ -39,6 +39,7 @@ namespace KryticalNova.Player
         private const float PausedTimeScale = 0f;
         private const int InitialUiHitCapacity = 8;
         private const float PendingInteractTimeout = 20f;
+        private const float FriendlyApproachDistance = 1.5f;
 
         [Header("Scene References")]
         [SerializeField] private Camera gameplayCamera;
@@ -113,6 +114,8 @@ namespace KryticalNova.Player
         private Vector2 previousCursorPosition;
         private IInteractable pendingInteract;
         private float pendingInteractExpiry;
+        // First click on a unit selects it; a second click on the selected unit attacks / talks / walks to it.
+        private Transform selectedTarget;
 
         private void Reset()
         {
@@ -294,6 +297,7 @@ namespace KryticalNova.Player
             if (!IsSpawned || IsServer)
             {
                 ApplyMovementSettings();
+                UpdateArrival();
                 TurnTowardsTravel();
             }
 
@@ -318,7 +322,7 @@ namespace KryticalNova.Player
                 if (!inputSuppressed)
                 {
                     meleeCombat?.CancelAttack();
-                    ClientPresentationRegistry.Markers?.ClearTarget();
+                    ClearSelection();
                 }
                 return;
             }
@@ -402,6 +406,24 @@ namespace KryticalNova.Player
             var targetEntity = hit.collider.GetComponentInParent<IDamageable>();
             if (targetEntity != null && targetEntity.Transform != transform)
             {
+                bool hostile = KryticalNova.Combat.CombatHostility.IsHostile(transform, targetEntity);
+
+                // First click only selects.
+                if (!IsSelected(targetEntity.Transform))
+                {
+                    Select(targetEntity.Transform, hostile ? WorldTargetKind.Hostile : WorldTargetKind.Friendly);
+                    if (!targetEntity.IsAlive) CommandMessage?.Invoke($"{targetEntity.EntityName} is defeated.");
+                    return;
+                }
+
+                // Second click on a friendly unit (another player): walk over to them.
+                if (!hostile)
+                {
+                    meleeCombat?.CancelAttack();
+                    WalkToUnit(targetEntity.Transform);
+                    return;
+                }
+
                 if (!targetEntity.IsAlive)
                 {
                     CommandMessage?.Invoke($"{targetEntity.EntityName} is defeated.");
@@ -409,7 +431,6 @@ namespace KryticalNova.Player
                 }
 
                 ClientPresentationRegistry.Markers?.HideMoveMarker();
-                ClientPresentationRegistry.Markers?.SetTarget(targetEntity.Transform, WorldTargetKind.Hostile);
 
                 if (meleeCombat != null)
                 {
@@ -442,17 +463,21 @@ namespace KryticalNova.Player
             var interactable = hit.collider.GetComponentInParent<IInteractable>();
             if (interactable != null)
             {
+                Transform unit = interactable is Component interactableComponent ? interactableComponent.transform : null;
+                if (unit != null && !IsSelected(unit))
+                {
+                    Select(unit, WorldTargetKind.Friendly);
+                    return;
+                }
+
                 meleeCombat?.CancelAttack();
                 ClientPresentationRegistry.Markers?.HideMoveMarker();
-                if (interactable is Component interactableComponent)
-                    ClientPresentationRegistry.Markers?.SetTarget(interactableComponent.transform, WorldTargetKind.Friendly);
                 BeginInteract(interactable);
                 return;
             }
 
-            // Clicking ground or platform clears active combat attack
+            // Clicking ground or platform stops an active attack; the selected target stays selected.
             meleeCombat?.CancelAttack();
-            ClientPresentationRegistry.Markers?.ClearTarget();
 
             if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
@@ -483,6 +508,41 @@ namespace KryticalNova.Player
 
             if (ExecuteLocalMove(hit.point, out Vector3 acceptedDestination))
                 ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, acceptedDestination, hit.normal);
+        }
+
+        private bool IsSelected(Transform unit) => unit != null && selectedTarget == unit;
+
+        private void Select(Transform unit, WorldTargetKind kind)
+        {
+            selectedTarget = unit;
+            ClientPresentationRegistry.Markers?.SetTarget(unit, kind);
+        }
+
+        private void ClearSelection()
+        {
+            selectedTarget = null;
+            ClientPresentationRegistry.Markers?.ClearTarget();
+        }
+
+        /// <summary>Walks to just short of another unit (friendly player) without interacting.</summary>
+        private void WalkToUnit(Transform unit)
+        {
+            Vector3 fromUnit = transform.position - unit.position;
+            fromUnit.y = 0f;
+            Vector3 destination = fromUnit.sqrMagnitude > FriendlyApproachDistance * FriendlyApproachDistance
+                ? unit.position + fromUnit.normalized * FriendlyApproachDistance
+                : transform.position;
+            if ((destination - transform.position).sqrMagnitude < 0.01f) return;
+
+            ClientPresentationRegistry.Markers?.HideMoveMarker();
+            if (IsSpawned && !IsServer)
+            {
+                bool isRunning = movementSkills != null && movementSkills.IsRunning;
+                RequestMoveDestinationServerRpc(destination, isRunning);
+                return;
+            }
+
+            ExecuteLocalMove(destination, out _);
         }
 
         /// <summary>Talks right away when in range; otherwise walks over and talks on arrival.</summary>
@@ -553,6 +613,7 @@ namespace KryticalNova.Player
                 CommandMessage?.Invoke("The path changed. Chi was not consumed.");
                 return false;
             }
+            SnapVelocityToPath();
             acceptedDestination = destination.position;
             return true;
         }
@@ -585,7 +646,46 @@ namespace KryticalNova.Player
             if (!agent.SetPath(requestedPath))
             {
                 resources?.RestoreChi(paidCost);
+                return;
             }
+            SnapVelocityToPath();
+        }
+
+        /// <summary>
+        /// Points the agent's momentum straight down the new path at full speed, so re-clicking mid-run turns
+        /// the character immediately instead of skidding through a wide arc.
+        /// </summary>
+        private void SnapVelocityToPath()
+        {
+            if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+            Vector3[] corners = agent.path.corners;
+            if (corners == null || corners.Length < 2) return;
+            Vector3 direction = corners[1] - agent.nextPosition;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f) return;
+            float speed = movementSkills != null ? movementSkills.CurrentSpeed : agent.speed;
+            agent.velocity = direction.normalized * speed;
+        }
+
+        /// <summary>Stops dead on the destination instead of coasting (autoBraking is off; we ease out ourselves).</summary>
+        private void UpdateArrival()
+        {
+            if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+            if (!agent.hasPath || agent.pathPending) return;
+            if (RemainingPathDistance() > agent.stoppingDistance) return;
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+        }
+
+        /// <summary>
+        /// NavMeshAgent.remainingDistance reads 0 until the agent's first update after SetPath, which would look like
+        /// instant arrival; never report less than the straight-line distance to the destination.
+        /// </summary>
+        private float RemainingPathDistance()
+        {
+            Vector3 toDestination = agent.destination - agent.nextPosition;
+            toDestination.y = 0f;
+            return Mathf.Max(agent.remainingDistance, toDestination.magnitude);
         }
 
         [ServerRpc]
@@ -596,6 +696,7 @@ namespace KryticalNova.Player
 
             var targetEntity = targetNetObj.GetComponent<IDamageable>();
             if (targetEntity == null || !targetEntity.IsAlive) return;
+            if (!KryticalNova.Combat.CombatHostility.IsHostile(transform, targetEntity)) return;
 
             if (meleeCombat != null)
             {
@@ -618,6 +719,7 @@ namespace KryticalNova.Player
             {
                 agent.isStopped = true;
                 agent.ResetPath();
+                agent.velocity = Vector3.zero;
             }
 
             Vector3 targetDir = targetEntity.Transform.position - transform.position;
@@ -676,8 +778,14 @@ namespace KryticalNova.Player
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh)
                 return;
 
-            Vector3 direction = agent.desiredVelocity;
+            // Face where we are actually travelling; desiredVelocity swings ahead of the body on re-paths.
+            Vector3 direction = agent.velocity;
             direction.y = 0f;
+            if (direction.sqrMagnitude < MinimumFacingSpeedSquared)
+            {
+                direction = agent.desiredVelocity;
+                direction.y = 0f;
+            }
             if (direction.sqrMagnitude < MinimumFacingSpeedSquared)
                 return;
 
@@ -714,10 +822,15 @@ namespace KryticalNova.Player
             MovementSettings settings = movementSkills.MovementSettings;
             if (agent != null && agent.isActiveAndEnabled)
             {
-                agent.speed = movementSkills.CurrentSpeed;
-                agent.acceleration = settings.acceleration;
+                float speed = movementSkills.CurrentSpeed;
+                agent.autoBraking = false;
+                agent.acceleration = Mathf.Max(settings.acceleration, speed * settings.accelerationPerSpeed);
                 agent.angularSpeed = settings.turnSpeed;
                 agent.stoppingDistance = settings.stoppingDistance;
+                // Full speed until the last stretch, then ease off a little before stopping on the point.
+                float factor = agent.isOnNavMesh && agent.hasPath && !agent.pathPending
+                    ? settings.ArrivalSpeedFactor(RemainingPathDistance(), speed) : 1f;
+                agent.speed = speed * factor;
             }
         }
 
