@@ -56,8 +56,8 @@ namespace KryticalNova.World
         public AnimationCurve moonIntensity = Curve((0f, 0.4f), (0.2f, 0.32f), (0.235f, 0f), (0.765f, 0f), (0.8f, 0.32f), (1f, 0.4f));
         [Tooltip("Cast shadow amount (0-1). Fades the comic shadow layer linearly.")]
         public AnimationCurve shadowStrength = Curve((0f, 0.55f), (0.24f, 0.55f), (0.3f, 1f), (0.7f, 1f), (0.76f, 0.55f), (1f, 0.55f));
-        [Range(0.001f, 0.2f)] public float sunDiscSize = 0.035f;
-        [Range(0.001f, 0.2f)] public float moonDiscSize = 0.03f;
+        [Range(0.001f, 0.2f)] public float sunDiscSize = 0.027f;
+        [Range(0.001f, 0.2f)] public float moonDiscSize = 0.023f;
         [Tooltip("HDR multiplier on the sun disc so Bloom gives it a soft halo.")]
         [Range(0f, 20f)] public float sunDiscIntensity = 6f;
         [Range(1f, 256f)] public float sunGlowPower = 24f;
@@ -67,9 +67,9 @@ namespace KryticalNova.World
         [Tooltip("Comic lens flare strength over the day (sun only).")]
         public AnimationCurve sunFlareIntensity = Curve((0.22f, 0f), (0.26f, 0.8f), (0.35f, 0.6f), (0.5f, 0.5f), (0.65f, 0.6f), (0.74f, 0.8f), (0.78f, 0f));
         [Tooltip("Angular radius (radians) of the sun texture's square, used when the presenter has a Sun Texture. Includes the rays.")]
-        [Range(0.01f, 0.4f)] public float sunTextureSize = 0.065f;
+        [Range(0.01f, 0.4f)] public float sunTextureSize = 0.05f;
         [Tooltip("Angular radius (radians) of the moon texture's square, used when the presenter has a Moon Texture.")]
-        [Range(0.01f, 0.4f)] public float moonTextureSize = 0.1f;
+        [Range(0.01f, 0.4f)] public float moonTextureSize = 0.075f;
         [Tooltip("Brightness of the sun texture (above 1 lets Bloom halo it).")]
         [Range(0f, 8f)] public float sunTextureIntensity = 1.0f;
         [Range(0f, 8f)] public float moonTextureIntensity = 1.15f;

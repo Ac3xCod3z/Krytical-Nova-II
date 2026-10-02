@@ -26,18 +26,21 @@ MonoBehaviour:
   ambientMultiplier: 1
   shadowMultiplier: 1
   cloudShadowStrength: 0.35
-  fogDensity: 0.0012
-  fogTint: {r: 0.7, g: 0.72, b: 0.75, a: 0}
+  fogDensity: 0.0022
+  fogTint: {r: 0.6627451, g: 0.76862746, b: 0.8784314, a: 0}
   windHeading: 60
   windSpeed: 3
+  windSpeedMin: 0
+  windSpeedMax: 9
+  calmChance: 0.3
   randomWindDirection: 1
   gustiness: 0.1
   precipitation: 0
   precipitationIntensity: 0
   mist: 0
   lightningPerMinute: 0
-  saturation: 5
-  contrast: 0
+  saturation: 8
+  contrast: 4
   ambienceLoop: {fileID: 0}
   ambienceVolume: 0.6
   transitionSeconds: 90

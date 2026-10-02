@@ -35,7 +35,8 @@ Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights d
 4. Transparents (weather particles, VFX)
 5. **ComicStyle** (BeforeRenderingPostProcessing): cast-shadow restyle, cloud shadows, Sobel outlines. Skips sky pixels.
 6. **SunShafts** (BeforeRenderingPostProcessing + 1): god rays, added before post so Bloom catches them.
-7. URP post: **Bloom** → **Tonemapping (Neutral)** → **Color Adjustments** (runtime) → **Vignette** → **Lens Flare** (data-driven, on the sun light).
+7. URP post: **Bloom** → **Tonemapping (Neutral)** → **Split Toning / Lift Gamma Gain** → **Color Adjustments** (runtime) →
+   **Vignette** → **Film Grain** → **SMAA** → **Lens Flare** (data-driven, on the sun light).
 
 ## 3. Lighting rules
 
@@ -84,13 +85,24 @@ Driven by `EnvironmentPresenter` (`Assets/Scripts/World/Presentation/`). Tuning 
 | `_KN_BodyTexAspect` | art width/height (keeps non-square art undistorted) |
 | `_KN_MoonPhase` | x phase (0 new, 0.5 full), y lit fraction |
 | `_KN_Rainbow` | x strength |
+| `_KN_Halo` | x sun 22° halo strength, y moon halo strength |
+| `_KN_SunShimmer` | x heat shimmer multiplier (1 = clear midday) |
 | `_KN_Cloud*` | cloud field, shared with ComicPost and SunShafts (`SkyCommon.hlsl`) |
+| `_KN_WindVector` | xy wind (m/s, world XZ, gust included), z speed. Set by `PrecipitationController` |
+| `_KN_WindParams` | x gust now, y gustiness, z strength 0-1 (speed / 20 m/s). Drives foliage and water |
+| `_KN_WindScroll` | integrated wind drift (texture tiles) for water ripples; continuous as the wind turns |
+| `_KN_Interactors[8]`, `_KN_InteractorCount` | xyz feet, w radius of the 8 `FoliageInteractor`s nearest the camera (grass parting) |
 
 ### Sun
 - **Art treatment**: the centre is washed out by its own light (`_SunGlare*`), light bleeds over ink lines
   (`_BodyInkLift`), colour and contrast are softened, and the art hazes into the sky near the horizon.
 - **Spikes**: barely visible (`_SunRayVisibility` 0.3), with a heat shimmer from the cloud noise
-  (`_SunShimmerAmount/Speed/Scale`) and a slow flicker. The disc never wobbles, only the rays.
+  (`_SunShimmerAmount/Speed/Scale`, base 0.03) and a slow flicker. The glow wobbles too, by `_SunShimmerGlow` (30%)
+  of the spike amount. The disc core never wobbles.
+- **Shimmer strength**: `_KN_SunShimmer` from the presenter (`shimmerStrength`): full on a clear midday sky, about
+  half at a low sun, close to 0 under cloud.
+- **No flare on the sun**: `LF_ComicSun` only has ghosts along the flare line. A flare element at position 0 reads
+  as a star stamped over the sun art, so don't add one.
 - **Sunset**: art graded to deep red → orange → warm (`_SunsetGrade`), flattened vertically up to 15% like real
   refraction (`_SunsetFlatten`), below `_SunsetHeight`.
 - **Size**: `sunTextureSize` 0.065 rad on `DC_Default`. Lower `sunTilt` to raise the noon sun; this also shortens shadows.
@@ -123,6 +135,20 @@ The bow is drawn around the **antisolar point**:
 
 Peak strength is `rainbowPeak` 0.25, so it stays subtle. Preview it with `previewRainbow` on the presenter.
 
+### 22° halo (rare)
+- A soft ring 22° from the sun (or moon): a faint red inner edge washing out to white, and slightly darker sky inside.
+  Added with a soft blend after the clouds, so it shows through cirrus, fades under thick cloud, and never clips.
+- **When**: each world day rolls `haloChancePerDay` (6%) for a `haloWindowHours` (2.5 h) window between 08:00 and
+  16:00. Each night rolls `moonHaloChancePerNight` (4%) between 20:00 and 04:00 and needs a moon over half lit.
+  The roll is a hash of the day count, so all clients agree without network traffic.
+- **Weather**: needs thin high cloud (cirrus ≥ ~0.15: Clear, FewClouds, PartlyCloudy), no rain or snow, and low diffusion.
+- Preview with `previewHalo` on the presenter. Shader tuning: `_HaloIntensity`, `_HaloWidth`, `_HaloMoon`.
+
+### GM sky commands
+`sky.rainbow`, `sky.moonphase`, `sky.moon.next`, `sky.halo`, `sky.shimmer`, `sky.flare`, `sky.lightning`, `sky.status`,
+`sky.reset` (`Assets/Scripts/DevTools/SkyCommands.cs`, and the World tab of the GM Tools window). These are local
+presentation overrides only.
+
 ### Cloud-edge glow
 Clouds crossing the sun or moon get a bright rim (`_BodyRimGlow`), HDR for the sun.
 
@@ -147,13 +173,124 @@ Clouds crossing the sun or moon get a bright rim (`_BodyRimGlow`), HDR for the s
 
 ## 6. Post volume rules
 
-- Scene volume: **Global Volume** → `SampleSceneProfile` (Bloom, Neutral tonemapping, Vignette 0.2).
+- Scene volume: **Global Volume** → `SampleSceneProfile`, written by **Krytical Nova → Lighting → Apply Post Processing
+  Look** (`Assets/Editor/World/PostProcessSetup.cs`; also runs in Build Zone01):
+
+  | Override | Value | Why |
+  |---|---|---|
+  | Tonemapping | Neutral | keeps the palette's hues (ACES shifts them) |
+  | Bloom | threshold 1, intensity 0.36, scatter 0.58, tint `#FFF1E0` | only the HDR budget glows, warm |
+  | Split Toning | shadows `#6E74A4`, highlights `#B8A68A`, balance 0 | cool shadows, warm paper highlights |
+  | Lift Gamma Gain | lift slightly blue, gain slightly warm | darks lean to ink-indigo, not dead black |
+  | Vignette | 0.28, smoothness 0.45, colour Ink `#14122B` | comic-panel framing |
+  | Film Grain | Thin1, 0.2 | printed-page feel under the halftone shadows |
+  | Motion Blur | off | |
+
+- Main camera anti-aliasing: **SMAA High**. FXAA smears the ink outlines; TAA ghosts the halftone dots.
+- No depth of field: a far blur would also blur the sky (sun art, clouds).
 - **Never write the profile asset at runtime.** `EnvironmentPresenter` writes Color Adjustments (saturation, contrast,
   colour filter) on `postVolume.profile`, the runtime instance.
 - Renderer features re-publish their serialized settings every frame. Modulate them only through their runtime classes:
   `ComicStyleRuntime` (shadow tint, opacity, dots) and `SunShaftRuntime` (shaft strength).
 - New screen-space features: Render Graph only (`RecordRenderGraph`). Skip Preview and Reflection cameras. Read
   `cameraDepthTexture` via `ConfigureInput`.
+
+## 6b. Colour bible
+
+Code: `Assets/Editor/World/ColorBible.cs` (**Krytical Nova → World → Apply Colour Bible**, also run by Build Zone01).
+
+| Role | Colour | Used for |
+|---|---|---|
+| Ink | `#14122B` | outlines, vignette, deepest night fog |
+| Shadow indigo | `#4C52BF` | comic shadow tint |
+| Sky blue / horizon | `#1F6ECC` / `#ADE0F2` | day sky |
+| Neon cyan | `#4FE3F0` | tech accents, exhaust glow, portal |
+| Neon magenta | `#E04FB8` | signage accent |
+| Signal yellow | `#FFC93C` | road paint, warnings |
+| Sunset coral | `#FF9E66` | dawn / dusk light |
+| Concrete / ruin concrete | `#8C8A94` / `#4A4752` | city neutral / demolished cut faces |
+
+**Fog ramp** (`DC_Default.fogColor`): night `#141A3D` → pre-dawn violet `#2E2A5C` → dawn coral `#E8A08A` → day comic blue
+`#8FC3E8` → dusk rose `#E07A8C` → twilight violet `#5B3F7A`. Distance fades toward the sky's hue, never grey. Weather fog
+**Weather looks** mute the palette but never grey it out. Fog tints are chromatic blue-lavenders with a low pull
+(overcast `#9EA8C8` at 35%, fog `#B4BEDC` at 40%, rain `#7C88B0` at 50%, storm `#5C6490` at 55%), so dawn and dusk colours
+still show through. Saturation drops stay small (fog −12, rain −15, storm −18; it was −30 to −45). Clear skies run fog
+density 0.0022 so distance reads as air (about 35% fog at 300 m).
+
+**Building palette**: no two buildings within 18 m share a material (`StarterTownBuilder.ApplyPalette`).
+- Shops and large buildings use 12 of Synty's 24 `PolygonScifi_0X_Y` atlas variants: warm and cool neutrals, teal,
+  indigo slate, dusty rose, ochre, sage, plum, brick, sandstone, and a rare orange. Lime, near-black and murky olive
+  are excluded.
+- Background towers use the 3 Synty window sets × 6 facade tints: steel, teal, lavender, sand, rose and clean
+  (`Assets/GameData/World/Materials/BuildingPalette`).
+
+**Sky bodies** (`DC_Default`): sun art 0.05 rad, moon art 0.075 rad, procedural discs 0.027 / 0.023. They read
+farther away than the original 0.065 / 0.1.
+
+## 6c. City layout and dressing (Zone01, `StarterTownBuilder.*`)
+
+- **Streets** follow the Synty demo: 10 m two-lane roads with 5 m kerbed sidewalks on the lines 0, ±35, ±65 and ±100. A
+  curated segment table varies the grid:
+  - The ±65 ring survives only as short road and alley pieces, so the outer bands form big lots.
+  - Some segments become pedestrian market alleys.
+  - Four blocks have a special use: park, parking, raised deck and construction.
+  - A flood fill checks that the plaza and all gates stay connected.
+- **Street types:**
+  - Main (gate avenues and the plaza ring): lattice gantries (`Pillar_02` and `Beams_01`) with hanging signs, plus
+    cables strung facade to facade.
+  - Side: power poles with cables running pole to pole.
+  - Wall road: barriers and crates.
+- **Buildings:**
+  - Modular shopfronts are `Section_*` modules: 1-3 bays, 1-2 deep and 1-6 floors, with awnings, wall signs, blade
+    neon, posters, AC units and roof clutter.
+  - Tower stacks are built from `Large_Part_*`.
+  - Whole prefabs get a 0.85-1.25 Y stretch on the outer bands.
+  - **Variety rule:** the same prefab or stack can't repeat within 20 m, and side-by-side neighbours on a street row
+    must differ in height by at least 25%.
+- **Signage:**
+  - Billboards are found by raycasting the building's own colliders and mounted 0.15 m off the wall. About 75% face the
+    plaza, and they're dropped if no wall is found. Nothing floats.
+  - Art orientation: `Billboard_Large` shows its art on -Z, `Sign_0x` on +Z, and Neon and `Sign_Ad` read from both
+    sides.
+- **Trash corners:** bins and dumpsters with rubbish in Synty's triplanar dirt material (`M_Grime_Light/Medium/Heavy`),
+  in back lots, alleys and along sidewalks.
+- **Stalls:** a shared grounded frame (back wall, a canopy stretched to 5 m, counter, crates, lanterns hung from the
+  measured canopy). Each stall has its own sign style: neon panel, wooden board, hologram plate, fabric banner, blade
+  sign or lightbox. Fonts are Orbitron, Exo 2 and Lato.
+  - **Wall-only props** (`Overhang_0x`, `Wall_Table`, `Flags`) are never used on open ground.
+  - **Prop placement:** props are snapped by their measured bounds, so each one sits on the ground, on the counter, or
+    hangs from the canopy.
+
+## 6d. Vegetation, wind and water
+
+- **Wind is part of every weather.** Each `WeatherProfile` has a `windSpeedMin`/`windSpeedMax` range and a
+  `calmChance`. The server rolls a speed per weather cycle (biased low, so strong days are rarer) and replicates it
+  next to the heading. A slow shared lull/surge noise (±25%) and the gust noise ride on top. GM: `weather.windset
+  <m/s> [heading]`, `weather.windclear`, `weather.wind`.
+- **Grass and flowers** are terrain details, not trees. They are instanced Synty meshes (`*_Wind` prefab variants in
+  `Assets/Prefabs/Environment/Foliage`) with `KryticalNova/Foliage Wind`.
+  - Layers and sizes live in `ZTP_Zone01.detailLayers`. They only grow on the grass splat, above the waterline and off
+    every road, sidewalk, building and prop mesh.
+  - Repaint with **Krytical Nova > Zone > Repaint Grass and Flowers Only** after rebuilding the town.
+  - Draw distance is `detailDistance` (70 m). Lower `Terrain.detailObjectDensity` for a quality setting.
+- **`KryticalNova/Foliage Wind`** uses the same cel lighting and dots as Comic Toon Lit.
+  - All motion happens in the vertex stage with no texture reads. Every pass (lit, shadow, depth, depth-normals)
+    bends the same way, so outlines stay attached.
+  - Grass mode bends from the base and parts around interactors. Tree mode keeps the trunk still while the canopy
+    sways and branch ends flutter.
+  - Motion fades out past `_WindFadeDistance`. Grass casts no shadows.
+  - Trees, bushes, hedges and town grass patches use it through `FoliageAssetBuilder`. The shared Synty atlas
+    materials are untouched.
+- **Leaves:** `WindLeavesController` runs 2 pooled `FX_Leaves_Green_01` emitters, only above 6 m/s, capped at 4/s and
+  40 particles each.
+- **Water** is `KryticalNova/Anime Water`, a hand-edited copy of the KumaBeer URP 6.1 shader.
+  - It covers one generated mesh (`Zone01_WaterMesh`, 4 m quads) only where the terrain dips under the waterline.
+  - A baked flow map (`T_WaterFlow_Zone01`: RG direction, B speed) makes rivers run from their first point to their
+    last. The current dies out inside lakes, which keep the calm ripples.
+  - Wind adds a ripple layer.
+  - The old flat `Water` object keeps the collider and NavMesh modifiers with its renderer off.
+  - Rebuild with **Krytical Nova > Zone > Rebuild Water**.
+  - The water needs the depth and opaque textures, which are now on for the PC and Mobile URP assets.
 
 ## 7. Performance budgets (PC, 1080p)
 
@@ -181,6 +318,27 @@ Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Ed
 - **Shadowmask mixed lighting** for interiors once indoor zones exist: crisp baked shadows far away, realtime up close.
 
 ## Changelog
+
+- **2026-10-02 (nature)**:
+  - Per-cycle wind speed ranges for all weather.
+  - Wind-reactive grass, flowers, bushes and trees, with grass parting around players.
+  - Dense small grass as terrain details.
+  - Sparse windy-day leaves.
+  - KumaBeer anime water with river flow.
+
+- **2026-10-02 (city)**:
+  - Streets rebuilt to the demo standard (10 m roads, gantries, power lines, alleys, special blocks).
+  - Modular shopfronts and tower stacks; variety rule for repeats and heights.
+  - Colour families with strong tower tints.
+  - Raycast-mounted facade billboards.
+  - Finished stalls with distinct name signs; triplanar trash corners.
+- **2026-10-02**:
+  - Post look: Split Toning, Lift Gamma Gain, Film Grain, an ink vignette and a warm bloom tint; SMAA on the main camera.
+  - Colour bible documented; fog ramp and weather fog tints retuned to it.
+  - Sun and moon read farther away (smaller).
+  - Building palette: neighbouring buildings never share a colour.
+  - URP exhaust trails and booster glows on the flying traffic (Synty legacy particle shaders converted).
+  - Mesh Demolisher ruin library: fractured towers in the outer ring (`Assets/Prefabs/Environment/Ruins`).
 
 - **2026-10-01**:
   - Stylized sun/moon art with glare, ink lift and haze. Heat-shimmering, mostly hidden sun spikes.

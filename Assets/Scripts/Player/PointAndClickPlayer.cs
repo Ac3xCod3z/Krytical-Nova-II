@@ -31,7 +31,7 @@ namespace KryticalNova.Player
         private const float SpawnSampleRadius = 3f;
         private const float DefaultOrbitSensitivity = 0.15f;
         private const float DefaultMinimumZoomDistance = 3f;
-        private const float DefaultMaximumZoomDistance = 18f;
+        private const float DefaultMaximumZoomDistance = 24f;
         private const float DefaultZoomSensitivity = 1f;
         private const float FixedRadialMultiplier = 1f;
         private const float MinimumFacingSpeedSquared = 0.01f;
@@ -70,11 +70,16 @@ namespace KryticalNova.Player
         [SerializeField, Min(MinimumPositiveValue)] private float zoomSensitivity = DefaultZoomSensitivity;
 
         [Header("Camera Pitch")]
-        [Tooltip("Lowest orbit pitch (negative looks up at the sky). The ground stop below still applies.")]
-        [SerializeField, Range(-80f, 0f)] private float minimumPitch = -35f;
+        [Tooltip("Lowest orbit pitch (negative looks up at the sky). The ground stop below is the real limit.")]
+        [SerializeField, Range(-89f, 0f)] private float minimumPitch = -80f;
         [SerializeField, Range(10f, 89f)] private float maximumPitch = 75f;
         [Tooltip("The camera never orbits closer than this to the ground beneath it.")]
-        [SerializeField, Min(0f)] private float groundClearance = 0.4f;
+        [SerializeField, Min(0f)] private float groundClearance = 0.6f;
+        [Tooltip("Once the camera scrapes the ground, dragging further down raises its aim point by up to this many metres, " +
+                 "tilting the view up to the sky (the camera itself never goes lower).")]
+        [SerializeField, Min(0f)] private float maximumSkyLookHeight = 40f;
+        [Tooltip("Metres of aim lift per degree of downward drag while the camera is held at the ground.")]
+        [SerializeField, Min(0f)] private float skyLookPerDegree = 0.8f;
 
         [Header("Occlusion")]
         [Tooltip("Props between the camera and the player dither-fade with this shader (KryticalNova/Occluder Dither).")]
@@ -104,10 +109,15 @@ namespace KryticalNova.Player
         private InputAction flipCameraAction;
         private Transform cameraTrackingTarget;
         private readonly RaycastHit[] groundHit = new RaycastHit[1];
+        private readonly RaycastHit[] pointerHits = new RaycastHit[16];
         private PlayerSkillHotbar hotbar;
         private EventSystem pointerEventSystem;
         private PointerEventData pointerEventData;
         private bool isOrbiting;
+        private CinemachineRotationComposer orbitComposer;
+        private bool pitchAtGroundStop;
+        private float skyLook;          // requested aim lift (m)
+        private float skyLookSmoothed;  // applied aim lift (m)
         private bool ownsCursor;
         private CursorLockMode previousCursorLock;
         private bool previousCursorVisibility;
@@ -257,6 +267,7 @@ namespace KryticalNova.Player
                 orbitCamera.RadialAxis.Center = FixedRadialMultiplier;
                 orbitCamera.RadialAxis.Wrap = false;
                 orbitCamera.Radius = Mathf.Clamp(orbitCamera.Radius, minimumZoomDistance, maximumZoomDistance);
+                orbitComposer = orbitCamera.GetComponent<CinemachineRotationComposer>();
             }
 
             if (!IsSpawned || IsServer)
@@ -334,6 +345,7 @@ namespace KryticalNova.Player
                 if (flipCameraAction != null && flipCameraAction.WasPressedThisFrame() && !IsPointerOverUi(screenPosition))
                     FlipCamera();
                 ClampPitchAboveGround();
+                ApplySkyLook();
             }
 
             if (isOrbiting)
@@ -389,6 +401,39 @@ namespace KryticalNova.Player
                 maximumZoomDistance);
         }
 
+        // Units win over props: a vendor inside a stall sits within the canopy's convex hull, so the
+        // nearest hit is the canopy. Walk the hits front to back and take the first unit, stopping at
+        // walkable ground so nothing can be picked through the floor. Otherwise use the nearest hit.
+        private bool TryPickPointerHit(Ray ray, out RaycastHit hit)
+        {
+            int count = Physics.RaycastNonAlloc(ray, pointerHits, maximumRayDistance, raycastLayers, QueryTriggerInteraction.Ignore);
+            hit = default;
+            if (count == 0) return false;
+
+            System.Array.Sort(pointerHits, 0, count, HitDistanceComparer.Instance);
+            hit = pointerHits[0];
+
+            for (int i = 0; i < count; i++)
+            {
+                Collider c = pointerHits[i].collider;
+                var damageable = c.GetComponentInParent<IDamageable>();
+                if ((damageable != null && damageable.Transform != transform) || c.GetComponentInParent<IInteractable>() != null)
+                {
+                    hit = pointerHits[i];
+                    return true;
+                }
+                if ((groundLayers.value & (1 << c.gameObject.layer)) != 0)
+                    break;
+            }
+            return true;
+        }
+
+        private sealed class HitDistanceComparer : System.Collections.Generic.IComparer<RaycastHit>
+        {
+            public static readonly HitDistanceComparer Instance = new HitDistanceComparer();
+            public int Compare(RaycastHit a, RaycastHit b) => a.distance.CompareTo(b.distance);
+        }
+
         private void TryMoveToPointer(Vector2 screenPosition)
         {
             if (resources != null && !resources.IsAlive) { CommandMessage?.Invoke("No HP remaining. Restore HP before moving."); return; }
@@ -397,7 +442,7 @@ namespace KryticalNova.Player
                 return;
 
             Ray ray = gameplayCamera.ScreenPointToRay(screenPosition);
-            if (!Physics.Raycast(ray, out RaycastHit hit, maximumRayDistance, raycastLayers, QueryTriggerInteraction.Ignore))
+            if (!TryPickPointerHit(ray, out RaycastHit hit))
                 return;
 
             // Any new click replaces a walk-to-talk in progress.
@@ -898,6 +943,7 @@ namespace KryticalNova.Player
             flat.Normalize();
 
             float pitch = orbitCamera.VerticalAxis.Value;
+            pitchAtGroundStop = pitch <= minimumPitch + 0.5f;
             for (int i = 0; i < 2; i++) // the ground sample moves a little with pitch; two passes settle it
             {
                 Vector3 probe = target + flat * (radius * Mathf.Cos(pitch * Mathf.Deg2Rad));
@@ -907,6 +953,7 @@ namespace KryticalNova.Player
                     return; // no ground under the camera (off the map edge): leave it be
                 float sin = Mathf.Clamp((groundHit[0].point.y + groundClearance - target.y) / radius, -1f, 1f);
                 float lowest = Mathf.Asin(sin) * Mathf.Rad2Deg;
+                if (pitch <= lowest + 0.5f) pitchAtGroundStop = true;
                 if (pitch >= lowest) break;
                 pitch = lowest;
             }
@@ -920,7 +967,30 @@ namespace KryticalNova.Player
             Vector2 delta = orbitDeltaAction.ReadValue<Vector2>() * orbitSensitivity;
             orbitCamera.HorizontalAxis.Value = orbitCamera.HorizontalAxis.ClampValue(orbitCamera.HorizontalAxis.Value + delta.x);
             float verticalDelta = invertVerticalOrbit ? delta.y : -delta.y;
+
+            // Scraping the ground: keep dragging down to tilt the view up to the sky; dragging back up undoes the tilt
+            // before the orbit rises again.
+            if (verticalDelta < 0f && pitchAtGroundStop && skyLookPerDegree > 0f)
+            {
+                skyLook = Mathf.Min(maximumSkyLookHeight, skyLook - verticalDelta * skyLookPerDegree);
+                verticalDelta = 0f;
+            }
+            else if (verticalDelta > 0f && skyLook > 0f && skyLookPerDegree > 0f)
+            {
+                float used = Mathf.Min(skyLook, verticalDelta * skyLookPerDegree);
+                skyLook -= used;
+                verticalDelta -= used / skyLookPerDegree;
+            }
             orbitCamera.VerticalAxis.Value = orbitCamera.VerticalAxis.ClampValue(orbitCamera.VerticalAxis.Value + verticalDelta);
+        }
+
+        /// <summary>Raises the composer's aim point by the sky-look lift (smoothed), so the ground-held camera looks up.</summary>
+        private void ApplySkyLook()
+        {
+            if (orbitComposer == null) return;
+            skyLookSmoothed = Mathf.Lerp(skyLookSmoothed, skyLook, 1f - Mathf.Exp(-Time.unscaledDeltaTime * 10f));
+            if (skyLookSmoothed < 0.001f && skyLook <= 0f) skyLookSmoothed = 0f;
+            orbitComposer.TargetOffset = new Vector3(0f, skyLookSmoothed, 0f);
         }
 
         private void EndOrbit()

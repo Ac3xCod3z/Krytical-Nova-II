@@ -37,9 +37,10 @@ Shader "Skybox/KryticalNova/Stylized Sky"
         [Header(Sun Rays Heat Shimmer)]
         _SunRayStart("Ray Start (art radius, disc edge ~0.5)", Range(0.2, 0.9)) = 0.52
         _SunRayVisibility("Ray Visibility", Range(0, 1)) = 0.3
-        _SunShimmerAmount("Shimmer Amount (uv)", Range(0, 0.05)) = 0.012
-        _SunShimmerSpeed("Shimmer Speed", Range(0, 0.5)) = 0.06
-        _SunShimmerScale("Shimmer Scale", Range(0.5, 12)) = 3
+        _SunShimmerAmount("Shimmer Amount (uv)", Range(0, 0.08)) = 0.03
+        _SunShimmerSpeed("Shimmer Speed", Range(0, 0.5)) = 0.09
+        _SunShimmerScale("Shimmer Scale", Range(0.5, 12)) = 5
+        _SunShimmerGlow("Shimmer On Glow (fraction of the ray wobble)", Range(0, 1)) = 0.3
 
         [Header(Sunset)]
         _SunsetHeight("Sunset Grade Height (sin elevation)", Range(0.02, 0.6)) = 0.28
@@ -58,6 +59,11 @@ Shader "Skybox/KryticalNova/Stylized Sky"
         _RainbowIntensity("Rainbow Intensity", Range(0, 2)) = 1
         _RainbowWidth("Rainbow Width", Range(0.5, 2)) = 1
         _RainbowSecondary("Secondary Bow Strength", Range(0, 1)) = 0.35
+
+        [Header(22 Degree Halo)]
+        _HaloIntensity("Halo Intensity", Range(0, 2)) = 0.6
+        _HaloWidth("Halo Width (degrees)", Range(0.5, 4)) = 1.5
+        _HaloMoon("Moon Halo Strength (relative)", Range(0, 1)) = 0.45
 
         [Header(Clouds)]
         _CloudHorizonFade("Cloud Horizon Fade", Range(0.01, 0.5)) = 0.16
@@ -136,6 +142,10 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                 float _RainbowIntensity;
                 float _RainbowWidth;
                 float _RainbowSecondary;
+                float _SunShimmerGlow;
+                float _HaloIntensity;
+                float _HaloWidth;
+                float _HaloMoon;
                 float _HorizonFogHeight;
             CBUFFER_END
 
@@ -155,6 +165,8 @@ Shader "Skybox/KryticalNova/Stylized Sky"
             float4 _KN_BodyTexAspect;     // x sun art width/height, y moon art width/height
             float4 _KN_MoonPhase;         // x phase 0..1 (0 new, 0.5 full), y illuminated fraction
             float4 _KN_Rainbow;           // x strength 0..1
+            float4 _KN_Halo;              // x sun 22° halo strength 0..1, y moon halo strength 0..1
+            float4 _KN_SunShimmer;        // x heat shimmer multiplier (0 none, 1 clear midday, >1 GM boost)
             TEXTURE2D(_KN_SunTex);  SAMPLER(sampler_KN_SunTex);
             TEXTURE2D(_KN_MoonTex); SAMPLER(sampler_KN_MoonTex);
             float4 _KN_CloudLit;
@@ -256,6 +268,23 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                 half inner = smoothstep(41.0, 32.0, theta) * smoothstep(18.0, 30.0, theta);
                 skyScale = 1.0 - 0.07 * strength * dark + 0.05 * strength * inner;
                 return col * strength;
+            }
+
+            // 22° ice-crystal halo: a thin soft ring, faint red inner edge fading to blue-white outside, with the
+            // slightly darker sky just inside it. Returns rgb to add (pre-scaled by strength); skyScale darkens the gap.
+            half3 Halo(float3 d, float3 bodyDir, half strength, out half skyScale)
+            {
+                skyScale = 1.0;
+                if (strength <= 0.0001) return 0.0;
+                float theta = degrees(acos(clamp(dot(d, bodyDir), -1.0, 1.0)));
+                half w = _HaloWidth;
+                half x = (theta - 22.0) / w;
+                half ring = exp(-x * x * 2.0);
+                // Real halos are sharp-ish and reddish on the inside, washing out to white then pale blue.
+                half3 col = lerp(Spectrum(saturate(0.55 - x * 0.35)), 1.0.xxx, 0.6);
+                half inner = smoothstep(14.0, 20.0, theta) * smoothstep(22.0 - w * 0.6, 20.0 - w, theta);
+                skyScale = 1.0 - 0.08 * strength * inner;
+                return col * ring * strength;
             }
 
             // Stylized-realism treatment for the sun/moon art: the body's own light washes out its centre, ink lines
@@ -395,7 +424,8 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                 half rayMask = smoothstep(_SunRayStart, _SunRayStart + 0.12, sunR);
                 float2 shimmerUV = sunUV * _SunShimmerScale + float2(_Time.y, -_Time.y * 0.7) * _SunShimmerSpeed;
                 half3 shimmerNoise = SAMPLE_TEXTURE2D_LOD(_KN_CloudNoise, sampler_KN_CloudNoise, shimmerUV, 0).rga;
-                sunUV += (shimmerNoise.xy - 0.5) * _SunShimmerAmount * rayMask;
+                half shimmerAmt = _SunShimmerAmount * _KN_SunShimmer.x;
+                sunUV += (shimmerNoise.xy - 0.5) * shimmerAmt * rayMask;
                 sunInside *= InsideUnit(sunUV);
 
                 half4 sunArt = SAMPLE_TEXTURE2D(_KN_SunTex, sampler_KN_SunTex, sunUV);
@@ -454,7 +484,16 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                 sky = lerp(sky, cloudColor, cloudAlpha);
 
                 // Sun glow scatters through thin cloud, mostly blocked by thick cloud.
-                half glow = pow(saturate(sunDot), _KN_SunParams.y) * _KN_SunParams.z;
+                // Heat shimmer also bends the glow (the disc core stays solid): wobble the direction a little.
+                float3 glowDir = d;
+                {
+                    float3 right = normalize(cross(float3(0, 1, 0), _KN_SunDir.xyz) + float3(1e-4, 0, 0));
+                    float3 upv = cross(_KN_SunDir.xyz, right);
+                    half coreMask = smoothstep(0.35, 0.7, sunR);
+                    float2 wob = (shimmerNoise.xy - 0.5) * shimmerAmt * _SunShimmerGlow * coreMask * _KN_BodyTexParams.x * 2.0;
+                    glowDir = normalize(d + right * wob.x + upv * wob.y);
+                }
+                half glow = pow(saturate(dot(glowDir, _KN_SunDir.xyz)), _KN_SunParams.y) * _KN_SunParams.z;
                 sky += _KN_SunColor.rgb * glow * (1.0 - cloudAlpha * 0.7);
                 // Soft moonlight halo, scattered the same way.
                 half moonHalo = pow(saturate(moonDot), _MoonHaloPower) * _MoonHalo * _KN_MoonPhase.y;
@@ -462,6 +501,19 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                 // Under overcast the body is only a pale smear of light glowing through the cloud deck.
                 half deckGlow = pow(saturate(sunDot), 300.0) * diffusion * cloudAlpha;
                 sky += LightTint(_KN_SunColor.rgb) * _KN_BodyTexBrightness.x * deckGlow * 0.5 * aboveHorizon;
+
+                // Rare 22° halos (presenter gates: thin high cloud, no rain, day hash). Shows through cirrus, not thick cloud.
+                {
+                    half haloScale, moonHaloScale;
+                    half haloMask = aboveHorizon * (1.0 - cloudAlpha * 0.8);
+                    half3 sunRing = Halo(d, _KN_SunDir.xyz, _KN_Halo.x * _HaloIntensity, haloScale);
+                    half3 moonRing = Halo(d, _KN_MoonDir.xyz, _KN_Halo.y * _HaloIntensity * _HaloMoon * _KN_MoonPhase.y, moonHaloScale);
+                    sky *= lerp(1.0, haloScale * moonHaloScale, haloMask);
+                    half3 ringLight = sunRing * LightTint(_KN_SunColor.rgb) * max(_KN_BodyTexBrightness.x, 0.25)
+                                    + moonRing * LightTint(_KN_MoonColor.rgb) * 0.6;
+                    // Soft-add (screen-like): fades as the sky behind gets bright, so it never clips to white.
+                    sky += ringLight * haloMask * saturate(1.0 - dot(sky, half3(0.299, 0.587, 0.114)) * 0.6);
+                }
 
                 // Rainbow after rain (strength already gated by the presenter: moisture, clearing sky, low sun).
                 half rainbowScale;

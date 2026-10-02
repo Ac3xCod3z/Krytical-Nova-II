@@ -106,6 +106,17 @@ namespace KryticalNova.World
             Flash = Envelope((float)(now - flashStart)) * flashAmplitude;
         }
 
+        /// <summary>GM/testing: a visible, full-strength strike right now near the camera (local only).</summary>
+        public void ForceStrike()
+        {
+            var env = WorldEnvironmentNetwork.Instance;
+            if (env == null || !enabled) return;
+            ScheduleStrike(env.State.Seed, lastSlot ^ 0x5A5A);
+            pendingVisible = true;
+            pendingAmplitude = 1f;
+            pendingStrikeTime = env.Now;
+        }
+
         private void ScheduleStrike(int seed, long slot)
         {
             if (cam == null)

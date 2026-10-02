@@ -42,9 +42,9 @@ namespace KryticalNova.World
         /// Blends two profiles. <paramref name="t"/> is already eased. <paramref name="coverageNoise"/> (0-1)
         /// picks where inside each profile's coverage range the sky currently sits.
         /// </summary>
-        /// <paramref name="fromHeading"/> / <paramref name="toHeading"/> are the per-cycle rolled wind headings (NaN = profile heading).
+        /// <paramref name="fromHeading"/> / <paramref name="toHeading"/> and the speeds are the per-cycle rolled wind (NaN = profile value).
         public static WeatherBlend Evaluate(WeatherProfile from, WeatherProfile to, float t, float coverageNoise,
-            float fromHeading = float.NaN, float toHeading = float.NaN)
+            float fromHeading = float.NaN, float toHeading = float.NaN, float fromSpeed = float.NaN, float toSpeed = float.NaN)
         {
             if (from == null) from = to;
             if (to == null) to = from;
@@ -71,7 +71,14 @@ namespace KryticalNova.World
             b.fogDensity = Mathf.Lerp(from.fogDensity, to.fogDensity, t);
             b.fogTint = Color.Lerp(from.fogTint, to.fogTint, t);
 
-            b.wind = Vector2.Lerp(from.WindVectorAt(fromHeading), to.WindVectorAt(toHeading), t);
+            // Blend direction and speed separately: lerping the vectors dips the speed mid-transition
+            // whenever the two headings differ a lot.
+            Vector2 dirFrom = from.WindVectorAt(fromHeading, 1f), dirTo = to.WindVectorAt(toHeading, 1f);
+            Vector2 dir = Vector2.Lerp(dirFrom, dirTo, t);
+            dir = dir.sqrMagnitude > 1e-4f ? dir.normalized : dirTo;
+            float sFrom = float.IsNaN(fromSpeed) ? from.windSpeed : fromSpeed;
+            float sTo = float.IsNaN(toSpeed) ? to.windSpeed : toSpeed;
+            b.wind = dir * Mathf.Lerp(sFrom, sTo, t);
             b.gustiness = Mathf.Lerp(from.gustiness, to.gustiness, t);
 
             b.rain = Mathf.Lerp(from.RainIntensity, to.RainIntensity, t);

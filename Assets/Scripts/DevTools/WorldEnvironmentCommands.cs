@@ -66,7 +66,23 @@ namespace KryticalNova.DevTools
             var w = env.Weather;
             float heading = UnityEngine.Mathf.Repeat(UnityEngine.Mathf.Atan2(w.wind.x, w.wind.y) * UnityEngine.Mathf.Rad2Deg, 360f);
             return $"Wind toward {heading:0}° at {w.wind.magnitude:0.0} m/s  ·  gustiness {w.gustiness:0.00}  gust now {w.gust:0.00}  " +
-                   $"(cycle heading {env.State.ToWindHeading:0}°, previous {env.State.FromWindHeading:0}°)";
+                   $"(cycle {env.State.ToWindSpeed:0.0} m/s toward {env.State.ToWindHeading:0}°, previous {env.State.FromWindSpeed:0.0} m/s toward {env.State.FromWindHeading:0}°)";
+        }
+
+        [Command("weather.windset", "Hold the wind at a speed (m/s) and optional heading (deg) until the next weather change, e.g. weather.windset 12 90")]
+        private static string WindSet(float speed, float heading = float.NaN)
+        {
+            var env = WorldEnvironmentNetwork.Instance;
+            if (env == null) return NoWorld;
+            return env.SetWind(speed, heading) ? $"Wind → {speed:0.0} m/s{(float.IsNaN(heading) ? "" : $" toward {heading:0}°")}." : NoAuthority;
+        }
+
+        [Command("weather.windclear", "Drop a weather.windset override and re-roll wind for the current weather.")]
+        private static string WindClear()
+        {
+            var env = WorldEnvironmentNetwork.Instance;
+            if (env == null) return NoWorld;
+            return env.ClearWindOverride() ? $"Wind re-rolled: {env.State.ToWindSpeed:0.0} m/s toward {env.State.ToWindHeading:0}°." : NoAuthority;
         }
 
         [Command("weather.lock", "Stop (true) or resume (false) automatic weather changes.")]

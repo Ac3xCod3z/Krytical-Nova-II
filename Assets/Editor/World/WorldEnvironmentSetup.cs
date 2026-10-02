@@ -54,19 +54,19 @@ namespace KryticalNova.EditorTools
             var clear = Weather("WP_Clear", w =>
             {
                 Cover(w, 0f, 0.12f); w.cirrusAmount = 0.35f; w.cloudShadowStrength = 0.35f;
-                w.fogDensity = 0.0012f; w.windSpeed = 3f; w.saturation = 5f;
+                w.fogDensity = 0.0012f; w.windSpeed = 3f; w.windSpeedMin = 0f; w.windSpeedMax = 9f; w.calmChance = 0.3f; w.saturation = 5f;
                 Duration(w, 300f, 700f);
             });
             var few = Weather("WP_FewClouds", w =>
             {
                 Cover(w, 0.15f, 0.3f); w.cirrusAmount = 0.3f; w.cloudShadowStrength = 0.5f;
-                w.fogDensity = 0.0014f; w.windSpeed = 4f;
+                w.fogDensity = 0.0014f; w.windSpeed = 4f; w.windSpeedMin = 0f; w.windSpeedMax = 10f; w.calmChance = 0.15f;
                 Duration(w, 300f, 600f);
             });
             var partly = Weather("WP_PartlyCloudy", w =>
             {
                 Cover(w, 0.35f, 0.55f); w.cirrusAmount = 0.2f; w.cloudShadowStrength = 0.6f;
-                w.sunIntensityMultiplier = 0.95f; w.fogDensity = 0.0016f; w.windSpeed = 5f;
+                w.sunIntensityMultiplier = 0.95f; w.fogDensity = 0.0016f; w.windSpeed = 5f; w.windSpeedMin = 1f; w.windSpeedMax = 11f; w.calmChance = 0.1f;
                 Duration(w, 300f, 600f);
             });
             var mostly = Weather("WP_MostlyCloudy", w =>
@@ -74,7 +74,7 @@ namespace KryticalNova.EditorTools
                 Cover(w, 0.6f, 0.78f); w.cloudDensity = 0.92f; w.cloudDarkness = 0.15f; w.cirrusAmount = 0.1f;
                 w.skyDesaturation = 0.15f; w.skyDarkening = 0.1f; w.sunIntensityMultiplier = 0.75f;
                 w.ambientMultiplier = 0.95f; w.shadowMultiplier = 0.6f; w.cloudShadowStrength = 0.55f;
-                w.fogDensity = 0.0022f; w.windSpeed = 6f; w.saturation = -10f;
+                w.fogDensity = 0.0022f; w.windSpeed = 6f; w.windSpeedMin = 2f; w.windSpeedMax = 12f; w.calmChance = 0.05f; w.saturation = -10f;
                 Duration(w, 240f, 500f);
             });
             var overcast = Weather("WP_Overcast", w =>
@@ -84,7 +84,7 @@ namespace KryticalNova.EditorTools
                 w.skyDesaturation = 0.45f; w.skyDarkening = 0.2f; w.sunIntensityMultiplier = 0.35f;
                 w.ambientMultiplier = 1.05f; w.shadowMultiplier = 0.1f; w.cloudShadowStrength = 0.05f;
                 w.fogDensity = 0.0035f; w.fogTint = new Color(0.7f, 0.72f, 0.75f, 0.4f);
-                w.windSpeed = 6f; w.saturation = -25f; w.contrast = -5f;
+                w.windSpeed = 6f; w.windSpeedMin = 2f; w.windSpeedMax = 12f; w.calmChance = 0.05f; w.saturation = -25f; w.contrast = -5f;
                 Duration(w, 240f, 500f);
             });
             var fog = Weather("WP_Fog", w =>
@@ -93,7 +93,7 @@ namespace KryticalNova.EditorTools
                 w.skyDesaturation = 0.5f; w.skyDarkening = 0.1f; w.sunIntensityMultiplier = 0.4f;
                 w.ambientMultiplier = 1.1f; w.shadowMultiplier = 0.15f; w.cloudShadowStrength = 0f;
                 w.fogDensity = 0.02f; w.fogTint = new Color(0.75f, 0.78f, 0.8f, 0.6f);
-                w.windSpeed = 1f; w.mist = 1f; w.saturation = -30f; w.contrast = -10f;
+                w.windSpeed = 1f; w.windSpeedMin = 0f; w.windSpeedMax = 2f; w.calmChance = 0.7f; w.mist = 1f; w.saturation = -30f; w.contrast = -10f;
                 w.transitionSeconds = 120f; Duration(w, 180f, 420f);
             });
             var lightRain = Weather("WP_LightRain", w =>
@@ -102,7 +102,7 @@ namespace KryticalNova.EditorTools
                 w.skyDesaturation = 0.5f; w.skyDarkening = 0.25f; w.sunIntensityMultiplier = 0.3f;
                 w.ambientMultiplier = 0.9f; w.shadowMultiplier = 0.08f; w.cloudShadowStrength = 0f;
                 w.fogDensity = 0.005f; w.fogTint = new Color(0.62f, 0.65f, 0.7f, 0.5f);
-                w.windSpeed = 7f; w.precipitation = PrecipitationType.Rain; w.precipitationIntensity = 0.35f;
+                w.windSpeed = 7f; w.windSpeedMin = 3f; w.windSpeedMax = 10f; w.calmChance = 0f; w.precipitation = PrecipitationType.Rain; w.precipitationIntensity = 0.35f;
                 w.saturation = -25f; w.contrast = -5f;
                 Duration(w, 200f, 420f);
             });
@@ -112,7 +112,7 @@ namespace KryticalNova.EditorTools
                 w.skyDesaturation = 0.6f; w.skyDarkening = 0.38f; w.sunIntensityMultiplier = 0.2f;
                 w.ambientMultiplier = 0.8f; w.shadowMultiplier = 0f; w.cloudShadowStrength = 0f;
                 w.fogDensity = 0.008f; w.fogTint = new Color(0.5f, 0.54f, 0.6f, 0.6f);
-                w.windSpeed = 10f; w.precipitation = PrecipitationType.Rain; w.precipitationIntensity = 0.8f;
+                w.windSpeed = 10f; w.windSpeedMin = 5f; w.windSpeedMax = 14f; w.calmChance = 0f; w.precipitation = PrecipitationType.Rain; w.precipitationIntensity = 0.8f;
                 w.saturation = -35f;
                 Duration(w, 200f, 420f);
             });
@@ -122,7 +122,7 @@ namespace KryticalNova.EditorTools
                 w.skyDesaturation = 0.65f; w.skyDarkening = 0.55f; w.sunIntensityMultiplier = 0.1f;
                 w.ambientMultiplier = 0.65f; w.shadowMultiplier = 0f; w.cloudShadowStrength = 0f;
                 w.fogDensity = 0.01f; w.fogTint = new Color(0.4f, 0.43f, 0.52f, 0.7f);
-                w.windSpeed = 16f; w.precipitation = PrecipitationType.Rain; w.precipitationIntensity = 1f;
+                w.windSpeed = 16f; w.windSpeedMin = 12f; w.windSpeedMax = 22f; w.calmChance = 0f; w.precipitation = PrecipitationType.Rain; w.precipitationIntensity = 1f;
                 w.lightningPerMinute = 8f; w.saturation = -40f; w.contrast = 10f;
                 Duration(w, 180f, 360f);
             });
@@ -132,7 +132,7 @@ namespace KryticalNova.EditorTools
                 w.skyDesaturation = 0.6f; w.skyDarkening = 0.12f; w.sunIntensityMultiplier = 0.4f;
                 w.ambientMultiplier = 1.15f; w.shadowMultiplier = 0.12f; w.cloudShadowStrength = 0f;
                 w.fogDensity = 0.007f; w.fogTint = new Color(0.85f, 0.88f, 0.92f, 0.6f);
-                w.windSpeed = 3f; w.precipitation = PrecipitationType.Snow; w.precipitationIntensity = 0.6f;
+                w.windSpeed = 3f; w.windSpeedMin = 0f; w.windSpeedMax = 8f; w.calmChance = 0.2f; w.precipitation = PrecipitationType.Snow; w.precipitationIntensity = 0.6f;
                 w.saturation = -30f; w.contrast = -8f;
                 Duration(w, 240f, 480f);
             });
@@ -142,7 +142,7 @@ namespace KryticalNova.EditorTools
                 w.skyDesaturation = 0.75f; w.skyDarkening = 0.25f; w.sunIntensityMultiplier = 0.2f;
                 w.ambientMultiplier = 1.1f; w.shadowMultiplier = 0f; w.cloudShadowStrength = 0f;
                 w.fogDensity = 0.025f; w.fogTint = new Color(0.88f, 0.9f, 0.94f, 0.8f);
-                w.windSpeed = 18f; w.precipitation = PrecipitationType.Snow; w.precipitationIntensity = 1f; w.mist = 0.3f;
+                w.windSpeed = 18f; w.windSpeedMin = 15f; w.windSpeedMax = 24f; w.calmChance = 0f; w.precipitation = PrecipitationType.Snow; w.precipitationIntensity = 1f; w.mist = 0.3f;
                 w.saturation = -45f; w.contrast = -10f;
                 Duration(w, 150f, 300f);
             });
@@ -244,6 +244,7 @@ namespace KryticalNova.EditorTools
             var lightning = GetOrAdd<LightningController>(presenterGo);
             var precipitation = GetOrAdd<PrecipitationController>(presenterGo);
             var ambience = GetOrAdd<WeatherAmbience>(presenterGo);
+            EnsureWindLeaves(presenterGo);
 
             Light keyLight = RenderSettings.sun;
             if (keyLight == null)
@@ -322,6 +323,21 @@ namespace KryticalNova.EditorTools
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             Undo.RegisterCreatedObjectUndo(instance, "Create weather rig");
             return instance.GetComponent<ParticleSystem>();
+        }
+
+        /// <summary>Sparse leaf particles on windy days (PolygonParticleFX leaves; caps live on the controller).</summary>
+        public static void EnsureWindLeaves(GameObject presenterGo)
+        {
+            var leaves = GetOrAdd<WindLeavesController>(presenterGo);
+            var so = new SerializedObject(leaves);
+            var prop = so.FindProperty("leavesPrefab");
+            if (prop.objectReferenceValue == null)
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Synty/PolygonParticleFX/Prefabs/FX_Leaves_Green_01.prefab");
+                if (prefab != null) prop.objectReferenceValue = prefab.GetComponent<ParticleSystem>();
+            }
+            so.FindProperty("groundMask").intValue = LayerMask.GetMask("Ground");
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static AudioSource EnsureAudio(Transform parent, string name)

@@ -31,6 +31,10 @@ namespace KryticalNova.World
         [Range(1f, 20f)] [SerializeField] private float gustPeriod = 5f;
         [Tooltip("Extra wind speed at a full gust in a gustiness-1 weather (0.8 = +80%).")]
         [Range(0f, 2f)] [SerializeField] private float maxGustBoost = 0.8f;
+        [Tooltip("Seconds per slow lull/surge swing of the wind, so even one weather state breathes.")]
+        [Range(20f, 600f)] [SerializeField] private float windSwellPeriod = 90f;
+        [Tooltip("How far the slow lull/surge scales wind speed (0.25 = ±25%).")]
+        [Range(0f, 0.6f)] [SerializeField] private float windSwellAmount = 0.25f;
 
         [Header("Debug (host / offline only)")]
         [SerializeField] [Range(0f, 24f)] private float debugHours = 12f;
@@ -172,7 +176,11 @@ namespace KryticalNova.World
             float p = state.TransitionProgress(now);
             WeatherBlendT = p * p * (3f - 2f * p);
             var blend = to == null ? WeatherBlend.Clear()
-                : WeatherBlend.Evaluate(from, to, WeatherBlendT, CoverageNoise(now), state.FromWindHeading, state.ToWindHeading);
+                : WeatherBlend.Evaluate(from, to, WeatherBlendT, CoverageNoise(now), state.FromWindHeading, state.ToWindHeading,
+                    state.FromWindSpeed, state.ToWindSpeed);
+
+            // Slow lulls and surges on top of the per-cycle speed (shared noise, so every client agrees).
+            blend.wind *= 1f + (SwellNoise(now) * 2f - 1f) * windSwellAmount;
 
             // Gusts: shared smooth noise, squared so calm stretches are long and surges are punchy.
             float g = GustNoise(now);
@@ -189,6 +197,29 @@ namespace KryticalNova.World
             float a = Hash01(state.Seed ^ 0x2F6B3A1, i);
             float b = Hash01(state.Seed ^ 0x2F6B3A1, i + 1);
             return Mathf.Lerp(a, b, f * f * (3f - 2f * f));
+        }
+
+        private float SwellNoise(double now)
+        {
+            double x = now / windSwellPeriod;
+            long i = (long)Math.Floor(x);
+            float f = (float)(x - i);
+            float a = Hash01(state.Seed ^ 0x51A7E11, i);
+            float b = Hash01(state.Seed ^ 0x51A7E11, i + 1);
+            return Mathf.Lerp(a, b, f * f * (3f - 2f * f));
+        }
+
+        /// <summary>
+        /// Server: the wind speed for one cycle of a weather. Some cycles are calm; the rest roll inside the profile's
+        /// range biased toward the low end (r²), so strong-wind days are rarer than breezy ones.
+        /// </summary>
+        private float RollWindSpeed(WeatherProfile profile)
+        {
+            if (profile == null) return 3f;
+            if (!profile.HasWindRange || rng == null) return profile.windSpeed;
+            if (rng.NextDouble() < profile.calmChance) return (float)rng.NextDouble();
+            float r = (float)rng.NextDouble();
+            return Mathf.Lerp(profile.windSpeedMin, profile.windSpeedMax, r * r);
         }
 
         /// <summary>Server: the heading a weather cycle blows toward — random per cycle, or the profile's fixed heading.</summary>
@@ -241,7 +272,9 @@ namespace KryticalNova.World
                 TransitionSeconds = 0f,
                 Seed = seed,
             };
-            state.ToWindHeading = state.FromWindHeading = RollWindHeading(weatherCatalog != null ? weatherCatalog.Get(start) : null);
+            var startProfile = weatherCatalog != null ? weatherCatalog.Get(start) : null;
+            state.ToWindHeading = state.FromWindHeading = RollWindHeading(startProfile);
+            state.ToWindSpeed = state.FromWindSpeed = RollWindSpeed(startProfile);
             lastNow = lastLocalNow = now;
             ScheduleNext(now, weatherCatalog != null ? weatherCatalog.Get(start) : null, 0f);
         }
@@ -282,6 +315,7 @@ namespace KryticalNova.World
             {
                 state.ToWeather = state.FromWeather;
                 state.ToWindHeading = state.FromWindHeading;
+                state.ToWindSpeed = state.FromWindSpeed;
             }
 
             state.FromWeather = state.ToWeather;
@@ -289,6 +323,8 @@ namespace KryticalNova.World
             // The outgoing weather keeps its heading; the new cycle rolls one and holds it until the next change.
             state.FromWindHeading = state.ToWindHeading;
             state.ToWindHeading = RollWindHeading(weatherCatalog.Get(to));
+            state.FromWindSpeed = state.ToWindSpeed;
+            state.ToWindSpeed = RollWindSpeed(weatherCatalog.Get(to));
             state.TransitionStart = now;
             state.TransitionSeconds = Mathf.Max(0f, seconds);
             Commit();
@@ -348,6 +384,36 @@ namespace KryticalNova.World
             if (!HasWorldAuthority || weatherCatalog == null || index < 0 || index >= weatherCatalog.Count) return false;
             BeginTransition((byte)index, transitionSeconds, Now);
             return true;
+        }
+
+        /// <summary>
+        /// GM override: holds this wind speed (and optionally heading, NaN = keep) for the current weather cycle,
+        /// easing in over <paramref name="blendSeconds"/>. The next weather change rolls fresh wind. Authority only.
+        /// </summary>
+        public bool SetWind(float speed, float heading = float.NaN, float blendSeconds = 5f)
+        {
+            if (!HasWorldAuthority || speed < 0f) return false;
+            double now = Now;
+            // Re-anchor on the current weather so the override blends from what is blowing right now.
+            Vector2 current = Weather.wind;
+            state.FromWeather = state.ToWeather;
+            state.FromWindSpeed = current.magnitude;
+            state.FromWindHeading = current.sqrMagnitude > 1e-4f
+                ? Mathf.Repeat(Mathf.Atan2(current.x, current.y) * Mathf.Rad2Deg, 360f) : state.ToWindHeading;
+            state.ToWindSpeed = speed;
+            if (!float.IsNaN(heading)) state.ToWindHeading = Mathf.Repeat(heading, 360f);
+            state.TransitionStart = now;
+            state.TransitionSeconds = Mathf.Max(0f, blendSeconds);
+            Commit();
+            return true;
+        }
+
+        /// <summary>Drops a GM wind override: re-rolls wind for the current weather. Authority only.</summary>
+        public bool ClearWindOverride(float blendSeconds = 5f)
+        {
+            if (!HasWorldAuthority || weatherCatalog == null) return false;
+            var profile = weatherCatalog.Get(state.ToWeather);
+            return SetWind(RollWindSpeed(profile), RollWindHeading(profile), blendSeconds);
         }
 
         /// <summary>Stops (or resumes) automatic weather changes. Authority only.</summary>

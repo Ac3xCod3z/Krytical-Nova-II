@@ -14,7 +14,8 @@ namespace KryticalNova.EditorTools
 {
     /// <summary>
     /// One-click, re-runnable Zone01 (starter town) setup: creates the scene from SampleScene, the
-    /// Interactable layer, NPC data + prefabs, then runs terrain → VFX → town → UI → NavMesh → build settings.
+    /// Interactable layer, NPC data + prefabs, then runs terrain → VFX → city → traffic → UI → NavMesh → minimap →
+    /// build settings.
     /// Hand-sculpted terrain, tuned NPC definitions and existing NPC prefabs are kept on re-runs.
     /// </summary>
     public static class Zone01Setup
@@ -83,10 +84,19 @@ namespace KryticalNova.EditorTools
             RemoveSampleTerrain();
             ZoneTerrainGenerator.Generate(false);
             PortalVfxBuilder.BuildAll();
+            ColorBible.ApplyAll();
+            PostProcessSetup.Apply();
+            if (RuinDemolisher.Library().Count == 0)
+                Debug.LogWarning("[Zone01] No demolished ruins baked yet: run Krytical Nova > Zone > Bake Demolished Ruin Library, then Build Starter Town.");
             StarterTownBuilder.Build();
+            CityTrafficBuilder.Build();
+            // Wind materials on town foliage, then grow grass now that roads/sidewalks/buildings exist to mask it.
+            FoliageAssetBuilder.ApplyToScene();
+            ZoneTerrainGenerator.RepaintDetailsMenu();
             EnsureZoneUi();
             AddInteractableToPlayerRaycasts();
             BakeNavMesh();
+            MinimapBaker.Bake();
             UpdateBuildSettings();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
             AssetDatabase.SaveAssets();

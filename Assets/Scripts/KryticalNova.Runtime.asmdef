@@ -10,6 +10,8 @@
         "Unity.Services.Multiplayer",
         "Unity.Services.Multiplayer.Server",
         "Unity.AI.Navigation",
+        "Unity.Splines",
+        "Unity.Mathematics",
         "Unity.InputSystem",
         "Unity.Cinemachine",
         "Kybernetik.Animancer",

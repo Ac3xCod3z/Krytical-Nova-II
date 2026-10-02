@@ -57,6 +57,13 @@ namespace KryticalNova.World
         [Range(0f, 360f)] public float windHeading = 60f;
         [Tooltip("Metres per second. Drives cloud drift and precipitation slant.")]
         [Range(0f, 40f)] public float windSpeed = 4f;
+        [Tooltip("Per-cycle wind speed range (m/s). Each time this weather starts the server rolls a speed in this range, " +
+                 "biased toward the low end, so the same weather can be breezy one day and blustery the next. " +
+                 "Max <= Min = always use Wind Speed.")]
+        [Range(0f, 40f)] public float windSpeedMin = 0f;
+        [Range(0f, 40f)] public float windSpeedMax = 0f;
+        [Tooltip("Chance a cycle of this weather is nearly still (0-1 m/s).")]
+        [Range(0f, 1f)] public float calmChance = 0f;
         [Tooltip("Roll a random heading each time this weather starts. It is held for the whole cycle and only changes " +
                  "when the next weather begins. Off = always use Wind Heading.")]
         public bool randomWindDirection = true;
@@ -92,13 +99,15 @@ namespace KryticalNova.World
         public float SnowIntensity => precipitation == PrecipitationType.Snow ? precipitationIntensity : 0f;
 
         public Vector2 WindVector => WindVectorAt(windHeading);
+        public bool HasWindRange => windSpeedMax > windSpeedMin;
 
-        /// <summary>Wind vector at this profile's speed but an explicit heading (the per-cycle rolled one).</summary>
-        public Vector2 WindVectorAt(float heading)
+        /// <summary>Wind vector at an explicit heading and speed (the per-cycle rolled ones). NaN = profile value.</summary>
+        public Vector2 WindVectorAt(float heading, float speed = float.NaN)
         {
             if (float.IsNaN(heading)) heading = windHeading;
+            if (float.IsNaN(speed)) speed = windSpeed;
             float r = heading * Mathf.Deg2Rad;
-            return new Vector2(Mathf.Sin(r), Mathf.Cos(r)) * windSpeed;
+            return new Vector2(Mathf.Sin(r), Mathf.Cos(r)) * speed;
         }
 
         private void OnValidate()

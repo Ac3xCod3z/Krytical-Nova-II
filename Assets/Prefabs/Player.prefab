@@ -65,6 +65,7 @@ GameObject:
   - component: {fileID: 6013858044858887643}
   - component: {fileID: 3738633918761511803}
   - component: {fileID: 5668717879715690075}
+  - component: {fileID: 1740344965673177520}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -276,11 +277,13 @@ MonoBehaviour:
   invertVerticalOrbit: 0
   lockCursorWhileOrbiting: 1
   minimumZoomDistance: 3
-  maximumZoomDistance: 18
+  maximumZoomDistance: 24
   zoomSensitivity: 1
-  minimumPitch: -35
+  minimumPitch: -80
   maximumPitch: 75
-  groundClearance: 0.4
+  groundClearance: 0.6
+  maximumSkyLookHeight: 40
+  skyLookPerDegree: 0.8
   occluderDitherShader: {fileID: 4800000, guid: 6a9231234ae1c9842a5ce7af8c7fdcc5, type: 3}
 --- !u!114 &6374771762735267548
 MonoBehaviour:
@@ -681,6 +684,19 @@ MonoBehaviour:
   appearance: {fileID: 0}
   weaponMount: {fileID: 0}
   petFollower: {fileID: 0}
+--- !u!114 &1740344965673177520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63b301013c7d8e4439cb4062da2fcdcd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.FoliageInteractor
+  radius: 0.9
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

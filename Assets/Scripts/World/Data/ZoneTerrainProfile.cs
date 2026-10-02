@@ -19,6 +19,29 @@ namespace KryticalNova.World
         }
 
         [Serializable]
+        public sealed class DetailLayer
+        {
+            [Tooltip("Synty foliage prefab name (a wind-reactive variant is generated from it).")]
+            public string prefab = "SM_Gen_Env_Grass_01";
+            [Tooltip("Smallest and largest uniform scale. Each instance picks a size in between.")]
+            public float minScale = 0.5f;
+            public float maxScale = 1f;
+            [Tooltip("Optional separate height range (0 = same as scale), so blade heights vary more than their width.")]
+            public float minHeight = 0f;
+            public float maxHeight = 0f;
+            [Tooltip("Lawn layers grow only on the mowed town lawns (inside the walls); others only outside them.")]
+            public bool lawn = false;
+            [Tooltip("Average instances per detail cell (~1 m²) where this layer is fully on.")]
+            [Range(0f, 8f)] public float density = 1f;
+            [Tooltip("Perlin frequency of the patches this layer grows in (bigger = smaller patches).")]
+            public float patchScale = 0.04f;
+            [Tooltip("Perlin value above which the layer appears (0 = everywhere, 0.6 = sparse patches).")]
+            [Range(0f, 1f)] public float patchThreshold = 0f;
+            [Tooltip("Unity detail noise spread: clumps instance sizes so big and small grow in groups.")]
+            public float noiseSpread = 0.3f;
+        }
+
+        [Serializable]
         public struct Lake
         {
             public Vector2 center;
@@ -49,12 +72,20 @@ namespace KryticalNova.World
         [Tooltip("Half size of the flat square under the town.")]
         public float townHalfSize = 62f;
         public float townFalloff = 25f;
+        [Tooltip("Half size of the paved (town stone) square: the walled city.")]
+        public float pavedHalfSize = 54f;
+        [Tooltip("Half size of the ruined outskirts band around the walls, painted as dirt and rubble. 0 = none.")]
+        public float ruinsHalfSize = 0f;
+        [Tooltip("Half size of the central lawn square painted grass inside the paving (the plaza). 0 = none.")]
+        public float greenHalfSize = 0f;
 
         [Header("Water")]
         public float waterLevel = -1.2f;
         public float riverWidth = 14f;
         public float riverBankWidth = 7f;
         public float riverBedHeight = -4f;
+        [Tooltip("Current speed (m/s-ish, shader units) of the river surface. Each river flows from its first point to its last.")]
+        public float riverFlowSpeed = 1f;
         public List<Polyline> rivers = new List<Polyline>();
         public float lakeBedHeight = -5f;
         public float lakeShoreWidth = 12f;
@@ -78,6 +109,18 @@ namespace KryticalNova.World
         [Tooltip("Trees and props stay this far from paths and the town.")]
         public float scatterClearance = 6f;
         [Range(0f, 60f)] public float maxScatterSlope = 32f;
+
+        [Header("Grass & flowers (terrain details)")]
+        [Tooltip("Detail cells across the terrain (1024 over 1 km ≈ 1 m cells).")]
+        public int detailResolution = 1024;
+        public int detailResolutionPerPatch = 32;
+        [Tooltip("Metres from the camera that grass draws.")]
+        public float detailDistance = 70f;
+        [Tooltip("Splat grass weight required for details to grow (keeps them off dirt, rock and town stone).")]
+        [Range(0f, 1f)] public float detailGrassThreshold = 0.75f;
+        [Tooltip("Metres of bare ground kept around road / sidewalk / building meshes.")]
+        public float detailMeshMargin = 0.4f;
+        public List<DetailLayer> detailLayers = new List<DetailLayer>();
 
         [Header("Splat")]
         [Range(0f, 90f)] public float rockSlopeStart = 30f;

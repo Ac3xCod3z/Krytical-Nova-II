@@ -85,6 +85,20 @@ namespace KryticalNova.World
         [Tooltip("Peak rainbow strength; keep it subtle.")]
         [Range(0f, 1f)] [SerializeField] private float rainbowPeak = 0.25f;
 
+        [Header("Halo (rare, 22° ice-crystal ring)")]
+        [Tooltip("Chance that a given world day gets a sun halo window (only shows if the sky has thin high cloud then).")]
+        [Range(0f, 1f)] [SerializeField] private float haloChancePerDay = 0.06f;
+        [Tooltip("Chance that a given night gets a moon halo window (also needs a bright moon).")]
+        [Range(0f, 1f)] [SerializeField] private float moonHaloChancePerNight = 0.04f;
+        [Tooltip("Length of a halo window, in game hours.")]
+        [Range(0.5f, 8f)] [SerializeField] private float haloWindowHours = 2.5f;
+        [Range(0f, 1f)] [SerializeField] private float haloPeak = 0.6f;
+        [Min(0.1f)] [SerializeField] private float haloFadeSeconds = 10f;
+
+        [Header("Heat shimmer")]
+        [Tooltip("Shimmer multiplier on a clear midday sky (the shader's Shimmer Amount is the base).")]
+        [Range(0f, 3f)] [SerializeField] private float shimmerStrength = 1f;
+
         [Header("Edit-mode preview")]
         [SerializeField] private bool previewInEditMode = true;
         [SerializeField] private DayCycleProfile previewDayCycle;
@@ -94,6 +108,8 @@ namespace KryticalNova.World
         [Range(0f, 1f)] [SerializeField] private float previewMoonPhase = 0.5f;
         [Tooltip("Forces the rainbow strength in edit mode (still needs a low sun to show).")]
         [Range(0f, 1f)] [SerializeField] private float previewRainbow;
+        [Tooltip("Forces the sun (x) and moon (y) halo strength in edit mode.")]
+        [SerializeField] private Vector2 previewHalo;
 
         private ColorAdjustments colorAdjustments;
         private LightShadows authoredShadows = LightShadows.Soft;
@@ -108,12 +124,47 @@ namespace KryticalNova.World
         private float skyMoisture;
         private float rainbowStrength;
         private float rainbowOverride = -1f;
+        private Vector2 haloStrength;
+        private Vector2 haloOverride = new Vector2(-1f, -1f);
+        private int dayCount;
+
+        // GM / testing overrides (local presentation only; < 0 = natural behaviour).
+        private float gmRainbow = -1f;
+        private float gmMoonPhase = -1f;
+        private Vector2 gmHalo = new Vector2(-1f, -1f);
+        private float gmShimmer = -1f;
+        private float gmFlareStrength = -1f;
         private LensFlareComponentSRP flare;
 
         /// <summary>0 new .. 0.5 full .. 1 new, shared by every client (derived from the replicated world clock).</summary>
         public float MoonPhase01 => moonPhase01;
         /// <summary>Lit fraction of the moon's disc, 0-1.</summary>
         public static float MoonIllumination(float phase01) => 0.5f - 0.5f * Mathf.Cos(phase01 * Mathf.PI * 2f);
+        /// <summary>Current presented rainbow strength 0-1 (before the peak scale).</summary>
+        public float RainbowStrength => rainbowStrength;
+        /// <summary>Current sun (x) and moon (y) halo strength 0-1.</summary>
+        public Vector2 HaloStrength => haloStrength;
+        /// <summary>Lingering wetness after rain, 0-1 (drives the rainbow).</summary>
+        public float SkyMoisture => skyMoisture;
+        public LightningController Lightning => lightning;
+
+        /// <summary>Forces the rainbow strength (0-1); negative restores natural behaviour.</summary>
+        public void SetRainbowOverride(float strength01) => gmRainbow = strength01;
+        /// <summary>The forced moon phase, or negative when the moon follows the world clock.</summary>
+        public float MoonPhaseOverride => gmMoonPhase;
+        /// <summary>Forces the moon phase (0 new .. 0.5 full); negative follows the world clock again.</summary>
+        public void SetMoonPhaseOverride(float phase01) => gmMoonPhase = phase01 < 0f ? -1f : Mathf.Repeat(phase01, 1f);
+        /// <summary>Forces sun / moon halo strength (0-1 each); negative component = natural.</summary>
+        public void SetHaloOverride(float sun01, float moon01) => gmHalo = new Vector2(sun01, moon01);
+        /// <summary>Overrides the heat shimmer multiplier; negative = natural (weather and time driven).</summary>
+        public void SetShimmerOverride(float multiplier) => gmShimmer = multiplier;
+        /// <summary>Overrides the lens flare strength; negative = inspector value.</summary>
+        public void SetFlareOverride(float strength) => gmFlareStrength = strength;
+        public void ClearOverrides()
+        {
+            gmRainbow = gmMoonPhase = gmShimmer = gmFlareStrength = -1f;
+            gmHalo = new Vector2(-1f, -1f);
+        }
 
         private static bool IsHeadless
         {
@@ -198,8 +249,11 @@ namespace KryticalNova.World
             float dt = Time.deltaTime;
             float time01 = SmoothClock(env, dt);
             // Continuous phase: whole days on the world clock plus today's fraction, over one lunar cycle.
-            moonPhase01 = Mathf.Repeat((env.State.DayCount(env.Now) + time01) / Mathf.Max(1f, env.DayCycle.lunarCycleDays), 1f);
-            rainbowOverride = -1f;
+            dayCount = (int)env.State.DayCount(env.Now);
+            moonPhase01 = gmMoonPhase >= 0f ? gmMoonPhase
+                : Mathf.Repeat((dayCount + time01) / Mathf.Max(1f, env.DayCycle.lunarCycleDays), 1f);
+            rainbowOverride = gmRainbow;
+            haloOverride = gmHalo;
             Apply(env.DayCycle, time01, env.Weather, flash, dt);
         }
 
@@ -240,6 +294,7 @@ namespace KryticalNova.World
             ambientTimer = 0f;
             moonPhase01 = previewMoonPhase;
             rainbowOverride = previewRainbow;
+            haloOverride = previewHalo;
             Apply(previewDayCycle, previewHours / 24f, weather, 0f, 0f);
         }
 
@@ -369,6 +424,18 @@ namespace KryticalNova.World
             }
             Shader.SetGlobalVector(Ids.Rainbow, new Vector4(rainbowStrength * rainbowPeak, 0f, 0f, 0f));
 
+            // ---- 22° halo: rare. Needs thin high cloud (cirrus), no precipitation, and a hashed window on this
+            // world day / night, so every client sees the same halo without any network traffic.
+            Vector2 haloTarget = HaloTarget(t, w, moonIllum);
+            haloStrength.x = haloOverride.x >= 0f ? haloOverride.x : Mathf.MoveTowards(haloStrength.x, haloTarget.x, dt / haloFadeSeconds);
+            haloStrength.y = haloOverride.y >= 0f ? haloOverride.y : Mathf.MoveTowards(haloStrength.y, haloTarget.y, dt / haloFadeSeconds);
+            Shader.SetGlobalVector(Ids.Halo, new Vector4(haloStrength.x * sunVisible, haloStrength.y * moonVisible, 0f, 0f));
+
+            // ---- heat shimmer: strongest on a clear midday sky, gone under cloud cover.
+            float shimmer = gmShimmer >= 0f ? gmShimmer
+                : shimmerStrength * (1f - Mathf.Clamp01(w.celestialDiffusion)) * (0.45f + 0.55f * Smooth(sunDir.y, 0.15f, 0.75f));
+            Shader.SetGlobalVector(Ids.SunShimmer, new Vector4(shimmer, 0f, 0f, 0f));
+
             // ---- clouds (wind scroll is wrapped to [0,1) so precision never degrades in long sessions)
             float invTile = 1f / cloudTileSize;
             Vector2 windUv = w.wind * (dt * invTile);
@@ -391,7 +458,8 @@ namespace KryticalNova.World
             if (flare != null)
             {
                 float cloudAtSun = CloudDensityToward(sunDir, w);
-                flare.intensity = useMoon ? 0f : dc.sunFlareIntensity.Evaluate(t) * sunClear * (1f - cloudAtSun) * sunFlareStrength;
+                float flareStrength = gmFlareStrength >= 0f ? gmFlareStrength : sunFlareStrength;
+                flare.intensity = useMoon ? 0f : dc.sunFlareIntensity.Evaluate(t) * sunClear * (1f - cloudAtSun) * flareStrength;
             }
 
             float groundShadow = cloudShadows && cloudNoise != null ? w.cloudShadow * Smooth(intensity, 0.05f, 0.6f) : 0f;
@@ -459,6 +527,52 @@ namespace KryticalNova.World
             return Mathf.Clamp01(mask * w.cloudDensity);
         }
 
+        /// <summary>
+        /// Natural halo strength (x sun, y moon). A world day rolls a sun window in daylight hours and a night rolls a
+        /// moon window; inside the window the halo shows only if the weather has thin high cloud and no precipitation.
+        /// </summary>
+        private Vector2 HaloTarget(float t, in WeatherBlend w, float moonIllum)
+        {
+            if (!Application.isPlaying) return Vector2.zero;
+            float sky = Smooth(w.cirrus, 0.12f, 0.25f) * (1f - Smooth(w.celestialDiffusion, 0.2f, 0.45f))
+                      * (1f - Mathf.Clamp01((w.rain + w.snow) * 10f));
+            if (sky <= 0f) return Vector2.zero;
+
+            float hours = t * 24f;
+            float window = haloWindowHours;
+            Vector2 target = Vector2.zero;
+            if (Hash01(dayCount, 11) < haloChancePerDay)
+            {
+                float start = Mathf.Lerp(8f, 16f - window, Hash01(dayCount, 12));
+                target.x = WindowEnvelope(hours, start, window) * haloPeak * sky;
+            }
+            // A night belongs to the day it starts on, so the window can run past midnight.
+            int night = hours < 12f ? dayCount - 1 : dayCount;
+            if (moonIllum > 0.5f && Hash01(night, 21) < moonHaloChancePerNight)
+            {
+                float start = 20f + Hash01(night, 22) * Mathf.Max(0f, 8f - window); // 20:00 .. 04:00
+                float h = hours < 12f ? hours + 24f : hours;
+                target.y = WindowEnvelope(h, start, window) * haloPeak * sky * Smooth(moonIllum, 0.5f, 0.85f);
+            }
+            return target;
+        }
+
+        private static float WindowEnvelope(float hours, float start, float length)
+        {
+            float edge = Mathf.Min(0.5f, length * 0.25f);
+            return Smooth(hours, start, start + edge) * (1f - Smooth(hours, start + length - edge, start + length));
+        }
+
+        private static float Hash01(int a, int b)
+        {
+            unchecked
+            {
+                uint h = (uint)a * 0x9E3779B1u ^ (uint)b * 0x85EBCA77u;
+                h ^= h >> 15; h *= 0x2C1B3C6Du; h ^= h >> 12; h *= 0x297A2D39u; h ^= h >> 15;
+                return (h & 0xFFFFFF) / 16777216f;
+            }
+        }
+
         /// <summary>Sun above the horizon but below ~42° elevation (sin 42° ≈ 0.67).</summary>
         private static float RainbowSunFactor(float sunElevationSin) =>
             Smooth(sunElevationSin, 0f, 0.06f) * (1f - Smooth(sunElevationSin, 0.55f, 0.67f));
@@ -514,6 +628,8 @@ namespace KryticalNova.World
             public static readonly int BodyTexAspect = Shader.PropertyToID("_KN_BodyTexAspect");
             public static readonly int MoonPhase = Shader.PropertyToID("_KN_MoonPhase");
             public static readonly int Rainbow = Shader.PropertyToID("_KN_Rainbow");
+            public static readonly int Halo = Shader.PropertyToID("_KN_Halo");
+            public static readonly int SunShimmer = Shader.PropertyToID("_KN_SunShimmer");
             public static readonly int CloudNoise = Shader.PropertyToID("_KN_CloudNoise");
             public static readonly int CloudParams = Shader.PropertyToID("_KN_CloudParams");
             public static readonly int CloudShape = Shader.PropertyToID("_KN_CloudShape");

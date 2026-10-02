@@ -20,24 +20,27 @@ MonoBehaviour:
   cloudTint: {r: 1, g: 1, b: 1, a: 1}
   cirrusAmount: 0
   celestialDiffusion: 0.85
-  skyDesaturation: 0.5
+  skyDesaturation: 0.35
   skyDarkening: 0.1
   sunIntensityMultiplier: 0.4
   ambientMultiplier: 1.1
   shadowMultiplier: 0.15
   cloudShadowStrength: 0
-  fogDensity: 0.02
-  fogTint: {r: 0.75, g: 0.78, b: 0.8, a: 0.6}
+  fogDensity: 0.014
+  fogTint: {r: 0.7058824, g: 0.74509805, b: 0.8627451, a: 0.4}
   windHeading: 60
   windSpeed: 1
+  windSpeedMin: 0
+  windSpeedMax: 2
+  calmChance: 0.7
   randomWindDirection: 1
   gustiness: 0
   precipitation: 0
   precipitationIntensity: 0
   mist: 1
   lightningPerMinute: 0
-  saturation: -30
-  contrast: -10
+  saturation: -12
+  contrast: -4
   ambienceLoop: {fileID: 0}
   ambienceVolume: 0.6
   transitionSeconds: 120

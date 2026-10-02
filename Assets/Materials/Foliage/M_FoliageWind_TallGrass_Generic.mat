@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_FoliageWind_TallGrass_Generic
+  m_Shader: {fileID: 4800000, guid: 158e70dbb52849945a4ff45cc191a290, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _ALPHATEST_ON
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 3fc3c11290504854c9e76317f3f97045, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 1
+    - _BendHeight: 1
+    - _CanopyRadius: 2.5
+    - _Cull: 0
+    - _Cutoff: 0.5
+    - _FlutterStrength: 0.04
+    - _IdleSway: 0.035
+    - _InteractStrength: 0.9
+    - _NormalUp: 0.6
+    - _TreeMode: 0
+    - _TrunkHeight: 1.5
+    - _WindFadeDistance: 60
+    - _WindStrength: 0.9
+    m_Colors:
+    - _BaseColor: {r: 0.84, g: 0.92, b: 0.8, a: 1}
+    - _ColorVariation: {r: 0.95, g: 1, b: 0.68, a: 0.45}
+    - _ColorVariation2: {r: 0.7, g: 0.88, b: 0.76, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

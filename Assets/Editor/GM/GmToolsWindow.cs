@@ -474,6 +474,52 @@ namespace KryticalNova.EditorTools.GM
             set { if (value != WeatherLocked) Run($"weather.lock {(value ? "true" : "false")}"); }
         }
 
+        // ---------------------------------------------------------------- sky (local presentation overrides)
+
+        [TabGroup(Tabs, WorldTab), Title("Sky"), Button("Rainbow (sets 17:00)"), EnableIf(nameof(HasWorld)), PropertyOrder(420)]
+        [InfoBox("Sky overrides only change this machine's view. Reset clears them all.")]
+        private void ForceRainbow()
+        {
+            Run("time.set 17");
+            Run("sky.rainbow 1");
+        }
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Moon"), EnableIf(nameof(HasWorld)), LabelText("New"), PropertyOrder(421)]
+        private void MoonNew() => Run("sky.moonphase new");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Moon"), EnableIf(nameof(HasWorld)), LabelText("1st Qtr"), PropertyOrder(422)]
+        private void MoonFirst() => Run("sky.moonphase first");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Moon"), EnableIf(nameof(HasWorld)), LabelText("Full"), PropertyOrder(423)]
+        private void MoonFull() => Run("sky.moonphase full");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Moon"), EnableIf(nameof(HasWorld)), LabelText("Last Qtr"), PropertyOrder(424)]
+        private void MoonLast() => Run("sky.moonphase last");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Moon"), EnableIf(nameof(HasWorld)), LabelText("Next ▸"), PropertyOrder(425)]
+        private void MoonNext() => Run("sky.moon.next");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Halo"), EnableIf(nameof(HasWorld)), LabelText("Sun Halo"), PropertyOrder(426)]
+        private void SunHalo() => Run("sky.halo sun");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Halo"), EnableIf(nameof(HasWorld)), LabelText("Moon Halo"), PropertyOrder(427)]
+        private void MoonHalo() => Run("sky.halo moon");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Halo"), EnableIf(nameof(HasWorld)), LabelText("Lightning"), PropertyOrder(428)]
+        private void Lightning() => Run("sky.lightning");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(HasWorld)), PropertyOrder(429)]
+        private void HeatShimmer([MinValue(0), MaxValue(5)] float multiplier = 2.5f) => Run($"sky.shimmer {F(multiplier)}");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(HasWorld)), PropertyOrder(430)]
+        private void LensFlare([MinValue(0), MaxValue(4)] float strength = 1f) => Run($"sky.flare {F(strength)}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyMisc"), EnableIf(nameof(HasWorld)), LabelText("Sky Status"), PropertyOrder(431)]
+        private void SkyStatus() => Run("sky.status");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyMisc"), EnableIf(nameof(HasWorld)), LabelText("Reset Sky"), GUIColor(1f, 0.85f, 0.5f), PropertyOrder(432)]
+        private void ResetSky() => Run("sky.reset");
+
         private static IEnumerable<string> WeatherNames()
         {
             var catalog = Env != null ? Env.Catalog : null;

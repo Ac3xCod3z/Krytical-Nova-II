@@ -36,11 +36,11 @@ namespace KryticalNova.EditorTools
             "SM_Gen_Env_Tree_01", "SM_Gen_Env_Tree_02", "SM_Gen_Env_Tree_03",
             "SM_Gen_Env_Tree_Pine_01", "SM_Gen_Env_Tree_Pine_02", "SM_Gen_Env_Tree_Pine_03"
         };
+        // Bushes and ferns stay terrain trees; grass and flowers are terrain details (see PaintDetails).
         private static readonly string[] GroundCoverPrefabs =
         {
             "SM_Gen_Env_Bush_01", "SM_Gen_Env_Bush_02", "SM_Gen_Env_Bush_03", "SM_Gen_Env_Bush_04",
-            "SM_Gen_Env_Grass_04", "SM_Gen_Env_Grass_05", "SM_Gen_Env_Fern_02", "SM_Gen_Env_Fern_03",
-            "SM_Gen_Env_Flowers_01", "SM_Gen_Env_Flowers_04", "SM_Gen_Env_Flowers_05"
+            "SM_Gen_Env_Fern_02", "SM_Gen_Env_Fern_03"
         };
         private static readonly string[] RockPrefabs =
         {
@@ -59,6 +59,17 @@ namespace KryticalNova.EditorTools
             if (EditorUtility.DisplayDialog("Regenerate Zone01 terrain?",
                     "This replaces the terrain heights, paint and trees, discarding any hand sculpting.", "Regenerate", "Cancel"))
                 Generate(true);
+        }
+
+        [MenuItem("Krytical Nova/Zone/Apply City Layout To Terrain Profile")]
+        public static void ApplyCityLayoutMenu()
+        {
+            var profile = LoadOrCreateProfile();
+            Undo.RecordObject(profile, "Apply city layout");
+            ApplyCityLayout(profile);
+            EditorUtility.SetDirty(profile);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[ZoneTerrain] City layout written to the profile. Run Force Regenerate to rebuild the terrain.");
         }
 
         [MenuItem("Krytical Nova/Zone/Repaint Terrain Layers Only")]
@@ -83,6 +94,19 @@ namespace KryticalNova.EditorTools
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }
 
+        [MenuItem("Krytical Nova/Zone/Repaint Grass and Flowers Only")]
+        public static void RepaintDetailsMenu()
+        {
+            var data = AssetDatabase.LoadAssetAtPath<TerrainData>(TerrainDataPath);
+            if (data == null) { Debug.LogError("[ZoneTerrain] Generate the terrain first."); return; }
+            var profile = LoadOrCreateProfile();
+            PaintDetails(profile, data);
+            var terrain = Object.FindAnyObjectByType<Terrain>();
+            if (terrain != null) ApplyDetailSettings(profile, terrain);
+            AssetDatabase.SaveAssets();
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        }
+
         // ---------------------------------------------------------------- entry point
 
         /// <summary>Creates (or, with force, rebuilds) the terrain data, then makes sure the scene objects exist.</summary>
@@ -103,6 +127,7 @@ namespace KryticalNova.EditorTools
                 Sculpt(profile, data);
                 Paint(profile, data);
                 ScatterVegetation(profile, data);
+                PaintDetails(profile, data);
             }
             else
             {
@@ -111,6 +136,7 @@ namespace KryticalNova.EditorTools
 
             var terrain = EnsureTerrainObject(profile, data);
             EnsureWater(profile);
+            EnsureWaterSurface(profile, data, build);
             if (build || GameObject.Find(EnvironmentRootName + "/Rocks") == null)
                 ScatterRocks(profile, data);
 
@@ -133,22 +159,97 @@ namespace KryticalNova.EditorTools
             return profile;
         }
 
-        /// <summary>The reference map's layout: origin is the town centre, +Z is north.</summary>
-        private static void FillDefaultLayout(ZoneTerrainProfile p)
-        {
-            p.rivers.Add(Line("North river (NE source → NW lake)",
-                310, 178, 230, 152, 140, 130, 60, 112, 0, 108, -60, 112, -140, 142, -205, 188, -236, 214));
-            p.rivers.Add(Line("East branch (→ SE lake)",
-                140, 130, 182, 78, 202, 0, 196, -84, 182, -148));
-            p.lakes.Add(new ZoneTerrainProfile.Lake { center = new Vector2(-236, 218), radius = 40f });
-            p.lakes.Add(new ZoneTerrainProfile.Lake { center = new Vector2(-228, 38), radius = 34f });
-            p.lakes.Add(new ZoneTerrainProfile.Lake { center = new Vector2(-72, -228), radius = 40f });
-            p.lakes.Add(new ZoneTerrainProfile.Lake { center = new Vector2(176, -176), radius = 36f });
+        private static void FillDefaultLayout(ZoneTerrainProfile p) => ApplyCityLayout(p);
 
-            p.paths.Add(Line("North gate → bridge → portal", 0, 48, 0, 150, 70, 178, 140, 205, 215, 232));
-            p.paths.Add(Line("South gate", 0, -48, 0, -120, -18, -170));
-            p.paths.Add(Line("East gate", 48, 0, 120, 4, 168, 10));
-            p.paths.Add(Line("West gate", -48, 0, -120, -6, -172, -2));
+        /// <summary>
+        /// The walled-city layout (reference map): a 1 km field, walls at ±110 m on a flat plateau with a ruined
+        /// outskirts band, a river cutting off the north island (portal) and a branch running south down the east
+        /// side. Origin is the city centre, +Z is north. Overwrites size, plateau, water, paths and portal.
+        /// </summary>
+        public static void ApplyCityLayout(ZoneTerrainProfile p)
+        {
+            p.size = 1000f;
+            p.heightRange = 90f;
+            p.heightmapResolution = 1025;
+            p.alphamapResolution = 1024;
+            p.hillFadeDistance = new Vector2(200f, 320f);
+            p.rimWidth = 60f;
+            p.rimHeight = 48f;
+            p.townHalfSize = 175f;
+            p.townFalloff = 28f;
+            p.pavedHalfSize = 112f;
+            p.ruinsHalfSize = 178f;
+            p.greenHalfSize = 20f;
+            p.riverWidth = 22f;
+            p.riverBankWidth = 8f;
+
+            p.rivers.Clear();
+            p.rivers.Add(Line("North river (east sea \u2192 west lake), cuts off the island",
+                540, 250, 420, 238, 300, 222, 200, 212, 100, 208, 0, 206, -100, 210, -210, 224, -320, 252, -380, 280));
+            p.rivers.Add(Line("East branch (\u2192 SE lake)",
+                300, 222, 238, 160, 228, 60, 230, -40, 236, -140, 262, -240, 318, -322));
+            p.lakes.Clear();
+            p.lakes.Add(new ZoneTerrainProfile.Lake { center = new Vector2(-385, 288), radius = 46f });
+            p.lakes.Add(new ZoneTerrainProfile.Lake { center = new Vector2(-330, 30), radius = 40f });
+            p.lakes.Add(new ZoneTerrainProfile.Lake { center = new Vector2(-190, -340), radius = 44f });
+            p.lakes.Add(new ZoneTerrainProfile.Lake { center = new Vector2(330, -335), radius = 42f });
+
+            p.paths.Clear();
+            p.paths.Add(Line("North gate \u2192 bridge \u2192 island \u2192 portal", 0, 110, 0, 250, 80, 300, 170, 336, 262, 362));
+            p.paths.Add(Line("South gate", 0, -110, 0, -250, -40, -380));
+            p.paths.Add(Line("East gate \u2192 east bridge", 110, 0, 200, 0, 300, 10, 380, 30));
+            p.paths.Add(Line("West gate", -110, 0, -230, -8, -380, 0));
+
+            p.portalCenter = new Vector2(262f, 362f);
+            p.portalPadRadius = 16f;
+            p.treeCount = 900;
+            p.rockCount = 240;
+            p.grassCount = 700; // bushes and ferns only; grass and flowers are details
+            FillDefaultDetailLayers(p);
+        }
+
+        /// <summary>
+        /// Small, size-varied grass carpets with tall-grass tufts and flower patches. Scales are well under the
+        /// old scattered grass (0.8-1.3), which read as knee-high bushes.
+        /// </summary>
+        public static void FillDefaultDetailLayers(ZoneTerrainProfile p)
+        {
+            p.detailLayers.Clear();
+            p.detailLayers.Add(Detail("SM_Gen_Env_Grass_01", 0.45f, 1.1f, 3.2f, 0.035f, 0f, 0.35f));
+            p.detailLayers.Add(Detail("SM_Gen_Env_Grass_02", 0.45f, 1.1f, 3.2f, 0.041f, 0f, 0.35f));
+            p.detailLayers.Add(Detail("SM_Gen_Env_Grass_03", 0.4f, 0.85f, 0.7f, 0.05f, 0.25f, 0.3f));
+            p.detailLayers.Add(Detail("SM_Gen_Env_Grass_04", 0.35f, 0.6f, 0.18f, 0.06f, 0.45f, 0.25f));
+            // Tall reedy grass (parts nicely around players): common, in broad stands, with a wide height spread.
+            p.detailLayers.Add(Detail("SM_Gen_Env_Grass_Tall_01", 0.45f, 0.8f, 0.75f, 0.03f, 0.38f, 0.45f, 0.3f, 1.05f));
+            p.detailLayers.Add(Detail("SM_Gen_Env_Grass_Tall_02", 0.45f, 0.8f, 0.75f, 0.033f, 0.4f, 0.45f, 0.3f, 1.05f));
+            p.detailLayers.Add(Detail("SM_Gen_Env_Flowers_02", 0.45f, 0.8f, 0.35f, 0.07f, 0.62f, 0.4f));
+            p.detailLayers.Add(Detail("SM_Gen_Env_Flowers_03", 0.45f, 0.8f, 0.4f, 0.08f, 0.6f, 0.4f));
+            p.detailLayers.Add(Detail("SM_Gen_Env_Flowers_05", 0.4f, 0.7f, 0.25f, 0.075f, 0.64f, 0.4f));
+            p.detailLayers.Add(Detail("SM_Gen_Env_Flowers_06", 0.45f, 0.8f, 0.3f, 0.065f, 0.63f, 0.4f));
+            p.detailLayers.Add(Detail("SM_Gen_Env_Flowers_07", 0.4f, 0.75f, 0.25f, 0.09f, 0.66f, 0.4f));
+            // Mowed plaza lawns: one short, even, dense cut (still bends with wind and players).
+            p.detailLayers.Add(Lawn("SM_Gen_Env_Grass_01", 7f));
+            p.detailLayers.Add(Lawn("SM_Gen_Env_Grass_02", 7f));
+        }
+
+        private static ZoneTerrainProfile.DetailLayer Detail(string prefab, float min, float max, float density,
+            float patchScale, float threshold, float spread, float minHeight = 0f, float maxHeight = 0f)
+        {
+            return new ZoneTerrainProfile.DetailLayer
+            {
+                prefab = prefab, minScale = min, maxScale = max, density = density,
+                patchScale = patchScale, patchThreshold = threshold, noiseSpread = spread,
+                minHeight = minHeight, maxHeight = maxHeight
+            };
+        }
+
+        private static ZoneTerrainProfile.DetailLayer Lawn(string prefab, float density)
+        {
+            return new ZoneTerrainProfile.DetailLayer
+            {
+                prefab = prefab, minScale = 0.7f, maxScale = 0.85f, minHeight = 0.36f, maxHeight = 0.42f,
+                density = density, patchScale = 0.05f, patchThreshold = 0f, noiseSpread = 0.1f, lawn = true
+            };
         }
 
         private static ZoneTerrainProfile.Polyline Line(string name, params float[] xz)
@@ -259,6 +360,7 @@ namespace KryticalNova.EditorTools
                 {
                     float nx = (xi + 0.5f) / res;
                     float x = -half + p.size * nx;
+                    bool inLawn = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) < p.pavedHalfSize;
                     var pos = new Vector2(x, z);
                     float height = data.GetInterpolatedHeight(nx, nz) + p.baseHeight;
                     float slope = data.GetSteepness(nx, nz);
@@ -267,10 +369,18 @@ namespace KryticalNova.EditorTools
                     float path = 1f - Smooth(p.pathWidth * 0.5f - 1f, p.pathWidth * 0.5f + 2.5f, DistanceToLines(p.paths, pos));
                     float pad = 1f - Smooth(0f, 5f, Vector2.Distance(pos, p.portalCenter) - p.portalPadRadius);
                     float wet = 1f - Smooth(p.waterLevel + 0.6f, p.waterLevel + 1.6f, height);
-                    float town = 1f - Smooth(-3f, 1f, Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) - (p.townHalfSize - 8f));
+                    float square = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
+                    float town = 1f - Smooth(-3f, 1f, square - p.pavedHalfSize);
+                    // The plaza lawns are grass inside the paving (walkway tiles are laid over them).
+                    float green = p.greenHalfSize > 0f ? 1f - Smooth(-1.5f, 0.5f, square - p.greenHalfSize) : 0f;
+                    town *= 1f - green;
                     float patchy = Smooth(0.55f, 0.75f, Mathf.PerlinNoise(x * 0.05f + off.x, z * 0.05f + off.y)) * 0.35f;
+                    // Ruined outskirts: trampled dirt broken by grass, fading out past the band.
+                    float ruins = p.ruinsHalfSize > 0f
+                        ? (1f - Smooth(-8f, 14f, square - p.ruinsHalfSize)) * (0.55f + 0.45f * Mathf.PerlinNoise(x * 0.09f + off.y, z * 0.09f + off.x))
+                        : 0f;
 
-                    float dirt = Mathf.Max(Mathf.Max(path, pad), Mathf.Max(wet, patchy));
+                    float dirt = Mathf.Max(Mathf.Max(path, pad), Mathf.Max(Mathf.Max(wet, patchy), ruins)) * (1f - green);
                     float wRock = rock * (1f - town);
                     float wDirt = dirt * (1f - rock) * (1f - town);
                     float wTown = town;
@@ -404,7 +514,7 @@ namespace KryticalNova.EditorTools
 
         private static void AddPrototype(List<TreePrototype> list, string name)
         {
-            var prefab = LoadPrefab(GenericNature + name);
+            var prefab = FoliageAssetBuilder.Variant(name) ?? LoadPrefab(GenericNature + name);
             if (prefab != null) list.Add(new TreePrototype { prefab = prefab });
         }
 
@@ -412,6 +522,155 @@ namespace KryticalNova.EditorTools
         {
             float half = p.size * 0.5f - 6f;
             return new Vector2(Range(rng, -half, half), Range(rng, -half, half));
+        }
+
+        // ---------------------------------------------------------------- grass & flowers (terrain details)
+
+        public static void ApplyDetailSettings(ZoneTerrainProfile p, Terrain terrain)
+        {
+            terrain.drawTreesAndFoliage = true;
+            terrain.detailObjectDistance = p.detailDistance;
+            terrain.detailObjectDensity = 1f;
+        }
+
+        /// <summary>
+        /// Grows grass and flowers as instanced detail meshes (wind-reactive variants). Unity culls them per patch
+        /// and stops drawing past <see cref="ZoneTerrainProfile.detailDistance"/>. Details only grow where the splat
+        /// is grass (never dirt, rock or town stone), above the waterline, and off every road, sidewalk, building and
+        /// prop mesh in the scene, so run this after the town is built.
+        /// </summary>
+        public static void PaintDetails(ZoneTerrainProfile p, TerrainData data)
+        {
+            if (p.detailLayers == null || p.detailLayers.Count == 0)
+            {
+                FillDefaultDetailLayers(p);
+                EditorUtility.SetDirty(p);
+            }
+
+            var prototypes = new List<DetailPrototype>();
+            var layers = new List<ZoneTerrainProfile.DetailLayer>();
+            foreach (var layer in p.detailLayers)
+            {
+                var prefab = FoliageAssetBuilder.Variant(layer.prefab);
+                if (prefab == null) { Debug.LogWarning($"[ZoneTerrain] Detail prefab '{layer.prefab}' not found."); continue; }
+                prototypes.Add(new DetailPrototype
+                {
+                    prototype = prefab,
+                    usePrototypeMesh = true,
+                    useInstancing = true,
+                    renderMode = DetailRenderMode.VertexLit,
+                    minWidth = layer.minScale, maxWidth = layer.maxScale,
+                    minHeight = layer.maxHeight > 0f ? layer.minHeight : layer.minScale,
+                    maxHeight = layer.maxHeight > 0f ? layer.maxHeight : layer.maxScale,
+                    noiseSpread = layer.noiseSpread,
+                    healthyColor = Color.white, dryColor = Color.white,
+                    alignToGround = 0.4f,
+                    positionJitter = 1f,
+                });
+                layers.Add(layer);
+            }
+
+            int res = Mathf.Clamp(Mathf.ClosestPowerOfTwo(p.detailResolution), 64, 4096);
+            data.SetDetailScatterMode(DetailScatterMode.InstanceCountMode);
+            data.SetDetailResolution(res, Mathf.Clamp(p.detailResolutionPerPatch, 8, 128));
+            data.detailPrototypes = prototypes.ToArray();
+
+            int aRes = data.alphamapResolution;
+            var alpha = data.GetAlphamaps(0, 0, aRes, aRes);
+            bool[,] blocked = MeshExclusionMask(p, res);
+            var off = NoiseOffset(p.seed);
+            var rng = new System.Random(p.seed + 71);
+            float half = p.size * 0.5f;
+            float cell = p.size / res;
+            long total = 0;
+
+            var maps = new int[layers.Count][,];
+            for (int l = 0; l < layers.Count; l++) maps[l] = new int[res, res];
+
+            for (int zi = 0; zi < res; zi++)
+            {
+                float nz = (zi + 0.5f) / res;
+                float z = -half + p.size * nz;
+                int az = Mathf.Min(aRes - 1, (int)(nz * aRes));
+                for (int xi = 0; xi < res; xi++)
+                {
+                    if (blocked[zi, xi]) continue;
+                    float nx = (xi + 0.5f) / res;
+                    int ax = Mathf.Min(aRes - 1, (int)(nx * aRes));
+                    float grass = alpha[az, ax, 0];
+                    if (grass < p.detailGrassThreshold) continue;
+                    float height = data.GetInterpolatedHeight(nx, nz) + p.baseHeight;
+                    if (height < p.waterLevel + 0.35f) continue;
+
+                    float x = -half + p.size * nx;
+                    bool inLawn = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) < p.pavedHalfSize;
+                    // Meadows vs. thinner turf, and a soft fade toward the grass edge.
+                    // (Lawns are kept even, like a mown carpet.)
+                    float meadow = inLawn ? 1f : 0.55f + 0.45f * Mathf.PerlinNoise(x * 0.012f + off.y, z * 0.012f + off.x);
+                    float edge = Mathf.InverseLerp(p.detailGrassThreshold, 1f, grass);
+                    float baseAmount = meadow * Mathf.Lerp(0.5f, 1f, edge) * cell * cell;
+
+                    for (int l = 0; l < layers.Count; l++)
+                    {
+                        var layer = layers[l];
+                        if (layer.lawn != inLawn) continue;
+                        float n = Mathf.PerlinNoise(x * layer.patchScale + off.x + l * 17.3f, z * layer.patchScale + off.y + l * 9.1f);
+                        float patch = layer.lawn ? 1f
+                            : layer.patchThreshold <= 0f
+                            ? 0.6f + 0.4f * n
+                            : Smooth(layer.patchThreshold, layer.patchThreshold + 0.12f, n);
+                        float expected = layer.density * patch * baseAmount;
+                        if (expected <= 0f) continue;
+                        int count = (int)expected + (rng.NextDouble() < expected - (int)expected ? 1 : 0);
+                        maps[l][zi, xi] = count;
+                        total += count;
+                    }
+                }
+            }
+
+            for (int l = 0; l < layers.Count; l++) data.SetDetailLayer(0, 0, l, maps[l]);
+            EditorUtility.SetDirty(data);
+            Debug.Log($"[ZoneTerrain] Painted {total:N0} grass/flower instances across {layers.Count} detail layers ({res}x{res} cells).");
+        }
+
+        /// <summary>
+        /// Cells covered by road, sidewalk, building and prop meshes standing on the ground (town, outskirts, portal,
+        /// rocks). Paving tiles have no colliders, so renderer bounds are used. Foliage is ignored.
+        /// </summary>
+        private static bool[,] MeshExclusionMask(ZoneTerrainProfile p, int res)
+        {
+            var mask = new bool[res, res];
+            var terrain = Object.FindAnyObjectByType<Terrain>();
+            float half = p.size * 0.5f;
+            string[] roots = { StarterTownBuilder.TownRootName, StarterTownBuilder.OutskirtsRootName, StarterTownBuilder.PortalRootName,
+                               EnvironmentRootName + "/Rocks" };
+            int stamped = 0;
+            foreach (var rootName in roots)
+            {
+                var root = GameObject.Find(rootName);
+                if (root == null) continue;
+                foreach (var r in root.GetComponentsInChildren<MeshRenderer>())
+                {
+                    var instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(r.gameObject);
+                    var src = instanceRoot != null ? PrefabUtility.GetCorrespondingObjectFromOriginalSource(instanceRoot) : null;
+                    if (src != null && FoliageAssetBuilder.IsFoliage(src.name)) continue;
+
+                    Bounds b = r.bounds;
+                    float ground = terrain != null ? terrain.SampleHeight(b.center) + terrain.transform.position.y : 0f;
+                    if (b.min.y > ground + 1.2f) continue; // signs, awnings, floating dressing
+                    float m = p.detailMeshMargin;
+                    int x0 = Mathf.Clamp(Mathf.FloorToInt((b.min.x - m + half) / p.size * res), 0, res - 1);
+                    int x1 = Mathf.Clamp(Mathf.CeilToInt((b.max.x + m + half) / p.size * res), 0, res - 1);
+                    int z0 = Mathf.Clamp(Mathf.FloorToInt((b.min.z - m + half) / p.size * res), 0, res - 1);
+                    int z1 = Mathf.Clamp(Mathf.CeilToInt((b.max.z + m + half) / p.size * res), 0, res - 1);
+                    for (int zi = z0; zi <= z1; zi++)
+                    for (int xi = x0; xi <= x1; xi++)
+                        mask[zi, xi] = true;
+                    stamped++;
+                }
+            }
+            if (stamped == 0) Debug.LogWarning("[ZoneTerrain] No town meshes found for the grass mask; run again after building the town.");
+            return mask;
         }
 
         // ---------------------------------------------------------------- scene objects
@@ -442,6 +701,7 @@ namespace KryticalNova.EditorTools
             terrain.treeBillboardDistance = 320f;
             terrain.treeMaximumFullLODCount = 600;
             terrain.shadowCastingMode = ShadowCastingMode.On;
+            ApplyDetailSettings(p, terrain);
             GameObjectUtility.SetStaticEditorFlags(terrain.gameObject,
                 StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
             return terrain;
@@ -489,6 +749,253 @@ namespace KryticalNova.EditorTools
             volume.size = new Vector3(10f, depth, 10f);
             volume.center = new Vector3(0f, -depth * 0.5f - 0.05f, 0f);
             GameObjectUtility.SetStaticEditorFlags(water, StaticEditorFlags.BatchingStatic);
+        }
+
+        // ---------------------------------------------------------------- anime water surface
+
+        private const string WaterSurfaceName = "Water Surface";
+        private const string AnimeWaterMaterialPath = ZoneFolder + "/M_AnimeWater_Zone01.mat";
+        private const string AnimeWaterSourceMaterial = "Assets/KumaBeer/Stylized anime water/Materials/anime water.mat";
+        private const string WaterMeshPath = ZoneFolder + "/Zone01_WaterMesh.asset";
+        private const string WaterFlowMapPath = ZoneFolder + "/T_WaterFlow_Zone01.png";
+        private const float WaterCell = 4f;          // metres per water mesh quad
+        private const float WaterUvMetres = 12f;     // metres per texture tile (matches the package's demo plane)
+        private const int FlowMapResolution = 512;
+
+        [MenuItem("Krytical Nova/Zone/Rebuild Water (Anime Water + River Flow)")]
+        public static void RebuildWaterMenu()
+        {
+            var data = AssetDatabase.LoadAssetAtPath<TerrainData>(TerrainDataPath);
+            if (data == null) { Debug.LogError("[ZoneTerrain] Generate the terrain first."); return; }
+            var profile = LoadOrCreateProfile();
+            EnsureWater(profile);
+            EnsureWaterSurface(profile, data, true);
+            AssetDatabase.SaveAssets();
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        }
+
+        /// <summary>
+        /// Visible water: one mesh covering only where the terrain dips under the waterline (rivers and lakes), shaded
+        /// with KryticalNova/Anime Water. A baked flow map makes rivers run downstream while lakes stay still. The
+        /// "Water" object keeps the collider and NavMesh modifiers; its flat plane renderer is switched off.
+        /// </summary>
+        private static void EnsureWaterSurface(ZoneTerrainProfile p, TerrainData data, bool rebuild)
+        {
+            var env = GetOrCreateRoot(EnvironmentRootName);
+            var water = env.transform.Find("Water");
+            if (water != null && water.TryGetComponent<MeshRenderer>(out var flat)) flat.enabled = false;
+
+            var t = env.transform.Find(WaterSurfaceName);
+            GameObject surface;
+            if (t == null)
+            {
+                surface = new GameObject(WaterSurfaceName);
+                surface.transform.SetParent(env.transform, false);
+                Undo.RegisterCreatedObjectUndo(surface, "Create water surface");
+                rebuild = true;
+            }
+            else surface = t.gameObject;
+
+            surface.layer = LayerMask.NameToLayer(WaterLayerName);
+            surface.transform.SetPositionAndRotation(new Vector3(0f, p.waterLevel, 0f), Quaternion.identity);
+            surface.transform.localScale = Vector3.one;
+
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(WaterMeshPath);
+            if (rebuild || mesh == null) mesh = BuildWaterMesh(p, data);
+            var flowMap = AssetDatabase.LoadAssetAtPath<Texture2D>(WaterFlowMapPath);
+            if (rebuild || flowMap == null) flowMap = BakeWaterFlowMap(p);
+
+            GetOrAdd<MeshFilter>(surface).sharedMesh = mesh;
+            var renderer = GetOrAdd<MeshRenderer>(surface);
+            renderer.sharedMaterial = AnimeWaterMaterial(p, flowMap);
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+            renderer.lightProbeUsage = LightProbeUsage.Off;
+            // Not navigation-relevant; the "Water" object carries the colliders and NavMesh modifiers.
+            GameObjectUtility.SetStaticEditorFlags(surface, 0);
+        }
+
+        /// <summary>A grid of 4 m quads kept only where the terrain is under (or just above) the waterline.</summary>
+        private static Mesh BuildWaterMesh(ZoneTerrainProfile p, TerrainData data)
+        {
+            int cells = Mathf.CeilToInt(p.size / WaterCell);
+            float half = p.size * 0.5f;
+            float threshold = p.waterLevel + 0.5f;
+
+            // Which grid corners sit under water (with a one-cell margin so shorelines are covered).
+            var under = new bool[cells + 1, cells + 1];
+            for (int z = 0; z <= cells; z++)
+            for (int x = 0; x <= cells; x++)
+            {
+                float nx = Mathf.Clamp01((float)x / cells), nz = Mathf.Clamp01((float)z / cells);
+                under[z, x] = data.GetInterpolatedHeight(nx, nz) + p.baseHeight < threshold;
+            }
+
+            var index = new int[cells + 1, cells + 1];
+            for (int z = 0; z <= cells; z++) for (int x = 0; x <= cells; x++) index[z, x] = -1;
+            var verts = new List<Vector3>();
+            var uvs = new List<Vector2>();
+            var tris = new List<int>();
+
+            int Vertex(int x, int z)
+            {
+                if (index[z, x] >= 0) return index[z, x];
+                float wx = -half + x * WaterCell, wz = -half + z * WaterCell;
+                index[z, x] = verts.Count;
+                verts.Add(new Vector3(wx, 0f, wz));
+                uvs.Add(new Vector2(wx, wz) / WaterUvMetres);
+                return index[z, x];
+            }
+
+            for (int z = 0; z < cells; z++)
+            for (int x = 0; x < cells; x++)
+            {
+                bool wet = false;
+                for (int dz = -1; dz <= 2 && !wet; dz++)
+                for (int dx = -1; dx <= 2 && !wet; dx++)
+                {
+                    int cx = x + dx, cz = z + dz;
+                    if (cx >= 0 && cz >= 0 && cx <= cells && cz <= cells && under[cz, cx]) wet = true;
+                }
+                if (!wet) continue;
+                int a = Vertex(x, z), b = Vertex(x + 1, z), c = Vertex(x + 1, z + 1), d = Vertex(x, z + 1);
+                tris.Add(a); tris.Add(d); tris.Add(c);
+                tris.Add(a); tris.Add(c); tris.Add(b);
+            }
+
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(WaterMeshPath);
+            bool create = mesh == null;
+            if (create) mesh = new Mesh { name = "Zone01_WaterMesh" };
+            mesh.Clear();
+            mesh.indexFormat = verts.Count > 65000 ? IndexFormat.UInt32 : IndexFormat.UInt16;
+            mesh.SetVertices(verts);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(tris, 0);
+            var normals = new Vector3[verts.Count];
+            var tangents = new Vector4[verts.Count];
+            for (int i = 0; i < verts.Count; i++) { normals[i] = Vector3.up; tangents[i] = new Vector4(1f, 0f, 0f, -1f); }
+            mesh.normals = normals;
+            mesh.tangents = tangents;
+            mesh.RecalculateBounds();
+            // Room for the shader's vertex wave offset so the surface isn't culled at grazing angles.
+            var bounds = mesh.bounds;
+            bounds.Expand(new Vector3(0f, 4f, 0f));
+            mesh.bounds = bounds;
+            if (create) AssetDatabase.CreateAsset(mesh, WaterMeshPath);
+            EditorUtility.SetDirty(mesh);
+            Debug.Log($"[ZoneTerrain] Water mesh: {verts.Count:N0} vertices, {tris.Count / 3:N0} triangles.");
+            return mesh;
+        }
+
+        /// <summary>
+        /// RG = downstream direction (each river runs from its first point to its last), B = current speed (0 in lakes
+        /// and still water). Sampled in world XZ by KryticalNova/Anime Water.
+        /// </summary>
+        private static Texture2D BakeWaterFlowMap(ZoneTerrainProfile p)
+        {
+            int res = FlowMapResolution;
+            float half = p.size * 0.5f;
+            var off = NoiseOffset(p.seed);
+            var dir = new Vector2[res * res];
+            var speed = new float[res * res];
+
+            for (int zi = 0; zi < res; zi++)
+            for (int xi = 0; xi < res; xi++)
+            {
+                var pos = new Vector2(-half + p.size * (xi + 0.5f) / res, -half + p.size * (zi + 0.5f) / res);
+                float best = float.MaxValue;
+                Vector2 tangent = Vector2.zero;
+                foreach (var line in p.rivers)
+                {
+                    for (int i = 0; i + 1 < line.points.Count; i++)
+                    {
+                        Vector2 a = line.points[i], b = line.points[i + 1];
+                        Vector2 ab = b - a;
+                        float t = Mathf.Clamp01(Vector2.Dot(pos - a, ab) / Mathf.Max(ab.sqrMagnitude, 1e-4f));
+                        float d = Vector2.Distance(pos, a + ab * t);
+                        if (d < best) { best = d; tangent = ab.normalized; }
+                    }
+                }
+
+                // Full current mid-channel, easing to still water at the banks.
+                float s = 1f - Smooth(p.riverWidth * 0.3f, p.riverWidth * 0.5f + p.riverBankWidth * 0.5f, best);
+                // The current dies out as a river opens into a lake.
+                for (int i = 0; i < p.lakes.Count; i++)
+                    s *= Smooth(-p.lakes[i].radius * 0.25f, 18f, LakeDistance(p.lakes[i], pos, off));
+                dir[zi * res + xi] = tangent;
+                speed[zi * res + xi] = s;
+            }
+
+            // Soften junctions and bends so the flow turns smoothly.
+            for (int pass = 0; pass < 2; pass++)
+            {
+                var d2 = new Vector2[dir.Length];
+                for (int zi = 0; zi < res; zi++)
+                for (int xi = 0; xi < res; xi++)
+                {
+                    Vector2 sum = Vector2.zero;
+                    for (int dz = -2; dz <= 2; dz++)
+                    for (int dx = -2; dx <= 2; dx++)
+                    {
+                        int x = Mathf.Clamp(xi + dx, 0, res - 1), z = Mathf.Clamp(zi + dz, 0, res - 1);
+                        sum += dir[z * res + x] * (0.1f + speed[z * res + x]);
+                    }
+                    d2[zi * res + xi] = sum.sqrMagnitude > 1e-6f ? sum.normalized : dir[zi * res + xi];
+                }
+                dir = d2;
+            }
+
+            var tex = new Texture2D(res, res, TextureFormat.RGBA32, false, true);
+            var pixels = new Color32[res * res];
+            float max = Mathf.Max(p.riverFlowSpeed, 0f);
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Vector2 d = dir[i];
+                pixels[i] = new Color32(
+                    (byte)Mathf.RoundToInt((d.x * 0.5f + 0.5f) * 255f),
+                    (byte)Mathf.RoundToInt((d.y * 0.5f + 0.5f) * 255f),
+                    (byte)Mathf.RoundToInt(Mathf.Clamp01(speed[i] * max) * 255f), 255);
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply();
+            System.IO.File.WriteAllBytes(WaterFlowMapPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+
+            AssetDatabase.ImportAsset(WaterFlowMapPath, ImportAssetOptions.ForceUpdate);
+            var importer = (TextureImporter)AssetImporter.GetAtPath(WaterFlowMapPath);
+            importer.sRGBTexture = false;
+            importer.mipmapEnabled = false;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.alphaSource = TextureImporterAlphaSource.None;
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(WaterFlowMapPath);
+        }
+
+        private static Material AnimeWaterMaterial(ZoneTerrainProfile p, Texture2D flowMap)
+        {
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(AnimeWaterMaterialPath);
+            if (mat == null)
+            {
+                var shader = Shader.Find("KryticalNova/Anime Water");
+                var source = AssetDatabase.LoadAssetAtPath<Material>(AnimeWaterSourceMaterial);
+                if (shader == null) { Debug.LogError("[ZoneTerrain] KryticalNova/Anime Water shader missing; falling back to the old water."); return WaterMaterial(); }
+                mat = source != null ? new Material(source) : new Material(shader);
+                mat.shader = shader;
+                mat.EnableKeyword("_USEREFLECTION_ON");
+                // Slightly deeper, more saturated teal for the comic palette.
+                mat.SetColor("_Maincolor", new Color(0.18f, 0.56f, 0.62f, 1f));
+                mat.SetColor("_DepthColor", new Color(0.0f, 0.12f, 0.32f, 1f));
+                mat.SetColor("_Foamcolor", new Color(0.95f, 0.97f, 1f, 0f));
+                AssetDatabase.CreateAsset(mat, AnimeWaterMaterialPath);
+            }
+            mat.SetTexture("_FlowMap", flowMap);
+            float half = p.size * 0.5f;
+            mat.SetVector("_FlowMapBounds", new Vector4(-half, -half, p.size, p.size));
+            EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         private static Material WaterMaterial()

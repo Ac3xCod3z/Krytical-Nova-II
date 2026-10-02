@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_FoliageWind_Tree_SciFi
+  m_Shader: {fileID: 4800000, guid: 158e70dbb52849945a4ff45cc191a290, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _ALPHATEST_ON
+  - _TREE_MODE
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: db556d465e9f4ab4caffaf339cf5b656, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 1
+    - _BendHeight: 8
+    - _CanopyRadius: 2.4
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _FlutterStrength: 0.06
+    - _IdleSway: 0.015
+    - _InteractStrength: 0
+    - _NormalUp: 0.2
+    - _TreeMode: 1
+    - _TrunkHeight: 1.2
+    - _WindFadeDistance: 220
+    - _WindStrength: 0.05
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorVariation: {r: 0.9, g: 1, b: 0.82, a: 0.18}
+    - _ColorVariation2: {r: 0.82, g: 0.94, b: 0.86, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

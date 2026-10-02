@@ -4,7 +4,7 @@ using Unity.Netcode;
 namespace KryticalNova.World
 {
     /// <summary>
-    /// The entire replicated world-environment state (~40 bytes). It only changes when the weather
+    /// The entire replicated world-environment state (~48 bytes). It only changes when the weather
     /// changes or a GM edits the clock; every client derives time of day and blend progress locally
     /// from <see cref="NetworkManager.ServerTime"/>.
     /// </summary>
@@ -29,6 +29,10 @@ namespace KryticalNova.World
         public float FromWindHeading;
         public float ToWindHeading;
 
+        /// <summary>Wind speed (m/s) rolled when FromWeather / ToWeather began. NaN = the profile's fixed speed.</summary>
+        public float FromWindSpeed;
+        public float ToWindSpeed;
+
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref CycleEpoch);
@@ -42,6 +46,8 @@ namespace KryticalNova.World
             serializer.SerializeValue(ref Seed);
             serializer.SerializeValue(ref FromWindHeading);
             serializer.SerializeValue(ref ToWindHeading);
+            serializer.SerializeValue(ref FromWindSpeed);
+            serializer.SerializeValue(ref ToWindSpeed);
         }
 
         public float TimeOfDay01(double now)
@@ -79,7 +85,8 @@ namespace KryticalNova.World
             TimeOffset01.Equals(o.TimeOffset01) && TimeScale.Equals(o.TimeScale) &&
             FromWeather == o.FromWeather && ToWeather == o.ToWeather &&
             TransitionStart.Equals(o.TransitionStart) && TransitionSeconds.Equals(o.TransitionSeconds) && Seed == o.Seed &&
-            FromWindHeading.Equals(o.FromWindHeading) && ToWindHeading.Equals(o.ToWindHeading);
+            FromWindHeading.Equals(o.FromWindHeading) && ToWindHeading.Equals(o.ToWindHeading) &&
+            FromWindSpeed.Equals(o.FromWindSpeed) && ToWindSpeed.Equals(o.ToWindSpeed);
 
         public override bool Equals(object obj) => obj is WorldEnvironmentState o && Equals(o);
 

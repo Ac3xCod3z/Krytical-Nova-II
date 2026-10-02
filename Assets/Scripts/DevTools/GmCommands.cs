@@ -86,6 +86,7 @@ namespace KryticalNova.DevTools
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",
                 "WEATHER      weather.set <name> [secs] · weather.clear · weather.lock <bool> · weather.list",
+                "SKY          sky.rainbow [0-1|off] · sky.moonphase <new|first|full|last|0-1|off> · sky.moon.next · sky.halo [sun|moon|both|off] · sky.shimmer <x|off> · sky.flare <x|off> · sky.lightning · sky.status · sky.reset",
                 "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear",
             });
         }
@@ -371,7 +372,8 @@ namespace KryticalNova.DevTools
         }
 
         // Named Zone01 landmarks (built by StarterTownBuilder) that don't carry a PointOfInterest component yet.
-        private static readonly string[] LandmarkNames = { "Plaza", "NW Training Yard", "N Gate (Guard Captain)", "Slot_GateMaster" };
+        // Most targets are PointOfInterest components laid down by the city builder; these are extra named objects.
+        private static readonly string[] LandmarkNames = { "Slot_Elder", "Slot_GateMaster" };
 
         private static List<TeleportTarget> CollectTargets()
         {

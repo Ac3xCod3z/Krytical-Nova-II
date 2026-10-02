@@ -1,8 +1,5 @@
 using System.Collections.Generic;
-using KryticalNova.Networking;
 using KryticalNova.World;
-using KryticalNova.World.Portals;
-using Unity.Netcode;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -11,25 +8,33 @@ using Object = UnityEngine.Object;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Lays out the Zone01 starter town from a code table using only small POLYGON Sci-Fi City buildings:
-    /// walls with four gates, a paved plaza and streets, vendor buildings, NPCs, the river bridge, the
-    /// portal pad and the player spawn points. Each root it owns is deleted and rebuilt on every run;
-    /// the terrain is never touched. Origin = town centre, +Z = north (the portal side).
+    /// Lays out the Zone01 walled city from code tables and seeded rules, using the POLYGON Sci-Fi City kit:
+    /// a Synty-demo-style street grid (10 m two-lane streets, merged lots, market alleys, special blocks), the central
+    /// plaza with the Elder hall and vendor stalls, themed districts of modular shopfronts, prefabs and stacked towers,
+    /// facade billboards and street dressing, the wall, and the outskirts (ruins, skyline, bridges, north-island portal).
+    /// Every root it owns is deleted and rebuilt on each run; the terrain is never touched. Origin = city centre, +Z =
+    /// north (the portal side). Split by section: .Streets / .Plaza / .Districts / .Facades / .Outskirts.
     /// </summary>
-    public static class StarterTownBuilder
+    public static partial class StarterTownBuilder
     {
         public const string TownRootName = "--- Town ---";
         public const string NpcRootName = "--- NPCs ---";
         public const string PortalRootName = "--- Portals ---";
         public const string SpawnRootName = "--- Spawn ---";
+        public const string OutskirtsRootName = "--- Outskirts ---";
         public const string NpcPrefabFolder = "Assets/Prefabs/NPC";
 
-        private const float WallHalf = 50f;      // wall line; inner face ≈ 48.5
-        private const float GateHalf = 6f;       // half width of each gate opening
-        private const float WallSegment = 11f;   // SM_Bld_City_Wall_01 is 11.2 m long
-        private const float PlazaHalf = 17.5f;
-        private const float StreetHalf = 5f;
-        private const float TileSize = 5f;
+        // City bands, as distances from the centre (max(|x|, |z|)). All multiples of the 5 m tile.
+        public const float WallHalf = 110f;      // wall centre line; inner face ≈ 108.5
+        private const float GateHalf = 6f;       // gate openings match the 10 m avenues
+        private const float PlazaHalf = 30f;
+        private const float LoopIn = 30f, LoopOut = 40f;
+        private const float MidIn = 60f, MidOut = 70f;
+        private const float RingIn = 95f, RingOut = 105f;
+        private const float LawnHalf = 20f;      // plaza lawns sit between the walkways (5 m) and the perimeter walk
+
+        private const float Tile = 5f;
+        private const int Cells = 44;            // 44 × 5 m = 220 m, wall to wall
         private const float PavingHeight = 0.03f;
         private const float BridgeDeckHeight = 0.32f;
 
@@ -40,7 +45,10 @@ namespace KryticalNova.EditorTools
         };
 
         private static Dictionary<string, string> prefabIndex;
+        private static readonly Dictionary<string, Bounds> footprintCache = new Dictionary<string, Bounds>();
         private static int groundLayer;
+        private static System.Random rng;
+        private static Terrain terrain;
 
         [MenuItem("Krytical Nova/Zone/Build Starter Town")]
         public static void BuildMenu() => Build();
@@ -49,371 +57,101 @@ namespace KryticalNova.EditorTools
         {
             groundLayer = LayerMask.NameToLayer("Ground");
             IndexPrefabs();
+            footprintCache.Clear();
             var profile = ZoneTerrainGenerator.LoadOrCreateProfile();
+            rng = new System.Random(profile.seed + 101);
+            terrain = Object.FindAnyObjectByType<Terrain>();
+
+            ClassifyTiles();
+            ResetOccupancy();
+            paletteUsed.Clear();
+            buildings.Clear();
+            buildingOcc = new bool[OccSize, OccSize];
+            paletteOptions.Clear();
+            ruinLibrary = RuinDemolisher.Library();
 
             var town = FreshRoot(TownRootName);
             BuildWalls(Group(town, "Walls"));
-            BuildPaving(Group(town, "Paving"));
-            BuildPlaza(Group(town, "Plaza"));
+            BuildStreets(Group(town, "Streets"));
+            BuildPlaza(Group(town, "Central Plaza"));
+            var npcs = FreshRoot(NpcRootName).transform;
+            BuildStalls(Group(town, "Vendor Stalls"), npcs);
+            BuildQuarters(Group(town, "Quarters"), npcs);
+            BuildSpecialBlocks(Group(town, "Special Blocks"));
             BuildDistricts(Group(town, "Districts"));
-            BuildBridge(Group(town, "North Bridge"), profile);
-            BuildNpcs(FreshRoot(NpcRootName).transform);
+            BuildAlleys(Group(town, "Market Alleys"));
+            BuildStreetDressing(Group(town, "Street Dressing"));
+            BuildFacadeBillboards(Group(town, "Facade Billboards"));
+            BuildStreetSigns(Group(town, "Street Signs"));
+
+            var outskirts = FreshRoot(OutskirtsRootName);
+            BuildBridges(Group(outskirts, "Bridges"), profile);
+            BuildRuins(Group(outskirts, "Ruins"), profile);
+            BuildSkyline(Group(outskirts, "Skyline"), profile);
             BuildPortal(FreshRoot(PortalRootName).transform, profile);
             BuildSpawns(FreshRoot(SpawnRootName).transform);
+            BuildPointsOfInterest(Group(town, "Points of Interest"), Group(outskirts, "Points of Interest"), profile);
             PlaceExistingActors();
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            Debug.Log("[StarterTown] Town, NPCs, bridge, portal and spawn points built.");
+            Debug.Log("[StarterTown] City, stalls, NPCs, outskirts, portal and spawn points built.");
         }
 
-        // ---------------------------------------------------------------- walls
+        // ---------------------------------------------------------------- occupancy (1 m grid over the walled city)
 
-        private static void BuildWalls(Transform parent)
+        private const int OccSize = (int)(WallHalf * 2f);
+        private static bool[,] occupied;
+
+        private static void ResetOccupancy()
         {
-            for (int side = 0; side < 4; side++)
-            {
-                // 0 = north, 1 = south, 2 = east, 3 = west
-                bool alongX = side < 2;
-                float line = side == 0 || side == 2 ? WallHalf : -WallHalf;
-                float yaw = alongX ? 0f : 90f;
-                for (int k = 0; k < 4; k++)
-                {
-                    float s = GateHalf + WallSegment * 0.5f + WallSegment * k;
-                    foreach (float along in new[] { s, -s })
-                    {
-                        float x = alongX ? along : line;
-                        float z = alongX ? line : along;
-                        Place(parent, "SM_Bld_City_Wall_01", x, z, yaw);
-                    }
-                }
-
-                // Gate towers flank every opening.
-                for (int sign = -1; sign <= 1; sign += 2)
-                {
-                    float along = sign * (GateHalf + 2f);
-                    Place(parent, "SM_Bld_City_Wall_Tower_01", alongX ? along : line, alongX ? line : along, yaw);
-                }
-            }
-
-            for (int sx = -1; sx <= 1; sx += 2)
-            for (int sz = -1; sz <= 1; sz += 2)
-                Place(parent, "SM_Bld_City_Wall_Tower_01", sx * WallHalf, sz * WallHalf, 0f);
-
-            // Main (north) gate beacons, echoing the light beam over the gate in the reference.
-            var beacon = AssetDatabase.LoadAssetAtPath<GameObject>(PortalVfxBuilder.GateBeaconPath);
-            if (beacon != null)
-                for (int sign = -1; sign <= 1; sign += 2)
-                {
-                    var go = (GameObject)PrefabUtility.InstantiatePrefab(beacon, parent);
-                    go.transform.position = new Vector3(sign * (GateHalf + 2f), 13.4f, WallHalf);
-                    go.transform.localScale = Vector3.one * 2f;
-                }
+            occupied = new bool[OccSize, OccSize];
+            for (int i = 0; i < Cells; i++)
+            for (int j = 0; j < Cells; j++)
+                if (tiles[i, j] != TileKind.Block)
+                    MarkRect(new Rect(CellMin(i), CellMin(j), Tile, Tile));
         }
 
-        // ---------------------------------------------------------------- ground
+        // Rects are quantized to the 1 m grid with a small inward tolerance, so footprints that exactly touch (shops
+        // standing shoulder to shoulder on the 5 m grid) don't claim each other's cells.
+        private const float OccEpsilon = 0.15f;
 
-        private static void BuildPaving(Transform parent)
+        private static bool IsFree(Rect r)
         {
-            // Plaza: 8 × 8 tiles.
-            for (float x = -PlazaHalf + TileSize * 0.5f; x < PlazaHalf; x += TileSize)
-            for (float z = -PlazaHalf + TileSize * 0.5f; z < PlazaHalf; z += TileSize)
-                Ground(parent, "SM_Env_Ground_Tile_01", x, z);
-
-            // Four streets, two tiles wide, from the plaza out through each gate.
-            for (float along = PlazaHalf + TileSize * 0.5f; along < WallHalf + 6f; along += TileSize)
-            for (float across = -StreetHalf + TileSize * 0.5f; across < StreetHalf; across += TileSize)
-            {
-                Ground(parent, "SM_Env_Ground_Tile_02", across, along);
-                Ground(parent, "SM_Env_Ground_Tile_02", across, -along);
-                Ground(parent, "SM_Env_Ground_Tile_02", along, across);
-                Ground(parent, "SM_Env_Ground_Tile_02", -along, across);
-            }
+            int x0 = Mathf.FloorToInt(r.xMin + OccEpsilon + WallHalf), x1 = Mathf.CeilToInt(r.xMax - OccEpsilon + WallHalf);
+            int z0 = Mathf.FloorToInt(r.yMin + OccEpsilon + WallHalf), z1 = Mathf.CeilToInt(r.yMax - OccEpsilon + WallHalf);
+            if (x0 < 0 || z0 < 0 || x1 > OccSize || z1 > OccSize) return false;
+            for (int x = x0; x < x1; x++)
+            for (int z = z0; z < z1; z++)
+                if (occupied[x, z]) return false;
+            return true;
         }
 
-        private static void Ground(Transform parent, string prefab, float x, float z)
+        private static void MarkRect(Rect r)
         {
-            var go = Place(parent, prefab, x, z, 0f, PavingHeight);
-            if (go != null) SetLayerRecursively(go, groundLayer);
+            int x0 = Mathf.Max(0, Mathf.FloorToInt(r.xMin + OccEpsilon + WallHalf)), x1 = Mathf.Min(OccSize, Mathf.CeilToInt(r.xMax - OccEpsilon + WallHalf));
+            int z0 = Mathf.Max(0, Mathf.FloorToInt(r.yMin + OccEpsilon + WallHalf)), z1 = Mathf.Min(OccSize, Mathf.CeilToInt(r.yMax - OccEpsilon + WallHalf));
+            for (int x = x0; x < x1; x++)
+            for (int z = z0; z < z1; z++)
+                occupied[x, z] = true;
         }
 
-        // ---------------------------------------------------------------- plaza
-
-        private static void BuildPlaza(Transform parent)
-        {
-            // Centre podium + hologram beacon (the reference's yellow centre square).
-            Place(parent, "SM_Bld_LandingPad_01", 0f, 0f, 45f);
-            var beacon = AssetDatabase.LoadAssetAtPath<GameObject>(PortalVfxBuilder.TownBeaconPath);
-            if (beacon != null)
-            {
-                var go = (GameObject)PrefabUtility.InstantiatePrefab(beacon, parent);
-                go.transform.position = new Vector3(0f, 1.25f, 0f);
-                go.transform.localScale = Vector3.one * 1.5f;
-            }
-
-            for (int sx = -1; sx <= 1; sx += 2)
-            for (int sz = -1; sz <= 1; sz += 2)
-            {
-                // Streetlights on the plaza corners, arms toward the centre.
-                float yaw = Mathf.Atan2(-sx, -sz) * Mathf.Rad2Deg;
-                Place(parent, "SM_Prop_Streetlight_01", sx * 16f, sz * 16f, yaw, 0f, 1f, alignToBounds: false);
-
-                // Hedges frame each corner, leaving the four street mouths open.
-                Place(parent, "SM_Env_Hedge_01", sx * 11f, sz * 17.2f, 0f);
-                Place(parent, "SM_Env_Hedge_01", sx * 17.2f, sz * 11f, 90f);
-
-                // Benches face the podium.
-                Place(parent, "SM_Prop_Bench_01", sx * 8f, sz * 13f, sz > 0 ? 180f : 0f);
-                Place(parent, "SM_Prop_TrashCan_01", sx * 11f, sz * 13.5f, 0f);
-            }
-        }
-
-        // ---------------------------------------------------------------- districts
-
-        private static void BuildDistricts(Transform parent)
-        {
-            // NE — Herb Master's market.
-            var ne = Group(parent, "NE Market (Herb Master)");
-            Place(ne, "SM_Bld_Shop_Open_01", 27f, 26f, 180f);
-            for (int i = 0; i < 3; i++)
-            {
-                float x = 34f + i * 5f;
-                Place(ne, "SM_Prop_MarketCover_01", x, 23f, 0f);
-                Place(ne, "SM_Prop_MarketTable_0" + (i + 1), x, 23.2f, 0f);
-            }
-            Place(ne, "SM_Prop_MarketLights_01", 39f, 25.5f, 0f);
-            Place(ne, "SM_Prop_Crate_01", 46f, 28f, 20f);
-            Place(ne, "SM_Prop_Crate_03", 45.5f, 31f, 0f);
-            Place(ne, "SM_Bld_Background_Small_01", 44.5f, 44.5f, 0f);
-            Place(ne, "SM_Bld_Background_Small_02", 37f, 46f, 0f);
-            Place(ne, "SM_Building_Shack_01", 45.5f, 37f, 270f);
-            Place(ne, "SM_Building_Shack_02", 24f, 45f, 180f);
-            Place(ne, "SM_Bld_Background_Small_03", 30.5f, 46f, 0f);
-
-            // NW — training yard.
-            var nw = Group(parent, "NW Training Yard");
-            for (int i = 0; i < 4; i++)
-            {
-                Place(nw, "SM_Prop_Barrier_01", -22.5f, 26f + i * 5f, 0f);
-                Place(nw, "SM_Prop_Barrier_01", -44f, 26f + i * 5f, 0f);
-                Place(nw, "SM_Prop_Barrier_01", -26f - i * 5f, 44.5f, 90f);
-            }
-            Place(nw, "SM_Prop_Crate_04", -41f, 41f, 90f);
-            Place(nw, "SM_Prop_Crate_Military_01", -40f, 38f, 15f);
-            Place(nw, "SM_Bld_Background_Small_04", -46.5f, 46.5f, 0f);
-            Place(nw, "SM_Bld_Raised_01", -45f, 13f, 90f);
-
-            // W — Mall Manager's food stand and vending row.
-            var w = Group(parent, "W Mall Stand (Mall Manager)");
-            Place(w, "SM_Bld_FoodHole_01", -26f, 10.5f, 180f);
-            Place(w, "SM_Prop_VendingMachine_Soda_01", -30.5f, 10.5f, 180f);
-            Place(w, "SM_Prop_VendingMachine_01", -33.5f, 9.5f, 180f);
-            Place(w, "SM_Prop_VendingMachine_01", -34.7f, 9.5f, 180f);
-            Place(w, "SM_Prop_Hologram_Noodles_01", -21.5f, 12.5f, 180f);
-            Place(w, "SM_Bld_Background_Small_01", -45f, -12f, 0f);
-
-            // SW — Blacksmith's chop shop.
-            var sw = Group(parent, "SW Smithy (Blacksmith)");
-            Place(sw, "SM_Bld_Chopshop_01", -36f, -29f, 90f);
-            Place(sw, "SM_Prop_Crate_03", -25.5f, -22f, 10f);
-            Place(sw, "SM_Prop_Crate_04", -25f, -35f, 90f);
-            Place(sw, "SM_Prop_Crate_Military_02", -27f, -37.5f, 0f);
-            Place(sw, "SM_Prop_Dumpster_01", -45f, -38f, 90f);
-            Place(sw, "SM_Building_Shack_02", -45.5f, -45.5f, 45f);
-            Place(sw, "SM_Bld_Background_Small_02", -27f, -46f, 0f);
-            Place(sw, "SM_Building_Shack_01", -36f, -46f, 0f);
-
-            // SE — Trader's bank and the Agent's kiosk.
-            var se = Group(parent, "SE Exchange (Trader, Agent)");
-            Place(se, "SM_Bld_Bank_01", 38.5f, -36.5f, 270f);
-            Place(se, "SM_Prop_Bank_Booth_01", 26f, -23f, 180f);
-            Place(se, "SM_Building_Shack_01", 21.5f, -46f, 0f);
-            Place(se, "SM_Prop_Atm_01", 26f, -43f, 270f);
-            Place(se, "SM_Prop_Atm_01", 26f, -40.5f, 270f);
-            Place(se, "SM_Bld_Background_Small_01", 45f, 12f, 0f);
-            Place(se, "SM_Bld_Background_Small_02", 45.5f, -13f, 90f);
-
-            // N gate — Guard Captain's posts.
-            var gate = Group(parent, "N Gate (Guard Captain)");
-            Place(gate, "SM_Bld_Security_WatchStation_01", -12.5f, 44.5f, 180f);
-            Place(gate, "SM_Bld_Security_WatchStation_01", 12.5f, 44.5f, 180f);
-            Place(gate, "SM_Prop_Barrier_Plastic_01", -5f, 54f, 90f);
-            Place(gate, "SM_Prop_Barrier_Plastic_01", 5f, 54f, 90f);
-
-            // Reserved spots from the reference map for NPCs that come later.
-            var slots = Group(parent, "Future NPC Slots");
-            Marker(slots, "Slot_Elder", -12f, 33f);
-            Marker(slots, "Slot_Tailor", -22f, -12f);
-            Marker(slots, "Slot_GuildDirector", -20f, 20f);
-            Marker(slots, "Slot_Collector", 12f, -32f);
-            Marker(slots, "Slot_GateMaster", 22f, -12f);
-        }
-
-        // ---------------------------------------------------------------- bridge
-
-        private static void BuildBridge(Transform parent, ZoneTerrainProfile profile)
-        {
-            // The north path crosses the river at x = 0; find the crossing from the river line.
-            float riverZ = RiverZAtX(profile, 0f, 108f);
-            const int length = 7;
-            float start = riverZ - TileSize * (length - 1) * 0.5f;
-            for (int i = 0; i < length; i++)
-            {
-                float z = start + i * TileSize;
-                for (int sx = -1; sx <= 1; sx += 2)
-                {
-                    DeckTile(parent, sx * TileSize * 0.5f, z, BridgeDeckHeight, "SM_Env_Ground_Tile_Base_01");
-                    Place(parent, "SM_Env_Railing_01", sx * (TileSize + 0.2f), z, 90f, BridgeDeckHeight);
-                }
-            }
-        }
-
-        /// <summary>The "Base" tiles are only an underside; a flat tile on top gives the walkable surface.</summary>
-        private static void DeckTile(Transform parent, float x, float z, float y, string basePrefab)
-        {
-            Place(parent, basePrefab, x, z, 0f, y);
-            var top = Place(parent, "SM_Env_Ground_Tile_01", x, z, 0f, y + 0.01f);
-            if (top != null) SetLayerRecursively(top, groundLayer);
-        }
-
-        private static float RiverZAtX(ZoneTerrainProfile profile, float x, float fallback)
-        {
-            foreach (var river in profile.rivers)
-                for (int i = 0; i + 1 < river.points.Count; i++)
-                {
-                    Vector2 a = river.points[i], b = river.points[i + 1];
-                    if ((a.x - x) * (b.x - x) > 0f || Mathf.Approximately(a.x, b.x)) continue;
-                    return Mathf.Lerp(a.y, b.y, (x - a.x) / (b.x - a.x));
-                }
-            return fallback;
-        }
-
-        // ---------------------------------------------------------------- NPCs
-
-        private struct NpcSpot
-        {
-            public string Id;
-            public float X, Z;
-            public float FaceX, FaceZ;
-            public NpcSpot(string id, float x, float z, float faceX, float faceZ) { Id = id; X = x; Z = z; FaceX = faceX; FaceZ = faceZ; }
-        }
-
-        private static readonly NpcSpot[] NpcSpots =
-        {
-            new NpcSpot("HerbMaster", 27f, 21.5f, 0f, 0f),
-            new NpcSpot("Blacksmith", -29.5f, -25.5f, 0f, 0f),
-            new NpcSpot("TrainerBlade", -28f, 29f, 0f, 0f),
-            new NpcSpot("TrainerFist", -38f, 29f, -33f, 0f),
-            new NpcSpot("Trader", 27f, -27.5f, 0f, 0f),
-            new NpcSpot("MallManager", -25f, 7.5f, 0f, 0f),
-            new NpcSpot("GuardCaptain", 8.5f, 40f, 0f, 25f),
-            new NpcSpot("Agent", 22.5f, -40f, 0f, 0f),
-        };
-
-        private static void BuildNpcs(Transform parent)
-        {
-            foreach (var spot in NpcSpots)
-            {
-                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{NpcPrefabFolder}/NPC_{spot.Id}.prefab");
-                if (prefab == null) { Debug.LogWarning($"[StarterTown] Missing NPC prefab NPC_{spot.Id}; run Zone01 setup."); continue; }
-                var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
-                var position = new Vector3(spot.X, 0f, spot.Z);
-                Vector3 look = new Vector3(spot.FaceX, 0f, spot.FaceZ) - position;
-                go.transform.SetPositionAndRotation(position, Quaternion.LookRotation(look.sqrMagnitude > 0.01f ? look : Vector3.back));
-            }
-        }
-
-        // ---------------------------------------------------------------- portal
-
-        private static void BuildPortal(Transform parent, ZoneTerrainProfile profile)
-        {
-            Vector2 c = profile.portalCenter;
-            float padTop = profile.portalPadHeight + 0.12f;
-
-            for (int ix = -1; ix <= 2; ix++)
-            for (int iz = -1; iz <= 2; iz++)
-            {
-                DeckTile(parent, c.x + (ix - 0.5f) * TileSize, c.y + (iz - 0.5f) * TileSize, padTop, "SM_Env_Ground_Tile_Base_02");
-            }
-
-            // Approach direction: the last path segment into the portal.
-            Vector2 approach = new Vector2(-1f, -0.4f).normalized;
-            foreach (var path in profile.paths)
-            {
-                int n = path.points.Count;
-                if (n >= 2 && Vector2.Distance(path.points[n - 1], c) < 1f) approach = (path.points[n - 2] - c).normalized;
-            }
-            float approachYaw = Mathf.Atan2(approach.x, approach.y) * Mathf.Rad2Deg;
-
-            // Power pylons ring the pad, leaving the approach open.
-            for (int i = 1; i < 8; i++)
-            {
-                float angle = approachYaw + i * 45f;
-                float rad = angle * Mathf.Deg2Rad;
-                Place(parent, "SM_Bld_Power_04", c.x + Mathf.Sin(rad) * 9.5f, c.y + Mathf.Cos(rad) * 9.5f, angle, padTop);
-            }
-
-            var portal = new GameObject("Zone Portal (Northeast)");
-            portal.transform.SetParent(parent, false);
-            portal.transform.SetPositionAndRotation(new Vector3(c.x, padTop, c.y), Quaternion.Euler(0f, approachYaw, 0f));
-            portal.AddComponent<NetworkObject>();
-            var trigger = portal.AddComponent<SphereCollider>();
-            trigger.isTrigger = true;
-            trigger.radius = 3f;
-            trigger.center = new Vector3(0f, 1.5f, 0f);
-            portal.AddComponent<ZonePortal>();
-
-            var vfx = AssetDatabase.LoadAssetAtPath<GameObject>(PortalVfxBuilder.PortalPath);
-            if (vfx != null)
-            {
-                var fx = (GameObject)PrefabUtility.InstantiatePrefab(vfx, portal.transform);
-                fx.transform.localPosition = new Vector3(0f, 2.6f, 0f);
-                fx.transform.localRotation = Quaternion.identity;
-                fx.transform.localScale = Vector3.one * 2.2f;
-            }
-        }
-
-        // ---------------------------------------------------------------- spawns
-
-        private static void BuildSpawns(Transform parent)
-        {
-            parent.gameObject.AddComponent<PlayerSpawnService>();
-            var points = new[] { new Vector2(0f, -12f), new Vector2(-5f, -11f), new Vector2(5f, -11f), new Vector2(-9f, -8f), new Vector2(9f, -8f), new Vector2(0f, -16f) };
-            for (int i = 0; i < points.Length; i++)
-            {
-                var go = new GameObject($"Spawn Point {i + 1}");
-                go.transform.SetParent(parent, false);
-                go.transform.SetPositionAndRotation(new Vector3(points[i].x, 0.05f, points[i].y), Quaternion.identity);
-                go.AddComponent<PlayerSpawnPoint>();
-            }
-        }
-
-        /// <summary>Moves the offline avatar to the plaza and the combat dummy into the training yard.</summary>
-        private static void PlaceExistingActors()
-        {
-            var scene = EditorSceneManager.GetActiveScene();
-            foreach (var root in scene.GetRootGameObjects())
-            {
-                if (root.name == "Player")
-                {
-                    Undo.RecordObject(root.transform, "Move player");
-                    root.transform.SetPositionAndRotation(new Vector3(0f, 1f, -12f), Quaternion.identity);
-                }
-                else if (root.name == "Combat Dummy")
-                {
-                    Undo.RecordObject(root.transform, "Move dummy");
-                    root.transform.SetPositionAndRotation(new Vector3(-33f, 1f, 36f), Quaternion.Euler(0f, 135f, 0f));
-                }
-            }
-        }
+        private static Rect CenteredRect(Vector2 center, Vector2 size) => new Rect(center - size * 0.5f, size);
 
         // ---------------------------------------------------------------- placement helpers
 
         /// <summary>
-        /// Instantiates a Synty prefab so its footprint is centred on (x, z) — most Sci-Fi City buildings
-        /// pivot on a corner — and gives collider-less meshes a box so they block clicks and the NavMesh.
+        /// Instantiates a Synty prefab so its footprint is centred on (x, z) — most Sci-Fi City buildings pivot on a
+        /// corner — and gives collider-less meshes a box so they block clicks and the NavMesh.
         /// </summary>
         private static GameObject Place(Transform parent, string prefabName, float x, float z, float yaw,
-            float y = 0f, float scale = 1f, bool alignToBounds = true)
+            float y = 0f, float scale = 1f, bool alignToBounds = true, bool collider = true)
+        {
+            return Spawn(parent, prefabName, new Vector3(x, y, z), Quaternion.Euler(0f, yaw, 0f), Vector3.one * scale, alignToBounds, collider);
+        }
+
+        /// <summary>Full-control placement: any rotation (tilted ruins) and non-uniform scale (wall spans).</summary>
+        private static GameObject Spawn(Transform parent, string prefabName, Vector3 position, Quaternion rotation, Vector3 scale,
+            bool alignToBounds = true, bool collider = true, bool castShadows = true)
         {
             if (!prefabIndex.TryGetValue(prefabName, out var path))
             {
@@ -422,24 +160,121 @@ namespace KryticalNova.EditorTools
             }
 
             var go = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(path), parent);
-            go.transform.localScale = Vector3.one * scale;
+            go.transform.localScale = scale;
             go.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             bool hasBounds = TryGetBounds(go, out Bounds local);
 
-            go.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            go.transform.rotation = rotation;
             Vector3 offset = Vector3.zero;
             if (alignToBounds && TryGetBounds(go, out Bounds rotated)) offset = new Vector3(rotated.center.x, 0f, rotated.center.z);
-            go.transform.position = new Vector3(x, y, z) - offset;
+            go.transform.position = position - offset;
 
-            if (hasBounds && go.GetComponentInChildren<Collider>() == null)
+            if (collider && hasBounds && go.GetComponentInChildren<Collider>() == null)
             {
                 var box = go.AddComponent<BoxCollider>();
-                box.center = local.center / scale;
-                box.size = local.size / scale;
+                box.center = Divide(local.center, scale);
+                box.size = Divide(local.size, scale);
             }
+            else if (!collider)
+            {
+                foreach (var c in go.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+            }
+
+            if (!castShadows)
+                foreach (var r in go.GetComponentsInChildren<Renderer>())
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
             GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic | StaticEditorFlags.OccluderStatic);
             return go;
+        }
+
+        private static Vector3 Divide(Vector3 a, Vector3 b) => new Vector3(a.x / b.x, a.y / b.y, a.z / b.z);
+
+        // ---------------------------------------------------------------- building palette (ColorBible)
+
+        private const float PaletteNeighbourRadius = 22f;
+        private static readonly List<(Vector2 Pos, string Family)> paletteUsed = new List<(Vector2, string)>();
+        private static readonly Dictionary<string, List<Material>> paletteOptions = new Dictionary<string, List<Material>>();
+
+        /// <summary>
+        /// Recolours a building from the colour-bible palette (Synty atlas variants / tinted tower materials), picking a
+        /// colour family no building within <see cref="PaletteNeighbourRadius"/> already uses, so neighbours never match
+        /// (families, not materials: two pale towers with different window sets still read as the same colour).
+        /// </summary>
+        private static void ApplyPalette(GameObject go, Vector2 pos)
+        {
+            if (go == null) return;
+            var chosen = new Dictionary<string, Material>(); // one pick per source material, shared by the object's renderers
+            foreach (var r in go.GetComponentsInChildren<Renderer>())
+            {
+                if (r is ParticleSystemRenderer) continue;
+                var mats = r.sharedMaterials;
+                bool changed = false;
+                for (int k = 0; k < mats.Length; k++)
+                {
+                    var source = mats[k];
+                    if (source == null) continue;
+                    if (!chosen.TryGetValue(source.name, out var pick))
+                    {
+                        if (!paletteOptions.TryGetValue(source.name, out var options))
+                            paletteOptions[source.name] = options = ColorBible.BuildingMaterials(source);
+                        if (options.Count == 0) continue;
+                        pick = PickUnusedNear(options, pos);
+                        chosen[source.name] = pick;
+                        paletteUsed.Add((pos, ColorBible.FamilyOf(pick)));
+                    }
+                    if (mats[k] != pick) { mats[k] = pick; changed = true; }
+                }
+                if (changed) r.sharedMaterials = mats;
+            }
+        }
+
+        private static Material PickUnusedNear(List<Material> options, Vector2 pos)
+        {
+            int start = rng.Next(options.Count);
+            for (int n = 0; n < options.Count; n++)
+            {
+                var m = options[(start + n) % options.Count];
+                string family = ColorBible.FamilyOf(m);
+                bool clash = false;
+                foreach (var (p, used) in paletteUsed)
+                    if (used == family && (p - pos).sqrMagnitude < PaletteNeighbourRadius * PaletteNeighbourRadius) { clash = true; break; }
+                if (!clash) return m;
+            }
+            return options[start];
+        }
+
+        /// <summary>Places a prefab in a local frame (origin + yaw), e.g. the pieces of a vendor stall.</summary>
+        private static GameObject PlaceLocal(Transform parent, string prefab, Vector2 origin, float frameYaw, float lx, float lz,
+            float localYaw = 0f, float y = 0f, bool collider = true, bool align = true)
+        {
+            Vector2 p = origin + Rotate(new Vector2(lx, lz), frameYaw);
+            return Place(parent, prefab, p.x, p.y, frameYaw + localYaw, y, 1f, align, collider);
+        }
+
+        /// <summary>Rotates an XZ vector by a Unity yaw (degrees, clockwise seen from above): local +Z → (sin, cos).</summary>
+        private static Vector2 Rotate(Vector2 v, float yaw)
+        {
+            float r = yaw * Mathf.Deg2Rad, c = Mathf.Cos(r), s = Mathf.Sin(r);
+            return new Vector2(v.x * c + v.y * s, -v.x * s + v.y * c);
+        }
+
+        private static float YawOf(Vector2 dir) => Mathf.Atan2(dir.x, dir.y) * Mathf.Rad2Deg;
+
+        /// <summary>Prefab footprint at yaw 0 (cached), from an editor-only temporary instance.</summary>
+        private static Bounds Footprint(string prefabName)
+        {
+            if (footprintCache.TryGetValue(prefabName, out var b)) return b;
+            b = new Bounds(Vector3.zero, Vector3.one);
+            if (prefabIndex.TryGetValue(prefabName, out var path))
+            {
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(path));
+                go.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                if (TryGetBounds(go, out var found)) b = found;
+                Object.DestroyImmediate(go);
+            }
+            footprintCache[prefabName] = b;
+            return b;
         }
 
         private static bool TryGetBounds(GameObject go, out Bounds bounds)
@@ -455,11 +290,28 @@ namespace KryticalNova.EditorTools
             return found;
         }
 
-        private static void Marker(Transform parent, string name, float x, float z)
+        private static float GroundHeight(float x, float z)
+        {
+            if (terrain == null) return 0f;
+            return terrain.SampleHeight(new Vector3(x, 0f, z)) + terrain.transform.position.y;
+        }
+
+        private static GameObject Marker(Transform parent, string name, float x, float z, float y = 0f)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
-            go.transform.position = new Vector3(x, 0f, z);
+            go.transform.position = new Vector3(x, y, z);
+            return go;
+        }
+
+        private static void Poi(Transform parent, string id, string displayName, float x, float z)
+        {
+            var go = Marker(parent, "POI " + displayName, x, z, GroundHeight(x, z));
+            var poi = go.AddComponent<PointOfInterest>();
+            var so = new SerializedObject(poi);
+            so.FindProperty("poiId").stringValue = id;
+            so.FindProperty("displayName").stringValue = displayName;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void SetLayerRecursively(GameObject go, int layer)
@@ -486,6 +338,10 @@ namespace KryticalNova.EditorTools
             go.transform.SetParent(parent, false);
             return go.transform;
         }
+
+        private static T Pick<T>(IReadOnlyList<T> list) => list[rng.Next(list.Count)];
+        private static float Range(float min, float max) => min + (float)rng.NextDouble() * (max - min);
+        private static bool Chance(double p) => rng.NextDouble() < p;
 
         private static void IndexPrefabs()
         {

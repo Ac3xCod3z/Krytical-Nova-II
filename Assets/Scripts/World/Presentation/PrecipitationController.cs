@@ -43,6 +43,9 @@ namespace KryticalNova.World
         }
 
         private static readonly int WindVectorId = Shader.PropertyToID("_KN_WindVector");
+        private static readonly int WindParamsId = Shader.PropertyToID("_KN_WindParams");
+        private static readonly int WindScrollId = Shader.PropertyToID("_KN_WindScroll");
+        private Vector2 windScroll;
 
         [SerializeField] private Rig rain = new Rig();
         [SerializeField] private Rig rainSplash = new Rig { heightOffset = 0.05f, windInfluence = 0f, groundAnchored = true };
@@ -64,6 +67,10 @@ namespace KryticalNova.World
         [Range(0f, 1.5f)] [SerializeField] private float snowWindDrift = 0.35f;
         [Tooltip("WindZone.windMain per m/s of weather wind.")]
         [SerializeField] private float windZoneScale = 0.06f;
+        [Tooltip("Wind speed (m/s) at which foliage and water reach full storm motion (_KN_WindParams.z = 1).")]
+        [Min(1f)] [SerializeField] private float foliageFullWindSpeed = 20f;
+        [Tooltip("Water ripple drift (texture tiles per second) per m/s of wind.")]
+        [SerializeField] private float waterWindScroll = 0.004f;
 
         [Header("Following")]
         [SerializeField] private float snapSize = 1f;
@@ -435,7 +442,7 @@ namespace KryticalNova.World
             TrackCameraVelocity(camPos, Time.deltaTime);
             UpdateJumpSpace();
 
-            // Wind (one zone for particles; global vector for future foliage shaders).
+            // Wind (one zone for particles; global vectors for foliage and water shaders).
             float speed = w.wind.magnitude;
             if (speed > 0.01f) windZone.transform.rotation = Quaternion.LookRotation(new Vector3(w.wind.x, 0f, w.wind.y));
             windZone.windMain = speed * windZoneScale;
@@ -443,6 +450,14 @@ namespace KryticalNova.World
             windZone.windPulseMagnitude = w.gustiness;
             windZone.windPulseFrequency = 0.15f + w.gustiness * 0.25f;
             Shader.SetGlobalVector(WindVectorId, new Vector4(w.wind.x, w.wind.y, speed, 0f));
+            // Foliage/water: x = gust now (0-1), y = gustiness, z = strength (0 calm .. 1 at foliageFullWindSpeed), w unused.
+            Shader.SetGlobalVector(WindParamsId, new Vector4(w.gust, w.gustiness, Mathf.Clamp01(speed / foliageFullWindSpeed), 0f));
+            // Integrated wind drift for water ripples: continuous even as wind speed/heading change. Wrapped at a
+            // whole number of texture tiles so the wrap is seamless.
+            windScroll += w.wind * (Time.deltaTime * waterWindScroll);
+            windScroll.x = Mathf.Repeat(windScroll.x, 64f);
+            windScroll.y = Mathf.Repeat(windScroll.y, 64f);
+            Shader.SetGlobalVector(WindScrollId, new Vector4(windScroll.x, windScroll.y, 0f, 0f));
 
             if ((w.rain > 0f || w.snow > 0f || w.mist > 0f) && Time.time >= nextShelterCheck)
             {

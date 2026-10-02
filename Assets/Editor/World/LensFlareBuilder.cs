@@ -7,9 +7,9 @@ using UnityEngine.Rendering;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Builds the comic sun lens flare: bakes three small flat-shaded textures (6-point starburst, halftone dot
-    /// disc, inked ring) and a LensFlareDataSRP that strings them along the flare axis with flat polygon/ring
-    /// shapes. Assigns it to the scene's EnvironmentPresenter, which drives intensity (sun only, cloud-aware).
+    /// Builds the comic sun lens flare: bakes two small flat-shaded textures (halftone dot disc, inked ring) and a
+    /// LensFlareDataSRP that strings them along the flare axis with flat polygon/ring shapes. Nothing is drawn on
+    /// the sun itself: the sky shader owns the sun's look, and a flare there reads as a star stamped over the art. Assigns it to the scene's EnvironmentPresenter, which drives intensity (sun only, cloud-aware).
     /// </summary>
     public static class LensFlareBuilder
     {
@@ -22,8 +22,8 @@ namespace KryticalNova.EditorTools
         public static void Build()
         {
             if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/GameData/World", "LensFlare");
+            AssetDatabase.DeleteAsset($"{Folder}/T_Flare_Starburst.png"); // retired: read as a star stamped on the sun
 
-            var starburst = BakeTexture("T_Flare_Starburst", Starburst);
             var halftone = BakeTexture("T_Flare_Halftone", Halftone);
             var ring = BakeTexture("T_Flare_InkRing", InkRing);
 
@@ -36,8 +36,6 @@ namespace KryticalNova.EditorTools
 
             data.elements = new[]
             {
-                // Starburst at the sun itself.
-                ImageElement(starburst, 0f, 0.42f, new Color(1f, 0.93f, 0.78f), 0.55f),
                 // Halftone and flat shapes marching across the screen, cool colours away from the sun.
                 ImageElement(halftone, 0.32f, 0.16f, new Color(1f, 0.6f, 0.25f), 0.22f),
                 Shape(SRPLensFlareType.Polygon, 0.58f, 0.11f, new Color(0.35f, 0.95f, 0.85f), 0.16f, sides: 6),
@@ -141,16 +139,6 @@ namespace KryticalNova.EditorTools
                 ti.SaveAndReimport();
             }
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-        }
-
-        private static float Starburst(float x, float y)
-        {
-            float r = Mathf.Sqrt(x * x + y * y);
-            float a = Mathf.Atan2(y, x);
-            float spikes = Mathf.Pow(Mathf.Abs(Mathf.Cos(a * 3f)), 24f);               // 6 sharp points
-            float arm = spikes * Mathf.Clamp01(1f - r) ;
-            float core = Mathf.Clamp01(1f - r / 0.18f);
-            return Mathf.Max(Step(arm, 0.12f), Step(core, 0.02f));                      // flat, posterized
         }
 
         private static float Halftone(float x, float y)
