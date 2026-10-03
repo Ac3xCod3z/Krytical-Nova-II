@@ -25,6 +25,8 @@ namespace KryticalNova.Networking
         private readonly Dictionary<string, Queue<GameObject>> pools = new Dictionary<string, Queue<GameObject>>();
         private readonly Dictionary<string, GameObject> prefabMap = new Dictionary<string, GameObject>();
         private readonly Dictionary<GameObject, string> prefabKeys = new Dictionary<GameObject, string>();
+        // Instances currently riding on another transform (auras, loops), by their pool key.
+        private readonly Dictionary<GameObject, string> attachedKeys = new Dictionary<GameObject, string>();
 
         private struct PendingReturn
         {
@@ -123,16 +125,72 @@ namespace KryticalNova.Networking
         public GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation, float lifetime = 0f)
         {
             if (prefab == null) return null;
+            string key = KeyFor(prefab);
+            if (lifetime <= 0f) lifetime = GetParticleDuration(prefab);
+            return Spawn(key, position, rotation, lifetime);
+        }
 
+        /// <summary>
+        /// Spawns a pooled instance that rides on <paramref name="parent"/> (buff auras, run dust, a one-shot that
+        /// should follow the character). With a non-negative <paramref name="lifetime"/> it returns to the pool by
+        /// itself (0 = the prefab's own duration); a negative one keeps it until <see cref="Release"/>.
+        /// </summary>
+        public GameObject SpawnAttached(GameObject prefab, Transform parent, Vector3 localPosition, Quaternion localRotation, float lifetime = -1f)
+        {
+            if (prefab == null || parent == null) return null;
+            string key = KeyFor(prefab);
+            var instance = Spawn(key, parent.position, parent.rotation);
+            if (instance == null) return null;
+
+            instance.transform.SetParent(parent, false);
+            instance.transform.SetLocalPositionAndRotation(localPosition, localRotation);
+            RestartParticles(instance); // the first Spawn of a fresh instance played it at the pool's origin
+            attachedKeys[instance] = key;
+            if (lifetime >= 0f)
+            {
+                pendingReturns.Add(new PendingReturn
+                {
+                    poolKey = key,
+                    instance = instance,
+                    returnTime = Time.time + (lifetime > 0f ? lifetime : GetParticleDuration(prefab)),
+                });
+            }
+            return instance;
+        }
+
+        /// <summary>
+        /// Ends an instance from <see cref="SpawnAttached"/>. Gracefully: it stops emitting, stays where it is in
+        /// the world while its last particles fade, then returns to the pool. Otherwise it is recycled at once.
+        /// </summary>
+        public void Release(GameObject instance, bool graceful = true)
+        {
+            if (instance == null || !attachedKeys.TryGetValue(instance, out string key)) return;
+            attachedKeys.Remove(instance);
+            if (!graceful)
+            {
+                Despawn(key, instance);
+                return;
+            }
+
+            float fade = 0f;
+            foreach (var ps in instance.GetComponentsInChildren<ParticleSystem>())
+            {
+                ps.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+                fade = Mathf.Max(fade, ps.main.startLifetime.constantMax);
+            }
+            instance.transform.SetParent(transform, true);
+            pendingReturns.Add(new PendingReturn { poolKey = key, instance = instance, returnTime = Time.time + fade });
+        }
+
+        private string KeyFor(GameObject prefab)
+        {
             if (!prefabKeys.TryGetValue(prefab, out var key))
             {
                 key = "prefab:" + prefab.name + ":" + prefabKeys.Count;
                 prefabKeys[prefab] = key;
                 prefabMap[key] = prefab;
             }
-
-            if (lifetime <= 0f) lifetime = GetParticleDuration(prefab);
-            return Spawn(key, position, rotation, lifetime);
+            return key;
         }
 
         /// <summary>Longest duration + start delay + particle lifetime across the prefab's particle systems.</summary>
@@ -178,6 +236,8 @@ namespace KryticalNova.Networking
         /// <summary>Recycles an instance back into the pool.</summary>
         public void Despawn(string poolKey, GameObject instance)
         {
+            // An attached instance dies with its parent: forget it even though it now compares equal to null.
+            if (!ReferenceEquals(instance, null)) attachedKeys.Remove(instance);
             if (instance == null) return;
 
             foreach (var ps in instance.GetComponentsInChildren<ParticleSystem>())

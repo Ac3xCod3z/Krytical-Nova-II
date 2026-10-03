@@ -77,7 +77,7 @@ namespace KryticalNova.Player
         public void TakeOff()
         {
             if (!IsReady) return;
-            ClientPresentationRegistry.Feel?.JumpTakeoff(transform, IsLocalPlayer());
+            ReportTakeoff();
             if (animancerMotor != null)
             {
                 animancerMotor.PlayJumpTakeoff();
@@ -109,7 +109,7 @@ namespace KryticalNova.Player
         public void Land()
         {
             if (!IsReady) return;
-            ClientPresentationRegistry.Feel?.Landed(transform, IsLocalPlayer());
+            ReportLanding();
             if (animancerMotor != null)
             {
                 animancerMotor.PlayJumpLanding();
@@ -132,16 +132,29 @@ namespace KryticalNova.Player
         }
 
         /// <summary>The feet leave the ground.</summary>
-        public void WarpedTakeOff()
-        {
-            ClientPresentationRegistry.Feel?.JumpTakeoff(transform, IsLocalPlayer());
-        }
+        public void WarpedTakeOff() => ReportTakeoff();
 
         /// <summary>The feet touch down; the landing clip's crouch and recovery play out in place.</summary>
         public void WarpedLand()
         {
-            ClientPresentationRegistry.Feel?.Landed(transform, IsLocalPlayer());
+            ReportLanding();
             if (animancerMotor != null) animancerMotor.PlayWarpedJumpRecovery();
+        }
+
+        private void ReportTakeoff()
+        {
+            var feel = ClientPresentationRegistry.Feel;
+            if (feel == null) return;
+            feel.JumpTakeoff(transform, IsLocalPlayer());
+            feel.Airborne(transform, true);
+        }
+
+        private void ReportLanding()
+        {
+            var feel = ClientPresentationRegistry.Feel;
+            if (feel == null) return;
+            feel.Airborne(transform, false);
+            feel.Landed(transform, IsLocalPlayer());
         }
 
         private bool IsLocalPlayer()
@@ -153,6 +166,7 @@ namespace KryticalNova.Player
         /// <summary>Restores visual pose and scale after an interrupted jump.</summary>
         public void ResetPresentation()
         {
+            ClientPresentationRegistry.Feel?.Airborne(transform, false); // an interrupted jump never reports a landing
             if (!IsReady) return;
             if (animancerMotor != null)
             {

@@ -15,6 +15,9 @@ namespace KryticalNova.Progression
         /// <summary>Short text for the slot.</summary>
         string GetItemLabel(ushort itemId);
 
+        /// <summary>Icon for the slot, or null to show the label instead.</summary>
+        UnityEngine.Sprite GetItemIcon(ushort itemId);
+
         /// <summary>Uses one of the item from the bag. Returns false when there is none to use.</summary>
         bool UseItem(ushort itemId);
     }

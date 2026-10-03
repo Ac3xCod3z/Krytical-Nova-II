@@ -7,19 +7,28 @@ using UnityEngine.Rendering.Universal;
 namespace KryticalNova.Rendering
 {
     /// <summary>
-    /// Runtime strength of the sun shafts, written by the day/night + weather presenter (time-of-day curve,
-    /// sun visibility, cloud diffusion). 0 skips the pass entirely.
+    /// Runtime strength, source and colour of the shafts, written by the day/night + weather presenter (time-of-day
+    /// curve, visibility, cloud diffusion). The source is the sun by day and the moon at night. 0 skips the pass entirely.
     /// </summary>
     public static class SunShaftRuntime
     {
         public static float Intensity;
+        /// <summary>Unit vector toward the light the shafts come from. Zero falls back to the sun (<c>_KN_SunDir</c>).</summary>
+        public static Vector3 SourceDirection;
+        /// <summary>Shaft colour; only its hue is used. Clear falls back to the sun colour (<c>_KN_SunColor</c>).</summary>
+        public static Color Tint;
 
-        public static void Reset() => Intensity = 0f;
+        public static void Reset()
+        {
+            Intensity = 0f;
+            SourceDirection = Vector3.zero;
+            Tint = Color.clear;
+        }
     }
 
     /// <summary>
-    /// Screen-space god rays from the sun: a quarter-res sky/cloud occlusion mask, radially blurred toward the
-    /// sun and added back before post-processing (so Bloom catches them). Buildings and clouds both cut the light.
+    /// Screen-space god rays from the sun (and, faintly, the moon): a quarter-res sky/cloud occlusion mask, radially
+    /// blurred toward the source and added back before post-processing (so Bloom catches them). Buildings and clouds both cut the light.
     /// PC renderer only (needs the depth texture). See Assets/_Game/_Docs/Design/Rendering-Bible.md.
     /// </summary>
     public class SunShaftsFeature : ScriptableRendererFeature
@@ -69,9 +78,11 @@ namespace KryticalNova.Rendering
             float strength = SunShaftRuntime.Intensity * settings.intensity;
             if (strength <= 0.001f || shader == null) return;
 
-            // Sun screen position; skip when it is behind the camera, fade as it leaves the screen.
+            // Source (sun or moon) screen position; skip when it is behind the camera, fade as it leaves the screen.
             Camera cam = cameraData.camera;
-            Vector3 sunDir = Shader.GetGlobalVector(ShaderIds.SunDir);
+            Vector3 sunDir = SunShaftRuntime.SourceDirection.sqrMagnitude > 0.25f
+                ? SunShaftRuntime.SourceDirection : (Vector3)Shader.GetGlobalVector(ShaderIds.SunDir);
+            Color tint = SunShaftRuntime.Tint.maxColorComponent > 0f ? SunShaftRuntime.Tint : (Color)Shader.GetGlobalVector(ShaderIds.SunColor);
             if (sunDir.y <= -0.02f) return;
             Vector3 viewport = cam.WorldToViewportPoint(cam.transform.position + sunDir * (cam.farClipPlane * 0.5f));
             if (viewport.z <= 0f) return;
@@ -81,6 +92,8 @@ namespace KryticalNova.Rendering
 
             if (_material == null) _material = CoreUtils.CreateEngineMaterial(shader);
             _material.SetVector(ShaderIds.SunScreenPos, new Vector4(viewport.x, viewport.y, cam.aspect, 0f));
+            _material.SetVector(ShaderIds.ShaftSourceDir, sunDir);
+            _material.SetVector(ShaderIds.ShaftTint, tint);
             _material.SetVector(ShaderIds.ShaftParams, new Vector4(settings.sourceTightness, settings.density, settings.decay, settings.weight));
             _material.SetVector(ShaderIds.ShaftComposite, new Vector4(strength, settings.comicBands, settings.cloudOcclusion, settings.debugShaftsOnly ? 1f : 0f));
 
@@ -100,6 +113,9 @@ namespace KryticalNova.Rendering
         static class ShaderIds
         {
             public static readonly int SunDir = Shader.PropertyToID("_KN_SunDir");
+            public static readonly int SunColor = Shader.PropertyToID("_KN_SunColor");
+            public static readonly int ShaftSourceDir = Shader.PropertyToID("_ShaftSourceDir");
+            public static readonly int ShaftTint = Shader.PropertyToID("_ShaftTint");
             public static readonly int SunScreenPos = Shader.PropertyToID("_SunScreenPos");
             public static readonly int ShaftParams = Shader.PropertyToID("_ShaftParams");
             public static readonly int ShaftComposite = Shader.PropertyToID("_ShaftComposite");

@@ -34,7 +34,8 @@
             <ui:VisualElement class="world-map-legend-icon legend-npc" picking-mode="Ignore" /><ui:Label text="NPC" class="world-map-legend" />
             <ui:VisualElement class="world-map-legend-icon legend-portal" picking-mode="Ignore" /><ui:Label text="Portal" class="world-map-legend" />
             <ui:VisualElement class="world-map-legend-icon legend-poi" picking-mode="Ignore" /><ui:Label text="Place" class="world-map-legend" />
+            <ui:VisualElement class="world-map-legend-icon legend-waypoint" picking-mode="Ignore" /><ui:Label text="Marker" class="world-map-legend" />
         </ui:VisualElement>
-        <ui:Label text="Scroll to zoom  ·  Drag to pan  ·  Resize in Settings ▸ Customize HUD Layout" class="help world-map-help" />
+        <ui:Label text="Scroll: zoom  ·  Drag: pan  ·  Right-click: place / remove your marker  ·  Resize: Settings ▸ HUD Layout" class="help world-map-help" />
     </ui:VisualElement>
 </ui:UXML>

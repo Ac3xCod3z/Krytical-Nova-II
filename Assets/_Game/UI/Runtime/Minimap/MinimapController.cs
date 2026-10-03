@@ -39,6 +39,7 @@ namespace KryticalNova.UI
         private readonly List<VisualElement> npcMarkers = new List<VisualElement>();
         private readonly List<VisualElement> allyMarkers = new List<VisualElement>();
         private readonly List<VisualElement> portalMarkers = new List<VisualElement>();
+        private readonly List<VisualElement> waypointMarkers = new List<VisualElement>();
         // Edge-clamped markers keep their counter-rotation in sync every frame (they don't move with the map).
         private float currentMapRotation;
 
@@ -155,6 +156,7 @@ namespace KryticalNova.UI
             RefreshMarkers(player, playerPx, half);
             // Keep icons upright while the map spins under them.
             foreach (var m in portalMarkers) if (m.style.display != DisplayStyle.None) m.style.rotate = new Rotate(-currentMapRotation);
+            foreach (var m in waypointMarkers) if (m.style.display != DisplayStyle.None) m.style.rotate = new Rotate(-currentMapRotation);
         }
 
         private Vector2 MapPixel(Vector3 world)
@@ -232,14 +234,24 @@ namespace KryticalNova.UI
             foreach (var portal in ZonePortal.Active)
             {
                 if (portal == null) continue;
-                Vector2 px = MapPixel(portal.transform.position);
                 // Clamp to the rim so the way onward is always visible.
-                Vector2 offset = px - playerPx;
-                float maxDist = maskHalf - EdgeInset;
-                if (offset.magnitude > maxDist) px = playerPx + offset.normalized * maxDist;
-                Place(Pooled(portalMarkers, portalCount++, "portal"), px, 22f);
+                Place(Pooled(portalMarkers, portalCount++, "portal"), ClampToRim(MapPixel(portal.transform.position), playerPx, maskHalf), 22f);
             }
             Hide(portalMarkers, portalCount);
+
+            // The player's own marker: rim-clamped like a portal, cleared on arrival.
+            MapWaypoint.ClearIfReached(player.position);
+            int waypointCount = 0;
+            if (MapWaypoint.TryGet(out Vector3 waypoint))
+                Place(Pooled(waypointMarkers, waypointCount++, "waypoint"), ClampToRim(MapPixel(waypoint), playerPx, maskHalf), 20f);
+            Hide(waypointMarkers, waypointCount);
+        }
+
+        private static Vector2 ClampToRim(Vector2 px, Vector2 playerPx, float maskHalf)
+        {
+            Vector2 offset = px - playerPx;
+            float maxDist = maskHalf - EdgeInset;
+            return offset.magnitude > maxDist ? playerPx + offset.normalized * maxDist : px;
         }
 
         private VisualElement Pooled(List<VisualElement> pool, int index, string kind)

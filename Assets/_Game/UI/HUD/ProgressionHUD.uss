@@ -87,6 +87,15 @@
 .skill-token:hover { -unity-background-image-tint-color: rgb(38, 104, 94); scale: 1.02 1.02; }
 .skill-icon { font-size: 17px; color: rgb(140, 238, 212); letter-spacing: 1px; }
 .skill-rank { font-size: 11px; margin-top: 3px; color: rgb(214, 228, 236); }
+/* The skill's icon on its drag tile; the text makes room for it. */
+.skill-art {
+    position: absolute;
+    left: 8px; top: 50%;
+    width: 44px; height: 44px;
+    translate: 0 -50%;
+    -unity-background-scale-mode: scale-to-fit;
+}
+.skill-token.has-art { padding-left: 60px; min-height: 56px; justify-content: center; }
 
 .jump-token { -unity-background-image-tint-color: rgb(36, 54, 102); }
 .jump-token:hover { -unity-background-image-tint-color: rgb(48, 72, 136); }
@@ -149,7 +158,24 @@
 .hotbar-slot.selected > .kn-frame { -unity-background-image-tint-color: rgb(140, 255, 220); }
 .hotbar-slot.drop-target { -unity-background-image-tint-color: rgba(150, 120, 50, 0.95); }
 .hotbar-slot.drop-target > .kn-frame { -unity-background-image-tint-color: rgb(255, 214, 92); }
-.hotbar-slot.on-cooldown { opacity: 0.5; }
+.hotbar-slot.on-cooldown { opacity: 0.6; }
+/* Comic skill / item icon, under the key and rank labels. A slot with an icon leaves its name to the tooltip. */
+.slot-icon {
+    position: absolute;
+    left: 4px; top: 10px;
+    width: 50px; height: 50px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+.hotbar-slot.has-icon .slot-name { visibility: hidden; }
+.hotbar-slot.has-icon .slot-key, .hotbar-slot.has-icon .slot-rank { text-shadow: 1px 1px 0 rgb(20, 18, 43); }
+/* Ink sweep over the icon: full height at the start of a cooldown, draining to nothing (height set in code). */
+.slot-cooldown {
+    position: absolute;
+    left: 4px; right: 4px; bottom: 4px;
+    height: 0;
+    max-height: 62px;
+    background-color: rgba(20, 18, 43, 0.72);
+}
 .hotbar-slot.insufficient-chi > .kn-frame { -unity-background-image-tint-color: rgb(220, 80, 88); }
 .hotbar-slot.charging { -unity-background-image-tint-color: rgba(150, 60, 70, 0.95); scale: 1.06 1.06; }
 .hotbar-slot.charging > .kn-frame { -unity-background-image-tint-color: rgb(255, 146, 156); }
@@ -203,6 +229,7 @@
 .buff-badge.shield-badge { -unity-background-image-tint-color: rgba(70, 56, 18, 0.95); }
 .buff-badge.channeled-badge { -unity-background-image-tint-color: rgba(14, 56, 72, 0.95); }
 .buff-badge-name { font-size: 11px; -unity-font-style: bold; color: rgb(232, 242, 250); margin-right: 5px; }
+.buff-badge-icon { width: 26px; height: 26px; margin-right: 5px; -unity-background-scale-mode: scale-to-fit; }
 .buff-badge-timer { font-size: 11px; color: rgb(114, 222, 196); }
 
 #drag-ghost {
@@ -218,6 +245,13 @@
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_03.png#SPR_HUD_SciFiSoldier_Box_03");
     -unity-background-image-tint-color: rgba(30, 128, 108, 0.95);
     -unity-slice-scale: 0.14px;
+}
+/* A skill with an icon drags as the icon itself (set inline) instead of the text chip. */
+#drag-ghost.icon-ghost {
+    width: 52px;
+    height: 52px;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 /* ------------------------------------------------------------------ HUD edit banner */

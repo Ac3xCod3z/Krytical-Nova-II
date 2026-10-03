@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7d883f7fa5794083aabfd8251e47a919
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 334986
+  packageName: Cartoon Explosion Pack
+  packageVersion: 1.0
+  assetPath: Assets/Cartoon Explosion Pack/Shared/Shaders/Subgraphs/Dither Fade.asset
+  uploadId: 837724

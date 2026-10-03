@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using UnityEngine;
 
 namespace KryticalNova.UI
@@ -14,6 +15,7 @@ namespace KryticalNova.UI
         private const string MinimapRotatesKey = Prefix + "minimapRotates";
         private const string ScreenShakeKey = Prefix + "screenShake";
         private const string LayoutKey = Prefix + "layout.v1";
+        private const string WaypointKey = Prefix + "waypoint.";
 
         public static event Action Changed;
 
@@ -64,6 +66,28 @@ namespace KryticalNova.UI
                 else PlayerPrefs.SetString(LayoutKey, value);
                 PlayerPrefs.Save();
             }
+        }
+
+        /// <summary>The player's own map marker for a zone (see <see cref="MapWaypoint"/>).</summary>
+        public static bool TryGetWaypoint(string zone, out Vector3 world)
+        {
+            world = default;
+            string[] parts = PlayerPrefs.GetString(WaypointKey + zone, string.Empty).Split(';');
+            return parts.Length == 3
+                && float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out world.x)
+                && float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out world.y)
+                && float.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out world.z);
+        }
+
+        public static void SetWaypoint(string zone, Vector3? world)
+        {
+            if (world.HasValue)
+            {
+                Vector3 w = world.Value;
+                PlayerPrefs.SetString(WaypointKey + zone, string.Format(CultureInfo.InvariantCulture, "{0:0.##};{1:0.##};{2:0.##}", w.x, w.y, w.z));
+            }
+            else PlayerPrefs.DeleteKey(WaypointKey + zone);
+            PlayerPrefs.Save();
         }
 
         private static bool GetBool(string key, bool fallback) => PlayerPrefs.GetInt(key, fallback ? 1 : 0) != 0;

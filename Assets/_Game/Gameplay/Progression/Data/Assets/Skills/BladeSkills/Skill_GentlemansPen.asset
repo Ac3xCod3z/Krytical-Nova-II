@@ -66,6 +66,7 @@ MonoBehaviour:
   maxBonusDamagePercent: 100
   chargeTime: 0
   holdToRepeat: 0
+  icon: {fileID: 21300000, guid: 64eb85f84336c0d458e7cbb459533735, type: 3}
   castClip: {fileID: 7400000, guid: eb6471cf3d130424da6ad1f474b6ff3e, type: 3}
   castClipSpeed: 1.2
   hitTimesNormalized:

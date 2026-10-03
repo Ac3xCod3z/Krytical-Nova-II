@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f730661b76e42b9926cfdd0268fca54, type: 3}
+  m_Name: Debris Billboard 001
+  m_EditorClassIdentifier: Assembly-CSharp::CTFX2.Creator.DebrisBillboardObject
+  albedo: {fileID: 2800000, guid: 56ec43ea09d147b48da344d92cb09cba, type: 3}
+  normal: {fileID: 2800000, guid: b32668187acd4c2ca656ee4117b42c67, type: 3}
+  dissolve: {fileID: 0}
+  flipbookSize: {x: 8, y: 8}
+  normalStrength: 1
+  cutoff: 0.01
+  softParticles: 1
+  useDitherFade: 1
+  speed: 1

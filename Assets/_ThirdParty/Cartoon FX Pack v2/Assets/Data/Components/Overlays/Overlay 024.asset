@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5adbd4907e794c5e8e6f7e57b81271c5, type: 3}
+  m_Name: Overlay 024
+  m_EditorClassIdentifier: 
+  albedo: {fileID: 2800000, guid: 3c0a70109d5688e429405f2ee3822e64, type: 3}
+  normal: {fileID: 0}
+  dissolve: {fileID: 0}
+  flipbookSize: {x: 1, y: 1}
+  normalStrength: 1
+  cutoff: 0.01
+  softParticles: 1
+  useDitherFade: 1
+  tiling: 1
+  randomizeOffset: 1

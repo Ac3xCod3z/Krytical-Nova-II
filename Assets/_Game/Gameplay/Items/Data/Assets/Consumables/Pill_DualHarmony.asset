@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 9003
   displayName: Dual Harmony Pill
   description: Restores 300 HP and 100 Chi.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 176dab872008d8b4899afbb69baa9c1c, type: 3}
   rarity: 1
   equipSlot: 0
   maxStack: 99

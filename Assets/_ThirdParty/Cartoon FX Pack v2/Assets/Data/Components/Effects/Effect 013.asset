@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1236caa9081949119ad0a299c116ece9, type: 3}
+  m_Name: Effect 013
+  m_EditorClassIdentifier: 
+  albedo: {fileID: 2800000, guid: c55737486ce0f794ca4c6478e4cc491b, type: 3}
+  normal: {fileID: 0}
+  dissolve: {fileID: 0}
+  flipbookSize: {x: 2, y: 2}
+  normalStrength: 1
+  cutoff: 0.01
+  softParticles: 1
+  useDitherFade: 1
+  speed: 0
+  randomStartFrame: 1
+  sizeMultiplier: 0.75

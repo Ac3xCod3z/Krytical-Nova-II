@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 9001
   displayName: Vitality Pill
   description: Restores 300 HP.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: fa30a95ba2a13bc44869fc8fded1f995, type: 3}
   rarity: 0
   equipSlot: 0
   maxStack: 99
