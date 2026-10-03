@@ -28,6 +28,7 @@ MonoBehaviour:
   cloudShadowStrength: 0
   fogDensity: 0.009
   fogTint: {r: 0.36078432, g: 0.39215687, b: 0.5647059, a: 0.54901963}
+  volumetricFog: 0
   windHeading: 60
   windSpeed: 16
   windSpeedMin: 12

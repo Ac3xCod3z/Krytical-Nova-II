@@ -51,6 +51,12 @@ namespace KryticalNova.World
         [Range(0f, 0.05f)] public float fogDensity = 0.0015f;
         [Tooltip("Blended into the time-of-day fog colour (alpha = weight).")]
         public Color fogTint = new Color(0.7f, 0.72f, 0.75f, 0f);
+        [Tooltip("Ground-level volumetric fog (Volumetric Fog & Mist 2), 0-1. Air is either raining or fogging: any Rain " +
+                 "profile reads as 0 here regardless of this value (see VolumetricFogAmount).")]
+        [Range(0f, 1f)] public float volumetricFog = 0f;
+
+        /// <summary>Volumetric fog this weather actually shows: rain and fog never coexist.</summary>
+        public float VolumetricFogAmount => precipitation == PrecipitationType.Rain ? 0f : volumetricFog;
 
         [Header("Wind")]
         [Tooltip("Compass direction the wind blows toward, in degrees.")]

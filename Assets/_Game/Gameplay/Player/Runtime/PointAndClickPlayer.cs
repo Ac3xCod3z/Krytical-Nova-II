@@ -1022,6 +1022,9 @@ namespace KryticalNova.Player
         /// <summary>Enabled player characters (local, remote proxies and the offline avatar), for map markers.</summary>
         public static IReadOnlyList<PointAndClickPlayer> Active => ActivePlayers;
 
+        /// <summary>Yaw (degrees) the character actually faces: the root yaw minus the model's forward offset.</summary>
+        public float FacingYaw => transform.eulerAngles.y - modelForwardOffset;
+
         private void OnEnable()
         {
             ActivePlayers.Add(this);

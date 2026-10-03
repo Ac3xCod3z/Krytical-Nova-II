@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using RipVertices.QuickDestruction;
+using RipVertices.QuickDestruction.Runtime;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -18,7 +19,8 @@ namespace KryticalNova.EditorTools
     /// settle into one of three damage tiers:
     ///   Damaged   – a corner bitten out of the top, the loose chunks lying at the foot;
     ///   Collapsed – a jagged stump with the upper floors toppled to one side;
-    ///   Rubble    – everything above knee height slumped into a heap.
+    ///   Rubble    – everything above knee height slumped into a heap;
+    ///   Sliced    – (towers) one angled cut, the top half leaning on the bottom half.
     /// The settled pieces are merged into static meshes ("Standing" + clustered "Fallen" chunks, cut faces in ruin
     /// concrete) and saved as plain prefabs in this system's folder; no Quick Destruction runtime component, rigidbody
     /// or generated vendor asset survives the bake, so ruins cost what any static mesh costs and need no network sync.
@@ -26,7 +28,8 @@ namespace KryticalNova.EditorTools
     /// </summary>
     public static class RuinBaker
     {
-        public enum Tier { Damaged, Collapsed, Rubble }
+        public enum Tier { Damaged, Collapsed, Rubble, Sliced }
+        public const string LeaningName = "Chunk_Leaning"; // a Sliced top half: placed as baked, never re-snapped
 
         public const string LibraryFolder = "Assets/_Game/Environment/Ruins/Prefabs";
         private const string MeshFolder = "Assets/_Game/Environment/Ruins/Meshes";
@@ -135,9 +138,11 @@ namespace KryticalNova.EditorTools
                 var destructible = AssetDatabase.LoadAssetAtPath<GameObject>(destructiblePath);
                 foreach (Tier tier in Enum.GetValues(typeof(Tier)))
                 {
+                    if (tier == Tier.Sliced) continue; // made from the intact source below
                     var rng = new System.Random(StableHash(source) ^ (variant * 31 + (int)tier * 1013));
                     if (BakeTier(destructible, source, tier, variant, rng)) made++;
                 }
+                if (TowerSources.Contains(source) && BakeSliced(sourcePrefab, source, variant)) made++;
             }
             finally
             {
@@ -209,13 +214,16 @@ namespace KryticalNova.EditorTools
                     };
                     if (loose) falling.Add(rb);
                 }
+                DropUnsupported(frags, falling, all.min.y);
 
-                // Settle.
+                // Settle. Standing pieces are kinematic, so they keep their real (non-convex) shape and loose pieces
+                // come to rest on actual geometry instead of invisible hulls across rooms and ledges.
                 foreach (var rb in frags)
                 {
+                    bool loose = falling.Contains(rb);
                     var col = rb.GetComponent<MeshCollider>();
-                    if (col != null) col.convex = true;
-                    rb.isKinematic = !falling.Contains(rb);
+                    if (col != null) col.convex = loose;
+                    rb.isKinematic = !loose;
                     rb.useGravity = true;
                     rb.mass = Mathf.Clamp(rb.mass, 1f, 400f);
                     rb.linearDamping = 0.05f;
@@ -229,11 +237,9 @@ namespace KryticalNova.EditorTools
                     Vector3 dir = tier == Tier.Rubble ? outward : (toppleDir + outward * 0.4f).normalized;
                     float h01 = (c.y - all.min.y) / height;
                     rb.linearVelocity = dir * push * (0.5f + h01);
-                    rb.angularVelocity = UnityEngine.Random.insideUnitSphere * 0.5f;
+                    rb.angularVelocity = new Vector3((float)rng.NextDouble() - 0.5f, (float)rng.NextDouble() - 0.5f, (float)rng.NextDouble() - 0.5f);
                 }
-                var physics = sim.GetPhysicsScene();
-                int steps = tier == Tier.Damaged ? 200 : 300;
-                for (int i = 0; i < steps; i++) physics.Simulate(0.02f);
+                SimulateUntilRest(sim.GetPhysicsScene(), falling);
 
                 // Keep what landed near the building; drop strays that bounced off into the distance or fell through.
                 float keepRadius = maxDim * 1.6f + 6f;
@@ -247,6 +253,178 @@ namespace KryticalNova.EditorTools
             {
                 EditorSceneManager.ClosePreviewScene(sim);
             }
+        }
+
+        /// <summary>
+        /// Anything still standing must connect to the ground through other standing pieces; otherwise it would hang in
+        /// the air above the hole the bite / cut left. Flood-fill from ground-touching fragments; the rest fall too.
+        /// </summary>
+        private static void DropUnsupported(List<Rigidbody> frags, HashSet<Rigidbody> falling, float baseY)
+        {
+            var standing = frags.Where(r => !falling.Contains(r)).ToList();
+            var bounds = standing.Select(r => { var b = r.GetComponent<Renderer>().bounds; b.Expand(0.1f); return b; }).ToList();
+            var supported = new bool[standing.Count];
+            var queue = new Queue<int>();
+            for (int i = 0; i < standing.Count; i++)
+                if (bounds[i].min.y < baseY + 0.35f) { supported[i] = true; queue.Enqueue(i); }
+            while (queue.Count > 0)
+            {
+                int i = queue.Dequeue();
+                for (int j = 0; j < standing.Count; j++)
+                    if (!supported[j] && bounds[i].Intersects(bounds[j])) { supported[j] = true; queue.Enqueue(j); }
+            }
+            for (int i = 0; i < standing.Count; i++)
+                if (!supported[i]) falling.Add(standing[i]);
+        }
+
+        /// <summary>Steps physics until every loose piece is at rest (or 15 s), so nothing is captured mid-fall.</summary>
+        private static void SimulateUntilRest(PhysicsScene physics, ICollection<Rigidbody> bodies)
+        {
+            const float dt = 0.02f;
+            for (int step = 1; step <= 750; step++)
+            {
+                physics.Simulate(dt);
+                if (step < 100 || step % 25 != 0) continue;
+                bool resting = true;
+                foreach (var rb in bodies)
+                    if (rb.linearVelocity.sqrMagnitude > 0.0025f || rb.angularVelocity.sqrMagnitude > 0.01f) { resting = false; break; }
+                if (resting) return;
+            }
+        }
+
+        /// <summary>
+        /// "Sliced" tier: one clean angled cut through the middle of the intact tower; the top half topples and comes to
+        /// rest leaning on the bottom half with its low edge on the ground. Seeds are retried until it actually leans.
+        /// </summary>
+        private static bool BakeSliced(GameObject sourcePrefab, string source, int variant)
+        {
+            var interior = AssetDatabase.LoadAssetAtPath<Material>(InteriorMaterialPath);
+            var merged = MergeSource(sourcePrefab, out var materials);
+            if (merged == null) return false;
+            var mats = materials.Concat(new[] { interior }).ToArray(); // + the cut cap submesh
+            Bounds b = merged.bounds;
+
+            for (int attempt = 0; attempt < 6; attempt++)
+            {
+                var rng = new System.Random(StableHash(source) ^ (variant * 131 + attempt * 7));
+                float h = Mathf.Lerp(0.42f, 0.58f, (float)rng.NextDouble());
+                float tilt = Mathf.Lerp(20f, 35f, (float)rng.NextDouble());
+                float yaw = (float)rng.NextDouble() * 360f;
+                Vector3 lowSide = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;   // the cut slopes down toward here
+                Vector3 normal = Quaternion.AngleAxis(tilt, Vector3.Cross(Vector3.up, lowSide)) * Vector3.up;
+                var plane = new Plane(normal, new Vector3(b.center.x, b.min.y + b.size.y * h, b.center.z));
+
+                MeshSlicer.Slice(WorkMesh.FromMesh(merged), plane, 1f, CutSurfaceUVMode.FitToCut, out var top, out var bottom);
+                if (top == null || bottom == null) continue;
+                var topMesh = top.ToMesh($"{source}_SlicedTop");
+                var bottomMesh = bottom.ToMesh($"{source}_SlicedBottom");
+
+                var sim = EditorSceneManager.NewPreviewScene();
+                try
+                {
+                    var ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    SceneManager.MoveGameObjectToScene(ground, sim);
+                    ground.transform.position = new Vector3(0f, -0.5f, 0f);
+                    ground.transform.localScale = new Vector3(400f, 1f, 400f);
+
+                    var space = new GameObject("Root");
+                    SceneManager.MoveGameObjectToScene(space, sim);
+                    var bottomRb = Piece(space.transform, "Bottom", bottomMesh, mats, false);
+                    var topRb = Piece(space.transform, "Top", topMesh, mats, true);
+                    topRb.mass = 400f;
+                    // Start the top half as if it already slid off the low side of the cut: stood on the ground beside
+                    // the stump, tipped back toward it, pushed out until it clears the stump. Physics then lets it
+                    // fall against the stump and come to rest leaning there.
+                    var t = topRb.transform;
+                    var topCol = topRb.GetComponent<Collider>();
+                    var botCol = bottomRb.GetComponent<Collider>();
+                    float lean = Mathf.Lerp(16f, 28f, (float)rng.NextDouble());
+                    var tb0 = topRb.GetComponent<Renderer>().bounds;
+                    t.RotateAround(tb0.center, Vector3.Cross(Vector3.up, lowSide), -lean);
+                    Physics.SyncTransforms();
+                    t.position += Vector3.up * (0.02f - topRb.GetComponent<Renderer>().bounds.min.y);
+                    for (int k = 0; k < 200; k++)
+                    {
+                        Physics.SyncTransforms();
+                        if (!Physics.ComputePenetration(topCol, t.position, t.rotation, botCol, bottomRb.transform.position,
+                                bottomRb.transform.rotation, out _, out _)) break;
+                        t.position += lowSide * 0.2f;
+                    }
+                    t.position -= lowSide * 0.1f; // touching, so it rests against the stump instead of tipping away
+                    topRb.position = t.position;
+                    topRb.rotation = t.rotation;
+                    SimulateUntilRest(sim.GetPhysicsScene(), new[] { topRb });
+
+                    var tb = topRb.GetComponent<Renderer>().bounds;
+                    var bb = bottomRb.GetComponent<Renderer>().bounds;
+                    bb.Expand(0.4f);
+                    bool onGround = tb.min.y < 0.6f;
+                    bool leaning = tb.Intersects(bb) && tb.max.y > bb.max.y * 0.6f;
+                    if (!onGround || !leaning)
+                    {
+                        Debug.Log($"[RuinBaker] {source} sliced attempt {attempt} rejected (onGround={onGround}, leaning={leaning}, top={tb.min.y:0.0}..{tb.max.y:0.0}).");
+                        Object.DestroyImmediate(topMesh); Object.DestroyImmediate(bottomMesh); continue;
+                    }
+
+                    topRb.gameObject.name = LeaningName;
+                    bool saved = SaveRuin(source, Tier.Sliced, variant, space.transform, new List<Rigidbody> { bottomRb }, new List<Rigidbody> { topRb });
+                    Object.DestroyImmediate(topMesh);
+                    Object.DestroyImmediate(bottomMesh);
+                    return saved;
+                }
+                finally
+                {
+                    EditorSceneManager.ClosePreviewScene(sim);
+                }
+            }
+            Debug.LogWarning($"[RuinBaker] {source} v{variant}: no Sliced seed came to rest leaning; skipped.");
+            return false;
+        }
+
+        private static Rigidbody Piece(Transform parent, string name, Mesh mesh, Material[] mats, bool dynamic)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            go.AddComponent<MeshRenderer>().sharedMaterials = mats.Take(mesh.subMeshCount).ToArray();
+            var col = go.AddComponent<MeshCollider>();
+            col.sharedMesh = mesh;
+            col.convex = dynamic;
+            var rb = go.AddComponent<Rigidbody>();
+            rb.isKinematic = !dynamic;
+            rb.angularDamping = 0.3f;
+            return rb;
+        }
+
+        /// <summary>All of the source prefab's meshes in prefab space, one submesh per material.</summary>
+        private static Mesh MergeSource(GameObject prefab, out Material[] materials)
+        {
+            var byMaterial = new Dictionary<Material, List<CombineInstance>>();
+            foreach (var mr in prefab.GetComponentsInChildren<MeshRenderer>())
+            {
+                var mf = mr.GetComponent<MeshFilter>();
+                if (mf == null || mf.sharedMesh == null) continue;
+                var ms = mr.sharedMaterials;
+                for (int s = 0; s < mf.sharedMesh.subMeshCount && s < ms.Length; s++)
+                {
+                    if (ms[s] == null) continue;
+                    if (!byMaterial.TryGetValue(ms[s], out var list)) byMaterial[ms[s]] = list = new List<CombineInstance>();
+                    list.Add(new CombineInstance { mesh = mf.sharedMesh, subMeshIndex = s, transform = prefab.transform.worldToLocalMatrix * mr.transform.localToWorldMatrix });
+                }
+            }
+            materials = byMaterial.Keys.ToArray();
+            if (byMaterial.Count == 0) return null;
+            var parts = byMaterial.Values.Select(v =>
+            {
+                var m = new Mesh { indexFormat = IndexFormat.UInt32 };
+                m.CombineMeshes(v.ToArray(), true, true);
+                return new CombineInstance { mesh = m, transform = Matrix4x4.identity };
+            }).ToArray();
+            var merged = new Mesh { indexFormat = IndexFormat.UInt32 };
+            merged.CombineMeshes(parts, false, false);
+            foreach (var part in parts) Object.DestroyImmediate(part.mesh);
+            merged.RecalculateBounds();
+            return merged;
         }
 
         // ---------------------------------------------------------------- output
@@ -264,11 +442,13 @@ namespace KryticalNova.EditorTools
 
                 var fallenGo = new GameObject(FallenName);
                 fallenGo.transform.SetParent(prefabRoot.transform, false);
-                int clusters = Mathf.Clamp(fallen.Count / 8, fallen.Count > 0 ? 1 : 0, 8);
+                // Small clusters so each settles onto the terrain on its own (a big mixed cluster can hang off a slope).
+                int clusters = Mathf.Clamp(fallen.Count / 4, fallen.Count > 0 ? 1 : 0, 12);
                 foreach (var (cluster, i) in Cluster(fallen, clusters).Select((c, i) => (c, i)))
                 {
                     if (cluster.Count == 0) continue;
-                    var chunk = new GameObject($"Chunk_{i:00}");
+                    bool leaning = cluster.Count == 1 && cluster[0].name == LeaningName;
+                    var chunk = new GameObject(leaning ? LeaningName : $"Chunk_{i:00}");
                     chunk.transform.SetParent(fallenGo.transform, false);
                     AddMerged(chunk, cluster, space, $"{name}_Chunk_{i:00}", meshes);
                 }
@@ -333,7 +513,9 @@ namespace KryticalNova.EditorTools
             meshes.Add(mesh);
 
             host.AddComponent<MeshFilter>().sharedMesh = mesh;
-            host.AddComponent<MeshRenderer>().sharedMaterials = materials.ToArray();
+            var renderer = host.AddComponent<MeshRenderer>();
+            renderer.sharedMaterials = materials.ToArray();
+            renderer.receiveGI = ReceiveGI.LightProbes; // merged fragments have no lightmap UVs: read APV instead
             host.AddComponent<MeshCollider>().sharedMesh = mesh;
         }
 

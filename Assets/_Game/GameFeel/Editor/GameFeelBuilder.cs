@@ -17,7 +17,7 @@ namespace KryticalNova.EditorTools
     /// <summary>
     /// Builds the GameFeel system (see GameFeelPresenter): URP copies of the POLYGON Particle FX it spawns, the
     /// PFX_GameFeel prefab with one FEEL MMF_Player per moment, and the scene wiring those players need — a Cinemachine
-    /// impulse listener + FOV shaker on the orbit camera, vignette / chromatic-aberration shakers on the global volume.
+    /// impulse listener + FOV shaker on the orbit camera, the Beautify vignette pulse + URP chromatic-aberration shaker on the global volume.
     /// Also swaps the player's hit VFX for the URP copy (the Synty original uses a legacy particle shader).
     /// Re-runnable: the prefab is rebuilt, scene components are added only when missing. Synty and FEEL folders are
     /// never modified. Sound slots (MMF_Sound) are left empty for audio to be assigned on the prefab.
@@ -122,13 +122,11 @@ namespace KryticalNova.EditorTools
                 {
                     Sound(p, "Hurt");
                     Impulse(p, new Vector3(0.3f, 0.22f, 0f), 0.25f);
-                    var v = p.AddFeedback(typeof(MMF_Vignette_URP)) as MMF_Vignette_URP;
-                    v.Label = "Hurt Vignette";
+                    var v = p.AddFeedback(typeof(MMF_BeautifyVignette)) as MMF_BeautifyVignette;
+                    v.Label = "Hurt Vignette (Beautify)";
                     v.Duration = 0.45f;
-                    v.RelativeIntensity = true;
-                    v.RemapIntensityOne = 0.25f;
-                    v.InterpolateColor = true;
-                    v.TargetColor = new Color(0.75f, 0.05f, 0.08f);
+                    v.RingBoost = 0.35f;
+                    v.PulseColor = new Color(0.75f, 0.05f, 0.08f);
                 });
                 so.FindProperty("clickFeel").objectReferenceValue = Player(root, "Click", p => Sound(p, "Click Tick"));
                 so.FindProperty("selectFeel").objectReferenceValue = Player(root, "Select", p => Sound(p, "Select"));
@@ -149,31 +147,6 @@ namespace KryticalNova.EditorTools
                     Sound(p, "Land Thud");
                     Impulse(p, new Vector3(0f, -0.22f, 0f), 0.16f);
                 });
-                so.FindProperty("targetReactionTemplate").objectReferenceValue = Player(root, "Target Reaction (template)", p =>
-                {
-                    var scale = p.AddFeedback(typeof(MMF_Scale)) as MMF_Scale;
-                    scale.Label = "Squash";
-                    scale.Mode = MMF_Scale.Modes.Additive;
-                    scale.AnimateScaleDuration = 0.2f;
-                    scale.RemapCurveZero = 0f;
-                    scale.RemapCurveOne = 0.18f;
-                    var wide = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.2f, 1f), new Keyframe(0.6f, -0.3f), new Keyframe(1f, 0f));
-                    var tall = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.2f, -1f), new Keyframe(0.6f, 0.3f), new Keyframe(1f, 0f));
-                    scale.AnimateScaleTweenX = new MMTweenType(wide, "AnimateX");
-                    scale.AnimateScaleTweenZ = new MMTweenType(wide, "AnimateZ");
-                    scale.AnimateScaleTweenY = new MMTweenType(tall, "AnimateY");
-                    scale.AllowAdditivePlays = false;
-
-                    var flash = p.AddFeedback(typeof(MMF_Flicker)) as MMF_Flicker;
-                    flash.Label = "White Flash";
-                    flash.Mode = MMF_Flicker.Modes.PropertyName;
-                    flash.PropertyName = "_BaseColor";
-                    flash.FlickerColor = new Color(4f, 4f, 4f, 1f); // HDR: blows the albedo out to white
-                    flash.FlickerDuration = 0.12f;
-                    flash.FlickerPeriod = 0.06f;
-                    flash.UseMaterialPropertyBlocks = false; // GPU Resident Drawer ignores property blocks
-                });
-
                 so.FindProperty("hitSparkVfx").objectReferenceValue = Load(Vfx("PFX_Hit_Sparks"));
                 so.FindProperty("heavyHitVfx").objectReferenceValue = Load(Vfx("PFX_Hit_Heavy"));
                 so.FindProperty("clickVfx").objectReferenceValue = Load(Vfx("PFX_Click_Ring"));
@@ -238,7 +211,9 @@ namespace KryticalNova.EditorTools
                 .FirstOrDefault(v => v.isGlobal && v.sharedProfile != null && AssetDatabase.GetAssetPath(v.sharedProfile) == VolumeProfilePath);
             if (volume != null)
             {
-                if (volume.GetComponent<MMVignetteShaker_URP>() == null) Undo.AddComponent<MMVignetteShaker_URP>(volume.gameObject);
+                var urpVignette = volume.GetComponent<MMVignetteShaker_URP>();
+                if (urpVignette != null) Undo.DestroyObjectImmediate(urpVignette); // Beautify owns the vignette now
+                if (volume.GetComponent<BeautifyVignettePulse>() == null) Undo.AddComponent<BeautifyVignettePulse>(volume.gameObject);
                 if (volume.GetComponent<MMChromaticAberrationShaker_URP>() == null) Undo.AddComponent<MMChromaticAberrationShaker_URP>(volume.gameObject);
                 EnsureChromaticAberration(volume.sharedProfile);
             }

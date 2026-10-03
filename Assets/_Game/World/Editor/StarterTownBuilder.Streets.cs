@@ -383,7 +383,8 @@ namespace KryticalNova.EditorTools
             const string tower = "SM_Bld_City_Wall_Tower_01";
             float wallLength = Footprint(wall).size.x;
             float towerHalf = Footprint(tower).size.x * 0.5f;
-            float[] towerAt = { GateHalf + 2f, 56f, WallHalf };
+            float[] towerAt = { GateTowerAcross, 56f, WallHalf };
+            float gateTowerHalf = towerHalf * GateTowerScale;
 
             for (int side = 0; side < 4; side++)
             {
@@ -398,7 +399,7 @@ namespace KryticalNova.EditorTools
                     for (int t = 0; t + 1 < towerAt.Length; t++)
                     {
                         // Wall spans between towers, scaled along their length to fit exactly.
-                        float a = towerAt[t] + towerHalf, b = towerAt[t + 1] - towerHalf;
+                        float a = towerAt[t] + (t == 0 ? gateTowerHalf : towerHalf), b = towerAt[t + 1] - towerHalf;
                         int count = Mathf.CeilToInt((b - a) / wallLength);
                         float segment = (b - a) / count;
                         for (int k = 0; k < count; k++)
@@ -411,11 +412,11 @@ namespace KryticalNova.EditorTools
                                 ReplaceWithRuin(parent, span, RuinBaker.Wall, PickTier(0.15f, 0.6f, 0.25f), WallOutward(side));
                         }
                     }
-                    for (int t = 0; t + 1 < towerAt.Length; t++)
+                    for (int t = 1; t + 1 < towerAt.Length; t++) // t = 0: gate towers come from BuildGates
                     {
                         var tw = Spawn(parent, tower, Point(sign * towerAt[t]), Quaternion.Euler(0f, yaw, 0f), Vector3.one);
                         // Mid-wall towers (not gate towers) sometimes stand broken.
-                        if (tw != null && t > 0 && RChance(WallTowerRuinChance))
+                        if (tw != null && RChance(WallTowerRuinChance))
                             ReplaceWithRuin(parent, tw, RuinBaker.WallTower, PickTier(0.2f, 0.5f, 0.3f), WallOutward(side));
                     }
                 }
@@ -425,26 +426,15 @@ namespace KryticalNova.EditorTools
             for (int sz = -1; sz <= 1; sz += 2)
                 Spawn(parent, tower, new Vector3(sx * WallHalf, 0f, sz * WallHalf), Quaternion.identity, Vector3.one * 1.25f);
 
-            // Gate dressing: scanners and barriers line each opening; beacons light the main (north) gate.
-            for (int side = 0; side < 4; side++)
-            {
-                Vector2 outward = side == 0 ? Vector2.up : side == 1 ? Vector2.down : side == 2 ? Vector2.right : Vector2.left;
-                Vector2 across = new Vector2(outward.y, -outward.x);
-                for (int sign = -1; sign <= 1; sign += 2)
-                {
-                    Vector2 p = outward * (WallHalf - 2.5f) + across * sign * (RoadHalf + 1.6f);
-                    Place(parent, "SM_Prop_Security_Scanner_01", p.x, p.y, YawOf(-outward));
-                    Vector2 q = outward * (WallHalf + 5f) + across * sign * (RoadHalf + 0.5f);
-                    Place(parent, "SM_Prop_Barrier_Plastic_01", q.x, q.y, YawOf(across));
-                }
-            }
+            // Gatehouses (towers, lintel, booths, fences, nameplates) on all four gates; beacons on the main (north) gate.
+            BuildGates(parent);
 
             var beacon = AssetDatabase.LoadAssetAtPath<GameObject>(PortalVfxBuilder.GateBeaconPath);
             if (beacon != null)
                 for (int sign = -1; sign <= 1; sign += 2)
                 {
                     var go = (GameObject)PrefabUtility.InstantiatePrefab(beacon, parent);
-                    go.transform.position = new Vector3(sign * towerAt[0], 13.4f, WallHalf);
+                    go.transform.position = new Vector3(sign * towerAt[0], 13.4f * GateTowerScale, WallHalf);
                     go.transform.localScale = Vector3.one * 2f;
                 }
         }

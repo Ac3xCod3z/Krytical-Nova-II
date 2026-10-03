@@ -20,6 +20,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f288ae1f4751b564a96ac7587541f7a2, type: 2}
   - {fileID: 11400000, guid: 0b64f35e74a41734fa8cfd7b9499a80e, type: 2}
   - {fileID: 11400000, guid: a2dde31fdd0c64e75bf44085fa3cf6f3, type: 2}
+  - {fileID: 11400000, guid: c0ae69ae30ebb8d40a82893859caac87, type: 2}
   m_DefaultRendererIndex: 0
   m_RequireDepthTexture: 1
   m_RequireOpaqueTexture: 1
@@ -40,8 +41,8 @@ MonoBehaviour:
   m_ProbeVolumeBlendingMemoryBudget: 256
   m_SupportProbeVolumeGPUStreaming: 0
   m_SupportProbeVolumeDiskStreaming: 0
-  m_SupportProbeVolumeScenarios: 0
-  m_SupportProbeVolumeScenarioBlending: 0
+  m_SupportProbeVolumeScenarios: 1
+  m_SupportProbeVolumeScenarioBlending: 1
   m_ProbeVolumeSHBands: 1
   m_MainLightRenderingMode: 1
   m_MainLightShadowsSupported: 1

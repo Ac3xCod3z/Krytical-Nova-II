@@ -52,7 +52,7 @@ MonoBehaviour:
   stripBeautifyTonemappingACES: 0
   stripBeautifyTonemappingACESFitted: 0
   stripBeautifyTonemappingAGX: 0
-  stripBeautifyTonemappingPBRNeutral: 1
+  stripBeautifyTonemappingPBRNeutral: 0
   stripBeautifySharpen: 0
   stripBeautifySharpenExclusionMask: 1
   stripBeautifyDithering: 0

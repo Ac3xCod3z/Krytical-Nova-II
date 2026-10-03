@@ -89,7 +89,8 @@ _Game/
 ├── Environment/
 │   ├── Vegetation/        Shaders/ (shared wind/foliage)  Materials/  Prefabs/  Editor/
 │   │   └── Grass/         Runtime/ Data/ Data/Assets/ Rendering/ Compute/ Materials/ Editor/  (own assembly)
-│   ├── Buildings/         Materials/BuildingPalette/
+│   ├── Buildings/         Materials/BuildingPalette/ (Signs/ = gate nameplate materials)
+│   ├── Props/             StreetLights/ (lit SM_Prop_Streetlight_01 variant)  Editor/ (StreetLightBuilder)
 │   ├── Ruins/             Meshes/  Prefabs/  Profiles/ (Quick Destruction profile)  Editor/ (RuinBaker)
 │   ├── Water/             Shaders/
 │   └── (future) Rocks/ Props/ Architecture/
@@ -222,7 +223,7 @@ with its own `.asmdef`:
 | `NPC_`  | NPC definition / prefab    | `LF_`  | Lens flare data                    |
 | `LS_` / `APV_` | Lighting settings / probe volume data (scene-generated) | `TL_`  | Terrain layer |
 | `UI_`   | UI element/screen asset (e.g. `UI_HUD_Target`) | `VFX_` | Future VFX Graph assets (`VFX_Combat_Hit`) |
-| `RUIN_` | Baked ruin prefab/mesh (`RUIN_<src>_<Tier>_v<n>`) | `DP_` | Quick Destruction profile          |
+| `RUIN_` | Baked ruin prefab/mesh (`RUIN_<src>_<Tier>_v<n>`, Tier = Damaged/Collapsed/Rubble/Sliced) | `DP_` | Quick Destruction profile |
 | `VF_`   | Volumetric Fog & Mist 2 profile | | |
 
 ---

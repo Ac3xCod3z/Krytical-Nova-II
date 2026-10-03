@@ -1,3 +1,4 @@
+using System.Linq;
 using KryticalNova.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -147,6 +148,8 @@ namespace KryticalNova.World
         /// <summary>Lingering wetness after rain, 0-1 (drives the rainbow).</summary>
         public float SkyMoisture => skyMoisture;
         public LightningController Lightning => lightning;
+        /// <summary>The presented (smoothed) time of day, 0-1, for other client presentation (street lamps).</summary>
+        public static float PresentedTimeOfDay01 { get; private set; } = 0.5f;
 
         /// <summary>Forces the rainbow strength (0-1); negative restores natural behaviour.</summary>
         public void SetRainbowOverride(float strength01) => gmRainbow = strength01;
@@ -302,6 +305,7 @@ namespace KryticalNova.World
 
         private void Apply(DayCycleProfile dc, float t, WeatherBlend w, float flash, float dt)
         {
+            PresentedTimeOfDay01 = t;
             Vector3 sunDir = dc.SunDirection(t);
             Vector3 moonDir = dc.MoonDirection(t);
             bool useMoon = sunDir.y < dc.lightSwapElevation;
@@ -365,7 +369,7 @@ namespace KryticalNova.World
 
             RenderSettings.fogColor = fog;
             RenderSettings.fogDensity = w.fogDensity;
-            VolumetricAtmosphereDriver.Publish(fog, w.fogDensity);
+            VolumetricAtmosphereDriver.Publish(fog, w.volumetricFog, w.rain, t);
 
             // ---- ambient (trilight → SH probe, rebuilt by Unity when the colours change)
             ambientTimer -= dt;
@@ -466,6 +470,9 @@ namespace KryticalNova.World
             float groundShadow = cloudShadows && cloudNoise != null ? w.cloudShadow * Smooth(intensity, 0.05f, 0.6f) : 0f;
             Shader.SetGlobalVector(Ids.CloudShadow, new Vector4(groundShadow, cloudShadowSoftness, 0f, 0f));
 
+            // ---- APV Day/Night lighting scenarios: baked street-lamp light fades in as the sun sets.
+            if (Application.isPlaying) BlendLightingScenarios(sunDir.y);
+
             // ---- quality tier
             int quality = QualitySettings.GetQualityLevel();
             if (quality != lastQualityLevel)
@@ -484,6 +491,25 @@ namespace KryticalNova.World
         }
 
         // ---------------------------------------------------------------- helpers
+
+        private const string DayScenario = "Day", NightScenario = "Night";
+        private float appliedNightBlend = -1f;
+
+        /// <summary>
+        /// Blends the APV "Day" scenario toward "Night" (lamps baked on) by sun elevation. No-op when the scene's baking
+        /// set has no Night scenario or the pipeline has scenario blending off (Mobile).
+        /// </summary>
+        private void BlendLightingScenarios(float sunElevation)
+        {
+            var prv = ProbeReferenceVolume.instance;
+            var set = prv.currentBakingSet;
+            if (set == null || !prv.isInitialized || !set.lightingScenarios.Contains(NightScenario)) return;
+            float night = 1f - Smooth(sunElevation, -0.08f, 0.1f);
+            if (Mathf.Abs(night - appliedNightBlend) < 0.01f) return;
+            appliedNightBlend = night;
+            if (prv.lightingScenario != DayScenario) prv.lightingScenario = DayScenario;
+            prv.BlendLightingScenario(NightScenario, night);
+        }
 
         private bool IsLowQuality(int level)
         {
