@@ -835,7 +835,9 @@ namespace KryticalNova.UI
             }
             if (skill.executionType == SkillExecutionType.Channeled)
             {
-                return $"Channeled Chi Restore · {dur:0}s duration · {chi:0} Chi";
+                float health = skill.GetChannelHealthRecovery(rank);
+                string restores = (health > 0f ? $"+{health:0.#}% HP · " : string.Empty) + $"+{skill.GetChannelChiRecovery(rank):0.#}% Chi";
+                return $"{restores} every {skill.channelTickInterval:0.#}s · {dur:0}s channel · {chi:0} Chi";
             }
             if (skill.statModifiers != null && skill.statModifiers.Length > 0)
             {
