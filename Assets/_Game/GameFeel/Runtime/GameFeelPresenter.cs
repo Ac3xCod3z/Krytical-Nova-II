@@ -35,6 +35,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player landFeel;
         [SerializeField] private MMF_Player attackCastFeel;
         [SerializeField] private MMF_Player buffCastFeel;
+        [Tooltip("Held while the local player charges a skill; authored one second long and stretched to the charge time.")]
+        [SerializeField] private MMF_Player chargeFeel;
 
         [Header("FEEL players (world particles, every client)")]
         [SerializeField] private MMF_Player hitWorldFeel;
@@ -56,13 +58,21 @@ namespace KryticalNova.GameFeel
         [SerializeField] private GameObject clickVfx;
         [SerializeField] private GameObject selectHostileVfx;
         [SerializeField] private GameObject selectFriendlyVfx;
+        [Tooltip("Ground ring of an area attack. Authored 1 m in radius and one second long: it is full size at " +
+                 "Area Ring Grow Time, then flashes and fades. Scaled to the skill's reach and timed to its hit.")]
+        [SerializeField] private GameObject areaRingVfx;
+        [Range(0.1f, 0.9f)] [SerializeField] private float areaRingGrowTime = 0.6f;
 
         [Header("Lasting effects on a character")]
         [SerializeField] private SkillFeelCatalog skills;
         [Tooltip("Looping aura for buffs the catalog has no entry for.")]
         [SerializeField] private GameObject defaultAuraVfx;
+        [Tooltip("Build-up for charged skills the catalog has no entry for.")]
+        [SerializeField] private GameObject defaultChargeVfx;
         [SerializeField] private GameObject runLoopVfx;
         [SerializeField] private GameObject airborneLoopVfx;
+        [Tooltip("Run, jump and landing dust takes the colour of the ground under the feet.")]
+        [SerializeField] private DustPalette dustPalette = DustPalette.Default;
         [SerializeField] private TrailRenderer bladeTrail;
         [Tooltip("Trail length for a basic combo strike (x) and for the finisher and skills (y), when gameplay gives none.")]
         [SerializeField] private Vector2 trailSeconds = new Vector2(0.22f, 0.4f);
@@ -74,13 +84,15 @@ namespace KryticalNova.GameFeel
 
         private readonly Dictionary<AnimancerComponent, int> frozen = new Dictionary<AnimancerComponent, int>();
         private MMF_Player[] cameraPlayers;
+        private Transform chargingLocalActor;
 
         private void OnEnable()
         {
             ClientPresentationRegistry.RegisterFeel(this);
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
-                attackCastFeel, buffCastFeel };
+                attackCastFeel, buffCastFeel, chargeFeel };
             if (skills == null) skills = GetComponent<SkillFeelCatalog>();
+            GroundSurfaces.Palette = dustPalette;
             HudPreferences.Changed += ApplyScreenShakePreference;
             ApplyScreenShakePreference();
         }
@@ -154,7 +166,7 @@ namespace KryticalNova.GameFeel
         public void RunStarted(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
-            PlayWorld(runWorldFeel, actor.position, Facing(actor), actor);
+            PlayWorld(runWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
             ActorVfx.For(actor).SetRunning(true, runLoopVfx);
             if (isLocalPlayer) Play(runFeel, actor.position, 1f);
         }
@@ -167,14 +179,14 @@ namespace KryticalNova.GameFeel
         public void JumpTakeoff(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
-            PlayWorld(jumpWorldFeel, actor.position, Facing(actor), actor);
+            PlayWorld(jumpWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
             if (isLocalPlayer) Play(jumpFeel, actor.position, 1f);
         }
 
         public void Landed(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
-            PlayWorld(landWorldFeel, actor.position, Facing(actor), actor);
+            PlayWorld(landWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
             if (isLocalPlayer) Play(landFeel, actor.position, 1f);
         }
 
@@ -185,13 +197,38 @@ namespace KryticalNova.GameFeel
             else ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx);
         }
 
-        public void SkillCast(Transform caster, string skillId, bool isAttack, bool isLocalPlayer)
+        public void SkillCast(Transform caster, string skillId, bool isAttack, bool isLocalPlayer, float areaRadius = 0f, float areaSeconds = 0f)
         {
             if (caster == null) return;
             SkillFeel feel = skills != null ? skills.Find(skillId) : null;
             MMF_Player world = feel != null && feel.cast != null ? feel.cast : isAttack ? attackCastWorldFeel : buffCastWorldFeel;
-            PlayWorld(world, caster.position, Facing(caster), caster);
+            Vector3 feet = ActorAnchor.Feet(caster);
+            PlayWorld(world, feet, Facing(caster), caster);
+            if (areaRadius > 0f) SpawnAreaRing(feet, caster, areaRadius, areaSeconds);
             if (isLocalPlayer) Play(isAttack ? attackCastFeel : buffCastFeel, caster.position, 1f);
+        }
+
+        public void ChargeStarted(Transform actor, string skillId, float seconds, bool isLocalPlayer)
+        {
+            if (actor == null) return;
+            SkillFeel feel = skills != null ? skills.Find(skillId) : null;
+            ActorVfx vfx = ActorVfx.For(actor);
+            vfx.BeginCharge(seconds);
+            vfx.AddCharge(feel != null && feel.charge != null ? feel.charge : defaultChargeVfx, ChestOffset);
+            if (feel != null && feel.chargeGround != null) vfx.AddCharge(feel.chargeGround, FeetOffset);
+
+            if (!isLocalPlayer || chargeFeel == null) return;
+            chargingLocalActor = actor;
+            chargeFeel.DurationMultiplier = Mathf.Max(0.05f, seconds);
+            Play(chargeFeel, actor.position, 1f);
+        }
+
+        public void ChargeEnded(Transform actor, string skillId, bool completed)
+        {
+            ActorVfx.Find(actor)?.ClearCharge();
+            if (actor == null || actor != chargingLocalActor) return;
+            chargingLocalActor = null;
+            if (chargeFeel != null && chargeFeel.IsPlaying) chargeFeel.StopFeedbacks();
         }
 
         public void SkillHit(Transform caster, string skillId, Vector3 point)
@@ -220,14 +257,15 @@ namespace KryticalNova.GameFeel
         {
             ActorVfx vfx = ActorVfx.Find(actor);
             if (vfx == null) return;
-            if (vfx.ClearAura(skillId)) PlayWorld(buffEndWorldFeel, actor.position, Quaternion.identity, actor);
+            if (vfx.ClearAura(skillId)) PlayWorld(buffEndWorldFeel, ActorAnchor.Feet(actor), Quaternion.identity, actor);
         }
 
         public void Consumed(Transform actor, bool restoredHealth, bool restoredChi)
         {
             if (actor == null) return;
-            if (restoredHealth) PlayWorld(healWorldFeel, actor.position, Quaternion.identity, actor);
-            if (restoredChi) PlayWorld(chiWorldFeel, actor.position, Quaternion.identity, actor);
+            Vector3 feet = ActorAnchor.Feet(actor);
+            if (restoredHealth) PlayWorld(healWorldFeel, feet, Quaternion.identity, actor);
+            if (restoredChi) PlayWorld(chiWorldFeel, feet, Quaternion.identity, actor);
         }
 
         // ------------------------------------------------------------------ helpers
@@ -247,8 +285,32 @@ namespace KryticalNova.GameFeel
             }
         }
 
+        // Metres above the soles (ActorVfx brings them into the root's space).
         private static readonly Vector3 FeetOffset = new Vector3(0f, 0.05f, 0f);
-        private static readonly Vector3 ChestOffset = new Vector3(0f, 1.1f, 0f);
+        private static readonly Vector3 ChestOffset = new Vector3(0f, 1.15f, 0f);
+        private const float AreaRingLift = 0.06f;
+
+        /// <summary>
+        /// The reach of an area attack, drawn on the ground around the caster: it grows to the real radius as the blow
+        /// lands, then flashes and fades, so the ring's edge is exactly where targets stop being hit.
+        /// </summary>
+        private void SpawnAreaRing(Vector3 feet, Transform caster, float radius, float seconds)
+        {
+            var pool = NetworkCombatVFXPool.Instance;
+            if (pool == null || areaRingVfx == null) return;
+            // The effect is one second long and full size at areaRingGrowTime; play it at the speed that puts that
+            // moment on the hit.
+            float speed = areaRingGrowTime / Mathf.Max(0.1f, seconds);
+            Vector3 ground = GroundSnap.Snap(feet, caster) + Vector3.up * AreaRingLift;
+            GameObject ring = pool.Spawn(areaRingVfx, ground, Quaternion.identity, 1f / speed + 0.1f);
+            if (ring == null) return;
+            ring.transform.localScale = areaRingVfx.transform.localScale * radius;
+            foreach (var ps in ring.GetComponentsInChildren<ParticleSystem>())
+            {
+                var main = ps.main;
+                main.simulationSpeed = speed;
+            }
+        }
 
         private static void Play(MMF_Player player, Vector3 position, float intensity)
         {

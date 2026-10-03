@@ -49,8 +49,8 @@ Shader "Skybox/KryticalNova/Stylized Sky"
 
         [Header(Moon Phase)]
         _MoonDisc("Moon Disc In Art (centre uv xy, radius uv zw)", Vector) = (0.495, 0.5, 0.23, 0.209)
-        _MoonEarthshine("Dark Side Earthshine", Range(0, 0.5)) = 0.12
-        _MoonDarkAlpha("Dark Side Opacity", Range(0, 1)) = 0.55
+        _MoonEarthshine("Dark Side Earthshine", Range(0, 0.5)) = 0.015
+        _MoonDarkAlpha("Dark Side Opacity", Range(0, 1)) = 0.95
 
         [Header(Cloud Rim Glow)]
         _BodyRimGlow("Cloud Rim Glow Near Sun/Moon", Range(0, 8)) = 2.5
@@ -439,6 +439,8 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                 sky += _KN_MoonColor.rgb * moon * _MoonBrightness * aboveHorizon * (1.0 - cloudAlpha * 0.95) * (1.0 - _KN_BodyTexParams.w);
                 half4 moonLook = StylizeBody(moonArt, moonUV, _KN_MoonDir.y, _KN_MoonColor.rgb, _KN_BodyTexBrightness.y,
                                              _MoonGlare, _MoonGlareRadius, 0.5, sky);
+                half moonLit = 1.0;      // lit-side mask over the moon's disc
+                half moonOnDisc = 0.0;   // 1 inside the disc, 0 around it
                 {
                     // Phase: a lit-side mask over the art. Sphere normal from the art's disc; shards outside the disc
                     // take the rim normal so they phase with the side they float on.
@@ -450,6 +452,8 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                     half lit = smoothstep(-0.08, 0.08, dot(n, L));
                     moonLook.rgb *= lerp(_MoonEarthshine, 1.0, lit);
                     moonLook.a *= lerp(_MoonDarkAlpha, 1.0, lit);
+                    moonLit = lit;
+                    moonOnDisc = (1.0 - smoothstep(0.92, 1.04, pr)) * moonInside * _KN_BodyTexParams.w;
                 }
                 half moonR = length((moonUV - _MoonDisc.xy) / _MoonDisc.zw) * 0.5;
                 moonLook = DiffuseBody(moonLook, moonR, LightTint(_KN_MoonColor.rgb), _KN_BodyTexBrightness.y * _KN_MoonPhase.y, diffusion);
@@ -496,7 +500,9 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                 half glow = pow(saturate(dot(glowDir, _KN_SunDir.xyz)), _KN_SunParams.y) * _KN_SunParams.z;
                 sky += _KN_SunColor.rgb * glow * (1.0 - cloudAlpha * 0.7);
                 // Soft moonlight halo, scattered the same way.
+                // The glow is light off the lit face: kept off the unlit part of the disc so the shadow stays dark.
                 half moonHalo = pow(saturate(moonDot), _MoonHaloPower) * _MoonHalo * _KN_MoonPhase.y;
+                moonHalo *= lerp(1.0, moonLit, moonOnDisc);
                 sky += _KN_MoonColor.rgb * moonHalo * aboveHorizon * (1.0 - cloudAlpha * 0.7);
                 // Under overcast the body is only a pale smear of light glowing through the cloud deck.
                 half deckGlow = pow(saturate(sunDot), 300.0) * diffusion * cloudAlpha;

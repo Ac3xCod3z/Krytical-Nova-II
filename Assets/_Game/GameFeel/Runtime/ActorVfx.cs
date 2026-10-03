@@ -7,9 +7,11 @@ using UnityEngine;
 namespace KryticalNova.GameFeel
 {
     /// <summary>
-    /// The lasting effects on one character: buff auras (one per skill, for the buff's whole duration), the run and
-    /// airborne loops, and the weapon trail. Added on demand by <see cref="GameFeelPresenter"/>, like HitReactor.
-    /// Everything is pooled and purely local; when the character is disabled or despawned its effects go with it.
+    /// The lasting effects on one character: buff auras (one per skill, for the buff's whole duration), the build-up of
+    /// a held charge, the run and airborne loops, and the weapon trail. Added on demand by
+    /// <see cref="GameFeelPresenter"/>, like HitReactor. Offsets are given in metres above the soles (see
+    /// <see cref="ActorAnchor"/>). Everything is pooled and purely local; when the character is disabled or despawned
+    /// its effects go with it.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ActorVfx : MonoBehaviour
@@ -18,6 +20,11 @@ namespace KryticalNova.GameFeel
         private const float ExpiryPulseHz = 3f;
         private const float ExpiryPulseDepth = 0.22f;
         private const float DefaultTrailSeconds = 0.25f;
+        private const float ChargeStartScale = 0.5f;
+        private const float ChargeFullScale = 1.15f;
+        private const float DustCheckSeconds = 0.2f;
+        private static readonly Vector3 RunLoopHeight = new Vector3(0f, 0.1f, 0f);
+        private static readonly Vector3 AirLoopHeight = new Vector3(0f, 0.9f, 0f);
 
         private struct Aura
         {
@@ -28,7 +35,12 @@ namespace KryticalNova.GameFeel
 
         private readonly Dictionary<string, Aura> auras = new Dictionary<string, Aura>();
         private readonly List<string> auraIds = new List<string>(); // iteration order without allocating
+        private readonly List<Aura> charges = new List<Aura>(2);
+        private float chargeStart, chargeSeconds;
+        private float rootHeight;
         private GameObject runLoop, airLoop;
+        private ParticleSystem[] runLoopSystems;
+        private float nextDustCheck;
         private GameObject runPrefab;
         private bool running, airborne;
         private TrailRenderer trail;
@@ -52,14 +64,19 @@ namespace KryticalNova.GameFeel
             return net != null ? net.transform : actor;
         }
 
+        private void Awake() => rootHeight = ActorAnchor.RootHeight(transform);
+
+        /// <summary>A point given in metres above the soles, in this root's local space.</summary>
+        private Vector3 Local(Vector3 aboveSoles) => aboveSoles - Vector3.up * rootHeight;
+
         // ------------------------------------------------------------------ buff auras
 
-        public void SetAura(string skillId, GameObject prefab, Vector3 localOffset, float duration)
+        public void SetAura(string skillId, GameObject prefab, Vector3 aboveSoles, float duration)
         {
             ClearAura(skillId, false);
             var pool = NetworkCombatVFXPool.Instance;
             if (pool == null || prefab == null) return;
-            var instance = pool.SpawnAttached(prefab, transform, localOffset, Quaternion.identity);
+            var instance = pool.SpawnAttached(prefab, transform, Local(aboveSoles), Quaternion.identity);
             if (instance == null) return;
             auras[skillId] = new Aura { Instance = instance, BaseScale = instance.transform.localScale, EndTime = Time.time + duration };
             auraIds.Add(skillId);
@@ -79,6 +96,39 @@ namespace KryticalNova.GameFeel
             return true;
         }
 
+        // ------------------------------------------------------------------ held charge
+
+        /// <summary>Starts a charge that fills over <paramref name="seconds"/>; add its effects with <see cref="AddCharge"/>.</summary>
+        public void BeginCharge(float seconds)
+        {
+            ClearCharge(false);
+            chargeStart = Time.time;
+            chargeSeconds = Mathf.Max(0.05f, seconds);
+        }
+
+        public void AddCharge(GameObject prefab, Vector3 aboveSoles)
+        {
+            var pool = NetworkCombatVFXPool.Instance;
+            if (pool == null || prefab == null) return;
+            var instance = pool.SpawnAttached(prefab, transform, Local(aboveSoles), Quaternion.identity);
+            if (instance == null) return;
+            var charge = new Aura { Instance = instance, BaseScale = instance.transform.localScale };
+            instance.transform.localScale = charge.BaseScale * ChargeStartScale;
+            charges.Add(charge);
+        }
+
+        public void ClearCharge(bool graceful = true)
+        {
+            var pool = NetworkCombatVFXPool.Instance;
+            foreach (Aura charge in charges)
+            {
+                if (charge.Instance == null) continue;
+                charge.Instance.transform.localScale = charge.BaseScale;
+                if (pool != null) pool.Release(charge.Instance, graceful);
+            }
+            charges.Clear();
+        }
+
         // ------------------------------------------------------------------ locomotion loops
 
         public void SetRunning(bool value, GameObject loopPrefab)
@@ -91,19 +141,38 @@ namespace KryticalNova.GameFeel
         public void SetAirborne(bool value, GameObject loopPrefab)
         {
             airborne = value;
-            SetLoop(ref airLoop, airborne, loopPrefab, new Vector3(0f, 1f, 0f));
+            SetLoop(ref airLoop, airborne, loopPrefab, AirLoopHeight);
             RefreshRunLoop(); // no dust while the feet are off the ground
         }
 
-        private void RefreshRunLoop() => SetLoop(ref runLoop, running && !airborne, runPrefab, new Vector3(0f, 0.05f, 0f));
+        private void RefreshRunLoop()
+        {
+            bool had = runLoop != null;
+            SetLoop(ref runLoop, running && !airborne, runPrefab, RunLoopHeight);
+            if (runLoop == null) runLoopSystems = null;
+            else if (!had)
+            {
+                runLoopSystems = runLoop.GetComponentsInChildren<ParticleSystem>();
+                nextDustCheck = 0f; // colour it for the ground it starts on, before the first puff
+                TintRunDust();
+            }
+        }
 
-        private void SetLoop(ref GameObject loop, bool on, GameObject prefab, Vector3 localOffset)
+        /// <summary>The run's puffs take the colour of the ground being crossed; puffs already in the air keep theirs.</summary>
+        private void TintRunDust()
+        {
+            if (runLoopSystems == null || Time.time < nextDustCheck) return;
+            nextDustCheck = Time.time + DustCheckSeconds;
+            GroundSurfaces.Tint(runLoopSystems, GroundSurfaces.DustAt(ActorAnchor.Feet(transform), transform));
+        }
+
+        private void SetLoop(ref GameObject loop, bool on, GameObject prefab, Vector3 aboveSoles)
         {
             var pool = NetworkCombatVFXPool.Instance;
             if (on == (loop != null) || pool == null) return;
             if (on)
             {
-                if (prefab != null) loop = pool.SpawnAttached(prefab, transform, localOffset, Quaternion.identity);
+                if (prefab != null) loop = pool.SpawnAttached(prefab, transform, Local(aboveSoles), Quaternion.identity);
             }
             else
             {
@@ -146,6 +215,15 @@ namespace KryticalNova.GameFeel
         private void Update()
         {
             if (trail != null && trail.emitting && Time.time >= trailUntil) trail.emitting = false;
+            TintRunDust();
+
+            if (charges.Count > 0)
+            {
+                float fill = Mathf.Clamp01((Time.time - chargeStart) / chargeSeconds);
+                float scale = Mathf.Lerp(ChargeStartScale, ChargeFullScale, fill);
+                for (int i = 0; i < charges.Count; i++)
+                    if (charges[i].Instance != null) charges[i].Instance.transform.localScale = charges[i].BaseScale * scale;
+            }
 
             // A buff about to run out breathes faster and smaller, so its end never comes as a surprise.
             for (int i = 0; i < auraIds.Count; i++)
@@ -160,25 +238,32 @@ namespace KryticalNova.GameFeel
             }
         }
 
+        // The character is being deactivated or destroyed: its children cannot be re-parented right now, so the
+        // effects are only stopped here and the pool collects whatever survives on its next Update.
         private void OnDisable()
         {
             var pool = NetworkCombatVFXPool.Instance;
-            foreach (var aura in auras.Values)
-            {
-                if (aura.Instance == null) continue;
-                aura.Instance.transform.localScale = aura.BaseScale;
-                if (pool != null) pool.Release(aura.Instance, false);
-            }
+            foreach (var aura in auras.Values) Drop(pool, aura);
             auras.Clear();
             auraIds.Clear();
+            foreach (Aura charge in charges) Drop(pool, charge);
+            charges.Clear();
             if (pool != null)
             {
-                pool.Release(runLoop, false);
-                pool.Release(airLoop, false);
+                pool.ReleaseDeferred(runLoop);
+                pool.ReleaseDeferred(airLoop);
             }
             runLoop = airLoop = null;
+            runLoopSystems = null;
             running = airborne = false;
             if (trail != null) trail.emitting = false;
+        }
+
+        private static void Drop(NetworkCombatVFXPool pool, Aura effect)
+        {
+            if (effect.Instance == null) return;
+            effect.Instance.transform.localScale = effect.BaseScale;
+            if (pool != null) pool.ReleaseDeferred(effect.Instance);
         }
     }
 }

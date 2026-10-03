@@ -137,6 +137,13 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
   - `PointAndClickPlayer.cs`: Integrated with `CharacterBuffManager` to proc offensive shield shatter / stance dispel on attacks and interrupt channeled skills upon movement.
   - `CombatEntity.cs`: Integrated with `CharacterBuffManager` so incoming damage is absorbed by active absorption shields before depleting health pools, and checks for defensive reflection.
   - `PlayerResources.cs` & `CharacterResources.asset`: Passive Chi regeneration disabled (`0 Chi/s`) to reflect the Twelve Sky 2 meditation model.
+  - `PlayerVaultMotor.cs` (traversal, no skill or Chi): a move command goes **over** low obstacles instead of round them
+    whenever that is not the longer way. Heights are measured from the ground in front of the obstacle; anything from
+    0.18 m up to **1.78 m** (the town's hedges, `SM_Env_Hedge_01`) and up to 1.8 m thick can be vaulted. Three styles by
+    height: a hurdle below 0.75 m, a hands-on leapfrog from 0.75 m, a front flip from 1.35 m (dumpsters, hedges). Like
+    the jump, Animancer plays the pose and KINEMATION Motion Warping moves the root on one clock
+    (`Warp_Player_Vault.asset`, built by Krytical Nova ▸ Player ▸ Build Vault Warp Asset); the time in the air follows
+    the current speed, so a run is not slowed down. All limits and the three styles are fields on the Player prefab.
 - **Asset Directory Structure (`Assets/_Game/Gameplay/Progression/Data/Assets/`):**
   - `Skills/SelfBuffSkills/`: The 8 Phase 3 self-buff and master skills.
   - `Skills/MovementSkills/`: `Jump.asset`, `Run.asset`, `Movement.asset`, `JumpMotion.asset`.
@@ -147,7 +154,7 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
   - `Materials/`: `DummyMaterial.mat`.
 - **Created 8 Phase 3 Skill Assets (`Assets/_Game/Gameplay/Progression/Data/Assets/Skills/SelfBuffSkills/`):**
   1. `Skill_SpiritualRage.asset`: +30% Critical Rate for 180s (15 Chi, 1.0s CD, Trainer Skill, Ranks 1-20).
-  2. `Skill_HeavenlySerenity.asset`: Channeled HP + Chi regen (1% → 5% Max HP/s and 2% → 10% Max Chi/s for 20s, 0 Chi, 1.0s CD, Trainer Skill, Ranks 1-20).
+  2. `Skill_HeavenlySerenity.asset`: Channeled HP + Chi regen (1% → 5% Max HP/s and 2% → 10% Max Chi/s for 20s, 0 Chi, 1.0s CD, Trainer Skill, Ranks 1-20). The caster kneels and holds the pose for the whole channel (`channelLoopClip`), rising when it ends or is interrupted.
   3. `Skill_HeavenlyShield.asset` (HS): Level 60 Drop Item. Absorbs incoming physical damage up to 111% - 150% Max HP for 60s (765 - 1010 Chi, 2.0s CD, Ranks 1-30, 1-30 skill points). Elemental damage bypasses the shield directly to health!
   4. `Skill_HeavenlyBlow.asset` (HB): Level 60 Drop Item. Increases chance of deadly blow by 12% - 75% multiplicatively (765 - 1010 Chi, 64s - 180s duration, 1.0s CD, Ranks 1-30, 1-30 skill points).
   5. `Skill_GarudasPrayer.asset` (GP): Level 70 Drop Item. Multiplies luck by +13% - +100% (891 - 1136 Chi, 66s - 240s duration, 1.0s CD, Ranks 1-30, 1-30 skill points).

@@ -20,17 +20,20 @@ namespace KryticalNova.EditorTools.GM
     /// Dockable GM / dev tools (Odin). Every action is sent as a Quantum Console command string (the same
     /// <c>gm.*</c>, <c>time.*</c>, <c>weather.*</c>, <c>item.*</c> commands you can type in-game), so the console and
     /// this window can never drift apart. Works in Play Mode as host or offline, like the commands themselves.
+    /// The search box at the top finds any command by name or description, whichever tab its button lives on.
     /// </summary>
     public sealed class GmToolsWindow : OdinEditorWindow
     {
         private const string Tabs = "Tabs";
         private const string PlayerTab = "Player";
         private const string StatsTab = "Stats";
+        private const string SkillsTab = "Skills";
         private const string CheatsTab = "Cheats";
         private const string TeleportTab = "Teleport";
         private const string WorldTab = "World";
         private const string ItemsTab = "Items";
         private const int MaxLogLines = 200;
+        private const int MaxSearchResults = 40;
 
         [MenuItem("Krytical Nova/GM Tools", priority = 0)]
         [MenuItem("Window/Krytical Nova/GM Tools")]
@@ -114,6 +117,7 @@ namespace KryticalNova.EditorTools.GM
             if (GmState.InfiniteChi) flags.Add("INF CHI");
             if (GmState.NoCooldowns) flags.Add("NO CD");
             if (GmCommands.OneShotEnabled) flags.Add("ONE-SHOT");
+            if (!Mathf.Approximately(Time.timeScale, 1f)) flags.Add($"GAME ×{Time.timeScale:0.##}");
             if (!Mathf.Approximately(GmState.SpeedMultiplier, 1f)) flags.Add($"SPEED ×{GmState.SpeedMultiplier:0.##}");
             if (flags.Count > 0)
             {
@@ -139,6 +143,100 @@ namespace KryticalNova.EditorTools.GM
             return $"{h:00}:{m:00}";
         }
 
+        // ================================================================ search (always visible)
+
+        [NonSerialized] private string search = string.Empty;
+        [NonSerialized] private List<CommandData> searchable;
+        [NonSerialized] private Vector2 searchScroll;
+
+        [OnInspectorGUI, PropertyOrder(-90)]
+        private void DrawSearch()
+        {
+            EditorGUILayout.BeginHorizontal();
+            search = EditorGUILayout.TextField(search ?? string.Empty, EditorStyles.toolbarSearchField);
+            if (GUILayout.Button("Clear", EditorStyles.miniButton, GUILayout.Width(46)))
+            {
+                search = string.Empty;
+                GUI.FocusControl(null);
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                EditorGUILayout.LabelField("Search every GM command by name or description: skill, moon, teleport, speed…", EditorStyles.miniLabel);
+                return;
+            }
+
+            List<CommandData> commands = Searchable();
+            if (commands == null)
+            {
+                EditorGUILayout.LabelField("Loading the command list…", EditorStyles.miniLabel);
+                return;
+            }
+
+            string[] words = search.Trim().ToLowerInvariant().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var signature = new GUIStyle(EditorStyles.boldLabel) { wordWrap = true };
+            var description = new GUIStyle(EditorStyles.miniLabel) { wordWrap = true };
+            int shown = 0, matches = 0;
+            searchScroll = EditorGUILayout.BeginScrollView(searchScroll, GUILayout.MaxHeight(260));
+            foreach (CommandData found in commands)
+            {
+                if (!Matches(found, words)) continue;
+                matches++;
+                if (shown >= MaxSearchResults) continue;
+                shown++;
+
+                EditorGUILayout.BeginHorizontal();
+                bool needsValues = found.ParamCount > 0;
+                if (GUILayout.Button(needsValues ? "Use" : "Run", GUILayout.Width(40)))
+                {
+                    if (needsValues)
+                    {
+                        // Needs values: hand it to the console line below, ready to complete and run.
+                        command = found.CommandName + " ";
+                        GUI.FocusControl(null);
+                        Log($"'{found.CommandName}{found.ParameterSignature}' is in the console line below: add its values and press Run.");
+                    }
+                    else Run(found.CommandName);
+                }
+                EditorGUILayout.BeginVertical();
+                EditorGUILayout.LabelField((found.CommandName + " " + found.ParameterSignature).Trim(), signature);
+                if (found.HasDescription) EditorGUILayout.LabelField(found.CommandDescription, description);
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.EndScrollView();
+            if (matches == 0) EditorGUILayout.LabelField("No command matches.", EditorStyles.miniLabel);
+            else if (matches > shown) EditorGUILayout.LabelField($"{matches - shown} more: type more of the name.", EditorStyles.miniLabel);
+        }
+
+        private static bool Matches(CommandData found, string[] words)
+        {
+            string name = found.CommandName.ToLowerInvariant();
+            string text = found.HasDescription ? found.CommandDescription.ToLowerInvariant() : string.Empty;
+            foreach (string word in words)
+                if (!name.Contains(word) && !text.Contains(word)) return false;
+            return true;
+        }
+
+        /// <summary>Every console command, sorted by name; null while Quantum Console is still building its table.</summary>
+        private List<CommandData> Searchable()
+        {
+            if (searchable != null) return searchable;
+            if (!QuantumConsoleProcessor.TableGenerated)
+            {
+                if (!QuantumConsoleProcessor.TableIsGenerating) QuantumConsoleProcessor.GenerateCommandTable();
+                if (!QuantumConsoleProcessor.TableGenerated) return null;
+            }
+            searchable = new List<CommandData>(QuantumConsoleProcessor.GetAllCommands());
+            searchable.Sort((a, b) =>
+            {
+                int byName = string.CompareOrdinal(a.CommandName, b.CommandName);
+                return byName != 0 ? byName : a.ParamCount.CompareTo(b.ParamCount);
+            });
+            return searchable;
+        }
+
         // ================================================================ PLAYER
 
         [ButtonGroup(Tabs + "/" + PlayerTab + "/Level"), EnableIf(nameof(IsReady)), PropertyOrder(0)]
@@ -155,9 +253,6 @@ namespace KryticalNova.EditorTools.GM
 
         [TabGroup(Tabs, PlayerTab), Title("Points"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(4)]
         private void AddStatPoints(int amount = 10) => Run($"gm.statpoints {amount}");
-
-        [TabGroup(Tabs, PlayerTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(5)]
-        private void AddSkillPoints(int amount = 10) => Run($"gm.skillpoints {amount}");
 
         [TabGroup(Tabs, PlayerTab), Title("Attributes"), ShowInInspector, DisplayAsString, LabelText("Current"), PropertyOrder(6)]
         private string AttributeSummary
@@ -219,23 +314,39 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + CheatsTab + "/Combat"), EnableIf(nameof(IsReady)), PropertyOrder(251)]
         private void ResetDummy() => Run("gm.dummy.reset");
 
-        [ButtonGroup(Tabs + "/" + CheatsTab + "/Combat"), EnableIf(nameof(IsReady)), PropertyOrder(252)]
+        // ================================================================ SKILLS
+
+        private enum HitStyle { Normal, Heavy, Crit }
+
+        [TabGroup(Tabs, SkillsTab), Title("Skill Points"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(150)]
+        private void AddSkillPoints(int amount = 10) => Run($"gm.skillpoints {amount}");
+
+        [TabGroup(Tabs, SkillsTab), Button("Unlock + Max All Skills", ButtonSizes.Large), GUIColor(0.55f, 0.9f, 0.75f), EnableIf(nameof(IsReady)), PropertyOrder(151)]
+        [InfoBox("Every combat, buff and movement skill at max rank, book skills unlocked. Ignores level and skill points.")]
+        private void MaxAllSkills() => Run("gm.skills.max");
+
+        [ButtonGroup(Tabs + "/" + SkillsTab + "/Books"), EnableIf(nameof(IsReady)), PropertyOrder(152)]
         private void UnlockDropSkills() => Run("gm.dropskills true");
 
-        [ButtonGroup(Tabs + "/" + CheatsTab + "/Combat"), EnableIf(nameof(IsReady)), PropertyOrder(253)]
+        [ButtonGroup(Tabs + "/" + SkillsTab + "/Books"), EnableIf(nameof(IsReady)), PropertyOrder(153)]
         private void LockDropSkills() => Run("gm.dropskills false");
 
-        [TabGroup(Tabs, CheatsTab), ValueDropdown(nameof(BookSkillChoices)), EnableIf(nameof(IsReady)), LabelText("Book Skill"), PropertyOrder(254)]
+        [TabGroup(Tabs, SkillsTab), ValueDropdown(nameof(BookSkillChoices)), EnableIf(nameof(IsReady)), LabelText("Book Skill"), PropertyOrder(154)]
         [SerializeField] private string bookSkillChoice;
 
-        [ButtonGroup(Tabs + "/" + CheatsTab + "/BookSkill"), EnableIf(nameof(IsReady)), LabelText("Unlock Skill"), PropertyOrder(255)]
+        [ButtonGroup(Tabs + "/" + SkillsTab + "/BookSkill"), EnableIf(nameof(IsReady)), LabelText("Unlock Skill"), PropertyOrder(155)]
         private void UnlockBookSkill() { if (!string.IsNullOrEmpty(bookSkillChoice)) Run($"gm.unlockskill {bookSkillChoice}"); }
 
-        [ButtonGroup(Tabs + "/" + CheatsTab + "/BookSkill"), EnableIf(nameof(IsReady)), LabelText("Lock Skill"), PropertyOrder(256)]
+        [ButtonGroup(Tabs + "/" + SkillsTab + "/BookSkill"), EnableIf(nameof(IsReady)), LabelText("Lock Skill"), PropertyOrder(156)]
         private void LockBookSkill() { if (!string.IsNullOrEmpty(bookSkillChoice)) Run($"gm.lockskill {bookSkillChoice}"); }
 
-        [ButtonGroup(Tabs + "/" + CheatsTab + "/BookSkill"), EnableIf(nameof(IsReady)), LabelText("List Skills"), PropertyOrder(257)]
+        [ButtonGroup(Tabs + "/" + SkillsTab + "/BookSkill"), EnableIf(nameof(IsReady)), LabelText("List Skills"), PropertyOrder(157)]
         private void ListSkills() => Run("gm.skills");
+
+        [TabGroup(Tabs, SkillsTab), Title("Hit Preview"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(160)]
+        [InfoBox("Hits you with the player's own impact effect. Amount 0 = 10% of max HP. God mode keeps the HP.")]
+        private void HitMe([MinValue(0)] float amount = 0f, HitStyle style = HitStyle.Normal) =>
+            Run($"gm.hitme {F(amount)} {style.ToString().ToLowerInvariant()}");
 
         /// <summary>Level-60 drop and Wargod skills: the ones a book (or this tool) has to unlock.</summary>
         private static IEnumerable<ValueDropdownItem<string>> BookSkillChoices()
@@ -333,6 +444,26 @@ namespace KryticalNova.EditorTools.GM
             get => GmState.SpeedMultiplier;
             set { if (!Mathf.Approximately(value, GmState.SpeedMultiplier)) Run($"gm.speed {F(value)}", log: false); }
         }
+
+        [TabGroup(Tabs, CheatsTab), Title("Game Speed"), ShowInInspector, PropertyRange(0.05f, 2f), EnableIf(nameof(IsReady)), LabelText("Game Speed ×"), PropertyOrder(204.1f)]
+        [InfoBox("Slows the whole game (animation, movement, effects) for a close look. 1 = normal.")]
+        private float GameSpeed
+        {
+            get => Application.isPlaying ? Time.timeScale : 1f;
+            set { if (!Mathf.Approximately(value, Time.timeScale)) Run($"gm.slowmo {F(value)}", log: false); }
+        }
+
+        [ButtonGroup(Tabs + "/" + CheatsTab + "/Speed"), EnableIf(nameof(IsReady)), LabelText("×0.1"), PropertyOrder(204.2f)]
+        private void TenthSpeed() => Run("gm.slowmo 0.1");
+
+        [ButtonGroup(Tabs + "/" + CheatsTab + "/Speed"), EnableIf(nameof(IsReady)), LabelText("×0.25"), PropertyOrder(204.3f)]
+        private void QuarterSpeed() => Run("gm.slowmo 0.25");
+
+        [ButtonGroup(Tabs + "/" + CheatsTab + "/Speed"), EnableIf(nameof(IsReady)), LabelText("×0.5"), PropertyOrder(204.4f)]
+        private void HalfSpeed() => Run("gm.slowmo 0.5");
+
+        [ButtonGroup(Tabs + "/" + CheatsTab + "/Speed"), EnableIf(nameof(IsReady)), LabelText("Normal"), PropertyOrder(204.5f)]
+        private void NormalSpeed() => Run("gm.slowmo 1");
 
         [TabGroup(Tabs, CheatsTab), Title("Presets"), Button(ButtonSizes.Large), GUIColor(0.55f, 0.9f, 0.75f), EnableIf(nameof(IsReady)), PropertyOrder(205)]
         [InfoBox("Max level, god mode, infinite Chi, no cooldowns, full heal.")]

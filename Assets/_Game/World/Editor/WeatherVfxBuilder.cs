@@ -306,6 +306,25 @@ namespace KryticalNova.EditorTools
             BaseShaderGUI.SetMaterialKeywords(mat, ParticleGUI.SetMaterialKeywords);
         }
 
+        /// <summary>A flat, opaque URP particle material: it writes depth, so the comic outline pass inks the particles.</summary>
+        internal static Material OpaqueParticleMaterial(string name, Color color)
+        {
+            string path = $"{MaterialFolder}/{name}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = mat == null;
+            if (isNew) mat = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+            mat.SetTexture("_BaseMap", null);
+            mat.SetColor("_BaseColor", color);
+            mat.SetFloat("_Surface", 0f);                  // opaque
+            mat.SetFloat("_ColorMode", 0f);                // multiply vertex colour
+            mat.SetFloat("_SoftParticlesEnabled", 0f);
+            mat.SetFloat("_CameraFadingEnabled", 0f);
+            BaseShaderGUI.SetMaterialKeywords(mat, ParticleGUI.SetMaterialKeywords);
+            if (isNew) AssetDatabase.CreateAsset(mat, path);
+            else EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
         /// <summary>Legacy Built-in particle materials render magenta in URP; make a URP Particles/Unlit copy.</summary>
         internal static Material ToUrp(Material source)
         {

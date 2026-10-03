@@ -144,6 +144,20 @@ namespace KryticalNova.Progression
             Changed?.Invoke();
         }
 
+        /// <summary>GM: unlocks every book skill and puts every skill at its top rank, ignoring level and skill points.</summary>
+        public void GmSetAllRanksToMax()
+        {
+            if (availableSkills == null) return;
+            foreach (var skill in availableSkills)
+            {
+                if (skill == null) continue;
+                if (skill.requiresSkillBook) unlockedDropSkills.Add(skill.skillId);
+                learnedRanks[skill.skillId] = skill.maxRank;
+            }
+            SkillMessage?.Invoke("GM: every skill unlocked at max rank.");
+            Changed?.Invoke();
+        }
+
         public bool CanUpgrade(SkillDefinitionSO skill, out string reason)
         {
             EnsureComponents();

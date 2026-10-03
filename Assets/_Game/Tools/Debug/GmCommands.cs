@@ -29,6 +29,8 @@ namespace KryticalNova.DevTools
         private static readonly Dictionary<StatType, float> gmFlatStats = new Dictionary<StatType, float>();
         private static bool oneShot;
         private static float pausedTimeScale = 1f;
+        // Physics step at normal speed, remembered the first time the game speed is changed (0 = never changed).
+        private static float normalFixedDeltaTime;
 
         /// <summary>Read by the editor GM Tools window to show the toggle state.</summary>
         public static bool OneShotEnabled => oneShot;
@@ -48,6 +50,7 @@ namespace KryticalNova.DevTools
             gmFlatStats.Clear();
             oneShot = false;
             pausedTimeScale = 1f;
+            RestoreGameSpeed();
         }
 
         #region Player lookup
@@ -80,9 +83,11 @@ namespace KryticalNova.DevTools
             {
                 "PROGRESSION  gm.level <n> · gm.maxlevel · gm.xp <n> · gm.statpoints <n> · gm.skillpoints <n> · gm.attr <str|vit|agi|spi> <n> · gm.resetstats",
                 "STATS        gm.stats · gm.setstat <StatType> <value> · gm.clearstats",
-                "VITALS       gm.heal · gm.fillchi · gm.damage <n> · gm.spendchi <n> · gm.kill",
-                "COMBAT       gm.dummy.hit [times] · gm.dummy.reset · gm.dropskills <true|false> · gm.unlockskill <id> · gm.lockskill <id> · gm.skills",
+                "VITALS       gm.heal · gm.fillchi · gm.damage <n> · gm.hitme [n] [normal|heavy|crit] · gm.spendchi <n> · gm.kill",
+                "SKILLS       gm.skillpoints <n> · gm.skills.max · gm.skills · gm.dropskills <true|false> · gm.unlockskill <id> · gm.lockskill <id>",
+                "COMBAT       gm.dummy.hit [times] · gm.dummy.reset",
                 "GOD MODE     gm.god [on|off] · gm.infchi · gm.nocd · gm.oneshot · gm.speed <mult> · gm.reset",
+                "GAME SPEED   gm.slowmo [x]   (0.25 = quarter speed, 1 = normal; no value toggles quarter speed)",
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",
                 "WEATHER      weather.set <name> [secs] · weather.clear · weather.lock <bool> · weather.list",
@@ -237,6 +242,42 @@ namespace KryticalNova.DevTools
             return $"HP {res.Health:0}/{res.MaxHealth:0}{(GmState.GodMode ? " (god mode on)" : "")}";
         }
 
+        [Command("gm.hitme", "Take a hit yourself to see the impact effect: gm.hitme [amount] [normal|heavy|crit]. Amount 0 = 10% of max HP.")]
+        private static string HitMe(float amount = 0f, string style = "normal")
+        {
+            if (!TryGetPlayer(out var player, out var error)) return error;
+            var res = player.GetComponent<PlayerResources>();
+            var melee = player.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>();
+            if (res == null || melee == null) return "Local player has no PlayerResources / PlayerMeleeCombat.";
+            if (!TryParseHitStyle(style, out int comboStep, out bool critical))
+                return $"Unknown style '{style}'. Use normal, heavy or crit.";
+            if (amount <= 0f) amount = res.MaxHealth * 0.1f;
+
+            float before = res.Health;
+            res.ApplyDamage(amount);
+            float lost = before - res.Health;
+            melee.PreviewImpact(player.transform, comboStep, critical);
+            ClientPresentationRegistry.Feedback?.ShowCombatFeedback(player.transform.position,
+                new DamageResult { DamageDealt = amount, IsCritical = critical });
+            // The networked path raises this from the replicated health; offline nothing else does.
+            if (!res.IsSpawned && lost > 0f)
+                ClientPresentationRegistry.Feel?.LocalPlayerDamaged(lost / Mathf.Max(1f, res.MaxHealth));
+            return $"Hit for {amount:0} ({style}) · HP {res.Health:0}/{res.MaxHealth:0}{(GmState.GodMode ? " (god mode on: no HP lost)" : "")}";
+        }
+
+        private static bool TryParseHitStyle(string text, out int comboStep, out bool critical)
+        {
+            comboStep = 1;
+            critical = false;
+            switch ((text ?? string.Empty).Trim().ToLowerInvariant())
+            {
+                case "": case "normal": case "light": return true;
+                case "heavy": case "finisher": comboStep = 3; return true;
+                case "crit": case "critical": comboStep = 3; critical = true; return true;
+                default: return false;
+            }
+        }
+
         [Command("gm.spendchi", "Spend Chi (tests the Chi bar / regen; ignored while infinite Chi is on).")]
         private static string SpendChi(float amount)
         {
@@ -298,9 +339,32 @@ namespace KryticalNova.DevTools
             return $"Speed ×{GmState.SpeedMultiplier:0.##}.";
         }
 
+        [Command("gm.slowmo", "Slow motion for the whole game: gm.slowmo 0.25 is quarter speed, gm.slowmo 1 is normal. With no value it toggles quarter speed.")]
+        private static string SlowMo() => SlowMo(Mathf.Approximately(Time.timeScale, 1f) ? 0.25f : 1f);
+
+        [Command("gm.slowmo")]
+        private static string SlowMo(float speed)
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            speed = Mathf.Clamp(speed, 0.05f, 2f);
+            if (normalFixedDeltaTime <= 0f) normalFixedDeltaTime = Time.fixedDeltaTime / Mathf.Max(0.01f, Time.timeScale);
+            Time.timeScale = speed;
+            Time.fixedDeltaTime = normalFixedDeltaTime * speed; // physics keeps stepping every frame instead of stuttering
+            return Mathf.Approximately(speed, 1f) ? "Game speed normal." : $"Game speed ×{speed:0.##}.";
+        }
+
+        private static void RestoreGameSpeed()
+        {
+            if (normalFixedDeltaTime <= 0f) return;
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = normalFixedDeltaTime;
+            normalFixedDeltaTime = 0f;
+        }
+
         [Command("gm.reset", "Turn off every GM toggle and stat bonus.")]
         private static string ResetAll()
         {
+            RestoreGameSpeed();
             GmState.ResetAll();
             gmFlatStats.Clear();
             oneShot = false;
@@ -382,6 +446,15 @@ namespace KryticalNova.DevTools
             if (!def.requiresSkillBook) return $"{def.displayName} does not need a skill book.";
             skills.LockDropSkill(def.skillId);
             return $"{def.displayName} locked.";
+        }
+
+        [Command("gm.skills.max", "Unlock every skill (books included) and set every combat and movement skill to its max rank, free.")]
+        private static string MaxAllSkills()
+        {
+            if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
+            skills.GmSetAllRanksToMax();
+            if (skills.TryGetComponent<PlayerMovementSkills>(out var movement)) movement.GmSetMaxRanks();
+            return "Every skill unlocked at max rank.";
         }
 
         [Command("gm.skills", "List combat skills with their id, rank and book lock state.")]

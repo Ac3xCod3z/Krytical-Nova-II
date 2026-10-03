@@ -238,15 +238,29 @@ namespace KryticalNova.Player
                 if (!skills.TryPayForCommand(MovementSkillId.Jump, out _, out string reason)) { AbortJump(reason); return; }
                 inFlight = true;
                 warpAirborne = true;
-                lastSweepFeet = transform.position - Vector3.up * agent.baseOffset;
+                lastSweepFeet = SweepFeet();
                 presentation.WarpedTakeOff();
                 return;
             }
 
-            Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            Vector3 feet = SweepFeet();
             if (!IsSegmentClear(lastSweepFeet, feet)) { AbortJump("Jump interrupted by an obstacle. Returned to takeoff."); return; }
             lastSweepFeet = feet;
             if (warpClock >= warpLandTime) FinishWarpedJump();
+        }
+
+        /// <summary>
+        /// The feet as the in-flight collision sweep sees them. The warp follows the clip's own root height, which sits
+        /// under the ground line in the take-off crouch and can undershoot just before touchdown on a low hop. Swept as
+        /// is, the ground itself would count as an obstacle and send the jump back to its start. So the sweep never goes
+        /// below the straight line from take-off to landing; anything standing on that ground still blocks it.
+        /// </summary>
+        private Vector3 SweepFeet()
+        {
+            Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            float travelled = Mathf.InverseLerp(warpTakeoffTime, warpLandTime, warpClock);
+            feet.y = Mathf.Max(feet.y, Mathf.Lerp(startFeet.y, landingFeet.y, travelled));
+            return feet;
         }
 
         /// <summary>

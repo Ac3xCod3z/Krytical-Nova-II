@@ -134,6 +134,15 @@ namespace KryticalNova.Progression
             return upgraded;
         }
 
+        /// <summary>GM: learns Run and Jump at their top ranks, ignoring level and skill points.</summary>
+        public void GmSetMaxRanks()
+        {
+            if (!isActiveAndEnabled) return;
+            runRank = runSkill.MaxRank;
+            jumpRank = jumpSkill.MaxRank;
+            Changed?.Invoke();
+        }
+
         /// <summary>Selects a learned skill persistently. Selecting it again returns to walking; no Chi is charged here.</summary>
         public bool ToggleSelection(MovementSkillId skill)
         {

@@ -17,6 +17,7 @@ namespace KryticalNova.Rendering
         private const float CastRadius = 0.35f;
         private const float FadedAmount = 0.82f;
         private const float FadeSeconds = 0.2f;
+        private const float SeeThroughAmount = 0.3f;
         private static readonly int FadeId = Shader.PropertyToID("_Fade");
 
         [SerializeField] private LayerMask occluderLayers = 1; // Default
@@ -49,6 +50,13 @@ namespace KryticalNova.Rendering
         }
 
         private void Awake() => block = new MaterialPropertyBlock();
+
+        /// <summary>
+        /// True while this collider's prop is faded enough to see through. What can be seen through can be clicked
+        /// through: pointer picks skip it, so the ground behind a faded building stays selectable.
+        /// </summary>
+        public bool IsFaded(Collider col) =>
+            col != null && byCollider.TryGetValue(col, out var occluder) && occluder != null && occluder.fade >= SeeThroughAmount;
 
         private void OnDisable()
         {

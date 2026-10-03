@@ -144,6 +144,7 @@ namespace KryticalNova.Player
         private int warpedJumpClipIndex;
         private Vector3 lastPosition;
         private float currentSpeed;
+        private bool reportedRunning;
 
         // Stance this instance is presenting. Leads the NetworkVariable while a draw/sheath plays
         // (the owner predicts it locally) and follows it otherwise.
@@ -155,6 +156,8 @@ namespace KryticalNova.Player
         /// <summary>Sheathed idle, also used by the equipment preview doll.</summary>
         public AnimationClip IdleClip => idleClip;
         public CharacterAnimState CurrentState => currentState;
+        /// <summary>The body is travelling (measured, so it also holds for characters this machine does not drive).</summary>
+        public bool IsTravelling => currentSpeed > moveSpeedThreshold;
         public bool IsActionBusy => currentState == CharacterAnimState.Equipping ||
                                      currentState == CharacterAnimState.Unequipping ||
                                      currentState == CharacterAnimState.Attacking;
@@ -241,7 +244,28 @@ namespace KryticalNova.Player
                 UpdateLocomotion();
             }
             UpdateLocomotionPlaybackSpeed();
+            ReportRunning();
         }
+
+        /// <summary>
+        /// Tells game feel when the run starts and stops. Judged from the clip actually playing rather than at the
+        /// places that change it: the stop clip, jumps, attacks and stance changes all leave the run by another route.
+        /// </summary>
+        private void ReportRunning()
+        {
+            bool legsFollowMovement = currentState == CharacterAnimState.Locomotion || (drawOnUpperBody && IsWeaponDrawActionPlaying);
+            bool running = legsFollowMovement && currentLocomotionClip != null
+                && (currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip);
+            if (running == reportedRunning) return;
+            var feel = ClientPresentationRegistry.Feel;
+            if (feel == null) return; // not listening yet: report once it is
+            reportedRunning = running;
+            if (running) feel.RunStarted(transform, !IsSpawned || IsOwner);
+            else feel.RunStopped(transform);
+        }
+
+        // The character's effects are dropped when it is disabled; a run still going on re-enable is reported again.
+        private void OnDisable() => reportedRunning = false;
 
         private void UpdateLocomotionPlaybackSpeed()
         {
@@ -333,12 +357,6 @@ namespace KryticalNova.Player
         private void PlayLocomotionClip(AnimationClip clip, float fade)
         {
             if (clip == null || clip == currentLocomotionClip) return;
-            bool wasRunning = currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip;
-            bool nowRunning = clip == runClip || clip == drawnRunClip;
-            if (nowRunning && !wasRunning)
-                ClientPresentationRegistry.Feel?.RunStarted(transform, !IsSpawned || IsOwner);
-            else if (wasRunning && !nowRunning)
-                ClientPresentationRegistry.Feel?.RunStopped(transform);
             currentLocomotionClip = clip;
             currentLocomotionState = animancer.Layers[0].Play(clip, fade);
             currentLocomotionState.ApplyFootIK = locomotionFootIK;
@@ -751,6 +769,40 @@ namespace KryticalNova.Player
             AnimationClip next = LocomotionClipForSpeed();
             if (next != null) PlayLocomotionClip(next, warpedJumpFadeOut);
             activeActionRoutine = null;
+        }
+
+        /// <summary>
+        /// Plays the pose of a single-clip warped action (the vault) from the body's current pose. Like the warped jump,
+        /// the caller moves the root with Motion Warping on the same clock; unlike it, the clip is stretched to the
+        /// time the caller's warp takes, so the action keeps pace with the run it interrupts.
+        /// </summary>
+        public void PlayWarpedAction(AnimationClip clip, float startTime, float speed, float fadeIn)
+        {
+            if (animancer == null || clip == null) return;
+            StopActiveActionRoutine();
+            currentState = CharacterAnimState.Jumping;
+            stopState = null;
+            warpedJumpActive = false;
+            warpedJumpState = animancer.Layers[0].Play(clip, fadeIn);
+            warpedJumpState.Time = startTime;
+            warpedJumpState.Speed = speed;
+            warpedJumpState.ApplyFootIK = false; // airborne: nothing to plant the feet on
+        }
+
+        /// <summary>
+        /// Touchdown of a warped action: straight back into locomotion at the speed the body resumes with, using the
+        /// jump's own hand-off, so the character lands running instead of settling first.
+        /// </summary>
+        public void EndWarpedAction(float fadeOut, float resumeSpeed)
+        {
+            StopActiveActionRoutine();
+            warpedJumpActive = false;
+            warpedJumpState = null;
+            FinishJump();
+            // The measured speed still holds the action's own travel; pick the gait the body carries on with.
+            currentSpeed = resumeSpeed;
+            AnimationClip next = LocomotionClipForSpeed();
+            if (next != null) PlayLocomotionClip(next, fadeOut);
         }
 
         private AnimationClip LocomotionClipForSpeed()
