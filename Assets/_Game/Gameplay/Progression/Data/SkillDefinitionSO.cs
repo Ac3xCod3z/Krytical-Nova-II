@@ -51,6 +51,24 @@ namespace KryticalNova.Progression
         }
     }
 
+    /// <summary>A buff stat modifier whose value grows linearly from the first rank to the last.</summary>
+    [Serializable]
+    public struct RankScaledModifier
+    {
+        public StatType statType;
+        public ModifierType modifierType;
+        public float minValue;
+        public float maxValue;
+
+        public RankScaledModifier(StatType stat, ModifierType modType, float min, float max)
+        {
+            statType = stat;
+            modifierType = modType;
+            minValue = min;
+            maxValue = max;
+        }
+    }
+
     /// <summary>Designer-configurable ScriptableObject defining skills, costs, targets, rank scaling, and effect payloads.</summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Skill Definition", fileName = "Skill_NewSkill")]
     public sealed class SkillDefinitionSO : ScriptableObject
@@ -140,10 +158,84 @@ namespace KryticalNova.Progression
         [Header("Static Modifiers (Fallback / General)")]
         public StatModifierPayload[] statModifiers = Array.Empty<StatModifierPayload>();
 
+        [Header("Rank-Scaled Buff Modifiers (e.g. Spiritual Rage, Lightning Flash)")]
+        public RankScaledModifier[] rankScaledModifiers = Array.Empty<RankScaledModifier>();
+        [Tooltip("The buff is removed by the caster's next landed hit (only the first hit of a multi-hit benefits).")]
+        public bool consumedOnNextHit;
+
+        [Header("Attack (damage skills; leave Max Damage at 0 for buffs)")]
+        [Tooltip("Damage applied as a percentage of Attack Power at the first rank. Multi-hit skills split this across their hits.")]
+        [Min(0f)] public float minDamagePercent;
+        [Min(0f)] public float maxDamagePercent;
+        [Min(1)] public int hitCount = 1;
+        [Tooltip("Metres. Reach to the target for single-target skills; blast radius around the caster for area skills.")]
+        [Min(0f)] public float minRange = 2f;
+        [Min(0f)] public float maxRange = 2f;
+        [Tooltip("Extra damage multiplier in percent (100 = none). Stands in for elemental damage such as Yang until elements exist.")]
+        [Min(0f)] public float minBonusDamagePercent = 100f;
+        [Min(0f)] public float maxBonusDamagePercent = 100f;
+
+        [Header("Input")]
+        [Tooltip("Seconds the hotbar key must be held before the skill casts. Releasing early cancels at no cost.")]
+        [Min(0f)] public float chargeTime;
+        [Tooltip("Holding the hotbar key recasts as soon as the cooldown and cast animation allow.")]
+        public bool holdToRepeat;
+
+        [Header("Presentation (all optional)")]
+        public AnimationClip castClip;
+        [Min(0.1f)] public float castClipSpeed = 1f;
+        [Tooltip("When each hit lands, as a fraction of the cast clip. Missing entries are spread evenly.")]
+        public float[] hitTimesNormalized = Array.Empty<float>();
+        [Tooltip("Fraction of the cast clip after which the caster may act again.")]
+        [Range(0.1f, 1f)] public float castLockNormalized = 1f;
+        [Tooltip("Looped while the hotbar key is held for a charged skill.")]
+        public AnimationClip chargeLoopClip;
+        [Tooltip("Spawned at the caster when the skill is cast.")]
+        public GameObject castVfxPrefab;
+        [Tooltip("Spawned on every target the skill damages.")]
+        public GameObject hitVfxPrefab;
+        [Tooltip("Spawned at the caster while a charged skill is being held.")]
+        public GameObject chargeVfxPrefab;
+        [Tooltip("Cast / charge VFX origin relative to the caster (x = right, y = up, z = forward).")]
+        public Vector3 vfxOffset = new Vector3(0f, 1f, 0f);
+
         // Backward compatibility properties
         public float chiCost => minChiCost;
         public float duration => maxDuration;
         public int skillPointCost => skillPointsToLearn;
+
+        /// <summary>Damage skills strike targets; everything else applies a timed buff to the caster.</summary>
+        public bool IsAttack => maxDamagePercent > 0f;
+        public bool IsAreaAttack => IsAttack && targetType == SkillTargetType.AreaOfEffect;
+        public bool IsCharged => chargeTime > 0f;
+
+        /// <summary>Total damage of one cast as a fraction of Attack Power (1 = 100%), before splitting across hits.</summary>
+        public float GetDamageMultiplier(int rank) =>
+            Mathf.Lerp(minDamagePercent, maxDamagePercent, GetRankProgress(rank)) / 100f
+            * Mathf.Lerp(minBonusDamagePercent, maxBonusDamagePercent, GetRankProgress(rank)) / 100f;
+
+        public float GetRange(int rank) => Mathf.Lerp(minRange, maxRange, GetRankProgress(rank));
+
+        /// <summary>Seconds from cast start until hit <paramref name="hitIndex"/> (0-based) lands.</summary>
+        public float GetHitDelay(int hitIndex)
+        {
+            float normalized = hitTimesNormalized != null && hitIndex < hitTimesNormalized.Length
+                ? hitTimesNormalized[hitIndex]
+                : (hitIndex + 1f) / (Mathf.Max(1, hitCount) + 1f);
+            return Mathf.Clamp01(normalized) * CastDuration;
+        }
+
+        /// <summary>
+        /// Length of the cast animation at its playback speed. Without a clip, attacks use a short default so their
+        /// hits are still timed, and buffs are instant.
+        /// </summary>
+        public float CastDuration =>
+            (castClip != null ? castClip.length : IsAttack ? DefaultCastSeconds : 0f) / Mathf.Max(0.1f, castClipSpeed);
+
+        /// <summary>Seconds after cast start during which the caster cannot begin another skill.</summary>
+        public float CastLockDuration => CastDuration * castLockNormalized;
+
+        private const float DefaultCastSeconds = 0.6f;
 
         public float GetRankProgress(int rank)
         {
@@ -234,6 +326,13 @@ namespace KryticalNova.Progression
                 list.AddRange(statModifiers);
             }
 
+            if (rankScaledModifiers != null)
+            {
+                float progress = GetRankProgress(rank);
+                foreach (var scaled in rankScaledModifiers)
+                    list.Add(new StatModifierPayload(scaled.statType, scaled.modifierType, Mathf.Lerp(scaled.minValue, scaled.maxValue, progress)));
+            }
+
             return list.ToArray();
         }
 
@@ -246,7 +345,10 @@ namespace KryticalNova.Progression
             totalSkillPointsToMax = Mathf.Max(skillPointsToLearn, totalSkillPointsToMax);
             minChiCost = Mathf.Max(0f, minChiCost);
             maxChiCost = Mathf.Max(minChiCost, maxChiCost);
-            cooldown = Mathf.Max(0.1f, cooldown);
+            cooldown = Mathf.Max(0f, cooldown); // spammable skills are paced by their cast animation instead
+            maxDamagePercent = Mathf.Max(minDamagePercent, maxDamagePercent);
+            maxRange = Mathf.Max(minRange, maxRange);
+            hitCount = Mathf.Max(1, hitCount);
             minDuration = Mathf.Max(0f, minDuration);
             maxDuration = Mathf.Max(minDuration, maxDuration);
             channelTickInterval = Mathf.Max(0.1f, channelTickInterval);

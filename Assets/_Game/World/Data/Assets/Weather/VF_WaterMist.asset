@@ -31,17 +31,17 @@ MonoBehaviour:
   detailScale: 0.35
   detailStrength: 0.5
   detailOffset: -0.5
-  density: 0.09
-  shape: 1
+  density: 0.3
+  shape: 0
   scaleNoiseWithHeight: 0
-  border: 0.05
+  border: 0.35
   customHeight: 0
   height: 0
   verticalOffset: 0
   distance: 0
   distanceFallOff: 0.93
-  maxDistance: 220
-  maxDistanceFallOff: 0.5
+  maxDistance: 650
+  maxDistanceFallOff: 0.3
   terrainFit: 0
   terrainFitResolution: 128
   terrainLayerMask:
@@ -123,10 +123,10 @@ MonoBehaviour:
   windDirection: {x: 0.008, y: 0, z: 0.004}
   useCustomDetailNoiseWindDirection: 0
   detailNoiseWindDirection: {x: 0.02, y: 0, z: 0}
-  dayNightCycle: 1
+  dayNightCycle: 0
   sunDirection: {x: 0, y: 1, z: 0}
-  sunColor: {r: 0, g: 0.9568, b: 0.8392, a: 1}
-  sunIntensity: 1
+  sunColor: {r: 0.41, g: 0.31, b: 0.38, a: 1}
+  sunIntensity: 1.6
   ambientLightMultiplier: 0.7
   lightDiffusionModel: 1
   lightDiffusionPower: 18

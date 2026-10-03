@@ -328,7 +328,10 @@ namespace KryticalNova.EditorTools
             }
         }
 
-        /// <summary>Flat paving over the terrain: no collider (the terrain under it is the walkable surface).</summary>
+        /// <summary>
+        /// Flat paving over the terrain. Tiles stand ~8 cm proud of the terrain, so each gets mesh colliders matching its
+        /// surface: the NavMesh, click hits, foot IK and ground rings then sit on the visible surface, not inside it.
+        /// </summary>
         private static GameObject Paving(Transform parent, string prefab, float x, float z, float yaw, float y = PavingHeight)
         {
             var go = Place(parent, prefab, x, z, yaw, y, 1f, true, collider: false);
@@ -336,8 +339,41 @@ namespace KryticalNova.EditorTools
             {
                 SetLayerRecursively(go, groundLayer);
                 GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);
+                AddPavingCollider(go);
             }
             return go;
+        }
+
+        /// <summary>Exact (non-convex) mesh colliders on the tile's meshes, so curbs and lips stay true; no-op if it has one.</summary>
+        internal static bool AddPavingCollider(GameObject go)
+        {
+            if (go.GetComponentInChildren<Collider>() != null) return false;
+            bool any = false;
+            foreach (var mf in go.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null) continue;
+                mf.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
+                any = true;
+            }
+            return any;
+        }
+
+        /// <summary>Patches an already-built town: adds the paving colliders without a rebuild. Rebake the NavMesh after.</summary>
+        [MenuItem("Krytical Nova/Zone/Add Paving Colliders (Open Scene)")]
+        public static void AddPavingCollidersInScene()
+        {
+            int ground = LayerMask.NameToLayer("Ground");
+            int added = 0;
+            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var go = t.gameObject;
+                if (go.layer != ground || !PrefabUtility.IsAnyPrefabInstanceRoot(go) || go.GetComponent<Terrain>() != null) continue;
+                string n = go.name;
+                if (!n.StartsWith("SM_Env_Ground_Tile") && !n.StartsWith("SM_Env_Sidewalk") && !n.StartsWith("SM_Env_Road")) continue;
+                if (AddPavingCollider(go)) { added++; EditorUtility.SetDirty(go); }
+            }
+            if (added > 0) UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+            Debug.Log($"[StarterTown] Added {added} paving colliders.");
         }
 
         // ---------------------------------------------------------------- wall

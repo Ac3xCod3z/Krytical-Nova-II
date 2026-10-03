@@ -1,13 +1,20 @@
 using System;
 using DG.Tweening;
+using Kinemation.MotionWarping.Runtime.Core;
+using Kinemation.MotionWarping.Runtime.Utility;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
+using WarpComponent = Kinemation.MotionWarping.Runtime.Core.MotionWarping;
 
 namespace KryticalNova.Player
 {
-    /// <summary>Validated click-to-jump traversal with DOTween timing, Animancer flip, and safe NavMesh restoration.</summary>
+    /// <summary>
+    /// Validated click-to-jump traversal with safe NavMesh restoration. With a warp asset assigned the whole jump is
+    /// one animation whose root motion is warped (KINEMATION Motion Warping) onto the apex and the landing point, so
+    /// pose and travel always agree. Without one it falls back to the DOTween parabola with separate jump clips.
+    /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerMovementSkills), typeof(PlayerResources))]
     public sealed class PlayerJumpMotor : NetworkBehaviour
@@ -19,6 +26,24 @@ namespace KryticalNova.Player
         private const float MaximumSweepTimeStep = 0.02f;
         [SerializeField] private JumpMotionData motionData;
         [SerializeField] private PlayerJumpPresentation presentation;
+
+        [Header("Motion-warped jump (built by Krytical Nova/Player/Build Jump Warp Asset)")]
+        [Tooltip("Root curves of the whole-jump clip with two phases: take-off to apex, apex to touchdown.")]
+        [SerializeField] private MotionWarpingAsset warpAsset;
+        [Tooltip("Lives on its own child object with Transform To Warp set to this player, so the warp component never finds " +
+                 "(and toggles) the player's Animator, Rigidbody or CharacterController.")]
+        [SerializeField] private WarpComponent motionWarping;
+
+        // Warped-jump state: the clock follows the clip, whose phases say when the feet leave and meet the ground.
+        private bool warping;
+        private bool warpAirborne;
+        private float warpClock;
+        private float warpTakeoffTime;
+        private float warpApexTime;
+        private float warpLandTime;
+        private Vector3 apexFeet;
+        private Vector3 lastSweepFeet;
+
         private NavMeshAgent agent;
         private PlayerMovementSkills skills;
         private PlayerResources resources;
@@ -122,6 +147,7 @@ namespace KryticalNova.Player
             float clearanceApex = Mathf.Max(startFeet.y, landingFeet.y) + motionData.apexClearance;
             // Short hops stay low; only a max-range jump climbs to the rank's full height.
             peakHeight = Mathf.Max(clearanceApex, startFeet.y + motionData.RiseForDistance(horizontalDistance, maxDist, jumpH));
+            if (UseWarpedJump) return BeginWarpedJump(out reason);
             ascentTime = Mathf.Sqrt(2f * (peakHeight - startFeet.y) / motionData.gravity);
             descentTime = Mathf.Sqrt(2f * (peakHeight - landingFeet.y) / motionData.gravity);
             flightTime = ascentTime + motionData.apexHoldDuration + descentTime;
@@ -146,6 +172,148 @@ namespace KryticalNova.Player
             jumpSequence.OnComplete(FinishJump);
             return true;
         }
+
+        // ------------------------------------------------------------------ motion-warped jump
+
+        private bool UseWarpedJump => warpAsset != null && motionWarping != null && presentation.SupportsWarpedJump
+            && warpAsset.warpPhases != null && warpAsset.warpPhases.Count == 2 && warpAsset.rootY != null;
+
+        private bool BeginWarpedJump(out string reason)
+        {
+            reason = string.Empty;
+            warpTakeoffTime = warpAsset.warpPhases[0].startTime;
+            warpApexTime = warpAsset.warpPhases[0].endTime;
+            warpLandTime = warpAsset.warpPhases[1].endTime;
+            float airTime = warpLandTime - warpTakeoffTime;
+            if (warpApexTime <= warpTakeoffTime || warpLandTime <= warpApexTime)
+            { reason = "Jump warp asset has no flight phases. Rebuild it from the Krytical Nova menu."; return false; }
+
+            // Travel is even over the flight, so the apex sits where the clip's apex falls in time.
+            apexFeet = Vector3.Lerp(startFeet, landingFeet, (warpApexTime - warpTakeoffTime) / airTime);
+            apexFeet.y = peakHeight;
+            if (!ValidateWarpedTrajectory()) { reason = "The jump arc or landing area is blocked."; return false; }
+
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+            {
+                agent.isStopped = true;
+                agent.ResetPath();
+                agent.velocity = Vector3.zero;
+            }
+            // The warp owns the root from the crouch onward (the clip's root dips before it rises), so the agent
+            // lets go now; an abort before take-off puts it back on the launch surface.
+            agent.enabled = false;
+
+            // Face the landing first: the warp keeps the rotation the character has when it starts.
+            Vector3 direction = landingFeet - startFeet;
+            direction.y = 0f;
+            transform.rotation = Quaternion.LookRotation(direction, Vector3.up) * Quaternion.AngleAxis(facingOffset, Vector3.up);
+
+            IsBusy = true;
+            inFlight = false;
+            warping = true;
+            warpAirborne = false;
+            warpClock = 0f;
+            presentation.BeginWarpedJump();
+
+            Vector3 rootOffset = Vector3.up * agent.baseOffset;
+            Quaternion rotation = transform.rotation;
+            motionWarping.Play(warpAsset, new[]
+            {
+                new WarpPoint { position = apexFeet + rootOffset, rotation = rotation },
+                new WarpPoint { position = landingFeet + rootOffset, rotation = rotation },
+            });
+            return true;
+        }
+
+        private void Update()
+        {
+            if (!warping) return;
+            if (!resources.IsAlive) { AbortJump("Jump interrupted: no HP remaining."); return; }
+            warpClock += Time.deltaTime;
+
+            if (!warpAirborne)
+            {
+                if (warpClock < warpTakeoffTime) return;
+                if (!ValidateWarpedTrajectory()) { AbortJump("Jump cancelled: the route changed before takeoff."); return; }
+                if (!skills.TryPayForCommand(MovementSkillId.Jump, out _, out string reason)) { AbortJump(reason); return; }
+                inFlight = true;
+                warpAirborne = true;
+                lastSweepFeet = transform.position - Vector3.up * agent.baseOffset;
+                presentation.WarpedTakeOff();
+                return;
+            }
+
+            Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            if (!IsSegmentClear(lastSweepFeet, feet)) { AbortJump("Jump interrupted by an obstacle. Returned to takeoff."); return; }
+            lastSweepFeet = feet;
+            if (warpClock >= warpLandTime) FinishWarpedJump();
+        }
+
+        /// <summary>
+        /// Where the warp will put the feet at a clip time. Mirrors the warp component's maths for this asset setup
+        /// (horizontal travel linear in time; height follows the clip's own rise and fall, rescaled to reach the
+        /// apex and the landing) so the route can be collision-checked before committing.
+        /// </summary>
+        private Vector3 EvaluateWarpedFeet(float clipTime)
+        {
+            if (clipTime <= warpTakeoffTime) return startFeet;
+            AnimationCurve height = warpAsset.rootY;
+            if (clipTime <= warpApexTime)
+            {
+                Vector3 feet = Vector3.Lerp(startFeet, apexFeet, Mathf.InverseLerp(warpTakeoffTime, warpApexTime, clipTime));
+                float clipTotal = height.Evaluate(warpApexTime) - height.Evaluate(warpTakeoffTime);
+                float share = Mathf.Abs(clipTotal) > MinimumTime
+                    ? Mathf.Clamp01((height.Evaluate(clipTime) - height.Evaluate(warpTakeoffTime)) / clipTotal) : 1f;
+                feet.y = Mathf.Lerp(startFeet.y, peakHeight, share);
+                return feet;
+            }
+            else
+            {
+                clipTime = Mathf.Min(clipTime, warpLandTime);
+                Vector3 feet = Vector3.Lerp(apexFeet, landingFeet, Mathf.InverseLerp(warpApexTime, warpLandTime, clipTime));
+                float clipTotal = height.Evaluate(warpLandTime) - height.Evaluate(warpApexTime);
+                float share = Mathf.Abs(clipTotal) > MinimumTime
+                    ? Mathf.Clamp01((height.Evaluate(clipTime) - height.Evaluate(warpApexTime)) / clipTotal) : 1f;
+                feet.y = Mathf.Lerp(peakHeight, landingFeet.y, share);
+                return feet;
+            }
+        }
+
+        private bool ValidateWarpedTrajectory()
+        {
+            if (!IsLandingClear()) return false;
+            Vector3 previous = startFeet;
+            for (int step = 1; step <= motionData.trajectorySamples; step++)
+            {
+                float clipTime = Mathf.Lerp(warpTakeoffTime, warpLandTime, (float)step / motionData.trajectorySamples);
+                Vector3 next = EvaluateWarpedFeet(clipTime);
+                if (!IsSegmentClear(previous, next)) return false;
+                previous = next;
+            }
+            return true;
+        }
+
+        private void FinishWarpedJump()
+        {
+            StopWarp();
+            if (!IsLandingClear() || !RestoreAgent(landingFeet + Vector3.up * agent.baseOffset))
+            { AbortJump("Landing became unavailable. Returned to takeoff."); return; }
+            IsBusy = false;
+            inFlight = false;
+            cooldownUntil = Time.time + motionData.landingCooldown;
+            presentation.WarpedLand();
+            Message?.Invoke(skills.IsJumpSelected ? "Landed. Jump stays selected; choose another landing point." : "Landed. Movement ready.");
+        }
+
+        private void StopWarp()
+        {
+            if (!warping) return;
+            warping = false;
+            warpAirborne = false;
+            if (motionWarping != null && motionWarping.IsActive()) motionWarping.Stop();
+        }
+
+        // ------------------------------------------------------------------ parabola jump (no warp asset)
 
         private void TakeOff()
         {
@@ -274,6 +442,7 @@ namespace KryticalNova.Player
         {
             if (cancelling) return;
             cancelling = true;
+            StopWarp();
             jumpSequence?.Kill();
             jumpSequence = null;
             if (agent != null)

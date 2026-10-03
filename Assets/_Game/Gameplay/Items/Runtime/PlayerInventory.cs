@@ -1,5 +1,6 @@
 using System;
 using KryticalNova.Core;
+using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -14,7 +15,13 @@ namespace KryticalNova.Items
     [RequireComponent(typeof(PlayerEquipment))]
     public sealed class PlayerInventory : NetworkBehaviour
     {
-        public const int Capacity = 48;
+        public const int PageSize = 48;
+        public const int PageCount = 3;
+        public const int Capacity = PageSize * PageCount;
+
+        private const string ReasonDefeated = "You can't use items while defeated.";
+        private const string ReasonUseCooldown = "You can't use another item yet.";
+        private const string ReasonAlreadyFull = "Already at full strength.";
 
         private delegate bool Mutation(ItemStack[] bag, ref EquipmentLoadout loadout, out string reason);
 
@@ -26,6 +33,8 @@ namespace KryticalNova.Items
         private readonly ItemStack[] cells = new ItemStack[Capacity];
         private readonly ItemStack[] scratch = new ItemStack[Capacity];
         private PlayerEquipment equipment;
+        private PlayerResources resources;
+        private float nextUseTime;
         private bool starterGranted;
         private bool pullPending;
 
@@ -55,6 +64,7 @@ namespace KryticalNova.Items
         private void Awake()
         {
             equipment = GetComponent<PlayerEquipment>();
+            resources = GetComponent<PlayerResources>();
             netCells = new NetworkList<ItemStack>(readPerm: NetworkVariableReadPermission.Owner,
                 writePerm: NetworkVariableWritePermission.Server);
         }
@@ -142,6 +152,12 @@ namespace KryticalNova.Items
             if (IsSpawned) SortRpc(); else ServerSort();
         }
 
+        /// <summary>Uses one consumable (pill) from a bag cell.</summary>
+        public void RequestUse(int bagIndex)
+        {
+            if (IsSpawned) UseRpc((byte)bagIndex); else ServerUse((byte)bagIndex);
+        }
+
         // ---------------- RPCs ----------------
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
@@ -158,6 +174,9 @@ namespace KryticalNova.Items
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void SortRpc() => ServerSort();
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void UseRpc(byte bagIndex) => ServerUse(bagIndex);
 
         [Rpc(SendTo.Owner)]
         private void RequestFailedRpc(string reason) => NotifyFailed(reason);
@@ -178,6 +197,34 @@ namespace KryticalNova.Items
 
         private void ServerSort() =>
             Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => { r = null; InventoryRules.Sort(b, catalog); return true; });
+
+        private void ServerUse(byte bagIndex)
+        {
+            ItemDefinition used = null;
+            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) =>
+            {
+                if (!InventoryRules.TryConsume(b, catalog, bagIndex, out used, out r)) return false;
+                r = UseBlockedReason(used);
+                if (r == null) return true;
+                used = null;
+                return false;
+            });
+            if (used == null) return;
+
+            nextUseTime = Time.time + used.useCooldown;
+            if (used.restoreHealth > 0f) resources.Heal(used.restoreHealth);
+            if (used.restoreChi > 0f) resources.RestoreChi(used.restoreChi);
+        }
+
+        /// <summary>Why a consumable would be wasted right now, or null when it can be used.</summary>
+        private string UseBlockedReason(ItemDefinition def)
+        {
+            if (resources == null || !resources.IsAlive) return ReasonDefeated;
+            if (Time.time < nextUseTime) return ReasonUseCooldown;
+            bool healthUseful = def.restoreHealth > 0f && resources.Health < resources.MaxHealth;
+            bool chiUseful = def.restoreChi > 0f && resources.Chi < resources.MaxChi;
+            return healthUseful || chiUseful ? null : ReasonAlreadyFull;
+        }
 
         /// <summary>Server/dev only. Returns how many were added.</summary>
         public int ServerGive(ushort itemId, int count)

@@ -151,6 +151,13 @@
 .hotbar-slot.drop-target > .kn-frame { -unity-background-image-tint-color: rgb(255, 214, 92); }
 .hotbar-slot.on-cooldown { opacity: 0.5; }
 .hotbar-slot.insufficient-chi > .kn-frame { -unity-background-image-tint-color: rgb(220, 80, 88); }
+.hotbar-slot.charging { -unity-background-image-tint-color: rgba(150, 60, 70, 0.95); scale: 1.06 1.06; }
+.hotbar-slot.charging > .kn-frame { -unity-background-image-tint-color: rgb(255, 146, 156); }
+.hotbar-slot-letter .slot-key { color: rgb(140, 238, 212); }
+.hotbar-divider { width: 1px; margin: 6px 7px; background-color: rgba(114, 222, 196, 0.35); }
+.blade-token { -unity-background-image-tint-color: rgb(58, 40, 92); }
+.blade-token:hover { -unity-background-image-tint-color: rgb(78, 54, 124); }
+.blade-token .skill-icon { color: rgb(206, 170, 255); }
 
 .hotbar-slot Label { margin: 0; padding: 0; min-height: 0; }
 .slot-key { height: 14px; flex-shrink: 0; font-size: 11px; color: rgb(236, 206, 140); -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/Orbitron/Orbitron-ExtraBold.ttf"); }

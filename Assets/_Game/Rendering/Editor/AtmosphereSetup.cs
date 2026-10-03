@@ -32,7 +32,13 @@ namespace KryticalNova.EditorTools
         {
             var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(PcRendererPath);
             if (renderer == null) { Debug.LogError($"[Atmosphere] Missing {PcRendererPath}"); return; }
-            RendererFeatureUtil.Ensure<VolumetricFogRenderFeature>(renderer, "VolumetricFog", f => { });
+            // After transparents: the water surface is transparent, so fog drawn before it gets painted over and no mist
+            // ever shows above lakes or rivers. (renderPassEventOrder is the value the feature actually injects at.)
+            RendererFeatureUtil.Ensure<VolumetricFogRenderFeature>(renderer, "VolumetricFog", f =>
+            {
+                f.renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
+                f.renderPassEventOrder = (int)RenderPassEvent.AfterRenderingTransparents;
+            });
             RendererFeatureUtil.Ensure<VolumetricLights.VolumetricLightsRenderFeature>(renderer, "VolumetricLights", f => { });
 
             var profile = EnsureProfile();
@@ -147,6 +153,8 @@ namespace KryticalNova.EditorTools
             fog.forceTerrainCaptureUpdate = true;
             fog.enabled = false;
             fog.enabled = true;
+            // Off in the saved scene: VolumetricAtmosphereDriver wakes it in fog weather, so edit mode stays clear.
+            fog.gameObject.SetActive(false);
             EditorUtility.SetDirty(fog);
             return fog;
         }
@@ -157,9 +165,11 @@ namespace KryticalNova.EditorTools
             var profile = AssetDatabase.LoadAssetAtPath<VolumetricFogProfile>(WaterMistProfilePath);
             bool created = profile == null;
             if (created) profile = ScriptableObject.CreateInstance<VolumetricFogProfile>();
-            profile.shape = VolumetricFogShape.Sphere;
+            // Box, not Sphere: a sphere forces a round footprint, which turned the river strips into 53 m blobs.
+            profile.shape = VolumetricFogShape.Box;
+            profile.border = 0.35f;             // soft edges so the boxes never show
             if (profile.noiseTexture == null) profile.noiseTexture = Resources.Load<Texture2D>("Textures/NoiseTex256");
-            profile.density = 0.09f;
+            profile.density = 0.3f;             // a 7 m layer needs far more than the 14 m ground fog to read
             profile.noiseScale = 12f;
             profile.noiseFinalMultiplier = 0.8f;
             profile.raymarchMinStep = 0.4f;
@@ -167,7 +177,12 @@ namespace KryticalNova.EditorTools
             profile.turbulence = 0.25f;
             profile.windDirection = new Vector3(0.008f, 0f, 0.004f);
             profile.albedo = new Color(0.9f, 0.88f, 0.86f, 0.5f);
-            profile.dayNightCycle = true;
+            // Not sun-lit: at dusk the key light fades to ~0 while it hands over to the moon, which left the mist black
+            // exactly when it exists. VolumetricAtmosphereDriver feeds it the sky's ambient colour instead.
+            profile.dayNightCycle = false;
+            profile.sunDirection = Vector3.up;
+            profile.sunIntensity = 1.6f;
+            profile.sunColor = new Color(0.41f, 0.31f, 0.38f);
             profile.ambientLightMultiplier = 0.7f;
             profile.lightDiffusionModel = DiffusionModel.Smooth;
             profile.lightDiffusionPower = 18f;
@@ -176,8 +191,9 @@ namespace KryticalNova.EditorTools
             profile.receiveShadows = false;
             profile.terrainFit = false;
             profile.distantFog = false;
-            profile.maxDistance = 220f;
-            profile.maxDistanceFallOff = 0.5f;
+            // The lakes lie 300-480 m from town: the mist has to read from there, not only at the shore.
+            profile.maxDistance = 650f;
+            profile.maxDistanceFallOff = 0.3f;
             if (created) AssetDatabase.CreateAsset(profile, WaterMistProfilePath);
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();
@@ -197,12 +213,12 @@ namespace KryticalNova.EditorTools
             if (parent != null) root.transform.SetParent(parent, false);
 
             var result = new System.Collections.Generic.List<VolumetricFog>();
-            float y = zone.waterLevel + 2.2f;
-            const float Height = 6f;
+            float y = zone.waterLevel + 2.8f;
+            const float Height = 7f;
             int i = 0;
             foreach (var lake in zone.lakes)
             {
-                float d = lake.radius * 2.6f; // lakes wobble ±35%: cover the whole shore
+                float d = lake.radius * 2.8f; // lakes wobble ±35%: cover the whole shore (the soft border eats the rim)
                 result.Add(MistVolume(root.transform, $"Lake {++i}", new Vector3(lake.center.x, y, lake.center.y), 0f, new Vector3(d, Height, d), profile));
             }
             int r = 0;

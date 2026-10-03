@@ -251,7 +251,7 @@ Shader "Skybox/KryticalNova/Stylized Sky"
             half3 Rainbow(float3 d, float3 sunDir, half strength, out half skyScale)
             {
                 skyScale = 1.0;
-                if (strength <= 0.0001) return 0.0;
+                if (strength <= 0.0001 || sunDir.y <= 0.0) return 0.0; // no sun above the horizon, no bow
                 float theta = degrees(acos(clamp(dot(d, -sunDir), -1.0, 1.0)));
                 half w = _RainbowWidth;
 

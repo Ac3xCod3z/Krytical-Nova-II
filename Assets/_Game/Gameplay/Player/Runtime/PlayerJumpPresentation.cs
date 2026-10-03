@@ -120,6 +120,30 @@ namespace KryticalNova.Player
             if (motionData != null) scaleSpring.Reset(motionData.landingScale, motionData.landingScaleVelocity);
         }
 
+        // ---- Warped jump: a chain of in-place clips, the motor moves the body with Motion Warping ----
+
+        /// <summary>The humanoid motor has the jump clip chain, so the jump can be driven by root-motion warping.</summary>
+        public bool SupportsWarpedJump => animancerMotor != null && animancerMotor.HasWarpedJump;
+
+        /// <summary>Starts the clip at its crouch; the motor starts warping on the same frame.</summary>
+        public void BeginWarpedJump()
+        {
+            if (SupportsWarpedJump) animancerMotor.PlayWarpedJump();
+        }
+
+        /// <summary>The feet leave the ground.</summary>
+        public void WarpedTakeOff()
+        {
+            ClientPresentationRegistry.Feel?.JumpTakeoff(transform, IsLocalPlayer());
+        }
+
+        /// <summary>The feet touch down; the landing clip's crouch and recovery play out in place.</summary>
+        public void WarpedLand()
+        {
+            ClientPresentationRegistry.Feel?.Landed(transform, IsLocalPlayer());
+            if (animancerMotor != null) animancerMotor.PlayWarpedJumpRecovery();
+        }
+
         private bool IsLocalPlayer()
         {
             var net = GetComponentInParent<Unity.Netcode.NetworkObject>();

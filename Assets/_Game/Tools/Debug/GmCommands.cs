@@ -81,13 +81,13 @@ namespace KryticalNova.DevTools
                 "PROGRESSION  gm.level <n> · gm.maxlevel · gm.xp <n> · gm.statpoints <n> · gm.skillpoints <n> · gm.attr <str|vit|agi|spi> <n> · gm.resetstats",
                 "STATS        gm.stats · gm.setstat <StatType> <value> · gm.clearstats",
                 "VITALS       gm.heal · gm.fillchi · gm.damage <n> · gm.spendchi <n> · gm.kill",
-                "COMBAT       gm.dummy.hit [times] · gm.dummy.reset · gm.dropskills <true|false>",
+                "COMBAT       gm.dummy.hit [times] · gm.dummy.reset · gm.dropskills <true|false> · gm.unlockskill <id> · gm.lockskill <id> · gm.skills",
                 "GOD MODE     gm.god [on|off] · gm.infchi · gm.nocd · gm.oneshot · gm.speed <mult> · gm.reset",
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",
                 "WEATHER      weather.set <name> [secs] · weather.clear · weather.lock <bool> · weather.list",
                 "SKY          sky.rainbow [0-1|off] · sky.moonphase <new|first|full|last|0-1|off> · sky.moon.next · sky.halo [sun|moon|both|off] · sky.shimmer <x|off> · sky.flare <x|off> · sky.lightning · sky.status · sky.reset",
-                "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear",
+                "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear   (pills: Pill_Vitality, Pill_Chi, Pill_DualHarmony)",
             });
         }
         #endregion
@@ -360,6 +360,56 @@ namespace KryticalNova.DevTools
             if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
             if (unlock) skills.UnlockAllDropSkills(); else skills.LockAllDropSkills();
             return unlock ? "All drop-book skills unlocked." : "All drop-book skills locked.";
+        }
+
+        [Command("gm.unlockskill", "Unlock one drop-book skill (level-60 / Wargod) by skill id or name. It still costs skill points to learn.")]
+        private static string UnlockSkill(string skill)
+        {
+            if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
+            var def = FindSkill(skills, skill);
+            if (def == null) return $"No skill '{skill}'. See gm.skills.";
+            if (!def.requiresSkillBook) return $"{def.displayName} does not need a skill book.";
+            skills.UnlockDropSkill(def.skillId);
+            return $"{def.displayName} unlocked.";
+        }
+
+        [Command("gm.lockskill", "Lock one drop-book skill again by skill id or name.")]
+        private static string LockSkill(string skill)
+        {
+            if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
+            var def = FindSkill(skills, skill);
+            if (def == null) return $"No skill '{skill}'. See gm.skills.";
+            if (!def.requiresSkillBook) return $"{def.displayName} does not need a skill book.";
+            skills.LockDropSkill(def.skillId);
+            return $"{def.displayName} locked.";
+        }
+
+        [Command("gm.skills", "List combat skills with their id, rank and book lock state.")]
+        private static string ListSkills()
+        {
+            if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
+            var lines = new System.Text.StringBuilder();
+            foreach (var def in skills.AvailableSkills)
+            {
+                if (def == null) continue;
+                string book = !def.requiresSkillBook ? "trainer" : skills.IsLocked(def) ? "BOOK LOCKED" : "book unlocked";
+                lines.AppendLine($"{def.skillId,-20} lvl {def.requiredCharacterLevel,-3} rank {skills.GetRank(def)}/{def.maxRank}  {book}");
+            }
+            return lines.ToString().TrimEnd();
+        }
+
+        private static SkillDefinitionSO FindSkill(PlayerCombatSkills skills, string query)
+        {
+            if (string.IsNullOrWhiteSpace(query)) return null;
+            string wanted = query.Replace(" ", string.Empty);
+            foreach (var def in skills.AvailableSkills)
+            {
+                if (def == null) continue;
+                if (string.Equals(def.skillId, wanted, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(def.displayName.Replace(" ", string.Empty), wanted, StringComparison.OrdinalIgnoreCase))
+                    return def;
+            }
+            return null;
         }
         #endregion
 

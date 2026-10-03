@@ -237,8 +237,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::VolumetricFogAndMist2.VolumetricFogRenderFeature
   m_Active: 1
   blurShader: {fileID: 4800000, guid: c9391e295126842e589edc35e6cfa61a, type: 3}
-  renderPassEvent: 450
-  renderPassEventOrder: 450
+  renderPassEvent: 500
+  renderPassEventOrder: 500
   fogLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295

@@ -66,6 +66,7 @@ GameObject:
   - component: {fileID: 3738633918761511803}
   - component: {fileID: 5668717879715690075}
   - component: {fileID: 1740344965673177520}
+  - component: {fileID: 3927446919622402130}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -88,6 +89,7 @@ Transform:
   m_Children:
   - {fileID: 940836822045485030}
   - {fileID: 1580111438606562423}
+  - {fileID: 5506350729238044251}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 9.036, z: 0}
 --- !u!33 &4229276168902270619
@@ -375,6 +377,8 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   motionData: {fileID: 11400000, guid: 97f240ce887a537438e5a3391cc42959, type: 2}
   presentation: {fileID: 6085351821164810621}
+  warpAsset: {fileID: 11400000, guid: 2229a32605b478f4c91025fb0eb07042, type: 2}
+  motionWarping: {fileID: 4791644402117621732}
 --- !u!114 &1740149640866193493
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -445,6 +449,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a41a0eca4f0d1a143a4cb24c18a5e8b8, type: 2}
   - {fileID: 11400000, guid: 3d8a214e4dfd45745839593168891abb, type: 2}
   - {fileID: 11400000, guid: 81b758423f495dd43b6e4266c873660f, type: 2}
+  - {fileID: 11400000, guid: 93ce52f5ac10d6b449c291fb6aa2971e, type: 2}
+  - {fileID: 11400000, guid: c4118b3ca14686640803753c1b7a6c76, type: 2}
+  - {fileID: 11400000, guid: f40d2c70cac0ca94f946c2046b8b19da, type: 2}
+  - {fileID: 11400000, guid: 5ace64353cf381e439012c3654614e0b, type: 2}
+  - {fileID: 11400000, guid: 4e13a546f9ecf8b448669954148d2731, type: 2}
+  - {fileID: 11400000, guid: c320f9b7ddb87ae4a819d83015fae5d4, type: 2}
+  - {fileID: 11400000, guid: 8e61247b7ba95634ca70d98cadd0a702, type: 2}
+  - {fileID: 11400000, guid: fbbb9e5c549f70e4fa962f4328b61f34, type: 2}
+  - {fileID: 11400000, guid: f9c17b3ebd6552d4ba2a6504c936eb61, type: 2}
+  - {fileID: 11400000, guid: 809e339dc23f3984ca61f68b93bdd721, type: 2}
 --- !u!114 &1450535918395789170
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -561,16 +575,38 @@ MonoBehaviour:
   jumpLoopClip: {fileID: 7400000, guid: 278a20928cf87054ebeeb1fb49277f3d, type: 3}
   jumpLandClip: {fileID: 7400000, guid: 6a92a180c4391d24cb53c32a5bedc09d, type: 3}
   jumpFadeDuration: 0.1
+  warpedJumpClips:
+  - {fileID: 7400000, guid: c88529aecf507884c8f64971ba054338, type: 3}
+  - {fileID: 1827226128182048838, guid: 08940ae74eb4cf445bc0c086f238af20, type: 3}
+  - {fileID: 1827226128182048838, guid: 89e03bb5a5462fb42862d23ed752b202, type: 3}
+  - {fileID: 7400000, guid: 542a9ff56ac19674ea4275b46dc3d8d3, type: 3}
+  warpedJumpClipStarts:
+  - 0
+  - 0.36666667
+  - 1.0666667
+  - 1.3666668
+  warpedJumpClipOffsets:
+  - 0
+  - 0
+  - 0
+  - 0.060000002
+  warpedJumpFadeIn: 0.12
+  warpedJumpClipFade: 0.08
+  warpedJumpFadeOut: 0.25
   equipClip: {fileID: 1827226128182048838, guid: 176296c2cbe8ac44daa619ee404c4c51, type: 3}
   unequipClip: {fileID: 1827226128182048838, guid: 8b08bc846f71cc14f943e1e27af95cf5, type: 3}
   sheathSocket: {fileID: 2714208618743281642}
   handSocket: {fileID: 2249706810175090179}
   katanaTransform: {fileID: 4067825989271735005}
-  equipReparentNormalizedTime: 0.38
-  unequipReparentNormalizedTime: 0.45
+  equipReparentNormalizedTime: 0.27
+  unequipReparentNormalizedTime: 0.77
   weaponDrawFootIK: 1
   drawOnUpperBodyLayer: 1
   weaponDrawFadeDuration: 0.15
+  equipWindow: {x: 0, y: 0.68}
+  unequipWindow: {x: 0.08, y: 0}
+  weaponDrawBlendOut: 0.3
+  katanaSocketBlend: 0.1
   agent: {fileID: 376469485258568685}
 --- !u!114 &6427914725768415556
 MonoBehaviour:
@@ -697,6 +733,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.FoliageInteractor
   radius: 0.9
+--- !u!114 &3927446919622402130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 069b0399ce353484eb5abfef12cc5e69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Combat.PlayerSkillAttacks
+  ShowTopMostFoldoutHeaderGroup: 1
+  animancer: {fileID: 0}
+  animancerMotor: {fileID: 0}
+  castCrossFade: 0.1
+  castFootIK: 1
+  rangeTolerance: 0.6
+  impactRangeLeniency: 1.5
+  areaTargetLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0
@@ -1023,6 +1081,62 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &5925894085200250535
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5506350729238044251}
+  - component: {fileID: 4791644402117621732}
+  m_Layer: 0
+  m_Name: Jump Warp
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5506350729238044251
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5925894085200250535}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 489573667355231182}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4791644402117621732
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5925894085200250535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3164a26014538e45b7dbfa103dabef0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MotionWarping.Runtime::Kinemation.MotionWarping.Runtime.Core.MotionWarping
+  scalePlayRate: 0
+  playAnimator: 0
+  blendTime: 0
+  onWarpStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onWarpEnded:
+    m_PersistentCalls:
+      m_Calls: []
+  transformToWarp: {fileID: 489573667355231182}
+  animator: {fileID: 0}
+  warpPhases: []
 --- !u!1 &8287182061213117814
 GameObject:
   m_ObjectHideFlags: 0

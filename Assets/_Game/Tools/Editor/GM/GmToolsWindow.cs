@@ -225,6 +225,32 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + CheatsTab + "/Combat"), EnableIf(nameof(IsReady)), PropertyOrder(253)]
         private void LockDropSkills() => Run("gm.dropskills false");
 
+        [TabGroup(Tabs, CheatsTab), ValueDropdown(nameof(BookSkillChoices)), EnableIf(nameof(IsReady)), LabelText("Book Skill"), PropertyOrder(254)]
+        [SerializeField] private string bookSkillChoice;
+
+        [ButtonGroup(Tabs + "/" + CheatsTab + "/BookSkill"), EnableIf(nameof(IsReady)), LabelText("Unlock Skill"), PropertyOrder(255)]
+        private void UnlockBookSkill() { if (!string.IsNullOrEmpty(bookSkillChoice)) Run($"gm.unlockskill {bookSkillChoice}"); }
+
+        [ButtonGroup(Tabs + "/" + CheatsTab + "/BookSkill"), EnableIf(nameof(IsReady)), LabelText("Lock Skill"), PropertyOrder(256)]
+        private void LockBookSkill() { if (!string.IsNullOrEmpty(bookSkillChoice)) Run($"gm.lockskill {bookSkillChoice}"); }
+
+        [ButtonGroup(Tabs + "/" + CheatsTab + "/BookSkill"), EnableIf(nameof(IsReady)), LabelText("List Skills"), PropertyOrder(257)]
+        private void ListSkills() => Run("gm.skills");
+
+        /// <summary>Level-60 drop and Wargod skills: the ones a book (or this tool) has to unlock.</summary>
+        private static IEnumerable<ValueDropdownItem<string>> BookSkillChoices()
+        {
+            var player = LocalPlayer;
+            var skills = player != null ? player.GetComponent<PlayerCombatSkills>() : null;
+            if (skills == null) yield break;
+            foreach (var def in skills.AvailableSkills)
+            {
+                if (def == null || !def.requiresSkillBook) continue;
+                string state = skills.IsLocked(def) ? "locked" : "unlocked";
+                yield return new ValueDropdownItem<string>($"Lvl {def.requiredCharacterLevel}/{def.displayName}  ({state})", def.skillId);
+            }
+        }
+
         // ================================================================ STATS
 
         [Serializable]
@@ -472,6 +498,52 @@ namespace KryticalNova.EditorTools.GM
         {
             get => Env != null && Env.WeatherLocked;
             set { if (value != WeatherLocked) Run($"weather.lock {(value ? "true" : "false")}"); }
+        }
+
+        // ---------------------------------------------------------------- wind
+
+        [TabGroup(Tabs, WorldTab), Title("Wind"), ShowInInspector, DisplayAsString, LabelText("Current"), PropertyOrder(414)]
+        private string CurrentWind
+        {
+            get
+            {
+                var env = Env;
+                if (env == null) return "—";
+                var w = env.Weather;
+                float heading = Mathf.Repeat(Mathf.Atan2(w.wind.x, w.wind.y) * Mathf.Rad2Deg, 360f);
+                return $"{w.wind.magnitude:0.0} m/s toward {heading:0}°  ·  gust {w.gust:0.00}";
+            }
+        }
+
+        [TabGroup(Tabs, WorldTab), PropertyRange(0f, 30f), EnableIf(nameof(HasWorld)), LabelText("Speed (m/s)"), PropertyOrder(415)]
+        [SerializeField] private float windSpeed = 8f;
+
+        [TabGroup(Tabs, WorldTab), PropertyRange(0f, 360f), EnableIf(nameof(HasWorld)), LabelText("Heading (°)"), PropertyOrder(416)]
+        [InfoBox("Held until the next weather change. Bends grass and trees, drives leaves, rain slant and water.")]
+        [SerializeField] private float windHeading = 90f;
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Wind"), EnableIf(nameof(HasWorld)), LabelText("Apply Wind"), PropertyOrder(417)]
+        private void ApplyWind() => Run($"weather.windset {F(windSpeed)} {F(windHeading)}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Wind"), EnableIf(nameof(HasWorld)), LabelText("Clear Override"), PropertyOrder(418)]
+        private void ClearWind() => Run("weather.windclear");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/WindPresets"), EnableIf(nameof(HasWorld)), PropertyOrder(419)]
+        private void Calm() => SetWindPreset(0.5f);
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/WindPresets"), EnableIf(nameof(HasWorld)), PropertyOrder(419)]
+        private void Breeze() => SetWindPreset(5f);
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/WindPresets"), EnableIf(nameof(HasWorld)), PropertyOrder(419)]
+        private void Windy() => SetWindPreset(12f);
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/WindPresets"), EnableIf(nameof(HasWorld)), PropertyOrder(419)]
+        private void Gale() => SetWindPreset(22f);
+
+        private void SetWindPreset(float speed)
+        {
+            windSpeed = speed;
+            Run($"weather.windset {F(speed)} {F(windHeading)}");
         }
 
         // ---------------------------------------------------------------- sky (local presentation overrides)

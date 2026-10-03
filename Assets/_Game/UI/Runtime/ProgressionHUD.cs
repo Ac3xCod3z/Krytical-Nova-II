@@ -86,6 +86,10 @@ namespace KryticalNova.UI
             "ReverseFlow"
         };
 
+        // Cards built at runtime for skills that have no authored card (parallel lists, like the arrays above).
+        private readonly List<string> generatedCardIds = new List<string>();
+        private readonly List<string> generatedSkillIds = new List<string>();
+
         private void OnEnable()
         {
             if (!Application.isPlaying) return;
@@ -151,31 +155,9 @@ namespace KryticalNova.UI
 
             // Bind combat skill cards
             for (int i = 0; i < combatSkillCardIds.Length; i++)
-            {
-                string cardId = combatSkillCardIds[i];
-                string skillId = combatSkillAssetIds[i];
-                // Resolved per use: the HUD rebinds to whichever player is local (offline avatar or networked player).
-                VisualElement tile = root.Q($"{cardId}-drag");
-                if (tile != null)
-                {
-                    BindPointer<PointerDownEvent>(tile, evt =>
-                    {
-                        var def = combatSkills != null ? combatSkills.GetSkill(skillId) : null;
-                        if (def != null) OnCombatSkillPointerDown(evt, def, tile);
-                    });
-                    BindDragSource(tile);
-                }
-
-                Button upgradeBtn = root.Q<Button>($"upgrade-{cardId}");
-                if (upgradeBtn != null)
-                {
-                    BindHoldable(upgradeBtn, () =>
-                    {
-                        var def = combatSkills != null ? combatSkills.GetSkill(skillId) : null;
-                        if (def != null) UpgradeCombatSkill(def);
-                    });
-                }
-            }
+                BindCombatSkillCard(combatSkillCardIds[i], combatSkillAssetIds[i]);
+            generatedCardIds.Clear();
+            generatedSkillIds.Clear();
 
             BindPointer<PointerUpEvent>(root, evt => { if (evt.button == LeftButton) StopHold(); });
             BindPointer<PointerCancelEvent>(root, evt => StopHold());
@@ -201,6 +183,100 @@ namespace KryticalNova.UI
             PlayerInventory.LocalChanged += OnLocalPlayerChanged;
             BindPlayer(PlayerInventory.Local != null ? PlayerInventory.Local.gameObject
                 : progression != null && progression.gameObject.activeInHierarchy ? progression.gameObject : null);
+        }
+
+        private void BindCombatSkillCard(string cardId, string skillId)
+        {
+            // Resolved per use: the HUD rebinds to whichever player is local (offline avatar or networked player).
+            VisualElement tile = root.Q($"{cardId}-drag");
+            if (tile != null)
+            {
+                BindPointer<PointerDownEvent>(tile, evt =>
+                {
+                    var def = combatSkills != null ? combatSkills.GetSkill(skillId) : null;
+                    if (def != null) OnCombatSkillPointerDown(evt, def, tile);
+                });
+                BindDragSource(tile);
+            }
+
+            Button upgradeBtn = root.Q<Button>($"upgrade-{cardId}");
+            if (upgradeBtn != null)
+            {
+                BindHoldable(upgradeBtn, () =>
+                {
+                    var def = combatSkills != null ? combatSkills.GetSkill(skillId) : null;
+                    if (def != null) UpgradeCombatSkill(def);
+                });
+            }
+        }
+
+        /// <summary>
+        /// Skills without a hand-written card in the UXML (the blade skills) get one built here, using the same
+        /// element names as the authored cards so refresh, drag and upgrade work identically.
+        /// </summary>
+        private void EnsureGeneratedSkillCards()
+        {
+            if (combatSkills == null) return;
+            VisualElement body = root.Q("skills-body");
+            if (body == null) return;
+
+            var pending = new List<SkillDefinitionSO>();
+            foreach (SkillDefinitionSO skill in combatSkills.AvailableSkills)
+            {
+                if (skill == null || Array.IndexOf(combatSkillAssetIds, skill.skillId) >= 0
+                    || generatedSkillIds.Contains(skill.skillId)) continue;
+                pending.Add(skill);
+            }
+            if (pending.Count == 0) return;
+            pending.Sort((a, b) => a.requiredCharacterLevel.CompareTo(b.requiredCharacterLevel));
+
+            if (generatedSkillIds.Count == 0)
+            {
+                var header = new Label("BLADE SKILLS");
+                header.AddToClassList("category-header");
+                header.AddToClassList("eyebrow");
+                header.AddToClassList("section");
+                body.Add(header);
+            }
+
+            foreach (SkillDefinitionSO skill in pending)
+            {
+                string cardId = "skill-" + skill.skillId.ToLowerInvariant();
+                var card = new VisualElement();
+                card.AddToClassList("skill-card");
+                card.AddToClassList("kn-card");
+                if (skill.requiresSkillBook) card.AddToClassList("rare-skill-card");
+
+                var token = new VisualElement { name = $"{cardId}-drag" };
+                token.AddToClassList("skill-token");
+                token.AddToClassList(skill.requiresSkillBook ? "rare-token" : "blade-token");
+                var icon = new Label(skill.displayName.ToUpperInvariant());
+                icon.AddToClassList("skill-icon");
+                token.Add(icon);
+                var rank = new Label { name = $"{cardId}-rank" };
+                rank.AddToClassList("skill-rank");
+                token.Add(rank);
+                card.Add(token);
+
+                card.Add(CardLabel($"{cardId}-description", "help"));
+                card.Add(CardLabel($"{cardId}-values", "section"));
+                card.Add(CardLabel($"{cardId}-requirement", skill.requiresSkillBook ? "drop-book-note" : "muted"));
+                card.Add(new Button { name = $"upgrade-{cardId}" });
+                card.Add(CardLabel($"{cardId}-drag-hint", "help"));
+                body.Add(card);
+
+                generatedCardIds.Add(cardId);
+                generatedSkillIds.Add(skill.skillId);
+                BindCombatSkillCard(cardId, skill.skillId);
+            }
+        }
+
+        private static Label CardLabel(string name, string className)
+        {
+            var label = new Label { name = name };
+            label.AddToClassList(className);
+            label.style.whiteSpace = WhiteSpace.Normal;
+            return label;
         }
 
         private void OnLocalPlayerChanged()
@@ -255,6 +331,7 @@ namespace KryticalNova.UI
 
             boundPlayer = player;
             initialized = true;
+            EnsureGeneratedSkillCards();
             Refresh();
         }
 
@@ -458,11 +535,15 @@ namespace KryticalNova.UI
                 string skillId = combatSkillAssetIds[i];
                 RefreshCombatSkillCard(cardId, skillId);
             }
+            for (int i = 0; i < generatedCardIds.Count; i++)
+                RefreshCombatSkillCard(generatedCardIds[i], generatedSkillIds[i]);
 
             for (int index = 0; index < slotElements.Length; index++)
             {
                 HotbarSlotEntry entry = hotbar.GetSlotEntry(index);
                 VisualElement slot = slotElements[index];
+                if (slot == null) continue;
+                string key = PlayerSkillHotbar.GetKeyLabel(index);
 
                 if (entry.itemType == HotbarItemType.Movement)
                 {
@@ -470,7 +551,7 @@ namespace KryticalNova.UI
                     slot.Q<Label>(className: "slot-name").text = def == null ? "—" : def.displayName.ToUpperInvariant();
                     slot.Q<Label>(className: "slot-rank").text = def == null ? "EMPTY" : $"RANK {skills.GetRank(entry.movementSkill)}";
                     slot.EnableInClassList("selected", entry.movementSkill != MovementSkillId.None && entry.movementSkill == skills.SelectedSkill);
-                    slot.tooltip = $"{def?.displayName}: click or press {(index + 1) % PlayerSkillHotbar.SlotCount}. Right-click to clear.";
+                    slot.tooltip = $"{def?.displayName}: click or press {key}. Right-click to clear.";
                 }
                 else if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null)
                 {
@@ -479,7 +560,8 @@ namespace KryticalNova.UI
                     int rank = combatSkills != null ? combatSkills.GetRank(def) : 0;
                     slot.Q<Label>(className: "slot-rank").text = $"RANK {rank}";
                     slot.EnableInClassList("selected", false);
-                    slot.tooltip = $"{def.displayName}: click or press {(index + 1) % PlayerSkillHotbar.SlotCount} to activate. Right-click to clear.";
+                    string hold = def.IsCharged ? $"hold {key} to charge" : def.holdToRepeat ? $"press or hold {key}" : $"click or press {key}";
+                    slot.tooltip = $"{def.displayName}: {hold} to activate. Right-click to clear.";
                 }
                 else
                 {
@@ -537,7 +619,8 @@ namespace KryticalNova.UI
             var skill = combatSkills.GetSkill(skillAssetId);
             if (skill == null) return;
 
-            bool isDropSkill = skill.requiresSkillBook;
+            // "Drop skill" below means a book skill whose book has not been acquired yet (still locked).
+            bool isDropSkill = combatSkills.IsLocked(skill);
             bool isLearned = combatSkills.IsLearned(skill);
             int rank = combatSkills.GetRank(skill);
 
@@ -618,7 +701,10 @@ namespace KryticalNova.UI
                 if (isDropSkill && !isLearned)
                     dragHint.text = "Available once acquired or crafted.";
                 else
-                    dragHint.text = rank == 0 ? $"Learn {skill.displayName}, then drag to a hotbar slot." : "Drag to a hotbar slot (1–10) to activate.";
+                    dragHint.text = rank == 0 ? $"Learn {skill.displayName}, then drag to a hotbar slot."
+                        : skill.IsCharged ? "Drag to a hotbar slot (1–0, Q W E R), then hold the key to charge."
+                        : skill.holdToRepeat ? "Drag to a hotbar slot (1–0, Q W E R). Hold the key to keep attacking."
+                        : "Drag to a hotbar slot (1–0, Q W E R) to activate.";
             }
 
             VisualElement tile = root.Q($"{cardPrefix}-drag");
@@ -632,6 +718,25 @@ namespace KryticalNova.UI
         {
             float chi = skill.GetChiCost(rank);
             float dur = skill.GetDuration(rank);
+            float progress = skill.GetRankProgress(rank);
+
+            if (skill.IsAttack)
+            {
+                float damage = Mathf.Lerp(skill.minDamagePercent, skill.maxDamagePercent, progress);
+                float bonus = Mathf.Lerp(skill.minBonusDamagePercent, skill.maxBonusDamagePercent, progress);
+                string hits = skill.hitCount > 1 ? $" over {skill.hitCount} hits" : string.Empty;
+                string yang = bonus > 100f ? $" · Yang {bonus:0.#}%" : string.Empty;
+                string reach = skill.IsAreaAttack ? $"{skill.GetRange(rank):0.#} m radius (all enemies)" : $"{skill.GetRange(rank):0.#} m reach";
+                return $"{damage:0}% damage{hits}{yang} · {reach} · {chi:0} Chi";
+            }
+            if (skill.rankScaledModifiers != null && skill.rankScaledModifiers.Length > 0)
+            {
+                var parts = new List<string>();
+                foreach (var mod in skill.rankScaledModifiers)
+                    parts.Add($"+{Mathf.Lerp(mod.minValue, mod.maxValue, progress):0.#}% {DescribeStat(mod.statType)}");
+                string scope = skill.consumedOnNextHit ? $"next hit, within {dur:0}s" : $"{dur:0}s duration";
+                return $"{string.Join(" · ", parts)} · {scope} · {chi:0} Chi";
+            }
 
             if (skill.isAbsorptionShield)
             {
@@ -675,6 +780,19 @@ namespace KryticalNova.UI
             return $"{dur:0}s duration · {chi:0} Chi";
         }
 
+        private static string DescribeStat(StatType stat)
+        {
+            switch (stat)
+            {
+                case StatType.AttackPower: return "Damage";
+                case StatType.CriticalRate: return "Critical Rate";
+                case StatType.ElementalDefense: return "Elemental Defense";
+                case StatType.ElementalAttack: return "Elemental Attack";
+                case StatType.DefensePower: return "Defense";
+                default: return stat.ToString();
+            }
+        }
+
         private void RefreshBuffs()
         {
             if (activeBuffsBar == null || buffManager == null) return;
@@ -712,12 +830,19 @@ namespace KryticalNova.UI
             if (combatSkills == null) return;
             for (int index = 0; index < slotElements.Length; index++)
             {
+                if (slotElements[index] == null) continue;
                 var entry = hotbar.GetSlotEntry(index);
+                bool charging = hotbar.ChargingSlot == index;
+                slotElements[index].EnableInClassList("charging", charging);
                 if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null)
                 {
                     bool onCooldown = combatSkills.IsOnCooldown(entry.combatSkill);
                     slotElements[index]?.EnableInClassList("on-cooldown", onCooldown);
-                    if (onCooldown)
+                    if (charging)
+                    {
+                        slotElements[index].Q<Label>(className: "slot-rank").text = $"CHARGE {hotbar.ChargeProgress * 100f:0}%";
+                    }
+                    else if (onCooldown)
                     {
                         float rem = combatSkills.GetRemainingCooldown(entry.combatSkill);
                         slotElements[index].Q<Label>(className: "slot-rank").text = $"{rem:0.0}s";
@@ -934,7 +1059,7 @@ namespace KryticalNova.UI
                 if (sourceSlot != NoSlot)
                 {
                     hotbar.SwapSlots(sourceSlot, targetSlot);
-                    Feedback($"Swapped hotbar slots {sourceSlot + 1} and {targetSlot + 1}.");
+                    Feedback($"Swapped hotbar slots {PlayerSkillHotbar.GetKeyLabel(sourceSlot)} and {PlayerSkillHotbar.GetKeyLabel(targetSlot)}.");
                 }
                 else
                 {
@@ -951,7 +1076,7 @@ namespace KryticalNova.UI
                         name = comSkill.displayName;
                     }
                     Feedback(assigned
-                        ? $"{name} assigned to key {(targetSlot + 1) % PlayerSkillHotbar.SlotCount}. Press the key or click the slot to activate."
+                        ? $"{name} assigned to key {PlayerSkillHotbar.GetKeyLabel(targetSlot)}. Press the key or click the slot to activate."
                         : "Assignment failed.");
                 }
             }

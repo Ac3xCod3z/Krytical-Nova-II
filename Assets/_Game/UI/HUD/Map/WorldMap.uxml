@@ -1,0 +1,40 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="WorldMap.uss" />
+    <!-- Instanced into ProgressionHUD.uxml; driven by WorldMapController. Markers and the player icon are added in code.
+         Chrome follows the Synty SciFi Menus screens (hexagon backdrop, scan lines, vignette, corner triangles). -->
+    <ui:VisualElement name="world-map" class="panel window world-map blocks-world hud-movable">
+        <ui:VisualElement class="world-map-backdrop" picking-mode="Ignore" />
+        <ui:VisualElement class="world-map-hexagons" picking-mode="Ignore" />
+        <ui:VisualElement class="world-map-corner world-map-corner-tl" picking-mode="Ignore" />
+        <ui:VisualElement class="world-map-corner world-map-corner-br" picking-mode="Ignore" />
+
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="WORLD MAP" class="heading world-map-title" />
+            <ui:Label text="[M]" class="muted header-key" />
+            <ui:Label name="world-map-zone" text="" class="accent world-map-zone" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Button name="world-map-center" text="CENTRE" class="world-map-center" />
+            <ui:Button name="close-world-map" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="world-map-viewport" class="world-map-viewport">
+            <ui:VisualElement name="world-map-content" class="world-map-content" picking-mode="Ignore">
+                <ui:VisualElement class="world-map-grid" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement class="world-map-scanlines" picking-mode="Ignore" />
+            <ui:VisualElement class="world-map-vignette" picking-mode="Ignore" />
+            <ui:Label text="N" class="world-map-north" picking-mode="Ignore" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="row world-map-footer">
+            <ui:Label name="world-map-coords" text="X 0  ·  Z 0" class="world-map-coords" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:VisualElement class="world-map-legend-icon legend-you" picking-mode="Ignore" /><ui:Label text="You" class="world-map-legend" />
+            <ui:VisualElement class="world-map-legend-icon legend-ally" picking-mode="Ignore" /><ui:Label text="Player" class="world-map-legend" />
+            <ui:VisualElement class="world-map-legend-icon legend-npc" picking-mode="Ignore" /><ui:Label text="NPC" class="world-map-legend" />
+            <ui:VisualElement class="world-map-legend-icon legend-portal" picking-mode="Ignore" /><ui:Label text="Portal" class="world-map-legend" />
+            <ui:VisualElement class="world-map-legend-icon legend-poi" picking-mode="Ignore" /><ui:Label text="Place" class="world-map-legend" />
+        </ui:VisualElement>
+        <ui:Label text="Scroll to zoom  ·  Drag to pan  ·  Resize in Settings ▸ Customize HUD Layout" class="help world-map-help" />
+    </ui:VisualElement>
+</ui:UXML>

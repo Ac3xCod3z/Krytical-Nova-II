@@ -78,6 +78,20 @@ namespace KryticalNova.Player
         [SerializeField] private AnimationClip jumpLandClip;
         [SerializeField, Min(0.01f)] private float jumpFadeDuration = 0.1f;
 
+        [Header("Warped Jump (clip chain, body moved by Motion Warping)")]
+        [Tooltip("In-place clips played back to back for one jump: take-off, flip, fall loop, landing. The jump motor's warp asset " +
+                 "supplies the height these poses leave out, so pose and travel agree. Used instead of the three clips above.")]
+        [SerializeField] private AnimationClip[] warpedJumpClips = Array.Empty<AnimationClip>();
+        [Tooltip("Seconds into the jump at which each clip above starts.")]
+        [SerializeField] private float[] warpedJumpClipStarts = Array.Empty<float>();
+        [Tooltip("Seconds into each clip at which it starts playing (the landing clip is entered just before its touchdown).")]
+        [SerializeField] private float[] warpedJumpClipOffsets = Array.Empty<float>();
+        [SerializeField, Min(0.01f)] private float warpedJumpFadeIn = 0.12f;
+        [Tooltip("Cross-fade between the clips of the chain.")]
+        [SerializeField, Min(0.01f)] private float warpedJumpClipFade = 0.08f;
+        [Tooltip("Fade back to locomotion once the landing recovery finishes or the player starts moving.")]
+        [SerializeField, Min(0.01f)] private float warpedJumpFadeOut = 0.25f;
+
         [Header("Katana Weapon Handling")]
         [SerializeField] private AnimationClip equipClip;
         [SerializeField] private AnimationClip unequipClip;
@@ -91,6 +105,16 @@ namespace KryticalNova.Player
         [Tooltip("Play draw/sheath on an upper-body layer so the legs keep walking/running underneath (no sliding when combat auto-draws mid-approach).")]
         [SerializeField] private bool drawOnUpperBodyLayer = true;
         [SerializeField, Min(0.01f)] private float weaponDrawFadeDuration = 0.15f;
+        [Tooltip("Seconds of the draw clip to play (x = start, y = end; 0,0 = whole clip). The Big Sword draw ends by resting the " +
+                 "blade on the shoulder; ending the window before that lets the hand blend straight to the drawn idle.")]
+        [SerializeField] private Vector2 equipWindow = new Vector2(0f, 0.68f); // the hand heads back to the shoulder from ~0.70s
+        [Tooltip("Seconds of the sheath clip to play (x = start, y = end; 0,0 = whole clip). Start after the shoulder rest so the " +
+                 "blade goes straight from the drawn idle to the sheath.")]
+        [SerializeField] private Vector2 unequipWindow = new Vector2(0.08f, 0f); // the clip opens on the shoulder-rest pose
+        [Tooltip("Blend from the trimmed draw/sheath back to the idle pose. Longer than the fade-in so the hand travels smoothly.")]
+        [SerializeField, Min(0.01f)] private float weaponDrawBlendOut = 0.3f;
+        [Tooltip("Seconds the katana takes to settle onto its new socket instead of snapping.")]
+        [SerializeField, Min(0f)] private float katanaSocketBlend = 0.1f;
 
         [Header("Components")]
         [SerializeField] private NavMeshAgent agent;
@@ -102,6 +126,7 @@ namespace KryticalNova.Player
             NetworkVariableWritePermission.Server);
 
         private const int UpperBodyLayerIndex = 1;
+        private const float LandingSettleSeconds = 0.15f;
 
         private CharacterAnimState currentState = CharacterAnimState.Locomotion;
         private AnimationClip currentLocomotionClip;
@@ -112,6 +137,11 @@ namespace KryticalNova.Player
         private Vector2 stopWindow;
         private float slowerGaitTimer;
         private Coroutine activeActionRoutine;
+        private Coroutine katanaBlendRoutine;
+        private AnimancerState warpedJumpState;
+        private bool warpedJumpActive;
+        private float warpedJumpTime;
+        private int warpedJumpClipIndex;
         private Vector3 lastPosition;
         private float currentSpeed;
 
@@ -201,6 +231,7 @@ namespace KryticalNova.Player
         private void Update()
         {
             UpdateSpeed();
+            if (warpedJumpActive) AdvanceWarpedJump();
 
             // While a draw/sheath plays on the upper-body layer, the legs keep following movement.
             if (currentState == CharacterAnimState.Locomotion || (drawOnUpperBody && IsWeaponDrawActionPlaying))
@@ -430,10 +461,12 @@ namespace KryticalNova.Player
             }
         }
 
-        private void FadeOutUpperBody()
+        private void FadeOutUpperBody() => FadeOutUpperBody(weaponDrawFadeDuration);
+
+        private void FadeOutUpperBody(float duration)
         {
             if (!drawOnUpperBody || animancer == null) return;
-            animancer.Layers[UpperBodyLayerIndex].StartFade(0f, weaponDrawFadeDuration);
+            animancer.Layers[UpperBodyLayerIndex].StartFade(0f, duration);
         }
 
         private bool IsWeaponDrawActionPlaying =>
@@ -449,31 +482,36 @@ namespace KryticalNova.Player
                 // The katana starts on the socket it is being taken from and only swaps at the reparent point
                 AttachKatanaToSocket(!draw);
 
+                // Only the window is played: the rest of the Big Sword clip parks the blade on the shoulder.
+                Vector2 window = draw ? equipWindow : unequipWindow;
+                float startTime = Mathf.Clamp(window.x, 0f, clip.length);
+                float endTime = window.y > startTime ? Mathf.Min(window.y, clip.length) : clip.length;
+
                 var state = drawOnUpperBody
                     ? animancer.Layers[UpperBodyLayerIndex].Play(clip, weaponDrawFadeDuration)
                     : animancer.Play(clip, weaponDrawFadeDuration);
-                state.Time = 0f;
+                state.Time = startTime;
                 state.ApplyFootIK = !drawOnUpperBody && weaponDrawFootIK;
 
                 float reparentNorm = draw ? equipReparentNormalizedTime : unequipReparentNormalizedTime;
-                float reparentTime = clip.length * reparentNorm;
-                float elapsed = 0f;
+                float reparentTime = Mathf.Clamp(clip.length * reparentNorm, startTime, endTime);
+                float clipTime = startTime;
                 bool reparented = false;
 
-                while (elapsed < clip.length)
+                while (clipTime < endTime)
                 {
-                    elapsed += Time.deltaTime;
-                    if (!reparented && elapsed >= reparentTime)
+                    clipTime += Time.deltaTime;
+                    if (!reparented && clipTime >= reparentTime)
                     {
                         reparented = true;
-                        AttachKatanaToSocket(draw);
+                        AttachKatanaToSocket(draw, katanaSocketBlend);
                     }
                     yield return null;
                 }
 
                 if (!reparented)
                 {
-                    AttachKatanaToSocket(draw);
+                    AttachKatanaToSocket(draw, katanaSocketBlend);
                 }
             }
             else
@@ -485,7 +523,7 @@ namespace KryticalNova.Player
             if (drawOnUpperBody)
             {
                 // The legs never left locomotion; just hand the arms back. Re-pick the clip set for the new stance.
-                FadeOutUpperBody();
+                FadeOutUpperBody(weaponDrawBlendOut);
             }
             currentLocomotionClip = null;
             UpdateLocomotion();
@@ -509,12 +547,27 @@ namespace KryticalNova.Player
             OnWeaponStanceChanged?.Invoke(newVal);
         }
 
-        public void AttachKatanaToSocket(bool inHand)
+        public void AttachKatanaToSocket(bool inHand) => AttachKatanaToSocket(inHand, 0f);
+
+        /// <param name="blendSeconds">Above zero, the katana eases from where it is onto the socket instead of snapping.</param>
+        private void AttachKatanaToSocket(bool inHand, float blendSeconds)
         {
             if (katanaTransform == null) return;
 
             Transform targetSocket = inHand ? handSocket : sheathSocket;
             if (targetSocket == null) return;
+
+            if (katanaBlendRoutine != null)
+            {
+                StopCoroutine(katanaBlendRoutine);
+                katanaBlendRoutine = null;
+            }
+            if (Application.isPlaying && blendSeconds > 0f && isActiveAndEnabled && katanaTransform.parent != targetSocket)
+            {
+                katanaTransform.SetParent(targetSocket, true);
+                katanaBlendRoutine = StartCoroutine(KatanaSocketBlendRoutine(blendSeconds));
+                return;
+            }
 
 #if UNITY_EDITOR
             if (!Application.isPlaying)
@@ -529,6 +582,28 @@ namespace KryticalNova.Player
             katanaTransform.localPosition = Vector3.zero;
             katanaTransform.localRotation = Quaternion.identity;
             katanaTransform.localScale = Vector3.one;
+        }
+
+        /// <summary>Slides the katana from its current pose under the new socket to the socket's own pose.</summary>
+        private IEnumerator KatanaSocketBlendRoutine(float seconds)
+        {
+            Vector3 fromPosition = katanaTransform.localPosition;
+            Quaternion fromRotation = katanaTransform.localRotation;
+            Vector3 fromScale = katanaTransform.localScale;
+            float elapsed = 0f;
+            while (elapsed < seconds)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / seconds);
+                katanaTransform.localPosition = Vector3.Lerp(fromPosition, Vector3.zero, t);
+                katanaTransform.localRotation = Quaternion.Slerp(fromRotation, Quaternion.identity, t);
+                katanaTransform.localScale = Vector3.Lerp(fromScale, Vector3.one, t);
+                yield return null;
+            }
+            katanaTransform.localPosition = Vector3.zero;
+            katanaTransform.localRotation = Quaternion.identity;
+            katanaTransform.localScale = Vector3.one;
+            katanaBlendRoutine = null;
         }
 
         #endregion
@@ -588,7 +663,98 @@ namespace KryticalNova.Player
         public void ResetJumpAnimation()
         {
             StopActiveActionRoutine();
+            warpedJumpActive = false;
+            warpedJumpState = null;
             FinishJump();
+        }
+
+        /// <summary>True when the warped jump's clip chain is set up; the jump motor then moves the body by warping.</summary>
+        public bool HasWarpedJump => animancer != null && warpedJumpClips != null && warpedJumpClips.Length > 0
+            && warpedJumpClipStarts != null && warpedJumpClipStarts.Length == warpedJumpClips.Length;
+
+        /// <summary>
+        /// Starts the jump's clip chain from the take-off crouch. The chain runs on its own clock at normal speed; the
+        /// jump motor's warp follows the same clock, so the pose and the body's travel stay in step.
+        /// </summary>
+        public void PlayWarpedJump()
+        {
+            if (!HasWarpedJump) return;
+            StopActiveActionRoutine();
+            currentState = CharacterAnimState.Jumping;
+            stopState = null;
+            warpedJumpActive = true;
+            warpedJumpTime = 0f;
+            warpedJumpClipIndex = -1;
+            AdvanceWarpedJump();
+        }
+
+        private void AdvanceWarpedJump()
+        {
+            if (warpedJumpClipIndex >= 0) warpedJumpTime += Time.deltaTime;
+            while (warpedJumpClipIndex + 1 < warpedJumpClips.Length
+                   && warpedJumpTime >= warpedJumpClipStarts[warpedJumpClipIndex + 1])
+            {
+                warpedJumpClipIndex++;
+                AnimationClip clip = warpedJumpClips[warpedJumpClipIndex];
+                if (clip == null) continue;
+                warpedJumpState = animancer.Layers[0].Play(clip, warpedJumpClipIndex == 0 ? warpedJumpFadeIn : warpedJumpClipFade);
+                warpedJumpState.Time = WarpedJumpClipOffset(warpedJumpClipIndex) + warpedJumpTime - warpedJumpClipStarts[warpedJumpClipIndex];
+                warpedJumpState.Speed = 1f;
+                warpedJumpState.ApplyFootIK = false; // airborne: nothing to plant the feet on
+            }
+        }
+
+        private float WarpedJumpLength
+        {
+            get
+            {
+                int last = warpedJumpClips.Length - 1;
+                float remaining = warpedJumpClips[last] != null ? warpedJumpClips[last].length - WarpedJumpClipOffset(last) : 0f;
+                return warpedJumpClipStarts[last] + Mathf.Max(0f, remaining);
+            }
+        }
+
+        private float WarpedJumpClipOffset(int index) =>
+            warpedJumpClipOffsets != null && index < warpedJumpClipOffsets.Length ? warpedJumpClipOffsets[index] : 0f;
+
+        /// <summary>
+        /// Touchdown: the landing clip's crouch and recovery play out in place (the root is back on the NavMesh).
+        /// Moving off ends the recovery early.
+        /// </summary>
+        public void PlayWarpedJumpRecovery()
+        {
+            StopActiveActionRoutine();
+            if (!warpedJumpActive) { FinishJump(); return; }
+            activeActionRoutine = StartCoroutine(WarpedJumpRecoveryRoutine());
+        }
+
+        private IEnumerator WarpedJumpRecoveryRoutine()
+        {
+            float length = WarpedJumpLength;
+            // The measured speed still holds the flight's travel for a moment after touchdown; only a move command
+            // given after that counts as "moving off".
+            float settleUntil = warpedJumpTime + LandingSettleSeconds;
+
+            while (warpedJumpTime < length && (warpedJumpTime < settleUntil || currentSpeed <= moveSpeedThreshold))
+            {
+                yield return null;
+            }
+
+            warpedJumpActive = false;
+            warpedJumpState = null;
+            FinishJump();
+            // Pick the next clip now with the jump's own fade rather than the shorter locomotion fade.
+            AnimationClip next = LocomotionClipForSpeed();
+            if (next != null) PlayLocomotionClip(next, warpedJumpFadeOut);
+            activeActionRoutine = null;
+        }
+
+        private AnimationClip LocomotionClipForSpeed()
+        {
+            bool drawn = presentedWeaponDrawn;
+            if (currentSpeed <= moveSpeedThreshold) return (drawn && drawnIdleClip != null) ? drawnIdleClip : idleClip;
+            if (currentSpeed >= walkSpeedThreshold) return (drawn && drawnRunClip != null) ? drawnRunClip : runClip;
+            return (drawn && drawnWalkClip != null) ? drawnWalkClip : walkClip;
         }
 
         private void FinishJump()

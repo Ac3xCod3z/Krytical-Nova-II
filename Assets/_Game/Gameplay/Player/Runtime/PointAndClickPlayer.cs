@@ -216,6 +216,8 @@ namespace KryticalNova.Player
                 fader.Configure(transform, occluderDitherShader);
             }
 
+            // Soft hero light so the local character stays readable at night.
+            PlayerNightLight.AttachTo(transform);
         }
 
         private void Start()
@@ -521,8 +523,9 @@ namespace KryticalNova.Player
                 return;
             }
 
-            // Clicking ground or platform stops an active attack; the selected target stays selected.
+            // Clicking ground or platform stops an active attack and drops the selection (its ring fades out).
             meleeCombat?.CancelAttack();
+            if (selectedTarget != null) ClearSelection();
 
             if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
@@ -554,6 +557,9 @@ namespace KryticalNova.Player
             if (ExecuteLocalMove(hit.point, out Vector3 acceptedDestination))
                 ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, acceptedDestination, hit.normal);
         }
+
+        /// <summary>The unit this player has clicked (skills aim at it), or null.</summary>
+        public Transform SelectedTarget => selectedTarget;
 
         private bool IsSelected(Transform unit) => unit != null && selectedTarget == unit;
 

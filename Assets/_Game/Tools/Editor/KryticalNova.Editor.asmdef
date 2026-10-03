@@ -16,7 +16,8 @@
         "RipVertices.QuickDestruction.Runtime",
         "KryticalNova.GameFeel",
         "MoreMountains.Tools",
-        "Unity.Cinemachine"
+        "Unity.Cinemachine",
+        "MotionWarping.Runtime"
     ],
     "includePlatforms": [
         "Editor"
