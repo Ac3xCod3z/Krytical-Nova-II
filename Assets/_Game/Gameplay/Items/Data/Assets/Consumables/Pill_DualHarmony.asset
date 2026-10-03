@@ -23,6 +23,7 @@ MonoBehaviour:
   restoreHealth: 300
   restoreChi: 100
   useCooldown: 1
+  usableFromHotbar: 1
   placeholderGlyph: HP+CHI
   appearanceParts: []
   weaponPrefab: {fileID: 0}

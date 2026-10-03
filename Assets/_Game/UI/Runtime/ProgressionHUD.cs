@@ -53,6 +53,7 @@ namespace KryticalNova.UI
         private bool initialized; // a player is bound
         private bool uiReady;
         private GameObject boundPlayer;
+        private PlayerInventory boundInventory;
         private int suppressWorldInputFrame = -1;
         private Action activeHoldAction;
         private float nextRepeatTime;
@@ -308,6 +309,8 @@ namespace KryticalNova.UI
             }
 
             resources.Changed += RefreshResources;
+            boundInventory = player.GetComponent<PlayerInventory>();
+            if (boundInventory != null) boundInventory.Changed += Refresh; // hotbar item counts
             movement.CommandMessage += Feedback;
             jumpMotor.Message += Feedback;
             if (combatStats != null) combatStats.OnStatsRecalculated += Refresh;
@@ -341,6 +344,8 @@ namespace KryticalNova.UI
             StopHold();
             CancelDrag();
             resources.Changed -= RefreshResources;
+            if (boundInventory != null) boundInventory.Changed -= Refresh;
+            boundInventory = null;
             movement.CommandMessage -= Feedback;
             jumpMotor.Message -= Feedback;
             if (combatStats != null) combatStats.OnStatsRecalculated -= Refresh;
@@ -544,6 +549,7 @@ namespace KryticalNova.UI
                 VisualElement slot = slotElements[index];
                 if (slot == null) continue;
                 string key = PlayerSkillHotbar.GetKeyLabel(index);
+                slot.EnableInClassList("on-cooldown", false); // skills re-apply theirs every frame
 
                 if (entry.itemType == HotbarItemType.Movement)
                 {
@@ -562,6 +568,15 @@ namespace KryticalNova.UI
                     slot.EnableInClassList("selected", false);
                     string hold = def.IsCharged ? $"hold {key} to charge" : def.holdToRepeat ? $"press or hold {key}" : $"click or press {key}";
                     slot.tooltip = $"{def.displayName}: {hold} to activate. Right-click to clear.";
+                }
+                else if (entry.itemType == HotbarItemType.Item && hotbar.ItemSource != null)
+                {
+                    int count = hotbar.ItemSource.CountItem(entry.itemId);
+                    slot.Q<Label>(className: "slot-name").text = hotbar.ItemSource.GetItemLabel(entry.itemId).ToUpperInvariant();
+                    slot.Q<Label>(className: "slot-rank").text = $"x{count}";
+                    slot.EnableInClassList("selected", false);
+                    slot.EnableInClassList("on-cooldown", count == 0);
+                    slot.tooltip = $"Click or press {key} to use. Right-click to clear.";
                 }
                 else
                 {
@@ -963,6 +978,13 @@ namespace KryticalNova.UI
                 BeginDragMovement(slotElements[index], entry.movementSkill, index, evt);
             else if (entry.itemType == HotbarItemType.CombatSkill)
                 BeginDragCombat(slotElements[index], entry.combatSkill, index, evt);
+            else if (entry.itemType == HotbarItemType.Item)
+            {
+                // Items are placed from the inventory; on the bar a click simply uses one.
+                hotbar.ActivateSlot(index);
+                suppressWorldInputFrame = Time.frameCount;
+                evt.StopPropagation();
+            }
         }
 
         private void OnSkillPointerDown(PointerDownEvent evt, MovementSkillId skill, VisualElement tile)

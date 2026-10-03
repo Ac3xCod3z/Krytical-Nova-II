@@ -8,7 +8,9 @@ namespace KryticalNova.Progression
     {
         None,
         Movement,
-        CombatSkill
+        CombatSkill,
+        /// <summary>A bag item flagged as usable from the hotbar (e.g. a pill).</summary>
+        Item
     }
 
     [Serializable]
@@ -17,6 +19,7 @@ namespace KryticalNova.Progression
         public HotbarItemType itemType;
         public MovementSkillId movementSkill;
         public SkillDefinitionSO combatSkill;
+        public ushort itemId;
 
         public bool IsEmpty => itemType == HotbarItemType.None;
     }
@@ -201,6 +204,19 @@ namespace KryticalNova.Progression
             return true;
         }
 
+        /// <summary>The player's bag, as far as the hotbar needs to know about it.</summary>
+        public IHotbarItemSource ItemSource => itemSource ??= GetComponent<IHotbarItemSource>();
+        private IHotbarItemSource itemSource;
+
+        /// <summary>Assigns a bag item to a hotbar slot. Only items flagged as usable from the hotbar are accepted.</summary>
+        public bool AssignItem(int index, ushort itemId)
+        {
+            if (!IsValidSlot(index) || ItemSource == null || !ItemSource.CanSlotItem(itemId)) return false;
+            slots[index] = new HotbarSlotEntry { itemType = HotbarItemType.Item, itemId = itemId };
+            Changed?.Invoke();
+            return true;
+        }
+
         /// <summary>Assigns a combat / buff skill to a hotbar slot.</summary>
         public bool AssignSkill(int index, SkillDefinitionSO skill)
         {
@@ -265,6 +281,10 @@ namespace KryticalNova.Progression
                 {
                     return combatSkills.TryCastSkill(entry.combatSkill, out _);
                 }
+            }
+            else if (entry.itemType == HotbarItemType.Item)
+            {
+                return ItemSource != null && ItemSource.UseItem(entry.itemId);
             }
             return false;
         }

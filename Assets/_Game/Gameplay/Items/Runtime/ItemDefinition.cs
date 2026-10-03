@@ -60,6 +60,8 @@ namespace KryticalNova.Items
         [Min(0f)] public float restoreChi;
         [Tooltip("Seconds before this player can use another consumable.")]
         [Min(0f)] public float useCooldown = 1f;
+        [Tooltip("The item can be dragged onto a hotbar slot and used with that slot's key. Leave off for items that only live in the bag.")]
+        public bool usableFromHotbar;
         [Tooltip("Short text drawn in the slot while the item has no icon sprite.")]
         public string placeholderGlyph;
 
@@ -82,5 +84,7 @@ namespace KryticalNova.Items
         public bool IsEquippable => equipSlot != EquipSlot.None;
         public bool IsStackable => maxStack > 1;
         public bool IsConsumable => restoreHealth > 0f || restoreChi > 0f;
+        /// <summary>Only usable items can go on the hotbar, and only when flagged for it.</summary>
+        public bool IsHotbarUsable => usableFromHotbar && IsConsumable;
     }
 }
