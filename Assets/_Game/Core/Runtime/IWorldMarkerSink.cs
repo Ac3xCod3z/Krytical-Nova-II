@@ -14,8 +14,11 @@ namespace KryticalNova.Core
     /// </summary>
     public interface IWorldMarkerSink
     {
-        /// <summary>Shows the destination ring; it hides itself once <paramref name="mover"/> arrives.</summary>
-        void ShowMoveMarker(Transform mover, Vector3 point, Vector3 normal);
+        /// <summary>
+        /// Shows the destination ring; it hides itself once <paramref name="mover"/> arrives, or after a short while
+        /// unless <paramref name="untilArrival"/> is set (a long journey ordered from the map).
+        /// </summary>
+        void ShowMoveMarker(Transform mover, Vector3 point, Vector3 normal, bool untilArrival = false);
         void HideMoveMarker();
         void SetTarget(Transform target, WorldTargetKind kind);
         void ClearTarget();

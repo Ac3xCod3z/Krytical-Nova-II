@@ -28,11 +28,13 @@ namespace KryticalNova.Progression
             bool defenderHasReflection = false,
             float reflectionChance = 10f,
             bool attackerHasShieldShatter = false,
-            float shatterChance = 10f)
+            float shatterChance = 10f,
+            bool canCrit = true)
         {
             float hitRoll = Random.Range(0f, 100f);
             float reflectRoll = Random.Range(0f, 100f);
-            float critRoll = Random.Range(0f, 100f);
+            // A roll above any possible Critical Rate: the strike can never be critical.
+            float critRoll = canCrit ? Random.Range(0f, 100f) : float.PositiveInfinity;
             float shatterRoll = Random.Range(0f, 100f);
 
             return CalculateAttackInternal(

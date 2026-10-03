@@ -11,6 +11,9 @@ namespace KryticalNova.Progression
         /// <summary>True while a previous cast's animation still locks the caster.</summary>
         bool IsCasting { get; }
 
+        /// <summary>True when <paramref name="next"/> may start now even though <see cref="IsCasting"/>, cutting the current cast short.</summary>
+        bool CanInterruptCast(SkillDefinitionSO next);
+
         /// <summary>The local player's current target for a single-target skill, or null.</summary>
         Transform ResolveTarget(SkillDefinitionSO skill);
 

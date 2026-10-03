@@ -29,6 +29,16 @@ namespace KryticalNova.DevTools
             return $"Grass distance {GrassRenderer.DistanceOverride:0} m.";
         }
 
+        [Command("grass.fill", "Toggle (or set) the cheap fill tufts between the real grass clumps, to compare with and without.")]
+        private static string Fill() => Fill(!GrassRenderer.FillEnabled);
+
+        [Command("grass.fill")]
+        private static string Fill(bool on)
+        {
+            GrassRenderer.FillEnabled = on;
+            return on ? "Grass fill on." : "Grass fill off.";
+        }
+
         [Command("grass.toggle", "Turn GPU grass on or off.")]
         private static string Toggle(bool on)
         {

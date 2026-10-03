@@ -314,6 +314,20 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + CheatsTab + "/Combat"), EnableIf(nameof(IsReady)), PropertyOrder(251)]
         private void ResetDummy() => Run("gm.dummy.reset");
 
+        [TabGroup(Tabs, CheatsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(252)]
+        private void SetDummyHP([MinValue(1)] float health = 2500f) => Run($"gm.dummy.hp {F(health)}");
+
+        [TabGroup(Tabs, CheatsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(253)]
+        [InfoBox("Refills the dummy. 0 returns it to its base max HP.")]
+        private void SetDummyMaxHP([MinValue(0)] float maxHealth = 5000f) => Run($"gm.dummy.maxhp {F(maxHealth)}");
+
+        [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Infinite Dummy HP (refills instead of dying)"), PropertyOrder(254)]
+        private bool InfiniteDummyHP
+        {
+            get => GmCommands.DummyInfiniteHealthEnabled;
+            set { if (value != GmCommands.DummyInfiniteHealthEnabled) Run($"gm.dummy.inf {(value ? "true" : "false")}"); }
+        }
+
         // ================================================================ SKILLS
 
         private enum HitStyle { Normal, Heavy, Crit }
@@ -345,8 +359,32 @@ namespace KryticalNova.EditorTools.GM
 
         [TabGroup(Tabs, SkillsTab), Title("Hit Preview"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(160)]
         [InfoBox("Hits you with the player's own impact effect. Amount 0 = 10% of max HP. God mode keeps the HP.")]
-        private void HitMe([MinValue(0)] float amount = 0f, HitStyle style = HitStyle.Normal) =>
-            Run($"gm.hitme {F(amount)} {style.ToString().ToLowerInvariant()}");
+        private void HitMe([MinValue(0)] float amount = 0f, HitStyle style = HitStyle.Normal, HitSide from = HitSide.Front) =>
+            Run($"gm.hitme {F(amount)} {style.ToString().ToLowerInvariant()} {from.ToString().ToLowerInvariant()}");
+
+        private enum HitSide { Front, Back, Left, Right }
+
+        [TabGroup(Tabs, SkillsTab), Title("Active Skills"), ValueDropdown(nameof(ActiveSkillChoices)), EnableIf(nameof(IsReady)), LabelText("Active Skill"), PropertyOrder(170)]
+        [InfoBox("Skills (buffs) currently running on you. Removing one takes down its stats, aura and buff-bar entry.")]
+        [SerializeField] private string activeSkillChoice;
+
+        [ButtonGroup(Tabs + "/" + SkillsTab + "/ActiveSkill"), EnableIf(nameof(IsReady)), LabelText("Remove Active Skill"), PropertyOrder(171)]
+        private void RemoveActiveSkill() { if (!string.IsNullOrEmpty(activeSkillChoice)) Run($"gm.buff.remove {activeSkillChoice}"); }
+
+        [ButtonGroup(Tabs + "/" + SkillsTab + "/ActiveSkill"), EnableIf(nameof(IsReady)), LabelText("Remove All Active Skills"), GUIColor(1f, 0.6f, 0.6f), PropertyOrder(172)]
+        private void RemoveAllActiveSkills() => Run("gm.buff.clear");
+
+        private static IEnumerable<ValueDropdownItem<string>> ActiveSkillChoices()
+        {
+            var player = LocalPlayer;
+            var buffs = player != null ? player.GetComponent<CharacterBuffManager>() : null;
+            if (buffs == null) yield break;
+            foreach (var buff in buffs.ActiveBuffs)
+            {
+                if (buff?.Skill == null) continue;
+                yield return new ValueDropdownItem<string>($"{buff.Skill.displayName}  ({buff.RemainingDuration:0}s left)", buff.Skill.skillId);
+            }
+        }
 
         /// <summary>Level-60 drop and Wargod skills: the ones a book (or this tool) has to unlock.</summary>
         private static IEnumerable<ValueDropdownItem<string>> BookSkillChoices()

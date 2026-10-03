@@ -16,7 +16,9 @@ namespace KryticalNova.UI
     /// World map window (WorldMap.uxml, instanced in the HUD document). Shows the zone's baked top-down map north-up
     /// with the local player's triangle at its true position (same world → UV mapping as the minimap), plus points
     /// of interest, NPCs, portals and other players. Scroll zooms about the cursor, drag pans, right-click places the
-    /// player's own marker (<see cref="MapWaypoint"/>), which the minimap shows too. The window is a
+    /// player's own marker (<see cref="MapWaypoint"/>), which the minimap shows too. Hovering a place, NPC, portal
+    /// or the marker names it; double-clicking it leads the player there (<see cref="MapTravel"/>) and draws the
+    /// route. The window is a
     /// <c>.hud-movable</c>, so its place and scale come from the HUD layout editor like every other panel.
     /// </summary>
     [DisallowMultipleComponent]
@@ -31,6 +33,8 @@ namespace KryticalNova.UI
         private const int LeftButton = 0;
         private const int RightButton = 1;
         private const float WaypointIconSize = 26f;
+        private const float RouteLineWidth = 3f;
+        private const float HoverPadding = 5f;   // pixels beyond an icon's edge that still count as over it
 
         private VisualElement root, window, viewport, content, playerIcon;
         private Label zoneLabel, coordsLabel;
@@ -44,6 +48,9 @@ namespace KryticalNova.UI
         private bool followPlayer = true;
         private int panPointerId = -1;
         private Vector2 panLast;
+        private MapHoverLabel hoverLabel;
+        private MapRouteLine routeLine;
+        private readonly List<MapTarget> targets = new List<MapTarget>();
 
         private readonly List<VisualElement> poiMarkers = new List<VisualElement>();
         private readonly List<VisualElement> npcMarkers = new List<VisualElement>();
@@ -79,6 +86,10 @@ namespace KryticalNova.UI
             playerIcon.Add(Layer("world-map-player-cone"));
             playerIcon.Add(Layer("world-map-player-icon"));
             content.Add(playerIcon);
+            routeLine = new MapRouteLine(RouteLineWidth);
+            content.Insert(0, routeLine); // under the markers
+            hoverLabel = new MapHoverLabel();
+            root.Add(hoverLabel);
 
             if (openButton != null) openButton.clicked += Toggle;
             closeButton.clicked += Close;
@@ -88,6 +99,7 @@ namespace KryticalNova.UI
             viewport.RegisterCallback<PointerMoveEvent>(OnPointerMove);
             viewport.RegisterCallback<PointerUpEvent>(OnPointerUp);
             viewport.RegisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
+            viewport.RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
             ZoneMinimapAnchor.CurrentChanged += OnZoneChanged;
 
             initialized = true;
@@ -107,7 +119,10 @@ namespace KryticalNova.UI
             viewport.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
             viewport.UnregisterCallback<PointerUpEvent>(OnPointerUp);
             viewport.UnregisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
+            viewport.UnregisterCallback<PointerLeaveEvent>(OnPointerLeave);
             playerIcon?.RemoveFromHierarchy();
+            routeLine?.RemoveFromHierarchy();
+            hoverLabel?.RemoveFromHierarchy();
         }
 
         private static VisualElement Layer(string className)
@@ -137,7 +152,7 @@ namespace KryticalNova.UI
             if (open && (data == null || data.map == null)) return; // this zone has no baked map
             window.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
             window.EnableInClassList("visible", open);
-            if (!open) { ReleasePan(); return; }
+            if (!open) { ReleasePan(); hoverLabel?.Hide(); return; }
             window.BringToFront();
             CenterOnPlayer();
             Transform player = LocalPlayer();
@@ -198,6 +213,13 @@ namespace KryticalNova.UI
             }
             if (evt.button != LeftButton) return;
             evt.StopPropagation();
+            // A double-click on something named leads the player there instead of starting a drag.
+            if (evt.clickCount >= 2 && TryPick(viewport.WorldToLocal(evt.position), out MapTarget target))
+            {
+                ReleasePan();
+                MapTravel.Start(target);
+                return;
+            }
             panPointerId = evt.pointerId;
             panLast = viewport.WorldToLocal(evt.position);
             viewport.CapturePointer(evt.pointerId);
@@ -205,7 +227,14 @@ namespace KryticalNova.UI
 
         private void OnPointerMove(PointerMoveEvent evt)
         {
-            if (evt.pointerId != panPointerId) return;
+            if (evt.pointerId != panPointerId)
+            {
+                // Not dragging: name whatever is under the pointer.
+                if (panPointerId < 0 && TryPick(viewport.WorldToLocal(evt.position), out MapTarget hovered)) hoverLabel.Show(hovered.Name, evt.position);
+                else hoverLabel.Hide();
+                return;
+            }
+            hoverLabel.Hide();
             Vector2 local = viewport.WorldToLocal(evt.position);
             Vector2 delta = local - panLast;
             panLast = local;
@@ -222,6 +251,34 @@ namespace KryticalNova.UI
         }
 
         private void OnPointerCaptureOut(PointerCaptureOutEvent evt) => panPointerId = -1;
+
+        private void OnPointerLeave(PointerLeaveEvent evt) => hoverLabel.Hide();
+
+        /// <summary>The named thing under a point of the viewport: the nearest whose icon the point is on.</summary>
+        private bool TryPick(Vector2 cursor, out MapTarget picked)
+        {
+            picked = default;
+            float contentSize = ViewportSize() * zoom;
+            if (data == null || contentSize <= 0f) return false;
+
+            Transform player = LocalPlayer();
+            MapTargets.Collect(targets, player != null ? player.position : Vector3.zero, places: true);
+            float best = float.MaxValue;
+            foreach (MapTarget target in targets)
+            {
+                float reach = IconSize(target.Kind) * 0.5f + HoverPadding;
+                float sqr = (MapPixel(target.Position, contentSize) + pan - cursor).sqrMagnitude;
+                if (sqr > reach * reach || sqr >= best) continue;
+                best = sqr;
+                picked = target;
+            }
+            return best < float.MaxValue;
+        }
+
+        // Icon sizes as RefreshMarkers places them.
+        private static float IconSize(MapTarget.TargetKind kind) =>
+            kind == MapTarget.TargetKind.Npc ? 10f : kind == MapTarget.TargetKind.Portal ? 24f
+            : kind == MapTarget.TargetKind.Place ? 14f : WaypointIconSize;
 
         private void ReleasePan()
         {
@@ -286,6 +343,10 @@ namespace KryticalNova.UI
             }
 
             RefreshMarkers(player, contentSize);
+
+            routeLine.Begin();
+            foreach (Vector3 corner in MapTravel.Route()) routeLine.Add(MapPixel(corner, contentSize));
+            routeLine.Apply();
         }
 
         /// <summary>World position → pixel inside the content element (origin top-left, +Z up).</summary>

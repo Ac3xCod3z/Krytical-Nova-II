@@ -36,6 +36,7 @@ namespace KryticalNova.EditorTools
         };
 
         private static readonly Vector2 ElderHall = new Vector2(0f, 18f);
+        private static readonly Vector2 ElderHallFootprint = new Vector2(14f, 14f);
         private static readonly Rect TrainingYard = new Rect(-90f, 75f, 35f, 15f);   // NW block interior, open to the mid ring road
         private static readonly Rect ExchangeSquare = new Rect(50f, -90f, 40f, 15f);  // SE block interior, open to the mid ring road
 
@@ -52,7 +53,7 @@ namespace KryticalNova.EditorTools
                 bool walkway = ax < Tile || az < Tile || Mathf.Max(ax, az) > LawnHalf;
                 if (centre) Paving(paving, "SM_Env_Ground_Tile_01", x, z, 0f);
                 else if (walkway) Paving(paving, "SM_Env_Sidewalk_03_SF", x, z, 0f);
-                // Lawn squares stay terrain grass (ZoneTerrainProfile.greenHalfSize).
+                // Lawn squares stay bare terrain (ZoneTerrainProfile.greenHalfSize); the GPU grass fills them (PlazaLawnRects).
             }
 
             // Centrepiece: landing pad podium + hologram beacon (the reference's bright centre square).
@@ -74,7 +75,7 @@ namespace KryticalNova.EditorTools
                 Place(hall, "SM_Prop_Paper_Banner_01", sx * 5.6f, 11f, 180f);
                 Place(hall, "SM_Prop_Streetlight_01", sx * 7.5f, 9f, 180f, 0f, 1f, alignToBounds: false);
             }
-            MarkRect(CenteredRect(ElderHall, new Vector2(14f, 14f)));
+            MarkRect(CenteredRect(ElderHall, ElderHallFootprint));
 
             var lawns = Group(parent, "Lawns");
             for (int sx = -1; sx <= 1; sx += 2)
@@ -93,7 +94,7 @@ namespace KryticalNova.EditorTools
                 Place(lawns, "SM_Prop_Bench_01", sx * 9f, sz * 6.4f, sz > 0 ? 180f : 0f);
                 Place(lawns, "SM_Prop_TrashCan_01", sx * 6.6f, sz * 6.6f, 0f);
                 Place(lawns, "SM_Prop_Streetlight_01", sx * 8.5f, sz * 20.6f, YawOf(new Vector2(0f, -sz)), 0f, 1f, alignToBounds: false);
-                // The lawns are mowed terrain-detail grass now (ZoneTerrainGenerator lawn layers), so the tall grass
+                // The lawns are mown GPU grass now (GrassSystemBuilder bakes PlazaLawnRects), so the tall grass
                 // patches are discarded. They are still placed first so the builder's random sequence, and every
                 // building after this, stays the same.
                 var patchA = Place(lawns, "SM_Env_Grass_Patch_01", c.x - sx * 4f, c.y + sz * 3f, Range(0f, 360f), 0f, 1f, true, false);

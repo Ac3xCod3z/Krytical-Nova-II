@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GT_LawnBlades
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.Grass.GrassType
   mesh: {fileID: 4300000, guid: c49e478e31119de458b3ccf8bd31cfda, type: 2}
-  heightRange: {x: 0.12, y: 0.17}
+  heightRange: {x: 0.13, y: 0.15}
   widthRange: {x: 5.5, y: 7}
   density: 0.95
   rootColor: {r: 0.14, g: 0.3, b: 0.12, a: 1}

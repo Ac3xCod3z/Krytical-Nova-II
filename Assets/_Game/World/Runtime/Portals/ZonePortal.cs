@@ -22,6 +22,8 @@ namespace KryticalNova.World.Portals
         public static IZoneTransferHandler TransferHandler { get; set; } = new SealedPortalHandler();
 
         [SerializeField] private string portalId = "zone01-northeast";
+        [Tooltip("Name shown on the map. Empty = this object's name.")]
+        [SerializeField] private string displayName = "";
         [Tooltip("Zone this portal leads to. Empty until the next map exists. TODO(zone2)")]
         [SerializeField] private string destinationZoneId = "";
         [Tooltip("Named arrival point in the destination zone.")]
@@ -41,6 +43,7 @@ namespace KryticalNova.World.Portals
         private void OnDisable() => ActivePortals.Remove(this);
 
         public string PortalId => portalId;
+        public string DisplayName => string.IsNullOrEmpty(displayName) ? name : displayName;
         public string DestinationZoneId => destinationZoneId;
         public string ArrivalPointId => arrivalPointId;
         public string SealedMessage => sealedMessage;

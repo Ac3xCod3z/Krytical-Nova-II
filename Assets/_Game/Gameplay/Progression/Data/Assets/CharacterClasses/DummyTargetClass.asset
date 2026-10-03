@@ -18,7 +18,7 @@ MonoBehaviour:
   baseVitality: 20
   baseAgility: 5
   baseSpirit: 5
-  baseHealthPool: 200
+  baseHealthPool: 4600
   baseChiPool: 50
   baseWeaponAP: 10
   baseWeaponDefense: 5

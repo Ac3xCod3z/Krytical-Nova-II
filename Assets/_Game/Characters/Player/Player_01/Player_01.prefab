@@ -1772,12 +1772,14 @@ MonoBehaviour:
   groundLayers:
     serializedVersion: 2
     m_Bits: 4294967291
-  rayStartHeight: 0.5
-  maxStepDown: 0.5
+  maxStepUp: 0.3
+  maxStepDown: 0.35
+  probeRadius: 0.06
   plantedHeight: 0.05
   liftedHeight: 0.2
   maxSlopeAngle: 40
-  maxPelvisDrop: 0.35
+  footSmoothing: 25
+  maxPelvisDrop: 0.2
   maxPelvisRaise: 0.15
   pelvisSmoothing: 12
   weightBlendSpeed: 6

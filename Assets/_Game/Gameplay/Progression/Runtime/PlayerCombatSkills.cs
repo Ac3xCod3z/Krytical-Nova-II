@@ -272,7 +272,7 @@ namespace KryticalNova.Progression
                 return false;
             }
             if (Time.time < castRequestPendingUntil) return false;
-            if (attackExecutor != null && attackExecutor.IsCasting) return false;
+            if (attackExecutor != null && attackExecutor.IsCasting && !attackExecutor.CanInterruptCast(skill)) return false;
             if (IsOnCooldown(skill))
             {
                 float rem = GetRemainingCooldown(skill);

@@ -28,7 +28,7 @@ MonoBehaviour:
   townFalloff: 28
   pavedHalfSize: 112
   ruinsHalfSize: 178
-  greenHalfSize: 20
+  greenHalfSize: 22
   waterLevel: -1.2
   riverWidth: 22
   riverBankWidth: 8

@@ -21,9 +21,15 @@ namespace KryticalNova.Progression
         private PlayerResources playerResources;
         private CharacterBuffManager buffManager;
         private float standaloneHealth;
+        private float maxHealthOverride; // 0 = none (testing: GM dummy tools)
+        private bool infiniteHealth;
         private bool initialized;
 
         private readonly NetworkVariable<float> netStandaloneHealth = new NetworkVariable<float>(
+            writePerm: NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<float> netMaxHealthOverride = new NetworkVariable<float>(
+            writePerm: NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<bool> netInfiniteHealth = new NetworkVariable<bool>(
             writePerm: NetworkVariableWritePermission.Server);
 
         public event Action<DamageResult, CharacterCombatStats> Damaged;
@@ -39,10 +45,14 @@ namespace KryticalNova.Progression
             get
             {
                 if (playerResources != null) return playerResources.MaxHealth;
+                if (maxHealthOverride > 0f) return maxHealthOverride;
                 if (useCombatStatsForMaxHealth && combatStats != null) return combatStats.GetStatValue(StatType.MaxHP);
                 return overrideMaxHealth;
             }
         }
+
+        /// <summary>Standalone entities only (dummies, NPCs): a lethal hit refills the pool instead of killing.</summary>
+        public bool InfiniteHealth => infiniteHealth;
 
         public float CurrentHealth
         {
@@ -70,14 +80,20 @@ namespace KryticalNova.Progression
                 if (IsServer)
                 {
                     netStandaloneHealth.Value = standaloneHealth;
+                    netMaxHealthOverride.Value = maxHealthOverride;
+                    netInfiniteHealth.Value = infiniteHealth;
                 }
                 else
                 {
+                    maxHealthOverride = netMaxHealthOverride.Value;
+                    infiniteHealth = netInfiniteHealth.Value;
                     standaloneHealth = netStandaloneHealth.Value;
                     HealthChanged?.Invoke();
                 }
 
                 netStandaloneHealth.OnValueChanged += OnNetStandaloneHealthChanged;
+                netMaxHealthOverride.OnValueChanged += OnNetMaxHealthOverrideChanged;
+                netInfiniteHealth.OnValueChanged += OnNetInfiniteHealthChanged;
             }
         }
 
@@ -86,8 +102,22 @@ namespace KryticalNova.Progression
             if (playerResources == null)
             {
                 netStandaloneHealth.OnValueChanged -= OnNetStandaloneHealthChanged;
+                netMaxHealthOverride.OnValueChanged -= OnNetMaxHealthOverrideChanged;
+                netInfiniteHealth.OnValueChanged -= OnNetInfiniteHealthChanged;
             }
             base.OnNetworkDespawn();
+        }
+
+        private void OnNetMaxHealthOverrideChanged(float previous, float current)
+        {
+            if (IsServer) return;
+            maxHealthOverride = current;
+            HealthChanged?.Invoke();
+        }
+
+        private void OnNetInfiniteHealthChanged(bool previous, bool current)
+        {
+            if (!IsServer) infiniteHealth = current;
         }
 
         private void OnNetStandaloneHealthChanged(float previous, float current)
@@ -213,6 +243,7 @@ namespace KryticalNova.Progression
                 else
                 {
                     standaloneHealth = Mathf.Max(0f, standaloneHealth - totalDamageToLife);
+                    if (infiniteHealth && standaloneHealth <= 0f) standaloneHealth = MaxHealth;
                     if (IsSpawned && IsServer)
                     {
                         netStandaloneHealth.Value = standaloneHealth;
@@ -244,6 +275,42 @@ namespace KryticalNova.Progression
                 }
                 HealthChanged?.Invoke();
             }
+        }
+
+        // ------------------------------------------------------------------ testing (standalone entities, server / offline)
+
+        private bool CanEditStandalone => playerResources == null && (!IsSpawned || IsServer);
+
+        /// <summary>Sets current health, clamped to 1..max. Returns false for players and on non-authoritative peers.</summary>
+        public bool SetHealth(float value)
+        {
+            if (!initialized) InitializeEntity();
+            if (!CanEditStandalone) return false;
+            standaloneHealth = Mathf.Clamp(value, 1f, MaxHealth);
+            if (IsSpawned) netStandaloneHealth.Value = standaloneHealth;
+            HealthChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>Replaces max health (0 returns to the class / stat value) and refills the pool.</summary>
+        public bool SetMaxHealthOverride(float value)
+        {
+            if (!initialized) InitializeEntity();
+            if (!CanEditStandalone) return false;
+            maxHealthOverride = Mathf.Max(0f, value);
+            if (IsSpawned) netMaxHealthOverride.Value = maxHealthOverride;
+            ResetHealth();
+            return true;
+        }
+
+        public bool SetInfiniteHealth(bool value)
+        {
+            if (!initialized) InitializeEntity();
+            if (!CanEditStandalone) return false;
+            infiniteHealth = value;
+            if (IsSpawned) netInfiniteHealth.Value = value;
+            if (value && standaloneHealth <= 0f) ResetHealth(); // revive a dummy that was already down
+            return true;
         }
     }
 }
