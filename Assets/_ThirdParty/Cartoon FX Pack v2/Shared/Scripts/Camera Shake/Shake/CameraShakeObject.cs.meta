@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 4fb627aa8a82403393cc8a58f1b4ff0e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 334986
+  packageName: Cartoon Explosion Pack
+  packageVersion: 1.0
+  assetPath: Assets/Cartoon Explosion Pack/Shared/Scripts/Camera Shake/Shake/CameraShakeObject.cs
+  uploadId: 837724

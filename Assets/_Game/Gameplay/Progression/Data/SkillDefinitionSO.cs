@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace KryticalNova.Progression
 {
@@ -109,11 +110,18 @@ namespace KryticalNova.Progression
         [Min(0f)] public float minDuration = 180f;
         [Min(0f)] public float maxDuration = 180f;
 
-        [Header("Channeled Chi Recovery (e.g. Heavenly Serenity)")]
+        [Header("Channeled Recovery (e.g. Heavenly Serenity)")]
         [Tooltip("Interval in seconds between channeled ticks.")]
         [Min(0.1f)] public float channelTickInterval = 1.0f;
-        [Tooltip("Percent of Max Chi restored per channel tick.")]
-        [Min(0f)] public float channelChiRecoveryPercent = 5.0f;
+        [Tooltip("Percent of Max Chi restored per channel tick at the first rank.")]
+        [FormerlySerializedAs("channelChiRecoveryPercent")]
+        [Min(0f)] public float minChannelChiRecoveryPercent = 5.0f;
+        [Tooltip("Percent of Max Chi restored per channel tick at the last rank.")]
+        [Min(0f)] public float maxChannelChiRecoveryPercent = 5.0f;
+        [Tooltip("Percent of Max HP restored per channel tick at the first rank. 0 = the channel does not heal.")]
+        [Min(0f)] public float minChannelHealthRecoveryPercent;
+        [Tooltip("Percent of Max HP restored per channel tick at the last rank.")]
+        [Min(0f)] public float maxChannelHealthRecoveryPercent;
 
         [Header("Absorption Shield (e.g. Heavenly Shield)")]
         public bool isAbsorptionShield;
@@ -182,6 +190,8 @@ namespace KryticalNova.Progression
         public bool holdToRepeat;
 
         [Header("Presentation (all optional)")]
+        [Tooltip("Hotbar, skill window and buff bar icon. Baked by Krytical Nova ▸ Progression ▸ Build Skill Icons.")]
+        public Sprite icon;
         public AnimationClip castClip;
         [Min(0.1f)] public float castClipSpeed = 1f;
         [Tooltip("When each hit lands, as a fraction of the cast clip. Missing entries are spread evenly.")]
@@ -252,6 +262,14 @@ namespace KryticalNova.Progression
         {
             return Mathf.Lerp(minDuration, maxDuration, GetRankProgress(rank));
         }
+
+        /// <summary>Percent of Max Chi a channeled skill restores per tick at <paramref name="rank"/>.</summary>
+        public float GetChannelChiRecovery(int rank) =>
+            Mathf.Lerp(minChannelChiRecoveryPercent, maxChannelChiRecoveryPercent, GetRankProgress(rank));
+
+        /// <summary>Percent of Max HP a channeled skill restores per tick at <paramref name="rank"/>.</summary>
+        public float GetChannelHealthRecovery(int rank) =>
+            Mathf.Lerp(minChannelHealthRecoveryPercent, maxChannelHealthRecoveryPercent, GetRankProgress(rank));
 
         public float GetShieldMultiplier(int rank)
         {
@@ -352,7 +370,10 @@ namespace KryticalNova.Progression
             minDuration = Mathf.Max(0f, minDuration);
             maxDuration = Mathf.Max(minDuration, maxDuration);
             channelTickInterval = Mathf.Max(0.1f, channelTickInterval);
-            channelChiRecoveryPercent = Mathf.Max(0f, channelChiRecoveryPercent);
+            minChannelChiRecoveryPercent = Mathf.Max(0f, minChannelChiRecoveryPercent);
+            maxChannelChiRecoveryPercent = Mathf.Max(minChannelChiRecoveryPercent, maxChannelChiRecoveryPercent);
+            minChannelHealthRecoveryPercent = Mathf.Max(0f, minChannelHealthRecoveryPercent);
+            maxChannelHealthRecoveryPercent = Mathf.Max(minChannelHealthRecoveryPercent, maxChannelHealthRecoveryPercent);
         }
     }
 }

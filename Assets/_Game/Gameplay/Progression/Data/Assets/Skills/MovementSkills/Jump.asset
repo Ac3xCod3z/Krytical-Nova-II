@@ -15,6 +15,7 @@ MonoBehaviour:
   skillId: 2
   displayName: Jump
   description: Select Jump, then left-click a nearby walkable landing point. Flip at the apex and bounce on landing. Jump stays selected.
+  icon: {fileID: 21300000, guid: 9b46b99d32b76cc4bb034abeea3837b4, type: 3}
   ranks:
   - requiredCharacterLevel: 1
     skillPointCost: 1

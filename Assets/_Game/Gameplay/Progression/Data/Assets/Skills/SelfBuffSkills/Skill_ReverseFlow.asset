@@ -59,3 +59,24 @@ MonoBehaviour:
   maxDestructionChance: 20
   dispelBuffChance: 50
   statModifiers: []
+  rankScaledModifiers: []
+  consumedOnNextHit: 0
+  minDamagePercent: 0
+  maxDamagePercent: 0
+  hitCount: 1
+  minRange: 2
+  maxRange: 2
+  minBonusDamagePercent: 100
+  maxBonusDamagePercent: 100
+  chargeTime: 0
+  holdToRepeat: 0
+  icon: {fileID: 21300000, guid: ab47e70759667fc47b3430eef1ada7b9, type: 3}
+  castClip: {fileID: 7400000, guid: bd9a4d0fed508624c8d84d66c69aa611, type: 2}
+  castClipSpeed: 1.2
+  hitTimesNormalized: []
+  castLockNormalized: 0.85
+  chargeLoopClip: {fileID: 0}
+  castVfxPrefab: {fileID: 0}
+  hitVfxPrefab: {fileID: 0}
+  chargeVfxPrefab: {fileID: 0}
+  vfxOffset: {x: 0, y: 1, z: 0}

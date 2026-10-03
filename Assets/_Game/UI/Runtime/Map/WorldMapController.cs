@@ -15,7 +15,8 @@ namespace KryticalNova.UI
     /// <summary>
     /// World map window (WorldMap.uxml, instanced in the HUD document). Shows the zone's baked top-down map north-up
     /// with the local player's triangle at its true position (same world → UV mapping as the minimap), plus points
-    /// of interest, NPCs, portals and other players. Scroll zooms about the cursor, drag pans. The window is a
+    /// of interest, NPCs, portals and other players. Scroll zooms about the cursor, drag pans, right-click places the
+    /// player's own marker (<see cref="MapWaypoint"/>), which the minimap shows too. The window is a
     /// <c>.hud-movable</c>, so its place and scale come from the HUD layout editor like every other panel.
     /// </summary>
     [DisallowMultipleComponent]
@@ -28,6 +29,8 @@ namespace KryticalNova.UI
         private const float InitRetryInterval = 1f;
         private const float PlayerIconSize = 26f;
         private const int LeftButton = 0;
+        private const int RightButton = 1;
+        private const float WaypointIconSize = 26f;
 
         private VisualElement root, window, viewport, content, playerIcon;
         private Label zoneLabel, coordsLabel;
@@ -46,6 +49,7 @@ namespace KryticalNova.UI
         private readonly List<VisualElement> npcMarkers = new List<VisualElement>();
         private readonly List<VisualElement> allyMarkers = new List<VisualElement>();
         private readonly List<VisualElement> portalMarkers = new List<VisualElement>();
+        private readonly List<VisualElement> waypointMarkers = new List<VisualElement>();
 
         private bool IsOpen => window != null && window.resolvedStyle.display != DisplayStyle.None;
 
@@ -186,6 +190,12 @@ namespace KryticalNova.UI
 
         private void OnPointerDown(PointerDownEvent evt)
         {
+            if (evt.button == RightButton)
+            {
+                evt.StopPropagation();
+                ToggleWaypoint(viewport.WorldToLocal(evt.position));
+                return;
+            }
             if (evt.button != LeftButton) return;
             evt.StopPropagation();
             panPointerId = evt.pointerId;
@@ -217,6 +227,26 @@ namespace KryticalNova.UI
         {
             if (panPointerId >= 0 && viewport.HasPointerCapture(panPointerId)) viewport.ReleasePointer(panPointerId);
             panPointerId = -1;
+        }
+
+        /// <summary>Right-click: drops the player's marker under the cursor, or removes it when the click lands on it.</summary>
+        private void ToggleWaypoint(Vector2 cursor)
+        {
+            float contentSize = ViewportSize() * zoom;
+            if (data == null || contentSize <= 0f) return;
+
+            if (MapWaypoint.TryGet(out Vector3 existing)
+                && (MapPixel(existing, contentSize) + pan - cursor).sqrMagnitude <= WaypointIconSize * WaypointIconSize * 0.25f)
+            {
+                MapWaypoint.Clear();
+                return;
+            }
+
+            Vector2 px = cursor - pan;
+            Vector2 uv = new Vector2(px.x / contentSize, 1f - px.y / contentSize);
+            if (uv.x < 0f || uv.x > 1f || uv.y < 0f || uv.y > 1f) return;
+            Transform player = LocalPlayer();
+            MapWaypoint.Set(data.UvToWorld(uv, player != null ? player.position.y : 0f));
         }
 
         private float ViewportSize()
@@ -311,6 +341,11 @@ namespace KryticalNova.UI
             foreach (var portal in ZonePortal.Active)
                 if (portal != null) Place(Pooled(portalMarkers, portalCount++, "portal"), MapPixel(portal.transform.position, contentSize), 24f);
             Hide(portalMarkers, portalCount);
+
+            int waypointCount = 0;
+            if (MapWaypoint.TryGet(out Vector3 waypoint))
+                Place(Pooled(waypointMarkers, waypointCount++, "waypoint"), MapPixel(waypoint, contentSize), WaypointIconSize);
+            Hide(waypointMarkers, waypointCount);
 
             playerIcon.BringToFront();
         }

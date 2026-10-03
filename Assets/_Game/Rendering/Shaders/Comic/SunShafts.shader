@@ -1,4 +1,4 @@
-// Screen-space sun shafts (god rays), driven by SunShaftsFeature.
+// Screen-space sun shafts (god rays), driven by SunShaftsFeature. The source is the sun by day and the moon at night.
 // Pass 0 builds a quarter-res occlusion mask: open sky near the sun, thinned by the same cloud field the
 //        skybox draws (SkyCommon), so buildings AND clouds cut the light.
 // Pass 1/2 radially blur that mask toward the sun's screen position (a long step, then a short one).
@@ -18,8 +18,8 @@ Shader "Hidden/KryticalNova/SunShafts"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
         #include "Assets/_Game/World/Sky/Shaders/SkyCommon.hlsl"
 
-        float4 _KN_SunDir;
-        float4 _KN_SunColor;
+        float4 _ShaftSourceDir;   // xyz = unit vector toward the sun or moon
+        float4 _ShaftTint;        // rgb = shaft colour (hue only)
 
         float4 _SunScreenPos;     // xy = sun viewport position (CPU, for culling/fade only), z = aspect (w/h)
         float4 _ShaftParams;      // x source tightness (power), y sample density, z decay, w weight
@@ -31,7 +31,7 @@ Shader "Hidden/KryticalNova/SunShafts"
         // blur marches toward the sun the mask was built around.
         float2 SunUV()
         {
-            float3 sunWS = _WorldSpaceCameraPos + _KN_SunDir.xyz * 1000.0;
+            float3 sunWS = _WorldSpaceCameraPos + _ShaftSourceDir.xyz * 1000.0;
             return ComputeNormalizedDeviceCoordinates(sunWS, UNITY_MATRIX_VP);
         }
 
@@ -80,7 +80,7 @@ Shader "Hidden/KryticalNova/SunShafts"
 
                 float3 farWS = ComputeWorldSpacePosition(uv, UNITY_RAW_FAR_CLIP_VALUE, UNITY_MATRIX_I_VP);
                 float3 d = normalize(farWS - _WorldSpaceCameraPos);
-                half source = pow(saturate(dot(d, _KN_SunDir.xyz)), _ShaftParams.x);
+                half source = pow(saturate(dot(d, _ShaftSourceDir.xyz)), _ShaftParams.x);
 
                 // Same projection the skybox uses, so a cloud in front of the sun blocks its shafts.
                 float dist = _KN_CloudShape.x / max(d.y, 0.02);
@@ -130,7 +130,7 @@ Shader "Hidden/KryticalNova/SunShafts"
                     half stepped = floor(shafts * bands) / bands;
                     shafts = lerp(stepped, shafts, 0.25);
                 }
-                half3 tint = _KN_SunColor.rgb / max(max(_KN_SunColor.r, max(_KN_SunColor.g, _KN_SunColor.b)), 1e-3);
+                half3 tint = _ShaftTint.rgb / max(max(_ShaftTint.r, max(_ShaftTint.g, _ShaftTint.b)), 1e-3);
                 color.rgb += tint * shafts * _ShaftComposite.x;
                 if (_ShaftComposite.w > 0.5) color.rgb = shafts.xxx; // debug: shafts only
                 return color;

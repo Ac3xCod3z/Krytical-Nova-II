@@ -11,12 +11,13 @@ namespace KryticalNova.GameFeel
 {
     /// <summary>
     /// Client-side game feel. Gameplay reports moments through <see cref="IGameFeelSink"/>; this turns them into FEEL
-    /// (MMF_Player) feedbacks — camera impulses, FOV kicks, URP screen pulses, the struck target's HitReactor wobble/flash, sound
-    /// slots — plus URP-converted POLYGON Particle FX spawned through <see cref="NetworkCombatVFXPool"/>.
-    ///
-    /// Camera-level feedback only plays for the local player's own actions (or when the local player is hit); world
-    /// effects (sparks, dust, the struck target's reaction) play on every client. Hit-stop slows only the attacker's and
-    /// target's Animancer graphs: Time.timeScale is never touched, so netcode ticks and other players are unaffected.
+    /// (MMF_Player) feedbacks. A moment has up to two players: a camera one (impulses, FOV kicks, URP screen pulses,
+    /// sound slots), played only for the local player's own actions or when the local player is hit, and a world one
+    /// (particles through <see cref="MMF_PooledVfx"/>: POLYGON Particle FX, Cartoon FX impacts and comic text), played
+    /// on every client. Skills get their own cast / hit players and buff auras from <see cref="SkillFeelCatalog"/>;
+    /// lasting effects on a character (auras, run dust, weapon trail) live in <see cref="ActorVfx"/>. Hit-stop slows
+    /// only the attacker's and target's Animancer graphs: Time.timeScale is never touched, so netcode ticks and other
+    /// players are unaffected.
     /// Built by GameFeelBuilder (Krytical Nova ▸ GameFeel ▸ Build Game Feel); tune the MMF_Players on the prefab.
     /// </summary>
     [DisallowMultipleComponent]
@@ -32,16 +33,39 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player runFeel;
         [SerializeField] private MMF_Player jumpFeel;
         [SerializeField] private MMF_Player landFeel;
+        [SerializeField] private MMF_Player attackCastFeel;
+        [SerializeField] private MMF_Player buffCastFeel;
 
-        [Header("World VFX (URP copies of POLYGON Particle FX)")]
-        [SerializeField] private GameObject hitSparkVfx;
-        [SerializeField] private GameObject heavyHitVfx;
+        [Header("FEEL players (world particles, every client)")]
+        [SerializeField] private MMF_Player hitWorldFeel;
+        [SerializeField] private MMF_Player heavyHitWorldFeel;
+        [Tooltip("Added on top of the heavy hit when the hit was critical (comic text).")]
+        [SerializeField] private MMF_Player critWorldFeel;
+        [SerializeField] private MMF_Player runWorldFeel;
+        [SerializeField] private MMF_Player jumpWorldFeel;
+        [SerializeField] private MMF_Player landWorldFeel;
+        [Tooltip("Cast / hit bursts for skills the catalog has no entry for.")]
+        [SerializeField] private MMF_Player attackCastWorldFeel;
+        [SerializeField] private MMF_Player buffCastWorldFeel;
+        [SerializeField] private MMF_Player skillHitWorldFeel;
+        [SerializeField] private MMF_Player buffEndWorldFeel;
+        [SerializeField] private MMF_Player healWorldFeel;
+        [SerializeField] private MMF_Player chiWorldFeel;
+
+        [Header("World VFX spawned directly")]
         [SerializeField] private GameObject clickVfx;
         [SerializeField] private GameObject selectHostileVfx;
         [SerializeField] private GameObject selectFriendlyVfx;
-        [SerializeField] private GameObject runDustVfx;
-        [SerializeField] private GameObject jumpDustVfx;
-        [SerializeField] private GameObject landDustVfx;
+
+        [Header("Lasting effects on a character")]
+        [SerializeField] private SkillFeelCatalog skills;
+        [Tooltip("Looping aura for buffs the catalog has no entry for.")]
+        [SerializeField] private GameObject defaultAuraVfx;
+        [SerializeField] private GameObject runLoopVfx;
+        [SerializeField] private GameObject airborneLoopVfx;
+        [SerializeField] private TrailRenderer bladeTrail;
+        [Tooltip("Trail length for a basic combo strike (x) and for the finisher and skills (y), when gameplay gives none.")]
+        [SerializeField] private Vector2 trailSeconds = new Vector2(0.22f, 0.4f);
 
         [Header("Hit-stop (Animancer graphs only)")]
         [Range(0f, 0.2f)] [SerializeField] private float hitStopSeconds = 0.06f;
@@ -54,13 +78,16 @@ namespace KryticalNova.GameFeel
         private void OnEnable()
         {
             ClientPresentationRegistry.RegisterFeel(this);
-            cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel };
+            cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
+                attackCastFeel, buffCastFeel };
+            if (skills == null) skills = GetComponent<SkillFeelCatalog>();
             HudPreferences.Changed += ApplyScreenShakePreference;
             ApplyScreenShakePreference();
         }
 
         private void Start()
         {
+            RebindShakers();
             // Pre-attach reactors so hits this client never got an RPC for (GM hits, remote attackers) still show.
             foreach (var entity in FindObjectsByType<Progression.CombatEntity>(FindObjectsSortMode.None))
                 HitReactor.For(entity.transform);
@@ -77,17 +104,21 @@ namespace KryticalNova.GameFeel
 
         // ------------------------------------------------------------------ IGameFeelSink
 
-        public void Swing(Transform attacker, int comboStep, bool isLocalPlayer)
+        public void Swing(Transform attacker, int comboStep, bool isLocalPlayer, float seconds = 0f)
         {
-            if (!isLocalPlayer || attacker == null) return;
+            if (attacker == null) return;
+            if (seconds <= 0f) seconds = comboStep >= 3 ? trailSeconds.y : trailSeconds.x;
+            ActorVfx.For(attacker).Trail(bladeTrail, seconds);
             // Every swing whooshes; the finisher also leans the camera in.
-            Play(swingFeel, attacker.position, comboStep == 3 ? 1f : 0.45f);
+            if (isLocalPlayer) Play(swingFeel, attacker.position, comboStep == 3 ? 1f : 0.45f);
         }
 
         public void Hit(in HitFeel hit)
         {
             bool heavy = hit.IsCritical || hit.ComboStep >= 3;
-            Spawn(heavy && heavyHitVfx != null ? heavyHitVfx : hitSparkVfx, hit.Point, Quaternion.LookRotation(hit.TowardAttacker, Vector3.up));
+            Quaternion facing = hit.TowardAttacker.sqrMagnitude > 0.001f ? Quaternion.LookRotation(hit.TowardAttacker, Vector3.up) : Quaternion.identity;
+            PlayWorld(heavy ? heavyHitWorldFeel : hitWorldFeel, hit.Point, facing, hit.Target);
+            if (hit.IsCritical) PlayWorld(critWorldFeel, hit.Point, facing, hit.Target);
 
             if (hit.Target != null) HitReactor.For(hit.Target)?.React(hit.TowardAttacker, heavy);
 
@@ -123,30 +154,122 @@ namespace KryticalNova.GameFeel
         public void RunStarted(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
-            Spawn(runDustVfx, FootPoint(actor), Quaternion.LookRotation(-FlatForward(actor), Vector3.up));
+            PlayWorld(runWorldFeel, actor.position, Facing(actor), actor);
+            ActorVfx.For(actor).SetRunning(true, runLoopVfx);
             if (isLocalPlayer) Play(runFeel, actor.position, 1f);
+        }
+
+        public void RunStopped(Transform actor)
+        {
+            ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
         }
 
         public void JumpTakeoff(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
-            Spawn(jumpDustVfx, FootPoint(actor), Quaternion.identity);
+            PlayWorld(jumpWorldFeel, actor.position, Facing(actor), actor);
             if (isLocalPlayer) Play(jumpFeel, actor.position, 1f);
         }
 
         public void Landed(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
-            Spawn(landDustVfx, FootPoint(actor), Quaternion.identity);
+            PlayWorld(landWorldFeel, actor.position, Facing(actor), actor);
             if (isLocalPlayer) Play(landFeel, actor.position, 1f);
         }
 
+        public void Airborne(Transform actor, bool airborne)
+        {
+            if (actor == null) return;
+            if (airborne) ActorVfx.For(actor).SetAirborne(true, airborneLoopVfx);
+            else ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx);
+        }
+
+        public void SkillCast(Transform caster, string skillId, bool isAttack, bool isLocalPlayer)
+        {
+            if (caster == null) return;
+            SkillFeel feel = skills != null ? skills.Find(skillId) : null;
+            MMF_Player world = feel != null && feel.cast != null ? feel.cast : isAttack ? attackCastWorldFeel : buffCastWorldFeel;
+            PlayWorld(world, caster.position, Facing(caster), caster);
+            if (isLocalPlayer) Play(isAttack ? attackCastFeel : buffCastFeel, caster.position, 1f);
+        }
+
+        public void SkillHit(Transform caster, string skillId, Vector3 point)
+        {
+            SkillFeel feel = skills != null ? skills.Find(skillId) : null;
+            Quaternion facing = Quaternion.identity;
+            if (caster != null)
+            {
+                Vector3 toward = caster.position - point;
+                toward.y = 0f;
+                if (toward.sqrMagnitude > 0.001f) facing = Quaternion.LookRotation(toward, Vector3.up);
+            }
+            PlayWorld(feel != null && feel.hit != null ? feel.hit : skillHitWorldFeel, point, facing, null);
+        }
+
+        public void BuffStarted(Transform actor, string skillId, float duration)
+        {
+            if (actor == null) return;
+            SkillFeel feel = skills != null ? skills.Find(skillId) : null;
+            GameObject aura = feel != null && feel.aura != null ? feel.aura : defaultAuraVfx;
+            Vector3 offset = feel != null && feel.auraAnchor == AuraAnchor.Chest ? ChestOffset : FeetOffset;
+            ActorVfx.For(actor).SetAura(skillId, aura, offset, duration);
+        }
+
+        public void BuffEnded(Transform actor, string skillId)
+        {
+            ActorVfx vfx = ActorVfx.Find(actor);
+            if (vfx == null) return;
+            if (vfx.ClearAura(skillId)) PlayWorld(buffEndWorldFeel, actor.position, Quaternion.identity, actor);
+        }
+
+        public void Consumed(Transform actor, bool restoredHealth, bool restoredChi)
+        {
+            if (actor == null) return;
+            if (restoredHealth) PlayWorld(healWorldFeel, actor.position, Quaternion.identity, actor);
+            if (restoredChi) PlayWorld(chiWorldFeel, actor.position, Quaternion.identity, actor);
+        }
+
         // ------------------------------------------------------------------ helpers
+
+        /// <summary>
+        /// FEEL shakers subscribe to static events in Awake, and those events are cleared on every Play start. With
+        /// Domain / Scene Reload off the scene's [ExecuteAlways] shakers get no new Awake, so they would stay deaf
+        /// (no FOV kick, no chromatic punch) until re-subscribed here. A no-op after a normal scene load.
+        /// </summary>
+        private static void RebindShakers()
+        {
+            foreach (var shaker in FindObjectsByType<MMShaker>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                shaker.ForceInitialization();
+                shaker.StopListening();
+                shaker.StartListening();
+            }
+        }
+
+        private static readonly Vector3 FeetOffset = new Vector3(0f, 0.05f, 0f);
+        private static readonly Vector3 ChestOffset = new Vector3(0f, 1.1f, 0f);
 
         private static void Play(MMF_Player player, Vector3 position, float intensity)
         {
             if (player != null) player.PlayFeedbacks(position, intensity);
         }
+
+        /// <summary>Plays a world player, first telling its pooled-VFX feedbacks which way to face and whom to follow.</summary>
+        private static void PlayWorld(MMF_Player player, Vector3 position, Quaternion rotation, Transform target, float intensity = 1f)
+        {
+            if (player == null) return;
+            var feedbacks = player.FeedbacksList;
+            for (int i = 0; i < feedbacks.Count; i++)
+            {
+                if (!(feedbacks[i] is MMF_PooledVfx vfx)) continue;
+                vfx.Rotation = rotation;
+                vfx.Target = target;
+            }
+            player.PlayFeedbacks(position, intensity);
+        }
+
+        private static Quaternion Facing(Transform actor) => Quaternion.LookRotation(FlatForward(actor), Vector3.up);
 
         private static void Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
         {

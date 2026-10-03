@@ -322,7 +322,8 @@ namespace KryticalNova.World
             // ---- key light (intensity crosses ~0 at the swap, so the swap never pops)
             float moonIllum = MoonIllumination(moonPhase01);
             // A thin crescent lights the world far less than a full moon.
-            float intensity = useMoon ? dc.moonIntensity.Evaluate(t) * moonVisible * Mathf.Lerp(0.25f, 1f, moonIllum)
+            float moonPower = dc.moonPhaseLight.Evaluate(moonIllum);
+            float intensity = useMoon ? dc.moonIntensity.Evaluate(t) * moonVisible * moonPower
                                       : dc.sunIntensity.Evaluate(t) * sunVisible;
             intensity *= w.sunMultiplier;
             float shadowAmount = Mathf.Clamp01(dc.shadowStrength.Evaluate(t) * w.shadowMultiplier) * Smooth(intensity, 0.01f, 0.15f)
@@ -373,16 +374,24 @@ namespace KryticalNova.World
             // Under heavy cover the sun no longer reaches cloud tops we can see.
             cloudLit = Color.Lerp(cloudLit, cloudShade, w.coverage * w.coverage * 0.6f);
 
+            // Moonlit night: how much of the moon's light reaches the ground (phase, height, cloud), 0 by day.
+            float night = Smooth(-sunDir.y, 0.03f, 0.2f);
+            float moonClear = moonVisible * (1f - Mathf.Clamp01(w.celestialDiffusion)) * Mathf.Clamp01(w.sunMultiplier);
+            float moonlit = night * moonClear * moonIllum;
+
             RenderSettings.fogColor = fog;
             RenderSettings.fogDensity = w.fogDensity;
-            VolumetricAtmosphereDriver.Publish(fog, w.volumetricFog, w.rain, t);
+            // A thin haze on dry nights gives the moonlight air to scatter in; brighter moons show more of it.
+            float nightHaze = dc.nightHaze * night * Mathf.Lerp(0.5f, 1f, moonClear * moonIllum);
+            VolumetricAtmosphereDriver.Publish(fog, w.volumetricFog, w.rain, t, nightHaze);
 
             // ---- ambient (trilight → SH probe, rebuilt by Unity when the colours change)
             ambientTimer -= dt;
             if (ambientTimer <= 0f)
             {
                 ambientTimer = ambientUpdateInterval;
-                float a = w.ambientMultiplier;
+                // A bright moon lifts the whole night a little, on top of its direct light.
+                float a = w.ambientMultiplier * (1f + dc.moonAmbientBoost * moonlit);
                 RenderSettings.ambientSkyColor = Weatherize(dc.ambientSky.Evaluate(t), desat, a) + lightningColor * flash * 0.3f;
                 RenderSettings.ambientEquatorColor = Weatherize(dc.ambientEquator.Evaluate(t), desat, a);
                 RenderSettings.ambientGroundColor = Weatherize(dc.ambientGround.Evaluate(t), desat, a);
@@ -465,9 +474,13 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(Ids.CloudShade, ToShader(cloudShade));
             Shader.SetGlobalVector(Ids.CloudExtra, new Vector4(w.cirrus, 0f, 0f, 0f));
 
-            // ---- god rays + lens flare: sun only, thinned by cloud diffusion and by a cloud right in front of the sun
+            // ---- god rays + lens flare, thinned by cloud diffusion and by a cloud right in front of the body.
+            // The shaft pass follows the key light: the sun by day, faint moon rays (by phase) at night. No moon flare.
             float sunClear = (1f - Mathf.Clamp01(w.celestialDiffusion)) * sunGate;
-            SunShaftRuntime.Intensity = useMoon ? 0f : dc.sunShaftIntensity.Evaluate(t) * sunClear;
+            SunShaftRuntime.Intensity = useMoon ? dc.moonShaftIntensity.Evaluate(t) * moonClear * moonIllum
+                                                : dc.sunShaftIntensity.Evaluate(t) * sunClear;
+            SunShaftRuntime.SourceDirection = keyDir;
+            SunShaftRuntime.Tint = useMoon ? dc.moonColor.Evaluate(t) : dc.sunColor.Evaluate(t);
             if (flare != null)
             {
                 float cloudAtSun = CloudDensityToward(sunDir, w);

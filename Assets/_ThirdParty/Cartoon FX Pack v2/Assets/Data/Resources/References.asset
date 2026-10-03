@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94068edbaa2f4815b0f29287672a65ab, type: 3}
+  m_Name: References
+  m_EditorClassIdentifier: 
+  defaultSystem:
+    system: {fileID: 3524595884924955570, guid: 0565f1f27ca6465194fada7e413ea4fc, type: 3}
+  text:
+    system: {fileID: 7533461494071949469, guid: aba9ce9f63914ba8943a77308a888b9b, type: 3}
+    material: {fileID: 2100000, guid: a7a7a5e9201f48dd819f11ac206e3e84, type: 2}
+  background:
+    system: {fileID: 3011368908348966401, guid: 4895ef7c417945b88f99f0a69ed78fb4, type: 3}
+    material: {fileID: 2100000, guid: 2544119e98554604a2012429a9fc3e87, type: 2}
+  halftone:
+    system: {fileID: 3011368908348966401, guid: 4895ef7c417945b88f99f0a69ed78fb4, type: 3}
+    material: {fileID: 2100000, guid: 2544119e98554604a2012429a9fc3e87, type: 2}
+  effect:
+    system: {fileID: 4873835647888607599, guid: 3fced07027df42f291c8eb5af3841172, type: 3}
+    material: {fileID: 2100000, guid: 2544119e98554604a2012429a9fc3e87, type: 2}
+  impact:
+    system: {fileID: 5076891092923619908, guid: 8b932c4a2e80422c95ee0c01be2c33ea, type: 3}
+    material: {fileID: 2100000, guid: 2544119e98554604a2012429a9fc3e87, type: 2}
+  debris:
+    system: {fileID: 3411295709106174235, guid: 47ed57be32994eb2973f2a8d6164db26, type: 3}
+    material: {fileID: 2100000, guid: ae5d30f7d4a54910bc7720a450d9aaa5, type: 2}
+  smoke:
+    system: {fileID: 5826070172991550944, guid: c2ce76470da445b78565b0dedfc24b13, type: 3}
+    material: {fileID: 2100000, guid: ae5d30f7d4a54910bc7720a450d9aaa5, type: 2}

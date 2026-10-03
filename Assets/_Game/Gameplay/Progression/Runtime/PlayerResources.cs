@@ -229,6 +229,9 @@ namespace KryticalNova.Progression
         public bool CanSpendChi(float amount) => isActiveAndEnabled && IsAlive && float.IsFinite(amount)
             && amount >= 0f && (chi + ComparisonTolerance >= amount || (GmState.InfiniteChi && IsGmTarget));
 
+        /// <summary>True where this player's HP and Chi are decided (the server, or offline). Clients only mirror them.</summary>
+        public bool HasAuthority => !IsSpawned || IsServer;
+
         /// <summary>GM toggles only apply to the local (owning) player, never to other players simulated on a host.</summary>
         private bool IsGmTarget => !IsSpawned || IsOwner;
 

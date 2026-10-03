@@ -53,7 +53,7 @@ namespace KryticalNova.World
         [Tooltip("Directional light intensity while it is the sun.")]
         public AnimationCurve sunIntensity = Curve((0.23f, 0f), (0.27f, 0.8f), (0.35f, 1.6f), (0.5f, 2f), (0.65f, 1.6f), (0.73f, 0.8f), (0.77f, 0f));
         [Tooltip("Directional light intensity while it is the moon.")]
-        public AnimationCurve moonIntensity = Curve((0f, 0.4f), (0.2f, 0.32f), (0.235f, 0f), (0.765f, 0f), (0.8f, 0.32f), (1f, 0.4f));
+        public AnimationCurve moonIntensity = Curve((0f, 0.75f), (0.2f, 0.6f), (0.235f, 0f), (0.765f, 0f), (0.8f, 0.6f), (1f, 0.75f));
         [Tooltip("Cast shadow amount (0-1). Fades the comic shadow layer linearly.")]
         public AnimationCurve shadowStrength = Curve((0f, 0.55f), (0.24f, 0.55f), (0.3f, 1f), (0.7f, 1f), (0.76f, 0.55f), (1f, 0.55f));
         [Range(0.001f, 0.2f)] public float sunDiscSize = 0.027f;
@@ -75,6 +75,14 @@ namespace KryticalNova.World
         [Range(0f, 8f)] public float moonTextureIntensity = 1.15f;
         [Tooltip("In-game days from new moon to new moon.")]
         [Min(1f)] public float lunarCycleDays = 8f;
+        [Tooltip("Moonlight multiplier by the moon's lit fraction (0 = new moon, 1 = full). A new moon still gives a little light.")]
+        public AnimationCurve moonPhaseLight = Curve((0f, 0.42f), (0.5f, 0.68f), (1f, 1f));
+        [Tooltip("Extra ambient light at night under a full moon (0.6 = +60%), scaled by the lit fraction and how clear the sky is.")]
+        [Range(0f, 2f)] public float moonAmbientBoost = 0.6f;
+        [Tooltip("Moon god-ray strength through the night. Kept faint; scaled by the lit fraction and thinned by cloud.")]
+        public AnimationCurve moonShaftIntensity = Curve((0f, 0.3f), (0.2f, 0.26f), (0.24f, 0f), (0.76f, 0f), (0.8f, 0.26f), (1f, 0.3f));
+        [Tooltip("Thin ground haze on dry nights, as a share of the ground-mist volume's density, so moonlight has air to scatter in.")]
+        [Range(0f, 0.5f)] public float nightHaze = 0.12f;
 
         [Header("Night")]
         public AnimationCurve starVisibility = Curve((0f, 1f), (0.2f, 1f), (0.255f, 0f), (0.745f, 0f), (0.8f, 1f), (1f, 1f));

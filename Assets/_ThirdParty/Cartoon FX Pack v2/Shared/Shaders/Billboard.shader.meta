@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a62e1dfc6b564aa39cb269b5f324e590
+AssetOrigin:
+  serializedVersion: 1
+  productId: 334986
+  packageName: Cartoon Explosion Pack
+  packageVersion: 1.0
+  assetPath: Assets/Cartoon Explosion Pack/Shared/Shaders/Background.shader
+  uploadId: 837724
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

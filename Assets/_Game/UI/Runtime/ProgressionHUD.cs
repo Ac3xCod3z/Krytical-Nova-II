@@ -43,6 +43,10 @@ namespace KryticalNova.UI
         private Label dragGhost;
         private readonly List<Action> removeUiCallbacks = new List<Action>();
         private readonly VisualElement[] slotElements = new VisualElement[PlayerSkillHotbar.SlotCount];
+        private readonly VisualElement[] slotIcons = new VisualElement[PlayerSkillHotbar.SlotCount];
+        private readonly VisualElement[] slotCooldowns = new VisualElement[PlayerSkillHotbar.SlotCount];
+        private readonly List<ActiveBuff> shownBuffs = new List<ActiveBuff>();
+        private readonly List<Label> shownBuffTimers = new List<Label>();
         private VisualElement dragSource;
         private MovementSkillId draggedMovementSkill;
         private SkillDefinitionSO draggedCombatSkill;
@@ -168,6 +172,9 @@ namespace KryticalNova.UI
                 int slotIndex = index;
                 VisualElement slot = root.Q($"slot-{index}");
                 slotElements[index] = slot;
+                // Icon under the labels, cooldown sweep over it. Built here so the UXML keeps one line per slot.
+                slotIcons[index] = SlotLayer(slot, "slot-icon", 0);
+                slotCooldowns[index] = SlotLayer(slot, "slot-cooldown", 1);
                 BindPointer<PointerDownEvent>(slot, evt => OnSlotPointerDown(evt, slotIndex));
                 BindDragSource(slot);
             }
@@ -184,6 +191,40 @@ namespace KryticalNova.UI
             PlayerInventory.LocalChanged += OnLocalPlayerChanged;
             BindPlayer(PlayerInventory.Local != null ? PlayerInventory.Local.gameObject
                 : progression != null && progression.gameObject.activeInHierarchy ? progression.gameObject : null);
+        }
+
+        private static VisualElement SlotLayer(VisualElement slot, string className, int index)
+        {
+            VisualElement layer = slot.Q(className: className);
+            if (layer != null) return layer; // the HUD re-enabled: reuse what the last pass added
+            layer = new VisualElement { pickingMode = PickingMode.Ignore };
+            layer.AddToClassList(className);
+            slot.Insert(index, layer);
+            return layer;
+        }
+
+        /// <summary>Shows <paramref name="sprite"/> on an icon element, or hides the element when there is none.</summary>
+        private static void SetIcon(VisualElement element, Sprite sprite)
+        {
+            if (element == null) return;
+            element.style.backgroundImage = sprite != null ? new StyleBackground(sprite) : StyleKeyword.None;
+            element.style.display = sprite != null ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        /// <summary>The icon on a skill card's drag tile, created on first use (authored and generated cards alike).</summary>
+        private static void SetTokenArt(VisualElement token, Sprite sprite)
+        {
+            if (token == null) return;
+            VisualElement art = token.Q(className: "skill-art");
+            if (art == null)
+            {
+                if (sprite == null) return;
+                art = new VisualElement { pickingMode = PickingMode.Ignore };
+                art.AddToClassList("skill-art");
+                token.Add(art);
+            }
+            SetIcon(art, sprite);
+            token.EnableInClassList("has-art", sprite != null);
         }
 
         private void BindCombatSkillCard(string cardId, string skillId)
@@ -385,7 +426,7 @@ namespace KryticalNova.UI
 
             if (initialized)
             {
-                RefreshBuffs();
+                RefreshBuffTimers();
                 RefreshHotbarCooldowns();
             }
         }
@@ -550,10 +591,12 @@ namespace KryticalNova.UI
                 if (slot == null) continue;
                 string key = PlayerSkillHotbar.GetKeyLabel(index);
                 slot.EnableInClassList("on-cooldown", false); // skills re-apply theirs every frame
+                Sprite icon = null;
 
                 if (entry.itemType == HotbarItemType.Movement)
                 {
                     MovementSkillData def = skills.GetDefinition(entry.movementSkill);
+                    icon = def != null ? def.icon : null;
                     slot.Q<Label>(className: "slot-name").text = def == null ? "—" : def.displayName.ToUpperInvariant();
                     slot.Q<Label>(className: "slot-rank").text = def == null ? "EMPTY" : $"RANK {skills.GetRank(entry.movementSkill)}";
                     slot.EnableInClassList("selected", entry.movementSkill != MovementSkillId.None && entry.movementSkill == skills.SelectedSkill);
@@ -562,6 +605,7 @@ namespace KryticalNova.UI
                 else if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null)
                 {
                     SkillDefinitionSO def = entry.combatSkill;
+                    icon = def.icon;
                     slot.Q<Label>(className: "slot-name").text = def.displayName.ToUpperInvariant();
                     int rank = combatSkills != null ? combatSkills.GetRank(def) : 0;
                     slot.Q<Label>(className: "slot-rank").text = $"RANK {rank}";
@@ -572,6 +616,7 @@ namespace KryticalNova.UI
                 else if (entry.itemType == HotbarItemType.Item && hotbar.ItemSource != null)
                 {
                     int count = hotbar.ItemSource.CountItem(entry.itemId);
+                    icon = hotbar.ItemSource.GetItemIcon(entry.itemId);
                     slot.Q<Label>(className: "slot-name").text = hotbar.ItemSource.GetItemLabel(entry.itemId).ToUpperInvariant();
                     slot.Q<Label>(className: "slot-rank").text = $"x{count}";
                     slot.EnableInClassList("selected", false);
@@ -585,6 +630,10 @@ namespace KryticalNova.UI
                     slot.EnableInClassList("selected", false);
                     slot.tooltip = "Drop a learned skill here.";
                 }
+
+                // With an icon the name is left to the tooltip; without one the slot keeps its text label.
+                SetIcon(slotIcons[index], icon);
+                slot.EnableInClassList("has-icon", icon != null);
             }
 
             if (combatStats != null)
@@ -726,6 +775,7 @@ namespace KryticalNova.UI
             if (tile != null)
             {
                 tile.tooltip = isLearned ? $"Drag {skill.displayName} to hotbar" : isDropSkill ? skill.acquisitionNote : "Learn before assigning";
+                SetTokenArt(tile, skill.icon);
             }
         }
 
@@ -785,7 +835,9 @@ namespace KryticalNova.UI
             }
             if (skill.executionType == SkillExecutionType.Channeled)
             {
-                return $"Channeled Chi Restore · {dur:0}s duration · {chi:0} Chi";
+                float health = skill.GetChannelHealthRecovery(rank);
+                string restores = (health > 0f ? $"+{health:0.#}% HP · " : string.Empty) + $"+{skill.GetChannelChiRecovery(rank):0.#}% Chi";
+                return $"{restores} every {skill.channelTickInterval:0.#}s · {dur:0}s channel · {chi:0} Chi";
             }
             if (skill.statModifiers != null && skill.statModifiers.Length > 0)
             {
@@ -808,10 +860,13 @@ namespace KryticalNova.UI
             }
         }
 
+        /// <summary>Rebuilds the buff badges when the set of buffs changes; timers tick in <see cref="RefreshBuffTimers"/>.</summary>
         private void RefreshBuffs()
         {
             if (activeBuffsBar == null || buffManager == null) return;
             activeBuffsBar.Clear();
+            shownBuffs.Clear();
+            shownBuffTimers.Clear();
 
             var buffs = buffManager.ActiveBuffs;
             for (int i = 0; i < buffs.Count; i++)
@@ -819,24 +874,48 @@ namespace KryticalNova.UI
                 var buff = buffs[i];
                 var badge = new VisualElement();
                 badge.AddToClassList("buff-badge");
+                badge.tooltip = buff.Skill.displayName;
 
                 if (buff.Skill.isAbsorptionShield)
                     badge.AddToClassList("shield-badge");
                 else if (buff.Skill.executionType == SkillExecutionType.Channeled)
                     badge.AddToClassList("channeled-badge");
 
-                var nameLbl = new Label(buff.Skill.displayName);
-                nameLbl.AddToClassList("buff-badge-name");
-                badge.Add(nameLbl);
+                if (buff.Skill.icon != null)
+                {
+                    var icon = new VisualElement();
+                    icon.AddToClassList("buff-badge-icon");
+                    SetIcon(icon, buff.Skill.icon);
+                    badge.Add(icon);
+                }
+                else
+                {
+                    var nameLbl = new Label(buff.Skill.displayName);
+                    nameLbl.AddToClassList("buff-badge-name");
+                    badge.Add(nameLbl);
+                }
 
-                string timerText = buff.Skill.isAbsorptionShield
-                    ? $"{buff.CurrentShieldCapacity:0} HP ({buff.RemainingDuration:0}s)"
-                    : $"{buff.RemainingDuration:0.0}s";
-                var timerLbl = new Label(timerText);
+                var timerLbl = new Label();
                 timerLbl.AddToClassList("buff-badge-timer");
                 badge.Add(timerLbl);
 
                 activeBuffsBar.Add(badge);
+                shownBuffs.Add(buff);
+                shownBuffTimers.Add(timerLbl);
+            }
+            RefreshBuffTimers();
+        }
+
+        private void RefreshBuffTimers()
+        {
+            if (activeBuffsBar == null || buffManager == null) return;
+            if (buffManager.ActiveBuffs.Count != shownBuffs.Count) { RefreshBuffs(); return; }
+            for (int i = 0; i < shownBuffs.Count; i++)
+            {
+                var buff = shownBuffs[i];
+                shownBuffTimers[i].text = buff.Skill.isAbsorptionShield
+                    ? $"{buff.CurrentShieldCapacity:0} HP ({buff.RemainingDuration:0}s)"
+                    : $"{buff.RemainingDuration:0.0}s";
             }
         }
 
@@ -849,10 +928,13 @@ namespace KryticalNova.UI
                 var entry = hotbar.GetSlotEntry(index);
                 bool charging = hotbar.ChargingSlot == index;
                 slotElements[index].EnableInClassList("charging", charging);
+                float cooldownLeft01 = 0f;
                 if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null)
                 {
                     bool onCooldown = combatSkills.IsOnCooldown(entry.combatSkill);
                     slotElements[index]?.EnableInClassList("on-cooldown", onCooldown);
+                    if (onCooldown && entry.combatSkill.cooldown > 0f)
+                        cooldownLeft01 = Mathf.Clamp01(combatSkills.GetRemainingCooldown(entry.combatSkill) / entry.combatSkill.cooldown);
                     if (charging)
                     {
                         slotElements[index].Q<Label>(className: "slot-rank").text = $"CHARGE {hotbar.ChargeProgress * 100f:0}%";
@@ -868,6 +950,8 @@ namespace KryticalNova.UI
                         slotElements[index].Q<Label>(className: "slot-rank").text = $"RANK {rank}";
                     }
                 }
+                // The sweep drains downward as the cooldown runs out.
+                slotCooldowns[index].style.height = Length.Percent(cooldownLeft01 * 100f);
             }
         }
 
@@ -954,6 +1038,7 @@ namespace KryticalNova.UI
             root.Q<Label>($"{prefix}-drag-hint").text = rank == 0 ? $"Learn {definition.displayName}, then drag its tile to a hotbar slot."
                 : "Drag to a slot. Select with 1–0, then left-click a destination. Select again to walk.";
             tile.tooltip = rank == 0 ? "Learn this skill before assigning it." : "Drag to hotbar";
+            SetTokenArt(tile, definition.icon);
         }
 
         private static string DescribeRank(MovementSkillId skill, MovementSkillRank rank)
@@ -1050,10 +1135,15 @@ namespace KryticalNova.UI
             dragMoved = true;
             SetVisible(dragGhost, true);
 
+            MovementSkillData draggedMovement = draggedCombatSkill == null ? skills.GetDefinition(draggedMovementSkill) : null;
+            Sprite ghostIcon = draggedCombatSkill != null ? draggedCombatSkill.icon : draggedMovement.icon;
             string ghostText = draggedCombatSkill != null
                 ? draggedCombatSkill.displayName.ToUpperInvariant()
-                : skills.GetDefinition(draggedMovementSkill).displayName.ToUpperInvariant();
-            dragGhost.text = ghostText;
+                : draggedMovement.displayName.ToUpperInvariant();
+            // The icon itself follows the cursor; skills without one keep the text chip.
+            dragGhost.text = ghostIcon != null ? string.Empty : ghostText;
+            dragGhost.EnableInClassList("icon-ghost", ghostIcon != null);
+            dragGhost.style.backgroundImage = ghostIcon != null ? new StyleBackground(ghostIcon) : StyleKeyword.Null;
 
             Vector2 local = root.Q("game-ui").WorldToLocal(position);
             dragGhost.style.left = local.x + GhostOffset;

@@ -128,6 +128,11 @@
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Objective_01_Clean.png");
     -unity-background-image-tint-color: rgb(186, 120, 255);
 }
+.world-map-marker.waypoint {
+    width: 26px; height: 26px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Flag_01.png");
+    -unity-background-image-tint-color: rgb(255, 201, 60);
+}
 .world-map-marker.poi {
     width: 14px; height: 14px;
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Star_01.png");
@@ -192,5 +197,9 @@
 .legend-poi {
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Star_01.png");
     -unity-background-image-tint-color: rgb(244, 238, 223);
+}
+.legend-waypoint {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Flag_01.png");
+    -unity-background-image-tint-color: rgb(255, 201, 60);
 }
 .world-map-help { margin-top: 4px; font-size: 10px; }

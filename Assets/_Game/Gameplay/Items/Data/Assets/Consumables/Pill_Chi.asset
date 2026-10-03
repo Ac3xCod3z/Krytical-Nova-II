@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 9002
   displayName: Chi Pill
   description: Restores 300 Chi.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 751959e3ec5e81b48a186d05be9a92fe, type: 3}
   rarity: 0
   equipSlot: 0
   maxStack: 99

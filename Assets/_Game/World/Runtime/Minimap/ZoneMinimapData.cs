@@ -16,5 +16,9 @@ namespace KryticalNova.World.Minimap
         /// <summary>World XZ → normalised map coordinates (0,0 bottom-left .. 1,1 top-right).</summary>
         public Vector2 WorldToUv(Vector3 world) =>
             new Vector2((world.x - worldCenter.x) / worldSize + 0.5f, (world.z - worldCenter.y) / worldSize + 0.5f);
+
+        /// <summary>Inverse of <see cref="WorldToUv"/>; the map has no height, so the caller supplies Y.</summary>
+        public Vector3 UvToWorld(Vector2 uv, float y) =>
+            new Vector3((uv.x - 0.5f) * worldSize + worldCenter.x, y, (uv.y - 0.5f) * worldSize + worldCenter.y);
     }
 }

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bce7e25c521e4e35a4ed1ddaebca85ac, type: 3}
+  m_Name: Meteors 001
+  m_EditorClassIdentifier: Assembly-CSharp::CTFX2.Creator.MeteorsObject
+  cutoff: 0.01
+  softParticles: 0
+  useDitherFade: 1
+  albedo: {fileID: 2800000, guid: 0d73ae4873274307b0538ed78e2201fa, type: 3}
+  normal: {fileID: 2800000, guid: 0d19521d0aab4d368a66c83a17bf63eb, type: 3}
+  flipbookSize: {x: 2, y: 2}
+  normalStrength: 1
+  meshes:
+  - {fileID: 5111803403807125043, guid: c3ff39293ec2489bbf3c400a5d43dde9, type: 3}
+  - {fileID: -2964742951195530179, guid: 6c5bb23e4739400db18c95c74346043e, type: 3}
+  - {fileID: -6607273478859585184, guid: 7fb1a8e9e4454485abdf0d261bc2820c, type: 3}
+  - {fileID: 268927095028535461, guid: 6e01846d708e46de838af94ab0d3fefd, type: 3}

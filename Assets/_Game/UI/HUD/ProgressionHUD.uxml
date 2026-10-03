@@ -186,8 +186,8 @@
             </ui:VisualElement>
             <ui:VisualElement class="skill-card kn-card">
                 <ui:VisualElement name="heavenly-serenity-drag" class="skill-token serenity-token"><ui:Label text="HEAVENLY SERENITY" class="skill-icon" /><ui:Label name="heavenly-serenity-rank" text="UNLEARNED" class="skill-rank" /></ui:VisualElement>
-                <ui:Label name="heavenly-serenity-description" text="Meditate in tranquil focus, restoring Chi over 20s (5% Max Chi/sec). Interrupts upon taking damage or moving." class="help" />
-                <ui:Label name="heavenly-serenity-values" text="Channeled Chi Restore · 20s duration · 1s CD · 0 Chi · Self" class="section" />
+                <ui:Label name="heavenly-serenity-description" text="Meditate in tranquil focus, restoring HP and Chi every second for 20s. Interrupted by taking damage or moving." class="help" />
+                <ui:Label name="heavenly-serenity-values" text="+1% HP · +2% Chi every 1s · 20s channel · 0 Chi" class="section" />
                 <ui:Label name="heavenly-serenity-requirement" text="Requires Level 1 · Cost: 1 skill point" class="muted" />
                 <ui:Button name="upgrade-heavenly-serenity" text="LEARN HEAVENLY SERENITY" />
                 <ui:Label name="heavenly-serenity-drag-hint" text="Learn Heavenly Serenity, then drag to a hotbar slot." class="help" />

@@ -27,6 +27,8 @@ namespace KryticalNova.Progression
         public MovementSkillId skillId = MovementSkillId.Run;
         public string displayName = "Run";
         [TextArea] public string description = "Toggle running without changing your destination.";
+        [Tooltip("Hotbar and skill window icon. Baked by Krytical Nova ▸ Progression ▸ Build Skill Icons.")]
+        public Sprite icon;
         public MovementSkillRank[] ranks = Array.Empty<MovementSkillRank>();
         public int MaxRank => ranks?.Length ?? 0;
 
