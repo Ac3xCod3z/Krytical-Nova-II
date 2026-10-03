@@ -25,6 +25,8 @@ namespace KryticalNova.World
 
         public float fogDensity;
         public Color fogTint;
+        /// <summary>Ground volumetric fog weight 0-1 (0 whenever it rains).</summary>
+        public float volumetricFog;
 
         public Vector2 wind;          // metres per second, world XZ (includes the current gust)
         public float gustiness;       // 0-1, blended from the profiles
@@ -70,6 +72,7 @@ namespace KryticalNova.World
 
             b.fogDensity = Mathf.Lerp(from.fogDensity, to.fogDensity, t);
             b.fogTint = Color.Lerp(from.fogTint, to.fogTint, t);
+            b.volumetricFog = Mathf.Lerp(from.VolumetricFogAmount, to.VolumetricFogAmount, t);
 
             // Blend direction and speed separately: lerping the vectors dips the speed mid-transition
             // whenever the two headings differ a lot.

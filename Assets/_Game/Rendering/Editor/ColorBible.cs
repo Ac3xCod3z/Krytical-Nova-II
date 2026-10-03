@@ -42,8 +42,9 @@ namespace KryticalNova.EditorTools
             public string FogTint;          // RRGGBBAA, alpha = pull toward the tint
             public float FogDensity;        // exponential-squared
             public float Saturation, Contrast, SkyDesaturation;
-            public WeatherLook(string tint, float density, float sat, float con, float skyDesat)
-            { FogTint = tint; FogDensity = density; Saturation = sat; Contrast = con; SkyDesaturation = skyDesat; }
+            public float VolumetricFog;     // ground volumetric fog 0-1: only fog / whiteout weather, never rain
+            public WeatherLook(string tint, float density, float sat, float con, float skyDesat, float volumetric = 0f)
+            { FogTint = tint; FogDensity = density; Saturation = sat; Contrast = con; SkyDesaturation = skyDesat; VolumetricFog = volumetric; }
         }
 
         private static readonly Dictionary<string, WeatherLook> WeatherLooks = new Dictionary<string, WeatherLook>
@@ -52,13 +53,13 @@ namespace KryticalNova.EditorTools
             { "WP_FewClouds",    new WeatherLook("A9C4E000", 0.0024f,   6f,  3f, 0f) },
             { "WP_PartlyCloudy", new WeatherLook("A9C4E000", 0.0026f,   4f,  2f, 0f) },
             { "WP_MostlyCloudy", new WeatherLook("A4B2CC26", 0.0030f,  -4f,  0f, 0.1f) },
-            { "WP_Overcast",     new WeatherLook("9EA8C859", 0.0045f, -10f, -2f, 0.3f) },
-            { "WP_Fog",          new WeatherLook("B4BEDC66", 0.0140f, -12f, -4f, 0.35f) },
+            { "WP_Overcast",     new WeatherLook("9EA8C859", 0.0045f, -10f, -2f, 0.3f, 0.15f) },
+            { "WP_Fog",          new WeatherLook("B4BEDC66", 0.0140f, -12f, -4f, 0.35f, 1f) },
             { "WP_LightRain",    new WeatherLook("98A4C466", 0.0055f, -10f,  0f, 0.35f) },
             { "WP_Rain",         new WeatherLook("7C88B080", 0.0075f, -15f,  4f, 0.4f) },
             { "WP_Thunderstorm", new WeatherLook("5C64908C", 0.0090f, -18f, 10f, 0.5f) },
             { "WP_Snow",         new WeatherLook("D2DAF073", 0.0065f, -12f, -4f, 0.4f) },
-            { "WP_Blizzard",     new WeatherLook("DCE2F499", 0.0200f, -20f, -8f, 0.55f) },
+            { "WP_Blizzard",     new WeatherLook("DCE2F499", 0.0200f, -20f, -8f, 0.55f, 0.5f) },
         };
 
         // Sky bodies read farther away (angular radius, radians).
@@ -98,10 +99,35 @@ namespace KryticalNova.EditorTools
                 w.saturation = look.Saturation;
                 w.contrast = look.Contrast;
                 w.skyDesaturation = look.SkyDesaturation;
+                w.volumetricFog = look.VolumetricFog;
                 EditorUtility.SetDirty(w);
             }
+            ValidateRainXorFog();
             AssetDatabase.SaveAssets();
             Debug.Log("[ColorBible] Fog ramp, weather looks (fog tint, density, saturation, contrast) and sky-body sizes applied.");
+        }
+
+        /// <summary>
+        /// Air either rains or fogs: warn if a raining profile asks for volumetric fog (it is ignored at runtime) or
+        /// if the weather graph jumps straight between fog and rain without a dry step in between.
+        /// </summary>
+        private static void ValidateRainXorFog()
+        {
+            foreach (string guid in AssetDatabase.FindAssets("t:WeatherProfile"))
+            {
+                var w = AssetDatabase.LoadAssetAtPath<WeatherProfile>(AssetDatabase.GUIDToAssetPath(guid));
+                if (w == null) continue;
+                if (w.RainIntensity > 0f && w.volumetricFog > 0f)
+                    Debug.LogWarning($"[ColorBible] {w.name} rains but has volumetricFog {w.volumetricFog}; rain always shows 0.", w);
+                foreach (var n in w.next)
+                {
+                    if (n.profile == null || n.weight <= 0f) continue;
+                    bool fogToRain = w.VolumetricFogAmount >= 0.5f && n.profile.RainIntensity > 0f;
+                    bool rainToFog = w.RainIntensity > 0f && n.profile.VolumetricFogAmount >= 0.5f;
+                    if (fogToRain || rainToFog)
+                        Debug.LogWarning($"[ColorBible] {w.name} -> {n.profile.name} jumps between fog and rain; route it through a dry weather.", w);
+                }
+            }
         }
 
         // ---------------------------------------------------------------- building palette

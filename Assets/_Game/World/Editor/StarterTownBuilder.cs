@@ -93,6 +93,7 @@ namespace KryticalNova.EditorTools
             BuildPortal(FreshRoot(PortalRootName).transform, profile);
             BuildSpawns(FreshRoot(SpawnRootName).transform);
             BuildPointsOfInterest(Group(town, "Points of Interest"), Group(outskirts, "Points of Interest"), profile);
+            FixFloatingRuins(outskirts.transform);
             PlaceExistingActors();
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
@@ -152,10 +153,18 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>Full-control placement: any rotation (tilted ruins) and non-uniform scale (wall spans).</summary>
+        // Intact street lights use our lit variant (Baked spot + volumetric cone, see StreetLightBuilder); the tilted
+        // wrecks along the island road ask for BrokenStreetlight and stay dark.
+        private const string Streetlight = "SM_Prop_Streetlight_01";
+        private const string BrokenStreetlight = "SM_Prop_Streetlight_01 (Broken)";
+
         private static GameObject Spawn(Transform parent, string prefabName, Vector3 position, Quaternion rotation, Vector3 scale,
             bool alignToBounds = true, bool collider = true, bool castShadows = true)
         {
-            if (!prefabIndex.TryGetValue(prefabName, out var path))
+            string path;
+            if (prefabName == Streetlight && AssetDatabase.LoadAssetAtPath<GameObject>(StreetLightBuilder.VariantPath) != null)
+                path = StreetLightBuilder.VariantPath;
+            else if (!prefabIndex.TryGetValue(prefabName == BrokenStreetlight ? Streetlight : prefabName, out path))
             {
                 Debug.LogWarning($"[StarterTown] Prefab not found: {prefabName}");
                 return null;

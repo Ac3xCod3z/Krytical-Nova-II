@@ -35,17 +35,26 @@ Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights d
 3. **Skybox**: `Skybox/KryticalNova/Stylized Sky`. Sky gradient, stars, sun/moon art, clouds, rainbow.
 4. Transparents (weather particles, VFX)
 5. **ComicStyle** (BeforeRenderingPostProcessing): cast-shadow restyle, cloud shadows, Sobel outlines. Skips sky pixels.
-4b. **Volumetric Fog & Mist 2** (`VF_GroundMist`, half-res raymarch + 1 blur pass): the terrain-fitted ground mist;
-   it samples the sun's shadow map, so buildings cut shadowed shafts through it at street level.
-   **Volumetric Lights** is registered for local lamps (add a `VolumetricLight` next to a point/spot light).
+4b. **Volumetric Fog & Mist 2** (half-res raymarch + 1 blur pass), driven by `VolumetricAtmosphereDriver`:
+   - `VF_GroundMist` — terrain-fitted ground fog that **only appears in fog weather** (`WeatherProfile.volumetricFog`:
+     Fog 1, Blizzard 0.5, Overcast 0.15, everything else 0; any Rain profile always reads 0 — air rains *or* fogs).
+     It samples the sun's shadow map, so buildings cut shafts through it.
+   - `VF_WaterMist` — low "Water Mist" volumes over each lake and along the rivers, rising at dusk (17:45–20:45)
+     on dry evenings.
+   - Volumes at ~0 are switched off entirely (no cost in clear or rainy weather). Both sample APV, so baked lamp
+     light tints the mist at night.
+   **Volumetric Lights**: every lit street lamp has a cone (`StreetLampController`), on dusk→dawn, faint in clear air
+   and stronger in fog / water mist (`VolumetricAtmosphereDriver.FogAmount`), distance-toggled at 45–65 m.
 6. **SunShafts** (BeforeRenderingPostProcessing + 1): sky / cloud god rays, added before post so Bloom catches them.
    Kept alongside the mist: the shafts own the sky, the mist owns the streets.
-7. URP post: **Bloom** → **Tonemapping (Neutral)** → **Split Toning / Lift Gamma Gain** → **Color Adjustments** (runtime) →
-   **Chromatic Aberration** (0 at rest; GameFeel pulses it on heavy hits) → **Vignette** → **Film Grain** → **SMAA** →
-   **Lens Flare** (data-driven, on the sun light).
-8. **Beautify 3** (after post): depth-aware sharpen (1.6), vibrance (+0.35), contrast 1.03, a faint warm anamorphic
-   streak on HDR highlights, dither 0.005. Its bloom, tonemapping, vignette, grain, outline, sun flare, eye adaptation
-   and depth of field stay **off**: URP / ComicStyle / the lens flare own those.
+7. **Beautify 3** (AfterRenderingTransparents — i.e. *before* URP post, on the HDR frame) owns **tonemapping
+   (PBR Neutral)**, **bloom** (threshold 1, intensity 0.4, spread 0.58, warm `#FFF1E0` tint) and the **ink vignette**
+   (outer ring 0.28, fade 0.45, `#14122B`), plus depth-aware sharpen (1.6), vibrance (+0.35), contrast 1.03, a faint
+   warm anamorphic streak and dither 0.005. Its grain, outline, sun flare, eye adaptation and depth of field stay off.
+8. URP post: Tonemapping **None**, Bloom/Vignette **off** (Beautify has them) → **Split Toning / Lift Gamma Gain** →
+   **Color Adjustments** (runtime) → **Chromatic Aberration** (0 at rest; GameFeel pulses it on heavy hits) →
+   **Film Grain** → **SMAA** → **Lens Flare** (data-driven, on the sun light). The GameFeel hurt pulse drives Beautify's
+   vignette (`BeautifyVignettePulse` on the Global Volume, runtime profile only).
 
 ## 3. Lighting rules
 
@@ -342,7 +351,9 @@ farther away than the original 0.065 / 0.1.
 | SSAO | < 0.5 ms | |
 | Lens flare | ~0.05 ms | 6 elements, depth occlusion |
 | Environment CPU | < 0.1 ms, 0 B GC | presenter, flare cloud sample |
-| Volumetric mist + Beautify | < 2 ms together | mist at half res, 0.6 m min step, 300 m max distance |
+| Volumetric mist + Beautify | < 2 ms together | mist at half res, 0.6 m min step, 300 m max distance; mist volumes off when unused |
+| Lamp cones | < 0.5 ms at night in fog | Faster raymarch preset, no shadows, off beyond 65 m, off by day |
+| Live minimap | ~8 renders/s, 512² | opaque-only Forward+ renderer, no shadows/post/features |
 
 Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Editor. Look for each feature's
 `ProfilingSampler` name ("Comic Style", "Sun Shafts").
@@ -354,13 +365,22 @@ Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Ed
   An A/B in Zone01 roughly doubled frame cost (+2–5 ms at street and vista views) and added no visible bounce, because
   its SDF tracing needs Read/Write enabled on every Synty mesh (memory cost, importer churn). APV + sky occlusion stays.
   Revisit only as an optional Ultra tier.
-- **Local fog volumes / lamp volumetrics**: Volumetric Lights is wired; add `VolumetricLight` to hand-placed lamps.
+- **Interior lights** can reuse the street-lamp pattern: Baked light (APV Night scenario) + optional VolumetricLight.
 - **Screen-space reflections**: URP has none built in, so it would be a custom Render Graph pass. Wet streets after rain
   would pair with the rainbow and moisture state.
 - **Auto-exposure / eye adaptation** for interiors.
 - **Shadowmask mixed lighting** for interiors once indoor zones exist: crisp baked shadows far away, realtime up close.
 
 ## Changelog
+
+- **2026-10-02 (pass 2)**:
+  - Beautify now owns tonemapping, bloom and vignette (URP's off); corrected the frame order (Beautify runs before URP post).
+  - Fog follows the weather: ground fog only in fog weather, never with rain; dusk water mist over lakes and rivers.
+  - Lit street-lamp prefab variant (Baked spot + VolumetricLight cone) everywhere an intact street light stands.
+  - **APV lighting scenarios "Day" / "Night"**: baked with the lamps off / on (Krytical Nova ▸ Lighting ▸ Bake Day +
+    Night Scenarios); EnvironmentPresenter blends Day→Night with the sun, so lamp light fades in at dusk.
+  - Gatehouses (POLYGON demo layout) with direction nameplates on all four gates; paved approaches.
+  - Live minimap (Minimap_Renderer, Forward+ so GPU Resident Drawer stays on; fog off for its render only).
 
 - **2026-10-02 (atmosphere, destruction, game feel)**:
   - Volumetric Fog & Mist 2 ground mist (terrain-fitted, shadowed sun scattering, weather-driven density/tint).

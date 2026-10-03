@@ -5,14 +5,13 @@ using KryticalNova.Core;
 using KryticalNova.Networking;
 using KryticalNova.UI;
 using MoreMountains.Feedbacks;
-using Unity.Netcode.Components;
 using UnityEngine;
 
 namespace KryticalNova.GameFeel
 {
     /// <summary>
     /// Client-side game feel. Gameplay reports moments through <see cref="IGameFeelSink"/>; this turns them into FEEL
-    /// (MMF_Player) feedbacks — camera impulses, FOV kicks, URP screen pulses, squash/flash on whatever got hit, sound
+    /// (MMF_Player) feedbacks — camera impulses, FOV kicks, URP screen pulses, the struck target's HitReactor wobble/flash, sound
     /// slots — plus URP-converted POLYGON Particle FX spawned through <see cref="NetworkCombatVFXPool"/>.
     ///
     /// Camera-level feedback only plays for the local player's own actions (or when the local player is hit); world
@@ -33,8 +32,6 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player runFeel;
         [SerializeField] private MMF_Player jumpFeel;
         [SerializeField] private MMF_Player landFeel;
-        [Tooltip("Squash + white flash, cloned under each struck target (its scale / flicker targets are set per target).")]
-        [SerializeField] private MMF_Player targetReactionTemplate;
 
         [Header("World VFX (URP copies of POLYGON Particle FX)")]
         [SerializeField] private GameObject hitSparkVfx;
@@ -51,7 +48,6 @@ namespace KryticalNova.GameFeel
         [Range(0f, 0.2f)] [SerializeField] private float heavyHitStopSeconds = 0.11f;
         [Range(0f, 1f)] [SerializeField] private float hitStopSpeed = 0.05f;
 
-        private readonly Dictionary<Transform, MMF_Player> reactions = new Dictionary<Transform, MMF_Player>();
         private readonly Dictionary<AnimancerComponent, int> frozen = new Dictionary<AnimancerComponent, int>();
         private MMF_Player[] cameraPlayers;
 
@@ -61,6 +57,13 @@ namespace KryticalNova.GameFeel
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel };
             HudPreferences.Changed += ApplyScreenShakePreference;
             ApplyScreenShakePreference();
+        }
+
+        private void Start()
+        {
+            // Pre-attach reactors so hits this client never got an RPC for (GM hits, remote attackers) still show.
+            foreach (var entity in FindObjectsByType<Progression.CombatEntity>(FindObjectsSortMode.None))
+                HitReactor.For(entity.transform);
         }
 
         private void OnDisable()
@@ -86,7 +89,7 @@ namespace KryticalNova.GameFeel
             bool heavy = hit.IsCritical || hit.ComboStep >= 3;
             Spawn(heavy && heavyHitVfx != null ? heavyHitVfx : hitSparkVfx, hit.Point, Quaternion.LookRotation(hit.TowardAttacker, Vector3.up));
 
-            if (hit.Target != null) React(hit.Target, heavy);
+            if (hit.Target != null) HitReactor.For(hit.Target)?.React(hit.TowardAttacker, heavy);
 
             if (hit.AttackerIsLocalPlayer)
             {
@@ -115,7 +118,6 @@ namespace KryticalNova.GameFeel
             var vfx = kind == WorldTargetKind.Hostile ? selectHostileVfx : selectFriendlyVfx;
             Spawn(vfx, FootPoint(target), Quaternion.identity);
             Play(selectFeel, target.position, kind == WorldTargetKind.Hostile ? 1f : 0.6f);
-            React(target, false, flash: kind == WorldTargetKind.Hostile);
         }
 
         public void RunStarted(Transform actor, bool isLocalPlayer)
@@ -150,43 +152,6 @@ namespace KryticalNova.GameFeel
         {
             var pool = NetworkCombatVFXPool.Instance;
             if (pool != null && prefab != null) pool.Spawn(prefab, position, rotation);
-        }
-
-        /// <summary>Squash (and optionally white-flash) the struck target with a per-target clone of the reaction player.</summary>
-        private void React(Transform target, bool heavy, bool flash = true)
-        {
-            if (targetReactionTemplate == null) return;
-            if (!reactions.TryGetValue(target, out var player) || player == null)
-            {
-                var squashRoot = VisualRoot(target);
-                var renderer = squashRoot.GetComponentInChildren<Renderer>();
-                if (renderer == null) return;
-                player = Instantiate(targetReactionTemplate, target, false);
-                player.name = "GameFeel Reaction";
-                foreach (var f in player.FeedbacksList)
-                {
-                    if (f is MMF_Scale scale) scale.AnimateScaleTarget = squashRoot;
-                    else if (f is MMF_Flicker flicker) flicker.BoundRenderer = renderer;
-                }
-                player.Initialization();
-                reactions[target] = player;
-            }
-            foreach (var f in player.FeedbacksList)
-                if (f is MMF_Flicker) f.Active = flash;
-            player.PlayFeedbacks(target.position, heavy ? 1f : 0.6f);
-        }
-
-        /// <summary>
-        /// The transform to squash: the root unless a NetworkTransform syncs it (then scale would be fought over by
-        /// replication), in which case the first child holding the visuals.
-        /// </summary>
-        private static Transform VisualRoot(Transform target)
-        {
-            if (target.GetComponent<NetworkTransform>() == null) return target;
-            foreach (Transform child in target)
-                if (child.GetComponentInChildren<SkinnedMeshRenderer>() != null || child.GetComponentInChildren<MeshRenderer>() != null)
-                    return child;
-            return target;
         }
 
         private void HitStop(Transform actor, float seconds)
@@ -237,7 +202,7 @@ namespace KryticalNova.GameFeel
         private static bool IsScreenFeedback(MMF_Feedback f)
         {
             string type = f.GetType().Name;
-            return type.Contains("Cinemachine") || type.Contains("FieldOfView") || type.EndsWith("_URP") || type.Contains("CameraShake");
+            return type.Contains("Cinemachine") || type.Contains("FieldOfView") || type.EndsWith("_URP") || type.Contains("CameraShake") || type.Contains("Beautify");
         }
     }
 }

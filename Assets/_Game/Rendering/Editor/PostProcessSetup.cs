@@ -23,16 +23,13 @@ namespace KryticalNova.EditorTools
             if (profile == null) { Debug.LogError($"[PostProcess] Missing {ProfilePath}"); return; }
             Undo.RecordObject(profile, "Apply post look");
 
+            // Tonemapping, bloom and vignette belong to Beautify (ApplyBeautify). URP's copies are switched off so
+            // nothing runs twice; Beautify sees the HDR frame first, so its tonemap/bloom get the right input.
             var tone = Get<Tonemapping>(profile);
-            tone.mode.Override(TonemappingMode.Neutral);
-
-            // Only the HDR budget (sun glare, shafts, lightning, emissive VFX) blooms; a warm tint keeps glows sunny.
+            tone.mode.Override(TonemappingMode.None);
             var bloom = Get<Bloom>(profile);
-            bloom.threshold.Override(1f);
-            bloom.intensity.Override(0.36f);
-            bloom.scatter.Override(0.58f);
-            bloom.tint.Override(ColorBible.Hex("FFF1E0"));
-            bloom.highQualityFiltering.Override(true);
+            bloom.intensity.Override(0f);
+            bloom.active = false;
 
             // Split toning: shadows lean to the comic indigo, highlights to warm paper. Kept subtle (near-grey inputs).
             var split = Get<SplitToning>(profile);
@@ -47,10 +44,8 @@ namespace KryticalNova.EditorTools
             lgg.gain.Override(new Vector4(1.02f, 1.005f, 0.98f, 0.02f));
 
             var vignette = Get<Vignette>(profile);
-            vignette.color.Override(ColorBible.Ink);
-            vignette.intensity.Override(0.28f);
-            vignette.smoothness.Override(0.45f);
-            vignette.rounded.Override(false);
+            vignette.intensity.Override(0f);
+            vignette.active = false;
 
             // Faint print grain: reads as a printed page under the halftone shadows, not as noise.
             var grain = Get<FilmGrain>(profile);
@@ -81,16 +76,18 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>
-        /// Beautify 3 runs after URP post (Rendering-Bible.md, "Post stack order"): it only adds what URP lacks —
-        /// a depth-aware sharpen that crisps the ink lines and halftone dots, a vibrance lift, a whisper of anamorphic
-        /// streak on HDR highlights and dithering against fog banding. URP keeps tonemapping, bloom, vignette and
-        /// grain; Beautify's copies stay off so nothing runs twice. Depth of field is banned by the Bible.
-        /// Chromatic aberration is left at 0 here; GameFeel punches it through a runtime volume on big hits.
+        /// Beautify 3 runs BEFORE URP post here (its pass is AfterRenderingTransparents, on the HDR frame; see
+        /// Rendering-Bible.md, "Frame order"). It owns tonemapping (PBR Neutral, the closest match to the old URP
+        /// Neutral look), the warm restrained bloom and the ink vignette, plus a depth-aware sharpen, a vibrance lift,
+        /// a faint anamorphic streak and dithering. URP keeps Split Toning, Lift Gamma Gain, Film Grain and Chromatic
+        /// Aberration (GameFeel punches CA on heavy hits; the hurt pulse drives Beautify's vignette at runtime).
+        /// Depth of field is banned by the Bible.
         /// </summary>
         private static void ApplyBeautify(VolumeProfile profile)
         {
             var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(PcRendererPath);
-            if (renderer != null) RendererFeatureUtil.Ensure<Beautify.Universal.BeautifyRendererFeature>(renderer, "Beautify", f => { });
+            if (renderer != null) RendererFeatureUtil.Ensure<Beautify.Universal.BeautifyRendererFeature>(renderer, "Beautify",
+                f => f.stripBeautifyTonemappingPBRNeutral = false); // stripped by default
 
             var b = Get<Beautify.Universal.Beautify>(profile);
             b.disabled.Override(false);
@@ -102,15 +99,28 @@ namespace KryticalNova.EditorTools
             b.saturate.Override(0.35f);           // vibrance: lifts muted tones, leaves saturated ones
             b.contrast.Override(1.03f);
             b.brightness.Override(1f);
-            b.tonemap.Override(Beautify.Universal.Beautify.TonemapOperator.Linear); // URP Neutral owns tonemapping
-            b.bloomIntensity.Override(0f);
+            b.tonemap.Override(Beautify.Universal.Beautify.TonemapOperator.PBRNeutral);
+            b.tonemapExposurePre.Override(1f);
+            b.tonemapBrightnessPost.Override(1f);
+            // Only the HDR budget (sun glare, shafts, lightning, emissive signs/VFX) blooms; a warm tint keeps it sunny.
+            b.bloomIntensity.Override(0.4f);
+            b.bloomThreshold.Override(1f);
+            b.bloomSpread.Override(0.58f);
+            b.bloomAntiflicker.Override(true);
+            var warm = ColorBible.Hex("FFF1E0");
+            b.bloomTint.Override(new Color(warm.r, warm.g, warm.b, 0.35f));
             b.anamorphicFlaresIntensity.Override(0.12f);
             b.anamorphicFlaresThreshold.Override(0.9f);
             b.anamorphicFlaresSpread.Override(1.2f);
             b.anamorphicFlaresTint.Override(new Color(1f, 0.82f, 0.6f, 0f));
             b.sunFlaresIntensity.Override(0f);    // EnvironmentPresenter's LensFlare owns the sun
             b.depthOfField.Override(false);
-            b.vignettingOuterRing.Override(0f);
+            // Comic-panel framing in ink, not black.
+            b.vignettingOuterRing.Override(0.28f);
+            b.vignettingInnerRing.Override(0f);
+            b.vignettingFade.Override(0.45f);
+            b.vignettingCircularShape.Override(false);
+            b.vignettingColor.Override(ColorBible.Ink);
             b.filmGrainEnabled.Override(false);
             b.chromaticAberrationIntensity.Override(0f);
             b.outline.Override(false);            // ComicStyleFeature owns the ink outlines

@@ -10,10 +10,11 @@ using UnityEngine.UIElements;
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// HUD minimap. Performance by design: no camera and no RenderTexture. The zone is baked once into a texture
-    /// (Krytical Nova/World/Bake Minimap) and each frame only three style transforms change: the map layer's
-    /// translate/rotate (markers are its children, so they ride along for free) and the arrow's rotate.
-    /// Marker positions refresh at 5 Hz from pooled elements, so nothing allocates per frame.
+    /// HUD minimap. The zone is baked once into a texture (Krytical Nova/World/Bake Minimap) that fills the map layer;
+    /// on the PC tier a live top-down capture (<see cref="MinimapLiveCamera"/>, ~8 Hz) is laid over it around the
+    /// player, so ruins, traffic and other changes show as they happen. Each frame only style transforms change: the
+    /// map layer's translate/rotate (live patch and markers are its children, so they ride along) and the arrow.
+    /// Markers move every frame from pooled elements; nothing allocates per frame.
     /// Orientation: rotates with the camera, or fixed north-up (Settings → HudPreferences.MinimapRotates).
     /// </summary>
     [DisallowMultipleComponent]
@@ -21,14 +22,18 @@ namespace KryticalNova.UI
     public sealed class MinimapController : MonoBehaviour
     {
         private static readonly float[] ZoomLevels = { 1.4f, 2.4f, 4f }; // UI pixels per metre
-        private const float MarkerRefreshInterval = 0.2f;
+        // The mask is 190 px; at the widest zoom (1.4 px/m, rotated) it shows ~96 m from the player.
+        private const float LiveRadius = 100f;
+        private const float LiveCapturesPerSecond = 8f;
+        private const float InitRetryInterval = 1f;
         private const float EdgeInset = 9f; // portals far away stick to the rim instead of vanishing
 
-        private VisualElement root, minimap, mask, map, north;
+        private VisualElement root, minimap, mask, map, north, liveLayer;
+        private MinimapLiveCamera live;
+        private float nextInitAttempt;
         private MinimapArrow arrow;
         private ZoneMinimapData data;
         private int zoomIndex = 1;
-        private float nextMarkerRefresh;
         private bool initialized;
 
         private readonly List<VisualElement> npcMarkers = new List<VisualElement>();
@@ -43,6 +48,13 @@ namespace KryticalNova.UI
         private void OnEnable()
         {
             if (!Application.isPlaying) return;
+            TryInitialize();
+        }
+
+        /// <summary>The HUD document can build its tree after this component enables; retry until it exists.</summary>
+        private void TryInitialize()
+        {
+            nextInitAttempt = Time.unscaledTime + InitRetryInterval;
             root = GetComponent<UIDocument>().rootVisualElement;
             minimap = root?.Q("minimap");
             if (minimap == null) return;
@@ -56,6 +68,14 @@ namespace KryticalNova.UI
             minimap.Q<Button>("minimap-zoom-out").clicked += ZoomOut;
             minimap.RegisterCallback<WheelEvent>(OnWheel);
             ZoneMinimapAnchor.CurrentChanged += OnZoneChanged;
+
+            liveLayer = new VisualElement { name = "minimap-live", pickingMode = PickingMode.Ignore };
+            liveLayer.style.position = Position.Absolute;
+            liveLayer.style.display = DisplayStyle.None;
+            map.Insert(0, liveLayer); // under the markers
+            live = MinimapLiveCamera.TryCreate(LiveRadius, LiveCapturesPerSecond, transform);
+            if (live != null) liveLayer.style.backgroundImage = Background.FromRenderTexture(live.Texture);
+
             initialized = true;
             OnZoneChanged();
         }
@@ -69,6 +89,9 @@ namespace KryticalNova.UI
             minimap.Q<Button>("minimap-zoom-out").clicked -= ZoomOut;
             minimap.UnregisterCallback<WheelEvent>(OnWheel);
             arrow?.RemoveFromHierarchy();
+            liveLayer?.RemoveFromHierarchy();
+            live?.Dispose();
+            live = null;
         }
 
         private void OnZoneChanged()
@@ -95,14 +118,18 @@ namespace KryticalNova.UI
             if (data == null) return;
             map.style.width = MapPixels;
             map.style.height = MapPixels;
-            nextMarkerRefresh = 0f; // marker map-pixel positions depend on zoom
         }
 
         // ------------------------------------------------------------------ per frame
 
         private void LateUpdate()
         {
-            if (!initialized || data == null || minimap.resolvedStyle.display == DisplayStyle.None) return;
+            if (!initialized)
+            {
+                if (Application.isPlaying && Time.unscaledTime >= nextInitAttempt) TryInitialize();
+                return;
+            }
+            if (data == null || minimap.resolvedStyle.display == DisplayStyle.None) return;
             Transform player = LocalPlayer();
             if (player == null) return;
 
@@ -120,16 +147,12 @@ namespace KryticalNova.UI
             map.style.translate = new Translate(half - playerPx.x, half - playerPx.y, 0f);
             map.style.rotate = new Rotate(currentMapRotation);
 
-            float playerYaw = player.eulerAngles.y;
+            float playerYaw = FacingYaw(player);
             arrow.style.rotate = new Rotate(rotates ? playerYaw - cameraYaw : playerYaw);
 
             PlaceNorth(currentMapRotation);
-
-            if (Time.unscaledTime >= nextMarkerRefresh)
-            {
-                nextMarkerRefresh = Time.unscaledTime + MarkerRefreshInterval;
-                RefreshMarkers(player, playerPx, half);
-            }
+            UpdateLive(player);
+            RefreshMarkers(player, playerPx, half);
             // Keep icons upright while the map spins under them.
             foreach (var m in portalMarkers) if (m.style.display != DisplayStyle.None) m.style.rotate = new Rotate(-currentMapRotation);
         }
@@ -153,7 +176,32 @@ namespace KryticalNova.UI
         private static Transform LocalPlayer()
         {
             var inv = PlayerInventory.Local;
-            return inv != null && inv.isActiveAndEnabled ? inv.transform : null;
+            if (inv != null && inv.isActiveAndEnabled) return inv.transform;
+            // Before the networked player spawns (or offline), fall back to the locally controlled avatar.
+            foreach (var p in PointAndClickPlayer.Active)
+                if (p != null && p.isActiveAndEnabled && (!p.IsSpawned || p.IsOwner)) return p.transform;
+            return null;
+        }
+
+        private static float FacingYaw(Transform player)
+        {
+            var pc = player.GetComponent<PointAndClickPlayer>();
+            return pc != null ? pc.FacingYaw : player.eulerAngles.y;
+        }
+
+        /// <summary>Keeps the live patch on the world spot it was captured at (it rides the map layer).</summary>
+        private void UpdateLive(Transform player)
+        {
+            if (live == null) return;
+            live.Tick(player.position);
+            if (!live.HasFrame) return;
+            float sizePx = live.Radius * 2f * PixelsPerMetre;
+            Vector2 c = MapPixel(live.Center);
+            liveLayer.style.display = DisplayStyle.Flex;
+            liveLayer.style.left = c.x - sizePx * 0.5f;
+            liveLayer.style.top = c.y - sizePx * 0.5f;
+            liveLayer.style.width = sizePx;
+            liveLayer.style.height = sizePx;
         }
 
         private void PlaceNorth(float mapRotation)
@@ -166,7 +214,7 @@ namespace KryticalNova.UI
             north.style.top = cy - 10f;
         }
 
-        // ------------------------------------------------------------------ markers (5 Hz, pooled)
+        // ------------------------------------------------------------------ markers (every frame, pooled)
 
         private void RefreshMarkers(Transform player, Vector2 playerPx, float maskHalf)
         {

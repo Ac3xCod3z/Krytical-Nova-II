@@ -41,6 +41,101 @@ namespace KryticalNova.EditorTools
                       "Run Krytical Nova > Lighting > Bake Lighting.");
         }
 
+        public const string DayScenario = "Day";
+        public const string NightScenario = "Night";
+        private static readonly Queue<string> pendingScenarios = new Queue<string>();
+
+        /// <summary>
+        /// Bakes two APV lighting scenarios for the open scene: "Day" with the street lamps off and "Night" with them
+        /// on. At runtime EnvironmentPresenter blends Day→Night with the sun, so baked lamp light (on streets and in
+        /// the volumetric mist, which samples APV) fades in at dusk and is gone at noon. Lamps are any Light under a
+        /// StreetLampController. Each bake runs async; the editor shows GI.Tick while it finalises.
+        /// </summary>
+        [MenuItem("Krytical Nova/Lighting/Bake Day + Night Scenarios (APV)")]
+        public static void BakeDayNightScenarios()
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            EnableScenariosOnPc();
+            var set = FindBakingSet(scene);
+            if (set == null) { Debug.LogError("[LightingSetup] No APV baking set for this scene. Run Setup Baked GI (APV) first."); return; }
+            set.TryAddScenario(DayScenario);
+            set.TryAddScenario(NightScenario);
+            ProbeReferenceVolume.instance.lightingScenario = DayScenario;
+            if (set.lightingScenarios.Contains("Default")) set.RemoveScenario("Default");
+            EditorUtility.SetDirty(set);
+            AssetDatabase.SaveAssets();
+
+            pendingScenarios.Clear();
+            pendingScenarios.Enqueue(DayScenario);
+            pendingScenarios.Enqueue(NightScenario);
+            BakeNextScenario();
+        }
+
+        private static void BakeNextScenario()
+        {
+            if (pendingScenarios.Count == 0)
+            {
+                SetLamps(true); // VolumetricLight cones need their Light enabled; baked lights cost nothing at runtime
+                ProbeReferenceVolume.instance.lightingScenario = DayScenario;
+                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                Debug.Log("[LightingSetup] Day + Night APV scenarios baked.");
+                return;
+            }
+            string scenario = pendingScenarios.Dequeue();
+            int lamps = SetLamps(scenario == NightScenario);
+            ProbeReferenceVolume.instance.lightingScenario = scenario;
+            Debug.Log($"[LightingSetup] Baking APV scenario '{scenario}' ({lamps} street lamp light(s) {(scenario == NightScenario ? "on" : "off")}).");
+            Lightmapping.bakeCompleted -= OnScenarioBaked;
+            Lightmapping.bakeCompleted += OnScenarioBaked;
+            if (!Lightmapping.BakeAsync())
+            {
+                Lightmapping.bakeCompleted -= OnScenarioBaked;
+                pendingScenarios.Clear();
+                SetLamps(true);
+                Debug.LogError("[LightingSetup] Bake could not start (already baking?).");
+            }
+        }
+
+        private static void OnScenarioBaked()
+        {
+            Lightmapping.bakeCompleted -= OnScenarioBaked;
+            EditorApplication.delayCall += BakeNextScenario;
+        }
+
+        private static int SetLamps(bool on)
+        {
+            int n = 0;
+            foreach (var lamp in Object.FindObjectsByType<KryticalNova.World.StreetLampController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                foreach (var light in lamp.GetComponentsInChildren<Light>(true))
+                {
+                    light.enabled = on;
+                    n++;
+                }
+            return n;
+        }
+
+        private static void EnableScenariosOnPc()
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(PcPipelinePath);
+            if (asset == null) return;
+            var so = new SerializedObject(asset);
+            so.FindProperty("m_SupportProbeVolumeScenarios").boolValue = true;
+            so.FindProperty("m_SupportProbeVolumeScenarioBlending").boolValue = true;
+            so.ApplyModifiedProperties();
+            EditorUtility.SetDirty(asset);
+        }
+
+        private static ProbeVolumeBakingSet FindBakingSet(UnityEngine.SceneManagement.Scene scene)
+        {
+            string guid = AssetDatabase.AssetPathToGUID(scene.path);
+            foreach (var setGuid in AssetDatabase.FindAssets("t:ProbeVolumeBakingSet"))
+            {
+                var candidate = AssetDatabase.LoadAssetAtPath<ProbeVolumeBakingSet>(AssetDatabase.GUIDToAssetPath(setGuid));
+                if (candidate != null && candidate.sceneGUIDs.Contains(guid)) return candidate;
+            }
+            return null;
+        }
+
         [MenuItem("Krytical Nova/Lighting/Bake Lighting")]
         public static void Bake()
         {

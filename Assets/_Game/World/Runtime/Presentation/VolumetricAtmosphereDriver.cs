@@ -4,40 +4,68 @@ using VolumetricFogAndMist2;
 namespace KryticalNova.World
 {
     /// <summary>
-    /// Feeds the weather + day cycle into the Volumetric Fog &amp; Mist 2 ground-mist volume: density follows the
-    /// weather's fog density (relative to a clear day) and the mist albedo leans toward the presented fog colour.
-    /// Sun/moon colour and direction come from the VolumetricFogManager's light sync, so this only owns density/tint.
-    /// Play mode works on an instanced profile (<see cref="VolumetricFog.settings"/>), so the profile asset is never
-    /// written at runtime. Disabled on headless servers and on low quality tiers (the PC renderer owns the feature).
+    /// Ties Volumetric Fog &amp; Mist 2 to the weather, like real air: it either rains or it fogs.
+    ///  - Ground mist (terrain-fitted, whole zone) shows only as much as the weather's <c>volumetricFog</c> asks for —
+    ///    full in WP_Fog, a thin haze in Overcast, a whiteout share in Blizzard, and never while it rains.
+    ///  - Water mist (low local volumes over the lakes and rivers) rises at dusk on dry evenings and lifts after.
+    /// Volumes at ~0 are switched off entirely, so clear or rainy weather costs nothing. Sun/moon colour comes from
+    /// the VolumetricFogManager's light sync; this owns density, albedo and on/off. Play mode works on instanced
+    /// profiles (<see cref="VolumetricFog.settings"/>), never the assets. Headless servers and low tiers skip it.
+    /// <see cref="FogAmount"/> tells other presentation (street-lamp light cones) how foggy the air is.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(60)] // after EnvironmentPresenter (50) has published this frame's atmosphere
     public sealed class VolumetricAtmosphereDriver : MonoBehaviour
     {
         [SerializeField] private VolumetricFog fog;
-        [Tooltip("Weather fog density that maps to the profile's authored mist density (WP_Clear is ~0.0022).")]
-        [SerializeField] private float clearFogDensity = 0.0024f;
-        [Tooltip("Clamp on the weather multiplier: thin on a clear noon, thick in WP_Fog / blizzards.")]
-        [SerializeField] private Vector2 densityMultiplierRange = new Vector2(0.6f, 3.5f);
+        [SerializeField] private VolumetricFog[] waterMists = new VolumetricFog[0];
+        [Tooltip("Dusk window in hours (start, end) when water mist forms; it fades in/out over Dusk Fade Hours.")]
+        [SerializeField] private Vector2 duskHours = new Vector2(17.75f, 20.75f);
+        [Min(0.05f)] [SerializeField] private float duskFadeHours = 0.75f;
         [Range(0f, 1f)] [SerializeField] private float albedoFromFogColor = 0.65f;
-        [Tooltip("Seconds to ease density changes (weather blends are already smooth; this hides quality-tier pops).")]
-        [Min(0.01f)] [SerializeField] private float smoothingSeconds = 1.5f;
+        [Tooltip("Seconds to ease weight changes (weather blends are already smooth; this hides quality-tier pops).")]
+        [Min(0.01f)] [SerializeField] private float smoothingSeconds = 2f;
         [SerializeField] private string[] disabledOnQualityLevels = { "Mobile" };
 
         private static Color publishedFogColor = Color.gray;
-        private static float publishedFogDensity = -1f;
+        private static float publishedVolumetric = -1f;
+        private static float publishedRain;
+        private static float publishedHours = 12f;
 
-        private VolumetricFogProfile runtimeProfile;
-        private float authoredDensity;
-        private Color authoredAlbedo;
-        private float density;
+        /// <summary>How foggy the air around the player is, 0-1 (max of ground fog and water mist). Presentation only.</summary>
+        public static float FogAmount { get; private set; }
+
+        private Layer ground;
+        private Layer[] water;
         private int lastQualityLevel = -1;
+        private bool tierDisabled;
+
+        private struct Layer
+        {
+            public VolumetricFog Fog;
+            public VolumetricFogProfile Profile;
+            public float AuthoredDensity;
+            public Color AuthoredAlbedo;
+            public float Weight;
+
+            public static Layer Create(VolumetricFog fog)
+            {
+                var l = new Layer { Fog = fog };
+                if (fog == null || fog.profile == null) return l;
+                l.AuthoredDensity = fog.profile.density;
+                l.AuthoredAlbedo = fog.profile.albedo;
+                l.Profile = fog.settings; // instanced copy from here on
+                return l;
+            }
+        }
 
         /// <summary>Called by <see cref="EnvironmentPresenter"/> every presented frame.</summary>
-        public static void Publish(Color fogColor, float fogDensity)
+        public static void Publish(Color fogColor, float volumetricFog, float rain, float timeOfDay01)
         {
             publishedFogColor = fogColor;
-            publishedFogDensity = fogDensity;
+            publishedVolumetric = volumetricFog;
+            publishedRain = rain;
+            publishedHours = timeOfDay01 * 24f;
         }
 
         private void OnEnable()
@@ -47,13 +75,15 @@ namespace KryticalNova.World
             return;
 #else
             if (Application.isBatchMode || fog == null || fog.profile == null) { enabled = false; return; }
-            authoredDensity = fog.profile.density;
-            authoredAlbedo = fog.profile.albedo;
-            density = authoredDensity;
-            runtimeProfile = fog.settings; // instanced copy from here on
+            ground = Layer.Create(fog);
+            water = new Layer[waterMists.Length];
+            for (int i = 0; i < waterMists.Length; i++) water[i] = Layer.Create(waterMists[i]);
             lastQualityLevel = -1;
+            FogAmount = 0f;
 #endif
         }
+
+        private void OnDisable() => FogAmount = 0f;
 
         private void LateUpdate()
         {
@@ -61,24 +91,49 @@ namespace KryticalNova.World
             if (quality != lastQualityLevel)
             {
                 lastQualityLevel = quality;
-                fog.gameObject.SetActive(!IsDisabledTier(quality));
+                tierDisabled = IsDisabledTier(quality);
             }
-            if (!fog.isActiveAndEnabled || publishedFogDensity < 0f) return;
+            if (publishedVolumetric < 0f) return;
 
-            float mult = Mathf.Clamp(publishedFogDensity / Mathf.Max(1e-5f, clearFogDensity),
-                densityMultiplierRange.x, densityMultiplierRange.y);
             float k = 1f - Mathf.Exp(-Time.deltaTime / smoothingSeconds);
-            density = Mathf.Lerp(density, authoredDensity * mult, k);
+            float groundTarget = tierDisabled ? 0f : Mathf.Clamp01(publishedVolumetric);
+            float waterTarget = tierDisabled ? 0f
+                : DuskWeight(publishedHours) * (1f - Mathf.Clamp01(publishedRain * 4f)) * (1f - groundTarget);
 
-            Color albedo = Color.Lerp(authoredAlbedo, publishedFogColor, albedoFromFogColor);
-            albedo.a = authoredAlbedo.a;
+            Apply(ref ground, groundTarget, k);
+            for (int i = 0; i < water.Length; i++) Apply(ref water[i], waterTarget, k);
 
-            if (Mathf.Abs(runtimeProfile.density - density) > 0.002f || !Approximately(runtimeProfile.albedo, albedo))
+            float waterWeight = water.Length > 0 ? water[0].Weight : 0f;
+            FogAmount = Mathf.Max(ground.Weight, waterWeight * 0.7f);
+        }
+
+        private void Apply(ref Layer layer, float target, float k)
+        {
+            if (layer.Fog == null || layer.Profile == null) return;
+            layer.Weight = Mathf.Lerp(layer.Weight, target, k);
+            if (target <= 0f && layer.Weight < 0.005f) layer.Weight = 0f;
+
+            bool on = layer.Weight > 0f;
+            if (layer.Fog.gameObject.activeSelf != on) layer.Fog.gameObject.SetActive(on);
+            if (!on) return;
+
+            float density = layer.AuthoredDensity * layer.Weight;
+            Color albedo = Color.Lerp(layer.AuthoredAlbedo, publishedFogColor, albedoFromFogColor);
+            albedo.a = layer.AuthoredAlbedo.a;
+            if (Mathf.Abs(layer.Profile.density - density) > 0.0005f || !Approximately(layer.Profile.albedo, albedo))
             {
-                runtimeProfile.density = density;
-                runtimeProfile.albedo = albedo;
-                fog.UpdateMaterialProperties();
+                layer.Profile.density = density;
+                layer.Profile.albedo = albedo;
+                layer.Fog.UpdateMaterialProperties();
             }
+        }
+
+        /// <summary>0 outside the dusk window, ramping to 1 over <see cref="duskFadeHours"/> at each end.</summary>
+        private float DuskWeight(float hours)
+        {
+            float fadeIn = Mathf.InverseLerp(duskHours.x, duskHours.x + duskFadeHours, hours);
+            float fadeOut = 1f - Mathf.InverseLerp(duskHours.y - duskFadeHours, duskHours.y, hours);
+            return hours < duskHours.x || hours > duskHours.y ? 0f : Mathf.Clamp01(Mathf.Min(fadeIn, fadeOut));
         }
 
         private bool IsDisabledTier(int level)

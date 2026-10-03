@@ -46,6 +46,15 @@ MonoBehaviour:
         - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1038395622-0
         - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-902918251-0
         - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1134661677-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1528786555-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1394692879-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-2020720776-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-677470693-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-262159739-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-12561669-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1150770998-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1495131207-0
+        - globalObjectIdString: GlobalObjectId_V1-2-ece2c8e05f782e54181534a6388e7af1-1225132140-0
         values:
         - colorIndex: 1
           iconNameOrGuid: d_Settings
@@ -120,6 +129,42 @@ MonoBehaviour:
           isIconRecursive: 0
           isColorRecursive: 0
         - colorIndex: 4
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: d_AvatarPivot
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 6
+          iconNameOrGuid: d_AvatarSelector
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: d_SceneViewFx
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 3
+          iconNameOrGuid: d_PreMatCube
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 3
+          iconNameOrGuid: d_PreMatCylinder
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 1
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 2
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
+          iconNameOrGuid: 
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 9
           iconNameOrGuid: 
           isIconRecursive: 0
           isColorRecursive: 0

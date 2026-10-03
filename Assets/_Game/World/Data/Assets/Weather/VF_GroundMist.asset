@@ -31,7 +31,7 @@ MonoBehaviour:
   detailScale: 0.35
   detailStrength: 0.5
   detailOffset: -0.5
-  density: 0.04
+  density: 0.12
   shape: 0
   scaleNoiseWithHeight: 0
   border: 0.05
@@ -47,7 +47,7 @@ MonoBehaviour:
   terrainLayerMask:
     serializedVersion: 2
     m_Bits: 8
-  terrainFogHeight: 8
+  terrainFogHeight: 14
   terrainFogMinAltitude: -5
   terrainFogMaxAltitude: 90
   albedo: {r: 0.86, g: 0.87, b: 0.9, a: 0.6}

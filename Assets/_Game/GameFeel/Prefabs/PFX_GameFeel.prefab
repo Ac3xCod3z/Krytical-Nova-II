@@ -136,8 +136,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249557701329274
-  - rid: 6309249557701329275
+  - rid: 6309249576056389756
+  - rid: 6309249576056389757
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -153,11 +153,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249557701329274
+    - rid: 6309249576056389756
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1258385030
+        UniqueID: -780274531
         Label: Footstep Burst (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -279,11 +279,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249557701329275
+    - rid: 6309249576056389757
       type: {class: MMF_CameraFieldOfView, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -248732170
+        UniqueID: 1853969704
         Label: FOV Kick
         OriginalLabel: Field of View
         ChannelMode: 0
@@ -529,9 +529,9 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249557701329269
-  - rid: 6309249557701329270
-  - rid: 6309249557701329271
+  - rid: 6309249576056389751
+  - rid: 6309249576056389752
+  - rid: 6309249576056389753
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -547,11 +547,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249557701329269
+    - rid: 6309249576056389751
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1095700858
+        UniqueID: 101404164
         Label: Hurt (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -673,11 +673,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249557701329270
+    - rid: 6309249576056389752
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 2072328847
+        UniqueID: 508457777
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
@@ -791,13 +791,13 @@ MonoBehaviour:
         Velocity: {x: 0.3, y: 0.22, z: 0}
         ClearImpulseOnStop: 0
         DrawGizmos: 0
-    - rid: 6309249557701329271
-      type: {class: MMF_Vignette_URP, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
+    - rid: 6309249576056389753
+      type: {class: MMF_BeautifyVignette, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -2044744525
-        Label: Hurt Vignette
-        OriginalLabel: Vignette URP
+        UniqueID: -1858664848
+        Label: Hurt Vignette (Beautify)
+        OriginalLabel: Beautify Vignette Pulse
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -863,13 +863,13 @@ MonoBehaviour:
           m_RotationOrder: 4
         RemapRangeFalloff: {x: 0, y: 1}
         AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
+          ButtonText: 
         Owner: {fileID: 1975205449869811269}
         DebugActive: 0
         Duration: 0.45
-        ResetShakerValuesAfterShake: 1
-        ResetTargetValuesAfterShake: 1
-        Intensity:
+        RingBoost: 0.35
+        PulseColor: {r: 0.75, g: 0.05, b: 0.08, a: 1}
+        Shape:
           serializedVersion: 2
           m_Curve:
           - serializedVersion: 3
@@ -882,7 +882,7 @@ MonoBehaviour:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.5
+            time: 0.15
             value: 1
             inSlope: 0
             outSlope: 0
@@ -902,55 +902,6 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-        RemapIntensityZero: 0
-        RemapIntensityOne: 0.25
-        RelativeIntensity: 1
-        InterpolateColor: 1
-        ColorCurve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 0.05
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 0.95
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapColorZero: 0
-        RemapColorOne: 1
-        TargetColor: {r: 0.75, g: 0.05, b: 0.08, a: 1}
 --- !u!1 &2229479083040644191
 GameObject:
   m_ObjectHideFlags: 0
@@ -1087,7 +1038,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249557701329276
+  - rid: 6309249576056389758
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1103,11 +1054,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249557701329276
+    - rid: 6309249576056389758
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1146783392
+        UniqueID: -1733647823
         Label: Jump (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -1229,499 +1180,6 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
---- !u!1 &3455705100876360781
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4020368324549558072}
-  - component: {fileID: 4429896971639241717}
-  m_Layer: 0
-  m_Name: Target Reaction (template)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4020368324549558072
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3455705100876360781}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2950265580643760927}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4429896971639241717
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3455705100876360781}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
-  Feedbacks: []
-  InitializationMode: 1
-  AutoInitialization: 1
-  SafeMode: 3
-  Direction: 0
-  AutoChangeDirectionOnEnd: 0
-  AutoPlayOnStart: 0
-  AutoPlayOnEnable: 0
-  LogMissingTargets: 1
-  ForceTimescaleMode: 0
-  ForcedTimescaleMode: 1
-  DurationMultiplier: 1
-  TimescaleMultiplier: 1
-  RandomizeDuration: 0
-  RandomDurationMultiplier: {x: 0.5, y: 1.5}
-  DisplayFullDurationDetails: 0
-  PlayerTimescaleMode: 0
-  OnlyPlayIfWithinRange: 0
-  RangeCenter: {fileID: 0}
-  RangeDistance: 5
-  UseRangeFalloff: 0
-  RangeFalloff:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  RemapRangeFalloff: {x: 0, y: 1}
-  IgnoreRangeEvents: 0
-  CooldownDuration: 0
-  InitialDelay: 0
-  CanPlay: 1
-  CanPlayWhileAlreadyPlaying: 1
-  ChanceToPlay: 100
-  FeedbacksIntensity: 1
-  Events:
-    TriggerMMFeedbacksEvents: 0
-    TriggerUnityEvents: 1
-    OnPlay:
-      m_PersistentCalls:
-        m_Calls: []
-    OnPause:
-      m_PersistentCalls:
-        m_Calls: []
-    OnStop:
-      m_PersistentCalls:
-        m_Calls: []
-    OnResume:
-      m_PersistentCalls:
-        m_Calls: []
-    OnChangeDirection:
-      m_PersistentCalls:
-        m_Calls: []
-    OnComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnRestoreInitialValues:
-      m_PersistentCalls:
-        m_Calls: []
-    OnSkipToTheEnd:
-      m_PersistentCalls:
-        m_Calls: []
-    OnInitializationComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnEnable:
-      m_PersistentCalls:
-        m_Calls: []
-    OnDisable:
-      m_PersistentCalls:
-        m_Calls: []
-  DebugActive: 0
-  InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 6309249557701329279
-  - rid: 6309249557701329280
-  PlayMode: 0
-  SequentialDelay: 0
-  KeepPlayModeChanges: 0
-  PerformanceMode: 0
-  RestoreInitialValuesOnDisable: 0
-  StopFeedbacksOnDisable: 0
-  PlayCount: 0
-  InPreviewMode: 0
-  MMF_ChannelMode: 0
-  MMF_Channel: 0
-  MMF_ChannelDefinition: {fileID: 0}
-  RunFirstOnEnableOnlyAfterStart: 0
-  references:
-    version: 2
-    RefIds:
-    - rid: 6309249557701329279
-      type: {class: MMF_Scale, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -136081079
-        Label: Squash
-        OriginalLabel: Scale
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 4429896971639241717}
-        DebugActive: 0
-        Mode: 1
-        AnimateScaleTarget: {fileID: 0}
-        MovementMode: 0
-        AnimateScaleDuration: 0.2
-        AnimatePositionSpeed: 1
-        RemapCurveZero: 0
-        RemapCurveOne: 0.18
-        Offset: 0
-        AnimateX: 1
-        AnimateScaleTweenX:
-          MMTweenDefinitionType: 1
-          MMTweenCurve: 4
-          Curve:
-            serializedVersion: 2
-            m_Curve:
-            - serializedVersion: 3
-              time: 0
-              value: 0
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.2
-              value: 1
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.6
-              value: -0.3
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 1
-              value: 0
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 4
-          Initialized: 0
-          ConditionPropertyName: AnimateX
-          EnumConditionPropertyName: 
-          EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000y
-        AnimateY: 1
-        AnimateScaleTweenY:
-          MMTweenDefinitionType: 1
-          MMTweenCurve: 4
-          Curve:
-            serializedVersion: 2
-            m_Curve:
-            - serializedVersion: 3
-              time: 0
-              value: 0
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.2
-              value: -1
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.6
-              value: 0.3
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 1
-              value: 0
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 4
-          Initialized: 0
-          ConditionPropertyName: AnimateY
-          EnumConditionPropertyName: 
-          EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000y
-        AnimateZ: 1
-        AnimateScaleTweenZ:
-          MMTweenDefinitionType: 1
-          MMTweenCurve: 4
-          Curve:
-            serializedVersion: 2
-            m_Curve:
-            - serializedVersion: 3
-              time: 0
-              value: 0
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.2
-              value: 1
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.6
-              value: -0.3
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 1
-              value: 0
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 4
-          Initialized: 0
-          ConditionPropertyName: AnimateZ
-          EnumConditionPropertyName: 
-          EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000y
-        UniformScaling: 0
-        AllowAdditivePlays: 0
-        DetermineScaleOnPlay: 0
-        DestinationScale: {x: 0.5, y: 0.5, z: 0.5}
-        AnimateScaleX:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        AnimateScaleY:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        AnimateScaleZ:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-    - rid: 6309249557701329280
-      type: {class: MMF_Flicker, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -108981743
-        Label: White Flash
-        OriginalLabel: Flicker
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 4429896971639241717}
-        DebugActive: 0
-        BoundRenderer: {fileID: 0}
-        ExtraBoundRenderers: []
-        Mode: 1
-        PropertyName: _BaseColor
-        FlickerDuration: 0.12
-        FlickerPeriod: 0.06
-        FlickerColor: {r: 4, g: 4, b: 4, a: 1}
-        MaterialIndexes: 
-        UseMaterialPropertyBlocks: 0
-        SpriteRendererTextureProperty: _MainTex
 --- !u!1 &3514794766457463837
 GameObject:
   m_ObjectHideFlags: 0
@@ -1761,7 +1219,6 @@ Transform:
   - {fileID: 6634761121836375325}
   - {fileID: 1145840308138198316}
   - {fileID: 5243854605290825036}
-  - {fileID: 4020368324549558072}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2261704719579256328
@@ -1785,7 +1242,6 @@ MonoBehaviour:
   runFeel: {fileID: 1877974857558533019}
   jumpFeel: {fileID: 7824541745625668971}
   landFeel: {fileID: 6991721425654025130}
-  targetReactionTemplate: {fileID: 4429896971639241717}
   hitSparkVfx: {fileID: 7159327404120368447, guid: 53062092db7b8e84491789e4c3e343b5, type: 3}
   heavyHitVfx: {fileID: 7227916704978438397, guid: 9044ba5dda6b76b41bd691d157c89f74, type: 3}
   clickVfx: {fileID: 7142657378915030908, guid: 3bb6c5c5d03c21d4983caa359250311e, type: 3}
@@ -1933,8 +1389,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249557701329264
-  - rid: 6309249557701329265
+  - rid: 6309249576056389746
+  - rid: 6309249576056389747
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1950,11 +1406,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249557701329264
+    - rid: 6309249576056389746
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1918075921
+        UniqueID: 1235714617
         Label: Hit (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -2076,11 +1532,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249557701329265
+    - rid: 6309249576056389747
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -104060272
+        UniqueID: 674213838
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
@@ -2330,8 +1786,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249557701329262
-  - rid: 6309249557701329263
+  - rid: 6309249576056389744
+  - rid: 6309249576056389745
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -2347,11 +1803,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249557701329262
+    - rid: 6309249576056389744
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -997159753
+        UniqueID: 486520756
         Label: Swing Whoosh (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -2473,11 +1929,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249557701329263
+    - rid: 6309249576056389745
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1493030016
+        UniqueID: 1692483243
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
@@ -2727,7 +2183,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249557701329272
+  - rid: 6309249576056389754
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -2743,11 +2199,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249557701329272
+    - rid: 6309249576056389754
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1829184858
+        UniqueID: -1245822928
         Label: Click Tick (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -3005,7 +2461,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249557701329273
+  - rid: 6309249576056389755
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -3021,11 +2477,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249557701329273
+    - rid: 6309249576056389755
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 130632494
+        UniqueID: -86929121
         Label: Select (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -3283,9 +2739,9 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249557701329266
-  - rid: 6309249557701329267
-  - rid: 6309249557701329268
+  - rid: 6309249576056389748
+  - rid: 6309249576056389749
+  - rid: 6309249576056389750
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -3301,11 +2757,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249557701329266
+    - rid: 6309249576056389748
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -2020322959
+        UniqueID: 464517020
         Label: Heavy Hit (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -3427,11 +2883,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249557701329267
+    - rid: 6309249576056389749
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1148037463
+        UniqueID: 787969724
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
@@ -3545,11 +3001,11 @@ MonoBehaviour:
         Velocity: {x: 0.45, y: 0.3, z: 0}
         ClearImpulseOnStop: 0
         DrawGizmos: 0
-    - rid: 6309249557701329268
+    - rid: 6309249576056389750
       type: {class: MMF_ChromaticAberration_URP, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1539398633
+        UniqueID: 488485585
         Label: Chromatic Punch
         OriginalLabel: Chromatic Aberration URP
         ChannelMode: 0
@@ -3795,8 +3251,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249557701329277
-  - rid: 6309249557701329278
+  - rid: 6309249576056389759
+  - rid: 6309249576056389760
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -3812,11 +3268,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249557701329277
+    - rid: 6309249576056389759
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1196563526
+        UniqueID: 1833717593
         Label: Land Thud (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -3938,11 +3394,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249557701329278
+    - rid: 6309249576056389760
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 313879110
+        UniqueID: -725329942
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0

@@ -170,7 +170,7 @@ namespace KryticalNova.EditorTools
                         {
                             Vector2 p = c + side * (s * (profile.pathWidth * 0.5f + 1.5f));
                             var rot = Quaternion.Euler(Range(-10f, 10f), YawOf(-side * s), Range(-12f, 12f));
-                            var go = Spawn(road, "SM_Prop_Streetlight_01", new Vector3(p.x, GroundHeight(p.x, p.y), p.y), rot, Vector3.one, false);
+                            var go = Spawn(road, BrokenStreetlight, new Vector3(p.x, GroundHeight(p.x, p.y), p.y), rot, Vector3.one, false);
                             SnapBottom(go, GroundHeight(p.x, p.y) - 0.4f);
                         }
                     }
@@ -280,9 +280,12 @@ namespace KryticalNova.EditorTools
         /// <summary>Weighted tier: mostly damaged/collapsed near the wall, more rubble out toward the rim.</summary>
         private static RuinBaker.Tier OutskirtsTier(Vector2 c)
         {
+            if (ruinRng.NextDouble() < SlicedShare) return RuinBaker.Tier.Sliced;
             float far = Mathf.InverseLerp(WallHalf + 20f, 450f, Square(c));
             return PickTier(0.43f - 0.15f * far, 0.36f, 0.21f + 0.15f * far);
         }
+
+        private const double SlicedShare = 0.08; // "a handful": cut once at an angle, top half leaning on the stump
 
         private static RuinBaker.Tier PickTier(float damaged, float collapsed, float rubble)
         {
@@ -296,7 +299,7 @@ namespace KryticalNova.EditorTools
         {
             prefab = null;
             if (!ruinLibrary.TryGetValue(source, out var byTier)) return false;
-            foreach (var t in new[] { tier, RuinBaker.Tier.Collapsed, RuinBaker.Tier.Rubble, RuinBaker.Tier.Damaged })
+            foreach (var t in new[] { tier, RuinBaker.Tier.Collapsed, RuinBaker.Tier.Rubble, RuinBaker.Tier.Damaged, RuinBaker.Tier.Sliced })
                 if (byTier.TryGetValue(t, out var list) && list.Count > 0) { prefab = RPick(list); return true; }
             return false;
         }
@@ -307,6 +310,11 @@ namespace KryticalNova.EditorTools
             var ruin = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             ruin.transform.SetPositionAndRotation(position, rotation);
             ruin.transform.localScale = scale;
+            // Sit the standing part (and anything leaning on it) on the LOWEST ground under its footprint, so no
+            // downhill edge floats; it sinks a little into the uphill side instead.
+            var standing = ruin.transform.Find(RuinBaker.StandingName);
+            if (standing != null && TryGetBounds(standing.gameObject, out var sb))
+                ruin.transform.position += Vector3.up * (FootprintGround(sb) - 0.3f - sb.min.y);
             SettleFallen(ruin, 0.25f * scale.y);
             GameObjectUtility.SetStaticEditorFlags(ruin, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic | StaticEditorFlags.OccluderStatic);
             ApplyPalette(ruin, palettePos);
@@ -318,8 +326,48 @@ namespace KryticalNova.EditorTools
             var fallenRoot = ruin.transform.Find(RuinBaker.FallenName);
             if (fallenRoot == null) return;
             foreach (Transform piece in fallenRoot)
+            {
+                if (piece.name == RuinBaker.LeaningName) continue; // rests on the stump as baked
                 if (TryGetBounds(piece.gameObject, out var b))
-                    SnapBottom(piece.gameObject, GroundHeight(b.center.x, b.center.z) - sink);
+                    piece.position += Vector3.up * (FootprintGround(b) - sink - b.min.y);
+            }
+        }
+
+        /// <summary>Lowest terrain height under a bounds' footprint (centre and four corners).</summary>
+        private static float FootprintGround(Bounds b)
+        {
+            float g = GroundHeight(b.center.x, b.center.z);
+            g = Mathf.Min(g, GroundHeight(b.min.x, b.min.z));
+            g = Mathf.Min(g, GroundHeight(b.min.x, b.max.z));
+            g = Mathf.Min(g, GroundHeight(b.max.x, b.min.z));
+            g = Mathf.Min(g, GroundHeight(b.max.x, b.max.z));
+            return g;
+        }
+
+        /// <summary>
+        /// Safety net after placement: any ruin chunk whose bottom hangs more than 1.5 m above the ground under it is
+        /// dropped back down and reported. Standing parts and leaning tops are judged by their own footprint.
+        /// </summary>
+        private static void FixFloatingRuins(Transform outskirts)
+        {
+            int fixedCount = 0;
+            foreach (Transform group in outskirts)
+            {
+                if (group.name != "Ruins" && group.name != "Wall Ruins") continue;
+                foreach (var fallen in group.GetComponentsInChildren<Transform>(true))
+                {
+                    if (fallen.name != RuinBaker.FallenName) continue;
+                    foreach (Transform piece in fallen)
+                    {
+                        if (!TryGetBounds(piece.gameObject, out var b)) continue;
+                        float ground = FootprintGround(b);
+                        if (b.min.y - ground <= 1.5f) continue;
+                        piece.position += Vector3.up * (ground - 0.2f - b.min.y);
+                        fixedCount++;
+                    }
+                }
+            }
+            if (fixedCount > 0) Debug.Log($"[StarterTown] Dropped {fixedCount} floating ruin chunk(s) back onto the ground.");
         }
 
         /// <summary>
@@ -340,7 +388,8 @@ namespace KryticalNova.EditorTools
                     Vector2 p = outward * RRange(WallHalf + 7f, WallHalf + 26f) + across * along;
                     if (!BandClear(profile, p, 7f)) continue;
                     string tower = RPick(RuinBaker.TowerSources);
-                    if (!TryPickRuin(tower, PickTier(0.2f, 0.45f, 0.35f), out var prefab)) continue;
+                    var tier = ruinRng.NextDouble() < SlicedShare ? RuinBaker.Tier.Sliced : PickTier(0.2f, 0.45f, 0.35f);
+                    if (!TryPickRuin(tower, tier, out var prefab)) continue;
                     outskirtsTaken.Add((p, 8f));
                     var cluster = Group(parent, $"Wall Ruin {++made}");
                     float ground = GroundHeight(p.x, p.y);
