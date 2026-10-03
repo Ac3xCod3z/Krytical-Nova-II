@@ -608,6 +608,15 @@ MonoBehaviour:
   unequipWindow: {x: 0.08, y: 0}
   weaponDrawBlendOut: 0.3
   katanaSocketBlend: 0.1
+  hitFrontClip: {fileID: 7400000, guid: 375775a403b7f3d4c8a8c1ad5f14ba45, type: 3}
+  hitBackClip: {fileID: 7400000, guid: cf58c17e5a396064d88de8a1c32822ce, type: 3}
+  hitLeftClip: {fileID: 7400000, guid: 02dcbf777be614046b7546c84bd0573d, type: 3}
+  hitRightClip: {fileID: 7400000, guid: 146cd813f6397d64f9111c1e6817fcfd, type: 3}
+  hitFrontHeavyClip: {fileID: 7400000, guid: 133f831095087dd40815d6f4ce7c25a0, type: 3}
+  hitFadeIn: 0.06
+  hitFadeOut: 0.2
+  hitReactionCooldown: 0.35
+  heavyHitHealthFraction: 0.15
   agent: {fileID: 376469485258568685}
 --- !u!114 &6427914725768415556
 MonoBehaviour:
@@ -1276,7 +1285,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6205866357027811024, guid: bee0831911ce5ef4482cb4eee2fa4143, type: 3}
       propertyPath: groundLayers.m_Bits
-      value: 379
+      value: 9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

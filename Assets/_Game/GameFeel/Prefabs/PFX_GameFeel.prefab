@@ -4189,9 +4189,10 @@ MonoBehaviour:
           ButtonText: 
         Owner: {fileID: 1975205449869811269}
         DebugActive: 0
-        Duration: 0.45
-        RingBoost: 0.35
-        PulseColor: {r: 0.75, g: 0.05, b: 0.08, a: 1}
+        Duration: 0.6
+        Reach: 0.3
+        PulseColor: {r: 0.75, g: 0.05, b: 0.08, a: 0.22}
+        DotOpacity: 0.5
         Shape:
           serializedVersion: 2
           m_Curve:
@@ -4205,7 +4206,7 @@ MonoBehaviour:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.15
+            time: 0.25
             value: 1
             inSlope: 0
             outSlope: 0
@@ -7109,7 +7110,6 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249592969921017
   - rid: 6309249592969921018
   - rid: 6309249592969921019
   PlayMode: 0
@@ -7127,90 +7127,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249592969921017
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
-      data:
-        Active: 1
-        UniqueID: -1226542208
-        Label: PFX_Cast_SlashLarge
-        OriginalLabel: Pooled VFX (Krytical Nova)
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 653938486856090545}
-        DebugActive: 0
-        Prefab: {fileID: 4567308083982429051, guid: fc1ee66c7c51db446940df7ba37e5be8, type: 3}
-        Offset: {x: 0, y: 1, z: 0.6}
-        SnapToGround: 0
-        FollowTarget: 0
-        Upright: 0
-        FaceCamera: 0
-        Scale: 1
-        Lifetime: 0
-        TintWithGroundDust: 0
     - rid: 6309249592969921018
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
@@ -7570,7 +7486,7 @@ MonoBehaviour:
     cast: {fileID: 1185423108362442649}
     hit: {fileID: 0}
     aura: {fileID: 8432837550358445277, guid: 76958f0672b46a642b39648e0921e48f, type: 3}
-    auraAnchor: 1
+    auraAnchor: 2
     charge: {fileID: 8935178380290688581, guid: 492b9f13a6bcf58498a235ceda6cf647, type: 3}
     chargeGround: {fileID: 5516983891467138753, guid: ed1e7dc4a1852634cb13be11db00514d, type: 3}
   - skillId: HeavenlySerenity
@@ -7591,7 +7507,7 @@ MonoBehaviour:
     cast: {fileID: 9096065948985309267}
     hit: {fileID: 0}
     aura: {fileID: 2682737783201060543, guid: be391632cf1cf2047a252f1267d50db8, type: 3}
-    auraAnchor: 1
+    auraAnchor: 0
     charge: {fileID: 0}
     chargeGround: {fileID: 0}
   - skillId: GarudasPrayer
@@ -10960,8 +10876,7 @@ MonoBehaviour:
         m_Calls: []
   DebugActive: 0
   InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 6309249592969920996
+  FeedbacksList: []
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -10976,91 +10891,7 @@ MonoBehaviour:
   RunFirstOnEnableOnlyAfterStart: 0
   references:
     version: 2
-    RefIds:
-    - rid: 6309249592969920996
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
-      data:
-        Active: 1
-        UniqueID: -120835098
-        Label: PFX_Cast_SlashLarge
-        OriginalLabel: Pooled VFX (Krytical Nova)
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 4920242637321671925}
-        DebugActive: 0
-        Prefab: {fileID: 4567308083982429051, guid: fc1ee66c7c51db446940df7ba37e5be8, type: 3}
-        Offset: {x: 0, y: 1, z: 0.6}
-        SnapToGround: 0
-        FollowTarget: 0
-        Upright: 0
-        FaceCamera: 0
-        Scale: 1
-        Lifetime: 0
-        TintWithGroundDust: 0
+    RefIds: []
 --- !u!1 &5812542252274445173
 GameObject:
   m_ObjectHideFlags: 0

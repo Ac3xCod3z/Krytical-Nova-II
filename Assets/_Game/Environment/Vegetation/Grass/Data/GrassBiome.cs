@@ -26,6 +26,9 @@ namespace KryticalNova.Vegetation.Grass
 
         [Tooltip("Overall density multiplier for this biome.")]
         [Range(0f, 1.5f)] public float density = 1f;
+        [Tooltip("Share of the fill grid that gets a cheap, non-interactive tuft between the real clumps (0 = none). " +
+                 "See the rule set's Fill grass settings.")]
+        [Range(0f, 1f)] public float fillDensity;
         public List<Entry> entries = new List<Entry>();
     }
 }

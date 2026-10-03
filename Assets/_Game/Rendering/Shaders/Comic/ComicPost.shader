@@ -1,6 +1,7 @@
 // Full-screen comic pass: Sobel outlines from depth + normals, comic-styled cast
 // shadows (read straight from the main light shadow map, so it works on terrain and
-// any material), and optional luminance-driven Ben-Day dots.
+// any material), optional luminance-driven Ben-Day dots, and the hurt tint's Ben-Day
+// dots (pushed as globals by the game-feel vignette pulse while the player is hurt).
 // Driven by ComicStyleFeature (URP renderer feature).
 Shader "Hidden/KryticalNova/ComicPost"
 {
@@ -60,6 +61,23 @@ Shader "Hidden/KryticalNova/ComicPost"
             // Post dots
             float  _PostHalftoneEnabled;
             float  _PostHalftoneThreshold;  // luminance below which dots start appearing
+
+            // Hurt tint dots (globals): Ben-Day dots in the tint colour that grow toward the screen corners.
+            half4  _KN_HurtDotColor;
+            float4 _KN_HurtDots;            // x = squared distance from the centre where dots begin,
+                                            // y = where they would be full size, z = opacity (0 = off)
+
+            half3 ApplyHurtDots(half3 color, float2 uv, float2 screenPx)
+            {
+                if (_KN_HurtDots.z <= 0.001)
+                    return color;
+                float2 d = uv - 0.5;
+                half amount = saturate((dot(d, d) - _KN_HurtDots.x) / max(_KN_HurtDots.y - _KN_HurtDots.x, 1e-3));
+                // On the same screen grid as the shadow dots. Squared, so the dots start as pinpricks and swell
+                // toward the corners (no visible ring where they begin); capped so they stay separate dots.
+                half dots = ComicHalftone(screenPx, amount * amount * 0.5);
+                return lerp(color, _KN_HurtDotColor.rgb, dots * _KN_HurtDots.z * smoothstep(0.0, 0.35, amount));
+            }
 
             bool IsSky(float rawDepth)
             {
@@ -184,7 +202,10 @@ Shader "Hidden/KryticalNova/ComicPost"
 
                 float rawDepth = SampleSceneDepth(uv);
                 if (IsSky(rawDepth))
+                {
+                    color.rgb = ApplyHurtDots(color.rgb, uv, screenPx);
                     return color;
+                }
 
                 float3 posWS = ComputeWorldSpacePosition(uv, rawDepth, UNITY_MATRIX_I_VP);
                 float centerDepth = LinearEyeDepth(rawDepth, _ZBufferParams);
@@ -212,6 +233,7 @@ Shader "Hidden/KryticalNova/ComicPost"
                     color.rgb = lerp(color.rgb, _OutlineColor.rgb, edge * opacity * _OutlineColor.a);
                 }
 
+                color.rgb = ApplyHurtDots(color.rgb, uv, screenPx);
                 return color;
             }
             ENDHLSL

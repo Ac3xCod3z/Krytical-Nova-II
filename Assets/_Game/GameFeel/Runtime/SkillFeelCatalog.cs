@@ -6,7 +6,7 @@ using UnityEngine;
 namespace KryticalNova.GameFeel
 {
     /// <summary>Where a buff's looping aura sits on the character.</summary>
-    public enum AuraAnchor { Feet, Chest }
+    public enum AuraAnchor { Feet, Chest, Head }
 
     /// <summary>
     /// How one skill looks: its cast burst, its hit burst, (for buffs) the aura that lasts as long as the buff and

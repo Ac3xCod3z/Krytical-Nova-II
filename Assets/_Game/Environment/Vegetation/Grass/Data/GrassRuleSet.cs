@@ -12,6 +12,7 @@ namespace KryticalNova.Vegetation.Grass
     public sealed class GrassRuleSet : ScriptableObject
     {
         public const int MaxBiomes = 4;
+        public const int MaxLawnRects = 8; // GrassCommon.hlsl KN_MAX_LAWN_RECTS
 
         [Header("Biomes (mask G channel picks one)")]
         [Tooltip("Index 0 = default (wild) biome. Others are assigned by region rules at bake time.")]
@@ -45,6 +46,13 @@ namespace KryticalNova.Vegetation.Grass
         [Tooltip("Optional painted designer mask over the terrain (R multiplies density).")]
         public Texture2D artistMask;
         public int maskResolution = 2048;
+
+        [Header("Kept lawns")]
+        [Tooltip("World XZ rectangles of mown lawns, written by the mask bake. Grass fills them completely and is " +
+                 "cut off straight at their edges.")]
+        public List<Rect> lawnRects = new List<Rect>();
+        [Tooltip("Metres the blade roots stay inside a lawn's edge.")]
+        [Min(0f)] public float lawnEdgeInset = 0.04f;
 
         [Header("Baked mask (R density, G biome, B moisture)")]
         public Texture2D mask;
@@ -80,5 +88,22 @@ namespace KryticalNova.Vegetation.Grass
         [Range(0f, 1f)] public float farKeepAtEnd = 0.45f;
         [Tooltip("Max far tufts per grass type per camera per frame.")]
         public int farCapacityPerType = 48000;
+
+        [Header("Fill grass (cheap, not interactive)")]
+        [Tooltip("Few-triangle tufts between the real clumps of biomes with a Fill Density, so the ground reads as full. " +
+                 "They sway with the wind but do not bend to characters.")]
+        public bool fillGrass = true;
+        [Tooltip("Low-poly tuft drawn for every type in the fill pass (root at origin, Y up).")]
+        public Mesh fillMesh;
+        [Tooltip("Grid spacing of fill tufts (m).")]
+        [Range(0.1f, 1f)] public float fillCellSize = 0.2f;
+        [Tooltip("Metres from the camera where fill tufts end; they thin out over the last 40%.")]
+        [Range(10f, 80f)] public float fillDistance = 35f;
+        [Tooltip("Fill tuft width relative to the type's own width range.")]
+        [Range(0.25f, 4f)] public float fillWidthScale = 1f;
+        [Tooltip("Fill tuft height relative to the type's own height range (a little under 1 keeps them beneath the real grass).")]
+        [Range(0.25f, 1.5f)] public float fillHeightScale = 0.9f;
+        [Tooltip("Max fill tufts per grass type per camera per frame.")]
+        public int fillCapacityPerType = 32000;
     }
 }

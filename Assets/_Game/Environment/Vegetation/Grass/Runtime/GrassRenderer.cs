@@ -7,8 +7,9 @@ namespace KryticalNova.Vegetation.Grass
     /// <summary>
     /// GPU grass. For each rendering camera (game camera, and the Scene view in the editor) a compute shader builds
     /// this frame's grass from a world-snapped grid around the camera: baked mask × biome × exclusion volumes ×
-    /// distance LOD × frustum. Two passes share the same rules: real clumps near the camera, and cheap far tufts
-    /// that take over across a hand-off band so the field never ends in a hard line. Every (type, pass) pair is one
+    /// distance LOD × frustum. The passes share the same rules: real clumps near the camera, cheap far tufts
+    /// that take over across a hand-off band so the field never ends in a hard line, and (for biomes that ask for
+    /// it) cheap fill tufts between the real clumps that only add fullness. Every (type, pass) pair is one
     /// Graphics.RenderMeshIndirect call reading a region of one shared instance buffer. No per-blade GameObjects,
     /// no CPU loops over blades, nothing stored between frames; presentation only (nothing is networked).
     /// </summary>
@@ -19,7 +20,9 @@ namespace KryticalNova.Vegetation.Grass
         public const int MaxTypes = 8;          // GrassGenerate.compute MAX_TYPES
         public const int InstanceStride = 32;   // GrassCommon.hlsl GrassInstance
         private const int MaxVolumes = 16;
-        private const int DrawCount = MaxTypes * 2; // near + far per type
+        private const int PassCount = 3;        // near, far, fill
+        private const int DrawCount = MaxTypes * PassCount;
+        private const int NearPass = 0, FarPass = 1, FillPass = 2; // GrassGenerate.compute _FarParams.x
 
         [SerializeField] private GrassRuleSet rules;
         [SerializeField] private Terrain terrain;
@@ -42,6 +45,8 @@ namespace KryticalNova.Vegetation.Grass
         /// <summary>Runtime quality overrides (NaN = use the rule set). Not saved to the asset.</summary>
         public static float DensityOverride = float.NaN;
         public static float DistanceOverride = float.NaN;
+        /// <summary>Runtime switch for the fill pass (debug: compare the lawn with and without its filler).</summary>
+        public static bool FillEnabled = true;
         private float Density => float.IsNaN(DensityOverride) ? rules.densityScale : DensityOverride;
         private float NearDistance => float.IsNaN(DistanceOverride) ? rules.maxDistance : DistanceOverride;
 
@@ -56,6 +61,10 @@ namespace KryticalNova.Vegetation.Grass
         private static readonly int LodId = Shader.PropertyToID("_Lod");
         private static readonly int FadeId = Shader.PropertyToID("_Fade");
         private static readonly int FarParamsId = Shader.PropertyToID("_FarParams");
+        private static readonly int FillParamsId = Shader.PropertyToID("_FillParams");
+        private static readonly int LawnClipId = Shader.PropertyToID("_LawnClip");
+        private static readonly int LawnRectsId = Shader.PropertyToID("_KN_LawnRects");
+        private static readonly int LawnRectCountId = Shader.PropertyToID("_KN_LawnRectCount");
         private static readonly int FrustumId = Shader.PropertyToID("_Frustum");
         private static readonly int BiomeParamsId = Shader.PropertyToID("_BiomeParams");
         private static readonly int BiomeSlotsId = Shader.PropertyToID("_BiomeSlots");
@@ -88,7 +97,10 @@ namespace KryticalNova.Vegetation.Grass
         private GraphicsBuffer countBuffer;  // Raw twin the compute shader counts into, copied to argsBuffer on the GPU
         private uint[] argsTemplate;
         private int generateKernel = -1, clampKernel = -1;
-        private int nearCapacity, farCapacity;
+        private int nearCapacity, farCapacity, fillCapacity;
+        private float fillMeshHeight = 1f;
+        private readonly Vector4[] lawnRects = new Vector4[GrassRuleSet.MaxLawnRects];
+        private int lawnRectCount;
 
         private readonly Vector4[] biomeParams = new Vector4[GrassRuleSet.MaxBiomes];
         private readonly Vector4[] biomeSlots = new Vector4[GrassRuleSet.MaxBiomes * GrassBiome.MaxEntries];
@@ -153,12 +165,24 @@ namespace KryticalNova.Vegetation.Grass
                         count++;
                     }
                 }
-                biomeParams[b] = new Vector4(biome != null ? biome.density : 0f, count, 0f, 0f);
+                biomeParams[b] = new Vector4(biome != null ? biome.density : 0f, count, biome != null ? biome.fillDensity : 0f, 0f);
             }
+
+            // The blade shader reads the lawns too (it holds each lawn's blades inside its rectangle).
+            lawnRectCount = Mathf.Min(rules.lawnRects.Count, GrassRuleSet.MaxLawnRects);
+            System.Array.Clear(lawnRects, 0, lawnRects.Length);
+            for (int i = 0; i < lawnRectCount; i++)
+            {
+                Rect r = rules.lawnRects[i];
+                lawnRects[i] = new Vector4(r.xMin, r.yMin, r.xMax, r.yMax);
+            }
+            Shader.SetGlobalVectorArray(LawnRectsId, lawnRects);
+            Shader.SetGlobalInt(LawnRectCountId, lawnRectCount);
 
             nearCapacity = Mathf.Max(1024, rules.capacityPerType);
             farCapacity = Mathf.Max(1024, rules.farCapacityPerType);
-            instances = new GraphicsBuffer(GraphicsBuffer.Target.Structured, MaxTypes * (nearCapacity + farCapacity), InstanceStride);
+            fillCapacity = Mathf.Max(1024, rules.fillCapacityPerType);
+            instances = new GraphicsBuffer(GraphicsBuffer.Target.Structured, MaxTypes * (nearCapacity + farCapacity + fillCapacity), InstanceStride);
             // Indirect-args buffers can't also be raw, so the compute shader counts into a raw twin with the same
             // layout and the GPU copies it across each frame.
             argsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments | GraphicsBuffer.Target.CopyDestination,
@@ -167,20 +191,27 @@ namespace KryticalNova.Vegetation.Grass
             argsTemplate = new uint[DrawCount * 5];
 
             Mesh farMesh = rules.farMesh;
+            Mesh fillMesh = rules.fillMesh;
+            fillMeshHeight = fillMesh != null ? Mathf.Max(fillMesh.bounds.max.y, 0.01f) : 1f;
             for (int i = 0; i < types.Count; i++)
             {
                 var type = types[i];
                 typeA[i] = new Vector4(type.density, type.heightRange.x, type.heightRange.y, type.MeshHeight);
                 typeB[i] = new Vector4(type.widthRange.x, type.widthRange.y, farMesh != null ? Mathf.Max(farMesh.bounds.max.y, 0.01f) : 1f, 0f);
-                SetupDraw(i, type, type.mesh, i * nearCapacity, nearCapacity, type.MeshHeight);
+                SetupDraw(i, type, type.mesh, i * nearCapacity, nearCapacity, type.MeshHeight, type.playerBend);
                 if (farMesh != null)
-                    SetupDraw(MaxTypes + i, type, farMesh, MaxTypes * nearCapacity + i * farCapacity, farCapacity, Mathf.Max(farMesh.bounds.max.y, 0.01f));
+                    SetupDraw(MaxTypes * FarPass + i, type, farMesh, MaxTypes * nearCapacity + i * farCapacity, farCapacity,
+                        Mathf.Max(farMesh.bounds.max.y, 0.01f), type.playerBend);
+                // Fill tufts take no part in interaction: a zero bend lets the shader skip the interactor loop.
+                if (fillMesh != null)
+                    SetupDraw(MaxTypes * FillPass + i, type, fillMesh, MaxTypes * (nearCapacity + farCapacity) + i * fillCapacity, fillCapacity,
+                        fillMeshHeight, 0f);
             }
             generateKernel = generateShader.FindKernel("Generate");
             clampKernel = generateShader.FindKernel("ClampArgs");
         }
 
-        private void SetupDraw(int draw, GrassType type, Mesh mesh, int offset, int capacity, float meshHeight)
+        private void SetupDraw(int draw, GrassType type, Mesh mesh, int offset, int capacity, float meshHeight, float playerBend)
         {
             argsTemplate[draw * 5 + 0] = mesh.GetIndexCount(0);
             argsTemplate[draw * 5 + 1] = 0;
@@ -201,7 +232,7 @@ namespace KryticalNova.Vegetation.Grass
             block.SetColor(PatchTintId, new Color(patch.r, patch.g, patch.b, type.patchTint.a));
             block.SetColor(WetTintId, new Color(wet.r, wet.g, wet.b, type.wetTint.a));
             block.SetVector(GrassParamsId, new Vector4(type.midPoint, type.brightnessVariation, type.rootOcclusion, type.normalUp));
-            block.SetVector(GrassMotionId, new Vector4(type.windStrength, type.flutter, type.playerBend, meshHeight));
+            block.SetVector(GrassMotionId, new Vector4(type.windStrength, type.flutter, playerBend, meshHeight));
         }
 
         private void Release()
@@ -235,6 +266,8 @@ namespace KryticalNova.Vegetation.Grass
             // Without far grass the real grass still thins out over its last 15% instead of stopping dead.
             float handOffStart = far ? Mathf.Min(rules.handOffBand.x, nearMax - 1f) : nearMax * 0.85f;
             float farMax = far ? Mathf.Max(rules.farDistance, nearMax + 10f) : nearMax;
+            bool fill = FillEnabled && rules.fillGrass && rules.fillMesh != null;
+            float fillMax = Mathf.Min(rules.fillDistance, nearMax);
 
             GeometryUtility.CalculateFrustumPlanes(cam, planes);
             for (int i = 0; i < 6; i++) frustum[i] = new Vector4(planes[i].normal.x, planes[i].normal.y, planes[i].normal.z, planes[i].distance);
@@ -270,15 +303,22 @@ namespace KryticalNova.Vegetation.Grass
             cs.SetVectorArray(VolumesId, volumes);
             cs.SetInt(VolumeCountId, volumeCount);
             cs.SetInt(DebugModeId, debugMode);
+            cs.SetVectorArray(LawnRectsId, lawnRects);
+            cs.SetInt(LawnRectCountId, lawnRectCount);
+            // Bare band outside a lawn = one mask texel: the bake marks every texel a lawn touches as lawn.
+            cs.SetVector(LawnClipId, new Vector4(rules.lawnEdgeInset, tSize.x / rules.mask.width, 0f, 0f));
+            cs.SetVector(FillParamsId, new Vector4(rules.fillWidthScale, fillMeshHeight, rules.fillHeightScale, 0f));
 
             // Near pass: real clumps.
-            Dispatch(cs, camPos, rules.cellSize, nearMax, false, 0, 0, nearCapacity);
+            Dispatch(cs, camPos, rules.cellSize, nearMax, NearPass, 0, nearCapacity);
             // Far pass: cheap tufts on a coarse grid, same rules.
-            if (far) Dispatch(cs, camPos, rules.farCellSize, farMax, true, MaxTypes, MaxTypes * nearCapacity, farCapacity);
+            if (far) Dispatch(cs, camPos, rules.farCellSize, farMax, FarPass, MaxTypes * nearCapacity, farCapacity);
+            // Fill pass: cheap tufts between the real clumps, close to the camera.
+            if (fill) Dispatch(cs, camPos, rules.fillCellSize, fillMax, FillPass, MaxTypes * (nearCapacity + farCapacity), fillCapacity);
 
             cs.SetBuffer(clampKernel, ArgsId, countBuffer);
-            cs.SetInts(ClampCapsId, nearCapacity, farCapacity, MaxTypes, 0);
-            cs.Dispatch(clampKernel, 1, 1, 1);
+            cs.SetInts(ClampCapsId, nearCapacity, farCapacity, MaxTypes, fillCapacity);
+            cs.Dispatch(clampKernel, Mathf.CeilToInt(DrawCount / 16f), 1, 1);
             Graphics.CopyBuffer(countBuffer, argsBuffer);
 
             var nearBounds = new Bounds(camPos, new Vector3(nearMax * 2f, tSize.y + 20f, nearMax * 2f));
@@ -286,18 +326,19 @@ namespace KryticalNova.Vegetation.Grass
             for (int i = 0; i < types.Count; i++)
             {
                 Draw(cam, types[i].mesh, i, nearBounds);
-                if (far) Draw(cam, rules.farMesh, MaxTypes + i, farBounds);
+                if (far) Draw(cam, rules.farMesh, MaxTypes * FarPass + i, farBounds);
+                if (fill) Draw(cam, rules.fillMesh, MaxTypes * FillPass + i, nearBounds);
             }
         }
 
-        private void Dispatch(ComputeShader cs, Vector3 camPos, float cell, float range, bool far, int drawBase, int regionBase, int capacity)
+        private void Dispatch(ComputeShader cs, Vector3 camPos, float cell, float range, int pass, int regionBase, int capacity)
         {
             int dim = Mathf.CeilToInt(range * 2f / cell) + 1;
             var origin = new Vector2Int(Mathf.FloorToInt((camPos.x - range) / cell), Mathf.FloorToInt((camPos.z - range) / cell));
             cs.SetInts(GridOriginId, origin.x, origin.y);
             cs.SetVector(GridId, new Vector4(cell, dim, range, Density));
-            cs.SetVector(FarParamsId, new Vector4(far ? 1f : 0f, rules.farWidthScale, 0f, 0f));
-            cs.SetInt(DrawBaseId, drawBase);
+            cs.SetVector(FarParamsId, new Vector4(pass, rules.farWidthScale, 0f, 0f));
+            cs.SetInt(DrawBaseId, MaxTypes * pass);
             cs.SetInt(RegionBaseId, regionBase);
             cs.SetInt(RegionCapacityId, capacity);
             int groups = Mathf.CeilToInt(dim / 8f);
@@ -328,13 +369,18 @@ namespace KryticalNova.Vegetation.Grass
             long tris = 0;
             for (int i = 0; i < types.Count; i++)
             {
-                uint near = counts[i * 5 + 1], farCount = counts[(MaxTypes + i) * 5 + 1];
+                uint near = counts[i * 5 + 1], farCount = counts[(MaxTypes * FarPass + i) * 5 + 1];
+                uint fillCount = counts[(MaxTypes * FillPass + i) * 5 + 1];
                 long t = near * (long)types[i].mesh.GetIndexCount(0) / 3;
                 long tf = rules.farMesh != null ? farCount * (long)rules.farMesh.GetIndexCount(0) / 3 : 0;
-                tris += t + tf;
+                long tl = rules.fillMesh != null ? fillCount * (long)rules.fillMesh.GetIndexCount(0) / 3 : 0;
+                tris += t + tf + tl;
                 sb.Append(types[i].name).Append(": ").Append(near.ToString("N0")).Append(" clumps (").Append(t.ToString("N0"))
-                  .Append(" tris) + ").Append(farCount.ToString("N0")).Append(" far tufts (").Append(tf.ToString("N0")).AppendLine(" tris)");
-                if (near >= nearCapacity || farCount >= farCapacity) sb.AppendLine("  (at capacity — raise the capacity or lower density)");
+                  .Append(" tris) + ").Append(farCount.ToString("N0")).Append(" far tufts (").Append(tf.ToString("N0")).Append(" tris)");
+                if (fillCount > 0) sb.Append(" + ").Append(fillCount.ToString("N0")).Append(" fill tufts (").Append(tl.ToString("N0")).Append(" tris)");
+                sb.AppendLine();
+                if (near >= nearCapacity || farCount >= farCapacity || fillCount >= fillCapacity)
+                    sb.AppendLine("  (at capacity — raise the capacity or lower density)");
             }
             sb.Append("Total ").Append(tris.ToString("N0")).Append(" tris  ·  real ").Append(NearDistance.ToString("0"))
               .Append(" m, far ").Append(rules.farDistance.ToString("0")).Append(" m  ·  density x").Append(Density.ToString("0.##"));

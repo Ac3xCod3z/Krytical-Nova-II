@@ -59,6 +59,7 @@ namespace KryticalNova.UI
         private Ring moveRing;
         private Ring targetRing3D;
         private Transform mover;
+        private bool moveRingUntilArrival;
         private Transform target;
         private IDamageable targetHealth;
         private float targetFootOffset;
@@ -98,8 +99,9 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ IWorldMarkerSink
 
-        public void ShowMoveMarker(Transform moverTransform, Vector3 point, Vector3 normal)
+        public void ShowMoveMarker(Transform moverTransform, Vector3 point, Vector3 normal, bool untilArrival = false)
         {
+            moveRingUntilArrival = untilArrival;
             // Destinations come from the NavMesh, which sits below the paving: put the ring on the visible surface.
             point = GroundSnap.Snap(point, out normal, moverTransform);
             if (isActiveAndEnabled) ClientPresentationRegistry.Feel?.MoveCommand(point, normal);
@@ -160,7 +162,7 @@ namespace KryticalNova.UI
                 bool moverGone = mover == null || !mover.gameObject.activeInHierarchy;
                 Vector3 offset = moverGone ? Vector3.zero : mover.position - moveRing.Root.position;
                 offset.y = 0f;
-                if (moverGone || offset.sqrMagnitude <= ArriveDistance * ArriveDistance || moveRing.Age > MoveMarkerLifetime
+                if (moverGone || offset.sqrMagnitude <= ArriveDistance * ArriveDistance || (!moveRingUntilArrival && moveRing.Age > MoveMarkerLifetime)
                     || !HudPreferences.ShowMoveMarker)
                     moveRing.FadeOut = 0f;
             }

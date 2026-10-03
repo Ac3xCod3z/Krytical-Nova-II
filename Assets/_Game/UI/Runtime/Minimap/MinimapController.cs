@@ -16,6 +16,8 @@ namespace KryticalNova.UI
     /// map layer's translate/rotate (live patch and markers are its children, so they ride along) and the arrow.
     /// Markers move every frame from pooled elements; nothing allocates per frame.
     /// Orientation: rotates with the camera, or fixed north-up (Settings → HudPreferences.MinimapRotates).
+    /// Hovering an NPC, a portal or the player's marker names it; double-clicking it leads the player there
+    /// (<see cref="MapTravel"/>) and draws the route.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -27,6 +29,10 @@ namespace KryticalNova.UI
         private const float LiveCapturesPerSecond = 8f;
         private const float InitRetryInterval = 1f;
         private const float EdgeInset = 9f; // portals far away stick to the rim instead of vanishing
+        private const float RouteLineWidth = 2.5f;
+        private const float HoverPadding = 4f;  // pixels beyond an icon's edge that still count as over it
+        private const float NpcIconSize = 9f, PortalIconSize = 22f, WaypointIconSize = 20f;
+        private const int LeftButton = 0;
 
         private VisualElement root, minimap, mask, map, north, liveLayer;
         private MinimapLiveCamera live;
@@ -42,6 +48,11 @@ namespace KryticalNova.UI
         private readonly List<VisualElement> waypointMarkers = new List<VisualElement>();
         // Edge-clamped markers keep their counter-rotation in sync every frame (they don't move with the map).
         private float currentMapRotation;
+        private MapHoverLabel hoverLabel;
+        private MapRouteLine routeLine;
+        private readonly List<MapTarget> targets = new List<MapTarget>();
+        private Vector2 lastPlayerPx;
+        private float lastMaskHalf;
 
         private float PixelsPerMetre => ZoomLevels[zoomIndex];
         private float MapPixels => data != null ? data.worldSize * PixelsPerMetre : 0f;
@@ -68,6 +79,9 @@ namespace KryticalNova.UI
             minimap.Q<Button>("minimap-zoom-in").clicked += ZoomIn;
             minimap.Q<Button>("minimap-zoom-out").clicked += ZoomOut;
             minimap.RegisterCallback<WheelEvent>(OnWheel);
+            minimap.RegisterCallback<PointerMoveEvent>(OnPointerMove);
+            minimap.RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
+            minimap.RegisterCallback<PointerDownEvent>(OnPointerDown);
             ZoneMinimapAnchor.CurrentChanged += OnZoneChanged;
 
             liveLayer = new VisualElement { name = "minimap-live", pickingMode = PickingMode.Ignore };
@@ -76,6 +90,10 @@ namespace KryticalNova.UI
             map.Insert(0, liveLayer); // under the markers
             live = MinimapLiveCamera.TryCreate(LiveRadius, LiveCapturesPerSecond, transform);
             if (live != null) liveLayer.style.backgroundImage = Background.FromRenderTexture(live.Texture);
+            routeLine = new MapRouteLine(RouteLineWidth);
+            map.Insert(1, routeLine); // over the live patch, under the markers
+            hoverLabel = new MapHoverLabel();
+            root.Add(hoverLabel);
 
             initialized = true;
             OnZoneChanged();
@@ -89,6 +107,11 @@ namespace KryticalNova.UI
             minimap.Q<Button>("minimap-zoom-in").clicked -= ZoomIn;
             minimap.Q<Button>("minimap-zoom-out").clicked -= ZoomOut;
             minimap.UnregisterCallback<WheelEvent>(OnWheel);
+            minimap.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
+            minimap.UnregisterCallback<PointerLeaveEvent>(OnPointerLeave);
+            minimap.UnregisterCallback<PointerDownEvent>(OnPointerDown);
+            routeLine?.RemoveFromHierarchy();
+            hoverLabel?.RemoveFromHierarchy();
             arrow?.RemoveFromHierarchy();
             liveLayer?.RemoveFromHierarchy();
             live?.Dispose();
@@ -112,6 +135,52 @@ namespace KryticalNova.UI
         {
             if (evt.delta.y < 0f) ZoomIn(); else if (evt.delta.y > 0f) ZoomOut();
             evt.StopPropagation();
+        }
+
+        // ------------------------------------------------------------------ hover name, double-click travel
+
+        private void OnPointerMove(PointerMoveEvent evt)
+        {
+            if (TryPick(evt.position, out MapTarget hovered)) hoverLabel.Show(hovered.Name, evt.position);
+            else hoverLabel.Hide();
+        }
+
+        private void OnPointerLeave(PointerLeaveEvent evt) => hoverLabel.Hide();
+
+        private void OnPointerDown(PointerDownEvent evt)
+        {
+            if (evt.button != LeftButton || evt.clickCount < 2 || !TryPick(evt.position, out MapTarget target)) return;
+            evt.StopPropagation();
+            MapTravel.Start(target);
+        }
+
+        /// <summary>The named thing under a panel position: the nearest whose icon the point is on, inside the round map.</summary>
+        private bool TryPick(Vector2 panelPosition, out MapTarget picked)
+        {
+            picked = default;
+            if (!initialized || data == null || lastMaskHalf <= 0f) return false;
+            // The panel is square but the map is round: its corners show no map.
+            Vector2 inMask = mask.WorldToLocal(panelPosition) - new Vector2(lastMaskHalf, lastMaskHalf);
+            if (inMask.sqrMagnitude > lastMaskHalf * lastMaskHalf) return false;
+
+            // The map layer's own pixels: its turn and slide are undone for us.
+            Vector2 cursor = map.WorldToLocal(panelPosition);
+            Transform player = LocalPlayer();
+            MapTargets.Collect(targets, player != null ? player.position : Vector3.zero, places: false);
+            float best = float.MaxValue;
+            foreach (MapTarget target in targets)
+            {
+                bool npc = target.Kind == MapTarget.TargetKind.Npc;
+                float size = npc ? NpcIconSize : target.Kind == MapTarget.TargetKind.Portal ? PortalIconSize : WaypointIconSize;
+                Vector2 px = MapPixel(target.Position);
+                if (!npc) px = ClampToRim(px, lastPlayerPx, lastMaskHalf); // portals and the marker stick to the rim
+                float reach = size * 0.5f + HoverPadding;
+                float sqr = (px - cursor).sqrMagnitude;
+                if (sqr > reach * reach || sqr >= best) continue;
+                best = sqr;
+                picked = target;
+            }
+            return best < float.MaxValue;
         }
 
         private void ApplyZoom()
@@ -139,6 +208,8 @@ namespace KryticalNova.UI
             float half = size * 0.5f;
 
             Vector2 playerPx = MapPixel(player.position);
+            lastPlayerPx = playerPx;
+            lastMaskHalf = half;
             float cameraYaw = CameraYaw();
             bool rotates = HudPreferences.MinimapRotates;
             currentMapRotation = rotates ? -cameraYaw : 0f;
@@ -154,6 +225,9 @@ namespace KryticalNova.UI
             PlaceNorth(currentMapRotation);
             UpdateLive(player);
             RefreshMarkers(player, playerPx, half);
+            routeLine.Begin();
+            foreach (Vector3 corner in MapTravel.Route()) routeLine.Add(MapPixel(corner));
+            routeLine.Apply();
             // Keep icons upright while the map spins under them.
             foreach (var m in portalMarkers) if (m.style.display != DisplayStyle.None) m.style.rotate = new Rotate(-currentMapRotation);
             foreach (var m in waypointMarkers) if (m.style.display != DisplayStyle.None) m.style.rotate = new Rotate(-currentMapRotation);
@@ -222,7 +296,7 @@ namespace KryticalNova.UI
         {
             int npcCount = 0;
             foreach (var npc in NpcInteractable.Active)
-                if (npc != null) Place(Pooled(npcMarkers, npcCount++, "npc"), MapPixel(npc.Position), 9f);
+                if (npc != null) Place(Pooled(npcMarkers, npcCount++, "npc"), MapPixel(npc.Position), NpcIconSize);
             Hide(npcMarkers, npcCount);
 
             int allyCount = 0;
@@ -235,7 +309,7 @@ namespace KryticalNova.UI
             {
                 if (portal == null) continue;
                 // Clamp to the rim so the way onward is always visible.
-                Place(Pooled(portalMarkers, portalCount++, "portal"), ClampToRim(MapPixel(portal.transform.position), playerPx, maskHalf), 22f);
+                Place(Pooled(portalMarkers, portalCount++, "portal"), ClampToRim(MapPixel(portal.transform.position), playerPx, maskHalf), PortalIconSize);
             }
             Hide(portalMarkers, portalCount);
 
@@ -243,7 +317,7 @@ namespace KryticalNova.UI
             MapWaypoint.ClearIfReached(player.position);
             int waypointCount = 0;
             if (MapWaypoint.TryGet(out Vector3 waypoint))
-                Place(Pooled(waypointMarkers, waypointCount++, "waypoint"), ClampToRim(MapPixel(waypoint), playerPx, maskHalf), 20f);
+                Place(Pooled(waypointMarkers, waypointCount++, "waypoint"), ClampToRim(MapPixel(waypoint), playerPx, maskHalf), WaypointIconSize);
             Hide(waypointMarkers, waypointCount);
         }
 

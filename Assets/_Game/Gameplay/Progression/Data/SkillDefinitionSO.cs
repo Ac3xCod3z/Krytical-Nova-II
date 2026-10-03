@@ -182,6 +182,8 @@ namespace KryticalNova.Progression
         [Tooltip("Extra damage multiplier in percent (100 = none). Stands in for elemental damage such as Yang until elements exist.")]
         [Min(0f)] public float minBonusDamagePercent = 100f;
         [Min(0f)] public float maxBonusDamagePercent = 100f;
+        [Tooltip("Off = this skill's hits never roll a critical, whatever the caster's Critical Rate.")]
+        public bool canCrit = true;
 
         [Header("Input")]
         [Tooltip("Seconds the hotbar key must be held before the skill casts. Releasing early cancels at no cost.")]
@@ -198,6 +200,13 @@ namespace KryticalNova.Progression
         public float[] hitTimesNormalized = Array.Empty<float>();
         [Tooltip("Fraction of the cast clip after which the caster may act again.")]
         [Range(0.1f, 1f)] public float castLockNormalized = 1f;
+        [Tooltip("Fraction of the cast clip after which an attack (a skill or the basic combo) may cut the rest of it " +
+                 "short. 1 = never: the cast lock runs its course.")]
+        [Range(0f, 1f)] public float attackCancelNormalized = 1f;
+        [Tooltip("Metres the body is raised (or lowered) over the cast clip's own time in seconds. The player's animator " +
+                 "discards a clip's root motion, so without this a leap stays on the ground with the legs tucked up. " +
+                 "Baked from the clip by Krytical Nova ▸ Progression ▸ Build Blade Skills.")]
+        public AnimationCurve castLiftCurve = new AnimationCurve();
         [Tooltip("Looped while the hotbar key is held for a charged skill.")]
         public AnimationClip chargeLoopClip;
         [Tooltip("Channeled skills: held for as long as the channel lasts. The cast clip brings the body into this pose " +
@@ -222,6 +231,7 @@ namespace KryticalNova.Progression
         public bool IsAreaAttack => IsAttack && targetType == SkillTargetType.AreaOfEffect;
         public bool IsCharged => chargeTime > 0f;
         public bool IsChanneled => executionType == SkillExecutionType.Channeled;
+        public bool HasCastLift => castLiftCurve != null && castLiftCurve.length > 1;
 
         /// <summary>Total damage of one cast as a fraction of Attack Power (1 = 100%), before splitting across hits.</summary>
         public float GetDamageMultiplier(int rank) =>
@@ -248,6 +258,9 @@ namespace KryticalNova.Progression
 
         /// <summary>Seconds after cast start during which the caster cannot begin another skill.</summary>
         public float CastLockDuration => CastDuration * castLockNormalized;
+
+        /// <summary>Seconds after cast start from which an attack may cut the cast short; the whole lock when it may not.</summary>
+        public float AttackCancelDelay => Mathf.Min(CastDuration * attackCancelNormalized, CastLockDuration);
 
         private const float DefaultCastSeconds = 0.6f;
 

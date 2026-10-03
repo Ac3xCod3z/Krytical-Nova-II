@@ -25,6 +25,7 @@ namespace KryticalNova.Combat
         private const int MaxAreaColliders = 64;
         private const float ChargeHandoffSeconds = 0.75f;
         private const float ChannelCrossFade = 0.25f;
+        private const float LiftSettleSpeed = 4f; // m/s the body returns to the ground if a cast ends off it
 
         [Header("Animation")]
         [SerializeField] private AnimancerComponent animancer;
@@ -50,9 +51,17 @@ namespace KryticalNova.Combat
         private CharacterBuffManager buffManager;
         private Coroutine executeRoutine;
         private Coroutine presentRoutine;
+        private Transform model;        // the animated rig; raised and lowered by casts that leap
+        private FootGroundingIK footIK;
+        private Vector3 modelRest;
+        private float bodyLift;
         private float castBusyUntil = float.NegativeInfinity;
 
+        private float castCancelFrom = float.PositiveInfinity; // from here an attack may cut the current cast short
+
         public bool IsCasting => Time.time < castBusyUntil;
+
+        public bool CanInterruptCast(SkillDefinitionSO next) => next != null && next.IsAttack && Time.time >= castCancelFrom;
 
         private bool IsLocalPlayerPresentation => !IsSpawned || IsOwner;
 
@@ -67,6 +76,12 @@ namespace KryticalNova.Combat
             // rig the locomotion motor drives, not on whichever one a child search finds first.
             if (animancer == null && animancerMotor != null) animancer = animancerMotor.Animancer;
             if (animancer == null) animancer = GetComponentInChildren<AnimancerComponent>();
+            if (animancer != null)
+            {
+                model = animancer.transform;
+                modelRest = model.localPosition;
+                footIK = model.GetComponent<FootGroundingIK>();
+            }
         }
 
         private void OnEnable()
@@ -78,6 +93,7 @@ namespace KryticalNova.Combat
 
         private void OnDisable()
         {
+            SetBodyLift(0f);
             if (hotbar == null) return;
             hotbar.ChargeStarted -= OnChargeStarted;
             hotbar.ChargeEnded -= OnChargeEnded;
@@ -135,13 +151,17 @@ namespace KryticalNova.Combat
             float castLock = skill.CastLockDuration;
             if (castLock <= 0f) return;
             castBusyUntil = Time.time + castLock;
-            melee.HoldForSkill(castLock, target != null ? target.position : (Vector3?)null);
+            // A cast an attack may cut short holds the basic combo only until that point, so a strike can take over.
+            float cancelDelay = skill.IsAttack ? castLock : skill.AttackCancelDelay;
+            castCancelFrom = cancelDelay < castLock ? Time.time + cancelDelay : float.PositiveInfinity;
+            melee.HoldForSkill(cancelDelay, target != null ? target.position : (Vector3?)null);
             if (skill.IsAttack && IsLocalPlayerPresentation && animancerMotor != null && !animancerMotor.IsWeaponDrawn)
                 animancerMotor.RequestSetWeaponDraw(true);
 
             if (skill.castClip == null || animancer == null) return;
             if (animancerMotor != null && animancerMotor.CurrentState == CharacterAnimState.Jumping) return;
             if (presentRoutine != null) StopCoroutine(presentRoutine);
+            SetBodyLift(0f);
             bool holdsPose = skill.IsChanneled && skill.channelLoopClip != null;
             presentRoutine = StartCoroutine(holdsPose ? ChannelRoutine(skill) : PresentRoutine(skill));
         }
@@ -191,7 +211,7 @@ namespace KryticalNova.Combat
 
         private bool ResolveSkillHit(SkillDefinitionSO skill, IDamageable victim, float multiplier, string label)
         {
-            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result) || result.IsEvaded) return false;
+            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result, skill.canCrit) || result.IsEvaded) return false;
             Vector3 position = victim.Transform.position + Vector3.up;
             if (IsSpawned) SkillHitVfxClientRpc(skill.skillId, position);
             else SpawnSkillHitVfxLocal(skill, position);
@@ -229,10 +249,37 @@ namespace KryticalNova.Combat
             state.Time = 0f;
             state.ApplyFootIK = castFootIK;
 
-            yield return new WaitForSeconds(skill.CastLockDuration);
+            if (!skill.HasCastLift)
+            {
+                yield return new WaitForSeconds(skill.CastLockDuration);
+            }
+            else
+            {
+                // The clip's leap is root motion, which the animator discards: put its height back on the body for
+                // as long as this cast still owns it.
+                float lockEnds = Time.time + skill.CastLockDuration;
+                while (Time.time < lockEnds && animancer.Layers[0].CurrentState == state)
+                {
+                    SetBodyLift(skill.castLiftCurve.Evaluate(state.Time));
+                    yield return null;
+                }
+            }
 
-            presentRoutine = null;
             ReleaseBody();
+            while (!Mathf.Approximately(bodyLift, 0f))
+            {
+                SetBodyLift(Mathf.MoveTowards(bodyLift, 0f, LiftSettleSpeed * Time.deltaTime));
+                yield return null;
+            }
+            presentRoutine = null;
+        }
+
+        private void SetBodyLift(float metres)
+        {
+            if (model == null || Mathf.Approximately(metres, bodyLift)) return;
+            bodyLift = metres;
+            model.localPosition = modelRest + Vector3.up * metres;
+            if (footIK != null) footIK.BodyLift = metres;
         }
 
         /// <summary>
@@ -343,6 +390,7 @@ namespace KryticalNova.Combat
             if (skill.chargeLoopClip == null || animancer == null) return;
             if (animancerMotor != null && animancerMotor.CurrentState == CharacterAnimState.Jumping) return;
             if (presentRoutine != null) { StopCoroutine(presentRoutine); presentRoutine = null; }
+            SetBodyLift(0f);
             if (animancerMotor != null) animancerMotor.SetAttackingState(true);
             animancer.Play(skill.chargeLoopClip, castCrossFade).ApplyFootIK = castFootIK;
         }

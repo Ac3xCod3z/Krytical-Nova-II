@@ -83,9 +83,10 @@ namespace KryticalNova.DevTools
             {
                 "PROGRESSION  gm.level <n> · gm.maxlevel · gm.xp <n> · gm.statpoints <n> · gm.skillpoints <n> · gm.attr <str|vit|agi|spi> <n> · gm.resetstats",
                 "STATS        gm.stats · gm.setstat <StatType> <value> · gm.clearstats",
-                "VITALS       gm.heal · gm.fillchi · gm.damage <n> · gm.hitme [n] [normal|heavy|crit] · gm.spendchi <n> · gm.kill",
+                "VITALS       gm.heal · gm.fillchi · gm.damage <n> · gm.hitme [n] [normal|heavy|crit] [front|back|left|right] · gm.spendchi <n> · gm.kill",
                 "SKILLS       gm.skillpoints <n> · gm.skills.max · gm.skills · gm.dropskills <true|false> · gm.unlockskill <id> · gm.lockskill <id>",
-                "COMBAT       gm.dummy.hit [times] · gm.dummy.reset",
+                "BUFFS        gm.buffs · gm.buff.remove <id|name> · gm.buff.clear   (take down active skills)",
+                "COMBAT       gm.dummy.hit [times] · gm.dummy.reset · gm.dummy.hp <n> · gm.dummy.maxhp <n> (0 = base) · gm.dummy.inf [on|off]",
                 "GOD MODE     gm.god [on|off] · gm.infchi · gm.nocd · gm.oneshot · gm.speed <mult> · gm.reset",
                 "GAME SPEED   gm.slowmo [x]   (0.25 = quarter speed, 1 = normal; no value toggles quarter speed)",
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
@@ -242,8 +243,9 @@ namespace KryticalNova.DevTools
             return $"HP {res.Health:0}/{res.MaxHealth:0}{(GmState.GodMode ? " (god mode on)" : "")}";
         }
 
-        [Command("gm.hitme", "Take a hit yourself to see the impact effect: gm.hitme [amount] [normal|heavy|crit]. Amount 0 = 10% of max HP.")]
-        private static string HitMe(float amount = 0f, string style = "normal")
+        [Command("gm.hitme", "Take a hit yourself to see the impact effect and hit animation: gm.hitme [amount] [normal|heavy|crit] " +
+                             "[front|back|left|right]. Amount 0 = 10% of max HP.")]
+        private static string HitMe(float amount = 0f, string style = "normal", string from = "front")
         {
             if (!TryGetPlayer(out var player, out var error)) return error;
             var res = player.GetComponent<PlayerResources>();
@@ -251,18 +253,35 @@ namespace KryticalNova.DevTools
             if (res == null || melee == null) return "Local player has no PlayerResources / PlayerMeleeCombat.";
             if (!TryParseHitStyle(style, out int comboStep, out bool critical))
                 return $"Unknown style '{style}'. Use normal, heavy or crit.";
+            if (!TryParseHitSide(from, player.transform, out Vector3 towardAttacker))
+                return $"Unknown side '{from}'. Use front, back, left or right.";
             if (amount <= 0f) amount = res.MaxHealth * 0.1f;
 
             float before = res.Health;
             res.ApplyDamage(amount);
             float lost = before - res.Health;
             melee.PreviewImpact(player.transform, comboStep, critical);
+            // This bypasses TakeDamage, so the hit animation is asked for here, the way a real blow asks for it.
+            player.GetComponent<KryticalNova.Player.PlayerAnimancerMotor>()?.ShowHitReaction(towardAttacker, comboStep >= 3);
             ClientPresentationRegistry.Feedback?.ShowCombatFeedback(player.transform.position,
                 new DamageResult { DamageDealt = amount, IsCritical = critical });
             // The networked path raises this from the replicated health; offline nothing else does.
             if (!res.IsSpawned && lost > 0f)
                 ClientPresentationRegistry.Feel?.LocalPlayerDamaged(lost / Mathf.Max(1f, res.MaxHealth));
-            return $"Hit for {amount:0} ({style}) · HP {res.Health:0}/{res.MaxHealth:0}{(GmState.GodMode ? " (god mode on: no HP lost)" : "")}";
+            return $"Hit for {amount:0} ({style}, from the {from}) · HP {res.Health:0}/{res.MaxHealth:0}{(GmState.GodMode ? " (god mode on: no HP lost)" : "")}";
+        }
+
+        private static bool TryParseHitSide(string text, Transform victim, out Vector3 towardAttacker)
+        {
+            towardAttacker = victim.forward;
+            switch ((text ?? string.Empty).Trim().ToLowerInvariant())
+            {
+                case "": case "front": case "f": return true;
+                case "back": case "behind": case "b": towardAttacker = -victim.forward; return true;
+                case "left": case "l": towardAttacker = -victim.right; return true;
+                case "right": case "r": towardAttacker = victim.right; return true;
+                default: return false;
+            }
         }
 
         private static bool TryParseHitStyle(string text, out int comboStep, out bool critical)
@@ -415,7 +434,58 @@ namespace KryticalNova.DevTools
             var target = NearestDummy(player);
             if (target == null) return "No combat target found in the scene.";
             target.ResetHealth();
-            return $"{target.EntityName} HP {target.CurrentHealth:0}/{target.MaxHealth:0}";
+            return DummyHealth(target);
+        }
+
+        private static string DummyHealth(CombatEntity target) =>
+            $"{target.EntityName} HP {target.CurrentHealth:0}/{target.MaxHealth:0}{(target.InfiniteHealth ? " (infinite)" : "")}";
+
+        private static bool TryGetDummy(out CombatEntity target, out string error)
+        {
+            target = null;
+            if (!TryGetPlayer(out var player, out error)) return false;
+            target = NearestDummy(player);
+            if (target == null) error = "No combat target found in the scene.";
+            return target != null;
+        }
+
+        /// <summary>Read by the editor GM Tools window to show the toggle state.</summary>
+        public static bool DummyInfiniteHealthEnabled
+        {
+            get
+            {
+                var inv = PlayerInventory.Local;
+                var target = inv != null ? NearestDummy(inv.gameObject) : null;
+                return target != null && target.InfiniteHealth;
+            }
+        }
+
+        [Command("gm.dummy.hp", "Set the nearest combat dummy/NPC target's current health.")]
+        private static string SetDummyHealth(float value)
+        {
+            if (!TryGetDummy(out var target, out var error)) return error;
+            return target.SetHealth(value) ? DummyHealth(target) : NoAuthority;
+        }
+
+        [Command("gm.dummy.maxhp", "Set the nearest combat dummy/NPC target's max health and refill it (0 = back to its base value).")]
+        private static string SetDummyMaxHealth(float value)
+        {
+            if (!TryGetDummy(out var target, out var error)) return error;
+            return target.SetMaxHealthOverride(value) ? DummyHealth(target) : NoAuthority;
+        }
+
+        [Command("gm.dummy.inf", "Toggle (or set) infinite health on the nearest combat dummy/NPC target: it refills instead of dying.")]
+        private static string InfiniteDummyHealth()
+        {
+            if (!TryGetDummy(out var target, out var error)) return error;
+            return InfiniteDummyHealth(!target.InfiniteHealth);
+        }
+
+        [Command("gm.dummy.inf")]
+        private static string InfiniteDummyHealth(bool on)
+        {
+            if (!TryGetDummy(out var target, out var error)) return error;
+            return target.SetInfiniteHealth(on) ? $"Infinite health {(on ? "ON" : "OFF")} · {DummyHealth(target)}" : NoAuthority;
         }
 
         [Command("gm.dropskills", "Unlock (true) or lock (false) every rare drop-book combat skill.")]
@@ -455,6 +525,45 @@ namespace KryticalNova.DevTools
             skills.GmSetAllRanksToMax();
             if (skills.TryGetComponent<PlayerMovementSkills>(out var movement)) movement.GmSetMaxRanks();
             return "Every skill unlocked at max rank.";
+        }
+
+        [Command("gm.buffs", "List the skills (buffs) active on you, with the time each has left.")]
+        private static string ListBuffs()
+        {
+            if (!TryGet<CharacterBuffManager>(out var buffs, out var error)) return error;
+            if (buffs.ActiveBuffs.Count == 0) return "No active skills.";
+            var sb = new StringBuilder();
+            foreach (var buff in buffs.ActiveBuffs)
+                if (buff?.Skill != null) sb.AppendLine($"{buff.Skill.skillId}  ({buff.Skill.displayName})  {buff.RemainingDuration:0.0}s left");
+            return sb.ToString().TrimEnd();
+        }
+
+        [Command("gm.buff.remove", "Take down one active skill (buff) by skill id or name: its stats, aura and buff-bar entry go.")]
+        private static string RemoveBuff(string skill)
+        {
+            if (!TryGet<CharacterBuffManager>(out var buffs, out var error)) return error;
+            string query = (skill ?? string.Empty).Replace(" ", string.Empty);
+            foreach (var buff in buffs.ActiveBuffs)
+            {
+                if (buff?.Skill == null) continue;
+                // By id, or by the start of the name without spaces ("heavenlyblow" finds "Heavenly Blow (HB)").
+                bool match = string.Equals(buff.Skill.skillId, query, StringComparison.OrdinalIgnoreCase)
+                    || (query.Length > 0 && (buff.Skill.displayName ?? string.Empty).Replace(" ", string.Empty)
+                        .StartsWith(query, StringComparison.OrdinalIgnoreCase));
+                if (!match) continue;
+                string name = buff.Skill.displayName;
+                return buffs.RemoveBuff(buff.Skill.skillId) ? $"{name} removed." : $"{name} could not be removed.";
+            }
+            return $"'{skill}' is not active. Use gm.buffs to list active skills.";
+        }
+
+        [Command("gm.buff.clear", "Take down every active skill (buff) on you.")]
+        private static string ClearBuffs()
+        {
+            if (!TryGet<CharacterBuffManager>(out var buffs, out var error)) return error;
+            int count = buffs.ActiveBuffs.Count;
+            buffs.ClearAllBuffs();
+            return count == 0 ? "No active skills." : $"{count} active skill(s) removed.";
         }
 
         [Command("gm.skills", "List combat skills with their id, rank and book lock state.")]

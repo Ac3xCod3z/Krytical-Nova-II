@@ -179,7 +179,7 @@ namespace KryticalNova.EditorTools
             p.townFalloff = 28f;
             p.pavedHalfSize = 112f;
             p.ruinsHalfSize = 178f;
-            p.greenHalfSize = 20f;
+            p.greenHalfSize = 22f; // lawns end at 20 m; the fade to stone hides under the perimeter walk
             p.riverWidth = 22f;
             p.riverBankWidth = 8f;
 

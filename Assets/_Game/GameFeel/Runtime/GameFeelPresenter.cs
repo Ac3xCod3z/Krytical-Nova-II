@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Animancer;
 using KryticalNova.Core;
 using KryticalNova.Networking;
+using KryticalNova.Player;
 using KryticalNova.UI;
 using MoreMountains.Feedbacks;
 using UnityEngine;
@@ -132,7 +133,9 @@ namespace KryticalNova.GameFeel
             PlayWorld(heavy ? heavyHitWorldFeel : hitWorldFeel, hit.Point, facing, hit.Target);
             if (hit.IsCritical) PlayWorld(critWorldFeel, hit.Point, facing, hit.Target);
 
-            if (hit.Target != null) HitReactor.For(hit.Target)?.React(hit.TowardAttacker, heavy);
+            // Characters with a hit animation of their own keep the squash and flash but not the lean: the clip leans.
+            if (hit.Target != null)
+                HitReactor.For(hit.Target)?.React(hit.Target.GetComponentInParent<PlayerAnimancerMotor>() != null ? Vector3.zero : hit.TowardAttacker, heavy);
 
             if (hit.AttackerIsLocalPlayer)
             {
@@ -249,7 +252,8 @@ namespace KryticalNova.GameFeel
             if (actor == null) return;
             SkillFeel feel = skills != null ? skills.Find(skillId) : null;
             GameObject aura = feel != null && feel.aura != null ? feel.aura : defaultAuraVfx;
-            Vector3 offset = feel != null && feel.auraAnchor == AuraAnchor.Chest ? ChestOffset : FeetOffset;
+            AuraAnchor anchor = feel != null ? feel.auraAnchor : AuraAnchor.Feet;
+            Vector3 offset = anchor == AuraAnchor.Head ? HeadOffset : anchor == AuraAnchor.Chest ? ChestOffset : FeetOffset;
             ActorVfx.For(actor).SetAura(skillId, aura, offset, duration);
         }
 
@@ -288,6 +292,7 @@ namespace KryticalNova.GameFeel
         // Metres above the soles (ActorVfx brings them into the root's space).
         private static readonly Vector3 FeetOffset = new Vector3(0f, 0.05f, 0f);
         private static readonly Vector3 ChestOffset = new Vector3(0f, 1.15f, 0f);
+        private static readonly Vector3 HeadOffset = new Vector3(0f, 1.85f, 0f); // the top of the head
         private const float AreaRingLift = 0.06f;
 
         /// <summary>

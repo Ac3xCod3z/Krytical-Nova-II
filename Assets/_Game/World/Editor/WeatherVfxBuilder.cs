@@ -301,6 +301,9 @@ namespace KryticalNova.EditorTools
             mat.SetFloat("_Surface", 1f);                  // transparent
             mat.SetFloat("_Blend", additive ? 2f : 0f);    // additive : alpha
             mat.SetFloat("_ColorMode", 0f);                // multiply vertex colour
+            // Both faces, like the legacy particle shaders these replace: flat rings and swirls laid on the ground
+            // face down, and would be culled from above.
+            mat.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Off);
             mat.SetFloat("_SoftParticlesEnabled", 0f);
             mat.SetFloat("_CameraFadingEnabled", 0f);
             BaseShaderGUI.SetMaterialKeywords(mat, ParticleGUI.SetMaterialKeywords);

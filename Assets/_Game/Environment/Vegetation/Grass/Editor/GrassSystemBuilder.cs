@@ -60,10 +60,13 @@ namespace KryticalNova.EditorTools
         {
             WeatherVfxBuilder.EnsureFolder(Folder);
             var meadowClump = ClumpMesh("GrassClump_Meadow", blades: 7, radius: 0.12f, baseWidth: 0.05f, lean: 16f, curve: 0.22f, seed: 11);
-            var lawnClump = ClumpMesh("GrassClump_Lawn", blades: 9, radius: 0.16f, baseWidth: 0.045f, lean: 10f, curve: 0.12f, seed: 23);
+            // Blades of nearly one length: a mown lawn, not a tuft.
+            var lawnClump = ClumpMesh("GrassClump_Lawn", blades: 9, radius: 0.16f, baseWidth: 0.045f, lean: 10f, curve: 0.12f, seed: 23,
+                shortestBlade: 0.88f);
             var syntyTallA = SyntyMesh("SM_Gen_Env_Grass_Tall_01");
             var syntyTallB = SyntyMesh("SM_Gen_Env_Grass_Tall_02");
             var farTuft = TuftMesh("GrassTuft_Far", blades: 6, radius: 0.32f, baseWidth: 0.16f, seed: 37);
+            var fillTuft = TuftMesh("GrassTuft_Fill", blades: 4, radius: 0.14f, baseWidth: 0.05f, seed: 53);
 
             var tallA = Type("GT_TallGrass_A", syntyTallA, t =>
             {
@@ -94,7 +97,7 @@ namespace KryticalNova.EditorTools
             });
             var lawn = Type("GT_LawnBlades", lawnClump, t =>
             {
-                t.heightRange = new Vector2(0.12f, 0.17f); t.widthRange = new Vector2(5.5f, 7f); t.density = 0.95f; // wide footprint, short cut
+                t.heightRange = new Vector2(0.13f, 0.15f); t.widthRange = new Vector2(5.5f, 7f); t.density = 0.95f; // wide footprint, short even cut
                 t.rootColor = new Color(0.14f, 0.3f, 0.12f); t.midColor = new Color(0.32f, 0.58f, 0.22f); t.tipColor = new Color(0.58f, 0.78f, 0.34f);
                 t.patchTint = new Color(0.95f, 1f, 0.8f, 0.12f); t.brightnessVariation = 0.06f; t.rootOcclusion = 0.65f;
                 t.windStrength = 0.6f; t.flutter = 0.25f; t.playerBend = 1.2f;
@@ -108,6 +111,7 @@ namespace KryticalNova.EditorTools
             var lawnBiome = Biome("GB_Lawn", b =>
             {
                 b.density = 1f;
+                b.fillDensity = 0.5f;
                 b.entries.Add(new GrassBiome.Entry { type = lawn, weight = 1f, patchiness = 0f, patchSize = 10f });
             });
 
@@ -130,6 +134,7 @@ namespace KryticalNova.EditorTools
                 AssetDatabase.CreateAsset(rules, RulesPath);
             }
             rules.farMesh = farTuft;
+            rules.fillMesh = fillTuft;
             EditorUtility.SetDirty(rules);
 
             if (AssetDatabase.LoadAssetAtPath<Material>(MaterialPath) == null)
@@ -149,8 +154,8 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>
-        /// Far-band stand-in: a few single-triangle blades (1 m tall, root at the origin), about 6 triangles per tuft.
-        /// It reads as grass at distance because it shares the real grass's colours, wind and placement.
+        /// Far-band and fill stand-in: a few single-triangle blades (1 m tall, root at the origin), 4-6 triangles per
+        /// tuft. It reads as grass because it shares the real grass's colours, wind and placement.
         /// </summary>
         private static Mesh TuftMesh(string name, int blades, float radius, float baseWidth, int seed)
         {
@@ -226,7 +231,8 @@ namespace KryticalNova.EditorTools
         /// A clump of thin tapered blades (1 m tall, root at the origin) bending outward. Cheap: 4 segments per blade.
         /// Regenerated every run so tweaks here apply; the asset GUID is kept.
         /// </summary>
-        private static Mesh ClumpMesh(string name, int blades, float radius, float baseWidth, float lean, float curve, int seed)
+        private static Mesh ClumpMesh(string name, int blades, float radius, float baseWidth, float lean, float curve, int seed,
+            float shortestBlade = 0.72f)
         {
             const int segments = 4;
             var rng = new System.Random(seed);
@@ -245,7 +251,7 @@ namespace KryticalNova.EditorTools
                 var leanDir = Vector3.Cross(widthDir, Vector3.up).normalized * (R() < 0.5f ? -1f : 1f);
                 // Lean outward from the clump centre a little too.
                 if (root.sqrMagnitude > 1e-6f) leanDir = (leanDir + root.normalized * 0.8f).normalized;
-                float height = Mathf.Lerp(0.72f, 1f, R());
+                float height = Mathf.Lerp(shortestBlade, 1f, R());
                 float leanAmount = Mathf.Tan(Mathf.Lerp(lean * 0.4f, lean, R()) * Mathf.Deg2Rad);
                 float width = baseWidth * Mathf.Lerp(0.8f, 1.2f, R());
                 int start = verts.Count;
@@ -302,6 +308,8 @@ namespace KryticalNova.EditorTools
         /// <summary>
         /// R = density (ground × slope × altitude × road/building falloff × artist mask), G = biome index / 3,
         /// B = moisture (near water). Roads and buildings fade out over <see cref="GrassRuleSet.meshEdgeFalloff"/>.
+        /// The town's kept lawns are full to their edges: every texel a lawn rectangle touches is lawn, whatever
+        /// paving or props stand next to it, and the renderer cuts the grass off exactly at the rectangle.
         /// </summary>
         public static void BakeMask(GrassRuleSet rules)
         {
@@ -338,6 +346,14 @@ namespace KryticalNova.EditorTools
                 artistRes = rules.artistMask.width;
             }
 
+            Rect[] keptLawns = StarterTownBuilder.PlazaLawnRects;
+            Rect[] lawnHoles = StarterTownBuilder.PlazaLawnHoles;
+            if (keptLawns.Length > GrassRuleSet.MaxLawnRects)
+                Debug.LogWarning($"[Grass] {keptLawns.Length} kept lawns, but only {GrassRuleSet.MaxLawnRects} get a trimmed edge.");
+            rules.lawnRects.Clear();
+            for (int i = 0; i < keptLawns.Length && i < GrassRuleSet.MaxLawnRects; i++) rules.lawnRects.Add(keptLawns[i]);
+            float halfTexel = texel * 0.5f;
+
             var pixels = new Color32[res * res];
             for (int z = 0; z < res; z++)
             for (int x = 0; x < res; x++)
@@ -345,7 +361,14 @@ namespace KryticalNova.EditorTools
                 float nx = (x + 0.5f) / res, nz = (z + 0.5f) / res;
                 float wx = -half + profile.size * nx, wz = -half + profile.size * nz;
 
-                bool lawn = Mathf.Max(Mathf.Abs(wx), Mathf.Abs(wz)) < rules.lawnRegionHalfSize;
+                bool kept = false;
+                foreach (Rect r in rules.lawnRects)
+                    kept |= wx + halfTexel > r.xMin && wx - halfTexel < r.xMax && wz + halfTexel > r.yMin && wz - halfTexel < r.yMax;
+                if (kept)
+                    foreach (Rect hole in lawnHoles)
+                        if (hole.Contains(new Vector2(wx, wz))) kept = false;
+
+                bool lawn = kept || Mathf.Max(Mathf.Abs(wx), Mathf.Abs(wz)) < rules.lawnRegionHalfSize;
                 float splat = SampleSplat(alpha, aRes, nx, nz, layer);
                 var groundRange = lawn ? rules.lawnGroundWeightRange : rules.groundWeightRange;
                 float ground = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(groundRange.x, groundRange.y, splat));
@@ -357,7 +380,7 @@ namespace KryticalNova.EditorTools
                 if (artist != null)
                     art = artist[Mathf.Min(artistRes - 1, (int)(nz * artistRes)) * artistRes + Mathf.Min(artistRes - 1, (int)(nx * artistRes))].r;
 
-                float density = ground * slope * altitude * edge * art;
+                float density = kept ? art : ground * slope * altitude * edge * art;
                 int biome = lawn ? rules.lawnBiome : 0;
                 float moisture = 1f - Mathf.Clamp01(waterDist[z, x] / rules.moistureDistance);
 

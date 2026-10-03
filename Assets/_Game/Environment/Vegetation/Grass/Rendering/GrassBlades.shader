@@ -1,7 +1,8 @@
 // Krytical Nova stylized grass (BotW-style), drawn with Graphics.RenderMeshIndirect by GrassRenderer.
 // Per-instance data comes from GrassGenerate.compute; per-type look (colours, motion) from a property block.
 //  Vertex:   height-masked bending (root planted) = layered wind (rolling field waves + local gust noise +
-//            blade flutter) + player/NPC push (_KN_Interactors) + random per-instance size/yaw.
+//            blade flutter) + player/NPC push (_KN_Interactors) + random per-instance size/yaw; blades
+//            rooted in a kept lawn are held inside its rectangle, which gives the lawn its trimmed edge.
 //  Fragment: root→mid→tip colour gradient × per-clump variation × field patches × wetness × fake root AO,
 //            lit with the comic cel band + Ben-Day dots using upward-biased (stylized) normals.
 Shader "KryticalNova/Grass Blades"
@@ -22,7 +23,7 @@ Shader "KryticalNova/Grass Blades"
     float4 _PatchTint;      // rgb, a strength
     float4 _WetTint;        // rgb, a strength
     float4 _GrassParams;    // x mid point, y brightness variation, z root occlusion, w normal-up
-    float4 _GrassMotion;    // x wind strength, y flutter, z player bend, w mesh height
+    float4 _GrassMotion;    // x wind strength, y flutter, z player bend (0 = takes no part in interaction), w mesh height
     int    _KN_GrassDebug;
 
     struct GrassVertexOut
@@ -78,7 +79,8 @@ Shader "KryticalNova/Grass Blades"
         // ---- Interaction: push away from players / NPCs and flatten a little.
         float2 push = 0.0;
         float flatten = 0.0;
-        [loop] for (int i = 0; i < _KN_InteractorCount; i++)
+        int interactors = _GrassMotion.z > 0.0 ? _KN_InteractorCount : 0; // filler tufts skip the loop
+        [loop] for (int i = 0; i < interactors; i++)
         {
             float4 it = _KN_Interactors[i];
             float2 d = root.xz - it.xz;
@@ -95,6 +97,11 @@ Shader "KryticalNova/Grass Blades"
         float2 moved = pos.xz - (root.xz + rotated.xz);
         float lenSq = dot(moved, moved);
         pos.y -= min(lenSq / max(heightWS * 2.0, 0.05), heightWS * 0.6);
+
+        // Kept lawns end in a straight cut: nothing leans, sways or is pushed across the edge.
+        int lawn;
+        KNLawnDistance(root.xz, lawn);
+        if (lawn >= 0) pos.xz = clamp(pos.xz, _KN_LawnRects[lawn].xy, _KN_LawnRects[lawn].zw);
 
         o.positionWS = pos;
         o.normalWS = normalize(lerp(nrm, float3(0.0, 1.0, 0.0), _GrassParams.w));

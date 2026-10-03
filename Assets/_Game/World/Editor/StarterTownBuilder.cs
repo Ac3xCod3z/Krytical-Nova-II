@@ -33,6 +33,19 @@ namespace KryticalNova.EditorTools
         private const float RingIn = 95f, RingOut = 105f;
         private const float LawnHalf = 20f;      // plaza lawns sit between the walkways (5 m) and the perimeter walk
 
+        /// <summary>
+        /// The Central Plaza's four lawns (world XZ), each running from the cross walkway to the perimeter walk. The
+        /// grass bake fills them edge to edge and the grass renderer trims them along these lines.
+        /// </summary>
+        public static Rect[] PlazaLawnRects => new[]
+        {
+            Rect.MinMaxRect(Tile, Tile, LawnHalf, LawnHalf), Rect.MinMaxRect(-LawnHalf, Tile, -Tile, LawnHalf),
+            Rect.MinMaxRect(Tile, -LawnHalf, LawnHalf, -Tile), Rect.MinMaxRect(-LawnHalf, -LawnHalf, -Tile, -Tile),
+        };
+
+        /// <summary>Ground inside those lawns that is built on, so no grass grows there.</summary>
+        public static Rect[] PlazaLawnHoles => new[] { CenteredRect(ElderHall, ElderHallFootprint) };
+
         private const float Tile = 5f;
         private const int Cells = 44;            // 44 × 5 m = 220 m, wall to wall
         private const float PavingHeight = 0.03f;

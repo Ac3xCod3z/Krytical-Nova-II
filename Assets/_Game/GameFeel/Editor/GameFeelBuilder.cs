@@ -53,7 +53,12 @@ namespace KryticalNova.EditorTools
         // Colour Bible (Rendering-Bible.md §6b), shared with the skill icons.
         private static readonly Color Cyan = new Color32(0x4F, 0xE3, 0xF0, 0xFF);
         private static readonly Color Yellow = new Color32(0xFF, 0xC9, 0x3C, 0xFF);
-        private static readonly Color Magenta = new Color32(0xE0, 0x4F, 0xB8, 0xFF);
+        private static readonly Color Red = new Color32(0xF0, 0x3A, 0x2E, 0xFF); // rage
+        // The hurt tint: a soft red wash from the corners with Ben-Day dots over it; the scene stays readable.
+        private const float HurtVignetteSeconds = 0.6f;
+        private const float HurtVignetteReach = 0.3f;
+        private static readonly Color HurtVignetteColor = new Color(0.75f, 0.05f, 0.08f, 0.22f);
+        private const float HurtVignetteDots = 0.5f;
         private static readonly Color Coral = new Color32(0xFF, 0x9E, 0x66, 0xFF);
         private static readonly Color Violet = new Color(0.62f, 0.4f, 1f);
         private static readonly Color Teal = new Color(0.35f, 0.95f, 0.78f);
@@ -108,7 +113,6 @@ namespace KryticalNova.EditorTools
 
             // Skill casts.
             Make("FX_SwordSlash_01", "PFX_Cast_Slash", 1f);
-            Make("FX_Slash_Large_01", "PFX_Cast_SlashLarge", 1f);
             Make("FX_MagicBlast_02", "PFX_Cast_Buff", 0.8f, Yellow);
             Make("FX_LevelUp_01", "PFX_Cast_PowerUp", 0.7f);
             Make("FX_LightningStrike_01", "PFX_Cast_Thunder", 0.8f);
@@ -118,27 +122,185 @@ namespace KryticalNova.EditorTools
             Make("FX_Heal_01", "PFX_Heal", 0.8f, HealGreen);
             Make("FX_Heal_01", "PFX_Chi", 0.8f, Cyan);
 
-            // Buff auras: loop for as long as the buff lasts.
-            Make("FX_GlowSpot_01", "PFX_Aura_Default", 0.8f, Yellow, loop: true);
-            Make("FX_Healing_Cirle_02", "PFX_Aura_AzureWall", 0.8f, Cyan, loop: true);        // ring + column: the wall
-            Make("FX_Electricity_01", "PFX_Aura_LightningFlash", 0.3f, Cyan, loop: true);
-            Make("FX_Embers_01", "PFX_Aura_SpiritualRage", 0.8f, Magenta, loop: true);
-            Make("FX_Heal_02", "PFX_Aura_Serenity", 0.7f, Yellow, loop: true);                // pillar of light: meditation
-            Make("FX_Healing_Cirle_02", "PFX_Aura_Shield", 1.05f, Yellow, loop: true);         // a wider golden barrier
-            Make("FX_Sparkle_Orbit_02", "PFX_Aura_Blow", 0.8f, Coral, loop: true);
-            Make("FX_Sparkles_Large_01", "PFX_Aura_Prayer", 0.8f, Yellow, loop: true);
-            Make("FX_Electricity_01", "PFX_Aura_Repulsion", 0.3f, Yellow, loop: true);        // crackling charge: the hit thrown back
-            Make("FX_Embers_01", "PFX_Aura_Destruction", 0.8f, Violet, loop: true);
-            Make("FX_Swirl_03", "PFX_Aura_ReverseFlow", 1.3f, Teal, loop: true);
+            foreach (AuraRecipe aura in Auras) Make(aura);
 
             // Held charges: energy drawn inward at the chest, a fast swirl at the feet.
             Make("FX_PowerDraw_01", "PFX_Charge_Default", 0.55f, Yellow, loop: true);
-            Make("FX_PowerDraw_01", "PFX_Charge_SpiritualRage", 0.55f, Magenta, loop: true);
-            Make("FX_Swirl_Fast_01", "PFX_Charge_Ground", 0.7f, Magenta, loop: true);
+            BuildRageCharge();
 
             BuildAreaRing();
             BuildBladeTrail();
             UseUrpMaterials($"{GameplayVfxFolder}/FX_ComicSlash.prefab");
+        }
+
+        /// <summary>A buff aura: a looping POLYGON effect that rides on the character for as long as the buff lasts.</summary>
+        private readonly struct AuraRecipe
+        {
+            public readonly string Source, Name;
+            public readonly float Scale;
+            /// <summary>Null keeps the effect exactly as POLYGON made it: its own colours and its full particle counts.</summary>
+            public readonly Color? Tint;
+            public readonly Action<GameObject> Then;
+            public AuraRecipe(string source, string name, float scale, Color? tint, Action<GameObject> then = null)
+            {
+                Source = source; Name = name; Scale = scale; Tint = tint; Then = then;
+            }
+        }
+
+        private static readonly AuraRecipe[] Auras =
+        {
+            new AuraRecipe("FX_GlowSpot_01", "PFX_Aura_Default", 0.8f, Yellow),
+            new AuraRecipe("FX_Healing_Cirle_02", "PFX_Aura_AzureWall", 0.8f, Cyan),          // ring + column: the wall
+            new AuraRecipe("FX_Electricity_01", "PFX_Aura_LightningFlash", 0.3f, Cyan),
+            // Rage held ready: a small flame over the head until it is spent, embers rising off it.
+            new AuraRecipe("FX_Fire_Small_01", "PFX_Aura_SpiritualRage", RageFlameScale, null, AddRageEmbers),
+            new AuraRecipe("FX_Healing_Cirle_02", "PFX_Aura_Serenity", 1f, null),             // a circle to meditate in, as POLYGON made it
+            new AuraRecipe("FX_Healing_Cirle_02", "PFX_Aura_Shield", 1.05f, Yellow),          // a wider golden barrier
+            new AuraRecipe("FX_Swirl_03", "PFX_Aura_Blow", 1f, null),                         // gathering force at the feet, as POLYGON made it
+            new AuraRecipe("FX_Sparkles_Large_01", "PFX_Aura_Prayer", 0.8f, Yellow),
+            new AuraRecipe("FX_Electricity_01", "PFX_Aura_Repulsion", 0.3f, Yellow),          // crackling charge: the hit thrown back
+            new AuraRecipe("FX_Embers_01", "PFX_Aura_Destruction", 0.8f, Violet),
+            new AuraRecipe("FX_Swirl_03", "PFX_Aura_ReverseFlow", 1.3f, Teal),
+        };
+
+        private static void Make(AuraRecipe aura)
+        {
+            WeatherVfxBuilder.Build(ParticleFx + aura.Source + ".prefab", Vfx(aura.Name), root =>
+            {
+                Configure(root, aura.Scale, aura.Tint, true, keepParticleCounts: !aura.Tint.HasValue);
+                aura.Then?.Invoke(root);
+            });
+        }
+
+        private const float RageFlameScale = 0.38f;
+        private const float RageEmberScale = 0.55f; // relative to the flame they rise from
+        private const float RageEmberSpread = 0.35f;
+        private const float RageFlameLife = 0.45f;  // a short plume that stays at the head instead of a tall column
+
+        /// <summary>Spiritual Rage's embers, pulled in to a tight plume so they read as heat coming off the flame.</summary>
+        private static void AddRageEmbers(GameObject root)
+        {
+            foreach (var ps in root.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                main.startLifetimeMultiplier *= RageFlameLife;
+            }
+            var source = Load(ParticleFx + "FX_Embers_01.prefab");
+            if (source == null) return;
+            var embers = (GameObject)PrefabUtility.InstantiatePrefab(source);
+            PrefabUtility.UnpackPrefabInstance(embers, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            embers.name = "Embers";
+            Loop(embers, RageEmberScale, null);
+            foreach (var ps in embers.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                main.startLifetimeMultiplier *= RageFlameLife;
+            }
+            embers.transform.SetParent(root.transform, false);
+            embers.transform.localPosition = Vector3.zero;
+            foreach (var ps in embers.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var shape = ps.shape;
+                shape.radius *= RageEmberSpread;
+                shape.scale *= RageEmberSpread;
+            }
+        }
+
+        /// <summary>Spiritual Rage gathering while the key is held: red energy drawn in at the chest, a red swirl at the feet.</summary>
+        private static void BuildRageCharge()
+        {
+            Make("FX_PowerDraw_01", "PFX_Charge_SpiritualRage", 0.55f, Red, loop: true);
+            Make("FX_Swirl_Fast_01", "PFX_Charge_Ground", 0.7f, Red, loop: true);
+        }
+
+        /// <summary>
+        /// The changes of the second feel pass, applied to the existing assets without regenerating the rest (a full
+        /// build rewrites every effect and the whole prefab, tuning included): Spiritual Rage's colours, the large
+        /// white slash taken off Fury Strike and Thunderous Dragon, and the softer hurt tint.
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Apply Feel Pass 2 (Rage colours, no large slash, soft hurt tint)")]
+        public static void ApplyFeelPass2()
+        {
+            BuildRageCharge();
+            RebuildSkillAuras("SpiritualRage");
+
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                GameObject root = scope.prefabContentsRoot;
+                int removed = 0;
+                foreach (var player in root.GetComponentsInChildren<MMF_Player>(true))
+                {
+                    if (player.name != "FuryStrike Cast" && player.name != "ThunderousDragon Cast") continue;
+                    for (int i = player.FeedbacksList.Count - 1; i >= 0; i--)
+                    {
+                        if (player.FeedbacksList[i] == null || player.FeedbacksList[i].Label != LargeSlashName) continue;
+                        player.FeedbacksList.RemoveAt(i);
+                        removed++;
+                    }
+                    EditorUtility.SetDirty(player);
+                }
+
+                int tints = 0;
+                foreach (var player in root.GetComponentsInChildren<MMF_Player>(true))
+                    foreach (var feedback in player.FeedbacksList)
+                    {
+                        if (!(feedback is MMF_BeautifyVignette vignette)) continue;
+                        vignette.Duration = HurtVignetteSeconds;
+                        vignette.Reach = HurtVignetteReach;
+                        vignette.PulseColor = HurtVignetteColor;
+                        vignette.DotOpacity = HurtVignetteDots;
+                        vignette.Shape = new MMF_BeautifyVignette().Shape;
+                        EditorUtility.SetDirty(player);
+                        tints++;
+                    }
+                Debug.Log($"[GameFeel] Feel pass 2: {removed} large slash effect(s) removed, {tints} hurt tint(s) softened.");
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        private const string LargeSlashName = "PFX_Cast_SlashLarge";
+
+        /// <summary>
+        /// Rebuilds chosen buff auras and points their skills at them, without regenerating the rest of the game feel
+        /// (a full build rewrites every effect and the whole prefab, tuning included).
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Skill Auras (Rage, Serenity, Blow)")]
+        public static void RebuildChangedAuras() => RebuildSkillAuras("SpiritualRage", "HeavenlySerenity", "HeavenlyBlow");
+
+        public static void RebuildSkillAuras(params string[] skillIds)
+        {
+            var looks = new List<SkillLook>();
+            foreach (string id in skillIds)
+            {
+                int i = Array.FindIndex(Skills, s => s.Id == id);
+                if (i < 0 || Skills[i].Aura == null) { Debug.LogWarning($"[GameFeel] No aura look for skill '{id}'."); continue; }
+                int a = Array.FindIndex(Auras, r => r.Name == Skills[i].Aura);
+                if (a < 0) { Debug.LogWarning($"[GameFeel] No aura recipe named '{Skills[i].Aura}'."); continue; }
+                Make(Auras[a]);
+                looks.Add(Skills[i]);
+            }
+            AssetDatabase.SaveAssets();
+
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                var catalog = scope.prefabContentsRoot.GetComponentInChildren<SkillFeelCatalog>(true);
+                if (catalog == null) { Debug.LogError($"[GameFeel] {PrefabPath} has no SkillFeelCatalog."); return; }
+                var so = new SerializedObject(catalog);
+                var list = so.FindProperty("skills");
+                foreach (SkillLook look in looks)
+                {
+                    for (int i = 0; i < list.arraySize; i++)
+                    {
+                        var entry = list.GetArrayElementAtIndex(i);
+                        if (entry.FindPropertyRelative("skillId").stringValue != look.Id) continue;
+                        entry.FindPropertyRelative("aura").objectReferenceValue = Load(Vfx(look.Aura));
+                        entry.FindPropertyRelative("auraAnchor").enumValueIndex = (int)look.Anchor;
+                    }
+                }
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[GameFeel] Rebuilt {looks.Count} skill aura(s): {string.Join(", ", skillIds)}.");
         }
 
         /// <summary>
@@ -174,7 +336,7 @@ namespace KryticalNova.EditorTools
         /// <summary>Loops ride on a character until released, so they stay light and never stop by themselves.</summary>
         private static void Loop(GameObject root, float scale, Color? tint) => Configure(root, scale, tint, true);
 
-        private static void Configure(GameObject root, float scale, Color? tint, bool loop)
+        private static void Configure(GameObject root, float scale, Color? tint, bool loop, bool keepParticleCounts = false)
         {
             root.transform.localScale = Vector3.one * scale;
             foreach (var ps in root.GetComponentsInChildren<ParticleSystem>(true))
@@ -183,7 +345,7 @@ namespace KryticalNova.EditorTools
                 main.loop = loop;
                 main.playOnAwake = true;
                 main.scalingMode = ParticleSystemScalingMode.Hierarchy;
-                main.maxParticles = Mathf.Min(main.maxParticles, loop ? 60 : 120);
+                if (!keepParticleCounts) main.maxParticles = Mathf.Min(main.maxParticles, loop ? 60 : 120);
                 main.stopAction = ParticleSystemStopAction.None; // the VFX pool recycles it
                 // Loops ride on a character whose kinematic Rigidbody never reports a velocity: emit by the distance
                 // the transform actually covers.
@@ -502,23 +664,25 @@ namespace KryticalNova.EditorTools
         /// </summary>
         private static readonly SkillLook[] Skills =
         {
-            new SkillLook("FuryStrike", cast: new[] { Slash("PFX_Cast_SlashLarge") }),
+            // No slash burst on the two area skills: the blade trail and the ground ring carry them. Fury Strike's
+            // empty cast keeps the presenter from falling back to the default slash.
+            new SkillLook("FuryStrike", cast: new Fx[0]),
             new SkillLook("HaeseoStroke", cast: new[] { Slash() }),
             new SkillLook("GentlemansPen", cast: new[] { Slash() }, hit: new[] { Comic("PFX_Comic_Slash"), new Fx("PFX_Hit_Sparks") }),
             new SkillLook("DevilsStrike", cast: new[] { Slash() }, hit: new[] { Comic("PFX_Comic_HitHeavy"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_Wham", 0.9f) }),
             new SkillLook("FlashOfRage", cast: new[] { Slash(), OnCaster("PFX_Cast_Fire") }, hit: new[] { Comic("PFX_Comic_Slash"), new Fx("PFX_Hit_Sparks") }),
             new SkillLook("SunraysStroke", cast: new[] { Slash(), AtFeet("PFX_Cast_PowerUp") }, hit: new[] { Comic("PFX_Comic_HitHeavy"), new Fx("PFX_Hit_Heavy") }),
             new SkillLook("PhantomThunder", cast: new[] { Slash() }, hit: new[] { Comic("PFX_Comic_Slash"), OnGround("PFX_Cast_Thunder"), Comic("PFX_Comic_Zap", 0.9f) }),
-            new SkillLook("ThunderousDragon", cast: new[] { Slash("PFX_Cast_SlashLarge"), OnGround("PFX_Cast_GroundCrack"), OnGround("PFX_Cast_Thunder") },
+            new SkillLook("ThunderousDragon", cast: new[] { OnGround("PFX_Cast_GroundCrack"), OnGround("PFX_Cast_Thunder") },
                 hit: new[] { Comic("PFX_Comic_HitHeavy"), OnGround("PFX_Cast_Thunder"), Comic("PFX_Comic_Zap", 0.9f) }),
 
             new SkillLook("AzureWall", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_AzureWall"),
             new SkillLook("LightningFlash", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_LightningFlash", anchor: AuraAnchor.Chest),
-            new SkillLook("SpiritualRage", cast: new[] { OnCaster("PFX_Cast_Fire") }, aura: "PFX_Aura_SpiritualRage", anchor: AuraAnchor.Chest,
+            new SkillLook("SpiritualRage", cast: new[] { OnCaster("PFX_Cast_Fire") }, aura: "PFX_Aura_SpiritualRage", anchor: AuraAnchor.Head,
                 charge: "PFX_Charge_SpiritualRage", chargeGround: "PFX_Charge_Ground"),
             new SkillLook("HeavenlySerenity", cast: new[] { AtFeet("PFX_Heal") }, aura: "PFX_Aura_Serenity"),
             new SkillLook("HeavenlyShield", cast: new[] { AtFeet("PFX_Cast_PowerUp") }, aura: "PFX_Aura_Shield"),
-            new SkillLook("HeavenlyBlow", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_Blow", anchor: AuraAnchor.Chest),
+            new SkillLook("HeavenlyBlow", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_Blow"),
             new SkillLook("GarudasPrayer", cast: new[] { AtFeet("PFX_Cast_PowerUp") }, aura: "PFX_Aura_Prayer", anchor: AuraAnchor.Chest),
             new SkillLook("HeavenlyRepulsion", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_Repulsion", anchor: AuraAnchor.Chest),
             new SkillLook("HeavenlyDestruction", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_Destruction", anchor: AuraAnchor.Chest),
@@ -559,9 +723,10 @@ namespace KryticalNova.EditorTools
                     Impulse(p, new Vector3(0.3f, 0.22f, 0f), 0.25f);
                     var v = p.AddFeedback(typeof(MMF_BeautifyVignette)) as MMF_BeautifyVignette;
                     v.Label = "Hurt Vignette (Beautify)";
-                    v.Duration = 0.45f;
-                    v.RingBoost = 0.35f;
-                    v.PulseColor = new Color(0.75f, 0.05f, 0.08f);
+                    v.Duration = HurtVignetteSeconds;
+                    v.Reach = HurtVignetteReach;
+                    v.PulseColor = HurtVignetteColor;
+                    v.DotOpacity = HurtVignetteDots;
                 });
                 so.FindProperty("clickFeel").objectReferenceValue = Player(root, "Click", p => Sound(p, "Click Tick"));
                 so.FindProperty("selectFeel").objectReferenceValue = Player(root, "Select", p => Sound(p, "Select"));

@@ -39,6 +39,10 @@ namespace KryticalNova.Player
         private const float PausedTimeScale = 0f;
         private const int InitialUiHitCapacity = 8;
         private const float PendingInteractTimeout = 20f;
+        private const float TravelSampleRadius = 6f;     // a map point is far coarser than a click on the ground
+        private const float TravelArrivalDistance = 1.5f;
+        private const float TravelStallSeconds = 2.5f;   // standing still this long mid-journey ends it (a cast, a blocked way)
+        private const float TravelStallSpeed = 0.2f;
         private const float FriendlyApproachDistance = 1.5f;
 
         [Header("Scene References")]
@@ -126,6 +130,12 @@ namespace KryticalNova.Player
         private Vector2 previousCursorPosition;
         private IInteractable pendingInteract;
         private float pendingInteractExpiry;
+        private bool isTravelling;
+        private Vector3 travelDestination;
+        private string travelName;
+        private bool travelStopsShort;   // no walkable way reaches the place itself: the journey ends where the way does
+        private Vector3 travelLastPosition;
+        private float travelStalledFor;
         // First click on a unit selects it; a second click on the selected unit attacks / talks / walks to it.
         private Transform selectedTarget;
 
@@ -323,6 +333,7 @@ namespace KryticalNova.Player
                 return;
 
             UpdatePendingInteract();
+            UpdateTravel();
 
             if (gameplayActions == null || !gameplayActions.enabled || !playerInput.inputIsActive
                 || !Application.isFocused || Time.timeScale <= PausedTimeScale)
@@ -341,6 +352,7 @@ namespace KryticalNova.Player
                 {
                     meleeCombat?.CancelAttack();
                     ClearSelection();
+                    StopTravel();
                 }
                 return;
             }
@@ -480,6 +492,7 @@ namespace KryticalNova.Player
                 // Second click on a friendly unit (another player): walk over to them.
                 if (!hostile)
                 {
+                    EndTravel(false);
                     meleeCombat?.CancelAttack();
                     WalkToUnit(targetEntity.Transform);
                     return;
@@ -491,6 +504,7 @@ namespace KryticalNova.Player
                     return;
                 }
 
+                EndTravel(false);
                 ClientPresentationRegistry.Markers?.HideMoveMarker();
 
                 if (meleeCombat != null)
@@ -531,6 +545,7 @@ namespace KryticalNova.Player
                     return;
                 }
 
+                EndTravel(false);
                 meleeCombat?.CancelAttack();
                 ClientPresentationRegistry.Markers?.HideMoveMarker();
                 BeginInteract(interactable);
@@ -543,6 +558,9 @@ namespace KryticalNova.Player
 
             if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
+
+            // A new destination on the ground replaces one chosen on the map.
+            EndTravel(false);
 
             // Moving interrupts channeled skills (e.g. Heavenly Serenity meditation)
             if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
@@ -574,6 +592,135 @@ namespace KryticalNova.Player
 
         /// <summary>The unit this player has clicked (skills aim at it), or null.</summary>
         public Transform SelectedTarget => selectedTarget;
+
+        // ------------------------------------------------------------------ travel (ordered from the map)
+
+        /// <summary>The player is being led to a place chosen on the map. Any new order on the ground, or Escape, ends it.</summary>
+        public bool IsTravelling => isTravelling;
+        public Vector3 TravelDestination => travelDestination;
+        /// <summary>Raised when a journey ends; true = the player arrived.</summary>
+        public event Action<bool> TravelEnded;
+
+        /// <summary>
+        /// Leads this player along the NavMesh to <paramref name="worldPoint"/> (owner side). It is an ordinary move
+        /// order with a destination found on the map instead of under the pointer, so it costs and behaves the same;
+        /// it always walks or runs, whatever movement skill is selected.
+        /// </summary>
+        public bool TravelTo(Vector3 worldPoint, string destinationName)
+        {
+            if (IsSpawned && !IsOwner) return false;
+            if (resources != null && !resources.IsAlive) { CommandMessage?.Invoke("No HP remaining. Restore HP before moving."); return false; }
+            if (jumpMotor != null && jumpMotor.IsBusy) { CommandMessage?.Invoke("Finish this jump before choosing another destination."); return false; }
+            if (vaultMotor != null && vaultMotor.IsBusy) return false;
+            if (agent == null) return false;
+
+            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            if (!NavMesh.SamplePosition(worldPoint, out NavMeshHit destination, TravelSampleRadius, filter)
+                || !TryResolveTravelGoal(destination.position, filter, out Vector3 goal, out bool stopsShort))
+            { CommandMessage?.Invoke($"There is no way to walk to {destinationName}."); return false; }
+
+            // The same clean slate a click on the ground gives.
+            EndTravel(false);
+            pendingInteract = null;
+            if (vaultMotor != null) vaultMotor.Disarm();
+            meleeCombat?.CancelAttack();
+            if (selectedTarget != null) ClearSelection();
+            if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
+            if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
+
+            if (IsSpawned && !IsServer)
+                RequestMoveDestinationServerRpc(goal, movementSkills != null && movementSkills.IsRunning);
+            else if (!ExecuteLocalMove(goal, out _))
+                return false;
+
+            isTravelling = true;
+            travelDestination = goal;
+            travelName = destinationName;
+            travelStopsShort = stopsShort;
+            travelLastPosition = transform.position;
+            travelStalledFor = 0f;
+            ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, goal, Vector3.up, untilArrival: true);
+            CommandMessage?.Invoke(stopsShort
+                ? $"No walkable way reaches {destinationName}: travelling as close as the way goes. Click the ground or press Escape to stop."
+                : $"Travelling to {destinationName}. Click the ground or press Escape to stop.");
+            return true;
+        }
+
+        /// <summary>
+        /// Where a journey to <paramref name="destination"/> can actually end. Usually the destination itself; when
+        /// the walkable ground stops short of it (a marker dropped inside a building, a place across water with no
+        /// bridge) the journey ends where the way does. False when there is no way toward it at all.
+        /// </summary>
+        private bool TryResolveTravelGoal(Vector3 destination, NavMeshQueryFilter filter, out Vector3 goal, out bool stopsShort)
+        {
+            goal = destination;
+            stopsShort = false;
+            Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            if (!NavMesh.SamplePosition(feet, out NavMeshHit from, TravelSampleRadius, filter)) return true; // let the move itself decide
+            if (!NavMesh.CalculatePath(from.position, destination, filter, requestedPath)) return false;
+            if (requestedPath.status == NavMeshPathStatus.PathComplete) return true;
+
+            Vector3[] corners = requestedPath.corners;
+            if (requestedPath.status != NavMeshPathStatus.PathPartial || corners.Length < 2) return false;
+            goal = corners[corners.Length - 1];
+            stopsShort = true;
+            return true;
+        }
+
+        /// <summary>Stops a journey where the player stands (Escape).</summary>
+        private void StopTravel()
+        {
+            if (!isTravelling) return;
+            if (IsSpawned && !IsServer) RequestStopMoveServerRpc();
+            else StopMoving();
+            ClientPresentationRegistry.Markers?.HideMoveMarker();
+            CommandMessage?.Invoke($"Travel to {travelName} stopped.");
+            EndTravel(false);
+        }
+
+        [ServerRpc]
+        private void RequestStopMoveServerRpc() => StopMoving();
+
+        private void StopMoving()
+        {
+            if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+            if (vaultMotor != null) vaultMotor.Disarm();
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+        }
+
+        private void EndTravel(bool arrived)
+        {
+            if (!isTravelling) return;
+            isTravelling = false;
+            if (arrived) CommandMessage?.Invoke(travelStopsShort ? $"This is as close to {travelName} as the way goes." : $"Arrived at {travelName}.");
+            TravelEnded?.Invoke(arrived);
+        }
+
+        /// <summary>Owner side, every frame: has the journey been completed, or come to a halt for some other reason?</summary>
+        private void UpdateTravel()
+        {
+            if (!isTravelling) return;
+            if (resources != null && !resources.IsAlive) { EndTravel(false); return; }
+
+            Vector3 offset = travelDestination + Vector3.up * (agent != null ? agent.baseOffset : 0f) - transform.position;
+            offset.y = 0f;
+            if (offset.sqrMagnitude <= TravelArrivalDistance * TravelArrivalDistance) { EndTravel(true); return; }
+
+            // Something else stopped the walk (a skill cast halts the agent, the way became blocked): the journey is over.
+            float delta = Time.deltaTime;
+            if (delta <= 0f) return;
+            Vector3 moved = transform.position - travelLastPosition;
+            moved.y = 0f;
+            travelLastPosition = transform.position;
+            bool airborne = (jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy);
+            travelStalledFor = moved.magnitude / delta > TravelStallSpeed || airborne ? 0f : travelStalledFor + delta;
+            if (travelStalledFor >= TravelStallSeconds)
+            {
+                ClientPresentationRegistry.Markers?.HideMoveMarker();
+                EndTravel(false);
+            }
+        }
 
         private bool IsSelected(Transform unit) => unit != null && selectedTarget == unit;
 

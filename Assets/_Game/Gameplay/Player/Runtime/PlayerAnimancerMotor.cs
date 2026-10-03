@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using Animancer;
 using KryticalNova.Core;
+using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
@@ -19,7 +20,7 @@ namespace KryticalNova.Player
 
     /// <summary>
     /// Animancer-driven motor controlling character locomotion, multi-stage jump,
-    /// and weapon draw/sheath animations with server-authoritative state replication.
+    /// weapon draw/sheath animations and hit reactions, with server-authoritative state replication.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PlayerAnimancerMotor : NetworkBehaviour
@@ -116,6 +117,20 @@ namespace KryticalNova.Player
         [Tooltip("Seconds the katana takes to settle onto its new socket instead of snapping.")]
         [SerializeField, Min(0f)] private float katanaSocketBlend = 0.1f;
 
+        [Header("Hit Reactions (named for the side the blow comes from)")]
+        [SerializeField] private AnimationClip hitFrontClip;
+        [SerializeField] private AnimationClip hitBackClip;
+        [SerializeField] private AnimationClip hitLeftClip;
+        [SerializeField] private AnimationClip hitRightClip;
+        [Tooltip("A heavy blow from the front (critical, or a large share of max health). Other sides use their normal clip.")]
+        [SerializeField] private AnimationClip hitFrontHeavyClip;
+        [SerializeField, Min(0.01f)] private float hitFadeIn = 0.06f;
+        [SerializeField, Min(0.01f)] private float hitFadeOut = 0.2f;
+        [Tooltip("Seconds before another reaction may start, so a multi-hit skill reads as one flinch, not a stutter.")]
+        [SerializeField, Min(0f)] private float hitReactionCooldown = 0.35f;
+        [Tooltip("A single blow that takes at least this share of max health counts as heavy.")]
+        [SerializeField, Range(0f, 1f)] private float heavyHitHealthFraction = 0.15f;
+
         [Header("Components")]
         [SerializeField] private NavMeshAgent agent;
 
@@ -145,6 +160,10 @@ namespace KryticalNova.Player
         private Vector3 lastPosition;
         private float currentSpeed;
         private bool reportedRunning;
+        private CombatEntity combatEntity;
+        private Coroutine hitRoutine;
+        private bool hitHoldsBody;      // a full-body reaction is playing: locomotion waits for it
+        private float nextHitReactionTime;
 
         // Stance this instance is presenting. Leads the NetworkVariable while a draw/sheath plays
         // (the owner predicts it locally) and follows it otherwise.
@@ -168,7 +187,13 @@ namespace KryticalNova.Player
         {
             if (agent == null) agent = GetComponent<NavMeshAgent>();
             if (animancer == null) animancer = GetComponentInChildren<AnimancerComponent>();
+            combatEntity = GetComponent<CombatEntity>();
             lastPosition = transform.position;
+        }
+
+        private void OnEnable()
+        {
+            if (combatEntity != null) combatEntity.Damaged += OnDamaged;
         }
 
         public override void OnNetworkSpawn()
@@ -202,7 +227,10 @@ namespace KryticalNova.Player
                 AnimationClip initialIdle = (drawn && drawnIdleClip != null) ? drawnIdleClip : idleClip;
                 if (initialIdle != null)
                 {
-                    animancer.Play(initialIdle);
+                    // Same settings as PlayLocomotionClip: without foot IK the first idle stands differently from
+                    // every idle after it (until the character has moved and stopped once).
+                    currentLocomotionState = animancer.Layers[0].Play(initialIdle);
+                    currentLocomotionState.ApplyFootIK = locomotionFootIK;
                     currentLocomotionClip = initialIdle;
                 }
             }
@@ -239,7 +267,8 @@ namespace KryticalNova.Player
             if (warpedJumpActive) AdvanceWarpedJump();
 
             // While a draw/sheath plays on the upper-body layer, the legs keep following movement.
-            if (currentState == CharacterAnimState.Locomotion || (drawOnUpperBody && IsWeaponDrawActionPlaying))
+            // A full-body hit reaction holds the legs too, until it ends or the character moves off.
+            if ((currentState == CharacterAnimState.Locomotion && !hitHoldsBody) || (drawOnUpperBody && IsWeaponDrawActionPlaying))
             {
                 UpdateLocomotion();
             }
@@ -265,7 +294,13 @@ namespace KryticalNova.Player
         }
 
         // The character's effects are dropped when it is disabled; a run still going on re-enable is reported again.
-        private void OnDisable() => reportedRunning = false;
+        private void OnDisable()
+        {
+            reportedRunning = false;
+            hitHoldsBody = false;
+            hitRoutine = null;
+            if (combatEntity != null) combatEntity.Damaged -= OnDamaged;
+        }
 
         private void UpdateLocomotionPlaybackSpeed()
         {
@@ -817,6 +852,101 @@ namespace KryticalNova.Player
         {
             currentState = CharacterAnimState.Locomotion;
             currentLocomotionClip = null;
+        }
+
+        #endregion
+
+        #region Hit Reactions
+
+        // Raised where damage is resolved (server or offline), so any attacker reaches every peer through here.
+        private void OnDamaged(DamageResult result, CharacterCombatStats attacker)
+        {
+            if (result.IsEvaded || result.IsReflected || result.DamageDealt <= 0f) return;
+            Vector3 toward = attacker != null ? attacker.transform.position - transform.position : transform.forward;
+            bool heavy = result.IsCritical || result.DamageDealt >= combatEntity.MaxHealth * heavyHitHealthFraction;
+            ShowHitReaction(toward, heavy);
+        }
+
+        /// <summary>
+        /// Shows this character flinching from a blow on every peer. Call where combat is resolved (server or offline).
+        /// Purely visual: nothing the character is doing is interrupted.
+        /// </summary>
+        public void ShowHitReaction(Vector3 towardAttacker, bool heavy)
+        {
+            towardAttacker.y = 0f;
+            if (!IsSpawned) PlayHitReaction(towardAttacker, heavy);
+            else if (IsServer) PlayHitReactionClientRpc(towardAttacker, heavy);
+        }
+
+        [ClientRpc]
+        private void PlayHitReactionClientRpc(Vector3 towardAttacker, bool heavy) => PlayHitReaction(towardAttacker, heavy);
+
+        private void PlayHitReaction(Vector3 towardAttacker, bool heavy)
+        {
+            if (animancer == null || !isActiveAndEnabled) return;
+            // A jump or vault is moved by its own clip chain; a draw/sheath owns the upper-body layer.
+            if (currentState == CharacterAnimState.Jumping || IsWeaponDrawActionPlaying) return;
+            if (Time.time < nextHitReactionTime) return;
+            AnimationClip clip = HitClipFor(towardAttacker, heavy);
+            if (clip == null) return;
+
+            // Standing still the whole body reacts. Moving, striking or casting, only the upper body does: the legs,
+            // the swing and the cast keep the base layer.
+            bool fullBody = currentState == CharacterAnimState.Locomotion && !IsTravelling;
+            if (!fullBody && !drawOnUpperBody) return;
+
+            nextHitReactionTime = Time.time + hitReactionCooldown;
+            if (hitRoutine != null) StopCoroutine(hitRoutine);
+            hitRoutine = StartCoroutine(HitReactionRoutine(clip, fullBody));
+        }
+
+        private AnimationClip HitClipFor(Vector3 towardAttacker, bool heavy)
+        {
+            Vector3 local = Quaternion.Inverse(transform.rotation) * towardAttacker;
+            float angle = local.sqrMagnitude > 0.0001f ? Mathf.Atan2(local.x, local.z) * Mathf.Rad2Deg : 0f;
+            AnimationClip clip;
+            if (Mathf.Abs(angle) <= 45f) clip = heavy && hitFrontHeavyClip != null ? hitFrontHeavyClip : hitFrontClip;
+            else if (Mathf.Abs(angle) >= 135f) clip = hitBackClip;
+            else clip = angle > 0f ? hitRightClip : hitLeftClip;
+            return clip != null ? clip : hitFrontClip;
+        }
+
+        private IEnumerator HitReactionRoutine(AnimationClip clip, bool fullBody)
+        {
+            float playFor = Mathf.Max(0.05f, clip.length - hitFadeOut);
+            if (fullBody)
+            {
+                hitHoldsBody = true;
+                stopState = null;
+                AnimancerState state = animancer.Layers[0].Play(clip, hitFadeIn);
+                state.Time = 0f;
+                state.Speed = 1f;
+                state.ApplyFootIK = locomotionFootIK;
+
+                // Moving off, striking, casting or jumping takes the body back at once.
+                while (state.Time < playFor && currentState == CharacterAnimState.Locomotion && !IsTravelling
+                       && animancer.Layers[0].CurrentState == state)
+                    yield return null;
+
+                hitHoldsBody = false;
+                if (currentState == CharacterAnimState.Locomotion) currentLocomotionClip = null; // locomotion fades back in
+            }
+            else
+            {
+                hitHoldsBody = false;
+                AnimancerLayer layer = animancer.Layers[UpperBodyLayerIndex];
+                AnimancerState state = layer.Play(clip, hitFadeIn);
+                state.Time = 0f;
+                state.Speed = 1f;
+                state.ApplyFootIK = false;
+
+                while (state.Time < playFor && !IsWeaponDrawActionPlaying && layer.CurrentState == state)
+                    yield return null;
+
+                // A draw or sheath that started meanwhile now owns the layer and fades it out itself.
+                if (!IsWeaponDrawActionPlaying && layer.CurrentState == state) FadeOutUpperBody(hitFadeOut);
+            }
+            hitRoutine = null;
         }
 
         #endregion

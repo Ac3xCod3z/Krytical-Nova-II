@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GB_Lawn
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.Grass.GrassBiome
   density: 1
+  fillDensity: 0.5
   entries:
   - type: {fileID: 11400000, guid: 8e366eaec80ac4e4691b03fab0fd4062, type: 2}
     weight: 1

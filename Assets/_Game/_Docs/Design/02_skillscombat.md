@@ -105,7 +105,7 @@ Every faction (Guanyin/Dragon, Fujin/Snake, Jinong/Tiger) follows an identical t
 ##### Structural Skill Map (Example: Guanyin Faction)
 * **Offensive Weapon Line (Blade):**
   * *1st Buff:* Lightning Flash (Lvl 1) — +20% Damage (180s).
-  * *Single-Hit Line:* Haeseo Stroke (Lvl 1) $\rightarrow$ Devil's Strike (Lvl 30) $\rightarrow$ Sunray's Stroke (Lvl 60 Drop).
+  * *Single-Hit Line:* Haeseo Stroke (Lvl 1) $\rightarrow$ Devil's Strike (Lvl 30) $\rightarrow$ Sunray's Strike (Lvl 60 Drop).
   * *Multi-Hit Line:* Gentleman's Pen (Lvl 1) $\rightarrow$ Flash of Rage (Lvl 30) $\rightarrow$ Phantom Thunder (Lvl 60 Drop).
   * *AoE Line:* Fury Strike (Lvl 1) $\rightarrow$ Spirit of Pegasus (Lvl 80 War God Drop).
 * **Defensive Weapon Line (Sword):**
