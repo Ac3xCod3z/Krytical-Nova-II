@@ -4,6 +4,7 @@ using KryticalNova.Core;
 using KryticalNova.Items;
 using KryticalNova.Items.Visuals;
 using KryticalNova.Player;
+using KryticalNova.Progression;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -45,6 +46,7 @@ namespace KryticalNova.UI
         private readonly VisualElement[] cells = new VisualElement[PlayerInventory.Capacity];
         private readonly Button[] pageTabs = new Button[PlayerInventory.PageCount];
         private int currentPage;
+        private readonly VisualElement[] hotbarSlots = new VisualElement[PlayerSkillHotbar.SlotCount];
         private Label ghostGlyph;
         private readonly Dictionary<EquipSlot, VisualElement> slots = new Dictionary<EquipSlot, VisualElement>();
         private readonly Dictionary<EquipSlot, Sprite> silhouettes = new Dictionary<EquipSlot, Sprite>();
@@ -112,6 +114,7 @@ namespace KryticalNova.UI
                 ghost.Add(ghostGlyph);
             }
 
+            Array.Clear(hotbarSlots, 0, hotbarSlots.Length); // looked up again lazily in the current document
             BuildGrid();
             BuildPageTabs();
             BuildEquipSlots();
@@ -497,7 +500,8 @@ namespace KryticalNova.UI
             ghost.style.top = pos.y - GhostHalfSize;
             int tab = PageTabAt(pos);
             if (tab >= 0 && tab != currentPage) ShowPage(tab);
-            SetHoverTarget(tab >= 0 ? pageTabs[tab] : FindItemElement(pos));
+            int hotbarSlot = HotbarSlotAt(pos);
+            SetHoverTarget(tab >= 0 ? pageTabs[tab] : hotbarSlot >= 0 ? hotbarSlots[hotbarSlot] : FindItemElement(pos));
         }
 
         private void OnItemPointerUp(PointerUpEvent evt)
@@ -516,6 +520,13 @@ namespace KryticalNova.UI
             if (!wasDragging)
             {
                 OpenMenu(from, pos);
+                return;
+            }
+
+            int hotbarSlot = HotbarSlotAt(pos);
+            if (hotbarSlot >= 0)
+            {
+                AssignToHotbar(from, hotbarSlot);
                 return;
             }
 
@@ -597,6 +608,30 @@ namespace KryticalNova.UI
             foreach (var kv in slots)
                 if (IsOpen(equipmentWindow) && kv.Value.worldBound.Contains(panelPosition)) return kv.Value;
             return null;
+        }
+
+        /// <summary>The hotbar slot (owned by ProgressionHUD, same document) under the pointer, or -1.</summary>
+        private int HotbarSlotAt(Vector2 panelPosition)
+        {
+            for (int i = 0; i < hotbarSlots.Length; i++)
+            {
+                if (hotbarSlots[i] == null) hotbarSlots[i] = root.Q($"slot-{i}");
+                if (hotbarSlots[i] != null && hotbarSlots[i].worldBound.Contains(panelPosition)) return i;
+            }
+            return -1;
+        }
+
+        /// <summary>Dropping a bag item on the hotbar links it there; the item itself stays in the bag.</summary>
+        private void AssignToHotbar(ItemLocation from, int slot)
+        {
+            var def = DefinitionAt(from);
+            var hotbar = inventory != null ? inventory.GetComponent<PlayerSkillHotbar>() : null;
+            if (def == null || hotbar == null) return;
+            string key = PlayerSkillHotbar.GetKeyLabel(slot);
+            bool assigned = from.IsBag && hotbar.AssignItem(slot, def.itemId);
+            ClientPresentationRegistry.Messages?.ShowMessage(assigned
+                ? $"{def.displayName} set to key {key}."
+                : $"{def.displayName} can't be used from the hotbar.");
         }
 
         private bool IsOverBlockingUi(Vector2 panelPosition)
@@ -710,7 +745,7 @@ namespace KryticalNova.UI
             tipDesc.text = def.description;
             tipStats.text = FormatStats(def);
             tipHint.text = !loc.IsBag ? "Right-click: unequip   ·   Left-click: options"
-                : IsUsable(def) ? "Right-click: use   ·   Left-click: options"
+                : IsUsable(def) ? (def.IsHotbarUsable ? "Right-click: use   ·   Drag to the hotbar to bind a key" : "Right-click: use   ·   Left-click: options")
                 : def.IsEquippable ? "Right-click: equip   ·   Left-click: options"
                 : "Left-click: options";
 

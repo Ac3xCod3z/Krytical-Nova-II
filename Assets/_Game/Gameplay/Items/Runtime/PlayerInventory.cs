@@ -13,7 +13,7 @@ namespace KryticalNova.Items
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerEquipment))]
-    public sealed class PlayerInventory : NetworkBehaviour
+    public sealed class PlayerInventory : NetworkBehaviour, IHotbarItemSource
     {
         public const int PageSize = 48;
         public const int PageCount = 3;
@@ -156,6 +156,42 @@ namespace KryticalNova.Items
         public void RequestUse(int bagIndex)
         {
             if (IsSpawned) UseRpc((byte)bagIndex); else ServerUse((byte)bagIndex);
+        }
+
+        // ---------------- Hotbar items (IHotbarItemSource) ----------------
+
+        public bool CanSlotItem(ushort itemId)
+        {
+            var def = catalog != null ? catalog.Get(itemId) : null;
+            return def != null && def.IsHotbarUsable;
+        }
+
+        public int CountItem(ushort itemId)
+        {
+            int count = 0;
+            foreach (var cell in cells) if (cell.itemId == itemId) count += cell.count;
+            return count;
+        }
+
+        public string GetItemLabel(ushort itemId)
+        {
+            var def = catalog != null ? catalog.Get(itemId) : null;
+            if (def == null) return string.Empty;
+            return string.IsNullOrEmpty(def.placeholderGlyph) ? def.displayName : def.placeholderGlyph;
+        }
+
+        /// <summary>Uses one of the item from the first bag cell that holds it.</summary>
+        public bool UseItem(ushort itemId)
+        {
+            if (itemId == 0) return false;
+            for (int i = 0; i < Capacity; i++)
+            {
+                if (cells[i].itemId != itemId) continue;
+                RequestUse(i);
+                return true;
+            }
+            NotifyFailed("You have none left.");
+            return false;
         }
 
         // ---------------- RPCs ----------------

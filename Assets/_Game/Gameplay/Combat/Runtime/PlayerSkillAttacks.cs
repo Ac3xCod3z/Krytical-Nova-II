@@ -61,6 +61,9 @@ namespace KryticalNova.Combat
             hotbar = GetComponent<PlayerSkillHotbar>();
             buffManager = GetComponent<CharacterBuffManager>();
             if (animancerMotor == null) animancerMotor = GetComponent<PlayerAnimancerMotor>();
+            // The player has two Animancers (the Visuals root and the humanoid rig under it). Skills must play on the
+            // rig the locomotion motor drives, not on whichever one a child search finds first.
+            if (animancer == null && animancerMotor != null) animancer = animancerMotor.Animancer;
             if (animancer == null) animancer = GetComponentInChildren<AnimancerComponent>();
         }
 

@@ -150,6 +150,8 @@ namespace KryticalNova.Player
         private bool presentedWeaponDrawn;
 
         public bool IsWeaponDrawn => presentedWeaponDrawn;
+        /// <summary>The Animancer that drives the character's humanoid rig (the prefab has more than one).</summary>
+        public AnimancerComponent Animancer => animancer;
         /// <summary>Sheathed idle, also used by the equipment preview doll.</summary>
         public AnimationClip IdleClip => idleClip;
         public CharacterAnimState CurrentState => currentState;

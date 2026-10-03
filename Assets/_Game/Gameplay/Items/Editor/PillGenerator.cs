@@ -64,7 +64,16 @@ namespace KryticalNova.EditorTools
         {
             string path = $"{PillFolder}/{asset}.asset";
             var def = AssetDatabase.LoadAssetAtPath<ItemDefinition>(path);
-            if (def != null) return def;
+            if (def != null)
+            {
+                // Pills are always hotbar items; amounts and text stay as tuned by hand.
+                if (!def.usableFromHotbar)
+                {
+                    def.usableFromHotbar = true;
+                    EditorUtility.SetDirty(def);
+                }
+                return def;
+            }
 
             def = ScriptableObject.CreateInstance<ItemDefinition>();
             def.itemId = id;
@@ -76,6 +85,7 @@ namespace KryticalNova.EditorTools
             def.restoreHealth = health;
             def.restoreChi = chi;
             def.placeholderGlyph = glyph;
+            def.usableFromHotbar = true;
             AssetDatabase.CreateAsset(def, path);
             return def;
         }
