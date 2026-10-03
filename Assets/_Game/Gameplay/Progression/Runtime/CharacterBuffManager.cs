@@ -76,7 +76,7 @@ namespace KryticalNova.Progression
             {
                 var buff = activeBuffs[i];
 
-                // Channeled skill tick (e.g. Heavenly Serenity Chi recovery)
+                // Channeled skill tick (e.g. Heavenly Serenity): a rank-scaled share of max HP and Chi each tick.
                 if (buff.Skill.executionType == SkillExecutionType.Channeled)
                 {
                     if (Time.time >= buff.NextChannelTickTime)
@@ -84,9 +84,17 @@ namespace KryticalNova.Progression
                         buff.NextChannelTickTime = Time.time + buff.Skill.channelTickInterval;
                         if (resources != null)
                         {
-                            float tickChi = resources.MaxChi * (buff.Skill.channelChiRecoveryPercent / 100f);
-                            resources.RestoreChi(tickChi);
-                            BuffMessage?.Invoke($"[Heavenly Serenity] Restored +{tickChi:0.#} Chi ({resources.Chi:0}/{resources.MaxChi:0})");
+                            float tickHealth = resources.MaxHealth * (buff.Skill.GetChannelHealthRecovery(buff.Rank) / 100f);
+                            float tickChi = resources.MaxChi * (buff.Skill.GetChannelChiRecovery(buff.Rank) / 100f);
+                            // Every peer ticks its copy of the buff, but only the authority changes the pools;
+                            // clients receive the result through the replicated values.
+                            if (resources.HasAuthority)
+                            {
+                                resources.Heal(tickHealth);
+                                resources.RestoreChi(tickChi);
+                            }
+                            string healed = tickHealth > 0f ? $"+{tickHealth:0.#} HP, " : string.Empty;
+                            BuffMessage?.Invoke($"[{buff.Skill.displayName}] Restored {healed}+{tickChi:0.#} Chi");
                         }
                     }
                 }

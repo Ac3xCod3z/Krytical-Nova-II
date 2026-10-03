@@ -39,7 +39,8 @@ Implement these first. They follow a simple pattern: deduct Chi, apply a tempora
   * **Effect:** Increases Critical Success Rate and enables critical damage multipliers.
 * **Heavenly Serenity (Level 1 Trainer Skill):**
   * **Type:** Channeled Self Buff / Regen.
-  * **Effect:** Restores Chi (MP) over 20 seconds. Interrupts on receiving damage.
+  * **Effect:** Restores HP and Chi (MP) every second for 20 seconds. Per second: 1% → 5% of Max HP and 2% → 10% of Max Chi
+    from rank 1 to rank 20. Costs no Chi. Interrupts on receiving damage or moving.
 
 #### 1.2 Faction Weapon Stance Buffs (Level 1 Trainer Skills)
 * **Lightning Flash (Guanyin Blade / Offensive):** +20% Physical Damage (180s duration).

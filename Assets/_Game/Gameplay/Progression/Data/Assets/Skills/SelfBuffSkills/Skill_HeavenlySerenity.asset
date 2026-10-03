@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: HeavenlySerenity
   displayName: Heavenly Serenity
-  description: Meditate in tranquil focus, restoring Chi over 20s (5% Max Chi/sec). Interrupts upon taking damage or moving.
+  description: Meditate in tranquil focus, restoring HP and Chi every second for 20s. Higher ranks restore more each second. Interrupted by taking damage or moving.
   category: 0
   targetType: 0
   executionType: 1
@@ -27,13 +27,16 @@ MonoBehaviour:
   maxRank: 20
   skillPointsToLearn: 1
   totalSkillPointsToMax: 20
-  minChiCost: 15
-  maxChiCost: 15
+  minChiCost: 0
+  maxChiCost: 0
   cooldown: 1
-  minDuration: 180
-  maxDuration: 180
+  minDuration: 20
+  maxDuration: 20
   channelTickInterval: 1
-  channelChiRecoveryPercent: 5
+  minChannelChiRecoveryPercent: 2
+  maxChannelChiRecoveryPercent: 10
+  minChannelHealthRecoveryPercent: 1
+  maxChannelHealthRecoveryPercent: 5
   isAbsorptionShield: 0
   minShieldPercent: 111
   maxShieldPercent: 150

@@ -110,7 +110,7 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
   - UI HUD status bar showing active buff badges and remaining durations.
 - [x] **3.3 General Utility Self-Buffs & Channeled Chi Recovery**
   - **Spiritual Rage:** Instant self-buff, increases Critical Rate (+30% Critical Rate for 180s, 1s cooldown, Self).
-  - **Heavenly Serenity:** Channeled Chi regen restoring Chi over 20s (replaces passive chi recovery; interrupts on taking damage or moving, 1s cooldown, Self).
+  - **Heavenly Serenity:** Channeled HP and Chi regen over 20s, scaling with rank (replaces passive chi recovery; interrupts on taking damage or moving, 1s cooldown, Self).
   - Remove passive Chi recovery from `PlayerResources` / `CharacterResourceData` to align with Twelve Sky 2 meditation model.
 - [x] **3.4 Absorption Shield Logic & Master Rare Drop Skills**
   - All skills configured with Self target type and short cooldowns (1–2s):
@@ -147,7 +147,7 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
   - `Materials/`: `DummyMaterial.mat`.
 - **Created 8 Phase 3 Skill Assets (`Assets/_Game/Gameplay/Progression/Data/Assets/Skills/SelfBuffSkills/`):**
   1. `Skill_SpiritualRage.asset`: +30% Critical Rate for 180s (15 Chi, 1.0s CD, Trainer Skill, Ranks 1-20).
-  2. `Skill_HeavenlySerenity.asset`: Channeled Chi regen (5% Max Chi/s for 20s, 0 Chi, 1.0s CD, Trainer Skill, Ranks 1-20).
+  2. `Skill_HeavenlySerenity.asset`: Channeled HP + Chi regen (1% → 5% Max HP/s and 2% → 10% Max Chi/s for 20s, 0 Chi, 1.0s CD, Trainer Skill, Ranks 1-20).
   3. `Skill_HeavenlyShield.asset` (HS): Level 60 Drop Item. Absorbs incoming physical damage up to 111% - 150% Max HP for 60s (765 - 1010 Chi, 2.0s CD, Ranks 1-30, 1-30 skill points). Elemental damage bypasses the shield directly to health!
   4. `Skill_HeavenlyBlow.asset` (HB): Level 60 Drop Item. Increases chance of deadly blow by 12% - 75% multiplicatively (765 - 1010 Chi, 64s - 180s duration, 1.0s CD, Ranks 1-30, 1-30 skill points).
   5. `Skill_GarudasPrayer.asset` (GP): Level 70 Drop Item. Multiplies luck by +13% - +100% (891 - 1136 Chi, 66s - 240s duration, 1.0s CD, Ranks 1-30, 1-30 skill points).
