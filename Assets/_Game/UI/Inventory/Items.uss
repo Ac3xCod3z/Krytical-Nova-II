@@ -61,6 +61,24 @@
     -unity-background-scale-mode: scale-to-fit;
 }
 
+/* Placeholder text icon for items without a sprite (pills) */
+.item-glyph {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    right: 2px;
+    bottom: 2px;
+    -unity-text-align: middle-center;
+    font-size: 11px;
+    white-space: normal;
+    color: rgb(240, 236, 220);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
+}
+.item-glyph.glyph-health { color: rgb(255, 120, 120); }
+.item-glyph.glyph-chi { color: rgb(120, 180, 255); }
+.item-glyph.glyph-dual { color: rgb(206, 150, 255); }
+
 /* Empty equip slot: a faint silhouette of that slot's gear */
 .equip-slot .item-icon.silhouette { -unity-background-image-tint-color: rgba(170, 200, 220, 0.14); }
 
@@ -116,6 +134,10 @@
     width: 324px;
     margin: 8px auto 4px auto;
 }
+.inventory-pages { width: 324px; margin: 6px auto 0 auto; }
+.inventory-page { flex-grow: 1; min-height: 22px; height: 22px; margin: 0 2px; padding: 0; font-size: 11px; opacity: 0.6; }
+.inventory-page.selected { opacity: 1; color: rgb(114, 222, 196); }
+.inventory-page.drop-hover { scale: 1.05 1.05; opacity: 1; }
 .inventory-count { font-size: 12px; margin-right: 8px; -unity-text-align: middle-right; }
 .inventory-sort { min-height: 24px; height: 24px; margin: 0 8px 0 0; padding: 0 10px; font-size: 11px; }
 

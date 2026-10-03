@@ -6,7 +6,7 @@
     <ui:VisualElement name="equipment-window" class="panel window blocks-world hud-movable">
         <ui:VisualElement class="row kn-header">
             <ui:Label text="EQUIPMENT" class="heading" />
-            <ui:Label text="[E]" class="muted header-key" />
+            <ui:Label text="[U]" class="muted header-key" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
             <ui:Button name="close-equipment" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
         </ui:VisualElement>
@@ -44,12 +44,18 @@
             <ui:Label text="INVENTORY" class="heading" />
             <ui:Label text="[I]" class="muted header-key" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
-            <ui:Label name="inventory-count" text="0 / 48" class="accent inventory-count" />
+            <ui:Label name="inventory-count" text="0 / 144" class="accent inventory-count" />
             <ui:Button name="inventory-sort" text="SORT" class="inventory-sort" />
             <ui:Button name="close-inventory" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
         </ui:VisualElement>
+        <!-- Page tabs: hover one while dragging an item to switch pages -->
+        <ui:VisualElement class="row inventory-pages">
+            <ui:Button name="inventory-page-0" text="I" class="inventory-page" />
+            <ui:Button name="inventory-page-1" text="II" class="inventory-page" />
+            <ui:Button name="inventory-page-2" text="III" class="inventory-page" />
+        </ui:VisualElement>
         <ui:VisualElement name="inventory-grid" class="inventory-grid" />
-        <ui:Label text="Right-click to equip  ·  Left-click for options  ·  Drag to move" class="help" />
+        <ui:Label text="Right-click to equip or use  ·  Left-click for options  ·  Drag to move" class="help" />
     </ui:VisualElement>
 
     <!-- Floating layers -->

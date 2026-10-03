@@ -21,17 +21,25 @@ namespace KryticalNova.Progression
         public bool IsEmpty => itemType == HotbarItemType.None;
     }
 
-    /// <summary>Owns ten assignable skill slots and routes their Input System shortcuts for movement and combat skills.</summary>
+    /// <summary>
+    /// Owns the assignable skill slots (number row 1–0 plus Q/W/E/R) and routes their Input System shortcuts for
+    /// movement and combat skills. Holding a key repeats skills flagged hold-to-repeat and charges charged skills.
+    /// </summary>
     [DefaultExecutionOrder(InputExecutionOrder)]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInput), typeof(PlayerMovementSkills))]
     public sealed class PlayerSkillHotbar : MonoBehaviour
     {
-        public const int SlotCount = 10;
+        /// <summary>Slots 0–9 are keys 1–0; the rest are Q, W, E, R.</summary>
+        public const int NumberSlotCount = 10;
+        public const int SlotCount = 14;
+        private const int NoSlot = -1;
         private const int InputExecutionOrder = -50;
         private const string CommandMapName = "SkillCommands";
         private const string GameplayMapName = "PointAndClick";
-        private const string SlotActionPrefix = "Slot";
+        private static readonly string[] SlotActionNames =
+            { "Slot1", "Slot2", "Slot3", "Slot4", "Slot5", "Slot6", "Slot7", "Slot8", "Slot9", "Slot10", "SlotQ", "SlotW", "SlotE", "SlotR" };
+        private static readonly string[] SlotKeyLabels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Q", "W", "E", "R" };
         private const string CharacterActionName = "CharacterWindow";
         private const string SkillsActionName = "SkillsWindow";
         private const string CancelActionName = "CancelOrbit";
@@ -49,7 +57,23 @@ namespace KryticalNova.Progression
         public event Action CharacterWindowRequested;
         public event Action SkillsWindowRequested;
         public event Action CancelRequested;
+        /// <summary>The local player began holding a charged skill's key.</summary>
+        public event Action<SkillDefinitionSO> ChargeStarted;
+        /// <summary>The hold ended; true when the charge filled and the skill was cast.</summary>
+        public event Action<SkillDefinitionSO, bool> ChargeEnded;
         public bool InputSuppressed { get; set; }
+
+        private int chargingSlot = NoSlot;
+        private SkillDefinitionSO chargingSkill;
+        private float chargeStartTime;
+
+        /// <summary>The slot whose charged skill is being held, or -1.</summary>
+        public int ChargingSlot => chargingSlot;
+        public float ChargeProgress => chargingSkill == null ? 0f
+            : Mathf.Clamp01((Time.time - chargeStartTime) / Mathf.Max(0.01f, chargingSkill.chargeTime));
+
+        /// <summary>The keyboard key shown for a zero-based slot.</summary>
+        public static string GetKeyLabel(int index) => IsValidSlot(index) ? SlotKeyLabels[index] : string.Empty;
 
         private void Awake()
         {
@@ -63,7 +87,7 @@ namespace KryticalNova.Progression
             commandMap = playerInput.actions.FindActionMap(CommandMapName, true);
             gameplayMap = playerInput.actions.FindActionMap(GameplayMapName, true);
             for (int index = 0; index < SlotCount; index++)
-                slotActions[index] = commandMap.FindAction(SlotActionPrefix + (index + 1), true);
+                slotActions[index] = commandMap.FindAction(SlotActionNames[index], true);
             characterAction = commandMap.FindAction(CharacterActionName, true);
             skillsAction = commandMap.FindAction(SkillsActionName, true);
             cancelAction = gameplayMap.FindAction(CancelActionName, true);
@@ -71,18 +95,89 @@ namespace KryticalNova.Progression
         }
 
         private void OnEnable() => commandMap?.Enable();
-        private void OnDisable() => commandMap?.Disable();
+        private void OnDisable()
+        {
+            EndCharge(false);
+            commandMap?.Disable();
+        }
 
         private void Update()
         {
             if (commandMap == null || !commandMap.enabled || !gameplayMap.enabled
-                || !playerInput.inputIsActive || !Application.isFocused || Time.timeScale <= 0f) return;
-            if (cancelAction.WasPressedThisFrame()) { CancelRequested?.Invoke(); return; }
-            if (InputSuppressed) return;
+                || !playerInput.inputIsActive || !Application.isFocused || Time.timeScale <= 0f)
+            {
+                EndCharge(false);
+                return;
+            }
+            if (cancelAction.WasPressedThisFrame()) { EndCharge(false); CancelRequested?.Invoke(); return; }
+            if (InputSuppressed) { EndCharge(false); return; }
             if (characterAction.WasPressedThisFrame()) CharacterWindowRequested?.Invoke();
             if (skillsAction.WasPressedThisFrame()) SkillsWindowRequested?.Invoke();
+
+            if (chargingSlot != NoSlot) { UpdateCharge(); return; }
+
             for (int index = 0; index < SlotCount; index++)
-                if (slotActions[index].WasPressedThisFrame()) { ActivateSlot(index); break; }
+            {
+                if (slotActions[index].WasPressedThisFrame()) { PressSlot(index); break; }
+                if (slotActions[index].IsPressed()) RepeatSlot(index);
+            }
+        }
+
+        /// <summary>Key down: charged skills start filling, everything else activates at once.</summary>
+        private void PressSlot(int index)
+        {
+            HotbarSlotEntry entry = slots[index];
+            if (entry.itemType != HotbarItemType.CombatSkill || entry.combatSkill == null || !entry.combatSkill.IsCharged)
+            {
+                ActivateSlot(index);
+                return;
+            }
+
+            if (combatSkills == null) combatSkills = GetComponent<PlayerCombatSkills>();
+            if (combatSkills == null) return;
+            if (!combatSkills.CanCast(entry.combatSkill, out string reason))
+            {
+                combatSkills.Announce(reason);
+                return;
+            }
+            chargingSlot = index;
+            chargingSkill = entry.combatSkill;
+            chargeStartTime = Time.time;
+            ChargeStarted?.Invoke(chargingSkill);
+            Changed?.Invoke();
+        }
+
+        /// <summary>Key held: skills flagged hold-to-repeat recast as soon as they are able, without error spam.</summary>
+        private void RepeatSlot(int index)
+        {
+            HotbarSlotEntry entry = slots[index];
+            if (entry.itemType != HotbarItemType.CombatSkill || entry.combatSkill == null || !entry.combatSkill.holdToRepeat) return;
+            if (combatSkills == null) combatSkills = GetComponent<PlayerCombatSkills>();
+            combatSkills?.TryCastSkill(entry.combatSkill, out _, quiet: true);
+        }
+
+        private void UpdateCharge()
+        {
+            if (!slotActions[chargingSlot].IsPressed())
+            {
+                string name = chargingSkill.displayName;
+                EndCharge(false);
+                combatSkills.Announce($"{name} released before it was charged. No Chi spent.");
+                return;
+            }
+            if (Time.time - chargeStartTime >= chargingSkill.chargeTime) EndCharge(true);
+        }
+
+        /// <summary>Stops the current charge; when <paramref name="cast"/> is set the filled charge is spent on the skill.</summary>
+        private void EndCharge(bool cast)
+        {
+            if (chargingSlot == NoSlot) return;
+            SkillDefinitionSO skill = chargingSkill;
+            chargingSlot = NoSlot;
+            chargingSkill = null;
+            bool completed = cast && combatSkills != null && combatSkills.TryCastSkill(skill, out _);
+            ChargeEnded?.Invoke(skill, completed);
+            Changed?.Invoke();
         }
 
         /// <summary>Reads the movement skill in a zero-based hotbar slot for backwards compatibility.</summary>

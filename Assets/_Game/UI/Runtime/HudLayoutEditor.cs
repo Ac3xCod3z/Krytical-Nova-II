@@ -59,7 +59,8 @@ namespace KryticalNova.UI
             { "settings-window", "SETTINGS WINDOW" },
             { "network-panel", "NETWORK PANEL" },
             { "npc-dialogue", "NPC DIALOGUE" },
-            { "zone-toast", "ZONE NOTICE" }
+            { "zone-toast", "ZONE NOTICE" },
+            { "world-map", "WORLD MAP" }
         };
 
         private readonly Dictionary<string, VisualElement> movables = new Dictionary<string, VisualElement>();

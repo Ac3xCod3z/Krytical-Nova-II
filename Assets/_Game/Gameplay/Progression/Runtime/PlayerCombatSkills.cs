@@ -10,16 +10,21 @@ namespace KryticalNova.Progression
     [RequireComponent(typeof(PlayerCharacterProgression), typeof(PlayerResources), typeof(CharacterBuffManager))]
     public sealed class PlayerCombatSkills : NetworkBehaviour
     {
+        /// <summary>A remote owner waits this long for the server's answer before it may ask to cast again.</summary>
+        private const float CastRequestTimeout = 0.5f;
+
         [SerializeField] private SkillDefinitionSO[] availableSkills = Array.Empty<SkillDefinitionSO>();
 
         private PlayerCharacterProgression progression;
         private PlayerResources resources;
         private CharacterBuffManager buffManager;
         private CharacterCombatStats combatStats;
+        private ISkillAttackExecutor attackExecutor;
 
         private readonly Dictionary<string, int> learnedRanks = new Dictionary<string, int>();
         private readonly HashSet<string> unlockedDropSkills = new HashSet<string>();
         private readonly Dictionary<string, float> cooldownEndTimes = new Dictionary<string, float>();
+        private float castRequestPendingUntil;
 
         public event Action Changed;
         public event Action<SkillDefinitionSO> SkillCast;
@@ -38,6 +43,22 @@ namespace KryticalNova.Progression
             if (resources == null) resources = GetComponent<PlayerResources>();
             if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
             if (combatStats == null) combatStats = GetComponent<CharacterCombatStats>();
+            if (attackExecutor == null) attackExecutor = GetComponent<ISkillAttackExecutor>();
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            EnsureComponents();
+            if (IsServer && buffManager != null) buffManager.NextHitBuffsConsumed += OnNextHitBuffsConsumed;
+            if (IsOwner && !IsServer)
+            {
+                foreach (var pair in learnedRanks) SubmitRankServerRpc(pair.Key, pair.Value);
+            }
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (buffManager != null) buffManager.NextHitBuffsConsumed -= OnNextHitBuffsConsumed;
         }
 
         public void SetAvailableSkills(SkillDefinitionSO[] skills)
@@ -57,28 +78,11 @@ namespace KryticalNova.Progression
             return null;
         }
 
+        /// <summary>0 until a skill point has been spent on the skill; reaching its level alone teaches nothing.</summary>
         public int GetRank(SkillDefinitionSO skill)
         {
             if (skill == null) return 0;
-            if (learnedRanks.TryGetValue(skill.skillId, out int rank) && rank > 0)
-                return rank;
-
-            // Rare skill book drop unlocked
-            if (skill.requiresSkillBook && unlockedDropSkills.Contains(skill.skillId))
-                return 1;
-
-            // If player has attained the required character level, skill is accessible at baseline rank 1
-            if (progression == null) progression = GetComponent<PlayerCharacterProgression>();
-            if (progression != null && progression.CurrentLevel >= skill.requiredCharacterLevel)
-            {
-                if (skill.requiresSkillBook && !unlockedDropSkills.Contains(skill.skillId))
-                {
-                    unlockedDropSkills.Add(skill.skillId);
-                }
-                return 1;
-            }
-
-            return 0;
+            return learnedRanks.TryGetValue(skill.skillId, out int rank) ? Mathf.Max(0, rank) : 0;
         }
 
         public bool IsLearned(SkillDefinitionSO skill)
@@ -86,6 +90,10 @@ namespace KryticalNova.Progression
             if (skill == null) return false;
             return GetRank(skill) > 0;
         }
+
+        /// <summary>Book skills (level-60 drops, Wargod) stay locked until their book is acquired, whatever the level.</summary>
+        public bool IsLocked(SkillDefinitionSO skill) =>
+            skill != null && skill.requiresSkillBook && !unlockedDropSkills.Contains(skill.skillId);
 
         public bool IsDropSkillUnlocked(string skillId) => unlockedDropSkills.Contains(skillId);
 
@@ -133,16 +141,15 @@ namespace KryticalNova.Progression
             if (skill == null) { reason = "Unknown skill"; return false; }
 
             if (progression == null) { reason = "Progression missing"; return false; }
+            if (IsLocked(skill))
+            {
+                reason = $"Requires skill book ({skill.acquisitionNote})";
+                return false;
+            }
             if (progression.CurrentLevel < skill.requiredCharacterLevel)
             {
                 reason = $"Requires character level {skill.requiredCharacterLevel}";
                 return false;
-            }
-
-            // At or above the required character level, martial arts secrets become accessible
-            if (skill.requiresSkillBook && !unlockedDropSkills.Contains(skill.skillId))
-            {
-                unlockedDropSkills.Add(skill.skillId);
             }
 
             int curRank = GetRank(skill);
@@ -180,10 +187,23 @@ namespace KryticalNova.Progression
 
             if (upgraded > 0)
             {
+                if (IsSpawned && !IsServer) SubmitRankServerRpc(skill.skillId, learnedRanks[skill.skillId]);
                 SkillMessage?.Invoke($"Upgraded {skill.displayName} to Rank {learnedRanks[skill.skillId]}");
                 Changed?.Invoke();
             }
             return upgraded;
+        }
+
+        /// <summary>
+        /// Tells the server which rank this player has, so its damage and costs use the real rank.
+        /// TODO(progression): the server trusts this until skill points are server-owned.
+        /// </summary>
+        [ServerRpc]
+        private void SubmitRankServerRpc(string skillId, int rank)
+        {
+            var skill = GetSkill(skillId);
+            if (skill == null) return;
+            learnedRanks[skillId] = Mathf.Clamp(rank, 0, skill.maxRank);
         }
 
         public bool IsOnCooldown(SkillDefinitionSO skill)
@@ -201,26 +221,25 @@ namespace KryticalNova.Progression
             return 0f;
         }
 
+        /// <summary>Checks a cast against the local player's current target.</summary>
         public bool CanCast(SkillDefinitionSO skill, out string reason)
+        {
+            EnsureComponents();
+            return CanCast(skill, ResolveTarget(skill), out reason);
+        }
+
+        /// <summary>An empty <paramref name="reason"/> on failure means "not yet" (still casting), not a user error.</summary>
+        public bool CanCast(SkillDefinitionSO skill, Transform target, out string reason)
         {
             EnsureComponents();
             reason = string.Empty;
             if (skill == null) { reason = "No skill selected"; return false; }
 
-            // Auto-unlock drop skills if character reached required level
-            if (skill.requiresSkillBook && !unlockedDropSkills.Contains(skill.skillId))
-            {
-                if (progression != null && progression.CurrentLevel >= skill.requiredCharacterLevel)
-                {
-                    unlockedDropSkills.Add(skill.skillId);
-                }
-            }
-
             if (!IsLearned(skill))
             {
-                reason = skill.requiresSkillBook
-                    ? $"Requires level {skill.requiredCharacterLevel} or {skill.acquisitionNote}"
-                    : "Learn this skill from the trainer first.";
+                reason = IsLocked(skill)
+                    ? $"{skill.displayName} requires a skill book ({skill.acquisitionNote})."
+                    : $"Learn {skill.displayName} with a skill point first.";
                 return false;
             }
             if (resources == null || !resources.IsAlive)
@@ -228,6 +247,8 @@ namespace KryticalNova.Progression
                 reason = "Cannot cast while defeated.";
                 return false;
             }
+            if (Time.time < castRequestPendingUntil) return false;
+            if (attackExecutor != null && attackExecutor.IsCasting) return false;
             if (IsOnCooldown(skill))
             {
                 float rem = GetRemainingCooldown(skill);
@@ -242,59 +263,95 @@ namespace KryticalNova.Progression
                 reason = $"Not enough Chi ({chiCost:0} Chi required, current: {resources.Chi:0}).";
                 return false;
             }
+            if (skill.IsAttack)
+            {
+                if (attackExecutor == null) { reason = "This character cannot use attack skills."; return false; }
+                if (!attackExecutor.CanExecute(skill, rank, target, out reason)) return false;
+            }
             return true;
         }
 
-        public bool TryCastSkill(SkillDefinitionSO skill, out string reason)
+        /// <summary>Shows a skill-related line in the player's feedback area.</summary>
+        public void Announce(string message)
         {
-            if (!CanCast(skill, out reason))
+            if (!string.IsNullOrEmpty(message)) SkillMessage?.Invoke(message);
+        }
+
+        /// <param name="quiet">Suppresses the failure message (used while a hotbar key is held to repeat).</param>
+        public bool TryCastSkill(SkillDefinitionSO skill, out string reason, bool quiet = false)
+        {
+            EnsureComponents();
+            Transform target = ResolveTarget(skill);
+            if (!CanCast(skill, target, out reason))
             {
-                SkillMessage?.Invoke(reason);
+                if (!quiet && !string.IsNullOrEmpty(reason)) SkillMessage?.Invoke(reason);
                 return false;
             }
 
             if (IsSpawned && !IsServer)
             {
-                RequestCastSkillServerRpc(skill.skillId);
+                castRequestPendingUntil = Time.time + CastRequestTimeout;
+                RequestCastSkillServerRpc(skill.skillId, ToReference(target));
                 return true;
             }
 
-            return ExecuteCastInternal(skill, out reason);
+            return ServerCast(skill, target, out reason);
         }
 
+        private Transform ResolveTarget(SkillDefinitionSO skill) =>
+            skill != null && skill.IsAttack && attackExecutor != null ? attackExecutor.ResolveTarget(skill) : null;
+
+        private static NetworkObjectReference ToReference(Transform target)
+        {
+            var netObj = target != null ? target.GetComponentInParent<NetworkObject>() : null;
+            return netObj != null && netObj.IsSpawned ? new NetworkObjectReference(netObj) : default;
+        }
+
+        private static Transform FromReference(NetworkObjectReference reference) =>
+            reference.TryGet(out NetworkObject netObj) ? netObj.transform : null;
+
         [ServerRpc]
-        private void RequestCastSkillServerRpc(string skillId)
+        private void RequestCastSkillServerRpc(string skillId, NetworkObjectReference targetReference)
         {
             var skill = GetSkill(skillId);
             if (skill == null) return;
 
-            if (ExecuteCastInternal(skill, out string reason))
-            {
-                int rank = GetRank(skill);
-                TriggerSkillCastClientRpc(skillId, rank);
-            }
-            else if (!string.IsNullOrEmpty(reason))
-            {
-                NotifyCastFailedClientRpc(reason);
-            }
+            Transform target = FromReference(targetReference);
+            string reason;
+            if (CanCast(skill, target, out reason) && ServerCast(skill, target, out reason)) return;
+            NotifyCastFailedClientRpc(reason ?? string.Empty);
         }
 
         [ClientRpc]
         private void NotifyCastFailedClientRpc(string reason)
         {
-            SkillMessage?.Invoke(reason);
+            if (!IsOwner) return;
+            castRequestPendingUntil = 0f;
+            if (!string.IsNullOrEmpty(reason)) SkillMessage?.Invoke(reason);
+        }
+
+        /// <summary>Runs the cast where combat is authoritative, then shows it on every peer.</summary>
+        private bool ServerCast(SkillDefinitionSO skill, Transform target, out string reason)
+        {
+            if (!ExecuteCastInternal(skill, target, out reason)) return false;
+            int rank = GetRank(skill);
+            if (IsSpawned) TriggerSkillCastClientRpc(skill.skillId, rank, ToReference(target));
+            else PresentCast(skill, rank, target);
+            return true;
         }
 
         [ClientRpc]
-        private void TriggerSkillCastClientRpc(string skillId, int rank)
+        private void TriggerSkillCastClientRpc(string skillId, int rank, NetworkObjectReference targetReference)
         {
             var skill = GetSkill(skillId);
             if (skill == null) return;
 
             if (!IsServer)
             {
+                // Mirror what the server already applied to its own copy.
+                castRequestPendingUntil = 0f;
                 cooldownEndTimes[skill.skillId] = Time.time + skill.cooldown;
-                if (buffManager != null)
+                if (!skill.IsAttack && buffManager != null)
                 {
                     buffManager.ApplyBuff(skill, rank);
                 }
@@ -304,10 +361,16 @@ namespace KryticalNova.Progression
                 Changed?.Invoke();
             }
 
-            KryticalNova.Core.ClientPresentationRegistry.Feedback?.ShowFloatingText(transform.position, $"[{skill.displayName}]");
+            PresentCast(skill, rank, FromReference(targetReference));
         }
 
-        private bool ExecuteCastInternal(SkillDefinitionSO skill, out string reason)
+        private void PresentCast(SkillDefinitionSO skill, int rank, Transform target)
+        {
+            KryticalNova.Core.ClientPresentationRegistry.Feedback?.ShowFloatingText(transform.position, $"[{skill.displayName}]");
+            attackExecutor?.Present(skill, rank, target);
+        }
+
+        private bool ExecuteCastInternal(SkillDefinitionSO skill, Transform target, out string reason)
         {
             reason = string.Empty;
             if (skill == null) return false;
@@ -326,16 +389,29 @@ namespace KryticalNova.Progression
 
             cooldownEndTimes[skill.skillId] = Time.time + skill.cooldown;
 
-            if (buffManager != null)
+            if (skill.IsAttack)
+            {
+                attackExecutor?.Execute(skill, rank, target);
+            }
+            else if (buffManager != null)
             {
                 buffManager.ApplyBuff(skill, rank);
             }
 
             SkillCast?.Invoke(skill);
             SkillMessage?.Invoke($"Activated {skill.displayName} (Rank {rank})!");
-            KryticalNova.Core.ClientPresentationRegistry.Feedback?.ShowFloatingText(transform.position, $"[{skill.displayName}]");
             Changed?.Invoke();
             return true;
+        }
+
+        // One-hit buffs are spent where the hit resolves (the server); clients drop their mirrored copy.
+        private void OnNextHitBuffsConsumed() => ConsumeNextHitBuffsClientRpc();
+
+        [ClientRpc]
+        private void ConsumeNextHitBuffsClientRpc()
+        {
+            if (IsServer || buffManager == null) return;
+            buffManager.ConsumeNextHitBuffs();
         }
     }
 }

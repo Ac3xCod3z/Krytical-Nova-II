@@ -93,6 +93,7 @@ namespace KryticalNova.Combat
         private IDamageable currentTarget;
         private Coroutine comboRoutine;
         private bool isAttacking;
+        private float skillHoldUntil = float.NegativeInfinity;
 
         // Server-only combo state: the server, not the client, decides which strike step is currently live.
         private int serverSwingStep;
@@ -259,6 +260,15 @@ namespace KryticalNova.Combat
         {
             if (clip == null) yield break;
 
+            // A skill cast owns the body until its hold ends; the combo picks up again with this strike.
+            if (Time.time < skillHoldUntil)
+            {
+                while (Time.time < skillHoldUntil) yield return null;
+                if (currentTarget == null || !currentTarget.IsAlive) yield break;
+                FaceTarget(currentTarget.Transform.position);
+                if (animancerMotor != null) animancerMotor.SetAttackingState(true);
+            }
+
             // Broadcast animation to proxies. A remote owner's server copy runs this same loop (started by
             // RequestAttackEntityServerRpc), so only the server sequences strikes; the client's loop is presentation.
             if (IsSpawned && IsServer)
@@ -279,6 +289,7 @@ namespace KryticalNova.Combat
 
             while (elapsed < length)
             {
+                if (Time.time < skillHoldUntil) break; // a skill interrupted this strike
                 elapsed += Time.deltaTime;
 
                 if (!slashSpawned && elapsed >= slashTime)
@@ -522,8 +533,25 @@ namespace KryticalNova.Combat
                 return;
             }
 
+            // Combo step damage multiplier (1.0x, 1.15x, 1.35x for finisher)
+            float stepMultiplier = comboStep == 1 ? 1.0f : comboStep == 2 ? 1.15f : 1.35f;
+            string stepLabel = comboStep == 3 ? "Combo Finisher" : $"Strike {comboStep}";
+
+            if (ResolveHit(target, stepMultiplier, comboStep, stepLabel, out var result) && !result.IsEvaded)
+                buffManager?.ConsumeNextHitBuffs();
+        }
+
+        /// <summary>
+        /// Resolves one authoritative hit (server or offline): damage roll, reflection / shield-shatter procs, damage
+        /// numbers and impact effects. Shared by basic strikes and attack skills. Returns false when nothing was resolved.
+        /// </summary>
+        public bool ResolveHit(IDamageable target, float damageMultiplier, int comboStep, string stepLabel, out DamageResult result)
+        {
+            result = default;
+            if (target == null || !target.IsAlive) return false;
+
             var attackerStats = combatStats != null ? combatStats : GetComponent<CharacterCombatStats>();
-            if (attackerStats == null || target.CombatStats == null) return;
+            if (attackerStats == null || target.CombatStats == null) return false;
 
             if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
             var defenderBuffs = target.Transform.GetComponent<CharacterBuffManager>();
@@ -534,13 +562,10 @@ namespace KryticalNova.Combat
             bool defenderReflect = defenderBuffs != null && defenderBuffs.HasReflection(out refChance, out _);
             bool attackerShatter = buffManager != null && buffManager.HasShieldShatter(out shatChance, out dispelChance);
 
-            // Combo step damage multiplier (1.0x, 1.15x, 1.35x for finisher)
-            float stepMultiplier = comboStep == 1 ? 1.0f : comboStep == 2 ? 1.15f : 1.35f;
-
-            var result = CombatCalculator.CalculateAttack(
+            result = CombatCalculator.CalculateAttack(
                 attackerStats,
                 target.CombatStats,
-                stepMultiplier,
+                damageMultiplier,
                 defenderReflect,
                 refChance,
                 attackerShatter,
@@ -571,7 +596,6 @@ namespace KryticalNova.Combat
                 else SpawnImpactVfxLocal(impactPos, toAttacker, comboStep, result.IsCritical, target.Transform);
             }
 
-            string stepLabel = comboStep == 3 ? "Combo Finisher" : $"Strike {comboStep}";
             if (result.IsEvaded)
                 OnCombatMessage?.Invoke($"{stepLabel} EVADED by {target.EntityName}!");
             else if (result.IsReflected)
@@ -580,7 +604,23 @@ namespace KryticalNova.Combat
                 OnCombatMessage?.Invoke($"CRITICAL {stepLabel} on {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
             else
                 OnCombatMessage?.Invoke($"{stepLabel} hit {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
+            return true;
         }
+
+        /// <summary>
+        /// Pauses the basic combo for a skill cast: closes the open swing, halts movement and optionally turns to
+        /// face a point. The combo resumes on its next strike once the hold ends.
+        /// </summary>
+        public void HoldForSkill(float seconds, Vector3? facePoint = null)
+        {
+            skillHoldUntil = Mathf.Max(skillHoldUntil, Time.time + Mathf.Max(0f, seconds));
+            if (weaponHitbox != null) weaponHitbox.EndSwing();
+            StopAgent();
+            if (facePoint.HasValue) FaceTarget(facePoint.Value);
+        }
+
+        /// <summary>The character's true facing (root rotation without the model's forward offset).</summary>
+        public Quaternion Facing => transform.rotation * Quaternion.AngleAxis(-modelForwardOffset, Vector3.up);
 
         [ClientRpc]
         private void SpawnImpactVfxClientRpc(Vector3 position, Vector3 towardAttacker, int comboStep, bool isCritical, ulong targetNetworkObjectId)

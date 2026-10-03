@@ -1,0 +1,196 @@
+/* World map window. Chrome from Synty SciFi Menus (Background_SciFiMenus_01); markers from the SciFi Soldier HUD map set.
+   Builds on KryticalTheme.uss / ProgressionHUD.uss (.panel, .window, .kn-*). */
+
+.world-map-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.world-map .header-key { font-size: 11px; margin-left: 6px; -unity-text-align: middle-left; }
+.world-map .header-spacer { flex-grow: 1; }
+
+/* Large by default, never full screen; players move and scale it through the HUD layout editor. */
+#world-map {
+    left: 50%;
+    top: 44px;
+    width: 548px;
+    translate: -50% 0;
+    display: none;
+}
+
+/* ------------------------------------------------------------------ chrome */
+
+.world-map-backdrop, .world-map-hexagons {
+    position: absolute;
+    left: 6px; top: 6px; right: 6px; bottom: 6px;
+    -unity-background-scale-mode: scale-and-crop;
+}
+.world-map-backdrop {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/General/SPR_SciFiMenus_Background_01.png");
+    -unity-background-image-tint-color: rgba(60, 110, 120, 0.35);
+}
+.world-map-hexagons {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/General/SPR_SciFiMenus_Background_Hexagons_01.png");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.07);
+}
+.world-map-corner {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/General/SPR_SciFiMenus_Menu_Triangle_Small_01.png");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.8);
+    -unity-background-scale-mode: scale-to-fit;
+}
+.world-map-corner-tl { left: -4px; top: -4px; }
+.world-map-corner-br { right: -4px; bottom: -4px; rotate: 180deg; }
+
+.world-map-title { -unity-font-definition: url("/Assets/Synty/InterfaceSciFiMenus/Fonts/Zen_Dots/ZenDots-Regular.ttf"); letter-spacing: 2px; }
+.world-map-zone { margin-left: 12px; font-size: 12px; -unity-text-align: middle-left; }
+.world-map-center { min-height: 24px; height: 24px; margin: 0 8px 0 0; padding: 0 10px; font-size: 11px; }
+
+/* ------------------------------------------------------------------ map */
+
+.world-map-viewport {
+    width: 500px;
+    height: 500px;
+    margin: 8px auto 6px auto;
+    overflow: hidden;
+    background-color: rgba(6, 12, 18, 0.96);
+    border-width: 1px;
+    border-color: rgba(114, 222, 196, 0.45);
+}
+
+/* Sized and translated in code (zoom / pan). Tinted toward the HUD teal so the baked capture reads as a hologram. */
+.world-map-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+    -unity-background-image-tint-color: rgb(150, 214, 212);
+}
+.world-map-grid {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/General/SPR_SciFiMenus_Background_Crosses_01.png");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.16);
+    -unity-background-scale-mode: scale-and-crop;
+}
+.world-map-scanlines, .world-map-vignette {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+}
+.world-map-scanlines {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/General/SPR_SciFiMenus_Background_ScanLines_01.png");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.10);
+}
+.world-map-vignette {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/General/SPR_SciFiMenus_Background_Vignette_01.png");
+    -unity-background-image-tint-color: rgba(4, 8, 12, 0.75);
+}
+.world-map-north {
+    position: absolute;
+    left: 50%;
+    top: 4px;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    translate: -50% 0;
+    -unity-text-align: middle-center;
+    font-size: 12px;
+    color: rgb(236, 206, 140);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/Orbitron/Orbitron-ExtraBold.ttf");
+    background-color: rgba(9, 15, 23, 0.9);
+    border-radius: 10px;
+}
+
+/* ------------------------------------------------------------------ markers (children of the content, map pixels) */
+
+.world-map-marker { position: absolute; -unity-background-scale-mode: scale-to-fit; }
+.world-map-marker.npc {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background-color: rgb(236, 196, 92);
+    border-width: 1.5px;
+    border-color: rgb(20, 18, 30);
+}
+.world-map-marker.ally {
+    width: 16px; height: 16px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Player_01_Clean.png");
+    -unity-background-image-tint-color: rgb(120, 190, 255);
+}
+.world-map-marker.portal {
+    width: 24px; height: 24px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Objective_01_Clean.png");
+    -unity-background-image-tint-color: rgb(186, 120, 255);
+}
+.world-map-marker.poi {
+    width: 14px; height: 14px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Star_01.png");
+    -unity-background-image-tint-color: rgb(244, 238, 223);
+    overflow: visible;
+}
+.world-map-poi-label {
+    position: absolute;
+    left: -60px;
+    top: 13px;
+    width: 134px;
+    margin: 0;
+    padding: 0;
+    -unity-text-align: upper-center;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgb(226, 236, 242);
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.95);
+}
+
+/* Local player: view cone under a teal triangle that points where the character faces. */
+.world-map-player { position: absolute; width: 26px; height: 26px; }
+.world-map-player-cone {
+    position: absolute;
+    left: -19px; top: -44px;
+    width: 64px; height: 64px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Map_PlayerViewCone_01.png");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.35);
+    -unity-background-scale-mode: scale-to-fit;
+}
+.world-map-player-icon {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Player_01_Clean.png");
+    -unity-background-image-tint-color: rgb(114, 222, 196);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* ------------------------------------------------------------------ footer */
+
+.world-map-footer { align-items: center; }
+.world-map-coords {
+    font-size: 12px;
+    color: rgb(236, 206, 140);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/Orbitron/Orbitron-ExtraBold.ttf");
+}
+.world-map-legend { font-size: 10px; margin: 0 8px 0 3px; color: rgb(170, 186, 200); }
+.world-map-legend-icon { width: 10px; height: 10px; -unity-background-scale-mode: scale-to-fit; }
+.legend-you {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Player_01_Clean.png");
+    -unity-background-image-tint-color: rgb(114, 222, 196);
+}
+.legend-ally {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Player_01_Clean.png");
+    -unity-background-image-tint-color: rgb(120, 190, 255);
+}
+.legend-npc { border-radius: 50%; background-color: rgb(236, 196, 92); }
+.legend-portal {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Objective_01_Clean.png");
+    -unity-background-image-tint-color: rgb(186, 120, 255);
+}
+.legend-poi {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Star_01.png");
+    -unity-background-image-tint-color: rgb(244, 238, 223);
+}
+.world-map-help { margin-top: 4px; font-size: 10px; }

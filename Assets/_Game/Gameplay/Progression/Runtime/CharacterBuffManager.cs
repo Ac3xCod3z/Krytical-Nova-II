@@ -44,6 +44,8 @@ namespace KryticalNova.Progression
 
         public event Action BuffsChanged;
         public event Action<string> BuffMessage;
+        /// <summary>Raised where the hit was resolved (server or offline) when one-hit buffs are spent.</summary>
+        public event Action NextHitBuffsConsumed;
 
         public IReadOnlyList<ActiveBuff> ActiveBuffs => activeBuffs;
         public bool HasActiveShield => GetActiveShieldCapacity() > 0f;
@@ -273,6 +275,28 @@ namespace KryticalNova.Progression
                 BuffMessage?.Invoke("Stance buffs dispelled by Heavenly Destruction!");
                 BuffsChanged?.Invoke();
             }
+        }
+
+        /// <summary>
+        /// Spends buffs that only empower one hit (e.g. Spiritual Rage). Call after the hit's damage is resolved,
+        /// so that hit benefits and the following ones do not.
+        /// </summary>
+        public bool ConsumeNextHitBuffs()
+        {
+            bool consumed = false;
+            for (int i = activeBuffs.Count - 1; i >= 0; i--)
+            {
+                if (!activeBuffs[i].Skill.consumedOnNextHit) continue;
+                BuffMessage?.Invoke($"{activeBuffs[i].Skill.displayName} spent on this hit.");
+                RemoveBuffAt(i);
+                consumed = true;
+            }
+            if (consumed)
+            {
+                BuffsChanged?.Invoke();
+                NextHitBuffsConsumed?.Invoke();
+            }
+            return consumed;
         }
 
         /// <summary>Removes all active buffs, shields, and channels.</summary>

@@ -558,6 +558,9 @@ namespace KryticalNova.Player
                 ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, acceptedDestination, hit.normal);
         }
 
+        /// <summary>The unit this player has clicked (skills aim at it), or null.</summary>
+        public Transform SelectedTarget => selectedTarget;
+
         private bool IsSelected(Transform unit) => unit != null && selectedTarget == unit;
 
         private void Select(Transform unit, WorldTargetKind kind)

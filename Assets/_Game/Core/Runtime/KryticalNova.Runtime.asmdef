@@ -16,6 +16,7 @@
         "Unity.Cinemachine",
         "Kybernetik.Animancer",
         "BoingKit",
+        "MotionWarping.Runtime",
         "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Universal.Runtime"
     ],

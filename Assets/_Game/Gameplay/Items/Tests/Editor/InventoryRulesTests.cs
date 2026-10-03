@@ -172,5 +172,41 @@ namespace KryticalNova.Tests
             Assert.AreEqual(20, bag[2].count);
             Assert.AreEqual(3, bag[0].count);
         }
+
+        [Test]
+        public void Consume_RemovesOneFromStack()
+        {
+            lookup.Items[Potion].restoreHealth = 300f;
+            bag[2] = new ItemStack(Potion, 5);
+            Assert.IsTrue(InventoryRules.TryConsume(bag, lookup, 2, out var used, out _));
+            Assert.AreSame(lookup.Items[Potion], used);
+            Assert.AreEqual(4, bag[2].count);
+        }
+
+        [Test]
+        public void Consume_LastOne_EmptiesCell()
+        {
+            lookup.Items[Potion].restoreChi = 100f;
+            bag[0] = new ItemStack(Potion, 1);
+            Assert.IsTrue(InventoryRules.TryConsume(bag, lookup, 0, out _, out _));
+            Assert.IsTrue(bag[0].IsEmpty);
+        }
+
+        [Test]
+        public void Consume_NonConsumable_IsRejectedAndStateUnchanged()
+        {
+            bag[0] = new ItemStack(SwordA, 1);
+            Assert.IsFalse(InventoryRules.TryConsume(bag, lookup, 0, out var used, out string reason));
+            Assert.AreEqual(InventoryRules.ReasonNotUsable, reason);
+            Assert.IsNull(used);
+            Assert.AreEqual(SwordA, bag[0].itemId);
+        }
+
+        [Test]
+        public void Consume_EmptyCell_IsRejected()
+        {
+            Assert.IsFalse(InventoryRules.TryConsume(bag, lookup, 1, out _, out string reason));
+            Assert.AreEqual(InventoryRules.ReasonEmpty, reason);
+        }
     }
 }

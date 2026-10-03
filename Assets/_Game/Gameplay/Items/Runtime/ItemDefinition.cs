@@ -55,6 +55,14 @@ namespace KryticalNova.Items
         [Header("Stats (applied while equipped)")]
         public List<ItemStatModifier> statModifiers = new List<ItemStatModifier>();
 
+        [Header("Consumable (used from the bag; one is removed per use)")]
+        [Min(0f)] public float restoreHealth;
+        [Min(0f)] public float restoreChi;
+        [Tooltip("Seconds before this player can use another consumable.")]
+        [Min(0f)] public float useCooldown = 1f;
+        [Tooltip("Short text drawn in the slot while the item has no icon sprite.")]
+        public string placeholderGlyph;
+
         [Header("Visuals")]
         [Tooltip("Armor / Gloves / Boots / Cape: Sidekick parts that replace the slot's body regions.")]
         public List<SidekickPartRef> appearanceParts = new List<SidekickPartRef>();
@@ -73,5 +81,6 @@ namespace KryticalNova.Items
 
         public bool IsEquippable => equipSlot != EquipSlot.None;
         public bool IsStackable => maxStack > 1;
+        public bool IsConsumable => restoreHealth > 0f || restoreChi > 0f;
     }
 }

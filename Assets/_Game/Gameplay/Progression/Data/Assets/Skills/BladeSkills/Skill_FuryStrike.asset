@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7880cd63b45e28428e12567876538bb, type: 3}
+  m_Name: Skill_FuryStrike
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
+  skillId: FuryStrike
+  displayName: Fury Strike
+  description: Sweeps the blade through every enemy around you. Hold the key to keep striking.
+  category: 4
+  targetType: 2
+  executionType: 0
+  acquisitionMethod: 0
+  requiresSkillBook: 0
+  acquisitionNote: Faction Skill Trainer
+  requiredCraftingArchives: []
+  requiredCharacterLevel: 1
+  minRank: 1
+  maxRank: 30
+  skillPointsToLearn: 1
+  totalSkillPointsToMax: 30
+  minChiCost: 16
+  maxChiCost: 167
+  cooldown: 0.2
+  minDuration: 0
+  maxDuration: 0
+  channelTickInterval: 1
+  channelChiRecoveryPercent: 5
+  isAbsorptionShield: 0
+  minShieldPercent: 111
+  maxShieldPercent: 150
+  hasDeadlyBlowBoost: 0
+  minDeadlyBlowPercent: 12
+  maxDeadlyBlowPercent: 75
+  hasLuckBoost: 0
+  minLuckPercent: 13
+  maxLuckPercent: 100
+  hasAcupressureResistance: 0
+  minAcupressureResistance: 1
+  maxAcupressureResistance: 20
+  hasReflection: 0
+  minReflectionChance: 1
+  maxReflectionChance: 10
+  reflectionMultiplier: 1
+  hasShieldShatter: 0
+  minDestructionChance: 1
+  maxDestructionChance: 20
+  dispelBuffChance: 50
+  statModifiers: []
+  rankScaledModifiers: []
+  consumedOnNextHit: 0
+  minDamagePercent: 120
+  maxDamagePercent: 234
+  hitCount: 1
+  minRange: 3
+  maxRange: 5
+  minBonusDamagePercent: 100
+  maxBonusDamagePercent: 100
+  chargeTime: 0
+  holdToRepeat: 1
+  castClip: {fileID: 7400000, guid: bf12677a6be1e77428d098f7aba7ab86, type: 3}
+  castClipSpeed: 1.6
+  hitTimesNormalized:
+  - 0.45
+  castLockNormalized: 0.8
+  chargeLoopClip: {fileID: 0}
+  castVfxPrefab: {fileID: 0}
+  hitVfxPrefab: {fileID: 0}
+  chargeVfxPrefab: {fileID: 0}
+  vfxOffset: {x: 0, y: 1, z: 0}

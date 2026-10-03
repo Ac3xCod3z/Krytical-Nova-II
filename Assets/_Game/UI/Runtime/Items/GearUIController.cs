@@ -32,6 +32,8 @@ namespace KryticalNova.UI
         private const float PitchDegreesPerPixel = 0.2f;
         private const float ZoomPerWheelStep = 0.3f;
         private const string BlockingClass = "blocks-world";
+        private const string GlyphClass = "item-glyph";
+        private static readonly string[] GlyphToneClasses = { "glyph-health", "glyph-chi", "glyph-dual" };
         private static readonly string[] RarityClasses = { "rarity-0", "rarity-1", "rarity-2", "rarity-3", "rarity-4" };
         private static readonly string[] RarityTextClasses = { "rarity-text-0", "rarity-text-1", "rarity-text-2", "rarity-text-3", "rarity-text-4" };
 
@@ -41,6 +43,9 @@ namespace KryticalNova.UI
         private Label countLabel, tryOnLabel, menuTitle, confirmText;
         private Label tipName, tipType, tipDesc, tipStats, tipHint;
         private readonly VisualElement[] cells = new VisualElement[PlayerInventory.Capacity];
+        private readonly Button[] pageTabs = new Button[PlayerInventory.PageCount];
+        private int currentPage;
+        private Label ghostGlyph;
         private readonly Dictionary<EquipSlot, VisualElement> slots = new Dictionary<EquipSlot, VisualElement>();
         private readonly Dictionary<EquipSlot, Sprite> silhouettes = new Dictionary<EquipSlot, Sprite>();
         private readonly List<Action> unbind = new List<Action>();
@@ -100,7 +105,15 @@ namespace KryticalNova.UI
             confirmText = root.Q<Label>("item-confirm-text");
             ghost = root.Q("item-drag-ghost");
 
+            if (ghostGlyph == null)
+            {
+                ghostGlyph = new Label { pickingMode = PickingMode.Ignore };
+                ghostGlyph.AddToClassList(GlyphClass);
+                ghost.Add(ghostGlyph);
+            }
+
             BuildGrid();
+            BuildPageTabs();
             BuildEquipSlots();
             BindViewport();
             BindButton("close-equipment", () => SetEquipmentOpen(false));
@@ -180,7 +193,7 @@ namespace KryticalNova.UI
                     else { SetEquipmentOpen(false); SetInventoryOpen(false); }
                 }
                 if (keyboard.iKey.wasPressedThisFrame) SetInventoryOpen(!IsOpen(inventoryWindow));
-                if (keyboard.eKey.wasPressedThisFrame) SetEquipmentOpen(!IsOpen(equipmentWindow));
+                if (keyboard.uKey.wasPressedThisFrame) SetEquipmentOpen(!IsOpen(equipmentWindow)); // E is a skill slot
             }
 
             // Click anywhere outside the context menu closes it (the world never receives that click).
@@ -296,6 +309,38 @@ namespace KryticalNova.UI
                 cells[i] = cell;
                 BindItemElement(cell);
             }
+            ShowPage(currentPage);
+        }
+
+        private void BuildPageTabs()
+        {
+            for (int i = 0; i < pageTabs.Length; i++)
+            {
+                int page = i;
+                pageTabs[i] = root.Q<Button>($"inventory-page-{i}");
+                BindButton($"inventory-page-{i}", () => ShowPage(page));
+            }
+            ShowPage(currentPage);
+        }
+
+        /// <summary>Only the current page's cells are laid out; the bag itself is one continuous array.</summary>
+        private void ShowPage(int page)
+        {
+            currentPage = Mathf.Clamp(page, 0, PlayerInventory.PageCount - 1);
+            for (int i = 0; i < cells.Length; i++)
+                if (cells[i] != null) cells[i].style.display = PageOf(i) == currentPage ? DisplayStyle.Flex : DisplayStyle.None;
+            for (int i = 0; i < pageTabs.Length; i++)
+                pageTabs[i]?.EnableInClassList("selected", i == currentPage);
+        }
+
+        private static int PageOf(int cellIndex) => cellIndex / PlayerInventory.PageSize;
+
+        private int PageTabAt(Vector2 panelPosition)
+        {
+            if (!IsOpen(inventoryWindow)) return -1;
+            for (int i = 0; i < pageTabs.Length; i++)
+                if (pageTabs[i] != null && pageTabs[i].worldBound.Contains(panelPosition)) return i;
+            return -1;
         }
 
         private void BuildEquipSlots()
@@ -317,6 +362,9 @@ namespace KryticalNova.UI
             var icon = new VisualElement { pickingMode = PickingMode.Ignore };
             icon.AddToClassList("item-icon");
             host.Insert(0, icon);
+            var glyph = new Label { pickingMode = PickingMode.Ignore };
+            glyph.AddToClassList(GlyphClass);
+            host.Insert(1, glyph);
             if (withCount)
             {
                 var count = new Label { pickingMode = PickingMode.Ignore };
@@ -381,8 +429,21 @@ namespace KryticalNova.UI
                 icon.style.backgroundImage = silhouette != null ? new StyleBackground(silhouette) : StyleKeyword.None;
                 icon.EnableInClassList("silhouette", silhouette != null);
             }
+            SetGlyph(host.Q<Label>(className: GlyphClass), def);
             var countLabel = host.Q<Label>(className: "item-count");
             if (countLabel != null) countLabel.text = def != null && count > 1 ? count.ToString() : string.Empty;
+        }
+
+        /// <summary>Items without a sprite show their placeholder text, tinted by what they restore.</summary>
+        private static void SetGlyph(Label glyph, ItemDefinition def)
+        {
+            if (glyph == null) return;
+            bool show = def != null && def.icon == null && !string.IsNullOrEmpty(def.placeholderGlyph);
+            glyph.text = show ? def.placeholderGlyph : string.Empty;
+            foreach (var c in GlyphToneClasses) glyph.RemoveFromClassList(c);
+            if (!show || !def.IsConsumable) return;
+            int tone = def.restoreHealth > 0f && def.restoreChi > 0f ? 2 : def.restoreChi > 0f ? 1 : 0;
+            glyph.AddToClassList(GlyphToneClasses[tone]);
         }
 
         private ItemDefinition DefinitionAt(ItemLocation loc)
@@ -434,7 +495,9 @@ namespace KryticalNova.UI
             if (!dragging) return;
             ghost.style.left = pos.x - GhostHalfSize;
             ghost.style.top = pos.y - GhostHalfSize;
-            SetHoverTarget(FindItemElement(pos));
+            int tab = PageTabAt(pos);
+            if (tab >= 0 && tab != currentPage) ShowPage(tab);
+            SetHoverTarget(tab >= 0 ? pageTabs[tab] : FindItemElement(pos));
         }
 
         private void OnItemPointerUp(PointerUpEvent evt)
@@ -474,6 +537,7 @@ namespace KryticalNova.UI
             HideTooltip();
             pressElement.AddToClassList("drag-source");
             ghost.style.backgroundImage = def.icon != null ? new StyleBackground(def.icon) : StyleKeyword.None;
+            SetGlyph(ghostGlyph, def);
             SetDisplay(ghost, true);
             ghost.BringToFront();
 
@@ -523,8 +587,13 @@ namespace KryticalNova.UI
 
         private VisualElement FindItemElement(Vector2 panelPosition)
         {
-            foreach (var cell in cells)
-                if (IsOpen(inventoryWindow) && cell.worldBound.Contains(panelPosition)) return cell;
+            if (IsOpen(inventoryWindow))
+            {
+                // Cells on other pages are not laid out; their stale bounds must not catch the pointer.
+                int first = currentPage * PlayerInventory.PageSize;
+                for (int i = first; i < first + PlayerInventory.PageSize; i++)
+                    if (cells[i].worldBound.Contains(panelPosition)) return cells[i];
+            }
             foreach (var kv in slots)
                 if (IsOpen(equipmentWindow) && kv.Value.worldBound.Contains(panelPosition)) return kv.Value;
             return null;
@@ -541,8 +610,9 @@ namespace KryticalNova.UI
         {
             if (inventory == null) return;
             suppressWorldInputFrame = Time.frameCount;
-            if (loc.IsBag) inventory.RequestQuickEquip(loc.index);
-            else inventory.RequestQuickUnequip(loc.Slot);
+            if (!loc.IsBag) inventory.RequestQuickUnequip(loc.Slot);
+            else if (IsUsable(DefinitionAt(loc))) inventory.RequestUse(loc.index);
+            else inventory.RequestQuickEquip(loc.index);
         }
 
         private void OnRequestFailed(string reason)
@@ -569,6 +639,7 @@ namespace KryticalNova.UI
             var actions = new List<MenuAction>();
             if (loc.IsBag)
             {
+                if (IsUsable(def)) actions.Add(new MenuAction("Use", () => inventory.RequestUse(loc.index)));
                 if (def.IsEquippable) actions.Add(new MenuAction("Equip", () => inventory.RequestQuickEquip(loc.index)));
                 if (CanTryOn(def)) actions.Add(new MenuAction("Try On", () => TryOn(def)));
             }
@@ -638,9 +709,10 @@ namespace KryticalNova.UI
                                             : def.rarity.ToString().ToUpperInvariant();
             tipDesc.text = def.description;
             tipStats.text = FormatStats(def);
-            tipHint.text = loc.IsBag
-                ? (def.IsEquippable ? "Right-click: equip   ·   Left-click: options" : "Left-click: options")
-                : "Right-click: unequip   ·   Left-click: options";
+            tipHint.text = !loc.IsBag ? "Right-click: unequip   ·   Left-click: options"
+                : IsUsable(def) ? "Right-click: use   ·   Left-click: options"
+                : def.IsEquippable ? "Right-click: equip   ·   Left-click: options"
+                : "Left-click: options";
 
             SetDisplay(tooltip, true);
             tooltip.BringToFront();
@@ -657,10 +729,19 @@ namespace KryticalNova.UI
 
         private void HideTooltip() => SetDisplay(tooltip, false);
 
+        /// <summary>Consumables that aren't gear are used, not equipped, on right-click.</summary>
+        private static bool IsUsable(ItemDefinition def) => def != null && def.IsConsumable && !def.IsEquippable;
+
         private static string FormatStats(ItemDefinition def)
         {
-            if (def.statModifiers == null || def.statModifiers.Count == 0) return "No stats yet";
             var sb = new System.Text.StringBuilder();
+            if (def.IsConsumable)
+            {
+                if (def.restoreHealth > 0f) sb.AppendLine($"Restores {def.restoreHealth:0} HP");
+                if (def.restoreChi > 0f) sb.AppendLine($"Restores {def.restoreChi:0} Chi");
+                return sb.ToString().TrimEnd();
+            }
+            if (def.statModifiers == null || def.statModifiers.Count == 0) return "No stats yet";
             foreach (var m in def.statModifiers)
             {
                 string value = m.modType == Progression.ModifierType.Flat ? $"{m.value:+0;-0}" : $"{m.value:+0;-0}%";

@@ -18,6 +18,7 @@ namespace KryticalNova.Items
         public const string ReasonCannotSwap = "Can't swap with that item.";
         public const string ReasonBagFull = "Inventory is full.";
         public const string ReasonUnknownItem = "Unknown item.";
+        public const string ReasonNotUsable = "That item can't be used.";
 
         public static bool TryMove(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
             ItemLocation from, ItemLocation to, out string reason)
@@ -69,6 +70,23 @@ namespace KryticalNova.Items
             }
             if (loadout[at.Slot] == 0) { reason = ReasonEmpty; return false; }
             loadout[at.Slot] = 0;
+            return true;
+        }
+
+        /// <summary>Removes one consumable from the stack at <paramref name="bagIndex"/> and reports what was used.</summary>
+        public static bool TryConsume(ItemStack[] bag, IItemLookup lookup, int bagIndex, out ItemDefinition used, out string reason)
+        {
+            used = null;
+            reason = null;
+            if (bagIndex < 0 || bagIndex >= bag.Length) { reason = ReasonInvalidLocation; return false; }
+            var stack = bag[bagIndex];
+            if (stack.IsEmpty) { reason = ReasonEmpty; return false; }
+            var def = lookup.Get(stack.itemId);
+            if (def == null) { reason = ReasonUnknownItem; return false; }
+            if (!def.IsConsumable) { reason = ReasonNotUsable; return false; }
+
+            bag[bagIndex] = stack.count > 1 ? new ItemStack(stack.itemId, (ushort)(stack.count - 1)) : ItemStack.Empty;
+            used = def;
             return true;
         }
 
