@@ -104,3 +104,10 @@
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Objective_01_Clean.png#ICON_SciFiSoldier_Map_Objective_01_Clean");
     -unity-background-image-tint-color: rgb(186, 120, 255);
 }
+/* The player's own marker (right-click on the world map). Rim-clamped like the portal. */
+.minimap-marker.waypoint {
+    width: 20px; height: 20px;
+    border-radius: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Flag_01.png#ICON_SciFiSoldier_Map_Flag_01");
+    -unity-background-image-tint-color: rgb(255, 201, 60);
+}

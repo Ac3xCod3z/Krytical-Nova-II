@@ -1,0 +1,159 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04ebc8e3bc924f09ac5a4d95aebc0a5b, type: 3}
+  m_Name: Carter One Thinn
+  m_EditorClassIdentifier: 
+  albedo: {fileID: 2800000, guid: 3a2a496000e6b6c4a9b4b6706f8ed9cc, type: 3}
+  normal: {fileID: 0}
+  dissolve: {fileID: 0}
+  flipbookSize: {x: 9, y: 9}
+  normalStrength: 1
+  cutoff: 0.01
+  softParticles: 1
+  useDitherFade: 1
+  characterMap:
+  - character: 33
+    index: 0
+  - character: 34
+    index: 1
+  - character: 35
+    index: 2
+  - character: 36
+    index: 3
+  - character: 37
+    index: 4
+  - character: 38
+    index: 5
+  - character: 42
+    index: 6
+  - character: 40
+    index: 7
+  - character: 41
+    index: 8
+  - character: 96
+    index: 9
+  - character: 43
+    index: 10
+  - character: 44
+    index: 11
+  - character: 45
+    index: 12
+  - character: 46
+    index: 13
+  - character: 47
+    index: 14
+  - character: 48
+    index: 15
+  - character: 49
+    index: 16
+  - character: 50
+    index: 17
+  - character: 51
+    index: 18
+  - character: 52
+    index: 19
+  - character: 53
+    index: 20
+  - character: 54
+    index: 21
+  - character: 55
+    index: 22
+  - character: 56
+    index: 23
+  - character: 57
+    index: 24
+  - character: 58
+    index: 25
+  - character: 59
+    index: 26
+  - character: 60
+    index: 27
+  - character: 61
+    index: 28
+  - character: 62
+    index: 29
+  - character: 63
+    index: 30
+  - character: 64
+    index: 31
+  - character: 65
+    index: 32
+  - character: 66
+    index: 33
+  - character: 67
+    index: 34
+  - character: 68
+    index: 35
+  - character: 69
+    index: 36
+  - character: 70
+    index: 37
+  - character: 71
+    index: 38
+  - character: 72
+    index: 39
+  - character: 73
+    index: 40
+  - character: 74
+    index: 41
+  - character: 75
+    index: 42
+  - character: 76
+    index: 43
+  - character: 77
+    index: 44
+  - character: 78
+    index: 45
+  - character: 79
+    index: 46
+  - character: 80
+    index: 47
+  - character: 81
+    index: 48
+  - character: 82
+    index: 49
+  - character: 83
+    index: 50
+  - character: 84
+    index: 51
+  - character: 85
+    index: 52
+  - character: 86
+    index: 53
+  - character: 87
+    index: 54
+  - character: 88
+    index: 55
+  - character: 89
+    index: 56
+  - character: 90
+    index: 57
+  - character: 91
+    index: 58
+  - character: 124
+    index: 59
+  - character: 93
+    index: 60
+  - character: 94
+    index: 61
+  - character: 95
+    index: 62
+  - character: 39
+    index: 63
+  - character: 125
+    index: 64
+  - character: 168
+    index: 65
+  - character: 123
+    index: 66
+  - character: 126
+    index: 67

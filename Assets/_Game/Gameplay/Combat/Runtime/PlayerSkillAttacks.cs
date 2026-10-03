@@ -119,7 +119,13 @@ namespace KryticalNova.Combat
         public void Present(SkillDefinitionSO skill, int rank, Transform target)
         {
             SpawnAtCaster(skill.castVfxPrefab, skill.vfxOffset);
-            if (skill.IsAttack) ClientPresentationRegistry.Feel?.Swing(transform, SkillComboStep, IsLocalPlayerPresentation);
+            var feel = ClientPresentationRegistry.Feel;
+            if (feel != null)
+            {
+                feel.SkillCast(transform, skill.skillId, skill.IsAttack, IsLocalPlayerPresentation);
+                // The blade trails for as long as the cast keeps the caster busy.
+                if (skill.IsAttack) feel.Swing(transform, SkillComboStep, IsLocalPlayerPresentation, skill.CastLockDuration);
+            }
 
             // Buffs without a cast clip stay instant and usable on the move, as before.
             float castLock = skill.CastLockDuration;
@@ -181,12 +187,9 @@ namespace KryticalNova.Combat
         private bool ResolveSkillHit(SkillDefinitionSO skill, IDamageable victim, float multiplier, string label)
         {
             if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result) || result.IsEvaded) return false;
-            if (skill.hitVfxPrefab != null)
-            {
-                Vector3 position = victim.Transform.position + Vector3.up;
-                if (IsSpawned) SkillHitVfxClientRpc(skill.skillId, position);
-                else SpawnSkillHitVfxLocal(skill, position);
-            }
+            Vector3 position = victim.Transform.position + Vector3.up;
+            if (IsSpawned) SkillHitVfxClientRpc(skill.skillId, position);
+            else SpawnSkillHitVfxLocal(skill, position);
             return true;
         }
 
@@ -240,10 +243,11 @@ namespace KryticalNova.Combat
             if (skill != null) SpawnSkillHitVfxLocal(skill, position);
         }
 
-        private static void SpawnSkillHitVfxLocal(SkillDefinitionSO skill, Vector3 position)
+        private void SpawnSkillHitVfxLocal(SkillDefinitionSO skill, Vector3 position)
         {
             var pool = NetworkCombatVFXPool.Instance;
             if (pool != null && skill.hitVfxPrefab != null) pool.Spawn(skill.hitVfxPrefab, position, Quaternion.identity);
+            ClientPresentationRegistry.Feel?.SkillHit(transform, skill.skillId, position);
         }
 
         private GameObject SpawnAtCaster(GameObject prefab, Vector3 offset, float lifetime = 0f)

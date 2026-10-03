@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94ff1d957cfd9c647a9c9e4ddd6084d2, type: 3}
+  m_Name: Obsidian
+  m_EditorClassIdentifier: Assembly-CSharp::PSD.Preferences.Theming.ThemeObject
+  background: {r: 0.05, g: 0.04, b: 0.07, a: 0.25}
+  contentBackground: {r: 0.09, g: 0.07, b: 0.13, a: 0.4}
+  errorBackground: {r: 0.25, g: 0.05, b: 0.08, a: 0.4}
+  successBackground: {r: 0.03, g: 0.2, b: 0.18, a: 0.4}
+  titleText: {r: 1, g: 0.4, b: 0.75, a: 1}
+  subtitleText: {r: 0.7, g: 0.65, b: 0.9, a: 1}
+  contentText: {r: 0.85, g: 0.85, b: 0.95, a: 1}
+  subtleText: {r: 0.45, g: 0.42, b: 0.55, a: 1}
+  accent: {r: 0, g: 0.85, b: 0.95, a: 1}
+  accentBorder: {r: 0, g: 0.85, b: 0.95, a: 0.4}
+  accentSubtle: {r: 0, g: 0.85, b: 0.95, a: 0.6}
+  accentBorderSubtle: {r: 0, g: 0.85, b: 0.95, a: 0.3}
+  errorAccent: {r: 1, g: 0.15, b: 0.35, a: 1}
+  errorStrip: {r: 1, g: 0.2, b: 0.4, a: 0.6}
+  errorText: {r: 1, g: 0.6, b: 0.7, a: 1}
+  errorFieldText: {r: 1, g: 0.5, b: 0.6, a: 1}
+  successAccent: {r: 0, g: 0.9, b: 0.7, a: 1}
+  successText: {r: 0.5, g: 1, b: 0.85, a: 1}
+  shadow: {r: 0.02, g: 0.01, b: 0.03, a: 1}
+  buttonShadowHeavy: {r: 0, g: 0, b: 0, a: 0.4}
+  buttonShadowMid: {r: 0, g: 0, b: 0, a: 0.22}
+  buttonShadowLight: {r: 0, g: 0, b: 0, a: 0.1}
+  btnGradientLeftNormal: {r: 0, g: 0.85, b: 0.95, a: 1}
+  btnGradientLeftHover: {r: 0.2, g: 0.92, b: 1, a: 1}
+  btnGradientLeftActive: {r: 0, g: 0.7, b: 0.8, a: 1}
+  btnGradientRightNormal: {r: 1, g: 0.4, b: 0.75, a: 1}
+  btnGradientRightHover: {r: 1, g: 0.55, b: 0.85, a: 1}
+  btnGradientRightActive: {r: 0.8, g: 0.25, b: 0.6, a: 1}
+  navigationSeparator: {r: 0.45, g: 0.42, b: 0.55, a: 0.15}
+  separator: {r: 0.45, g: 0.42, b: 0.55, a: 0.2}
+  categoryTabSelected: {r: 0.14, g: 0.11, b: 0.2, a: 1}
+  categoryUnderline: {r: 0, g: 0.85, b: 0.95, a: 1}
+  categoryTabText: {r: 0.85, g: 0.85, b: 0.95, a: 1}
+  pillActive: {r: 0, g: 0.85, b: 0.95, a: 1}
+  pillActiveInvalid: {r: 1, g: 0.2, b: 0.4, a: 1}
+  pillInvalid: {r: 0.3, g: 0.08, b: 0.12, a: 1}
+  pillDisabledContent: {r: 0.45, g: 0.42, b: 0.55, a: 0.7}
+  badgeText: {r: 0, g: 0.85, b: 0.95, a: 1}
+  badgeBackground: {r: 0, g: 0.85, b: 0.95, a: 0.15}

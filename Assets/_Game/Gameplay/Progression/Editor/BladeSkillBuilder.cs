@@ -8,15 +8,24 @@ using UnityEngine;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Builds the Blade skill set (attacks and blade buffs), reworks Spiritual Rage into a charged one-hit buff, and
-    /// wires everything onto the Player prefab. Safe to re-run: numbers are rewritten from the table below, while
-    /// animation clips and VFX are only filled in when empty, so choices made in the Inspector survive a rebuild.
+    /// Builds the Blade skill set (attacks and blade buffs), reworks Spiritual Rage into a charged one-hit buff, gives
+    /// every buff that has no animation of its own the shared buff cast, and wires everything onto the Player prefab.
+    /// Safe to re-run: numbers are rewritten from the table below, while animation clips and VFX are only filled in
+    /// when empty, so choices made in the Inspector survive a rebuild.
     /// </summary>
     public static class BladeSkillBuilder
     {
         private const string SkillFolder = "Assets/_Game/Gameplay/Progression/Data/Assets/Skills/BladeSkills";
         private const string SpiritualRagePath = "Assets/_Game/Gameplay/Progression/Data/Assets/Skills/SelfBuffSkills/Skill_SpiritualRage.asset";
         private const string PlayerPrefabPath = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
+        private const string SkillRoot = "Assets/_Game/Gameplay/Progression/Data/Assets/Skills";
+
+        // One non-combat cast shared by every buff without its own animation: a weaponless spell gesture (Emerald AI
+        // demo set), copied into the player's animation folder so the skills never point into a vendor demo.
+        private const string BuffCastSource = "Assets/_ThirdParty/Emerald AI/Demo/Demo Source/Animations/Sorceress/Animations/Sorceress@Attack1.FBX";
+        private const string BuffCastPath = "Assets/_Game/Characters/Player/Animations/BuffCast.anim";
+        private const float BuffCastSpeed = 1.2f;
+        private const float BuffCastLock = 0.85f;
 
         // Placeholder animations (Grruzam katana set). Clip names are generic, so these are picked by length and type.
         private const string Katana = "Assets/_ThirdParty/Grruzam Powerful Sword Animation(Great Sword, Katana)/Animation/M_Katana_Blade/";
@@ -79,12 +88,60 @@ namespace KryticalNova.EditorTools
             };
 
             var rage = RebuildSpiritualRage();
+            int animated = GiveBuffsSharedCast();
 
             AssetDatabase.SaveAssets();
             int added = WirePlayerPrefab(skills);
             AssetDatabase.SaveAssets();
             Debug.Log($"[BladeSkills] {skills.Count} blade skills written to {SkillFolder}" +
-                      $"{(rage != null ? ", Spiritual Rage reworked" : string.Empty)}; {added} added to {PlayerPrefabPath}.");
+                      $"{(rage != null ? ", Spiritual Rage reworked" : string.Empty)}; {animated} buffs given the shared cast; " +
+                      $"{added} added to {PlayerPrefabPath}.");
+        }
+
+        /// <summary>
+        /// Buffs without a cast clip are instant and silent. Each gets the shared buff cast: the whole body plays it
+        /// and the caster is held in place for most of the clip, like an attack skill. Buffs that already have a clip
+        /// (or get one in the Inspector) are left alone.
+        /// </summary>
+        [MenuItem("Krytical Nova/Progression/Give Buffs The Shared Cast Animation")]
+        public static int GiveBuffsSharedCast()
+        {
+            AnimationClip cast = SharedBuffCast();
+            if (cast == null) return 0;
+
+            int count = 0;
+            foreach (string guid in AssetDatabase.FindAssets("t:SkillDefinitionSO", new[] { SkillRoot }))
+            {
+                var skill = AssetDatabase.LoadAssetAtPath<SkillDefinitionSO>(AssetDatabase.GUIDToAssetPath(guid));
+                if (skill == null || skill.IsAttack || skill.castClip != null) continue;
+                skill.castClip = cast;
+                skill.castClipSpeed = BuffCastSpeed;
+                skill.castLockNormalized = BuffCastLock;
+                EditorUtility.SetDirty(skill);
+                count++;
+            }
+            AssetDatabase.SaveAssets();
+            return count;
+        }
+
+        private static AnimationClip SharedBuffCast()
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(BuffCastPath);
+            if (clip == null)
+            {
+                AnimationClip source = LoadClip(BuffCastSource);
+                if (source == null) return null;
+                clip = Object.Instantiate(source);
+                clip.name = "BuffCast";
+                AssetDatabase.CreateAsset(clip, BuffCastPath);
+            }
+            // The source calls Emerald AI's ability spawner through an animation event; the player has no receiver.
+            if (AnimationUtility.GetAnimationEvents(clip).Length > 0)
+            {
+                AnimationUtility.SetAnimationEvents(clip, System.Array.Empty<AnimationEvent>());
+                EditorUtility.SetDirty(clip);
+            }
+            return clip;
         }
 
         private static SkillDefinitionSO Attack(string id, string displayName, int level, string bookNote, int pointsToLearn,

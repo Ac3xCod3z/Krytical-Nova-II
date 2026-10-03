@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94ff1d957cfd9c647a9c9e4ddd6084d2, type: 3}
+  m_Name: Aurora
+  m_EditorClassIdentifier: Assembly-CSharp::PSD.Preferences.Theming.ThemeObject
+  background: {r: 0.04, g: 0.08, b: 0.12, a: 0.25}
+  contentBackground: {r: 0.06, g: 0.1, b: 0.14, a: 0.4}
+  errorBackground: {r: 0.32, g: 0.14, b: 0.08, a: 0.4}
+  successBackground: {r: 0.06, g: 0.26, b: 0.2, a: 0.4}
+  titleText: {r: 0.92, g: 0.97, b: 1, a: 1}
+  subtitleText: {r: 0.65, g: 0.82, b: 0.9, a: 1}
+  contentText: {r: 0.85, g: 0.92, b: 0.96, a: 1}
+  subtleText: {r: 0.45, g: 0.52, b: 0.58, a: 1}
+  accent: {r: 1, g: 0.72, b: 0.25, a: 1}
+  accentBorder: {r: 1, g: 0.72, b: 0.25, a: 0.4}
+  accentSubtle: {r: 0.55, g: 0.3, b: 0.95, a: 0.6}
+  accentBorderSubtle: {r: 0.55, g: 0.3, b: 0.95, a: 0.3}
+  errorAccent: {r: 0.9, g: 0.25, b: 0.25, a: 1}
+  errorStrip: {r: 0.9, g: 0.3, b: 0.3, a: 0.6}
+  errorText: {r: 1, g: 0.55, b: 0.55, a: 1}
+  errorFieldText: {r: 0.85, g: 0.5, b: 0.5, a: 1}
+  successAccent: {r: 0.25, g: 0.8, b: 0.4, a: 1}
+  successText: {r: 0.45, g: 0.9, b: 0.55, a: 1}
+  shadow: {r: 0.2, g: 0.05, b: 0.4, a: 1}
+  buttonShadowHeavy: {r: 0, g: 0, b: 0, a: 0.3}
+  buttonShadowMid: {r: 0, g: 0, b: 0, a: 0.18}
+  buttonShadowLight: {r: 0, g: 0, b: 0, a: 0.08}
+  btnGradientLeftNormal: {r: 0.38, g: 0.35, b: 0.78, a: 1}
+  btnGradientLeftHover: {r: 0.45, g: 0.42, b: 0.88, a: 1}
+  btnGradientLeftActive: {r: 0.3, g: 0.28, b: 0.65, a: 1}
+  btnGradientRightNormal: {r: 0.114, g: 0.62, b: 0.459, a: 1}
+  btnGradientRightHover: {r: 0.15, g: 0.72, b: 0.53, a: 1}
+  btnGradientRightActive: {r: 0.09, g: 0.52, b: 0.38, a: 1}
+  navigationSeparator: {r: 0.5, g: 0.5, b: 0.5, a: 0.15}
+  separator: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
+  categoryTabSelected: {r: 0.35, g: 0.35, b: 0.35, a: 1}
+  categoryUnderline: {r: 1, g: 1, b: 1, a: 1}
+  categoryTabText: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  pillActive: {r: 0.5, g: 0.7, b: 1, a: 1}
+  pillActiveInvalid: {r: 1, g: 0.6, b: 0.4, a: 1}
+  pillInvalid: {r: 1, g: 0.85, b: 0.85, a: 1}
+  pillDisabledContent: {r: 0.7, g: 0.7, b: 0.7, a: 0.7}
+  badgeText: {r: 0.498, g: 0.467, b: 0.867, a: 1}
+  badgeBackground: {r: 0.235, g: 0.204, b: 0.718, a: 0.15}

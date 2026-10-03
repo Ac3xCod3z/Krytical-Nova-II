@@ -7,6 +7,8 @@ namespace KryticalNova.World
     /// Ties Volumetric Fog &amp; Mist 2 to the weather, like real air: it either rains or it fogs.
     ///  - Ground mist (terrain-fitted, whole zone) shows only as much as the weather's <c>volumetricFog</c> asks for —
     ///    full in WP_Fog, a thin haze in Overcast, a whiteout share in Blizzard, and never while it rains.
+    ///  - On dry nights the same ground volume runs at a small fraction (night haze), so moonlight has air to scatter
+    ///    in and buildings cut soft shafts through it.
     ///  - Water mist (low local volumes over the lakes and rivers) rises at dusk on dry evenings and lifts after.
     /// Volumes at ~0 are switched off entirely, so clear or rainy weather costs nothing. Sun/moon colour comes from
     /// the VolumetricFogManager's light sync; this owns density, albedo and on/off. Play mode works on instanced
@@ -35,12 +37,14 @@ namespace KryticalNova.World
         private static float publishedVolumetric = -1f;
         private static float publishedRain;
         private static float publishedHours = 12f;
+        private static float publishedNightHaze;
 
         /// <summary>How foggy the air is town-wide, 0-1 (fog weather only; local water mist excluded). Presentation only.</summary>
         public static float FogAmount { get; private set; }
 
         private Layer ground;
         private Layer[] water;
+        private float weatherWeight; // the fog-weather share of the ground weight (excludes night haze)
         private int lastQualityLevel = -1;
         private bool tierDisabled;
 
@@ -64,8 +68,10 @@ namespace KryticalNova.World
         }
 
         /// <summary>Called by <see cref="EnvironmentPresenter"/> every presented frame.</summary>
-        public static void Publish(Color fogColor, float volumetricFog, float rain, float timeOfDay01)
+        /// <param name="nightHaze">Thin ground haze for moonlit nights, 0-1 share of the ground mist (not fog weather).</param>
+        public static void Publish(Color fogColor, float volumetricFog, float rain, float timeOfDay01, float nightHaze = 0f)
         {
+            publishedNightHaze = nightHaze;
             publishedFogColor = fogColor;
             publishedVolumetric = volumetricFog;
             publishedRain = rain;
@@ -83,6 +89,7 @@ namespace KryticalNova.World
             water = new Layer[waterMists.Length];
             for (int i = 0; i < waterMists.Length; i++) water[i] = Layer.Create(waterMists[i]);
             lastQualityLevel = -1;
+            weatherWeight = 0f;
             FogAmount = 0f;
 #endif
         }
@@ -100,16 +107,19 @@ namespace KryticalNova.World
             if (publishedVolumetric < 0f) return;
 
             float k = 1f - Mathf.Exp(-Time.deltaTime / smoothingSeconds);
-            float groundTarget = tierDisabled ? 0f : Mathf.Clamp01(publishedVolumetric);
-            float waterTarget = tierDisabled ? 0f
-                : DuskWeight(publishedHours) * (1f - Mathf.Clamp01(publishedRain * 4f)) * (1f - groundTarget);
+            float weatherTarget = tierDisabled ? 0f : Mathf.Clamp01(publishedVolumetric);
+            float dry = 1f - Mathf.Clamp01(publishedRain * 4f);
+            // Night haze is the same ground volume at a fraction of its density, on dry nights only.
+            float groundTarget = tierDisabled ? 0f : Mathf.Max(weatherTarget, Mathf.Clamp01(publishedNightHaze) * dry);
+            float waterTarget = tierDisabled ? 0f : DuskWeight(publishedHours) * dry * (1f - weatherTarget);
+            weatherWeight = Mathf.Lerp(weatherWeight, weatherTarget, k);
 
             Apply(ref ground, groundTarget, k, false);
             for (int i = 0; i < water.Length; i++) Apply(ref water[i], waterTarget, k, true);
 
             // Only fog weather thickens the air town-wide. Water mist is local to the lakes and rivers, so it must not
-            // brighten every lamp cone in the city at dusk.
-            FogAmount = ground.Weight;
+            // brighten every lamp cone in the city at dusk. Neither must the thin night haze.
+            FogAmount = Mathf.Min(ground.Weight, weatherWeight);
         }
 
         /// <param name="ambientLit">Water mist: lit by the sky ambient, because the key light is ~0 through dusk.</param>

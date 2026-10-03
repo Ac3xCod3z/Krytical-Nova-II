@@ -41,11 +41,15 @@ Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights d
      It samples the sun's shadow map, so buildings cut shafts through it.
    - `VF_WaterMist` — low "Water Mist" volumes over each lake and along the rivers, building at dusk from 17:45 and thinning slowly until 22:00
      on dry evenings.
-   - Volumes at ~0 are switched off entirely (no cost in clear or rainy weather). Both sample APV, so baked lamp
-     light tints the mist at night.
+   - **Night haze**: on dry nights `VF_GroundMist` also runs at a small share of its density
+     (`DayCycleProfile.nightHaze`, 0.12), stronger under a bright moon, so moonlight has air to scatter in and
+     buildings cut soft shafts through it. It never counts toward `FogAmount`.
+   - Volumes at ~0 are switched off entirely (no cost in clear or rainy daytime weather). Both sample APV, so baked
+     lamp light tints the mist at night.
    **Volumetric Lights**: every lit street lamp has a cone (`StreetLampController`), on dusk→dawn, faint in clear air
    and stronger only in fog weather (`VolumetricAtmosphereDriver.FogAmount`; local water mist doesn't count), distance-toggled at 45–65 m.
-6. **SunShafts** (BeforeRenderingPostProcessing + 1): sky / cloud god rays, added before post so Bloom catches them.
+6. **SunShafts** (BeforeRenderingPostProcessing + 1): sky / cloud god rays from the key light (sun by day, faint
+   moon rays at night), added before post so Bloom catches them.
    Kept alongside the mist: the shafts own the sky, the mist owns the streets.
 7. **Beautify 3** (AfterRenderingTransparents — i.e. *before* URP post, on the HDR frame) owns **tonemapping
    (PBR Neutral)**, **bloom** (threshold 1, intensity 0.4, spread 0.58, warm `#FFF1E0` tint) and the **ink vignette**
@@ -138,7 +142,10 @@ Driven by `EnvironmentPresenter` (`Assets/_Game/World/Runtime/Presentation/`). T
   0.23 × 0.209 uv). The dark side keeps `_MoonEarthshine`.
 - Phase = (world day count + time of day) / `lunarCycleDays` (8). It's derived from the replicated world clock, so all
   clients agree. Waxing lights the right side.
-- Moonlight intensity and the moon halo scale with the lit fraction.
+- Moonlight scales with the lit fraction through `DayCycleProfile.moonPhaseLight` (new moon 0.42 → full 1) on top
+  of `moonIntensity` (0.75 at midnight). A bright, unclouded moon also lifts the night ambient
+  (`moonAmbientBoost`, up to +60%), drives faint moon shafts (`moonShaftIntensity`) and thickens the night haze.
+  The moon halo scales with the lit fraction too. Still one directional light: the moon is the key light at night.
 - `time.set` resets the day count, so the phase jumps. That's acceptable.
 
 ### Rainbow (physically motivated)
@@ -184,7 +191,9 @@ Clouds crossing the sun or moon get a bright rim (`_BodyRimGlow`), HDR for the s
   3. Additive composite tinted by the sun colour.
 - Strength comes from `SunShaftRuntime.Intensity`, which the presenter sets from `sunShaftIntensity` (peaks at dawn and
   dusk), sun visibility, and diffusion.
-- Off at night, and fades when the sun leaves the screen.
+- At night the same pass follows the moon: `SunShaftRuntime.SourceDirection` / `Tint` switch with the key light and
+  the strength comes from `moonShaftIntensity` × lit fraction × clear sky (peak 0.3, so it stays under the bloom
+  threshold). Fades when the source leaves the screen.
 - `comicBands` posterizes the shafts (off by default, since it draws hard rings). `debugShaftsOnly` shows only the shaft
   buffer.
 - **Render Graph gotcha**: material values set *inside* a pass's render function apply when the command buffer runs, so
@@ -373,6 +382,15 @@ Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Ed
 - **Shadowmask mixed lighting** for interiors once indoor zones exist: crisp baked shadows far away, realtime up close.
 
 ## Changelog
+
+- **2026-10-03 (moonlit nights)**:
+  - Moon key light raised (0.4 → 0.75 at midnight) with a phase curve (`moonPhaseLight`) instead of a fixed 25–100 % lerp.
+  - Night ambient lifts with the lit fraction; thin volumetric night haze on dry nights; faint moon shafts through the
+    SunShafts pass (source and tint now follow the key light).
+  - GameFeel VFX: every moment is a FEEL player (camera half for the local player, world half with pooled particles
+    for everyone). Buff auras, run / airborne loops and the blade trail ride on the character (`ActorVfx`); hits use
+    Cartoon FX impacts and comic text; the blade trail uses an All In 1 Shader Nodes slash material. Emissive VFX stay
+    inside the bloom budget in §4.
 
 - **2026-10-02 (pass 4)**:
   - Volumetric Fog 2 now renders **after transparents** (feature `renderPassEventOrder` 500): the water surface is

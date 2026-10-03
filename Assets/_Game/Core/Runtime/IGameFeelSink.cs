@@ -18,20 +18,35 @@ namespace KryticalNova.Core
     }
 
     /// <summary>
-    /// Client-only "juice" (screen shake, hit flash, squash, dust, sounds). Implemented by the GameFeel assembly and
-    /// registered in <see cref="ClientPresentationRegistry.Feel"/>; null on dedicated servers, so callers null-check.
-    /// Gameplay code only reports moments; it never decides how they feel.
+    /// Client-only "juice" (screen shake, hit flash, squash, dust, auras, trails, sounds). Implemented by the GameFeel
+    /// assembly and registered in <see cref="ClientPresentationRegistry.Feel"/>; null on dedicated servers, so callers
+    /// null-check. Gameplay code only reports moments; it never decides how they look or feel. Skills are named by
+    /// their <c>skillId</c>, which the GameFeel side maps to its own effects.
     /// </summary>
     public interface IGameFeelSink
     {
-        void Swing(Transform attacker, int comboStep, bool isLocalPlayer);
+        /// <param name="seconds">How long the blade keeps cutting (drives the weapon trail); 0 uses a default.</param>
+        void Swing(Transform attacker, int comboStep, bool isLocalPlayer, float seconds = 0f);
         void Hit(in HitFeel hit);
         /// <summary>The local player lost health; <paramref name="fraction01"/> is the loss relative to max health.</summary>
         void LocalPlayerDamaged(float fraction01);
         void MoveCommand(Vector3 point, Vector3 normal);
         void TargetSelected(Transform target, WorldTargetKind kind);
         void RunStarted(Transform actor, bool isLocalPlayer);
+        void RunStopped(Transform actor);
         void JumpTakeoff(Transform actor, bool isLocalPlayer);
         void Landed(Transform actor, bool isLocalPlayer);
+        /// <summary>The actor left the ground (true) or is back on it, including after an aborted jump (false).</summary>
+        void Airborne(Transform actor, bool airborne);
+
+        /// <summary>A skill was cast (attack or buff), on every peer.</summary>
+        void SkillCast(Transform caster, string skillId, bool isAttack, bool isLocalPlayer);
+        /// <summary>A skill's hit landed at <paramref name="point"/>, on every peer.</summary>
+        void SkillHit(Transform caster, string skillId, Vector3 point);
+        /// <summary>A timed buff took hold. It lasts until <see cref="BuffEnded"/>; <paramref name="duration"/> is its full length.</summary>
+        void BuffStarted(Transform actor, string skillId, float duration);
+        void BuffEnded(Transform actor, string skillId);
+        /// <summary>A consumable took effect on the actor.</summary>
+        void Consumed(Transform actor, bool restoredHealth, bool restoredChi);
     }
 }

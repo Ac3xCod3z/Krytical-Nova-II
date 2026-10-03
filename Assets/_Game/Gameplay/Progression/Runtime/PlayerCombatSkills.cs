@@ -49,7 +49,12 @@ namespace KryticalNova.Progression
         public override void OnNetworkSpawn()
         {
             EnsureComponents();
-            if (IsServer && buffManager != null) buffManager.NextHitBuffsConsumed += OnNextHitBuffsConsumed;
+            if (IsServer && buffManager != null)
+            {
+                buffManager.NextHitBuffsConsumed += OnNextHitBuffsConsumed;
+                buffManager.BuffRemoved += OnServerBuffRemoved;
+                NetworkManager.OnClientConnectedCallback += OnClientConnectedToServer;
+            }
             if (IsOwner && !IsServer)
             {
                 foreach (var pair in learnedRanks) SubmitRankServerRpc(pair.Key, pair.Value);
@@ -58,7 +63,12 @@ namespace KryticalNova.Progression
 
         public override void OnNetworkDespawn()
         {
-            if (buffManager != null) buffManager.NextHitBuffsConsumed -= OnNextHitBuffsConsumed;
+            if (buffManager != null)
+            {
+                buffManager.NextHitBuffsConsumed -= OnNextHitBuffsConsumed;
+                buffManager.BuffRemoved -= OnServerBuffRemoved;
+            }
+            if (NetworkManager != null) NetworkManager.OnClientConnectedCallback -= OnClientConnectedToServer;
         }
 
         public void SetAvailableSkills(SkillDefinitionSO[] skills)
@@ -412,6 +422,37 @@ namespace KryticalNova.Progression
         {
             if (IsServer || buffManager == null) return;
             buffManager.ConsumeNextHitBuffs();
+        }
+
+        // Buffs tick on every peer by themselves, but only the server knows when one is cut short (shield broken,
+        // dispelled, channel interrupted). Clients drop their mirrored copy so stats, the buff bar and the aura agree.
+        private void OnServerBuffRemoved(string skillId)
+        {
+            if (IsSpawned) BuffRemovedClientRpc(skillId);
+        }
+
+        [ClientRpc]
+        private void BuffRemovedClientRpc(string skillId)
+        {
+            if (IsServer || buffManager == null) return;
+            buffManager.RemoveBuff(skillId);
+        }
+
+        /// <summary>A late joiner never saw the casts, so it is sent this player's running buffs with their time left.</summary>
+        private void OnClientConnectedToServer(ulong clientId)
+        {
+            if (!IsSpawned || buffManager == null || clientId == NetworkManager.ServerClientId) return;
+            var target = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } } };
+            foreach (var buff in buffManager.ActiveBuffs)
+                SyncBuffClientRpc(buff.Skill.skillId, buff.Rank, buff.RemainingDuration, target);
+        }
+
+        [ClientRpc]
+        private void SyncBuffClientRpc(string skillId, int rank, float remaining, ClientRpcParams target = default)
+        {
+            if (IsServer || buffManager == null || buffManager.HasBuff(skillId)) return;
+            var skill = GetSkill(skillId);
+            if (skill != null) buffManager.ApplyBuff(skill, rank, remaining);
         }
     }
 }

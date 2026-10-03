@@ -180,6 +180,12 @@ namespace KryticalNova.Items
             return string.IsNullOrEmpty(def.placeholderGlyph) ? def.displayName : def.placeholderGlyph;
         }
 
+        public Sprite GetItemIcon(ushort itemId)
+        {
+            var def = catalog != null ? catalog.Get(itemId) : null;
+            return def != null ? def.icon : null;
+        }
+
         /// <summary>Uses one of the item from the first bag cell that holds it.</summary>
         public bool UseItem(ushort itemId)
         {
@@ -250,7 +256,17 @@ namespace KryticalNova.Items
             nextUseTime = Time.time + used.useCooldown;
             if (used.restoreHealth > 0f) resources.Heal(used.restoreHealth);
             if (used.restoreChi > 0f) resources.RestoreChi(used.restoreChi);
+
+            if (IsSpawned) ItemUsedRpc(used.restoreHealth > 0f, used.restoreChi > 0f);
+            else PresentItemUsed(used.restoreHealth > 0f, used.restoreChi > 0f);
         }
+
+        /// <summary>Everyone sees the pill take effect; the server alone knows it was actually consumed.</summary>
+        [Rpc(SendTo.Everyone)]
+        private void ItemUsedRpc(bool restoredHealth, bool restoredChi) => PresentItemUsed(restoredHealth, restoredChi);
+
+        private void PresentItemUsed(bool restoredHealth, bool restoredChi) =>
+            ClientPresentationRegistry.Feel?.Consumed(transform, restoredHealth, restoredChi);
 
         /// <summary>Why a consumable would be wasted right now, or null when it can be used.</summary>
         private string UseBlockedReason(ItemDefinition def)

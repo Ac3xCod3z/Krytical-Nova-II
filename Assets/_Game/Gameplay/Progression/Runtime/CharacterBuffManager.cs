@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.Progression
@@ -46,6 +47,8 @@ namespace KryticalNova.Progression
         public event Action<string> BuffMessage;
         /// <summary>Raised where the hit was resolved (server or offline) when one-hit buffs are spent.</summary>
         public event Action NextHitBuffsConsumed;
+        /// <summary>A buff left this character for any reason (expired, spent, broken, dispelled, replaced), by skill id.</summary>
+        public event Action<string> BuffRemoved;
 
         public IReadOnlyList<ActiveBuff> ActiveBuffs => activeBuffs;
         public bool HasActiveShield => GetActiveShieldCapacity() > 0f;
@@ -102,7 +105,8 @@ namespace KryticalNova.Progression
             }
         }
 
-        public bool ApplyBuff(SkillDefinitionSO skill, int rank = 1)
+        /// <param name="remaining">Seconds left when joining a buff already running elsewhere; negative = a fresh, full-length buff.</param>
+        public bool ApplyBuff(SkillDefinitionSO skill, int rank = 1, float remaining = -1f)
         {
             EnsureComponents();
             if (skill == null || combatStats == null) return false;
@@ -122,6 +126,7 @@ namespace KryticalNova.Progression
             }
 
             var newBuff = new ActiveBuff(skill, rank, shieldCapacity, duration, reflectChance, shatterChance, dispelChance);
+            if (remaining >= 0f) newBuff.RemainingDuration = Mathf.Min(remaining, duration);
 
             if (skill.executionType == SkillExecutionType.Channeled)
             {
@@ -143,6 +148,17 @@ namespace KryticalNova.Progression
 
             activeBuffs.Add(newBuff);
             BuffMessage?.Invoke($"Applied {skill.displayName} (Rank {rank}, {duration:0}s)");
+            BuffsChanged?.Invoke();
+            ClientPresentationRegistry.Feel?.BuffStarted(transform, skill.skillId, newBuff.RemainingDuration);
+            return true;
+        }
+
+        /// <summary>Drops a buff by skill id (a client mirroring a removal the server decided). Returns false if absent.</summary>
+        public bool RemoveBuff(string skillId)
+        {
+            int index = activeBuffs.FindIndex(b => b.Skill.skillId == skillId);
+            if (index < 0) return false;
+            RemoveBuffAt(index);
             BuffsChanged?.Invoke();
             return true;
         }
@@ -350,6 +366,8 @@ namespace KryticalNova.Progression
             }
 
             activeBuffs.RemoveAt(index);
+            ClientPresentationRegistry.Feel?.BuffEnded(transform, buff.Skill.skillId);
+            BuffRemoved?.Invoke(buff.Skill.skillId);
         }
     }
 }

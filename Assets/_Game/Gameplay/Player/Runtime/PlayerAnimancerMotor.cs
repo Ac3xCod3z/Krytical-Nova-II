@@ -337,6 +337,8 @@ namespace KryticalNova.Player
             bool nowRunning = clip == runClip || clip == drawnRunClip;
             if (nowRunning && !wasRunning)
                 ClientPresentationRegistry.Feel?.RunStarted(transform, !IsSpawned || IsOwner);
+            else if (wasRunning && !nowRunning)
+                ClientPresentationRegistry.Feel?.RunStopped(transform);
             currentLocomotionClip = clip;
             currentLocomotionState = animancer.Layers[0].Play(clip, fade);
             currentLocomotionState.ApplyFootIK = locomotionFootIK;
