@@ -136,7 +136,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113263
+  - rid: 6309249592969921030
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -152,11 +152,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113263
+    - rid: 6309249592969921030
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 2011405564
+        UniqueID: 1614712202
         Label: PFX_Cast_Buff
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -235,6 +235,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &30455965192200017
 GameObject:
   m_ObjectHideFlags: 0
@@ -371,7 +372,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113227
+  - rid: 6309249592969920994
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -387,11 +388,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113227
+    - rid: 6309249592969920994
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1700269841
+        UniqueID: 1563932571
         Label: PFX_Heal
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -470,6 +471,328 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
+--- !u!1 &128126604129083736
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8129861665364582965}
+  - component: {fileID: 7310458663138325628}
+  m_Layer: 0
+  m_Name: Jump
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8129861665364582965
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 128126604129083736}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 943116251258394650}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7310458663138325628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 128126604129083736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
+  Feedbacks: []
+  InitializationMode: 1
+  AutoInitialization: 1
+  SafeMode: 3
+  Direction: 0
+  AutoChangeDirectionOnEnd: 0
+  AutoPlayOnStart: 0
+  AutoPlayOnEnable: 0
+  LogMissingTargets: 1
+  ForceTimescaleMode: 0
+  ForcedTimescaleMode: 1
+  DurationMultiplier: 1
+  TimescaleMultiplier: 1
+  RandomizeDuration: 0
+  RandomDurationMultiplier: {x: 0.5, y: 1.5}
+  DisplayFullDurationDetails: 0
+  PlayerTimescaleMode: 0
+  OnlyPlayIfWithinRange: 0
+  RangeCenter: {fileID: 0}
+  RangeDistance: 5
+  UseRangeFalloff: 0
+  RangeFalloff:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  RemapRangeFalloff: {x: 0, y: 1}
+  IgnoreRangeEvents: 0
+  CooldownDuration: 0
+  InitialDelay: 0
+  CanPlay: 1
+  CanPlayWhileAlreadyPlaying: 1
+  ChanceToPlay: 100
+  FeedbacksIntensity: 1
+  Events:
+    TriggerMMFeedbacksEvents: 0
+    TriggerUnityEvents: 1
+    OnPlay:
+      m_PersistentCalls:
+        m_Calls: []
+    OnPause:
+      m_PersistentCalls:
+        m_Calls: []
+    OnStop:
+      m_PersistentCalls:
+        m_Calls: []
+    OnResume:
+      m_PersistentCalls:
+        m_Calls: []
+    OnChangeDirection:
+      m_PersistentCalls:
+        m_Calls: []
+    OnComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnRestoreInitialValues:
+      m_PersistentCalls:
+        m_Calls: []
+    OnSkipToTheEnd:
+      m_PersistentCalls:
+        m_Calls: []
+    OnInitializationComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnEnable:
+      m_PersistentCalls:
+        m_Calls: []
+    OnDisable:
+      m_PersistentCalls:
+        m_Calls: []
+  DebugActive: 0
+  InScriptDrivenPause: 0
+  FeedbacksList:
+  - rid: 6309249592969920985
+  - rid: 6309249592969920986
+  PlayMode: 0
+  SequentialDelay: 0
+  KeepPlayModeChanges: 0
+  PerformanceMode: 0
+  RestoreInitialValuesOnDisable: 0
+  StopFeedbacksOnDisable: 0
+  PlayCount: 0
+  InPreviewMode: 0
+  MMF_ChannelMode: 0
+  MMF_Channel: 0
+  MMF_ChannelDefinition: {fileID: 0}
+  RunFirstOnEnableOnlyAfterStart: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 6309249592969920985
+      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: 1827299910
+        Label: PFX_Dust_Jump
+        OriginalLabel: Pooled VFX (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 7310458663138325628}
+        DebugActive: 0
+        Prefab: {fileID: 5749567742799198340, guid: d9d80131120f4094ca535a147abda6b6, type: 3}
+        Offset: {x: 0, y: 0, z: 0}
+        SnapToGround: 1
+        FollowTarget: 0
+        Upright: 1
+        FaceCamera: 0
+        Scale: 1
+        Lifetime: 0
+        TintWithGroundDust: 1
+    - rid: 6309249592969920986
+      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: 826691106
+        Label: PFX_Jump_Burst
+        OriginalLabel: Pooled VFX (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 7310458663138325628}
+        DebugActive: 0
+        Prefab: {fileID: 4772007539961030448, guid: 3d27702bdbcae0640944b479644f51fe, type: 3}
+        Offset: {x: 0, y: 0, z: 0}
+        SnapToGround: 1
+        FollowTarget: 0
+        Upright: 1
+        FaceCamera: 0
+        Scale: 1
+        Lifetime: 0
+        TintWithGroundDust: 1
 --- !u!1 &152166454331457556
 GameObject:
   m_ObjectHideFlags: 0
@@ -606,8 +929,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113203
-  - rid: 6309249582823113204
+  - rid: 6309249592969920968
+  - rid: 6309249592969920969
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -623,11 +946,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113203
+    - rid: 6309249592969920968
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -692589434
+        UniqueID: 452585383
         Label: Footstep Burst (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -749,11 +1072,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249582823113204
+    - rid: 6309249592969920969
       type: {class: MMF_CameraFieldOfView, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1147391876
+        UniqueID: 1420686787
         Label: FOV Kick
         OriginalLabel: Field of View
         ChannelMode: 0
@@ -999,7 +1322,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113258
+  - rid: 6309249592969921025
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1015,11 +1338,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113258
+    - rid: 6309249592969921025
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1884639491
+        UniqueID: 2077954897
         Label: PFX_Cast_Fire
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -1098,6 +1421,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &288788725371242552
 GameObject:
   m_ObjectHideFlags: 0
@@ -1234,7 +1558,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113257
+  - rid: 6309249592969921024
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1250,11 +1574,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113257
+    - rid: 6309249592969921024
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -2110120001
+        UniqueID: -1582819802
         Label: PFX_Cast_Buff
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -1333,6 +1657,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &315102689949849854
 GameObject:
   m_ObjectHideFlags: 0
@@ -1469,7 +1794,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113260
+  - rid: 6309249592969921027
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1485,11 +1810,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113260
+    - rid: 6309249592969921027
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -132801263
+        UniqueID: 899007990
         Label: PFX_Cast_PowerUp
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -1568,6 +1893,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &351908316587854937
 GameObject:
   m_ObjectHideFlags: 0
@@ -1704,7 +2030,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113259
+  - rid: 6309249592969921026
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1720,11 +2046,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113259
+    - rid: 6309249592969921026
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1413149169
+        UniqueID: 1501080738
         Label: PFX_Heal
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -1803,6 +2129,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &371491881266604253
 GameObject:
   m_ObjectHideFlags: 0
@@ -1939,7 +2266,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113261
+  - rid: 6309249592969921028
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1955,11 +2282,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113261
+    - rid: 6309249592969921028
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 446271064
+        UniqueID: -1574197954
         Label: PFX_Cast_Buff
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -2038,6 +2365,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &447915907464786260
 GameObject:
   m_ObjectHideFlags: 0
@@ -2174,8 +2502,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113242
-  - rid: 6309249582823113243
+  - rid: 6309249592969921009
+  - rid: 6309249592969921010
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -2191,11 +2519,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113242
+    - rid: 6309249592969921009
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 396163151
+        UniqueID: 1239322352
         Label: PFX_Cast_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -2274,11 +2602,12 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113243
+        TintWithGroundDust: 0
+    - rid: 6309249592969921010
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -2065209702
+        UniqueID: 957338466
         Label: PFX_Cast_PowerUp
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -2357,7 +2686,8 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
---- !u!1 &486473163451913386
+        TintWithGroundDust: 0
+--- !u!1 &485391257022529415
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2365,22 +2695,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 462302309577285007}
-  - component: {fileID: 5264891301303734706}
+  - component: {fileID: 4763269474855102918}
+  - component: {fileID: 6902997894170687547}
   m_Layer: 0
-  m_Name: Buff Skill
+  m_Name: Heavy Hit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &462302309577285007
+--- !u!4 &4763269474855102918
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 486473163451913386}
+  m_GameObject: {fileID: 485391257022529415}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -2389,13 +2719,13 @@ Transform:
   m_Children: []
   m_Father: {fileID: 943116251258394650}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5264891301303734706
+--- !u!114 &6902997894170687547
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 486473163451913386}
+  m_GameObject: {fileID: 485391257022529415}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
@@ -2493,7 +2823,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113223
+  - rid: 6309249592969920981
+  - rid: 6309249592969920982
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -2509,12 +2840,12 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113223
+    - rid: 6309249592969920981
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1147853217
-        Label: PFX_Cast_Buff
+        UniqueID: 370981022
+        Label: PFX_Hit_Heavy
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
         Channel: 0
@@ -2582,16 +2913,101 @@ MonoBehaviour:
         RemapRangeFalloff: {x: 0, y: 1}
         AutomaticShakerSetupButton:
           ButtonText: 
-        Owner: {fileID: 5264891301303734706}
+        Owner: {fileID: 6902997894170687547}
         DebugActive: 0
-        Prefab: {fileID: 5351825876767244245, guid: 56a6da422bd6409428ffad7b451849f9, type: 3}
-        Offset: {x: 0, y: 0.05, z: 0}
+        Prefab: {fileID: 7227916704978438397, guid: 9044ba5dda6b76b41bd691d157c89f74, type: 3}
+        Offset: {x: 0, y: 0, z: 0}
         SnapToGround: 0
-        FollowTarget: 1
-        Upright: 1
+        FollowTarget: 0
+        Upright: 0
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
+    - rid: 6309249592969920982
+      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: -2117216314
+        Label: PFX_Comic_HitHeavy
+        OriginalLabel: Pooled VFX (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 6902997894170687547}
+        DebugActive: 0
+        Prefab: {fileID: 2899793206256431410, guid: a96e3ed674d06484daacc713fd01c76c, type: 3}
+        Offset: {x: 0, y: 0, z: 0}
+        SnapToGround: 0
+        FollowTarget: 0
+        Upright: 0
+        FaceCamera: 1
+        Scale: 1
+        Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &506638572962060329
 GameObject:
   m_ObjectHideFlags: 0
@@ -2728,7 +3144,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113264
+  - rid: 6309249592969921031
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -2744,11 +3160,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113264
+    - rid: 6309249592969921031
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 335848119
+        UniqueID: -1903543517
         Label: PFX_Cast_Buff
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -2827,6 +3243,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &756046763852950096
 GameObject:
   m_ObjectHideFlags: 0
@@ -2963,7 +3380,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113246
+  - rid: 6309249592969921013
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -2979,11 +3396,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113246
+    - rid: 6309249592969921013
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1404418041
+        UniqueID: -1159610356
         Label: PFX_Cast_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -3062,6 +3479,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &848231378447875968
 GameObject:
   m_ObjectHideFlags: 0
@@ -3198,7 +3616,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113234
+  - rid: 6309249592969921001
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -3214,11 +3632,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113234
+    - rid: 6309249592969921001
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1253211391
+        UniqueID: 1563697779
         Label: PFX_Cast_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -3297,6 +3715,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &1116884725868747759
 GameObject:
   m_ObjectHideFlags: 0
@@ -3433,9 +3852,9 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113198
-  - rid: 6309249582823113199
-  - rid: 6309249582823113200
+  - rid: 6309249592969920963
+  - rid: 6309249592969920964
+  - rid: 6309249592969920965
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -3451,11 +3870,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113198
+    - rid: 6309249592969920963
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1392832580
+        UniqueID: 978409384
         Label: Hurt (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -3577,11 +3996,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249582823113199
+    - rid: 6309249592969920964
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1155962143
+        UniqueID: -1435432715
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
@@ -3695,11 +4114,11 @@ MonoBehaviour:
         Velocity: {x: 0.3, y: 0.22, z: 0}
         ClearImpulseOnStop: 0
         DrawGizmos: 0
-    - rid: 6309249582823113200
+    - rid: 6309249592969920965
       type: {class: MMF_BeautifyVignette, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 271533959
+        UniqueID: 1218677043
         Label: Hurt Vignette (Beautify)
         OriginalLabel: Beautify Vignette Pulse
         ChannelMode: 0
@@ -3806,325 +4225,6 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
---- !u!1 &1186687978545707356
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2674207602592407960}
-  - component: {fileID: 5710625275653131331}
-  m_Layer: 0
-  m_Name: Land
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2674207602592407960
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1186687978545707356}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 943116251258394650}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5710625275653131331
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1186687978545707356}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
-  Feedbacks: []
-  InitializationMode: 1
-  AutoInitialization: 1
-  SafeMode: 3
-  Direction: 0
-  AutoChangeDirectionOnEnd: 0
-  AutoPlayOnStart: 0
-  AutoPlayOnEnable: 0
-  LogMissingTargets: 1
-  ForceTimescaleMode: 0
-  ForcedTimescaleMode: 1
-  DurationMultiplier: 1
-  TimescaleMultiplier: 1
-  RandomizeDuration: 0
-  RandomDurationMultiplier: {x: 0.5, y: 1.5}
-  DisplayFullDurationDetails: 0
-  PlayerTimescaleMode: 0
-  OnlyPlayIfWithinRange: 0
-  RangeCenter: {fileID: 0}
-  RangeDistance: 5
-  UseRangeFalloff: 0
-  RangeFalloff:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  RemapRangeFalloff: {x: 0, y: 1}
-  IgnoreRangeEvents: 0
-  CooldownDuration: 0
-  InitialDelay: 0
-  CanPlay: 1
-  CanPlayWhileAlreadyPlaying: 1
-  ChanceToPlay: 100
-  FeedbacksIntensity: 1
-  Events:
-    TriggerMMFeedbacksEvents: 0
-    TriggerUnityEvents: 1
-    OnPlay:
-      m_PersistentCalls:
-        m_Calls: []
-    OnPause:
-      m_PersistentCalls:
-        m_Calls: []
-    OnStop:
-      m_PersistentCalls:
-        m_Calls: []
-    OnResume:
-      m_PersistentCalls:
-        m_Calls: []
-    OnChangeDirection:
-      m_PersistentCalls:
-        m_Calls: []
-    OnComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnRestoreInitialValues:
-      m_PersistentCalls:
-        m_Calls: []
-    OnSkipToTheEnd:
-      m_PersistentCalls:
-        m_Calls: []
-    OnInitializationComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnEnable:
-      m_PersistentCalls:
-        m_Calls: []
-    OnDisable:
-      m_PersistentCalls:
-        m_Calls: []
-  DebugActive: 0
-  InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 6309249582823113220
-  - rid: 6309249582823113221
-  PlayMode: 0
-  SequentialDelay: 0
-  KeepPlayModeChanges: 0
-  PerformanceMode: 0
-  RestoreInitialValuesOnDisable: 0
-  StopFeedbacksOnDisable: 0
-  PlayCount: 0
-  InPreviewMode: 0
-  MMF_ChannelMode: 0
-  MMF_Channel: 0
-  MMF_ChannelDefinition: {fileID: 0}
-  RunFirstOnEnableOnlyAfterStart: 0
-  references:
-    version: 2
-    RefIds:
-    - rid: 6309249582823113220
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
-      data:
-        Active: 1
-        UniqueID: 785510045
-        Label: PFX_Dust_Land
-        OriginalLabel: Pooled VFX (Krytical Nova)
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 5710625275653131331}
-        DebugActive: 0
-        Prefab: {fileID: 5417658407794936908, guid: ae779793cfb641a489eec4c35c73735a, type: 3}
-        Offset: {x: 0, y: 0, z: 0}
-        SnapToGround: 1
-        FollowTarget: 0
-        Upright: 1
-        FaceCamera: 0
-        Scale: 1
-        Lifetime: 0
-    - rid: 6309249582823113221
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
-      data:
-        Active: 1
-        UniqueID: -1882143347
-        Label: PFX_Land_Ring
-        OriginalLabel: Pooled VFX (Krytical Nova)
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 5710625275653131331}
-        DebugActive: 0
-        Prefab: {fileID: 9149572251927974615, guid: cd3e2f5e60ee55a4c9d947f9ea79b354, type: 3}
-        Offset: {x: 0, y: 0, z: 0}
-        SnapToGround: 1
-        FollowTarget: 0
-        Upright: 1
-        FaceCamera: 0
-        Scale: 1
-        Lifetime: 0
 --- !u!1 &1244400778936352457
 GameObject:
   m_ObjectHideFlags: 0
@@ -4261,8 +4361,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113210
-  - rid: 6309249582823113211
+  - rid: 6309249592969920975
+  - rid: 6309249592969920976
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -4278,11 +4378,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113210
+    - rid: 6309249592969920975
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 990487853
+        UniqueID: -636327270
         Label: Buff Cast (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -4404,11 +4504,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249582823113211
+    - rid: 6309249592969920976
       type: {class: MMF_ChromaticAberration_URP, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1249441745
+        UniqueID: 1355514059
         Label: Chromatic Shimmer
         OriginalLabel: Chromatic Aberration URP
         ChannelMode: 0
@@ -4654,8 +4754,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113240
-  - rid: 6309249582823113241
+  - rid: 6309249592969921007
+  - rid: 6309249592969921008
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -4671,11 +4771,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113240
+    - rid: 6309249592969921007
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1653869321
+        UniqueID: -1891894401
         Label: PFX_Comic_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -4754,11 +4854,12 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113241
+        TintWithGroundDust: 0
+    - rid: 6309249592969921008
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 957567567
+        UniqueID: 390682449
         Label: PFX_Hit_Sparks
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -4837,6 +4938,328 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
+--- !u!1 &1811251496462343224
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5168492235832597074}
+  - component: {fileID: 8276131323661013608}
+  m_Layer: 0
+  m_Name: Land
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5168492235832597074
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811251496462343224}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 943116251258394650}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8276131323661013608
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811251496462343224}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
+  Feedbacks: []
+  InitializationMode: 1
+  AutoInitialization: 1
+  SafeMode: 3
+  Direction: 0
+  AutoChangeDirectionOnEnd: 0
+  AutoPlayOnStart: 0
+  AutoPlayOnEnable: 0
+  LogMissingTargets: 1
+  ForceTimescaleMode: 0
+  ForcedTimescaleMode: 1
+  DurationMultiplier: 1
+  TimescaleMultiplier: 1
+  RandomizeDuration: 0
+  RandomDurationMultiplier: {x: 0.5, y: 1.5}
+  DisplayFullDurationDetails: 0
+  PlayerTimescaleMode: 0
+  OnlyPlayIfWithinRange: 0
+  RangeCenter: {fileID: 0}
+  RangeDistance: 5
+  UseRangeFalloff: 0
+  RangeFalloff:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  RemapRangeFalloff: {x: 0, y: 1}
+  IgnoreRangeEvents: 0
+  CooldownDuration: 0
+  InitialDelay: 0
+  CanPlay: 1
+  CanPlayWhileAlreadyPlaying: 1
+  ChanceToPlay: 100
+  FeedbacksIntensity: 1
+  Events:
+    TriggerMMFeedbacksEvents: 0
+    TriggerUnityEvents: 1
+    OnPlay:
+      m_PersistentCalls:
+        m_Calls: []
+    OnPause:
+      m_PersistentCalls:
+        m_Calls: []
+    OnStop:
+      m_PersistentCalls:
+        m_Calls: []
+    OnResume:
+      m_PersistentCalls:
+        m_Calls: []
+    OnChangeDirection:
+      m_PersistentCalls:
+        m_Calls: []
+    OnComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnRestoreInitialValues:
+      m_PersistentCalls:
+        m_Calls: []
+    OnSkipToTheEnd:
+      m_PersistentCalls:
+        m_Calls: []
+    OnInitializationComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnEnable:
+      m_PersistentCalls:
+        m_Calls: []
+    OnDisable:
+      m_PersistentCalls:
+        m_Calls: []
+  DebugActive: 0
+  InScriptDrivenPause: 0
+  FeedbacksList:
+  - rid: 6309249592969920987
+  - rid: 6309249592969920988
+  PlayMode: 0
+  SequentialDelay: 0
+  KeepPlayModeChanges: 0
+  PerformanceMode: 0
+  RestoreInitialValuesOnDisable: 0
+  StopFeedbacksOnDisable: 0
+  PlayCount: 0
+  InPreviewMode: 0
+  MMF_ChannelMode: 0
+  MMF_Channel: 0
+  MMF_ChannelDefinition: {fileID: 0}
+  RunFirstOnEnableOnlyAfterStart: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 6309249592969920987
+      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: -587738187
+        Label: PFX_Dust_Land
+        OriginalLabel: Pooled VFX (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 8276131323661013608}
+        DebugActive: 0
+        Prefab: {fileID: 5417658407794936908, guid: ae779793cfb641a489eec4c35c73735a, type: 3}
+        Offset: {x: 0, y: 0, z: 0}
+        SnapToGround: 1
+        FollowTarget: 0
+        Upright: 1
+        FaceCamera: 0
+        Scale: 1
+        Lifetime: 0
+        TintWithGroundDust: 1
+    - rid: 6309249592969920988
+      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: 958492141
+        Label: PFX_Land_Ring
+        OriginalLabel: Pooled VFX (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 8276131323661013608}
+        DebugActive: 0
+        Prefab: {fileID: 9149572251927974615, guid: cd3e2f5e60ee55a4c9d947f9ea79b354, type: 3}
+        Offset: {x: 0, y: 0, z: 0}
+        SnapToGround: 1
+        FollowTarget: 0
+        Upright: 1
+        FaceCamera: 0
+        Scale: 1
+        Lifetime: 0
+        TintWithGroundDust: 1
 --- !u!1 &1860192764033273148
 GameObject:
   m_ObjectHideFlags: 0
@@ -4973,9 +5396,9 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113253
-  - rid: 6309249582823113254
-  - rid: 6309249582823113255
+  - rid: 6309249592969921020
+  - rid: 6309249592969921021
+  - rid: 6309249592969921022
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -4991,11 +5414,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113253
+    - rid: 6309249592969921020
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1146293627
+        UniqueID: -620000170
         Label: PFX_Comic_HitHeavy
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -5074,11 +5497,12 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113254
+        TintWithGroundDust: 0
+    - rid: 6309249592969921021
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1855368083
+        UniqueID: -2056239072
         Label: PFX_Cast_Thunder
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -5157,11 +5581,12 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113255
+        TintWithGroundDust: 0
+    - rid: 6309249592969921022
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1953971280
+        UniqueID: 612800434
         Label: PFX_Comic_Zap
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -5240,6 +5665,243 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
+--- !u!1 &1946346447722196720
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1540863482785886458}
+  - component: {fileID: 8584719502530091101}
+  m_Layer: 0
+  m_Name: Attack Skill
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1540863482785886458
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1946346447722196720}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 943116251258394650}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8584719502530091101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1946346447722196720}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
+  Feedbacks: []
+  InitializationMode: 1
+  AutoInitialization: 1
+  SafeMode: 3
+  Direction: 0
+  AutoChangeDirectionOnEnd: 0
+  AutoPlayOnStart: 0
+  AutoPlayOnEnable: 0
+  LogMissingTargets: 1
+  ForceTimescaleMode: 0
+  ForcedTimescaleMode: 1
+  DurationMultiplier: 1
+  TimescaleMultiplier: 1
+  RandomizeDuration: 0
+  RandomDurationMultiplier: {x: 0.5, y: 1.5}
+  DisplayFullDurationDetails: 0
+  PlayerTimescaleMode: 0
+  OnlyPlayIfWithinRange: 0
+  RangeCenter: {fileID: 0}
+  RangeDistance: 5
+  UseRangeFalloff: 0
+  RangeFalloff:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  RemapRangeFalloff: {x: 0, y: 1}
+  IgnoreRangeEvents: 0
+  CooldownDuration: 0
+  InitialDelay: 0
+  CanPlay: 1
+  CanPlayWhileAlreadyPlaying: 1
+  ChanceToPlay: 100
+  FeedbacksIntensity: 1
+  Events:
+    TriggerMMFeedbacksEvents: 0
+    TriggerUnityEvents: 1
+    OnPlay:
+      m_PersistentCalls:
+        m_Calls: []
+    OnPause:
+      m_PersistentCalls:
+        m_Calls: []
+    OnStop:
+      m_PersistentCalls:
+        m_Calls: []
+    OnResume:
+      m_PersistentCalls:
+        m_Calls: []
+    OnChangeDirection:
+      m_PersistentCalls:
+        m_Calls: []
+    OnComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnRestoreInitialValues:
+      m_PersistentCalls:
+        m_Calls: []
+    OnSkipToTheEnd:
+      m_PersistentCalls:
+        m_Calls: []
+    OnInitializationComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnEnable:
+      m_PersistentCalls:
+        m_Calls: []
+    OnDisable:
+      m_PersistentCalls:
+        m_Calls: []
+  DebugActive: 0
+  InScriptDrivenPause: 0
+  FeedbacksList:
+  - rid: 6309249592969920989
+  PlayMode: 0
+  SequentialDelay: 0
+  KeepPlayModeChanges: 0
+  PerformanceMode: 0
+  RestoreInitialValuesOnDisable: 0
+  StopFeedbacksOnDisable: 0
+  PlayCount: 0
+  InPreviewMode: 0
+  MMF_ChannelMode: 0
+  MMF_Channel: 0
+  MMF_ChannelDefinition: {fileID: 0}
+  RunFirstOnEnableOnlyAfterStart: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 6309249592969920989
+      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: -1636805510
+        Label: PFX_Cast_Slash
+        OriginalLabel: Pooled VFX (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 8584719502530091101}
+        DebugActive: 0
+        Prefab: {fileID: 776290690471797295, guid: d680f8c2e87f97f4a8e75f5abeb69421, type: 3}
+        Offset: {x: 0, y: 1, z: 0.6}
+        SnapToGround: 0
+        FollowTarget: 0
+        Upright: 0
+        FaceCamera: 0
+        Scale: 1
+        Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &2203422368552751798
 GameObject:
   m_ObjectHideFlags: 0
@@ -5376,7 +6038,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113216
+  - rid: 6309249592969920983
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -5392,11 +6054,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113216
+    - rid: 6309249592969920983
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -846633399
+        UniqueID: -834435181
         Label: PFX_Comic_Pow
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -5475,6 +6137,7 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &2229479083040644191
 GameObject:
   m_ObjectHideFlags: 0
@@ -5611,7 +6274,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113205
+  - rid: 6309249592969920970
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -5627,11 +6290,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113205
+    - rid: 6309249592969920970
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -740445742
+        UniqueID: -1506887342
         Label: Jump (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -5753,6 +6416,327 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+--- !u!1 &2243070206107937506
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 480561294442344964}
+  - component: {fileID: 1752504120370288804}
+  m_Layer: 0
+  m_Name: Hit
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &480561294442344964
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2243070206107937506}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 943116251258394650}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1752504120370288804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2243070206107937506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
+  Feedbacks: []
+  InitializationMode: 1
+  AutoInitialization: 1
+  SafeMode: 3
+  Direction: 0
+  AutoChangeDirectionOnEnd: 0
+  AutoPlayOnStart: 0
+  AutoPlayOnEnable: 0
+  LogMissingTargets: 1
+  ForceTimescaleMode: 0
+  ForcedTimescaleMode: 1
+  DurationMultiplier: 1
+  TimescaleMultiplier: 1
+  RandomizeDuration: 0
+  RandomDurationMultiplier: {x: 0.5, y: 1.5}
+  DisplayFullDurationDetails: 0
+  PlayerTimescaleMode: 0
+  OnlyPlayIfWithinRange: 0
+  RangeCenter: {fileID: 0}
+  RangeDistance: 5
+  UseRangeFalloff: 0
+  RangeFalloff:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  RemapRangeFalloff: {x: 0, y: 1}
+  IgnoreRangeEvents: 0
+  CooldownDuration: 0
+  InitialDelay: 0
+  CanPlay: 1
+  CanPlayWhileAlreadyPlaying: 1
+  ChanceToPlay: 100
+  FeedbacksIntensity: 1
+  Events:
+    TriggerMMFeedbacksEvents: 0
+    TriggerUnityEvents: 1
+    OnPlay:
+      m_PersistentCalls:
+        m_Calls: []
+    OnPause:
+      m_PersistentCalls:
+        m_Calls: []
+    OnStop:
+      m_PersistentCalls:
+        m_Calls: []
+    OnResume:
+      m_PersistentCalls:
+        m_Calls: []
+    OnChangeDirection:
+      m_PersistentCalls:
+        m_Calls: []
+    OnComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnRestoreInitialValues:
+      m_PersistentCalls:
+        m_Calls: []
+    OnSkipToTheEnd:
+      m_PersistentCalls:
+        m_Calls: []
+    OnInitializationComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnEnable:
+      m_PersistentCalls:
+        m_Calls: []
+    OnDisable:
+      m_PersistentCalls:
+        m_Calls: []
+  DebugActive: 0
+  InScriptDrivenPause: 0
+  FeedbacksList:
+  - rid: 6309249592969920979
+  - rid: 6309249592969920980
+  PlayMode: 0
+  SequentialDelay: 0
+  KeepPlayModeChanges: 0
+  PerformanceMode: 0
+  RestoreInitialValuesOnDisable: 0
+  StopFeedbacksOnDisable: 0
+  PlayCount: 0
+  InPreviewMode: 0
+  MMF_ChannelMode: 0
+  MMF_Channel: 0
+  MMF_ChannelDefinition: {fileID: 0}
+  RunFirstOnEnableOnlyAfterStart: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 6309249592969920979
+      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: 1314689757
+        Label: PFX_Hit_Sparks
+        OriginalLabel: Pooled VFX (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 1752504120370288804}
+        DebugActive: 0
+        Prefab: {fileID: 7159327404120368447, guid: 53062092db7b8e84491789e4c3e343b5, type: 3}
+        Offset: {x: 0, y: 0, z: 0}
+        SnapToGround: 0
+        FollowTarget: 0
+        Upright: 0
+        FaceCamera: 0
+        Scale: 1
+        Lifetime: 0
+        TintWithGroundDust: 0
+    - rid: 6309249592969920980
+      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: 234031396
+        Label: PFX_Comic_Hit
+        OriginalLabel: Pooled VFX (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 1752504120370288804}
+        DebugActive: 0
+        Prefab: {fileID: 8099354821405166919, guid: 2900866a3a51bb64da7375bd5cb29ccb, type: 3}
+        Offset: {x: 0, y: 0, z: 0}
+        SnapToGround: 0
+        FollowTarget: 0
+        Upright: 0
+        FaceCamera: 1
+        Scale: 1
+        Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &2467610144177978239
 GameObject:
   m_ObjectHideFlags: 0
@@ -5889,7 +6873,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113262
+  - rid: 6309249592969921029
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -5905,11 +6889,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113262
+    - rid: 6309249592969921029
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 2112035569
+        UniqueID: -2020362481
         Label: PFX_Cast_PowerUp
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -5988,6 +6972,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &2866291671848684673
 GameObject:
   m_ObjectHideFlags: 0
@@ -6124,9 +7109,9 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113250
-  - rid: 6309249582823113251
-  - rid: 6309249582823113252
+  - rid: 6309249592969921017
+  - rid: 6309249592969921018
+  - rid: 6309249592969921019
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -6142,11 +7127,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113250
+    - rid: 6309249592969921017
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -147960689
+        UniqueID: -1226542208
         Label: PFX_Cast_SlashLarge
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -6225,11 +7210,12 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113251
+        TintWithGroundDust: 0
+    - rid: 6309249592969921018
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -865924945
+        UniqueID: 185475134
         Label: PFX_Cast_GroundCrack
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -6308,11 +7294,12 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113252
+        TintWithGroundDust: 0
+    - rid: 6309249592969921019
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 155274563
+        UniqueID: -1821655795
         Label: PFX_Cast_Thunder
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -6391,6 +7378,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &3514794766457463837
 GameObject:
   m_ObjectHideFlags: 0
@@ -6423,7 +7411,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 488887521791041179}
-  - {fileID: 6498084615665843081}
+  - {fileID: 5128728559827055356}
   - {fileID: 4427924340156602756}
   - {fileID: 7643465894309650733}
   - {fileID: 7641009037690847182}
@@ -6433,6 +7421,7 @@ Transform:
   - {fileID: 5243854605290825036}
   - {fileID: 2982443869156574263}
   - {fileID: 652211052204775936}
+  - {fileID: 534833323357067468}
   - {fileID: 943116251258394650}
   - {fileID: 75832430970113480}
   m_Father: {fileID: 0}
@@ -6450,7 +7439,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.GameFeel::KryticalNova.GameFeel.GameFeelPresenter
   swingFeel: {fileID: 1098837105228287661}
-  hitFeel: {fileID: 8471356248141250969}
+  hitFeel: {fileID: 4036524832985159196}
   heavyHitFeel: {fileID: 2511470425427756674}
   damagedFeel: {fileID: 1975205449869811269}
   clickFeel: {fileID: 8968357565126767598}
@@ -6460,14 +7449,15 @@ MonoBehaviour:
   landFeel: {fileID: 6991721425654025130}
   attackCastFeel: {fileID: 1299619330173391653}
   buffCastFeel: {fileID: 2572343611210182763}
-  hitWorldFeel: {fileID: 4036524832985159196}
-  heavyHitWorldFeel: {fileID: 5488746016765027789}
+  chargeFeel: {fileID: 8044330502860694924}
+  hitWorldFeel: {fileID: 1752504120370288804}
+  heavyHitWorldFeel: {fileID: 6902997894170687547}
   critWorldFeel: {fileID: 7611691562356977541}
-  runWorldFeel: {fileID: 7438210119042861138}
-  jumpWorldFeel: {fileID: 1706238844397119032}
-  landWorldFeel: {fileID: 5710625275653131331}
-  attackCastWorldFeel: {fileID: 7283708617244031857}
-  buffCastWorldFeel: {fileID: 5264891301303734706}
+  runWorldFeel: {fileID: 4039640629274132460}
+  jumpWorldFeel: {fileID: 7310458663138325628}
+  landWorldFeel: {fileID: 8276131323661013608}
+  attackCastWorldFeel: {fileID: 8584719502530091101}
+  buffCastWorldFeel: {fileID: 2322264311140356711}
   skillHitWorldFeel: {fileID: 819875294343304332}
   buffEndWorldFeel: {fileID: 7875625149445985166}
   healWorldFeel: {fileID: 8276355321499083853}
@@ -6475,10 +7465,19 @@ MonoBehaviour:
   clickVfx: {fileID: 7142657378915030908, guid: 3bb6c5c5d03c21d4983caa359250311e, type: 3}
   selectHostileVfx: {fileID: 1708667203789070966, guid: 7be486becb90aff4f9a98707f447b6cb, type: 3}
   selectFriendlyVfx: {fileID: 4766843787125620758, guid: d13db0cd2cc54b843b5fa7cb8c656a2f, type: 3}
+  areaRingVfx: {fileID: 2047525001561010786, guid: b2cb25350638afe4bad486e3507bbb63, type: 3}
+  areaRingGrowTime: 0.6
   skills: {fileID: 9074143639501137624}
   defaultAuraVfx: {fileID: 209474232359278204, guid: a4bbdbae6a1a8ac4ba366f112a4b3675, type: 3}
+  defaultChargeVfx: {fileID: 7565169768429559366, guid: 4577b6d342a6cfe4796aff906eebba8e, type: 3}
   runLoopVfx: {fileID: 6423134534051599964, guid: e2aa7c26372aa754f96b8a80dfc02110, type: 3}
   airborneLoopVfx: {fileID: 3498379367027563030, guid: 7ec97adac9adec14ea39821bc0db7ed8, type: 3}
+  dustPalette:
+    paving: {r: 0.9, g: 0.88, b: 0.84, a: 1}
+    road: {r: 0.48, g: 0.49, b: 0.54, a: 1}
+    grass: {r: 0.82, g: 0.74, b: 0.56, a: 1}
+    dirt: {r: 0.56, g: 0.37, b: 0.23, a: 1}
+    rock: {r: 0.72, g: 0.72, b: 0.7, a: 1}
   bladeTrail: {fileID: 7498730998765805603, guid: 0de5a9fb67963784692c60d668c36af0, type: 3}
   trailSeconds: {x: 0.22, y: 0.4}
   hitStopSeconds: 0.06
@@ -6502,91 +7501,127 @@ MonoBehaviour:
     hit: {fileID: 0}
     aura: {fileID: 0}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: HaeseoStroke
     cast: {fileID: 2653683392965220370}
     hit: {fileID: 0}
     aura: {fileID: 0}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: GentlemansPen
     cast: {fileID: 1883576563952948437}
     hit: {fileID: 781336578896998233}
     aura: {fileID: 0}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: DevilsStrike
     cast: {fileID: 3088447993244524658}
     hit: {fileID: 1186493130434093768}
     aura: {fileID: 0}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: FlashOfRage
     cast: {fileID: 2089760702755170091}
     hit: {fileID: 8480473819750005313}
     aura: {fileID: 0}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: SunraysStroke
     cast: {fileID: 2556694275612791567}
     hit: {fileID: 510575417223368822}
     aura: {fileID: 0}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: PhantomThunder
     cast: {fileID: 6337654853053899846}
     hit: {fileID: 6356753479944113483}
     aura: {fileID: 0}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: ThunderousDragon
     cast: {fileID: 653938486856090545}
     hit: {fileID: 5522397188766537534}
     aura: {fileID: 0}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: AzureWall
     cast: {fileID: 5518028317378147607}
     hit: {fileID: 0}
     aura: {fileID: 6437292424960184504, guid: ede274060501fc744833d1cd9ea94590, type: 3}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: LightningFlash
     cast: {fileID: 3776281491791902591}
     hit: {fileID: 0}
     aura: {fileID: 3768222195475884542, guid: 79cd8d5dd0a8f2a46b51162cd4691413, type: 3}
     auraAnchor: 1
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: SpiritualRage
     cast: {fileID: 1185423108362442649}
     hit: {fileID: 0}
     aura: {fileID: 8432837550358445277, guid: 76958f0672b46a642b39648e0921e48f, type: 3}
     auraAnchor: 1
+    charge: {fileID: 8935178380290688581, guid: 492b9f13a6bcf58498a235ceda6cf647, type: 3}
+    chargeGround: {fileID: 5516983891467138753, guid: ed1e7dc4a1852634cb13be11db00514d, type: 3}
   - skillId: HeavenlySerenity
     cast: {fileID: 5470299484089413125}
     hit: {fileID: 0}
     aura: {fileID: 2076692261057545097, guid: d596640bfce76c94d92b3cf788d66bbf, type: 3}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: HeavenlyShield
     cast: {fileID: 1321324057700622182}
     hit: {fileID: 0}
     aura: {fileID: 8228095194777085304, guid: cfb1ed4124fe3ba4b8695d8adbb78757, type: 3}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: HeavenlyBlow
     cast: {fileID: 9096065948985309267}
     hit: {fileID: 0}
     aura: {fileID: 2682737783201060543, guid: be391632cf1cf2047a252f1267d50db8, type: 3}
     auraAnchor: 1
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: GarudasPrayer
     cast: {fileID: 1177513747272201461}
     hit: {fileID: 0}
     aura: {fileID: 6519256877287142374, guid: ce118175f9216e548859aa4d75f30c5e, type: 3}
     auraAnchor: 1
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: HeavenlyRepulsion
     cast: {fileID: 7126940174431366234}
     hit: {fileID: 0}
     aura: {fileID: 1216726810632374521, guid: 6b82b4fe5a2cb464d8e8482cffd52302, type: 3}
-    auraAnchor: 0
+    auraAnchor: 1
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: HeavenlyDestruction
     cast: {fileID: 9130834718664055139}
     hit: {fileID: 0}
     aura: {fileID: 5127600062839925902, guid: 9a76ed9571399064086ebc6cf9e54dfb, type: 3}
     auraAnchor: 1
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
   - skillId: ReverseFlow
     cast: {fileID: 681717028047365274}
     hit: {fileID: 0}
     aura: {fileID: 1973698908605550291, guid: 77a127fc05dbc37478f0a5f405c2b8f1, type: 3}
     auraAnchor: 0
+    charge: {fileID: 0}
+    chargeGround: {fileID: 0}
 --- !u!1 &3770417009563495348
 GameObject:
   m_ObjectHideFlags: 0
@@ -6723,7 +7758,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113226
+  - rid: 6309249592969920993
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -6739,11 +7774,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113226
+    - rid: 6309249592969920993
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1696006279
+        UniqueID: 1454815207
         Label: PFX_Buff_End
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -6822,6 +7857,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &3812694536349551334
 GameObject:
   m_ObjectHideFlags: 0
@@ -6958,8 +7994,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113224
-  - rid: 6309249582823113225
+  - rid: 6309249592969920991
+  - rid: 6309249592969920992
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -6975,11 +8011,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113224
+    - rid: 6309249592969920991
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1987879569
+        UniqueID: -1315763725
         Label: PFX_Comic_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -7058,11 +8094,12 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113225
+        TintWithGroundDust: 0
+    - rid: 6309249592969920992
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 887778234
+        UniqueID: 2144256216
         Label: PFX_Hit_Sparks
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -7141,6 +8178,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &4051447612268237264
 GameObject:
   m_ObjectHideFlags: 0
@@ -7277,7 +8315,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113256
+  - rid: 6309249592969921023
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -7293,11 +8331,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113256
+    - rid: 6309249592969921023
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 674367255
+        UniqueID: 1209236323
         Label: PFX_Cast_Buff
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -7376,403 +8414,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
---- !u!1 &4227557705565847965
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6498084615665843081}
-  - component: {fileID: 8471356248141250969}
-  m_Layer: 0
-  m_Name: Hit
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6498084615665843081
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4227557705565847965}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2950265580643760927}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8471356248141250969
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4227557705565847965}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
-  Feedbacks: []
-  InitializationMode: 1
-  AutoInitialization: 1
-  SafeMode: 3
-  Direction: 0
-  AutoChangeDirectionOnEnd: 0
-  AutoPlayOnStart: 0
-  AutoPlayOnEnable: 0
-  LogMissingTargets: 1
-  ForceTimescaleMode: 0
-  ForcedTimescaleMode: 1
-  DurationMultiplier: 1
-  TimescaleMultiplier: 1
-  RandomizeDuration: 0
-  RandomDurationMultiplier: {x: 0.5, y: 1.5}
-  DisplayFullDurationDetails: 0
-  PlayerTimescaleMode: 0
-  OnlyPlayIfWithinRange: 0
-  RangeCenter: {fileID: 0}
-  RangeDistance: 5
-  UseRangeFalloff: 0
-  RangeFalloff:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  RemapRangeFalloff: {x: 0, y: 1}
-  IgnoreRangeEvents: 0
-  CooldownDuration: 0
-  InitialDelay: 0
-  CanPlay: 1
-  CanPlayWhileAlreadyPlaying: 1
-  ChanceToPlay: 100
-  FeedbacksIntensity: 1
-  Events:
-    TriggerMMFeedbacksEvents: 0
-    TriggerUnityEvents: 1
-    OnPlay:
-      m_PersistentCalls:
-        m_Calls: []
-    OnPause:
-      m_PersistentCalls:
-        m_Calls: []
-    OnStop:
-      m_PersistentCalls:
-        m_Calls: []
-    OnResume:
-      m_PersistentCalls:
-        m_Calls: []
-    OnChangeDirection:
-      m_PersistentCalls:
-        m_Calls: []
-    OnComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnRestoreInitialValues:
-      m_PersistentCalls:
-        m_Calls: []
-    OnSkipToTheEnd:
-      m_PersistentCalls:
-        m_Calls: []
-    OnInitializationComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnEnable:
-      m_PersistentCalls:
-        m_Calls: []
-    OnDisable:
-      m_PersistentCalls:
-        m_Calls: []
-  DebugActive: 0
-  InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 6309249582823113193
-  - rid: 6309249582823113194
-  PlayMode: 0
-  SequentialDelay: 0
-  KeepPlayModeChanges: 0
-  PerformanceMode: 0
-  RestoreInitialValuesOnDisable: 0
-  StopFeedbacksOnDisable: 0
-  PlayCount: 0
-  InPreviewMode: 0
-  MMF_ChannelMode: 0
-  MMF_Channel: 0
-  MMF_ChannelDefinition: {fileID: 0}
-  RunFirstOnEnableOnlyAfterStart: 0
-  references:
-    version: 2
-    RefIds:
-    - rid: 6309249582823113193
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -720805069
-        Label: Hit (assign clip)
-        OriginalLabel: Sound
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 8471356248141250969}
-        DebugActive: 0
-        Sfx: {fileID: 0}
-        RandomSfx: []
-        TestPlayButton:
-          ButtonText: Debug Play Sound
-        TestStopButton:
-          ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
-        UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
-        Priority: 128
-        PanStereo: 0
-        SpatialBlend: 0
-        DopplerLevel: 1
-        Spread: 0
-        RolloffMode: 0
-        MinDistance: 1
-        MaxDistance: 500
-        UseCustomRolloffCurve: 0
-        CustomRolloffCurve:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        UseSpatialBlendCurve: 0
-        SpatialBlendCurve:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        UseReverbZoneMixCurve: 0
-        ReverbZoneMixCurve:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        UseSpreadCurve: 0
-        SpreadCurve:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-    - rid: 6309249582823113194
-      type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: 1734705408
-        Label: Camera Impulse
-        OriginalLabel: Cinemachine Impulse
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 8471356248141250969}
-        DebugActive: 0
-        m_ImpulseDefinition:
-          ImpulseChannel: 1
-          ImpulseShape: 0
-          CustomImpulseShape:
-            serializedVersion: 2
-            m_Curve: []
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 4
-          ImpulseDuration: 0.18
-          ImpulseType: 3
-          DissipationRate: 0
-          RawSignal: {fileID: 11400000, guid: bcf6524ce6451f34cb7106d0c00da9a5, type: 2}
-          AmplitudeGain: 1
-          FrequencyGain: 1
-          RepeatMode: 0
-          Randomize: 1
-          TimeEnvelope:
-            AttackShape:
-              serializedVersion: 2
-              m_Curve: []
-              m_PreInfinity: 2
-              m_PostInfinity: 2
-              m_RotationOrder: 4
-            DecayShape:
-              serializedVersion: 2
-              m_Curve: []
-              m_PreInfinity: 2
-              m_PostInfinity: 2
-              m_RotationOrder: 4
-            AttackTime: 0
-            SustainTime: 0.2
-            DecayTime: 0.7
-            ScaleWithImpact: 1
-            HoldForever: 0
-          ImpactRadius: 100
-          DirectionMode: 0
-          DissipationMode: 2
-          DissipationDistance: 100
-          PropagationSpeed: 343
-        Velocity: {x: 0.18, y: 0.12, z: 0}
-        ClearImpulseOnStop: 0
-        DrawGizmos: 0
+        TintWithGroundDust: 0
 --- !u!1 &4509057797340649318
 GameObject:
   m_ObjectHideFlags: 0
@@ -7909,8 +8551,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113208
-  - rid: 6309249582823113209
+  - rid: 6309249592969920973
+  - rid: 6309249592969920974
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -7926,11 +8568,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113208
+    - rid: 6309249592969920973
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1793274157
+        UniqueID: 812249502
         Label: Skill Slash (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -8052,11 +8694,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249582823113209
+    - rid: 6309249592969920974
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1423775902
+        UniqueID: -1281311028
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
@@ -8306,8 +8948,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113191
-  - rid: 6309249582823113192
+  - rid: 6309249592969920956
+  - rid: 6309249592969920957
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -8323,11 +8965,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113191
+    - rid: 6309249592969920956
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -2012588077
+        UniqueID: -1834383855
         Label: Swing Whoosh (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -8449,11 +9091,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249582823113192
+    - rid: 6309249592969920957
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -201383706
+        UniqueID: -656832897
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
@@ -8703,8 +9345,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113238
-  - rid: 6309249582823113239
+  - rid: 6309249592969921005
+  - rid: 6309249592969921006
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -8720,11 +9362,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113238
+    - rid: 6309249592969921005
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 550986278
+        UniqueID: -118009091
         Label: PFX_Cast_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -8803,11 +9445,12 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113239
+        TintWithGroundDust: 0
+    - rid: 6309249592969921006
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1750188719
+        UniqueID: 1006798530
         Label: PFX_Cast_Fire
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -8886,6 +9529,627 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
+--- !u!1 &4523772679499346160
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 534833323357067468}
+  - component: {fileID: 8044330502860694924}
+  m_Layer: 0
+  m_Name: Charge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &534833323357067468
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4523772679499346160}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2950265580643760927}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8044330502860694924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4523772679499346160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
+  Feedbacks: []
+  InitializationMode: 1
+  AutoInitialization: 1
+  SafeMode: 3
+  Direction: 0
+  AutoChangeDirectionOnEnd: 0
+  AutoPlayOnStart: 0
+  AutoPlayOnEnable: 0
+  LogMissingTargets: 1
+  ForceTimescaleMode: 0
+  ForcedTimescaleMode: 1
+  DurationMultiplier: 1
+  TimescaleMultiplier: 1
+  RandomizeDuration: 0
+  RandomDurationMultiplier: {x: 0.5, y: 1.5}
+  DisplayFullDurationDetails: 0
+  PlayerTimescaleMode: 0
+  OnlyPlayIfWithinRange: 0
+  RangeCenter: {fileID: 0}
+  RangeDistance: 5
+  UseRangeFalloff: 0
+  RangeFalloff:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  RemapRangeFalloff: {x: 0, y: 1}
+  IgnoreRangeEvents: 0
+  CooldownDuration: 0
+  InitialDelay: 0
+  CanPlay: 1
+  CanPlayWhileAlreadyPlaying: 1
+  ChanceToPlay: 100
+  FeedbacksIntensity: 1
+  Events:
+    TriggerMMFeedbacksEvents: 0
+    TriggerUnityEvents: 1
+    OnPlay:
+      m_PersistentCalls:
+        m_Calls: []
+    OnPause:
+      m_PersistentCalls:
+        m_Calls: []
+    OnStop:
+      m_PersistentCalls:
+        m_Calls: []
+    OnResume:
+      m_PersistentCalls:
+        m_Calls: []
+    OnChangeDirection:
+      m_PersistentCalls:
+        m_Calls: []
+    OnComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnRestoreInitialValues:
+      m_PersistentCalls:
+        m_Calls: []
+    OnSkipToTheEnd:
+      m_PersistentCalls:
+        m_Calls: []
+    OnInitializationComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnEnable:
+      m_PersistentCalls:
+        m_Calls: []
+    OnDisable:
+      m_PersistentCalls:
+        m_Calls: []
+  DebugActive: 0
+  InScriptDrivenPause: 0
+  FeedbacksList:
+  - rid: 6309249592969920977
+  - rid: 6309249592969920978
+  PlayMode: 0
+  SequentialDelay: 0
+  KeepPlayModeChanges: 0
+  PerformanceMode: 0
+  RestoreInitialValuesOnDisable: 0
+  StopFeedbacksOnDisable: 0
+  PlayCount: 0
+  InPreviewMode: 0
+  MMF_ChannelMode: 0
+  MMF_Channel: 0
+  MMF_ChannelDefinition: {fileID: 0}
+  RunFirstOnEnableOnlyAfterStart: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 6309249592969920977
+      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+      data:
+        Active: 1
+        UniqueID: 1612520643
+        Label: Charge Build-up (assign clip)
+        OriginalLabel: Sound
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: Automatic Shaker Setup
+        Owner: {fileID: 8044330502860694924}
+        DebugActive: 0
+        Sfx: {fileID: 0}
+        RandomSfx: []
+        TestPlayButton:
+          ButtonText: Debug Play Sound
+        TestStopButton:
+          ButtonText: Debug Stop Sound
+        PlayMethod: 0
+        PoolSize: 10
+        UseLegacyEventsMode: 0
+        StopSoundOnFeedbackStop: 1
+        MinVolume: 1
+        MaxVolume: 1
+        MinPitch: 1
+        MaxPitch: 1
+        SfxAudioMixerGroup: {fileID: 0}
+        Priority: 128
+        PanStereo: 0
+        SpatialBlend: 0
+        DopplerLevel: 1
+        Spread: 0
+        RolloffMode: 0
+        MinDistance: 1
+        MaxDistance: 500
+        UseCustomRolloffCurve: 0
+        CustomRolloffCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        UseSpatialBlendCurve: 0
+        SpatialBlendCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        UseReverbZoneMixCurve: 0
+        ReverbZoneMixCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        UseSpreadCurve: 0
+        SpreadCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+    - rid: 6309249592969920978
+      type: {class: MMF_CameraFieldOfView, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+      data:
+        Active: 1
+        UniqueID: -179564003
+        Label: FOV Pull-in
+        OriginalLabel: Field of View
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: Automatic Shaker Setup
+        Owner: {fileID: 8044330502860694924}
+        DebugActive: 0
+        Duration: 1
+        ResetShakerValuesAfterShake: 1
+        ResetTargetValuesAfterShake: 1
+        RelativeFieldOfView: 1
+        ShakeFieldOfView:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapFieldOfViewZero: 0
+        RemapFieldOfViewOne: -3
+--- !u!1 &4728281291110241828
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6787177586401713171}
+  - component: {fileID: 4039640629274132460}
+  m_Layer: 0
+  m_Name: Run Start
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6787177586401713171
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4728281291110241828}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 943116251258394650}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4039640629274132460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4728281291110241828}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
+  Feedbacks: []
+  InitializationMode: 1
+  AutoInitialization: 1
+  SafeMode: 3
+  Direction: 0
+  AutoChangeDirectionOnEnd: 0
+  AutoPlayOnStart: 0
+  AutoPlayOnEnable: 0
+  LogMissingTargets: 1
+  ForceTimescaleMode: 0
+  ForcedTimescaleMode: 1
+  DurationMultiplier: 1
+  TimescaleMultiplier: 1
+  RandomizeDuration: 0
+  RandomDurationMultiplier: {x: 0.5, y: 1.5}
+  DisplayFullDurationDetails: 0
+  PlayerTimescaleMode: 0
+  OnlyPlayIfWithinRange: 0
+  RangeCenter: {fileID: 0}
+  RangeDistance: 5
+  UseRangeFalloff: 0
+  RangeFalloff:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  RemapRangeFalloff: {x: 0, y: 1}
+  IgnoreRangeEvents: 0
+  CooldownDuration: 0
+  InitialDelay: 0
+  CanPlay: 1
+  CanPlayWhileAlreadyPlaying: 1
+  ChanceToPlay: 100
+  FeedbacksIntensity: 1
+  Events:
+    TriggerMMFeedbacksEvents: 0
+    TriggerUnityEvents: 1
+    OnPlay:
+      m_PersistentCalls:
+        m_Calls: []
+    OnPause:
+      m_PersistentCalls:
+        m_Calls: []
+    OnStop:
+      m_PersistentCalls:
+        m_Calls: []
+    OnResume:
+      m_PersistentCalls:
+        m_Calls: []
+    OnChangeDirection:
+      m_PersistentCalls:
+        m_Calls: []
+    OnComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnRestoreInitialValues:
+      m_PersistentCalls:
+        m_Calls: []
+    OnSkipToTheEnd:
+      m_PersistentCalls:
+        m_Calls: []
+    OnInitializationComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnEnable:
+      m_PersistentCalls:
+        m_Calls: []
+    OnDisable:
+      m_PersistentCalls:
+        m_Calls: []
+  DebugActive: 0
+  InScriptDrivenPause: 0
+  FeedbacksList:
+  - rid: 6309249592969920984
+  PlayMode: 0
+  SequentialDelay: 0
+  KeepPlayModeChanges: 0
+  PerformanceMode: 0
+  RestoreInitialValuesOnDisable: 0
+  StopFeedbacksOnDisable: 0
+  PlayCount: 0
+  InPreviewMode: 0
+  MMF_ChannelMode: 0
+  MMF_Channel: 0
+  MMF_ChannelDefinition: {fileID: 0}
+  RunFirstOnEnableOnlyAfterStart: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 6309249592969920984
+      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: 1435282448
+        Label: PFX_Dust_Run
+        OriginalLabel: Pooled VFX (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 4039640629274132460}
+        DebugActive: 0
+        Prefab: {fileID: 3906999147637414273, guid: 121c098a5415c9b44ac6b3203b52df71, type: 3}
+        Offset: {x: 0, y: 0, z: 0}
+        SnapToGround: 1
+        FollowTarget: 0
+        Upright: 1
+        FaceCamera: 0
+        Scale: 1
+        Lifetime: 0
+        TintWithGroundDust: 1
 --- !u!1 &5532712438082511532
 GameObject:
   m_ObjectHideFlags: 0
@@ -8916,7 +10180,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 943116251258394650}
+  m_Father: {fileID: 2950265580643760927}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4036524832985159196
 MonoBehaviour:
@@ -9022,8 +10286,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113212
-  - rid: 6309249582823113213
+  - rid: 6309249592969920958
+  - rid: 6309249592969920959
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -9039,13 +10303,13 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113212
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+    - rid: 6309249592969920958
+      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1153427452
-        Label: PFX_Hit_Sparks
-        OriginalLabel: Pooled VFX (Krytical Nova)
+        UniqueID: -1311082848
+        Label: Hit (assign clip)
+        OriginalLabel: Sound
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -9111,24 +10375,67 @@ MonoBehaviour:
           m_RotationOrder: 4
         RemapRangeFalloff: {x: 0, y: 1}
         AutomaticShakerSetupButton:
-          ButtonText: 
+          ButtonText: Automatic Shaker Setup
         Owner: {fileID: 4036524832985159196}
         DebugActive: 0
-        Prefab: {fileID: 7159327404120368447, guid: 53062092db7b8e84491789e4c3e343b5, type: 3}
-        Offset: {x: 0, y: 0, z: 0}
-        SnapToGround: 0
-        FollowTarget: 0
-        Upright: 0
-        FaceCamera: 0
-        Scale: 1
-        Lifetime: 0
-    - rid: 6309249582823113213
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+        Sfx: {fileID: 0}
+        RandomSfx: []
+        TestPlayButton:
+          ButtonText: Debug Play Sound
+        TestStopButton:
+          ButtonText: Debug Stop Sound
+        PlayMethod: 0
+        PoolSize: 10
+        UseLegacyEventsMode: 0
+        StopSoundOnFeedbackStop: 1
+        MinVolume: 1
+        MaxVolume: 1
+        MinPitch: 1
+        MaxPitch: 1
+        SfxAudioMixerGroup: {fileID: 0}
+        Priority: 128
+        PanStereo: 0
+        SpatialBlend: 0
+        DopplerLevel: 1
+        Spread: 0
+        RolloffMode: 0
+        MinDistance: 1
+        MaxDistance: 500
+        UseCustomRolloffCurve: 0
+        CustomRolloffCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        UseSpatialBlendCurve: 0
+        SpatialBlendCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        UseReverbZoneMixCurve: 0
+        ReverbZoneMixCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        UseSpreadCurve: 0
+        SpreadCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+    - rid: 6309249592969920959
+      type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1131327190
-        Label: PFX_Comic_Hit
-        OriginalLabel: Pooled VFX (Krytical Nova)
+        UniqueID: 1011117616
+        Label: Camera Impulse
+        OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -9194,17 +10501,52 @@ MonoBehaviour:
           m_RotationOrder: 4
         RemapRangeFalloff: {x: 0, y: 1}
         AutomaticShakerSetupButton:
-          ButtonText: 
+          ButtonText: Automatic Shaker Setup
         Owner: {fileID: 4036524832985159196}
         DebugActive: 0
-        Prefab: {fileID: 8099354821405166919, guid: 2900866a3a51bb64da7375bd5cb29ccb, type: 3}
-        Offset: {x: 0, y: 0, z: 0}
-        SnapToGround: 0
-        FollowTarget: 0
-        Upright: 0
-        FaceCamera: 1
-        Scale: 1
-        Lifetime: 0
+        m_ImpulseDefinition:
+          ImpulseChannel: 1
+          ImpulseShape: 0
+          CustomImpulseShape:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+          ImpulseDuration: 0.18
+          ImpulseType: 3
+          DissipationRate: 0
+          RawSignal: {fileID: 11400000, guid: bcf6524ce6451f34cb7106d0c00da9a5, type: 2}
+          AmplitudeGain: 1
+          FrequencyGain: 1
+          RepeatMode: 0
+          Randomize: 1
+          TimeEnvelope:
+            AttackShape:
+              serializedVersion: 2
+              m_Curve: []
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            DecayShape:
+              serializedVersion: 2
+              m_Curve: []
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            AttackTime: 0
+            SustainTime: 0.2
+            DecayTime: 0.7
+            ScaleWithImpact: 1
+            HoldForever: 0
+          ImpactRadius: 100
+          DirectionMode: 0
+          DissipationMode: 2
+          DissipationDistance: 100
+          PropagationSpeed: 343
+        Velocity: {x: 0.18, y: 0.12, z: 0}
+        ClearImpulseOnStop: 0
+        DrawGizmos: 0
 --- !u!1 &5718239542436560606
 GameObject:
   m_ObjectHideFlags: 0
@@ -9341,7 +10683,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113201
+  - rid: 6309249592969920966
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -9357,11 +10699,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113201
+    - rid: 6309249592969920966
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -1550724794
+        UniqueID: -1814319561
         Label: Click Tick (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -9619,7 +10961,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113229
+  - rid: 6309249592969920996
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -9635,11 +10977,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113229
+    - rid: 6309249592969920996
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1151837352
+        UniqueID: -120835098
         Label: PFX_Cast_SlashLarge
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -9718,6 +11060,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &5812542252274445173
 GameObject:
   m_ObjectHideFlags: 0
@@ -9854,7 +11197,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113202
+  - rid: 6309249592969920967
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -9870,11 +11213,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113202
+    - rid: 6309249592969920967
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 799224726
+        UniqueID: -548674322
         Label: Select (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -10025,14 +11368,14 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5128728559827055356}
-  - {fileID: 6285605603160369011}
+  - {fileID: 480561294442344964}
+  - {fileID: 4763269474855102918}
   - {fileID: 4318514292435341564}
-  - {fileID: 821948857616321100}
-  - {fileID: 5075839888200402808}
-  - {fileID: 2674207602592407960}
-  - {fileID: 3302310715072898548}
-  - {fileID: 462302309577285007}
+  - {fileID: 6787177586401713171}
+  - {fileID: 8129861665364582965}
+  - {fileID: 5168492235832597074}
+  - {fileID: 1540863482785886458}
+  - {fileID: 6494277547213609580}
   - {fileID: 3358769359915699576}
   - {fileID: 2536484693260845181}
   - {fileID: 5282834841980247243}
@@ -10175,9 +11518,9 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113195
-  - rid: 6309249582823113196
-  - rid: 6309249582823113197
+  - rid: 6309249592969920960
+  - rid: 6309249592969920961
+  - rid: 6309249592969920962
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -10193,11 +11536,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113195
+    - rid: 6309249592969920960
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 168971041
+        UniqueID: -681092420
         Label: Heavy Hit (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -10319,11 +11662,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249582823113196
+    - rid: 6309249592969920961
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1612456471
+        UniqueID: 2037379417
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
@@ -10437,11 +11780,11 @@ MonoBehaviour:
         Velocity: {x: 0.45, y: 0.3, z: 0}
         ClearImpulseOnStop: 0
         DrawGizmos: 0
-    - rid: 6309249582823113197
+    - rid: 6309249592969920962
       type: {class: MMF_ChromaticAberration_URP, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 7622383
+        UniqueID: -1639938690
         Label: Chromatic Punch
         OriginalLabel: Chromatic Aberration URP
         ChannelMode: 0
@@ -10687,8 +12030,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113232
-  - rid: 6309249582823113233
+  - rid: 6309249592969920999
+  - rid: 6309249592969921000
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -10704,11 +12047,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113232
+    - rid: 6309249592969920999
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1909069160
+        UniqueID: 196611177
         Label: PFX_Comic_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -10787,11 +12130,12 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113233
+        TintWithGroundDust: 0
+    - rid: 6309249592969921000
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1629807175
+        UniqueID: -1754533895
         Label: PFX_Hit_Sparks
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -10870,6 +12214,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &6266076755142533581
 GameObject:
   m_ObjectHideFlags: 0
@@ -11006,7 +12351,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113228
+  - rid: 6309249592969920995
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -11022,11 +12367,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113228
+    - rid: 6309249592969920995
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1247292153
+        UniqueID: 214089781
         Label: PFX_Chi
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -11105,6 +12450,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &6269954932125783099
 GameObject:
   m_ObjectHideFlags: 0
@@ -11241,8 +12587,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113244
-  - rid: 6309249582823113245
+  - rid: 6309249592969921011
+  - rid: 6309249592969921012
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -11258,11 +12604,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113244
+    - rid: 6309249592969921011
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1519086773
+        UniqueID: 1577381920
         Label: PFX_Comic_HitHeavy
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -11341,11 +12687,12 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113245
+        TintWithGroundDust: 0
+    - rid: 6309249592969921012
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1845401190
+        UniqueID: -1474556394
         Label: PFX_Hit_Heavy
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -11424,6 +12771,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &6330245005371239481
 GameObject:
   m_ObjectHideFlags: 0
@@ -11560,8 +12908,8 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113206
-  - rid: 6309249582823113207
+  - rid: 6309249592969920971
+  - rid: 6309249592969920972
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -11577,11 +12925,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113206
+    - rid: 6309249592969920971
       type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -134481604
+        UniqueID: -212303562
         Label: Land Thud (assign clip)
         OriginalLabel: Sound
         ChannelMode: 0
@@ -11703,11 +13051,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249582823113207
+    - rid: 6309249592969920972
       type: {class: MMF_CinemachineImpulse, ns: MoreMountains.FeedbacksForThirdParty, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: 1044797104
+        UniqueID: 1229155225
         Label: Camera Impulse
         OriginalLabel: Cinemachine Impulse
         ChannelMode: 0
@@ -11821,7 +13169,7 @@ MonoBehaviour:
         Velocity: {x: 0, y: -0.22, z: 0}
         ClearImpulseOnStop: 0
         DrawGizmos: 0
---- !u!1 &6412307190155156044
+--- !u!1 &6355519962866198887
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -11829,22 +13177,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3302310715072898548}
-  - component: {fileID: 7283708617244031857}
+  - component: {fileID: 6494277547213609580}
+  - component: {fileID: 2322264311140356711}
   m_Layer: 0
-  m_Name: Attack Skill
+  m_Name: Buff Skill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3302310715072898548
+--- !u!4 &6494277547213609580
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6412307190155156044}
+  m_GameObject: {fileID: 6355519962866198887}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -11853,13 +13201,13 @@ Transform:
   m_Children: []
   m_Father: {fileID: 943116251258394650}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7283708617244031857
+--- !u!114 &2322264311140356711
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6412307190155156044}
+  m_GameObject: {fileID: 6355519962866198887}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
@@ -11957,7 +13305,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113222
+  - rid: 6309249592969920990
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -11973,12 +13321,12 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113222
+    - rid: 6309249592969920990
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 676448007
-        Label: PFX_Cast_Slash
+        UniqueID: 1700309428
+        Label: PFX_Cast_Buff
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
         Channel: 0
@@ -12046,16 +13394,17 @@ MonoBehaviour:
         RemapRangeFalloff: {x: 0, y: 1}
         AutomaticShakerSetupButton:
           ButtonText: 
-        Owner: {fileID: 7283708617244031857}
+        Owner: {fileID: 2322264311140356711}
         DebugActive: 0
-        Prefab: {fileID: 776290690471797295, guid: d680f8c2e87f97f4a8e75f5abeb69421, type: 3}
-        Offset: {x: 0, y: 1, z: 0.6}
+        Prefab: {fileID: 5351825876767244245, guid: 56a6da422bd6409428ffad7b451849f9, type: 3}
+        Offset: {x: 0, y: 0.05, z: 0}
         SnapToGround: 0
-        FollowTarget: 0
-        Upright: 0
+        FollowTarget: 1
+        Upright: 1
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &6590968345690756658
 GameObject:
   m_ObjectHideFlags: 0
@@ -12192,7 +13541,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113230
+  - rid: 6309249592969920997
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -12208,11 +13557,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113230
+    - rid: 6309249592969920997
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -707888233
+        UniqueID: -60217766
         Label: PFX_Cast_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -12291,325 +13640,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
---- !u!1 &6748892203940907880
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6285605603160369011}
-  - component: {fileID: 5488746016765027789}
-  m_Layer: 0
-  m_Name: Heavy Hit
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6285605603160369011
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6748892203940907880}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 943116251258394650}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5488746016765027789
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6748892203940907880}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
-  Feedbacks: []
-  InitializationMode: 1
-  AutoInitialization: 1
-  SafeMode: 3
-  Direction: 0
-  AutoChangeDirectionOnEnd: 0
-  AutoPlayOnStart: 0
-  AutoPlayOnEnable: 0
-  LogMissingTargets: 1
-  ForceTimescaleMode: 0
-  ForcedTimescaleMode: 1
-  DurationMultiplier: 1
-  TimescaleMultiplier: 1
-  RandomizeDuration: 0
-  RandomDurationMultiplier: {x: 0.5, y: 1.5}
-  DisplayFullDurationDetails: 0
-  PlayerTimescaleMode: 0
-  OnlyPlayIfWithinRange: 0
-  RangeCenter: {fileID: 0}
-  RangeDistance: 5
-  UseRangeFalloff: 0
-  RangeFalloff:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  RemapRangeFalloff: {x: 0, y: 1}
-  IgnoreRangeEvents: 0
-  CooldownDuration: 0
-  InitialDelay: 0
-  CanPlay: 1
-  CanPlayWhileAlreadyPlaying: 1
-  ChanceToPlay: 100
-  FeedbacksIntensity: 1
-  Events:
-    TriggerMMFeedbacksEvents: 0
-    TriggerUnityEvents: 1
-    OnPlay:
-      m_PersistentCalls:
-        m_Calls: []
-    OnPause:
-      m_PersistentCalls:
-        m_Calls: []
-    OnStop:
-      m_PersistentCalls:
-        m_Calls: []
-    OnResume:
-      m_PersistentCalls:
-        m_Calls: []
-    OnChangeDirection:
-      m_PersistentCalls:
-        m_Calls: []
-    OnComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnRestoreInitialValues:
-      m_PersistentCalls:
-        m_Calls: []
-    OnSkipToTheEnd:
-      m_PersistentCalls:
-        m_Calls: []
-    OnInitializationComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnEnable:
-      m_PersistentCalls:
-        m_Calls: []
-    OnDisable:
-      m_PersistentCalls:
-        m_Calls: []
-  DebugActive: 0
-  InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 6309249582823113214
-  - rid: 6309249582823113215
-  PlayMode: 0
-  SequentialDelay: 0
-  KeepPlayModeChanges: 0
-  PerformanceMode: 0
-  RestoreInitialValuesOnDisable: 0
-  StopFeedbacksOnDisable: 0
-  PlayCount: 0
-  InPreviewMode: 0
-  MMF_ChannelMode: 0
-  MMF_Channel: 0
-  MMF_ChannelDefinition: {fileID: 0}
-  RunFirstOnEnableOnlyAfterStart: 0
-  references:
-    version: 2
-    RefIds:
-    - rid: 6309249582823113214
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
-      data:
-        Active: 1
-        UniqueID: -387045787
-        Label: PFX_Hit_Heavy
-        OriginalLabel: Pooled VFX (Krytical Nova)
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 5488746016765027789}
-        DebugActive: 0
-        Prefab: {fileID: 7227916704978438397, guid: 9044ba5dda6b76b41bd691d157c89f74, type: 3}
-        Offset: {x: 0, y: 0, z: 0}
-        SnapToGround: 0
-        FollowTarget: 0
-        Upright: 0
-        FaceCamera: 0
-        Scale: 1
-        Lifetime: 0
-    - rid: 6309249582823113215
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
-      data:
-        Active: 1
-        UniqueID: 401317499
-        Label: PFX_Comic_HitHeavy
-        OriginalLabel: Pooled VFX (Krytical Nova)
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 5488746016765027789}
-        DebugActive: 0
-        Prefab: {fileID: 2899793206256431410, guid: a96e3ed674d06484daacc713fd01c76c, type: 3}
-        Offset: {x: 0, y: 0, z: 0}
-        SnapToGround: 0
-        FollowTarget: 0
-        Upright: 0
-        FaceCamera: 1
-        Scale: 1
-        Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &6910135872251630139
 GameObject:
   m_ObjectHideFlags: 0
@@ -12746,9 +13777,9 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113235
-  - rid: 6309249582823113236
-  - rid: 6309249582823113237
+  - rid: 6309249592969921002
+  - rid: 6309249592969921003
+  - rid: 6309249592969921004
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -12764,11 +13795,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113235
+    - rid: 6309249592969921002
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 611934390
+        UniqueID: 349049893
         Label: PFX_Comic_HitHeavy
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -12847,11 +13878,12 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113236
+        TintWithGroundDust: 0
+    - rid: 6309249592969921003
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1501092647
+        UniqueID: 776840768
         Label: PFX_Hit_Heavy
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -12930,11 +13962,12 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113237
+        TintWithGroundDust: 0
+    - rid: 6309249592969921004
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -2037578588
+        UniqueID: 1250905224
         Label: PFX_Comic_Wham
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -13013,6 +14046,7 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &6968012172599798894
 GameObject:
   m_ObjectHideFlags: 0
@@ -13149,7 +14183,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113265
+  - rid: 6309249592969921032
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -13165,11 +14199,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113265
+    - rid: 6309249592969921032
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1894458498
+        UniqueID: -144419599
         Label: PFX_Cast_Buff
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -13248,6 +14282,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &7161645480704834691
 GameObject:
   m_ObjectHideFlags: 0
@@ -13439,7 +14474,7 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113231
+  - rid: 6309249592969920998
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -13455,11 +14490,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113231
+    - rid: 6309249592969920998
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1340762340
+        UniqueID: 1035133386
         Label: PFX_Cast_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -13538,560 +14573,7 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
---- !u!1 &7842855567805963369
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5075839888200402808}
-  - component: {fileID: 1706238844397119032}
-  m_Layer: 0
-  m_Name: Jump
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5075839888200402808
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7842855567805963369}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 943116251258394650}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1706238844397119032
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7842855567805963369}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
-  Feedbacks: []
-  InitializationMode: 1
-  AutoInitialization: 1
-  SafeMode: 3
-  Direction: 0
-  AutoChangeDirectionOnEnd: 0
-  AutoPlayOnStart: 0
-  AutoPlayOnEnable: 0
-  LogMissingTargets: 1
-  ForceTimescaleMode: 0
-  ForcedTimescaleMode: 1
-  DurationMultiplier: 1
-  TimescaleMultiplier: 1
-  RandomizeDuration: 0
-  RandomDurationMultiplier: {x: 0.5, y: 1.5}
-  DisplayFullDurationDetails: 0
-  PlayerTimescaleMode: 0
-  OnlyPlayIfWithinRange: 0
-  RangeCenter: {fileID: 0}
-  RangeDistance: 5
-  UseRangeFalloff: 0
-  RangeFalloff:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  RemapRangeFalloff: {x: 0, y: 1}
-  IgnoreRangeEvents: 0
-  CooldownDuration: 0
-  InitialDelay: 0
-  CanPlay: 1
-  CanPlayWhileAlreadyPlaying: 1
-  ChanceToPlay: 100
-  FeedbacksIntensity: 1
-  Events:
-    TriggerMMFeedbacksEvents: 0
-    TriggerUnityEvents: 1
-    OnPlay:
-      m_PersistentCalls:
-        m_Calls: []
-    OnPause:
-      m_PersistentCalls:
-        m_Calls: []
-    OnStop:
-      m_PersistentCalls:
-        m_Calls: []
-    OnResume:
-      m_PersistentCalls:
-        m_Calls: []
-    OnChangeDirection:
-      m_PersistentCalls:
-        m_Calls: []
-    OnComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnRestoreInitialValues:
-      m_PersistentCalls:
-        m_Calls: []
-    OnSkipToTheEnd:
-      m_PersistentCalls:
-        m_Calls: []
-    OnInitializationComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnEnable:
-      m_PersistentCalls:
-        m_Calls: []
-    OnDisable:
-      m_PersistentCalls:
-        m_Calls: []
-  DebugActive: 0
-  InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 6309249582823113218
-  - rid: 6309249582823113219
-  PlayMode: 0
-  SequentialDelay: 0
-  KeepPlayModeChanges: 0
-  PerformanceMode: 0
-  RestoreInitialValuesOnDisable: 0
-  StopFeedbacksOnDisable: 0
-  PlayCount: 0
-  InPreviewMode: 0
-  MMF_ChannelMode: 0
-  MMF_Channel: 0
-  MMF_ChannelDefinition: {fileID: 0}
-  RunFirstOnEnableOnlyAfterStart: 0
-  references:
-    version: 2
-    RefIds:
-    - rid: 6309249582823113218
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
-      data:
-        Active: 1
-        UniqueID: -1526589313
-        Label: PFX_Dust_Jump
-        OriginalLabel: Pooled VFX (Krytical Nova)
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 1706238844397119032}
-        DebugActive: 0
-        Prefab: {fileID: 5749567742799198340, guid: d9d80131120f4094ca535a147abda6b6, type: 3}
-        Offset: {x: 0, y: 0, z: 0}
-        SnapToGround: 1
-        FollowTarget: 0
-        Upright: 1
-        FaceCamera: 0
-        Scale: 1
-        Lifetime: 0
-    - rid: 6309249582823113219
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
-      data:
-        Active: 1
-        UniqueID: 1599549709
-        Label: PFX_Jump_Burst
-        OriginalLabel: Pooled VFX (Krytical Nova)
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 1706238844397119032}
-        DebugActive: 0
-        Prefab: {fileID: 4772007539961030448, guid: 3d27702bdbcae0640944b479644f51fe, type: 3}
-        Offset: {x: 0, y: 0, z: 0}
-        SnapToGround: 1
-        FollowTarget: 0
-        Upright: 1
-        FaceCamera: 0
-        Scale: 1
-        Lifetime: 0
---- !u!1 &8035303288420908280
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 821948857616321100}
-  - component: {fileID: 7438210119042861138}
-  m_Layer: 0
-  m_Name: Run Start
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &821948857616321100
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8035303288420908280}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 943116251258394650}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7438210119042861138
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8035303288420908280}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
-  Feedbacks: []
-  InitializationMode: 1
-  AutoInitialization: 1
-  SafeMode: 3
-  Direction: 0
-  AutoChangeDirectionOnEnd: 0
-  AutoPlayOnStart: 0
-  AutoPlayOnEnable: 0
-  LogMissingTargets: 1
-  ForceTimescaleMode: 0
-  ForcedTimescaleMode: 1
-  DurationMultiplier: 1
-  TimescaleMultiplier: 1
-  RandomizeDuration: 0
-  RandomDurationMultiplier: {x: 0.5, y: 1.5}
-  DisplayFullDurationDetails: 0
-  PlayerTimescaleMode: 0
-  OnlyPlayIfWithinRange: 0
-  RangeCenter: {fileID: 0}
-  RangeDistance: 5
-  UseRangeFalloff: 0
-  RangeFalloff:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  RemapRangeFalloff: {x: 0, y: 1}
-  IgnoreRangeEvents: 0
-  CooldownDuration: 0
-  InitialDelay: 0
-  CanPlay: 1
-  CanPlayWhileAlreadyPlaying: 1
-  ChanceToPlay: 100
-  FeedbacksIntensity: 1
-  Events:
-    TriggerMMFeedbacksEvents: 0
-    TriggerUnityEvents: 1
-    OnPlay:
-      m_PersistentCalls:
-        m_Calls: []
-    OnPause:
-      m_PersistentCalls:
-        m_Calls: []
-    OnStop:
-      m_PersistentCalls:
-        m_Calls: []
-    OnResume:
-      m_PersistentCalls:
-        m_Calls: []
-    OnChangeDirection:
-      m_PersistentCalls:
-        m_Calls: []
-    OnComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnRestoreInitialValues:
-      m_PersistentCalls:
-        m_Calls: []
-    OnSkipToTheEnd:
-      m_PersistentCalls:
-        m_Calls: []
-    OnInitializationComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnEnable:
-      m_PersistentCalls:
-        m_Calls: []
-    OnDisable:
-      m_PersistentCalls:
-        m_Calls: []
-  DebugActive: 0
-  InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 6309249582823113217
-  PlayMode: 0
-  SequentialDelay: 0
-  KeepPlayModeChanges: 0
-  PerformanceMode: 0
-  RestoreInitialValuesOnDisable: 0
-  StopFeedbacksOnDisable: 0
-  PlayCount: 0
-  InPreviewMode: 0
-  MMF_ChannelMode: 0
-  MMF_Channel: 0
-  MMF_ChannelDefinition: {fileID: 0}
-  RunFirstOnEnableOnlyAfterStart: 0
-  references:
-    version: 2
-    RefIds:
-    - rid: 6309249582823113217
-      type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
-      data:
-        Active: 1
-        UniqueID: 163015922
-        Label: PFX_Dust_Run
-        OriginalLabel: Pooled VFX (Krytical Nova)
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          IgnoreFeedbackDurationForRepeats: 0
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 7438210119042861138}
-        DebugActive: 0
-        Prefab: {fileID: 3906999147637414273, guid: 121c098a5415c9b44ac6b3203b52df71, type: 3}
-        Offset: {x: 0, y: 0, z: 0}
-        SnapToGround: 1
-        FollowTarget: 0
-        Upright: 1
-        FaceCamera: 0
-        Scale: 1
-        Lifetime: 0
+        TintWithGroundDust: 0
 --- !u!1 &8920768856701234197
 GameObject:
   m_ObjectHideFlags: 0
@@ -14228,9 +14710,9 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 6309249582823113247
-  - rid: 6309249582823113248
-  - rid: 6309249582823113249
+  - rid: 6309249592969921014
+  - rid: 6309249592969921015
+  - rid: 6309249592969921016
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -14246,11 +14728,11 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6309249582823113247
+    - rid: 6309249592969921014
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1201927692
+        UniqueID: -555211558
         Label: PFX_Comic_Slash
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -14329,11 +14811,12 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113248
+        TintWithGroundDust: 0
+    - rid: 6309249592969921015
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -2053669978
+        UniqueID: -1132114891
         Label: PFX_Cast_Thunder
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -14412,11 +14895,12 @@ MonoBehaviour:
         FaceCamera: 0
         Scale: 1
         Lifetime: 0
-    - rid: 6309249582823113249
+        TintWithGroundDust: 0
+    - rid: 6309249592969921016
       type: {class: MMF_PooledVfx, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -13369980
+        UniqueID: -1308606587
         Label: PFX_Comic_Zap
         OriginalLabel: Pooled VFX (Krytical Nova)
         ChannelMode: 0
@@ -14495,3 +14979,4 @@ MonoBehaviour:
         FaceCamera: 1
         Scale: 1
         Lifetime: 0
+        TintWithGroundDust: 0

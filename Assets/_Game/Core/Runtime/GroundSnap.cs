@@ -29,20 +29,30 @@ namespace KryticalNova.Core
         /// <summary>The visible ground point (and its normal) under <paramref name="point"/>; the input if none is found.</summary>
         public static Vector3 Snap(Vector3 point, out Vector3 normal, Transform ignoreRoot = null)
         {
+            if (TryGetGround(point, out RaycastHit ground, ignoreRoot))
+            {
+                normal = ground.normal;
+                return ground.point;
+            }
             normal = Vector3.up;
+            return point;
+        }
+
+        /// <summary>The visible ground under <paramref name="point"/> as a raycast hit, for callers that need to know what it is.</summary>
+        public static bool TryGetGround(Vector3 point, out RaycastHit ground, Transform ignoreRoot = null)
+        {
+            ground = default;
             int count = Physics.RaycastNonAlloc(point + Vector3.up * Above, Vector3.down, Hits, Above + Below, Mask,
                 QueryTriggerInteraction.Ignore);
             float best = float.MaxValue;
-            Vector3 result = point;
             for (int i = 0; i < count; i++)
             {
                 var hit = Hits[i];
                 if (hit.distance >= best || IsCharacter(hit.collider, ignoreRoot)) continue;
                 best = hit.distance;
-                result = hit.point;
-                normal = hit.normal;
+                ground = hit;
             }
-            return result;
+            return best < float.MaxValue;
         }
 
         public static Vector3 Snap(Vector3 point, Transform ignoreRoot = null) => Snap(point, out _, ignoreRoot);

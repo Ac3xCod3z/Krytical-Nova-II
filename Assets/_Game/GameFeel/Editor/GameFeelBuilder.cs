@@ -17,8 +17,8 @@ namespace KryticalNova.EditorTools
 {
     /// <summary>
     /// Builds the GameFeel system (see GameFeelPresenter): first-party copies of the effects it spawns (URP copies of
-    /// POLYGON Particle FX, stripped copies of Cartoon FX impacts and comic text, the blade trail on an All In 1
-    /// Shader Nodes slash material), the PFX_GameFeel
+    /// POLYGON Particle FX with its cartoon puffs made solid, stripped copies of Cartoon FX impacts and comic text,
+    /// the blade trail on an All In 1 Shader Nodes slash material, the area-attack ground ring), the PFX_GameFeel
     /// prefab with one FEEL MMF_Player per moment plus the per-skill catalog, and the scene wiring those players need
     /// — a Cinemachine impulse listener + FOV shaker on the orbit camera, the Beautify vignette pulse + URP
     /// chromatic-aberration shaker on the global volume.
@@ -35,6 +35,10 @@ namespace KryticalNova.EditorTools
         private const string MaterialFolder = "Assets/_Game/VFX/Materials";
         private const string ParticleFx = "Assets/Synty/PolygonParticleFX/Prefabs/";
         private const string SwipeTexture = "Assets/Synty/PolygonParticleFX/Textures/PolygonParticles_Swipe_01.png";
+        private const string RingTexture = "Assets/Synty/PolygonParticleFX/Textures/PolygonParticles_Ring_01.png";
+        private const string DiscTexture = "Assets/Synty/PolygonParticleFX/Textures/PolygonParticles_Circle_01.png";
+        /// <summary>How far out the ring and disc art reach on their quads (the rest is transparent margin).</summary>
+        private const float GroundArtRadius = 0.95f;
         private const string AllIn1SlashMaterial = "Assets/Plugins/AllIn1ShaderNodes/Demo/Materials/DemoMaterials/MAT_Demo_VfxSlash.mat";
         private const string CartoonFx = "Assets/_ThirdParty/Cartoon FX Pack v2/Assets/Prefabs/";
         private const string PlayerPrefabPath = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
@@ -42,6 +46,9 @@ namespace KryticalNova.EditorTools
         private const string OrbitCameraName = "Player Orbit Camera";
         private const string SystemsHeader = "--- Systems ---";
         private const string BladeTrailName = "PFX_Blade_Trail";
+        private const string AreaRingName = "PFX_Area_Ring";
+        /// <summary>Matches GameFeelPresenter's Area Ring Grow Time: the ring is full size this far through its one second.</summary>
+        private const float AreaRingGrowTime = 0.6f;
 
         // Colour Bible (Rendering-Bible.md §6b), shared with the skill icons.
         private static readonly Color Cyan = new Color32(0x4F, 0xE3, 0xF0, 0xFF);
@@ -90,13 +97,13 @@ namespace KryticalNova.EditorTools
             CartoonText("Text 021", "PFX_Comic_Zap", 2.8f);
             CartoonText("Text 012", "PFX_Comic_SlashText", 2.8f);
 
-            // Locomotion.
-            Make("FX_Dust_Small_01", "PFX_Dust_Run", 0.55f);
-            Make("FX_Dust_Small_01", "PFX_Dust_Jump", 0.75f);
-            Make("FX_Dust_Big_01", "PFX_Dust_Land", 0.45f);
-            Make("FX_Cartoony_Jump_Up_01", "PFX_Jump_Burst", 0.8f);
-            Make("FX_Cartoony_Rings_01", "PFX_Land_Ring", 0.9f);
-            Make("FX_Cartoony_Sprint_01", "PFX_Run_Loop", 0.7f, loop: true);
+            // Locomotion: POLYGON's cartoon puffs (its "dust" effects are ambient motes, far too faint for a burst).
+            Make("FX_Cartoony_Jump_01", "PFX_Dust_Run", 0.6f);        // kick-off ring of puffs
+            Make("FX_Cartoony_Jump_01", "PFX_Dust_Jump", 0.85f);
+            Make("FX_Cartoony_Jump_01", "PFX_Dust_Land", 1.2f);
+            Make("FX_Cartoony_Jump_Up_01", "PFX_Jump_Burst", 1.15f);
+            Make("FX_Cartoony_Rings_01", "PFX_Land_Ring", 1.1f, then: GroundRings);
+            Make("FX_Cartoony_Sprint_01", "PFX_Run_Loop", 0.85f, loop: true);
             Make("FX_Trail_Dust_01", "PFX_Air_Loop", 0.6f, loop: true);
 
             // Skill casts.
@@ -115,15 +122,21 @@ namespace KryticalNova.EditorTools
             Make("FX_GlowSpot_01", "PFX_Aura_Default", 0.8f, Yellow, loop: true);
             Make("FX_Healing_Cirle_02", "PFX_Aura_AzureWall", 0.8f, Cyan, loop: true);        // ring + column: the wall
             Make("FX_Electricity_01", "PFX_Aura_LightningFlash", 0.3f, Cyan, loop: true);
-            Make("FX_Embers_01", "PFX_Aura_SpiritualRage", 0.5f, Magenta, loop: true);
+            Make("FX_Embers_01", "PFX_Aura_SpiritualRage", 0.8f, Magenta, loop: true);
             Make("FX_Heal_02", "PFX_Aura_Serenity", 0.7f, Yellow, loop: true);                // pillar of light: meditation
             Make("FX_Healing_Cirle_02", "PFX_Aura_Shield", 1.05f, Yellow, loop: true);         // a wider golden barrier
             Make("FX_Sparkle_Orbit_02", "PFX_Aura_Blow", 0.8f, Coral, loop: true);
             Make("FX_Sparkles_Large_01", "PFX_Aura_Prayer", 0.8f, Yellow, loop: true);
-            Make("FX_Swirl_01", "PFX_Aura_Repulsion", 0.8f, Yellow, loop: true);              // turning wind: the hit turned back
-            Make("FX_Embers_01", "PFX_Aura_Destruction", 0.5f, Violet, loop: true);
-            Make("FX_Swirl_03", "PFX_Aura_ReverseFlow", 0.8f, Teal, loop: true);
+            Make("FX_Electricity_01", "PFX_Aura_Repulsion", 0.3f, Yellow, loop: true);        // crackling charge: the hit thrown back
+            Make("FX_Embers_01", "PFX_Aura_Destruction", 0.8f, Violet, loop: true);
+            Make("FX_Swirl_03", "PFX_Aura_ReverseFlow", 1.3f, Teal, loop: true);
 
+            // Held charges: energy drawn inward at the chest, a fast swirl at the feet.
+            Make("FX_PowerDraw_01", "PFX_Charge_Default", 0.55f, Yellow, loop: true);
+            Make("FX_PowerDraw_01", "PFX_Charge_SpiritualRage", 0.55f, Magenta, loop: true);
+            Make("FX_Swirl_Fast_01", "PFX_Charge_Ground", 0.7f, Magenta, loop: true);
+
+            BuildAreaRing();
             BuildBladeTrail();
             UseUrpMaterials($"{GameplayVfxFolder}/FX_ComicSlash.prefab");
         }
@@ -146,12 +159,13 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>URP copy of a POLYGON effect, scaled, optionally re-tinted; one-shot unless <paramref name="loop"/>.</summary>
-        private static void Make(string source, string name, float scale, Color? tint = null, bool loop = false)
+        private static void Make(string source, string name, float scale, Color? tint = null, bool loop = false, Action<GameObject> then = null)
         {
             WeatherVfxBuilder.Build(ParticleFx + source + ".prefab", Vfx(name), root =>
             {
                 if (loop) Loop(root, scale, tint);
                 else OneShot(root, scale, tint);
+                then?.Invoke(root);
             });
         }
 
@@ -171,8 +185,120 @@ namespace KryticalNova.EditorTools
                 main.scalingMode = ParticleSystemScalingMode.Hierarchy;
                 main.maxParticles = Mathf.Min(main.maxParticles, loop ? 60 : 120);
                 main.stopAction = ParticleSystemStopAction.None; // the VFX pool recycles it
+                // Loops ride on a character whose kinematic Rigidbody never reports a velocity: emit by the distance
+                // the transform actually covers.
+                if (loop) main.emitterVelocityMode = ParticleSystemEmitterVelocityMode.Transform;
+
+                var renderer = ps.GetComponent<ParticleSystemRenderer>();
+                if (renderer != null && renderer.renderMode == ParticleSystemRenderMode.Mesh && renderer.mesh != null
+                    && renderer.mesh.name.StartsWith("FX_Sphere_", StringComparison.Ordinal))
+                    ComicPuff(ps, renderer);
             }
             if (tint.HasValue) Recolor(root, tint.Value);
+        }
+
+        /// <summary>
+        /// POLYGON's cartoon puffs are sphere meshes drawn with Unity's Default-Particle material. Every vertex of the
+        /// mesh maps to a single point in the soft rim of that material's dot texture, so in URP the puffs come out
+        /// almost transparent. They get an opaque flat material instead: solid cartoon clouds that write depth, so the
+        /// comic outline pass inks them, coloured through the particles (see GroundSurfaces). Opaque puffs cannot
+        /// fade, so they pop in and shrink away.
+        /// </summary>
+        private static void ComicPuff(ParticleSystem ps, ParticleSystemRenderer renderer)
+        {
+            renderer.sharedMaterial = WeatherVfxBuilder.OpaqueParticleMaterial("M_ComicPuff", Color.white);
+            var main = ps.main;
+            main.startColor = DustPalette.Default.paving; // re-tinted at run time for the ground it comes off
+            var colour = ps.colorOverLifetime;
+            colour.enabled = false;
+            var size = ps.sizeOverLifetime;
+            size.enabled = true;
+            size.separateAxes = false;
+            size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
+                new Keyframe(0f, 0.3f), new Keyframe(0.15f, 1f), new Keyframe(0.55f, 0.8f), new Keyframe(1f, 0f)));
+        }
+
+        /// <summary>Flat ground billboards (the landing shockwave) draw a crisp ring instead of the default soft dot.</summary>
+        private static void GroundRings(GameObject root)
+        {
+            Material ring = WeatherVfxBuilder.ParticleMaterial("M_GroundRing", RingTexture, additive: false);
+            foreach (var renderer in root.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                if (renderer.renderMode == ParticleSystemRenderMode.HorizontalBillboard) renderer.sharedMaterial = ring;
+        }
+
+        /// <summary>
+        /// The reach of an area attack: a ring and a faint disc lying on the ground, 1 m in radius at unit scale (the
+        /// presenter scales it to the skill's range). One second long: it grows to full size at
+        /// <see cref="AreaRingGrowTime"/> (the presenter plays it so that this lands on the hit), flashes and fades.
+        /// </summary>
+        private static void BuildAreaRing()
+        {
+            var go = new GameObject(AreaRingName);
+            try
+            {
+                GroundDisc(go, WeatherVfxBuilder.ParticleMaterial("M_AreaRing_Edge", RingTexture, additive: false), Coral, 1f, 1f);
+                var fill = new GameObject("Fill");
+                fill.transform.SetParent(go.transform, false);
+                GroundDisc(fill, WeatherVfxBuilder.ParticleMaterial("M_AreaRing_Fill", DiscTexture, additive: false), Coral, 0.14f, 0.45f);
+                PrefabUtility.SaveAsPrefabAsset(go, Vfx(AreaRingName));
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        /// <summary>One flat quad on the ground that grows to a 1 m radius, flashes at full size and fades.</summary>
+        private static void GroundDisc(GameObject go, Material material, Color tint, float alpha, float flashAlpha)
+        {
+            var ps = go.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.duration = 1f;
+            main.loop = false;
+            main.playOnAwake = true;
+            main.startLifetime = 1f;
+            main.startSpeed = 0f;
+            main.startSize = 2f / GroundArtRadius; // quad width whose art is 1 m in radius
+            main.startColor = Color.white;
+            main.maxParticles = 1;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            main.stopAction = ParticleSystemStopAction.None;
+
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 1) });
+            var shape = ps.shape;
+            shape.enabled = false;
+
+            var size = ps.sizeOverLifetime;
+            size.enabled = true;
+            var grow = new AnimationCurve(new Keyframe(0f, 0.2f, 0f, 2.6f), new Keyframe(AreaRingGrowTime, 1f, 0f, 0f), new Keyframe(1f, 1.03f));
+            size.size = new ParticleSystem.MinMaxCurve(1f, grow);
+
+            var colour = ps.colorOverLifetime;
+            colour.enabled = true;
+            var gradient = new Gradient();
+            gradient.SetKeys(
+                new[]
+                {
+                    new GradientColorKey(tint, 0f), new GradientColorKey(tint, AreaRingGrowTime - 0.05f),
+                    new GradientColorKey(Color.white, AreaRingGrowTime + 0.02f), new GradientColorKey(tint, AreaRingGrowTime + 0.2f),
+                    new GradientColorKey(tint, 1f),
+                },
+                new[]
+                {
+                    new GradientAlphaKey(0f, 0f), new GradientAlphaKey(alpha, 0.08f), new GradientAlphaKey(alpha, AreaRingGrowTime - 0.05f),
+                    new GradientAlphaKey(flashAlpha, AreaRingGrowTime + 0.02f), new GradientAlphaKey(0f, 1f),
+                });
+            colour.color = gradient;
+
+            var renderer = go.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = ParticleSystemRenderMode.HorizontalBillboard;
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.lightProbeUsage = LightProbeUsage.Off;
         }
 
         /// <summary>
@@ -213,6 +339,9 @@ namespace KryticalNova.EditorTools
             else mat.CopyPropertiesFromMaterial(source);
             tint.a = source.GetColor("_BaseColor").a;
             mat.SetColor("_BaseColor", tint);
+            // Unity mirrors the base colour into the legacy _Color when it next saves the material; write it now so
+            // a rebuild leaves the file exactly as it was.
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", tint);
             if (isNew) AssetDatabase.CreateAsset(mat, path);
             else EditorUtility.SetDirty(mat);
             return mat;
@@ -338,21 +467,22 @@ namespace KryticalNova.EditorTools
         {
             public readonly string Prefab;
             public readonly Vector3 Offset;
-            public readonly bool Ground, Follow, FaceCamera;
-            public Fx(string prefab, Vector3 offset = default, bool ground = false, bool follow = false, bool faceCamera = false)
+            public readonly bool Ground, Follow, FaceCamera, Dust;
+            public Fx(string prefab, Vector3 offset = default, bool ground = false, bool follow = false, bool faceCamera = false, bool dust = false)
             {
-                Prefab = prefab; Offset = offset; Ground = ground; Follow = follow; FaceCamera = faceCamera;
+                Prefab = prefab; Offset = offset; Ground = ground; Follow = follow; FaceCamera = faceCamera; Dust = dust;
             }
         }
 
         private readonly struct SkillLook
         {
-            public readonly string Id, Aura;
+            public readonly string Id, Aura, Charge, ChargeGround;
             public readonly AuraAnchor Anchor;
             public readonly Fx[] Cast, Hit;
-            public SkillLook(string id, Fx[] cast = null, Fx[] hit = null, string aura = null, AuraAnchor anchor = AuraAnchor.Feet)
+            public SkillLook(string id, Fx[] cast = null, Fx[] hit = null, string aura = null, AuraAnchor anchor = AuraAnchor.Feet,
+                string charge = null, string chargeGround = null)
             {
-                Id = id; Cast = cast; Hit = hit; Aura = aura; Anchor = anchor;
+                Id = id; Cast = cast; Hit = hit; Aura = aura; Anchor = anchor; Charge = charge; ChargeGround = chargeGround;
             }
         }
 
@@ -362,10 +492,13 @@ namespace KryticalNova.EditorTools
         /// <summary>Rising effects (pillars, columns) start at the feet so they wrap the body instead of the head.</summary>
         private static Fx AtFeet(string prefab) => new Fx(prefab, Feet, follow: true);
         private static Fx OnGround(string prefab) => new Fx(prefab, ground: true);
+        /// <summary>Puffs kicked up off the ground: they take the colour of the surface they come from.</summary>
+        private static Fx Dust(string prefab) => new Fx(prefab, ground: true, dust: true);
 
         /// <summary>
         /// What each skill looks like. Attacks: a cast burst and a hit burst. Buffs: a cast burst and an aura that
-        /// lasts for the buff's duration. Skills missing here fall back to the presenter's default players.
+        /// lasts for the buff's duration. Charged skills: what gathers while the key is held. Skills missing here fall
+        /// back to the presenter's default players.
         /// </summary>
         private static readonly SkillLook[] Skills =
         {
@@ -381,12 +514,13 @@ namespace KryticalNova.EditorTools
 
             new SkillLook("AzureWall", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_AzureWall"),
             new SkillLook("LightningFlash", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_LightningFlash", anchor: AuraAnchor.Chest),
-            new SkillLook("SpiritualRage", cast: new[] { OnCaster("PFX_Cast_Fire") }, aura: "PFX_Aura_SpiritualRage", anchor: AuraAnchor.Chest),
+            new SkillLook("SpiritualRage", cast: new[] { OnCaster("PFX_Cast_Fire") }, aura: "PFX_Aura_SpiritualRage", anchor: AuraAnchor.Chest,
+                charge: "PFX_Charge_SpiritualRage", chargeGround: "PFX_Charge_Ground"),
             new SkillLook("HeavenlySerenity", cast: new[] { AtFeet("PFX_Heal") }, aura: "PFX_Aura_Serenity"),
             new SkillLook("HeavenlyShield", cast: new[] { AtFeet("PFX_Cast_PowerUp") }, aura: "PFX_Aura_Shield"),
             new SkillLook("HeavenlyBlow", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_Blow", anchor: AuraAnchor.Chest),
             new SkillLook("GarudasPrayer", cast: new[] { AtFeet("PFX_Cast_PowerUp") }, aura: "PFX_Aura_Prayer", anchor: AuraAnchor.Chest),
-            new SkillLook("HeavenlyRepulsion", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_Repulsion"),
+            new SkillLook("HeavenlyRepulsion", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_Repulsion", anchor: AuraAnchor.Chest),
             new SkillLook("HeavenlyDestruction", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_Destruction", anchor: AuraAnchor.Chest),
             new SkillLook("ReverseFlow", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_ReverseFlow"),
         };
@@ -458,15 +592,28 @@ namespace KryticalNova.EditorTools
                     Sound(p, "Buff Cast");
                     Chromatic(p, "Chromatic Shimmer", 0.3f, 0.25f);
                 });
+                so.FindProperty("chargeFeel").objectReferenceValue = Player(root, "Charge", p =>
+                {
+                    Sound(p, "Charge Build-up");
+                    // One second long; the presenter stretches it to the skill's charge time. The view closes in while
+                    // the charge fills and springs back as it is released.
+                    var fov = p.AddFeedback(typeof(MMF_CameraFieldOfView)) as MMF_CameraFieldOfView;
+                    fov.Label = "FOV Pull-in";
+                    fov.Duration = 1f;
+                    fov.RelativeFieldOfView = true;
+                    fov.RemapFieldOfViewZero = 0f;
+                    fov.RemapFieldOfViewOne = -3f;
+                    fov.ShakeFieldOfView = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(1f, 1f));
+                });
 
                 // ---- world particles: every client
                 var world = Group(root, "World");
                 so.FindProperty("hitWorldFeel").objectReferenceValue = World(world, "Hit", new Fx("PFX_Hit_Sparks"), Comic("PFX_Comic_Hit"));
                 so.FindProperty("heavyHitWorldFeel").objectReferenceValue = World(world, "Heavy Hit", new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"));
                 so.FindProperty("critWorldFeel").objectReferenceValue = World(world, "Critical", Comic("PFX_Comic_Pow", 0.9f));
-                so.FindProperty("runWorldFeel").objectReferenceValue = World(world, "Run Start", OnGround("PFX_Dust_Run"));
-                so.FindProperty("jumpWorldFeel").objectReferenceValue = World(world, "Jump", OnGround("PFX_Dust_Jump"), OnGround("PFX_Jump_Burst"));
-                so.FindProperty("landWorldFeel").objectReferenceValue = World(world, "Land", OnGround("PFX_Dust_Land"), OnGround("PFX_Land_Ring"));
+                so.FindProperty("runWorldFeel").objectReferenceValue = World(world, "Run Start", Dust("PFX_Dust_Run"));
+                so.FindProperty("jumpWorldFeel").objectReferenceValue = World(world, "Jump", Dust("PFX_Dust_Jump"), Dust("PFX_Jump_Burst"));
+                so.FindProperty("landWorldFeel").objectReferenceValue = World(world, "Land", Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"));
                 so.FindProperty("attackCastWorldFeel").objectReferenceValue = World(world, "Attack Skill", Slash());
                 so.FindProperty("buffCastWorldFeel").objectReferenceValue = World(world, "Buff Skill", AtFeet("PFX_Cast_Buff"));
                 so.FindProperty("skillHitWorldFeel").objectReferenceValue = World(world, "Skill Hit", Comic("PFX_Comic_Slash"), new Fx("PFX_Hit_Sparks"));
@@ -478,8 +625,12 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("selectHostileVfx").objectReferenceValue = Load(Vfx("PFX_Select_Hostile"));
                 so.FindProperty("selectFriendlyVfx").objectReferenceValue = Load(Vfx("PFX_Select_Friendly"));
 
+                so.FindProperty("areaRingVfx").objectReferenceValue = Load(Vfx(AreaRingName));
+                so.FindProperty("areaRingGrowTime").floatValue = AreaRingGrowTime;
+
                 so.FindProperty("skills").objectReferenceValue = catalog;
                 so.FindProperty("defaultAuraVfx").objectReferenceValue = Load(Vfx("PFX_Aura_Default"));
+                so.FindProperty("defaultChargeVfx").objectReferenceValue = Load(Vfx("PFX_Charge_Default"));
                 so.FindProperty("runLoopVfx").objectReferenceValue = Load(Vfx("PFX_Run_Loop"));
                 so.FindProperty("airborneLoopVfx").objectReferenceValue = Load(Vfx("PFX_Air_Loop"));
                 so.FindProperty("bladeTrail").objectReferenceValue = Load(Vfx(BladeTrailName)).GetComponent<TrailRenderer>();
@@ -509,6 +660,8 @@ namespace KryticalNova.EditorTools
                 entry.FindPropertyRelative("hit").objectReferenceValue = look.Hit != null ? World(group, look.Id + " Hit", look.Hit) : null;
                 entry.FindPropertyRelative("aura").objectReferenceValue = look.Aura != null ? Load(Vfx(look.Aura)) : null;
                 entry.FindPropertyRelative("auraAnchor").enumValueIndex = (int)look.Anchor;
+                entry.FindPropertyRelative("charge").objectReferenceValue = look.Charge != null ? Load(Vfx(look.Charge)) : null;
+                entry.FindPropertyRelative("chargeGround").objectReferenceValue = look.ChargeGround != null ? Load(Vfx(look.ChargeGround)) : null;
             }
             so.ApplyModifiedPropertiesWithoutUndo();
         }
@@ -552,6 +705,7 @@ namespace KryticalNova.EditorTools
                     vfx.FollowTarget = fx.Follow;
                     vfx.FaceCamera = fx.FaceCamera;
                     vfx.Upright = fx.Ground || fx.Follow;
+                    vfx.TintWithGroundDust = fx.Dust;
                 }
             });
         }

@@ -9,7 +9,8 @@ namespace KryticalNova.EditorTools
 {
     /// <summary>
     /// Builds the Blade skill set (attacks and blade buffs), reworks Spiritual Rage into a charged one-hit buff, gives
-    /// every buff that has no animation of its own the shared buff cast, and wires everything onto the Player prefab.
+    /// every buff that has no animation of its own the shared buff cast, gives Heavenly Serenity the kneel it holds
+    /// while it channels, and wires everything onto the Player prefab.
     /// Safe to re-run: numbers are rewritten from the table below, while animation clips and VFX are only filled in
     /// when empty, so choices made in the Inspector survive a rebuild.
     /// </summary>
@@ -19,6 +20,7 @@ namespace KryticalNova.EditorTools
         private const string SpiritualRagePath = "Assets/_Game/Gameplay/Progression/Data/Assets/Skills/SelfBuffSkills/Skill_SpiritualRage.asset";
         private const string PlayerPrefabPath = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
         private const string SkillRoot = "Assets/_Game/Gameplay/Progression/Data/Assets/Skills";
+        private const string HeavenlySerenityPath = SkillRoot + "/SelfBuffSkills/Skill_HeavenlySerenity.asset";
 
         // One non-combat cast shared by every buff without its own animation: a weaponless spell gesture (Emerald AI
         // demo set), copied into the player's animation folder so the skills never point into a vendor demo.
@@ -41,6 +43,8 @@ namespace KryticalNova.EditorTools
         private const string ClipLightningFlash = Katana + "1_Movements/0__Intro/M_katana_Blade@Intro.FBX";
         private const string ClipRageChargeLoop = Katana + "5_Revenges/Guard_Revenges/M_katana_Blade@Revenge_Guard_Loop.FBX";
         private const string ClipRageRelease = Katana + "5_Revenges/Guard_Revenges/M_katana_Blade@Revenge_Guard_End.FBX";
+        private const string ClipSerenityEnter = Katana + "1_Movements/14__Idle_To_Crouch/M_katana_Blade@Idle_ver_A_To_Crouch_ver_A_Idle.FBX";
+        private const string ClipSerenityLoop = Katana + "1_Movements/13__Crouch/Inplace/M_katana_Blade@Crouch_ver_A_Idle.FBX";
 
         private const float MeleeReach = 2f;
         private const float SingleHitTime = 0.4f;
@@ -88,6 +92,7 @@ namespace KryticalNova.EditorTools
             };
 
             var rage = RebuildSpiritualRage();
+            GiveSerenityItsKneel();
             int animated = GiveBuffsSharedCast();
 
             AssetDatabase.SaveAssets();
@@ -96,6 +101,28 @@ namespace KryticalNova.EditorTools
             Debug.Log($"[BladeSkills] {skills.Count} blade skills written to {SkillFolder}" +
                       $"{(rage != null ? ", Spiritual Rage reworked" : string.Empty)}; {animated} buffs given the shared cast; " +
                       $"{added} added to {PlayerPrefabPath}.");
+        }
+
+        /// <summary>
+        /// Heavenly Serenity is a 20-second channel, so it gets a pose of its own instead of the shared cast: the body
+        /// lowers into a kneel, holds it for the whole channel and rises when the channel ends. Left alone once it
+        /// has a held pose, so a clip chosen in the Inspector survives a rebuild.
+        /// </summary>
+        [MenuItem("Krytical Nova/Progression/Give Heavenly Serenity Its Kneel")]
+        public static bool GiveSerenityItsKneel()
+        {
+            var skill = AssetDatabase.LoadAssetAtPath<SkillDefinitionSO>(HeavenlySerenityPath);
+            if (skill == null) return false;
+            if (skill.channelLoopClip != null) return true;
+            AnimationClip enter = LoadClip(ClipSerenityEnter), loop = LoadClip(ClipSerenityLoop);
+            if (enter == null || loop == null) return false;
+            skill.castClip = enter;
+            skill.castClipSpeed = 1f;
+            skill.castLockNormalized = 1f;
+            skill.channelLoopClip = loop;
+            EditorUtility.SetDirty(skill);
+            AssetDatabase.SaveAssets();
+            return true;
         }
 
         /// <summary>

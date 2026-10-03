@@ -40,7 +40,13 @@ namespace KryticalNova.Core
         void Airborne(Transform actor, bool airborne);
 
         /// <summary>A skill was cast (attack or buff), on every peer.</summary>
-        void SkillCast(Transform caster, string skillId, bool isAttack, bool isLocalPlayer);
+        /// <param name="areaRadius">Metres around the caster an area attack reaches; 0 for every other skill.</param>
+        /// <param name="areaSeconds">Seconds from the cast until the area attack lands.</param>
+        void SkillCast(Transform caster, string skillId, bool isAttack, bool isLocalPlayer, float areaRadius = 0f, float areaSeconds = 0f);
+        /// <summary>The actor began holding a charged skill's key; the charge fills over <paramref name="seconds"/>.</summary>
+        void ChargeStarted(Transform actor, string skillId, float seconds, bool isLocalPlayer);
+        /// <summary>The hold ended: released into the cast (<paramref name="completed"/>) or let go early.</summary>
+        void ChargeEnded(Transform actor, string skillId, bool completed);
         /// <summary>A skill's hit landed at <paramref name="point"/>, on every peer.</summary>
         void SkillHit(Transform caster, string skillId, Vector3 point);
         /// <summary>A timed buff took hold. It lasts until <see cref="BuffEnded"/>; <paramref name="duration"/> is its full length.</summary>

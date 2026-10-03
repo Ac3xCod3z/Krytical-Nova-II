@@ -200,6 +200,9 @@ namespace KryticalNova.Progression
         [Range(0.1f, 1f)] public float castLockNormalized = 1f;
         [Tooltip("Looped while the hotbar key is held for a charged skill.")]
         public AnimationClip chargeLoopClip;
+        [Tooltip("Channeled skills: held for as long as the channel lasts. The cast clip brings the body into this pose " +
+                 "and, played backwards, out of it again.")]
+        public AnimationClip channelLoopClip;
         [Tooltip("Spawned at the caster when the skill is cast.")]
         public GameObject castVfxPrefab;
         [Tooltip("Spawned on every target the skill damages.")]
@@ -218,6 +221,7 @@ namespace KryticalNova.Progression
         public bool IsAttack => maxDamagePercent > 0f;
         public bool IsAreaAttack => IsAttack && targetType == SkillTargetType.AreaOfEffect;
         public bool IsCharged => chargeTime > 0f;
+        public bool IsChanneled => executionType == SkillExecutionType.Channeled;
 
         /// <summary>Total damage of one cast as a fraction of Attack Power (1 = 100%), before splitting across hits.</summary>
         public float GetDamageMultiplier(int rank) =>

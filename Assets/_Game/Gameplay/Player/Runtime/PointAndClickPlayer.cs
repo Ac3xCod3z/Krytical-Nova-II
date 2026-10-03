@@ -91,6 +91,7 @@ namespace KryticalNova.Player
         private PlayerMovementSkills movementSkills;
         private PlayerResources resources;
         private PlayerJumpMotor jumpMotor;
+        private PlayerVaultMotor vaultMotor;
         private CharacterCombatStats combatStats;
         private CharacterBuffManager buffManager;
         private PlayerAnimancerMotor animancerMotor;
@@ -111,6 +112,7 @@ namespace KryticalNova.Player
         private readonly RaycastHit[] groundHit = new RaycastHit[1];
         private readonly RaycastHit[] pointerHits = new RaycastHit[16];
         private PlayerSkillHotbar hotbar;
+        private KryticalNova.Rendering.OccluderFader occluderFader;
         private EventSystem pointerEventSystem;
         private PointerEventData pointerEventData;
         private bool isOrbiting;
@@ -153,6 +155,8 @@ namespace KryticalNova.Player
             movementSkills = GetComponent<PlayerMovementSkills>();
             resources = GetComponent<PlayerResources>();
             jumpMotor = GetComponent<PlayerJumpMotor>();
+            vaultMotor = GetComponent<PlayerVaultMotor>();
+            if (vaultMotor != null) vaultMotor.Landed += ResumeMoveAfterVault;
             combatStats = GetComponent<CharacterCombatStats>();
             buffManager = GetComponent<CharacterBuffManager>();
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
@@ -214,6 +218,7 @@ namespace KryticalNova.Player
                 if (!cam.TryGetComponent<KryticalNova.Rendering.OccluderFader>(out var fader))
                     fader = cam.gameObject.AddComponent<KryticalNova.Rendering.OccluderFader>();
                 fader.Configure(transform, occluderDitherShader);
+                occluderFader = fader;
             }
 
             // Soft hero light so the local character stays readable at night.
@@ -406,6 +411,7 @@ namespace KryticalNova.Player
         // Units win over props: a vendor inside a stall sits within the canopy's convex hull, so the
         // nearest hit is the canopy. Walk the hits front to back and take the first unit, stopping at
         // walkable ground so nothing can be picked through the floor. Otherwise use the nearest hit.
+        // Props faded to keep the player in view are skipped: what can be seen through can be clicked through.
         private bool TryPickPointerHit(Ray ray, out RaycastHit hit)
         {
             int count = Physics.RaycastNonAlloc(ray, pointerHits, maximumRayDistance, raycastLayers, QueryTriggerInteraction.Ignore);
@@ -413,11 +419,17 @@ namespace KryticalNova.Player
             if (count == 0) return false;
 
             System.Array.Sort(pointerHits, 0, count, HitDistanceComparer.Instance);
-            hit = pointerHits[0];
+            bool found = false;
 
             for (int i = 0; i < count; i++)
             {
                 Collider c = pointerHits[i].collider;
+                if (occluderFader != null && occluderFader.IsFaded(c)) continue;
+                if (!found)
+                {
+                    hit = pointerHits[i];
+                    found = true;
+                }
                 var damageable = c.GetComponentInParent<IDamageable>();
                 if ((damageable != null && damageable.Transform != transform) || c.GetComponentInParent<IInteractable>() != null)
                 {
@@ -427,7 +439,7 @@ namespace KryticalNova.Player
                 if ((groundLayers.value & (1 << c.gameObject.layer)) != 0)
                     break;
             }
-            return true;
+            return found;
         }
 
         private sealed class HitDistanceComparer : System.Collections.Generic.IComparer<RaycastHit>
@@ -440,6 +452,7 @@ namespace KryticalNova.Player
         {
             if (resources != null && !resources.IsAlive) { CommandMessage?.Invoke("No HP remaining. Restore HP before moving."); return; }
             if (jumpMotor != null && jumpMotor.IsBusy) { CommandMessage?.Invoke("Finish this jump before choosing another destination."); return; }
+            if (vaultMotor != null && vaultMotor.IsBusy) return; // back on the ground in a moment
             if (gameplayCamera == null || !gameplayCamera.pixelRect.Contains(screenPosition))
                 return;
 
@@ -447,8 +460,9 @@ namespace KryticalNova.Player
             if (!TryPickPointerHit(ray, out RaycastHit hit))
                 return;
 
-            // Any new click replaces a walk-to-talk in progress.
+            // Any new click replaces a walk-to-talk in progress, and a vault that was planned for the old route.
             pendingInteract = null;
+            if (vaultMotor != null) vaultMotor.Disarm();
 
             var targetEntity = hit.collider.GetComponentInParent<IDamageable>();
             if (targetEntity != null && targetEntity.Transform != transform)
@@ -648,7 +662,7 @@ namespace KryticalNova.Player
 
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
             if (!NavMesh.SamplePosition(destinationPoint, out NavMeshHit destination, destinationSampleRadius, filter)
-                || !agent.CalculatePath(destination.position, requestedPath) || requestedPath.status != NavMeshPathStatus.PathComplete)
+                || !TryPlanRoute(destination.position))
             { CommandMessage?.Invoke("No complete walking path to that point."); return false; }
             if (Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance)
                 return false;
@@ -674,13 +688,16 @@ namespace KryticalNova.Player
         {
             if (resources != null && !resources.IsAlive) return;
             if (jumpMotor != null && jumpMotor.IsBusy) return;
+            if (vaultMotor != null && vaultMotor.IsBusy) return;
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+            // The owner ended its own copy of a channel when it clicked; the authoritative one ends here.
+            if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
 
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
             if (!NavMesh.SamplePosition(destinationPoint, out NavMeshHit destination, destinationSampleRadius, filter))
                 return;
 
-            if (!agent.CalculatePath(destination.position, requestedPath) || requestedPath.status != NavMeshPathStatus.PathComplete)
+            if (!TryPlanRoute(destination.position))
                 return;
 
             if (Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance)
@@ -700,6 +717,40 @@ namespace KryticalNova.Player
                 return;
             }
             SnapVelocityToPath();
+        }
+
+        /// <summary>
+        /// Fills <see cref="requestedPath"/> with the way to <paramref name="destination"/>. When a low obstacle on the
+        /// straight line can be vaulted and that is shorter, the path only leads to the vault's take-off point: the
+        /// vault motor takes over there and <see cref="ResumeMoveAfterVault"/> carries on from the landing.
+        /// </summary>
+        private bool TryPlanRoute(Vector3 destination)
+        {
+            if (vaultMotor != null) vaultMotor.Disarm();
+            bool walkable = agent.CalculatePath(destination, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
+            // With no way round, a vault that gets there is the route.
+            if (vaultMotor == null) return walkable;
+            if (!vaultMotor.TryArm(destination, walkable ? requestedPath : null, raycastLayers, modelForwardOffset, out Vector3 takeoff))
+            {
+                // Nothing to go over from here; there may be once the walk has cleared whatever is in the line now.
+                if (walkable) vaultMotor.Watch(destination, raycastLayers, modelForwardOffset);
+                return walkable;
+            }
+            if (agent.CalculatePath(takeoff, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete) return true;
+            vaultMotor.Disarm();
+            return walkable && agent.CalculatePath(destination, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
+        }
+
+        /// <summary>The rest of a move that went over an obstacle. The run was paid for when the move was ordered.</summary>
+        private void ResumeMoveAfterVault(Vector3 destination)
+        {
+            if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+            if (resources != null && !resources.IsAlive) return;
+            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            if (!NavMesh.SamplePosition(destination, out NavMeshHit target, destinationSampleRadius, filter) || !TryPlanRoute(target.position)) return;
+            if (Vector3.Distance(agent.nextPosition, target.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance) return;
+            agent.isStopped = false;
+            if (agent.SetPath(requestedPath)) SnapVelocityToPath();
         }
 
         /// <summary>
@@ -862,6 +913,7 @@ namespace KryticalNova.Player
                 movementSkills.SelectWalk();
             }
             if (jumpMotor != null && jumpMotor.IsBusy) return;
+            if (vaultMotor != null && vaultMotor.IsBusy) return;
             MovementSkillId currentMode = movementSkills.SelectedSkill;
             if (currentMode != previousMovementMode)
             {

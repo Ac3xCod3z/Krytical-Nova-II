@@ -70,11 +70,12 @@ MonoBehaviour:
   chargeTime: 0
   holdToRepeat: 0
   icon: {fileID: 21300000, guid: f6ab203e3f51f6042bfbb7c0566cd746, type: 3}
-  castClip: {fileID: 7400000, guid: bd9a4d0fed508624c8d84d66c69aa611, type: 2}
-  castClipSpeed: 1.2
+  castClip: {fileID: 7400000, guid: a5617ef9abf458c41b357010d3971edd, type: 3}
+  castClipSpeed: 1
   hitTimesNormalized: []
-  castLockNormalized: 0.85
+  castLockNormalized: 1
   chargeLoopClip: {fileID: 0}
+  channelLoopClip: {fileID: 7400000, guid: eb8cc302bb3204846bbca5f3f3210449, type: 3}
   castVfxPrefab: {fileID: 0}
   hitVfxPrefab: {fileID: 0}
   chargeVfxPrefab: {fileID: 0}

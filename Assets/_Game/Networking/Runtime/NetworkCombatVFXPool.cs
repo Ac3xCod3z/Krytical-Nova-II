@@ -182,6 +182,20 @@ namespace KryticalNova.Networking
             pendingReturns.Add(new PendingReturn { poolKey = key, instance = instance, returnTime = Time.time + fade });
         }
 
+        /// <summary>
+        /// Ends an attached instance whose parent is being deactivated or destroyed. Unity refuses to re-parent a child
+        /// during that, so the instance only stops here and returns to the pool on the next Update, if it survived.
+        /// </summary>
+        public void ReleaseDeferred(GameObject instance)
+        {
+            if (ReferenceEquals(instance, null) || !attachedKeys.TryGetValue(instance, out string key)) return;
+            attachedKeys.Remove(instance);
+            if (instance == null) return;
+            foreach (var ps in instance.GetComponentsInChildren<ParticleSystem>())
+                ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            pendingReturns.Add(new PendingReturn { poolKey = key, instance = instance, returnTime = Time.time });
+        }
+
         private string KeyFor(GameObject prefab)
         {
             if (!prefabKeys.TryGetValue(prefab, out var key))

@@ -14,7 +14,8 @@ namespace KryticalNova.Combat
     /// Carries out attack skills for <see cref="PlayerCombatSkills"/>: single-target strikes, multi-hit strikes and
     /// area blasts around the caster. Damage is resolved where combat is authoritative (server or offline) through
     /// <see cref="PlayerMeleeCombat.ResolveHit"/>; the cast animation and VFX play on every peer. Also plays the
-    /// hold-to-charge pose for charged skills on the local player.
+    /// hold-to-charge pose and build-up for charged skills: at once for the player holding the key, and on the other
+    /// peers through an RPC.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerMeleeCombat), typeof(PlayerCombatSkills))]
@@ -23,6 +24,7 @@ namespace KryticalNova.Combat
         private const int SkillComboStep = 3; // skills hit with the finisher's impact feel
         private const int MaxAreaColliders = 64;
         private const float ChargeHandoffSeconds = 0.75f;
+        private const float ChannelCrossFade = 0.25f;
 
         [Header("Animation")]
         [SerializeField] private AnimancerComponent animancer;
@@ -122,7 +124,9 @@ namespace KryticalNova.Combat
             var feel = ClientPresentationRegistry.Feel;
             if (feel != null)
             {
-                feel.SkillCast(transform, skill.skillId, skill.IsAttack, IsLocalPlayerPresentation);
+                // Area attacks show their reach on the ground, timed to the moment the blow lands.
+                float areaRadius = skill.IsAreaAttack ? skill.GetRange(rank) : 0f;
+                feel.SkillCast(transform, skill.skillId, skill.IsAttack, IsLocalPlayerPresentation, areaRadius, skill.GetHitDelay(0));
                 // The blade trails for as long as the cast keeps the caster busy.
                 if (skill.IsAttack) feel.Swing(transform, SkillComboStep, IsLocalPlayerPresentation, skill.CastLockDuration);
             }
@@ -138,7 +142,8 @@ namespace KryticalNova.Combat
             if (skill.castClip == null || animancer == null) return;
             if (animancerMotor != null && animancerMotor.CurrentState == CharacterAnimState.Jumping) return;
             if (presentRoutine != null) StopCoroutine(presentRoutine);
-            presentRoutine = StartCoroutine(PresentRoutine(skill));
+            bool holdsPose = skill.IsChanneled && skill.channelLoopClip != null;
+            presentRoutine = StartCoroutine(holdsPose ? ChannelRoutine(skill) : PresentRoutine(skill));
         }
 
         // ------------------------------------------------------------------ damage (server / offline)
@@ -230,6 +235,49 @@ namespace KryticalNova.Combat
             ReleaseBody();
         }
 
+        /// <summary>
+        /// A channeled skill holds a pose of its own for as long as the channel lasts. The cast clip brings the body
+        /// into it, the loop keeps it there until the buff is gone (run out, or cut short by damage or a move command),
+        /// and the cast clip played backwards brings the body out again. A channel cut short by moving, jumping or
+        /// attacking skips the way out: the body is already needed elsewhere.
+        /// </summary>
+        private IEnumerator ChannelRoutine(SkillDefinitionSO skill)
+        {
+            if (animancerMotor != null) animancerMotor.SetAttackingState(true);
+            var enter = animancer.Play(skill.castClip, castCrossFade);
+            enter.Speed = skill.castClipSpeed;
+            enter.Time = 0f;
+            enter.ApplyFootIK = castFootIK;
+
+            float enterEnds = Time.time + skill.CastDuration;
+            while (Time.time < enterEnds && IsChanneling(skill)) yield return null;
+
+            if (IsChanneling(skill))
+            {
+                animancer.Play(skill.channelLoopClip, ChannelCrossFade).ApplyFootIK = castFootIK;
+                while (IsChanneling(skill)) yield return null;
+            }
+
+            if (BodyIsFree)
+            {
+                var exit = animancer.Play(skill.castClip, ChannelCrossFade);
+                exit.Speed = -skill.castClipSpeed;
+                exit.NormalizedTime = 1f;
+                exit.ApplyFootIK = castFootIK;
+                float exitEnds = Time.time + skill.CastDuration;
+                while (Time.time < exitEnds && BodyIsFree) yield return null;
+            }
+
+            presentRoutine = null;
+            ReleaseBody();
+        }
+
+        private bool IsChanneling(SkillDefinitionSO skill) => buffManager != null && buffManager.HasBuff(skill.skillId);
+
+        /// <summary>Nothing else has taken the body since the skill posed it: not a move, a jump or the basic combo.</summary>
+        private bool BodyIsFree => !melee.IsAttacking
+            && (animancerMotor == null || (animancerMotor.CurrentState == CharacterAnimState.Attacking && !animancerMotor.IsTravelling));
+
         /// <summary>Hands the body back to locomotion unless the basic combo is about to take over again.</summary>
         private void ReleaseBody()
         {
@@ -258,12 +306,40 @@ namespace KryticalNova.Combat
             return pool.Spawn(prefab, transform.position + facing * offset, facing, lifetime);
         }
 
-        // ------------------------------------------------------------------ hold-to-charge (local player only)
+        // ------------------------------------------------------------------ hold-to-charge
 
+        // The hotbar raises these on the machine holding the key; everyone else is told by RPC.
         private void OnChargeStarted(SkillDefinitionSO skill)
+        {
+            PresentChargeStarted(skill);
+            if (IsSpawned) ChargeStartedRpc(skill.skillId);
+        }
+
+        private void OnChargeEnded(SkillDefinitionSO skill, bool completed)
+        {
+            PresentChargeEnded(skill, completed);
+            if (IsSpawned) ChargeEndedRpc(skill.skillId, completed);
+        }
+
+        [Rpc(SendTo.NotOwner, InvokePermission = RpcInvokePermission.Owner)]
+        private void ChargeStartedRpc(string skillId)
+        {
+            var skill = GetComponent<PlayerCombatSkills>().GetSkill(skillId);
+            if (skill != null) PresentChargeStarted(skill);
+        }
+
+        [Rpc(SendTo.NotOwner, InvokePermission = RpcInvokePermission.Owner)]
+        private void ChargeEndedRpc(string skillId, bool completed)
+        {
+            var skill = GetComponent<PlayerCombatSkills>().GetSkill(skillId);
+            if (skill != null) PresentChargeEnded(skill, completed);
+        }
+
+        private void PresentChargeStarted(SkillDefinitionSO skill)
         {
             melee.HoldForSkill(skill.chargeTime);
             SpawnAtCaster(skill.chargeVfxPrefab, skill.vfxOffset, skill.chargeTime);
+            ClientPresentationRegistry.Feel?.ChargeStarted(transform, skill.skillId, skill.chargeTime, IsLocalPlayerPresentation);
             if (skill.chargeLoopClip == null || animancer == null) return;
             if (animancerMotor != null && animancerMotor.CurrentState == CharacterAnimState.Jumping) return;
             if (presentRoutine != null) { StopCoroutine(presentRoutine); presentRoutine = null; }
@@ -271,8 +347,9 @@ namespace KryticalNova.Combat
             animancer.Play(skill.chargeLoopClip, castCrossFade).ApplyFootIK = castFootIK;
         }
 
-        private void OnChargeEnded(SkillDefinitionSO skill, bool completed)
+        private void PresentChargeEnded(SkillDefinitionSO skill, bool completed)
         {
+            ClientPresentationRegistry.Feel?.ChargeEnded(transform, skill.skillId, completed);
             if (presentRoutine != null) return; // the cast's own presentation already owns the body
             if (!completed) ReleaseBody();
             else presentRoutine = StartCoroutine(ReleaseAfter(ChargeHandoffSeconds));

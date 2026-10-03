@@ -40,6 +40,8 @@ namespace KryticalNova.GameFeel
         public float Scale = 1f;
         [Tooltip("Seconds before the instance returns to the pool. 0 = the prefab's own particle duration.")]
         public float Lifetime;
+        [Tooltip("Colour the effect like the dust of the ground it plays on (pale on paving, grey on roads, earthy on grass and dirt).")]
+        public bool TintWithGroundDust;
 
         /// <summary>Facing for the next play; set by the presenter, identity otherwise.</summary>
         [System.NonSerialized] public Quaternion Rotation = Quaternion.identity;
@@ -68,7 +70,10 @@ namespace KryticalNova.GameFeel
             {
                 instance = pool.Spawn(Prefab, Place(position, rotation), rotation, Lifetime);
             }
-            if (instance != null) instance.transform.localScale = Prefab.transform.localScale * Scale;
+            if (instance == null) return;
+            instance.transform.localScale = Prefab.transform.localScale * Scale;
+            if (TintWithGroundDust)
+                GroundSurfaces.Tint(instance.GetComponentsInChildren<ParticleSystem>(), GroundSurfaces.DustAt(position, Target));
         }
 
         private Vector3 Place(Vector3 position, Quaternion rotation)

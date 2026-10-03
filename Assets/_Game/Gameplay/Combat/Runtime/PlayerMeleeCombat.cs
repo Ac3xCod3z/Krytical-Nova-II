@@ -622,6 +622,23 @@ namespace KryticalNova.Combat
         /// <summary>The character's true facing (root rotation without the model's forward offset).</summary>
         public Quaternion Facing => transform.rotation * Quaternion.AngleAxis(-modelForwardOffset, Vector3.up);
 
+        /// <summary>
+        /// Plays this character's impact presentation on <paramref name="target"/> without resolving any damage (GM
+        /// preview). It goes through the same call a real hit does, so the two cannot drift apart.
+        /// </summary>
+        public void PreviewImpact(Transform target, int comboStep, bool critical)
+        {
+            if (target == null) return;
+            Vector3 toAttacker = transform.position - target.position;
+            toAttacker.y = 0f;
+            // Striking yourself: the blow comes from the front.
+            toAttacker = toAttacker.sqrMagnitude > 0.0001f ? toAttacker.normalized : Facing * Vector3.forward;
+            // An agent's root floats its base offset above the soles; the impact height is measured from the ground.
+            float rootHeight = target.TryGetComponent(out NavMeshAgent targetAgent) ? targetAgent.baseOffset : 0f;
+            Vector3 impactPos = target.position + Vector3.up * (impactVfxHeight - rootHeight) + toAttacker * impactVfxTowardAttacker;
+            SpawnImpactVfxLocal(impactPos, toAttacker, comboStep, critical, target);
+        }
+
         [ClientRpc]
         private void SpawnImpactVfxClientRpc(Vector3 position, Vector3 towardAttacker, int comboStep, bool isCritical, ulong targetNetworkObjectId)
         {

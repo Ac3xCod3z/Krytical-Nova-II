@@ -139,7 +139,8 @@ Driven by `EnvironmentPresenter` (`Assets/_Game/World/Runtime/Presentation/`). T
 
 ### Moon phases
 - A shader mask over the unchanged `T_Moon` art. The moon disc in the art is `_MoonDisc` (centre 0.495, 0.5; radius
-  0.23 × 0.209 uv). The dark side keeps `_MoonEarthshine`.
+  0.23 × 0.209 uv). The dark side keeps only `_MoonEarthshine` (0.015) of the art and covers the sky behind it at
+  `_MoonDarkAlpha` (0.95), so it reads as a shadow that hides the stars; the moon halo is masked off it.
 - Phase = (world day count + time of day) / `lunarCycleDays` (8). It's derived from the replicated world clock, so all
   clients agree. Waxing lights the right side.
 - Moonlight scales with the lit fraction through `DayCycleProfile.moonPhaseLight` (new moon 0.42 → full 1) on top
@@ -382,6 +383,14 @@ Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Ed
 - **Shadowmask mixed lighting** for interiors once indoor zones exist: crisp baked shadows far away, realtime up close.
 
 ## Changelog
+
+- **2026-10-03 (pass 4)**:
+  - Moon phase mask darkened: earthshine 0.12 → 0.015, dark side opacity 0.55 → 0.95, halo no longer washes over the
+    unlit part of the disc.
+  - Cartoon dust puffs (run, jump, landing) are **opaque** flat-coloured meshes (`M_ComicPuff`), not translucent
+    sprites: they write depth, so the outline pass inks them like any other comic shape. Their colour comes from the
+    ground they are kicked off (`GroundSurfaces`: paving, road, grass, dirt, rock), never from the grass tint itself.
+  - Area attacks draw their reach on the ground (`PFX_Area_Ring`, coral, alpha-blended, no emission).
 
 - **2026-10-03 (moonlit nights)**:
   - Moon key light raised (0.4 → 0.75 at midnight) with a phase curve (`moonPhaseLight`) instead of a fixed 25–100 % lerp.
