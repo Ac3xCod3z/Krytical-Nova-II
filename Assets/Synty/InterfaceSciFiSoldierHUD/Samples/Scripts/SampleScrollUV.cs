@@ -8,7 +8,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Synty.Interface.SciFiSoldierHUD.Samples
+namespace Synty.Interface.SciFiMenus.Samples
 {
     /// <summary>
     ///     Animates the UVs of a raw image for a scrolling background effect.
