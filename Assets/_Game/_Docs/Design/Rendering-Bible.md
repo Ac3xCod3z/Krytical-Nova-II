@@ -374,6 +374,16 @@ Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Ed
 
 ## Changelog
 
+- **2026-10-02 (pass 4)**:
+  - Volumetric Fog 2 now renders **after transparents** (feature `renderPassEventOrder` 500): the water surface is
+    transparent and used to paint over any mist above it.
+  - Water mist: box volumes (river strips are real strips), visible to 650 m, lit by the sky ambient with a brightness
+    floor (the key light is ~0 through dusk) and never tinted by the weather fog colour.
+  - Edit mode has no fog: `EnvironmentPresenter` only enables distance fog in Play Mode (`previewFogInEditMode` to
+    opt in) and the fog volumes are saved inactive.
+  - Grass mask ignores transparent renderers (lamp light cones were erasing the plaza lawns).
+  - A rainbow needs a low sun above the horizon even when forced from GM tools.
+
 - **2026-10-02 (night fix)**:
   - Night "haze" was Beautify's vignette fade (0.45) mixing 45 % ink into every pixel; fade is now 0.
   - Ground fog only in Fog / Blizzard weather (Overcast 0); dusk water mist lifts slowly until 22:00.

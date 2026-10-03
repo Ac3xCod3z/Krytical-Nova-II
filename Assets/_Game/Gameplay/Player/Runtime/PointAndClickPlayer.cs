@@ -523,8 +523,9 @@ namespace KryticalNova.Player
                 return;
             }
 
-            // Clicking ground or platform stops an active attack; the selected target stays selected.
+            // Clicking ground or platform stops an active attack and drops the selection (its ring fades out).
             meleeCombat?.CancelAttack();
+            if (selectedTarget != null) ClearSelection();
 
             if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }

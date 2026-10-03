@@ -102,6 +102,8 @@ namespace KryticalNova.World
 
         [Header("Edit-mode preview")]
         [SerializeField] private bool previewInEditMode = true;
+        [Tooltip("Show the weather's distance fog in edit mode too. Off: the Scene view stays clear; Play Mode always has fog.")]
+        [SerializeField] private bool previewFogInEditMode;
         [SerializeField] private DayCycleProfile previewDayCycle;
         [SerializeField] private WeatherProfile previewWeather;
         [Range(0f, 24f)] [SerializeField] private float previewHours = 10f;
@@ -201,7 +203,9 @@ namespace KryticalNova.World
             }
             if (skyMaterial != null) RenderSettings.skybox = skyMaterial;
             SetupFlare();
-            RenderSettings.fog = true;
+            // Distance fog belongs to the running game. In edit mode it only hazes the Scene view, so it stays off
+            // unless someone asks to preview it.
+            RenderSettings.fog = Application.isPlaying || previewFogInEditMode;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.ambientMode = AmbientMode.Trilight;
 
@@ -236,7 +240,9 @@ namespace KryticalNova.World
             if (Application.isPlaying || IsHeadless) return;
             UnityEditor.EditorApplication.delayCall += () =>
             {
-                if (this != null && isActiveAndEnabled) ApplyPreview();
+                if (this == null || !isActiveAndEnabled) return;
+                RenderSettings.fog = previewFogInEditMode;
+                ApplyPreview();
             };
         }
 #endif
@@ -417,7 +423,9 @@ namespace KryticalNova.World
             // point, so a sun higher than 42° puts it below the horizon).
             if (rainbowOverride >= 0f)
             {
-                rainbowStrength = rainbowOverride;
+                // Even a forced bow needs a low sun above the horizon: it sits opposite the sun, so with the sun
+                // down or high overhead it would hang in the wrong part of the sky (or underground).
+                rainbowStrength = rainbowOverride * RainbowSunFactor(sunDir.y);
             }
             else
             {

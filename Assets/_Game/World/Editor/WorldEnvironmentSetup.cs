@@ -300,7 +300,7 @@ namespace KryticalNova.EditorTools
             // --- render settings
             RenderSettings.skybox = skyMaterial;
             RenderSettings.sun = keyLight;
-            RenderSettings.fog = true;
+            RenderSettings.fog = false; // EnvironmentPresenter switches it on in Play Mode; the editor stays clear
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.fogDensity = 0.0015f;
             RenderSettings.ambientMode = AmbientMode.Trilight;

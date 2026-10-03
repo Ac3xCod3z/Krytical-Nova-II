@@ -29,6 +29,8 @@ namespace KryticalNova.World
         [Min(0.01f)] [SerializeField] private float smoothingSeconds = 2f;
         [SerializeField] private string[] disabledOnQualityLevels = { "Mobile" };
 
+        private const float MinMistLight = 0.42f;
+
         private static Color publishedFogColor = Color.gray;
         private static float publishedVolumetric = -1f;
         private static float publishedRain;
@@ -102,15 +104,16 @@ namespace KryticalNova.World
             float waterTarget = tierDisabled ? 0f
                 : DuskWeight(publishedHours) * (1f - Mathf.Clamp01(publishedRain * 4f)) * (1f - groundTarget);
 
-            Apply(ref ground, groundTarget, k);
-            for (int i = 0; i < water.Length; i++) Apply(ref water[i], waterTarget, k);
+            Apply(ref ground, groundTarget, k, false);
+            for (int i = 0; i < water.Length; i++) Apply(ref water[i], waterTarget, k, true);
 
             // Only fog weather thickens the air town-wide. Water mist is local to the lakes and rivers, so it must not
             // brighten every lamp cone in the city at dusk.
             FogAmount = ground.Weight;
         }
 
-        private void Apply(ref Layer layer, float target, float k)
+        /// <param name="ambientLit">Water mist: lit by the sky ambient, because the key light is ~0 through dusk.</param>
+        private void Apply(ref Layer layer, float target, float k, bool ambientLit)
         {
             if (layer.Fog == null || layer.Profile == null) return;
             layer.Weight = Mathf.Lerp(layer.Weight, target, k);
@@ -121,12 +124,24 @@ namespace KryticalNova.World
             if (!on) return;
 
             float density = layer.AuthoredDensity * layer.Weight;
-            Color albedo = Color.Lerp(layer.AuthoredAlbedo, publishedFogColor, albedoFromFogColor);
+            // Water mist keeps its pale albedo: tinted toward the dusk fog colour it vanishes into the background.
+            Color albedo = ambientLit ? layer.AuthoredAlbedo : Color.Lerp(layer.AuthoredAlbedo, publishedFogColor, albedoFromFogColor);
             albedo.a = layer.AuthoredAlbedo.a;
-            if (Mathf.Abs(layer.Profile.density - density) > 0.0005f || !Approximately(layer.Profile.albedo, albedo))
+            Color lit = layer.Profile.sunColor;
+            if (ambientLit)
+            {
+                // Sky ambient hue with a brightness floor, so the mist still reads as the evening darkens.
+                lit = (RenderSettings.ambientSkyColor + RenderSettings.ambientEquatorColor) * 0.5f;
+                float peak = lit.maxColorComponent;
+                if (peak < MinMistLight) lit *= MinMistLight / Mathf.Max(peak, 0.01f);
+                lit.a = 1f;
+            }
+            if (Mathf.Abs(layer.Profile.density - density) > 0.0005f || !Approximately(layer.Profile.albedo, albedo)
+                || !Approximately(layer.Profile.sunColor, lit))
             {
                 layer.Profile.density = density;
                 layer.Profile.albedo = albedo;
+                layer.Profile.sunColor = lit;
                 layer.Fog.UpdateMaterialProperties();
             }
         }

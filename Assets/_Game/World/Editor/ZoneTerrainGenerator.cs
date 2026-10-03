@@ -648,6 +648,10 @@ namespace KryticalNova.EditorTools
                     var instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(r.gameObject);
                     var src = instanceRoot != null ? PrefabUtility.GetCorrespondingObjectFromOriginalSource(instanceRoot) : null;
                     if (src != null && FoliageAssetBuilder.IsFoliage(src.name)) continue;
+                    // Only solid meshes cover the ground. Light cones, fog volumes and other transparent effects have
+                    // huge bounds (a lamp's volumetric cone is 44 m wide) and would wipe the grass around them.
+                    var mat = r.sharedMaterial;
+                    if (mat == null || mat.renderQueue >= 2500) continue;
 
                     Bounds b = r.bounds;
                     float ground = terrain != null ? terrain.SampleHeight(b.center) + terrain.transform.position.y : 0f;
