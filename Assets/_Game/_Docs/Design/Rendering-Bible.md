@@ -37,19 +37,20 @@ Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights d
 5. **ComicStyle** (BeforeRenderingPostProcessing): cast-shadow restyle, cloud shadows, Sobel outlines. Skips sky pixels.
 4b. **Volumetric Fog & Mist 2** (half-res raymarch + 1 blur pass), driven by `VolumetricAtmosphereDriver`:
    - `VF_GroundMist` — terrain-fitted ground fog that **only appears in fog weather** (`WeatherProfile.volumetricFog`:
-     Fog 1, Blizzard 0.5, Overcast 0.15, everything else 0; any Rain profile always reads 0 — air rains *or* fogs).
+     Fog 1, Blizzard 0.5, everything else 0; any Rain profile always reads 0 — air rains *or* fogs).
      It samples the sun's shadow map, so buildings cut shafts through it.
-   - `VF_WaterMist` — low "Water Mist" volumes over each lake and along the rivers, rising at dusk (17:45–20:45)
+   - `VF_WaterMist` — low "Water Mist" volumes over each lake and along the rivers, building at dusk from 17:45 and thinning slowly until 22:00
      on dry evenings.
    - Volumes at ~0 are switched off entirely (no cost in clear or rainy weather). Both sample APV, so baked lamp
      light tints the mist at night.
    **Volumetric Lights**: every lit street lamp has a cone (`StreetLampController`), on dusk→dawn, faint in clear air
-   and stronger in fog / water mist (`VolumetricAtmosphereDriver.FogAmount`), distance-toggled at 45–65 m.
+   and stronger only in fog weather (`VolumetricAtmosphereDriver.FogAmount`; local water mist doesn't count), distance-toggled at 45–65 m.
 6. **SunShafts** (BeforeRenderingPostProcessing + 1): sky / cloud god rays, added before post so Bloom catches them.
    Kept alongside the mist: the shafts own the sky, the mist owns the streets.
 7. **Beautify 3** (AfterRenderingTransparents — i.e. *before* URP post, on the HDR frame) owns **tonemapping
    (PBR Neutral)**, **bloom** (threshold 1, intensity 0.4, spread 0.58, warm `#FFF1E0` tint) and the **ink vignette**
-   (outer ring 0.28, fade 0.45, `#14122B`), plus depth-aware sharpen (1.6), vibrance (+0.35), contrast 1.03, a faint
+   (rings 0.1 → 0.5, ink `#14122B` at 60 %, **fade 0** — Beautify's "fade" fades the whole frame to the
+   vignette colour, it is not edge softness), plus depth-aware sharpen (1.6), vibrance (+0.35), contrast 1.03, a faint
    warm anamorphic streak and dither 0.005. Its grain, outline, sun flare, eye adaptation and depth of field stay off.
 8. URP post: Tonemapping **None**, Bloom/Vignette **off** (Beautify has them) → **Split Toning / Lift Gamma Gain** →
    **Color Adjustments** (runtime) → **Chromatic Aberration** (0 at rest; GameFeel pulses it on heavy hits) →
@@ -372,6 +373,13 @@ Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Ed
 - **Shadowmask mixed lighting** for interiors once indoor zones exist: crisp baked shadows far away, realtime up close.
 
 ## Changelog
+
+- **2026-10-02 (night fix)**:
+  - Night "haze" was Beautify's vignette fade (0.45) mixing 45 % ink into every pixel; fade is now 0.
+  - Ground fog only in Fog / Blizzard weather (Overcast 0); dusk water mist lifts slowly until 22:00.
+  - Local player gets a soft shadowless night fill light (`PlayerNightLight`, dusk → dawn).
+  - Paving tiles have mesh colliders: NavMesh, clicks, foot IK and ground rings sit on the visible surface
+    (`GroundSnap` places markers and dust on it).
 
 - **2026-10-02 (pass 2)**:
   - Beautify now owns tonemapping, bloom and vignette (URP's off); corrected the frame order (Beautify runs before URP post).

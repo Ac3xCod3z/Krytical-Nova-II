@@ -12,7 +12,7 @@ namespace KryticalNova.UI
     [DisallowMultipleComponent]
     public sealed class WorldMarkerPresenter : MonoBehaviour, IWorldMarkerSink
     {
-        private const float GroundLift = 0.05f;
+        private const float GroundLift = 0.04f;
         private const float ArriveDistance = 0.6f;
         private const float MoveMarkerLifetime = 12f;
         private const float AppearSeconds = 0.22f;
@@ -100,6 +100,8 @@ namespace KryticalNova.UI
 
         public void ShowMoveMarker(Transform moverTransform, Vector3 point, Vector3 normal)
         {
+            // Destinations come from the NavMesh, which sits below the paving: put the ring on the visible surface.
+            point = GroundSnap.Snap(point, out normal, moverTransform);
             if (isActiveAndEnabled) ClientPresentationRegistry.Feel?.MoveCommand(point, normal);
             if (!isActiveAndEnabled || !HudPreferences.ShowMoveMarker) return;
             mover = moverTransform;
@@ -205,8 +207,9 @@ namespace KryticalNova.UI
         private void UpdateTargetPose()
         {
             if (target == null) return;
-            Vector3 feet = target.position;
-            feet.y += targetFootOffset + GroundLift;
+            // Pivots and collider bottoms can sit below the tiles; ride the visible ground under the target instead.
+            Vector3 feet = GroundSnap.Snap(target.position + Vector3.up * targetFootOffset, target);
+            feet.y += GroundLift;
             targetRing3D.Root.SetPositionAndRotation(feet, Quaternion.identity);
             targetRing3D.Root.localScale = Vector3.one * targetDiameter;
         }

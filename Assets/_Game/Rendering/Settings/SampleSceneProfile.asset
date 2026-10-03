@@ -756,13 +756,13 @@ MonoBehaviour:
     m_Value: 0.15
   vignettingOuterRing:
     m_OverrideState: 1
-    m_Value: 0.28
+    m_Value: 0.5
   vignettingInnerRing:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.1
   vignettingFade:
     m_OverrideState: 1
-    m_Value: 0.45
+    m_Value: 0
   vignettingCircularShape:
     m_OverrideState: 1
     m_Value: 0
@@ -783,7 +783,7 @@ MonoBehaviour:
     m_Value: {x: 0.5, y: 0.5}
   vignettingColor:
     m_OverrideState: 1
-    m_Value: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+    m_Value: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 0.6}
   vignettingMask:
     m_OverrideState: 0
     m_Value: {fileID: 0}

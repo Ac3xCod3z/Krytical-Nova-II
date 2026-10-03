@@ -53,7 +53,7 @@ namespace KryticalNova.EditorTools
             { "WP_FewClouds",    new WeatherLook("A9C4E000", 0.0024f,   6f,  3f, 0f) },
             { "WP_PartlyCloudy", new WeatherLook("A9C4E000", 0.0026f,   4f,  2f, 0f) },
             { "WP_MostlyCloudy", new WeatherLook("A4B2CC26", 0.0030f,  -4f,  0f, 0.1f) },
-            { "WP_Overcast",     new WeatherLook("9EA8C859", 0.0045f, -10f, -2f, 0.3f, 0.15f) },
+            { "WP_Overcast",     new WeatherLook("9EA8C859", 0.0045f, -10f, -2f, 0.3f, 0f) },
             { "WP_Fog",          new WeatherLook("B4BEDC66", 0.0140f, -12f, -4f, 0.35f, 1f) },
             { "WP_LightRain",    new WeatherLook("98A4C466", 0.0055f, -10f,  0f, 0.35f) },
             { "WP_Rain",         new WeatherLook("7C88B080", 0.0075f, -15f,  4f, 0.4f) },

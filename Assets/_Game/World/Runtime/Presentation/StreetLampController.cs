@@ -6,8 +6,8 @@ namespace KryticalNova.World
     /// <summary>
     /// A lit street lamp (prefab variant SM_Prop_Streetlight_01_Lit). Its Light is **Baked**: the street pool and the
     /// glow in the volumetric mist come from the APV "Night" lighting scenario, at no runtime cost. This only drives the
-    /// visible light cone (Kronnect VolumetricLight): on from dusk to dawn, faint in clear air and strong in fog or
-    /// dusk water mist (<see cref="VolumetricAtmosphereDriver.FogAmount"/>). The cone also distance-toggles itself.
+    /// visible light cone (Kronnect VolumetricLight): on from dusk to dawn, faint in clear air and strong in fog
+    /// weather (<see cref="VolumetricAtmosphereDriver.FogAmount"/>). The cone also distance-toggles itself.
     /// Never runs on a headless server.
     /// </summary>
     [DisallowMultipleComponent]

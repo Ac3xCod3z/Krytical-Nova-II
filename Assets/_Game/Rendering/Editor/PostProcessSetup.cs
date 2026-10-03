@@ -115,12 +115,16 @@ namespace KryticalNova.EditorTools
             b.anamorphicFlaresTint.Override(new Color(1f, 0.82f, 0.6f, 0f));
             b.sunFlaresIntensity.Override(0f);    // EnvironmentPresenter's LensFlare owns the sun
             b.depthOfField.Override(false);
-            // Comic-panel framing in ink, not black.
-            b.vignettingOuterRing.Override(0.28f);
-            b.vignettingInnerRing.Override(0f);
-            b.vignettingFade.Override(0.45f);
+            // Comic-panel framing in ink, not black. Rings are squared distances from the centre: clear inside the inner
+            // ring, full ink past the outer. Alpha is the strength. vignettingFade is NOT edge softness: it fades the
+            // whole frame to the vignette colour (blink / fade-out), so it stays 0. At 0.45 it laid a flat ink veil over
+            // every pixel, which read as purple haze at night when the scene is darker than the ink.
+            b.vignettingOuterRing.Override(0.5f);
+            b.vignettingInnerRing.Override(0.1f);
+            b.vignettingFade.Override(0f);
             b.vignettingCircularShape.Override(false);
-            b.vignettingColor.Override(ColorBible.Ink);
+            var ink = ColorBible.Ink;
+            b.vignettingColor.Override(new Color(ink.r, ink.g, ink.b, 0.6f));
             b.filmGrainEnabled.Override(false);
             b.chromaticAberrationIntensity.Override(0f);
             b.outline.Override(false);            // ComicStyleFeature owns the ink outlines

@@ -216,6 +216,8 @@ namespace KryticalNova.Player
                 fader.Configure(transform, occluderDitherShader);
             }
 
+            // Soft hero light so the local character stays readable at night.
+            PlayerNightLight.AttachTo(transform);
         }
 
         private void Start()

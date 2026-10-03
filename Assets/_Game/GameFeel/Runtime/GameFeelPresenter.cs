@@ -177,7 +177,7 @@ namespace KryticalNova.GameFeel
             }
         }
 
-        private static Vector3 FootPoint(Transform t) => t.position + Vector3.up * 0.05f;
+        private static Vector3 FootPoint(Transform t) => GroundSnap.Snap(t.position, t) + Vector3.up * 0.05f;
 
         private static Vector3 FlatForward(Transform t)
         {

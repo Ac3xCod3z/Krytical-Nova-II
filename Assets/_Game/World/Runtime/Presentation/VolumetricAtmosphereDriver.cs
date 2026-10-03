@@ -11,7 +11,7 @@ namespace KryticalNova.World
     /// Volumes at ~0 are switched off entirely, so clear or rainy weather costs nothing. Sun/moon colour comes from
     /// the VolumetricFogManager's light sync; this owns density, albedo and on/off. Play mode works on instanced
     /// profiles (<see cref="VolumetricFog.settings"/>), never the assets. Headless servers and low tiers skip it.
-    /// <see cref="FogAmount"/> tells other presentation (street-lamp light cones) how foggy the air is.
+    /// <see cref="FogAmount"/> tells other presentation (street-lamp light cones) how foggy the air is in fog weather.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(60)] // after EnvironmentPresenter (50) has published this frame's atmosphere
@@ -19,9 +19,11 @@ namespace KryticalNova.World
     {
         [SerializeField] private VolumetricFog fog;
         [SerializeField] private VolumetricFog[] waterMists = new VolumetricFog[0];
-        [Tooltip("Dusk window in hours (start, end) when water mist forms; it fades in/out over Dusk Fade Hours.")]
-        [SerializeField] private Vector2 duskHours = new Vector2(17.75f, 20.75f);
-        [Min(0.05f)] [SerializeField] private float duskFadeHours = 0.75f;
+        [Tooltip("Dusk window in hours (start, end) when water mist exists. It builds over Dusk Fade In Hours from the start, "
+            + "then thins away slowly over Dusk Fade Out Hours before the end.")]
+        [SerializeField] private Vector2 duskHours = new Vector2(17.75f, 22f);
+        [Min(0.05f)] [SerializeField] private float duskFadeInHours = 0.75f;
+        [Min(0.05f)] [SerializeField] private float duskFadeOutHours = 2f;
         [Range(0f, 1f)] [SerializeField] private float albedoFromFogColor = 0.65f;
         [Tooltip("Seconds to ease weight changes (weather blends are already smooth; this hides quality-tier pops).")]
         [Min(0.01f)] [SerializeField] private float smoothingSeconds = 2f;
@@ -32,7 +34,7 @@ namespace KryticalNova.World
         private static float publishedRain;
         private static float publishedHours = 12f;
 
-        /// <summary>How foggy the air around the player is, 0-1 (max of ground fog and water mist). Presentation only.</summary>
+        /// <summary>How foggy the air is town-wide, 0-1 (fog weather only; local water mist excluded). Presentation only.</summary>
         public static float FogAmount { get; private set; }
 
         private Layer ground;
@@ -103,8 +105,9 @@ namespace KryticalNova.World
             Apply(ref ground, groundTarget, k);
             for (int i = 0; i < water.Length; i++) Apply(ref water[i], waterTarget, k);
 
-            float waterWeight = water.Length > 0 ? water[0].Weight : 0f;
-            FogAmount = Mathf.Max(ground.Weight, waterWeight * 0.7f);
+            // Only fog weather thickens the air town-wide. Water mist is local to the lakes and rivers, so it must not
+            // brighten every lamp cone in the city at dusk.
+            FogAmount = ground.Weight;
         }
 
         private void Apply(ref Layer layer, float target, float k)
@@ -128,12 +131,13 @@ namespace KryticalNova.World
             }
         }
 
-        /// <summary>0 outside the dusk window, ramping to 1 over <see cref="duskFadeHours"/> at each end.</summary>
+        /// <summary>0 outside the dusk window: builds quickly at sunset, then lifts slowly as the evening goes on.</summary>
         private float DuskWeight(float hours)
         {
-            float fadeIn = Mathf.InverseLerp(duskHours.x, duskHours.x + duskFadeHours, hours);
-            float fadeOut = 1f - Mathf.InverseLerp(duskHours.y - duskFadeHours, duskHours.y, hours);
-            return hours < duskHours.x || hours > duskHours.y ? 0f : Mathf.Clamp01(Mathf.Min(fadeIn, fadeOut));
+            if (hours < duskHours.x || hours > duskHours.y) return 0f;
+            float fadeIn = Mathf.InverseLerp(duskHours.x, duskHours.x + duskFadeInHours, hours);
+            float fadeOut = 1f - Mathf.InverseLerp(duskHours.y - duskFadeOutHours, duskHours.y, hours);
+            return Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(Mathf.Min(fadeIn, fadeOut)));
         }
 
         private bool IsDisabledTier(int level)
