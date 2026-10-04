@@ -614,6 +614,10 @@ MonoBehaviour:
   startWeather: {fileID: 11400000, guid: 6c9b9d0296dfc1643b8e8b9edcb7d19b, type: 2}
   autoWeather: 1
   coverageDriftPeriod: 300
+  gustPeriod: 5
+  maxGustBoost: 0.8
+  windSwellPeriod: 90
+  windSwellAmount: 0.25
   debugHours: 12
   debugWeather: {fileID: 0}
   debugTransitionSeconds: 10
@@ -645,6 +649,8 @@ GameObject:
   - component: {fileID: 546974347}
   - component: {fileID: 546974349}
   - component: {fileID: 546974350}
+  - component: {fileID: 546974351}
+  - component: {fileID: 546974352}
   m_Layer: 0
   m_Name: Progression UI
   m_TagString: Untagged
@@ -773,6 +779,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57693b489e173cc4783cce590139ff37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.MinimapController
+--- !u!114 &546974351
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7e9879255329ad46b30de45fa10cc0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.ChatWindowController
+--- !u!114 &546974352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf09a64bd70eeb94abc22868f4432f20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.DuelHudController
 --- !u!114 &590200685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1698,8 +1728,36 @@ MonoBehaviour:
     useShelter: 0
   blizzardThreshold: 0.7
   windZone: {fileID: 0}
+  windGustsPrefab: {fileID: 0}
+  windStreakSpeedRange: {x: 8, y: 18}
+  rainWindDrift: 0.6
+  snowWindDrift: 0.35
   windZoneScale: 0.06
+  foliageFullWindSpeed: 20
+  waterWindScroll: 0.004
   snapSize: 1
+  maxVelocityLead: 40
+  velocitySmoothing: 0.1
+  followPlayerJumps: 1
+  rainRadius: 20
+  precipitationCollides: 1
+  splashRadius: 12
+  splashRayHeight: 40
+  splashesPerSecond: 140
+  rainDropWidth: {x: 0.012, y: 0.02}
+  rainStreakLength: 0.03
+  rainGravity: 0.3
+  rainFallSpeed: 10
+  rainOpacity: 0.38
+  splashDropWidth: {x: 0.006, y: 0.012}
+  splashStretch: 2.5
+  rainMaxScreenSize: 0.004
+  litTint: {r: 0.82, g: 0.88, b: 1, a: 1}
+  darkTint: {r: 0.16, g: 0.18, b: 0.24, a: 1}
+  keyLightInfluence: 0.3
+  rippleTexture: {fileID: 0}
+  rippleChance: 0.55
+  rippleSize: {x: 0.25, y: 0.5}
   shelterMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1748,7 +1806,11 @@ MonoBehaviour:
   skyMaterial: {fileID: 2100000, guid: 85edaf0aa49d62c488cdd9b1371e5281, type: 2}
   postVolume: {fileID: 832575518}
   cloudNoise: {fileID: 2800000, guid: 0fa9bd80c310041438dad7e54d755743, type: 3}
+  sunTexture: {fileID: 0}
+  moonTexture: {fileID: 0}
   lightning: {fileID: 1523991250}
+  sunFlare: {fileID: 0}
+  sunFlareStrength: 1
   cloudHeight: 2000
   cloudTileSize: 7000
   detailScale: 2
@@ -1756,7 +1818,10 @@ MonoBehaviour:
   detailWindMultiplier: 1.6
   cloudShadows: 1
   cloudShadowSoftness: 2.5
-  rotationThresholdDegrees: 0.05
+  clockSmoothingSeconds: 2
+  clockSnapThreshold01: 0.01
+  lowSunShadowFadeStart: 0.02
+  lowSunShadowFadeEnd: 0.08
   shadowsOffBelow: 0.04
   minLightShadowStrength: 0.65
   lightningLightBoost: 2.5
@@ -1766,10 +1831,23 @@ MonoBehaviour:
   ambientUpdateInterval: 0.1
   lowQualityLevels:
   - Mobile
+  rainbowLingerSeconds: 150
+  rainbowFadeSeconds: 8
+  rainbowPeak: 0.25
+  haloChancePerDay: 0.06
+  moonHaloChancePerNight: 0.04
+  haloWindowHours: 2.5
+  haloPeak: 0.6
+  haloFadeSeconds: 10
+  shimmerStrength: 1
   previewInEditMode: 1
+  previewFogInEditMode: 0
   previewDayCycle: {fileID: 11400000, guid: a7f0ae27afcd779428e89fd93f980779, type: 2}
   previewWeather: {fileID: 11400000, guid: 6c9b9d0296dfc1643b8e8b9edcb7d19b, type: 2}
   previewHours: 10
+  previewMoonPhase: 0.5
+  previewRainbow: 0
+  previewHalo: {x: 0, y: 0}
 --- !u!4 &1523991252
 Transform:
   m_ObjectHideFlags: 0

@@ -15,7 +15,9 @@ namespace KryticalNova.Player
         Jumping,
         Equipping,
         Unequipping,
-        Attacking
+        Attacking,
+        /// <summary>Killed: the death clips own the body until the character is revived.</summary>
+        Dead
     }
 
     /// <summary>
@@ -553,6 +555,15 @@ namespace KryticalNova.Player
 
         private void PlayWeaponDrawAnimation(bool draw)
         {
+            if (currentState == CharacterAnimState.Dead)
+            {
+                // A body on the ground does not draw: the stance just changes for when it gets back up.
+                bool differs = presentedWeaponDrawn != draw;
+                presentedWeaponDrawn = draw;
+                AttachKatanaToSocket(draw);
+                if (differs) OnWeaponStanceChanged?.Invoke(draw);
+                return;
+            }
             StopActiveActionRoutine();
 
             bool changed = presentedWeaponDrawn != draw;
@@ -733,6 +744,7 @@ namespace KryticalNova.Player
 
         public void PlayJumpTakeoff()
         {
+            if (currentState == CharacterAnimState.Dead) return;
             StopActiveActionRoutine();
 
             activeActionRoutine = StartCoroutine(JumpTakeoffRoutine());
@@ -763,6 +775,7 @@ namespace KryticalNova.Player
 
         public void PlayJumpLanding()
         {
+            if (currentState == CharacterAnimState.Dead) return;
             StopActiveActionRoutine();
 
             activeActionRoutine = StartCoroutine(JumpLandingRoutine());
@@ -799,7 +812,7 @@ namespace KryticalNova.Player
         /// </summary>
         public void PlayWarpedJump()
         {
-            if (!HasWarpedJump) return;
+            if (!HasWarpedJump || currentState == CharacterAnimState.Dead) return;
             StopActiveActionRoutine();
             currentState = CharacterAnimState.Jumping;
             stopState = null;
@@ -881,7 +894,7 @@ namespace KryticalNova.Player
         /// </summary>
         public void PlayWarpedAction(AnimationClip clip, float startTime, float speed, float fadeIn)
         {
-            if (animancer == null || clip == null) return;
+            if (animancer == null || clip == null || currentState == CharacterAnimState.Dead) return;
             StopActiveActionRoutine();
             currentState = CharacterAnimState.Jumping;
             stopState = null;
@@ -898,6 +911,7 @@ namespace KryticalNova.Player
         /// </summary>
         public void EndWarpedAction(float fadeOut, float resumeSpeed)
         {
+            if (currentState == CharacterAnimState.Dead) return;
             StopActiveActionRoutine();
             warpedJumpActive = false;
             warpedJumpState = null;
@@ -918,6 +932,7 @@ namespace KryticalNova.Player
 
         private void FinishJump()
         {
+            if (currentState == CharacterAnimState.Dead) return; // died in the air: the death clips keep the body
             currentState = CharacterAnimState.Locomotion;
             currentLocomotionClip = null;
         }
@@ -930,6 +945,8 @@ namespace KryticalNova.Player
         private void OnDamaged(DamageResult result, CharacterCombatStats attacker)
         {
             if (result.IsEvaded || result.IsReflected || result.DamageDealt <= 0f) return;
+            // The killing blow has its own animation (PlayerDeathMotor); a corpse does not flinch.
+            if (combatEntity != null && !combatEntity.IsAlive) return;
             Vector3 toward = attacker != null ? attacker.transform.position - transform.position : transform.forward;
             bool heavy = result.IsCritical || result.DamageDealt >= combatEntity.MaxHealth * heavyHitHealthFraction;
             ShowHitReaction(toward, heavy);
@@ -953,7 +970,7 @@ namespace KryticalNova.Player
         {
             if (animancer == null || !isActiveAndEnabled) return;
             // A jump or vault is moved by its own clip chain; a draw/sheath owns the upper-body layer.
-            if (currentState == CharacterAnimState.Jumping || IsWeaponDrawActionPlaying) return;
+            if (currentState == CharacterAnimState.Jumping || currentState == CharacterAnimState.Dead || IsWeaponDrawActionPlaying) return;
             if (Time.time < nextHitReactionTime) return;
             AnimationClip clip = HitClipFor(towardAttacker, heavy);
             if (clip == null) return;
@@ -1019,10 +1036,62 @@ namespace KryticalNova.Player
 
         #endregion
 
+        #region Death
+
+        public bool IsDead => currentState == CharacterAnimState.Dead;
+
+        /// <summary>
+        /// Plays one clip of a death: the fall, the flight, or the loop the body is left lying in. The first call
+        /// takes the body away from whatever it was doing; nothing gives it back until <see cref="Revive"/>. The
+        /// caller (PlayerDeathMotor) moves the root with Motion Warping on the same clock.
+        /// </summary>
+        public AnimancerState PlayDeathClip(AnimationClip clip, float fadeIn)
+        {
+            if (animancer == null || clip == null) return null;
+            if (currentState != CharacterAnimState.Dead)
+            {
+                StopActiveActionRoutine();
+                if (hitRoutine != null)
+                {
+                    StopCoroutine(hitRoutine);
+                    hitRoutine = null;
+                }
+                hitHoldsBody = false;
+                warpedJumpActive = false;
+                warpedJumpState = null;
+                stopState = null;
+                FadeOutUpperBody(fadeIn);
+                currentState = CharacterAnimState.Dead;
+                currentLocomotionClip = null;
+                currentLocomotionState = null;
+            }
+
+            AnimancerState state = animancer.Layers[0].Play(clip, fadeIn);
+            state.Time = 0f;
+            state.Speed = 1f;
+            state.ApplyFootIK = false; // a body on the ground has no feet to plant
+            return state;
+        }
+
+        /// <summary>Back on its feet (after a respawn): the body returns to locomotion.</summary>
+        public void Revive(float fadeIn)
+        {
+            if (currentState != CharacterAnimState.Dead) return;
+            currentState = CharacterAnimState.Locomotion;
+            currentLocomotionClip = null;
+            speedCount = 0; // it was put somewhere else in one step: that is not travel
+            currentSpeed = 0f;
+            AnimationClip idle = LocomotionClipForSpeed();
+            if (idle != null) PlayLocomotionClip(idle, fadeIn);
+        }
+
+        #endregion
+
         #region Attack Action Hooks
 
         public void SetAttackingState(bool attacking)
         {
+            if (currentState == CharacterAnimState.Dead) return;
             if (attacking)
             {
                 StopActiveActionRoutine();

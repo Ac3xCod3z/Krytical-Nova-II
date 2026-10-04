@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="ChatWindow.uss" />
+    <!-- Instanced into ProgressionHUD.uxml; driven by ChatWindowController. Tabs and lines are added in code.
+         Not .hud-movable: the chat always sits in the bottom-left corner and is only resized, from its own grip. -->
+    <ui:VisualElement name="chat-window" class="chat-window panel blocks-world">
+        <ui:VisualElement name="chat-tabs" class="chat-tabs" />
+        <ui:ScrollView name="chat-log" class="chat-log" mode="Vertical" horizontal-scroller-visibility="Hidden" />
+        <ui:VisualElement class="chat-input-row">
+            <ui:Label name="chat-channel" text="GENERAL" class="chat-channel" />
+            <ui:TextField name="chat-input" class="kn-textfield chat-input" max-length="200" />
+        </ui:VisualElement>
+        <ui:Label name="chat-hint" text="[ENTER] to chat" class="chat-hint" picking-mode="Ignore" />
+        <ui:VisualElement name="chat-resize" class="chat-resize" tooltip="Drag to resize" />
+    </ui:VisualElement>
+</ui:UXML>

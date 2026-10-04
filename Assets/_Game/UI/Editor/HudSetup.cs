@@ -23,6 +23,8 @@ namespace KryticalNova.EditorTools
         private const string GearType = "KryticalNova.UI.GearUIController, KryticalNova.UI";
         private const string MinimapType = "KryticalNova.UI.MinimapController, KryticalNova.UI";
         private const string WorldMapType = "KryticalNova.UI.WorldMapController, KryticalNova.UI";
+        private const string ChatType = "KryticalNova.UI.ChatWindowController, KryticalNova.UI";
+        private const string DuelType = "KryticalNova.UI.DuelHudController, KryticalNova.UI";
 
         [MenuItem("Krytical Nova/UI/Set Up HUD In Open Scene")]
         public static void SetUpOpenScene()
@@ -53,6 +55,10 @@ namespace KryticalNova.EditorTools
             if (minimapType != null) EnsureComponent(hudObject, minimapType);
             var worldMapType = System.Type.GetType(WorldMapType);
             if (worldMapType != null) EnsureComponent(hudObject, worldMapType);
+            var chatType = System.Type.GetType(ChatType);
+            if (chatType != null) EnsureComponent(hudObject, chatType);
+            var duelType = System.Type.GetType(DuelType);
+            if (duelType != null) EnsureComponent(hudObject, duelType);
 
             var markers = Object.FindAnyObjectByType(markersType, FindObjectsInactive.Include) as Component;
             if (markers == null)

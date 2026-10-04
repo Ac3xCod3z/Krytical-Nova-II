@@ -88,7 +88,11 @@ namespace KryticalNova.UI.Menus
         private Tab tab;
         private int slot = -1;
         private int lastEditSource;
-        private int previewFace, previewIdle, previewEmote = -1;
+        // Preview tab: stances and emotes are browsed by group (one row picks the group, the next the motion in it).
+        private int previewFace, stanceGroup, stanceInGroup, emoteGroup;
+        private int emoteInGroup = -1; // none played yet
+        private readonly List<string> stanceGroups = new List<string>(), emoteGroups = new List<string>();
+        private readonly List<List<int>> stanceMembers = new List<List<int>>(), emoteMembers = new List<List<int>>();
         private string suggestion;
         private string pendingName;
         private bool nameValid;
@@ -140,6 +144,8 @@ namespace KryticalNova.UI.Menus
 
         private void ShowTab(Tab next)
         {
+            // The preview is not saved with the character: leaving the tab puts the face and stance back.
+            if (tab == Tab.Preview && next != Tab.Preview) ResetPreview();
             tab = next;
             for (int i = 0; i < tabButtons.Length; i++)
                 if (tabButtons[i] != null) tabButtons[i].SetSelected(i == (int)next);
@@ -367,21 +373,60 @@ namespace KryticalNova.UI.Menus
                     previewFace = Wrap(previewFace + direction, library.Faces.Count);
                     showroom.SetFace(previewFace);
                 });
-            if (library != null && library.Idles.Count > 0 && row < optionRows.Length)
-                optionRows[row++].Show("Stance", () => library.Idles[previewIdle].name, direction =>
+            if (library != null && library.Idles.Count > 0 && row + 1 < optionRows.Length)
+            {
+                CharacterExpressionLibrary.Group(library.Idles, recipe.bodyType, stanceGroups, stanceMembers);
+                stanceGroup = Mathf.Clamp(stanceGroup, 0, stanceGroups.Count - 1);
+                stanceInGroup = Mathf.Clamp(stanceInGroup, 0, stanceMembers[stanceGroup].Count - 1);
+                optionRows[row++].Show("Stance Group", () => Counted(stanceGroups[stanceGroup], stanceGroup, stanceGroups.Count), direction =>
                 {
-                    previewIdle = Wrap(previewIdle + direction, library.Idles.Count);
-                    showroom.PlayIdle(previewIdle);
+                    stanceGroup = Wrap(stanceGroup + direction, stanceGroups.Count);
+                    stanceInGroup = 0;
+                    showroom.PlayIdle(stanceMembers[stanceGroup][0]);
+                    RefreshOptionRows();
                 });
-            if (library != null && library.Emotes.Count > 0 && row < optionRows.Length)
-                optionRows[row++].Show("Emote", () => previewEmote >= 0 ? library.Emotes[previewEmote].name : "Use the arrows", direction =>
+                optionRows[row++].Show("Stance", () => Counted(library.Idles[stanceMembers[stanceGroup][stanceInGroup]].name,
+                    stanceInGroup, stanceMembers[stanceGroup].Count), direction =>
                 {
-                    previewEmote = Wrap(previewEmote + direction, library.Emotes.Count);
-                    showroom.PlayEmote(previewEmote);
+                    stanceInGroup = Wrap(stanceInGroup + direction, stanceMembers[stanceGroup].Count);
+                    showroom.PlayIdle(stanceMembers[stanceGroup][stanceInGroup]);
                 });
+            }
+            if (library != null && library.Emotes.Count > 0 && row + 1 < optionRows.Length)
+            {
+                CharacterExpressionLibrary.Group(library.Emotes, recipe.bodyType, emoteGroups, emoteMembers);
+                emoteGroup = Mathf.Clamp(emoteGroup, 0, emoteGroups.Count - 1);
+                emoteInGroup = Mathf.Min(emoteInGroup, emoteMembers[emoteGroup].Count - 1);
+                optionRows[row++].Show("Emote Group", () => Counted(emoteGroups[emoteGroup], emoteGroup, emoteGroups.Count), direction =>
+                {
+                    emoteGroup = Wrap(emoteGroup + direction, emoteGroups.Count);
+                    emoteInGroup = 0;
+                    showroom.PlayEmote(emoteMembers[emoteGroup][0]);
+                    RefreshOptionRows();
+                });
+                optionRows[row++].Show("Emote", () => emoteInGroup >= 0
+                    ? Counted(library.Emotes[emoteMembers[emoteGroup][emoteInGroup]].name, emoteInGroup, emoteMembers[emoteGroup].Count)
+                    : "Use the arrows", direction =>
+                {
+                    int count = emoteMembers[emoteGroup].Count;
+                    // Nothing played yet: right starts at the first, left at the last.
+                    emoteInGroup = emoteInGroup < 0 ? (direction > 0 ? 0 : count - 1) : Wrap(emoteInGroup + direction, count);
+                    showroom.PlayEmote(emoteMembers[emoteGroup][emoteInGroup]);
+                });
+            }
             HideOptionRows(row);
             foreach (var slider in sliderRows) slider.Hide();
         }
+
+        private void ResetPreview()
+        {
+            previewFace = 0;
+            stanceGroup = stanceInGroup = 0;
+            emoteInGroup = -1;
+            if (showroom != null) showroom.ResetPreview();
+        }
+
+        private static string Counted(string name, int index, int count) => $"{name}  ({index + 1}/{count})";
 
         private static int Wrap(int index, int count) => ((index % count) + count) % count;
 

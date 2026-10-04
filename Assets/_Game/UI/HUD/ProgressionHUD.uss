@@ -122,7 +122,8 @@
 .kn-toggle { margin-top: 6px; }
 .keys-help { -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf"); color: rgb(196, 210, 222); }
 
-#network-panel { position: absolute; left: 16px; bottom: 16px; width: 290px; padding: 12px 16px; }
+/* Bottom right: the bottom-left corner belongs to the chat window. */
+#network-panel { position: absolute; right: 16px; bottom: 96px; width: 290px; padding: 12px 16px; }
 .network-status { margin-top: 4px; white-space: normal; font-size: 12px; }
 .network-fields { justify-content: flex-start; }
 .network-ip { flex-grow: 1; margin-right: 6px; }

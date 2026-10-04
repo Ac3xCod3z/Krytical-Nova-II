@@ -90,7 +90,7 @@ namespace KryticalNova.UI
             if (subscribedManager == null) SubscribeToManager();
 
             var keyboard = Keyboard.current;
-            if (keyboard != null && focusedFields == 0
+            if (keyboard != null && !IsTyping()
                 && (keyboard.backquoteKey.wasPressedThisFrame || keyboard.f1Key.wasPressedThisFrame))
                 SetVisible(panel, panel.resolvedStyle.display == DisplayStyle.None);
 
@@ -182,6 +182,16 @@ namespace KryticalNova.UI
             if (statusLabel == null) return;
             statusLabel.text = $"Error: {error}";
             statusLabel.style.color = new Color(1f, 0.45f, 0.45f);
+        }
+
+        // Any text field on the HUD, not only this panel's: a backquote typed into chat must not toggle the panel.
+        private bool IsTyping()
+        {
+            if (focusedFields > 0) return true;
+            var focused = root.panel?.focusController?.focusedElement as VisualElement;
+            for (VisualElement element = focused; element != null; element = element.parent)
+                if (element is TextField) return true;
+            return false;
         }
 
         private void SetTyping(int delta)

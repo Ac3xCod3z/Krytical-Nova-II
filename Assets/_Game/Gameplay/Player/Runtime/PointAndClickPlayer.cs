@@ -94,6 +94,9 @@ namespace KryticalNova.Player
         private PlayerInput playerInput;
         private PlayerMovementSkills movementSkills;
         private PlayerResources resources;
+        private const float SelectionRefreshInterval = 0.25f;
+        private WorldTargetKind selectedKind;
+        private float nextSelectionRefresh;
         private PlayerJumpMotor jumpMotor;
         private PlayerVaultMotor vaultMotor;
         private CharacterCombatStats combatStats;
@@ -349,6 +352,7 @@ namespace KryticalNova.Player
             }
 
             bool inputSuppressed = hotbar != null && hotbar.InputSuppressed;
+            RefreshSelectionKind();
 
             // Escape (CancelOrbit action) is the single cancel source: ends orbit and stops any melee attack.
             if (cancelOrbitAction.WasPressedThisFrame())
@@ -393,7 +397,7 @@ namespace KryticalNova.Player
                 return;
             }
 
-            if (!inputSuppressed && toggleWeaponAction.WasPressedThisFrame())
+            if (!inputSuppressed && (resources == null || resources.IsAlive) && toggleWeaponAction.WasPressedThisFrame())
             {
                 animancerMotor?.RequestToggleWeaponDraw();
             }
@@ -732,6 +736,7 @@ namespace KryticalNova.Player
         private void Select(Transform unit, WorldTargetKind kind)
         {
             selectedTarget = unit;
+            selectedKind = kind;
             ClientPresentationRegistry.Markers?.SetTarget(unit, kind);
         }
 
@@ -739,6 +744,22 @@ namespace KryticalNova.Player
         {
             selectedTarget = null;
             ClientPresentationRegistry.Markers?.ClearTarget();
+        }
+
+        /// <summary>
+        /// A selected player can turn from friend to foe and back while selected (a duel starts or ends, the GM
+        /// switches faction PvP): the ring follows.
+        /// </summary>
+        private void RefreshSelectionKind()
+        {
+            if (selectedTarget == null || Time.unscaledTime < nextSelectionRefresh) return;
+            nextSelectionRefresh = Time.unscaledTime + SelectionRefreshInterval;
+            var entity = selectedTarget.GetComponentInParent<IDamageable>();
+            if (entity == null) return;
+            WorldTargetKind kind = KryticalNova.Combat.CombatHostility.IsHostile(transform, entity) ? WorldTargetKind.Hostile : WorldTargetKind.Friendly;
+            if (kind == selectedKind) return;
+            selectedKind = kind;
+            ClientPresentationRegistry.Markers?.SetTarget(selectedTarget, kind);
         }
 
         /// <summary>Walks to just short of another unit (friendly player) without interacting.</summary>

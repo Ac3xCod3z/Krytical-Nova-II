@@ -5,7 +5,10 @@ namespace KryticalNova.Factions
     {
         FactionId Faction { get; }
 
-        /// <summary>A GM override of the faction rule for this member. <see cref="PvpStance.Faction"/> means none.</summary>
-        PvpStance Stance { get; }
+        /// <summary>
+        /// True while this member and <paramref name="other"/> are in a duel with each other: the one case in which
+        /// members who would be friendly may fight.
+        /// </summary>
+        bool IsDuelling(IFactionMember other);
     }
 }

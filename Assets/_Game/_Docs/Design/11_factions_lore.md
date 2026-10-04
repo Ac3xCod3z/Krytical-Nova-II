@@ -133,7 +133,13 @@ Used by the random-name button. One name, 3 to 16 letters.
 - **Starting territory:** all three factions currently spawn in Zone01 Starter Town. Faction territories come later.
 - **Faction PvP:** every character carries its faction and other players see it. Characters of different factions
   **are hostile**: they can attack each other. The default lives in `FactionCatalog.crossFactionPvp` (on). A GM can
-  switch it for everyone while playing (`gm.pvp`), and can pin one player to friendly or hostile whatever their
-  faction (`gm.stance friendly|hostile|faction`); both are also in the GM window's Cheats tab.
+  switch it for everyone while playing (`gm.pvp`, also in the GM window's Cheats tab).
+- **Same faction = friendly, except in a duel.** Players of one faction cannot hurt each other. The only exception
+  is a duel both agreed to: one asks (`/duel`, or the DUEL button shown when a friendly player is selected), the
+  other accepts, and after a 3 second countdown the two are hostile **to each other only**. The duel is to the
+  death: the loser dies and respawns like in any fight. It also ends, with the other player winning, on `/forfeit`,
+  walking 60 m from where it started, or leaving the game; a duelist killed by a third party ends it with no
+  winner. The winner sees YOU WIN and the loser YOU LOSE, each in their own faction's UI. GM: `gm.duel <a> <b>`,
+  `gm.duel.end`. Code: `PlayerDuel`, `FactionRules.AreHostile`, `CombatHostility`.
 - **Faction skills, wars and leadership** (module 08 sections 2 to 11) are not built. When they are, they attach to
   these three factions.

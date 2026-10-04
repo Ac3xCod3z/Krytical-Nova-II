@@ -107,6 +107,8 @@ namespace KryticalNova.Combat
         public float MeleeStrikingRange => meleeStrikingRange;
 
         public event Action<string> OnCombatMessage;
+        /// <summary>Raised where a hit is resolved (server or offline), after the damage was applied. Feeds the combat log.</summary>
+        public event Action<IDamageable, DamageResult> HitResolved;
 
         private void Awake()
         {
@@ -521,6 +523,8 @@ namespace KryticalNova.Combat
         private void ExecuteAuthoritativeStrike(IDamageable target, int comboStep)
         {
             if (target == null || !target.IsAlive) return;
+            // The client picks the target; the server decides whether it may be struck (a friend never is).
+            if (!CombatHostility.IsHostile(transform, target)) return;
 
             // Server-authoritative combo order / cadence validation (networked sessions only)
             if (IsSpawned && !ServerValidateHit(target, comboStep)) return;
@@ -584,6 +588,7 @@ namespace KryticalNova.Combat
             }
 
             ShowDamageToAttacker(target.Transform.position, result);
+            HitResolved?.Invoke(target, result);
 
             if (!result.IsEvaded)
             {
@@ -611,7 +616,8 @@ namespace KryticalNova.Combat
 
         // ------------------------------------------------------------------ the attacker's own feedback
         // Hits resolve on the server, but the damage number and the combat line belong to the player who dealt the
-        // blow and to nobody else. TODO(chat): the server relays combat to other players through the chat window.
+        // blow and to nobody else. The chat window's Combat tab is fed from HitResolved (see PlayerChat), again for
+        // the players involved only.
 
         private const byte CriticalBit = 1;
         private const byte EvadedBit = 2;

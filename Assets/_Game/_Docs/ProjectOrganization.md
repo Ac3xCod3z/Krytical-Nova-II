@@ -77,6 +77,8 @@ _Game/
 │   ├── NPC/               Runtime/  Data/Assets/
 │   ├── Player/            Runtime/  Prefabs/ (Player.prefab = the networked gameplay player)
 │   ├── Progression/       Runtime/  Data/ (SO classes)  Data/Assets/ (SO instances)  Editor/
+│   ├── Social/            Runtime/ (chat channels and rules, PlayerChat, the combat log; later guilds, parties)
+│   │                      Tests/Editor/
 │   └── (future) Skills/ Quests/ Interaction/ StatusEffects/ Inventory/
 ├── Characters/            Representation only: models, rigs, materials, animations, visual prefabs
 │   ├── Player/            Player_01/ (Sidekick character)  Animations/
@@ -102,7 +104,7 @@ _Game/
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
 ├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets)  Editor/ (Menus/ = front-end
-│                          scene builder, own assembly)  Common/  HUD/  Inventory/  NPC/  Shaders/
+│                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/)  Inventory/  NPC/  Shaders/
 │                          Menus/ (Materials/, KeyGlyphs.asset: assets the front-end scenes use)
 │                          (future: Skills/ Character/ World/ Settings/)
 ├── VFX/                   Gameplay/  GameFeel/  Environment/{City,Portals,Vehicles,Weather}/  Materials/ (shared FX mats)
@@ -149,7 +151,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 
 | Assembly                          | Defined in                                     | Covers (via .asmref)                                                     |
 |-----------------------------------|------------------------------------------------|---------------------------------------------------------------------------|
-| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation}/Runtime, {Progression,Factions,CharacterCreation}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
+| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social}/Runtime, {Progression,Factions,CharacterCreation}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime. Excluded from dedicated server (`!UNITY_SERVER`)      |
 | `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
@@ -159,6 +161,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Editor.Menus`       | `UI/Editor/Menus/`                             | Front-end scene builder. Depends on Editor, UI, Runtime, uGUI, TextMesh Pro. `!UNITY_SERVER` |
 | `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
 | `KryticalNova.CharacterCreation.Tests.Editor` | `Gameplay/CharacterCreation/Tests/Editor/` | EditMode tests (names, roster, recipes, creator edits, gear rules) |
+| `KryticalNova.Social.Tests.Editor` | `Gameplay/Social/Tests/Editor/`               | EditMode tests (chat channel rules, typed chat lines)                     |
 
 **Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
 **New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`

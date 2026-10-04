@@ -559,6 +559,65 @@
     font-size: 12.8px;
 }
 
+/* ---- ChatWindow.uss ---- */
+.kn-faction-null .chat-resize {
+    border-top-color: rgba(222, 65, 73, 0.55);
+    border-right-color: rgba(222, 65, 73, 0.55);
+}
+.kn-faction-null .chat-tab {
+    font-size: 12.8px;
+    color: rgb(194, 174, 200);
+}
+.kn-faction-null .chat-tab--active {
+    -unity-background-image-tint-color: rgb(128, 0, 6);
+}
+.kn-faction-null .chat-line {
+    font-size: 15.36px;
+}
+.kn-faction-null .chat-channel {
+    font-size: 12.8px;
+    color: rgb(194, 174, 200);
+}
+.kn-faction-null .chat-input {
+    font-size: 15.36px;
+}
+.kn-faction-null .chat-hint {
+    font-size: 12.8px;
+    color: rgba(194, 174, 200, 0.6);
+}
+
+/* ---- DuelPanels.uss ---- */
+.kn-faction-null .duel-target-name {
+    font-size: 16.64px;
+}
+.kn-faction-null .duel-target-button {
+    font-size: 14.08px;
+}
+.kn-faction-null .duel-request-text {
+    font-size: 19.2px;
+}
+.kn-faction-null .duel-request-button {
+    font-size: 15.36px;
+}
+.kn-faction-null .duel-timer {
+    background-color: rgba(59, 39, 66, 0.9);
+}
+.kn-faction-null .duel-timer-fill {
+    background-color: rgb(222, 65, 73);
+}
+.kn-faction-null .duel-result-eyebrow {
+    font-size: 15.36px;
+}
+.kn-faction-null .duel-result-title {
+    font-size: 71.68px;
+}
+.kn-faction-null .duel-result-detail {
+    font-size: 19.2px;
+}
+.kn-faction-null .duel-result--win .duel-result-title {
+    color: rgb(222, 65, 73);
+}
+
 /* ---- NpcInteraction.uss ---- */
 .kn-faction-null .nameplate {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Gradient_Outwards_01.png#SPR_HUD_DarkFantasy_Gradient_Outwards_01");

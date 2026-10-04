@@ -30,6 +30,18 @@ namespace KryticalNova.Networking
             if (instance == this) instance = null;
         }
 
+        /// <summary>
+        /// Server (or offline) only: puts a player who died back on one of this map's spawn points. Each map has its
+        /// own service and points, so where a death leads is decided by the scene. False when the map has none (the
+        /// player then gets up where they fell).
+        /// </summary>
+        public static bool Respawn(Transform player)
+        {
+            if (instance == null || player == null || PlayerSpawnPoint.Active.Count == 0) return false;
+            PlaceSpawnedPlayer(player);
+            return true;
+        }
+
         /// <summary>Called on the server by a player from its OnNetworkSpawn, before its first Start.</summary>
         public static void PlaceSpawnedPlayer(Transform player)
         {

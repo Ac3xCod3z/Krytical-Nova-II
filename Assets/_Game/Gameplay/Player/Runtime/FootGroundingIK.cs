@@ -106,7 +106,9 @@ namespace KryticalNova.Player
             lastPosition = position;
 
             float dt = Time.deltaTime;
-            bool grounded = motor == null || motor.CurrentState != CharacterAnimState.Jumping;
+            // In the air, or lying dead: there is nothing to plant the feet on.
+            bool grounded = motor == null
+                || (motor.CurrentState != CharacterAnimState.Jumping && motor.CurrentState != CharacterAnimState.Dead);
             masterWeight = settle ? (grounded ? 1f : 0f) : Mathf.MoveTowards(masterWeight, grounded ? 1f : 0f, weightBlendSpeed * dt);
 
             if (masterWeight <= 0f)

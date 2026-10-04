@@ -61,6 +61,17 @@ PvP has two separate goals:
 
 A player can therefore be valuable without simply having the highest damage.
 
+## 9. Krytical Nova II: what is built (2026-10-04)
+
+- **Individual PvP:** players of different factions fight freely (see `11_factions_lore.md`); players of the same
+  faction only in an accepted **duel**, pairwise and to the death.
+- **Death:** the killing blow picks the animation. A blow from the front half turns the body to face it and knocks
+  it over backwards; a blow from behind is taken as the body stands and knocks it down forwards. A critical kill
+  throws the body about 5.5 m away from the killer. The body lies where it lands, then the server respawns the
+  player on one of the map's spawn points after 8 s (Zone01: the Central Plaza). The countdown is in the chat's
+  Combat tab. Code: `PlayerDeathMotor`, `CombatEntity.Killed`, `PlayerSpawnService.Respawn`.
+- Not built: group, guild and faction warfare, contribution and class points, hero rank.
+
 ### Sources
 - Twelve Sky 2 Reborn — Class System Guide.
 - Twelve Sky 2 Reborn — Hero Rank System.

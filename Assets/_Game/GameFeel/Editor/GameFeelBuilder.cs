@@ -128,9 +128,119 @@ namespace KryticalNova.EditorTools
             Make("FX_PowerDraw_01", "PFX_Charge_Default", 0.55f, Yellow, loop: true);
             BuildRageCharge();
 
+            BuildDeathVfx();
             BuildAreaRing();
             BuildBladeTrail();
             UseUrpMaterials($"{GameplayVfxFolder}/FX_ComicSlash.prefab");
+        }
+
+        // ---------------------------------------------------------------- death & respawn
+
+        private const string DeathTrailName = "PFX_CritDeath_Trail";
+        private static readonly string[] DeathCameraPlayers = { "Death", "Critical Death", "Body Land", "Respawn" };
+        private static readonly string[] DeathWorldPlayers = { "Death", "Critical Death", "Body Land", "Critical Body Land", "Respawn" };
+
+        /// <summary>Effects of a death of their own: the blow that kills, the thrown body's trail and crater, the return.</summary>
+        private static void BuildDeathVfx()
+        {
+            Make("FX_Explosion_Body_01", "PFX_Death_Burst", 0.5f);                 // the life knocked out of the body
+            Make("FX_StarStunned_01", "PFX_Death_Stars", 0.8f);                    // stars over the body once it is down
+            Make("FX_Explosion_Body_01", "PFX_CritDeath_Blast", 0.9f, Red);        // a critical kill: bigger, in rage red
+            Make("FX_Smoke_Trail_Small_01", DeathTrailName, 0.8f, loop: true);     // rides on the thrown body
+            Make("FX_GroundCrack_Blast_01", "PFX_CritDeath_Crater", 0.5f);         // where the thrown body comes down
+            Make("FX_LightRayRound_01", "PFX_Respawn", 0.8f, Cyan);                // back on a spawn point
+        }
+
+        /// <summary>
+        /// Rebuilds the death and respawn effects and their players on the game feel prefab without regenerating the
+        /// rest of it (a full build rewrites every effect and the whole prefab, tuning included).
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Death Feel")]
+        public static void RebuildDeathFeel()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            BuildDeathVfx();
+            AssetDatabase.SaveAssets();
+
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                GameObject root = scope.prefabContentsRoot;
+                var presenter = root.GetComponent<GameFeelPresenter>();
+                Transform world = root.transform.Find("World");
+                if (presenter == null || world == null)
+                {
+                    Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
+                    return;
+                }
+                Remove(root.transform, DeathCameraPlayers);
+                Remove(world, DeathWorldPlayers);
+
+                var so = new SerializedObject(presenter);
+                AddDeathFeel(root, world.gameObject, so);
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[GameFeel] Death and respawn feel rebuilt on {PrefabPath}. Assign sounds on the new MMF_Sound slots.");
+        }
+
+        private static void Remove(Transform parent, string[] childNames)
+        {
+            foreach (string name in childNames)
+            {
+                Transform child = parent.Find(name);
+                if (child != null) Object.DestroyImmediate(child.gameObject);
+            }
+        }
+
+        private static void AddDeathFeel(GameObject root, GameObject world, SerializedObject so)
+        {
+            // ---- camera / screen / sound: the local player died, or killed
+            so.FindProperty("deathFeel").objectReferenceValue = Player(root, "Death", p =>
+            {
+                Sound(p, "Death");
+                Impulse(p, new Vector3(0.4f, 0.28f, 0f), 0.32f);
+                Chromatic(p, "Chromatic Punch", 0.25f, 0.6f);
+            });
+            so.FindProperty("critDeathFeel").objectReferenceValue = Player(root, "Critical Death", p =>
+            {
+                Sound(p, "Critical Death");
+                Impulse(p, new Vector3(0.9f, 0.55f, 0f), 0.45f);
+                Chromatic(p, "Chromatic Slam", 0.4f, 1f);
+                // The view punches out as the body is launched and settles while it flies.
+                var fov = p.AddFeedback(typeof(MMF_CameraFieldOfView)) as MMF_CameraFieldOfView;
+                fov.Label = "FOV Punch";
+                fov.Duration = 0.55f;
+                fov.RelativeFieldOfView = true;
+                fov.RemapFieldOfViewZero = 0f;
+                fov.RemapFieldOfViewOne = 7f;
+                fov.ShakeFieldOfView = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.12f, 1f), new Keyframe(1f, 0f));
+            });
+            so.FindProperty("bodyLandFeel").objectReferenceValue = Player(root, "Body Land", p =>
+            {
+                Sound(p, "Body Thud");
+                Impulse(p, new Vector3(0f, -0.4f, 0f), 0.22f);
+            });
+            so.FindProperty("respawnFeel").objectReferenceValue = Player(root, "Respawn", p =>
+            {
+                Sound(p, "Respawn");
+                Chromatic(p, "Chromatic Shimmer", 0.45f, 0.35f);
+            });
+
+            // ---- world particles: every client
+            var overBody = new Vector3(0f, 0.7f, 0f);
+            so.FindProperty("deathWorldFeel").objectReferenceValue = World(world, "Death",
+                new Fx("PFX_Death_Burst"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"));
+            so.FindProperty("critDeathWorldFeel").objectReferenceValue = World(world, "Critical Death",
+                new Fx("PFX_CritDeath_Blast"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"), Comic("PFX_Comic_Wham", 0.9f));
+            so.FindProperty("bodyLandWorldFeel").objectReferenceValue = World(world, "Body Land",
+                Dust("PFX_Dust_Land"), new Fx("PFX_Death_Stars", overBody, follow: true));
+            so.FindProperty("critBodyLandWorldFeel").objectReferenceValue = World(world, "Critical Body Land",
+                OnGround("PFX_CritDeath_Crater"), Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"), Comic("PFX_Comic_Pow", 0.9f),
+                new Fx("PFX_Death_Stars", overBody, follow: true));
+            so.FindProperty("respawnWorldFeel").objectReferenceValue = World(world, "Respawn",
+                AtFeet("PFX_Respawn"), AtFeet("PFX_Cast_PowerUp"));
+
+            so.FindProperty("critDeathTrailVfx").objectReferenceValue = Load(Vfx(DeathTrailName));
         }
 
         /// <summary>A buff aura: a looping POLYGON effect that rides on the character for as long as the buff lasts.</summary>
@@ -785,6 +895,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("buffEndWorldFeel").objectReferenceValue = World(world, "Buff End", OnCaster("PFX_Buff_End"));
                 so.FindProperty("healWorldFeel").objectReferenceValue = World(world, "Heal", AtFeet("PFX_Heal"));
                 so.FindProperty("chiWorldFeel").objectReferenceValue = World(world, "Chi", AtFeet("PFX_Chi"));
+                AddDeathFeel(root, world, so);
 
                 so.FindProperty("clickVfx").objectReferenceValue = Load(Vfx("PFX_Click_Ring"));
                 so.FindProperty("selectHostileVfx").objectReferenceValue = Load(Vfx("PFX_Select_Hostile"));

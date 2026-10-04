@@ -1,0 +1,32 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="DuelPanels.uss" />
+    <!-- Instanced into ProgressionHUD.uxml; driven by DuelHudController. Shared .panel skin, so each faction sees
+         these in its own HUD style. -->
+
+    <!-- The selected friendly player: ask for a duel, or whisper. -->
+    <ui:VisualElement name="duel-target" class="duel-target panel blocks-world">
+        <ui:Label name="duel-target-name" text="PLAYER" class="heading duel-target-name" />
+        <ui:Button name="duel-target-duel" text="DUEL" class="kn-button-primary duel-target-button" />
+        <ui:Button name="duel-target-whisper" text="WHISPER" class="duel-target-button" />
+    </ui:VisualElement>
+
+    <!-- A duel request addressed to the local player. -->
+    <ui:VisualElement name="duel-request" class="duel-request panel blocks-world">
+        <ui:Label text="DUEL REQUEST" class="eyebrow" />
+        <ui:Label name="duel-request-text" text="Someone challenges you to a duel" class="heading duel-request-text" />
+        <ui:VisualElement class="duel-request-buttons">
+            <ui:Button name="duel-accept" text="ACCEPT  [Y]" class="kn-button-primary duel-request-button" />
+            <ui:Button name="duel-decline" text="DECLINE  [N]" class="kn-button-danger duel-request-button" />
+        </ui:VisualElement>
+        <ui:VisualElement class="duel-timer" picking-mode="Ignore">
+            <ui:VisualElement name="duel-request-fill" class="duel-timer-fill" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- How the local player's duel ended. -->
+    <ui:VisualElement name="duel-result" class="duel-result panel" picking-mode="Ignore">
+        <ui:Label text="DUEL" class="eyebrow duel-result-eyebrow" picking-mode="Ignore" />
+        <ui:Label name="duel-result-title" text="YOU WIN" class="heading duel-result-title" picking-mode="Ignore" />
+        <ui:Label name="duel-result-detail" text="" class="duel-result-detail" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

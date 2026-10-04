@@ -17,6 +17,21 @@ namespace KryticalNova.Core
         public bool TargetIsLocalPlayer;
     }
 
+    /// <summary>A player's death as every client sees it (from the server's death ClientRpc).</summary>
+    public struct DeathFeel
+    {
+        /// <summary>The body's root when the blow landed.</summary>
+        public Vector3 Point;
+        /// <summary>Flat direction the blow travelled: the way the body is thrown.</summary>
+        public Vector3 Direction;
+        public Transform Target;
+        /// <summary>Who dealt the blow on this client, or null (a GM kill, or the killer is not spawned here).</summary>
+        public Transform Killer;
+        public bool IsCritical;
+        public bool VictimIsLocalPlayer;
+        public bool KillerIsLocalPlayer;
+    }
+
     /// <summary>
     /// Client-only "juice" (screen shake, hit flash, squash, dust, auras, trails, sounds). Implemented by the GameFeel
     /// assembly and registered in <see cref="ClientPresentationRegistry.Feel"/>; null on dedicated servers, so callers
@@ -54,5 +69,13 @@ namespace KryticalNova.Core
         void BuffEnded(Transform actor, string skillId);
         /// <summary>A consumable took effect on the actor.</summary>
         void Consumed(Transform actor, bool restoredHealth, bool restoredChi);
+
+        /// <summary>A character was killed, on every peer. A critical death throws the body.</summary>
+        void Death(in DeathFeel death);
+        /// <summary>The dying body hit the ground.</summary>
+        /// <param name="involvesLocalPlayer">The local player is the one who died or the one who killed.</param>
+        void BodyLanded(Transform actor, bool critical, bool involvesLocalPlayer);
+        /// <summary>A dead character is back on its feet at a spawn point.</summary>
+        void Respawned(Transform actor, bool isLocalPlayer);
     }
 }

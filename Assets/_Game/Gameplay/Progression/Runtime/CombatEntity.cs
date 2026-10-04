@@ -34,7 +34,18 @@ namespace KryticalNova.Progression
 
         public event Action<DamageResult, CharacterCombatStats> Damaged;
         public event Action Died;
+        /// <summary>
+        /// Raised where combat is decided (server or offline) when this entity dies, with the blow that did it: who,
+        /// from which side, and whether it was critical. <see cref="Died"/> is the bare notice every peer gets.
+        /// </summary>
+        public event Action<KillingBlow> Killed;
         public event Action HealthChanged;
+
+        // The hit being applied right now, so the death it may cause knows what caused it.
+        private KillingBlow pendingBlow;
+        private bool hasPendingBlow;
+
+        private bool HasAuthority => !IsSpawned || IsServer;
 
         public string EntityName => entityName;
 
@@ -183,7 +194,42 @@ namespace KryticalNova.Progression
         }
 
         private void OnResourcesChanged() => HealthChanged?.Invoke();
-        private void OnResourcesDepleted() => Died?.Invoke();
+        private void OnResourcesDepleted() => RaiseDied();
+
+        private void RaiseDied()
+        {
+            Died?.Invoke();
+            if (HasAuthority) Killed?.Invoke(hasPendingBlow ? pendingBlow : KillingBlow.FromTheFront(transform));
+        }
+
+        /// <summary>
+        /// Server (or offline) only: kills this entity outright with a blow of the given kind, for tools and effects
+        /// that have no attack roll behind them. Ignores god mode.
+        /// </summary>
+        public void Kill(KillingBlow blow)
+        {
+            if (!HasAuthority || !IsAlive) return;
+            pendingBlow = blow;
+            hasPendingBlow = true;
+            try
+            {
+                if (playerResources != null)
+                {
+                    playerResources.ApplyDamage(playerResources.Health + 1f, ignoreGodMode: true);
+                }
+                else
+                {
+                    standaloneHealth = 0f;
+                    if (IsSpawned && IsServer) netStandaloneHealth.Value = 0f;
+                    HealthChanged?.Invoke();
+                    RaiseDied();
+                }
+            }
+            finally
+            {
+                hasPendingBlow = false;
+            }
+        }
 
         public DamageResult TakeDamage(DamageResult damage, CharacterCombatStats attacker)
         {
@@ -242,23 +288,38 @@ namespace KryticalNova.Progression
 
             if (totalDamageToLife > 0f)
             {
-                if (playerResources != null)
+                pendingBlow = new KillingBlow
                 {
-                    playerResources.ApplyDamage(totalDamageToLife);
+                    Result = damage,
+                    Attacker = attacker,
+                    Direction = KillingBlow.DirectionFrom(attacker != null ? attacker.transform : null, transform),
+                    IsCritical = damage.IsCritical,
+                };
+                hasPendingBlow = true;
+                try
+                {
+                    if (playerResources != null)
+                    {
+                        playerResources.ApplyDamage(totalDamageToLife);
+                    }
+                    else
+                    {
+                        standaloneHealth = Mathf.Max(0f, standaloneHealth - totalDamageToLife);
+                        if (infiniteHealth && standaloneHealth <= 0f) standaloneHealth = MaxHealth;
+                        if (IsSpawned && IsServer)
+                        {
+                            netStandaloneHealth.Value = standaloneHealth;
+                        }
+                        HealthChanged?.Invoke();
+                        if (standaloneHealth <= 0f)
+                        {
+                            RaiseDied();
+                        }
+                    }
                 }
-                else
+                finally
                 {
-                    standaloneHealth = Mathf.Max(0f, standaloneHealth - totalDamageToLife);
-                    if (infiniteHealth && standaloneHealth <= 0f) standaloneHealth = MaxHealth;
-                    if (IsSpawned && IsServer)
-                    {
-                        netStandaloneHealth.Value = standaloneHealth;
-                    }
-                    HealthChanged?.Invoke();
-                    if (standaloneHealth <= 0f)
-                    {
-                        Died?.Invoke();
-                    }
+                    hasPendingBlow = false;
                 }
             }
 

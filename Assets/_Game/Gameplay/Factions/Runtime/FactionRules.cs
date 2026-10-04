@@ -4,8 +4,9 @@ namespace KryticalNova.Factions
 {
     /// <summary>
     /// Who is an enemy of whom. Players of different factions are hostile while cross-faction PvP is on (the faction
-    /// catalog's default, which a GM can switch at runtime); players of the same faction are friendly. A GM can also
-    /// pin one player to friendly or hostile (<see cref="PvpStance"/>), which wins over the faction rule.
+    /// catalog's default, which a GM can switch at runtime); players of the same faction are friendly. The one
+    /// exception is a duel both players agreed to: the two duelists are hostile to each other, and to nobody else,
+    /// for as long as it lasts.
     /// </summary>
     public static class FactionRules
     {
@@ -40,12 +41,11 @@ namespace KryticalNova.Factions
         public static bool AreHostile(FactionId a, FactionId b) =>
             CrossFactionPvp && a != FactionId.None && b != FactionId.None && a != b;
 
-        /// <summary>The full rule between two members: a friendly pin wins, then a hostile pin, then the factions.</summary>
+        /// <summary>The full rule between two members: duelling each other makes them hostile, otherwise the factions decide.</summary>
         public static bool AreHostile(IFactionMember a, IFactionMember b)
         {
             if (a == null || b == null || ReferenceEquals(a, b)) return false;
-            if (a.Stance == PvpStance.Friendly || b.Stance == PvpStance.Friendly) return false;
-            if (a.Stance == PvpStance.Hostile || b.Stance == PvpStance.Hostile) return true;
+            if (a.IsDuelling(b) || b.IsDuelling(a)) return true;
             return AreHostile(a.Faction, b.Faction);
         }
 

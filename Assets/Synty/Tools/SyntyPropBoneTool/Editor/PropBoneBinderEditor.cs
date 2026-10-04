@@ -16,7 +16,7 @@ namespace Synty.Tools.SyntyPropBoneTool
     /// </summary>
     [CustomEditor(typeof(PropBoneBinder))]
     [CanEditMultipleObjects]
-    public class PropBoneBinderEditor : Editor
+    public class PropBoneBinderEditor : UnityEditor.Editor
     {
         private List<PropBoneBinder> _binders = new List<PropBoneBinder>();
         private static bool _moreOptionsFoldout = false;

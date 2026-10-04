@@ -74,7 +74,7 @@ namespace KryticalNova.Networking
                 {
                     StatusChanged?.Invoke("Initializing Unity Services...");
                     var options = new InitializationOptions();
-                    string profile = EditorCloneProfile();
+                    string profile = LocalProfile();
                     if (profile != null) options.SetProfile(profile);
                     await UnityServices.InitializeAsync(options);
                 }
@@ -320,6 +320,27 @@ namespace KryticalNova.Networking
         }
 #endif
 
+        private const string ProfileArgument = "-profile";
+        private const int MaxProfileLength = 30;
+
+        /// <summary>
+        /// The name that keeps this running copy of the game apart from others on the same machine: its sign-in,
+        /// its saved characters and its interface settings. A build started with "-profile &lt;name&gt;" uses that
+        /// name; a Multiplayer Play Mode clone uses its own (<see cref="EditorCloneProfile"/>). Null otherwise,
+        /// which is the machine's default save.
+        /// </summary>
+        public static string LocalProfile()
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+            {
+                if (!string.Equals(args[i], ProfileArgument, StringComparison.OrdinalIgnoreCase)) continue;
+                string named = CleanProfile(args[i + 1]);
+                if (named != null) return named;
+            }
+            return EditorCloneProfile();
+        }
+
         /// <summary>
         /// Editor instances cloned for multiplayer testing (Multiplayer Play Mode virtual players) share this
         /// machine's sign-in cache. Each gets its own authentication profile, so they are different players.
@@ -337,16 +358,23 @@ namespace KryticalNova.Networking
             int end = id.IndexOf('/');
             if (end >= 0) id = id.Substring(0, end);
 
-            var profile = new System.Text.StringBuilder(30);
-            foreach (char c in id)
-            {
-                if (profile.Length == 30) break;
-                if (char.IsLetterOrDigit(c) || c == '-' || c == '_') profile.Append(c);
-            }
-            return profile.Length > 0 ? profile.ToString() : null;
+            return CleanProfile(id);
 #else
             return null;
 #endif
+        }
+
+        // Authentication profiles accept letters, digits, '-' and '_', up to 30 characters.
+        private static string CleanProfile(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return null;
+            var profile = new System.Text.StringBuilder(MaxProfileLength);
+            foreach (char c in raw)
+            {
+                if (profile.Length == MaxProfileLength) break;
+                if (char.IsLetterOrDigit(c) || c == '-' || c == '_') profile.Append(c);
+            }
+            return profile.Length > 0 ? profile.ToString() : null;
         }
 
         private void ConfigureTransport(string address, ushort port)

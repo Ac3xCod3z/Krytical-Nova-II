@@ -7,7 +7,8 @@ namespace KryticalNova.Combat
     /// <summary>
     /// Who may attack whom. Anything that is not a player and can take damage (dummies, monsters) is hostile.
     /// Between two players the factions decide (<see cref="FactionRules"/>): players of different factions are
-    /// hostile while cross-faction PvP is on, and a GM can pin a single player to friendly or hostile.
+    /// hostile while cross-faction PvP is on, players of the same faction are friendly, and two players in a duel
+    /// (<see cref="PlayerDuel"/>) are hostile to each other.
     /// </summary>
     public static class CombatHostility
     {

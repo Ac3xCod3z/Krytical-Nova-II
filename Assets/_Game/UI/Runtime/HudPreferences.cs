@@ -1,21 +1,33 @@
 using System;
 using System.Globalization;
+using KryticalNova.Networking;
 using UnityEngine;
 
 namespace KryticalNova.UI
 {
-    /// <summary>Player-facing interface options, persisted per machine in PlayerPrefs.</summary>
+    /// <summary>
+    /// Player-facing interface options, persisted in PlayerPrefs. One set per machine, or per local profile when
+    /// several copies of the game run side by side (a Multiplayer Play Mode clone, a build started with "-profile").
+    /// </summary>
     public static class HudPreferences
     {
-        private const string Prefix = "kn.hud.";
-        private const string MoveMarkerKey = Prefix + "moveMarker";
-        private const string TargetRingKey = Prefix + "targetRing";
-        private const string ControlsHintKey = Prefix + "controlsHint";
-        private const string NameplatesKey = Prefix + "nameplates";
-        private const string MinimapRotatesKey = Prefix + "minimapRotates";
-        private const string ScreenShakeKey = Prefix + "screenShake";
-        private const string LayoutKey = Prefix + "layout.v1";
-        private const string WaypointKey = Prefix + "waypoint.";
+        private static readonly string Prefix = BuildPrefix();
+        private static readonly string MoveMarkerKey = Prefix + "moveMarker";
+        private static readonly string TargetRingKey = Prefix + "targetRing";
+        private static readonly string ControlsHintKey = Prefix + "controlsHint";
+        private static readonly string NameplatesKey = Prefix + "nameplates";
+        private static readonly string MinimapRotatesKey = Prefix + "minimapRotates";
+        private static readonly string ScreenShakeKey = Prefix + "screenShake";
+        private static readonly string LayoutKey = Prefix + "layout.v1";
+        private static readonly string WaypointKey = Prefix + "waypoint.";
+        private static readonly string ChatWidthKey = Prefix + "chat.width";
+        private static readonly string ChatHeightKey = Prefix + "chat.height";
+
+        private static string BuildPrefix()
+        {
+            string profile = NetworkConnectionManager.LocalProfile();
+            return string.IsNullOrEmpty(profile) ? "kn.hud." : "kn.hud." + profile + ".";
+        }
 
         public static event Action Changed;
 
@@ -87,6 +99,20 @@ namespace KryticalNova.UI
                 PlayerPrefs.SetString(WaypointKey + zone, string.Format(CultureInfo.InvariantCulture, "{0:0.##};{1:0.##};{2:0.##}", w.x, w.y, w.z));
             }
             else PlayerPrefs.DeleteKey(WaypointKey + zone);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>The size the player dragged the chat window to, in panel units. False until they resize it.</summary>
+        public static bool TryGetChatSize(out Vector2 size)
+        {
+            size = new Vector2(PlayerPrefs.GetFloat(ChatWidthKey, 0f), PlayerPrefs.GetFloat(ChatHeightKey, 0f));
+            return size.x > 0f && size.y > 0f;
+        }
+
+        public static void SetChatSize(Vector2 size)
+        {
+            PlayerPrefs.SetFloat(ChatWidthKey, size.x);
+            PlayerPrefs.SetFloat(ChatHeightKey, size.y);
             PlayerPrefs.Save();
         }
 

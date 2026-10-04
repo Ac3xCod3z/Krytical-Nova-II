@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using KryticalNova.Combat;
 using KryticalNova.Core;
 using KryticalNova.Factions;
 using KryticalNova.Items;
 using KryticalNova.Networking;
 using KryticalNova.Player;
 using KryticalNova.Progression;
+using KryticalNova.Social;
 using KryticalNova.World;
 using KryticalNova.World.Portals;
 using QFSW.QC;
@@ -331,12 +333,38 @@ namespace KryticalNova.DevTools
             return $"Chi {res.Chi:0}/{res.MaxChi:0}{(InfiniteChiOn(res) ? " (infinite Chi on)" : "")}";
         }
 
-        [Command("gm.kill", "Kill yourself (bypasses god mode).")]
-        private static string Kill()
+        [Command("gm.kill", "Kill the targeted player (bypasses god mode): gm.kill [normal|crit] [front|back|left|right]. " +
+                            "crit plays the thrown death; the side is where the blow comes from (default front).")]
+        private static string Kill(string kind = "normal", string side = "front")
         {
-            if (!TryGet<PlayerResources>(out var res, out var error)) return error;
-            res.ApplyDamage(res.Health + 1f, ignoreGodMode: true);
-            return "Killed.";
+            if (!TryGet<CombatEntity>(out var entity, out var error)) return error;
+            if (!entity.IsAlive) return $"{entity.EntityName} is already dead. gm.respawn brings them back.";
+
+            bool crit = string.Equals(kind, "crit", StringComparison.OrdinalIgnoreCase) || string.Equals(kind, "critical", StringComparison.OrdinalIgnoreCase);
+            if (!crit && !string.Equals(kind, "normal", StringComparison.OrdinalIgnoreCase)) { side = kind; }
+
+            Transform body = entity.transform;
+            Vector3 from; // where the blow comes from, relative to the body
+            switch (side.ToLowerInvariant())
+            {
+                case "front": from = body.forward; break;
+                case "back": from = -body.forward; break;
+                case "left": from = -body.right; break;
+                case "right": from = body.right; break;
+                default: return "Use: gm.kill [normal|crit] [front|back|left|right]";
+            }
+            from.y = 0f;
+            entity.Kill(new KillingBlow { Direction = -from.normalized, IsCritical = crit });
+            return $"Killed {entity.EntityName} ({(crit ? "critical" : "normal")}, blow from the {side.ToLowerInvariant()}).";
+        }
+
+        [Command("gm.respawn", "Respawn the targeted player now if they are dead, without waiting for the timer.")]
+        private static string Respawn()
+        {
+            if (!TryGet<PlayerDeathMotor>(out var death, out var error)) return error;
+            if (!death.IsDead) return "That player is not dead.";
+            death.Respawn();
+            return "Respawned.";
         }
         #endregion
 
@@ -351,21 +379,60 @@ namespace KryticalNova.DevTools
             if (!TryGet<PlayerIdentity>(out _, out var error)) return error;
             PlayerIdentity.SetCrossFactionPvp(on);
             return on ? "Cross-faction PvP ON: players of different factions can attack each other."
-                      : "Cross-faction PvP OFF: every player is friendly (unless pinned hostile with gm.stance).";
+                      : "Cross-faction PvP OFF: every player is friendly, except the two players of a duel.";
         }
 
-        [Command("gm.stance", "Pin the targeted player's PvP stance: gm.stance <faction|friendly|hostile>. " +
-                              "friendly = nobody can attack them and they attack no player; hostile = they fight every player; " +
-                              "faction = back to the faction rule. No value prints the current stance.")]
-        private static string Stance(string stance = "")
+        [Command("gm.duel", "Start a duel between two connected players at once, without a request: gm.duel <clientIdA> <clientIdB> (see gm.players).")]
+        private static string Duel(ulong clientA, ulong clientB)
         {
-            if (!TryGet<PlayerIdentity>(out var identity, out var error)) return error;
-            if (string.IsNullOrWhiteSpace(stance))
-                return $"{identity.CharacterName} ({identity.Faction}): stance {identity.Stance}. Cross-faction PvP is {(FactionRules.CrossFactionPvp ? "ON" : "OFF")}.";
-            if (!Enum.TryParse(stance, true, out PvpStance value) || !Enum.IsDefined(typeof(PvpStance), value))
-                return "Use: gm.stance faction | friendly | hostile";
-            identity.SetStance(value);
-            return $"{identity.CharacterName} is now {value}.";
+            if (!TryDuelist(clientA, out var a, out var error) || !TryDuelist(clientB, out var b, out error)) return error;
+            return a.ServerForceStart(b)
+                ? $"Duel started: {a.DuelistName} against {b.DuelistName}."
+                : "Could not start that duel (the same player twice, one of them is dead, or already duelling).";
+        }
+
+        [Command("gm.duel.end", "Stop the targeted player's duel with no winner.")]
+        private static string DuelEnd()
+        {
+            if (!TryGet<PlayerDuel>(out var duel, out var error)) return error;
+            return duel.ServerCancel("The duel was ended by the GM.") ? "Duel ended." : "That player is not in a duel.";
+        }
+
+        private static bool TryDuelist(ulong clientId, out PlayerDuel duel, out string error)
+        {
+            duel = null;
+            error = null;
+            foreach (var (id, player) in GmTarget.ConnectedPlayers())
+            {
+                if (id != clientId) continue;
+                duel = player.GetComponent<PlayerDuel>();
+                break;
+            }
+            if (duel == null) error = $"No connected player with client id {clientId} (host / server only). Try gm.players.";
+            return duel != null;
+        }
+        #endregion
+
+        #region Chat
+        [Command("gm.say", "Announce on the GM channel: every player of every faction reads it, wherever they are. Wrap the text in quotes.")]
+        private static string Say(string text)
+        {
+            // Any player will do: this only checks that we are the host, the server or offline.
+            if (!TryGetPlayer(out _, out var error)) return error;
+            int reached = PlayerChat.ServerBroadcastGm(text, "GM");
+            return reached > 0 ? $"Announced to {reached} player(s)." : "Nothing sent (empty text, or nobody is connected).";
+        }
+
+        [Command("gm.guild", "Put the targeted player in a guild for guild chat: gm.guild <name>, or gm.guild none to take them out. " +
+                             "No value prints their guild. (Test stand-in until guilds exist.)")]
+        private static string Guild(string guild = "")
+        {
+            if (!TryGet<PlayerChat>(out var chat, out var error)) return error;
+            if (string.IsNullOrWhiteSpace(guild))
+                return string.IsNullOrEmpty(chat.Guild) ? $"{chat.SpeakerName} is in no guild." : $"{chat.SpeakerName} is in guild '{chat.Guild}'.";
+            bool leave = string.Equals(guild, "none", StringComparison.OrdinalIgnoreCase);
+            chat.ServerSetGuild(leave ? string.Empty : guild);
+            return leave ? $"{chat.SpeakerName} left their guild." : $"{chat.SpeakerName} is now in guild '{chat.Guild}'.";
         }
         #endregion
 

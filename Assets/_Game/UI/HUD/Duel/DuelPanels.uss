@@ -1,0 +1,109 @@
+/* Duel panels of the HUD: the target strip, the request and the result banner. The frame is the shared .panel, so
+   the faction skins (Build Faction Skins) restyle them with everything else. */
+
+.duel-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* ------------------------------------------------------------------ selected friendly player */
+
+.duel-target {
+    position: absolute;
+    top: 64px;
+    left: 50%;
+    translate: -50% 0;
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 12px;
+}
+
+.duel-target-name {
+    font-size: 13px;
+    margin-right: 12px;
+    color: rgb(226, 236, 242);
+}
+
+.duel-target-button {
+    min-height: 24px;
+    margin: 0 0 0 6px;
+    padding: 3px 12px;
+    font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ request */
+
+.duel-request {
+    position: absolute;
+    top: 118px;
+    left: 50%;
+    translate: -50% 0;
+    width: 340px;
+    align-items: center;
+    padding: 12px 18px 14px 18px;
+}
+
+.duel-request-text {
+    font-size: 15px;
+    margin: 4px 0 10px 0;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    color: rgb(255, 255, 255);
+}
+
+.duel-request-buttons {
+    flex-direction: row;
+    align-self: stretch;
+}
+
+.duel-request-button {
+    flex-grow: 1;
+    margin: 0 4px;
+    font-size: 12px;
+}
+
+.duel-timer {
+    align-self: stretch;
+    height: 3px;
+    margin-top: 10px;
+    background-color: rgba(34, 52, 66, 0.9);
+}
+
+.duel-timer-fill {
+    height: 100%;
+    width: 100%;
+    background-color: rgb(114, 222, 196);
+}
+
+/* ------------------------------------------------------------------ result */
+
+.duel-result {
+    position: absolute;
+    top: 26%;
+    left: 50%;
+    translate: -50% 0;
+    min-width: 420px;
+    align-items: center;
+    padding: 18px 44px 20px 44px;
+}
+
+.duel-result-eyebrow { font-size: 12px; }
+
+.duel-result-title {
+    font-size: 56px;
+    letter-spacing: 4px;
+    margin: 2px 0 4px 0;
+    -unity-text-align: middle-center;
+}
+
+.duel-result-detail {
+    font-size: 15px;
+    -unity-text-align: middle-center;
+    color: rgb(226, 236, 242);
+}
+
+.duel-result--win .duel-result-title { color: rgb(114, 222, 196); }
+.duel-result--lose .duel-result-title { color: rgb(240, 58, 46); }

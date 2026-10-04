@@ -34,6 +34,8 @@ namespace KryticalNova.UI.Menus
 
         private void Start()
         {
+            // The chosen character does not stand like a statue: it shifts, looks about and greets by itself.
+            if (showroom != null) showroom.Ambient = true;
             roster = CharacterSession.Store.Load();
             MenuUi.SetText(screen, "Screen_Header", "Choose Your Character");
             var details = MenuUi.Find(screen, "Save_Details");

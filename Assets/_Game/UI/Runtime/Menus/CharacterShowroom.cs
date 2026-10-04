@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Factions;
 using KryticalNova.Items.Visuals;
@@ -44,6 +45,40 @@ namespace KryticalNova.UI.Menus
         private readonly PreviewOrbit orbit = new PreviewOrbit();
         private CharacterDoll doll;
         private MaterialPropertyBlock block;
+        private BodyType bodyType;
+        private int stance; // index into the library's stances; 0 is the relaxed default
+
+        // Ambient life (character select): the character shifts, looks about, and now and then waves or changes
+        // stance, so the screen is not a statue. Calm motions only, and only those performed for its body type.
+        private static readonly string[] AmbientStanceGroups = { "Base", "Arms Folded", "Hands On Hips", "Posture", "Thoughtful" };
+        private static readonly string[] AmbientGestureGroups = { "Bored", "Head Nod", "Inspect", "Look", "Play With Hair", "Stretch", "Thoughtful", "Weight Shift", "Yawn" };
+        private static readonly string[] AmbientEmoteGroups = { "Greet", "Happy", "Celebrate", "Affection" };
+        // Motions of those groups that do not suit a character at rest (a frightened look over the shoulder).
+        private static readonly string[] AmbientSkippedWords = { "Scared" };
+        private const float AmbientGestureChance = 0.55f;
+        private const float AmbientEmoteChance = 0.25f; // the rest is a change of stance
+        private static readonly Vector2 AmbientPause = new Vector2(3.5f, 7f);
+        private static readonly Vector2 AmbientFirstPause = new Vector2(1.2f, 2.5f);
+        private readonly List<int> ambientPicks = new List<int>(32);
+        private bool ambient;
+        private float ambientWait;
+        private int lastAmbientEmote = -1;
+
+        /// <summary>
+        /// On: the shown character moves by itself between calm stances, small gestures and the odd emote (the
+        /// select screen). Off: it holds whatever stance it is given (the creator, where the player picks).
+        /// </summary>
+        public bool Ambient
+        {
+            get => ambient;
+            set
+            {
+                if (ambient == value) return;
+                ambient = value;
+                ambientWait = Random.Range(AmbientFirstPause.x, AmbientFirstPause.y);
+                if (!value) ResetPreview();
+            }
+        }
 
         public CharacterCreationDatabase Database => database;
         public CharacterExpressionLibrary Expressions => expressions;
@@ -67,16 +102,42 @@ namespace KryticalNova.UI.Menus
         /// <summary>Show (or restyle) the character. Returns false when the recipe cannot be built.</summary>
         public bool Show(in CharacterRecipe recipe)
         {
-            if (doll == null)
+            bool created = doll == null;
+            if (created)
             {
-                doll = CharacterDoll.Create(modelPrefab, stage != null ? stage : transform, idleClip);
+                // The library's relaxed stance when there is one; the player's own (sword-ready) idle otherwise.
+                AnimationClip standing = HasStances ? expressions.Idles[0].For(recipe.bodyType) : idleClip;
+                doll = CharacterDoll.Create(modelPrefab, stage != null ? stage : transform, standing);
                 if (doll == null) return false;
                 if (expressions != null) doll.EnableExpressions(expressions);
+                stance = 0;
             }
             doll.gameObject.SetActive(true);
             ApplyFaction(recipe.faction);
+
+            // Each motion has a masculine and a feminine performance: a change of body type swaps the stance (or goes
+            // back to the relaxed one, which both have, when the stance was made for the other body only).
+            bool bodyChanged = bodyType != recipe.bodyType;
+            bodyType = recipe.bodyType;
+            if (bodyChanged && !created && HasStances)
+            {
+                if (!expressions.Idles[stance].Has(bodyType)) stance = 0;
+                doll.PlayIdle(expressions.Idles[stance].For(bodyType));
+            }
+            // Another character stepped up: it starts relaxed and takes a moment before it moves.
+            if (ambient)
+            {
+                if (HasStances && stance != 0 && !bodyChanged)
+                {
+                    stance = 0;
+                    doll.PlayIdle(expressions.Idles[0].For(bodyType));
+                }
+                ambientWait = Random.Range(AmbientFirstPause.x, AmbientFirstPause.y);
+            }
             return doll.Apply(recipe, database);
         }
+
+        private bool HasStances => expressions != null && expressions.Idles.Count > 0;
 
         public void Hide()
         {
@@ -93,12 +154,30 @@ namespace KryticalNova.UI.Menus
 
         public void PlayIdle(int index)
         {
-            if (doll != null && expressions != null && index >= 0 && index < expressions.Idles.Count) doll.PlayIdle(expressions.Idles[index].clip);
+            if (doll == null || expressions == null || index < 0 || index >= expressions.Idles.Count) return;
+            var motion = expressions.Idles[index];
+            if (!motion.Has(bodyType)) return; // not performed for this body type
+            stance = index;
+            doll.PlayIdle(motion.For(bodyType), motion.EnterFor(bodyType));
         }
 
         public void PlayEmote(int index)
         {
-            if (doll != null && expressions != null && index >= 0 && index < expressions.Emotes.Count) doll.PlayEmote(expressions.Emotes[index].clip);
+            if (doll == null || expressions == null || index < 0 || index >= expressions.Emotes.Count) return;
+            var motion = expressions.Emotes[index];
+            if (motion.Has(bodyType)) doll.PlayEmote(motion.For(bodyType)); // never the other body's performance
+        }
+
+        /// <summary>Back to the neutral face and the relaxed stance (the preview is not part of the character).</summary>
+        public void ResetPreview()
+        {
+            if (doll == null) return;
+            doll.SetFace(0);
+            if (HasStances && stance != 0)
+            {
+                stance = 0;
+                doll.PlayIdle(expressions.Idles[0].For(bodyType));
+            }
         }
 
         // ---------------- View control (same gestures as the equipment page) ----------------
@@ -109,6 +188,47 @@ namespace KryticalNova.UI.Menus
         public void ResetView() => orbit.ResetView();
         /// <summary>0 frames the whole body, 1 the face.</summary>
         public void Focus(float zoom01) => orbit.Focus(zoom01);
+
+        private void Update()
+        {
+            if (!ambient || expressions == null || doll == null || !doll.isActiveAndEnabled || doll.IsBusy) return;
+            ambientWait -= Time.unscaledDeltaTime;
+            if (ambientWait > 0f) return;
+            ambientWait = Random.Range(AmbientPause.x, AmbientPause.y);
+
+            float roll = Random.value;
+            if (roll < AmbientGestureChance) PlayAmbientEmote(AmbientGestureGroups);
+            else if (roll < AmbientGestureChance + AmbientEmoteChance) PlayAmbientEmote(AmbientEmoteGroups);
+            else PlayAmbientStance();
+        }
+
+        private void PlayAmbientEmote(string[] groups)
+        {
+            Pick(expressions.Emotes, groups, lastAmbientEmote);
+            if (ambientPicks.Count == 0) return;
+            lastAmbientEmote = ambientPicks[Random.Range(0, ambientPicks.Count)];
+            PlayEmote(lastAmbientEmote);
+        }
+
+        private void PlayAmbientStance()
+        {
+            Pick(expressions.Idles, AmbientStanceGroups, stance);
+            if (ambientPicks.Count > 0) PlayIdle(ambientPicks[Random.Range(0, ambientPicks.Count)]);
+        }
+
+        /// <summary>The motions of the given groups that were performed for this character's body type, except the last one used.</summary>
+        private void Pick(IReadOnlyList<CharacterExpressionLibrary.Motion> motions, string[] groups, int except)
+        {
+            ambientPicks.Clear();
+            for (int i = 0; i < motions.Count; i++)
+            {
+                if (i == except || !motions[i].Has(bodyType)) continue;
+                if (System.Array.IndexOf(groups, motions[i].group) < 0) continue;
+                bool skipped = false;
+                foreach (string word in AmbientSkippedWords) skipped |= motions[i].name.Contains(word);
+                if (!skipped) ambientPicks.Add(i);
+            }
+        }
 
         private void LateUpdate()
         {

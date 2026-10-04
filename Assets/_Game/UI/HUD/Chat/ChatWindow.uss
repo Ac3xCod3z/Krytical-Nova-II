@@ -1,0 +1,129 @@
+/* HUD chat window: channel tabs, the message log and the input line. The panel itself is the shared .panel. */
+
+.chat-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Always the bottom-left corner of the HUD. The player resizes it from the grip in its top-right corner; the
+   controller keeps the size between min-width/min-height and max-width/max-height. */
+.chat-window {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    width: 380px;
+    height: 210px;
+    min-width: 300px;
+    min-height: 150px;
+    max-width: 520px;
+    max-height: 340px;
+    padding: 8px 10px 8px 10px;
+}
+
+.chat-resize {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-top-color: rgba(114, 222, 196, 0.55);
+    border-right-color: rgba(114, 222, 196, 0.55);
+}
+
+.chat-resize:hover, .chat-resize--active {
+    border-top-color: rgb(244, 244, 150);
+    border-right-color: rgb(244, 244, 150);
+}
+
+/* ------------------------------------------------------------------ tabs */
+
+.chat-tabs {
+    flex-direction: row;
+    flex-shrink: 0;
+    margin-bottom: 4px;
+}
+
+.chat-tab {
+    flex-grow: 1;
+    min-height: 20px;
+    margin: 0 1px;
+    padding: 2px 2px;
+    font-size: 10px;
+    letter-spacing: 0;
+    color: rgb(170, 186, 200);
+}
+
+.chat-tab--active {
+    color: rgb(255, 255, 255);
+    -unity-background-image-tint-color: rgb(34, 128, 112);
+}
+
+/* A line arrived on a tab the player is not looking at. */
+.chat-tab--unread { color: rgb(244, 244, 150); }
+
+/* ------------------------------------------------------------------ log */
+
+.chat-log {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 40px;
+}
+
+/* A slim scroll bar: the log is narrow and the default bar would take a tenth of it. */
+.chat-log .unity-scroller--vertical { width: 8px; }
+.chat-log .unity-scroller--vertical .unity-repeat-button { display: none; }
+.chat-log .unity-scroller--vertical .unity-slider { margin-top: 0; margin-bottom: 0; }
+.chat-log .unity-base-slider__dragger { width: 6px; left: 1px; }
+
+.chat-line {
+    white-space: normal;
+    font-size: 12px;
+    margin: 0;
+    padding: 0 2px 1px 2px;
+    color: rgb(226, 236, 242);
+}
+
+.chat-line--general { color: rgb(232, 238, 242); }
+.chat-line--faction { color: rgb(136, 226, 124); }
+.chat-line--guild { color: rgb(110, 190, 255); }
+.chat-line--whisper { color: rgb(236, 150, 255); }
+.chat-line--gm { color: rgb(255, 184, 60); }
+.chat-line--system { color: rgb(244, 244, 150); }
+.chat-line--combat { color: rgb(255, 162, 132); }
+
+/* ------------------------------------------------------------------ input */
+
+.chat-input-row {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.chat-channel {
+    min-width: 64px;
+    margin-right: 6px;
+    font-size: 10px;
+    -unity-text-align: middle-left;
+    color: rgb(170, 186, 200);
+}
+
+.chat-input {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin: 0;
+    font-size: 12px;
+}
+
+.chat-hint {
+    position: absolute;
+    right: 18px;
+    bottom: 13px;
+    font-size: 10px;
+    color: rgba(170, 186, 200, 0.6);
+}

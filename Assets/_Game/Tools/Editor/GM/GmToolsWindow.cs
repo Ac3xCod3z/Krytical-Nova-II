@@ -498,14 +498,6 @@ namespace KryticalNova.EditorTools.GM
             set { if (value != CrossFactionPvp) Run($"gm.pvp {(value ? "true" : "false")}"); }
         }
 
-        [TabGroup(Tabs, CheatsTab), ShowInInspector, EnumToggleButtons, EnableIf(nameof(IsReady)), LabelText("Target's stance"), PropertyOrder(205.8f)]
-        [InfoBox("Faction: follows the switch above. Friendly: cannot attack or be attacked by players. Hostile: fights every player, own faction included.")]
-        private PvpStance TargetStance
-        {
-            get => LocalPlayer != null && LocalPlayer.TryGetComponent<PlayerIdentity>(out var identity) ? identity.Stance : PvpStance.Faction;
-            set { if (value != TargetStance) Run($"gm.stance {value}"); }
-        }
-
         [TabGroup(Tabs, CheatsTab), ShowInInspector, PropertyRange(0.1f, 10f), EnableIf(nameof(IsReady)), LabelText("Move Speed ×"), PropertyOrder(204)]
         private float SpeedMultiplier
         {

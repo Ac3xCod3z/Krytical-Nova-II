@@ -16,17 +16,23 @@ namespace KryticalNova.CharacterCreation
         private AnimancerComponent animancer;
         private AnimationClip idle;
         private CharacterAppearance appearance;
+        private FaceBlinker blinker;
 
-        // Expressions: the face eases towards a target set of blend-shape weights; an emote plays once, then the idle returns.
+        // Expressions: the face eases towards a target set of blend-shape weights; a stance is entered and then held
+        // in its loop; an emote plays once, then the stance returns.
         private const float FaceBlendPerSecond = 500f;
         private const float MotionFade = 0.25f;
+        private const string EyelidShapePrefix = "eyeBlink";
         private CharacterExpressionLibrary expressions;
         private float[] faceTarget, faceCurrent;
         private int[] shapeIndex;
         private Mesh indexedMesh;
-        private float emoteEndsAt = -1f;
+        private AnimancerState idleState;   // the stance's loop, while it is what plays
+        private AnimancerState onceState;   // a stance's way in, or an emote: played once, then the loop takes over
 
         public CharacterLook Look => look;
+        /// <summary>A stance's way in or an emote is playing; the doll is not yet back in its loop.</summary>
+        public bool IsBusy => onceState != null;
 
         /// <summary>Clone <paramref name="modelPrefab"/> (the player's Sidekick model) under <paramref name="parent"/>.</summary>
         public static CharacterDoll Create(GameObject modelPrefab, Transform parent, AnimationClip idleClip)
@@ -62,6 +68,7 @@ namespace KryticalNova.CharacterCreation
             appearance = GetComponent<CharacterAppearance>();
             if (look == null && TryGetComponent<CharacterAppearance>(out _)) look = gameObject.AddComponent<CharacterLook>();
             animancer = GetComponent<AnimancerComponent>();
+            blinker = GetComponent<FaceBlinker>();
             if (TryGetComponent<Animator>(out var animator))
             {
                 animator.applyRootMotion = false;
@@ -71,7 +78,15 @@ namespace KryticalNova.CharacterCreation
 
         private void OnEnable()
         {
-            if (idle != null && animancer != null) animancer.Play(idle);
+            // Whatever was playing when the doll was hidden is gone: it stands in its stance again.
+            onceState = null;
+            idleState = idle != null && animancer != null ? animancer.Play(idle) : null;
+        }
+
+        private void OnDisable()
+        {
+            onceState = null;
+            idleState = null;
         }
 
         public bool Apply(in CharacterRecipe recipe, CharacterCreationDatabase database) =>
@@ -96,35 +111,63 @@ namespace KryticalNova.CharacterCreation
         {
             if (expressions == null || faceTarget == null) return;
             System.Array.Clear(faceTarget, 0, faceTarget.Length);
-            if (index < 0 || index >= expressions.Faces.Count) return;
-            foreach (var weight in expressions.Faces[index].weights)
-                if (weight.shape < faceTarget.Length) faceTarget[weight.shape] = weight.weight;
+            bool usesEyelids = false;
+            if (index >= 0 && index < expressions.Faces.Count)
+            {
+                foreach (var weight in expressions.Faces[index].weights)
+                {
+                    if (weight.shape >= faceTarget.Length) continue;
+                    faceTarget[weight.shape] = weight.weight;
+                    if (weight.weight > 0f && expressions.Shapes[weight.shape].StartsWith(EyelidShapePrefix)) usesEyelids = true;
+                }
+            }
+            // The blinker writes the eyelid shapes too and leaves them open after a blink: a face that holds the lids
+            // (a wink, a squint) would lose them at the first blink. Such a face does its own lids.
+            if (blinker != null && blinker.enabled == usesEyelids)
+            {
+                blinker.enabled = !usesEyelids;
+                indexedMesh = null; // put every shape back, whatever the blinker left behind
+            }
         }
 
-        /// <summary>Change the looping stance.</summary>
-        public void PlayIdle(AnimationClip clip)
+        /// <summary>Change the looping stance, going through its way in when it has one.</summary>
+        public void PlayIdle(AnimationClip clip, AnimationClip enter = null)
         {
             if (clip == null) return;
             idle = clip;
-            emoteEndsAt = -1f;
-            if (animancer != null && isActiveAndEnabled) animancer.Play(clip, MotionFade);
+            if (animancer == null || !isActiveAndEnabled) return;
+            if (enter != null)
+            {
+                idleState = null;
+                onceState = animancer.Play(enter, MotionFade, FadeMode.FromStart);
+            }
+            else HoldIdle();
         }
 
-        /// <summary>Play a gesture once, then go back to the idle.</summary>
+        /// <summary>Play a gesture once, then go back to the stance. Playing it again starts it over.</summary>
         public void PlayEmote(AnimationClip clip)
         {
             if (clip == null || animancer == null || !isActiveAndEnabled) return;
-            var state = animancer.Play(clip, MotionFade);
-            state.Time = 0f;
-            emoteEndsAt = Time.time + Mathf.Max(clip.length - MotionFade, 0.1f);
+            idleState = null;
+            onceState = animancer.Play(clip, MotionFade, FadeMode.FromStart);
+        }
+
+        private void HoldIdle()
+        {
+            onceState = null;
+            idleState = idle != null ? animancer.Play(idle, MotionFade) : null;
         }
 
         private void LateUpdate()
         {
-            if (emoteEndsAt >= 0f && Time.time >= emoteEndsAt)
+            if (animancer != null)
             {
-                emoteEndsAt = -1f;
-                if (idle != null && animancer != null) animancer.Play(idle, MotionFade);
+                // Follow the clip's own time, so this holds whatever the time scale is.
+                if (onceState != null && (onceState.Time >= onceState.Length - MotionFade || onceState.Weight <= 0f && !onceState.IsPlaying))
+                    HoldIdle();
+                // Many of the pack's stance loops are not marked as looping: the doll wraps them itself.
+                else if (idleState != null && !idleState.IsLooping && idleState.Time >= idleState.Length)
+                    idleState.Time -= idleState.Length;
             }
             BlendFace();
         }

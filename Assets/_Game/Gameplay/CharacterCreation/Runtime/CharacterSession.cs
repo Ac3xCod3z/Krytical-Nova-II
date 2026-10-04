@@ -25,12 +25,15 @@ namespace KryticalNova.CharacterCreation
             resolved = false;
         }
 
-        /// <summary>The store used by menus and players. Each Multiplayer Play Mode clone gets its own save.</summary>
+        /// <summary>
+        /// The store used by menus and players. Each Multiplayer Play Mode clone, and each build started with its
+        /// own "-profile", gets its own save.
+        /// </summary>
         public static ICharacterStore Store
         {
             get
             {
-                if (store == null) store = new PlayerPrefsCharacterStore(NetworkConnectionManager.EditorCloneProfile());
+                if (store == null) store = new PlayerPrefsCharacterStore(NetworkConnectionManager.LocalProfile());
                 return store;
             }
             set => store = value;

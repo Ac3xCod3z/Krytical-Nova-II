@@ -600,6 +600,25 @@ namespace KryticalNova.Player
             if (IsBusy) AbortJump("Jump cancelled.");
         }
 
+        /// <summary>
+        /// The character died in the middle of a jump: let go of the body where it is instead of taking it back to
+        /// the take-off. The death takes it from there (PlayerDeathMotor brings it to the ground).
+        /// </summary>
+        public void ReleaseForDeath()
+        {
+            if (remoteJump) { EndRemoteJump(false); return; }
+            if (!IsBusy) return;
+            if (IsSpawned && IsServer) JumpAbortedClientRpc(string.Empty);
+            StopWarp();
+            jumpSequence?.Kill();
+            jumpSequence = null;
+            if (agent != null) agent.enabled = false;
+            IsBusy = false;
+            inFlight = false;
+            cooldownUntil = Time.time + (motionData != null ? motionData.landingCooldown : 0f);
+            presentation?.ResetPresentation();
+        }
+
         private void AbortJump(string reason)
         {
             if (cancelling) return;

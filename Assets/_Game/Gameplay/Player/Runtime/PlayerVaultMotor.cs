@@ -590,7 +590,26 @@ namespace KryticalNova.Player
             if (HasAuthority) Landed?.Invoke(plan.Destination);
         }
 
-        /// <summary>Puts the character back where the vault started (the landing is gone, or it died in the air).</summary>
+        /// <summary>
+        /// The character died: drop the vault it was lined up for, or let go of the body where it is if it was in
+        /// the middle of one. The death takes it from there (PlayerDeathMotor brings it to the ground).
+        /// </summary>
+        public void ReleaseForDeath()
+        {
+            Disarm();
+            if (!vaulting) return;
+            StopWarp();
+            vaulting = false;
+            if (HasAuthority)
+            {
+                if (IsSpawned && IsServer) VaultAbortedClientRpc();
+                agent.enabled = false;
+            }
+            ClientPresentationRegistry.Feel?.Airborne(transform, false);
+            if (animancerMotor != null) animancerMotor.ResetJumpAnimation();
+        }
+
+        /// <summary>Puts the character back where the vault started (the landing is gone).</summary>
         private void Abort()
         {
             if (cancelling) return;

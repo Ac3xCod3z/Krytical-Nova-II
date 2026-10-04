@@ -38,6 +38,13 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player buffCastFeel;
         [Tooltip("Held while the local player charges a skill; authored one second long and stretched to the charge time.")]
         [SerializeField] private MMF_Player chargeFeel;
+        [Tooltip("The local player died, or killed someone.")]
+        [SerializeField] private MMF_Player deathFeel;
+        [Tooltip("The same for a critical kill: the body is thrown.")]
+        [SerializeField] private MMF_Player critDeathFeel;
+        [Tooltip("The thrown or falling body of that death hits the ground.")]
+        [SerializeField] private MMF_Player bodyLandFeel;
+        [SerializeField] private MMF_Player respawnFeel;
 
         [Header("FEEL players (world particles, every client)")]
         [SerializeField] private MMF_Player hitWorldFeel;
@@ -54,6 +61,11 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player buffEndWorldFeel;
         [SerializeField] private MMF_Player healWorldFeel;
         [SerializeField] private MMF_Player chiWorldFeel;
+        [SerializeField] private MMF_Player deathWorldFeel;
+        [SerializeField] private MMF_Player critDeathWorldFeel;
+        [SerializeField] private MMF_Player bodyLandWorldFeel;
+        [SerializeField] private MMF_Player critBodyLandWorldFeel;
+        [SerializeField] private MMF_Player respawnWorldFeel;
 
         [Header("World VFX spawned directly")]
         [SerializeField] private GameObject clickVfx;
@@ -72,6 +84,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private GameObject defaultChargeVfx;
         [SerializeField] private GameObject runLoopVfx;
         [SerializeField] private GameObject airborneLoopVfx;
+        [Tooltip("Rides on a body thrown by a critical kill until it lands.")]
+        [SerializeField] private GameObject critDeathTrailVfx;
         [Tooltip("Run, jump and landing dust takes the colour of the ground under the feet.")]
         [SerializeField] private DustPalette dustPalette = DustPalette.Default;
         [SerializeField] private TrailRenderer bladeTrail;
@@ -82,6 +96,8 @@ namespace KryticalNova.GameFeel
         [Range(0f, 0.2f)] [SerializeField] private float hitStopSeconds = 0.06f;
         [Range(0f, 0.2f)] [SerializeField] private float heavyHitStopSeconds = 0.11f;
         [Range(0f, 1f)] [SerializeField] private float hitStopSpeed = 0.05f;
+        [Tooltip("The killer's own freeze on a kill (x) and on a critical kill (y). The dying body is never frozen: it is moving.")]
+        [SerializeField] private Vector2 killStopSeconds = new Vector2(0.1f, 0.18f);
 
         private readonly Dictionary<AnimancerComponent, int> frozen = new Dictionary<AnimancerComponent, int>();
         private MMF_Player[] cameraPlayers;
@@ -91,7 +107,7 @@ namespace KryticalNova.GameFeel
         {
             ClientPresentationRegistry.RegisterFeel(this);
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
-                attackCastFeel, buffCastFeel, chargeFeel };
+                attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, bodyLandFeel, respawnFeel };
             if (skills == null) skills = GetComponent<SkillFeelCatalog>();
             GroundSurfaces.Palette = dustPalette;
             HudPreferences.Changed += ApplyScreenShakePreference;
@@ -272,6 +288,39 @@ namespace KryticalNova.GameFeel
             if (restoredChi) PlayWorld(chiWorldFeel, feet, Quaternion.identity, actor);
         }
 
+        public void Death(in DeathFeel death)
+        {
+            // Effects face the way the body goes, so sparks and debris trail behind it.
+            Quaternion along = death.Direction.sqrMagnitude > 0.001f ? Quaternion.LookRotation(death.Direction, Vector3.up) : Quaternion.identity;
+            PlayWorld(death.IsCritical ? critDeathWorldFeel : deathWorldFeel, death.Point, along, death.Target);
+            if (death.Target != null)
+            {
+                HitReactor.For(death.Target)?.React(Vector3.zero, true);
+                ActorVfx vfx = ActorVfx.For(death.Target);
+                vfx.SetRunning(false, runLoopVfx);
+                if (death.IsCritical) vfx.SetAirborne(true, critDeathTrailVfx != null ? critDeathTrailVfx : airborneLoopVfx);
+            }
+
+            if (death.VictimIsLocalPlayer || death.KillerIsLocalPlayer)
+                Play(death.IsCritical ? critDeathFeel : deathFeel, death.Point, 1f);
+            if (death.KillerIsLocalPlayer) HitStop(death.Killer, death.IsCritical ? killStopSeconds.y : killStopSeconds.x);
+        }
+
+        public void BodyLanded(Transform actor, bool critical, bool involvesLocalPlayer)
+        {
+            if (actor == null) return;
+            ActorVfx.Find(actor)?.SetAirborne(false, critDeathTrailVfx != null ? critDeathTrailVfx : airborneLoopVfx);
+            PlayWorld(critical ? critBodyLandWorldFeel : bodyLandWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
+            if (involvesLocalPlayer) Play(bodyLandFeel, actor.position, critical ? 1f : 0.5f);
+        }
+
+        public void Respawned(Transform actor, bool isLocalPlayer)
+        {
+            if (actor == null) return;
+            PlayWorld(respawnWorldFeel, ActorAnchor.Feet(actor), Quaternion.identity, actor);
+            if (isLocalPlayer) Play(respawnFeel, actor.position, 1f);
+        }
+
         // ------------------------------------------------------------------ helpers
 
         /// <summary>
@@ -347,6 +396,9 @@ namespace KryticalNova.GameFeel
         private void HitStop(Transform actor, float seconds)
         {
             if (actor == null || seconds <= 0f) return;
+            // A dying body is being thrown by Motion Warping on its own clock: holding its pose would make it slide.
+            var motor = actor.GetComponentInParent<PlayerAnimancerMotor>();
+            if (motor != null && motor.IsDead) return;
             var animancer = actor.GetComponentInChildren<AnimancerComponent>();
             if (animancer == null || !animancer.IsGraphInitialized) return;
             StartCoroutine(HitStopRoutine(animancer, seconds));

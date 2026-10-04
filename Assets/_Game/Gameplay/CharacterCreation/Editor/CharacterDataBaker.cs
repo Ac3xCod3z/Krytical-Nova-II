@@ -179,7 +179,7 @@ namespace KryticalNova.EditorTools
         [MenuItem("Krytical Nova/Characters/Clear Saved Characters")]
         public static void ClearSavedCharacters()
         {
-            new PlayerPrefsCharacterStore(KryticalNova.Networking.NetworkConnectionManager.EditorCloneProfile()).DeleteAll();
+            new PlayerPrefsCharacterStore(KryticalNova.Networking.NetworkConnectionManager.LocalProfile()).DeleteAll();
             CharacterSession.Clear();
             Debug.Log("[Characters] Saved characters cleared.");
         }
@@ -189,6 +189,7 @@ namespace KryticalNova.EditorTools
         {
             Bake();
             SidekickGearGenerator.Generate();
+            CharacterExpressionBaker.Bake();
         }
 
         [MenuItem("Krytical Nova/Characters/3. Bake Character Data (Lineages, Palettes, Faces)")]
