@@ -574,6 +574,9 @@
 .kn-faction-covenant .chat-line {
     font-size: 13.44px;
 }
+.kn-faction-covenant .chat-line--party {
+    color: rgb(232, 163, 35);
+}
 .kn-faction-covenant .chat-channel {
     font-size: 11.2px;
     color: rgb(200, 188, 174);
@@ -616,6 +619,48 @@
 }
 .kn-faction-covenant .duel-result--win .duel-result-title {
     color: rgb(222, 167, 65);
+}
+
+/* ---- PartyPanels.uss ---- */
+.kn-faction-covenant .party-title {
+    font-size: 11.2px;
+}
+.kn-faction-covenant .party-leave {
+    font-size: 10.08px;
+}
+.kn-faction-covenant .party-member-name {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .party-member--leader .party-member-name {
+    color: rgb(130, 244, 168);
+}
+.kn-faction-covenant .party-member-level {
+    font-size: 11.2px;
+    color: rgb(200, 188, 174);
+}
+.kn-faction-covenant .party-hp {
+    background-color: rgba(66, 53, 39, 0.9);
+}
+.kn-faction-covenant .party-hp-fill {
+    background-color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .party-member--away .party-hp-fill {
+    background-color: rgba(200, 188, 174, 0.35);
+}
+.kn-faction-covenant .party-member--away .party-member-name {
+    color: rgb(176, 166, 154);
+}
+.kn-faction-covenant .party-invite-text {
+    font-size: 16.8px;
+}
+.kn-faction-covenant .party-invite-button {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .party-timer {
+    background-color: rgba(66, 53, 39, 0.9);
+}
+.kn-faction-covenant .party-timer-fill {
+    background-color: rgb(222, 167, 65);
 }
 
 /* ---- NpcInteraction.uss ---- */

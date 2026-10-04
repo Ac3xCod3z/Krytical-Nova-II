@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="PartyPanels.uss" />
+    <!-- Instanced into ProgressionHUD.uxml; driven by PartyHudController. Shared .panel skin, so each faction sees
+         these in its own HUD style. Member rows are added in code. -->
+
+    <!-- The local player's party: one row per other member (up to four), under the status frame. Moved and
+         resized from Settings > Edit HUD Layout like the other HUD panels. -->
+    <ui:VisualElement name="party-frames" class="party-frames panel blocks-world hud-movable">
+        <ui:VisualElement class="party-header">
+            <ui:Label text="PARTY" class="eyebrow party-title" />
+            <ui:Button name="party-leave" text="LEAVE" class="kn-button-danger party-leave" />
+        </ui:VisualElement>
+        <ui:VisualElement name="party-members" class="party-members" picking-mode="Ignore" />
+    </ui:VisualElement>
+
+    <!-- A party invitation addressed to the local player. -->
+    <ui:VisualElement name="party-invite" class="party-invite panel blocks-world">
+        <ui:Label text="PARTY INVITATION" class="eyebrow" />
+        <ui:Label name="party-invite-text" text="Someone invites you to a party" class="heading party-invite-text" />
+        <ui:VisualElement class="party-invite-buttons">
+            <ui:Button name="party-accept" text="JOIN  [Y]" class="kn-button-primary party-invite-button" />
+            <ui:Button name="party-decline" text="REFUSE  [N]" class="kn-button-danger party-invite-button" />
+        </ui:VisualElement>
+        <ui:VisualElement class="party-timer" picking-mode="Ignore">
+            <ui:VisualElement name="party-invite-fill" class="party-timer-fill" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

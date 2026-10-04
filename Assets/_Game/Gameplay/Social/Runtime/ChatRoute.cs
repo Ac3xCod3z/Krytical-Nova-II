@@ -13,5 +13,6 @@ namespace KryticalNova.Social
         NotGameMaster,
         /// <summary>System and Combat lines are written by the game, never sent by a player.</summary>
         NotAPlayerChannel,
+        NotInParty,
     }
 }

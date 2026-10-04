@@ -77,7 +77,7 @@ _Game/
 │   ├── NPC/               Runtime/  Data/Assets/
 │   ├── Player/            Runtime/  Prefabs/ (Player.prefab = the networked gameplay player)
 │   ├── Progression/       Runtime/  Data/ (SO classes)  Data/Assets/ (SO instances)  Editor/
-│   ├── Social/            Runtime/ (chat channels and rules, PlayerChat, the combat log; later guilds, parties)
+│   ├── Social/            Runtime/ (chat channels and rules, PlayerChat, the combat log, parties; later guilds)
 │   │                      Tests/Editor/
 │   └── (future) Skills/ Quests/ Interaction/ StatusEffects/ Inventory/
 ├── Characters/            Representation only: models, rigs, materials, animations, visual prefabs
@@ -105,7 +105,7 @@ _Game/
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
 ├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets)  Editor/ (Menus/ = front-end
-│                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/)  Inventory/  NPC/  Shaders/
+│                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/ Duel/ Party/)  Inventory/  NPC/  Shaders/
 │                          Menus/ (Materials/, KeyGlyphs.asset: assets the front-end scenes use)
 │                          (future: Skills/ Character/ World/ Settings/)
 ├── VFX/                   Gameplay/  GameFeel/  Environment/{City,Portals,Vehicles,Weather}/  Materials/ (shared FX mats)
@@ -162,7 +162,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Editor.Menus`       | `UI/Editor/Menus/`                             | Front-end scene builder. Depends on Editor, UI, Runtime, uGUI, TextMesh Pro. `!UNITY_SERVER` |
 | `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
 | `KryticalNova.CharacterCreation.Tests.Editor` | `Gameplay/CharacterCreation/Tests/Editor/` | EditMode tests (names, roster, recipes, creator edits, gear rules) |
-| `KryticalNova.Social.Tests.Editor` | `Gameplay/Social/Tests/Editor/`               | EditMode tests (chat channel rules, typed chat lines)                     |
+| `KryticalNova.Social.Tests.Editor` | `Gameplay/Social/Tests/Editor/`               | EditMode tests (chat channel rules, typed chat lines, party rules)                     |
 
 **Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
 **New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`

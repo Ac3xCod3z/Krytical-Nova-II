@@ -7,8 +7,8 @@ namespace KryticalNova.Social
 {
     /// <summary>
     /// The chat rules, free of networking so they can be tested: who hears a message on each channel.
-    /// General is a local shout, Faction and Guild reach their members anywhere on the server, a whisper reaches one
-    /// player, and the GM channel reaches everyone but only the host may speak on it.
+    /// General is a local shout, Faction, Guild and Party reach their members anywhere on the server, a whisper
+    /// reaches one player, and the GM channel reaches everyone but only the host may speak on it.
     /// </summary>
     public static class ChatRouting
     {
@@ -54,6 +54,12 @@ namespace KryticalNova.Social
                     if (string.IsNullOrEmpty(sender.Guild)) return ChatRoute.NotInGuild;
                     for (int i = 0; i < everyone.Count; i++)
                         if (string.Equals(everyone[i].Guild, sender.Guild, StringComparison.OrdinalIgnoreCase)) recipients.Add(i);
+                    return ChatRoute.Delivered;
+
+                case ChatChannel.Party:
+                    if (sender.Party == 0) return ChatRoute.NotInParty;
+                    for (int i = 0; i < everyone.Count; i++)
+                        if (everyone[i].Party == sender.Party) recipients.Add(i);
                     return ChatRoute.Delivered;
 
                 case ChatChannel.Whisper:

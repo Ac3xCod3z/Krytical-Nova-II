@@ -9,6 +9,7 @@
     <ui:Template name="WorldMap" src="Map/WorldMap.uxml" />
     <ui:Template name="ChatWindow" src="Chat/ChatWindow.uxml" />
     <ui:Template name="DuelPanels" src="Duel/DuelPanels.uxml" />
+    <ui:Template name="PartyPanels" src="Party/PartyPanels.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
         <!-- Player status frame -->
         <ui:VisualElement name="summary" class="panel blocks-world hud-movable">
@@ -341,6 +342,9 @@
 
         <!-- Inventory + Equipment windows, tooltip, context menu (GearUIController) -->
         <ui:Instance template="ItemWindows" name="item-layer" class="item-layer" picking-mode="Ignore" />
+
+        <!-- Party: member frames and the invitation (PartyHudController) -->
+        <ui:Instance template="PartyPanels" name="party-layer" class="party-layer" picking-mode="Ignore" />
 
         <!-- Duel: target strip, request, YOU WIN / YOU LOSE (DuelHudController). Last, so it draws over the windows. -->
         <ui:Instance template="DuelPanels" name="duel-layer" class="duel-layer" picking-mode="Ignore" />

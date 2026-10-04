@@ -3,10 +3,11 @@
     <!-- Instanced into ProgressionHUD.uxml; driven by DuelHudController. Shared .panel skin, so each faction sees
          these in its own HUD style. -->
 
-    <!-- The selected friendly player: ask for a duel, or whisper. -->
+    <!-- The selected friendly player: ask for a duel, invite to the party, or whisper. -->
     <ui:VisualElement name="duel-target" class="duel-target panel blocks-world">
         <ui:Label name="duel-target-name" text="PLAYER" class="heading duel-target-name" />
         <ui:Button name="duel-target-duel" text="DUEL" class="kn-button-primary duel-target-button" />
+        <ui:Button name="duel-target-invite" text="INVITE" class="duel-target-button" />
         <ui:Button name="duel-target-whisper" text="WHISPER" class="duel-target-button" />
     </ui:VisualElement>
 

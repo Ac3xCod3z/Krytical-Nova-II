@@ -73,6 +73,7 @@ GameObject:
   - component: {fileID: 3222653949759909076}
   - component: {fileID: 2197880957116394824}
   - component: {fileID: 7474861536265259682}
+  - component: {fileID: 410367017437213386}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -3498,6 +3499,20 @@ MonoBehaviour:
   requestSeconds: 30
   countdownSeconds: 3
   leashRadius: 60
+--- !u!114 &410367017437213386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38c15014c43e016409be0094c3d2b799, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.PlayerParty
+  ShowTopMostFoldoutHeaderGroup: 1
+  inviteSeconds: 30
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

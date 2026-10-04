@@ -2,6 +2,7 @@ using KryticalNova.Combat;
 using KryticalNova.Core;
 using KryticalNova.Player;
 using KryticalNova.Progression;
+using KryticalNova.Social;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -9,7 +10,7 @@ using UnityEngine.UIElements;
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// The duel panels of the HUD. While a friendly player is selected a small strip offers DUEL and WHISPER. A request
+    /// The duel panels of the HUD. While a friendly player is selected a small strip offers DUEL, INVITE (to the party) and WHISPER. A request
     /// from another player shows with ACCEPT / DECLINE (keys Y / N) until it is answered or lapses. When the local
     /// player's duel ends the winner sees YOU WIN and the loser YOU LOSE. The panels use the shared panel skin, so
     /// each player sees them in the look of their own faction. The server decides everything
@@ -60,6 +61,7 @@ namespace KryticalNova.UI
             {
                 boundRoot = root;
                 Bind(targetStrip, "duel-target-duel", AskSelected);
+                Bind(targetStrip, "duel-target-invite", InviteSelected);
                 Bind(targetStrip, "duel-target-whisper", WhisperSelected);
                 Bind(request, "duel-accept", () => Answer(true));
                 Bind(request, "duel-decline", () => Answer(false));
@@ -162,6 +164,12 @@ namespace KryticalNova.UI
         {
             PlayerDuel mine = PlayerDuel.Local;
             if (mine != null && shownTarget != null) mine.Request(shownTarget);
+        }
+
+        private void InviteSelected()
+        {
+            PlayerParty mine = PlayerParty.Local;
+            if (mine != null && shownTarget != null) mine.Invite(shownTarget.GetComponent<PlayerParty>());
         }
 
         private void WhisperSelected()

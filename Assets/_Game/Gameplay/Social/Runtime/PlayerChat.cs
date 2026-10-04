@@ -49,6 +49,7 @@ namespace KryticalNova.Social
         private PlayerMeleeCombat meleeCombat;
         private PlayerDeathMotor deathMotor;
         private PlayerDuel duel;
+        private PlayerParty party;
         private string offlineGuild = string.Empty;
 
         /// <summary>This machine's own player, or null (dedicated server, no player yet).</summary>
@@ -69,6 +70,7 @@ namespace KryticalNova.Social
             meleeCombat = GetComponent<PlayerMeleeCombat>();
             deathMotor = GetComponent<PlayerDeathMotor>();
             duel = GetComponent<PlayerDuel>();
+            party = GetComponent<PlayerParty>();
         }
 
         private void OnEnable()
@@ -150,6 +152,9 @@ namespace KryticalNova.Social
                     break;
                 case ChatRoute.NotInGuild:
                     ServerSystem("You are not in a guild.");
+                    break;
+                case ChatRoute.NotInParty:
+                    ServerSystem("You are not in a party. Invite a player with /invite <name>.");
                     break;
                 case ChatRoute.NoSuchPlayer:
                     ServerSystem($"No player named '{whisperTarget}' is online.");
@@ -251,6 +256,7 @@ namespace KryticalNova.Social
             Name = SpeakerName,
             Faction = identity != null ? identity.Faction : default,
             Guild = Guild,
+            Party = party != null ? party.PartyId : 0,
             Position = transform.position,
             IsGameMaster = IsGameMaster,
         };

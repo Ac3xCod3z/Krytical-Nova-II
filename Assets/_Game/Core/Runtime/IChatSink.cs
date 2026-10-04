@@ -17,6 +17,8 @@ namespace KryticalNova.Core
         System = 5,
         /// <summary>This player's own combat: damage dealt and taken, evades and misses.</summary>
         Combat = 6,
+        /// <summary>Everyone in the speaker's party, wherever they are.</summary>
+        Party = 7,
     }
 
     /// <summary>One line for the chat window.</summary>

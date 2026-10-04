@@ -28,7 +28,7 @@ namespace KryticalNova.UI
         private const string UnreadTabClass = "chat-tab--unread";
         private const string LineClass = "chat-line";
         private const string ResizingClass = "chat-resize--active";
-        private const string Welcome = "Press Enter to chat.  /s say   /f faction   /g guild   /w <name> whisper   /r reply";
+        private const string Welcome = "Press Enter to chat.  /s say   /f faction   /p party   /g guild   /w <name> whisper   /r reply";
 
         private sealed class Tab
         {
@@ -46,16 +46,16 @@ namespace KryticalNova.UI
             public ChatLine Line;
         }
 
-        private static readonly string[] ChannelNames = { "GENERAL", "FACTION", "GUILD", "WHISPER", "GM", "SYSTEM", "COMBAT" };
+        private static readonly string[] ChannelNames = { "GENERAL", "FACTION", "GUILD", "WHISPER", "GM", "SYSTEM", "COMBAT", "PARTY" };
         private static readonly string[] LineClasses =
         {
             "chat-line--general", "chat-line--faction", "chat-line--guild", "chat-line--whisper",
-            "chat-line--gm", "chat-line--system", "chat-line--combat"
+            "chat-line--gm", "chat-line--system", "chat-line--combat", "chat-line--party"
         };
 
         private readonly List<Stored>[] history = new List<Stored>[ChannelNames.Length];
         private readonly List<Stored> merged = new List<Stored>(LinesShown * 2);
-        private readonly List<Tab> tabs = new List<Tab>(7);
+        private readonly List<Tab> tabs = new List<Tab>(8);
 
         private VisualElement root;
         private VisualElement boundRoot;
@@ -206,6 +206,7 @@ namespace KryticalNova.UI
             {
                 case ChatChannel.General: return $"[General] {line.Sender}: {line.Text}";
                 case ChatChannel.Faction: return $"[Faction] {line.Sender}: {line.Text}";
+                case ChatChannel.Party: return $"[Party] {line.Sender}: {line.Text}";
                 case ChatChannel.Guild: return $"[Guild] {line.Sender}: {line.Text}";
                 case ChatChannel.Whisper: return $"{(line.Outgoing ? "To" : "From")} {line.Sender}: {line.Text}";
                 case ChatChannel.Gm: return $"[GM] {line.Sender}: {line.Text}";
@@ -241,7 +242,8 @@ namespace KryticalNova.UI
 
         private void BuildTabs()
         {
-            int players = Bit(ChatChannel.General) | Bit(ChatChannel.Faction) | Bit(ChatChannel.Guild) | Bit(ChatChannel.Whisper);
+            int players = Bit(ChatChannel.General) | Bit(ChatChannel.Faction) | Bit(ChatChannel.Party) | Bit(ChatChannel.Guild)
+                | Bit(ChatChannel.Whisper);
             // Notices and GM announcements are for the player whatever tab they are on; combat has its own tab.
             int always = Bit(ChatChannel.System) | Bit(ChatChannel.Gm);
 
@@ -250,6 +252,7 @@ namespace KryticalNova.UI
             AddTab("ALL", players | always, null);
             AddTab("GENERAL", Bit(ChatChannel.General) | always, ChatChannel.General);
             AddTab("FACTION", Bit(ChatChannel.Faction) | always, ChatChannel.Faction);
+            AddTab("PARTY", Bit(ChatChannel.Party) | always, ChatChannel.Party);
             AddTab("GUILD", Bit(ChatChannel.Guild) | always, ChatChannel.Guild);
             AddTab("WHISPER", Bit(ChatChannel.Whisper) | always, ChatChannel.Whisper);
             AddTab("GM", always, ChatChannel.Gm);

@@ -14,9 +14,9 @@
     position: absolute;
     left: 16px;
     bottom: 16px;
-    width: 380px;
+    width: 420px;
     height: 210px;
-    min-width: 300px;
+    min-width: 340px;
     min-height: 150px;
     max-width: 520px;
     max-height: 340px;
@@ -90,6 +90,7 @@
 
 .chat-line--general { color: rgb(232, 238, 242); }
 .chat-line--faction { color: rgb(136, 226, 124); }
+.chat-line--party { color: rgb(96, 220, 232); }
 .chat-line--guild { color: rgb(110, 190, 255); }
 .chat-line--whisper { color: rgb(236, 150, 255); }
 .chat-line--gm { color: rgb(255, 184, 60); }
