@@ -1,0 +1,554 @@
+fileFormatVersion: 2
+guid: 5233a0ee691c018439c47868f8d44565
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 0
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 3072
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f3b6f4aa5feb022448515eb34b601dc5
+      internalID: -1916781514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_1
+      rect:
+        serializedVersion: 2
+        x: 819
+        y: 3072
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a909b093098175346ad0101973d37abe
+      internalID: 1582479099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_2
+      rect:
+        serializedVersion: 2
+        x: 1638
+        y: 3072
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bd7cec1f10ddc1b43bc292ee44c5d33c
+      internalID: -1300110091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_3
+      rect:
+        serializedVersion: 2
+        x: 2457
+        y: 3072
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e86319281b59e6d4283a9f2a3dc86e21
+      internalID: -1469999274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_4
+      rect:
+        serializedVersion: 2
+        x: 3276
+        y: 3072
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 91b76c36dd7305d42bdcebbf8370a525
+      internalID: -862128326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_5
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2048
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 98fa7f62f5c015d459bc3281c946908e
+      internalID: 1915833943
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_6
+      rect:
+        serializedVersion: 2
+        x: 819
+        y: 2048
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2802a06f6c2c5c542939d43051dd752e
+      internalID: 1375824691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_7
+      rect:
+        serializedVersion: 2
+        x: 1638
+        y: 2048
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c7fc8eec2bf17c34c834334fd1a198a3
+      internalID: -1099417473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_8
+      rect:
+        serializedVersion: 2
+        x: 2457
+        y: 2048
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 05dcebeb51e40b34b986b26be5ff1c89
+      internalID: 1533030092
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_9
+      rect:
+        serializedVersion: 2
+        x: 3276
+        y: 2048
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 003c219d8fc8a4f47b933f1764f12c08
+      internalID: 883046821
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_10
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1024
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 42ff2ff12b00e634a80aafdbd55c9778
+      internalID: -2134074615
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_11
+      rect:
+        serializedVersion: 2
+        x: 819
+        y: 1024
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c185a503d3682064ba2aac4e1c4f6ff0
+      internalID: 1984523135
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_12
+      rect:
+        serializedVersion: 2
+        x: 1638
+        y: 1024
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b117bfc9d2261fb4bb9e4814caa1df5e
+      internalID: -1718561519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_13
+      rect:
+        serializedVersion: 2
+        x: 2457
+        y: 1024
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 82563952c37ec564a853f2f7c9cc5bc2
+      internalID: -869561142
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_14
+      rect:
+        serializedVersion: 2
+        x: 3276
+        y: 1024
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fdd95a08541145c4683c4a978701744e
+      internalID: 2094420288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_15
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2fe6d250f450d7a4b82e81e526afd0e2
+      internalID: 2035999136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_16
+      rect:
+        serializedVersion: 2
+        x: 819
+        y: 0
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2c446f37a2d025342b1733b88a983bd8
+      internalID: -1616204750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_17
+      rect:
+        serializedVersion: 2
+        x: 1638
+        y: 0
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea2a4f2a55bd73341bbb90733c892cbd
+      internalID: 152378461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_18
+      rect:
+        serializedVersion: 2
+        x: 2457
+        y: 0
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c39d98161c3072443aacc81609adca4a
+      internalID: 2066942034
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FX_DarkFantasy_FireSheet_01_19
+      rect:
+        serializedVersion: 2
+        x: 3276
+        y: 0
+        width: 819.2
+        height: 1024
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 29710c53baa9b474e8fe0cf07e04783b
+      internalID: -84683904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      SPR_FX_DarkFantasy_FireSheet_01_0: -1916781514
+      SPR_FX_DarkFantasy_FireSheet_01_1: 1582479099
+      SPR_FX_DarkFantasy_FireSheet_01_10: -2134074615
+      SPR_FX_DarkFantasy_FireSheet_01_11: 1984523135
+      SPR_FX_DarkFantasy_FireSheet_01_12: -1718561519
+      SPR_FX_DarkFantasy_FireSheet_01_13: -869561142
+      SPR_FX_DarkFantasy_FireSheet_01_14: 2094420288
+      SPR_FX_DarkFantasy_FireSheet_01_15: 2035999136
+      SPR_FX_DarkFantasy_FireSheet_01_16: -1616204750
+      SPR_FX_DarkFantasy_FireSheet_01_17: 152378461
+      SPR_FX_DarkFantasy_FireSheet_01_18: 2066942034
+      SPR_FX_DarkFantasy_FireSheet_01_19: -84683904
+      SPR_FX_DarkFantasy_FireSheet_01_2: -1300110091
+      SPR_FX_DarkFantasy_FireSheet_01_3: -1469999274
+      SPR_FX_DarkFantasy_FireSheet_01_4: -862128326
+      SPR_FX_DarkFantasy_FireSheet_01_5: 1915833943
+      SPR_FX_DarkFantasy_FireSheet_01_6: 1375824691
+      SPR_FX_DarkFantasy_FireSheet_01_7: -1099417473
+      SPR_FX_DarkFantasy_FireSheet_01_8: 1533030092
+      SPR_FX_DarkFantasy_FireSheet_01_9: 883046821
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
