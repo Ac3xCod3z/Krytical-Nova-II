@@ -106,7 +106,7 @@ namespace KryticalNova.UI
             Bind("network-close", () => SetVisible(panel, false));
             Bind("network-host", () => Manager?.StartLocalHost(ParsePort()));
             Bind("network-join", () => Manager?.StartLocalClient(ipField?.value ?? string.Empty, ParsePort()));
-            Bind("network-server", () => { if (NetworkManager.Singleton != null) NetworkManager.Singleton.StartServer(); });
+            Bind("network-server", () => Manager?.StartLocalServer(ParsePort()));
             Bind("network-host-online", () => { if (Manager != null) _ = Manager.StartMediatedHostAsync(); });
             Bind("network-join-code", () => { if (Manager != null) _ = Manager.JoinMediatedSessionByCodeAsync(codeField?.value ?? string.Empty); });
             Bind("network-copy-code", () =>

@@ -565612,6 +565612,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.Portals.ZonePortal
   ShowTopMostFoldoutHeaderGroup: 1
   portalId: zone01-northeast
+  displayName: 
   destinationZoneId: 
   arrivalPointId: 
   activationRadius: 3
@@ -628860,6 +628861,10 @@ PrefabInstance:
     - target: {fileID: 1450535918395789170, guid: 52503238b9ac2f545a4511a34d62f4e7, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 3519672788
+      objectReference: {fileID: 0}
+    - target: {fileID: 1450535918395789170, guid: 52503238b9ac2f545a4511a34d62f4e7, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 1718997538
       objectReference: {fileID: 0}
     - target: {fileID: 3071671160467358554, guid: 52503238b9ac2f545a4511a34d62f4e7, type: 3}
       propertyPath: m_Name

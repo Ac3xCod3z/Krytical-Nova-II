@@ -14,6 +14,8 @@ namespace KryticalNova.Player
     /// Validated click-to-jump traversal with safe NavMesh restoration. With a warp asset assigned the whole jump is
     /// one animation whose root motion is warped (KINEMATION Motion Warping) onto the apex and the landing point, so
     /// pose and travel always agree. Without one it falls back to the DOTween parabola with separate jump clips.
+    /// The jump is simulated where the player is (the server, or offline). Every other machine only presents it:
+    /// it plays the same clips on the same clock while NetworkTransform carries the body.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerMovementSkills), typeof(PlayerResources))]
@@ -24,6 +26,11 @@ namespace KryticalNova.Player
         private const float LandingHeightTolerance = 0.2f;
         private const float FlipFinishMargin = 0.04f;
         private const float MaximumSweepTimeStep = 0.02f;
+        // A jump shown here but simulated elsewhere: the body arrives through NetworkTransform a little after the
+        // order to show it, so the clips start that much later and the landing waits for the body to come down.
+        private const float RemoteStartDelay = 0.1f;
+        private const float RemoteLandingGrace = 0.6f;
+        private const float RemoteLandingTolerance = 0.05f;
         [SerializeField] private JumpMotionData motionData;
         [SerializeField] private PlayerJumpPresentation presentation;
 
@@ -63,8 +70,23 @@ namespace KryticalNova.Player
         private bool apexPlayed;
         private bool cancelling;
         private bool restoreOnEnable;
+        private bool planUsesWarp;
+
+        // A jump simulated elsewhere, shown here: only the clock and the clips run.
+        private bool remoteJump;
+        private bool remoteStarted;
+        private bool remoteWarped;
+        private bool remoteAirborne;
+        private float remoteClock;
+        private float remoteTakeoffTime;
+        private float remoteApexTime;
+        private float remoteLandTime;
+
         public bool IsBusy { get; private set; }
         public event Action<string> Message;
+
+        /// <summary>True where this player's jump is simulated (the server, or offline).</summary>
+        private bool HasAuthority => !IsSpawned || IsServer;
 
         private void Awake()
         {
@@ -84,36 +106,60 @@ namespace KryticalNova.Player
         /// <summary>Validates a clicked landing point before interrupting the current path. Chi is charged at takeoff.</summary>
         public bool TryJump(Vector3 clickedPoint, LayerMask obstacleLayers, float modelForwardOffset, out string reason)
         {
-            if (IsSpawned && !IsServer)
+            // An owning client checks the jump against its mirrored ranks, Chi and the same NavMesh, so a bad click
+            // is refused at once; the server checks again before it starts anything.
+            if (!TryPlanJump(clickedPoint, obstacleLayers.value, modelForwardOffset, out reason)) return false;
+
+            if (!HasAuthority)
             {
-                reason = string.Empty;
                 RequestJumpServerRpc(clickedPoint, obstacleLayers.value, modelForwardOffset);
                 return true;
             }
 
-            bool started = ExecuteJumpInternal(clickedPoint, obstacleLayers.value, modelForwardOffset, out reason);
-            // Host jumping: remote clients only saw the transform move; replay the jump presentation there.
-            if (started && IsSpawned && IsServer) TriggerJumpClientRpc(clickedPoint, obstacleLayers.value, modelForwardOffset);
-            return started;
+            BeginJump();
+            return true;
         }
 
         [ServerRpc]
         private void RequestJumpServerRpc(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset)
         {
-            if (ExecuteJumpInternal(clickedPoint, obstacleLayersValue, modelForwardOffset, out _))
-            {
-                TriggerJumpClientRpc(clickedPoint, obstacleLayersValue, modelForwardOffset);
-            }
+            if (TryPlanJump(clickedPoint, obstacleLayersValue, modelForwardOffset, out string reason)) BeginJump();
+            else JumpRejectedRpc(reason);
+        }
+
+        [Rpc(SendTo.Owner)]
+        private void JumpRejectedRpc(string reason)
+        {
+            if (!string.IsNullOrEmpty(reason)) Message?.Invoke(reason);
+        }
+
+        /// <summary>Starts the planned jump where it is simulated and shows it on every other machine.</summary>
+        private void BeginJump()
+        {
+            if (planUsesWarp) BeginWarpedJump();
+            else BeginParabolaJump();
+            if (IsSpawned) JumpStartedClientRpc(landingFeet, peakHeight);
         }
 
         [ClientRpc]
-        private void TriggerJumpClientRpc(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset)
+        private void JumpStartedClientRpc(Vector3 landing, float peak)
         {
-            if (IsServer) return; // Server already running it
-            ExecuteJumpInternal(clickedPoint, obstacleLayersValue, modelForwardOffset, out _);
+            if (IsServer) return; // the server is already running it
+            BeginRemoteJump(landing, peak);
         }
 
-        private bool ExecuteJumpInternal(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset, out string reason)
+        [ClientRpc]
+        private void JumpAbortedClientRpc(string reason)
+        {
+            if (IsServer) return;
+            EndRemoteJump(false);
+            if (IsOwner && !string.IsNullOrEmpty(reason)) Message?.Invoke(reason);
+        }
+
+        /// <summary>
+        /// Checks a jump to <paramref name="clickedPoint"/> and works out its route without starting or spending anything.
+        /// </summary>
+        private bool TryPlanJump(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset, out string reason)
         {
             reason = string.Empty;
             if (IsBusy) { reason = "Finish this jump before choosing another destination."; return false; }
@@ -147,12 +193,22 @@ namespace KryticalNova.Player
             float clearanceApex = Mathf.Max(startFeet.y, landingFeet.y) + motionData.apexClearance;
             // Short hops stay low; only a max-range jump climbs to the rank's full height.
             peakHeight = Mathf.Max(clearanceApex, startFeet.y + motionData.RiseForDistance(horizontalDistance, maxDist, jumpH));
-            if (UseWarpedJump) return BeginWarpedJump(out reason);
-            ascentTime = Mathf.Sqrt(2f * (peakHeight - startFeet.y) / motionData.gravity);
-            descentTime = Mathf.Sqrt(2f * (peakHeight - landingFeet.y) / motionData.gravity);
-            flightTime = ascentTime + motionData.apexHoldDuration + descentTime;
+            planUsesWarp = UseWarpedJump;
+            if (planUsesWarp) return PlanWarpedJump(out reason);
+            PlanParabola();
             if (!ValidateTrajectory()) { reason = "The jump arc or landing area is blocked."; return false; }
+            return true;
+        }
 
+        private void PlanParabola()
+        {
+            ascentTime = Mathf.Sqrt(2f * Mathf.Max(0f, peakHeight - startFeet.y) / motionData.gravity);
+            descentTime = Mathf.Sqrt(2f * Mathf.Max(0f, peakHeight - landingFeet.y) / motionData.gravity);
+            flightTime = ascentTime + motionData.apexHoldDuration + descentTime;
+        }
+
+        private void BeginParabolaJump()
+        {
             if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
             {
                 agent.isStopped = true;
@@ -170,7 +226,6 @@ namespace KryticalNova.Player
             float clock = 0f;
             jumpSequence.Append(DOTween.To(() => clock, value => { clock = value; EvaluateFlight(value); }, flightTime, flightTime).SetEase(Ease.Linear));
             jumpSequence.OnComplete(FinishJump);
-            return true;
         }
 
         // ------------------------------------------------------------------ motion-warped jump
@@ -178,21 +233,30 @@ namespace KryticalNova.Player
         private bool UseWarpedJump => warpAsset != null && motionWarping != null && presentation.SupportsWarpedJump
             && warpAsset.warpPhases != null && warpAsset.warpPhases.Count == 2 && warpAsset.rootY != null;
 
-        private bool BeginWarpedJump(out string reason)
+        private bool ReadWarpPhases()
         {
-            reason = string.Empty;
             warpTakeoffTime = warpAsset.warpPhases[0].startTime;
             warpApexTime = warpAsset.warpPhases[0].endTime;
             warpLandTime = warpAsset.warpPhases[1].endTime;
-            float airTime = warpLandTime - warpTakeoffTime;
-            if (warpApexTime <= warpTakeoffTime || warpLandTime <= warpApexTime)
+            return warpApexTime > warpTakeoffTime && warpLandTime > warpApexTime;
+        }
+
+        private bool PlanWarpedJump(out string reason)
+        {
+            reason = string.Empty;
+            if (!ReadWarpPhases())
             { reason = "Jump warp asset has no flight phases. Rebuild it from the Krytical Nova menu."; return false; }
 
             // Travel is even over the flight, so the apex sits where the clip's apex falls in time.
+            float airTime = warpLandTime - warpTakeoffTime;
             apexFeet = Vector3.Lerp(startFeet, landingFeet, (warpApexTime - warpTakeoffTime) / airTime);
             apexFeet.y = peakHeight;
             if (!ValidateWarpedTrajectory()) { reason = "The jump arc or landing area is blocked."; return false; }
+            return true;
+        }
 
+        private void BeginWarpedJump()
+        {
             if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
             {
                 agent.isStopped = true;
@@ -222,11 +286,94 @@ namespace KryticalNova.Player
                 new WarpPoint { position = apexFeet + rootOffset, rotation = rotation },
                 new WarpPoint { position = landingFeet + rootOffset, rotation = rotation },
             });
-            return true;
+        }
+
+        // ------------------------------------------------------------------ presentation of a jump simulated elsewhere
+
+        private void BeginRemoteJump(Vector3 landing, float peak)
+        {
+            if (remoteJump) EndRemoteJump(false);
+            if (motionData == null || presentation == null || !presentation.IsReady) return;
+
+            startFeet = transform.position - Vector3.up * (agent != null ? agent.baseOffset : 0f);
+            landingFeet = landing;
+            peakHeight = peak;
+            remoteWarped = UseWarpedJump && ReadWarpPhases();
+            if (remoteWarped)
+            {
+                remoteTakeoffTime = warpTakeoffTime;
+                remoteApexTime = warpApexTime;
+                remoteLandTime = warpLandTime;
+            }
+            else
+            {
+                PlanParabola();
+                remoteTakeoffTime = motionData.anticipationDuration;
+                remoteApexTime = remoteTakeoffTime + ascentTime;
+                remoteLandTime = remoteTakeoffTime + flightTime;
+            }
+
+            IsBusy = true;
+            remoteJump = true;
+            remoteStarted = false;
+            remoteAirborne = false;
+            apexPlayed = false;
+            remoteClock = -RemoteStartDelay;
+        }
+
+        private void UpdateRemoteJump()
+        {
+            remoteClock += Time.deltaTime;
+            if (!remoteStarted)
+            {
+                if (remoteClock < 0f) return;
+                remoteStarted = true;
+                if (remoteWarped) presentation.BeginWarpedJump();
+                else presentation.Anticipate();
+            }
+
+            if (!remoteAirborne)
+            {
+                if (remoteClock < remoteTakeoffTime) return;
+                remoteAirborne = true;
+                if (remoteWarped) presentation.WarpedTakeOff();
+                else presentation.TakeOff();
+                return;
+            }
+
+            if (!remoteWarped && !apexPlayed && remoteClock >= remoteApexTime)
+            {
+                apexPlayed = true;
+                presentation.PlayApexFlip(Mathf.Max(MinimumTime, remoteLandTime - remoteClock - FlipFinishMargin));
+            }
+            if (remoteClock < remoteLandTime) return;
+            // Touch down when the body has: until then it is still coming in through NetworkTransform.
+            Vector3 feet = transform.position - Vector3.up * (agent != null ? agent.baseOffset : 0f);
+            bool arrived = (feet - landingFeet).sqrMagnitude <= RemoteLandingTolerance * RemoteLandingTolerance;
+            if (arrived || remoteClock >= remoteLandTime + RemoteLandingGrace) EndRemoteJump(true);
+        }
+
+        private void EndRemoteJump(bool landed)
+        {
+            if (!remoteJump) return;
+            bool shown = remoteStarted;
+            remoteJump = false;
+            remoteStarted = false;
+            remoteAirborne = false;
+            IsBusy = false;
+            cooldownUntil = Time.time + (motionData != null ? motionData.landingCooldown : 0f);
+            if (presentation == null || !shown) return;
+            if (!landed) { presentation.ResetPresentation(); return; }
+
+            if (remoteWarped) presentation.WarpedLand();
+            else presentation.Land();
+            if (IsOwner)
+                Message?.Invoke(skills.IsJumpSelected ? "Landed. Jump stays selected; choose another landing point." : "Landed. Movement ready.");
         }
 
         private void Update()
         {
+            if (remoteJump) { UpdateRemoteJump(); return; }
             if (!warping) return;
             if (!resources.IsAlive) { AbortJump("Jump interrupted: no HP remaining."); return; }
             warpClock += Time.deltaTime;
@@ -449,6 +596,7 @@ namespace KryticalNova.Player
         /// <summary>Cancels flight and restores the launch position when this controller is interrupted.</summary>
         public void CancelJump()
         {
+            if (remoteJump) { EndRemoteJump(false); return; }
             if (IsBusy) AbortJump("Jump cancelled.");
         }
 
@@ -456,6 +604,7 @@ namespace KryticalNova.Player
         {
             if (cancelling) return;
             cancelling = true;
+            if (IsSpawned && IsServer) JumpAbortedClientRpc(reason);
             StopWarp();
             jumpSequence?.Kill();
             jumpSequence = null;

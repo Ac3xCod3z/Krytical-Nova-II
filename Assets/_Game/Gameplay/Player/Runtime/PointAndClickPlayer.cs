@@ -184,6 +184,9 @@ namespace KryticalNova.Player
         {
             base.OnNetworkSpawn();
 
+            // The server picks where every player appears, before its first Start attaches it to the NavMesh.
+            if (IsServer) KryticalNova.Networking.PlayerSpawnService.PlaceSpawnedPlayer(transform);
+
             if (!IsOwner)
             {
                 // Disable input and camera controls on remote player proxies
@@ -242,7 +245,10 @@ namespace KryticalNova.Player
 
             if (IsSpawned && !IsOwner)
             {
-                // Remote proxy does not need input action maps or camera handling
+                // Another player's character needs no input or camera here, but the server moves it: without an
+                // agent on the NavMesh every move, attack and jump that player asks for would be dropped.
+                if (IsServer && !PlaceAgentOnNavigation())
+                    enabled = false;
                 return;
             }
 
@@ -579,8 +585,7 @@ namespace KryticalNova.Player
 
             if (IsSpawned && !IsServer)
             {
-                bool isRunning = movementSkills != null && movementSkills.IsRunning;
-                RequestMoveDestinationServerRpc(hit.point, isRunning);
+                RequestMoveDestinationServerRpc(hit.point);
                 // The server validates the path; the marker is the client's best guess at the destination.
                 ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
                 return;
@@ -629,7 +634,7 @@ namespace KryticalNova.Player
             if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
 
             if (IsSpawned && !IsServer)
-                RequestMoveDestinationServerRpc(goal, movementSkills != null && movementSkills.IsRunning);
+                RequestMoveDestinationServerRpc(goal);
             else if (!ExecuteLocalMove(goal, out _))
                 return false;
 
@@ -749,8 +754,7 @@ namespace KryticalNova.Player
             ClientPresentationRegistry.Markers?.HideMoveMarker();
             if (IsSpawned && !IsServer)
             {
-                bool isRunning = movementSkills != null && movementSkills.IsRunning;
-                RequestMoveDestinationServerRpc(destination, isRunning);
+                RequestMoveDestinationServerRpc(destination);
                 return;
             }
 
@@ -771,8 +775,7 @@ namespace KryticalNova.Player
             Vector3 destination = interactable.InteractPoint;
             if (IsSpawned && !IsServer)
             {
-                bool isRunning = movementSkills != null && movementSkills.IsRunning;
-                RequestMoveDestinationServerRpc(destination, isRunning);
+                RequestMoveDestinationServerRpc(destination);
                 return;
             }
 
@@ -831,7 +834,7 @@ namespace KryticalNova.Player
         }
 
         [ServerRpc]
-        private void RequestMoveDestinationServerRpc(Vector3 destinationPoint, bool isRunning)
+        private void RequestMoveDestinationServerRpc(Vector3 destinationPoint)
         {
             if (resources != null && !resources.IsAlive) return;
             if (jumpMotor != null && jumpMotor.IsBusy) return;
@@ -850,8 +853,9 @@ namespace KryticalNova.Player
             if (Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance)
                 return;
 
+            // The server knows which movement skill is selected; the request only names the place.
             float paidCost = 0f;
-            if (isRunning && movementSkills != null
+            if (movementSkills != null && movementSkills.IsRunning
                 && !movementSkills.TryPayForCommand(MovementSkillId.Run, out paidCost, out _))
             {
                 return;

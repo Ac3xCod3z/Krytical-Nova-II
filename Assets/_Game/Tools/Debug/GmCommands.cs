@@ -15,25 +15,33 @@ using UnityEngine.InputSystem;
 namespace KryticalNova.DevTools
 {
     /// <summary>
-    /// Quantum Console GM / development commands (prefix "gm."). Like the item and world commands they act on the
-    /// authority's own player only (host or offline), because progression and max HP/Chi are computed on the server.
+    /// Quantum Console GM / development commands (prefix "gm."). Like the item and world commands they only run where
+    /// the game is decided (host, server or offline), because progression and max HP/Chi are computed there. They
+    /// act on the local player, or on the connected player picked with gm.target (see <see cref="GmTarget"/>).
     /// Time and weather shortcuts wrap <see cref="WorldEnvironmentCommands"/>' API.
     /// </summary>
     public static class GmCommands
     {
-        private const string NoPlayer = "No local player.";
         private const string NoAuthority = "Only the host/offline player can use GM commands.";
         private const float NavSampleRadius = 6f;
 
-        private static readonly object GmStatSource = new object();
-        private static readonly Dictionary<StatType, float> gmFlatStats = new Dictionary<StatType, float>();
-        private static bool oneShot;
         private static float pausedTimeScale = 1f;
         // Physics step at normal speed, remembered the first time the game speed is changed (0 = never changed).
         private static float normalFixedDeltaTime;
 
+        /// <summary>The GM toggles of the player the commands act on (read by the editor GM Tools window); null if none.</summary>
+        public static PlayerGmState TargetGmState =>
+            GmTarget.TryGetPlayer(out var player, out _) ? player.GetComponent<PlayerGmState>() : null;
+
         /// <summary>Read by the editor GM Tools window to show the toggle state.</summary>
-        public static bool OneShotEnabled => oneShot;
+        public static bool OneShotEnabled
+        {
+            get
+            {
+                var gm = TargetGmState;
+                return gm != null && gm.OneShot;
+            }
+        }
 
         /// <summary>Read-only teleport target listing for tools (the editor GM Tools window).</summary>
         public static List<(string Name, string Kind, Vector3 Position)> GetTeleportTargets()
@@ -47,31 +55,55 @@ namespace KryticalNova.DevTools
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
-            gmFlatStats.Clear();
-            oneShot = false;
             pausedTimeScale = 1f;
             RestoreGameSpeed();
         }
 
         #region Player lookup
-        private static bool TryGetPlayer(out GameObject player, out string error)
-        {
-            player = null;
-            error = null;
-            var inv = PlayerInventory.Local;
-            if (inv == null) { error = NoPlayer; return false; }
-            if (inv.IsSpawned && !inv.IsServer) { error = NoAuthority; return false; }
-            player = inv.gameObject;
-            return true;
-        }
+        private static bool TryGetPlayer(out GameObject player, out string error) => GmTarget.TryGetPlayer(out player, out error);
 
         private static bool TryGet<T>(out T component, out string error) where T : Component
         {
             component = null;
             if (!TryGetPlayer(out var player, out error)) return false;
             component = player.GetComponent<T>();
-            if (component == null) { error = $"Local player has no {typeof(T).Name}."; return false; }
+            if (component == null) { error = $"That player has no {typeof(T).Name}."; return false; }
             return true;
+        }
+
+        [Command("gm.players", "List connected players and their client ids (host / server).")]
+        private static string Players()
+        {
+            var players = GmTarget.ConnectedPlayers();
+            if (players.Count == 0) return "No network session hosted here: GM commands act on your own player.";
+            ulong? target = GmTarget.ClientId;
+            var local = PlayerInventory.Local;
+            var sb = new StringBuilder();
+            foreach (var (clientId, player) in players)
+            {
+                bool isLocal = local != null && local.gameObject == player;
+                bool isTarget = target.HasValue ? target.Value == clientId : isLocal;
+                int level = player.TryGetComponent<PlayerCharacterProgression>(out var prog) ? prog.CurrentLevel : 0;
+                sb.Append(isTarget ? "> " : "  ").Append("client ").Append(clientId)
+                  .Append(isLocal ? " (you)" : string.Empty).Append("  level ").Append(level)
+                  .Append("  at ").AppendLine(player.transform.position.ToString("0"));
+            }
+            sb.Append("Pick one with gm.target <clientId>; gm.target self goes back to your own player.");
+            return sb.ToString();
+        }
+
+        [Command("gm.target", "Choose which connected player GM and item commands act on: gm.target <clientId> or gm.target self.")]
+        private static string Target(string who = "")
+        {
+            who = (who ?? string.Empty).Trim();
+            if (who.Length == 0) return $"GM commands act on {GmTarget.Describe()}.";
+            if (who.Equals("self", StringComparison.OrdinalIgnoreCase) || who.Equals("me", StringComparison.OrdinalIgnoreCase))
+            {
+                GmTarget.TargetSelf();
+                return "GM commands act on your own player.";
+            }
+            if (!ulong.TryParse(who, out ulong clientId)) return "Use gm.target <clientId> or gm.target self. gm.players lists the ids.";
+            return GmTarget.TrySetTarget(clientId, out var error) ? $"GM commands now act on {GmTarget.Describe()}." : error;
         }
         #endregion
 
@@ -81,6 +113,7 @@ namespace KryticalNova.DevTools
         {
             return string.Join("\n", new[]
             {
+                "TARGET       gm.players · gm.target <clientId|self>   (host: aim every command below at a connected player)",
                 "PROGRESSION  gm.level <n> · gm.maxlevel · gm.xp <n> · gm.statpoints <n> · gm.skillpoints <n> · gm.attr <str|vit|agi|spi> <n> · gm.resetstats",
                 "STATS        gm.stats · gm.setstat <StatType> <value> · gm.clearstats",
                 "VITALS       gm.heal · gm.fillchi · gm.damage <n> · gm.hitme [n] [normal|heavy|crit] [front|back|left|right] · gm.spendchi <n> · gm.kill",
@@ -191,31 +224,21 @@ namespace KryticalNova.DevTools
         private static string SetStat(StatType stat, float value)
         {
             if (!TryGet<CharacterCombatStats>(out var stats, out var error)) return error;
-            if (Mathf.Approximately(value, 0f)) gmFlatStats.Remove(stat);
-            else gmFlatStats[stat] = value;
-            ApplyGmModifiers(stats);
+            if (!TryGet<PlayerGmState>(out var gm, out error)) return error;
+            gm.SetFlatStat(stat, value);
             return $"{stat} GM bonus {value:+0.##;-0.##;0} → {stats.GetStatValue(stat):0.##}.";
         }
 
         [Command("gm.clearstats", "Remove every GM stat bonus (incl. one-shot).")]
         private static string ClearStats()
         {
-            if (!TryGet<CharacterCombatStats>(out var stats, out var error)) return error;
-            gmFlatStats.Clear();
-            oneShot = false;
-            ApplyGmModifiers(stats);
+            if (!TryGet<PlayerGmState>(out var gm, out var error)) return error;
+            gm.ClearStatBonuses();
             return "GM stat bonuses cleared.";
         }
 
-        private static void ApplyGmModifiers(CharacterCombatStats stats)
-        {
-            var mods = new List<StatModifier>();
-            foreach (var kv in gmFlatStats)
-                mods.Add(new StatModifier(kv.Key, ModifierType.Flat, kv.Value, GmStatSource));
-            if (oneShot)
-                mods.Add(new StatModifier(StatType.AttackPower, ModifierType.PercentMult, 100000f, GmStatSource));
-            stats.SetSourceModifiers(GmStatSource, mods);
-        }
+        private static bool GodModeOn(Component player) => player.TryGetComponent<PlayerGmState>(out var gm) && gm.GodMode;
+        private static bool InfiniteChiOn(Component player) => player.TryGetComponent<PlayerGmState>(out var gm) && gm.InfiniteChi;
         #endregion
 
         #region Vitals
@@ -240,7 +263,7 @@ namespace KryticalNova.DevTools
         {
             if (!TryGet<PlayerResources>(out var res, out var error)) return error;
             res.ApplyDamage(amount);
-            return $"HP {res.Health:0}/{res.MaxHealth:0}{(GmState.GodMode ? " (god mode on)" : "")}";
+            return $"HP {res.Health:0}/{res.MaxHealth:0}{(GodModeOn(res) ? " (god mode on)" : "")}";
         }
 
         [Command("gm.hitme", "Take a hit yourself to see the impact effect and hit animation: gm.hitme [amount] [normal|heavy|crit] " +
@@ -268,7 +291,7 @@ namespace KryticalNova.DevTools
             // The networked path raises this from the replicated health; offline nothing else does.
             if (!res.IsSpawned && lost > 0f)
                 ClientPresentationRegistry.Feel?.LocalPlayerDamaged(lost / Mathf.Max(1f, res.MaxHealth));
-            return $"Hit for {amount:0} ({style}, from the {from}) · HP {res.Health:0}/{res.MaxHealth:0}{(GmState.GodMode ? " (god mode on: no HP lost)" : "")}";
+            return $"Hit for {amount:0} ({style}, from the {from}) · HP {res.Health:0}/{res.MaxHealth:0}{(GodModeOn(res) ? " (god mode on: no HP lost)" : "")}";
         }
 
         private static bool TryParseHitSide(string text, Transform victim, out Vector3 towardAttacker)
@@ -302,60 +325,65 @@ namespace KryticalNova.DevTools
         {
             if (!TryGet<PlayerResources>(out var res, out var error)) return error;
             res.TrySpendChi(Mathf.Min(amount, res.Chi));
-            return $"Chi {res.Chi:0}/{res.MaxChi:0}{(GmState.InfiniteChi ? " (infinite Chi on)" : "")}";
+            return $"Chi {res.Chi:0}/{res.MaxChi:0}{(InfiniteChiOn(res) ? " (infinite Chi on)" : "")}";
         }
 
         [Command("gm.kill", "Kill yourself (bypasses god mode).")]
         private static string Kill()
         {
             if (!TryGet<PlayerResources>(out var res, out var error)) return error;
-            bool god = GmState.GodMode;
-            GmState.GodMode = false;
-            res.ApplyDamage(res.Health + 1f);
-            GmState.GodMode = god;
-            return "You died.";
+            res.ApplyDamage(res.Health + 1f, ignoreGodMode: true);
+            return "Killed.";
         }
         #endregion
 
         #region God mode
         [Command("gm.god", "Toggle (or set) no-damage god mode.")]
-        private static string God() => God(!GmState.GodMode);
+        private static string God()
+        {
+            if (!TryGet<PlayerGmState>(out var gm, out var error)) return error;
+            return God(!gm.GodMode);
+        }
 
         [Command("gm.god")]
         private static string God(bool on)
         {
-            GmState.GodMode = on;
+            if (!TryGet<PlayerGmState>(out var gm, out var error)) return error;
+            gm.SetGodMode(on);
             return $"God mode {(on ? "ON" : "OFF")}.";
         }
 
         [Command("gm.infchi", "Toggle infinite Chi (skills never fail or drain Chi).")]
         private static string InfiniteChi()
         {
-            GmState.InfiniteChi = !GmState.InfiniteChi;
-            return $"Infinite Chi {(GmState.InfiniteChi ? "ON" : "OFF")}.";
+            if (!TryGet<PlayerGmState>(out var gm, out var error)) return error;
+            gm.SetInfiniteChi(!gm.InfiniteChi);
+            return $"Infinite Chi {(gm.InfiniteChi ? "ON" : "OFF")}.";
         }
 
         [Command("gm.nocd", "Toggle no skill cooldowns.")]
         private static string NoCooldowns()
         {
-            GmState.NoCooldowns = !GmState.NoCooldowns;
-            return $"No cooldowns {(GmState.NoCooldowns ? "ON" : "OFF")}.";
+            if (!TryGet<PlayerGmState>(out var gm, out var error)) return error;
+            gm.SetNoCooldowns(!gm.NoCooldowns);
+            return $"No cooldowns {(gm.NoCooldowns ? "ON" : "OFF")}.";
         }
 
         [Command("gm.oneshot", "Toggle ×1000 Attack Power.")]
         private static string OneShot()
         {
             if (!TryGet<CharacterCombatStats>(out var stats, out var error)) return error;
-            oneShot = !oneShot;
-            ApplyGmModifiers(stats);
-            return $"One-shot {(oneShot ? "ON" : "OFF")} · AP {stats.GetStatValue(StatType.AttackPower):0}.";
+            if (!TryGet<PlayerGmState>(out var gm, out error)) return error;
+            gm.SetOneShot(!gm.OneShot);
+            return $"One-shot {(gm.OneShot ? "ON" : "OFF")} · AP {stats.GetStatValue(StatType.AttackPower):0}.";
         }
 
         [Command("gm.speed", "Movement speed multiplier (1 = normal).")]
         private static string Speed(float multiplier)
         {
-            GmState.SpeedMultiplier = Mathf.Clamp(multiplier, 0.1f, 20f);
-            return $"Speed ×{GmState.SpeedMultiplier:0.##}.";
+            if (!TryGet<PlayerGmState>(out var gm, out var error)) return error;
+            gm.SetSpeedMultiplier(multiplier);
+            return $"Speed ×{gm.SpeedMultiplier:0.##}.";
         }
 
         [Command("gm.slowmo", "Slow motion for the whole game: gm.slowmo 0.25 is quarter speed, gm.slowmo 1 is normal. With no value it toggles quarter speed.")]
@@ -384,10 +412,7 @@ namespace KryticalNova.DevTools
         private static string ResetAll()
         {
             RestoreGameSpeed();
-            GmState.ResetAll();
-            gmFlatStats.Clear();
-            oneShot = false;
-            if (TryGet<CharacterCombatStats>(out var stats, out _)) ApplyGmModifiers(stats);
+            if (TryGet<PlayerGmState>(out var gm, out _)) gm.ResetAll();
             return "GM toggles reset.";
         }
         #endregion
@@ -454,8 +479,7 @@ namespace KryticalNova.DevTools
         {
             get
             {
-                var inv = PlayerInventory.Local;
-                var target = inv != null ? NearestDummy(inv.gameObject) : null;
+                var target = GmTarget.TryGetPlayer(out var player, out _) ? NearestDummy(player) : null;
                 return target != null && target.InfiniteHealth;
             }
         }
@@ -709,13 +733,10 @@ namespace KryticalNova.DevTools
             if (player.TryGetComponent<NavMeshAgent>(out var agent))
             {
                 position += Vector3.up * agent.baseOffset;
-                if (agent.isActiveAndEnabled && agent.isOnNavMesh)
-                {
-                    agent.ResetPath();
-                    agent.Warp(position);
-                }
+                if (agent.isActiveAndEnabled && agent.isOnNavMesh) agent.ResetPath();
             }
-            player.transform.position = position;
+            // Observers snap with the player instead of watching it slide across the map.
+            NetworkPlacement.Place(player.transform, position, player.transform.rotation);
             return true;
         }
         #endregion

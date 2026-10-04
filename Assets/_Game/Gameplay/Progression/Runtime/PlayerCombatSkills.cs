@@ -5,7 +5,10 @@ using UnityEngine;
 
 namespace KryticalNova.Progression
 {
-    /// <summary>Owns learned combat skills, rare drop book unlocks, cooldowns, and skill casting execution.</summary>
+    /// <summary>
+    /// Owns learned combat skills, rare drop book unlocks, cooldowns, and skill casting execution. Ranks and book
+    /// unlocks are decided where the player is simulated (the server, or offline) and mirrored to the owning client.
+    /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacterProgression), typeof(PlayerResources), typeof(CharacterBuffManager))]
     public sealed class PlayerCombatSkills : NetworkBehaviour
@@ -20,6 +23,13 @@ namespace KryticalNova.Progression
         private CharacterBuffManager buffManager;
         private CharacterCombatStats combatStats;
         private ISkillAttackExecutor attackExecutor;
+        private PlayerGmState gmState;
+
+        // Indexed like availableSkills: 0 = not learned. Only the owner needs them; casts carry their rank to everyone else.
+        private NetworkList<byte> netRanks;
+        private readonly NetworkVariable<ulong> netUnlockedBooks = new NetworkVariable<ulong>(
+            0UL, NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
+        private bool mirrorDirty;
 
         private readonly Dictionary<string, int> learnedRanks = new Dictionary<string, int>();
         private readonly HashSet<string> unlockedDropSkills = new HashSet<string>();
@@ -32,9 +42,14 @@ namespace KryticalNova.Progression
 
         public IReadOnlyList<SkillDefinitionSO> AvailableSkills => availableSkills;
 
+        /// <summary>True where this player's skills are decided (the server, or offline). Clients only mirror them.</summary>
+        public bool HasAuthority => !IsSpawned || IsServer;
+
         private void Awake()
         {
             EnsureComponents();
+            netRanks = new NetworkList<byte>(readPerm: NetworkVariableReadPermission.Owner,
+                writePerm: NetworkVariableWritePermission.Server);
         }
 
         private void EnsureComponents()
@@ -44,6 +59,7 @@ namespace KryticalNova.Progression
             if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
             if (combatStats == null) combatStats = GetComponent<CharacterCombatStats>();
             if (attackExecutor == null) attackExecutor = GetComponent<ISkillAttackExecutor>();
+            if (gmState == null) gmState = GetComponent<PlayerGmState>();
         }
 
         public override void OnNetworkSpawn()
@@ -55,9 +71,15 @@ namespace KryticalNova.Progression
                 buffManager.BuffRemoved += OnServerBuffRemoved;
                 NetworkManager.OnClientConnectedCallback += OnClientConnectedToServer;
             }
-            if (IsOwner && !IsServer)
+            if (IsServer)
             {
-                foreach (var pair in learnedRanks) SubmitRankServerRpc(pair.Key, pair.Value);
+                WriteNetState();
+            }
+            else if (IsOwner)
+            {
+                netRanks.OnListChanged += OnNetRanksChanged;
+                netUnlockedBooks.OnValueChanged += OnNetBooksChanged;
+                ReadNetState();
             }
         }
 
@@ -69,6 +91,66 @@ namespace KryticalNova.Progression
                 buffManager.BuffRemoved -= OnServerBuffRemoved;
             }
             if (NetworkManager != null) NetworkManager.OnClientConnectedCallback -= OnClientConnectedToServer;
+            if (netRanks != null) netRanks.OnListChanged -= OnNetRanksChanged;
+            netUnlockedBooks.OnValueChanged -= OnNetBooksChanged;
+            mirrorDirty = false;
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            netRanks?.Dispose(); // guarded; covers the never-spawned offline avatar
+        }
+
+        private void OnNetRanksChanged(NetworkListEvent<byte> change) => mirrorDirty = true;
+        private void OnNetBooksChanged(ulong previous, ulong current) => mirrorDirty = true;
+
+        // A burst of rank changes (e.g. every skill maxed at once) refreshes the mirror once.
+        private void LateUpdate()
+        {
+            if (!mirrorDirty) return;
+            mirrorDirty = false;
+            ReadNetState();
+        }
+
+        /// <summary>Server: publishes ranks and book unlocks to the owner.</summary>
+        private void WriteNetState()
+        {
+            if (!IsSpawned || !IsServer || availableSkills == null) return;
+            ulong books = 0UL;
+            for (int i = 0; i < availableSkills.Length; i++)
+            {
+                var skill = availableSkills[i];
+                byte rank = skill != null ? (byte)Mathf.Clamp(GetRank(skill), 0, byte.MaxValue) : (byte)0;
+                if (i >= netRanks.Count) netRanks.Add(rank);
+                else if (netRanks[i] != rank) netRanks[i] = rank;
+                if (skill != null && i < 64 && unlockedDropSkills.Contains(skill.skillId)) books |= 1UL << i;
+            }
+            netUnlockedBooks.Value = books;
+        }
+
+        /// <summary>Owning client: rebuilds the local view from what the server published.</summary>
+        private void ReadNetState()
+        {
+            if (availableSkills == null) return;
+            learnedRanks.Clear();
+            unlockedDropSkills.Clear();
+            ulong books = netUnlockedBooks.Value;
+            for (int i = 0; i < availableSkills.Length; i++)
+            {
+                var skill = availableSkills[i];
+                if (skill == null) continue;
+                if (i < netRanks.Count && netRanks[i] > 0) learnedRanks[skill.skillId] = netRanks[i];
+                if (i < 64 && (books & (1UL << i)) != 0) unlockedDropSkills.Add(skill.skillId);
+            }
+            Changed?.Invoke();
+        }
+
+        /// <summary>Publishes a change made here, where the skills are decided.</summary>
+        private void Commit()
+        {
+            WriteNetState();
+            Changed?.Invoke();
         }
 
         public void SetAvailableSkills(SkillDefinitionSO[] skills)
@@ -107,47 +189,51 @@ namespace KryticalNova.Progression
 
         public bool IsDropSkillUnlocked(string skillId) => unlockedDropSkills.Contains(skillId);
 
+        /// <summary>Authority only: book unlocks come from the server (drops, GM).</summary>
         public void UnlockDropSkill(string skillId)
         {
+            if (!HasAuthority) return;
             if (!unlockedDropSkills.Contains(skillId))
             {
                 unlockedDropSkills.Add(skillId);
                 SkillMessage?.Invoke($"Acquired secret martial arts book: {skillId} unlocked!");
-                Changed?.Invoke();
+                Commit();
             }
         }
 
         public void LockDropSkill(string skillId)
         {
+            if (!HasAuthority) return;
             if (unlockedDropSkills.Remove(skillId))
             {
-                Changed?.Invoke();
+                Commit();
             }
         }
 
         public void UnlockAllDropSkills()
         {
-            if (availableSkills == null) return;
+            if (!HasAuthority || availableSkills == null) return;
             foreach (var skill in availableSkills)
             {
                 if (skill != null && skill.requiresSkillBook)
                     unlockedDropSkills.Add(skill.skillId);
             }
             SkillMessage?.Invoke("All Rare Drop Book Skills unlocked for testing!");
-            Changed?.Invoke();
+            Commit();
         }
 
         public void LockAllDropSkills()
         {
+            if (!HasAuthority) return;
             unlockedDropSkills.Clear();
             SkillMessage?.Invoke("All Rare Drop Book Skills locked.");
-            Changed?.Invoke();
+            Commit();
         }
 
         /// <summary>GM: unlocks every book skill and puts every skill at its top rank, ignoring level and skill points.</summary>
         public void GmSetAllRanksToMax()
         {
-            if (availableSkills == null) return;
+            if (!HasAuthority || availableSkills == null) return;
             foreach (var skill in availableSkills)
             {
                 if (skill == null) continue;
@@ -155,7 +241,7 @@ namespace KryticalNova.Progression
                 learnedRanks[skill.skillId] = skill.maxRank;
             }
             SkillMessage?.Invoke("GM: every skill unlocked at max rank.");
-            Changed?.Invoke();
+            Commit();
         }
 
         public bool CanUpgrade(SkillDefinitionSO skill, out string reason)
@@ -193,9 +279,21 @@ namespace KryticalNova.Progression
             return true;
         }
 
+        /// <summary>
+        /// Spends skill points on up to <paramref name="maxCount"/> ranks. On an owning client this asks the server and
+        /// returns how many ranks it is expected to grant; the new rank arrives through <see cref="Changed"/>.
+        /// </summary>
         public int TryUpgradeMultiple(SkillDefinitionSO skill, int maxCount)
         {
             if (skill == null || maxCount <= 0 || progression == null) return 0;
+
+            if (!HasAuthority)
+            {
+                if (!IsOwner) return 0;
+                int expected = CountAffordableRanks(skill, maxCount);
+                if (expected > 0) UpgradeServerRpc(skill.skillId, expected);
+                return expected;
+            }
 
             int upgraded = 0;
             while (upgraded < maxCount)
@@ -211,29 +309,40 @@ namespace KryticalNova.Progression
 
             if (upgraded > 0)
             {
-                if (IsSpawned && !IsServer) SubmitRankServerRpc(skill.skillId, learnedRanks[skill.skillId]);
                 SkillMessage?.Invoke($"Upgraded {skill.displayName} to Rank {learnedRanks[skill.skillId]}");
-                Changed?.Invoke();
+                Commit();
             }
             return upgraded;
         }
 
-        /// <summary>
-        /// Tells the server which rank this player has, so its damage and costs use the real rank.
-        /// TODO(progression): the server trusts this until skill points are server-owned.
-        /// </summary>
+        /// <summary>How many more ranks of <paramref name="skill"/> the mirrored level and skill points cover.</summary>
+        private int CountAffordableRanks(SkillDefinitionSO skill, int maxCount)
+        {
+            if (IsLocked(skill) || progression.CurrentLevel < skill.requiredCharacterLevel) return 0;
+            int rank = GetRank(skill);
+            int points = progression.SkillPoints;
+            int count = 0;
+            while (count < maxCount && rank + count < skill.maxRank)
+            {
+                int cost = skill.GetSkillPointCostForRank(rank + count);
+                if (points < cost) break;
+                points -= cost;
+                count++;
+            }
+            return count;
+        }
+
         [ServerRpc]
-        private void SubmitRankServerRpc(string skillId, int rank)
+        private void UpgradeServerRpc(string skillId, int count)
         {
             var skill = GetSkill(skillId);
-            if (skill == null) return;
-            learnedRanks[skillId] = Mathf.Clamp(rank, 0, skill.maxRank);
+            if (skill != null) TryUpgradeMultiple(skill, count);
         }
 
         public bool IsOnCooldown(SkillDefinitionSO skill)
         {
             if (skill == null) return false;
-            if (KryticalNova.Core.GmState.NoCooldowns && (!IsSpawned || IsOwner)) return false;
+            if (gmState != null && gmState.NoCooldowns) return false;
             return cooldownEndTimes.TryGetValue(skill.skillId, out float endTime) && Time.time < endTime;
         }
 

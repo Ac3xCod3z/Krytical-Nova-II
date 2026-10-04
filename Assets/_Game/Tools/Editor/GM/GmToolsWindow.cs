@@ -19,7 +19,8 @@ namespace KryticalNova.EditorTools.GM
     /// <summary>
     /// Dockable GM / dev tools (Odin). Every action is sent as a Quantum Console command string (the same
     /// <c>gm.*</c>, <c>time.*</c>, <c>weather.*</c>, <c>item.*</c> commands you can type in-game), so the console and
-    /// this window can never drift apart. Works in Play Mode as host or offline, like the commands themselves.
+    /// this window can never drift apart. Works in Play Mode as host, server or offline, like the commands themselves,
+    /// and acts on your own player or on the connected player picked at the top (<c>gm.target</c>).
     /// The search box at the top finds any command by name or description, whichever tab its button lives on.
     /// </summary>
     public sealed class GmToolsWindow : OdinEditorWindow
@@ -49,22 +50,17 @@ namespace KryticalNova.EditorTools.GM
 
         // ================================================================ state helpers
 
-        private static PlayerInventory LocalInventory => Application.isPlaying ? PlayerInventory.Local : null;
-        private static GameObject LocalPlayer => LocalInventory != null ? LocalInventory.gameObject : null;
+        // "Local" = the player the commands act on: your own, or the connected player picked with gm.target.
+        private static GameObject LocalPlayer => Application.isPlaying && GmTarget.TryGetPlayer(out var player, out _) ? player : null;
+        private static PlayerInventory LocalInventory => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerInventory>() : null;
+        private static PlayerGmState TargetGm => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerGmState>() : null;
         private static PlayerCharacterProgression Progression => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerCharacterProgression>() : null;
         private static PlayerResources Resources => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerResources>() : null;
         private static CharacterCombatStats CombatStats => LocalPlayer != null ? LocalPlayer.GetComponent<CharacterCombatStats>() : null;
         private static WorldEnvironmentNetwork Env => Application.isPlaying ? WorldEnvironmentNetwork.Instance : null;
 
-        /// <summary>Play Mode, a local player exists, and we are host/offline (the commands' own authority rule).</summary>
-        private static bool IsReady
-        {
-            get
-            {
-                var inv = LocalInventory;
-                return inv != null && (!inv.IsSpawned || inv.IsServer);
-            }
-        }
+        /// <summary>Play Mode, a player to act on exists, and we are host/server/offline (the commands' own authority rule).</summary>
+        private static bool IsReady => LocalPlayer != null;
 
         private static bool HasWorld => Env != null && Env.HasWorldAuthority;
 
@@ -82,15 +78,10 @@ namespace KryticalNova.EditorTools.GM
                 if (GUILayout.Button("Enter Play Mode", GUILayout.Height(26))) EditorApplication.isPlaying = true;
                 return;
             }
-            var inv = LocalInventory;
-            if (inv == null)
+            DrawTargetPicker();
+            if (!GmTarget.TryGetPlayer(out _, out string unavailable))
             {
-                SirenixEditorGUI.WarningMessageBox("Waiting for the local player to spawn…");
-                return;
-            }
-            if (!IsReady)
-            {
-                SirenixEditorGUI.ErrorMessageBox("Connected as a client. GM commands only work on the host or offline.");
+                SirenixEditorGUI.WarningMessageBox(unavailable);
                 return;
             }
 
@@ -113,12 +104,13 @@ namespace KryticalNova.EditorTools.GM
             EditorGUILayout.LabelField($"Pos ({pos.x:0}, {pos.y:0}, {pos.z:0})   ·   {time}   ·   {weather}", EditorStyles.miniLabel);
 
             var flags = new List<string>();
-            if (GmState.GodMode) flags.Add("GOD");
-            if (GmState.InfiniteChi) flags.Add("INF CHI");
-            if (GmState.NoCooldowns) flags.Add("NO CD");
-            if (GmCommands.OneShotEnabled) flags.Add("ONE-SHOT");
+            var gm = TargetGm;
+            if (gm != null && gm.GodMode) flags.Add("GOD");
+            if (gm != null && gm.InfiniteChi) flags.Add("INF CHI");
+            if (gm != null && gm.NoCooldowns) flags.Add("NO CD");
+            if (gm != null && gm.OneShot) flags.Add("ONE-SHOT");
             if (!Mathf.Approximately(Time.timeScale, 1f)) flags.Add($"GAME ×{Time.timeScale:0.##}");
-            if (!Mathf.Approximately(GmState.SpeedMultiplier, 1f)) flags.Add($"SPEED ×{GmState.SpeedMultiplier:0.##}");
+            if (gm != null && !Mathf.Approximately(gm.SpeedMultiplier, 1f)) flags.Add($"SPEED ×{gm.SpeedMultiplier:0.##}");
             if (flags.Count > 0)
             {
                 var prev = GUI.color;
@@ -127,6 +119,27 @@ namespace KryticalNova.EditorTools.GM
                 GUI.color = prev;
             }
             SirenixEditorGUI.EndBox();
+        }
+
+        /// <summary>Hosting a session: choose which connected player every button below acts on.</summary>
+        private void DrawTargetPicker()
+        {
+            var players = GmTarget.ConnectedPlayers();
+            if (players.Count == 0) return;
+
+            var local = PlayerInventory.Local;
+            ulong? target = GmTarget.ClientId;
+            var labels = new string[players.Count];
+            int selected = -1;
+            for (int i = 0; i < players.Count; i++)
+            {
+                bool isLocal = local != null && local.gameObject == players[i].Player;
+                labels[i] = isLocal ? $"Client {players[i].ClientId} (you)" : $"Client {players[i].ClientId}";
+                if (target.HasValue ? target.Value == players[i].ClientId : isLocal) selected = i;
+            }
+
+            int picked = EditorGUILayout.Popup("Target player", selected, labels);
+            if (picked != selected && picked >= 0) Run($"gm.target {players[picked].ClientId}");
         }
 
         private static void DrawBar(string label, float fill)
@@ -451,22 +464,22 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, CheatsTab), Title("Toggles"), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("God Mode (no damage)"), PropertyOrder(200)]
         private bool GodMode
         {
-            get => GmState.GodMode;
-            set { if (value != GmState.GodMode) Run($"gm.god {(value ? "true" : "false")}"); }
+            get => TargetGm != null && TargetGm.GodMode;
+            set { if (value != GodMode) Run($"gm.god {(value ? "true" : "false")}"); }
         }
 
         [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Infinite Chi"), PropertyOrder(201)]
         private bool InfiniteChi
         {
-            get => GmState.InfiniteChi;
-            set { if (value != GmState.InfiniteChi) Run("gm.infchi"); }
+            get => TargetGm != null && TargetGm.InfiniteChi;
+            set { if (value != InfiniteChi) Run("gm.infchi"); }
         }
 
         [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("No Skill Cooldowns"), PropertyOrder(202)]
         private bool NoCooldowns
         {
-            get => GmState.NoCooldowns;
-            set { if (value != GmState.NoCooldowns) Run("gm.nocd"); }
+            get => TargetGm != null && TargetGm.NoCooldowns;
+            set { if (value != NoCooldowns) Run("gm.nocd"); }
         }
 
         [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("One-Shot (×1000 AP)"), PropertyOrder(203)]
@@ -479,8 +492,8 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, CheatsTab), ShowInInspector, PropertyRange(0.1f, 10f), EnableIf(nameof(IsReady)), LabelText("Move Speed ×"), PropertyOrder(204)]
         private float SpeedMultiplier
         {
-            get => GmState.SpeedMultiplier;
-            set { if (!Mathf.Approximately(value, GmState.SpeedMultiplier)) Run($"gm.speed {F(value)}", log: false); }
+            get => TargetGm != null ? TargetGm.SpeedMultiplier : 1f;
+            set { if (!Mathf.Approximately(value, SpeedMultiplier)) Run($"gm.speed {F(value)}", log: false); }
         }
 
         [TabGroup(Tabs, CheatsTab), Title("Game Speed"), ShowInInspector, PropertyRange(0.05f, 2f), EnableIf(nameof(IsReady)), LabelText("Game Speed ×"), PropertyOrder(204.1f)]
@@ -508,9 +521,9 @@ namespace KryticalNova.EditorTools.GM
         private void DevLoadout()
         {
             Run("gm.maxlevel");
-            if (!GmState.GodMode) Run("gm.god true");
-            if (!GmState.InfiniteChi) Run("gm.infchi");
-            if (!GmState.NoCooldowns) Run("gm.nocd");
+            if (!GodMode) Run("gm.god true");
+            if (!InfiniteChi) Run("gm.infchi");
+            if (!NoCooldowns) Run("gm.nocd");
             Run("gm.heal");
         }
 

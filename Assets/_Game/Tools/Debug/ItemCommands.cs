@@ -5,21 +5,28 @@ using QFSW.QC;
 namespace KryticalNova.DevTools
 {
     /// <summary>
-    /// Quantum Console item commands. Like the world commands they act on the authority's own player only (host or
-    /// offline), because they call the server-only inventory API.
+    /// Quantum Console item commands. Like the GM commands they only run where the game is decided (host, server or
+    /// offline), because they call the server-only inventory API, and act on the player picked by <see cref="GmTarget"/>.
     /// </summary>
     public static class ItemCommands
     {
         private const string NoPlayer = "No local player inventory.";
-        private const string NoAuthority = "Only the host/offline player can spawn items.";
+
+        private static bool TryGetInventory(out PlayerInventory inventory, out string error)
+        {
+            inventory = null;
+            if (!GmTarget.TryGetPlayer(out var player, out error)) return false;
+            inventory = player.GetComponent<PlayerInventory>();
+            if (inventory == null) error = NoPlayer;
+            return inventory != null;
+        }
 
         [Command("item.give", "Give an item by id, asset name or display name, e.g. item.give 2001 or item.give Armor_SOLD_03")]
         [Command("give_item")]
         private static string Give(string item, int count = 1)
         {
-            var inv = PlayerInventory.Local;
-            if (inv == null || inv.Catalog == null) return NoPlayer;
-            if (inv.IsSpawned && !inv.IsServer) return NoAuthority;
+            if (!TryGetInventory(out var inv, out var error)) return error;
+            if (inv.Catalog == null) return NoPlayer;
             var def = inv.Catalog.Find(item);
             if (def == null) return $"Unknown item '{item}'. Try item.list.";
             int added = inv.ServerGive(def.itemId, count);
@@ -30,9 +37,7 @@ namespace KryticalNova.DevTools
         [Command("clear_inventory")]
         private static string Clear()
         {
-            var inv = PlayerInventory.Local;
-            if (inv == null) return NoPlayer;
-            if (inv.IsSpawned && !inv.IsServer) return NoAuthority;
+            if (!TryGetInventory(out var inv, out var error)) return error;
             inv.ServerClear();
             return "Inventory cleared.";
         }

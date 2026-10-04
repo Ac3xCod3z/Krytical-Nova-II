@@ -68,6 +68,7 @@ GameObject:
   - component: {fileID: 1740344965673177520}
   - component: {fileID: 3927446919622402130}
   - component: {fileID: 4870418043466479006}
+  - component: {fileID: 9212538085794178723}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -320,6 +321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74831f5948a994949be2a5bad5217ca4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.PlayerCharacterProgression
+  ShowTopMostFoldoutHeaderGroup: 1
   progressionData: {fileID: 11400000, guid: b3758b07d12065d4ea279a4920feacc2, type: 2}
   statData: {fileID: 11400000, guid: 0a91a70a2a6ce4c4ca72a5d7d9142256, type: 2}
 --- !u!114 &3852248727181477858
@@ -334,6 +336,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e1b906688fda7041a3e8a4f9f3e6284, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.PlayerMovementSkills
+  ShowTopMostFoldoutHeaderGroup: 1
   movementSettings: {fileID: 11400000, guid: f83f4117f53a6a246bec1085409fe244, type: 2}
   runSkill: {fileID: 11400000, guid: f3a947464b30a634793667eb2d90e561, type: 2}
   jumpSkill: {fileID: 11400000, guid: 31e4ae76cb22e714c973310cc06ecc05, type: 2}
@@ -472,14 +475,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3519672788
-  InScenePlacedSourceGlobalObjectIdHash: 1718997538
+  GlobalObjectIdHash: 1718997538
+  InScenePlacedSourceGlobalObjectIdHash: 0
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  m_InScenePlaced: 1
+  m_InScenePlaced: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -812,6 +815,19 @@ MonoBehaviour:
   fadeOut: 0.15
   warpTemplate: {fileID: 11400000, guid: 58f1fce925d87974e9b69ec4c90ddb6c, type: 2}
   motionWarping: {fileID: 4791644402117621732}
+--- !u!114 &9212538085794178723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b02f28c9f7da184588f14c9896e84ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.PlayerGmState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

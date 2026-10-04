@@ -106,7 +106,7 @@ namespace KryticalNova.Networking
                 }
                 if (GUILayout.Button("Start Server"))
                 {
-                    if (nm != null) nm.StartServer();
+                    NetworkConnectionManager.Instance?.StartLocalServer(parsedPort);
                 }
                 GUILayout.EndHorizontal();
 

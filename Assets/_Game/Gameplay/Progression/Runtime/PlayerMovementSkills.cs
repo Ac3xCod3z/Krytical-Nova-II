@@ -1,13 +1,18 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace KryticalNova.Progression
 {
-    /// <summary>Owns learned ranks and persistent selection. Skill selection is separate from paid destination commands.</summary>
+    /// <summary>
+    /// Owns learned ranks and persistent selection. Skill selection is separate from paid destination commands.
+    /// Ranks and selection are decided where the player is simulated (the server, or offline) and mirrored to every
+    /// client; an owning client asks the server to learn a rank or change the selection.
+    /// </summary>
     [DefaultExecutionOrder(InitializationOrder)]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacterProgression), typeof(PlayerResources))]
-    public sealed class PlayerMovementSkills : MonoBehaviour
+    public sealed class PlayerMovementSkills : NetworkBehaviour
     {
         private const int InitializationOrder = -100;
         [SerializeField] private MovementSettings movementSettings;
@@ -15,31 +20,78 @@ namespace KryticalNova.Progression
         [SerializeField] private MovementSkillData jumpSkill;
         private PlayerCharacterProgression progression;
         private PlayerResources resources;
+        private PlayerGmState gmState;
         private int runRank;
         private int jumpRank;
         private MovementSkillId selectedSkill;
+
+        private readonly NetworkVariable<MovementSkillState> netState = new NetworkVariable<MovementSkillState>(
+            writePerm: NetworkVariableWritePermission.Server);
+
         public event Action Changed;
         public MovementSettings MovementSettings => movementSettings;
         public MovementSkillId SelectedSkill => selectedSkill;
         public bool IsRunning => selectedSkill == MovementSkillId.Run && runRank > 0;
         public bool IsJumpSelected => selectedSkill == MovementSkillId.Jump && jumpRank > 0;
-        public float CurrentSpeed => BaseSpeed * GmSpeedMultiplier;
+        public float CurrentSpeed => BaseSpeed * (gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f);
         private float BaseSpeed => movementSettings == null ? 0f : IsRunning && runSkill != null && runSkill.TryGetRank(runRank, out var rank)
             ? Mathf.Max(movementSettings.walkSpeed, rank.runSpeed) : movementSettings.walkSpeed;
-        // GM speed only affects the local (owning) player, never other players simulated on a host.
-        private float GmSpeedMultiplier => resources != null && (!resources.IsSpawned || resources.IsOwner)
-            ? Mathf.Max(0.1f, KryticalNova.Core.GmState.SpeedMultiplier) : 1f;
+
+        /// <summary>True where this player's ranks and selection are decided (the server, or offline).</summary>
+        public bool HasAuthority => !IsSpawned || IsServer;
 
         private void Awake()
         {
             progression = GetComponent<PlayerCharacterProgression>();
             resources = GetComponent<PlayerResources>();
+            gmState = GetComponent<PlayerGmState>();
             if (movementSettings == null || runSkill == null || jumpSkill == null
                 || runSkill.skillId != MovementSkillId.Run || jumpSkill.skillId != MovementSkillId.Jump)
             {
                 Debug.LogError("PlayerMovementSkills needs movement settings and valid Run/Jump skill assets.", this);
                 enabled = false;
             }
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            netState.OnValueChanged += OnNetStateChanged;
+            if (IsServer) netState.Value = Capture();
+            else ApplyReplicated(netState.Value);
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            netState.OnValueChanged -= OnNetStateChanged;
+            base.OnNetworkDespawn();
+        }
+
+        private void OnNetStateChanged(MovementSkillState previous, MovementSkillState current)
+        {
+            if (!IsServer) ApplyReplicated(current);
+        }
+
+        private MovementSkillState Capture() => new MovementSkillState
+        {
+            runRank = (byte)Mathf.Clamp(runRank, 0, byte.MaxValue),
+            jumpRank = (byte)Mathf.Clamp(jumpRank, 0, byte.MaxValue),
+            selected = selectedSkill,
+        };
+
+        private void ApplyReplicated(MovementSkillState state)
+        {
+            runRank = state.runRank;
+            jumpRank = state.jumpRank;
+            selectedSkill = state.selected;
+            Changed?.Invoke();
+        }
+
+        /// <summary>Publishes a change made here, where the skills are decided.</summary>
+        private void Commit()
+        {
+            if (IsSpawned && IsServer) netState.Value = Capture();
+            Changed?.Invoke();
         }
 
         /// <summary>Returns the shared definition for a known movement skill.</summary>
@@ -104,12 +156,23 @@ namespace KryticalNova.Progression
             return TryUpgradeMultiple(skill, 1) > 0;
         }
 
-        /// <summary>Purchases up to maxCount Run or Jump ranks after validating all requirements.</summary>
+        /// <summary>
+        /// Purchases up to maxCount Run or Jump ranks after validating all requirements. On an owning client this asks
+        /// the server and returns how many ranks it is expected to grant; the new rank arrives through <see cref="Changed"/>.
+        /// </summary>
         public int TryUpgradeMultiple(MovementSkillId skill, int maxCount)
         {
             if (maxCount <= 0 || !isActiveAndEnabled || progression == null) return 0;
             MovementSkillData definition = GetDefinition(skill);
             if (definition == null) return 0;
+
+            if (!HasAuthority)
+            {
+                if (!IsOwner) return 0;
+                int expected = CountAffordableRanks(definition, GetRank(skill), maxCount);
+                if (expected > 0) UpgradeServerRpc(skill, expected);
+                return expected;
+            }
 
             int upgraded = 0;
             while (upgraded < maxCount)
@@ -129,35 +192,85 @@ namespace KryticalNova.Progression
 
             if (upgraded > 0)
             {
-                Changed?.Invoke();
+                Commit();
             }
             return upgraded;
         }
 
-        /// <summary>GM: learns Run and Jump at their top ranks, ignoring level and skill points.</summary>
+        /// <summary>How many ranks above <paramref name="rank"/> the mirrored level and skill points cover.</summary>
+        private int CountAffordableRanks(MovementSkillData definition, int rank, int maxCount)
+        {
+            int points = progression.SkillPoints;
+            int count = 0;
+            while (count < maxCount && definition.TryGetRank(rank + count + 1, out var next)
+                   && progression.CurrentLevel >= next.requiredCharacterLevel && points >= next.skillPointCost)
+            {
+                points -= next.skillPointCost;
+                count++;
+            }
+            return count;
+        }
+
+        [ServerRpc]
+        private void UpgradeServerRpc(MovementSkillId skill, int count)
+        {
+            TryUpgradeMultiple(skill, count);
+        }
+
+        /// <summary>GM: learns Run and Jump at their top ranks, ignoring level and skill points. Authority only.</summary>
         public void GmSetMaxRanks()
         {
-            if (!isActiveAndEnabled) return;
+            if (!HasAuthority || !isActiveAndEnabled) return;
             runRank = runSkill.MaxRank;
             jumpRank = jumpSkill.MaxRank;
-            Changed?.Invoke();
+            Commit();
         }
 
         /// <summary>Selects a learned skill persistently. Selecting it again returns to walking; no Chi is charged here.</summary>
         public bool ToggleSelection(MovementSkillId skill)
         {
             if (!CanUse(skill) || resources == null || !resources.IsAlive) return false;
-            selectedSkill = selectedSkill == skill ? MovementSkillId.None : skill;
-            Changed?.Invoke();
-            return true;
+            return Select(selectedSkill == skill ? MovementSkillId.None : skill);
         }
 
         /// <summary>Returns to ordinary walking while preserving any valid ground destination.</summary>
         public void SelectWalk()
         {
             if (selectedSkill == MovementSkillId.None) return;
-            selectedSkill = MovementSkillId.None;
-            Changed?.Invoke();
+            Select(MovementSkillId.None);
+        }
+
+        private bool Select(MovementSkillId skill)
+        {
+            if (!HasAuthority)
+            {
+                if (!IsOwner) return false;
+                // Shown at once so the hotbar and the next click agree; the server's answer replaces it.
+                SelectServerRpc(skill);
+            }
+            selectedSkill = skill;
+            Commit();
+            return true;
+        }
+
+        [ServerRpc]
+        private void SelectServerRpc(MovementSkillId skill)
+        {
+            bool allowed = skill == MovementSkillId.None || (CanUse(skill) && resources != null && resources.IsAlive);
+            if (allowed && selectedSkill != skill)
+            {
+                selectedSkill = skill;
+                Commit();
+                return;
+            }
+            // Nothing changed here, so nothing would be replicated: put the owner back on the real selection.
+            if (!allowed) CorrectSelectionRpc(Capture());
+        }
+
+        [Rpc(SendTo.Owner)]
+        private void CorrectSelectionRpc(MovementSkillState state)
+        {
+            if (!IsServer) ApplyReplicated(state);
         }
     }
 }

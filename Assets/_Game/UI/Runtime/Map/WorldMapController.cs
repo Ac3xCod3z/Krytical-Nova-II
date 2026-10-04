@@ -146,6 +146,9 @@ namespace KryticalNova.UI
         private void Toggle() => SetOpen(!IsOpen);
         private void Close() => SetOpen(false);
 
+        /// <summary>Opens the map (the minimap does this on a double-click).</summary>
+        public void Open() => SetOpen(true);
+
         private void SetOpen(bool open)
         {
             if (!initialized || open == IsOpen) return;

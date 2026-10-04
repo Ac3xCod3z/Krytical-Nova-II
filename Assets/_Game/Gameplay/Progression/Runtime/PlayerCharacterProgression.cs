@@ -1,12 +1,16 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace KryticalNova.Progression
 {
-    /// <summary>Per-player session state and validated XP/point transactions. Never modifies shared data assets.</summary>
+    /// <summary>
+    /// Per-player level, XP, points and attributes. Decided where the player is simulated (the server, or offline)
+    /// and mirrored to every client; an owning client asks the server to spend its points. Never modifies shared data assets.
+    /// </summary>
     [DefaultExecutionOrder(InitializationOrder)]
     [DisallowMultipleComponent]
-    public sealed class PlayerCharacterProgression : MonoBehaviour
+    public sealed class PlayerCharacterProgression : NetworkBehaviour
     {
         private const int InitializationOrder = -200;
         private const int AttributeCount = 4;
@@ -18,6 +22,10 @@ namespace KryticalNova.Progression
         private int statPoints;
         private int skillPoints;
         private readonly int[] attributes = new int[AttributeCount];
+
+        private readonly NetworkVariable<ProgressionState> netState = new NetworkVariable<ProgressionState>(
+            writePerm: NetworkVariableWritePermission.Server);
+
         public event Action Changed;
         public event Action<int> LevelGained;
         public int CurrentLevel => currentLevel;
@@ -28,6 +36,9 @@ namespace KryticalNova.Progression
         public bool IsAtLevelCap => currentLevel >= MaxLevel;
         public int ExperienceRequired => progressionData != null && progressionData.TryGetStep(currentLevel, out var step) ? step.experienceRequired : 0;
         public int AllocationCost => statData != null ? statData.allocationCost : 1;
+
+        /// <summary>True where this player's progression is decided (the server, or offline). Clients only mirror it.</summary>
+        public bool HasAuthority => !IsSpawned || IsServer;
 
         private void Awake()
         {
@@ -43,10 +54,70 @@ namespace KryticalNova.Progression
                 attributes[index] = statData.GetStartingValue((CharacterAttribute)index);
         }
 
-        /// <summary>Adds positive XP, carrying overflow across levels and granting each transition's rewards once.</summary>
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            netState.OnValueChanged += OnNetStateChanged;
+            if (IsServer) netState.Value = Capture();
+            else ApplyReplicated(netState.Value, announceLevels: false);
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            netState.OnValueChanged -= OnNetStateChanged;
+            base.OnNetworkDespawn();
+        }
+
+        private void OnNetStateChanged(ProgressionState previous, ProgressionState current)
+        {
+            if (!IsServer) ApplyReplicated(current, announceLevels: true);
+        }
+
+        private ProgressionState Capture()
+        {
+            var state = new ProgressionState
+            {
+                level = currentLevel,
+                experience = experience,
+                statPoints = statPoints,
+                skillPoints = skillPoints,
+            };
+            for (int index = 0; index < attributes.Length; index++)
+                state[(CharacterAttribute)index] = attributes[index];
+            return state;
+        }
+
+        private void ApplyReplicated(ProgressionState state, bool announceLevels)
+        {
+            if (state.level < FirstLevel) return; // not written by the server yet
+
+            int previousLevel = currentLevel;
+            currentLevel = state.level;
+            experience = state.experience;
+            statPoints = state.statPoints;
+            skillPoints = state.skillPoints;
+            for (int index = 0; index < attributes.Length; index++)
+                attributes[index] = state[(CharacterAttribute)index];
+
+            if (announceLevels)
+            {
+                for (int level = previousLevel + 1; level <= currentLevel; level++)
+                    LevelGained?.Invoke(level);
+            }
+            Changed?.Invoke();
+        }
+
+        /// <summary>Publishes a change made here, where the progression is decided.</summary>
+        private void Commit()
+        {
+            if (IsSpawned && IsServer) netState.Value = Capture();
+            Changed?.Invoke();
+        }
+
+        /// <summary>Adds positive XP, carrying overflow across levels and granting each transition's rewards once. Authority only.</summary>
         public void GrantExperience(int amount)
         {
-            if (!isActiveAndEnabled || progressionData == null || amount <= 0 || IsAtLevelCap) return;
+            if (!HasAuthority || !isActiveAndEnabled || progressionData == null || amount <= 0 || IsAtLevelCap) return;
             long remainingExperience = (long)experience + amount;
             while (progressionData.TryGetStep(currentLevel, out var step) && remainingExperience >= step.experienceRequired)
             {
@@ -57,7 +128,7 @@ namespace KryticalNova.Progression
                 LevelGained?.Invoke(currentLevel);
             }
             experience = IsAtLevelCap ? 0 : (int)Math.Min(remainingExperience, int.MaxValue);
-            Changed?.Invoke();
+            Commit();
         }
 
         /// <summary>Reads the player's current allocated attribute value.</summary>
@@ -81,7 +152,11 @@ namespace KryticalNova.Progression
             return TryAllocateMultiple(attribute, 1) > 0;
         }
 
-        /// <summary>Spends the configured stat-point cost for multiple points and increases the attribute atomically.</summary>
+        /// <summary>
+        /// Spends the configured stat-point cost for multiple points and increases the attribute atomically. On an
+        /// owning client this asks the server and returns how many points it is expected to accept; the new values
+        /// arrive through <see cref="Changed"/>.
+        /// </summary>
         public int TryAllocateMultiple(CharacterAttribute attribute, int maxCount)
         {
             if (maxCount <= 0 || !isActiveAndEnabled || statData == null) return 0;
@@ -89,6 +164,16 @@ namespace KryticalNova.Progression
             if (index < 0 || index >= attributes.Length) return 0;
 
             int cost = statData.allocationCost;
+            if (!HasAuthority)
+            {
+                if (!IsOwner) return 0;
+                int affordable = cost > 0 ? statPoints / cost : maxCount;
+                int expected = Mathf.Min(maxCount, affordable, statData.maximumAttributeValue - attributes[index]);
+                if (expected <= 0) return 0;
+                AllocateServerRpc(attribute, expected);
+                return expected;
+            }
+
             int allocated = 0;
             while (allocated < maxCount && statPoints >= cost && attributes[index] < statData.maximumAttributeValue)
             {
@@ -98,25 +183,31 @@ namespace KryticalNova.Progression
             }
             if (allocated > 0)
             {
-                Changed?.Invoke();
+                Commit();
             }
             return allocated;
         }
 
-        /// <summary>Atomically spends skill points if the requested positive cost is affordable.</summary>
+        [ServerRpc]
+        private void AllocateServerRpc(CharacterAttribute attribute, int count)
+        {
+            TryAllocateMultiple(attribute, count);
+        }
+
+        /// <summary>Atomically spends skill points if the requested positive cost is affordable. Authority only.</summary>
         public bool TrySpendSkillPoints(int cost)
         {
-            if (!isActiveAndEnabled || cost <= 0 || skillPoints < cost) return false;
+            if (!HasAuthority || !isActiveAndEnabled || cost <= 0 || skillPoints < cost) return false;
             skillPoints -= cost;
-            Changed?.Invoke();
+            Commit();
             return true;
         }
 
-        #region Development / GM tools
+        #region Development / GM tools (authority only)
         /// <summary>GM: jumps to a level. Raising grants each skipped level's rewards; lowering rebuilds the character at that level (attributes reset, points re-granted).</summary>
         public void SetLevel(int level)
         {
-            if (!isActiveAndEnabled || progressionData == null) return;
+            if (!HasAuthority || !isActiveAndEnabled || progressionData == null) return;
             level = Mathf.Clamp(level, FirstLevel, MaxLevel);
             if (level < currentLevel)
             {
@@ -130,47 +221,47 @@ namespace KryticalNova.Progression
                 LevelGained?.Invoke(currentLevel);
             }
             experience = 0;
-            Changed?.Invoke();
+            Commit();
         }
 
         /// <summary>GM: sets XP within the current level (clamped below the level-up threshold).</summary>
         public void SetExperience(int amount)
         {
-            if (!isActiveAndEnabled) return;
+            if (!HasAuthority || !isActiveAndEnabled) return;
             int required = ExperienceRequired;
             experience = Mathf.Clamp(amount, 0, required > 0 ? required - 1 : 0);
-            Changed?.Invoke();
+            Commit();
         }
 
         /// <summary>GM: adds (or with a negative value removes) unspent stat points.</summary>
         public void AddStatPoints(int amount)
         {
-            if (!isActiveAndEnabled) return;
+            if (!HasAuthority || !isActiveAndEnabled) return;
             statPoints = (int)Math.Max(0L, Math.Min((long)statPoints + amount, int.MaxValue));
-            Changed?.Invoke();
+            Commit();
         }
 
         /// <summary>GM: adds (or with a negative value removes) unspent skill points.</summary>
         public void AddSkillPoints(int amount)
         {
-            if (!isActiveAndEnabled) return;
+            if (!HasAuthority || !isActiveAndEnabled) return;
             skillPoints = (int)Math.Max(0L, Math.Min((long)skillPoints + amount, int.MaxValue));
-            Changed?.Invoke();
+            Commit();
         }
 
         /// <summary>GM: sets an attribute directly without spending points.</summary>
         public void SetAttribute(CharacterAttribute attribute, int value)
         {
             int index = (int)attribute;
-            if (!isActiveAndEnabled || statData == null || index < 0 || index >= attributes.Length) return;
+            if (!HasAuthority || !isActiveAndEnabled || statData == null || index < 0 || index >= attributes.Length) return;
             attributes[index] = Mathf.Clamp(value, 0, statData.maximumAttributeValue);
-            Changed?.Invoke();
+            Commit();
         }
 
         /// <summary>GM: refunds every allocated attribute point back to the stat point pool.</summary>
         public void ResetAllocations()
         {
-            if (!isActiveAndEnabled || statData == null) return;
+            if (!HasAuthority || !isActiveAndEnabled || statData == null) return;
             int cost = Mathf.Max(1, statData.allocationCost);
             for (int index = 0; index < attributes.Length; index++)
             {
@@ -179,7 +270,7 @@ namespace KryticalNova.Progression
                 statPoints = SaturatingAdd(statPoints, spent * cost);
                 attributes[index] = starting;
             }
-            Changed?.Invoke();
+            Commit();
         }
 
         private void ResetCharacter()

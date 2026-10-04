@@ -1,16 +1,15 @@
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.InputSystem;
 
 namespace KryticalNova.Networking
 {
     /// <summary>
-    /// The scene's Player is the offline avatar. When this peer gets its own networked player
-    /// (Host or Client), the offline avatar is hidden so there is exactly one controllable character,
-    /// and the host's networked player takes over its position. When the session ends the offline
-    /// avatar returns where the networked player last stood. A dedicated Server has no local player,
-    /// so the offline avatar is left alone there.
+    /// The scene's Player is the offline avatar. It is hidden for as long as any network session runs on this
+    /// peer (Host, Client or Server), so there is exactly one controllable character and the server never
+    /// network-spawns it as a scene object. The host's networked player takes over its position, and when the
+    /// session ends the offline avatar returns where the networked player last stood. A headless dedicated
+    /// server never shows it at all.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class OfflinePlayerHandoff : MonoBehaviour
@@ -28,9 +27,21 @@ namespace KryticalNova.Networking
         private static OfflinePlayerHandoff instance;
         private NetworkManager subscribedManager;
 
+        private static bool IsHeadlessServer
+        {
+            get
+            {
+#if UNITY_SERVER
+                return true;
+#else
+                return Application.isBatchMode;
+#endif
+            }
+        }
+
         /// <summary>
-        /// Called by the local owner's networked player right before it enables its PlayerInput,
-        /// so the keyboard/mouse are free to pair with it.
+        /// Called before a session starts on this peer and by the local owner's networked player right before it
+        /// enables its PlayerInput, so the keyboard/mouse are free to pair with it.
         /// </summary>
         public static void ReleaseOfflineAvatar()
         {
@@ -40,30 +51,24 @@ namespace KryticalNova.Networking
         private void Awake()
         {
             instance = this;
+            // Nobody plays on a headless server: the avatar must be gone before the first session starts.
+            if (IsHeadlessServer && offlinePlayer != null) offlinePlayer.SetActive(false);
         }
 
         private void Start()
         {
             subscribedManager = NetworkManager.Singleton != null ? NetworkManager.Singleton : GetComponent<NetworkManager>();
             if (subscribedManager == null) return;
-            subscribedManager.OnServerStarted += HideEarly;
-            subscribedManager.OnClientStarted += HideEarly;
+            subscribedManager.OnServerStarted += Hide;
+            subscribedManager.OnClientStarted += Hide;
         }
 
         private void OnDestroy()
         {
             if (instance == this) instance = null;
             if (subscribedManager == null) return;
-            subscribedManager.OnServerStarted -= HideEarly;
-            subscribedManager.OnClientStarted -= HideEarly;
-        }
-
-        // Hide the offline avatar as soon as this peer will own a networked player (Host/Client), before
-        // that player's PlayerInput enables and finds the keyboard/mouse already taken.
-        private void HideEarly()
-        {
-            var nm = subscribedManager != null ? subscribedManager : NetworkManager.Singleton;
-            if (nm != null && nm.IsClient) Hide();
+            subscribedManager.OnServerStarted -= Hide;
+            subscribedManager.OnClientStarted -= Hide;
         }
 
         private void Hide()
@@ -77,7 +82,7 @@ namespace KryticalNova.Networking
 
         private void Update()
         {
-            if (offlinePlayer == null) return;
+            if (offlinePlayer == null || IsHeadlessServer) return;
 
             var nm = NetworkManager.Singleton;
             NetworkObject localPlayer = nm != null && nm.IsClient && nm.LocalClient != null ? nm.LocalClient.PlayerObject : null;
@@ -93,8 +98,10 @@ namespace KryticalNova.Networking
                 return;
             }
 
-            // Still connecting as a client: keep the offline avatar until the networked one exists.
-            if (nm != null && nm.IsClient && nm.IsListening) return;
+            // A session is running or about to (still connecting, or a server with no local player): stay hidden.
+            if (nm != null && nm.IsListening) return;
+            var connection = NetworkConnectionManager.Instance;
+            if (connection != null && connection.IsStartingSession) return;
 
             if (isHandedOff)
                 Restore();
@@ -108,7 +115,7 @@ namespace KryticalNova.Networking
             // Only the server may move a player; on a pure client the server chose the spawn point.
             // (The offline avatar's transform is still valid while it is inactive.)
             if (nm.IsServer)
-                MovePlayer(localPlayer.transform, offlinePlayer.transform.position, offlinePlayer.transform.rotation);
+                NetworkPlacement.Place(localPlayer.transform, offlinePlayer.transform.position, offlinePlayer.transform.rotation);
 
             offlinePlayer.SetActive(false);
 
@@ -126,16 +133,9 @@ namespace KryticalNova.Networking
             handedOffTo = null;
             isHandedOff = false;
             if (hasNetworkedPose)
-                MovePlayer(offlinePlayer.transform, lastNetworkedPosition, lastNetworkedRotation);
+                NetworkPlacement.Place(offlinePlayer.transform, lastNetworkedPosition, lastNetworkedRotation);
             hasNetworkedPose = false;
             offlinePlayer.SetActive(true);
-        }
-
-        private static void MovePlayer(Transform player, Vector3 position, Quaternion rotation)
-        {
-            if (player.TryGetComponent<NavMeshAgent>(out var agent) && agent.isActiveAndEnabled && agent.isOnNavMesh)
-                agent.Warp(position);
-            player.SetPositionAndRotation(position, rotation);
         }
     }
 }

@@ -142,6 +142,12 @@ namespace KryticalNova.Player
 
         private const int UpperBodyLayerIndex = 1;
         private const float LandingSettleSeconds = 0.15f;
+        private const float RemoteMoveOffSpeed = 1f;
+        // Speed of a body this machine does not move itself (see MeasureTravelSpeed).
+        private const float SpeedWindowSeconds = 0.12f;
+        private const float SpeedSampleInterval = 0.01f;
+        private const int SpeedSampleCapacity = 16;
+        private const float PlacedDistance = 5f;
 
         private CharacterAnimState currentState = CharacterAnimState.Locomotion;
         private AnimationClip currentLocomotionClip;
@@ -159,8 +165,13 @@ namespace KryticalNova.Player
         private int warpedJumpClipIndex;
         private Vector3 lastPosition;
         private float currentSpeed;
+        private readonly Vector3[] speedPositions = new Vector3[SpeedSampleCapacity];
+        private readonly float[] speedTimes = new float[SpeedSampleCapacity];
+        private int speedOldest;
+        private int speedCount;
         private bool reportedRunning;
         private CombatEntity combatEntity;
+        private PlayerMovementSkills movementSkills;
         private Coroutine hitRoutine;
         private bool hitHoldsBody;      // a full-body reaction is playing: locomotion waits for it
         private float nextHitReactionTime;
@@ -188,6 +199,7 @@ namespace KryticalNova.Player
             if (agent == null) agent = GetComponent<NavMeshAgent>();
             if (animancer == null) animancer = GetComponentInChildren<AnimancerComponent>();
             combatEntity = GetComponent<CombatEntity>();
+            movementSkills = GetComponent<PlayerMovementSkills>();
             lastPosition = transform.position;
         }
 
@@ -312,6 +324,20 @@ namespace KryticalNova.Player
             currentLocomotionState.Speed = Mathf.Clamp(currentSpeed / nativeSpeed, locomotionPlaybackRange.x, locomotionPlaybackRange.y);
         }
 
+        /// <summary>
+        /// The speed that picks walk or run. Where this machine moves the body it is the body's own speed. Elsewhere
+        /// it is the speed the character has been told to travel at, which every machine knows exactly: a measured
+        /// speed wobbles, and around the threshold that shows as a walk breaking into a run.
+        /// </summary>
+        private float GaitSpeed
+        {
+            get
+            {
+                bool movedHere = agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh;
+                return movedHere || movementSkills == null ? currentSpeed : movementSkills.CurrentSpeed;
+            }
+        }
+
         private void UpdateSpeed()
         {
             if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
@@ -320,10 +346,47 @@ namespace KryticalNova.Player
             }
             else
             {
-                float delta = Time.deltaTime > 0f ? Time.deltaTime : 0.02f;
-                currentSpeed = ((transform.position - lastPosition) / delta).magnitude;
+                currentSpeed = MeasureTravelSpeed();
             }
             lastPosition = transform.position;
+        }
+
+        /// <summary>
+        /// The speed of a body something else moves (NetworkTransform on a client). Its travel from one frame to the
+        /// next is uneven: single frames read several times the real speed, which flipped a walk into the run clip and
+        /// back. Over a short window the travel is true, so the speed is the distance covered in that window.
+        /// </summary>
+        private float MeasureTravelSpeed()
+        {
+            float now = Time.time;
+            Vector3 position = transform.position;
+            // Put somewhere else in one step (spawn, teleport): that is not travel.
+            if ((position - lastPosition).sqrMagnitude > PlacedDistance * PlacedDistance) speedCount = 0;
+
+            int newest = (speedOldest + speedCount - 1) % SpeedSampleCapacity;
+            if (speedCount == 0 || now - speedTimes[newest] >= SpeedSampleInterval)
+            {
+                if (speedCount == SpeedSampleCapacity)
+                {
+                    speedOldest = (speedOldest + 1) % SpeedSampleCapacity;
+                    speedCount--;
+                }
+                int slot = (speedOldest + speedCount) % SpeedSampleCapacity;
+                speedPositions[slot] = position;
+                speedTimes[slot] = now;
+                speedCount++;
+            }
+
+            // Forget what has left the window, keeping one sample to measure from.
+            while (speedCount > 1 && now - speedTimes[(speedOldest + 1) % SpeedSampleCapacity] >= SpeedWindowSeconds)
+            {
+                speedOldest = (speedOldest + 1) % SpeedSampleCapacity;
+                speedCount--;
+            }
+
+            float span = now - speedTimes[speedOldest];
+            if (span < SpeedSampleInterval) return speedCount > 1 ? currentSpeed : 0f;
+            return (position - speedPositions[speedOldest]).magnitude / span;
         }
 
         private void UpdateLocomotion()
@@ -338,13 +401,14 @@ namespace KryticalNova.Player
             // --- Moving: pick a gait, with hysteresis so braking doesn't flash run -> walk -> idle ---
             if (IsMoving())
             {
-                AnimationClip targetClip = currentSpeed >= walkSpeedThreshold ? targetRun : targetWalk;
+                float gaitSpeed = GaitSpeed;
+                AnimationClip targetClip = gaitSpeed >= walkSpeedThreshold ? targetRun : targetWalk;
 
                 bool wasRunning = currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip;
                 if (wasRunning && targetClip == targetWalk)
                 {
                     slowerGaitTimer += Time.deltaTime;
-                    if (currentSpeed > walkSpeedThreshold - runToWalkHysteresis || slowerGaitTimer < gaitChangeDelay)
+                    if (gaitSpeed > walkSpeedThreshold - runToWalkHysteresis || slowerGaitTimer < gaitChangeDelay)
                         targetClip = targetRun;
                 }
                 else
@@ -791,8 +855,12 @@ namespace KryticalNova.Player
             // The measured speed still holds the flight's travel for a moment after touchdown; only a move command
             // given after that counts as "moving off".
             float settleUntil = warpedJumpTime + LandingSettleSeconds;
+            // A body that arrives through NetworkTransform keeps easing into place after it lands, so its measured
+            // speed never quite reaches zero: there, only real travel ends the recovery.
+            bool movedHere = agent != null && agent.isActiveAndEnabled;
+            float moveOffSpeed = movedHere ? moveSpeedThreshold : Mathf.Max(moveSpeedThreshold, RemoteMoveOffSpeed);
 
-            while (warpedJumpTime < length && (warpedJumpTime < settleUntil || currentSpeed <= moveSpeedThreshold))
+            while (warpedJumpTime < length && (warpedJumpTime < settleUntil || currentSpeed <= moveOffSpeed))
             {
                 yield return null;
             }
@@ -844,7 +912,7 @@ namespace KryticalNova.Player
         {
             bool drawn = presentedWeaponDrawn;
             if (currentSpeed <= moveSpeedThreshold) return (drawn && drawnIdleClip != null) ? drawnIdleClip : idleClip;
-            if (currentSpeed >= walkSpeedThreshold) return (drawn && drawnRunClip != null) ? drawnRunClip : runClip;
+            if (GaitSpeed >= walkSpeedThreshold) return (drawn && drawnRunClip != null) ? drawnRunClip : runClip;
             return (drawn && drawnWalkClip != null) ? drawnWalkClip : walkClip;
         }
 

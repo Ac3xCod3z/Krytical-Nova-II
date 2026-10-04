@@ -137,6 +137,9 @@ namespace KryticalNova.Player
         private bool cancelling;
 
         /// <summary>The body is in the air over an obstacle.</summary>
+        private const float RemoteLandingGrace = 0.6f;
+        private const float RemoteLandingTolerance = 0.2f;
+
         public bool IsBusy => vaulting;
         /// <summary>The vault has landed (authority only); the argument is where the move was heading.</summary>
         public event Action<Vector3> Landed;
@@ -432,7 +435,7 @@ namespace KryticalNova.Player
             {
                 if (HasAuthority && !resources.IsAlive) { Abort(); return; }
                 clock += Time.deltaTime;
-                if (clock >= airTime) Finish();
+                if (clock >= airTime && (HasAuthority || RemoteBodyHasLanded())) Finish();
                 return;
             }
 
@@ -464,6 +467,27 @@ namespace KryticalNova.Player
             Begin(new Plan { Landing = landing, NearEdge = nearEdge, FarEdge = farEdge, Top = top, FacingOffset = facingOffset }, speed);
         }
 
+        /// <summary>
+        /// Shown here, simulated elsewhere: the body comes in through NetworkTransform slightly behind the clip, so
+        /// the touchdown waits (briefly) for it instead of running the last stretch of the vault in the air.
+        /// </summary>
+        private bool RemoteBodyHasLanded()
+        {
+            if (clock >= airTime + RemoteLandingGrace) return true;
+            Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            return (feet - landingFeet).sqrMagnitude <= RemoteLandingTolerance * RemoteLandingTolerance;
+        }
+
+        [ClientRpc]
+        private void VaultAbortedClientRpc()
+        {
+            if (!IsServer && vaulting) Abort();
+        }
+
+        /// <summary>
+        /// Starts the vault. Where the player is simulated this moves the body with the warp; every other machine
+        /// plays the same clip on the same clock while NetworkTransform carries the body.
+        /// </summary>
         private void Begin(Plan vault, float speed)
         {
             takeoffRoot = transform.position;
@@ -485,24 +509,30 @@ namespace KryticalNova.Player
             across.y = 0f;
             Quaternion facing = Quaternion.LookRotation(across.normalized, Vector3.up) * Quaternion.AngleAxis(vault.FacingOffset, Vector3.up);
 
-            if (agent.isActiveAndEnabled && agent.isOnNavMesh)
+            if (HasAuthority)
             {
-                agent.isStopped = true;
-                agent.ResetPath();
-                agent.velocity = Vector3.zero;
+                if (agent.isActiveAndEnabled && agent.isOnNavMesh)
+                {
+                    agent.isStopped = true;
+                    agent.ResetPath();
+                    agent.velocity = Vector3.zero;
+                }
+                agent.enabled = false; // the warp owns the root until touchdown
             }
-            agent.enabled = false; // the warp owns the root until touchdown
 
             vaulting = true;
             clock = 0f;
             float window = Mathf.Max(0.05f, style.window.y - style.window.x);
             animancerMotor.PlayWarpedAction(style.clip, style.window.x, window / airTime, fadeIn);
 
-            ShapeWarp(raise, riseEnds, fallStarts);
-            motionWarping.Play(warpAsset, new[]
+            if (HasAuthority)
             {
-                new WarpPoint { position = landingFeet + Vector3.up * agent.baseOffset, rotation = facing },
-            });
+                ShapeWarp(raise, riseEnds, fallStarts);
+                motionWarping.Play(warpAsset, new[]
+                {
+                    new WarpPoint { position = landingFeet + Vector3.up * agent.baseOffset, rotation = facing },
+                });
+            }
 
             var feel = ClientPresentationRegistry.Feel;
             if (feel != null)
@@ -547,7 +577,7 @@ namespace KryticalNova.Player
         private void Finish()
         {
             StopWarp();
-            if (!RestoreAgent(landingFeet + Vector3.up * agent.baseOffset)) { Abort(); return; }
+            if (HasAuthority && !RestoreAgent(landingFeet + Vector3.up * agent.baseOffset)) { Abort(); return; }
             vaulting = false;
             animancerMotor.EndWarpedAction(fadeOut, travelSpeed);
 
@@ -568,10 +598,14 @@ namespace KryticalNova.Player
             StopWarp();
             vaulting = false;
             armed = false;
-            if (!gameObject.activeInHierarchy || !RestoreAgent(takeoffRoot))
+            if (HasAuthority)
             {
-                agent.enabled = false;
-                transform.position = takeoffRoot;
+                if (IsSpawned && IsServer) VaultAbortedClientRpc();
+                if (!gameObject.activeInHierarchy || !RestoreAgent(takeoffRoot))
+                {
+                    agent.enabled = false;
+                    transform.position = takeoffRoot;
+                }
             }
             ClientPresentationRegistry.Feel?.Airborne(transform, false);
             if (animancerMotor != null) animancerMotor.ResetJumpAnimation();

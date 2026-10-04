@@ -583,7 +583,7 @@ namespace KryticalNova.Combat
                 }
             }
 
-            ClientPresentationRegistry.Feedback?.ShowCombatFeedback(target.Transform.position, result);
+            ShowDamageToAttacker(target.Transform.position, result);
 
             if (!result.IsEvaded)
             {
@@ -599,15 +599,61 @@ namespace KryticalNova.Combat
             }
 
             if (result.IsEvaded)
-                OnCombatMessage?.Invoke($"{stepLabel} EVADED by {target.EntityName}!");
+                TellAttacker($"{stepLabel} EVADED by {target.EntityName}!");
             else if (result.IsReflected)
-                OnCombatMessage?.Invoke($"{stepLabel} REFLECTED by {target.EntityName}'s Heavenly Repulsion!");
+                TellAttacker($"{stepLabel} REFLECTED by {target.EntityName}'s Heavenly Repulsion!");
             else if (result.IsCritical)
-                OnCombatMessage?.Invoke($"CRITICAL {stepLabel} on {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
+                TellAttacker($"CRITICAL {stepLabel} on {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
             else
-                OnCombatMessage?.Invoke($"{stepLabel} hit {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
+                TellAttacker($"{stepLabel} hit {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
             return true;
         }
+
+        // ------------------------------------------------------------------ the attacker's own feedback
+        // Hits resolve on the server, but the damage number and the combat line belong to the player who dealt the
+        // blow and to nobody else. TODO(chat): the server relays combat to other players through the chat window.
+
+        private const byte CriticalBit = 1;
+        private const byte EvadedBit = 2;
+        private const byte ReflectedBit = 4;
+        private const byte ShatteredBit = 8;
+
+        private bool AttackerIsHere => !IsSpawned || IsOwner;
+
+        private void ShowDamageToAttacker(Vector3 position, DamageResult result)
+        {
+            if (AttackerIsHere)
+            {
+                ClientPresentationRegistry.Feedback?.ShowCombatFeedback(position, result);
+                return;
+            }
+            byte flags = (byte)((result.IsCritical ? CriticalBit : 0) | (result.IsEvaded ? EvadedBit : 0)
+                | (result.IsReflected ? ReflectedBit : 0) | (result.ShieldShattered ? ShatteredBit : 0));
+            DamageFeedbackRpc(position, result.DamageDealt, result.ReflectedDamage, flags);
+        }
+
+        [Rpc(SendTo.Owner)]
+        private void DamageFeedbackRpc(Vector3 position, float damage, float reflected, byte flags)
+        {
+            ClientPresentationRegistry.Feedback?.ShowCombatFeedback(position, new DamageResult
+            {
+                DamageDealt = damage,
+                ReflectedDamage = reflected,
+                IsCritical = (flags & CriticalBit) != 0,
+                IsEvaded = (flags & EvadedBit) != 0,
+                IsReflected = (flags & ReflectedBit) != 0,
+                ShieldShattered = (flags & ShatteredBit) != 0,
+            });
+        }
+
+        private void TellAttacker(string message)
+        {
+            if (AttackerIsHere) OnCombatMessage?.Invoke(message);
+            else CombatMessageRpc(message);
+        }
+
+        [Rpc(SendTo.Owner)]
+        private void CombatMessageRpc(string message) => OnCombatMessage?.Invoke(message);
 
         /// <summary>
         /// Pauses the basic combo for a skill cast: closes the open swing, halts movement and optionally turns to

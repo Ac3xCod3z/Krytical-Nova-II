@@ -40,6 +40,8 @@ namespace KryticalNova.Networking
         public string ActiveSessionId => activeSessionId;
         public bool IsServicesInitialized => isServicesInitialized;
         public bool IsConnected => NetworkManager.Singleton != null && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer);
+        /// <summary>An online session is being created or joined; the NetworkManager has not started yet.</summary>
+        public bool IsStartingSession { get; private set; }
 
         private void Awake()
         {
@@ -71,7 +73,10 @@ namespace KryticalNova.Networking
                 if (UnityServices.State != ServicesInitializationState.Initialized)
                 {
                     StatusChanged?.Invoke("Initializing Unity Services...");
-                    await UnityServices.InitializeAsync();
+                    var options = new InitializationOptions();
+                    string profile = EditorCloneProfile();
+                    if (profile != null) options.SetProfile(profile);
+                    await UnityServices.InitializeAsync(options);
                 }
 
                 if (!AuthenticationService.Instance.IsSignedIn)
@@ -102,15 +107,42 @@ namespace KryticalNova.Networking
                 return false;
             }
 
-            ConfigureTransport(defaultListenAddress, port > 0 ? port : defaultPort);
+            ushort listenPort = port > 0 ? port : defaultPort;
+            ConfigureTransport(defaultListenAddress, listenPort);
+            OfflinePlayerHandoff.ReleaseOfflineAvatar();
             bool success = NetworkManager.Singleton.StartHost();
             if (success)
             {
-                StatusChanged?.Invoke($"Local Host started on {defaultListenAddress}:{port}");
+                StatusChanged?.Invoke($"Local Host started on {defaultListenAddress}:{listenPort}");
             }
             else
             {
                 ReportError("NetworkManager failed to start Local Host.");
+            }
+            return success;
+        }
+
+        /// <summary>Starts a server with no local player (the in-Editor stand-in for a dedicated server).</summary>
+        public bool StartLocalServer(ushort port = 0)
+        {
+            if (NetworkManager.Singleton == null)
+            {
+                ReportError("Cannot start local server: NetworkManager.Singleton is missing.");
+                return false;
+            }
+
+            ushort listenPort = port > 0 ? port : defaultPort;
+            ConfigureTransport(defaultListenAddress, listenPort);
+            // The offline avatar is a scene NetworkObject: it must be hidden before the server sweeps the scene.
+            OfflinePlayerHandoff.ReleaseOfflineAvatar();
+            bool success = NetworkManager.Singleton.StartServer();
+            if (success)
+            {
+                StatusChanged?.Invoke($"Local Server started on {defaultListenAddress}:{listenPort}");
+            }
+            else
+            {
+                ReportError("NetworkManager failed to start Local Server.");
             }
             return success;
         }
@@ -128,6 +160,7 @@ namespace KryticalNova.Networking
             ushort targetPort = port > 0 ? port : defaultPort;
 
             ConfigureTransport(address, targetPort);
+            OfflinePlayerHandoff.ReleaseOfflineAvatar();
             bool success = NetworkManager.Singleton.StartClient();
             if (success)
             {
@@ -157,6 +190,9 @@ namespace KryticalNova.Networking
                     Name = $"KryticalNova_Zone_{Guid.NewGuid().ToString().Substring(0, 8)}"
                 }.WithRelayNetwork();
 
+                // The session starts the NetworkManager itself; the offline avatar has to be out of the way first.
+                IsStartingSession = true;
+                OfflinePlayerHandoff.ReleaseOfflineAvatar();
                 var hostSession = await MultiplayerService.Instance.CreateSessionAsync(options);
                 activeSession = hostSession;
                 activeSessionId = hostSession.Id;
@@ -169,6 +205,10 @@ namespace KryticalNova.Networking
             {
                 ReportError($"Failed to create mediated session: {ex.Message}");
                 return false;
+            }
+            finally
+            {
+                IsStartingSession = false;
             }
         }
 
@@ -188,6 +228,8 @@ namespace KryticalNova.Networking
             {
                 StatusChanged?.Invoke($"Joining session with code: {code}...");
                 var joinOptions = new JoinSessionOptions();
+                IsStartingSession = true;
+                OfflinePlayerHandoff.ReleaseOfflineAvatar();
                 var session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code.Trim(), joinOptions);
 
                 activeSession = session;
@@ -201,6 +243,10 @@ namespace KryticalNova.Networking
             {
                 ReportError($"Failed to join session: {ex.Message}");
                 return false;
+            }
+            finally
+            {
+                IsStartingSession = false;
             }
         }
 
@@ -268,10 +314,39 @@ namespace KryticalNova.Networking
             if (NetworkManager.Singleton != null)
             {
                 ConfigureTransport(defaultListenAddress, defaultPort);
+                OfflinePlayerHandoff.ReleaseOfflineAvatar();
                 NetworkManager.Singleton.StartServer();
             }
         }
 #endif
+
+        /// <summary>
+        /// Editor instances cloned for multiplayer testing (Multiplayer Play Mode virtual players) share this
+        /// machine's sign-in cache. Each gets its own authentication profile, so they are different players.
+        /// </summary>
+        private static string EditorCloneProfile()
+        {
+#if UNITY_EDITOR
+            const string cloneFolder = "/Library/VP/";
+            string path = Application.dataPath.Replace('\\', '/');
+            int at = path.IndexOf(cloneFolder, StringComparison.OrdinalIgnoreCase);
+            if (at < 0) return null;
+
+            string id = path.Substring(at + cloneFolder.Length);
+            int end = id.IndexOf('/');
+            if (end >= 0) id = id.Substring(0, end);
+
+            var profile = new System.Text.StringBuilder(30);
+            foreach (char c in id)
+            {
+                if (profile.Length == 30) break;
+                if (char.IsLetterOrDigit(c) || c == '-' || c == '_') profile.Append(c);
+            }
+            return profile.Length > 0 ? profile.ToString() : null;
+#else
+            return null;
+#endif
+        }
 
         private void ConfigureTransport(string address, ushort port)
         {

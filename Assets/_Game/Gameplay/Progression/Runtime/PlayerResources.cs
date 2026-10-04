@@ -16,6 +16,7 @@ namespace KryticalNova.Progression
         [SerializeField] private CharacterResourceData resourceData;
         private PlayerCharacterProgression progression;
         private CharacterCombatStats combatStats;
+        private PlayerGmState gmState;
         private float health;
         private float chi;
         private float maxHealth;
@@ -54,6 +55,7 @@ namespace KryticalNova.Progression
             if (initialized) return;
             progression = GetComponent<PlayerCharacterProgression>();
             combatStats = GetComponent<CharacterCombatStats>();
+            gmState = GetComponent<PlayerGmState>();
             if (resourceData == null)
             {
                 Debug.LogError("PlayerResources requires CharacterResourceData.", this);
@@ -227,18 +229,18 @@ namespace KryticalNova.Progression
 
         /// <summary>Checks affordability without consuming Chi. Selection and hotbar assignment are free.</summary>
         public bool CanSpendChi(float amount) => isActiveAndEnabled && IsAlive && float.IsFinite(amount)
-            && amount >= 0f && (chi + ComparisonTolerance >= amount || (GmState.InfiniteChi && IsGmTarget));
+            && amount >= 0f && (chi + ComparisonTolerance >= amount || HasInfiniteChi);
 
         /// <summary>True where this player's HP and Chi are decided (the server, or offline). Clients only mirror them.</summary>
         public bool HasAuthority => !IsSpawned || IsServer;
 
-        /// <summary>GM toggles only apply to the local (owning) player, never to other players simulated on a host.</summary>
-        private bool IsGmTarget => !IsSpawned || IsOwner;
+        // GM toggles are per player (see PlayerGmState); characters without one are never affected.
+        private bool HasInfiniteChi => gmState != null && gmState.InfiniteChi;
 
         /// <summary>Consumes Chi once for an accepted skill command and delays passive recovery.</summary>
         public bool TrySpendChi(float amount)
         {
-            if (GmState.InfiniteChi && IsGmTarget && IsAlive) return true;
+            if (HasInfiniteChi && IsAlive) return true;
             if (!CanSpendChi(amount)) return false;
             if (amount <= 0f) return true;
             chi = Mathf.Max(0f, chi - amount);
@@ -258,10 +260,11 @@ namespace KryticalNova.Progression
         }
 
         /// <summary>Applies positive damage and signals depletion on the transition to zero HP.</summary>
-        public void ApplyDamage(float amount)
+        /// <param name="ignoreGodMode">GM kill: the damage lands even on a god-mode player.</param>
+        public void ApplyDamage(float amount, bool ignoreGodMode = false)
         {
             if (!isActiveAndEnabled || !IsAlive || !float.IsFinite(amount) || amount <= 0f) return;
-            if (GmState.GodMode && IsGmTarget) return;
+            if (!ignoreGodMode && gmState != null && gmState.GodMode) return;
             health = Mathf.Max(0f, health - amount);
             healthRecoveryTime = Time.time + resourceData.healthRegenerationDelay;
             SyncNetworkState();

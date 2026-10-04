@@ -137,7 +137,7 @@ namespace KryticalNova.UI
             evt.StopPropagation();
         }
 
-        // ------------------------------------------------------------------ hover name, double-click travel
+        // ------------------------------------------------------------------ hover name, double-click travel / world map
 
         private void OnPointerMove(PointerMoveEvent evt)
         {
@@ -149,9 +149,15 @@ namespace KryticalNova.UI
 
         private void OnPointerDown(PointerDownEvent evt)
         {
-            if (evt.button != LeftButton || evt.clickCount < 2 || !TryPick(evt.position, out MapTarget target)) return;
+            if (evt.button != LeftButton || evt.clickCount < 2) return;
+            // The zoom buttons are part of the minimap; clicking one quickly is not a double-click on the map.
+            for (var element = evt.target as VisualElement; element != null && element != minimap; element = element.parent)
+                if (element is Button) return;
+
             evt.StopPropagation();
-            MapTravel.Start(target);
+            // On something named: go there. Anywhere else: the full map.
+            if (TryPick(evt.position, out MapTarget target)) MapTravel.Start(target);
+            else if (TryGetComponent(out WorldMapController worldMap)) worldMap.Open();
         }
 
         /// <summary>The named thing under a panel position: the nearest whose icon the point is on, inside the round map.</summary>
