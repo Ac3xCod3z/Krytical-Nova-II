@@ -360,7 +360,7 @@ namespace KryticalNova.Player
                 EndOrbit();
                 if (!inputSuppressed)
                 {
-                    meleeCombat?.CancelAttack();
+                    CancelAttack();
                     ClearSelection();
                     StopTravel();
                 }
@@ -508,7 +508,7 @@ namespace KryticalNova.Player
                 if (!hostile)
                 {
                     EndTravel(false);
-                    meleeCombat?.CancelAttack();
+                    CancelAttack();
                     WalkToUnit(targetEntity.Transform);
                     return;
                 }
@@ -561,14 +561,14 @@ namespace KryticalNova.Player
                 }
 
                 EndTravel(false);
-                meleeCombat?.CancelAttack();
+                CancelAttack();
                 ClientPresentationRegistry.Markers?.HideMoveMarker();
                 BeginInteract(interactable);
                 return;
             }
 
             // Clicking ground or platform stops an active attack and drops the selection (its ring fades out).
-            meleeCombat?.CancelAttack();
+            CancelAttack();
             if (selectedTarget != null) ClearSelection();
 
             if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
@@ -637,7 +637,7 @@ namespace KryticalNova.Player
             EndTravel(false);
             pendingInteract = null;
             if (vaultMotor != null) vaultMotor.Disarm();
-            meleeCombat?.CancelAttack();
+            CancelAttack();
             if (selectedTarget != null) ClearSelection();
             if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
             if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
@@ -965,6 +965,26 @@ namespace KryticalNova.Player
             Vector3 toDestination = agent.destination - agent.nextPosition;
             toDestination.y = 0f;
             return Mathf.Max(agent.remainingDistance, toDestination.magnitude);
+        }
+
+        /// <summary>
+        /// Calls the basic attack off, here and where it is decided. On a client the server's copy of this player
+        /// is the one walking in and striking: left running, it would walk the player straight back to the target.
+        /// </summary>
+        private void CancelAttack()
+        {
+            if (meleeCombat == null) return;
+            bool wasAttacking = meleeCombat.IsAttacking;
+            meleeCombat.CancelAttack();
+            if (wasAttacking && IsSpawned && !IsServer) RequestCancelAttackServerRpc();
+        }
+
+        [ServerRpc]
+        private void RequestCancelAttackServerRpc()
+        {
+            if (meleeCombat == null || !meleeCombat.IsAttacking) return;
+            meleeCombat.CancelAttack();
+            StopMoving(); // it may have been walking in; a new order, if any, arrives right behind this
         }
 
         [ServerRpc]

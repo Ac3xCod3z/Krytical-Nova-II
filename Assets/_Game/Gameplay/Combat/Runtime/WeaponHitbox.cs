@@ -37,6 +37,9 @@ namespace KryticalNova.Combat
         public bool IsActive => hitboxCollider != null && hitboxCollider.enabled;
         public int CurrentComboStep => currentComboStep;
 
+        /// <summary>The blade has already caught this unit during the swing that is open now.</summary>
+        public bool HasHitThisSwing(IDamageable unit) => unit != null && hitEntitiesThisSwing.Contains(unit);
+
         private void Awake()
         {
             if (hitboxCollider == null)
