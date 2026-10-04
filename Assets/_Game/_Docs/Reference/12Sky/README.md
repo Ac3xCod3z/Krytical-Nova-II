@@ -1,0 +1,17 @@
+# 12Sky / Twelve Sky 2 reference pack
+
+Reference material for Krytical Nova's systems, exported from the Claude doc "12Sky Systems Transcription & Krytical Nova Build List" (4 Oct 2026).
+
+| File | What it is |
+| --- | --- |
+| `01_Systems_Build_List.md` | Master Glossary (Twelve Sky 2 term → Krytical Nova term → what the code calls it today), the 43-row build list with per-system Status, variance notes, ranked candidates, open questions. **This is the renaming scheme and the checklist.** |
+| `02_Gear_System_Spec.md` | Concrete spec for Tempering, Fusion, Tuning, Slotting + Cores, Epic Mk, Nova Rank, Titles, auxiliary slots, data model, build order. |
+| `03_Full_Transcription.md` | All 31 pages of the 12Sky in-game help, transcribed in Krytical Nova terms with the reference term in brackets, each with its screenshot. |
+| `pages~/12sky_page_NN.jpg` | The 31 original screenshots. The `~` suffix makes Unity ignore the folder, so they are not imported as textures. |
+
+## Rules for Claude Code
+
+1. **Names.** Code, assets and UI text use the Krytical Nova term from the Glossary. The TS2 term appears in docs only, in parentheses, so the owner can read by the name he knows. Existing identifiers (`NpcRole.Blacksmith`, `MaxChi`, `Pill_*`…) may keep their enum / field names with a Krytical Nova display name, unless a row in the Glossary or the build list says to rename outright.
+2. **Status.** When a system lands, update its Status in `01_Systems_Build_List.md` (`Complete` / `Partial` / `To build` / `Candidate`) and tick it in the checklist view. Do not delete rows.
+3. **Gear.** Follow `02_Gear_System_Spec.md` sections 11–12 in order; numbers marked *(proposed)* are tunables in ScriptableObjects, not constants in code.
+4. **Design docs.** `../../Design/*.md` still use the TS2 vocabulary (Reinforcement, Combination, Refinement, CP, Silver). They are the long-form reference; when they conflict with these files on a name, these files win.
