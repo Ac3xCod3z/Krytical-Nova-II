@@ -1,0 +1,3 @@
+# Reference screenshots stay plain git objects (LFS uploads are not available from every environment)
+*.jpg -filter -diff -merge
+*.png -filter -diff -merge
