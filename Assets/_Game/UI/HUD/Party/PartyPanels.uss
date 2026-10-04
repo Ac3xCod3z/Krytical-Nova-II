@@ -1,0 +1,117 @@
+/* Party panels of the HUD: the member frames and the invitation. The frame is the shared .panel, so the faction
+   skins (Build Faction Skins) restyle them with everything else. */
+
+.party-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* ------------------------------------------------------------------ member frames (under the status frame) */
+
+.party-frames {
+    position: absolute;
+    top: 214px;
+    left: 16px;
+    width: 210px;
+    padding: 8px 12px 8px 12px;
+}
+
+.party-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.party-title { font-size: 10px; }
+
+.party-leave {
+    min-height: 18px;
+    margin: 0;
+    padding: 1px 8px;
+    font-size: 9px;
+}
+
+.party-member { margin-top: 5px; }
+
+.party-member-top {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.party-member-name {
+    font-size: 12px;
+    color: rgb(226, 236, 242);
+}
+
+/* The leader's name is marked in gold. */
+.party-member--leader .party-member-name { color: rgb(244, 214, 130); }
+
+.party-member-level {
+    font-size: 10px;
+    color: rgb(170, 186, 200);
+}
+
+.party-hp {
+    height: 5px;
+    margin-top: 2px;
+    background-color: rgba(34, 52, 66, 0.9);
+}
+
+.party-hp-fill {
+    height: 100%;
+    width: 100%;
+    background-color: rgb(114, 222, 196);
+}
+
+/* Out of sight: their health is not known here. */
+.party-member--away .party-hp-fill { background-color: rgba(170, 186, 200, 0.35); }
+.party-member--away .party-member-name { color: rgb(150, 164, 176); }
+.party-member--down .party-member-name { color: rgb(240, 58, 46); }
+
+/* ------------------------------------------------------------------ invitation */
+
+.party-invite {
+    position: absolute;
+    top: 230px;
+    left: 50%;
+    translate: -50% 0;
+    width: 340px;
+    align-items: center;
+    padding: 12px 18px 14px 18px;
+}
+
+.party-invite-text {
+    font-size: 15px;
+    margin: 4px 0 10px 0;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    color: rgb(255, 255, 255);
+}
+
+.party-invite-buttons {
+    flex-direction: row;
+    align-self: stretch;
+}
+
+.party-invite-button {
+    flex-grow: 1;
+    margin: 0 4px;
+    font-size: 12px;
+}
+
+.party-timer {
+    align-self: stretch;
+    height: 3px;
+    margin-top: 10px;
+    background-color: rgba(34, 52, 66, 0.9);
+}
+
+.party-timer-fill {
+    height: 100%;
+    width: 100%;
+    background-color: rgb(114, 222, 196);
+}

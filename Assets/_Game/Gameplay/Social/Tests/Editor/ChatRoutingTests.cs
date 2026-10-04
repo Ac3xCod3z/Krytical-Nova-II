@@ -13,13 +13,13 @@ namespace KryticalNova.Tests
         private const float Shout = 40f;
 
         // 0: the host (Hegemony, at the origin).  1: Hegemony, 10 m away.  2: Null, 10 m away.
-        // 3: Hegemony, across the map.  4: Covenant, across the map.
+        // 3: Hegemony, across the map.  4: Covenant, across the map.  1 and 3 are in a party.
         private static List<ChatParticipant> World() => new List<ChatParticipant>
         {
             new ChatParticipant { ClientId = 0, Name = "Host", Faction = FactionId.Hegemony, Guild = "Wolves", Position = Vector3.zero, IsGameMaster = true },
-            new ChatParticipant { ClientId = 1, Name = "Ally", Faction = FactionId.Hegemony, Guild = "", Position = new Vector3(10f, 0f, 0f) },
+            new ChatParticipant { ClientId = 1, Name = "Ally", Faction = FactionId.Hegemony, Guild = "", Party = 7, Position = new Vector3(10f, 0f, 0f) },
             new ChatParticipant { ClientId = 2, Name = "Foe", Faction = FactionId.Null, Guild = "wolves", Position = new Vector3(0f, 0f, 10f) },
-            new ChatParticipant { ClientId = 3, Name = "Scout", Faction = FactionId.Hegemony, Guild = "", Position = new Vector3(500f, 0f, 0f) },
+            new ChatParticipant { ClientId = 3, Name = "Scout", Faction = FactionId.Hegemony, Guild = "", Party = 7, Position = new Vector3(500f, 0f, 0f) },
             new ChatParticipant { ClientId = 4, Name = "Scout", Faction = FactionId.Covenant, Guild = "", Position = new Vector3(-500f, 0f, 0f) },
         };
 
@@ -55,6 +55,20 @@ namespace KryticalNova.Tests
         public void GuildChatNeedsAGuild()
         {
             Assert.AreEqual(ChatRoute.NotInGuild, Route(ChatChannel.Guild, 1, out var heard));
+            Assert.IsEmpty(heard);
+        }
+
+        [Test]
+        public void PartyChatReachesThePartyAnywhereAndNobodyElse()
+        {
+            Assert.AreEqual(ChatRoute.Delivered, Route(ChatChannel.Party, 1, out var heard));
+            CollectionAssert.AreEquivalent(new[] { 1, 3 }, heard);
+        }
+
+        [Test]
+        public void PartyChatNeedsAParty()
+        {
+            Assert.AreEqual(ChatRoute.NotInParty, Route(ChatChannel.Party, 0, out var heard));
             Assert.IsEmpty(heard);
         }
 
@@ -129,6 +143,7 @@ namespace KryticalNova.Tests
             Assert.AreEqual("Ally", whisper.Target);
             Assert.AreEqual("meet me at the plaza", whisper.Text);
 
+            Assert.AreEqual(ChatChannel.Party, ChatCommands.Parse("/p on my way", ChatChannel.General, null, null).Channel);
             Assert.AreEqual(ChatInputKind.SwitchChannel, ChatCommands.Parse("/g", ChatChannel.General, null, null).Kind);
             Assert.AreEqual(ChatInputKind.Notice, ChatCommands.Parse("/r hi", ChatChannel.General, null, null).Kind);
             Assert.AreEqual("Foe", ChatCommands.Parse("/r hi", ChatChannel.General, null, "Foe").Target);

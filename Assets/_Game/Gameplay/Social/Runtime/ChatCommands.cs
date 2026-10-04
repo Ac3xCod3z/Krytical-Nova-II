@@ -6,7 +6,7 @@ using UnityEngine;
 namespace KryticalNova.Social
 {
     /// <summary>
-    /// Reads what the player typed into the chat box: plain text goes to the current channel, "/s /f /g /w /r /gm"
+    /// Reads what the player typed into the chat box: plain text goes to the current channel, "/s /f /p /g /w /r /gm"
     /// pick a channel, and any other "/name" runs a command another system registered (duels, for one). Runs on the
     /// machine that typed; the server still applies the chat rules to whatever is sent.
     /// </summary>
@@ -57,6 +57,9 @@ namespace KryticalNova.Social
                 case "f":
                 case "faction":
                     return OnChannel(ChatChannel.Faction, rest);
+                case "p":
+                case "party":
+                    return OnChannel(ChatChannel.Party, rest);
                 case "g":
                 case "guild":
                     return OnChannel(ChatChannel.Guild, rest);

@@ -25,6 +25,7 @@ namespace KryticalNova.EditorTools
         private const string WorldMapType = "KryticalNova.UI.WorldMapController, KryticalNova.UI";
         private const string ChatType = "KryticalNova.UI.ChatWindowController, KryticalNova.UI";
         private const string DuelType = "KryticalNova.UI.DuelHudController, KryticalNova.UI";
+        private const string PartyType = "KryticalNova.UI.PartyHudController, KryticalNova.UI";
 
         [MenuItem("Krytical Nova/UI/Set Up HUD In Open Scene")]
         public static void SetUpOpenScene()
@@ -59,6 +60,8 @@ namespace KryticalNova.EditorTools
             if (chatType != null) EnsureComponent(hudObject, chatType);
             var duelType = System.Type.GetType(DuelType);
             if (duelType != null) EnsureComponent(hudObject, duelType);
+            var partyType = System.Type.GetType(PartyType);
+            if (partyType != null) EnsureComponent(hudObject, partyType);
 
             var markers = Object.FindAnyObjectByType(markersType, FindObjectsInactive.Include) as Component;
             if (markers == null)

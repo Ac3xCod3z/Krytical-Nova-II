@@ -19,6 +19,14 @@ namespace KryticalNova.Core
         public static IGameFeelSink Feel { get; private set; }
         public static IChatSink Chat { get; private set; }
         public static IDuelSink Duel { get; private set; }
+        public static IPartySink Party { get; private set; }
+
+        public static void RegisterParty(IPartySink sink) => Party = sink;
+
+        public static void UnregisterParty(IPartySink sink)
+        {
+            if (ReferenceEquals(Party, sink)) Party = null;
+        }
 
         public static void RegisterDuel(IDuelSink sink) => Duel = sink;
 

@@ -11,6 +11,8 @@ namespace KryticalNova.Social
         public FactionId Faction;
         /// <summary>Empty when the player is in no guild.</summary>
         public string Guild;
+        /// <summary>0 when the player is in no party.</summary>
+        public ulong Party;
         public Vector3 Position;
         /// <summary>True for the host's own player: the only one allowed on the GM channel.</summary>
         public bool IsGameMaster;
