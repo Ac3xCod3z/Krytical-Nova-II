@@ -26,6 +26,11 @@ namespace KryticalNova.Networking
         [SerializeField] private ushort defaultPort = 7777;
         [SerializeField] private int defaultMaxPlayers = 100;
 
+        [Header("Editor Play-Testing")]
+        [Tooltip("In the Editor, the main Editor starts a local host on entering the world and Multiplayer Play Mode clones join it.")]
+        [SerializeField] private bool autoStartInEditor = true;
+        private const float AutoJoinRetrySeconds = 2f;
+
         [Header("State (Read-Only)")]
         [SerializeField] private string activeSessionId;
         [SerializeField] private string activeSessionCode;
@@ -59,7 +64,42 @@ namespace KryticalNova.Networking
         {
 #if UNITY_SERVER
             StartDedicatedServerAsync();
+#else
+            if (autoStartInEditor && Application.isEditor && !Application.isBatchMode)
+                StartCoroutine(AutoStartEditorSession());
 #endif
+        }
+
+        /// <summary>
+        /// Play-testing in the Editor: the main Editor hosts as soon as it reaches the world, and every Multiplayer
+        /// Play Mode clone joins it. A clone that gets there first keeps trying until the host is up.
+        /// </summary>
+        private System.Collections.IEnumerator AutoStartEditorSession()
+        {
+            // One frame, so every Start in the scene (the runtime NavMesh among them) has run before a player spawns.
+            yield return null;
+
+            bool isClone = EditorCloneProfile() != null;
+            var retry = new WaitForSecondsRealtime(AutoJoinRetrySeconds);
+            while (true)
+            {
+                var nm = NetworkManager.Singleton;
+                if (nm == null) yield break;
+
+                // Already in a session, by this or by hand from the network panel.
+                if (nm.IsServer || nm.IsConnectedClient) yield break;
+
+                if (!nm.IsListening && !nm.ShutdownInProgress && !IsStartingSession)
+                {
+                    if (!isClone)
+                    {
+                        StartLocalHost();
+                        yield break;
+                    }
+                    StartLocalClient();
+                }
+                yield return retry;
+            }
         }
 
         /// <summary>Initializes cloud gaming services and anonymous authentication if not already active.</summary>
