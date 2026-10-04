@@ -91,7 +91,17 @@ namespace KryticalNova.Combat
         private CharacterCombatStats combatStats;
         private CharacterBuffManager buffManager;
         private IDamageable currentTarget;
+        private const float ApproachRepathInterval = 0.1f;
+        // How far past the striking range a target may drift mid-combo before the combo breaks off to follow it.
+        private const float ComboReachSlack = 0.5f;
+        // Owning client: how long past a strike's end the next one may arrive (network jitter) before the pose is let go.
+        private const float OwnerStrikeGrace = 0.25f;
+        // Owning client: a strike is thrown standing still, so being moved this far means the server broke it off.
+        private const float OwnerStrikeBreakDistance = 0.25f;
+        private const float OwnerRestSpeed = 0.5f; // m/s; slower than this, the replicated body has arrived
+
         private Coroutine comboRoutine;
+        private Coroutine ownerStrikeRoutine;
         private bool isAttacking;
         private float skillHoldUntil = float.NegativeInfinity;
 
@@ -172,8 +182,21 @@ namespace KryticalNova.Combat
 
             if (comboRoutine == null)
             {
-                comboRoutine = StartCoroutine(ComboLoopRoutine());
+                // Only the server (or the offline game) walks the player in and sequences strikes. A client that
+                // owns this player shows the strikes the server sends (PlayComboStrikeClientRpc): timing them from
+                // its own replicated copy of the positions would never agree with the server's.
+                comboRoutine = StartCoroutine(SequencesStrikes ? ComboLoopRoutine() : OwnerFollowRoutine());
             }
+        }
+
+        private bool SequencesStrikes => !IsSpawned || IsServer;
+
+        /// <summary>Owning client: the attack lasts for as long as its target does.</summary>
+        private IEnumerator OwnerFollowRoutine()
+        {
+            isAttacking = true;
+            while (currentTarget != null && currentTarget.IsAlive) yield return null;
+            CancelAttack();
         }
 
         /// <summary>
@@ -185,6 +208,11 @@ namespace KryticalNova.Combat
             {
                 StopCoroutine(comboRoutine);
                 comboRoutine = null;
+            }
+            if (ownerStrikeRoutine != null)
+            {
+                StopCoroutine(ownerStrikeRoutine);
+                ownerStrikeRoutine = null;
             }
 
             isAttacking = false;
@@ -207,16 +235,19 @@ namespace KryticalNova.Combat
 
             while (currentTarget != null && currentTarget.IsAlive)
             {
-                // 1. Approach into striking range if needed
+                // 1. Approach into striking range if needed. Range is checked every frame so the first strike starts
+                // the moment the target is reachable; the path is only refreshed now and then (the target may move).
+                float nextRepath = 0f;
                 while (currentTarget != null && currentTarget.IsAlive && !IsWithinStrikingRange(currentTarget))
                 {
                     if (animancerMotor != null) animancerMotor.SetAttackingState(false);
-                    if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+                    if (Time.time >= nextRepath && agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
                     {
+                        nextRepath = Time.time + ApproachRepathInterval;
                         agent.isStopped = false;
                         agent.SetDestination(ApproachPoint(currentTarget.Transform.position));
                     }
-                    yield return new WaitForSeconds(0.05f);
+                    yield return null;
                 }
 
                 if (currentTarget == null || !currentTarget.IsAlive) break;
@@ -237,16 +268,20 @@ namespace KryticalNova.Combat
                 // Strike 1
                 yield return ExecuteStrikeStep(1, combo1Clip, swing1Start, swing1End, strike1Speed);
                 if (currentTarget == null || !currentTarget.IsAlive) break;
+                // A target that walked off is chased, not swung at from where it used to stand.
+                if (HasLeftReach(currentTarget)) continue;
 
                 // Strike 2
                 FaceTarget(currentTarget.Transform.position);
                 yield return ExecuteStrikeStep(2, combo2Clip, swing2Start, swing2End, strike2Speed);
                 if (currentTarget == null || !currentTarget.IsAlive) break;
+                if (HasLeftReach(currentTarget)) continue;
 
                 // Strike 3
                 FaceTarget(currentTarget.Transform.position);
                 yield return ExecuteStrikeStep(3, combo3Clip, swing3Start, swing3End, strike3Speed);
                 if (currentTarget == null || !currentTarget.IsAlive) break;
+                if (HasLeftReach(currentTarget)) continue;
 
                 // Slight delay after the third hit before the combo restarts
                 if (postComboDelay > 0f)
@@ -271,8 +306,8 @@ namespace KryticalNova.Combat
                 if (animancerMotor != null) animancerMotor.SetAttackingState(true);
             }
 
-            // Broadcast animation to proxies. A remote owner's server copy runs this same loop (started by
-            // RequestAttackEntityServerRpc), so only the server sequences strikes; the client's loop is presentation.
+            // Broadcast the strike to every client, its owner included: a remote owner's server copy runs this loop
+            // (started by RequestAttackEntityServerRpc), and only the server sequences strikes.
             if (IsSpawned && IsServer)
             {
                 if (ServerTryBeginSwing(step))
@@ -292,6 +327,14 @@ namespace KryticalNova.Combat
             while (elapsed < length)
             {
                 if (Time.time < skillHoldUntil) break; // a skill interrupted this strike
+                // The target got away: drop the wind-up or the recovery and go after it. A swing already under
+                // way is seen through.
+                if (!swingActive && SequencesStrikes && currentTarget != null && HasLeftReach(currentTarget))
+                {
+                    serverSwingOpen = false;
+                    serverSwingMinInterval = 0f; // cut short by the server itself, so the next strike is not "too fast"
+                    break;
+                }
                 elapsed += Time.deltaTime;
 
                 if (!slashSpawned && elapsed >= slashTime)
@@ -311,6 +354,7 @@ namespace KryticalNova.Combat
                 else if (swingActive && elapsed >= swingEnd)
                 {
                     swingActive = false;
+                    EnsureTargetStruck(step);
                     if (weaponHitbox != null)
                     {
                         weaponHitbox.EndSwing();
@@ -324,6 +368,19 @@ namespace KryticalNova.Combat
             {
                 weaponHitbox.EndSwing();
             }
+        }
+
+        /// <summary>
+        /// A completed swing always reaches the unit being attacked. The blade's sweep depends on the pose the
+        /// animation happens to pass through, and against a body as narrow as a player it catches the target on
+        /// barely half the swings; whether a blow lands is for the attack roll (evasion) to decide, not the pose.
+        /// The sweep still decides who else is caught, and the usual checks (hostility, reach) still apply.
+        /// </summary>
+        private void EnsureTargetStruck(int step)
+        {
+            if (!SequencesStrikes || currentTarget == null || !currentTarget.IsAlive) return;
+            if (weaponHitbox != null && weaponHitbox.HasHitThisSwing(currentTarget)) return;
+            ExecuteAuthoritativeStrike(currentTarget, step);
         }
 
         private void PlayStrikeAnimationLocal(int step, AnimationClip clip, float speed = 1f)
@@ -415,17 +472,61 @@ namespace KryticalNova.Combat
         [ClientRpc]
         private void PlayComboStrikeClientRpc(int step)
         {
-            if (IsOwner) return; // Owner already played animation locally
+            if (IsServer) return; // the server (host) played it when it opened the swing
+            // The owner may have called the attack off while this was on its way.
+            if (IsOwner && !isAttacking) return;
 
             AnimationClip clip = step == 1 ? combo1Clip : step == 2 ? combo2Clip : combo3Clip;
             float speed = step == 1 ? strike1Speed : step == 2 ? strike2Speed : strike3Speed;
             if (clip != null && animancer != null)
             {
+                float duration = clip.length / Mathf.Max(0.01f, speed);
+                if (IsOwner)
+                {
+                    if (ownerStrikeRoutine != null) StopCoroutine(ownerStrikeRoutine);
+                    ownerStrikeRoutine = StartCoroutine(OwnerStrikeRoutine(step, duration));
+                }
+
                 PlayStrikeState(clip, speed);
 
-                // Proxies don't run the swing windows, so time the slash the same way the owner does.
+                // Clients don't run the swing windows, so time the slash the same way the server does.
                 StartCoroutine(SpawnSlashVfxDelayed(step, clip.length * GetSlashVfxTime(step) / Mathf.Max(0.01f, speed)));
             }
+        }
+
+        /// <summary>
+        /// Owning client: holds the attack pose for one strike sent by the server. The next strike takes over
+        /// before this runs out; when none comes, or the server starts walking the player after its target, the
+        /// body returns to locomotion.
+        /// </summary>
+        private IEnumerator OwnerStrikeRoutine(int step, float duration)
+        {
+            if (animancerMotor != null) animancerMotor.SetAttackingState(true);
+            // The replicated body trails the server's: it may still be gliding the last steps in when the first
+            // strike arrives. Only movement after it has come to rest means the server broke the strike off.
+            Vector3 lastPosition = transform.position;
+            Vector3 stoodAt = lastPosition;
+            bool atRest = false;
+            float until = Time.time + duration + (step == 3 ? postComboDelay : 0f) + OwnerStrikeGrace;
+            while (Time.time < until)
+            {
+                yield return null;
+                Vector3 position = transform.position;
+                Vector3 travelled = position - lastPosition;
+                travelled.y = 0f;
+                lastPosition = position;
+                if (!atRest)
+                {
+                    if (travelled.magnitude > OwnerRestSpeed * Time.deltaTime) continue;
+                    atRest = true;
+                    stoodAt = position;
+                }
+                Vector3 moved = position - stoodAt;
+                moved.y = 0f;
+                if (moved.sqrMagnitude > OwnerStrikeBreakDistance * OwnerStrikeBreakDistance) break;
+            }
+            ownerStrikeRoutine = null;
+            if (animancerMotor != null) animancerMotor.SetAttackingState(false);
         }
 
         private float GetSlashVfxTime(int step) => step == 1 ? slash1VfxTime : step == 2 ? slash2VfxTime : slash3VfxTime;
@@ -462,13 +563,27 @@ namespace KryticalNova.Combat
             return offset.sqrMagnitude <= meleeStrikingRange * meleeStrikingRange;
         }
 
-        /// <summary>The point on the striking ring nearest the attacker, so arrival and autoBraking aim for the ring, not the target's centre.</summary>
+        /// <summary>Mid-combo: the target is now further away than a strike can follow.</summary>
+        private bool HasLeftReach(IDamageable target)
+        {
+            Vector3 offset = target.Transform.position - transform.position;
+            offset.y = 0f;
+            float reach = meleeStrikingRange + ComboReachSlack;
+            return offset.sqrMagnitude > reach * reach;
+        }
+
+        /// <summary>
+        /// The point on the approach ring nearest the attacker, so arrival and autoBraking aim for the ring, not the
+        /// target's centre. The agent counts as arrived one stopping distance short of its destination, so the ring
+        /// sits that much further in: wherever the agent comes to rest, it is inside the striking range.
+        /// </summary>
         private Vector3 ApproachPoint(Vector3 targetPos)
         {
             Vector3 fromTarget = transform.position - targetPos;
             fromTarget.y = 0f;
             if (fromTarget.sqrMagnitude < 0.0001f) return targetPos;
-            float ring = Mathf.Max(0.1f, meleeStrikingRange - approachInset);
+            float stoppingDistance = agent != null ? agent.stoppingDistance : 0f;
+            float ring = Mathf.Max(0.1f, meleeStrikingRange - approachInset - stoppingDistance);
             return targetPos + fromTarget.normalized * ring;
         }
 

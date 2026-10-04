@@ -1,12 +1,14 @@
 using KryticalNova.Core;
+using KryticalNova.Factions;
 using KryticalNova.Progression;
 using UnityEngine;
 
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// Client-only ground rings built from the Synty SciFi HUD ring sprites: one at the chosen move destination
-    /// (hidden once the player arrives) and one under the selected target (hidden when it dies or is deselected).
+    /// Client-only ground rings built from the Synty HUD ring sprites of the local player's faction: one at the
+    /// chosen move destination (hidden once the player arrives) and one under the selected target (hidden when it
+    /// dies or is deselected).
     /// Each ring is a pair of flat quads; nothing here has a collider, so markers never intercept clicks.
     /// </summary>
     [DisallowMultipleComponent]
@@ -41,6 +43,23 @@ namespace KryticalNova.UI
         [SerializeField] private float moveSpinDegreesPerSecond = 90f;
         [SerializeField] private float targetSpinDegreesPerSecond = 25f;
 
+        /// <summary>One faction's own ring art. A texture left empty falls back to the Hegemony's.</summary>
+        [System.Serializable]
+        private struct FactionRings
+        {
+            public Texture2D moveOuterRing;
+            public Texture2D moveInnerRing;
+            public Texture2D targetRing;
+            public Texture2D targetOuterRing;
+            [ColorUsage(true, true)] public Color moveColor;
+        }
+
+        [Header("Faction Styles")]
+        [Tooltip("The rings above are the Hegemony's (Sci-Fi Soldier HUD). The Null's come from the Dark Fantasy HUD.")]
+        [SerializeField] private FactionRings nullRings;
+        [Tooltip("The Covenant's rings, from the Fantasy Warrior HUD.")]
+        [SerializeField] private FactionRings covenantRings;
+
         private sealed class Ring
         {
             public Transform Root;
@@ -58,6 +77,7 @@ namespace KryticalNova.UI
 
         private Ring moveRing;
         private Ring targetRing3D;
+        private FactionId shownFaction;
         private Transform mover;
         private bool moveRingUntilArrival;
         private Transform target;
@@ -79,6 +99,30 @@ namespace KryticalNova.UI
             quad = BuildFlatQuad();
             moveRing = CreateRing("Move Marker", moveOuterRing, moveInnerRing != null ? moveInnerRing : moveOuterRing, moveColor);
             targetRing3D = CreateRing("Target Marker", targetOuterRing != null ? targetOuterRing : targetRing, targetRing, hostileColor);
+            ApplyFactionStyle(FactionSkin.Current);
+        }
+
+        /// <summary>
+        /// Each faction draws its markers with rings from its own HUD pack, like the rest of its interface. Hostile
+        /// and friendly target colours stay the same for everyone; the move marker takes the faction's colour.
+        /// </summary>
+        private void ApplyFactionStyle(FactionId faction)
+        {
+            shownFaction = faction;
+            FactionRings rings = faction == FactionId.Null ? nullRings : faction == FactionId.Covenant ? covenantRings : default;
+
+            Texture2D moveOuter = rings.moveOuterRing != null ? rings.moveOuterRing : moveOuterRing;
+            Texture2D moveInner = rings.moveInnerRing != null ? rings.moveInnerRing : moveInnerRing != null ? moveInnerRing : moveOuterRing;
+            Texture2D targetInner = rings.targetRing != null ? rings.targetRing : targetRing;
+            Texture2D targetOuter = rings.targetOuterRing != null ? rings.targetOuterRing : targetOuterRing != null ? targetOuterRing : targetRing;
+            Color move = rings.moveColor.a > 0f ? rings.moveColor : moveColor;
+
+            moveRing.OuterMaterial.mainTexture = moveOuter;
+            moveRing.InnerMaterial.mainTexture = moveInner;
+            moveRing.OuterMaterial.SetColor(ColorId, move);
+            moveRing.InnerMaterial.SetColor(ColorId, move);
+            targetRing3D.OuterMaterial.mainTexture = targetOuter;
+            targetRing3D.InnerMaterial.mainTexture = targetInner;
         }
 
         private void OnEnable() => ClientPresentationRegistry.RegisterMarkers(this);
@@ -148,6 +192,8 @@ namespace KryticalNova.UI
         private void LateUpdate()
         {
             float dt = Time.deltaTime;
+            // The skin follows the local player's faction, which is only known once their identity has replicated.
+            if (FactionSkin.Current != shownFaction) ApplyFactionStyle(FactionSkin.Current);
             UpdateMoveRing(dt);
             UpdateTargetRing(dt);
         }

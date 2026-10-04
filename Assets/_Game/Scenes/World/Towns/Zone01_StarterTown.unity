@@ -158837,6 +158837,18 @@ MonoBehaviour:
   friendlyColor: {r: 1.7, g: 1.3, b: 0.5, a: 1}
   moveSpinDegreesPerSecond: 90
   targetSpinDegreesPerSecond: 25
+  nullRings:
+    moveOuterRing: {fileID: 2800000, guid: dc2531e2c45083f4c84cbc017bb1ada9, type: 3}
+    moveInnerRing: {fileID: 2800000, guid: 93e4aac57e7ac764ca8fe263186de589, type: 3}
+    targetRing: {fileID: 2800000, guid: e1e3596442d28404fac7ac52701aba13, type: 3}
+    targetOuterRing: {fileID: 2800000, guid: 1b75560b74ed64b4b9c5d16db9d45e82, type: 3}
+    moveColor: {r: 0.8, g: 0.5, b: 1.7, a: 1}
+  covenantRings:
+    moveOuterRing: {fileID: 2800000, guid: 3c2b017f2a0e3e64bb7aa744996d557e, type: 3}
+    moveInnerRing: {fileID: 2800000, guid: fa3e9d29a1efaec4daeeaf2a185da37b, type: 3}
+    targetRing: {fileID: 2800000, guid: 78807f878b10a984fbedf25be9d49689, type: 3}
+    targetOuterRing: {fileID: 2800000, guid: d68cabbfeabf4da419e11e20d6cd1329, type: 3}
+    moveColor: {r: 0.45, g: 1.5, b: 0.65, a: 1}
 --- !u!4 &562578989
 Transform:
   m_ObjectHideFlags: 0
