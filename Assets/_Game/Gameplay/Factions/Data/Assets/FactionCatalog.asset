@@ -16,4 +16,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 99a8277b9eb6bae4d9cb6a4763cc1ec9, type: 2}
   - {fileID: 11400000, guid: 44b139d558b3c6440a512bb98e244511, type: 2}
   - {fileID: 11400000, guid: cb0611604d2fd9e47b8e92b17c4ee822, type: 2}
-  crossFactionPvp: 0
+  crossFactionPvp: 1

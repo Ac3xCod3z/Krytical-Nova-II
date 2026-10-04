@@ -4224,10 +4224,10 @@
     "m_Guid": {
         "m_GuidSerialized": "071d513b-2989-4bcf-83b1-c0a4e3c825aa"
     },
-    "m_Name": "EyelinerAmount",
+    "m_Name": "FeminieAmount",
     "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "EyelinerAmount",
-    "m_DefaultReferenceName": "_EyelinerAmount",
+    "m_RefNameGeneratedByDisplayName": "FeminieAmount",
+    "m_DefaultReferenceName": "_FeminieAmount",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
@@ -6844,7 +6844,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "f8bde0cc51094db18f7c87dcb495b5c0",
     "m_Id": 0,
-    "m_DisplayName": "EyelinerAmount",
+    "m_DisplayName": "FeminieAmount",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",

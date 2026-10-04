@@ -97,7 +97,7 @@ namespace KryticalNova.EditorTools
             if (catalog == null)
             {
                 catalog = ScriptableObject.CreateInstance<FactionCatalog>();
-                AssetDatabase.CreateAsset(catalog, CatalogPath); // crossFactionPvp stays off until factions have territory
+                AssetDatabase.CreateAsset(catalog, CatalogPath); // crossFactionPvp defaults to on; a GM can switch it (gm.pvp)
             }
             catalog.SetContents(list);
             EditorUtility.SetDirty(catalog);

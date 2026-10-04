@@ -456,7 +456,7 @@ namespace FastScriptReload.Editor
         
         private static string ResolveRelativeToAssetDirectoryFilePath(UnityEngine.Object obj)
         {
-            return AssetDatabase.GetAssetPath(obj.GetInstanceID());
+            return AssetDatabase.GetAssetPath(obj); // KN: Unity 6000.6 made the instance-ID overload an error
         }
 
         public void Update()

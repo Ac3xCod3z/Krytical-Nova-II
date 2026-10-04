@@ -9,9 +9,9 @@ namespace KryticalNova.Factions
     {
         [SerializeField] private List<FactionDefinition> factions = new List<FactionDefinition>();
 
-        [Tooltip("Off: every player is friendly to every other player. On: players of different factions are hostile. " +
-                 "Leave off while all factions share the starter town.")]
-        public bool crossFactionPvp;
+        [Tooltip("The default when a session starts. On: players of different factions are hostile. Off: every player is " +
+                 "friendly to every other player. A GM can switch it while playing (gm.pvp).")]
+        public bool crossFactionPvp = true;
 
         public IReadOnlyList<FactionDefinition> Factions => factions;
 

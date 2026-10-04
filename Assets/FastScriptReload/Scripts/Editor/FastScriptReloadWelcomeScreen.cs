@@ -994,7 +994,7 @@ CustomPolling - (experimental) watches files by manual polling for changes, slow
                 $"\r\n\r\nDepending on version you'll find it via: " +
                 $"\r\n1) Edit -> Preferences -> General -> Script Changes While Playing -> Recompile After Finished Playing." +
                 $"\r\n2) Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled Outside Playmode",
-                "Ok, disable asset auto refresh (I'll refresh manually when needed)",
+                "Ok, disable auto refresh (I'll refresh manually)", // KN: Unity 6000.6 rejects button text of 64+ characters
                 "No, don't change (stop showing this message)",
                 "No, don't change"
             );

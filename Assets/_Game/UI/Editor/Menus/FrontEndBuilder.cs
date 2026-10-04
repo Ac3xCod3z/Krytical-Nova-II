@@ -514,6 +514,9 @@ namespace KryticalNova.EditorTools
             SetRef(showroom, "database", database);
             SetRef(showroom, "modelPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(ModelPrefabPath));
             SetRef(showroom, "idleClip", PlayerIdleClip());
+            var expressions = AssetDatabase.LoadAssetAtPath<CharacterExpressionLibrary>(CharacterExpressionBaker.LibraryPath);
+            if (expressions == null) expressions = CharacterExpressionBaker.Bake();
+            SetRef(showroom, "expressions", expressions);
             SetRef(showroom, "viewCamera", camera);
             SetRef(showroom, "stage", stage);
             SetRef(showroom, "rimLight", rim);

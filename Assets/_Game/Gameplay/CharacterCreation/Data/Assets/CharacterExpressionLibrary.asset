@@ -1,0 +1,1013 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f15cdee7503cf04f9ade29c205eed3c, type: 3}
+  m_Name: CharacterExpressionLibrary
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.CharacterCreation.CharacterExpressionLibrary
+  shapes:
+  - noseSneerLeft
+  - noseSneerRight
+  - browFrownRight
+  - browInnerDownRight
+  - browFrownLeft
+  - browInnerDownLeft
+  - mouthUpperUpLeft
+  - mouthUpperUpRight
+  - eyeLookDownLeft
+  - eyeLookDownRight
+  - eyeLookInLeft
+  - eyeLookInRight
+  - eyeLookOutLeft
+  - eyeLookOutRight
+  - eyeLookUpLeft
+  - eyeLookUpRight
+  - eyeSquintLeft
+  - eyeSquintRight
+  - eyeWideLowerLeft
+  - eyeWideLowerRight
+  - eyeWideUpperLeft
+  - eyeWideUpperRight
+  - browOuterDownLeft
+  - browOuterDownRight
+  - cheekSquintLeft
+  - cheekSquintRight
+  - jawForward
+  - jawOpen
+  - mouthFrownLeft
+  - mouthLowerDownLeft
+  - mouthLowerDownRight
+  - mouthPressLeft
+  - mouthPressRight
+  - mouthPucker
+  - mouthRollOutLower
+  - mouthRollUpper
+  - mouthShrugLower
+  - mouthStretchLeft
+  - mouthStretchRight
+  - browInnerUpRight
+  - browInnerUpLeft
+  - mouthSmileLeft
+  - mouthSmileRight
+  - mouthDimpleLeft
+  - mouthDimpleRight
+  - mouthLeft
+  - mouthRight
+  - mouthRollLower
+  - tongueCurlDown
+  - tongueOut
+  - tongueRaise
+  - tongueSideCurlUp
+  - tongueTwistRight
+  - eyeBlinkLowerLeft
+  - eyeBlinkLowerRight
+  - eyeBlinkUpperLeft
+  - eyeBlinkUpperRight
+  - tongueCurlUp
+  - browOuterUpLeft
+  - browOuterUpRight
+  - tongueLower
+  - tongueUp
+  - mouthClose
+  - mouthShrugUpper
+  - jawBackward
+  - mouthFrownRight
+  - jawRight
+  - mouthRollOutUpper
+  - browRaiseRight
+  - browRaiseLeft
+  - tongueCurlRight
+  - tongueDown
+  - tongueTwistLeft
+  - tongueIn
+  - tongueSideCurlDown
+  faces:
+  - name: Neutral
+    weights: []
+  - name: Angry
+    weights:
+    - shape: 0
+      weight: 6.650351
+    - shape: 1
+      weight: 35.921764
+    - shape: 2
+      weight: 19.193703
+    - shape: 3
+      weight: 87.0046
+    - shape: 4
+      weight: 18.564983
+    - shape: 5
+      weight: 87.0046
+    - shape: 6
+      weight: 32.571262
+    - shape: 7
+      weight: 48.79865
+    - shape: 8
+      weight: 100
+    - shape: 9
+      weight: 100
+    - shape: 10
+      weight: 100
+    - shape: 11
+      weight: 100
+    - shape: 12
+      weight: 100
+    - shape: 13
+      weight: 100
+    - shape: 14
+      weight: 100
+    - shape: 15
+      weight: 100
+    - shape: 16
+      weight: 100
+    - shape: 17
+      weight: 100
+    - shape: 18
+      weight: 15.174114
+    - shape: 19
+      weight: 31.450054
+    - shape: 20
+      weight: 24.154154
+    - shape: 21
+      weight: 41.59334
+    - shape: 22
+      weight: 1.5868675
+    - shape: 23
+      weight: 1.5868675
+    - shape: 24
+      weight: 38.82578
+    - shape: 25
+      weight: 37.90492
+    - shape: 26
+      weight: 39.026398
+    - shape: 27
+      weight: 2.3698595
+    - shape: 28
+      weight: 7.8120694
+    - shape: 29
+      weight: 100
+    - shape: 30
+      weight: 100
+    - shape: 31
+      weight: 7.817527
+    - shape: 32
+      weight: 24.361582
+    - shape: 33
+      weight: 0.6643615
+    - shape: 34
+      weight: 42.363525
+    - shape: 35
+      weight: 2.1188526
+    - shape: 36
+      weight: 100
+    - shape: 37
+      weight: 15.480873
+    - shape: 38
+      weight: 26.595684
+  - name: Content
+    weights:
+    - shape: 39
+      weight: 15.600438
+    - shape: 40
+      weight: 15.600438
+    - shape: 16
+      weight: 35.678047
+    - shape: 17
+      weight: 35.678047
+    - shape: 20
+      weight: 55.61283
+    - shape: 21
+      weight: 55.61283
+    - shape: 24
+      weight: 31.75255
+    - shape: 25
+      weight: 31.75255
+    - shape: 41
+      weight: 29.477669
+    - shape: 42
+      weight: 29.462816
+  - name: Delighted
+    weights:
+    - shape: 8
+      weight: 100
+    - shape: 9
+      weight: 100
+    - shape: 10
+      weight: 100
+    - shape: 11
+      weight: 100
+    - shape: 12
+      weight: 100
+    - shape: 13
+      weight: 100
+    - shape: 14
+      weight: 100
+    - shape: 15
+      weight: 100
+    - shape: 18
+      weight: 42.99835
+    - shape: 19
+      weight: 42.99835
+    - shape: 20
+      weight: 55.61283
+    - shape: 21
+      weight: 55.61283
+    - shape: 40
+      weight: 74.26004
+    - shape: 39
+      weight: 74.26004
+    - shape: 24
+      weight: 67.27113
+    - shape: 25
+      weight: 67.27113
+    - shape: 27
+      weight: 36.65868
+    - shape: 43
+      weight: 68.577095
+    - shape: 44
+      weight: 68.577095
+    - shape: 45
+      weight: 0.5734848
+    - shape: 29
+      weight: 24.204569
+    - shape: 30
+      weight: 24.204569
+    - shape: 46
+      weight: 3.392887
+    - shape: 41
+      weight: 56.740326
+    - shape: 42
+      weight: 60.094414
+    - shape: 37
+      weight: 14.101955
+    - shape: 38
+      weight: 14.101955
+    - shape: 6
+      weight: 8.409349
+    - shape: 7
+      weight: 8.409349
+    - shape: 0
+      weight: 21.174105
+    - shape: 1
+      weight: 21.174105
+  - name: Disgusted
+    weights:
+    - shape: 0
+      weight: 30.702738
+    - shape: 1
+      weight: 100
+    - shape: 2
+      weight: 3.422467
+    - shape: 3
+      weight: 79.24685
+    - shape: 4
+      weight: 27.363714
+    - shape: 5
+      weight: 32.401737
+    - shape: 40
+      weight: 57.952774
+    - shape: 6
+      weight: 34.32607
+    - shape: 7
+      weight: 44.39905
+    - shape: 8
+      weight: 100
+    - shape: 9
+      weight: 100
+    - shape: 10
+      weight: 100
+    - shape: 11
+      weight: 100
+    - shape: 12
+      weight: 100
+    - shape: 13
+      weight: 100
+    - shape: 14
+      weight: 100
+    - shape: 15
+      weight: 100
+    - shape: 16
+      weight: 21.782574
+    - shape: 17
+      weight: 71.080315
+    - shape: 20
+      weight: 43.04493
+    - shape: 21
+      weight: 43.589977
+    - shape: 22
+      weight: 37.35113
+    - shape: 23
+      weight: 41.879387
+    - shape: 24
+      weight: 45.57096
+    - shape: 25
+      weight: 45.57096
+    - shape: 27
+      weight: 26.31762
+    - shape: 43
+      weight: 83.26137
+    - shape: 44
+      weight: 83.26137
+    - shape: 28
+      weight: 20.131878
+    - shape: 29
+      weight: 35.572117
+    - shape: 30
+      weight: 35.572117
+    - shape: 31
+      weight: 2.9017608
+    - shape: 32
+      weight: 15.292112
+    - shape: 47
+      weight: 26.319298
+    - shape: 36
+      weight: 41.072445
+    - shape: 42
+      weight: 1.2681412
+    - shape: 37
+      weight: 33.45164
+    - shape: 38
+      weight: 33.45164
+    - shape: 48
+      weight: 49.019833
+    - shape: 49
+      weight: 70.33475
+    - shape: 50
+      weight: 51.4669
+    - shape: 51
+      weight: 1.1804179
+    - shape: 52
+      weight: 11.13518
+  - name: Distraught
+    weights:
+    - shape: 0
+      weight: 26.478434
+    - shape: 1
+      weight: 26.478434
+    - shape: 2
+      weight: 61.70756
+    - shape: 39
+      weight: 72.11701
+    - shape: 4
+      weight: 61.70756
+    - shape: 40
+      weight: 72.11701
+    - shape: 6
+      weight: 80.260864
+    - shape: 7
+      weight: 80.260864
+    - shape: 53
+      weight: 86.364784
+    - shape: 54
+      weight: 69.14108
+    - shape: 55
+      weight: 5.178634
+    - shape: 56
+      weight: 5.178634
+    - shape: 8
+      weight: 100
+    - shape: 9
+      weight: 100
+    - shape: 10
+      weight: 100
+    - shape: 11
+      weight: 100
+    - shape: 12
+      weight: 100
+    - shape: 13
+      weight: 100
+    - shape: 14
+      weight: 100
+    - shape: 15
+      weight: 100
+    - shape: 16
+      weight: 24.0487
+    - shape: 17
+      weight: 24.0487
+    - shape: 22
+      weight: 37.35113
+    - shape: 23
+      weight: 41.879387
+    - shape: 24
+      weight: 42.940666
+    - shape: 25
+      weight: 42.940666
+    - shape: 27
+      weight: 32.841064
+    - shape: 43
+      weight: 100
+    - shape: 44
+      weight: 100
+    - shape: 29
+      weight: 17.057638
+    - shape: 30
+      weight: 17.057638
+    - shape: 33
+      weight: 19.631214
+    - shape: 47
+      weight: 18.289263
+    - shape: 35
+      weight: 42.687145
+    - shape: 36
+      weight: 100
+    - shape: 37
+      weight: 100
+    - shape: 38
+      weight: 100
+    - shape: 57
+      weight: 25.895697
+    - shape: 51
+      weight: 1.8770769
+  - name: Enraged
+    weights:
+    - shape: 0
+      weight: 6.259154
+    - shape: 1
+      weight: 33.80872
+    - shape: 2
+      weight: 4.1960335
+    - shape: 3
+      weight: 100
+    - shape: 5
+      weight: 100
+    - shape: 6
+      weight: 70.88868
+    - shape: 7
+      weight: 70.88868
+    - shape: 8
+      weight: 100
+    - shape: 9
+      weight: 100
+    - shape: 10
+      weight: 100
+    - shape: 11
+      weight: 100
+    - shape: 12
+      weight: 100
+    - shape: 13
+      weight: 100
+    - shape: 14
+      weight: 100
+    - shape: 15
+      weight: 100
+    - shape: 16
+      weight: 47.141083
+    - shape: 17
+      weight: 47.141083
+    - shape: 18
+      weight: 14.28152
+    - shape: 19
+      weight: 29.600052
+    - shape: 20
+      weight: 49.7963
+    - shape: 21
+      weight: 68.28931
+    - shape: 58
+      weight: 1.1911883
+    - shape: 59
+      weight: 1.1911883
+    - shape: 24
+      weight: 33.55861
+    - shape: 25
+      weight: 32.671246
+    - shape: 26
+      weight: 68.15183
+    - shape: 27
+      weight: 73.55718
+    - shape: 45
+      weight: 0.5654479
+    - shape: 29
+      weight: 48.644024
+    - shape: 30
+      weight: 48.644024
+    - shape: 32
+      weight: 0.78953964
+    - shape: 33
+      weight: 3.4389563
+    - shape: 36
+      weight: 100
+    - shape: 41
+      weight: 20.581295
+    - shape: 42
+      weight: 20.570961
+    - shape: 37
+      weight: 21.198513
+    - shape: 38
+      weight: 19.18554
+    - shape: 48
+      weight: 7.0684395
+    - shape: 60
+      weight: 26.863516
+    - shape: 49
+      weight: 1.9470118
+    - shape: 61
+      weight: 31.688032
+  - name: Grumpy
+    weights:
+    - shape: 0
+      weight: 78.41918
+    - shape: 1
+      weight: 78.41918
+    - shape: 2
+      weight: 39.049046
+    - shape: 3
+      weight: 63.59201
+    - shape: 4
+      weight: 21.956556
+    - shape: 5
+      weight: 63.59201
+    - shape: 62
+      weight: 10.44748
+    - shape: 63
+      weight: 8.194102
+    - shape: 16
+      weight: 84.10981
+    - shape: 17
+      weight: 65.53747
+    - shape: 18
+      weight: 41.17207
+    - shape: 19
+      weight: 60.3757
+    - shape: 20
+      weight: 22.73332
+    - shape: 21
+      weight: 39.146675
+    - shape: 58
+      weight: 19.205055
+    - shape: 59
+      weight: 19.205055
+    - shape: 24
+      weight: 32.15531
+    - shape: 25
+      weight: 27.07708
+    - shape: 64
+      weight: 1.7075051
+    - shape: 28
+      weight: 6.2462606
+    - shape: 65
+      weight: 6.9920106
+    - shape: 33
+      weight: 11.755764
+    - shape: 47
+      weight: 1.726132
+    - shape: 35
+      weight: 6.888648
+  - name: Happy
+    weights:
+    - shape: 39
+      weight: 37.928734
+    - shape: 40
+      weight: 37.928734
+    - shape: 6
+      weight: 8.409349
+    - shape: 7
+      weight: 8.409349
+    - shape: 16
+      weight: 69.700775
+    - shape: 17
+      weight: 69.700775
+    - shape: 20
+      weight: 55.61283
+    - shape: 21
+      weight: 55.61283
+    - shape: 24
+      weight: 67.54395
+    - shape: 25
+      weight: 67.54395
+    - shape: 43
+      weight: 68.577095
+    - shape: 44
+      weight: 68.577095
+    - shape: 29
+      weight: 77.930786
+    - shape: 30
+      weight: 77.930786
+    - shape: 41
+      weight: 36.86857
+    - shape: 42
+      weight: 36.925877
+  - name: InPain
+    weights:
+    - shape: 0
+      weight: 26.478434
+    - shape: 1
+      weight: 100
+    - shape: 2
+      weight: 61.70756
+    - shape: 3
+      weight: 32.401737
+    - shape: 39
+      weight: 4.6710567
+    - shape: 4
+      weight: 61.70756
+    - shape: 5
+      weight: 32.401737
+    - shape: 40
+      weight: 57.952774
+    - shape: 6
+      weight: 51.91539
+    - shape: 7
+      weight: 69.385475
+    - shape: 53
+      weight: 100
+    - shape: 54
+      weight: 69.14108
+    - shape: 56
+      weight: 3.750034
+    - shape: 16
+      weight: 57.964302
+    - shape: 17
+      weight: 75.53238
+    - shape: 20
+      weight: 1.0161113
+    - shape: 22
+      weight: 37.35113
+    - shape: 23
+      weight: 41.879387
+    - shape: 24
+      weight: 13.670437
+    - shape: 25
+      weight: 57.60172
+    - shape: 28
+      weight: 2.5728297
+    - shape: 29
+      weight: 100
+    - shape: 30
+      weight: 85.73805
+    - shape: 31
+      weight: 9.264764
+    - shape: 32
+      weight: 22.222675
+    - shape: 33
+      weight: 19.631214
+    - shape: 34
+      weight: 100
+    - shape: 35
+      weight: 42.687145
+    - shape: 36
+      weight: 57.845325
+    - shape: 42
+      weight: 7.72106
+    - shape: 37
+      weight: 72.00148
+    - shape: 38
+      weight: 72.00148
+  - name: Sad
+    weights:
+    - shape: 2
+      weight: 60.20518
+    - shape: 39
+      weight: 28.628347
+    - shape: 4
+      weight: 60.20518
+    - shape: 40
+      weight: 28.628347
+    - shape: 63
+      weight: 15.058665
+    - shape: 55
+      weight: 26.446617
+    - shape: 56
+      weight: 26.446617
+    - shape: 16
+      weight: 28.013988
+    - shape: 17
+      weight: 28.013988
+    - shape: 18
+      weight: 70.51227
+    - shape: 19
+      weight: 70.51227
+    - shape: 22
+      weight: 15.986946
+    - shape: 23
+      weight: 15.986946
+    - shape: 26
+      weight: 34.651913
+    - shape: 27
+      weight: 0.72995913
+    - shape: 28
+      weight: 16.42613
+    - shape: 65
+      weight: 16.440626
+    - shape: 45
+      weight: 6.8617964
+    - shape: 33
+      weight: 12.112203
+    - shape: 46
+      weight: 6.8617964
+    - shape: 47
+      weight: 19.599972
+    - shape: 35
+      weight: 35.57251
+    - shape: 36
+      weight: 1.3937608
+    - shape: 66
+      weight: 0.9958351
+  - name: Scared
+    weights:
+    - shape: 2
+      weight: 57.569057
+    - shape: 39
+      weight: 94.731606
+    - shape: 4
+      weight: 57.569057
+    - shape: 40
+      weight: 94.731606
+    - shape: 6
+      weight: 34.32607
+    - shape: 7
+      weight: 34.32607
+    - shape: 53
+      weight: 64.90994
+    - shape: 54
+      weight: 64.90994
+    - shape: 16
+      weight: 40.46588
+    - shape: 17
+      weight: 40.46588
+    - shape: 20
+      weight: 83.91833
+    - shape: 21
+      weight: 83.91833
+    - shape: 22
+      weight: 15.986946
+    - shape: 23
+      weight: 15.986946
+    - shape: 24
+      weight: 45.57096
+    - shape: 25
+      weight: 45.57096
+    - shape: 43
+      weight: 83.26137
+    - shape: 44
+      weight: 83.26137
+    - shape: 28
+      weight: 20.131878
+    - shape: 65
+      weight: 20.11806
+    - shape: 29
+      weight: 35.572117
+    - shape: 30
+      weight: 35.572117
+    - shape: 31
+      weight: 15.292112
+    - shape: 32
+      weight: 15.292112
+    - shape: 34
+      weight: 5.039769
+    - shape: 36
+      weight: 8.157338
+    - shape: 37
+      weight: 33.45164
+    - shape: 38
+      weight: 33.45164
+  - name: Smug
+    weights:
+    - shape: 0
+      weight: 4.766315
+    - shape: 1
+      weight: 78.41918
+    - shape: 2
+      weight: 3.5653408
+    - shape: 3
+      weight: 67.55925
+    - shape: 4
+      weight: 39.973484
+    - shape: 5
+      weight: 67.55925
+    - shape: 67
+      weight: 18.098972
+    - shape: 16
+      weight: 50.616318
+    - shape: 17
+      weight: 94.85328
+    - shape: 18
+      weight: 41.17207
+    - shape: 19
+      weight: 60.3757
+    - shape: 20
+      weight: 22.73332
+    - shape: 21
+      weight: 39.146675
+    - shape: 58
+      weight: 19.205055
+    - shape: 59
+      weight: 19.205055
+    - shape: 24
+      weight: 1.5519898
+    - shape: 25
+      weight: 27.07708
+    - shape: 64
+      weight: 1.7075051
+    - shape: 31
+      weight: 22.161139
+    - shape: 46
+      weight: 5.6843495
+    - shape: 41
+      weight: 5.557764
+    - shape: 42
+      weight: 67.36226
+  - name: Surprised
+    weights:
+    - shape: 68
+      weight: 25.175385
+    - shape: 39
+      weight: 82.874985
+    - shape: 69
+      weight: 25.175385
+    - shape: 40
+      weight: 82.874985
+    - shape: 18
+      weight: 42.99835
+    - shape: 19
+      weight: 42.99835
+    - shape: 20
+      weight: 55.61283
+    - shape: 21
+      weight: 55.61283
+    - shape: 27
+      weight: 81.77303
+    - shape: 45
+      weight: 0.5734848
+    - shape: 33
+      weight: 10.930574
+    - shape: 46
+      weight: 3.392887
+    - shape: 36
+      weight: 100
+    - shape: 37
+      weight: 14.101955
+    - shape: 38
+      weight: 14.101955
+    - shape: 70
+      weight: 2.7522948
+    - shape: 57
+      weight: 43.444393
+    - shape: 71
+      weight: 58.875835
+    - shape: 51
+      weight: 5.6628146
+    - shape: 72
+      weight: 14.089094
+  - name: Suspicious
+    weights:
+    - shape: 0
+      weight: 78.41918
+    - shape: 1
+      weight: 78.41918
+    - shape: 2
+      weight: 39.049046
+    - shape: 3
+      weight: 41.188843
+    - shape: 69
+      weight: 40.888344
+    - shape: 5
+      weight: 41.188843
+    - shape: 40
+      weight: 25.148443
+    - shape: 62
+      weight: 50.217926
+    - shape: 63
+      weight: 39.38661
+    - shape: 16
+      weight: 74.170166
+    - shape: 17
+      weight: 74.170166
+    - shape: 58
+      weight: 19.205055
+    - shape: 59
+      weight: 19.205055
+    - shape: 24
+      weight: 32.15531
+    - shape: 25
+      weight: 27.07708
+    - shape: 64
+      weight: 1.7075051
+    - shape: 45
+      weight: 54.378094
+    - shape: 32
+      weight: 6.371845
+    - shape: 33
+      weight: 11.755764
+    - shape: 47
+      weight: 15.265825
+    - shape: 35
+      weight: 6.888648
+    - shape: 41
+      weight: 18.252823
+    - shape: 42
+      weight: 11.995333
+  - name: Terrified
+    weights:
+    - shape: 0
+      weight: 100
+    - shape: 1
+      weight: 100
+    - shape: 2
+      weight: 57.569057
+    - shape: 39
+      weight: 94.731606
+    - shape: 4
+      weight: 57.569057
+    - shape: 40
+      weight: 94.731606
+    - shape: 6
+      weight: 55.993664
+    - shape: 7
+      weight: 55.993664
+    - shape: 18
+      weight: 67.686806
+    - shape: 19
+      weight: 67.686806
+    - shape: 20
+      weight: 100
+    - shape: 21
+      weight: 100
+    - shape: 22
+      weight: 15.986946
+    - shape: 23
+      weight: 15.986946
+    - shape: 24
+      weight: 100
+    - shape: 25
+      weight: 100
+    - shape: 27
+      weight: 58.804848
+    - shape: 43
+      weight: 12.7468
+    - shape: 44
+      weight: 12.7468
+    - shape: 28
+      weight: 10.887365
+    - shape: 45
+      weight: 14.330257
+    - shape: 32
+      weight: 5.959021
+    - shape: 42
+      weight: 10.913481
+    - shape: 37
+      weight: 55.696404
+    - shape: 38
+      weight: 55.696404
+    - shape: 48
+      weight: 71.15682
+    - shape: 73
+      weight: 9.792931
+    - shape: 50
+      weight: 78.58381
+    - shape: 74
+      weight: 59.69441
+  - name: Worried
+    weights:
+    - shape: 2
+      weight: 60.19305
+    - shape: 39
+      weight: 54.757496
+    - shape: 4
+      weight: 60.19305
+    - shape: 40
+      weight: 54.757496
+    - shape: 53
+      weight: 77.3617
+    - shape: 54
+      weight: 77.3617
+    - shape: 20
+      weight: 45.41583
+    - shape: 21
+      weight: 45.41583
+    - shape: 22
+      weight: 4.3595614
+    - shape: 23
+      weight: 4.3595614
+    - shape: 24
+      weight: 45.57096
+    - shape: 25
+      weight: 45.57096
+    - shape: 43
+      weight: 11.421156
+    - shape: 44
+      weight: 11.421156
+    - shape: 47
+      weight: 7.5767674
+    - shape: 36
+      weight: 43.752117
+  idles:
+  - name: Ready
+    clip: {fileID: 7400000, guid: 738b43c856812d44485cce817b79ea06, type: 3}
+  - name: At Ease
+    clip: {fileID: -5546555014965455605, guid: 6c39249bf65af8a4c8af2f6432af9bec, type: 3}
+  - name: Relaxed
+    clip: {fileID: 7400002, guid: a3422ad278cd9a94aa3da8e6bff9deea, type: 3}
+  - name: Restless
+    clip: {fileID: 7400002, guid: 69d59c13a83a7c74a8cc0607ded391ec, type: 3}
+  emotes:
+  - name: Talk
+    clip: {fileID: -4131146202891655349, guid: d42c5615ec78fc34cbcaf031b2975360, type: 3}
+  - name: Jump
+    clip: {fileID: 7400002, guid: 067cc188e25b78b4a940a9fa67cd6ee7, type: 3}

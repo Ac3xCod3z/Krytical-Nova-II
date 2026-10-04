@@ -26,6 +26,7 @@ namespace KryticalNova.UI.Menus
             Origin,
             Body,
             Head,
+            Preview,
             Colour,
             Finalise
         }
@@ -41,10 +42,10 @@ namespace KryticalNova.UI.Menus
         [SerializeField] private PortraitStudio portraits;
         [SerializeField] private MenuHotkeys hotkeys;
 
-        [Header("Tabs, in order: Origin, Body, Head, Colour, Finalise")]
+        [Header("Tabs, in order: Origin, Body, Head, Preview, Colour, Finalise")]
         [SerializeField] private MenuRow[] tabButtons = Array.Empty<MenuRow>();
         [SerializeField] private GameObject originSection;
-        [Tooltip("The list of option rows shared by the Body and Head tabs.")]
+        [Tooltip("The list of option rows shared by the Body, Head and Preview tabs.")]
         [SerializeField] private GameObject optionsSection;
         [SerializeField] private GameObject colourSection;
         [SerializeField] private GameObject finaliseSection;
@@ -87,6 +88,7 @@ namespace KryticalNova.UI.Menus
         private Tab tab;
         private int slot = -1;
         private int lastEditSource;
+        private int previewFace, previewIdle, previewEmote = -1;
         private string suggestion;
         private string pendingName;
         private bool nameValid;
@@ -142,11 +144,11 @@ namespace KryticalNova.UI.Menus
             for (int i = 0; i < tabButtons.Length; i++)
                 if (tabButtons[i] != null) tabButtons[i].SetSelected(i == (int)next);
             SetActive(originSection, next == Tab.Origin);
-            SetActive(optionsSection, next == Tab.Body || next == Tab.Head);
+            SetActive(optionsSection, next == Tab.Body || next == Tab.Head || next == Tab.Preview);
             SetActive(colourSection, next == Tab.Colour);
             SetActive(finaliseSection, next == Tab.Finalise);
             RefreshTab();
-            if (showroom != null) showroom.Focus(next == Tab.Head ? 0.8f : next == Tab.Colour ? 0.45f : 0f);
+            if (showroom != null) showroom.Focus(next == Tab.Head ? 0.8f : next == Tab.Colour ? 0.45f : next == Tab.Preview ? 0.3f : 0f);
             if (nextPrompt != null) MenuUi.SetText(nextPrompt, "Label_Action", next == Tab.Finalise ? "Create Character" : "Next");
             if (next == Tab.Finalise && nameInput != null)
             {
@@ -163,6 +165,7 @@ namespace KryticalNova.UI.Menus
                 case Tab.Origin: RefreshOrigin(); break;
                 case Tab.Body: ShowBody(); break;
                 case Tab.Head: ShowHead(); break;
+                case Tab.Preview: ShowPreview(); break;
                 case Tab.Colour: ShowColours(); break;
                 case Tab.Finalise: RefreshName(); break;
             }
@@ -349,6 +352,38 @@ namespace KryticalNova.UI.Menus
                 default: return region.ToString();
             }
         }
+
+        // ---------------- Preview (faces, idles, emotes) ----------------
+
+        // Nothing here is saved with the character: it shows the player how their character looks alive.
+        private void ShowPreview()
+        {
+            SetListTitle("Preview");
+            var library = showroom != null ? showroom.Expressions : null;
+            int row = 0;
+            if (library != null && library.Faces.Count > 0 && row < optionRows.Length)
+                optionRows[row++].Show("Expression", () => library.Faces[previewFace].name, direction =>
+                {
+                    previewFace = Wrap(previewFace + direction, library.Faces.Count);
+                    showroom.SetFace(previewFace);
+                });
+            if (library != null && library.Idles.Count > 0 && row < optionRows.Length)
+                optionRows[row++].Show("Stance", () => library.Idles[previewIdle].name, direction =>
+                {
+                    previewIdle = Wrap(previewIdle + direction, library.Idles.Count);
+                    showroom.PlayIdle(previewIdle);
+                });
+            if (library != null && library.Emotes.Count > 0 && row < optionRows.Length)
+                optionRows[row++].Show("Emote", () => previewEmote >= 0 ? library.Emotes[previewEmote].name : "Use the arrows", direction =>
+                {
+                    previewEmote = Wrap(previewEmote + direction, library.Emotes.Count);
+                    showroom.PlayEmote(previewEmote);
+                });
+            HideOptionRows(row);
+            foreach (var slider in sliderRows) slider.Hide();
+        }
+
+        private static int Wrap(int index, int count) => ((index % count) + count) % count;
 
         // ---------------- Colour ----------------
 

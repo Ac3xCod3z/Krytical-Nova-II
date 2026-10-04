@@ -17,6 +17,8 @@ namespace KryticalNova.UI.Menus
         [Tooltip("The player's Sidekick model prefab (Player_01).")]
         [SerializeField] private GameObject modelPrefab;
         [SerializeField] private AnimationClip idleClip;
+        [Tooltip("Faces, idles and emotes the character can show (the creator's Preview tab). Optional.")]
+        [SerializeField] private CharacterExpressionLibrary expressions;
         [SerializeField] private Camera viewCamera;
         [Tooltip("Where the character stands. It faces the stage's -Z.")]
         [SerializeField] private Transform stage;
@@ -44,6 +46,7 @@ namespace KryticalNova.UI.Menus
         private MaterialPropertyBlock block;
 
         public CharacterCreationDatabase Database => database;
+        public CharacterExpressionLibrary Expressions => expressions;
         public bool IsShowing => doll != null && doll.gameObject.activeSelf;
 
         public float ScreenShiftX
@@ -68,6 +71,7 @@ namespace KryticalNova.UI.Menus
             {
                 doll = CharacterDoll.Create(modelPrefab, stage != null ? stage : transform, idleClip);
                 if (doll == null) return false;
+                if (expressions != null) doll.EnableExpressions(expressions);
             }
             doll.gameObject.SetActive(true);
             ApplyFaction(recipe.faction);
@@ -78,6 +82,23 @@ namespace KryticalNova.UI.Menus
         {
             if (doll != null) doll.gameObject.SetActive(false);
             ApplyFaction(FactionId.None);
+        }
+
+        // ---------------- Expressions (the creator's Preview tab) ----------------
+
+        public void SetFace(int index)
+        {
+            if (doll != null) doll.SetFace(index);
+        }
+
+        public void PlayIdle(int index)
+        {
+            if (doll != null && expressions != null && index >= 0 && index < expressions.Idles.Count) doll.PlayIdle(expressions.Idles[index].clip);
+        }
+
+        public void PlayEmote(int index)
+        {
+            if (doll != null && expressions != null && index >= 0 && index < expressions.Emotes.Count) doll.PlayEmote(expressions.Emotes[index].clip);
         }
 
         // ---------------- View control (same gestures as the equipment page) ----------------

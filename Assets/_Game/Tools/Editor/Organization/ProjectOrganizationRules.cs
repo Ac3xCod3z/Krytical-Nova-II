@@ -35,10 +35,11 @@ namespace KryticalNova.EditorTools.Organization
         /// Synty: SidekickCharacters reads "Assets/Synty/SidekickCharacters/Database/Side_Kick_Data.db".
         /// DownloadCache: Synty's ToolDownloader caches its .unitypackage files there.
         /// QuickDestruction: BakePipeline/QuickDestructionWindow/QDUI hard-code "Assets/QuickDestruction/...".
+        /// FastScriptReload: cannot be moved (Unity refuses the move; the user confirmed it has to stay at the root).
         /// </summary>
         public static readonly HashSet<string> PinnedVendorRoots = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "Synty", "DownloadCache", "QuickDestruction",
+            "Synty", "DownloadCache", "QuickDestruction", "FastScriptReload",
         };
 
         /// <summary>Root-level files that tools expect at a fixed path.</summary>

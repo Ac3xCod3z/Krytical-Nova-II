@@ -49,6 +49,7 @@ Assets/
 ├── Synty/                Sidekick hard-codes Assets/Synty/SidekickCharacters/... paths
 ├── DownloadCache/        Synty's ToolDownloader cache
 ├── QuickDestruction/     RipVertices Quick Destruction hard-codes Assets/QuickDestruction/... (bake output, icons)
+├── FastScriptReload/     Fast Script Reload (hot reload in Play mode). Cannot be moved out of the root
 ├── _Recovery/            Unity crash-recovery scenes (Unity-generated)
 └── DefaultNetworkPrefabs.asset   Netcode for GameObjects regenerates it at this path
 ```
@@ -274,6 +275,7 @@ Menu **Krytical Nova ▸ Characters** (run in order, or use *Bake Everything*):
 | 2. Build Faction Assets                      | The three faction assets and the catalog. Keeps text and colours tuned in the Inspector |
 | 3. Bake Character Data                       | Lineages, palettes, ready-made faces and colour channels into `CharacterCreationDatabase.asset` |
 | 4. Set Up Player Identity Components         | Adds `PlayerIdentity` / `CharacterLook` to the player prefabs                          |
+| 5. Bake Expressions (Faces, Idles, Emotes)   | Fills `CharacterExpressionLibrary.asset` for the creator's Preview tab: Sidekick face poses, idles, emotes. Add clips in `CharacterExpressionBaker` |
 | Clear Saved Characters                       | Deletes the three saved character slots (PlayerPrefs)                                  |
 
 Menu **Krytical Nova ▸ Front End**:

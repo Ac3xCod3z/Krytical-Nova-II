@@ -25,7 +25,15 @@ namespace KryticalNova.Player
         private readonly NetworkVariable<CharacterNetState> netState = new NetworkVariable<CharacterNetState>(
             writePerm: NetworkVariableWritePermission.Server);
 
+        // PvP: this player's GM-pinned stance, and the game-wide cross-faction switch. The switch is one value for
+        // the whole server, mirrored on every player object so a late joiner receives it with the first player it sees.
+        private readonly NetworkVariable<byte> netStance = new NetworkVariable<byte>(
+            writePerm: NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<bool> netCrossFactionPvp = new NetworkVariable<bool>(
+            writePerm: NetworkVariableWritePermission.Server);
+
         private CharacterNetState current;
+        private PvpStance stance;
         private LineageDefinition lineage;
         private CharacterLook look;
         private CombatEntity combatEntity;
@@ -43,13 +51,14 @@ namespace KryticalNova.Player
         public BodyFit Body => lineage != null ? lineage.body : BodyFit.None;
         public string GearPack => lineage != null ? lineage.ownPack : null;
         public CharacterNetState State => current;
+        public PvpStance Stance => stance;
 
         private void Awake()
         {
             look = GetComponentInChildren<CharacterLook>(true);
             combatEntity = GetComponent<CombatEntity>();
             inventory = GetComponent<PlayerInventory>();
-            if (database != null && database.Factions != null) FactionRules.CrossFactionPvp = database.Factions.crossFactionPvp;
+            if (database != null && database.Factions != null) FactionRules.Configure(database.Factions.crossFactionPvp);
         }
 
         private void Start()
@@ -63,6 +72,18 @@ namespace KryticalNova.Player
         {
             base.OnNetworkSpawn();
             netState.OnValueChanged += OnNetStateChanged;
+            netStance.OnValueChanged += OnNetStanceChanged;
+            netCrossFactionPvp.OnValueChanged += OnNetCrossFactionPvpChanged;
+            if (IsServer)
+            {
+                netStance.Value = (byte)stance;
+                netCrossFactionPvp.Value = FactionRules.CrossFactionPvp;
+            }
+            else
+            {
+                stance = (PvpStance)netStance.Value;
+                FactionRules.CrossFactionPvp = netCrossFactionPvp.Value;
+            }
             if (!IsServer && !netState.Value.IsEmpty) Apply(netState.Value);
             if (IsOwner && CharacterSession.TryGetActive(out var profile))
                 SubmitIdentityRpc(CharacterNetState.From(profile.name, profile.recipe));
@@ -71,7 +92,42 @@ namespace KryticalNova.Player
         public override void OnNetworkDespawn()
         {
             netState.OnValueChanged -= OnNetStateChanged;
+            netStance.OnValueChanged -= OnNetStanceChanged;
+            netCrossFactionPvp.OnValueChanged -= OnNetCrossFactionPvpChanged;
             base.OnNetworkDespawn();
+        }
+
+        // ---------------- PvP (GM tools) ----------------
+
+        /// <summary>Server (or offline) only: pin this player to friendly or hostile, or hand them back to the faction rule.</summary>
+        public void SetStance(PvpStance value)
+        {
+            if (IsSpawned && !IsServer) return;
+            stance = value;
+            if (IsSpawned) netStance.Value = (byte)value;
+            Changed?.Invoke();
+        }
+
+        /// <summary>Server (or offline) only: switch PvP between factions on or off for everyone.</summary>
+        public static void SetCrossFactionPvp(bool on)
+        {
+            var network = NetworkManager.Singleton;
+            if (network != null && network.IsListening && !network.IsServer) return;
+            FactionRules.CrossFactionPvp = on;
+            foreach (var identity in FindObjectsByType<PlayerIdentity>(FindObjectsInactive.Exclude))
+                if (identity.IsSpawned) identity.netCrossFactionPvp.Value = on;
+        }
+
+        private void OnNetStanceChanged(byte previous, byte next)
+        {
+            if (IsServer) return;
+            stance = (PvpStance)next;
+            Changed?.Invoke();
+        }
+
+        private void OnNetCrossFactionPvpChanged(bool previous, bool next)
+        {
+            if (!IsServer) FactionRules.CrossFactionPvp = next;
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]

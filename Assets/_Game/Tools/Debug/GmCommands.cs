@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using KryticalNova.Core;
+using KryticalNova.Factions;
 using KryticalNova.Items;
 using KryticalNova.Networking;
+using KryticalNova.Player;
 using KryticalNova.Progression;
 using KryticalNova.World;
 using KryticalNova.World.Portals;
@@ -120,6 +122,7 @@ namespace KryticalNova.DevTools
                 "SKILLS       gm.skillpoints <n> · gm.skills.max · gm.skills · gm.dropskills <true|false> · gm.unlockskill <id> · gm.lockskill <id>",
                 "BUFFS        gm.buffs · gm.buff.remove <id|name> · gm.buff.clear   (take down active skills)",
                 "COMBAT       gm.dummy.hit [times] · gm.dummy.reset · gm.dummy.hp <n> · gm.dummy.maxhp <n> (0 = base) · gm.dummy.inf [on|off]",
+                "PVP          gm.pvp [on|off]   (factions fight each other, for everyone) · gm.stance <faction|friendly|hostile>   (pin the targeted player)",
                 "GOD MODE     gm.god [on|off] · gm.infchi · gm.nocd · gm.oneshot · gm.speed <mult> · gm.reset",
                 "GAME SPEED   gm.slowmo [x]   (0.25 = quarter speed, 1 = normal; no value toggles quarter speed)",
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
@@ -334,6 +337,35 @@ namespace KryticalNova.DevTools
             if (!TryGet<PlayerResources>(out var res, out var error)) return error;
             res.ApplyDamage(res.Health + 1f, ignoreGodMode: true);
             return "Killed.";
+        }
+        #endregion
+
+        #region PvP
+        [Command("gm.pvp", "Toggle (or set) PvP between factions for everyone: gm.pvp [true|false].")]
+        private static string Pvp() => Pvp(!FactionRules.CrossFactionPvp);
+
+        [Command("gm.pvp")]
+        private static string Pvp(bool on)
+        {
+            // Any player will do: this only checks that we are the host, the server or offline.
+            if (!TryGet<PlayerIdentity>(out _, out var error)) return error;
+            PlayerIdentity.SetCrossFactionPvp(on);
+            return on ? "Cross-faction PvP ON: players of different factions can attack each other."
+                      : "Cross-faction PvP OFF: every player is friendly (unless pinned hostile with gm.stance).";
+        }
+
+        [Command("gm.stance", "Pin the targeted player's PvP stance: gm.stance <faction|friendly|hostile>. " +
+                              "friendly = nobody can attack them and they attack no player; hostile = they fight every player; " +
+                              "faction = back to the faction rule. No value prints the current stance.")]
+        private static string Stance(string stance = "")
+        {
+            if (!TryGet<PlayerIdentity>(out var identity, out var error)) return error;
+            if (string.IsNullOrWhiteSpace(stance))
+                return $"{identity.CharacterName} ({identity.Faction}): stance {identity.Stance}. Cross-faction PvP is {(FactionRules.CrossFactionPvp ? "ON" : "OFF")}.";
+            if (!Enum.TryParse(stance, true, out PvpStance value) || !Enum.IsDefined(typeof(PvpStance), value))
+                return "Use: gm.stance faction | friendly | hostile";
+            identity.SetStance(value);
+            return $"{identity.CharacterName} is now {value}.";
         }
         #endregion
 

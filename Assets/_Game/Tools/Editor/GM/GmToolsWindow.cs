@@ -4,7 +4,9 @@ using System.Globalization;
 using System.Text;
 using KryticalNova.Core;
 using KryticalNova.DevTools;
+using KryticalNova.Factions;
 using KryticalNova.Items;
+using KryticalNova.Player;
 using KryticalNova.Progression;
 using KryticalNova.World;
 using QFSW.QC;
@@ -487,6 +489,21 @@ namespace KryticalNova.EditorTools.GM
         {
             get => GmCommands.OneShotEnabled;
             set { if (value != GmCommands.OneShotEnabled) Run("gm.oneshot"); }
+        }
+
+        [TabGroup(Tabs, CheatsTab), Title("PvP"), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Factions fight each other (everyone)"), PropertyOrder(205.7f)]
+        private bool CrossFactionPvp
+        {
+            get => FactionRules.CrossFactionPvp;
+            set { if (value != CrossFactionPvp) Run($"gm.pvp {(value ? "true" : "false")}"); }
+        }
+
+        [TabGroup(Tabs, CheatsTab), ShowInInspector, EnumToggleButtons, EnableIf(nameof(IsReady)), LabelText("Target's stance"), PropertyOrder(205.8f)]
+        [InfoBox("Faction: follows the switch above. Friendly: cannot attack or be attacked by players. Hostile: fights every player, own faction included.")]
+        private PvpStance TargetStance
+        {
+            get => LocalPlayer != null && LocalPlayer.TryGetComponent<PlayerIdentity>(out var identity) ? identity.Stance : PvpStance.Faction;
+            set { if (value != TargetStance) Run($"gm.stance {value}"); }
         }
 
         [TabGroup(Tabs, CheatsTab), ShowInInspector, PropertyRange(0.1f, 10f), EnableIf(nameof(IsReady)), LabelText("Move Speed ×"), PropertyOrder(204)]

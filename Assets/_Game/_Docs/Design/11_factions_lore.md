@@ -132,7 +132,8 @@ Used by the random-name button. One name, 3 to 16 letters.
 
 - **Starting territory:** all three factions currently spawn in Zone01 Starter Town. Faction territories come later.
 - **Faction PvP:** every character carries its faction and other players see it. Characters of different factions
-  are **not** hostile yet. One switch (`FactionCatalog.crossFactionPvp`) turns that on once factions stop sharing a
-  town.
+  **are hostile**: they can attack each other. The default lives in `FactionCatalog.crossFactionPvp` (on). A GM can
+  switch it for everyone while playing (`gm.pvp`), and can pin one player to friendly or hostile whatever their
+  faction (`gm.stance friendly|hostile|faction`); both are also in the GM window's Cheats tab.
 - **Faction skills, wars and leadership** (module 08 sections 2 to 11) are not built. When they are, they attach to
   these three factions.

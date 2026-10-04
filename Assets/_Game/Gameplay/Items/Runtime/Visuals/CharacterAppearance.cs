@@ -59,6 +59,8 @@ namespace KryticalNova.Items.Visuals
 
         public bool IsConfigured => fixedParts.Count > 0 || defaultParts.Count > 0;
         public SkinnedMeshRenderer Renderer => targetRenderer;
+
+        private List<string> liveFaceShapes;
         public Mesh CurrentMesh => ownedMesh;
         public IReadOnlyList<string> CurrentBoneNames => boneNames;
         public IReadOnlyList<SidekickPartRef> CurrentParts => partList;
@@ -160,6 +162,22 @@ namespace KryticalNova.Items.Visuals
             OnSourceRebuilt();
         }
 
+        /// <summary>
+        /// Keeps more face shapes live on the merged mesh, on top of the blink shapes, so expressions can be blended
+        /// at runtime. Display characters use this; players in the world keep the cheaper baked face. The mesh is
+        /// rebuilt on the next update.
+        /// </summary>
+        public void SetLiveFaceShapes(IReadOnlyList<string> shapes)
+        {
+            var all = new List<string>();
+            if (blink) all.AddRange(FaceBlinker.LiveShapes);
+            if (shapes != null)
+                foreach (string shape in shapes)
+                    if (!all.Contains(shape)) all.Add(shape);
+            liveFaceShapes = all;
+            dirty = IsConfigured;
+        }
+
         public void RebuildNow()
         {
             dirty = false;
@@ -203,7 +221,8 @@ namespace KryticalNova.Items.Visuals
         private void RebuildMerged()
         {
             ClearDebugRenderers();
-            var mesh = merger.Merge(partList, bodyShape, boneBuffer, name + "_Merged", idleFace, blink ? FaceBlinker.LiveShapes : null);
+            var mesh = merger.Merge(partList, bodyShape, boneBuffer, name + "_Merged", idleFace,
+                liveFaceShapes != null ? liveFaceShapes : blink ? (IReadOnlyList<string>)FaceBlinker.LiveShapes : null);
             if (mesh == null) return;
             var old = ownedMesh;
             ownedMesh = mesh;
