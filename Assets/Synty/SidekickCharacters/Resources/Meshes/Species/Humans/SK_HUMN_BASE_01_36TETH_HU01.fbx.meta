@@ -700,7 +700,8 @@ ModelImporter:
     - name: calf_twist_01_l
       parentName: calf_l
       position: {x: 0.17972955, y: -0.0000002433259, z: 0.0000000575925}
-      rotation: {x: -0.00000002490374, y: -0.00000032786636, z: -0.0000013815512, w: 1}
+      rotation: {x: -0.00000002490374, y: -0.00000032786636, z: -0.0000013815512,
+        w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: foot_l
       parentName: calf_l
@@ -735,7 +736,8 @@ ModelImporter:
     - name: calf_twist_01_r
       parentName: calf_r
       position: {x: -0.17972955, y: 0.00000024333437, z: -0.0000000575925}
-      rotation: {x: -0.000000024904278, y: -0.00000032786636, z: -0.0000013815994, w: 1}
+      rotation: {x: -0.000000024904278, y: -0.00000032786636, z: -0.0000013815994,
+        w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: foot_r
       parentName: calf_r
@@ -1104,7 +1106,8 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 1
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 12d6d9d404b39014580b3b3542fa2824, type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 12d6d9d404b39014580b3b3542fa2824,
+    type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1

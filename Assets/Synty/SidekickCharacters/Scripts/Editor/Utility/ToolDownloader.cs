@@ -28,7 +28,6 @@ namespace Synty.SidekickCharacters
         private const string _VERSION_TAG = "\"tag_name\":";
         private const string _VERSION_KEY = "sk_current_tool_version";
         private const string _SIDEKICK_TOOL_MENU_ITEM = "Synty/Sidekick Character Tool";
-        private const string _AUTO_SHOWN_FLAG_FILE = "ProjectSettings/SidekickToolDownloaderAutoShown.txt";
 
         private string _version = "-";
         private Label _latestVersion;
@@ -94,10 +93,8 @@ namespace Synty.SidekickCharacters
             {
                 _latestVersion.text = "Latest Version: " + _version;
             }
-            // Auto-open only once per project; after that the user opens it via the Synty menu.
-            if (IsNewVersionAvailable(_version) && !File.Exists(_AUTO_SHOWN_FLAG_FILE))
+            if (IsNewVersionAvailable(_version))
             {
-                File.WriteAllText(_AUTO_SHOWN_FLAG_FILE, DateTime.Now.ToString("yyyy-MM-dd"));
                 DownloaderBackgroundService.ShowToolDownloaderWindow();
             }
         }

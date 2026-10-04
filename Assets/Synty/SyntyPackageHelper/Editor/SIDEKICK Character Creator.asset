@@ -15,5 +15,4 @@ MonoBehaviour:
   assetPackDisplayName: SIDEKICK Character Creator
   packageIds:
   - com.unity.shadergraph
-  - com.unity.formats.fbx
   hasPromptedUser: 0
