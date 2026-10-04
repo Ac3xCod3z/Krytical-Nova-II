@@ -83,7 +83,8 @@ _Game/
 ├── Characters/            Representation only: models, rigs, materials, animations, visual prefabs
 │   ├── Player/            Player_01/ (Sidekick character)  Animations/
 │   ├── NPC/               Prefabs/  Animations/
-│   └── (future) Enemies/ Shared/
+│   ├── Shared/            Props/ (SM_EmoteProp_*: what a character holds during prop emotes; baked from Synty's samples)
+│   └── (future) Enemies/
 ├── World/
 │   ├── Runtime/           Clock, weather, environment net state, Presentation/, Portals/, Minimap/, Navigation/, Ambience/
 │   ├── Data/              SO classes;  Data/Assets/ (day cycle, weather catalog, Weather/ profiles)

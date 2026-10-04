@@ -50,8 +50,10 @@ namespace KryticalNova.UI.Menus
 
         // Ambient life (character select): the character shifts, looks about, and now and then waves or changes
         // stance, so the screen is not a statue. Calm motions only, and only those performed for its body type.
-        private static readonly string[] AmbientStanceGroups = { "Base", "Arms Folded", "Hands On Hips", "Posture", "Thoughtful" };
-        private static readonly string[] AmbientGestureGroups = { "Bored", "Head Nod", "Inspect", "Look", "Play With Hair", "Stretch", "Thoughtful", "Weight Shift", "Yawn" };
+        private static readonly string[] AmbientStanceGroups = { "Base", "Arms Folded", "Hands On Hips", "Posture", "Thoughtful",
+            "Drink", "Eat", "Use Phone" };
+        private static readonly string[] AmbientGestureGroups = { "Bored", "Head Nod", "Inspect", "Look", "Play With Hair", "Stretch", "Thoughtful",
+            "Weight Shift", "Yawn", "Drink", "Eat", "Use Phone", "Check Watch" };
         private static readonly string[] AmbientEmoteGroups = { "Greet", "Happy", "Celebrate", "Affection" };
         // Motions of those groups that do not suit a character at rest (a frightened look over the shoulder).
         private static readonly string[] AmbientSkippedWords = { "Scared" };
@@ -122,7 +124,7 @@ namespace KryticalNova.UI.Menus
             if (bodyChanged && !created && HasStances)
             {
                 if (!expressions.Idles[stance].Has(bodyType)) stance = 0;
-                doll.PlayIdle(expressions.Idles[stance].For(bodyType));
+                doll.PlayIdle(expressions.Idles[stance].For(bodyType), null, expressions.Idles[stance].prop);
             }
             // Another character stepped up: it starts relaxed and takes a moment before it moves.
             if (ambient)
@@ -158,14 +160,14 @@ namespace KryticalNova.UI.Menus
             var motion = expressions.Idles[index];
             if (!motion.Has(bodyType)) return; // not performed for this body type
             stance = index;
-            doll.PlayIdle(motion.For(bodyType), motion.EnterFor(bodyType));
+            doll.PlayIdle(motion.For(bodyType), motion.EnterFor(bodyType), motion.prop);
         }
 
         public void PlayEmote(int index)
         {
             if (doll == null || expressions == null || index < 0 || index >= expressions.Emotes.Count) return;
             var motion = expressions.Emotes[index];
-            if (motion.Has(bodyType)) doll.PlayEmote(motion.For(bodyType)); // never the other body's performance
+            if (motion.Has(bodyType)) doll.PlayEmote(motion.For(bodyType), motion.prop); // never the other body's performance
         }
 
         /// <summary>Back to the neutral face and the relaxed stance (the preview is not part of the character).</summary>

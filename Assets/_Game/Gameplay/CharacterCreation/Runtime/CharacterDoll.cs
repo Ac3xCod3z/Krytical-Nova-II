@@ -30,6 +30,17 @@ namespace KryticalNova.CharacterCreation
         private AnimancerState idleState;   // the stance's loop, while it is what plays
         private AnimancerState onceState;   // a stance's way in, or an emote: played once, then the loop takes over
 
+        // Props: some motions are performed with something in the right hand. The clips animate the rig's prop bone
+        // themselves, so the prop only has to ride on it.
+        private const string PropBoneName = "prop_r";
+        private const float PropGrowSeconds = 0.15f;
+        private Transform propBone;
+        private GameObject stanceProp;      // what the current stance holds (null for most)
+        private GameObject shownProp;       // the instance in the hand now
+        private GameObject shownPropSource; // the prefab it came from
+        private Vector3 shownPropScale;
+        private float propGrown = 1f;
+
         public CharacterLook Look => look;
         /// <summary>A stance's way in or an emote is playing; the doll is not yet back in its loop.</summary>
         public bool IsBusy => onceState != null;
@@ -69,6 +80,12 @@ namespace KryticalNova.CharacterCreation
             if (look == null && TryGetComponent<CharacterAppearance>(out _)) look = gameObject.AddComponent<CharacterLook>();
             animancer = GetComponent<AnimancerComponent>();
             blinker = GetComponent<FaceBlinker>();
+            foreach (var bone in GetComponentsInChildren<Transform>(true))
+            {
+                if (bone.name != PropBoneName) continue;
+                propBone = bone;
+                break;
+            }
             if (TryGetComponent<Animator>(out var animator))
             {
                 animator.applyRootMotion = false;
@@ -81,12 +98,32 @@ namespace KryticalNova.CharacterCreation
             // Whatever was playing when the doll was hidden is gone: it stands in its stance again.
             onceState = null;
             idleState = idle != null && animancer != null ? animancer.Play(idle) : null;
+            HoldProp(stanceProp);
         }
 
         private void OnDisable()
         {
             onceState = null;
             idleState = null;
+            HoldProp(null);
+        }
+
+        /// <summary>Puts a prop in the right hand (growing in rather than popping), or empties the hand.</summary>
+        private void HoldProp(GameObject prefab)
+        {
+            if (prefab == shownPropSource && (shownProp != null || prefab == null)) return;
+            if (shownProp != null) Destroy(shownProp);
+            shownProp = null;
+            shownPropSource = prefab;
+            if (prefab == null || propBone == null) return;
+
+            shownProp = Instantiate(prefab, propBone);
+            shownProp.name = prefab.name;
+            shownProp.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            foreach (var part in shownProp.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = gameObject.layer;
+            shownPropScale = prefab.transform.localScale;
+            shownProp.transform.localScale = Vector3.zero;
+            propGrown = 0f;
         }
 
         public bool Apply(in CharacterRecipe recipe, CharacterCreationDatabase database) =>
@@ -130,32 +167,42 @@ namespace KryticalNova.CharacterCreation
             }
         }
 
-        /// <summary>Change the looping stance, going through its way in when it has one.</summary>
-        public void PlayIdle(AnimationClip clip, AnimationClip enter = null)
+        /// <summary>
+        /// Change the looping stance, going through its way in when it has one. <paramref name="prop"/> is held in
+        /// the right hand for as long as the stance lasts.
+        /// </summary>
+        public void PlayIdle(AnimationClip clip, AnimationClip enter = null, GameObject prop = null)
         {
             if (clip == null) return;
             idle = clip;
+            stanceProp = prop;
             if (animancer == null || !isActiveAndEnabled) return;
             if (enter != null)
             {
                 idleState = null;
                 onceState = animancer.Play(enter, MotionFade, FadeMode.FromStart);
+                HoldProp(prop); // the way in is where the prop comes out
             }
             else HoldIdle();
         }
 
-        /// <summary>Play a gesture once, then go back to the stance. Playing it again starts it over.</summary>
-        public void PlayEmote(AnimationClip clip)
+        /// <summary>
+        /// Play a gesture once, then go back to the stance. Playing it again starts it over. <paramref name="prop"/>
+        /// is held in the right hand until the gesture ends; a gesture without one is done empty-handed.
+        /// </summary>
+        public void PlayEmote(AnimationClip clip, GameObject prop = null)
         {
             if (clip == null || animancer == null || !isActiveAndEnabled) return;
             idleState = null;
             onceState = animancer.Play(clip, MotionFade, FadeMode.FromStart);
+            HoldProp(prop);
         }
 
         private void HoldIdle()
         {
             onceState = null;
             idleState = idle != null ? animancer.Play(idle, MotionFade) : null;
+            HoldProp(stanceProp);
         }
 
         private void LateUpdate()
@@ -168,6 +215,11 @@ namespace KryticalNova.CharacterCreation
                 // Many of the pack's stance loops are not marked as looping: the doll wraps them itself.
                 else if (idleState != null && !idleState.IsLooping && idleState.Time >= idleState.Length)
                     idleState.Time -= idleState.Length;
+            }
+            if (shownProp != null && propGrown < 1f)
+            {
+                propGrown = Mathf.Min(1f, propGrown + Time.unscaledDeltaTime / PropGrowSeconds);
+                shownProp.transform.localScale = shownPropScale * Mathf.SmoothStep(0f, 1f, propGrown);
             }
             BlendFace();
         }

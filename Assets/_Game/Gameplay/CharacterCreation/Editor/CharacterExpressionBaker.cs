@@ -13,8 +13,9 @@ namespace KryticalNova.EditorTools
     /// blend-shape values are read here, because clips cannot be read at runtime), and the stances and emotes of
     /// Synty's ANIMATION - Idles and ANIMATION - Emotes and Taunts packs (the Sidekick set, since the player is a
     /// Sidekick character). The packs are scanned, so a pack update only needs a new bake. Each motion is paired
-    /// with its masculine and feminine performance. Left out: the clips that mime with a prop the display character
-    /// does not hold, and the root-motion variants that would walk it off its stage.
+    /// with its masculine and feminine performance. Motions made around a prop (drinking, eating, the phone, the
+    /// comb) get the pack's own prop, as a first-party copy with a URP material, to hold in the right hand. Left
+    /// out: the root-motion variants that would walk the character off its stage.
     /// </summary>
     public static class CharacterExpressionBaker
     {
@@ -27,9 +28,15 @@ namespace KryticalNova.EditorTools
         private const string EmotePrefix = "A_MOD_EMOT_";
         private const string DefaultStance = "Base";
 
-        // Mimed with a prop in the hand (cup, food, phone, watch, comb): the display character shows none.
-        private static readonly string[] PropGroups = { "Drink", "Eat", "UsePhone", "CheckWatch" };
-        private static readonly string[] PropMotions = { "PlayWithHair_CombBack" };
+        // The idle pack's sample props, and where the player's own copies of them go (the samples use a built-in
+        // pipeline material).
+        private const string PropSource = "Assets/Synty/AnimationIdles/Samples/Prefabs/SM_Prop_{0}_01.prefab";
+        private const string PropFolder = "Assets/_Game/Characters/Shared/Props";
+        private const string PropMaterialPath = PropFolder + "/M_EmoteProps.mat";
+
+        // Which prop a motion is performed with: by the pack's group, or by the motion's own key.
+        private static readonly (string group, string prop)[] GroupProps = { ("Drink", "Cup"), ("Eat", "Donut"), ("UsePhone", "SmartPhone") };
+        private static readonly (string key, string prop)[] MotionProps = { ("PlayWithHair_CombBack", "Comb") };
         // The same emote again, moved by root motion (the animator of a display character discards it).
         private static readonly string[] RootMotionSuffixes = { "_RM", "_RMH", "_RMV" };
         // The emote pack's own neutral idle is not an emote.
@@ -154,28 +161,91 @@ namespace KryticalNova.EditorTools
         private static void BakeIdlePack(List<CharacterExpressionLibrary.Motion> stances, List<CharacterExpressionLibrary.Motion> gestures)
         {
             var found = Scan(IdlePack, IdlePrefix);
+            var props = new Dictionary<string, GameObject>();
             foreach (var pair in found)
             {
                 string key = pair.Key;
                 Found clips = pair.Value;
-                if (PropGroups.Contains(clips.group) || PropMotions.Contains(key)) continue;
                 if (HasToken(key, "Enter") || HasToken(key, "Exit")) continue; // the way into and out of a stance
+                GameObject prop = PropFor(clips.group, key, props);
 
                 if (key == DefaultStance)
                 {
-                    stances.Insert(0, Motion("Relaxed", "Base", clips, null)); // the default comes first
+                    stances.Insert(0, Motion("Relaxed", "Base", clips, null, null)); // the default comes first
                 }
                 else if (key.EndsWith("_Loop"))
                 {
                     string stance = key.Substring(0, key.Length - "_Loop".Length);
                     found.TryGetValue(stance + "_Enter", out Found enter);
-                    stances.Add(Motion(DisplayName(stance, clips.group), Words(clips.group), clips, enter));
+                    stances.Add(Motion(DisplayName(stance, clips.group), Words(clips.group), clips, enter, prop));
                 }
                 else
                 {
-                    gestures.Add(Motion(DisplayName(key, clips.group), Words(clips.group), clips, null));
+                    gestures.Add(Motion(DisplayName(key, clips.group), Words(clips.group), clips, null, prop));
                 }
             }
+        }
+
+        private static GameObject PropFor(string group, string key, Dictionary<string, GameObject> built)
+        {
+            string name = null;
+            foreach (var (propGroup, prop) in GroupProps) if (propGroup == group) name = prop;
+            foreach (var (propKey, prop) in MotionProps) if (propKey == key) name = prop;
+            if (name == null) return null;
+            if (!built.TryGetValue(name, out GameObject prefab)) built[name] = prefab = BuildProp(name);
+            return prefab;
+        }
+
+        /// <summary>
+        /// The player's own copy of one of the pack's sample props: the same mesh with a URP material, no colliders,
+        /// its pivot where the pack put it (the hand's prop bone carries it).
+        /// </summary>
+        private static GameObject BuildProp(string name)
+        {
+            string source = string.Format(PropSource, name);
+            string path = $"{PropFolder}/SM_EmoteProp_{name}.prefab";
+            var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(source);
+            if (sourcePrefab == null)
+            {
+                Debug.LogWarning($"[Characters] Prop '{name}' not found at {source}; its motions are played empty-handed.");
+                return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            }
+
+            WeatherVfxBuilder.EnsureFolder(PropFolder);
+            var instance = Object.Instantiate(sourcePrefab);
+            try
+            {
+                instance.name = Path.GetFileNameWithoutExtension(path);
+                foreach (var collider in instance.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
+                foreach (var renderer in instance.GetComponentsInChildren<Renderer>(true))
+                {
+                    var materials = renderer.sharedMaterials;
+                    for (int i = 0; i < materials.Length; i++) materials[i] = PropMaterial(materials[i]);
+                    renderer.sharedMaterials = materials;
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                }
+                return PrefabUtility.SaveAsPrefabAsset(instance, path);
+            }
+            finally
+            {
+                Object.DestroyImmediate(instance);
+            }
+        }
+
+        /// <summary>One URP Lit material for all the props: they share the pack's palette texture.</summary>
+        private static Material PropMaterial(Material source)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(PropMaterialPath);
+            if (material != null) return material;
+            material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = Path.GetFileNameWithoutExtension(PropMaterialPath) };
+            if (source != null)
+            {
+                material.SetTexture("_BaseMap", source.mainTexture);
+                material.SetColor("_BaseColor", source.HasProperty("_Color") ? source.color : Color.white);
+            }
+            material.SetFloat("_Smoothness", 0.2f);
+            AssetDatabase.CreateAsset(material, PropMaterialPath);
+            return material;
         }
 
         private static void BakeEmotePack(List<CharacterExpressionLibrary.Motion> emotes)
@@ -185,17 +255,18 @@ namespace KryticalNova.EditorTools
             {
                 string key = pair.Key;
                 if (SkippedEmotes.Contains(key) || RootMotionSuffixes.Any(key.EndsWith)) continue;
-                packed.Add(Motion(DisplayName(key, pair.Value.group), Words(pair.Value.group), pair.Value, null));
+                packed.Add(Motion(DisplayName(key, pair.Value.group), Words(pair.Value.group), pair.Value, null, null));
             }
             // Emotes proper first, the idle pack's small gestures after them.
             emotes.InsertRange(0, packed);
         }
 
-        private static CharacterExpressionLibrary.Motion Motion(string name, string group, Found clips, Found enter) =>
+        private static CharacterExpressionLibrary.Motion Motion(string name, string group, Found clips, Found enter, GameObject prop) =>
             new CharacterExpressionLibrary.Motion
             {
                 name = name,
                 group = group,
+                prop = prop,
                 clip = clips.masculine,
                 feminine = clips.feminine,
                 enter = enter != null ? enter.masculine : null,

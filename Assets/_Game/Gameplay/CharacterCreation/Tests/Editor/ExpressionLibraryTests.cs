@@ -70,7 +70,7 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void NoRootMotionVariantsAndNoPropMimes()
+        public void NoRootMotionVariantsAndPropMotionsComeWithTheirProp()
         {
             var library = Library();
             foreach (var list in new[] { library.Idles, library.Emotes })
@@ -80,8 +80,9 @@ namespace KryticalNova.Tests
                     AnimationClip any = motion.Has(BodyType.Masculine) ? motion.For(BodyType.Masculine) : motion.For(BodyType.Feminine);
                     string file = System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(any));
                     StringAssert.DoesNotContain("_RM", file, "a root-motion variant would walk the character off its stage");
-                    foreach (string prop in new[] { "Drink", "Eat", "Use Phone", "Check Watch" })
-                        Assert.AreNotEqual(prop, motion.group, $"{motion.name} mimes with a prop the display character does not hold");
+                    bool needsProp = motion.group == "Drink" || motion.group == "Eat" || motion.group == "Use Phone" || file.Contains("CombBack");
+                    if (needsProp) Assert.IsNotNull(motion.prop, $"{motion.group}/{motion.name} is performed with a prop and has none");
+                    else Assert.IsNull(motion.prop, $"{motion.group}/{motion.name} should be empty-handed");
                 }
             }
         }

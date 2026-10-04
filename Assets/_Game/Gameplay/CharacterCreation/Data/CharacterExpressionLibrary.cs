@@ -41,6 +41,8 @@ namespace KryticalNova.CharacterCreation
             [Tooltip("Stances only: the move into the pose, played once before the loop.")]
             public AnimationClip enter;
             public AnimationClip enterFeminine;
+            [Tooltip("Held in the right hand while this motion plays (a cup, a phone...). The clip animates the hand's prop bone.")]
+            public GameObject prop;
 
             /// <summary>True when the pack has this motion performed for that body type. A character only shows those.</summary>
             public bool Has(BodyType body) => (body == BodyType.Feminine ? feminine : clip) != null;
