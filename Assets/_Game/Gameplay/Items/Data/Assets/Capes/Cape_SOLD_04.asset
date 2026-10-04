@@ -20,111 +20,14 @@ MonoBehaviour:
   equipSlot: 7
   maxStack: 1
   statModifiers: []
-  appearanceParts:
-  - region: 24
-    mesh: {fileID: 8952101864045584861, guid: bd2c22d2cf32af04b9a9dffa9aeb99c7, type: 3}
-    boneNames:
-    - abac_dyn_01_01_l
-    - abac_dyn_01_01_r
-    - backAttach
-    - ball_l
-    - ball_r
-    - calf_l
-    - calf_r
-    - calf_twist_01_l
-    - calf_twist_01_r
-    - clavicle_l
-    - clavicle_r
-    - elbowAttach_l
-    - elbowAttach_r
-    - eyeLight_l
-    - eyeLight_r
-    - eye_l
-    - eye_r
-    - faceAttach
-    - foot_l
-    - foot_r
-    - hand_l
-    - hand_r
-    - head
-    - headAttach
-    - hipAttachBack
-    - hipAttachFront
-    - hipAttach_l
-    - hipAttach_r
-    - ik_foot_l
-    - ik_foot_r
-    - ik_foot_root
-    - ik_hand_gun
-    - ik_hand_l
-    - ik_hand_r
-    - ik_hand_root
-    - index_01_l
-    - index_01_r
-    - index_02_l
-    - index_02_r
-    - index_03_l
-    - index_03_r
-    - jaw
-    - kneeAttach_l
-    - kneeAttach_r
-    - lowerarm_l
-    - lowerarm_r
-    - lowerarm_twist_01_l
-    - lowerarm_twist_01_r
-    - middle_01_l
-    - middle_01_r
-    - middle_02_l
-    - middle_02_r
-    - middle_03_l
-    - middle_03_r
-    - neck_01
-    - pelvis
-    - pinky_01_l
-    - pinky_01_r
-    - pinky_02_l
-    - pinky_02_r
-    - pinky_03_l
-    - pinky_03_r
-    - prop_l
-    - prop_r
-    - ring_01_l
-    - ring_01_r
-    - ring_02_l
-    - ring_02_r
-    - ring_03_l
-    - ring_03_r
-    - root
-    - shoulderAttach_l
-    - shoulderAttach_r
-    - spine_01
-    - spine_02
-    - spine_03
-    - thigh_l
-    - thigh_r
-    - thigh_twist_01_l
-    - thigh_twist_01_r
-    - thumb_01_l
-    - thumb_01_r
-    - thumb_02_l
-    - thumb_02_r
-    - thumb_03_l
-    - thumb_03_r
-    - upperarm_l
-    - upperarm_r
-    - upperarm_twist_01_l
-    - upperarm_twist_01_r
-    extraBones:
-    - name: abac_dyn_01_01_l
-      parent: backAttach
-      localPosition: {x: -0.12994513, y: 0.19249351, z: -0.03990407}
-      localRotation: {x: 0.88367724, y: -0.3900351, z: -0.25512972, w: -0.043543156}
-      localScale: {x: 1, y: 1, z: 1}
-    - name: abac_dyn_01_01_r
-      parent: backAttach
-      localPosition: {x: 0.12952763, y: 0.18724282, z: -0.03668016}
-      localRotation: {x: -0.3834441, y: 0.88743716, z: 0.061470713, w: 0.2482889}
-      localScale: {x: 1, y: 1, z: 1}
+  restoreHealth: 0
+  restoreChi: 0
+  useCooldown: 1
+  usableFromHotbar: 0
+  placeholderGlyph: 
+  appearancePartIds: 2e02t
+  partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
+  appearanceParts: []
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

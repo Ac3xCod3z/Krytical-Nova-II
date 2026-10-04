@@ -25,6 +25,8 @@ namespace KryticalNova.Items
         public string[] boneNames;
         [Tooltip("Optional dangle bones (*_dyn_*) a pruned character skeleton may lack, parent-first; created on demand.")]
         public ExtraBone[] extraBones;
+        [Tooltip("Bare-chested torso: a feminine body also wears its species' chest wrap (Sidekick's uses_wrap flag).")]
+        public bool usesWrap;
 
         public bool IsValid => mesh != null && boneNames != null && boneNames.Length > 0;
     }
@@ -66,7 +68,12 @@ namespace KryticalNova.Items
         public string placeholderGlyph;
 
         [Header("Visuals")]
-        [Tooltip("Armor / Gloves / Boots / Cape: Sidekick parts that replace the slot's body regions.")]
+        [Tooltip("Armor / Gloves / Boots / Cape: Sidekick part catalog IDs that replace the slot's body regions. " +
+                 "The meshes are loaded on first use, so the catalog never holds every armor mesh in memory.")]
+        public ushort[] appearancePartIds = Array.Empty<ushort>();
+        [Tooltip("The catalog the part IDs above belong to.")]
+        public KryticalNova.Items.Visuals.SidekickPartCatalog partCatalog;
+        [Tooltip("Direct part references. Used only when no part IDs are set (hand-made items).")]
         public List<SidekickPartRef> appearanceParts = new List<SidekickPartRef>();
         [Tooltip("Weapon: model parented under the weapon mount (local pose identity).")]
         public GameObject weaponPrefab;
@@ -80,6 +87,23 @@ namespace KryticalNova.Items
         public float petScale = 1f;
         [Tooltip("Hover point relative to the owner (x right, y up, z forward).")]
         public Vector3 petOffset = new Vector3(0.45f, 0.75f, -0.15f); // player root is at capsule centre (~1 m)
+
+        [NonSerialized] private List<SidekickPartRef> loadedParts;
+
+        /// <summary>The Sidekick parts this item shows when worn. The same list instance is returned every call.</summary>
+        public IReadOnlyList<SidekickPartRef> GetAppearanceParts()
+        {
+            if (appearancePartIds == null || appearancePartIds.Length == 0 || partCatalog == null) return appearanceParts;
+            if (loadedParts == null)
+            {
+                loadedParts = new List<SidekickPartRef>(appearancePartIds.Length);
+                KryticalNova.Items.Visuals.PartLibrary.LoadAll(partCatalog, appearancePartIds, loadedParts);
+            }
+            return loadedParts;
+        }
+
+        private void OnEnable() => loadedParts = null;
+        private void OnValidate() => loadedParts = null;
 
         public bool IsEquippable => equipSlot != EquipSlot.None;
         public bool IsStackable => maxStack > 1;

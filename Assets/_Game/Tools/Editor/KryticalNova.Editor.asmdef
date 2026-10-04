@@ -17,7 +17,8 @@
         "KryticalNova.GameFeel",
         "MoreMountains.Tools",
         "Unity.Cinemachine",
-        "MotionWarping.Runtime"
+        "MotionWarping.Runtime",
+        "Gilzoide.SqliteNet"
     ],
     "includePlatforms": [
         "Editor"

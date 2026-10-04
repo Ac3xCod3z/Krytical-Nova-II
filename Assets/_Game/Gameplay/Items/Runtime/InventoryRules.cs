@@ -20,23 +20,29 @@ namespace KryticalNova.Items
         public const string ReasonUnknownItem = "Unknown item.";
         public const string ReasonNotUsable = "That item can't be used.";
 
+        /// <summary>
+        /// Says why this wearer may not equip an item (a user-facing reason), or null when it may. Supplied by the
+        /// caller, who knows the wearer's faction and body; the rules stay pure.
+        /// </summary>
+        public delegate string EquipGate(ItemDefinition item);
+
         public static bool TryMove(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
-            ItemLocation from, ItemLocation to, out string reason)
+            ItemLocation from, ItemLocation to, out string reason, EquipGate gate = null)
         {
             reason = null;
             if (!IsValid(bag, from) || !IsValid(bag, to)) { reason = ReasonInvalidLocation; return false; }
             if (from.Equals(to)) return true;
 
             if (from.IsBag && to.IsBag) return MoveBagToBag(bag, lookup, from.index, to.index, out reason);
-            if (from.IsBag) return MoveBagToEquip(bag, ref loadout, lookup, from.index, to.Slot, out reason);
-            if (to.IsBag) return MoveEquipToBag(bag, ref loadout, lookup, from.Slot, to.index, out reason);
+            if (from.IsBag) return MoveBagToEquip(bag, ref loadout, lookup, from.index, to.Slot, out reason, gate);
+            if (to.IsBag) return MoveEquipToBag(bag, ref loadout, lookup, from.Slot, to.index, out reason, gate);
 
             reason = ReasonWrongSlot; // equip -> different equip slot: no two slots share an item type
             return false;
         }
 
         public static bool TryQuickEquip(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
-            int bagIndex, out string reason)
+            int bagIndex, out string reason, EquipGate gate = null)
         {
             reason = null;
             if (bagIndex < 0 || bagIndex >= bag.Length) { reason = ReasonInvalidLocation; return false; }
@@ -44,7 +50,7 @@ namespace KryticalNova.Items
             var def = lookup.Get(bag[bagIndex].itemId);
             if (def == null) { reason = ReasonUnknownItem; return false; }
             if (!def.IsEquippable) { reason = ReasonNotEquippable; return false; }
-            return MoveBagToEquip(bag, ref loadout, lookup, bagIndex, def.equipSlot, out reason);
+            return MoveBagToEquip(bag, ref loadout, lookup, bagIndex, def.equipSlot, out reason, gate);
         }
 
         public static bool TryQuickUnequip(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
@@ -197,7 +203,7 @@ namespace KryticalNova.Items
         }
 
         private static bool MoveBagToEquip(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
-            int from, EquipSlot slot, out string reason)
+            int from, EquipSlot slot, out string reason, EquipGate gate)
         {
             reason = null;
             var src = bag[from];
@@ -207,6 +213,7 @@ namespace KryticalNova.Items
             if (!def.IsEquippable) { reason = ReasonNotEquippable; return false; }
             if (def.equipSlot != slot) { reason = ReasonWrongSlot; return false; }
             if (src.count != 1) { reason = ReasonSplitStack; return false; }
+            if (gate != null && (reason = gate(def)) != null) return false;
 
             ushort previous = loadout[slot];
             loadout[slot] = src.itemId;
@@ -215,7 +222,7 @@ namespace KryticalNova.Items
         }
 
         private static bool MoveEquipToBag(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
-            EquipSlot slot, int to, out string reason)
+            EquipSlot slot, int to, out string reason, EquipGate gate = null)
         {
             reason = null;
             ushort equipped = loadout[slot];
@@ -232,6 +239,7 @@ namespace KryticalNova.Items
             // Dropping an equipped item onto a compatible bag item swaps them (equips the bag item).
             var def = lookup.Get(dst.itemId);
             if (def == null || def.equipSlot != slot || dst.count != 1) { reason = ReasonCannotSwap; return false; }
+            if (gate != null && (reason = gate(def)) != null) return false;
             loadout[slot] = dst.itemId;
             bag[to] = new ItemStack(equipped, 1);
             return true;

@@ -18,12 +18,7 @@ namespace KryticalNova.Items.Visuals
     {
         public const string PreviewLayerName = "UIPreview";
         private const int PreviewRenderingLayer = 7;
-        private const float MinDistance = 1.5f, MaxDistance = 4.1f;
-        private const float MinPitch = -10f, MaxPitch = 25f;
-        private const float FarPivotHeight = 0.95f, NearPivotHeight = 1.5f;
-        private const float DefaultPitch = 6f;
         private const int MaxTextureHeight = 1024;
-        private const float PanLimitX = 0.45f, PanLimitDown = 0.8f, PanLimitUp = 0.7f;
 
         [SerializeField] private Vector3 stageOrigin = new Vector3(0f, -500f, 0f);
         [Tooltip("URP renderer used by the preview camera, looked up by name in the active pipeline asset. A feature-free " +
@@ -48,10 +43,8 @@ namespace KryticalNova.Items.Visuals
         private MaterialPropertyBlock studioAmbient;
         private bool fogWasOn;
 
-        private float yaw, targetYaw, yawVelocity;
-        private float pitch = DefaultPitch, targetPitch = DefaultPitch, pitchVelocity;
-        private float distance = MaxDistance, targetDistance = MaxDistance, distanceVelocity;
-        private Vector2 pan, targetPan, panVelocity; // metres in the camera plane (x right, y up)
+        // The view maths is shared with the character creator's showroom, so both feel the same.
+        private readonly PreviewOrbit orbit = new PreviewOrbit();
         private ItemDefinition tryOnItem;
 
         public RenderTexture Texture => texture;
@@ -69,6 +62,8 @@ namespace KryticalNova.Items.Visuals
         {
             previewLayer = LayerMask.NameToLayer(PreviewLayerName);
             if (previewLayer < 0) previewLayer = 31; // still isolated, just unnamed
+            orbit.smoothTime = smoothTime;
+            orbit.fieldOfView = fieldOfView;
             transform.position = stageOrigin;
             BuildCamera();
             BuildLights();
@@ -190,46 +185,17 @@ namespace KryticalNova.Items.Visuals
 
         // ---------------- View control (called by the UI manipulator) ----------------
 
-        public void Rotate(float deltaYaw, float deltaPitch)
-        {
-            targetYaw += deltaYaw;
-            targetPitch = Mathf.Clamp(targetPitch + deltaPitch, MinPitch, MaxPitch);
-        }
+        public void Rotate(float deltaYaw, float deltaPitch) => orbit.Rotate(deltaYaw, deltaPitch);
 
-        public void Zoom(float delta)
-        {
-            targetDistance = Mathf.Clamp(targetDistance + delta, MinDistance, MaxDistance);
-            targetPan = ClampPan(targetPan, targetDistance); // zooming out pulls a pan back into frame
-        }
+        public void Zoom(float delta) => orbit.Zoom(delta);
 
         /// <summary>
         /// Slide the view by a drag of <paramref name="pixelDelta"/> (UI pixels, y down) on a viewport
         /// <paramref name="viewportHeightPixels"/> tall, so the model tracks the cursor 1:1.
         /// </summary>
-        public void Pan(Vector2 pixelDelta, float viewportHeightPixels)
-        {
-            if (viewportHeightPixels <= 1f) return;
-            float metresPerPixel = 2f * targetDistance * Mathf.Tan(fieldOfView * 0.5f * Mathf.Deg2Rad) / viewportHeightPixels;
-            // Dragging right moves the model right, so the view pivot moves left.
-            targetPan = ClampPan(targetPan + new Vector2(-pixelDelta.x, pixelDelta.y) * metresPerPixel, targetDistance);
-        }
+        public void Pan(Vector2 pixelDelta, float viewportHeightPixels) => orbit.Pan(pixelDelta, viewportHeightPixels);
 
-        public void ResetView()
-        {
-            targetYaw = Mathf.Round(yaw / 360f) * 360f; // shortest way back to facing the camera
-            targetPitch = DefaultPitch;
-            targetDistance = MaxDistance;
-            targetPan = Vector2.zero;
-        }
-
-        /// <summary>Pan range grows as you zoom in; at full-body framing there's almost none, so the model can't leave view.</summary>
-        private static Vector2 ClampPan(Vector2 value, float atDistance)
-        {
-            float zoom01 = Mathf.InverseLerp(MaxDistance, MinDistance, atDistance);
-            float range = Mathf.Lerp(0.15f, 1f, zoom01);
-            return new Vector2(Mathf.Clamp(value.x, -PanLimitX * range, PanLimitX * range),
-                               Mathf.Clamp(value.y, -PanLimitDown * range, PanLimitUp * range));
-        }
+        public void ResetView() => orbit.ResetView();
 
         // ---------------- Try-on ----------------
 
@@ -289,32 +255,21 @@ namespace KryticalNova.Items.Visuals
         private void LateUpdate()
         {
             if (!IsOpen || doll == null) return;
-            yaw = Mathf.SmoothDamp(yaw, targetYaw, ref yawVelocity, smoothTime);
-            pitch = Mathf.SmoothDamp(pitch, targetPitch, ref pitchVelocity, smoothTime);
-            distance = Mathf.SmoothDamp(distance, targetDistance, ref distanceVelocity, smoothTime);
-            pan = Vector2.SmoothDamp(pan, targetPan, ref panVelocity, smoothTime);
+            orbit.Tick(Time.deltaTime);
             PlaceCamera();
         }
 
         private void SnapView()
         {
-            yaw = targetYaw = 0f;
-            pitch = targetPitch = DefaultPitch;
-            distance = targetDistance = MaxDistance;
-            yawVelocity = pitchVelocity = distanceVelocity = 0f;
-            pan = targetPan = panVelocity = Vector2.zero;
+            orbit.Snap();
             PlaceCamera();
         }
 
         private void PlaceCamera()
         {
-            doll.transform.localRotation = Quaternion.Euler(0f, 180f + yaw, 0f); // face the camera
-            float zoom01 = Mathf.InverseLerp(MaxDistance, MinDistance, distance);
-            Vector3 pivot = transform.position + Vector3.up * Mathf.Lerp(FarPivotHeight, NearPivotHeight, zoom01);
-            Quaternion orbit = Quaternion.Euler(pitch, 0f, 0f);
-            pivot += orbit * new Vector3(pan.x, pan.y, 0f); // pan slides the pivot in the camera plane
-            Vector3 offset = orbit * new Vector3(0f, 0f, -distance);
-            previewCamera.transform.SetPositionAndRotation(pivot + offset, Quaternion.LookRotation(-offset, Vector3.up));
+            orbit.Evaluate(transform.position, Quaternion.identity, out var dollRotation, out var cameraPosition, out var cameraRotation);
+            doll.transform.localRotation = dollRotation;
+            previewCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
         }
 
         private void BuildCamera()

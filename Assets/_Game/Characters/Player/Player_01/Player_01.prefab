@@ -1694,6 +1694,7 @@ GameObject:
   - component: {fileID: 6205866357027811024}
   - component: {fileID: 5088627385439411535}
   - component: {fileID: 3207520345899935226}
+  - component: {fileID: 5994372541494688676}
   m_Layer: 0
   m_Name: Player_01
   m_TagString: Untagged
@@ -1889,6 +1890,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 2
     mesh: {fileID: 1169329786267267185, guid: c8019d765640efa4ca29c27414307c71, type: 3}
     boneNames:
@@ -1993,6 +1995,7 @@ MonoBehaviour:
       localPosition: {x: -0.15886939, y: 0.043768458, z: 0.0000051492066}
       localRotation: {x: 0.000018024697, y: -0.000009623042, z: 0.4917021, w: 0.87076354}
       localScale: {x: 1, y: 1, z: 1}
+    usesWrap: 0
   - region: 3
     mesh: {fileID: 1727919587988324998, guid: 0a13259e2e1801346bbd6f1d2d581325, type: 3}
     boneNames:
@@ -2085,6 +2088,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 4
     mesh: {fileID: -7082250828194340603, guid: b94380d9b7732f54987c0849050c67f1, type: 3}
     boneNames:
@@ -2177,6 +2181,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 5
     mesh: {fileID: 5880358173220840583, guid: af016b82c7fcece43af1714c5653c64a, type: 3}
     boneNames:
@@ -2269,6 +2274,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 6
     mesh: {fileID: -5822640371647158391, guid: b4b6edefeb11f8d43ab98d1be86893e6, type: 3}
     boneNames:
@@ -2361,6 +2367,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 7
     mesh: {fileID: -2969025946985875895, guid: 4a374f93e3d7b5348b61584eeaa05a50, type: 3}
     boneNames:
@@ -2453,6 +2460,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 8
     mesh: {fileID: 996071111192857306, guid: 8d86ba231e254f841b02e2a7deb6390d, type: 3}
     boneNames:
@@ -2545,6 +2553,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 35
     mesh: {fileID: -7821558691773507259, guid: bf55b78dd7cc7d44dbe8276efeab9954, type: 3}
     boneNames:
@@ -2637,6 +2646,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 36
     mesh: {fileID: 2049896182394885004, guid: fc5d73da8465e7644b14ec99f4bc5855, type: 3}
     boneNames:
@@ -2729,6 +2739,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 37
     mesh: {fileID: -7507895210473912596, guid: b005a7422f4d71842ae80386a96264a8, type: 3}
     boneNames:
@@ -2821,6 +2832,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 22
     mesh: {fileID: 5942856181524171363, guid: c3f37e75dd595ae4095b9e1e16726e16, type: 3}
     boneNames:
@@ -2913,6 +2925,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   defaultParts:
   - region: 10
     mesh: {fileID: 17756598249193320, guid: bfd664514da041243b22a6ab9a6b103e, type: 3}
@@ -3006,6 +3019,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 11
     mesh: {fileID: -6845218446381291896, guid: 780ef39007ccf884880e4cfa638acd1c, type: 3}
     boneNames:
@@ -3098,6 +3112,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 12
     mesh: {fileID: -1447243814624848692, guid: 255f26f6a974cc44b856d737b3b9d4af, type: 3}
     boneNames:
@@ -3190,6 +3205,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 13
     mesh: {fileID: 2139163387953509675, guid: 19f56a996d96174438dd264b28b3f117, type: 3}
     boneNames:
@@ -3282,6 +3298,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 14
     mesh: {fileID: 6129775027209676298, guid: cca8b8751cbb90f489b164f90027eecb, type: 3}
     boneNames:
@@ -3374,6 +3391,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 15
     mesh: {fileID: -3307020310844632383, guid: 5d1dc8955dd7bf24a8e69edc0e21d454, type: 3}
     boneNames:
@@ -3466,6 +3484,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 16
     mesh: {fileID: 2453717979002479881, guid: 91d860e42297ca44fbcb714158c2ba5b, type: 3}
     boneNames:
@@ -3558,6 +3577,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 17
     mesh: {fileID: 307423362337249017, guid: 77d92666cdb799f45a06ecca4b8c0fcd, type: 3}
     boneNames:
@@ -3650,6 +3670,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 18
     mesh: {fileID: -2648699563482672753, guid: 353c718dd5e9a234fb9292852df9eacb, type: 3}
     boneNames:
@@ -3742,6 +3763,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 19
     mesh: {fileID: 5035911249670827981, guid: b3ee2f840da91ab4f9088f5358b9aadc, type: 3}
     boneNames:
@@ -3834,6 +3856,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 20
     mesh: {fileID: 6940187120607203366, guid: ae7d339ec0046c245bf096797ce16606, type: 3}
     boneNames:
@@ -3926,6 +3949,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   - region: 21
     mesh: {fileID: -1306329099038814219, guid: f470578e834137242b2460a5f5e8d157, type: 3}
     boneNames:
@@ -4018,6 +4042,7 @@ MonoBehaviour:
     - upperarm_twist_01_l
     - upperarm_twist_01_r
     extraBones: []
+    usesWrap: 0
   bodyShape:
     masculineFeminine: 0
     skinny: 0
@@ -5910,6 +5935,12 @@ MonoBehaviour:
     e32: 0
     e33: 1
   mergeParts: 1
+  wrapPart:
+    region: 0
+    mesh: {fileID: 0}
+    boneNames: []
+    extraBones: []
+    usesWrap: 0
 --- !u!114 &3207520345899935226
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5929,6 +5960,18 @@ MonoBehaviour:
   holdDuration: 0.1
   openDuration: 0.14
   jawRestBlend: 1
+--- !u!114 &5994372541494688676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3933595338312819546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b831e375bb0c534792a3b94b2be86db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.CharacterCreation.CharacterLook
 --- !u!1 &4149163464626883883
 GameObject:
   m_ObjectHideFlags: 0

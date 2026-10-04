@@ -37,6 +37,12 @@ namespace KryticalNova.Progression
         public event Action HealthChanged;
 
         public string EntityName => entityName;
+
+        /// <summary>A player's character name, applied on every peer when its identity replicates.</summary>
+        public void SetEntityName(string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value)) entityName = value;
+        }
         public Transform Transform => transform;
         public CharacterCombatStats CombatStats => combatStats;
 

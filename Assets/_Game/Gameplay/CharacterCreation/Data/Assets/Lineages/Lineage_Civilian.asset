@@ -1,0 +1,2221 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 448b3b9b32ae86d4a9a95fbe512b8c82, type: 3}
+  m_Name: Lineage_Civilian
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.CharacterCreation.LineageDefinition
+  id: 1
+  faction: 1
+  displayName: Civilian
+  description: Citizens, technicians and corporate staff of the Hegemony's cities.
+  traits:
+  - Adaptable
+  - Connected
+  - Resourceful
+  speciesCode: HU
+  body: 1
+  ownPack: SCFI_CIVL
+  basicOutfit: d600d700d800d900da00db00dc00dd00de00df00e000e100t
+  defaultPalette: 1
+  wrapPartId: 1013
+  masculine:
+    regions:
+    - region: 1
+      optional: 0
+      partIds: dd03f603t
+    - region: 2
+      optional: 1
+      partIds: de03f703ff0307040f0417041f0427042f043704d400ed000601b701d801f9011a023b025c027d029e02bf02e002t
+    - region: 3
+      optional: 1
+      partIds: df03f80300040804100418042004280430043804b801d901fa011b023c025d027e029f02c002e102t
+    - region: 4
+      optional: 1
+      partIds: e003f90301040904110419042104290431043904b901da01fb011c023d025e027f02a002c102e202t
+    - region: 5
+      optional: 0
+      partIds: e103t
+    - region: 6
+      optional: 0
+      partIds: e203t
+    - region: 7
+      optional: 0
+      partIds: e303fa0302040a0412041a0422042a0432043a04ba01db01fc011d023e025f028002a102c202e302t
+    - region: 8
+      optional: 0
+      partIds: e403fb0303040b0413041b0423042b0433043b04bb01dc01fd011e023f0260028102a202c302e402t
+    - region: 9
+      optional: 1
+      partIds: e503fc0304040c0414041c0424042c0434043c04d500ee000701bc01dd01fe011f02400261028202a302c402e502t
+    - region: 35
+      optional: 0
+      partIds: f203fd0305040d0415041d0425042d0435043d043f04d601f701180239025a027b029c02bd02de02ff02t
+    - region: 36
+      optional: 0
+      partIds: f303fe0306040e0416041e0426042e0436043e04d701f80119023a025b027c029d02be02df020003t
+    - region: 37
+      optional: 0
+      partIds: f403t
+    builds:
+    - name: Super Slim
+      build: -100
+      muscle: -100
+    - name: Slim
+      build: -50
+      muscle: -100
+    - name: Medium
+      build: 0
+      muscle: -100
+    - name: Muscular
+      build: 10
+      muscle: 80
+    - name: Heavy
+      build: 60
+      muscle: -10
+    - name: Super Heavy
+      build: 100
+      muscle: 20
+    presets:
+    - name: Civilian 01
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: dd030704df03e003e103e203e303e403f203f303f403t
+        palette: 1
+        skinTone: 7
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4279571733
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4280891461
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 02
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: dd031f04df03e003e103e203e303e403f203f303f403t
+        palette: 1
+        skinTone: 5
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4279242768
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4280891461
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 03
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: dd03d80100040104e103e20312041304f203fe03f403t
+        palette: 1
+        skinTone: 9
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4283790914
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4280891461
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 04
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: dd03060100040104e103e20312041304f203fe03f403t
+        palette: 1
+        skinTone: 8
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4287070520
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4280891461
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 05
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: dd03ed00df03e003e103e203e303e403f203d701f403t
+        palette: 1
+        skinTone: 4
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4281149222
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4281024080
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 06
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: dd030601b801a002e103e203e303e403f203f303f403t
+        palette: 1
+        skinTone: 5
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4287970669
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4281348154
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    skinTones:
+    - name: Pale White
+      swatch:
+        serializedVersion: 2
+        rgba: 4288463356
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286554330
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4289054200
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286815146
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: White
+      swatch:
+        serializedVersion: 2
+        rgba: 4287345642
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286094032
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Light Tan
+      swatch:
+        serializedVersion: 2
+        rgba: 4286293461
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Tan
+      swatch:
+        serializedVersion: 2
+        rgba: 4284649663
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4284649663
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4285176007
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4285176007
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4285176007
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4284649663
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4284649663
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4284649663
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Dark Tan
+      swatch:
+        serializedVersion: 2
+        rgba: 4283858092
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283858092
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4284317867
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4284317867
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4284317867
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283858092
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283858092
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4283858092
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Light Brown
+      swatch:
+        serializedVersion: 2
+        rgba: 4283065487
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283459728
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283459728
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4283459728
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Medium Brown
+      swatch:
+        serializedVersion: 2
+        rgba: 4282603648
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283194750
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283194750
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282537854
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4283194750
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Dark Brown
+      swatch:
+        serializedVersion: 2
+        rgba: 4282272104
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282732135
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282732135
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4280561979
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280561979
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Very Dark Brown
+      swatch:
+        serializedVersion: 2
+        rgba: 4280954946
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282731611
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Black
+      swatch:
+        serializedVersion: 2
+        rgba: 4280691253
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    channels: 0102y
+  feminine:
+    regions:
+    - region: 1
+      optional: 0
+      partIds: dd03f603t
+    - region: 2
+      optional: 1
+      partIds: de03f703ff0307040f0417041f0427042f043704d400ed000601b701d801f9011a023b025c027d029e02bf02e002t
+    - region: 3
+      optional: 1
+      partIds: df03f80300040804100418042004280430043804b801d901fa011b023c025d027e029f02c002e102t
+    - region: 4
+      optional: 1
+      partIds: e003f90301040904110419042104290431043904b901da01fb011c023d025e027f02a002c102e202t
+    - region: 5
+      optional: 0
+      partIds: e103t
+    - region: 6
+      optional: 0
+      partIds: e203t
+    - region: 7
+      optional: 0
+      partIds: e303fa0302040a0412041a0422042a0432043a04ba01db01fc011d023e025f028002a102c202e302t
+    - region: 8
+      optional: 0
+      partIds: e403fb0303040b0413041b0423042b0433043b04bb01dc01fd011e023f0260028102a202c302e402t
+    - region: 35
+      optional: 0
+      partIds: f203fd0305040d0415041d0425042d0435043d043f04d601f701180239025a027b029c02bd02de02ff02t
+    - region: 36
+      optional: 0
+      partIds: f303fe0306040e0416041e0426042e0436043e04d701f80119023a025b027c029d02be02df020003t
+    - region: 37
+      optional: 0
+      partIds: f403t
+    builds:
+    - name: Super Slim
+      build: -100
+      muscle: -100
+    - name: Slim
+      build: -60
+      muscle: -100
+    - name: Medium
+      build: -20
+      muscle: -100
+    - name: Muscular
+      build: 0
+      muscle: 50
+    - name: Heavy
+      build: 80
+      muscle: -50
+    - name: Super Heavy
+      build: 90
+      muscle: -100
+    presets:
+    - name: Civilian 01
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: dd03060100040104e103e20312041304f203fe03f403t
+        palette: 1
+        skinTone: 8
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4287070520
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4280891461
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 02
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: dd03ed00df03e003e103e203e303e403f203d701f403t
+        palette: 1
+        skinTone: 4
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4281149222
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4281024080
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 03
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: dd030601b801a002e103e203e303e403f203f303f403t
+        palette: 1
+        skinTone: 5
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4287970669
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4281348154
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 04
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: dd030601df03e003e103e203e303e403f203f303f403t
+        palette: 1
+        skinTone: 7
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4279571733
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4280891461
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 05
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: dd03f901df03e003e103e203e303e403f203f303f403t
+        palette: 1
+        skinTone: 5
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4279242768
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4280891461
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Civilian 06
+      recipe:
+        version: 1
+        faction: 1
+        lineage: 1
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: dd03d80100040104e103e20312041304f203fe03f403t
+        palette: 1
+        skinTone: 9
+        colors:
+        - channel: 1
+          color:
+            serializedVersion: 2
+            rgba: 4283790914
+        - channel: 2
+          color:
+            serializedVersion: 2
+            rgba: 4280891461
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    skinTones:
+    - name: Pale White
+      swatch:
+        serializedVersion: 2
+        rgba: 4288463356
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286554330
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4289054200
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287342553
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288463356
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286815146
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: White
+      swatch:
+        serializedVersion: 2
+        rgba: 4287345642
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286094032
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4286422221
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4287345642
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Light Tan
+      swatch:
+        serializedVersion: 2
+        rgba: 4286293461
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4284976059
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4286293461
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Tan
+      swatch:
+        serializedVersion: 2
+        rgba: 4284649663
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4284649663
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4285176007
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4285176007
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4285176007
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4284649663
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4284649663
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283924655
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4284649663
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Dark Tan
+      swatch:
+        serializedVersion: 2
+        rgba: 4283858092
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283858092
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4284317867
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4284317867
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4284317867
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283858092
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283858092
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4283858092
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Light Brown
+      swatch:
+        serializedVersion: 2
+        rgba: 4283065487
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283459728
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283459728
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283263895
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4283459728
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4283065487
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Medium Brown
+      swatch:
+        serializedVersion: 2
+        rgba: 4282603648
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4283194750
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4283194750
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282537854
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4283194750
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4282603648
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Dark Brown
+      swatch:
+        serializedVersion: 2
+        rgba: 4282272104
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282732135
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282732135
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4280561979
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280561979
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4282272104
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Very Dark Brown
+      swatch:
+        serializedVersion: 2
+        rgba: 4280954946
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282731611
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4282337373
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280954946
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    - name: Black
+      swatch:
+        serializedVersion: 2
+        rgba: 4280691253
+      cells:
+      - u: 0
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 0
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 0
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 0
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 0
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 1
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 2
+        v: 5
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 1
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 2
+        v: 4
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 1
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 2
+        v: 3
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 1
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 2
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4280625200
+      - u: 1
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4280691253
+      - u: 2
+        v: 1
+        color:
+          serializedVersion: 2
+          rgba: 4288453351
+      - u: 6
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+      - u: 7
+        v: 2
+        color:
+          serializedVersion: 2
+          rgba: 4287538634
+    channels: 0102y

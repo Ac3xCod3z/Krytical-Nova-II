@@ -29,6 +29,7 @@ namespace KryticalNova.Items.Visuals
 
         private readonly int[] indices = new int[4];
         private Mesh resolvedMesh;
+        private int resolvedShapeCount;
         private float nextBlink;
         private float blinkStart = -1f;
         private Transform jaw;
@@ -65,7 +66,8 @@ namespace KryticalNova.Items.Visuals
                 jaw.localRotation = Quaternion.Slerp(jaw.localRotation, jawRest, jawRestBlend);
 
             if (target == null || target.sharedMesh == null) return;
-            if (target.sharedMesh != resolvedMesh) Resolve();
+            // A rebuilt character gets a new mesh; one rebuilt in place keeps its mesh but may lose its shapes.
+            if (target.sharedMesh != resolvedMesh || resolvedMesh.blendShapeCount != resolvedShapeCount) Resolve();
             if (indices[0] < 0 && indices[2] < 0) return;
 
             float now = Time.time;
@@ -92,13 +94,14 @@ namespace KryticalNova.Items.Visuals
         private void Resolve()
         {
             resolvedMesh = target.sharedMesh;
+            resolvedShapeCount = resolvedMesh.blendShapeCount;
             for (int i = 0; i < LiveShapes.Length; i++) indices[i] = resolvedMesh.GetBlendShapeIndex(LiveShapes[i]);
         }
 
         private void Apply(float weight)
         {
             for (int i = 0; i < indices.Length; i++)
-                if (indices[i] >= 0) target.SetBlendShapeWeight(indices[i], weight);
+                if (indices[i] >= 0 && indices[i] < resolvedShapeCount) target.SetBlendShapeWeight(indices[i], weight);
         }
     }
 }

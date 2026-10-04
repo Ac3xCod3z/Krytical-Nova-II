@@ -95,6 +95,18 @@ namespace KryticalNova.Items
             }
         }
 
+        /// <summary>The body itself (torso to feet), as opposed to attachments. These regions are never left empty.</summary>
+        public static bool IsBodyRegion(BodyRegion region) => region >= BodyRegion.Torso && region <= BodyRegion.FootRight;
+
+        /// <summary>True when a visual equip slot owns the region, so a character's own part there is a fallback, not fixed.</summary>
+        public static bool IsSlotRegion(BodyRegion region)
+        {
+            return System.Array.IndexOf(ArmorRegions, region) >= 0 || System.Array.IndexOf(GloveRegions, region) >= 0
+                || System.Array.IndexOf(BootRegions, region) >= 0 || System.Array.IndexOf(CapeRegions, region) >= 0;
+        }
+
+        // The head and face attachments ride with Armor so a helm that is paired with an armor piece (skeletons)
+        // is swapped together with it. Humans and elves never get parts in those two regions.
         private static readonly BodyRegion[] ArmorRegions =
         {
             BodyRegion.Torso, BodyRegion.ArmUpperLeft, BodyRegion.ArmUpperRight, BodyRegion.ArmLowerLeft,
@@ -102,7 +114,7 @@ namespace KryticalNova.Items
             BodyRegion.AttachmentHipsFront, BodyRegion.AttachmentHipsBack, BodyRegion.AttachmentHipsLeft,
             BodyRegion.AttachmentHipsRight, BodyRegion.AttachmentShoulderLeft, BodyRegion.AttachmentShoulderRight,
             BodyRegion.AttachmentElbowLeft, BodyRegion.AttachmentElbowRight, BodyRegion.AttachmentKneeLeft,
-            BodyRegion.AttachmentKneeRight
+            BodyRegion.AttachmentKneeRight, BodyRegion.AttachmentHead, BodyRegion.AttachmentFace
         };
         private static readonly BodyRegion[] GloveRegions = { BodyRegion.HandLeft, BodyRegion.HandRight };
         private static readonly BodyRegion[] BootRegions = { BodyRegion.FootLeft, BodyRegion.FootRight };

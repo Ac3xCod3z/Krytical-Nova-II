@@ -1,12 +1,13 @@
+using KryticalNova.Factions;
 using KryticalNova.Progression;
 using UnityEngine;
 
 namespace KryticalNova.Combat
 {
     /// <summary>
-    /// Who may attack whom. There is no faction system yet, so every player is friendly to every other player;
-    /// anything else that can take damage (dummies, monsters) is hostile. Replace the player rule with a faction
-    /// comparison once factions exist.
+    /// Who may attack whom. Anything that is not a player and can take damage (dummies, monsters) is hostile.
+    /// Between two players the factions decide (<see cref="FactionRules.AreHostile"/>): while cross-faction PvP is
+    /// switched off, which it is until factions stop sharing the starter town, every player is friendly.
     /// </summary>
     public static class CombatHostility
     {
@@ -15,7 +16,8 @@ namespace KryticalNova.Combat
         public static bool IsHostile(Transform attacker, IDamageable target)
         {
             if (target == null || target.Transform == null || target.Transform == attacker) return false;
-            return !(IsPlayer(attacker) && IsPlayer(target.Transform));
+            if (!(IsPlayer(attacker) && IsPlayer(target.Transform))) return true;
+            return FactionRules.AreHostile(FactionRules.Of(attacker), FactionRules.Of(target.Transform));
         }
     }
 }

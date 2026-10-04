@@ -1,0 +1,1375 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed675db5707fe54408d26e31b92f6453, type: 3}
+  m_Name: GearDictionary
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.GearDictionary
+  parts: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
+  entries:
+  - itemId: 2001
+    name: Recruit Armor
+    slot: 2
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 1
+    partIds: bd01be01bf01c001c101c401c501c601cc01cd01ce01cf01d001d101d201d301d401d501t
+  - itemId: 2002
+    name: Ranger Armor
+    slot: 2
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 2
+    partIds: de01df01e001e101e201e501e601e701ed01ee01ef01f001f101f201f301f401f501f601t
+  - itemId: 2003
+    name: Sentinel Armor
+    slot: 2
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 3
+    partIds: ff0100020102020203020602070208020e020f0210021102120213021402150216021702t
+  - itemId: 2004
+    name: Vanguard Armor
+    slot: 2
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 4
+    partIds: 200221022202230224022702280229022f02300231023202330234023502360237023802t
+  - itemId: 2005
+    name: Warden Armor
+    slot: 2
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 5
+    partIds: 41024202430244024502480249024a025002510252025302540255025602570258025902t
+  - itemId: 2006
+    name: Striker Armor
+    slot: 2
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 6
+    partIds: 6202630264026502660269026a026b027102720273027402750276027702780279027a02t
+  - itemId: 2007
+    name: Phantom Armor
+    slot: 2
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 7
+    partIds: 830284028502860287028a028b028c02920293029402950296029702980299029a029b02t
+  - itemId: 2008
+    name: Bastion Armor
+    slot: 2
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 8
+    partIds: a402a502a602a702a802ab02ac02ad02b302b402b502b602b702b802b902ba02bb02bc02t
+  - itemId: 2009
+    name: Raider Armor
+    slot: 2
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 9
+    partIds: c502c602c702c802c902cc02cd02ce02d402d502d602d702d802d902da02db02dc02dd02t
+  - itemId: 2010
+    name: Commander Armor
+    slot: 2
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 10
+    partIds: e602e702e802e902ea02ed02ee02ef02f502f602f702f802f902fa02fb02fc02fd02fe02t
+  - itemId: 2101
+    name: Commuter Outfit
+    slot: 2
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 1
+    partIds: d600d700d800d900da00dd00de00df00e500e600e700e800e900ea00eb00ec00t
+  - itemId: 2102
+    name: Technician Outfit
+    slot: 2
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 2
+    partIds: ef00f000f100f200f300f600f700f800fe00ff00000101010201030104010501t
+  - itemId: 2103
+    name: Courier Outfit
+    slot: 2
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 3
+    partIds: 080109010a010b010c010f01100111011701180119011a011b011c011d011e01t
+  - itemId: 2104
+    name: Analyst Outfit
+    slot: 2
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 4
+    partIds: 1f01d700d800d900da002001210122012601270128012901t
+  - itemId: 2105
+    name: Executive Outfit
+    slot: 2
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 5
+    partIds: 2a01f000f100f200f3002b012c012d013001t
+  - itemId: 2106
+    name: Director Outfit
+    slot: 2
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 6
+    partIds: 310109010a010b010c013201330134013701t
+  - itemId: 2107
+    name: Magnate Outfit
+    slot: 2
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 7
+    partIds: 3801d700d800d900da00dd00de00df00t
+  - itemId: 2201
+    name: Servitor Plating
+    slot: 2
+    rarity: 0
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 1
+    partIds: 3b013c013d013e013f01420143014401480149014a014b014c014d014e01t
+  - itemId: 2202
+    name: Hauler Plating
+    slot: 2
+    rarity: 0
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 2
+    partIds: 4f0150015101520153015601570158015c015d015e015f0160016101t
+  - itemId: 2203
+    name: Welder Plating
+    slot: 2
+    rarity: 1
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 3
+    partIds: 6201630164016501660169016a016b016f0170017101720173017401t
+  - itemId: 2204
+    name: Sentry Plating
+    slot: 2
+    rarity: 1
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 4
+    partIds: 750176017701780179017c017d017e01820183018401850186018701t
+  - itemId: 2205
+    name: Enforcer Plating
+    slot: 2
+    rarity: 2
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 5
+    partIds: 880189018a018b018c018f019001910195019601t
+  - itemId: 2206
+    name: Ravager Plating
+    slot: 2
+    rarity: 2
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 6
+    partIds: 9701980199019a019b019c019d019e01a001a101t
+  - itemId: 2207
+    name: Juggernaut Plating
+    slot: 2
+    rarity: 3
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 7
+    partIds: a201a301a401a501a601a70143014401a801a901t
+  - itemId: 2208
+    name: Overseer Plating
+    slot: 2
+    rarity: 3
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 8
+    partIds: aa01ab01ac01ad01ae01420157015801af01b001t
+  - itemId: 2209
+    name: Annihilator Plating
+    slot: 2
+    rarity: 4
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 9
+    partIds: b101b201b301b401b50156016a016b01t
+  - itemId: 2210
+    name: Prime Plating
+    slot: 2
+    rarity: 4
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 10
+    partIds: b6013c013d013e013f0169017d017e01t
+  - itemId: 2301
+    name: Graveworn Armor
+    slot: 2
+    rarity: 0
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 1
+    partIds: 6a006b006c006d006e0071007200730079007a007b007c007d007e007f008000810082007600t
+  - itemId: 2302
+    name: Boneguard Armor
+    slot: 2
+    rarity: 0
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 2
+    partIds: 830084008500860087008a008b008c00920093009400950096009700980099008f00t
+  - itemId: 2303
+    name: Cryptwarden Armor
+    slot: 2
+    rarity: 1
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 3
+    partIds: 9a009b009c009d009e00a100a200a300a800a900aa00ab00ac00ad00a600t
+  - itemId: 2304
+    name: Deathsworn Armor
+    slot: 2
+    rarity: 2
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 4
+    partIds: ae00af00b000b100b200b300b400b500b800b900ba00bb00bc00bd00b600t
+  - itemId: 2305
+    name: Dreadknight Armor
+    slot: 2
+    rarity: 2
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 5
+    partIds: be00bf00c000c100c200c30072007300c600c700c800c900c400t
+  - itemId: 2306
+    name: Lichbound Armor
+    slot: 2
+    rarity: 3
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 6
+    partIds: ca00cb00cc006d006e0071008b008c00cd00t
+  - itemId: 2307
+    name: Revenant Armor
+    slot: 2
+    rarity: 4
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 7
+    partIds: cf006b006c00860087008a00a200a300d000t
+  - itemId: 2401
+    name: Thrall Armor
+    slot: 2
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 1
+    partIds: 030304030503060307030a030b030c03120313031403150316031703180319031a031b03t
+  - itemId: 2402
+    name: Huscarl Armor
+    slot: 2
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 2
+    partIds: 1e031f032003210322032503260327032d032e032f033003310332033303340335033603t
+  - itemId: 2403
+    name: Reaver Armor
+    slot: 2
+    rarity: 1
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 3
+    partIds: 39033a033b033c033d03400341034203480349034a034b034c034d034e034f0350035103t
+  - itemId: 2404
+    name: Berserker Armor
+    slot: 2
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 4
+    partIds: 540355035603570358035b035c035d0363036403650366036703680369036a036b036c03t
+  - itemId: 2405
+    name: Jarl Armor
+    slot: 2
+    rarity: 3
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 5
+    partIds: 6f0370037103720373037603770378037e037f038003810382038303840385038603t
+  - itemId: 2406
+    name: Warlord Armor
+    slot: 2
+    rarity: 4
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 6
+    partIds: 89038a038b038c038d03900391039203980399039a039b039c039d039e039f03a003t
+  - itemId: 2501
+    name: Scout Armor
+    slot: 2
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 1
+    partIds: 06000700080009000a000d000e000f00150016001700180019001a001b001c001d001e00t
+  - itemId: 2502
+    name: Warden Armor
+    slot: 2
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 2
+    partIds: 240025002600270028002b002c002d0033003400350036003700380039003a003b003c00t
+  - itemId: 2503
+    name: Ranger Armor
+    slot: 2
+    rarity: 1
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 3
+    partIds: 400041004200430044004700480049004f00500051005200530054005500560057005800t
+  - itemId: 2504
+    name: Bladesinger Armor
+    slot: 2
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 4
+    partIds: 5a000700080009000a005b000e000f005e005f006000t
+  - itemId: 2505
+    name: Highguard Armor
+    slot: 2
+    rarity: 3
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 5
+    partIds: 6200250026002700280063002c002d006600t
+  - itemId: 2506
+    name: Sunlord Armor
+    slot: 2
+    rarity: 4
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 6
+    partIds: 68004100420043004400690048004900t
+  - itemId: 3001
+    name: Recruit Gauntlets
+    slot: 3
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 1
+    partIds: c201c301t
+  - itemId: 3002
+    name: Ranger Gauntlets
+    slot: 3
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 2
+    partIds: e301e401t
+  - itemId: 3003
+    name: Sentinel Gauntlets
+    slot: 3
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 3
+    partIds: 04020502t
+  - itemId: 3004
+    name: Vanguard Gauntlets
+    slot: 3
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 4
+    partIds: 25022602t
+  - itemId: 3005
+    name: Warden Gauntlets
+    slot: 3
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 5
+    partIds: 46024702t
+  - itemId: 3006
+    name: Striker Gauntlets
+    slot: 3
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 6
+    partIds: 67026802t
+  - itemId: 3007
+    name: Phantom Gauntlets
+    slot: 3
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 7
+    partIds: 88028902t
+  - itemId: 3008
+    name: Bastion Gauntlets
+    slot: 3
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 8
+    partIds: a902aa02t
+  - itemId: 3009
+    name: Raider Gauntlets
+    slot: 3
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 9
+    partIds: ca02cb02t
+  - itemId: 3010
+    name: Commander Gauntlets
+    slot: 3
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 10
+    partIds: eb02ec02t
+  - itemId: 3101
+    name: Commuter Gloves
+    slot: 3
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 1
+    partIds: db00dc00t
+  - itemId: 3102
+    name: Technician Gloves
+    slot: 3
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 2
+    partIds: f400f500t
+  - itemId: 3103
+    name: Courier Gloves
+    slot: 3
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 3
+    partIds: 0d010e01t
+  - itemId: 3201
+    name: Servitor Servos
+    slot: 3
+    rarity: 0
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 1
+    partIds: 40014101t
+  - itemId: 3202
+    name: Hauler Servos
+    slot: 3
+    rarity: 1
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 2
+    partIds: 54015501t
+  - itemId: 3203
+    name: Welder Servos
+    slot: 3
+    rarity: 2
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 3
+    partIds: 67016801t
+  - itemId: 3204
+    name: Sentry Servos
+    slot: 3
+    rarity: 3
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 4
+    partIds: 7a017b01t
+  - itemId: 3205
+    name: Enforcer Servos
+    slot: 3
+    rarity: 4
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 5
+    partIds: 8d018e01t
+  - itemId: 3301
+    name: Graveworn Gauntlets
+    slot: 3
+    rarity: 0
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 1
+    partIds: 6f007000t
+  - itemId: 3302
+    name: Boneguard Gauntlets
+    slot: 3
+    rarity: 1
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 2
+    partIds: 88008900t
+  - itemId: 3303
+    name: Cryptwarden Gauntlets
+    slot: 3
+    rarity: 3
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 3
+    partIds: 9f00a000t
+  - itemId: 3401
+    name: Thrall Bracers
+    slot: 3
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 1
+    partIds: 08030903t
+  - itemId: 3402
+    name: Huscarl Bracers
+    slot: 3
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 2
+    partIds: 23032403t
+  - itemId: 3403
+    name: Reaver Bracers
+    slot: 3
+    rarity: 1
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 3
+    partIds: 3e033f03t
+  - itemId: 3404
+    name: Berserker Bracers
+    slot: 3
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 4
+    partIds: 59035a03t
+  - itemId: 3405
+    name: Jarl Bracers
+    slot: 3
+    rarity: 3
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 5
+    partIds: 74037503t
+  - itemId: 3406
+    name: Warlord Bracers
+    slot: 3
+    rarity: 4
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 6
+    partIds: 8e038f03t
+  - itemId: 3501
+    name: Scout Gloves
+    slot: 3
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 1
+    partIds: 0b000c00t
+  - itemId: 3502
+    name: Warden Gloves
+    slot: 3
+    rarity: 1
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 2
+    partIds: 29002a00t
+  - itemId: 3503
+    name: Ranger Gloves
+    slot: 3
+    rarity: 3
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 3
+    partIds: 45004600t
+  - itemId: 4001
+    name: Recruit Boots
+    slot: 4
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 1
+    partIds: c701c801t
+  - itemId: 4002
+    name: Ranger Boots
+    slot: 4
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 2
+    partIds: e801e901t
+  - itemId: 4003
+    name: Sentinel Boots
+    slot: 4
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 3
+    partIds: 09020a02t
+  - itemId: 4004
+    name: Vanguard Boots
+    slot: 4
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 4
+    partIds: 2a022b02t
+  - itemId: 4005
+    name: Warden Boots
+    slot: 4
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 5
+    partIds: 4b024c02t
+  - itemId: 4006
+    name: Striker Boots
+    slot: 4
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 6
+    partIds: 6c026d02t
+  - itemId: 4007
+    name: Phantom Boots
+    slot: 4
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 7
+    partIds: 8d028e02t
+  - itemId: 4008
+    name: Bastion Boots
+    slot: 4
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 8
+    partIds: ae02af02t
+  - itemId: 4009
+    name: Raider Boots
+    slot: 4
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 9
+    partIds: cf02d002t
+  - itemId: 4010
+    name: Commander Boots
+    slot: 4
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 10
+    partIds: f002f102t
+  - itemId: 4101
+    name: Commuter Shoes
+    slot: 4
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 1
+    partIds: e000e100t
+  - itemId: 4102
+    name: Technician Shoes
+    slot: 4
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 2
+    partIds: f900fa00t
+  - itemId: 4103
+    name: Courier Shoes
+    slot: 4
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 3
+    partIds: 12011301t
+  - itemId: 4201
+    name: Servitor Stabilizers
+    slot: 4
+    rarity: 0
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 1
+    partIds: 45014601t
+  - itemId: 4202
+    name: Hauler Stabilizers
+    slot: 4
+    rarity: 1
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 2
+    partIds: 59015a01t
+  - itemId: 4203
+    name: Welder Stabilizers
+    slot: 4
+    rarity: 2
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 3
+    partIds: 6c016d01t
+  - itemId: 4204
+    name: Sentry Stabilizers
+    slot: 4
+    rarity: 3
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 4
+    partIds: 7f018001t
+  - itemId: 4205
+    name: Enforcer Stabilizers
+    slot: 4
+    rarity: 4
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 5
+    partIds: 92019301t
+  - itemId: 4301
+    name: Graveworn Greaves
+    slot: 4
+    rarity: 0
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 1
+    partIds: 74007500t
+  - itemId: 4302
+    name: Boneguard Greaves
+    slot: 4
+    rarity: 1
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 2
+    partIds: 8d008e00t
+  - itemId: 4303
+    name: Cryptwarden Greaves
+    slot: 4
+    rarity: 3
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 3
+    partIds: a400a500t
+  - itemId: 4401
+    name: Thrall Boots
+    slot: 4
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 1
+    partIds: 0d030e03t
+  - itemId: 4402
+    name: Huscarl Boots
+    slot: 4
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 2
+    partIds: 28032903t
+  - itemId: 4403
+    name: Reaver Boots
+    slot: 4
+    rarity: 1
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 3
+    partIds: 43034403t
+  - itemId: 4404
+    name: Berserker Boots
+    slot: 4
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 4
+    partIds: 5e035f03t
+  - itemId: 4405
+    name: Jarl Boots
+    slot: 4
+    rarity: 3
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 5
+    partIds: 79037a03t
+  - itemId: 4406
+    name: Warlord Boots
+    slot: 4
+    rarity: 4
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 6
+    partIds: 93039403t
+  - itemId: 4501
+    name: Scout Boots
+    slot: 4
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 1
+    partIds: 10001100t
+  - itemId: 4502
+    name: Warden Boots
+    slot: 4
+    rarity: 1
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 2
+    partIds: 2e002f00t
+  - itemId: 4503
+    name: Ranger Boots
+    slot: 4
+    rarity: 3
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 3
+    partIds: 4a004b00t
+  - itemId: 7001
+    name: Recruit Cape
+    slot: 7
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 1
+    partIds: cb01t
+  - itemId: 7002
+    name: Ranger Cape
+    slot: 7
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 2
+    partIds: ec01t
+  - itemId: 7003
+    name: Sentinel Cape
+    slot: 7
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 3
+    partIds: 0d02t
+  - itemId: 7004
+    name: Vanguard Cape
+    slot: 7
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 4
+    partIds: 2e02t
+  - itemId: 7005
+    name: Warden Cape
+    slot: 7
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 5
+    partIds: 4f02t
+  - itemId: 7006
+    name: Striker Cape
+    slot: 7
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 6
+    partIds: 7002t
+  - itemId: 7007
+    name: Phantom Cape
+    slot: 7
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 7
+    partIds: 9102t
+  - itemId: 7008
+    name: Bastion Cape
+    slot: 7
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 8
+    partIds: b202t
+  - itemId: 7009
+    name: Raider Cape
+    slot: 7
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 9
+    partIds: d302t
+  - itemId: 7010
+    name: Commander Cape
+    slot: 7
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 10
+    partIds: f402t
+  - itemId: 7101
+    name: Commuter Pack
+    slot: 7
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 1
+    partIds: e400t
+  - itemId: 7102
+    name: Technician Pack
+    slot: 7
+    rarity: 0
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 2
+    partIds: fd00t
+  - itemId: 7103
+    name: Courier Pack
+    slot: 7
+    rarity: 1
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 3
+    partIds: 1601t
+  - itemId: 7104
+    name: Analyst Pack
+    slot: 7
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 4
+    partIds: 2501t
+  - itemId: 7105
+    name: Executive Pack
+    slot: 7
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 5
+    partIds: 2f01t
+  - itemId: 7106
+    name: Director Pack
+    slot: 7
+    rarity: 3
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 6
+    partIds: 3601t
+  - itemId: 7107
+    name: Magnate Pack
+    slot: 7
+    rarity: 4
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 7
+    partIds: 3a01t
+  - itemId: 7201
+    name: Servitor Back Unit
+    slot: 7
+    rarity: 0
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 1
+    partIds: 4701t
+  - itemId: 7202
+    name: Hauler Back Unit
+    slot: 7
+    rarity: 0
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 2
+    partIds: 5b01t
+  - itemId: 7203
+    name: Welder Back Unit
+    slot: 7
+    rarity: 1
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 3
+    partIds: 6e01t
+  - itemId: 7204
+    name: Sentry Back Unit
+    slot: 7
+    rarity: 2
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 4
+    partIds: 8101t
+  - itemId: 7205
+    name: Enforcer Back Unit
+    slot: 7
+    rarity: 3
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 5
+    partIds: 9401t
+  - itemId: 7206
+    name: Ravager Back Unit
+    slot: 7
+    rarity: 4
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 6
+    partIds: 9f01t
+  - itemId: 7301
+    name: Graveworn Shroud
+    slot: 7
+    rarity: 0
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 1
+    partIds: 7800t
+  - itemId: 7302
+    name: Boneguard Shroud
+    slot: 7
+    rarity: 0
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 2
+    partIds: 9100t
+  - itemId: 7303
+    name: Cryptwarden Shroud
+    slot: 7
+    rarity: 1
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 3
+    partIds: a700t
+  - itemId: 7304
+    name: Deathsworn Shroud
+    slot: 7
+    rarity: 2
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 4
+    partIds: b700t
+  - itemId: 7305
+    name: Dreadknight Shroud
+    slot: 7
+    rarity: 2
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 5
+    partIds: c500t
+  - itemId: 7306
+    name: Lichbound Shroud
+    slot: 7
+    rarity: 3
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 6
+    partIds: ce00t
+  - itemId: 7307
+    name: Revenant Shroud
+    slot: 7
+    rarity: 4
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 7
+    partIds: d100t
+  - itemId: 7401
+    name: Thrall Cloak
+    slot: 7
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 1
+    partIds: 1103t
+  - itemId: 7402
+    name: Huscarl Cloak
+    slot: 7
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 2
+    partIds: 2c03t
+  - itemId: 7403
+    name: Reaver Cloak
+    slot: 7
+    rarity: 1
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 3
+    partIds: 4703t
+  - itemId: 7404
+    name: Berserker Cloak
+    slot: 7
+    rarity: 1
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 4
+    partIds: 6203t
+  - itemId: 7405
+    name: Jarl Cloak
+    slot: 7
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 5
+    partIds: 7d03t
+  - itemId: 7406
+    name: Warlord Cloak
+    slot: 7
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 6
+    partIds: 9703t
+  - itemId: 7407
+    name: Mark 07 Cloak
+    slot: 7
+    rarity: 3
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 7
+    partIds: a603t
+  - itemId: 7408
+    name: Mark 08 Cloak
+    slot: 7
+    rarity: 3
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 8
+    partIds: aa03t
+  - itemId: 7409
+    name: Mark 09 Cloak
+    slot: 7
+    rarity: 4
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 9
+    partIds: ae03t
+  - itemId: 7410
+    name: Mark 10 Cloak
+    slot: 7
+    rarity: 4
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 10
+    partIds: b103t
+  - itemId: 7501
+    name: Scout Cloak
+    slot: 7
+    rarity: 0
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 1
+    partIds: 1400t
+  - itemId: 7502
+    name: Warden Cloak
+    slot: 7
+    rarity: 1
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 2
+    partIds: 3200t
+  - itemId: 7503
+    name: Ranger Cloak
+    slot: 7
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 3
+    partIds: 4e00t
+  - itemId: 7504
+    name: Bladesinger Cloak
+    slot: 7
+    rarity: 3
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 4
+    partIds: 5d00t
+  - itemId: 7505
+    name: Highguard Cloak
+    slot: 7
+    rarity: 4
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 5
+    partIds: 6500t

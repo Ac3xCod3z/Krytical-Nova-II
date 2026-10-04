@@ -1,0 +1,634 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 448b3b9b32ae86d4a9a95fbe512b8c82, type: 3}
+  m_Name: Lineage_Robot
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.CharacterCreation.LineageDefinition
+  id: 3
+  faction: 2
+  displayName: Robot
+  description: The labour machines that woke up. They compute. They do not forgive.
+  traits:
+  - Tireless
+  - Precise
+  - Unfeeling
+  speciesCode: RO
+  body: 2
+  ownPack: SCFI_ROBO
+  basicOutfit: 3b013c013d013e013f014001410142014301440145014601t
+  defaultPalette: 13
+  wrapPartId: 0
+  masculine:
+    regions:
+    - region: 1
+      optional: 0
+      partIds: 40044104420443044404450446044704480449044a044b044c044d044e044f04t
+    builds:
+    - name: Super Slim
+      build: -100
+      muscle: -100
+    - name: Slim
+      build: -50
+      muscle: -100
+    - name: Medium
+      build: 0
+      muscle: -100
+    - name: Muscular
+      build: 10
+      muscle: 80
+    - name: Heavy
+      build: 60
+      muscle: -10
+    - name: Super Heavy
+      build: 100
+      muscle: 20
+    presets:
+    - name: Robot 01
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4e04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4293197568
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4287795858
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 02
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4904t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4279566591
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286873978
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 03
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4c04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294952960
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286616741
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 04
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4604t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294180608
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286937719
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 05
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4304t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4278255577
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4292993481
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 06
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4d04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294944000
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286874500
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 07
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4f04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294931365
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4288326575
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 08
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4004t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4282526457
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4288453276
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 09
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4404t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294960640
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4290422943
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 10
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4504t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4278204671
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4290422943
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 11
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4b04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294663167
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4288524215
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 12
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 0
+        build: 0
+        muscle: 0
+        parts: 4a04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4287692544
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286681496
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    skinTones: []
+    channels: 0503y
+  feminine:
+    regions:
+    - region: 1
+      optional: 0
+      partIds: 40044104420443044404450446044704480449044a044b044c044d044e044f04t
+    builds:
+    - name: Super Slim
+      build: -100
+      muscle: -100
+    - name: Slim
+      build: -60
+      muscle: -100
+    - name: Medium
+      build: -20
+      muscle: -100
+    - name: Muscular
+      build: 0
+      muscle: 50
+    - name: Heavy
+      build: 80
+      muscle: -50
+    - name: Super Heavy
+      build: 90
+      muscle: -100
+    presets:
+    - name: Robot 01
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4b04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294663167
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4288524215
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 02
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4a04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4287692544
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286681496
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 03
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4e04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4293197568
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4287795858
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 04
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4904t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4279566591
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286873978
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 05
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4c04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294952960
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286616741
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 06
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4604t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294180608
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286937719
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 07
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4304t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4278255577
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4292993481
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 08
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4d04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294944000
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4286874500
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 09
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4f04t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294931365
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4288326575
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 10
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4004t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4282526457
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4288453276
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 11
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4404t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4294960640
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4290422943
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    - name: Robot 12
+      recipe:
+        version: 1
+        faction: 2
+        lineage: 3
+        bodyType: 1
+        build: 0
+        muscle: 0
+        parts: 4504t
+        palette: 13
+        skinTone: 0
+        colors:
+        - channel: 3
+          color:
+            serializedVersion: 2
+            rgba: 4278204671
+        - channel: 5
+          color:
+            serializedVersion: 2
+            rgba: 4290422943
+        scars: 0
+        eyeliner: 0
+        grime: 0
+    skinTones: []
+    channels: 0503y

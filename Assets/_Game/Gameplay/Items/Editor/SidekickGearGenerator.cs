@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using KryticalNova.Factions;
 using KryticalNova.Items;
+using KryticalNova.Items.Visuals;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,6 +19,7 @@ namespace KryticalNova.EditorTools
     {
         public const string ItemsRoot = "Assets/_Game/Gameplay/Items/Data/Assets";
         public const string CatalogPath = ItemsRoot + "/ItemCatalog.asset";
+        public const string DictionaryPath = ItemsRoot + "/GearDictionary.asset";
         public const string WeaponPrefabFolder = ItemsRoot + "/Prefabs/Weapons";
         public const string OutfitFolder = "Assets/Synty/SidekickCharacters/Resources/Meshes/Outfits/ScifiSoldiers";
         public const string HumanFolder = "Assets/Synty/SidekickCharacters/Resources/Meshes/Species/Humans";
@@ -80,32 +83,10 @@ namespace KryticalNova.EditorTools
             try { EnsureReadable(OutfitFolder); EnsureReadable(HumanFolder); }
             finally { AssetDatabase.StopAssetEditing(); }
 
-            // Outfit parts grouped by outfit number.
-            var outfits = new SortedDictionary<int, List<(BodyRegion region, string path)>>();
-            foreach (var path in Directory.GetFiles(OutfitFolder, "*.fbx").Select(p => p.Replace('\\', '/')))
-            {
-                var m = PartName.Match(Path.GetFileNameWithoutExtension(path));
-                if (!m.Success) continue;
-                int vv = int.Parse(m.Groups["vv"].Value);
-                var region = (BodyRegion)int.Parse(m.Groups["nn"].Value);
-                if (!outfits.TryGetValue(vv, out var list)) outfits[vv] = list = new List<(BodyRegion, string)>();
-                list.Add((region, path));
-            }
-
-            foreach (var kv in outfits)
-            {
-                int vv = kv.Key;
-                string label = vv - 1 < OutfitNames.Length ? OutfitNames[vv - 1] : $"Outfit {vv:00}";
-                var rarity = (ItemRarity)Mathf.Clamp((vv - 1) / 2, 0, 4);
-                all.AddIfNotNull(OutfitItem(EquipSlot.Armor, ArmorBase, vv, $"Armor_SOLD_{vv:00}", $"{label} Armor", rarity, kv.Value,
-                    "Body armour: torso, arms, hips and legs.", created));
-                all.AddIfNotNull(OutfitItem(EquipSlot.Gloves, GlovesBase, vv, $"Gloves_SOLD_{vv:00}", $"{label} Gauntlets", rarity, kv.Value,
-                    "Hand protection.", created));
-                all.AddIfNotNull(OutfitItem(EquipSlot.Boots, BootsBase, vv, $"Boots_SOLD_{vv:00}", $"{label} Boots", rarity, kv.Value,
-                    "Sturdy footwear.", created));
-                all.AddIfNotNull(OutfitItem(EquipSlot.Cape, CapeBase, vv, $"Cape_SOLD_{vv:00}", $"{label} Cape", rarity, kv.Value,
-                    "Worn across the back.", created));
-            }
+            // Gear pieces for every pack, built from the part catalog, plus the dictionary that says who may use them.
+            var partCatalog = AssetDatabase.LoadAssetAtPath<SidekickPartCatalog>(SidekickPartCatalogBaker.CatalogPath);
+            if (partCatalog == null || partCatalog.Parts.Count == 0) partCatalog = SidekickPartCatalogBaker.Bake();
+            var rows = GenerateGear(partCatalog, all, created);
 
             foreach (var seed in Weapons) all.AddIfNotNull(WeaponItem(seed, created));
 
@@ -129,27 +110,227 @@ namespace KryticalNova.EditorTools
             }
 
             BuildCatalog(all);
+            BuildDictionary(partCatalog, rows);
             AssetDatabase.SaveAssets();
-            Debug.Log($"[Items] {all.Count} items in catalog ({created.Count} new). Next: Krytical Nova/Items/2. Capture Item Icons.");
+            Debug.Log($"[Items] {all.Count} items in catalog ({created.Count} new), {rows.Count} gear pieces in the dictionary. " +
+                      "Next: Krytical Nova/Items/2. Capture Item Icons.");
         }
+
+        // ---------------------------------------------------------------- gear from every pack
+
+        private sealed class GearPack
+        {
+            public string code;        // pack code in part names
+            public string tag;         // short token used in asset names
+            public ushort idOffset;    // added to the slot's ID base; one block of 100 per pack, never reused
+            public FactionMask factions;
+            public BodyFit bodies;
+            public bool helmets;       // armor carries the head attachment with the same variant number
+            public string[] sets;      // set name per variant
+            public string armor, gloves, boots, cape;
+        }
+
+        // Default owners. To let another faction use a piece, edit the row in GearDictionary.asset: this table only
+        // seeds new rows, hand-edited faction, body and rarity values are kept.
+        private static readonly GearPack[] Packs =
+        {
+            new GearPack
+            {
+                code = "SCFI_SOLD", tag = "SOLD", idOffset = 0, factions = FactionMask.Hegemony, bodies = BodyFit.Humanoid,
+                sets = OutfitNames, armor = "Armor", gloves = "Gauntlets", boots = "Boots", cape = "Cape"
+            },
+            new GearPack
+            {
+                code = "SCFI_CIVL", tag = "CIVL", idOffset = 100, factions = FactionMask.Hegemony, bodies = BodyFit.Humanoid,
+                sets = new[] { "Commuter", "Technician", "Courier", "Analyst", "Executive", "Director", "Magnate" },
+                armor = "Outfit", gloves = "Gloves", boots = "Shoes", cape = "Pack"
+            },
+            new GearPack
+            {
+                code = "SCFI_ROBO", tag = "ROBO", idOffset = 200, factions = FactionMask.Null, bodies = BodyFit.Robot,
+                sets = new[] { "Servitor", "Hauler", "Welder", "Sentry", "Enforcer", "Ravager", "Juggernaut", "Overseer", "Annihilator", "Prime" },
+                armor = "Plating", gloves = "Servos", boots = "Stabilizers", cape = "Back Unit"
+            },
+            new GearPack
+            {
+                code = "FANT_SKTN", tag = "SKTN", idOffset = 300, factions = FactionMask.Null, bodies = BodyFit.Skeleton, helmets = true,
+                sets = new[] { "Graveworn", "Boneguard", "Cryptwarden", "Deathsworn", "Dreadknight", "Lichbound", "Revenant" },
+                armor = "Armor", gloves = "Gauntlets", boots = "Greaves", cape = "Shroud"
+            },
+            new GearPack
+            {
+                code = "VIKG_WARR", tag = "VIKG", idOffset = 400, factions = FactionMask.Covenant, bodies = BodyFit.Humanoid,
+                sets = new[] { "Thrall", "Huscarl", "Reaver", "Berserker", "Jarl", "Warlord" },
+                armor = "Armor", gloves = "Bracers", boots = "Boots", cape = "Cloak"
+            },
+            new GearPack
+            {
+                code = "ELVN_WARR", tag = "ELVN", idOffset = 500, factions = FactionMask.Covenant, bodies = BodyFit.Humanoid,
+                sets = new[] { "Scout", "Warden", "Ranger", "Bladesinger", "Highguard", "Sunlord" },
+                armor = "Armor", gloves = "Gloves", boots = "Boots", cape = "Cloak"
+            },
+        };
+
+        private static readonly BodyRegion[] ArmorBody =
+        {
+            BodyRegion.Torso, BodyRegion.ArmUpperLeft, BodyRegion.ArmUpperRight, BodyRegion.ArmLowerLeft,
+            BodyRegion.ArmLowerRight, BodyRegion.Hips, BodyRegion.LegLeft, BodyRegion.LegRight
+        };
+        private static readonly BodyRegion[] ArmorAttachments =
+        {
+            BodyRegion.AttachmentHipsFront, BodyRegion.AttachmentHipsBack, BodyRegion.AttachmentHipsLeft,
+            BodyRegion.AttachmentHipsRight, BodyRegion.AttachmentShoulderLeft, BodyRegion.AttachmentShoulderRight,
+            BodyRegion.AttachmentElbowLeft, BodyRegion.AttachmentElbowRight, BodyRegion.AttachmentKneeLeft,
+            BodyRegion.AttachmentKneeRight
+        };
+
+        private static List<GearDictionary.Entry> GenerateGear(SidekickPartCatalog catalog, List<ItemDefinition> all, List<string> created)
+        {
+            var rows = new List<GearDictionary.Entry>();
+            foreach (var pack in Packs)
+            {
+                // Variant numbers that exist per region in this pack.
+                var variants = new Dictionary<BodyRegion, List<byte>>();
+                foreach (var part in catalog.Parts)
+                {
+                    if (part.pack != pack.code) continue;
+                    if (!variants.TryGetValue(part.region, out var list)) variants[part.region] = list = new List<byte>();
+                    if (!list.Contains(part.variant)) list.Add(part.variant);
+                }
+                foreach (var list in variants.Values) list.Sort();
+
+                AddSlot(pack, EquipSlot.Armor, ArmorBase, BodyRegion.Torso, pack.armor, "Worn on the body: torso, arms, hips and legs.");
+                AddSlot(pack, EquipSlot.Gloves, GlovesBase, BodyRegion.HandLeft, pack.gloves, "Worn on the hands.");
+                AddSlot(pack, EquipSlot.Boots, BootsBase, BodyRegion.FootLeft, pack.boots, "Worn on the feet.");
+                AddSlot(pack, EquipSlot.Cape, CapeBase, BodyRegion.AttachmentBack, pack.cape, "Worn across the back.");
+
+                void AddSlot(GearPack p, EquipSlot slot, ushort idBase, BodyRegion keyRegion, string noun, string description)
+                {
+                    if (!variants.TryGetValue(keyRegion, out var slotVariants)) return;
+                    for (int i = 0; i < slotVariants.Count; i++)
+                    {
+                        byte vv = slotVariants[i];
+                        var ids = PartIdsFor(catalog, p, slot, vv, variants);
+                        if (ids.Count == 0) continue;
+                        string set = vv - 1 < p.sets.Length ? p.sets[vv - 1] : $"Mark {vv:00}";
+                        // Spread the pack's variants over the five rarities, lowest variant = Common.
+                        var rarity = (ItemRarity)Mathf.Clamp(i * 5 / slotVariants.Count, 0, 4);
+                        var def = Simple(slot, (ushort)(idBase + p.idOffset + vv), $"{AssetPrefix(slot)}_{p.tag}_{vv:00}",
+                            $"{set} {noun}", rarity, description, created, out _);
+                        // Part data is derived from the catalog, so it is always refreshed (names and stats are left alone).
+                        def.partCatalog = catalog;
+                        def.appearancePartIds = ids.ToArray();
+                        def.appearanceParts = new List<SidekickPartRef>(); // no direct mesh references: loaded on demand
+                        EditorUtility.SetDirty(def);
+                        all.Add(def);
+                        rows.Add(new GearDictionary.Entry
+                        {
+                            itemId = def.itemId, name = def.displayName, slot = slot, rarity = def.rarity,
+                            factions = p.factions, bodies = p.bodies, pack = p.code, variant = vv, partIds = ids.ToArray()
+                        });
+                    }
+                }
+            }
+            return rows;
+        }
+
+        private static List<ushort> PartIdsFor(SidekickPartCatalog catalog, GearPack pack, EquipSlot slot, byte vv,
+            Dictionary<BodyRegion, List<byte>> variants)
+        {
+            var ids = new List<ushort>();
+            void Exact(BodyRegion region)
+            {
+                if (catalog.TryFind(pack.code, region, vv, out var part)) ids.Add(part.id);
+            }
+            // A pack can have fewer arm or leg variants than torsos. Reuse one it does have, so a set never shows
+            // the wearer's basic outfit poking through its own armor.
+            void Nearest(BodyRegion region)
+            {
+                if (!variants.TryGetValue(region, out var list) || list.Count == 0) return;
+                byte pick = list.Contains(vv) ? vv : list[(vv - 1) % list.Count];
+                if (catalog.TryFind(pack.code, region, pick, out var part)) ids.Add(part.id);
+            }
+
+            switch (slot)
+            {
+                case EquipSlot.Armor:
+                    foreach (var region in ArmorBody) Nearest(region);
+                    foreach (var region in ArmorAttachments) Exact(region);
+                    if (pack.helmets) Exact(BodyRegion.AttachmentHead);
+                    break;
+                case EquipSlot.Gloves:
+                    Exact(BodyRegion.HandLeft);
+                    Exact(BodyRegion.HandRight);
+                    break;
+                case EquipSlot.Boots:
+                    Exact(BodyRegion.FootLeft);
+                    Exact(BodyRegion.FootRight);
+                    break;
+                case EquipSlot.Cape:
+                    Exact(BodyRegion.AttachmentBack);
+                    break;
+            }
+            return ids;
+        }
+
+        private static void BuildDictionary(SidekickPartCatalog catalog, List<GearDictionary.Entry> rows)
+        {
+            var dictionary = AssetDatabase.LoadAssetAtPath<GearDictionary>(DictionaryPath);
+            if (dictionary == null)
+            {
+                dictionary = ScriptableObject.CreateInstance<GearDictionary>();
+                AssetDatabase.CreateAsset(dictionary, DictionaryPath);
+            }
+
+            // The dictionary is where faction, body and rarity are edited: keep what is already there.
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                if (dictionary.TryGet(row.itemId, out var existing))
+                {
+                    row.factions = existing.factions;
+                    row.bodies = existing.bodies;
+                    row.rarity = existing.rarity;
+                    rows[i] = row;
+                }
+                var def = AssetDatabase.LoadAssetAtPath<ItemDefinition>($"{ItemsRoot}/{FolderFor(row.slot)}/{AssetNameOf(row)}.asset");
+                if (def != null && def.rarity != row.rarity)
+                {
+                    def.rarity = row.rarity;
+                    EditorUtility.SetDirty(def);
+                }
+            }
+            rows.Sort((a, b) => a.itemId.CompareTo(b.itemId));
+            dictionary.SetContents(catalog, rows);
+            EditorUtility.SetDirty(dictionary);
+        }
+
+        private static string AssetNameOf(GearDictionary.Entry row)
+        {
+            foreach (var pack in Packs)
+                if (pack.code == row.pack) return $"{AssetPrefix(row.slot)}_{pack.tag}_{row.variant:00}";
+            return string.Empty;
+        }
+
+        // Asset name prefix per slot (the existing soldier items are Armor_, Gloves_, Boots_, Cape_).
+        private static string AssetPrefix(EquipSlot slot)
+        {
+            switch (slot)
+            {
+                case EquipSlot.Gloves: return "Gloves";
+                case EquipSlot.Boots: return "Boots";
+                case EquipSlot.Cape: return "Cape";
+                default: return "Armor";
+            }
+        }
+
+        public static bool IsDictionaryGear(ItemDefinition item) =>
+            item != null && (item.equipSlot == EquipSlot.Armor || item.equipSlot == EquipSlot.Gloves
+                             || item.equipSlot == EquipSlot.Boots || item.equipSlot == EquipSlot.Cape);
 
         private static void AddIfNotNull(this List<ItemDefinition> list, ItemDefinition def)
         {
             if (def != null) list.Add(def);
-        }
-
-        private static ItemDefinition OutfitItem(EquipSlot slot, ushort idBase, int vv, string asset, string displayName,
-            ItemRarity rarity, List<(BodyRegion region, string path)> parts, string description, List<string> created)
-        {
-            var regions = EquipSlots.RegionsFor(slot);
-            var mine = parts.Where(p => regions.Contains(p.region)).OrderBy(p => p.region).ToList();
-            if (mine.Count == 0) return null;
-
-            var def = Simple(slot, (ushort)(idBase + vv), asset, displayName, rarity, description, created, out bool isNew);
-            // Part data is derived from the FBXs, so it is always refreshed (names/stats/rarity are left alone).
-            def.appearanceParts = mine.Select(p => LoadPart(p.path, p.region)).Where(p => p.IsValid).ToList();
-            EditorUtility.SetDirty(def);
-            return def;
         }
 
         public static SidekickPartRef LoadPart(string fbxPath, BodyRegion region)
@@ -161,31 +342,7 @@ namespace KryticalNova.EditorTools
                 Debug.LogWarning($"[Items] No SkinnedMeshRenderer in {fbxPath}");
                 return default;
             }
-            // Record every dangle-bone chain so a pruned character skeleton can grow the bones on demand.
-            var extras = new List<ExtraBone>();
-            var seen = new HashSet<string>();
-            foreach (var b in smr.bones)
-            {
-                var chain = new List<Transform>();
-                for (var t = b; t != null && t.name.Contains("_dyn_"); t = t.parent) chain.Add(t);
-                for (int i = chain.Count - 1; i >= 0; i--)
-                {
-                    var t = chain[i];
-                    if (!seen.Add(t.name) || t.parent == null) continue;
-                    extras.Add(new ExtraBone
-                    {
-                        name = t.name, parent = t.parent.name,
-                        localPosition = t.localPosition, localRotation = t.localRotation, localScale = t.localScale
-                    });
-                }
-            }
-            return new SidekickPartRef
-            {
-                region = region,
-                mesh = smr.sharedMesh,
-                boneNames = smr.bones.Select(b => b != null ? b.name : "root").ToArray(),
-                extraBones = extras.ToArray()
-            };
+            return KryticalNova.Items.Visuals.SidekickPartRefs.FromRenderer(smr, region);
         }
 
         public static bool TryParsePart(string partName, out BodyRegion region)
@@ -351,15 +508,17 @@ namespace KryticalNova.EditorTools
             var merged = catalog.Items.Where(i => i != null).Concat(items).Distinct().OrderBy(i => i.itemId).ToList();
 
             ItemDefinition ById(ushort id) => merged.FirstOrDefault(i => i.itemId == id);
-            var equipped = catalog.StarterEquipped.Count > 0
-                ? catalog.StarterEquipped.ToList()
-                : new[] { ById(WeaponBase + 1), ById(ArmorBase + 1), ById(GlovesBase + 1), ById(BootsBase + 1), ById(CapeBase + 1) }
-                    .Where(i => i != null).ToList();
-            var bag = catalog.StarterBag.Count > 0
-                ? catalog.StarterBag.ToList()
-                : new ushort[] { ArmorBase + 3, ArmorBase + 7, GlovesBase + 5, BootsBase + 8, CapeBase + 4, WeaponBase + 2,
-                        WeaponBase + 6, RingBase + 3, AmuletBase + 3, PetBase + 1 }
-                    .Select(ById).Where(i => i != null).Select(i => new StarterItem { item = i, count = 1 }).ToList();
+            // Nobody starts wearing gear: a new character shows its lineage's basic outfit, and the gear it is
+            // handed comes from its own pack (PlayerInventory), not from these shared lists.
+            var equipped = (catalog.StarterEquipped.Count > 0
+                    ? catalog.StarterEquipped.ToList()
+                    : new List<ItemDefinition> { ById(WeaponBase + 1) })
+                .Where(i => i != null && !IsDictionaryGear(i)).ToList();
+            var bag = (catalog.StarterBag.Count > 0
+                    ? catalog.StarterBag.ToList()
+                    : new ushort[] { WeaponBase + 2, WeaponBase + 6, RingBase + 3, AmuletBase + 3, PetBase + 1 }
+                        .Select(ById).Where(i => i != null).Select(i => new StarterItem { item = i, count = 1 }).ToList())
+                .Where(s => s.item != null && !IsDictionaryGear(s.item)).ToList();
 
             catalog.SetContents(merged, equipped, bag);
             EditorUtility.SetDirty(catalog);

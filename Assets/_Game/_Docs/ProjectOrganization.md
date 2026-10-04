@@ -69,7 +69,10 @@ _Game/
 │                          (future: Architecture/ Events/ Services/ SaveSystem/ Pooling/ Utilities/ Extensions/)
 ├── Gameplay/
 │   ├── Combat/            Runtime/
-│   ├── Items/             Runtime/ (+Visuals/)  Data/Assets/  Editor/  Tests/Editor/
+│   ├── Factions/          Runtime/ (ids, rules)  Data/ + Data/Assets/ (the three factions, catalog)  Editor/
+│   ├── CharacterCreation/ Runtime/ (recipe, look, roster, save, names)  Data/ + Data/Assets/ (lineages, palettes,
+│   │                      database)  Editor/ (bakers)  Tests/Editor/
+│   ├── Items/             Runtime/ (+Visuals/)  Data/Assets/ (items, part catalog, gear dictionary)  Editor/  Tests/Editor/
 │   ├── NPC/               Runtime/  Data/Assets/
 │   ├── Player/            Runtime/  Prefabs/ (Player.prefab = the networked gameplay player)
 │   ├── Progression/       Runtime/  Data/ (SO classes)  Data/Assets/ (SO instances)  Editor/
@@ -97,14 +100,19 @@ _Game/
 ├── GameFeel/              Runtime/ (KryticalNova.GameFeel, client-only)  Editor/ (GameFeelBuilder)  Prefabs/ (PFX_GameFeel)
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
 ├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
-├── UI/                    Runtime/ (KryticalNova.UI)  Editor/  Common/  HUD/  Inventory/  NPC/  Shaders/
-│                          (future: Menus/ Skills/ Character/ World/ Settings/)
+├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets)  Editor/ (Menus/ = front-end
+│                          scene builder, own assembly)  Common/  HUD/  Inventory/  NPC/  Shaders/
+│                          Menus/ (Materials/, KeyGlyphs.asset: assets the front-end scenes use)
+│                          (future: Skills/ Character/ World/ Settings/)
 ├── VFX/                   Gameplay/  GameFeel/  Environment/{City,Portals,Vehicles,Weather}/  Materials/ (shared FX mats)
 ├── Input/Actions/         InputSystem_Actions.inputactions (project-wide actions)
-├── Scenes/                World/Towns/ (Zone01_StarterTown + its lighting/APV/navmesh data)  Development/
-│                          (future: Bootstrap/ MainMenu/ World/Overworld/ Dungeons/ Cinematics/)
+├── Scenes/                MainMenu/ (Title, FactionSelect, CharacterCreator, CharacterSelect, Loading: generated, rebuild
+│                          with Krytical Nova ▸ Front End ▸ 1. Build Front-End Scenes; never edit by hand)
+│                          World/Towns/ (Zone01_StarterTown + its lighting/APV/navmesh data)  Development/
+│                          (future: Bootstrap/ World/Overworld/ Dungeons/ Cinematics/)
 ├── Settings/              Project-level config assets for packages (Animancer Settings)
-├── Tools/                 Editor/ (KryticalNova.Editor.asmdef, Organization/, GM/, Hierarchy/ = vHierarchy data)  Debug/ (QC commands)
+├── Tools/                 Editor/ (KryticalNova.Editor.asmdef, Organization/, GM/, Build/ = build scene order,
+│                          Hierarchy/ = vHierarchy data)  Debug/ (QC commands)
 │                          (future: Profiling/ Importers/)
 └── (future) Audio/{Music,SFX,Ambience,Voice}/  Art/ (shared-only art)  Tests/ (cross-system tests)
 ```
@@ -140,14 +148,16 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 
 | Assembly                          | Defined in                                     | Covers (via .asmref)                                                     |
 |-----------------------------------|------------------------------------------------|---------------------------------------------------------------------------|
-| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression}/Runtime, Progression/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
+| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation}/Runtime, {Progression,Factions,CharacterCreation}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime. Excluded from dedicated server (`!UNITY_SERVER`)      |
 | `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
 | `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
-| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel) |
+| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel) |
 | `KryticalNova.Editor.GM`          | `Tools/Editor/GM/`                             | GM tools window                                                           |
+| `KryticalNova.Editor.Menus`       | `UI/Editor/Menus/`                             | Front-end scene builder. Depends on Editor, UI, Runtime, uGUI, TextMesh Pro. `!UNITY_SERVER` |
 | `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
+| `KryticalNova.CharacterCreation.Tests.Editor` | `Gameplay/CharacterCreation/Tests/Editor/` | EditMode tests (names, roster, recipes, creator edits, gear rules) |
 
 **Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
 **New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`
@@ -255,6 +265,29 @@ Menu **Krytical Nova ▸ Project**:
 | Validate Project Organization                | Audits root entries, loose files, asset names, script folders, assembly coverage, `UnityEditor` usage in runtime code |
 
 | Organize Scene Hierarchy                     | Files a zone scene's loose root objects under `--- X ---` headers and colours/icons every header with vHierarchy 2 |
+
+Menu **Krytical Nova ▸ Characters** (run in order, or use *Bake Everything*):
+
+| Item                                         | What it does                                                                           |
+|----------------------------------------------|----------------------------------------------------------------------------------------|
+| 1. Bake Sidekick Part Catalog                | Indexes every Sidekick part on disk into `SidekickPartCatalog.asset` (stable ids, loaded on demand) |
+| 2. Build Faction Assets                      | The three faction assets and the catalog. Keeps text and colours tuned in the Inspector |
+| 3. Bake Character Data                       | Lineages, palettes, ready-made faces and colour channels into `CharacterCreationDatabase.asset` |
+| 4. Set Up Player Identity Components         | Adds `PlayerIdentity` / `CharacterLook` to the player prefabs                          |
+| Clear Saved Characters                       | Deletes the three saved character slots (PlayerPrefs)                                  |
+
+Menu **Krytical Nova ▸ Front End**:
+
+| Item                                         | What it does                                                                           |
+|----------------------------------------------|----------------------------------------------------------------------------------------|
+| 1. Build Front-End Scenes                    | Regenerates the five `Scenes/MainMenu/` scenes from the Synty Fantasy Menus / Fantasy Screens prefabs and puts them first in the build order |
+| Play From Title Screen (toggle)              | On: Play starts at the Title like a build. Off (default): Play runs the open scene, so the zone still starts directly |
+
+Menu **Krytical Nova ▸ UI**:
+
+| Item                                         | What it does                                                                           |
+|----------------------------------------------|----------------------------------------------------------------------------------------|
+| Build Faction Skins                          | Regenerates `UI/Common/KryticalSkin_Null.uss` and `KryticalSkin_Covenant.uss` from the Hegemony sheets (the base layout). Run after editing a base sheet. Never edit the base sheets for one faction |
 
 ### Scene hierarchy
 

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04a4f5db52526814d9dea30988513ff4, type: 3}
+  m_Name: KeyGlyphs
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.Menus.KeyGlyphSet
+  glyphs:
+  - key: 2
+    onKeycap: {fileID: 21300000, guid: 8eff536e73ba2ae449dbb2baa3463bf1, type: 3}
+    standalone: {fileID: 21300000, guid: 969c9f23a4d23524e855d7c7844a9188, type: 3}
+  - key: 77
+    onKeycap: {fileID: 21300000, guid: 8eff536e73ba2ae449dbb2baa3463bf1, type: 3}
+    standalone: {fileID: 21300000, guid: 969c9f23a4d23524e855d7c7844a9188, type: 3}
+  - key: 1
+    onKeycap: {fileID: 21300000, guid: 7072f3358fdb9b54daf7e3e18e1c36d5, type: 3}
+    standalone: {fileID: 21300000, guid: 59e53768711c5234e913a2ef11f9cb9a, type: 3}
+  - key: 3
+    onKeycap: {fileID: 21300000, guid: d33b775a595011e469b6dde621a1309b, type: 3}
+    standalone: {fileID: 21300000, guid: 45942f5cb992a2a4193302fd5165d099, type: 3}
+  - key: 65
+    onKeycap: {fileID: 21300000, guid: d3ca901a7e6d27a4b91fadff96d2ef26, type: 3}
+    standalone: {fileID: 21300000, guid: bf064c3600de52249a9612f7d58a44c8, type: 3}
+  - key: 63
+    onKeycap: {fileID: 21300000, guid: 1981e49fd7f976542ba50bc3e5542223, type: 3}
+    standalone: {fileID: 21300000, guid: 4eafc3f009ecd434190d0f330b297c4c, type: 3}
+  - key: 64
+    onKeycap: {fileID: 21300000, guid: 76420674bf03fb94c82f0ca1e3789857, type: 3}
+    standalone: {fileID: 21300000, guid: 760ee90b80110f2458065ac85dfe838b, type: 3}
+  - key: 61
+    onKeycap: {fileID: 21300000, guid: ddaeb2186c724d84f8751b90def5ad04, type: 3}
+    standalone: {fileID: 21300000, guid: 463d8e2454e87c448b155837e09e7325, type: 3}
+  - key: 62
+    onKeycap: {fileID: 21300000, guid: 2ef9a18df52fada488557ffd51a94d1c, type: 3}
+    standalone: {fileID: 21300000, guid: fefdaf05751bf104eb59b0c2941fd580, type: 3}
+  mouseLeft: {fileID: 21300000, guid: a780adaa0a1955544844e37c0c5fbbf5, type: 3}
+  mouseRight: {fileID: 21300000, guid: 514e6027260dd88429027de05d4a015d, type: 3}
+  mouseMiddle: {fileID: 21300000, guid: d5f3b4681dc0a00459a49a6ae0b4e8a5, type: 3}

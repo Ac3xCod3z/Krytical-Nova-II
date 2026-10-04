@@ -323,8 +323,9 @@ namespace KryticalNova.Networking
         /// <summary>
         /// Editor instances cloned for multiplayer testing (Multiplayer Play Mode virtual players) share this
         /// machine's sign-in cache. Each gets its own authentication profile, so they are different players.
+        /// Also used to keep each clone's saved characters apart. Null in the main Editor and in builds.
         /// </summary>
-        private static string EditorCloneProfile()
+        public static string EditorCloneProfile()
         {
 #if UNITY_EDITOR
             const string cloneFolder = "/Library/VP/";

@@ -1,0 +1,589 @@
+using System;
+using System.Collections.Generic;
+using KryticalNova.CharacterCreation;
+using KryticalNova.Factions;
+using KryticalNova.Items;
+using TMPro;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+
+namespace KryticalNova.UI.Menus
+{
+    /// <summary>
+    /// The character creator. The faction was chosen on the screen before; here the player picks a lineage and body
+    /// type (Origin), shapes the body, chooses the head and its colours, and names the character. The body's outfit
+    /// is not chosen: every new character wears its lineage's basic outfit and earns gear in the game.
+    /// The live character on the right is the same doll, orbit and lighting as character select.
+    /// Built on Synty's Fantasy Screens character creator; the scene builder prepares that screen and wires the
+    /// pieces below.
+    /// </summary>
+    [DisallowMultipleComponent]
+    public sealed class CharacterCreatorController : MonoBehaviour
+    {
+        private enum Tab
+        {
+            Origin,
+            Body,
+            Head,
+            Colour,
+            Finalise
+        }
+
+        // Edits that arrive as a stream (a slider drag) are one undo step; everything else is one step per click.
+        private const int DiscreteEdit = 0, BuildSlider = 1, MuscleSlider = 2;
+        private const int MaxHistory = 40;
+
+        [Tooltip("The character creator screen instance (Screen_FantasyScreens_CharacterCreator_01).")]
+        [SerializeField] private Transform screen;
+        [SerializeField] private CharacterCreationDatabase database;
+        [SerializeField] private CharacterShowroom showroom;
+        [SerializeField] private PortraitStudio portraits;
+        [SerializeField] private MenuHotkeys hotkeys;
+
+        [Header("Tabs, in order: Origin, Body, Head, Colour, Finalise")]
+        [SerializeField] private MenuRow[] tabButtons = Array.Empty<MenuRow>();
+        [SerializeField] private GameObject originSection;
+        [Tooltip("The list of option rows shared by the Body and Head tabs.")]
+        [SerializeField] private GameObject optionsSection;
+        [SerializeField] private GameObject colourSection;
+        [SerializeField] private GameObject finaliseSection;
+
+        [Header("Origin: one tile per lineage and body type")]
+        [SerializeField] private MenuRow[] originTiles = Array.Empty<MenuRow>();
+        [SerializeField] private RawImage[] originPortraits = Array.Empty<RawImage>();
+
+        [Header("Body and Head")]
+        [SerializeField] private MenuOptionRow[] optionRows = Array.Empty<MenuOptionRow>();
+        [SerializeField] private MenuSliderRow[] sliderRows = Array.Empty<MenuSliderRow>();
+
+        [Header("Colour")]
+        [SerializeField] private MenuSwatchGroup[] swatchGroups = Array.Empty<MenuSwatchGroup>();
+
+        [Header("Finalise")]
+        [SerializeField] private TMP_InputField nameInput;
+        [SerializeField] private MenuOptionRow nameSuggestion;
+        [SerializeField] private TMP_Text nameMessage;
+        [SerializeField] private Button finaliseButton;
+        [SerializeField] private Color nameOkColor = new Color(0.56f, 0.89f, 0.62f);
+        [SerializeField] private Color nameProblemColor = new Color(1f, 0.79f, 0.24f);
+
+        private struct Origin
+        {
+            public LineageDefinition lineage;
+            public BodyType bodyType;
+        }
+
+        private readonly List<Origin> origins = new List<Origin>();
+        private readonly List<CharacterRecipe> history = new List<CharacterRecipe>();
+        private readonly List<Color32> skinSwatches = new List<Color32>();
+        private readonly System.Random random = new System.Random();
+        private CharacterRoster roster;
+        private FactionDefinition faction;
+        private CharacterRecipe recipe;
+        private LineageDefinition lineage;
+        private LineageDefinition.Setup setup;
+        private Transform nextPrompt;
+        private Tab tab;
+        private int slot = -1;
+        private int lastEditSource;
+        private string suggestion;
+        private string pendingName;
+        private bool nameValid;
+        private bool leaving;
+
+        private void Start()
+        {
+            // Pressing Play in this scene (no faction chosen) builds a Hegemony character, for quick iteration.
+            var factionId = FrontEnd.PendingFaction != FactionId.None ? FrontEnd.PendingFaction : FactionId.Hegemony;
+            faction = database != null && database.Factions != null ? database.Factions.Get(factionId) : null;
+            roster = CharacterSession.Store.Load();
+            slot = FrontEnd.PendingSlot >= 0 && !roster.IsUsed(FrontEnd.PendingSlot) ? FrontEnd.PendingSlot : roster.FirstFree;
+
+            var lineages = new List<LineageDefinition>();
+            if (database != null) database.GetLineages(factionId, lineages);
+            foreach (var l in lineages)
+            {
+                origins.Add(new Origin { lineage = l, bodyType = BodyType.Masculine });
+                origins.Add(new Origin { lineage = l, bodyType = BodyType.Feminine });
+            }
+            if (origins.Count == 0 || slot < 0)
+            {
+                Debug.LogWarning(slot < 0 ? "[Menus] Every character slot is used; nothing to create." : $"[Menus] No lineages for {factionId}.", this);
+                leaving = true;
+                FrontEnd.Go(FrontEnd.CharacterSelectScene);
+                return;
+            }
+
+            BindTabs();
+            BindOrigin();
+            BindFinalise();
+            BindPrompts();
+            Apply(RecipeEdit.Default(origins[0].lineage, origins[0].bodyType));
+            ShowTab(Tab.Origin);
+            RenderPortraits();
+        }
+
+        // ---------------- Tabs ----------------
+
+        private void BindTabs()
+        {
+            for (int i = 0; i < tabButtons.Length; i++)
+            {
+                if (tabButtons[i] == null) continue;
+                var target = (Tab)i;
+                tabButtons[i].Clicked += () => ShowTab(target);
+            }
+        }
+
+        private void ShowTab(Tab next)
+        {
+            tab = next;
+            for (int i = 0; i < tabButtons.Length; i++)
+                if (tabButtons[i] != null) tabButtons[i].SetSelected(i == (int)next);
+            SetActive(originSection, next == Tab.Origin);
+            SetActive(optionsSection, next == Tab.Body || next == Tab.Head);
+            SetActive(colourSection, next == Tab.Colour);
+            SetActive(finaliseSection, next == Tab.Finalise);
+            RefreshTab();
+            if (showroom != null) showroom.Focus(next == Tab.Head ? 0.8f : next == Tab.Colour ? 0.45f : 0f);
+            if (nextPrompt != null) MenuUi.SetText(nextPrompt, "Label_Action", next == Tab.Finalise ? "Create Character" : "Next");
+            if (next == Tab.Finalise && nameInput != null)
+            {
+                nameInput.Select();
+                nameInput.ActivateInputField();
+            }
+        }
+
+        /// <summary>Rebuild the visible tab from the recipe (after any change, undo or randomise).</summary>
+        private void RefreshTab()
+        {
+            switch (tab)
+            {
+                case Tab.Origin: RefreshOrigin(); break;
+                case Tab.Body: ShowBody(); break;
+                case Tab.Head: ShowHead(); break;
+                case Tab.Colour: ShowColours(); break;
+                case Tab.Finalise: RefreshName(); break;
+            }
+        }
+
+        private void StepTab(int direction)
+        {
+            int next = Mathf.Clamp((int)tab + direction, 0, (int)Tab.Finalise);
+            if (next != (int)tab) ShowTab((Tab)next);
+        }
+
+        // ---------------- Origin ----------------
+
+        private void BindOrigin()
+        {
+            for (int i = 0; i < originTiles.Length; i++)
+            {
+                var tile = originTiles[i];
+                if (tile == null) continue;
+                bool used = i < origins.Count;
+                tile.gameObject.SetActive(used);
+                if (!used) continue;
+                int index = i;
+                tile.Clicked += () => ChooseOrigin(index);
+            }
+            if (originSection != null) MenuUi.SetText(originSection.transform, "Label_Header", faction != null ? $"{faction.displayName} Origins" : "Origin");
+        }
+
+        private void ChooseOrigin(int index)
+        {
+            var origin = origins[index];
+            if (origin.lineage == lineage && origin.bodyType == recipe.bodyType) return;
+            Record(DiscreteEdit);
+            var next = RecipeEdit.Default(origin.lineage, origin.bodyType);
+            next.build = recipe.build; // the body shape carries over to the new origin
+            next.muscle = recipe.muscle;
+            Apply(next);
+        }
+
+        private void RefreshOrigin()
+        {
+            int current = origins.FindIndex(o => o.lineage == lineage && o.bodyType == recipe.bodyType);
+            for (int i = 0; i < originTiles.Length; i++)
+                if (originTiles[i] != null) originTiles[i].SetSelected(i == current);
+            if (originSection == null || lineage == null) return;
+
+            var info = MenuUi.Find(originSection.transform, "Description");
+            MenuUi.SetText(info, "Label_Header", $"{lineage.displayName}, {(recipe.bodyType == BodyType.Feminine ? "Feminine" : "Masculine")}");
+            MenuUi.SetText(info, "Label_Description", lineage.description);
+            for (int i = 0; i < 3; i++)
+            {
+                var chip = MenuUi.Find(originSection.transform, $"Trait_0{i + 1}");
+                if (chip == null) continue;
+                bool used = lineage.traits != null && i < lineage.traits.Length;
+                chip.gameObject.SetActive(used);
+                if (used) MenuUi.SetText(chip, "Label_Stat", lineage.traits[i]);
+            }
+        }
+
+        private void RenderPortraits()
+        {
+            if (portraits == null) return;
+            var looks = new List<CharacterRecipe>(origins.Count);
+            foreach (var origin in origins) looks.Add(RecipeEdit.Default(origin.lineage, origin.bodyType));
+            Color accent = faction != null ? faction.accentColor : Color.gray;
+            Color.RGBToHSV(accent, out float h, out float s, out _);
+            portraits.Render(looks, originPortraits, Color.HSVToRGB(h, Mathf.Min(s, 0.6f), 0.22f));
+        }
+
+        // ---------------- Body ----------------
+
+        private void ShowBody()
+        {
+            SetListTitle("Body");
+            int row = 0;
+            if (setup.builds.Count > 0 && row < optionRows.Length) optionRows[row++].Show("Build", BuildName, StepBuild);
+            HideOptionRows(row);
+            if (sliderRows.Length > 0)
+                sliderRows[0].Show("Body Size", "Slim", "Heavy", -100f, 100f, recipe.build, v => ShapeChanged(BuildSlider, (sbyte)v, recipe.muscle));
+            if (sliderRows.Length > 1)
+                sliderRows[1].Show("Musculature", "Lean", "Muscular", -100f, 100f, recipe.muscle, v => ShapeChanged(MuscleSlider, recipe.build, (sbyte)v));
+            for (int i = 2; i < sliderRows.Length; i++) sliderRows[i].Hide();
+        }
+
+        private int BuildIndex()
+        {
+            for (int i = 0; i < setup.builds.Count; i++)
+                if (setup.builds[i].build == recipe.build && setup.builds[i].muscle == recipe.muscle) return i;
+            return -1;
+        }
+
+        private string BuildName()
+        {
+            int index = BuildIndex();
+            return index >= 0 ? setup.builds[index].name : "Custom";
+        }
+
+        private void StepBuild(int direction)
+        {
+            int count = setup.builds.Count;
+            int index = BuildIndex();
+            // From a custom shape the arrows go to the first or last preset.
+            index = index < 0 ? (direction > 0 ? 0 : count - 1) : ((index + direction) % count + count) % count;
+            Record(DiscreteEdit);
+            recipe.build = setup.builds[index].build;
+            recipe.muscle = setup.builds[index].muscle;
+            if (sliderRows.Length > 0) sliderRows[0].SetValue(recipe.build);
+            if (sliderRows.Length > 1) sliderRows[1].SetValue(recipe.muscle);
+            Preview();
+        }
+
+        private void ShapeChanged(int source, sbyte build, sbyte muscle)
+        {
+            Record(source);
+            recipe.build = build;
+            recipe.muscle = muscle;
+            Preview();
+            RefreshOptionRows(); // the Build row may now read "Custom"
+        }
+
+        // ---------------- Head ----------------
+
+        private void ShowHead()
+        {
+            SetListTitle("Head");
+            int row = 0;
+            if (setup.presets.Count > 1 && row < optionRows.Length) optionRows[row++].Show("Look", LookName, StepLook);
+            foreach (var options in setup.regions)
+            {
+                if (row >= optionRows.Length) break;
+                if (!RecipeEdit.HasChoice(options)) continue;
+                var region = options;
+                optionRows[row++].Show(RegionName(region.region), () => OptionName(region), direction => StepRegion(region, direction));
+            }
+            HideOptionRows(row);
+            foreach (var slider in sliderRows) slider.Hide();
+        }
+
+        private string LookName()
+        {
+            int index = RecipeEdit.MatchingPreset(setup, recipe);
+            return index >= 0 ? $"{index + 1} / {setup.presets.Count}" : "Custom";
+        }
+
+        private void StepLook(int direction)
+        {
+            int count = setup.presets.Count;
+            int index = RecipeEdit.MatchingPreset(setup, recipe);
+            index = index < 0 ? (direction > 0 ? 0 : count - 1) : ((index + direction) % count + count) % count;
+            Record(DiscreteEdit);
+            recipe = RecipeEdit.FromPreset(lineage, recipe.bodyType, index, recipe);
+            Preview();
+            RefreshOptionRows();
+        }
+
+        private string OptionName(LineageDefinition.RegionOptions options)
+        {
+            int index = RecipeEdit.IndexOf(recipe, database.Parts, options);
+            return index < 0 ? "None" : $"{index + 1} / {options.partIds.Length}";
+        }
+
+        private void StepRegion(LineageDefinition.RegionOptions options, int direction)
+        {
+            Record(DiscreteEdit);
+            RecipeEdit.Step(ref recipe, database.Parts, setup, options, direction);
+            Preview();
+            RefreshOptionRows(); // the Look row may now read "Custom"
+        }
+
+        private static string RegionName(BodyRegion region)
+        {
+            switch (region)
+            {
+                case BodyRegion.Head: return "Head";
+                case BodyRegion.Hair: return "Hair";
+                case BodyRegion.EyebrowLeft: return "Eyebrows";
+                case BodyRegion.EyeLeft:
+                case BodyRegion.EyeRight: return "Eyes";
+                case BodyRegion.EarLeft: return "Ears";
+                case BodyRegion.FacialHair: return "Facial Hair";
+                case BodyRegion.Nose: return "Nose";
+                case BodyRegion.Teeth: return "Teeth";
+                case BodyRegion.Tongue: return "Tongue";
+                default: return region.ToString();
+            }
+        }
+
+        // ---------------- Colour ----------------
+
+        private void ShowColours()
+        {
+            int group = 0;
+            if (setup.skinTones.Count > 0 && group < swatchGroups.Length)
+            {
+                skinSwatches.Clear();
+                foreach (var tone in setup.skinTones) skinSwatches.Add(tone.swatch);
+                swatchGroups[group++].Show("Skin", skinSwatches, recipe.skinTone - 1, PickSkin);
+            }
+            foreach (byte id in setup.channels)
+            {
+                if (group >= swatchGroups.Length) break;
+                if (!database.TryGetChannel(id, out var channel) || channel.swatches == null) continue;
+                var picked = channel;
+                swatchGroups[group++].Show(channel.displayName, channel.swatches, RecipeEdit.SwatchIndex(recipe, channel), index => PickColor(picked, index));
+            }
+            for (; group < swatchGroups.Length; group++) swatchGroups[group].Hide();
+        }
+
+        private void PickSkin(int index)
+        {
+            Record(DiscreteEdit);
+            recipe.skinTone = (byte)(index + 1);
+            Preview();
+        }
+
+        private void PickColor(CharacterCreationDatabase.ColorChannel channel, int index)
+        {
+            if (index < 0 || index >= channel.swatches.Length) return;
+            Record(DiscreteEdit);
+            RecipeEdit.SetColor(ref recipe, channel.id, channel.swatches[index]);
+            Preview();
+        }
+
+        // ---------------- Finalise ----------------
+
+        private void BindFinalise()
+        {
+            if (finaliseSection != null) MenuUi.SetText(finaliseSection.transform, "Label_Header", "Name Your Character");
+            if (nameInput != null)
+            {
+                nameInput.characterLimit = CharacterNameRules.MaxLength;
+                nameInput.richText = false;
+                nameInput.text = string.Empty;
+                if (nameInput.placeholder is TMP_Text placeholder) placeholder.text = "Type a name";
+                nameInput.onValueChanged.AddListener(_ => RefreshName());
+                // The vendor field ships with raycasts off, so it cannot be clicked into.
+                if (nameInput.TryGetComponent<Graphic>(out var hit)) hit.raycastTarget = true;
+            }
+            if (nameSuggestion != null) nameSuggestion.Show("Suggest a Name", () => suggestion ?? "Use the arrows", _ => Suggest());
+            if (finaliseButton != null)
+            {
+                MenuUi.SetAllTexts(finaliseButton.transform, "Create Character");
+                finaliseButton.onClick.AddListener(Finalise);
+            }
+        }
+
+        private void Suggest()
+        {
+            // The generator can land on a name this player already uses; a few tries are plenty.
+            for (int attempt = 0; attempt < 8; attempt++)
+            {
+                string candidate = CharacterNameGenerator.Generate(recipe.lineage, recipe.bodyType, random);
+                if (!CharacterNameRules.Validate(candidate, out string normalized, out _) || roster.IsNameTaken(normalized)) continue;
+                suggestion = normalized;
+                break;
+            }
+            if (nameInput != null && suggestion != null) nameInput.text = suggestion;
+            if (nameSuggestion != null) nameSuggestion.Refresh();
+        }
+
+        private void RefreshName()
+        {
+            string raw = nameInput != null ? nameInput.text : string.Empty;
+            nameValid = CharacterNameRules.Validate(raw, out pendingName, out string reason);
+            if (nameValid && roster.IsNameTaken(pendingName))
+            {
+                nameValid = false;
+                reason = CharacterNameRules.ReasonTaken;
+            }
+            if (nameMessage != null)
+            {
+                string home = faction != null ? faction.displayName : "the world";
+                nameMessage.text = nameValid
+                    ? $"{pendingName}, {lineage.displayName} of the {home}. Ready."
+                    : reason;
+                nameMessage.color = nameValid ? nameOkColor : nameProblemColor;
+            }
+            if (finaliseButton != null) finaliseButton.interactable = nameValid;
+        }
+
+        private void Finalise()
+        {
+            if (leaving) return;
+            RefreshName();
+            if (!nameValid) return;
+            if (!CharacterRecipeValidator.Validate(recipe, database, out string problem))
+            {
+                Debug.LogError($"[Menus] The creator built a look the rules reject: {problem}", this);
+                if (nameMessage != null) nameMessage.text = problem;
+                return;
+            }
+
+            roster.Set(slot, CharacterProfile.Create(pendingName, recipe));
+            CharacterSession.Store.Save(roster);
+            leaving = true;
+            FrontEnd.HighlightSlot = slot;
+            FrontEnd.PendingSlot = -1;
+            FrontEnd.PendingFaction = FactionId.None;
+            FrontEnd.Go(FrontEnd.CharacterSelectScene);
+        }
+
+        // ---------------- Prompts and shortcuts ----------------
+
+        private void BindPrompts()
+        {
+            var turn = MenuUi.Require(screen, "Prompt_Turn", this);
+            if (turn != null)
+            {
+                MenuUi.SetText(turn, "Label_Action", "Turn   Scroll: Zoom");
+                if (hotkeys != null) hotkeys.ShowMouse(turn, KeyGlyphSet.MouseGlyph.LeftButton);
+            }
+            Prompt("Prompt_Randomise", Key.R, "Randomise", Randomise);
+            Prompt("Prompt_Undo", Key.Z, "Undo", Undo);
+            Prompt("Prompt_Back", Key.Escape, "Back", Back);
+            nextPrompt = Prompt("Prompt_Next", Key.Enter, "Next", Next);
+
+            if (hotkeys == null) return;
+            hotkeys.Bind(Key.NumpadEnter, Next);
+            hotkeys.Bind(Key.Q, () => StepTab(-1));
+            hotkeys.Bind(Key.E, () => StepTab(1));
+            MakeTabKey("Input_Key_Left", -1);
+            MakeTabKey("Input_Key_Right", 1);
+        }
+
+        private Transform Prompt(string promptName, Key key, string label, Action action)
+        {
+            var prompt = MenuUi.Require(screen, promptName, this);
+            if (prompt == null) return null;
+            MenuUi.SetText(prompt, "Label_Action", label);
+            MenuUi.MakeClickable(prompt.gameObject, () => action());
+            if (hotkeys != null) hotkeys.Bind(key, action, prompt);
+            return prompt;
+        }
+
+        // The Q and E keycaps either side of the tabs are also buttons.
+        private void MakeTabKey(string keyName, int direction)
+        {
+            var key = MenuUi.Find(screen, keyName);
+            if (key != null) MenuUi.MakeClickable(key.gameObject, () => StepTab(direction));
+        }
+
+        private void Next()
+        {
+            if (tab == Tab.Finalise) Finalise();
+            else StepTab(1);
+        }
+
+        private void Back()
+        {
+            if (leaving) return;
+            if (tab != Tab.Origin)
+            {
+                StepTab(-1);
+                return;
+            }
+            leaving = true;
+            FrontEnd.Go(FrontEnd.FactionSelectScene); // the slot being filled stays pending
+        }
+
+        private void Randomise()
+        {
+            if (lineage == null) return;
+            Record(DiscreteEdit);
+            Apply(RecipeEdit.Randomize(lineage, recipe.bodyType, database, random));
+        }
+
+        private void Undo()
+        {
+            if (history.Count == 0) return;
+            var previous = history[history.Count - 1];
+            history.RemoveAt(history.Count - 1);
+            lastEditSource = DiscreteEdit;
+            Apply(previous);
+        }
+
+        // ---------------- Shared ----------------
+
+        /// <summary>Remember the look before an edit. A stream of edits from one slider counts once.</summary>
+        private void Record(int source)
+        {
+            if (source != DiscreteEdit && source == lastEditSource && history.Count > 0) return;
+            lastEditSource = source;
+            history.Add(recipe.Clone());
+            if (history.Count > MaxHistory) history.RemoveAt(0);
+        }
+
+        /// <summary>Replace the whole look (origin change, undo, randomise) and rebuild what is on screen.</summary>
+        private void Apply(in CharacterRecipe next)
+        {
+            recipe = next;
+            lineage = database.GetLineage(recipe.lineage);
+            setup = lineage.SetupFor(recipe.bodyType);
+            Preview();
+            RefreshTab();
+        }
+
+        private void Preview()
+        {
+            if (showroom != null) showroom.Show(recipe);
+        }
+
+        private void SetListTitle(string title)
+        {
+            if (optionsSection != null) MenuUi.SetText(optionsSection.transform, "Label_Header", title);
+        }
+
+        private void HideOptionRows(int from)
+        {
+            for (int i = from; i < optionRows.Length; i++)
+                if (optionRows[i] != null) optionRows[i].Hide();
+        }
+
+        private void RefreshOptionRows()
+        {
+            foreach (var row in optionRows)
+                if (row != null && row.gameObject.activeSelf) row.Refresh();
+        }
+
+        private static void SetActive(GameObject target, bool active)
+        {
+            if (target != null && target.activeSelf != active) target.SetActive(active);
+        }
+    }
+}

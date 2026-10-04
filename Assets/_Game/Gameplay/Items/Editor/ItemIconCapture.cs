@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using KryticalNova.CharacterCreation;
 using KryticalNova.Items;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -22,6 +23,7 @@ namespace KryticalNova.EditorTools
         private const int Size = 256;
         private const int Supersample = 2; // MSAA targets break URP render requests; supersample + box filter instead
         private const string SidekickMaterialPath = "Assets/_Game/Characters/Player/Player_01/Materials/Player_01.mat";
+        private static readonly int ColorMapId = Shader.PropertyToID("_ColorMap");
 
         private static readonly BodyRegion[] ArmorIconRegions =
         {
@@ -38,6 +40,15 @@ namespace KryticalNova.EditorTools
             Capture(catalog.Items.Where(i => i != null).ToList());
         }
 
+        /// <summary>Only the items that have no icon yet (new gear), leaving every existing icon as it is.</summary>
+        [MenuItem("Krytical Nova/Items/Capture Icons (Missing Only)")]
+        public static void CaptureMissing()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(SidekickGearGenerator.CatalogPath);
+            if (catalog == null) { Debug.LogError("[Items] No ItemCatalog. Run 'Generate Test Gear' first."); return; }
+            Capture(catalog.Items.Where(i => i != null && i.icon == null).ToList());
+        }
+
         [MenuItem("Krytical Nova/Items/Capture Icons (Selected Items)")]
         public static void CaptureSelected()
         {
@@ -49,6 +60,8 @@ namespace KryticalNova.EditorTools
             if (items.Count == 0) return;
             WeatherVfxBuilder.EnsureFolder(IconFolder);
             var sidekickMat = AssetDatabase.LoadAssetAtPath<Material>(SidekickMaterialPath);
+            var characters = AssetDatabase.LoadAssetAtPath<CharacterCreationDatabase>(CharacterDataBaker.DatabasePath);
+            var packMaterials = new Dictionary<string, Material>();
             var scene = EditorSceneManager.NewPreviewScene();
             var rt = new RenderTexture(Size * Supersample, Size * Supersample, 24, RenderTextureFormat.ARGB32);
             rt.Create();
@@ -66,7 +79,8 @@ namespace KryticalNova.EditorTools
                 {
                     var item = items[i];
                     if (EditorUtility.DisplayCancelableProgressBar("Capturing item icons", item.displayName, (float)i / items.Count)) break;
-                    var subject = BuildSubject(item, sidekickMat, temp, out Vector3 viewDir);
+                    var material = PackMaterial(item, sidekickMat, characters, packMaterials, temp);
+                    var subject = BuildSubject(item, material, temp, out Vector3 viewDir);
                     if (subject == null) continue;
                     SceneManager.MoveGameObjectToScene(subject, scene);
                     string path = $"{IconFolder}/{item.name}.png";
@@ -75,6 +89,8 @@ namespace KryticalNova.EditorTools
                     written.Add((item, path));
                 }
 
+                // A new file has no importer until the database has seen it, and imports are deferred inside the batch.
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 AssetDatabase.StartAssetEditing();
                 try { foreach (var w in written) ImportAsSprite(w.path); }
                 finally { AssetDatabase.StopAssetEditing(); }
@@ -156,6 +172,45 @@ namespace KryticalNova.EditorTools
             light.shadows = LightShadows.None;
         }
 
+        /// <summary>
+        /// Gear is drawn in its own pack's colours: the palette the lineage of that pack starts with. Worn in the game
+        /// it takes its wearer's palette, so this is the look it has on the characters it was made for.
+        /// </summary>
+        private static Material PackMaterial(ItemDefinition item, Material baseMaterial, CharacterCreationDatabase characters,
+            Dictionary<string, Material> cache, List<Object> temp)
+        {
+            string pack = PackOf(item);
+            if (pack == null || characters == null || baseMaterial == null) return baseMaterial;
+            if (cache.TryGetValue(pack, out var cached)) return cached;
+
+            var result = baseMaterial;
+            foreach (var lineage in characters.Lineages)
+            {
+                if (lineage == null || lineage.ownPack != pack) continue;
+                var recipe = RecipeEdit.Default(lineage, BodyType.Masculine);
+                var pixels = new Color32[CharacterColorMap.PixelCount];
+                CharacterColorMap.Fill(recipe, characters, pixels);
+                var map = CharacterColorMap.CreateTexture($"IconPalette_{pack}");
+                map.SetPixels32(pixels);
+                map.Apply(false);
+                result = new Material(baseMaterial) { name = $"IconMaterial_{pack}" };
+                result.SetTexture(ColorMapId, map);
+                temp.Add(map);
+                temp.Add(result);
+                break;
+            }
+            cache[pack] = result;
+            return result;
+        }
+
+        private static string PackOf(ItemDefinition item)
+        {
+            if (item.partCatalog == null || item.appearancePartIds == null) return null;
+            foreach (ushort id in item.appearancePartIds)
+                if (item.partCatalog.TryGet(id, out var entry)) return entry.pack;
+            return null;
+        }
+
         private static GameObject BuildSubject(ItemDefinition item, Material sidekickMat, List<Object> temp, out Vector3 viewDir)
         {
             var root = new GameObject($"Icon_{item.name}");
@@ -212,8 +267,9 @@ namespace KryticalNova.EditorTools
         /// <summary>Parts are drawn unskinned: their vertices are already assembled in the shared bind pose.</summary>
         private static void AddParts(GameObject root, ItemDefinition item, Material mat, System.Func<SidekickPartRef, bool> filter)
         {
-            var parts = item.appearanceParts.Where(p => p.IsValid).Where(filter).ToList();
-            if (parts.Count == 0) parts = item.appearanceParts.Where(p => p.IsValid).ToList();
+            var all = item.GetAppearanceParts();
+            var parts = all.Where(p => p.IsValid).Where(filter).ToList();
+            if (parts.Count == 0) parts = all.Where(p => p.IsValid).ToList();
             foreach (var p in parts)
             {
                 var go = new GameObject(p.mesh.name);

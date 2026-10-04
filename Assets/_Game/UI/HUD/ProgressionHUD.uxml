@@ -1,6 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <Style src="../Common/KryticalTheme.uss" />
     <Style src="ProgressionHUD.uss" />
+    <!-- Faction skins: generated overrides that only apply under a .kn-faction-* class (see FactionSkin). -->
+    <Style src="../Common/KryticalSkin_Null.uss" />
+    <Style src="../Common/KryticalSkin_Covenant.uss" />
     <ui:Template name="ItemWindows" src="../Inventory/ItemWindows.uxml" />
     <ui:Template name="Minimap" src="Minimap/Minimap.uxml" />
     <ui:Template name="WorldMap" src="Map/WorldMap.uxml" />

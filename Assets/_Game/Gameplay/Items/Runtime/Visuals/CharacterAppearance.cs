@@ -40,6 +40,8 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private Matrix4x4[] referenceBindposes = System.Array.Empty<Matrix4x4>();
         [Tooltip("Debug: render one SkinnedMeshRenderer per part instead of merging (more draw calls).")]
         [SerializeField] private bool mergeParts = true;
+        [Tooltip("The species' chest wrap, worn on a feminine body whenever the resolved torso needs one. Set by ApplyBase.")]
+        [SerializeField] private SidekickPartRef wrapPart;
 
         private readonly Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>> slotParts = new Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>>();
         private readonly SortedDictionary<BodyRegion, SidekickPartRef> resolved = new SortedDictionary<BodyRegion, SidekickPartRef>();
@@ -78,12 +80,15 @@ namespace KryticalNova.Items.Visuals
             // Keep the baked mesh until the first LateUpdate, by which time the equipment binder has applied the
             // loadout, so spawning costs exactly one merge.
             dirty = IsConfigured;
-            // FaceBlinker normally lives on the prefab (tunable in the Inspector); add one only if it's missing.
-            if (blink && IsConfigured)
-            {
-                if (!TryGetComponent<FaceBlinker>(out var blinker)) blinker = gameObject.AddComponent<FaceBlinker>();
-                if (!blinker.HasTarget) blinker.Bind(targetRenderer);
-            }
+            EnsureBlinker();
+        }
+
+        // FaceBlinker normally lives on the prefab (tunable in the Inspector); add one only if it's missing.
+        private void EnsureBlinker()
+        {
+            if (!blink || !IsConfigured || targetRenderer == null) return;
+            if (!TryGetComponent<FaceBlinker>(out var blinker)) blinker = gameObject.AddComponent<FaceBlinker>();
+            if (!blinker.HasTarget) blinker.Bind(targetRenderer);
         }
 
         private void OnDestroy()
@@ -92,11 +97,30 @@ namespace KryticalNova.Items.Visuals
             if (ownedMesh != null) Destroy(ownedMesh);
         }
 
+        /// <summary>
+        /// Replace the character's own look at runtime (character creation, a replicated recipe): the always-worn
+        /// parts, the parts shown while a slot is empty, the body shape and the chest wrap. Equipped gear is kept.
+        /// </summary>
+        public void ApplyBase(IReadOnlyList<SidekickPartRef> fixedList, IReadOnlyList<SidekickPartRef> defaults,
+            BodyShapeWeights shape, SidekickPartRef wrap = default)
+        {
+            fixedParts.Clear();
+            if (fixedList != null) fixedParts.AddRange(fixedList);
+            defaultParts.Clear();
+            if (defaults != null) defaultParts.AddRange(defaults);
+            bodyShape = shape;
+            wrapPart = wrap;
+            StopSharing();
+            EnsureBlinker();
+            dirty = true;
+        }
+
         /// <summary>Show <paramref name="item"/>'s parts for <paramref name="slot"/>; null shows the default body.</summary>
         public void SetSlot(EquipSlot slot, ItemDefinition item)
         {
             if (Array.IndexOf(VisualSlots, slot) < 0) return;
-            IReadOnlyList<SidekickPartRef> parts = item != null && item.appearanceParts.Count > 0 ? item.appearanceParts : null;
+            IReadOnlyList<SidekickPartRef> parts = item != null ? item.GetAppearanceParts() : null;
+            if (parts != null && parts.Count == 0) parts = null;
             if (slotParts.TryGetValue(slot, out var existing) && ReferenceEquals(existing, parts)) return;
             if (parts == null) slotParts.Remove(slot); else slotParts[slot] = parts;
             StopSharing();
@@ -124,6 +148,14 @@ namespace KryticalNova.Items.Visuals
             }
             slotParts.Clear();
             foreach (var kv in source.slotParts) slotParts[kv.Key] = kv.Value;
+            // The source's own look can change after this clone was made (a recipe applied at runtime): a later
+            // try-on must merge from the current look, not the one copied at Instantiate.
+            fixedParts.Clear();
+            fixedParts.AddRange(source.fixedParts);
+            defaultParts.Clear();
+            defaultParts.AddRange(source.defaultParts);
+            bodyShape = source.bodyShape;
+            wrapPart = source.wrapPart;
             dirty = false;
             OnSourceRebuilt();
         }
@@ -149,16 +181,21 @@ namespace KryticalNova.Items.Visuals
             foreach (var slot in VisualSlots)
             {
                 var regions = EquipSlots.RegionsFor(slot);
-                if (slotParts.TryGetValue(slot, out var parts))
-                {
+                bool worn = slotParts.TryGetValue(slot, out var parts);
+                if (worn)
                     foreach (var p in parts) if (p.IsValid) resolved[p.region] = p;
-                }
-                else
+                foreach (var p in defaultParts)
                 {
-                    foreach (var p in defaultParts)
-                        if (p.IsValid && Array.IndexOf(regions, p.region) >= 0) resolved[p.region] = p;
+                    if (!p.IsValid || Array.IndexOf(regions, p.region) < 0) continue;
+                    // Empty slot: the character's own parts. Worn item: only the body itself falls back, so a set
+                    // with fewer leg variants than torsos never leaves a limb missing; attachments stay off.
+                    if (!worn || (EquipSlots.IsBodyRegion(p.region) && !resolved.ContainsKey(p.region))) resolved[p.region] = p;
                 }
             }
+            // A bare-chested torso needs the chest wrap on a feminine body (same rule as Sidekick's own tool).
+            if (wrapPart.IsValid && bodyShape.masculineFeminine > 50f
+                && resolved.TryGetValue(BodyRegion.Torso, out var torso) && torso.usesWrap)
+                resolved[BodyRegion.Wrap] = wrapPart;
             partList.Clear();
             partList.AddRange(resolved.Values); // region order => deterministic bone order for sharing
         }

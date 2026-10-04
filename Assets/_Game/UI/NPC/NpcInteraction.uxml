@@ -1,6 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="../Common/KryticalTheme.uss" />
     <Style src="NpcInteraction.uss" />
+    <!-- Faction skins: generated overrides that only apply under a .kn-faction-* class (see FactionSkin). -->
+    <Style src="../Common/KryticalSkin_Null.uss" />
+    <Style src="../Common/KryticalSkin_Covenant.uss" />
     <ui:VisualElement name="npc-ui" class="kn-root" picking-mode="Ignore">
         <ui:VisualElement name="nameplates" picking-mode="Ignore" />
         <ui:Label name="zone-toast" text="" class="hud-movable" picking-mode="Ignore" />

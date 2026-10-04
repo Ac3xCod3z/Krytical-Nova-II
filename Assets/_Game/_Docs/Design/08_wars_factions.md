@@ -1,5 +1,8 @@
 # Twelve Sky 2 — Module 08: Factions, Wars & Territory
 
+> **Krytical Nova II:** our three factions are the Hegemony, the Null and the Covenant. See
+> [11_factions_lore.md](11_factions_lore.md). The reference names below are kept for the systems they describe.
+
 ## 1. Faction structure
 The classic game revolves around three major factions:
 - Noble Dragon.

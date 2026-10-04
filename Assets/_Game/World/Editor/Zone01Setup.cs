@@ -157,13 +157,8 @@ namespace KryticalNova.EditorTools
             Debug.Log($"[Zone01] NavMesh baked to {path}.");
         }
 
-        private static void UpdateBuildSettings()
-        {
-            var scenes = new List<EditorBuildSettingsScene> { new EditorBuildSettingsScene(ScenePath, true) };
-            foreach (var s in EditorBuildSettings.scenes)
-                if (s.path != ScenePath) scenes.Add(s);
-            EditorBuildSettings.scenes = scenes.ToArray();
-        }
+        // The zone is no longer the boot scene: the front end comes first (see BuildSceneOrder).
+        private static void UpdateBuildSettings() => BuildSceneOrder.Apply();
 
         // ---------------------------------------------------------------- layer + raycasts
 

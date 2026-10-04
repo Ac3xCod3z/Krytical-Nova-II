@@ -26,6 +26,8 @@ namespace KryticalNova.Items
         private delegate bool Mutation(ItemStack[] bag, ref EquipmentLoadout loadout, out string reason);
 
         [SerializeField] private ItemCatalog catalog;
+        [Tooltip("Who may wear which gear. Checked on every equip; also the source of the starter gear from the wearer's pack.")]
+        [SerializeField] private GearDictionary gearDictionary;
         [Tooltip("Grant the catalog's starter loadout when this player is created (no save system yet).")]
         [SerializeField] private bool grantStarterLoadout = true;
 
@@ -36,7 +38,10 @@ namespace KryticalNova.Items
         private PlayerResources resources;
         private float nextUseTime;
         private bool starterGranted;
+        private bool packGearGranted;
         private bool pullPending;
+        private IGearWearer wearer;
+        private InventoryRules.EquipGate equipGate;
 
         /// <summary>The inventory the local user controls: the owned networked player, else the offline scene avatar.</summary>
         public static PlayerInventory Local { get; private set; }
@@ -65,6 +70,8 @@ namespace KryticalNova.Items
         {
             equipment = GetComponent<PlayerEquipment>();
             resources = GetComponent<PlayerResources>();
+            wearer = GetComponent<IGearWearer>();
+            equipGate = EquipBlockedReason;
             netCells = new NetworkList<ItemStack>(readPerm: NetworkVariableReadPermission.Owner,
                 writePerm: NetworkVariableWritePermission.Server);
         }
@@ -226,10 +233,45 @@ namespace KryticalNova.Items
         // ---------------- Server logic ----------------
 
         private void ServerMove(ItemLocation from, ItemLocation to) =>
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryMove(b, ref l, catalog, from, to, out r));
+            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryMove(b, ref l, catalog, from, to, out r, equipGate));
 
         private void ServerQuickEquip(byte bagIndex) =>
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryQuickEquip(b, ref l, catalog, bagIndex, out r));
+            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryQuickEquip(b, ref l, catalog, bagIndex, out r, equipGate));
+
+        /// <summary>The gear dictionary decides who may wear what: faction and body. Null means allowed.</summary>
+        private string EquipBlockedReason(ItemDefinition item)
+        {
+            if (gearDictionary == null || wearer == null) return null;
+            return gearDictionary.CanUse(item.itemId, wearer.Faction, wearer.Body, out string reason) ? null : reason;
+        }
+
+        /// <summary>The same check for UI (greying out gear this character cannot wear).</summary>
+        public bool CanEquip(ItemDefinition item, out string reason)
+        {
+            reason = item != null ? EquipBlockedReason(item) : InventoryRules.ReasonUnknownItem;
+            return reason == null;
+        }
+
+        /// <summary>
+        /// Server/offline: puts some gear from the wearer's own pack in the bag, one piece per rarity for each slot.
+        /// A stand-in until gear is earned in the world; called once the character's identity is known.
+        /// </summary>
+        public void ServerGrantPackGear(string pack)
+        {
+            if (packGearGranted || !CanMutate() || gearDictionary == null || string.IsNullOrEmpty(pack)) return;
+            packGearGranted = true;
+            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) =>
+            {
+                r = null;
+                // Rows are ordered by item ID, so the last row of a (slot, rarity) is its highest variant: the piece
+                // that looks least like the basic outfit the character already wears.
+                var picks = new System.Collections.Generic.Dictionary<int, ushort>();
+                foreach (var entry in gearDictionary.Entries)
+                    if (entry.pack == pack) picks[((int)entry.slot << 8) | (int)entry.rarity] = entry.itemId;
+                foreach (ushort itemId in picks.Values) InventoryRules.TryAdd(b, catalog, itemId, 1);
+                return true;
+            });
+        }
 
         private void ServerQuickUnequip(EquipSlot slot) =>
             Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryQuickUnequip(b, ref l, catalog, slot, out r));

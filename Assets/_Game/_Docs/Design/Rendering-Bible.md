@@ -382,7 +382,32 @@ Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Ed
 - **Auto-exposure / eye adaptation** for interiors.
 - **Shadowmask mixed lighting** for interiors once indoor zones exist: crisp baked shadows far away, realtime up close.
 
+### Showroom scenes (character creator, character select)
+
+The front-end scenes that show a live character are studio sets, not world scenes. They have no sky, no day cycle and
+nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers there.
+
+- Camera on **`UIPreview_Renderer`** (the equipment page's renderer): comic outline and Ben-Day dots, without the
+  world's sky-driven passes. SMAA, like the world camera.
+- **One shadowed directional key light** (warm white, from the front left), as everywhere else. Up to three unshadowed
+  realtime spots shape the figure: fill (front right), rim (behind left) and kicker (behind right, low).
+- **The faction lights the set.** Rim takes the faction's accent colour and fill its second colour (lifted towards
+  white); with no character shown they fall back to a neutral cool pair. The key never changes, so skin and gear
+  colours read the same for every faction.
+- Fixed trilight ambient (cool sky, dark ground). No fog, no skybox, no reflection probe.
+- Backdrop: `KryticalNova/UI/Showroom Backdrop`, an unlit quad that prints a faction-coloured burst with the same
+  screen-aligned dots as the comic pass. The pedestal is `Comic Toon Lit` and very dark, because three lights meet on it.
+- Menus without a 3D scene (Title, Faction Select, Loading) draw the same dots in uGUI (`KryticalNova/UI/BenDay`), and
+  every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black.
+
 ## Changelog
+
+- **2026-10-04 (front end and factions)**:
+  - Showroom lighting rules added (section 3): one shadowed key, faction-coloured rim and fill, dotted burst backdrop.
+  - Two uGUI shaders share the comic dot grid with the world: `UI/BenDay` (dot-shaded fills) and `UI/BenDayWipe`
+    (scene transition).
+  - Gear icons are rendered in their own pack's palette (`ItemIconCapture`), so a Null chest piece is not drawn in
+    Hegemony colours.
 
 - **2026-10-03 (pass 4)**:
   - Moon phase mask darkened: earthshine 0.12 → 0.015, dark side opacity 0.55 → 0.95, halo no longer washes over the

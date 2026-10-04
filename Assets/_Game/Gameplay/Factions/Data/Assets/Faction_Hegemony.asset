@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67398180852df2a4988ebb41a1ec6541, type: 3}
+  m_Name: Faction_Hegemony
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Factions.FactionDefinition
+  id: 1
+  displayName: Hegemony
+  tagline: Efficiency. Expansion. Ownership.
+  lore: The Hegemony built their futuristic civilization on cold efficiency and boundless greed. Lacking the manual power to expand their high-tech cities, they turned to necromantic energy and advanced engineering to manufacture a synthetic workforce. Driven by corporate elites and enforced by heavily armored void-marines, Hegemony society treated their mechanical creations as disposable, torture-tested labor. When their urban sprawl breached ancestral wildlands, they treated native inhabitants with the same clinical indifference, viewing living souls merely as raw fuel for their necromantic generators.
+  crest: {fileID: 21300000, guid: 1d451406eb7b65346a9a7ec52fe74601, type: 3}
+  accentColor: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+  secondaryColor: {r: 0.8627451, g: 0.9098039, b: 0.9411765, a: 1}
