@@ -434,9 +434,12 @@ namespace KryticalNova.Player
         // nearest hit is the canopy. Walk the hits front to back and take the first unit, stopping at
         // walkable ground so nothing can be picked through the floor. Otherwise use the nearest hit.
         // Props faded to keep the player in view are skipped: what can be seen through can be clicked through.
+        // Players sit on a layer the click mask leaves out, so a click never lands on yourself. The ray takes
+        // that layer in as well and keeps only the other units on it, which is what makes other players clickable.
         private bool TryPickPointerHit(Ray ray, out RaycastHit hit)
         {
-            int count = Physics.RaycastNonAlloc(ray, pointerHits, maximumRayDistance, raycastLayers, QueryTriggerInteraction.Ignore);
+            int clickLayers = raycastLayers.value | (1 << gameObject.layer);
+            int count = Physics.RaycastNonAlloc(ray, pointerHits, maximumRayDistance, clickLayers, QueryTriggerInteraction.Ignore);
             hit = default;
             if (count == 0) return false;
 
@@ -447,13 +450,15 @@ namespace KryticalNova.Player
             {
                 Collider c = pointerHits[i].collider;
                 if (occluderFader != null && occluderFader.IsFaded(c)) continue;
+                var damageable = c.GetComponentInParent<IDamageable>();
+                bool isOtherUnit = damageable != null && damageable.Transform != transform;
+                if (!isOtherUnit && (raycastLayers.value & (1 << c.gameObject.layer)) == 0) continue;
                 if (!found)
                 {
                     hit = pointerHits[i];
                     found = true;
                 }
-                var damageable = c.GetComponentInParent<IDamageable>();
-                if ((damageable != null && damageable.Transform != transform) || c.GetComponentInParent<IInteractable>() != null)
+                if (isOtherUnit || c.GetComponentInParent<IInteractable>() != null)
                 {
                     hit = pointerHits[i];
                     return true;
