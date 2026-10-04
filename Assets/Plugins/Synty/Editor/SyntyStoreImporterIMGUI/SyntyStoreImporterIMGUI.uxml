@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Plugins/Synty/Editor/SyntyStoreImporterIMGUI/SyntyStoreImporterIMGUI.uss?fileID=7433441132597879392&amp;guid=9a171f20602b5cb4bbf1dfc10e7d3a4c&amp;type=3#SyntyStoreImporterIMGUI" />
+    <uie:Toolbar>
+        <uie:ToolbarButton text="Choose Folder" display-tooltip-when-elided="true" name="ChooseFolder" />
+        <uie:ToolbarBreadcrumbs style="align-items: center;">
+            <ui:Label text="C:/Users/Syntycxvxcvxcvxcvxcvxcvxcvxcvxcvxcv" name="Path" style="white-space: nowrap; color: rgb(217, 192, 9);" />
+        </uie:ToolbarBreadcrumbs>
+    </uie:Toolbar>
+    <ui:Button name="StoreButton" />
+    <uie:Toolbar style="align-items: center; justify-content: space-between;">
+        <uie:ToolbarBreadcrumbs>
+            <uie:ToolbarButton text="Import Selected" display-tooltip-when-elided="true" name="ImportSelected" />
+            <uie:ToolbarButton text="Import All" display-tooltip-when-elided="true" name="ImportAll" />
+        </uie:ToolbarBreadcrumbs>
+        <uie:ToolbarBreadcrumbs>
+            <uie:ToolbarSearchField focusable="true" />
+        </uie:ToolbarBreadcrumbs>
+    </uie:Toolbar>
+    <ui:Button text="CHOOSE FOLDER" display-tooltip-when-elided="true" name="ChooseFolder" class="button" style="display: none;" />
+    <ui:Button text="IMPORT SELECTED" display-tooltip-when-elided="true" name="ImportSelected" class="button" style="display: none;" />
+    <ui:Button text="IMPORT ALL" display-tooltip-when-elided="true" name="ImportAll" class="button" style="display: none;" />
+    <ui:ScrollView style="height: 100%; margin-left: 5px;" />
+</ui:UXML>

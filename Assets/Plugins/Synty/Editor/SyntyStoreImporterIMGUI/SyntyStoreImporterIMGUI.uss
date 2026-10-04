@@ -1,0 +1,70 @@
+#StoreButton {
+    height: 171px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -unity-background-image-tint-color: rgb(204, 204, 204);
+    transition-duration: 0.1s;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+}
+
+#StoreButton:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+#StoreButton:active {
+    -unity-background-image-tint-color: rgb(170, 170, 170);
+    border-top-left-radius: 25px;
+    border-bottom-left-radius: 25px;
+    border-top-right-radius: 25px;
+    border-bottom-right-radius: 25px;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+}
+
+.button {
+    height: 30px;
+}
+
+#Package > #Icon {
+    width: 120px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    max-width: 120px;
+    min-width: 120px;
+    background-color: rgb(77, 77, 77);
+}
+
+#Separator {
+    height: 16px;
+    justify-content: flex-start;
+}
+
+#Separator > #Line {
+    height: 1px;
+    background-color: rgb(128, 128, 128);
+}
+
+#Package .label {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-left: 0;
+    margin-right: 5px;
+    margin-top: 0;
+    margin-bottom: 5px;
+    -unity-font-style: bold;
+}

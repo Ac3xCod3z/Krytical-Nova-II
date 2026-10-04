@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Plugins/Synty/Editor/SyntyStoreImporterIMGUI/SyntyStoreImporterIMGUI.uss?fileID=7433441132597879392&amp;guid=9a171f20602b5cb4bbf1dfc10e7d3a4c&amp;type=3#SyntyStoreImporterIMGUI" />
+    <ui:VisualElement name="Separator">
+        <ui:VisualElement name="Line" class="line" />
+    </ui:VisualElement>
+    <ui:VisualElement name="Package" style="flex-direction: row; height: 120px; margin-left: 5px; margin-right: 5px; margin-top: 5px; margin-bottom: 15px;">
+        <ui:VisualElement name="Icon" />
+        <ui:VisualElement style="width: 100%; padding-left: 10px;">
+            <ui:Label text="POLYGON_Apo.unitypackage" display-tooltip-when-elided="true" class="label" />
+            <ui:Button text="IMPORT" display-tooltip-when-elided="true" class="button" style="width: 180px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 5px; margin-top: 5px; margin-bottom: 5px;" />
+            <ui:Toggle label="Import Selected" style="flex-direction: row-reverse; width: 170px; margin-left: 0; margin-right: 5px; margin-top: 5px; margin-bottom: 5px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
