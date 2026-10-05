@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.MovementSkillData
   skillId: 1
   displayName: Run
-  description: Select Run, then left-click destinations. Each accepted destination costs Chi. Select Run again to walk.
+  description: Select Run, then left-click destinations. Each accepted destination costs Flux. Select Run again to walk.
   icon: {fileID: 21300000, guid: 8978fd1257db77e43bdb5ca039c8c1aa, type: 3}
   ranks:
   - requiredCharacterLevel: 1

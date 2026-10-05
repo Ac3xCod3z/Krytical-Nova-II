@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Pill_Chi
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 9002
-  displayName: Chi Pill
-  description: Restores 300 Chi.
+  displayName: Flux Stim
+  description: Restores 300 Flux.
   icon: {fileID: 21300000, guid: 751959e3ec5e81b48a186d05be9a92fe, type: 3}
   rarity: 0
   equipSlot: 0
@@ -24,7 +24,9 @@ MonoBehaviour:
   restoreChi: 300
   useCooldown: 1
   usableFromHotbar: 1
-  placeholderGlyph: CHI
+  placeholderGlyph: FLUX
+  appearancePartIds: 
+  partCatalog: {fileID: 0}
   appearanceParts: []
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}

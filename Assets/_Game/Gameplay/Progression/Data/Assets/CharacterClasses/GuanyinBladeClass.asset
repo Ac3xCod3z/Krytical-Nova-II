@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4501098f9e737e543a60514fc746cb1d, type: 3}
   m_Name: GuanyinBladeClass
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.CharacterClassData
-  factionName: Guanyin
-  weaponType: Blade
+  factionName: Hegemony
+  weaponType: Monoblade
   baseStrength: 10
   baseVitality: 10
   baseAgility: 10

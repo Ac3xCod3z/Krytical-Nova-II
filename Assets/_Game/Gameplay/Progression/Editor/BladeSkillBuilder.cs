@@ -69,40 +69,40 @@ namespace KryticalNova.EditorTools
             var skills = new List<SkillDefinitionSO>
             {
                 // id, name, level, book note (null = trainer), SP to learn, SP to max, chi, damage %, reach / radius
-                Attack("FuryStrike", "Fury Strike", 1, null, 1, 30, 16, 167, 120, 234, 3, 5, area: true, hits: 1,
+                Attack("FuryStrike", "Perimeter Cut", 1, null, 1, 30, 16, 167, 120, 234, 3, 5, area: true, hits: 1,
                     cooldown: 0.2f, clip: ClipFuryStrike, speed: 1.6f, castLock: 0.85f, holdToRepeat: true,
                     hitTimes: new[] { FuryStrikeHitTime }, canCrit: false,
                     description: "Sweeps the blade through every enemy around you. Hold the key to keep striking."),
-                Attack("HaeseoStroke", "Haeseo Stroke", 1, null, 1, 30, 7, 121, 124, 271, MeleeReach, MeleeReach, area: false, hits: 1,
+                Attack("HaeseoStroke", "Clean Cut", 1, null, 1, 30, 7, 121, 124, 271, MeleeReach, MeleeReach, area: false, hits: 1,
                     cooldown: 1.5f, clip: ClipHaeseoStroke, speed: 1f, castLock: 0.9f,
                     description: "A single decisive stroke against your target."),
-                Attack("GentlemansPen", "Gentleman's Pen", 1, null, 1, 30, 16, 229, 302, 782, MeleeReach, MeleeReach, area: false, hits: 3,
+                Attack("GentlemansPen", "Signature Series", 1, null, 1, 30, 16, 229, 302, 782, MeleeReach, MeleeReach, area: false, hits: 3,
                     cooldown: 3f, clip: ClipGentlemansPen, speed: 1.2f, castLock: 0.95f,
                     description: "Three flowing cuts against your target."),
-                Attack("DevilsStrike", "Devil's Strike", 30, null, 1, 35, 74, 170, 135, 326, MeleeReach, MeleeReach, area: false, hits: 1,
+                Attack("DevilsStrike", "Severance", 30, null, 1, 35, 74, 170, 135, 326, MeleeReach, MeleeReach, area: false, hits: 1,
                     cooldown: 1.5f, clip: ClipDevilsStrike, speed: 1.2f, castLock: 0.9f, hitTimes: new[] { DevilsStrikeHitTime },
                     description: "A heavier single hit for seasoned blades."),
-                Attack("FlashOfRage", "Flash of Rage", 30, null, 1, 35, 142, 321, 330, 913, MeleeReach, MeleeReach, area: false, hits: 3,
+                Attack("FlashOfRage", "Hostile Takeover", 30, null, 1, 35, 142, 321, 330, 913, MeleeReach, MeleeReach, area: false, hits: 3,
                     cooldown: 3f, clip: ClipFlashOfRage, speed: 1.1f, castLock: 0.95f, hitTimes: FlashOfRageHitTimes,
                     description: "A furious three-hit flurry against your target."),
                 // The id keeps its first name ("Stroke"): saves, the icon and the feel catalog are keyed on it.
-                Attack("SunraysStroke", "Sunray's Strike", 60, "Lvl 60 Drop Item (Skill Book)", 1, 40, 99, 194, 145, 336, MeleeReach, MeleeReach, area: false, hits: 1,
+                Attack("SunraysStroke", "Zero Hour", 60, "Lvl 60 Drop (Skill Chip)", 1, 40, 99, 194, 145, 336, MeleeReach, MeleeReach, area: false, hits: 1,
                     cooldown: 1.5f, clip: ClipSunraysStroke, speed: 1f, castLock: 0.9f, minBonus: 101, maxBonus: 110,
                     hitTimes: new[] { SunraysStrikeHitTime },
-                    description: "A rising single hit charged with Yang energy."),
-                Attack("PhantomThunder", "Phantom Thunder", 60, "Lvl 60 Drop Item (Skill Book)", 1, 40, 187, 367, 354, 939, MeleeReach, MeleeReach, area: false, hits: 3,
+                    description: "A rising single hit that lands with extra force."),
+                Attack("PhantomThunder", "Liquidation", 60, "Lvl 60 Drop (Skill Chip)", 1, 40, 187, 367, 354, 939, MeleeReach, MeleeReach, area: false, hits: 3,
                     cooldown: 3f, clip: ClipPhantomThunder, speed: 1.1f, castLock: 0.95f, minBonus: 101, maxBonus: 110,
                     hitTimes: PhantomThunderHitTimes,
-                    description: "Three thunderous cuts charged with Yang energy."),
-                Attack("ThunderousDragon", "Thunderous Dragon", 80, "Lvl 80 Wargod Skill Book (Drop)", 50, 120, 806, 1203, 121, 434, 5, 7, area: true, hits: 1,
+                    description: "Three cuts that each land with extra force."),
+                Attack("ThunderousDragon", "Market Crash", 80, "Lvl 80 War God Dossier", 50, 120, 806, 1203, 121, 434, 5, 7, area: true, hits: 1,
                     cooldown: 2.5f, clip: ClipThunderousDragon, speed: 1f, castLock: 0.95f,
                     hitTimes: new[] { ThunderousDragonHitTime }, leaps: true, holdToRepeat: true,
-                    description: "Wargod technique. A dragon of thunder tears through every enemy around you. Hold the key to keep striking."),
+                    description: "War God technique. A leaping strike that crashes down on every enemy around you. Hold the key to keep striking."),
 
-                Buff("AzureWall", "Azure Wall", 20, 9, 88, 66, 180, ClipAzureWall, 1.2f,
+                Buff("AzureWall", "Firewall", 20, 9, 88, 66, 180, ClipAzureWall, 1.2f,
                     "Hardens your guard, raising Elemental Defense.",
                     new RankScaledModifier(StatType.ElementalDefense, ModifierType.PercentAdd, 1f, 10f)),
-                Buff("LightningFlash", "Lightning Flash", 28, 17, 353, 64, 180, ClipLightningFlash, 1.8f,
+                Buff("LightningFlash", "Overclock", 28, 17, 353, 64, 180, ClipLightningFlash, 1.8f,
                     "Quickens the blade, raising all damage you deal.",
                     new RankScaledModifier(StatType.AttackPower, ModifierType.PercentAdd, 2f, 20f)),
             };
@@ -331,7 +331,7 @@ namespace KryticalNova.EditorTools
             skill.requiredCharacterLevel = level;
             skill.requiresSkillBook = bookNote != null;
             skill.acquisitionMethod = bookNote != null ? SkillAcquisitionMethod.DropItem : SkillAcquisitionMethod.FactionTrainer;
-            skill.acquisitionNote = bookNote ?? "Faction Skill Trainer";
+            skill.acquisitionNote = bookNote ?? "Faction Instructor";
             skill.minRank = 1;
             // One point buys the first rank; every later rank costs one more, up to the skill's point cap.
             skill.maxRank = pointsToMax - pointsToLearn + 1;

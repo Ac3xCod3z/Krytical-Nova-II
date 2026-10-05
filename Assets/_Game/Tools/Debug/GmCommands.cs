@@ -131,7 +131,8 @@ namespace KryticalNova.DevTools
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",
                 "WEATHER      weather.set <name> [secs] · weather.clear · weather.lock <bool> · weather.list",
                 "SKY          sky.rainbow [0-1|off] · sky.moonphase <new|first|full|last|0-1|off> · sky.moon.next · sky.halo [sun|moon|both|off] · sky.shimmer <x|off> · sky.flare <x|off> · sky.lightning · sky.status · sky.reset",
-                "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear   (pills: Pill_Vitality, Pill_Chi, Pill_DualHarmony)",
+                "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear   (stims: Pill_Vitality, Pill_Chi, Pill_DualHarmony)",
+                "GEAR         gm.gear <slot> <level> <rarity> [class] · gm.loadout [class]   (e.g. gm.gear weapon 45 rare carbine)",
             });
         }
         #endregion
@@ -221,7 +222,7 @@ namespace KryticalNova.DevTools
                   .Append("  →  ").AppendLine(final.ToString("0.##"));
             }
             if (TryGet<PlayerResources>(out var res, out _))
-                sb.AppendLine($"HP {res.Health:0}/{res.MaxHealth:0}   Chi {res.Chi:0}/{res.MaxChi:0}");
+                sb.AppendLine($"HP {res.Health:0}/{res.MaxHealth:0}   Flux {res.Chi:0}/{res.MaxChi:0}");
             return sb.ToString();
         }
 
@@ -247,20 +248,20 @@ namespace KryticalNova.DevTools
         #endregion
 
         #region Vitals
-        [Command("gm.heal", "Fully restore HP and Chi.")]
+        [Command("gm.heal", "Fully restore HP and Flux.")]
         private static string Heal()
         {
             if (!TryGet<PlayerResources>(out var res, out var error)) return error;
             res.RestoreAll();
-            return $"HP {res.Health:0}/{res.MaxHealth:0}   Chi {res.Chi:0}/{res.MaxChi:0}";
+            return $"HP {res.Health:0}/{res.MaxHealth:0}   Flux {res.Chi:0}/{res.MaxChi:0}";
         }
 
-        [Command("gm.fillchi", "Fully restore Chi.")]
+        [Command("gm.fillchi", "Fully restore Flux.")]
         private static string FillChi()
         {
             if (!TryGet<PlayerResources>(out var res, out var error)) return error;
             res.RestoreChi(res.MaxChi);
-            return $"Chi {res.Chi:0}/{res.MaxChi:0}";
+            return $"Flux {res.Chi:0}/{res.MaxChi:0}";
         }
 
         [Command("gm.damage", "Deal damage to yourself (ignored while god mode is on).")]
@@ -325,12 +326,12 @@ namespace KryticalNova.DevTools
             }
         }
 
-        [Command("gm.spendchi", "Spend Chi (tests the Chi bar / regen; ignored while infinite Chi is on).")]
+        [Command("gm.spendchi", "Spend Flux (tests the Flux bar / regen; ignored while infinite Flux is on).")]
         private static string SpendChi(float amount)
         {
             if (!TryGet<PlayerResources>(out var res, out var error)) return error;
             res.TrySpendChi(Mathf.Min(amount, res.Chi));
-            return $"Chi {res.Chi:0}/{res.MaxChi:0}{(InfiniteChiOn(res) ? " (infinite Chi on)" : "")}";
+            return $"Flux {res.Chi:0}/{res.MaxChi:0}{(InfiniteChiOn(res) ? " (infinite Flux on)" : "")}";
         }
 
         [Command("gm.kill", "Kill the targeted player (bypasses god mode): gm.kill [normal|crit] [front|back|left|right]. " +
@@ -379,23 +380,23 @@ namespace KryticalNova.DevTools
             if (!TryGet<PlayerIdentity>(out _, out var error)) return error;
             PlayerIdentity.SetCrossFactionPvp(on);
             return on ? "Cross-faction PvP ON: players of different factions can attack each other."
-                      : "Cross-faction PvP OFF: every player is friendly, except the two players of a duel.";
+                      : "Cross-faction PvP OFF: every player is friendly, except the two players of a callout.";
         }
 
-        [Command("gm.duel", "Start a duel between two connected players at once, without a request: gm.duel <clientIdA> <clientIdB> (see gm.players).")]
+        [Command("gm.duel", "Start a callout between two connected players at once, without a request: gm.duel <clientIdA> <clientIdB> (see gm.players).")]
         private static string Duel(ulong clientA, ulong clientB)
         {
             if (!TryDuelist(clientA, out var a, out var error) || !TryDuelist(clientB, out var b, out error)) return error;
             return a.ServerForceStart(b)
-                ? $"Duel started: {a.DuelistName} against {b.DuelistName}."
-                : "Could not start that duel (the same player twice, one of them is dead, or already duelling).";
+                ? $"Callout started: {a.DuelistName} against {b.DuelistName}."
+                : "Could not start that callout (the same player twice, one of them is dead, or already in a callout).";
         }
 
-        [Command("gm.duel.end", "Stop the targeted player's duel with no winner.")]
+        [Command("gm.duel.end", "Stop the targeted player's callout with no winner.")]
         private static string DuelEnd()
         {
             if (!TryGet<PlayerDuel>(out var duel, out var error)) return error;
-            return duel.ServerCancel("The duel was ended by the GM.") ? "Duel ended." : "That player is not in a duel.";
+            return duel.ServerCancel("The callout was ended by the GM.") ? "Callout ended." : "That player is not in a callout.";
         }
 
         private static bool TryDuelist(ulong clientId, out PlayerDuel duel, out string error)
@@ -423,16 +424,16 @@ namespace KryticalNova.DevTools
             return reached > 0 ? $"Announced to {reached} player(s)." : "Nothing sent (empty text, or nobody is connected).";
         }
 
-        [Command("gm.guild", "Put the targeted player in a guild for guild chat: gm.guild <name>, or gm.guild none to take them out. " +
-                             "No value prints their guild. (Test stand-in until guilds exist.)")]
+        [Command("gm.guild", "Put the targeted player in a crew for crew chat: gm.guild <name>, or gm.guild none to take them out. " +
+                             "No value prints their crew. (Test stand-in until crews exist.)")]
         private static string Guild(string guild = "")
         {
             if (!TryGet<PlayerChat>(out var chat, out var error)) return error;
             if (string.IsNullOrWhiteSpace(guild))
-                return string.IsNullOrEmpty(chat.Guild) ? $"{chat.SpeakerName} is in no guild." : $"{chat.SpeakerName} is in guild '{chat.Guild}'.";
+                return string.IsNullOrEmpty(chat.Guild) ? $"{chat.SpeakerName} is in no crew." : $"{chat.SpeakerName} is in crew '{chat.Guild}'.";
             bool leave = string.Equals(guild, "none", StringComparison.OrdinalIgnoreCase);
             chat.ServerSetGuild(leave ? string.Empty : guild);
-            return leave ? $"{chat.SpeakerName} left their guild." : $"{chat.SpeakerName} is now in guild '{chat.Guild}'.";
+            return leave ? $"{chat.SpeakerName} left their crew." : $"{chat.SpeakerName} is now in crew '{chat.Guild}'.";
         }
         #endregion
 
@@ -452,12 +453,12 @@ namespace KryticalNova.DevTools
             return $"God mode {(on ? "ON" : "OFF")}.";
         }
 
-        [Command("gm.infchi", "Toggle infinite Chi (skills never fail or drain Chi).")]
+        [Command("gm.infchi", "Toggle infinite Flux (skills never fail or drain Flux).")]
         private static string InfiniteChi()
         {
             if (!TryGet<PlayerGmState>(out var gm, out var error)) return error;
             gm.SetInfiniteChi(!gm.InfiniteChi);
-            return $"Infinite Chi {(gm.InfiniteChi ? "ON" : "OFF")}.";
+            return $"Infinite Flux {(gm.InfiniteChi ? "ON" : "OFF")}.";
         }
 
         [Command("gm.nocd", "Toggle no skill cooldowns.")]
@@ -625,7 +626,7 @@ namespace KryticalNova.DevTools
             if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
             var def = FindSkill(skills, skill);
             if (def == null) return $"No skill '{skill}'. See gm.skills.";
-            if (!def.requiresSkillBook) return $"{def.displayName} does not need a skill book.";
+            if (!def.requiresSkillBook) return $"{def.displayName} does not need a Skill Chip.";
             skills.UnlockDropSkill(def.skillId);
             return $"{def.displayName} unlocked.";
         }
@@ -636,7 +637,7 @@ namespace KryticalNova.DevTools
             if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
             var def = FindSkill(skills, skill);
             if (def == null) return $"No skill '{skill}'. See gm.skills.";
-            if (!def.requiresSkillBook) return $"{def.displayName} does not need a skill book.";
+            if (!def.requiresSkillBook) return $"{def.displayName} does not need a Skill Chip.";
             skills.LockDropSkill(def.skillId);
             return $"{def.displayName} locked.";
         }

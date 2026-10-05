@@ -34,6 +34,9 @@ namespace KryticalNova.UI
         private const float ZoomPerWheelStep = 0.3f;
         private const string BlockingClass = "blocks-world";
         private const string GlyphClass = "item-glyph";
+        private const string LevelClass = "item-level";
+        private const string UnusableClass = "item-unusable";
+        private const string UnmetClass = "tooltip-requires--unmet";
         private static readonly string[] GlyphToneClasses = { "glyph-health", "glyph-chi", "glyph-dual" };
         private static readonly string[] RarityClasses = { "rarity-0", "rarity-1", "rarity-2", "rarity-3", "rarity-4" };
         private static readonly string[] RarityTextClasses = { "rarity-text-0", "rarity-text-1", "rarity-text-2", "rarity-text-3", "rarity-text-4" };
@@ -42,7 +45,7 @@ namespace KryticalNova.UI
         private VisualElement equipmentWindow, inventoryWindow, grid, viewport, tryOnChip;
         private VisualElement tooltip, menu, menuActions, confirm, ghost;
         private Label countLabel, tryOnLabel, menuTitle, confirmText;
-        private Label tipName, tipType, tipDesc, tipStats, tipHint;
+        private Label tipName, tipType, tipRequires, tipDesc, tipStats, tipHint;
         private readonly VisualElement[] cells = new VisualElement[PlayerInventory.Capacity];
         private readonly Button[] pageTabs = new Button[PlayerInventory.PageCount];
         private int currentPage;
@@ -55,6 +58,7 @@ namespace KryticalNova.UI
 
         private PlayerInventory inventory;
         private PlayerEquipment equipment;
+        private PlayerCharacterProgression progression; // a level-up changes what can be worn
         private CharacterPreviewStage stage;
 
         // Press / drag state
@@ -97,6 +101,7 @@ namespace KryticalNova.UI
             tooltip = root.Q("item-tooltip");
             tipName = root.Q<Label>("tooltip-name");
             tipType = root.Q<Label>("tooltip-type");
+            tipRequires = root.Q<Label>("tooltip-requires");
             tipDesc = root.Q<Label>("tooltip-desc");
             tipStats = root.Q<Label>("tooltip-stats");
             tipHint = root.Q<Label>("tooltip-hint");
@@ -161,6 +166,7 @@ namespace KryticalNova.UI
             {
                 inventory.Changed -= RefreshBag;
                 inventory.RequestFailed -= OnRequestFailed;
+                if (progression != null) progression.Changed -= RefreshBag;
                 if (equipment != null) equipment.SlotChanged -= OnSlotChanged;
             }
             CancelDrag();
@@ -168,6 +174,8 @@ namespace KryticalNova.UI
             HideConfirm();
             inventory = next;
             equipment = next != null ? next.Equipment : null;
+            progression = next != null ? next.GetComponent<PlayerCharacterProgression>() : null;
+            if (progression != null) progression.Changed += RefreshBag;
             if (inventory != null)
             {
                 inventory.Changed += RefreshBag;
@@ -368,6 +376,9 @@ namespace KryticalNova.UI
             var glyph = new Label { pickingMode = PickingMode.Ignore };
             glyph.AddToClassList(GlyphClass);
             host.Insert(1, glyph);
+            var level = new Label { pickingMode = PickingMode.Ignore };
+            level.AddToClassList(LevelClass);
+            host.Add(level);
             if (withCount)
             {
                 var count = new Label { pickingMode = PickingMode.Ignore };
@@ -399,7 +410,8 @@ namespace KryticalNova.UI
                 var stack = inventory != null ? inventory.Get(i) : ItemStack.Empty;
                 var def = inventory != null && !stack.IsEmpty ? inventory.GetDefinition(i) : null;
                 if (def != null) used++;
-                SetItemVisual(cells[i], def, stack.count, null);
+                bool unusable = def != null && def.IsEquippable && !inventory.CanEquip(def, out _);
+                SetItemVisual(cells[i], def, stack.count, null, unusable);
             }
             if (countLabel != null) countLabel.text = $"{used} / {PlayerInventory.Capacity}";
         }
@@ -417,8 +429,11 @@ namespace KryticalNova.UI
 
         private void OnSlotChanged(EquipSlot slot, ushort previous, ushort next) => RefreshEquipment();
 
-        private static void SetItemVisual(VisualElement host, ItemDefinition def, int count, Sprite silhouette)
+        private static void SetItemVisual(VisualElement host, ItemDefinition def, int count, Sprite silhouette, bool unusable = false)
         {
+            host.EnableInClassList(UnusableClass, def != null && unusable);
+            var levelLabel = host.Q<Label>(className: LevelClass);
+            if (levelLabel != null) levelLabel.text = def != null && def.IsEquippable && def.itemLevel > 0 ? def.itemLevel.ToString() : string.Empty;
             var icon = host.Q(className: "item-icon");
             foreach (var c in RarityClasses) host.RemoveFromClassList(c);
             if (def != null)
@@ -740,8 +755,14 @@ namespace KryticalNova.UI
 
             tipName.text = def.displayName;
             ApplyRarityText(tipName, def.rarity);
-            tipType.text = def.IsEquippable ? $"{def.equipSlot.ToString().ToUpperInvariant()}  ·  {def.rarity.ToString().ToUpperInvariant()}"
-                                            : def.rarity.ToString().ToUpperInvariant();
+            tipType.text = TypeLine(def);
+            string requirement = RequirementLine(def, out bool unmet);
+            if (tipRequires != null)
+            {
+                tipRequires.text = requirement;
+                tipRequires.EnableInClassList(UnmetClass, unmet);
+                SetDisplay(tipRequires, requirement.Length > 0);
+            }
             tipDesc.text = def.description;
             tipStats.text = FormatStats(def);
             tipHint.text = !loc.IsBag ? "Right-click: unequip   ·   Left-click: options"
@@ -767,20 +788,61 @@ namespace KryticalNova.UI
         /// <summary>Consumables that aren't gear are used, not equipped, on right-click.</summary>
         private static bool IsUsable(ItemDefinition def) => def != null && def.IsConsumable && !def.IsEquippable;
 
+        /// <summary>"WEAPON  ·  RARE  ·  LEVEL 45", with the class on a weapon.</summary>
+        private static string TypeLine(ItemDefinition def)
+        {
+            string rarity = def.rarity.ToString().ToUpperInvariant();
+            if (!def.IsEquippable) return rarity;
+            string slot = def.weaponClass != WeaponClassId.None
+                ? WeaponClasses.DisplayName(def.weaponClass).ToUpperInvariant()
+                : def.equipSlot.ToString().ToUpperInvariant();
+            return def.itemLevel > 0 ? $"{slot}  ·  {rarity}  ·  LEVEL {def.itemLevel}" : $"{slot}  ·  {rarity}";
+        }
+
+        /// <summary>Why the local character cannot wear this (level, faction, body), or the level it asks for. Empty for non-gear.</summary>
+        private string RequirementLine(ItemDefinition def, out bool unmet)
+        {
+            unmet = false;
+            if (!def.IsEquippable) return string.Empty;
+            if (inventory != null && !inventory.CanEquip(def, out string reason))
+            {
+                unmet = true;
+                return reason;
+            }
+            return def.itemLevel > 1 ? PlayerInventory.RequiresLevel(def.itemLevel) : string.Empty;
+        }
+
+        private const string PrimaryColor = "#F0ECDC";
+        private const string SkillColor = "#72DEC4";
+
         private static string FormatStats(ItemDefinition def)
         {
             var sb = new System.Text.StringBuilder();
             if (def.IsConsumable)
             {
                 if (def.restoreHealth > 0f) sb.AppendLine($"Restores {def.restoreHealth:0} HP");
-                if (def.restoreChi > 0f) sb.AppendLine($"Restores {def.restoreChi:0} Chi");
+                if (def.restoreChi > 0f) sb.AppendLine($"Restores {def.restoreChi:0} Flux");
                 return sb.ToString().TrimEnd();
             }
-            if (def.statModifiers == null || def.statModifiers.Count == 0) return "No stats yet";
-            foreach (var m in def.statModifiers)
+            if (!def.IsEquippable) return string.Empty;
+            if (!def.HasStats && (def.skillModifiers == null || def.skillModifiers.Length == 0))
+                return def.equipSlot == EquipSlot.Pet ? string.Empty : "No stats";
+
+            // Primary stats first and brighter: they are what the piece is for.
+            if (def.baseStats != null)
+                foreach (var m in def.baseStats)
+                    sb.Append("<color=").Append(PrimaryColor).Append('>').Append(StatDisplay.FormatModifier(m.stat, m.modType, m.value)).AppendLine("</color>");
+            if (def.secondaryStats != null)
+                foreach (var m in def.secondaryStats) sb.AppendLine(StatDisplay.FormatModifier(m.stat, m.modType, m.value));
+            if (def.statModifiers != null)
+                foreach (var m in def.statModifiers) sb.AppendLine(StatDisplay.FormatModifier(m.stat, m.modType, m.value));
+            if (def.skillModifiers != null)
             {
-                string value = m.modType == Progression.ModifierType.Flat ? $"{m.value:+0;-0}" : $"{m.value:+0;-0}%";
-                sb.Append(value).Append(' ').AppendLine(m.stat.ToString());
+                foreach (var m in def.skillModifiers)
+                {
+                    string line = m.line != WeaponClassId.None ? $"{WeaponClasses.DisplayName(m.line)} skills" : "class skills";
+                    sb.Append("<color=").Append(SkillColor).Append(">+").Append(m.levels).Append(" to ").Append(line).AppendLine("</color>");
+                }
             }
             return sb.ToString().TrimEnd();
         }

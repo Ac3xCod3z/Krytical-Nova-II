@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3622be29843aeb149be9b3196ff71071, type: 3}
+  m_Name: Weapon_ArcCaster_U30
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
+  itemId: 12242
+  displayName: Arc Projector
+  description: 'Arc Caster: the ranged weapon of the Null.'
+  icon: {fileID: 21300000, guid: 69168d9f5e0e5d14abe686ed72f8e33d, type: 3}
+  rarity: 1
+  equipSlot: 1
+  maxStack: 1
+  itemLevel: 30
+  lineId: 141
+  weaponClass: 6
+  baseStats:
+  - stat: 4
+    modType: 0
+    value: 187
+  secondaryStats:
+  - stat: 6
+    modType: 0
+    value: 75
+  - stat: 12
+    modType: 0
+    value: 30
+  skillModifiers:
+  - line: 6
+    levels: 1
+  statModifiers: []
+  restoreHealth: 0
+  restoreChi: 0
+  useCooldown: 1
+  usableFromHotbar: 0
+  placeholderGlyph: 
+  appearancePartIds: 
+  partCatalog: {fileID: 0}
+  appearanceParts: []
+  weaponPrefab: {fileID: 2849276624213658431, guid: 30d844a0f230fb8429730c595398ffe8, type: 3}
+  weaponLocalPosition: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalScale: {x: 1, y: 1, z: 1}
+  hitboxCenter: {x: 0, y: 0.051455796, z: 0.36955005}
+  hitboxSize: {x: 0.18, y: 0.3637712, z: 0.6391001}
+  petPrefab: {fileID: 0}
+  petScale: 1
+  petOffset: {x: 0.45, y: 0.75, z: -0.15}

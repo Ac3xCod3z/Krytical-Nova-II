@@ -33,12 +33,12 @@ namespace KryticalNova.EditorTools
             WeatherVfxBuilder.EnsureFolder(PillFolder);
             var pills = new List<ItemDefinition>
             {
-                Pill(VitalityPillId, "Pill_Vitality", "Vitality Pill", ItemRarity.Common, "HP",
+                Pill(VitalityPillId, "Pill_Vitality", "HP Stim", ItemRarity.Common, "HP",
                     $"Restores {PillAmount:0} HP.", PillAmount, 0f),
-                Pill(ChiPillId, "Pill_Chi", "Chi Pill", ItemRarity.Common, "CHI",
-                    $"Restores {PillAmount:0} Chi.", 0f, PillAmount),
-                Pill(DualPillId, "Pill_DualHarmony", "Dual Harmony Pill", ItemRarity.Uncommon, "HP+CHI",
-                    $"Restores {PillAmount:0} HP and {DualChiAmount:0} Chi.", PillAmount, DualChiAmount),
+                Pill(ChiPillId, "Pill_Chi", "Flux Stim", ItemRarity.Common, "FLUX",
+                    $"Restores {PillAmount:0} Flux.", 0f, PillAmount),
+                Pill(DualPillId, "Pill_DualHarmony", "Dual Stim", ItemRarity.Uncommon, "HP+FLUX",
+                    $"Restores {PillAmount:0} HP and {DualChiAmount:0} Flux.", PillAmount, DualChiAmount),
             };
 
             var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(CatalogPath);

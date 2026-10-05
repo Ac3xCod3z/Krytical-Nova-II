@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Factions;
 using KryticalNova.Items;
+using KryticalNova.Progression;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -24,6 +25,7 @@ namespace KryticalNova.UI.Menus
         private enum Tab
         {
             Origin,
+            Discipline,
             Body,
             Head,
             Preview,
@@ -42,13 +44,19 @@ namespace KryticalNova.UI.Menus
         [SerializeField] private PortraitStudio portraits;
         [SerializeField] private MenuHotkeys hotkeys;
 
-        [Header("Tabs, in order: Origin, Body, Head, Preview, Colour, Finalise")]
+        [Header("Tabs, in order: Origin, Discipline, Body, Head, Preview, Colour, Finalise")]
         [SerializeField] private MenuRow[] tabButtons = Array.Empty<MenuRow>();
         [SerializeField] private GameObject originSection;
         [Tooltip("The list of option rows shared by the Body, Head and Preview tabs.")]
         [SerializeField] private GameObject optionsSection;
         [SerializeField] private GameObject colourSection;
         [SerializeField] private GameObject finaliseSection;
+
+        [Header("Discipline: the faction's three weapon classes, shown on the Origin tiles")]
+        [SerializeField] private WeaponClassCatalog classes;
+        [Tooltip("Looks up the weapon a class starts with.")]
+        [SerializeField] private GearDictionary gear;
+        [SerializeField] private ItemCatalog items;
 
         [Header("Origin: one tile per lineage and body type")]
         [SerializeField] private MenuRow[] originTiles = Array.Empty<MenuRow>();
@@ -76,6 +84,9 @@ namespace KryticalNova.UI.Menus
         }
 
         private readonly List<Origin> origins = new List<Origin>();
+        private readonly List<WeaponClassCatalog.Entry> disciplines = new List<WeaponClassCatalog.Entry>();
+        private FactionId factionId;
+        private WeaponClassId discipline;
         private readonly List<CharacterRecipe> history = new List<CharacterRecipe>();
         private readonly List<Color32> skinSwatches = new List<Color32>();
         private readonly System.Random random = new System.Random();
@@ -101,7 +112,9 @@ namespace KryticalNova.UI.Menus
         private void Start()
         {
             // Pressing Play in this scene (no faction chosen) builds a Hegemony character, for quick iteration.
-            var factionId = FrontEnd.PendingFaction != FactionId.None ? FrontEnd.PendingFaction : FactionId.Hegemony;
+            factionId = FrontEnd.PendingFaction != FactionId.None ? FrontEnd.PendingFaction : FactionId.Hegemony;
+            discipline = WeaponClassRules.DefaultFor(factionId);
+            if (classes != null) classes.GetClasses(factionId, disciplines);
             faction = database != null && database.Factions != null ? database.Factions.Get(factionId) : null;
             roster = CharacterSession.Store.Load();
             slot = FrontEnd.PendingSlot >= 0 && !roster.IsUsed(FrontEnd.PendingSlot) ? FrontEnd.PendingSlot : roster.FirstFree;
@@ -137,9 +150,24 @@ namespace KryticalNova.UI.Menus
             for (int i = 0; i < tabButtons.Length; i++)
             {
                 if (tabButtons[i] == null) continue;
-                var target = (Tab)i;
+                var target = TabOfButton(i);
                 tabButtons[i].Clicked += () => ShowTab(target);
             }
+
+            // The Discipline tab is the pack's spare button, which sits further along the bar. Children of the screen
+            // prefab cannot be reordered in the saved scene, so it is moved next to Origin here.
+            if (tabButtons.Length > (int)Tab.Finalise && tabButtons[(int)Tab.Origin] != null && tabButtons[(int)Tab.Discipline] != null)
+                tabButtons[(int)Tab.Discipline].transform.SetSiblingIndex(tabButtons[(int)Tab.Origin].transform.GetSiblingIndex() + 1);
+        }
+
+        /// <summary>
+        /// One button per tab, in tab order. A screen built before the Discipline tab existed has one button fewer:
+        /// its buttons skip that tab, which stays reachable with Next / Back.
+        /// </summary>
+        private Tab TabOfButton(int index)
+        {
+            bool hasDisciplineButton = tabButtons.Length > (int)Tab.Finalise;
+            return hasDisciplineButton || index == 0 ? (Tab)index : (Tab)(index + 1);
         }
 
         private void ShowTab(Tab next)
@@ -148,8 +176,8 @@ namespace KryticalNova.UI.Menus
             if (tab == Tab.Preview && next != Tab.Preview) ResetPreview();
             tab = next;
             for (int i = 0; i < tabButtons.Length; i++)
-                if (tabButtons[i] != null) tabButtons[i].SetSelected(i == (int)next);
-            SetActive(originSection, next == Tab.Origin);
+                if (tabButtons[i] != null) tabButtons[i].SetSelected(TabOfButton(i) == next);
+            SetActive(originSection, next == Tab.Origin || next == Tab.Discipline);
             SetActive(optionsSection, next == Tab.Body || next == Tab.Head || next == Tab.Preview);
             SetActive(colourSection, next == Tab.Colour);
             SetActive(finaliseSection, next == Tab.Finalise);
@@ -169,6 +197,7 @@ namespace KryticalNova.UI.Menus
             switch (tab)
             {
                 case Tab.Origin: RefreshOrigin(); break;
+                case Tab.Discipline: RefreshDiscipline(); break;
                 case Tab.Body: ShowBody(); break;
                 case Tab.Head: ShowHead(); break;
                 case Tab.Preview: ShowPreview(); break;
@@ -191,13 +220,14 @@ namespace KryticalNova.UI.Menus
             {
                 var tile = originTiles[i];
                 if (tile == null) continue;
-                bool used = i < origins.Count;
-                tile.gameObject.SetActive(used);
-                if (!used) continue;
                 int index = i;
-                tile.Clicked += () => ChooseOrigin(index);
+                // The same tiles are the lineage choices on the Origin tab and the class cards on the Discipline tab.
+                tile.Clicked += () =>
+                {
+                    if (tab == Tab.Discipline) ChooseDiscipline(index);
+                    else if (index < origins.Count) ChooseOrigin(index);
+                };
             }
-            if (originSection != null) MenuUi.SetText(originSection.transform, "Label_Header", faction != null ? $"{faction.displayName} Origins" : "Origin");
         }
 
         private void ChooseOrigin(int index)
@@ -215,8 +245,14 @@ namespace KryticalNova.UI.Menus
         {
             int current = origins.FindIndex(o => o.lineage == lineage && o.bodyType == recipe.bodyType);
             for (int i = 0; i < originTiles.Length; i++)
-                if (originTiles[i] != null) originTiles[i].SetSelected(i == current);
+            {
+                if (originTiles[i] == null) continue;
+                originTiles[i].gameObject.SetActive(i < origins.Count);
+                originTiles[i].SetSelected(i == current);
+                SetTilePicture(i, null);
+            }
             if (originSection == null || lineage == null) return;
+            MenuUi.SetText(originSection.transform, "Label_Header", faction != null ? $"{faction.displayName} Origins" : "Origin");
 
             var info = MenuUi.Find(originSection.transform, "Description");
             MenuUi.SetText(info, "Label_Header", $"{lineage.displayName}, {(recipe.bodyType == BodyType.Feminine ? "Feminine" : "Masculine")}");
@@ -228,6 +264,78 @@ namespace KryticalNova.UI.Menus
                 bool used = lineage.traits != null && i < lineage.traits.Length;
                 chip.gameObject.SetActive(used);
                 if (used) MenuUi.SetText(chip, "Label_Stat", lineage.traits[i]);
+            }
+        }
+
+        // ---------------- Discipline ----------------
+
+        private void ChooseDiscipline(int index)
+        {
+            if (index < 0 || index >= disciplines.Count || disciplines[index].id == discipline) return;
+            Record(DiscreteEdit);
+            discipline = disciplines[index].id;
+            recipe.weaponClass = discipline;
+            RefreshDiscipline();
+        }
+
+        /// <summary>The Origin tiles as class cards: the weapon each class starts with, and what the class is.</summary>
+        private void RefreshDiscipline()
+        {
+            int current = disciplines.FindIndex(d => d.id == discipline);
+            for (int i = 0; i < originTiles.Length; i++)
+            {
+                if (originTiles[i] == null) continue;
+                bool used = i < disciplines.Count;
+                originTiles[i].gameObject.SetActive(used);
+                originTiles[i].SetSelected(i == current);
+                SetTilePicture(i, used ? StarterWeapon(disciplines[i].id) : null);
+            }
+            if (originSection == null) return;
+            MenuUi.SetText(originSection.transform, "Label_Header", "Choose a Discipline");
+            var info = MenuUi.Find(originSection.transform, "Description");
+            if (current < 0)
+            {
+                MenuUi.SetText(info, "Label_Header", WeaponClasses.DisplayName(discipline));
+                MenuUi.SetText(info, "Label_Description", "The weapon you start with. You can take up your faction's other weapons at any time.");
+                return;
+            }
+
+            var entry = disciplines[current];
+            var weapon = StarterWeapon(entry.id);
+            MenuUi.SetText(info, "Label_Header", $"{entry.displayName}, {WeaponClasses.RoleName(entry.role)}");
+            MenuUi.SetText(info, "Label_Description",
+                $"{entry.summary}\nYou can take up your faction's other weapons at any time."); // two short lines: all the panel has room for
+            string[] chips = { WeaponClasses.RoleName(entry.role), entry.stanceSummary, weapon != null ? $"Starts with: {weapon.displayName}" : null };
+            for (int i = 0; i < 3; i++)
+            {
+                var chip = MenuUi.Find(originSection.transform, $"Trait_0{i + 1}");
+                if (chip == null) continue;
+                bool used = !string.IsNullOrEmpty(chips[i]);
+                chip.gameObject.SetActive(used);
+                if (used) MenuUi.SetText(chip, "Label_Stat", chips[i]);
+            }
+        }
+
+        /// <summary>The level-1 weapon a class starts with, or null when the gear ladder has none for it.</summary>
+        private ItemDefinition StarterWeapon(WeaponClassId weaponClass)
+        {
+            if (gear == null || items == null) return null;
+            return gear.TryFindStarter(EquipSlot.Weapon, factionId, BodyFit.None, null, weaponClass, out var entry) ? items.Get(entry.itemId) : null;
+        }
+
+        /// <summary>A tile shows a lineage portrait (Origin) or, given an item, that item's icon (Discipline).</summary>
+        private void SetTilePicture(int index, ItemDefinition item)
+        {
+            if (index < originPortraits.Length && originPortraits[index] != null)
+                originPortraits[index].gameObject.SetActive(item == null);
+            var icon = originTiles[index] != null ? MenuUi.Find<Image>(originTiles[index].transform, "ICON") : null;
+            if (icon == null) return;
+            icon.gameObject.SetActive(item != null && item.icon != null);
+            if (item != null && item.icon != null)
+            {
+                icon.sprite = item.icon;
+                icon.preserveAspect = true;
+                icon.color = Color.white;
             }
         }
 
@@ -633,6 +741,9 @@ namespace KryticalNova.UI.Menus
         private void Apply(in CharacterRecipe next)
         {
             recipe = next;
+            // A look built from scratch (new origin, randomise) carries no Discipline; one from the undo history does.
+            if (WeaponClassRules.BelongsTo(recipe.weaponClass, factionId)) discipline = recipe.weaponClass;
+            else recipe.weaponClass = discipline;
             lineage = database.GetLineage(recipe.lineage);
             setup = lineage.SetupFor(recipe.bodyType);
             Preview();

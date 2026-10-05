@@ -29,7 +29,7 @@
 
         <!-- Top-right menu -->
         <ui:VisualElement name="menu" class="row blocks-world hud-movable">
-            <ui:Button name="open-inventory" text="INVENTORY  [I]" />
+            <ui:Button name="open-inventory" text="PACK  [I]" />
             <ui:Button name="open-map" text="MAP  [M]" />
             <ui:Button name="open-equipment" text="EQUIPMENT  [U]" />
             <ui:Button name="open-character" text="CHARACTER  [C]" />
@@ -79,8 +79,8 @@
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Vitality" /><ui:Label name="stat-1" text="10" class="stat-value" /><ui:Button name="allocate-1" text="+1" /></ui:VisualElement>
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Agility" /><ui:Label name="stat-2" text="10" class="stat-value" /><ui:Button name="allocate-2" text="+1" /></ui:VisualElement>
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Spirit" /><ui:Label name="stat-3" text="10" class="stat-value" /><ui:Button name="allocate-3" text="+1" /></ui:VisualElement>
-            <ui:Label name="resource-values" text="HP 200 / 200    Chi 100 / 100" class="accent section" />
-            <ui:Label name="resource-formula" text="STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evade | AGI: +2 Evade, +1 DP | CHI: +20 Chi, +1 AP" class="help" />
+            <ui:Label name="resource-values" text="HP 200 / 200    Flux 100 / 100" class="accent section" />
+            <ui:Label name="resource-formula" text="STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evasion | AGI: +2 Evasion, +1 DP | SPI: +20 Flux, +1 AP" class="help" />
             <ui:Label name="stat-note" text="Spend 1 point per increase. Allocating stat points or equipping gear scales both Primary and Secondary sub-stats dynamically." class="help section" />
             <ui:Label text="VITALS" class="eyebrow section" />
             <ui:VisualElement class="combat-stats-container kn-card">
@@ -90,7 +90,7 @@
                 </ui:VisualElement>
                 <ui:Label name="vital-hp-breakdown" text="Base 100 · Vitality +200 · Gear/Pets/Mounts +0" class="help vital-breakdown" />
                 <ui:VisualElement class="combat-stat-row">
-                    <ui:Label text="Chi" class="combat-stat-label" />
+                    <ui:Label text="Flux" class="combat-stat-label" />
                     <ui:Label name="vital-chi" text="100 / 100" class="combat-stat-value" />
                 </ui:VisualElement>
                 <ui:Label name="vital-chi-breakdown" text="Base 50 · Spirit +200 · Gear/Pets/Mounts +0" class="help vital-breakdown" />
@@ -137,12 +137,24 @@
                     <ui:Label name="combat-stat-crit-dmg" text="150%" class="combat-stat-value" />
                 </ui:VisualElement>
                 <ui:VisualElement class="combat-stat-row">
-                    <ui:Label text="Stun Resistance" class="combat-stat-label" />
+                    <ui:Label text="Lockup Resist" class="combat-stat-label" />
                     <ui:Label name="combat-stat-stun-res" text="0.0%" class="combat-stat-value" />
                 </ui:VisualElement>
                 <ui:VisualElement class="combat-stat-row">
                     <ui:Label text="Move Speed" class="combat-stat-label" />
                     <ui:Label name="combat-stat-speed" text="100%" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Critical Defense" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-crit-def" text="0%" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Kill-XP Rate" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-xp-rate" text="+0%" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Kill-XP Amount" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-xp-amount" text="+0%" class="combat-stat-value" />
                 </ui:VisualElement>
             </ui:VisualElement>
             </ui:ScrollView>
@@ -165,8 +177,8 @@
             <ui:Label text="MOVEMENT SKILLS" class="category-header eyebrow" />
             <ui:VisualElement class="skill-card kn-card">
                 <ui:VisualElement name="run-drag" class="skill-token"><ui:Label text="RUN" class="skill-icon" /><ui:Label name="run-rank" text="UNLEARNED · 0 / 20" class="skill-rank" /></ui:VisualElement>
-                <ui:Label name="run-description" text="Select Run, then left-click destinations. Each accepted destination costs Chi. Select Run again to walk." class="help" />
-                <ui:Label name="run-values" text="Next rank: 7.0 m/s · 5 Chi / destination" class="section" />
+                <ui:Label name="run-description" text="Select Run, then left-click destinations. Each accepted destination costs Flux. Select Run again to walk." class="help" />
+                <ui:Label name="run-values" text="Next rank: 7.0 m/s · 5 Flux / destination" class="section" />
                 <ui:Label name="run-requirement" text="Requires level 1 · Cost: 1 skill point" class="muted" />
                 <ui:Button name="upgrade-run" text="LEARN RUN" />
                 <ui:Label name="run-drag-hint" text="Learn Run, then drag the RUN tile to a hotbar slot." class="help" />
@@ -174,7 +186,7 @@
             <ui:VisualElement class="skill-card kn-card">
                 <ui:VisualElement name="jump-drag" class="skill-token jump-token"><ui:Label text="JUMP" class="skill-icon" /><ui:Label name="jump-rank" text="UNLEARNED · 0 / 20" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="jump-description" text="Select Jump, then left-click a landing point. Flip forward at the apex and bounce on landing." class="help" />
-                <ui:Label name="jump-values" text="Next: 2.0 m range / +1.5 m height — 12 Chi" class="section skill-values" />
+                <ui:Label name="jump-values" text="Next: 2.0 m range / +1.5 m height — 12 Flux" class="section skill-values" />
                 <ui:Label name="jump-requirement" text="Requires level 1 · Upgrade: 1 skill point" class="muted" />
                 <ui:Button name="upgrade-jump" text="LEARN JUMP" />
                 <ui:Label name="jump-drag-hint" text="Learn Jump, then drag its tile to a hotbar slot." class="help" />
@@ -185,15 +197,15 @@
             <ui:VisualElement class="skill-card kn-card">
                 <ui:VisualElement name="spiritual-rage-drag" class="skill-token rage-token"><ui:Label text="SPIRITUAL RAGE" class="skill-icon" /><ui:Label name="spiritual-rage-rank" text="UNLEARNED" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="spiritual-rage-description" text="Ignites spiritual fervor, granting +30% Critical Rate for 180s." class="help" />
-                <ui:Label name="spiritual-rage-values" text="+30% Critical Rate · 180s duration · 1s CD · 15 Chi · Self" class="section" />
+                <ui:Label name="spiritual-rage-values" text="+30% Critical Rate · 180s duration · 1s CD · 15 Flux · Self" class="section" />
                 <ui:Label name="spiritual-rage-requirement" text="Requires Level 1 · Cost: 1 skill point" class="muted" />
                 <ui:Button name="upgrade-spiritual-rage" text="LEARN SPIRITUAL RAGE" />
                 <ui:Label name="spiritual-rage-drag-hint" text="Learn Spiritual Rage, then drag to a hotbar slot." class="help" />
             </ui:VisualElement>
             <ui:VisualElement class="skill-card kn-card">
                 <ui:VisualElement name="heavenly-serenity-drag" class="skill-token serenity-token"><ui:Label text="HEAVENLY SERENITY" class="skill-icon" /><ui:Label name="heavenly-serenity-rank" text="UNLEARNED" class="skill-rank" /></ui:VisualElement>
-                <ui:Label name="heavenly-serenity-description" text="Meditate in tranquil focus, restoring HP and Chi every second for 20s. Interrupted by taking damage or moving." class="help" />
-                <ui:Label name="heavenly-serenity-values" text="+1% HP · +2% Chi every 1s · 20s channel · 0 Chi" class="section" />
+                <ui:Label name="heavenly-serenity-description" text="Meditate in tranquil focus, restoring HP and Flux every second for 20s. Interrupted by taking damage or moving." class="help" />
+                <ui:Label name="heavenly-serenity-values" text="+1% HP · +2% Flux every 1s · 20s channel · 0 Flux" class="section" />
                 <ui:Label name="heavenly-serenity-requirement" text="Requires Level 1 · Cost: 1 skill point" class="muted" />
                 <ui:Button name="upgrade-heavenly-serenity" text="LEARN HEAVENLY SERENITY" />
                 <ui:Label name="heavenly-serenity-drag-hint" text="Learn Heavenly Serenity, then drag to a hotbar slot." class="help" />
@@ -207,8 +219,8 @@
             <ui:VisualElement class="skill-card kn-card rare-skill-card">
                 <ui:VisualElement name="heavenly-shield-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY SHIELD" class="skill-icon" /><ui:Label name="heavenly-shield-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="heavenly-shield-description" text="Forms an impenetrable celestial barrier absorbing incoming damage up to 150% Max HP for 60s." class="help" />
-                <ui:Label name="heavenly-shield-values" text="150% Max HP Shield · 60s duration · 2s CD · 30 Chi · Self" class="section" />
-                <ui:Label name="heavenly-shield-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Label name="heavenly-shield-values" text="150% Max HP Shield · 60s duration · 2s CD · 30 Flux · Self" class="section" />
+                <ui:Label name="heavenly-shield-requirement" text="Requires a Skill Chip (locked until acquired)" class="drop-book-note" />
                 <ui:Button name="upgrade-heavenly-shield" text="REQUIRES SKILL BOOK" />
                 <ui:Label name="heavenly-shield-drag-hint" text="Available once the Heavenly Shield skill book is acquired." class="help" />
             </ui:VisualElement>
@@ -216,9 +228,9 @@
             <!-- Heavenly Blow -->
             <ui:VisualElement class="skill-card kn-card rare-skill-card">
                 <ui:VisualElement name="heavenly-blow-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY BLOW" class="skill-icon" /><ui:Label name="heavenly-blow-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
-                <ui:Label name="heavenly-blow-description" text="Channels lethal spiritual force, granting +75% Critical / Deadly Blow chance for 180s." class="help" />
-                <ui:Label name="heavenly-blow-values" text="+75% Critical Rate · 180s duration · 1s CD · 25 Chi · Self" class="section" />
-                <ui:Label name="heavenly-blow-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Label name="heavenly-blow-description" text="Channels lethal spiritual force, granting +75% Critical chance for 180s." class="help" />
+                <ui:Label name="heavenly-blow-values" text="+75% Critical Rate · 180s duration · 1s CD · 25 Flux · Self" class="section" />
+                <ui:Label name="heavenly-blow-requirement" text="Requires a Skill Chip (locked until acquired)" class="drop-book-note" />
                 <ui:Button name="upgrade-heavenly-blow" text="REQUIRES SKILL BOOK" />
                 <ui:Label name="heavenly-blow-drag-hint" text="Available once the Heavenly Blow skill book is acquired." class="help" />
             </ui:VisualElement>
@@ -227,8 +239,8 @@
             <ui:VisualElement class="skill-card kn-card rare-skill-card">
                 <ui:VisualElement name="garudas-prayer-drag" class="skill-token rare-token"><ui:Label text="GARUDA'S PRAYER" class="skill-icon" /><ui:Label name="garudas-prayer-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="garudas-prayer-description" text="Invokes the divine favor of Garuda, bestowing +100% Luck for 240s." class="help" />
-                <ui:Label name="garudas-prayer-values" text="+100% Luck · 240s duration · 1s CD · 20 Chi · Self" class="section" />
-                <ui:Label name="garudas-prayer-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Label name="garudas-prayer-values" text="+100% Luck · 240s duration · 1s CD · 20 Flux · Self" class="section" />
+                <ui:Label name="garudas-prayer-requirement" text="Requires a Skill Chip (locked until acquired)" class="drop-book-note" />
                 <ui:Button name="upgrade-garudas-prayer" text="REQUIRES SKILL BOOK" />
                 <ui:Label name="garudas-prayer-drag-hint" text="Available once the Garuda's Prayer skill book is acquired." class="help" />
             </ui:VisualElement>
@@ -237,8 +249,8 @@
             <ui:VisualElement class="skill-card kn-card rare-skill-card">
                 <ui:VisualElement name="heavenly-repulsion-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY REPULSION" class="skill-icon" /><ui:Label name="heavenly-repulsion-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="heavenly-repulsion-description" text="Envelops the body in a reactive mirror aura. 10% chance on incoming hit to take 0 damage and reflect 100% damage back for 180s." class="help" />
-                <ui:Label name="heavenly-repulsion-values" text="10% Reflect · 100% Dmg Reflected · 180s duration · 1s CD · 25 Chi · Self" class="section" />
-                <ui:Label name="heavenly-repulsion-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Label name="heavenly-repulsion-values" text="10% Reflect · 100% Dmg Reflected · 180s duration · 1s CD · 25 Flux · Self" class="section" />
+                <ui:Label name="heavenly-repulsion-requirement" text="Requires a Skill Chip (locked until acquired)" class="drop-book-note" />
                 <ui:Button name="upgrade-heavenly-repulsion" text="REQUIRES SKILL BOOK" />
                 <ui:Label name="heavenly-repulsion-drag-hint" text="Available once the Heavenly Repulsion skill book is acquired." class="help" />
             </ui:VisualElement>
@@ -247,8 +259,8 @@
             <ui:VisualElement class="skill-card kn-card rare-skill-card">
                 <ui:VisualElement name="heavenly-destruction-drag" class="skill-token rare-token"><ui:Label text="HEAVENLY DESTRUCTION" class="skill-icon" /><ui:Label name="heavenly-destruction-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
                 <ui:Label name="heavenly-destruction-description" text="Infuses attacks with devastating force. 10% chance per hit to instantly shatter enemy Heavenly Shield and 50% chance to dispel stance buffs for 180s." class="help" />
-                <ui:Label name="heavenly-destruction-values" text="10% Shield Shatter · 50% Dispel · 180s duration · 1s CD · 25 Chi · Self" class="section" />
-                <ui:Label name="heavenly-destruction-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Label name="heavenly-destruction-values" text="10% Shield Shatter · 50% Dispel · 180s duration · 1s CD · 25 Flux · Self" class="section" />
+                <ui:Label name="heavenly-destruction-requirement" text="Requires a Skill Chip (locked until acquired)" class="drop-book-note" />
                 <ui:Button name="upgrade-heavenly-destruction" text="REQUIRES SKILL BOOK" />
                 <ui:Label name="heavenly-destruction-drag-hint" text="Available once the Heavenly Destruction skill book is acquired." class="help" />
             </ui:VisualElement>
@@ -256,9 +268,9 @@
             <!-- Reverse Flow -->
             <ui:VisualElement class="skill-card kn-card rare-skill-card">
                 <ui:VisualElement name="reverse-flow-drag" class="skill-token rare-token"><ui:Label text="REVERSE FLOW" class="skill-icon" /><ui:Label name="reverse-flow-rank" text="LOCKED (BOOK REQUIRED)" class="skill-rank" /></ui:VisualElement>
-                <ui:Label name="reverse-flow-description" text="Reverses internal meridian flow, granting +20% Stun (Acupressure) resistance for 180s." class="help" />
-                <ui:Label name="reverse-flow-values" text="+20% Stun Resistance · 180s duration · 1s CD · 20 Chi · Self" class="section" />
-                <ui:Label name="reverse-flow-requirement" text="Requires Rare Skill Book Drop (Locked until acquired)" class="drop-book-note" />
+                <ui:Label name="reverse-flow-description" text="Reverses internal meridian flow, granting +20% Lockup resistance for 180s." class="help" />
+                <ui:Label name="reverse-flow-values" text="+20% Lockup Resist · 180s duration · 1s CD · 20 Flux · Self" class="section" />
+                <ui:Label name="reverse-flow-requirement" text="Requires a Skill Chip (locked until acquired)" class="drop-book-note" />
                 <ui:Button name="upgrade-reverse-flow" text="REQUIRES SKILL BOOK" />
                 <ui:Label name="reverse-flow-drag-hint" text="Available once the Reverse Flow skill book is acquired." class="help" />
             </ui:VisualElement>
@@ -283,7 +295,7 @@
                 <ui:Toggle name="setting-controls-hint" label="Show hotbar controls hint" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-minimap-rotate" label="Rotate minimap with camera" value="true" class="kn-toggle kn-card" />
                 <ui:Label text="KEYS" class="eyebrow section" />
-                <ui:Label text="I  Inventory     U  Equipment     C  Character     K  Skills     M  Map     O  Settings&#10;1–0 and Q W E R  Hotbar     Esc  Close / cancel     F1 or ~  Network panel" class="help keys-help" />
+                <ui:Label text="I  Pack     U  Equipment     C  Character     K  Skills     M  Map     O  Settings&#10;1–0 and Q W E R  Hotbar     Esc  Close / cancel     F1 or ~  Network panel" class="help keys-help" />
             </ui:ScrollView>
         </ui:VisualElement>
 

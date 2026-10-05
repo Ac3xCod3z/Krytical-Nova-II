@@ -312,3 +312,39 @@ MonoBehaviour:
   - experienceRequired: 98504
     statPointReward: 5
     skillPointReward: 1
+  - experienceRequired: 100000
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 101504
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 103015
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 104534
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 106060
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 107593
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 109134
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 110682
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 112237
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 113799
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 115369
+    statPointReward: 5
+    skillPointReward: 1
+  - experienceRequired: 116946
+    statPointReward: 5
+    skillPointReward: 1

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Stat_MaxChi
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.StatDefinitionData
   statType: 9
-  statName: Max Chi
-  abbreviation: CHI
+  statName: Max Flux
+  abbreviation: FLUX
   description: Resource pool consumed by actions and movement toggles.
   minValue: 0
   maxValue: 999999

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Pill_Vitality
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 9001
-  displayName: Vitality Pill
+  displayName: HP Stim
   description: Restores 300 HP.
   icon: {fileID: 21300000, guid: fa30a95ba2a13bc44869fc8fded1f995, type: 3}
   rarity: 0
@@ -25,6 +25,8 @@ MonoBehaviour:
   useCooldown: 1
   usableFromHotbar: 1
   placeholderGlyph: HP
+  appearancePartIds: 
+  partCatalog: {fileID: 0}
   appearanceParts: []
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}

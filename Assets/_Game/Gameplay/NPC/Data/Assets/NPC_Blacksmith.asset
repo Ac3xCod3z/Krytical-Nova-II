@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: NPC_Blacksmith
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 1
-  displayName: Blacksmith
-  title: "Weapons \xB7 Armor \xB7 Crafting"
+  displayName: Armorer
+  title: "Weapons \xB7 Armor \xB7 Tempering"
   greeting: Bring me steel and coin, and I'll make you something worth swinging.
-  services: Buys, sells, upgrades and crafts early-game weapons and armor.
+  services: Buys, sells and crafts weapons and armor. Tempering, Fusion and Tuning are done at this forge.
   interactRange: 3

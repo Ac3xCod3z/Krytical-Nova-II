@@ -97,7 +97,7 @@ namespace KryticalNova.EditorTools.GM
             if (res != null)
             {
                 DrawBar($"HP  {res.Health:0} / {res.MaxHealth:0}", res.MaxHealth > 0f ? res.Health / res.MaxHealth : 0f);
-                DrawBar($"Chi  {res.Chi:0} / {res.MaxChi:0}", res.MaxChi > 0f ? res.Chi / res.MaxChi : 0f);
+                DrawBar($"Flux  {res.Chi:0} / {res.MaxChi:0}", res.MaxChi > 0f ? res.Chi / res.MaxChi : 0f);
             }
 
             var env = Env;
@@ -108,7 +108,7 @@ namespace KryticalNova.EditorTools.GM
             var flags = new List<string>();
             var gm = TargetGm;
             if (gm != null && gm.GodMode) flags.Add("GOD");
-            if (gm != null && gm.InfiniteChi) flags.Add("INF CHI");
+            if (gm != null && gm.InfiniteChi) flags.Add("INF FLUX");
             if (gm != null && gm.NoCooldowns) flags.Add("NO CD");
             if (gm != null && gm.OneShot) flags.Add("ONE-SHOT");
             if (!Mathf.Approximately(Time.timeScale, 1f)) flags.Add($"GAME ×{Time.timeScale:0.##}");
@@ -427,7 +427,7 @@ namespace KryticalNova.EditorTools.GM
         }
 
         [TabGroup(Tabs, StatsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(100)]
-        [InfoBox("Adds a flat GM bonus on top of everything else (0 removes it). Max HP / Chi pools update on the HUD.")]
+        [InfoBox("Adds a flat GM bonus on top of everything else (0 removes it). Max HP / Flux pools update on the HUD.")]
         private void SetStatBonus(StatType stat = StatType.MaxHP, float value = 500f) => Run($"gm.setstat {stat} {F(value)}");
 
         [ButtonGroup(Tabs + "/" + StatsTab + "/Actions"), EnableIf(nameof(IsReady)), PropertyOrder(101)]
@@ -470,7 +470,7 @@ namespace KryticalNova.EditorTools.GM
             set { if (value != GodMode) Run($"gm.god {(value ? "true" : "false")}"); }
         }
 
-        [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Infinite Chi"), PropertyOrder(201)]
+        [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Infinite Flux"), PropertyOrder(201)]
         private bool InfiniteChi
         {
             get => TargetGm != null && TargetGm.InfiniteChi;
@@ -526,7 +526,7 @@ namespace KryticalNova.EditorTools.GM
         private void NormalSpeed() => Run("gm.slowmo 1");
 
         [TabGroup(Tabs, CheatsTab), Title("Presets"), Button(ButtonSizes.Large), GUIColor(0.55f, 0.9f, 0.75f), EnableIf(nameof(IsReady)), PropertyOrder(205)]
-        [InfoBox("Max level, god mode, infinite Chi, no cooldowns, full heal.")]
+        [InfoBox("Max level, god mode, infinite Flux, no cooldowns, full heal.")]
         private void DevLoadout()
         {
             Run("gm.maxlevel");
@@ -816,6 +816,49 @@ namespace KryticalNova.EditorTools.GM
 
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Give"), EnableIf(nameof(IsReady)), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(503)]
         private void ClearBag() => Run("item.clear");
+
+        // ---- ladder gear: the same lookups as gm.gear / gm.loadout
+
+        private enum GearSlotChoice { Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape }
+        private enum GearRarityChoice { Common, Uncommon, Rare, Epic }
+        private enum GearClassChoice
+        {
+            Current, Monoblade, Glaive, Carbine, Harvester, ServoClaws, ArcCaster, Longaxe, Claymore, Warbow
+        }
+
+        [TabGroup(Tabs, ItemsTab), Title("Ladder Gear"), EnableIf(nameof(IsReady)), LabelText("Slot"), PropertyOrder(510)]
+        [SerializeField] private GearSlotChoice gearSlot = GearSlotChoice.Weapon;
+
+        [TabGroup(Tabs, ItemsTab), EnableIf(nameof(IsReady)), LabelText("Rarity"), PropertyOrder(511)]
+        [SerializeField] private GearRarityChoice gearRarity = GearRarityChoice.Common;
+
+        [TabGroup(Tabs, ItemsTab), ValueDropdown(nameof(GearLevelChoices)), EnableIf(nameof(IsReady)), LabelText("Level"), PropertyOrder(512)]
+        [SerializeField] private int gearLevel = 1;
+
+        [TabGroup(Tabs, ItemsTab), EnableIf(nameof(IsReady)), LabelText("Class"), PropertyOrder(513)]
+        [InfoBox("Current = the class the player is using. Another class only matters for weapons and loadouts.")]
+        [SerializeField] private GearClassChoice gearClass = GearClassChoice.Current;
+
+        private string GearClassArgument => gearClass == GearClassChoice.Current ? string.Empty : " " + gearClass.ToString().ToLowerInvariant();
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Gear"), EnableIf(nameof(IsReady)), PropertyOrder(514)]
+        private void GiveGear() =>
+            Run($"gm.gear {gearSlot.ToString().ToLowerInvariant()} {gearLevel} {gearRarity.ToString().ToLowerInvariant()}{GearClassArgument}");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Gear"), EnableIf(nameof(IsReady)), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(515)]
+        private void StarterLoadout() => Run($"gm.loadout{GearClassArgument}");
+
+        /// <summary>The tiers that exist for the chosen slot and rarity, so the level can only be a real band step.</summary>
+        private IEnumerable<ValueDropdownItem<int>> GearLevelChoices()
+        {
+            var inv = LocalInventory;
+            if (inv == null || inv.Gear == null) yield break;
+            var seen = new SortedSet<int>();
+            string slotName = gearSlot.ToString(), rarityName = gearRarity.ToString();
+            foreach (var entry in inv.Gear.Entries)
+                if (entry.slot.ToString() == slotName && entry.rarity.ToString() == rarityName) seen.Add(entry.itemLevel);
+            foreach (int level in seen) yield return new ValueDropdownItem<int>($"Level {level}", level);
+        }
 
         private static IEnumerable<ValueDropdownItem<string>> ItemChoices()
         {

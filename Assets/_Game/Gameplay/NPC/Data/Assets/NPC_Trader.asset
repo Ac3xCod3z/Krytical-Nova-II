@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: NPC_Trader
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 3
-  displayName: Trader
-  title: Community Marketplace
+  displayName: Broker
+  title: The Exchange
   greeting: Everything has a buyer. Everything.
-  services: With a Commission Receipt, list rare items (12% enchant or more) for sale, or browse and buy gear listed by other players.
+  services: With a Commission Receipt, list Rare gear (12% Temper or more) on the Exchange, or browse and buy gear listed by other players.
   interactRange: 3

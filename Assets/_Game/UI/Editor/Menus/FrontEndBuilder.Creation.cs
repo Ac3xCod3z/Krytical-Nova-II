@@ -16,6 +16,7 @@ namespace KryticalNova.EditorTools
         private const string CharacterIcons = Screens + "Sprites/Icons_Character/ICON_FantasyScreens_Character_";
         private const string OriginTabIcon = "Assets/Synty/InterfaceFantasyMenus/Sprites/Icons_FantasyMenus/SPR_FantasyMenus_Icon_Flag_01.png";
         private const string FinaliseTabIcon = Screens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Done_01_Underlay.png";
+        private const string DisciplineTabIcon = Screens + "Sprites/Icons_Inventory/ICON_FantasyScreens_Inventory_Swords_01_Underlay.png";
         private const string PreviewTabIcon = Screens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Message_01_Underlay.png";
         private const string OptionRowPrefab = Menus + "Settings/Settings_FantasyMenus_Item_Array_01.prefab";
         private const string SliderRowPrefab = Screens + "Prefabs/Components/Settings_FantasyScreens_Item_Slider_01.prefab";
@@ -148,6 +149,9 @@ namespace KryticalNova.EditorTools
             var creator = controller.AddComponent<CharacterCreatorController>();
             SetRef(creator, "screen", screen);
             SetRef(creator, "database", database);
+            SetRef(creator, "classes", AssetDatabase.LoadAssetAtPath<KryticalNova.Items.WeaponClassCatalog>(ClassSkillBuilder.CatalogPath));
+            SetRef(creator, "gear", AssetDatabase.LoadAssetAtPath<KryticalNova.Items.GearDictionary>(SidekickGearGenerator.DictionaryPath));
+            SetRef(creator, "items", AssetDatabase.LoadAssetAtPath<KryticalNova.Items.ItemCatalog>(SidekickGearGenerator.CatalogPath));
             SetRef(creator, "showroom", showroom);
             SetRef(creator, "portraits", studio);
             SetRef(creator, "hotkeys", hotkeys);
@@ -175,7 +179,7 @@ namespace KryticalNova.EditorTools
             End(build);
         }
 
-        /// <summary>The pack's seven tabs become our six: Origin, Body, Head, Preview, Colour, Finalise.</summary>
+        /// <summary>The pack's seven tabs become ours: Origin, Discipline, Body, Head, Preview, Colour, Finalise.</summary>
         private static void PrepareTabs(Transform screen, CharacterCreatorController creator)
         {
             var nav = MenuUi.Find(screen, "Navigation_Tabs");
@@ -183,13 +187,20 @@ namespace KryticalNova.EditorTools
             var tabs = new List<MenuRow>
             {
                 PrepareTab(nav, "Button_Randomize", OriginTabIcon),
+                PrepareTab(nav, "Button_Facial_Hair", DisciplineTabIcon), // the pack's spare tab: the weapon class
                 PrepareTab(nav, "Button_Body", CharacterIcons + "Body_01_Underlay.png"),
                 PrepareTab(nav, "Button_Race", CharacterIcons + "Head_01_Underlay.png"), // the screen renames the pack's Head tab
                 PrepareTab(nav, "Button_Hair", PreviewTabIcon), // the pack's Hair tab: hair is a row on the Head tab
                 PrepareTab(nav, "Button_Colour", CharacterIcons + "Markings_01_Underlay.png"),
                 PrepareTab(nav, "Button_Finalise", FinaliseTabIcon)
             };
-            Hide(MenuUi.Find(nav, "Button_Facial_Hair"));
+            // The pack hides nothing here any more: its spare tab is ours. The controller moves it next to Origin
+            // when the screen opens (children of the screen prefab cannot be reordered in the saved scene).
+            if (tabs[1] != null)
+            {
+                tabs[1].gameObject.SetActive(true);
+                Record(tabs[1].gameObject);
+            }
             SetRefs(creator, "tabButtons", tabs);
         }
 

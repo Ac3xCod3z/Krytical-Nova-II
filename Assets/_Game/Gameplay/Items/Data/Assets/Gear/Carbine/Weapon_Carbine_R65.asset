@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3622be29843aeb149be9b3196ff71071, type: 3}
+  m_Name: Weapon_Carbine_R65
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
+  itemId: 12018
+  displayName: Assault Carbine
+  description: 'Carbine: the ranged weapon of the Hegemony.'
+  icon: {fileID: 21300000, guid: 0d6fd60af37ec9247bb2ccd9029262d5, type: 3}
+  rarity: 2
+  equipSlot: 1
+  maxStack: 1
+  itemLevel: 65
+  lineId: 127
+  weaponClass: 3
+  baseStats:
+  - stat: 4
+    modType: 0
+    value: 490
+  secondaryStats:
+  - stat: 6
+    modType: 0
+    value: 163
+  - stat: 12
+    modType: 0
+    value: 83
+  skillModifiers:
+  - line: 3
+    levels: 3
+  statModifiers: []
+  restoreHealth: 0
+  restoreChi: 0
+  useCooldown: 1
+  usableFromHotbar: 0
+  placeholderGlyph: 
+  appearancePartIds: 
+  partCatalog: {fileID: 0}
+  appearanceParts: []
+  weaponPrefab: {fileID: 5021330530495522819, guid: a30f8576c529d5549b7ede19a5c73cad, type: 3}
+  weaponLocalPosition: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalScale: {x: 1, y: 1, z: 1}
+  hitboxCenter: {x: 0, y: 0.014846921, z: 0.3808626}
+  hitboxSize: {x: 0.18, y: 0.4152559, z: 0.66172516}
+  petPrefab: {fileID: 0}
+  petScale: 1
+  petOffset: {x: 0.45, y: 0.75, z: -0.15}

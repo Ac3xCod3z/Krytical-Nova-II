@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Skill_DevilsStrike
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
   skillId: DevilsStrike
-  displayName: Devil's Strike
+  displayName: Severance
   description: A heavier single hit for seasoned blades.
   category: 4
+  weaponClass: 1
+  classSlot: 4
+  presentationId: 
   targetType: 1
   executionType: 0
   acquisitionMethod: 0
   requiresSkillBook: 0
-  acquisitionNote: Faction Skill Trainer
+  acquisitionNote: Faction Instructor
   requiredCraftingArchives: []
   requiredCharacterLevel: 30
   minRank: 1
@@ -76,6 +79,7 @@ MonoBehaviour:
   hitTimesNormalized:
   - 0.16
   castLockNormalized: 0.9
+  attackCancelNormalized: 1
   castLiftCurve:
     serializedVersion: 2
     m_Curve: []

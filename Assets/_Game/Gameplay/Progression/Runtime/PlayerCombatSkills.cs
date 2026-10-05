@@ -24,6 +24,7 @@ namespace KryticalNova.Progression
         private CharacterCombatStats combatStats;
         private ISkillAttackExecutor attackExecutor;
         private PlayerGmState gmState;
+        private IWeaponClassSource classSource;
 
         // Indexed like availableSkills: 0 = not learned. Only the owner needs them; casts carry their rank to everyone else.
         private NetworkList<byte> netRanks;
@@ -39,8 +40,31 @@ namespace KryticalNova.Progression
         public event Action Changed;
         public event Action<SkillDefinitionSO> SkillCast;
         public event Action<string> SkillMessage;
+        /// <summary>The character's weapon class changed (it equipped another class's weapon): (previous, current).</summary>
+        public event Action<WeaponClassId, WeaponClassId> ActiveClassChanged;
 
         public IReadOnlyList<SkillDefinitionSO> AvailableSkills => availableSkills;
+
+        /// <summary>The class of the weapon in hand. None when nothing tracks it (a test avatar): every skill is then usable.</summary>
+        public WeaponClassId ActiveClass => classSource != null ? classSource.ActiveClass : WeaponClassId.None;
+
+        /// <summary>Shared skills always; a class skill only while its class's weapon is in hand.</summary>
+        public bool IsInActiveKit(SkillDefinitionSO skill)
+        {
+            if (skill == null) return false;
+            if (!skill.IsClassSkill || classSource == null) return true;
+            var active = classSource.ActiveClass;
+            return active == WeaponClassId.None || skill.weaponClass == active;
+        }
+
+        /// <summary>The skill a class has in a slot, or null.</summary>
+        public SkillDefinitionSO GetClassSkill(WeaponClassId weaponClass, ClassSkillSlot slot)
+        {
+            if (availableSkills == null) return null;
+            foreach (var skill in availableSkills)
+                if (skill != null && skill.weaponClass == weaponClass && skill.classSlot == slot) return skill;
+            return null;
+        }
 
         /// <summary>True where this player's skills are decided (the server, or offline). Clients only mirror them.</summary>
         public bool HasAuthority => !IsSpawned || IsServer;
@@ -60,6 +84,38 @@ namespace KryticalNova.Progression
             if (combatStats == null) combatStats = GetComponent<CharacterCombatStats>();
             if (attackExecutor == null) attackExecutor = GetComponent<ISkillAttackExecutor>();
             if (gmState == null) gmState = GetComponent<PlayerGmState>();
+            if (classSource == null) classSource = GetComponent<IWeaponClassSource>();
+        }
+
+        private void OnEnable()
+        {
+            EnsureComponents();
+            if (classSource != null) classSource.ActiveClassChanged += OnActiveClassChanged;
+        }
+
+        private void OnDisable()
+        {
+            if (classSource != null) classSource.ActiveClassChanged -= OnActiveClassChanged;
+        }
+
+        /// <summary>
+        /// A stance or guard belongs to the class that raised it: swapping to another class's weapon drops it. Decided
+        /// where buffs are decided; the removal reaches clients like any other cut-short buff.
+        /// </summary>
+        private void OnActiveClassChanged(WeaponClassId previous, WeaponClassId current)
+        {
+            if (HasAuthority && buffManager != null && current != WeaponClassId.None)
+            {
+                List<string> stale = null;
+                foreach (var buff in buffManager.ActiveBuffs)
+                {
+                    if (buff.Skill == null || !buff.Skill.IsClassSkill || buff.Skill.weaponClass == current) continue;
+                    (stale ??= new List<string>()).Add(buff.Skill.skillId);
+                }
+                if (stale != null) foreach (string skillId in stale) buffManager.RemoveBuff(skillId);
+            }
+            ActiveClassChanged?.Invoke(previous, current);
+            Changed?.Invoke();
         }
 
         public override void OnNetworkSpawn()
@@ -124,8 +180,10 @@ namespace KryticalNova.Progression
                 byte rank = skill != null ? (byte)Mathf.Clamp(GetRank(skill), 0, byte.MaxValue) : (byte)0;
                 if (i >= netRanks.Count) netRanks.Add(rank);
                 else if (netRanks[i] != rank) netRanks[i] = rank;
-                if (skill != null && i < 64 && unlockedDropSkills.Contains(skill.skillId)) books |= 1UL << i;
+                if (skill != null && i < 64 && unlockedDropSkills.Contains(skill.RankKey)) books |= 1UL << i;
             }
+            // The list can shrink when the skill set changes (a character's faction becomes known).
+            while (netRanks.Count > availableSkills.Length) netRanks.RemoveAt(netRanks.Count - 1);
             netUnlockedBooks.Value = books;
         }
 
@@ -140,8 +198,8 @@ namespace KryticalNova.Progression
             {
                 var skill = availableSkills[i];
                 if (skill == null) continue;
-                if (i < netRanks.Count && netRanks[i] > 0) learnedRanks[skill.skillId] = netRanks[i];
-                if (i < 64 && (books & (1UL << i)) != 0) unlockedDropSkills.Add(skill.skillId);
+                if (i < netRanks.Count && netRanks[i] > 0) learnedRanks[skill.RankKey] = netRanks[i];
+                if (i < 64 && (books & (1UL << i)) != 0) unlockedDropSkills.Add(skill.RankKey);
             }
             Changed?.Invoke();
         }
@@ -153,10 +211,23 @@ namespace KryticalNova.Progression
             Changed?.Invoke();
         }
 
+        /// <summary>
+        /// Replaces the skills this character can have (shared skills plus the kits of its faction). Every peer must
+        /// be given the same list in the same order: ranks are mirrored to the owner by position in it.
+        /// </summary>
         public void SetAvailableSkills(SkillDefinitionSO[] skills)
         {
-            availableSkills = skills;
+            availableSkills = skills ?? Array.Empty<SkillDefinitionSO>();
+            if (IsSpawned && IsServer) WriteNetState();
+            else if (IsSpawned && IsOwner) { ReadNetState(); return; } // raises Changed itself
             Changed?.Invoke();
+        }
+
+        /// <summary>The key a skill's rank, unlock and cooldown are stored under, from its ID.</summary>
+        private string RankKeyOf(string skillId)
+        {
+            var skill = GetSkill(skillId);
+            return skill != null ? skill.RankKey : skillId;
         }
 
         public SkillDefinitionSO GetSkill(string skillId)
@@ -174,7 +245,7 @@ namespace KryticalNova.Progression
         public int GetRank(SkillDefinitionSO skill)
         {
             if (skill == null) return 0;
-            return learnedRanks.TryGetValue(skill.skillId, out int rank) ? Mathf.Max(0, rank) : 0;
+            return learnedRanks.TryGetValue(skill.RankKey, out int rank) ? Mathf.Max(0, rank) : 0;
         }
 
         public bool IsLearned(SkillDefinitionSO skill)
@@ -185,18 +256,19 @@ namespace KryticalNova.Progression
 
         /// <summary>Book skills (level-60 drops, Wargod) stay locked until their book is acquired, whatever the level.</summary>
         public bool IsLocked(SkillDefinitionSO skill) =>
-            skill != null && skill.requiresSkillBook && !unlockedDropSkills.Contains(skill.skillId);
+            skill != null && skill.requiresSkillBook && !unlockedDropSkills.Contains(skill.RankKey);
 
-        public bool IsDropSkillUnlocked(string skillId) => unlockedDropSkills.Contains(skillId);
+        public bool IsDropSkillUnlocked(string skillId) => unlockedDropSkills.Contains(RankKeyOf(skillId));
 
         /// <summary>Authority only: book unlocks come from the server (drops, GM).</summary>
         public void UnlockDropSkill(string skillId)
         {
             if (!HasAuthority) return;
-            if (!unlockedDropSkills.Contains(skillId))
+            string key = RankKeyOf(skillId);
+            if (!unlockedDropSkills.Contains(key))
             {
-                unlockedDropSkills.Add(skillId);
-                SkillMessage?.Invoke($"Acquired secret martial arts book: {skillId} unlocked!");
+                unlockedDropSkills.Add(key);
+                SkillMessage?.Invoke($"Acquired Skill Chip: {skillId} unlocked!");
                 Commit();
             }
         }
@@ -204,7 +276,7 @@ namespace KryticalNova.Progression
         public void LockDropSkill(string skillId)
         {
             if (!HasAuthority) return;
-            if (unlockedDropSkills.Remove(skillId))
+            if (unlockedDropSkills.Remove(RankKeyOf(skillId)))
             {
                 Commit();
             }
@@ -216,9 +288,9 @@ namespace KryticalNova.Progression
             foreach (var skill in availableSkills)
             {
                 if (skill != null && skill.requiresSkillBook)
-                    unlockedDropSkills.Add(skill.skillId);
+                    unlockedDropSkills.Add(skill.RankKey);
             }
-            SkillMessage?.Invoke("All Rare Drop Book Skills unlocked for testing!");
+            SkillMessage?.Invoke("All Skill Chip skills unlocked for testing!");
             Commit();
         }
 
@@ -226,7 +298,7 @@ namespace KryticalNova.Progression
         {
             if (!HasAuthority) return;
             unlockedDropSkills.Clear();
-            SkillMessage?.Invoke("All Rare Drop Book Skills locked.");
+            SkillMessage?.Invoke("All Skill Chip skills locked.");
             Commit();
         }
 
@@ -237,8 +309,8 @@ namespace KryticalNova.Progression
             foreach (var skill in availableSkills)
             {
                 if (skill == null) continue;
-                if (skill.requiresSkillBook) unlockedDropSkills.Add(skill.skillId);
-                learnedRanks[skill.skillId] = skill.maxRank;
+                if (skill.requiresSkillBook) unlockedDropSkills.Add(skill.RankKey);
+                learnedRanks[skill.RankKey] = skill.maxRank;
             }
             SkillMessage?.Invoke("GM: every skill unlocked at max rank.");
             Commit();
@@ -253,7 +325,7 @@ namespace KryticalNova.Progression
             if (progression == null) { reason = "Progression missing"; return false; }
             if (IsLocked(skill))
             {
-                reason = $"Requires skill book ({skill.acquisitionNote})";
+                reason = $"Requires Skill Chip ({skill.acquisitionNote})";
                 return false;
             }
             if (progression.CurrentLevel < skill.requiredCharacterLevel)
@@ -303,13 +375,13 @@ namespace KryticalNova.Progression
                 int cost = skill.GetSkillPointCostForRank(curRank);
                 if (!progression.TrySpendSkillPoints(cost)) break;
 
-                learnedRanks[skill.skillId] = curRank + 1;
+                learnedRanks[skill.RankKey] = curRank + 1;
                 upgraded++;
             }
 
             if (upgraded > 0)
             {
-                SkillMessage?.Invoke($"Upgraded {skill.displayName} to Rank {learnedRanks[skill.skillId]}");
+                SkillMessage?.Invoke($"Upgraded {skill.displayName} to Rank {learnedRanks[skill.RankKey]}");
                 Commit();
             }
             return upgraded;
@@ -343,13 +415,13 @@ namespace KryticalNova.Progression
         {
             if (skill == null) return false;
             if (gmState != null && gmState.NoCooldowns) return false;
-            return cooldownEndTimes.TryGetValue(skill.skillId, out float endTime) && Time.time < endTime;
+            return cooldownEndTimes.TryGetValue(skill.RankKey, out float endTime) && Time.time < endTime;
         }
 
         public float GetRemainingCooldown(SkillDefinitionSO skill)
         {
             if (skill == null) return 0f;
-            if (cooldownEndTimes.TryGetValue(skill.skillId, out float endTime))
+            if (cooldownEndTimes.TryGetValue(skill.RankKey, out float endTime))
                 return Mathf.Max(0f, endTime - Time.time);
             return 0f;
         }
@@ -371,8 +443,13 @@ namespace KryticalNova.Progression
             if (!IsLearned(skill))
             {
                 reason = IsLocked(skill)
-                    ? $"{skill.displayName} requires a skill book ({skill.acquisitionNote})."
+                    ? $"{skill.displayName} requires a Skill Chip ({skill.acquisitionNote})."
                     : $"Learn {skill.displayName} with a skill point first.";
+                return false;
+            }
+            if (!IsInActiveKit(skill))
+            {
+                reason = $"{skill.displayName} needs a {WeaponClasses.DisplayName(skill.weaponClass)} in hand.";
                 return false;
             }
             if (resources == null || !resources.IsAlive)
@@ -393,7 +470,7 @@ namespace KryticalNova.Progression
             float chiCost = skill.GetChiCost(rank);
             if (!resources.CanSpendChi(chiCost))
             {
-                reason = $"Not enough Chi ({chiCost:0} Chi required, current: {resources.Chi:0}).";
+                reason = $"Not enough Flux ({chiCost:0} Flux required, current: {resources.Chi:0}).";
                 return false;
             }
             if (skill.IsAttack)
@@ -483,7 +560,7 @@ namespace KryticalNova.Progression
             {
                 // Mirror what the server already applied to its own copy.
                 castRequestPendingUntil = 0f;
-                cooldownEndTimes[skill.skillId] = Time.time + skill.cooldown;
+                cooldownEndTimes[skill.RankKey] = Time.time + skill.cooldown;
                 if (!skill.IsAttack && buffManager != null)
                 {
                     buffManager.ApplyBuff(skill, rank);
@@ -514,13 +591,13 @@ namespace KryticalNova.Progression
             {
                 if (resources != null && !resources.TrySpendChi(chiCost))
                 {
-                    reason = $"Not enough Chi ({chiCost:0} Chi required, current: {resources.Chi:0}).";
+                    reason = $"Not enough Flux ({chiCost:0} Flux required, current: {resources.Chi:0}).";
                     SkillMessage?.Invoke(reason);
                     return false;
                 }
             }
 
-            cooldownEndTimes[skill.skillId] = Time.time + skill.cooldown;
+            cooldownEndTimes[skill.RankKey] = Time.time + skill.cooldown;
 
             if (skill.IsAttack)
             {

@@ -59,9 +59,11 @@ namespace KryticalNova.Social
                     return OnChannel(ChatChannel.Faction, rest);
                 case "p":
                 case "party":
+                case "squad":
                     return OnChannel(ChatChannel.Party, rest);
                 case "g":
                 case "guild":
+                case "crew":
                     return OnChannel(ChatChannel.Guild, rest);
                 case "gm":
                     return OnChannel(ChatChannel.Gm, rest);

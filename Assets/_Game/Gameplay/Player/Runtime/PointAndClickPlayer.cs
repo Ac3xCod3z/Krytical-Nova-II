@@ -851,7 +851,7 @@ namespace KryticalNova.Player
             if (!agent.SetPath(requestedPath))
             {
                 resources?.RestoreChi(paidCost);
-                CommandMessage?.Invoke("The path changed. Chi was not consumed.");
+                CommandMessage?.Invoke("The path changed. Flux was not consumed.");
                 return false;
             }
             SnapVelocityToPath();

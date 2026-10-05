@@ -29,6 +29,12 @@ namespace KryticalNova.CharacterCreation
             var lineage = database.GetLineage(recipe.lineage);
             if (lineage == null) { reason = ReasonUnknownLineage; return false; }
             if (lineage.faction != recipe.faction) { reason = ReasonWrongFaction; return false; }
+            // None is a character saved before classes existed; it plays as its faction's offense class.
+            if (recipe.weaponClass != Progression.WeaponClassId.None && !WeaponClassRules.BelongsTo(recipe.weaponClass, recipe.faction))
+            {
+                reason = WeaponClassRules.ReasonWrongDiscipline;
+                return false;
+            }
             if (recipe.PartCount > CharacterRecipe.MaxParts) { reason = ReasonTooManyParts; return false; }
 
             var setup = lineage.SetupFor(recipe.bodyType);

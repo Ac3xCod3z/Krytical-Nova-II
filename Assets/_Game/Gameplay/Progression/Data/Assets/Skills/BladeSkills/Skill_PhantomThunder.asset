@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Skill_PhantomThunder
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
   skillId: PhantomThunder
-  displayName: Phantom Thunder
-  description: Three thunderous cuts charged with Yang energy.
+  displayName: Liquidation
+  description: Three cuts that each land with extra force.
   category: 4
+  weaponClass: 1
+  classSlot: 7
+  presentationId: 
   targetType: 1
   executionType: 0
   acquisitionMethod: 1
   requiresSkillBook: 1
-  acquisitionNote: Lvl 60 Drop Item (Skill Book)
+  acquisitionNote: Lvl 60 Drop (Skill Chip)
   requiredCraftingArchives: []
   requiredCharacterLevel: 60
   minRank: 1
@@ -78,6 +81,7 @@ MonoBehaviour:
   - 0.43
   - 0.51
   castLockNormalized: 0.95
+  attackCancelNormalized: 1
   castLiftCurve:
     serializedVersion: 2
     m_Curve: []

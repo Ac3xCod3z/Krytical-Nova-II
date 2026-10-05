@@ -65,7 +65,7 @@ Folders marked *(future)* don't exist yet. Create them when the first asset need
 
 ```
 _Game/
-├── _Docs/                 Design docs (Design/), plans (Plans/), this file
+├── _Docs/                 Design docs (Design/), plans (Plans/), reference packs (Reference/: naming glossary, build list), this file
 ├── Core/Runtime/          Cross-cutting interfaces & registries. Defines KryticalNova.Runtime.asmdef
 │                          (future: Architecture/ Events/ Services/ SaveSystem/ Pooling/ Utilities/ Extensions/)
 ├── Gameplay/

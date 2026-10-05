@@ -94,7 +94,7 @@ namespace KryticalNova.Progression
                                 resources.RestoreChi(tickChi);
                             }
                             string healed = tickHealth > 0f ? $"+{tickHealth:0.#} HP, " : string.Empty;
-                            BuffMessage?.Invoke($"[{buff.Skill.displayName}] Restored {healed}+{tickChi:0.#} Chi");
+                            BuffMessage?.Invoke($"[{buff.Skill.displayName}] Restored {healed}+{tickChi:0.#} Flux");
                         }
                     }
                 }
@@ -157,7 +157,7 @@ namespace KryticalNova.Progression
             activeBuffs.Add(newBuff);
             BuffMessage?.Invoke($"Applied {skill.displayName} (Rank {rank}, {duration:0}s)");
             BuffsChanged?.Invoke();
-            ClientPresentationRegistry.Feel?.BuffStarted(transform, skill.skillId, newBuff.RemainingDuration);
+            ClientPresentationRegistry.Feel?.BuffStarted(transform, skill.PresentationId, newBuff.RemainingDuration);
             return true;
         }
 
@@ -374,7 +374,7 @@ namespace KryticalNova.Progression
             }
 
             activeBuffs.RemoveAt(index);
-            ClientPresentationRegistry.Feel?.BuffEnded(transform, buff.Skill.skillId);
+            ClientPresentationRegistry.Feel?.BuffEnded(transform, buff.Skill.PresentationId);
             BuffRemoved?.Invoke(buff.Skill.skillId);
         }
     }

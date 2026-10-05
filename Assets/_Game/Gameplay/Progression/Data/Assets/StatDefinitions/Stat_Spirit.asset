@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.StatDefinitionData
   statType: 3
   statName: Spirit
-  abbreviation: CHI
+  abbreviation: SPI
   description: Resource pool expansion for skill casting and attack scaling.
   minValue: 0
   maxValue: 999999

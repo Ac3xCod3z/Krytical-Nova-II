@@ -57,6 +57,21 @@ This table is the gear slice of the Glossary in `01_Systems_Build_List.md`. Refe
 | Epic | Elite / WarLord | 100–112 | every 3 (100, 103, 106, 109, 112) | 5 | endgame sets (Mk I, Mk II) | 1.70 |
 | Legendary | Requiem | 112+ | *(proposed)* one set | 1 | Reboot 12+, deferred | 2.00 *(proposed)* |
 
+**Looks, groups and the level cap (owner, 4 Oct 2026; as built).** Gear of one rarity shares looks across its level tiers, so a new tier is new stats and a new level on the same piece:
+
+| Band | Item levels | Tiers | Looks |
+| --- | --- | --- | --- |
+| Common | 1, 4, 7 … 28 | 10 | one per group; outfits use the group's variant 01, the basic outfit a new character already wears |
+| Uncommon | 20, 25, 30, 35, 40 | 5 | one per group, a little more detailed |
+| Rare I | 45, 55, 65, 75 | 4 (40 levels) | first Rare look |
+| Rare II | 85, 95, 105 | 3 (30 levels) | second Rare look |
+| Epic | 100, 103, 106, 109, 112 | 5 | hero look |
+
+- **Groups.** Armor, Gloves, Boots, Cape, Ring and Amulet each have a line set per group: SOLD and CIVL (Hegemony), ROBO and SKTN (Null), VIKG and ELVN (Covenant), so skeletons, robots, soldiers… each have their own drops. Weapons have a line set per weapon class (nine; `04_Weapon_Classes.md`) and are locked to that class's faction.
+- **Player level cap: 112**, so the top Epic tier is the cap gear. A piece can only be equipped at or above its item level.
+- **Frame colours:** Common white, Uncommon blue, Rare yellow, Epic purple (Legendary, reserved, orange). They are the same in every faction skin.
+- **Legendary** stays in the enum; nothing of that rarity is generated.
+- **Rank up / down** (12Sky page 26, future): the next tier of a piece is the next item of the same line (`GearDictionary.TryGetNextTier`); crossing from Rare I to Rare II or into another rarity is a design decision for that feature.
 **Which systems apply per rarity:**
 
 | Rarity | Tempering | Fusion | Tuning | Slotting | Mark upgrade |
@@ -324,6 +339,16 @@ These cost more Creds than armor in TS2 and are where min-maxing lives; only the
 
 ## 11. Data model and code changes (for Claude Code)
 
+**As built (4 Oct 2026): steps 1 and 2 of section 12.**
+
+- `GearDictionary` (`Gameplay/Items/Runtime`) holds two tables. **`lines`** is the hand-edited one: a line is one run of level tiers that share a look (`lineId`, `tag`, `slot`, `rarity`, `band`, `pack`, `factions`, `bodies`, `weaponClass`, `look`, `displayName`). **`entries`** is baked: one row per item, read by the equip rule, the GM commands and the starter kit.
+- Item ID = `10000 + (lineId − 1) × 16 + tier index`. Line IDs are append-only, so item IDs never change. Legacy IDs below 10000 are retired (look templates, pets and Stims keep theirs).
+- A **look template** is an `ItemDefinition` that is not in the catalog (the per-variant outfit pieces, one asset per weapon mesh, the ring / amulet icons). `GearStatBaker` copies its parts, icon and weapon model onto every tier of the lines that wear it. To change a look, change the line's `look`.
+- `GearStatTable` (`Items/Data/Assets/GearStatTable.asset`) holds the bands, rarity multipliers, slopes, the secondary ladder and exact rows. The owner's Epic 100–112 tables are exact rows, word for word, because they do not follow one rounding rule; `GearLadderTests` asserts every cell. Uncommon and Rare secondaries are *(proposed)* values from the milestones in section 3.
+- `ItemDefinition` gained `itemLevel`, `lineId`, `weaponClass`, `baseStats` (primary: what Tempering scales), `secondaryStats`, `skillModifiers`. Not added yet: `maxSockets`, `setId`, `markTier`, `mkIIDefinition`, `fusionEligible`, `tuneEligible` (they arrive with their systems).
+- `ItemStack` and `EquipmentLoadout` are unchanged (item ID only on the wire). When Tempering lands, `ItemStack` grows its instance fields and the loadout carries stacks; `GearStatResolver.Resolve(stack, definition, …)` already takes the stack, so callers do not change.
+- `StatType` gained `AttackSpeedPercent`, `CoreResistancePercent`, `KnockbackResistancePercent`, `CriticalDefensePercent`, `KillExpRatePercent`, `KillExpAmountPercent`. Skill modifiers are `ItemDefinition.skillModifiers` (class + levels), not a stat type. Critical Defense is applied in `CombatCalculator`; skill modifiers and the Kill-XP stats are stored and shown only.
+- Menus: `Krytical Nova ▸ Items ▸ 1. Generate Gear Looks From Synty` (templates, seeds missing lines), `▸ 6. Bake Gear Ladder` (lines → items, entries, catalog), `▸ 2. Capture Item Icons` (per look), `▸ Rebuild Weapon Look Models`. GM: `gm.gear <slot> <level> <rarity> [class]`, `gm.loadout [class]`.
 All paths follow `ProjectOrganization.md`: gear code in `Assets/_Game/Gameplay/Items/`, stat code in `Assets/_Game/Gameplay/Progression/`, NPC services in `Assets/_Game/Gameplay/NPC/`, UI in `Assets/_Game/UI/`. Namespaces `KryticalNova.Items`, `KryticalNova.Progression`, `KryticalNova.NPC`.
 
 **`StatType` additions** (`Gameplay/Progression/Data/StatType.cs`): `AttackSpeedPercent`, `CoreResistancePercent`, `KnockbackResistancePercent` (the "Bounce"), `CriticalDefensePercent`, `KillExpRatePercent`, `KillExpAmountPercent`, `SkillLineModifier` (carries a skill-line id + level in its modifier). Each needs a `StatDefinitionData` asset and a row in the character sheet.
@@ -360,8 +385,8 @@ All paths follow `ProjectOrganization.md`: gear code in `Assets/_Game/Gameplay/I
 
 Each step compiles and plays on its own; the GM console (`item.give`, `gm.attr`) is the test harness until shops exist.
 
-- [ ] **1. Stats and definitions.** Add the seven `StatType`s and their definition assets; extend `ItemDefinition` and `ItemStack`; write `GearStatTable` and `GearStatBaker`; bake Common 1–30 and Epic 100–112 and pass the Epic acceptance test.
-- [ ] **2. Resolver.** `GearStatResolver` and `PlayerEquipment` reading it; character sheet shows gear-derived values; equip a baked Epic weapon and see 884 AP at 0%.
+- [x] **1. Stats and definitions.** *(done 4 Oct 2026: all four rarities baked, not only Common and Epic)* Add the seven `StatType`s and their definition assets; extend `ItemDefinition` and `ItemStack`; write `GearStatTable` and `GearStatBaker`; bake Common 1–30 and Epic 100–112 and pass the Epic acceptance test.
+- [x] **2. Resolver.** *(done 4 Oct 2026)* `GearStatResolver` and `PlayerEquipment` reading it; character sheet shows gear-derived values; equip a baked Epic weapon and see 884 AP at 0%.
 - [ ] **3. Materials.** `GearMaterialGenerator` creates every material and Core item; `item.give` works for all.
 - [ ] **4. Tempering.** `TemperTuning`, `TemperRequest`, Armorer panel tab, tooltip and glow. Test: 0 → 60% never breaks, 90–119% breaks sometimes, Failsafe never breaks, 120% cap without Prime Alloy.
 - [ ] **5. Fusion.** `FusionTuning`, `FuseRequest`, material validation (clean item rule), FS label under the name.
@@ -369,7 +394,7 @@ Each step compiles and plays on its own; the GM console (`item.give`, `gm.attr`)
 - [ ] **7. Slotting and Cores.** `SocketTuning`, four socket requests, Fixer panel, Core crafting 3 → 1.
 - [ ] **8. Epic Mark.** Mk II definitions from the baker, `MarkUpgradeRequest`, carry-over test.
 - [ ] **9. Herald.** `NpcRole.Herald`, Zone01 seed, Nova Rank and Titles with their panels, 12 Nova prefabs, title on nameplates.
-- [ ] **10. Cape.** Cape ladder rows, Critical Defense stat, one socket.
+- [ ] **10. Cape.** Cape ladder rows and the Critical Defense stat are in (4 Oct 2026); the one socket waits for Slotting.
 - [ ] **11. Verify.** `GearStatBakerTests`, a resolver test per system, and a play-mode pass: temper, fuse, tune, slot, mark, nova, title on one Epic set end to end; then flip rows 2–5, 10, 11 of the build list to Complete.
 
 Deferred and out of scope here: set bonuses, Legendary / Requiem, Pets (design 04), Mounts (design 05), Wings, the Bounty Board's Renown rewards, the Nova Store's real-money catalogue.

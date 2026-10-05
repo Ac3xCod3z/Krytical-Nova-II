@@ -176,20 +176,20 @@ namespace KryticalNova.Social
             bool live = from != null && from.IsSpawned && !from.leaving && Time.time <= inviteExpires;
             invitedBy = null;
             InviteClosedRpc();
-            if (!live) { Tell("There is no party invitation to answer."); return; }
+            if (!live) { Tell("There is no squad invitation to answer."); return; }
 
             if (!accept)
             {
-                Tell($"You declined {from.MemberName}'s party invitation.");
-                from.Tell($"{MemberName} declined your party invitation.");
+                Tell($"You declined {from.MemberName}'s squad invitation.");
+                from.Tell($"{MemberName} declined your squad invitation.");
                 return;
             }
-            if (group != null) { Tell("You are already in a party."); return; }
+            if (group != null) { Tell("You are already in a squad."); return; }
             // The inviter may have joined somebody else's party, or the party may have filled, in the meantime.
-            string refusal = from.group != null && from.group.Members[0] != from ? $"{from.MemberName} no longer leads a party." : from.Refusal(this);
+            string refusal = from.group != null && from.group.Members[0] != from ? $"{from.MemberName} no longer leads a squad." : from.Refusal(this);
             if (refusal != null)
             {
-                Tell("You can no longer join that party.");
+                Tell("You can no longer join that squad.");
                 from.Tell(refusal);
                 return;
             }
@@ -201,24 +201,24 @@ namespace KryticalNova.Social
             }
             group = from.group;
             group.Members.Add(this);
-            Tell($"You joined {from.MemberName}'s party. Talk to it with /p.");
+            Tell($"You joined {from.MemberName}'s squad. Talk to it with /p.");
             foreach (PlayerParty member in group.Members)
-                if (member != this) member.Tell($"{MemberName} joined the party.");
+                if (member != this) member.Tell($"{MemberName} joined the squad.");
             Publish(group);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void LeaveRpc()
         {
-            if (group == null) { Tell("You are not in a party."); return; }
-            Remove(this, $"{MemberName} left the party.", "You left the party.");
+            if (group == null) { Tell("You are not in a squad."); return; }
+            Remove(this, $"{MemberName} left the squad.", "You left the squad.");
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void KickRpc(string playerName)
         {
             if (!TryLeadMember(playerName, out PlayerParty member)) return;
-            Remove(member, $"{member.MemberName} was removed from the party.", "You were removed from the party.");
+            Remove(member, $"{member.MemberName} was removed from the squad.", "You were removed from the squad.");
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
@@ -227,7 +227,7 @@ namespace KryticalNova.Social
             if (!TryLeadMember(playerName, out PlayerParty member)) return;
             group.Members.Remove(member);
             group.Members.Insert(0, member);
-            foreach (PlayerParty other in group.Members) other.Tell($"{member.MemberName} now leads the party.");
+            foreach (PlayerParty other in group.Members) other.Tell($"{member.MemberName} now leads the squad.");
             Publish(group);
         }
 
@@ -236,10 +236,10 @@ namespace KryticalNova.Social
         private void ServerInvite(PlayerParty target)
         {
             if (target == null || target == this) { Tell("Invite another player."); return; }
-            if (group != null && group.Members[0] != this) { Tell("Only the party leader can invite."); return; }
+            if (group != null && group.Members[0] != this) { Tell("Only the squad leader can invite."); return; }
             if (target.group != null)
             {
-                Tell(target.group == group ? $"{target.MemberName} is already in your party." : $"{target.MemberName} is already in a party.");
+                Tell(target.group == group ? $"{target.MemberName} is already in your squad." : $"{target.MemberName} is already in a squad.");
                 return;
             }
             if (target.invitedBy != null && target.invitedBy != this && Time.time <= target.inviteExpires)
@@ -249,8 +249,8 @@ namespace KryticalNova.Social
 
             target.invitedBy = this;
             target.inviteExpires = Time.time + inviteSeconds;
-            Tell($"You invited {target.MemberName} to your party.");
-            target.Tell($"{MemberName} invites you to a party. Join with /join, refuse with /refuse.");
+            Tell($"You invited {target.MemberName} to your squad.");
+            target.Tell($"{MemberName} invites you to a squad. Join with /join, refuse with /refuse.");
             target.InvitePromptRpc(MemberName, inviteSeconds);
         }
 
@@ -266,9 +266,9 @@ namespace KryticalNova.Social
                 case PartyCheck.OtherFaction:
                     return $"{candidate.MemberName} is not of your faction.";
                 case PartyCheck.LevelTooFar:
-                    return $"{candidate.MemberName} is level {candidate.Level}: party members must be within {PartyRules.MaxLevelGap} levels of each other.";
+                    return $"{candidate.MemberName} is level {candidate.Level}: squad members must be within {PartyRules.MaxLevelGap} levels of each other.";
                 case PartyCheck.Full:
-                    return $"Your party is full ({PartyRules.MaxSize} players).";
+                    return $"Your squad is full ({PartyRules.MaxSize} players).";
                 default:
                     return null;
             }
@@ -280,15 +280,15 @@ namespace KryticalNova.Social
         private bool TryLeadMember(string playerName, out PlayerParty member)
         {
             member = null;
-            if (group == null) { Tell("You are not in a party."); return false; }
-            if (group.Members[0] != this) { Tell("Only the party leader can do that."); return false; }
+            if (group == null) { Tell("You are not in a squad."); return false; }
+            if (group.Members[0] != this) { Tell("Only the squad leader can do that."); return false; }
             foreach (PlayerParty other in group.Members)
             {
                 if (other == this || !string.Equals(other.MemberName, playerName, StringComparison.OrdinalIgnoreCase)) continue;
                 member = other;
                 return true;
             }
-            Tell($"No party member is named '{ChatRouting.Clean(playerName)}'.");
+            Tell($"No squad member is named '{ChatRouting.Clean(playerName)}'.");
             return false;
         }
 
@@ -309,13 +309,13 @@ namespace KryticalNova.Social
                 {
                     other.group = null;
                     other.PublishNone();
-                    other.Tell("The party was disbanded.");
+                    other.Tell("The squad was disbanded.");
                 }
                 left.Members.Clear();
                 return;
             }
             if (led)
-                foreach (PlayerParty other in left.Members) other.Tell($"{left.Members[0].MemberName} now leads the party.");
+                foreach (PlayerParty other in left.Members) other.Tell($"{left.Members[0].MemberName} now leads the squad.");
             Publish(left);
         }
 

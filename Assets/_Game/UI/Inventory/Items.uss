@@ -92,6 +92,17 @@
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
 }
 
+/* Item level, top-left of a gear icon: tiers of one line share a picture, the number tells them apart. */
+.item-level {
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    font-size: 10px;
+    color: rgb(240, 236, 220);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
+}
+
 .equip-label {
     position: absolute;
     bottom: -17px;
@@ -106,16 +117,21 @@
 .item-cell:hover, .equip-slot:hover { -unity-background-image-tint-color: rgba(70, 100, 124, 0.95); scale: 1.05 1.05; }
 .item-cell:hover > .item-frame, .equip-slot:hover > .item-frame { -unity-background-image-tint-color: rgba(220, 236, 246, 0.85); }
 
-/* Rarity: tinted frame + a soft glow inside the slot */
-.rarity-0 > .item-frame { -unity-background-image-tint-color: rgba(176, 186, 196, 0.75); }
-.rarity-1 > .item-frame { -unity-background-image-tint-color: rgb(96, 210, 112); }
-.rarity-2 > .item-frame { -unity-background-image-tint-color: rgb(84, 150, 255); }
+/* Rarity: tinted frame + a soft glow inside the slot. Common white, Uncommon blue, Rare yellow, Epic purple
+   (Legendary, reserved, orange). These are game signals: the faction skin builder leaves .rarity- rules alone. */
+.rarity-0 > .item-frame { -unity-background-image-tint-color: rgba(242, 245, 248, 0.92); }
+.rarity-1 > .item-frame { -unity-background-image-tint-color: rgb(84, 150, 255); }
+.rarity-2 > .item-frame { -unity-background-image-tint-color: rgb(255, 212, 64); }
 .rarity-3 > .item-frame { -unity-background-image-tint-color: rgb(186, 104, 255); }
-.rarity-4 > .item-frame { -unity-background-image-tint-color: rgb(255, 162, 48); }
-.rarity-1 { -unity-background-image-tint-color: rgba(34, 70, 46, 0.9); }
-.rarity-2 { -unity-background-image-tint-color: rgba(30, 50, 86, 0.9); }
+.rarity-4 > .item-frame { -unity-background-image-tint-color: rgb(255, 128, 48); }
+.rarity-1 { -unity-background-image-tint-color: rgba(30, 50, 86, 0.9); }
+.rarity-2 { -unity-background-image-tint-color: rgba(86, 70, 20, 0.9); }
 .rarity-3 { -unity-background-image-tint-color: rgba(58, 34, 86, 0.9); }
-.rarity-4 { -unity-background-image-tint-color: rgba(86, 54, 20, 0.9); }
+.rarity-4 { -unity-background-image-tint-color: rgba(86, 46, 20, 0.9); }
+
+/* Gear the character cannot wear (level, faction or body): still shown, clearly out of reach. */
+.item-unusable > .item-icon { opacity: 0.38; }
+.item-unusable > .item-level { color: rgb(255, 110, 96); }
 
 /* Drag feedback */
 .drag-source { opacity: 0.35; }
@@ -210,15 +226,17 @@
 }
 .tooltip-name { font-size: 15px; -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf"); white-space: normal; }
 .tooltip-type { font-size: 11px; color: rgb(214, 178, 104); letter-spacing: 1px; margin-bottom: 6px; }
+.tooltip-requires { font-size: 11px; margin-bottom: 4px; color: rgb(170, 184, 196); white-space: normal; }
+.tooltip-requires--unmet { color: rgb(255, 110, 96); }
 .tooltip-desc { font-size: 12px; white-space: normal; color: rgb(200, 212, 222); }
 .tooltip-stats { font-size: 11px; margin-top: 6px; color: rgb(146, 162, 178); white-space: normal; }
 .tooltip-hint { font-size: 10px; margin-top: 8px; color: rgb(114, 222, 196); white-space: normal; }
 
-.rarity-text-0 { color: rgb(220, 226, 232); }
-.rarity-text-1 { color: rgb(110, 225, 126); }
-.rarity-text-2 { color: rgb(110, 170, 255); }
+.rarity-text-0 { color: rgb(240, 243, 246); }
+.rarity-text-1 { color: rgb(110, 170, 255); }
+.rarity-text-2 { color: rgb(255, 218, 96); }
 .rarity-text-3 { color: rgb(200, 128, 255); }
-.rarity-text-4 { color: rgb(255, 176, 64); }
+.rarity-text-4 { color: rgb(255, 150, 64); }
 
 .item-menu {
     position: absolute;

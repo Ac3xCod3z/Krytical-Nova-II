@@ -80,6 +80,29 @@ namespace KryticalNova.Progression
         [TextArea(2, 4)] public string description = "Skill description.";
         public SkillCategory category = SkillCategory.GeneralUtility;
 
+        [Header("Weapon Class")]
+        [Tooltip("The class this skill belongs to. None = shared: every class can use it.")]
+        public WeaponClassId weaponClass = WeaponClassId.None;
+        [Tooltip("Which of the class's ten slots this is. Skills in the same slot share rank, unlock and cooldown across classes.")]
+        public ClassSkillSlot classSlot = ClassSkillSlot.None;
+        [Tooltip("Skill whose hit feel this one borrows (its ID). Empty = its own.")]
+        public string presentationId = string.Empty;
+
+        /// <summary>True for one of a weapon class's ten skills, as opposed to a shared skill.</summary>
+        public bool IsClassSkill => weaponClass != WeaponClassId.None && classSlot != ClassSkillSlot.None;
+        /// <summary>
+        /// What a rank, an unlock and a cooldown are stored under. A class skill is stored under its slot, so the
+        /// three classes of a faction share one set; a shared skill is stored under its own ID.
+        /// </summary>
+        public string RankKey => IsClassSkill ? SlotKeys[(int)classSlot] : skillId;
+        /// <summary>The ID hit feel and effects are looked up under.</summary>
+        public string PresentationId => string.IsNullOrEmpty(presentationId) ? skillId : presentationId;
+
+        private static readonly string[] SlotKeys =
+        {
+            "slot:None", "slot:S1", "slot:S2", "slot:S3", "slot:S4", "slot:S5", "slot:S6", "slot:S7", "slot:S8", "slot:Stance", "slot:Guard"
+        };
+
         [Header("Targeting & Execution")]
         public SkillTargetType targetType = SkillTargetType.Self;
         public SkillExecutionType executionType = SkillExecutionType.Instant;
@@ -89,7 +112,7 @@ namespace KryticalNova.Progression
         [Tooltip("When true, this skill cannot be purchased via trainer skill points; it requires acquiring a rare skill book drop or crafting.")]
         public bool requiresSkillBook;
         [Tooltip("Note shown in the skill UI describing how this skill is obtained.")]
-        public string acquisitionNote = "Faction Skill Trainer";
+        public string acquisitionNote = "Faction Instructor";
         [Tooltip("List of required archives to craft this skill (e.g. for HR, RF, HD).")]
         public string[] requiredCraftingArchives = Array.Empty<string>();
         [Min(1)] public int requiredCharacterLevel = 1;

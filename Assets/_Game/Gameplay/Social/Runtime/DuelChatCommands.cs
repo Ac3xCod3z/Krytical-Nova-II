@@ -8,13 +8,14 @@ namespace KryticalNova.Social
     /// <summary>The chat box's duel commands: /duel [name], /accept, /decline, /forfeit. They act for the local player.</summary>
     public static class DuelChatCommands
     {
-        private const string Offline = "Duels need an online session with another player.";
+        private const string Offline = "Callouts need an online session with another player.";
 
         // ChatCommands forgets its commands at SubsystemRegistration (no domain reload); this runs just after.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Register()
         {
-            ChatCommands.Register("duel", Duel);
+            ChatCommands.Register("callout", Duel);
+            ChatCommands.Register("duel", Duel); // the old name still works
             ChatCommands.Register("accept", _ => Answer(true));
             ChatCommands.Register("decline", _ => Answer(false));
             ChatCommands.Register("forfeit", _ => Forfeit());
@@ -39,7 +40,7 @@ namespace KryticalNova.Social
             {
                 Transform selected = mine.TryGetComponent(out PointAndClickPlayer controls) ? controls.SelectedTarget : null;
                 target = selected != null ? selected.GetComponentInParent<PlayerDuel>() : null;
-                if (target == null || target == mine) return "Select a player first, or use /duel <name>.";
+                if (target == null || target == mine) return "Select a player first, or use /callout <name>.";
             }
 
             mine.Request(target);

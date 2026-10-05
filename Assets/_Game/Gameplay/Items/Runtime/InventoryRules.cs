@@ -16,7 +16,7 @@ namespace KryticalNova.Items
         public const string ReasonNotEquippable = "That item can't be equipped.";
         public const string ReasonSplitStack = "Split the stack before equipping.";
         public const string ReasonCannotSwap = "Can't swap with that item.";
-        public const string ReasonBagFull = "Inventory is full.";
+        public const string ReasonBagFull = "Your Pack is full.";
         public const string ReasonUnknownItem = "Unknown item.";
         public const string ReasonNotUsable = "That item can't be used.";
 
@@ -124,7 +124,7 @@ namespace KryticalNova.Items
             return count - remaining;
         }
 
-        /// <summary>Merges partial stacks, then orders by equip slot, rarity (high first), name; empties last.</summary>
+        /// <summary>Merges partial stacks, then orders by equip slot, rarity (high first), item level (high first), name; empties last.</summary>
         public static void Sort(ItemStack[] bag, IItemLookup lookup)
         {
             var stacks = new List<ItemStack>(bag.Length);
@@ -166,6 +166,8 @@ namespace KryticalNova.Items
             int c = slotA.CompareTo(slotB);
             if (c != 0) return c;
             c = db.rarity.CompareTo(da.rarity);
+            if (c != 0) return c;
+            c = db.itemLevel.CompareTo(da.itemLevel);
             if (c != 0) return c;
             c = string.Compare(da.displayName, db.displayName, StringComparison.OrdinalIgnoreCase);
             if (c != 0) return c;

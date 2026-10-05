@@ -112,7 +112,7 @@ namespace KryticalNova.UI
         public void ShowInvite(string inviterName, float seconds)
         {
             if (invite == null) return;
-            inviteText.text = $"{inviterName} invites you to a party";
+            inviteText.text = $"{inviterName} invites you to a squad";
             inviteStarted = Time.unscaledTime;
             inviteEnds = inviteStarted + Mathf.Max(1f, seconds);
             inviteFill.style.width = Length.Percent(100f);
@@ -162,7 +162,7 @@ namespace KryticalNova.UI
             for (; editing && shown < PartyRules.MaxSize - 1; shown++)
             {
                 Row row = shown < rows.Count ? rows[shown] : AddRow();
-                row.Name.text = $"PARTY MEMBER {shown + 1}";
+                row.Name.text = $"SQUAD MEMBER {shown + 1}";
                 row.Level.text = "LV --";
                 row.Fill.style.width = Length.Percent(100f);
                 row.Root.RemoveFromClassList(LeaderClass);

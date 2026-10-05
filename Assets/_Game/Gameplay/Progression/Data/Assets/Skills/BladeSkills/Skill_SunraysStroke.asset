@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Skill_SunraysStroke
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
   skillId: SunraysStroke
-  displayName: Sunray's Strike
-  description: A rising single hit charged with Yang energy.
+  displayName: Zero Hour
+  description: A rising single hit that lands with extra force.
   category: 4
+  weaponClass: 1
+  classSlot: 6
+  presentationId: 
   targetType: 1
   executionType: 0
   acquisitionMethod: 1
   requiresSkillBook: 1
-  acquisitionNote: Lvl 60 Drop Item (Skill Book)
+  acquisitionNote: Lvl 60 Drop (Skill Chip)
   requiredCraftingArchives: []
   requiredCharacterLevel: 60
   minRank: 1
@@ -76,6 +79,7 @@ MonoBehaviour:
   hitTimesNormalized:
   - 0.33
   castLockNormalized: 0.9
+  attackCancelNormalized: 1
   castLiftCurve:
     serializedVersion: 2
     m_Curve: []

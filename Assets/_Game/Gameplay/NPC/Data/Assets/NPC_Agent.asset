@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: NPC_Agent
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 6
-  displayName: Agent
-  title: "Enhancement \xB7 Penetration"
-  greeting: Sockets, slots, penetration. Paid in Contribution Points.
-  services: 'Item enhancement: buy penetration materials with Contribution Points (CP) to add socket slots to your gear.'
+  displayName: Fixer
+  title: "Slotting \xB7 Cores"
+  greeting: Slots, Cores, cutters. Paid in Renown.
+  services: 'Slotting: buy Slot Cutters with Renown to cut Core slots into your gear.'
   interactRange: 3

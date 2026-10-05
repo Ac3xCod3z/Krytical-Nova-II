@@ -26,7 +26,15 @@ namespace KryticalNova.Progression
         ElementalDefense,
         AcupressureStunResistance,
         Luck,
-        MoveSpeedPercent
+        MoveSpeedPercent,
+
+        // Gear stats. Appended: the numeric values above are serialized in assets, so never reorder.
+        AttackSpeedPercent,
+        CoreResistancePercent,
+        KnockbackResistancePercent,
+        CriticalDefensePercent,
+        KillExpRatePercent,
+        KillExpAmountPercent
     }
 
     public enum ModifierType

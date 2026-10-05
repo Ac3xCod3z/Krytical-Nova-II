@@ -23,6 +23,7 @@ namespace KryticalNova.CharacterCreation
         public byte scars;
         public byte eyeliner;
         public byte grime;
+        public KryticalNova.Progression.WeaponClassId weaponClass;
         public FixedList128Bytes<ushort> parts;       // room for 63, recipes cap at CharacterRecipe.MaxParts
         public FixedList128Bytes<ColorOverride> colors; // room for 15
 
@@ -43,7 +44,8 @@ namespace KryticalNova.CharacterCreation
                 skinTone = recipe.skinTone,
                 scars = recipe.scars,
                 eyeliner = recipe.eyeliner,
-                grime = recipe.grime
+                grime = recipe.grime,
+                weaponClass = recipe.weaponClass
             };
             // Truncates instead of throwing if a name ever exceeds the buffer; rules cap names well below it.
             state.name.CopyFromTruncated(characterName ?? string.Empty);
@@ -69,6 +71,7 @@ namespace KryticalNova.CharacterCreation
                 scars = scars,
                 eyeliner = eyeliner,
                 grime = grime,
+                weaponClass = weaponClass,
                 parts = new ushort[parts.Length],
                 colors = new ColorOverride[colors.Length]
             };
@@ -91,6 +94,7 @@ namespace KryticalNova.CharacterCreation
             serializer.SerializeValue(ref scars);
             serializer.SerializeValue(ref eyeliner);
             serializer.SerializeValue(ref grime);
+            serializer.SerializeValue(ref weaponClass);
 
             byte partCount = (byte)parts.Length;
             serializer.SerializeValue(ref partCount);
@@ -144,6 +148,7 @@ namespace KryticalNova.CharacterCreation
             if (!name.Equals(other.name) || version != other.version || faction != other.faction || lineage != other.lineage
                 || bodyType != other.bodyType || build != other.build || muscle != other.muscle || palette != other.palette
                 || skinTone != other.skinTone || scars != other.scars || eyeliner != other.eyeliner || grime != other.grime
+                || weaponClass != other.weaponClass
                 || parts.Length != other.parts.Length || colors.Length != other.colors.Length)
                 return false;
             for (int i = 0; i < parts.Length; i++)

@@ -115,6 +115,9 @@ namespace KryticalNova.Progression
             {
                 result.IsCritical = true;
                 float critBonusMult = baseCritMult + (attacker.GetStatValue(StatType.CriticalDamagePercent) / 100f);
+                // Critical Defense (capes) trims the bonus part of the crit, never the base hit. 0 for everyone without it.
+                float critDefense = Mathf.Clamp(defender.GetStatValue(StatType.CriticalDefensePercent), 0f, 100f);
+                if (critDefense > 0f) critBonusMult = 1f + (Mathf.Max(1f, critBonusMult) - 1f) * (1f - critDefense / 100f);
                 physicalDamage *= critBonusMult;
 
                 // Acupressure Resistance mitigates fatal/critical trauma

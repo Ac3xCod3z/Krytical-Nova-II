@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3622be29843aeb149be9b3196ff71071, type: 3}
+  m_Name: Weapon_ArcCaster_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
+  itemId: 0
+  displayName: Laser Emitter
+  description: Arc Caster look.
+  icon: {fileID: 21300000, guid: 2a843e09351a960498c771e855ac4fde, type: 3}
+  rarity: 0
+  equipSlot: 1
+  maxStack: 1
+  itemLevel: 0
+  lineId: 0
+  weaponClass: 6
+  baseStats: []
+  secondaryStats: []
+  skillModifiers: []
+  statModifiers: []
+  restoreHealth: 0
+  restoreChi: 0
+  useCooldown: 1
+  usableFromHotbar: 0
+  placeholderGlyph: 
+  appearancePartIds: 
+  partCatalog: {fileID: 0}
+  appearanceParts: []
+  weaponPrefab: {fileID: 2519111035267519302, guid: eb71900e2211b22448519fe92c8b52a8, type: 3}
+  weaponLocalPosition: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalScale: {x: 1, y: 1, z: 1}
+  hitboxCenter: {x: 0, y: 0.045471415, z: 0.41532648}
+  hitboxSize: {x: 0.18, y: 0.33540145, z: 0.7306529}
+  petPrefab: {fileID: 0}
+  petScale: 1
+  petOffset: {x: 0.45, y: 0.75, z: -0.15}

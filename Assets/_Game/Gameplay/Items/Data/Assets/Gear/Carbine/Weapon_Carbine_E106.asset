@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3622be29843aeb149be9b3196ff71071, type: 3}
+  m_Name: Weapon_Carbine_E106
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
+  itemId: 12050
+  displayName: Vanguard Carbine
+  description: 'Carbine: the ranged weapon of the Hegemony.'
+  icon: {fileID: 21300000, guid: dd04fc5ae7c92cc4bb91229f0a4ce17a, type: 3}
+  rarity: 3
+  equipSlot: 1
+  maxStack: 1
+  itemLevel: 106
+  lineId: 129
+  weaponClass: 3
+  baseStats:
+  - stat: 4
+    modType: 0
+    value: 937
+  secondaryStats:
+  - stat: 6
+    modType: 0
+    value: 265
+  - stat: 12
+    modType: 0
+    value: 135
+  skillModifiers:
+  - line: 3
+    levels: 4
+  statModifiers: []
+  restoreHealth: 0
+  restoreChi: 0
+  useCooldown: 1
+  usableFromHotbar: 0
+  placeholderGlyph: 
+  appearancePartIds: 
+  partCatalog: {fileID: 0}
+  appearanceParts: []
+  weaponPrefab: {fileID: 3477451846458736069, guid: 561e08b2e10ec6e4c9c5beaed0ad1c7f, type: 3}
+  weaponLocalPosition: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalScale: {x: 1, y: 1, z: 1}
+  hitboxCenter: {x: 0, y: 0.015484929, z: 0.41498724}
+  hitboxSize: {x: 0.18, y: 0.44963288, z: 0.72997445}
+  petPrefab: {fileID: 0}
+  petScale: 1
+  petOffset: {x: 0.45, y: 0.75, z: -0.15}
