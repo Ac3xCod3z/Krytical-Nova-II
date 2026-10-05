@@ -1,0 +1,799 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 654d9d437ca5d4f4baf830c6090cb863, type: 3}
+  m_Name: GearStatTable
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.GearStatTable
+  bands:
+  - name: Common
+    code: C
+    rarity: 0
+    levels: 0104070a0d101316191cy
+  - name: Uncommon
+    code: U
+    rarity: 1
+    levels: 14191e2328y
+  - name: Rare I
+    code: R
+    rarity: 2
+    levels: 2d37414by
+  - name: Rare II
+    code: R
+    rarity: 2
+    levels: 555f69y
+  - name: Epic
+    code: E
+    rarity: 3
+    levels: 64676a6d70y
+  rarityMultipliers:
+  - 1
+  - 1.2
+  - 1.45
+  - 1.7
+  - 2
+  weaponAttackPerLevel: 5.2
+  armorDefensePerLevel: 2.1
+  secondaryDefensePerLevel: 0.55
+  evasionPerLevel: 0.35
+  evasionFromLevel: 5
+  hitRatePerLevel: 2.5
+  glovesHitShare: 0.4
+  ladder:
+  - rarity: 1
+    slot: 1
+    stat: 12
+    fromLevel: 20
+    fromValue: 20
+    toLevel: 40
+    toValue: 40
+  - rarity: 1
+    slot: 2
+    stat: 8
+    fromLevel: 20
+    fromValue: 10
+    toLevel: 40
+    toValue: 25
+  - rarity: 1
+    slot: 2
+    stat: 13
+    fromLevel: 20
+    fromValue: 8
+    toLevel: 40
+    toValue: 16
+  - rarity: 1
+    slot: 3
+    stat: 12
+    fromLevel: 20
+    fromValue: 5
+    toLevel: 40
+    toValue: 10
+  - rarity: 1
+    slot: 5
+    stat: 2
+    fromLevel: 20
+    fromValue: 5
+    toLevel: 40
+    toValue: 8
+  - rarity: 1
+    slot: 5
+    stat: 11
+    fromLevel: 20
+    fromValue: 13
+    toLevel: 40
+    toValue: 13
+  - rarity: 1
+    slot: 6
+    stat: 3
+    fromLevel: 20
+    fromValue: 5
+    toLevel: 40
+    toValue: 8
+  - rarity: 1
+    slot: 6
+    stat: 21
+    fromLevel: 20
+    fromValue: 40
+    toLevel: 40
+    toValue: 40
+  - rarity: 2
+    slot: 1
+    stat: 12
+    fromLevel: 45
+    fromValue: 67
+    toLevel: 105
+    toValue: 115
+  - rarity: 2
+    slot: 2
+    stat: 8
+    fromLevel: 45
+    fromValue: 32
+    toLevel: 105
+    toValue: 76
+  - rarity: 2
+    slot: 2
+    stat: 13
+    fromLevel: 45
+    fromValue: 22
+    toLevel: 105
+    toValue: 48
+  - rarity: 2
+    slot: 3
+    stat: 12
+    fromLevel: 45
+    fromValue: 15
+    toLevel: 105
+    toValue: 28
+  - rarity: 2
+    slot: 4
+    stat: 16
+    fromLevel: 45
+    fromValue: 10
+    toLevel: 105
+    toValue: 28
+  - rarity: 2
+    slot: 5
+    stat: 2
+    fromLevel: 45
+    fromValue: 11
+    toLevel: 105
+    toValue: 23
+  - rarity: 2
+    slot: 5
+    stat: 12
+    fromLevel: 45
+    fromValue: 55
+    toLevel: 105
+    toValue: 95
+  - rarity: 2
+    slot: 5
+    stat: 11
+    fromLevel: 45
+    fromValue: 15
+    toLevel: 105
+    toValue: 17
+  - rarity: 2
+    slot: 6
+    stat: 3
+    fromLevel: 45
+    fromValue: 11
+    toLevel: 105
+    toValue: 23
+  - rarity: 2
+    slot: 6
+    stat: 13
+    fromLevel: 45
+    fromValue: 40
+    toLevel: 105
+    toValue: 72
+  - rarity: 2
+    slot: 6
+    stat: 21
+    fromLevel: 45
+    fromValue: 44
+    toLevel: 105
+    toValue: 49
+  - rarity: 2
+    slot: 6
+    stat: 22
+    fromLevel: 45
+    fromValue: 80
+    toLevel: 55
+    toValue: 100
+  - rarity: 2
+    slot: 6
+    stat: 22
+    fromLevel: 55
+    fromValue: 100
+    toLevel: 105
+    toValue: 100
+  - rarity: 2
+    slot: 7
+    stat: 20
+    fromLevel: 45
+    fromValue: 10
+    toLevel: 105
+    toValue: 24
+  - rarity: 3
+    slot: 4
+    stat: 16
+    fromLevel: 100
+    fromValue: 30
+    toLevel: 112
+    toValue: 40
+  - rarity: 3
+    slot: 7
+    stat: 20
+    fromLevel: 100
+    fromValue: 26
+    toLevel: 112
+    toValue: 28
+  skillLevels:
+  - rarity: 1
+    slot: 1
+    fromLevel: 20
+    toLevel: 40
+    levels: 1
+  - rarity: 2
+    slot: 1
+    fromLevel: 45
+    toLevel: 45
+    levels: 2
+  - rarity: 2
+    slot: 1
+    fromLevel: 55
+    toLevel: 75
+    levels: 3
+  - rarity: 2
+    slot: 1
+    fromLevel: 85
+    toLevel: 105
+    levels: 4
+  - rarity: 3
+    slot: 1
+    fromLevel: 100
+    toLevel: 106
+    levels: 4
+  - rarity: 3
+    slot: 1
+    fromLevel: 109
+    toLevel: 112
+    levels: 5
+  - rarity: 2
+    slot: 3
+    fromLevel: 45
+    toLevel: 45
+    levels: 2
+  - rarity: 2
+    slot: 3
+    fromLevel: 55
+    toLevel: 75
+    levels: 3
+  - rarity: 2
+    slot: 3
+    fromLevel: 85
+    toLevel: 105
+    levels: 4
+  - rarity: 3
+    slot: 3
+    fromLevel: 100
+    toLevel: 106
+    levels: 4
+  - rarity: 3
+    slot: 3
+    fromLevel: 109
+    toLevel: 112
+    levels: 5
+  - rarity: 2
+    slot: 4
+    fromLevel: 45
+    toLevel: 45
+    levels: 2
+  - rarity: 2
+    slot: 4
+    fromLevel: 55
+    toLevel: 75
+    levels: 3
+  - rarity: 2
+    slot: 4
+    fromLevel: 85
+    toLevel: 105
+    levels: 4
+  - rarity: 3
+    slot: 4
+    fromLevel: 100
+    toLevel: 106
+    levels: 4
+  - rarity: 3
+    slot: 4
+    fromLevel: 109
+    toLevel: 112
+    levels: 5
+  - rarity: 2
+    slot: 5
+    fromLevel: 45
+    toLevel: 45
+    levels: 2
+  - rarity: 2
+    slot: 5
+    fromLevel: 55
+    toLevel: 75
+    levels: 3
+  - rarity: 2
+    slot: 5
+    fromLevel: 85
+    toLevel: 105
+    levels: 4
+  - rarity: 3
+    slot: 5
+    fromLevel: 100
+    toLevel: 106
+    levels: 4
+  - rarity: 3
+    slot: 5
+    fromLevel: 109
+    toLevel: 112
+    levels: 5
+  overrides:
+  - rarity: 3
+    slot: 1
+    level: 100
+    stat: 4
+    value: 884
+  - rarity: 3
+    slot: 1
+    level: 103
+    stat: 4
+    value: 910
+  - rarity: 3
+    slot: 1
+    level: 106
+    stat: 4
+    value: 937
+  - rarity: 3
+    slot: 1
+    level: 109
+    stat: 4
+    value: 963
+  - rarity: 3
+    slot: 1
+    level: 112
+    stat: 4
+    value: 990
+  - rarity: 3
+    slot: 1
+    level: 100
+    stat: 6
+    value: 250
+  - rarity: 3
+    slot: 1
+    level: 103
+    stat: 6
+    value: 258
+  - rarity: 3
+    slot: 1
+    level: 106
+    stat: 6
+    value: 265
+  - rarity: 3
+    slot: 1
+    level: 109
+    stat: 6
+    value: 273
+  - rarity: 3
+    slot: 1
+    level: 112
+    stat: 6
+    value: 280
+  - rarity: 3
+    slot: 1
+    level: 100
+    stat: 12
+    value: 120
+  - rarity: 3
+    slot: 1
+    level: 103
+    stat: 12
+    value: 128
+  - rarity: 3
+    slot: 1
+    level: 106
+    stat: 12
+    value: 135
+  - rarity: 3
+    slot: 1
+    level: 109
+    stat: 12
+    value: 143
+  - rarity: 3
+    slot: 1
+    level: 112
+    stat: 12
+    value: 150
+  - rarity: 3
+    slot: 2
+    level: 100
+    stat: 5
+    value: 357
+  - rarity: 3
+    slot: 2
+    level: 103
+    stat: 5
+    value: 368
+  - rarity: 3
+    slot: 2
+    level: 106
+    stat: 5
+    value: 378
+  - rarity: 3
+    slot: 2
+    level: 109
+    stat: 5
+    value: 389
+  - rarity: 3
+    slot: 2
+    level: 112
+    stat: 5
+    value: 400
+  - rarity: 3
+    slot: 2
+    level: 100
+    stat: 7
+    value: 35
+  - rarity: 3
+    slot: 2
+    level: 103
+    stat: 7
+    value: 36
+  - rarity: 3
+    slot: 2
+    level: 106
+    stat: 7
+    value: 37
+  - rarity: 3
+    slot: 2
+    level: 109
+    stat: 7
+    value: 38
+  - rarity: 3
+    slot: 2
+    level: 112
+    stat: 7
+    value: 39
+  - rarity: 3
+    slot: 2
+    level: 100
+    stat: 8
+    value: 80
+  - rarity: 3
+    slot: 2
+    level: 103
+    stat: 8
+    value: 85
+  - rarity: 3
+    slot: 2
+    level: 106
+    stat: 8
+    value: 90
+  - rarity: 3
+    slot: 2
+    level: 109
+    stat: 8
+    value: 95
+  - rarity: 3
+    slot: 2
+    level: 112
+    stat: 8
+    value: 100
+  - rarity: 3
+    slot: 2
+    level: 100
+    stat: 13
+    value: 50
+  - rarity: 3
+    slot: 2
+    level: 103
+    stat: 13
+    value: 52
+  - rarity: 3
+    slot: 2
+    level: 106
+    stat: 13
+    value: 55
+  - rarity: 3
+    slot: 2
+    level: 109
+    stat: 13
+    value: 58
+  - rarity: 3
+    slot: 2
+    level: 112
+    stat: 13
+    value: 60
+  - rarity: 3
+    slot: 3
+    level: 100
+    stat: 5
+    value: 94
+  - rarity: 3
+    slot: 3
+    level: 103
+    stat: 5
+    value: 97
+  - rarity: 3
+    slot: 3
+    level: 106
+    stat: 5
+    value: 100
+  - rarity: 3
+    slot: 3
+    level: 109
+    stat: 5
+    value: 102
+  - rarity: 3
+    slot: 3
+    level: 112
+    stat: 5
+    value: 105
+  - rarity: 3
+    slot: 3
+    level: 100
+    stat: 6
+    value: 100
+  - rarity: 3
+    slot: 3
+    level: 103
+    stat: 6
+    value: 105
+  - rarity: 3
+    slot: 3
+    level: 106
+    stat: 6
+    value: 110
+  - rarity: 3
+    slot: 3
+    level: 109
+    stat: 6
+    value: 115
+  - rarity: 3
+    slot: 3
+    level: 112
+    stat: 6
+    value: 120
+  - rarity: 3
+    slot: 3
+    level: 100
+    stat: 12
+    value: 30
+  - rarity: 3
+    slot: 3
+    level: 103
+    stat: 12
+    value: 32
+  - rarity: 3
+    slot: 3
+    level: 106
+    stat: 12
+    value: 35
+  - rarity: 3
+    slot: 3
+    level: 109
+    stat: 12
+    value: 37
+  - rarity: 3
+    slot: 3
+    level: 112
+    stat: 12
+    value: 40
+  - rarity: 3
+    slot: 4
+    level: 100
+    stat: 5
+    value: 94
+  - rarity: 3
+    slot: 4
+    level: 103
+    stat: 5
+    value: 97
+  - rarity: 3
+    slot: 4
+    level: 106
+    stat: 5
+    value: 100
+  - rarity: 3
+    slot: 4
+    level: 109
+    stat: 5
+    value: 102
+  - rarity: 3
+    slot: 4
+    level: 112
+    stat: 5
+    value: 105
+  - rarity: 3
+    slot: 4
+    level: 100
+    stat: 7
+    value: 35
+  - rarity: 3
+    slot: 4
+    level: 103
+    stat: 7
+    value: 36
+  - rarity: 3
+    slot: 4
+    level: 106
+    stat: 7
+    value: 37
+  - rarity: 3
+    slot: 4
+    level: 109
+    stat: 7
+    value: 38
+  - rarity: 3
+    slot: 4
+    level: 112
+    stat: 7
+    value: 39
+  - rarity: 3
+    slot: 5
+    level: 100
+    stat: 2
+    value: 24
+  - rarity: 3
+    slot: 5
+    level: 103
+    stat: 2
+    value: 25
+  - rarity: 3
+    slot: 5
+    level: 106
+    stat: 2
+    value: 26
+  - rarity: 3
+    slot: 5
+    level: 109
+    stat: 2
+    value: 27
+  - rarity: 3
+    slot: 5
+    level: 112
+    stat: 2
+    value: 28
+  - rarity: 3
+    slot: 5
+    level: 100
+    stat: 12
+    value: 100
+  - rarity: 3
+    slot: 5
+    level: 103
+    stat: 12
+    value: 106
+  - rarity: 3
+    slot: 5
+    level: 106
+    stat: 12
+    value: 112
+  - rarity: 3
+    slot: 5
+    level: 109
+    stat: 12
+    value: 118
+  - rarity: 3
+    slot: 5
+    level: 112
+    stat: 12
+    value: 125
+  - rarity: 3
+    slot: 5
+    level: 100
+    stat: 11
+    value: 18
+  - rarity: 3
+    slot: 5
+    level: 103
+    stat: 11
+    value: 18
+  - rarity: 3
+    slot: 5
+    level: 106
+    stat: 11
+    value: 19
+  - rarity: 3
+    slot: 5
+    level: 109
+    stat: 11
+    value: 19
+  - rarity: 3
+    slot: 5
+    level: 112
+    stat: 11
+    value: 20
+  - rarity: 3
+    slot: 6
+    level: 100
+    stat: 3
+    value: 24
+  - rarity: 3
+    slot: 6
+    level: 103
+    stat: 3
+    value: 25
+  - rarity: 3
+    slot: 6
+    level: 106
+    stat: 3
+    value: 26
+  - rarity: 3
+    slot: 6
+    level: 109
+    stat: 3
+    value: 27
+  - rarity: 3
+    slot: 6
+    level: 112
+    stat: 3
+    value: 28
+  - rarity: 3
+    slot: 6
+    level: 100
+    stat: 13
+    value: 75
+  - rarity: 3
+    slot: 6
+    level: 103
+    stat: 13
+    value: 78
+  - rarity: 3
+    slot: 6
+    level: 106
+    stat: 13
+    value: 82
+  - rarity: 3
+    slot: 6
+    level: 109
+    stat: 13
+    value: 86
+  - rarity: 3
+    slot: 6
+    level: 112
+    stat: 13
+    value: 90
+  - rarity: 3
+    slot: 6
+    level: 100
+    stat: 21
+    value: 50
+  - rarity: 3
+    slot: 6
+    level: 103
+    stat: 21
+    value: 52
+  - rarity: 3
+    slot: 6
+    level: 106
+    stat: 21
+    value: 54
+  - rarity: 3
+    slot: 6
+    level: 109
+    stat: 21
+    value: 56
+  - rarity: 3
+    slot: 6
+    level: 112
+    stat: 21
+    value: 60
+  - rarity: 3
+    slot: 6
+    level: 100
+    stat: 22
+    value: 100
+  - rarity: 3
+    slot: 6
+    level: 103
+    stat: 22
+    value: 105
+  - rarity: 3
+    slot: 6
+    level: 106
+    stat: 22
+    value: 110
+  - rarity: 3
+    slot: 6
+    level: 109
+    stat: 22
+    value: 115
+  - rarity: 3
+    slot: 6
+    level: 112
+    stat: 22
+    value: 120

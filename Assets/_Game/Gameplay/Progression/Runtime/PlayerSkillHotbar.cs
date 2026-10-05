@@ -97,11 +97,40 @@ namespace KryticalNova.Progression
             commandMap.Enable();
         }
 
-        private void OnEnable() => commandMap?.Enable();
+        private void OnEnable()
+        {
+            commandMap?.Enable();
+            if (combatSkills != null) combatSkills.ActiveClassChanged += OnActiveClassChanged;
+        }
+
         private void OnDisable()
         {
             EndCharge(false);
             commandMap?.Disable();
+            if (combatSkills != null) combatSkills.ActiveClassChanged -= OnActiveClassChanged;
+        }
+
+        /// <summary>
+        /// The character took up another class's weapon: every slot that held a class skill now holds the new
+        /// class's skill of the same slot (they share a rank), so the keys keep doing the same job.
+        /// </summary>
+        private void OnActiveClassChanged(WeaponClassId previous, WeaponClassId current)
+        {
+            if (current == WeaponClassId.None) return;
+            EndCharge(false);
+            bool changed = false;
+            for (int index = 0; index < SlotCount; index++)
+            {
+                var entry = slots[index];
+                if (entry.itemType != HotbarItemType.CombatSkill || entry.combatSkill == null) continue;
+                if (!entry.combatSkill.IsClassSkill || entry.combatSkill.weaponClass == current) continue;
+                var match = combatSkills.GetClassSkill(current, entry.combatSkill.classSlot);
+                slots[index] = match != null
+                    ? new HotbarSlotEntry { itemType = HotbarItemType.CombatSkill, movementSkill = MovementSkillId.None, combatSkill = match }
+                    : default;
+                changed = true;
+            }
+            if (changed) Changed?.Invoke();
         }
 
         private void Update()

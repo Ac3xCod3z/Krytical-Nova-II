@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Zero Hour
   description: A rising single hit that lands with extra force.
   category: 4
+  weaponClass: 1
+  classSlot: 6
+  presentationId: 
   targetType: 1
   executionType: 0
   acquisitionMethod: 1

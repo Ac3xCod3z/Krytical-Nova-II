@@ -367,6 +367,10 @@
     font-size: 12.32px;
     -unity-font-definition: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Fonts/Grenze/Grenze-SemiBold.ttf");
 }
+.kn-faction-covenant .item-level {
+    font-size: 11.2px;
+    -unity-font-definition: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Fonts/Grenze/Grenze-SemiBold.ttf");
+}
 .kn-faction-covenant .equip-label {
     font-size: 10.08px;
     color: rgb(178, 165, 151);
@@ -376,12 +380,6 @@
 }
 .kn-faction-covenant .item-cell:hover > .item-frame, .kn-faction-covenant .equip-slot:hover > .item-frame {
     -unity-background-image-tint-color: rgba(246, 236, 224, 0.85);
-}
-.kn-faction-covenant .rarity-0 > .item-frame {
-    -unity-background-image-tint-color: rgba(196, 188, 179, 0.75);
-}
-.kn-faction-covenant .rarity-2 {
-    -unity-background-image-tint-color: rgba(86, 64, 38, 0.9);
 }
 .kn-faction-covenant .drop-valid > .item-frame {
     -unity-background-image-tint-color: rgb(255, 197, 88);
@@ -437,6 +435,10 @@
 .kn-faction-covenant .tooltip-type {
     font-size: 12.32px;
     color: rgb(104, 214, 141);
+}
+.kn-faction-covenant .tooltip-requires {
+    font-size: 12.32px;
+    color: rgb(196, 186, 174);
 }
 .kn-faction-covenant .tooltip-desc {
     font-size: 13.44px;

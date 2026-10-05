@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Firewall
   description: Hardens your guard, raising Elemental Defense.
   category: 2
+  weaponClass: 1
+  classSlot: 10
+  presentationId: 
   targetType: 0
   executionType: 0
   acquisitionMethod: 0

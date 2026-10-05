@@ -14,7 +14,7 @@ namespace KryticalNova.Progression
         [Min(0)] public int skillPointReward;
     }
 
-    /// <summary>Designer-owned level transitions. A table of 99 transitions gives a level cap of 100.</summary>
+    /// <summary>Designer-owned level transitions. The level cap is the number of rows plus one (111 rows: cap 112).</summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Character Progression")]
     public sealed class CharacterProgressionData : ScriptableObject
     {

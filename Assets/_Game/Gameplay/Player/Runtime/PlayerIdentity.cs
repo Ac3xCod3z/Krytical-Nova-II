@@ -40,6 +40,8 @@ namespace KryticalNova.Player
 
         /// <summary>Raised on every peer when the identity is applied (name, faction and look are then current).</summary>
         public event Action Changed;
+        /// <summary><see cref="IGearWearer"/>: faction, body, pack or Discipline changed. Raised with <see cref="Changed"/>.</summary>
+        public event Action WearerChanged;
 
         public CharacterCreationDatabase Database => database;
         public bool HasIdentity => !current.IsEmpty;
@@ -49,6 +51,8 @@ namespace KryticalNova.Player
         public LineageDefinition Lineage => lineage;
         public BodyFit Body => lineage != null ? lineage.body : BodyFit.None;
         public string GearPack => lineage != null ? lineage.ownPack : null;
+        /// <summary>The class chosen in the creator; characters saved before classes existed get their faction's offense class.</summary>
+        public WeaponClassId Discipline => WeaponClassRules.Normalize(current.weaponClass, current.faction);
         public CharacterNetState State => current;
 
         /// <summary>The duel exception of the faction rule: true while this player and <paramref name="other"/> duel each other.</summary>
@@ -148,8 +152,9 @@ namespace KryticalNova.Player
             if (look != null && !look.Apply(state.ToRecipe(), database))
                 Debug.LogWarning($"[PlayerIdentity] Could not build the look of '{CharacterName}'.", this);
             if (combatEntity != null) combatEntity.SetEntityName(CharacterName);
-            // The gear a new character can use comes from its own pack (until gear is earned in the world).
-            if (inventory != null && (!IsSpawned || IsServer)) inventory.ServerGrantPackGear(GearPack);
+            // A new character starts in the level-1 outfit of its own pack, holding its Discipline's weapon.
+            if (inventory != null && (!IsSpawned || IsServer)) inventory.ServerGrantStarterKit(GearPack, Faction, Body, Discipline);
+            WearerChanged?.Invoke();
             Changed?.Invoke();
         }
     }

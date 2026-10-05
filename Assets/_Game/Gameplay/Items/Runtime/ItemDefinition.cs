@@ -13,6 +13,14 @@ namespace KryticalNova.Items
         public float value;
     }
 
+    /// <summary>"+N levels" to the skills of one weapon class (None = whichever class the wearer is using).</summary>
+    [Serializable]
+    public struct ItemSkillModifier
+    {
+        public WeaponClassId line;
+        public byte levels;
+    }
+
     /// <summary>
     /// One Sidekick skinned part. Bone names are extracted at edit time so runtime never instantiates the source FBX:
     /// the mesh's bone indices are remapped onto the character's skeleton by name.
@@ -54,7 +62,21 @@ namespace KryticalNova.Items
         public EquipSlot equipSlot;
         [Min(1)] public ushort maxStack = 1;
 
-        [Header("Stats (applied while equipped)")]
+        [Header("Gear ladder (baked by GearStatBaker: edit GearDictionary lines and GearStatTable, not these)")]
+        [Tooltip("Level of this piece, and the level a character needs to equip it. 0 = no requirement.")]
+        public byte itemLevel;
+        [Tooltip("The GearDictionary line this tier belongs to. 0 = not ladder gear.")]
+        public ushort lineId;
+        [Tooltip("Weapons: the class this weapon makes its wielder. None for everything else.")]
+        public WeaponClassId weaponClass;
+        [Tooltip("Primary stats (Attack Power on weapons, Defense on the rest). Tempering will scale these.")]
+        public ItemStatModifier[] baseStats = Array.Empty<ItemStatModifier>();
+        [Tooltip("Secondary stats from the ladder table.")]
+        public ItemStatModifier[] secondaryStats = Array.Empty<ItemStatModifier>();
+        [Tooltip("Bonus skill levels. Stored and shown; not applied to skill ranks yet.")]
+        public ItemSkillModifier[] skillModifiers = Array.Empty<ItemSkillModifier>();
+
+        [Header("Stats (applied while equipped; hand-made items)")]
         public List<ItemStatModifier> statModifiers = new List<ItemStatModifier>();
 
         [Header("Consumable (used from the bag; one is removed per use)")]
@@ -104,6 +126,11 @@ namespace KryticalNova.Items
 
         private void OnEnable() => loadedParts = null;
         private void OnValidate() => loadedParts = null;
+
+        /// <summary>True for a baked tier of the gear ladder (as opposed to a consumable, a pet or a look template).</summary>
+        public bool IsLadderGear => lineId != 0;
+        public bool HasStats => (baseStats != null && baseStats.Length > 0) || (secondaryStats != null && secondaryStats.Length > 0)
+                                || (statModifiers != null && statModifiers.Count > 0);
 
         public bool IsEquippable => equipSlot != EquipSlot.None;
         public bool IsStackable => maxStack > 1;

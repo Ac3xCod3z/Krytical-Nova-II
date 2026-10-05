@@ -144,6 +144,18 @@
                     <ui:Label text="Move Speed" class="combat-stat-label" />
                     <ui:Label name="combat-stat-speed" text="100%" class="combat-stat-value" />
                 </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Critical Defense" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-crit-def" text="0%" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Kill-XP Rate" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-xp-rate" text="+0%" class="combat-stat-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="combat-stat-row">
+                    <ui:Label text="Kill-XP Amount" class="combat-stat-label" />
+                    <ui:Label name="combat-stat-xp-amount" text="+0%" class="combat-stat-value" />
+                </ui:VisualElement>
             </ui:VisualElement>
             </ui:ScrollView>
         </ui:VisualElement>

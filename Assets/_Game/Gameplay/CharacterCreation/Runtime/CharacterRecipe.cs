@@ -1,6 +1,7 @@
 using System;
 using KryticalNova.Factions;
 using KryticalNova.Items.Visuals;
+using KryticalNova.Progression;
 
 namespace KryticalNova.CharacterCreation
 {
@@ -35,6 +36,11 @@ namespace KryticalNova.CharacterCreation
         public byte scars;
         public byte eyeliner;
         public byte grime;
+        /// <summary>
+        /// Discipline: the weapon class the character starts with (and uses while unarmed). One of its faction's
+        /// three. None on characters saved before classes existed; they read as their faction's offense class.
+        /// </summary>
+        public WeaponClassId weaponClass;
 
         public bool IsEmpty => lineage == 0;
         public int PartCount => parts != null ? parts.Length : 0;
@@ -62,7 +68,7 @@ namespace KryticalNova.CharacterCreation
         {
             if (version != other.version || faction != other.faction || lineage != other.lineage || bodyType != other.bodyType
                 || build != other.build || muscle != other.muscle || palette != other.palette || skinTone != other.skinTone
-                || scars != other.scars || eyeliner != other.eyeliner || grime != other.grime
+                || scars != other.scars || eyeliner != other.eyeliner || grime != other.grime || weaponClass != other.weaponClass
                 || PartCount != other.PartCount || ColorCount != other.ColorCount)
                 return false;
             for (int i = 0; i < PartCount; i++)

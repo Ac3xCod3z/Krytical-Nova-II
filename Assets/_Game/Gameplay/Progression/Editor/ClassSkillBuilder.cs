@@ -1,0 +1,345 @@
+using System.Collections.Generic;
+using System.Linq;
+using KryticalNova.Factions;
+using KryticalNova.Items;
+using KryticalNova.Progression;
+using UnityEditor;
+using UnityEngine;
+
+namespace KryticalNova.EditorTools
+{
+    /// <summary>
+    /// Builds the skill kits of the nine weapon classes and the class catalog. Every class has the same ten slots
+    /// (S1 to S8, Stance, Guard). The Monoblade's ten skills, built and tuned by <see cref="BladeSkillBuilder"/>,
+    /// are the template: each other class gets a copy per slot with its own name, animation set, reach and stance
+    /// stat. Names come from _Docs/Reference/12Sky/04_Weapon_Classes.md.
+    /// Re-runnable: a class skill that already exists keeps its numbers and its animation (so hand tuning survives);
+    /// only its name, class, slot and description are refreshed.
+    /// </summary>
+    public static class ClassSkillBuilder
+    {
+        private const string SkillRoot = "Assets/_Game/Gameplay/Progression/Data/Assets/Skills";
+        private const string MonobladeFolder = SkillRoot + "/BladeSkills";
+        public const string CatalogPath = "Assets/_Game/Gameplay/Items/Data/Assets/WeaponClassCatalog.asset";
+        private const string PlayerPrefabPath = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
+
+        private const string GreatSword = "Assets/_ThirdParty/Grruzam Powerful Sword Animation(Great Sword, Katana)/Animation/M_Big_Sword/";
+        private const string Bow = "Assets/Synty/AnimationBowCombat/Animations/Polygon/Neutral/Standing/Shoot/";
+
+        // The Monoblade skill in each slot, in slot order.
+        private static readonly string[] MonobladeIds =
+        {
+            "FuryStrike", "HaeseoStroke", "GentlemansPen", "DevilsStrike", "FlashOfRage",
+            "SunraysStroke", "PhantomThunder", "ThunderousDragon", "LightningFlash", "AzureWall"
+        };
+
+        private enum ClipSet
+        {
+            /// <summary>The template's own clips (Grruzam katana).</summary>
+            Katana,
+            /// <summary>Grruzam great-sword: the two-handed melee classes.</summary>
+            GreatSword,
+            /// <summary>Synty Bow Combat.</summary>
+            Bow
+        }
+
+        private sealed class ClassSeed
+        {
+            public WeaponClassId id;
+            public ClipSet clips;
+            public string summary;
+            public string[] names; // slot order: S1..S8, Stance, Guard
+        }
+
+        // Clips per slot (S1..S8, Stance, Guard). Null keeps the template's clip.
+        private static readonly string[] GreatSwordClips =
+        {
+            GreatSword + "3_Skills/M_Big_Sword@Skill_H.FBX",
+            GreatSword + "2_Attacks/3__Dash_Attack/M_Big_Sword@Dash_Attack_ver_B.FBX",
+            GreatSword + "2_Attacks/0__3Combos/M_Big_Sword@Attack_3Combo_ALL_Inplace.FBX",
+            GreatSword + "2_Attacks/5__Upper_Attack/M_Big_Sword@UpperAttack_ZeroHeight.FBX",
+            GreatSword + "3_Skills/M_Big_Sword@Skill_B.FBX",
+            GreatSword + "3_Skills/M_Big_Sword@Skill_A.FBX",
+            GreatSword + "3_Skills/M_Big_Sword@Skill_G_ALL.FBX",
+            GreatSword + "3_Skills/M_Big_Sword@Skill_D.FBX",
+            GreatSword + "1_Movements/0__Intro/M_Big_Sword@Intro.FBX",
+            null
+        };
+
+        private static readonly string[] BowClips =
+        {
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "A_POLY_BOW_Stand_Shoot_Leaping_Neut.fbx",
+            null,
+            null
+        };
+
+        private static readonly ClassSeed[] Classes =
+        {
+            new ClassSeed
+            {
+                id = WeaponClassId.Monoblade, clips = ClipSet.Katana, summary = "A single-edged blade. Fast, clean cuts on the front line.",
+                names = new[] { "Perimeter Cut", "Clean Cut", "Signature Series", "Severance", "Hostile Takeover", "Zero Hour", "Liquidation", "Market Crash", "Overclock", "Firewall" }
+            },
+            new ClassSeed
+            {
+                id = WeaponClassId.Glaive, clips = ClipSet.GreatSword, summary = "A polearm that holds a line and controls the space around it.",
+                names = new[] { "Riot Sweep", "Suppression Thrust", "Compliance Combo", "Curfew", "Cease and Desist", "Lockstep", "Full Enforcement", "Martial Law", "Bulwark Protocol", "Shield Field" }
+            },
+            new ClassSeed
+            {
+                id = WeaponClassId.Carbine, clips = ClipSet.Katana, summary = "A firearm. Picks targets apart from range.",
+                names = new[] { "Spray Pattern", "Clean Shot", "Triple Tap", "Headhunter", "Burst Contract", "Longshot", "Terminal Burst", "Orbital Call", "Target Lock", "Reactive Plating" }
+            },
+            new ClassSeed
+            {
+                id = WeaponClassId.Harvester, clips = ClipSet.GreatSword, summary = "A reaping blade. Wide, heavy swings that cut down whatever is close.",
+                names = new[] { "Reaping Cycle", "Culling Stroke", "Threshing Combo", "Scrap Sentence", "Hydraulic Flurry", "Extinction Blow", "Kill Loop", "Terminal Harvest", "Kill Protocol", "Null Shell" }
+            },
+            new ClassSeed
+            {
+                id = WeaponClassId.ServoClaws, clips = ClipSet.Katana, summary = "Powered claws. Close, relentless and hard to move.",
+                names = new[] { "Shockwave Stomp", "Piston Jab", "Servo Combo", "Compactor", "Overdrive Cycle", "Core Breach", "Three-Phase Rend", "Zero Point", "Lockdown Plating", "Faraday Skin" }
+            },
+            new ClassSeed
+            {
+                id = WeaponClassId.ArcCaster, clips = ClipSet.Katana, summary = "An energy projector. Burns targets down from a distance.",
+                names = new[] { "Arc Flare", "Lance Shot", "Tri-Bolt", "Ion Spike", "Cascade Fire", "Sunspot", "Chain Storm", "Extinction Beam", "Capacitor", "Static Veil" }
+            },
+            new ClassSeed
+            {
+                id = WeaponClassId.Longaxe, clips = ClipSet.GreatSword, summary = "A two-handed axe. Slow to raise, final when it lands.",
+                names = new[] { "Reaping Arc", "Hewing Blow", "Clan Rhythm", "Oathbreaker", "Frostbite Flurry", "Skysplitter", "Wolfpack", "Northfall", "Blood Oath", "Ancestor's Ward" }
+            },
+            new ClassSeed
+            {
+                id = WeaponClassId.Claymore, clips = ClipSet.GreatSword, summary = "A great sword. The clan's shield as much as its blade.",
+                names = new[] { "Shieldwall Sweep", "Steadfast Cut", "Three Oaths", "Bulwark Strike", "Hearthguard Flurry", "Dawnguard", "Highguard Trinity", "Kingsfall", "Shieldwall", "Stoneheart" }
+            },
+            new ClassSeed
+            {
+                id = WeaponClassId.Warbow, clips = ClipSet.Bow, summary = "A war bow. Light on its feet, deadly at range.",
+                names = new[] { "Arrow Rain", "Hunter's Mark", "Three Feathers", "Heartseeker", "Volley", "Moonshot", "Stormflight", "Skyfall", "Windwalk", "Barkskin" }
+            },
+        };
+
+        // Ranged single-target reach by rank (melee is 2). Area skills keep their radius.
+        private const float RangedMinReach = 8f, RangedMaxReach = 12f;
+        private const float StanceMin = 2f, StanceMax = 20f;
+        // Hit moments, as a share of the cast, for a clip nobody has measured yet.
+        private const float SingleHitTime = 0.4f, AreaHitTime = 0.45f;
+        private static readonly float[] TripleHitTimes = { 0.25f, 0.5f, 0.75f };
+
+        [MenuItem("Krytical Nova/Progression/Build Class Skills")]
+        public static void Build()
+        {
+            var templates = new SkillDefinitionSO[WeaponClasses.SlotCount];
+            for (int i = 0; i < MonobladeIds.Length; i++)
+            {
+                templates[i] = AssetDatabase.LoadAssetAtPath<SkillDefinitionSO>($"{MonobladeFolder}/Skill_{MonobladeIds[i]}.asset");
+                if (templates[i] == null)
+                {
+                    Debug.LogError($"[ClassSkills] Monoblade skill '{MonobladeIds[i]}' not found. Run 'Krytical Nova/Progression/Build Blade Skills' first.");
+                    return;
+                }
+            }
+
+            var entries = new List<WeaponClassCatalog.Entry>();
+            int created = 0;
+            foreach (var seed in Classes)
+            {
+                var role = WeaponClasses.RoleOf(seed.id);
+                var skills = new SkillDefinitionSO[WeaponClasses.SlotCount];
+                for (int i = 0; i < WeaponClasses.SlotCount; i++)
+                {
+                    var slot = WeaponClasses.Slots[i];
+                    SkillDefinitionSO skill;
+                    if (seed.id == WeaponClassId.Monoblade)
+                    {
+                        skill = templates[i];
+                        skill.presentationId = string.Empty;
+                    }
+                    else
+                    {
+                        skill = LoadOrClone(seed, slot, templates[i], out bool isNew);
+                        if (isNew)
+                        {
+                            created++;
+                            ApplyClassShape(skill, seed, role, slot, i);
+                        }
+                        skill.skillId = $"{seed.id}_{slot}";
+                        skill.presentationId = templates[i].skillId;
+                        skill.description = Describe(seed.id, role, slot);
+                        if (skill.icon == null) skill.icon = templates[i].icon;
+                    }
+                    skill.displayName = seed.names[i];
+                    skill.weaponClass = seed.id;
+                    skill.classSlot = slot;
+                    EditorUtility.SetDirty(skill);
+                    skills[i] = skill;
+                }
+
+                entries.Add(new WeaponClassCatalog.Entry
+                {
+                    id = seed.id, displayName = WeaponClasses.DisplayName(seed.id), faction = WeaponClassRules.FactionOf(seed.id),
+                    role = role, summary = seed.summary, stanceSummary = $"{seed.names[8]}: {StanceEffect(role)}", skills = skills
+                });
+            }
+
+            var catalog = AssetDatabase.LoadAssetAtPath<WeaponClassCatalog>(CatalogPath);
+            if (catalog == null)
+            {
+                catalog = ScriptableObject.CreateInstance<WeaponClassCatalog>();
+                AssetDatabase.CreateAsset(catalog, CatalogPath);
+            }
+            catalog.SetContents(entries.ToArray(), SharedSkills());
+            EditorUtility.SetDirty(catalog);
+            AssetDatabase.SaveAssets();
+
+            bool wired = WirePlayerPrefab(catalog);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[ClassSkills] {entries.Count} classes, {entries.Count * WeaponClasses.SlotCount} class skills ({created} new), " +
+                      $"{catalog.SharedSkills.Count} shared skills in {CatalogPath}.{(wired ? " Player prefab given its PlayerWeaponClass." : string.Empty)}");
+        }
+
+        /// <summary>The skills every class can use: what the player prefab lists that is not a class skill.</summary>
+        private static SkillDefinitionSO[] SharedSkills()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+            var combatSkills = prefab != null ? prefab.GetComponent<PlayerCombatSkills>() : null;
+            if (combatSkills == null) return System.Array.Empty<SkillDefinitionSO>();
+            return combatSkills.AvailableSkills.Where(s => s != null && !s.IsClassSkill && System.Array.IndexOf(MonobladeIds, s.skillId) < 0).ToArray();
+        }
+
+        private static SkillDefinitionSO LoadOrClone(ClassSeed seed, ClassSkillSlot slot, SkillDefinitionSO template, out bool isNew)
+        {
+            string folder = $"{SkillRoot}/{seed.id}Skills";
+            WeatherVfxBuilder.EnsureFolder(folder);
+            string path = $"{folder}/Skill_{seed.id}_{slot}.asset";
+            var skill = AssetDatabase.LoadAssetAtPath<SkillDefinitionSO>(path);
+            isNew = skill == null;
+            if (!isNew) return skill;
+            skill = Object.Instantiate(template); // every number, the icon and the hit timing of the Monoblade's slot
+            AssetDatabase.CreateAsset(skill, path);
+            return skill;
+        }
+
+        /// <summary>What differs from the Monoblade for a new class skill: its animation, its reach and its stance stat.</summary>
+        private static void ApplyClassShape(SkillDefinitionSO skill, ClassSeed seed, WeaponClassRole role, ClassSkillSlot slot, int slotIndex)
+        {
+            string[] clips = seed.clips == ClipSet.GreatSword ? GreatSwordClips : seed.clips == ClipSet.Bow ? BowClips : null;
+            string clipPath = clips != null ? clips[slotIndex] : null;
+            if (clipPath != null)
+            {
+                var clip = LoadClip(clipPath);
+                if (clip != null && clip != skill.castClip)
+                {
+                    skill.castClip = clip;
+                    // The Monoblade's hit moments were measured on its own clips; a new clip starts from the defaults.
+                    if (skill.IsAttack)
+                    {
+                        bool area = skill.targetType == SkillTargetType.AreaOfEffect;
+                        skill.hitTimesNormalized = skill.hitCount > 1 ? (float[])TripleHitTimes.Clone() : new[] { area ? AreaHitTime : SingleHitTime };
+                        skill.castLiftCurve = slot == ClassSkillSlot.S8 ? BladeSkillBuilder.BakeLift(clip) : new AnimationCurve();
+                    }
+                }
+            }
+
+            if (role == WeaponClassRole.Ranged && skill.IsAttack && skill.targetType == SkillTargetType.SingleTarget)
+            {
+                skill.minRange = RangedMinReach;
+                skill.maxRange = RangedMaxReach;
+            }
+
+            if (slot == ClassSkillSlot.Stance)
+            {
+                switch (role)
+                {
+                    case WeaponClassRole.Defense:
+                        skill.rankScaledModifiers = new[] { new RankScaledModifier(StatType.DefensePower, ModifierType.PercentAdd, StanceMin, StanceMax) };
+                        break;
+                    case WeaponClassRole.Ranged:
+                        skill.rankScaledModifiers = new[]
+                        {
+                            new RankScaledModifier(StatType.EvasionRate, ModifierType.PercentAdd, StanceMin, StanceMax),
+                            new RankScaledModifier(StatType.MoveSpeedPercent, ModifierType.Flat, StanceMin, StanceMax),
+                        };
+                        break;
+                    default:
+                        skill.rankScaledModifiers = new[] { new RankScaledModifier(StatType.AttackPower, ModifierType.PercentAdd, StanceMin, StanceMax) };
+                        break;
+                }
+            }
+        }
+
+        private static string StanceEffect(WeaponClassRole role)
+        {
+            switch (role)
+            {
+                case WeaponClassRole.Defense: return "raises Defense";
+                case WeaponClassRole.Ranged: return "raises Evasion and Move Speed";
+                default: return "raises Attack Power";
+            }
+        }
+
+        private static string Describe(WeaponClassId id, WeaponClassRole role, ClassSkillSlot slot)
+        {
+            bool ranged = role == WeaponClassRole.Ranged;
+            string hit = ranged ? "shot" : "strike";
+            string hits = ranged ? "shots" : "strikes";
+            switch (slot)
+            {
+                case ClassSkillSlot.S1: return $"Hits every enemy around you. Hold the key to keep {(ranged ? "firing" : "striking")}.";
+                case ClassSkillSlot.S2: return $"A single {hit} at your target.";
+                case ClassSkillSlot.S3: return $"Three quick {hits} at your target.";
+                case ClassSkillSlot.S4: return $"A heavier single {hit} for a seasoned {WeaponClasses.DisplayName(id)}.";
+                case ClassSkillSlot.S5: return $"A three-{hit} flurry at your target.";
+                case ClassSkillSlot.S6: return $"A single {hit} that lands with extra force.";
+                case ClassSkillSlot.S7: return $"Three {hits} that each land with extra force.";
+                case ClassSkillSlot.S8: return $"War God technique. Crashes down on every enemy around you. Hold the key to keep {(ranged ? "firing" : "striking")}.";
+                case ClassSkillSlot.Stance:
+                    return role == WeaponClassRole.Defense ? "Sets your stance, raising your Defense."
+                        : ranged ? "Lightens your step, raising Evasion and Move Speed."
+                        : "Quickens your weapon, raising all damage you deal.";
+                default: return "Hardens your guard, raising Elemental Defense.";
+            }
+        }
+
+        private static AnimationClip LoadClip(string fbxPath)
+        {
+            var clip = AssetDatabase.LoadAllAssetsAtPath(fbxPath).OfType<AnimationClip>()
+                .FirstOrDefault(c => !c.name.StartsWith("__preview__"));
+            if (clip == null) Debug.LogWarning($"[ClassSkills] No animation clip found in {fbxPath}; the Monoblade's clip stays as a stand-in.");
+            return clip;
+        }
+
+        /// <summary>The player needs the component that works out its class from the weapon in hand.</summary>
+        private static bool WirePlayerPrefab(WeaponClassCatalog catalog)
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
+            try
+            {
+                var component = root.GetComponent<PlayerWeaponClass>();
+                bool added = component == null;
+                if (added) component = root.AddComponent<PlayerWeaponClass>();
+                var so = new SerializedObject(component);
+                var property = so.FindProperty("catalog");
+                if (!added && property.objectReferenceValue == catalog) return false;
+                property.objectReferenceValue = catalog;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
+                return true;
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+    }
+}

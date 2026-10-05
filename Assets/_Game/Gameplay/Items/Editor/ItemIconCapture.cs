@@ -32,21 +32,34 @@ namespace KryticalNova.EditorTools
             BodyRegion.AttachmentHipsBack, BodyRegion.AttachmentHipsLeft, BodyRegion.AttachmentHipsRight
         };
 
+        /// <summary>
+        /// What gets an icon of its own: every look template a gear line wears (its tiers share that icon) and every
+        /// catalog item that is not ladder gear (pets, hand-made items).
+        /// </summary>
+        private static List<ItemDefinition> IconSubjects()
+        {
+            var subjects = GearStatBaker.LookTemplates();
+            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(SidekickGearGenerator.CatalogPath);
+            if (catalog != null)
+                subjects.AddRange(catalog.Items.Where(i => i != null && !i.IsLadderGear && i.IsEquippable && !subjects.Contains(i)));
+            return subjects;
+        }
+
         [MenuItem("Krytical Nova/Items/2. Capture Item Icons (All)")]
         public static void CaptureAll()
         {
-            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(SidekickGearGenerator.CatalogPath);
-            if (catalog == null) { Debug.LogError("[Items] No ItemCatalog. Run 'Generate Test Gear' first."); return; }
-            Capture(catalog.Items.Where(i => i != null).ToList());
+            Capture(IconSubjects());
+            GearStatBaker.Bake(); // hand each look's icon to its tiers
         }
 
         /// <summary>Only the items that have no icon yet (new gear), leaving every existing icon as it is.</summary>
         [MenuItem("Krytical Nova/Items/Capture Icons (Missing Only)")]
         public static void CaptureMissing()
         {
-            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(SidekickGearGenerator.CatalogPath);
-            if (catalog == null) { Debug.LogError("[Items] No ItemCatalog. Run 'Generate Test Gear' first."); return; }
-            Capture(catalog.Items.Where(i => i != null && i.icon == null).ToList());
+            var missing = IconSubjects().Where(i => i.icon == null).ToList();
+            if (missing.Count == 0) { Debug.Log("[Items] Every look already has an icon."); return; }
+            Capture(missing);
+            GearStatBaker.Bake();
         }
 
         [MenuItem("Krytical Nova/Items/Capture Icons (Selected Items)")]
@@ -236,8 +249,8 @@ namespace KryticalNova.EditorTools
                 case EquipSlot.Weapon:
                     if (item.weaponPrefab == null) break;
                     var w = (GameObject)Object.Instantiate(item.weaponPrefab, root.transform, false);
-                    // Blade (+Z) runs bottom-left to top-right, the classic inventory diagonal.
-                    w.transform.localRotation = Quaternion.LookRotation(new Vector3(1f, 1f, 0f).normalized, Vector3.back);
+                    // Blade (+Z) runs bottom-left to top-right, the classic inventory diagonal, broad side (Y) to the camera.
+                    w.transform.localRotation = Quaternion.LookRotation(new Vector3(1f, 1f, 0f).normalized, new Vector3(-1f, 1f, 0f).normalized);
                     viewDir = Vector3.back;
                     break;
                 case EquipSlot.Pet:

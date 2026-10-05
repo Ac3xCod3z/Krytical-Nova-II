@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Perimeter Cut
   description: Sweeps the blade through every enemy around you. Hold the key to keep striking.
   category: 4
+  weaponClass: 1
+  classSlot: 1
+  presentationId: 
   targetType: 2
   executionType: 0
   acquisitionMethod: 0

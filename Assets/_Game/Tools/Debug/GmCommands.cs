@@ -132,6 +132,7 @@ namespace KryticalNova.DevTools
                 "WEATHER      weather.set <name> [secs] · weather.clear · weather.lock <bool> · weather.list",
                 "SKY          sky.rainbow [0-1|off] · sky.moonphase <new|first|full|last|0-1|off> · sky.moon.next · sky.halo [sun|moon|both|off] · sky.shimmer <x|off> · sky.flare <x|off> · sky.lightning · sky.status · sky.reset",
                 "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear   (stims: Pill_Vitality, Pill_Chi, Pill_DualHarmony)",
+                "GEAR         gm.gear <slot> <level> <rarity> [class] · gm.loadout [class]   (e.g. gm.gear weapon 45 rare carbine)",
             });
         }
         #endregion

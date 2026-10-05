@@ -817,6 +817,49 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Give"), EnableIf(nameof(IsReady)), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(503)]
         private void ClearBag() => Run("item.clear");
 
+        // ---- ladder gear: the same lookups as gm.gear / gm.loadout
+
+        private enum GearSlotChoice { Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape }
+        private enum GearRarityChoice { Common, Uncommon, Rare, Epic }
+        private enum GearClassChoice
+        {
+            Current, Monoblade, Glaive, Carbine, Harvester, ServoClaws, ArcCaster, Longaxe, Claymore, Warbow
+        }
+
+        [TabGroup(Tabs, ItemsTab), Title("Ladder Gear"), EnableIf(nameof(IsReady)), LabelText("Slot"), PropertyOrder(510)]
+        [SerializeField] private GearSlotChoice gearSlot = GearSlotChoice.Weapon;
+
+        [TabGroup(Tabs, ItemsTab), EnableIf(nameof(IsReady)), LabelText("Rarity"), PropertyOrder(511)]
+        [SerializeField] private GearRarityChoice gearRarity = GearRarityChoice.Common;
+
+        [TabGroup(Tabs, ItemsTab), ValueDropdown(nameof(GearLevelChoices)), EnableIf(nameof(IsReady)), LabelText("Level"), PropertyOrder(512)]
+        [SerializeField] private int gearLevel = 1;
+
+        [TabGroup(Tabs, ItemsTab), EnableIf(nameof(IsReady)), LabelText("Class"), PropertyOrder(513)]
+        [InfoBox("Current = the class the player is using. Another class only matters for weapons and loadouts.")]
+        [SerializeField] private GearClassChoice gearClass = GearClassChoice.Current;
+
+        private string GearClassArgument => gearClass == GearClassChoice.Current ? string.Empty : " " + gearClass.ToString().ToLowerInvariant();
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Gear"), EnableIf(nameof(IsReady)), PropertyOrder(514)]
+        private void GiveGear() =>
+            Run($"gm.gear {gearSlot.ToString().ToLowerInvariant()} {gearLevel} {gearRarity.ToString().ToLowerInvariant()}{GearClassArgument}");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Gear"), EnableIf(nameof(IsReady)), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(515)]
+        private void StarterLoadout() => Run($"gm.loadout{GearClassArgument}");
+
+        /// <summary>The tiers that exist for the chosen slot and rarity, so the level can only be a real band step.</summary>
+        private IEnumerable<ValueDropdownItem<int>> GearLevelChoices()
+        {
+            var inv = LocalInventory;
+            if (inv == null || inv.Gear == null) yield break;
+            var seen = new SortedSet<int>();
+            string slotName = gearSlot.ToString(), rarityName = gearRarity.ToString();
+            foreach (var entry in inv.Gear.Entries)
+                if (entry.slot.ToString() == slotName && entry.rarity.ToString() == rarityName) seen.Add(entry.itemLevel);
+            foreach (int level in seen) yield return new ValueDropdownItem<int>($"Level {level}", level);
+        }
+
         private static IEnumerable<ValueDropdownItem<string>> ItemChoices()
         {
             var inv = LocalInventory;

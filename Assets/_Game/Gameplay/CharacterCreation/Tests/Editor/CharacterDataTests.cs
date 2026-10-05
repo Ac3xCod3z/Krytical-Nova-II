@@ -2,6 +2,7 @@ using System.Linq;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Factions;
 using KryticalNova.Items;
+using KryticalNova.Progression;
 using NUnit.Framework;
 using UnityEditor;
 
@@ -172,17 +173,59 @@ namespace KryticalNova.Tests
                     && (part.region == BodyRegion.AttachmentHead || part.region == BodyRegion.AttachmentFace));
                 if (entry.pack != "FANT_SKTN") Assert.IsFalse(hasHeadgear, entry.name);
             }
-            var skeletonArmor = dictionary.Entries.First(e => e.pack == "FANT_SKTN" && e.slot == EquipSlot.Armor && e.variant == 3);
+            // A skeleton armor that has a helm wears the helm of its own variant.
+            var skeletonArmor = dictionary.Entries.First(e => e.pack == "FANT_SKTN" && e.slot == EquipSlot.Armor
+                && e.partIds.Any(id => database.Parts.TryGet(id, out var part) && part.region == BodyRegion.AttachmentHead));
             Assert.IsTrue(skeletonArmor.partIds.Any(id => database.Parts.TryGet(id, out var part)
-                && part.region == BodyRegion.AttachmentHead && part.variant == 3));
+                && part.region == BodyRegion.AttachmentHead && part.variant == skeletonArmor.variant));
         }
 
         [Test]
         public void EveryPackHasGearInEveryRarity()
         {
-            foreach (var pack in dictionary.Entries.Select(e => e.pack).Distinct())
-                for (var rarity = ItemRarity.Common; rarity <= ItemRarity.Legendary; rarity++)
+            // Legendary is reserved: nothing of that rarity is in the game yet.
+            foreach (var pack in dictionary.Entries.Select(e => e.pack).Where(p => !string.IsNullOrEmpty(p)).Distinct())
+                for (var rarity = ItemRarity.Common; rarity <= ItemRarity.Epic; rarity++)
                     Assert.IsTrue(dictionary.Entries.Any(e => e.pack == pack && e.rarity == rarity), $"{pack} has no {rarity} gear");
+        }
+
+        [Test]
+        public void CommonOutfitsAreTheBasicOutfit()
+        {
+            foreach (var lineage in database.Lineages)
+            {
+                foreach (var entry in dictionary.Entries.Where(e => e.pack == lineage.ownPack && e.rarity == ItemRarity.Common
+                                                                    && (e.slot == EquipSlot.Armor || e.slot == EquipSlot.Gloves || e.slot == EquipSlot.Boots)))
+                    Assert.AreEqual(1, entry.variant, $"{entry.name} (level {entry.itemLevel}) should look like {lineage.displayName}'s basic outfit");
+            }
+        }
+
+        [Test]
+        public void ADisciplineMustBelongToTheCharactersFaction()
+        {
+            var recipe = Preset(Civilian, BodyType.Masculine); // Hegemony
+            recipe.weaponClass = WeaponClassId.Carbine;
+            Assert.IsTrue(CharacterRecipeValidator.Validate(recipe, database, out _));
+            recipe.weaponClass = WeaponClassId.None; // saved before classes existed
+            Assert.IsTrue(CharacterRecipeValidator.Validate(recipe, database, out _));
+            recipe.weaponClass = WeaponClassId.Warbow; // Covenant
+            Assert.IsFalse(CharacterRecipeValidator.Validate(recipe, database, out string reason));
+            Assert.AreEqual(WeaponClassRules.ReasonWrongDiscipline, reason);
+        }
+
+        [Test]
+        public void TheDisciplineTravelsWithTheCharacter()
+        {
+            var recipe = Preset(Robot, BodyType.Masculine); // Null
+            recipe.weaponClass = WeaponClassId.ArcCaster;
+            var state = CharacterNetState.From("Unit", recipe);
+            Assert.AreEqual(WeaponClassId.ArcCaster, state.weaponClass);
+            Assert.AreEqual(WeaponClassId.ArcCaster, state.ToRecipe().weaponClass);
+
+            var changed = recipe.Clone();
+            changed.weaponClass = WeaponClassId.Harvester;
+            Assert.IsFalse(recipe.Equals(changed), "Two characters that differ only by Discipline are different");
+            Assert.IsFalse(state.Equals(CharacterNetState.From("Unit", changed)));
         }
     }
 }

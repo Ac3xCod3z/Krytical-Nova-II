@@ -142,7 +142,7 @@ namespace KryticalNova.Combat
             {
                 // Area attacks show their reach on the ground, timed to the moment the blow lands.
                 float areaRadius = skill.IsAreaAttack ? skill.GetRange(rank) : 0f;
-                feel.SkillCast(transform, skill.skillId, skill.IsAttack, IsLocalPlayerPresentation, areaRadius, skill.GetHitDelay(0));
+                feel.SkillCast(transform, skill.PresentationId, skill.IsAttack, IsLocalPlayerPresentation, areaRadius, skill.GetHitDelay(0));
                 // The blade trails for as long as the cast keeps the caster busy.
                 if (skill.IsAttack) feel.Swing(transform, SkillComboStep, IsLocalPlayerPresentation, skill.CastLockDuration);
             }
@@ -342,7 +342,7 @@ namespace KryticalNova.Combat
         {
             var pool = NetworkCombatVFXPool.Instance;
             if (pool != null && skill.hitVfxPrefab != null) pool.Spawn(skill.hitVfxPrefab, position, Quaternion.identity);
-            ClientPresentationRegistry.Feel?.SkillHit(transform, skill.skillId, position);
+            ClientPresentationRegistry.Feel?.SkillHit(transform, skill.PresentationId, position);
         }
 
         private GameObject SpawnAtCaster(GameObject prefab, Vector3 offset, float lifetime = 0f)
@@ -386,7 +386,7 @@ namespace KryticalNova.Combat
         {
             melee.HoldForSkill(skill.chargeTime);
             SpawnAtCaster(skill.chargeVfxPrefab, skill.vfxOffset, skill.chargeTime);
-            ClientPresentationRegistry.Feel?.ChargeStarted(transform, skill.skillId, skill.chargeTime, IsLocalPlayerPresentation);
+            ClientPresentationRegistry.Feel?.ChargeStarted(transform, skill.PresentationId, skill.chargeTime, IsLocalPlayerPresentation);
             if (skill.chargeLoopClip == null || animancer == null) return;
             if (animancerMotor != null && animancerMotor.CurrentState == CharacterAnimState.Jumping) return;
             if (presentRoutine != null) { StopCoroutine(presentRoutine); presentRoutine = null; }
@@ -397,7 +397,7 @@ namespace KryticalNova.Combat
 
         private void PresentChargeEnded(SkillDefinitionSO skill, bool completed)
         {
-            ClientPresentationRegistry.Feel?.ChargeEnded(transform, skill.skillId, completed);
+            ClientPresentationRegistry.Feel?.ChargeEnded(transform, skill.PresentationId, completed);
             if (presentRoutine != null) return; // the cast's own presentation already owns the body
             if (!completed) ReleaseBody();
             else presentRoutine = StartCoroutine(ReleaseAfter(ChargeHandoffSeconds));

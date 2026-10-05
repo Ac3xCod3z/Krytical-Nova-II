@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
@@ -22,6 +23,7 @@ namespace KryticalNova.Items
         private EquipmentLoadout current;
         // One stable source object per slot so unequipping removes exactly that slot's modifiers.
         private readonly object[] slotSources = new object[EquipSlots.Count];
+        private readonly List<StatModifier> resolved = new List<StatModifier>(8);
 
         /// <summary>(slot, previousItemId, newItemId). Raised on every peer, including the initial state on spawn.</summary>
         public event Action<EquipSlot, ushort, ushort> SlotChanged;
@@ -83,11 +85,11 @@ namespace KryticalNova.Items
         {
             if (combatStats == null) return;
             object source = slotSources[(int)slot];
-            combatStats.RemoveModifiersFromSource(source);
             var def = catalog != null ? catalog.Get(itemId) : null;
-            if (def == null) return;
-            foreach (var m in def.statModifiers)
-                combatStats.AddModifier(new StatModifier(m.stat, m.modType, m.value, source));
+            resolved.Clear();
+            // The loadout carries item IDs only; when gear gains per-item state (Temper, Fusion...) the stack comes from it.
+            if (def != null) GearStatResolver.Resolve(new ItemStack(itemId, 1), def, source, resolved);
+            combatStats.SetSourceModifiers(source, resolved); // one recalculation per slot, also when emptied
         }
     }
 }

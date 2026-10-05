@@ -147,6 +147,21 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void Sort_PutsHigherTiersOfTheSameRarityFirst()
+        {
+            const ushort Low = 10000, High = 10003;
+            Add(Low, "Tier Armor", EquipSlot.Armor, ItemRarity.Rare);
+            Add(High, "Tier Armor", EquipSlot.Armor, ItemRarity.Rare);
+            lookup.Items[Low].itemLevel = 45;
+            lookup.Items[High].itemLevel = 75;
+            bag[0] = new ItemStack(Low, 1);
+            bag[1] = new ItemStack(High, 1);
+            InventoryRules.Sort(bag, lookup);
+            Assert.AreEqual(High, bag[0].itemId);
+            Assert.AreEqual(Low, bag[1].itemId);
+        }
+
+        [Test]
         public void Sort_OrdersBySlotThenRarityAndMergesStacks()
         {
             bag[0] = new ItemStack(Potion, 3);

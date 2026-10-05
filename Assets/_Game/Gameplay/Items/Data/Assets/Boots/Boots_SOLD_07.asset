@@ -19,6 +19,12 @@ MonoBehaviour:
   rarity: 3
   equipSlot: 4
   maxStack: 1
+  itemLevel: 0
+  lineId: 0
+  weaponClass: 0
+  baseStats: []
+  secondaryStats: []
+  skillModifiers: []
   statModifiers: []
   restoreHealth: 0
   restoreChi: 0

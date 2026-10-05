@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Signature Series
   description: Three flowing cuts against your target.
   category: 4
+  weaponClass: 1
+  classSlot: 3
+  presentationId: 
   targetType: 1
   executionType: 0
   acquisitionMethod: 0

@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Hostile Takeover
   description: A furious three-hit flurry against your target.
   category: 4
+  weaponClass: 1
+  classSlot: 5
+  presentationId: 
   targetType: 1
   executionType: 0
   acquisitionMethod: 0

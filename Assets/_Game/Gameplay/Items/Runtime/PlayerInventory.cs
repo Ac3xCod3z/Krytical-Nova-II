@@ -38,9 +38,12 @@ namespace KryticalNova.Items
         private PlayerResources resources;
         private float nextUseTime;
         private bool starterGranted;
-        private bool packGearGranted;
+        private bool starterKitGranted;
+        // The weapon handed out before the character is known; the starter kit replaces it with the Discipline's.
+        private ushort placeholderWeaponId;
         private bool pullPending;
         private IGearWearer wearer;
+        private PlayerCharacterProgression progression;
         private InventoryRules.EquipGate equipGate;
 
         /// <summary>The inventory the local user controls: the owned networked player, else the offline scene avatar.</summary>
@@ -52,6 +55,7 @@ namespace KryticalNova.Items
         public event Action<string> RequestFailed;
 
         public ItemCatalog Catalog => catalog;
+        public GearDictionary Gear => gearDictionary;
         public PlayerEquipment Equipment => equipment;
         public ItemStack Get(int index) => index >= 0 && index < Capacity ? cells[index] : ItemStack.Empty;
         public ItemDefinition GetDefinition(int index) => catalog != null ? catalog.Get(Get(index).itemId) : null;
@@ -71,6 +75,7 @@ namespace KryticalNova.Items
             equipment = GetComponent<PlayerEquipment>();
             resources = GetComponent<PlayerResources>();
             wearer = GetComponent<IGearWearer>();
+            progression = GetComponent<PlayerCharacterProgression>();
             equipGate = EquipBlockedReason;
             netCells = new NetworkList<ItemStack>(readPerm: NetworkVariableReadPermission.Owner,
                 writePerm: NetworkVariableWritePermission.Server);
@@ -238,12 +243,19 @@ namespace KryticalNova.Items
         private void ServerQuickEquip(byte bagIndex) =>
             Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryQuickEquip(b, ref l, catalog, bagIndex, out r, equipGate));
 
-        /// <summary>The gear dictionary decides who may wear what: faction and body. Null means allowed.</summary>
+        /// <summary>
+        /// The gear dictionary decides who may wear what (faction and body), then the piece's level must not be
+        /// above the character's. Null means allowed.
+        /// </summary>
         private string EquipBlockedReason(ItemDefinition item)
         {
-            if (gearDictionary == null || wearer == null) return null;
-            return gearDictionary.CanUse(item.itemId, wearer.Faction, wearer.Body, out string reason) ? null : reason;
+            if (gearDictionary != null && wearer != null
+                && !gearDictionary.CanUse(item.itemId, wearer.Faction, wearer.Body, out string reason)) return reason;
+            if (progression != null && item.itemLevel > progression.CurrentLevel) return RequiresLevel(item.itemLevel);
+            return null;
         }
+
+        public static string RequiresLevel(int level) => $"Requires level {level}.";
 
         /// <summary>The same check for UI (greying out gear this character cannot wear).</summary>
         public bool CanEquip(ItemDefinition item, out string reason)
@@ -252,25 +264,64 @@ namespace KryticalNova.Items
             return reason == null;
         }
 
+        private static readonly EquipSlot[] StarterSlots =
+            { EquipSlot.Weapon, EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape };
+
         /// <summary>
-        /// Server/offline: puts some gear from the wearer's own pack in the bag, one piece per rarity for each slot.
-        /// A stand-in until gear is earned in the world; called once the character's identity is known.
+        /// Server/offline: what a new character starts with, once per spawn, called when its identity is known. The
+        /// level-1 Common outfit of its own pack and the level-1 Common weapon of its Discipline, worn. The outfit
+        /// looks like the basic outfit it already had, so this changes stats, not looks. Slots that already hold
+        /// something are left alone.
         /// </summary>
-        public void ServerGrantPackGear(string pack)
+        public void ServerGrantStarterKit(string pack, Factions.FactionId faction, BodyFit body, WeaponClassId discipline)
         {
-            if (packGearGranted || !CanMutate() || gearDictionary == null || string.IsNullOrEmpty(pack)) return;
-            packGearGranted = true;
+            if (starterKitGranted || !CanMutate() || gearDictionary == null) return;
+            starterKitGranted = true;
             Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) =>
             {
                 r = null;
-                // Rows are ordered by item ID, so the last row of a (slot, rarity) is its highest variant: the piece
-                // that looks least like the basic outfit the character already wears.
-                var picks = new System.Collections.Generic.Dictionary<int, ushort>();
-                foreach (var entry in gearDictionary.Entries)
-                    if (entry.pack == pack) picks[((int)entry.slot << 8) | (int)entry.rarity] = entry.itemId;
-                foreach (ushort itemId in picks.Values) InventoryRules.TryAdd(b, catalog, itemId, 1);
+                if (placeholderWeaponId != 0 && l.weapon == placeholderWeaponId) l.weapon = 0;
+                foreach (var slot in StarterSlots)
+                {
+                    if (l[slot] != 0) continue;
+                    if (slot != EquipSlot.Weapon && string.IsNullOrEmpty(pack)) continue; // no character: weapon only
+                    if (gearDictionary.TryFindStarter(slot, faction, body, pack, discipline, out var entry)
+                        && catalog.Get(entry.itemId) != null)
+                        l[slot] = entry.itemId;
+                }
                 return true;
             });
+        }
+
+        /// <summary>
+        /// GM: empties the Pack and re-equips the level-1 starter kit of a class (the wearer's own outfit pack).
+        /// Returns false when that class has no starter weapon this wearer can use.
+        /// </summary>
+        public bool ServerResetToLoadout(WeaponClassId weaponClass)
+        {
+            if (!CanMutate() || gearDictionary == null || catalog == null) return false;
+            var faction = wearer != null ? wearer.Faction : Factions.FactionId.None;
+            var body = wearer != null ? wearer.Body : BodyFit.None;
+            string pack = wearer != null ? wearer.GearPack : null;
+            if (!gearDictionary.TryFindStarter(EquipSlot.Weapon, faction, body, pack, weaponClass, out _)) return false;
+
+            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) =>
+            {
+                r = null;
+                Array.Clear(b, 0, b.Length);
+                l = default;
+                foreach (var slot in StarterSlots)
+                {
+                    if (slot != EquipSlot.Weapon && string.IsNullOrEmpty(pack)) continue;
+                    if (gearDictionary.TryFindStarter(slot, faction, body, pack, weaponClass, out var entry)
+                        && catalog.Get(entry.itemId) != null)
+                        l[slot] = entry.itemId;
+                }
+                foreach (var s in catalog.StarterBag)
+                    if (s.item != null) InventoryRules.TryAdd(b, catalog, s.item.itemId, s.count);
+                return true;
+            });
+            return true;
         }
 
         private void ServerQuickUnequip(EquipSlot slot) =>
@@ -378,6 +429,15 @@ namespace KryticalNova.Items
                 if (def != null && def.IsEquippable) loadout[def.equipSlot] = def.itemId;
             foreach (var s in catalog.StarterBag)
                 if (s.item != null) InventoryRules.TryAdd(cells, catalog, s.item.itemId, s.count);
+            // Nobody is ever unarmed: until a character identity arrives (it never does for a test avatar) the
+            // player holds the plainest Monoblade. The starter kit swaps it for the Discipline's weapon.
+            if (loadout.weapon == 0 && gearDictionary != null
+                && gearDictionary.TryFindStarter(EquipSlot.Weapon, Factions.FactionId.None, BodyFit.None, null, WeaponClassId.Monoblade, out var placeholder)
+                && catalog.Get(placeholder.itemId) != null)
+            {
+                placeholderWeaponId = placeholder.itemId;
+                loadout.weapon = placeholder.itemId;
+            }
             equipment.ServerSetLoadout(loadout);
             Changed?.Invoke();
         }

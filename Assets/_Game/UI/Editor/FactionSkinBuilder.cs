@@ -146,6 +146,8 @@ namespace KryticalNova.EditorTools
                 string selectors = rule.Groups[1].Value.Trim();
                 if (selectors.Length == 0 || selectors.StartsWith("@")) continue;
 
+                // Rarity colours mean the same thing in every faction, so they are never moved into a skin's palette.
+                bool keepColours = selectors.Contains(".rarity-");
                 var changed = new List<string>();
                 float sliceRatio = 1f; // how much larger the new sprite's border is: the slice scale shrinks by it
                 string sliceDeclaration = null;
@@ -165,7 +167,7 @@ namespace KryticalNova.EditorTools
                         if (!Mathf.Approximately(skin.fontScale, 1f)) changed.Add($"font-size: {ScaleNumber(value, skin.fontScale)};");
                         continue;
                     }
-                    string converted = ConvertValue(property, value, skin, ref sliceRatio);
+                    string converted = ConvertValue(property, value, skin, ref sliceRatio, keepColours);
                     if (converted != value) changed.Add($"{property}: {converted};");
                 }
                 if (sliceDeclaration != null && !Mathf.Approximately(sliceRatio, 1f))
@@ -187,7 +189,7 @@ namespace KryticalNova.EditorTools
             return string.Join(", ", parts);
         }
 
-        private static string ConvertValue(string property, string value, Skin skin, ref float sliceRatio)
+        private static string ConvertValue(string property, string value, Skin skin, ref float sliceRatio, bool keepColours)
         {
             var url = Url.Match(value);
             if (url.Success)
@@ -210,7 +212,7 @@ namespace KryticalNova.EditorTools
                 sliceRatio = BorderRatio(file, replacement);
                 return $"url(\"{replacement}#{Path.GetFileNameWithoutExtension(replacement)}\")";
             }
-            return Rgb.Replace(value, match => Recolour(match, skin));
+            return keepColours ? value : Rgb.Replace(value, match => Recolour(match, skin));
         }
 
         /// <summary>New border size over old border size, so the corners keep their on-screen size.</summary>

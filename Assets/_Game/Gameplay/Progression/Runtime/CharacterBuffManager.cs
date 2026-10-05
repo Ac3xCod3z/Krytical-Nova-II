@@ -157,7 +157,7 @@ namespace KryticalNova.Progression
             activeBuffs.Add(newBuff);
             BuffMessage?.Invoke($"Applied {skill.displayName} (Rank {rank}, {duration:0}s)");
             BuffsChanged?.Invoke();
-            ClientPresentationRegistry.Feel?.BuffStarted(transform, skill.skillId, newBuff.RemainingDuration);
+            ClientPresentationRegistry.Feel?.BuffStarted(transform, skill.PresentationId, newBuff.RemainingDuration);
             return true;
         }
 
@@ -374,7 +374,7 @@ namespace KryticalNova.Progression
             }
 
             activeBuffs.RemoveAt(index);
-            ClientPresentationRegistry.Feel?.BuffEnded(transform, buff.Skill.skillId);
+            ClientPresentationRegistry.Feel?.BuffEnded(transform, buff.Skill.PresentationId);
             BuffRemoved?.Invoke(buff.Skill.skillId);
         }
     }

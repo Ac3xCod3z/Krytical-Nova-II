@@ -62,6 +62,7 @@
     <ui:VisualElement name="item-tooltip" class="panel item-tooltip" picking-mode="Ignore">
         <ui:Label name="tooltip-name" text="Item" class="tooltip-name" />
         <ui:Label name="tooltip-type" text="Armor · Common" class="tooltip-type" />
+        <ui:Label name="tooltip-requires" text="" class="tooltip-requires" />
         <ui:Label name="tooltip-desc" text="" class="tooltip-desc" />
         <ui:Label name="tooltip-stats" text="No stats yet" class="tooltip-stats" />
         <ui:Label name="tooltip-hint" text="" class="tooltip-hint" />

@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Market Crash
   description: War God technique. A leaping strike that crashes down on every enemy around you. Hold the key to keep striking.
   category: 4
+  weaponClass: 1
+  classSlot: 8
+  presentationId: 
   targetType: 2
   executionType: 0
   acquisitionMethod: 1

@@ -1,0 +1,177 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10121cbb243306c409921b223492a383, type: 3}
+  m_Name: WeaponClassCatalog
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.WeaponClassCatalog
+  classes:
+  - id: 1
+    displayName: Monoblade
+    faction: 1
+    role: 0
+    summary: A single-edged blade. Fast, clean cuts on the front line.
+    stanceSummary: 'Overclock: raises Attack Power'
+    skills:
+    - {fileID: 11400000, guid: 93ce52f5ac10d6b449c291fb6aa2971e, type: 2}
+    - {fileID: 11400000, guid: c4118b3ca14686640803753c1b7a6c76, type: 2}
+    - {fileID: 11400000, guid: f40d2c70cac0ca94f946c2046b8b19da, type: 2}
+    - {fileID: 11400000, guid: 5ace64353cf381e439012c3654614e0b, type: 2}
+    - {fileID: 11400000, guid: 4e13a546f9ecf8b448669954148d2731, type: 2}
+    - {fileID: 11400000, guid: c320f9b7ddb87ae4a819d83015fae5d4, type: 2}
+    - {fileID: 11400000, guid: 8e61247b7ba95634ca70d98cadd0a702, type: 2}
+    - {fileID: 11400000, guid: fbbb9e5c549f70e4fa962f4328b61f34, type: 2}
+    - {fileID: 11400000, guid: 809e339dc23f3984ca61f68b93bdd721, type: 2}
+    - {fileID: 11400000, guid: f9c17b3ebd6552d4ba2a6504c936eb61, type: 2}
+  - id: 2
+    displayName: Glaive
+    faction: 1
+    role: 1
+    summary: A polearm that holds a line and controls the space around it.
+    stanceSummary: 'Bulwark Protocol: raises Defense'
+    skills:
+    - {fileID: 11400000, guid: dafcfd34786a90c489d0468a1f57d2d9, type: 2}
+    - {fileID: 11400000, guid: 04fb118698d1fcf49a8c08249aa1c9b1, type: 2}
+    - {fileID: 11400000, guid: 82dc858a18c694e468f0e8a5947bd8a6, type: 2}
+    - {fileID: 11400000, guid: 224679c0b72c5f54987ac24cc053006d, type: 2}
+    - {fileID: 11400000, guid: 11fbbc94b3c8fe74288ddc9792cea1b1, type: 2}
+    - {fileID: 11400000, guid: ad93f7240cc025e489c197d5877a1d60, type: 2}
+    - {fileID: 11400000, guid: 32ec149fb7bdbe645b89c9cbacfbd01a, type: 2}
+    - {fileID: 11400000, guid: fd371ce2975d20640b1178d4c3e3cc5c, type: 2}
+    - {fileID: 11400000, guid: d1a696e927be1ac4db379c1692ee7198, type: 2}
+    - {fileID: 11400000, guid: 1a3a1eebcf872744cbd2265fd52c9586, type: 2}
+  - id: 3
+    displayName: Carbine
+    faction: 1
+    role: 2
+    summary: A firearm. Picks targets apart from range.
+    stanceSummary: 'Target Lock: raises Evasion and Move Speed'
+    skills:
+    - {fileID: 11400000, guid: 1480c71cbb3e72e4aa41e7f00d0c7b3b, type: 2}
+    - {fileID: 11400000, guid: a4746483993b90547b0a9dcc6604fddb, type: 2}
+    - {fileID: 11400000, guid: b32bfdd057d3d4145b8f58ecc7b54b0c, type: 2}
+    - {fileID: 11400000, guid: fb8147fc0dac28f48ae976f5a8c12346, type: 2}
+    - {fileID: 11400000, guid: 4e1e744641c21c3429e0f406e20138d1, type: 2}
+    - {fileID: 11400000, guid: 6f9277c28d2c492429390ec2c5c93550, type: 2}
+    - {fileID: 11400000, guid: d468e4277ff41e94197fcf4e3d506fc5, type: 2}
+    - {fileID: 11400000, guid: 7aa1abae30f9e8d448a9a10a4782fdc6, type: 2}
+    - {fileID: 11400000, guid: 2a799eb3d3315c7408b14407d5b511ba, type: 2}
+    - {fileID: 11400000, guid: 02dff6a5a75e127499555ddb3dc4d130, type: 2}
+  - id: 4
+    displayName: Harvester
+    faction: 2
+    role: 0
+    summary: A reaping blade. Wide, heavy swings that cut down whatever is close.
+    stanceSummary: 'Kill Protocol: raises Attack Power'
+    skills:
+    - {fileID: 11400000, guid: d7e2293c7391d80448d51795ee66efae, type: 2}
+    - {fileID: 11400000, guid: 778ab037c577b9445bd809fc4e5544c3, type: 2}
+    - {fileID: 11400000, guid: 2307099753200c04f8f1aa40a61e1ded, type: 2}
+    - {fileID: 11400000, guid: 5aeff77e64c0595409ce33ca9491cdea, type: 2}
+    - {fileID: 11400000, guid: b582182bca2f2b045abf57766b713cda, type: 2}
+    - {fileID: 11400000, guid: 378f8e4cbe5f0f9479f1832a1d508a4d, type: 2}
+    - {fileID: 11400000, guid: c5982480fbdb3984086c88a79afef2a7, type: 2}
+    - {fileID: 11400000, guid: d6bf4ec1ab817384d85fd45cdb3eddf6, type: 2}
+    - {fileID: 11400000, guid: 6bdaa8beea8141e4e8e71461d6f819b5, type: 2}
+    - {fileID: 11400000, guid: 492bb427db4c7b54f9ab2f4afcd887b5, type: 2}
+  - id: 5
+    displayName: Servo Claws
+    faction: 2
+    role: 1
+    summary: Powered claws. Close, relentless and hard to move.
+    stanceSummary: 'Lockdown Plating: raises Defense'
+    skills:
+    - {fileID: 11400000, guid: 11d14686b6f5f7f4083dc0b8cb64a0e7, type: 2}
+    - {fileID: 11400000, guid: 7b1569aec73be1f41a8594aa14155802, type: 2}
+    - {fileID: 11400000, guid: 7cf234dba51473a4e97e34cefb410f0e, type: 2}
+    - {fileID: 11400000, guid: bd9298525b9d71343800d4d7a2ab57c7, type: 2}
+    - {fileID: 11400000, guid: 59790d36a0d0ff34797ab2e5c9f21d07, type: 2}
+    - {fileID: 11400000, guid: e4f7bd1a4f211134cbb27aed34d12b11, type: 2}
+    - {fileID: 11400000, guid: c1bc83860086f4d4b927179c27fb1468, type: 2}
+    - {fileID: 11400000, guid: 6483e8cade278af4a968f5d2034cc1f4, type: 2}
+    - {fileID: 11400000, guid: 03c07093d255862488eb89c9a86a46e8, type: 2}
+    - {fileID: 11400000, guid: ba4b4e662ec6636418f9bf3a7eb515c4, type: 2}
+  - id: 6
+    displayName: Arc Caster
+    faction: 2
+    role: 2
+    summary: An energy projector. Burns targets down from a distance.
+    stanceSummary: 'Capacitor: raises Evasion and Move Speed'
+    skills:
+    - {fileID: 11400000, guid: e2674380b28dc1d4abb9671b14e244ab, type: 2}
+    - {fileID: 11400000, guid: cddfd0e886b11784e9931ac6e6309e0d, type: 2}
+    - {fileID: 11400000, guid: 7a896c094e587304e86f2068a96b3926, type: 2}
+    - {fileID: 11400000, guid: fe791b623e358a34a842f5789ea012d6, type: 2}
+    - {fileID: 11400000, guid: 225f12d4cd7ab3a44a75f38e30494735, type: 2}
+    - {fileID: 11400000, guid: 2ac7bee2b6dcee648b2a7688c134d35f, type: 2}
+    - {fileID: 11400000, guid: ebc832b51c1c57d4ba249bf9383754e3, type: 2}
+    - {fileID: 11400000, guid: 441387988c722c84eb6140e994b1d9b6, type: 2}
+    - {fileID: 11400000, guid: 5fabb94c10fed9946ab96cf71e14c56e, type: 2}
+    - {fileID: 11400000, guid: 8706459c5c7cbc24abbb5623c3c647d8, type: 2}
+  - id: 7
+    displayName: Longaxe
+    faction: 3
+    role: 0
+    summary: A two-handed axe. Slow to raise, final when it lands.
+    stanceSummary: 'Blood Oath: raises Attack Power'
+    skills:
+    - {fileID: 11400000, guid: c7fe5988e702d0f4797740c68eddfa26, type: 2}
+    - {fileID: 11400000, guid: b68f3829a5138c348a4091ad2adcbf64, type: 2}
+    - {fileID: 11400000, guid: 2c2eaa6501bb5be43a52417c9217ee74, type: 2}
+    - {fileID: 11400000, guid: bee35a9a408748144861eb4785222ec4, type: 2}
+    - {fileID: 11400000, guid: 8cc1a5a4e81946c48aadd6d2fde3d393, type: 2}
+    - {fileID: 11400000, guid: 074af4f8dbcaa9f4d8fefd663fd9e1a4, type: 2}
+    - {fileID: 11400000, guid: 2c0b43c9f83b7b148818a791cef928f9, type: 2}
+    - {fileID: 11400000, guid: 9ce1886a5eb25fd4f83bad69e9da186d, type: 2}
+    - {fileID: 11400000, guid: 595ebb06b47aaa94baac65535e8ecc93, type: 2}
+    - {fileID: 11400000, guid: 52311485133e166499229cc8215d6b47, type: 2}
+  - id: 8
+    displayName: Claymore
+    faction: 3
+    role: 1
+    summary: A great sword. The clan's shield as much as its blade.
+    stanceSummary: 'Shieldwall: raises Defense'
+    skills:
+    - {fileID: 11400000, guid: c8eefc82e04a5e34b9f1e093852d39dd, type: 2}
+    - {fileID: 11400000, guid: ef91715f428d7e7498277301b0c1e384, type: 2}
+    - {fileID: 11400000, guid: 474161a148cf0d247970d2add942951c, type: 2}
+    - {fileID: 11400000, guid: d196f299c0dc3674f9bf8757259a4243, type: 2}
+    - {fileID: 11400000, guid: 869f5ed968c0de04f9617cb362b20b56, type: 2}
+    - {fileID: 11400000, guid: d4abfa02c61b2f442896e420b6a519db, type: 2}
+    - {fileID: 11400000, guid: ba59463e96f625d4da3108dfc072ecac, type: 2}
+    - {fileID: 11400000, guid: 9ccb55067699b0745aacb736c52773a4, type: 2}
+    - {fileID: 11400000, guid: d7ef94df6b7103c4eb3557116f7f1210, type: 2}
+    - {fileID: 11400000, guid: 4eff770881207c1468808b5134256c1c, type: 2}
+  - id: 9
+    displayName: Warbow
+    faction: 3
+    role: 2
+    summary: A war bow. Light on its feet, deadly at range.
+    stanceSummary: 'Windwalk: raises Evasion and Move Speed'
+    skills:
+    - {fileID: 11400000, guid: 641eb480cd2b9d740b54b047f2b9f531, type: 2}
+    - {fileID: 11400000, guid: fcdc2839a078ace4bb1b2cda37a47ccf, type: 2}
+    - {fileID: 11400000, guid: ba0dd8cc6a9456c478df84458b10c6d2, type: 2}
+    - {fileID: 11400000, guid: ec6f2579dd3cbf948bd98f4554573044, type: 2}
+    - {fileID: 11400000, guid: 51e81a61ee2457b479d799c23b4f86b7, type: 2}
+    - {fileID: 11400000, guid: c78aea8ae40980441bb2f6a251427a6d, type: 2}
+    - {fileID: 11400000, guid: 76fd04fb4ccdf644086054902346e624, type: 2}
+    - {fileID: 11400000, guid: d7319fe401846b44c9a3a4cd4d058433, type: 2}
+    - {fileID: 11400000, guid: 81200c4285dabe747bed9efb38899a1b, type: 2}
+    - {fileID: 11400000, guid: 639ab7824d320bb468948e4e0d3e72f3, type: 2}
+  sharedSkills:
+  - {fileID: 11400000, guid: ab0c63122f105dc4d99ccbb6bbb52b32, type: 2}
+  - {fileID: 11400000, guid: 2ba18aa81bbb41145ac999532c282a4d, type: 2}
+  - {fileID: 11400000, guid: 2fb0cfd36b03e9b479d0a848de56d214, type: 2}
+  - {fileID: 11400000, guid: a568f94f9631fd547861082813e09016, type: 2}
+  - {fileID: 11400000, guid: 85cd24f01ce9c4f4f91b2d0a49294cae, type: 2}
+  - {fileID: 11400000, guid: a41a0eca4f0d1a143a4cb24c18a5e8b8, type: 2}
+  - {fileID: 11400000, guid: 3d8a214e4dfd45745839593168891abb, type: 2}
+  - {fileID: 11400000, guid: 81b758423f495dd43b6e4266c873660f, type: 2}
