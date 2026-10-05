@@ -16,7 +16,7 @@ namespace Synty.Tools.SyntyPropBoneTool
     /// </summary>
     [CustomEditor(typeof(PropBoneConfig))]
     [CanEditMultipleObjects]
-    public class PropBoneConfigEditor : UnityEditor.Editor
+    public class PropBoneConfigEditor : Editor
     {
         private List<PropBoneConfig> _configs = new List<PropBoneConfig>();
 
