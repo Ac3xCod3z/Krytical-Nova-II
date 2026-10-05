@@ -18,7 +18,7 @@
             <ui:Label name="npc-greeting" text="" class="npc-greeting" />
             <ui:Label name="npc-services" text="" class="npc-services" />
             <ui:VisualElement class="npc-actions">
-                <ui:Button name="npc-shop" text="SHOP / QUESTS — COMING SOON" enabled="false" class="npc-action" />
+                <ui:Button name="npc-shop" text="SHOP / CONTRACTS — COMING SOON" enabled="false" class="npc-action" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

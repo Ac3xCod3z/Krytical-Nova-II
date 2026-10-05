@@ -93,7 +93,7 @@ namespace KryticalNova.Combat
             {
                 // Leaving the game mid-duel hands the win to the one who stayed.
                 if (opponent != null) Finish(opponent, this, $"{DuelistName} left the game.");
-                else if (startingWith != null) CancelStart("The duel was called off.");
+                else if (startingWith != null) CancelStart("The callout was called off.");
             }
             base.OnNetworkDespawn();
         }
@@ -125,21 +125,21 @@ namespace KryticalNova.Combat
         private void RequestRpc(NetworkObjectReference targetReference)
         {
             PlayerDuel target = targetReference.TryGet(out NetworkObject targetObject) ? targetObject.GetComponent<PlayerDuel>() : null;
-            if (target == null || target == this) { Tell("Select another player to duel."); return; }
-            if (!Alive) { Tell("You cannot ask for a duel while defeated."); return; }
-            if (Busy) { Tell("You are already in a duel."); return; }
+            if (target == null || target == this) { Tell("Select another player to call out."); return; }
+            if (!Alive) { Tell("You cannot ask for a callout while defeated."); return; }
+            if (Busy) { Tell("You are already in a callout."); return; }
             if (!target.Alive) { Tell($"{target.DuelistName} is defeated."); return; }
-            if (target.Busy) { Tell($"{target.DuelistName} is busy with another duel."); return; }
+            if (target.Busy) { Tell($"{target.DuelistName} is busy with another callout."); return; }
             if (CombatHostility.IsHostile(transform, target.combatEntity)) { Tell($"{target.DuelistName} is already your enemy."); return; }
             if (Vector3.Distance(transform.position, target.transform.position) > requestRange)
-            { Tell($"{target.DuelistName} is too far away for a duel."); return; }
+            { Tell($"{target.DuelistName} is too far away for a callout."); return; }
             if (target.challenger != null && Time.time <= target.challengeExpires && target.challenger != this)
             { Tell($"{target.DuelistName} is answering another request."); return; }
 
             target.challenger = this;
             target.challengeExpires = Time.time + requestSeconds;
-            Tell($"You challenged {target.DuelistName} to a duel.");
-            target.Tell($"{DuelistName} challenges you to a duel. Accept with /accept, refuse with /decline.");
+            Tell($"You called out {target.DuelistName}.");
+            target.Tell($"{DuelistName} calls you out. Accept with /accept, refuse with /decline.");
             target.PromptRpc(DuelistName, requestSeconds);
         }
 
@@ -150,18 +150,18 @@ namespace KryticalNova.Combat
             bool live = from != null && from.IsSpawned && Time.time <= challengeExpires;
             challenger = null;
             PromptClosedRpc();
-            if (!live) { Tell("There is no duel request to answer."); return; }
+            if (!live) { Tell("There is no callout request to answer."); return; }
 
             if (!accept)
             {
-                Tell($"You declined {from.DuelistName}'s duel.");
-                from.Tell($"{DuelistName} declined your duel.");
+                Tell($"You declined {from.DuelistName}'s callout.");
+                from.Tell($"{DuelistName} declined your callout.");
                 return;
             }
             if (Busy || from.Busy || !Alive || !from.Alive)
             {
-                Tell("That duel can no longer start.");
-                from.Tell($"The duel with {DuelistName} can no longer start.");
+                Tell("That callout can no longer start.");
+                from.Tell($"The callout with {DuelistName} can no longer start.");
                 return;
             }
 
@@ -173,7 +173,7 @@ namespace KryticalNova.Combat
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void ForfeitRpc()
         {
-            if (opponent == null) { Tell("You are not in a duel."); return; }
+            if (opponent == null) { Tell("You are not in a callout."); return; }
             Finish(opponent, this, $"{DuelistName} forfeited.");
         }
 
@@ -183,12 +183,12 @@ namespace KryticalNova.Combat
         {
             for (int left = countdownSeconds; left > 0; left--)
             {
-                Tell($"Duel with {other.DuelistName} starts in {left}...");
-                other.Tell($"Duel with {DuelistName} starts in {left}...");
+                Tell($"Callout with {other.DuelistName} starts in {left}...");
+                other.Tell($"Callout with {DuelistName} starts in {left}...");
                 yield return new WaitForSeconds(1f);
                 if (other == null || !other.IsSpawned || !Alive || !other.Alive || startingWith != other)
                 {
-                    CancelStart("The duel was called off.");
+                    CancelStart("The callout was called off.");
                     yield break;
                 }
             }
@@ -220,8 +220,8 @@ namespace KryticalNova.Combat
             other.keepsWatch = false;
             netOpponent.Value = other.NetworkObjectId;
             other.netOpponent.Value = NetworkObjectId;
-            Tell($"The duel with {other.DuelistName} has begun. It ends when one of you falls.");
-            other.Tell($"The duel with {DuelistName} has begun. It ends when one of you falls.");
+            Tell($"The callout with {other.DuelistName} has begun. It ends when one of you falls.");
+            other.Tell($"The callout with {DuelistName} has begun. It ends when one of you falls.");
         }
 
         /// <summary>Server only: start a duel between this player and <paramref name="other"/> at once, for GM tools.</summary>
@@ -249,20 +249,20 @@ namespace KryticalNova.Combat
         {
             if (!keepsWatch || opponent == null) return;
             float leash = leashRadius * leashRadius;
-            if ((transform.position - origin).sqrMagnitude > leash) Finish(opponent, this, $"{DuelistName} left the duel.");
-            else if ((opponent.transform.position - origin).sqrMagnitude > leash) Finish(this, opponent, $"{opponent.DuelistName} left the duel.");
+            if ((transform.position - origin).sqrMagnitude > leash) Finish(opponent, this, $"{DuelistName} left the callout.");
+            else if ((opponent.transform.position - origin).sqrMagnitude > leash) Finish(this, opponent, $"{opponent.DuelistName} left the callout.");
         }
 
         // Raised where combat is decided, so this only ever runs on the server.
         private void OnKilled(KillingBlow blow)
         {
             if (!IsSpawned || !IsServer) return;
-            if (startingWith != null) CancelStart("The duel was called off.");
+            if (startingWith != null) CancelStart("The callout was called off.");
             if (opponent == null) return;
 
             PlayerDuel killer = blow.Attacker != null ? blow.Attacker.GetComponent<PlayerDuel>() : null;
             if (killer == opponent) Finish(opponent, this, null);
-            else ServerCancel("The duel was interrupted.");
+            else ServerCancel("The callout was interrupted.");
         }
 
         private static void Finish(PlayerDuel winner, PlayerDuel loser, string how)
@@ -277,7 +277,7 @@ namespace KryticalNova.Combat
             }
             if (winner.IsSpawned) winner.ResultRpc(true, loserName);
             if (loser.IsSpawned) loser.ResultRpc(false, winnerName);
-            winner.Announcement?.Invoke($"{winnerName} won the duel against {loserName}.");
+            winner.Announcement?.Invoke($"{winnerName} won the callout against {loserName}.");
         }
 
         private static void Clear(PlayerDuel duelist)

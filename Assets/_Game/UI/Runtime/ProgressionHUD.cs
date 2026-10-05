@@ -792,7 +792,7 @@ namespace KryticalNova.UI
                 string hits = skill.hitCount > 1 ? $" over {skill.hitCount} hits" : string.Empty;
                 string yang = bonus > 100f ? $" · Yang {bonus:0.#}%" : string.Empty;
                 string reach = skill.IsAreaAttack ? $"{skill.GetRange(rank):0.#} m radius (all enemies)" : $"{skill.GetRange(rank):0.#} m reach";
-                return $"{damage:0}% damage{hits}{yang} · {reach} · {chi:0} Chi";
+                return $"{damage:0}% damage{hits}{yang} · {reach} · {chi:0} Flux";
             }
             if (skill.rankScaledModifiers != null && skill.rankScaledModifiers.Length > 0)
             {
@@ -800,51 +800,51 @@ namespace KryticalNova.UI
                 foreach (var mod in skill.rankScaledModifiers)
                     parts.Add($"+{Mathf.Lerp(mod.minValue, mod.maxValue, progress):0.#}% {DescribeStat(mod.statType)}");
                 string scope = skill.consumedOnNextHit ? $"next hit, within {dur:0}s" : $"{dur:0}s duration";
-                return $"{string.Join(" · ", parts)} · {scope} · {chi:0} Chi";
+                return $"{string.Join(" · ", parts)} · {scope} · {chi:0} Flux";
             }
 
             if (skill.isAbsorptionShield)
             {
                 float shieldPct = Mathf.Round(skill.GetShieldMultiplier(rank) * 100f);
-                return $"{shieldPct}% Max HP Shield · {dur:0}s duration · {chi:0} Chi";
+                return $"{shieldPct}% Max HP Shield · {dur:0}s duration · {chi:0} Flux";
             }
             if (skill.hasDeadlyBlowBoost)
             {
                 float deadly = skill.GetDeadlyBlowBonus(rank);
-                return $"+{deadly:0.#}% Deadly Blow (mult) · {dur:0}s duration · {chi:0} Chi";
+                return $"+{deadly:0.#}% Critical (mult) · {dur:0}s duration · {chi:0} Flux";
             }
             if (skill.hasLuckBoost)
             {
                 float luck = skill.GetLuckBonus(rank);
-                return $"+{luck:0.#}% Luck (mult) · {dur:0}s duration · {chi:0} Chi";
+                return $"+{luck:0.#}% Luck (mult) · {dur:0}s duration · {chi:0} Flux";
             }
             if (skill.hasReflection)
             {
                 float refChance = skill.GetReflectionChance(rank);
-                return $"{refChance:0.#}% Reflect Physical Dmg · {dur:0}s duration · {chi:0} Chi";
+                return $"{refChance:0.#}% Reflect Physical Dmg · {dur:0}s duration · {chi:0} Flux";
             }
             if (skill.hasShieldShatter)
             {
                 float shatChance = skill.GetDestructionChance(rank);
-                return $"{shatChance:0.#}% Shield Shatter & Dispel · {dur:0}s duration · {chi:0} Chi";
+                return $"{shatChance:0.#}% Shield Shatter & Dispel · {dur:0}s duration · {chi:0} Flux";
             }
             if (skill.hasAcupressureResistance)
             {
                 float stunRes = skill.GetAcupressureResistance(rank);
-                return $"+{stunRes:0.#}% Stun Defense · {dur:0}s duration · {chi:0} Chi";
+                return $"+{stunRes:0.#}% Lockup Resist · {dur:0}s duration · {chi:0} Flux";
             }
             if (skill.executionType == SkillExecutionType.Channeled)
             {
                 float health = skill.GetChannelHealthRecovery(rank);
-                string restores = (health > 0f ? $"+{health:0.#}% HP · " : string.Empty) + $"+{skill.GetChannelChiRecovery(rank):0.#}% Chi";
-                return $"{restores} every {skill.channelTickInterval:0.#}s · {dur:0}s channel · {chi:0} Chi";
+                string restores = (health > 0f ? $"+{health:0.#}% HP · " : string.Empty) + $"+{skill.GetChannelChiRecovery(rank):0.#}% Flux";
+                return $"{restores} every {skill.channelTickInterval:0.#}s · {dur:0}s channel · {chi:0} Flux";
             }
             if (skill.statModifiers != null && skill.statModifiers.Length > 0)
             {
                 var mod = skill.statModifiers[0];
-                return $"+{mod.value:0.#}% {mod.statType} · {dur:0}s duration · {chi:0} Chi";
+                return $"+{mod.value:0.#}% {mod.statType} · {dur:0}s duration · {chi:0} Flux";
             }
-            return $"{dur:0}s duration · {chi:0} Chi";
+            return $"{dur:0}s duration · {chi:0} Flux";
         }
 
         private static string DescribeStat(StatType stat)
@@ -963,14 +963,14 @@ namespace KryticalNova.UI
             hp.title = $"HP {resources.Health:0} / {resources.MaxHealth:0}";
             ProgressBar chi = root.Q<ProgressBar>("chi-bar");
             chi.value = ProgressBarScale * resources.Chi / Mathf.Max(1f, resources.MaxChi);
-            chi.title = $"CHI {resources.Chi:0} / {resources.MaxChi:0}";
+            chi.title = $"FLUX {resources.Chi:0} / {resources.MaxChi:0}";
             root.Q<Label>("resource-values").text = $"HP {resources.Health:0} / {resources.MaxHealth:0}    Chi {resources.Chi:0} / {resources.MaxChi:0}";
             RefreshVitals();
             if (resources.Data != null)
             {
                 Label formulaLabel = root.Q<Label>("resource-formula");
                 if (formulaLabel != null)
-                    formulaLabel.text = "STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evade | AGI: +2 Evade, +1 DP | CHI: +20 Chi, +1 AP";
+                    formulaLabel.text = "STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evade | AGI: +2 Evade, +1 DP | SPI: +20 Flux, +1 AP";
             }
             for (int index = 0; index < slotElements.Length; index++)
             {
@@ -1043,8 +1043,8 @@ namespace KryticalNova.UI
 
         private static string DescribeRank(MovementSkillId skill, MovementSkillRank rank)
         {
-            return skill == MovementSkillId.Run ? $"{rank.runSpeed:0.0} m/s · {rank.chiCost:0.#} Chi / destination"
-                : $"{rank.jumpDistance:0.0} m range / +{rank.jumpHeight:0.0} m height\n{rank.chiCost:0.#} Chi / jump";
+            return skill == MovementSkillId.Run ? $"{rank.runSpeed:0.0} m/s · {rank.chiCost:0.#} Flux / destination"
+                : $"{rank.jumpDistance:0.0} m range / +{rank.jumpHeight:0.0} m height\n{rank.chiCost:0.#} Flux / jump";
         }
 
         private void OnSlotPointerDown(PointerDownEvent evt, int index)
@@ -1296,7 +1296,7 @@ namespace KryticalNova.UI
                 case CharacterAttribute.Agility:
                     return $"Allocate +{step} Agility:\n• Primary: +{step * 2} Evade (Dodge)\n• Secondary: +{step * 1} Defense (DP)\n(Press and hold to allocate continuously)";
                 case CharacterAttribute.Spirit:
-                    return $"Allocate +{step} Spirit (Chi):\n• Primary: +{step * 20} Chi (Mana)\n• Secondary: +{step * 1} Attack Power (AP)\n(Press and hold to allocate continuously)";
+                    return $"Allocate +{step} Spirit:\n• Primary: +{step * 20} Max Flux\n• Secondary: +{step * 1} Attack Power (AP)\n(Press and hold to allocate continuously)";
                 default:
                     return $"Allocate +{step} {attribute}.";
             }

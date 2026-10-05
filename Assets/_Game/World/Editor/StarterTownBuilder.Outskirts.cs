@@ -533,7 +533,7 @@ namespace KryticalNova.EditorTools
         private static void BuildPointsOfInterest(Transform town, Transform outside, ZoneTerrainProfile profile)
         {
             Poi(town, "plaza", "Central Plaza", 0f, -9f);
-            Poi(town, "elder", "Elder Hall", 0f, 8f);
+            Poi(town, "elder", "Chancellor's Hall", 0f, 8f);
             Poi(town, "yard", "Training Yard", TrainingYard.center.x, TrainingYard.yMin + 2f);
             Poi(town, "exchange", "Exchange Square", ExchangeSquare.center.x, ExchangeSquare.yMax - 2f);
             Poi(town, "gate-n", "North Gate", 0f, RingIn);
@@ -544,7 +544,7 @@ namespace KryticalNova.EditorTools
                 Poi(outside, $"bridge-{i + 1}", $"Bridge {i + 1}", bridgeCenters[i].x, bridgeCenters[i].y);
             Poi(outside, "island", "North Island", 100f, 300f);
             for (int m = 0; m < MobAreas.Length; m++)
-                Poi(outside, MobAreaIds[m], "Mob Area " + MobAreaIds[m].Substring(4).ToUpperInvariant(), MobAreas[m].x, MobAreas[m].y - 26f);
+                Poi(outside, MobAreaIds[m], "Hostile Zone " + MobAreaIds[m].Substring(4).ToUpperInvariant(), MobAreas[m].x, MobAreas[m].y - 26f);
         }
 
         /// <summary>Moves the offline avatar to the plaza and the combat dummy into the training yard.</summary>

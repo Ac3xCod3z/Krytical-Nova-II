@@ -28,7 +28,7 @@ namespace KryticalNova.UI
         private const string UnreadTabClass = "chat-tab--unread";
         private const string LineClass = "chat-line";
         private const string ResizingClass = "chat-resize--active";
-        private const string Welcome = "Press Enter to chat.  /s say   /f faction   /p party   /g guild   /w <name> whisper   /r reply";
+        private const string Welcome = "Press Enter to chat.  /s say   /f faction   /p squad   /g crew   /w <name> whisper   /r reply";
 
         private sealed class Tab
         {
@@ -46,7 +46,7 @@ namespace KryticalNova.UI
             public ChatLine Line;
         }
 
-        private static readonly string[] ChannelNames = { "GENERAL", "FACTION", "GUILD", "WHISPER", "GM", "SYSTEM", "COMBAT", "PARTY" };
+        private static readonly string[] ChannelNames = { "GENERAL", "FACTION", "CREW", "WHISPER", "GM", "SYSTEM", "COMBAT", "SQUAD" };
         private static readonly string[] LineClasses =
         {
             "chat-line--general", "chat-line--faction", "chat-line--guild", "chat-line--whisper",
@@ -206,8 +206,8 @@ namespace KryticalNova.UI
             {
                 case ChatChannel.General: return $"[General] {line.Sender}: {line.Text}";
                 case ChatChannel.Faction: return $"[Faction] {line.Sender}: {line.Text}";
-                case ChatChannel.Party: return $"[Party] {line.Sender}: {line.Text}";
-                case ChatChannel.Guild: return $"[Guild] {line.Sender}: {line.Text}";
+                case ChatChannel.Party: return $"[Squad] {line.Sender}: {line.Text}";
+                case ChatChannel.Guild: return $"[Crew] {line.Sender}: {line.Text}";
                 case ChatChannel.Whisper: return $"{(line.Outgoing ? "To" : "From")} {line.Sender}: {line.Text}";
                 case ChatChannel.Gm: return $"[GM] {line.Sender}: {line.Text}";
                 default: return line.Text;
@@ -252,8 +252,8 @@ namespace KryticalNova.UI
             AddTab("ALL", players | always, null);
             AddTab("GENERAL", Bit(ChatChannel.General) | always, ChatChannel.General);
             AddTab("FACTION", Bit(ChatChannel.Faction) | always, ChatChannel.Faction);
-            AddTab("PARTY", Bit(ChatChannel.Party) | always, ChatChannel.Party);
-            AddTab("GUILD", Bit(ChatChannel.Guild) | always, ChatChannel.Guild);
+            AddTab("SQUAD", Bit(ChatChannel.Party) | always, ChatChannel.Party);
+            AddTab("CREW", Bit(ChatChannel.Guild) | always, ChatChannel.Guild);
             AddTab("WHISPER", Bit(ChatChannel.Whisper) | always, ChatChannel.Whisper);
             AddTab("GM", always, ChatChannel.Gm);
             AddTab("COMBAT", Bit(ChatChannel.Combat), null);

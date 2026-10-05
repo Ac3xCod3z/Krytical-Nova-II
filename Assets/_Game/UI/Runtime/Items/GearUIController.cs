@@ -773,7 +773,7 @@ namespace KryticalNova.UI
             if (def.IsConsumable)
             {
                 if (def.restoreHealth > 0f) sb.AppendLine($"Restores {def.restoreHealth:0} HP");
-                if (def.restoreChi > 0f) sb.AppendLine($"Restores {def.restoreChi:0} Chi");
+                if (def.restoreChi > 0f) sb.AppendLine($"Restores {def.restoreChi:0} Flux");
                 return sb.ToString().TrimEnd();
             }
             if (def.statModifiers == null || def.statModifiers.Count == 0) return "No stats yet";

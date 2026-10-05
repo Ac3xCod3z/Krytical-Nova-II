@@ -165,7 +165,7 @@ namespace KryticalNova.Progression
             {
                 string name = chargingSkill.displayName;
                 EndCharge(false);
-                combatSkills.Announce($"{name} released before it was charged. No Chi spent.");
+                combatSkills.Announce($"{name} released before it was charged. No Flux spent.");
                 return;
             }
             if (Time.time - chargeStartTime >= chargingSkill.chargeTime) EndCharge(true);

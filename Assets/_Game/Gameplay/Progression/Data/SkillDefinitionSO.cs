@@ -89,7 +89,7 @@ namespace KryticalNova.Progression
         [Tooltip("When true, this skill cannot be purchased via trainer skill points; it requires acquiring a rare skill book drop or crafting.")]
         public bool requiresSkillBook;
         [Tooltip("Note shown in the skill UI describing how this skill is obtained.")]
-        public string acquisitionNote = "Faction Skill Trainer";
+        public string acquisitionNote = "Faction Instructor";
         [Tooltip("List of required archives to craft this skill (e.g. for HR, RF, HD).")]
         public string[] requiredCraftingArchives = Array.Empty<string>();
         [Min(1)] public int requiredCharacterLevel = 1;

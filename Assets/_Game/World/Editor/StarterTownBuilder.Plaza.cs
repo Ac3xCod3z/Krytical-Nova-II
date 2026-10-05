@@ -126,13 +126,13 @@ namespace KryticalNova.EditorTools
         {
             switch (s.Kind)
             {
-                case StallKind.Market: return new StallLook { Title = "HERB MASTER", Subtitle = "remedies · scrolls", Style = SignStyle.WoodBoard, Font = FontLato, Ink = ColorBible.Hex("F2E6C8"), Board = ColorBible.Hex("6B4A30") };
-                case StallKind.Forge: return new StallLook { Title = "BLACKSMITH", Subtitle = "forge · repair", Style = SignStyle.NeonPanel, Font = FontOrbitron, Ink = ColorBible.SunsetCoral * 2.2f, Board = ColorBible.Ink };
-                case StallKind.HoloBooth: return new StallLook { Title = "ITEM MALL", Subtitle = "premium goods", Style = SignStyle.HoloPlate, Font = FontOrbitron, Ink = Color.white * 1.8f, Board = ColorBible.NeonCyan };
-                case StallKind.Watch: return new StallLook { Title = "GUARD POST", Subtitle = "quests · battles", Style = SignStyle.Lightbox, Font = FontExo, Ink = ColorBible.Ink, Board = ColorBible.Hex("F4EBDD") };
-                case StallKind.Tailor: return new StallLook { Title = "TAILOR", Subtitle = "coming soon", Style = SignStyle.FabricBanner, Font = FontExo, Ink = Color.white, Board = ColorBible.NeonMagenta * 0.8f };
-                case StallKind.Guild: return new StallLook { Title = "GUILD HALL", Subtitle = "coming soon", Style = SignStyle.BladeSign, Font = FontLato, Ink = ColorBible.SignalYellow, Board = ColorBible.ShadowIndigo };
-                case StallKind.Gate: return new StallLook { Title = "GATE MASTER", Subtitle = "coming soon", Style = SignStyle.NeonPanel, Font = FontExo, Ink = ColorBible.NeonCyan * 2f, Board = ColorBible.Ink };
+                case StallKind.Market: return new StallLook { Title = "APOTHECARY", Subtitle = "stims · recall tags", Style = SignStyle.WoodBoard, Font = FontLato, Ink = ColorBible.Hex("F2E6C8"), Board = ColorBible.Hex("6B4A30") };
+                case StallKind.Forge: return new StallLook { Title = "ARMORER", Subtitle = "forge · tempering", Style = SignStyle.NeonPanel, Font = FontOrbitron, Ink = ColorBible.SunsetCoral * 2.2f, Board = ColorBible.Ink };
+                case StallKind.HoloBooth: return new StallLook { Title = "NOVA STORE", Subtitle = "premium goods", Style = SignStyle.HoloPlate, Font = FontOrbitron, Ink = Color.white * 1.8f, Board = ColorBible.NeonCyan };
+                case StallKind.Watch: return new StallLook { Title = "MARSHAL POST", Subtitle = "contracts · battles", Style = SignStyle.Lightbox, Font = FontExo, Ink = ColorBible.Ink, Board = ColorBible.Hex("F4EBDD") };
+                case StallKind.Tailor: return new StallLook { Title = "OUTFITTER", Subtitle = "coming soon", Style = SignStyle.FabricBanner, Font = FontExo, Ink = Color.white, Board = ColorBible.NeonMagenta * 0.8f };
+                case StallKind.Guild: return new StallLook { Title = "CREW HALL", Subtitle = "coming soon", Style = SignStyle.BladeSign, Font = FontLato, Ink = ColorBible.SignalYellow, Board = ColorBible.ShadowIndigo };
+                case StallKind.Gate: return new StallLook { Title = "WAYFINDER", Subtitle = "coming soon", Style = SignStyle.NeonPanel, Font = FontExo, Ink = ColorBible.NeonCyan * 2f, Board = ColorBible.Ink };
                 default: return new StallLook { Title = "COLLECTOR", Subtitle = "coming soon", Style = SignStyle.WoodBoard, Font = FontOrbitron, Ink = ColorBible.SignalYellow, Board = ColorBible.Hex("3E3A48") };
             }
         }

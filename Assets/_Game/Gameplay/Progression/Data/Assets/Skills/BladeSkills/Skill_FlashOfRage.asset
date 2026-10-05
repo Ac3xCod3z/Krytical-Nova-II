@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Skill_FlashOfRage
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
   skillId: FlashOfRage
-  displayName: Flash of Rage
+  displayName: Hostile Takeover
   description: A furious three-hit flurry against your target.
   category: 4
   targetType: 1
   executionType: 0
   acquisitionMethod: 0
   requiresSkillBook: 0
-  acquisitionNote: Faction Skill Trainer
+  acquisitionNote: Faction Instructor
   requiredCraftingArchives: []
   requiredCharacterLevel: 30
   minRank: 1
@@ -78,6 +78,7 @@ MonoBehaviour:
   - 0.34
   - 0.38
   castLockNormalized: 0.95
+  attackCancelNormalized: 1
   castLiftCurve:
     serializedVersion: 2
     m_Curve: []

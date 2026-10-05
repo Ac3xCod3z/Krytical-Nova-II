@@ -69,7 +69,7 @@ namespace KryticalNova.EditorTools
 
         private static readonly (string name, ItemRarity rarity)[] Amulets =
         {
-            ("Bone Charm", ItemRarity.Common), ("Jade Pendant", ItemRarity.Uncommon), ("Amulet of Chi", ItemRarity.Rare),
+            ("Bone Charm", ItemRarity.Common), ("Jade Pendant", ItemRarity.Uncommon), ("Amulet of Flux", ItemRarity.Rare),
             ("Heart of Embers", ItemRarity.Epic), ("Celestial Talisman", ItemRarity.Legendary)
         };
 

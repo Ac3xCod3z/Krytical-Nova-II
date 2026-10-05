@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: NPC_TrainerBlade
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 2
-  displayName: Blade Trainer
-  title: "Martial Arts \xB7 Blade"
+  displayName: Monoblade Instructor
+  title: "Combat Skills \xB7 Monoblade"
   greeting: A blade is only as sharp as the hand that guides it.
-  services: Faction martial arts instructor specialising in blades. Learn and upgrade your combat skills.
+  services: Hegemony Instructor for the Monoblade. Learn and upgrade your combat skills.
   interactRange: 3

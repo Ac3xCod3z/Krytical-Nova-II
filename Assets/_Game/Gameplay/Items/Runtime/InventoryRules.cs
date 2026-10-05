@@ -16,7 +16,7 @@ namespace KryticalNova.Items
         public const string ReasonNotEquippable = "That item can't be equipped.";
         public const string ReasonSplitStack = "Split the stack before equipping.";
         public const string ReasonCannotSwap = "Can't swap with that item.";
-        public const string ReasonBagFull = "Inventory is full.";
+        public const string ReasonBagFull = "Your Pack is full.";
         public const string ReasonUnknownItem = "Unknown item.";
         public const string ReasonNotUsable = "That item can't be used.";
 

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: NPC_MallManager
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 4
-  displayName: Mall Manager
-  title: Item Mall Services
+  displayName: Store Clerk
+  title: Nova Store
   greeting: Premium goods, premium service. How may I assist?
-  services: 'Manages Item Mall functions: downgrading, extracting and processing premium visual goods and tickets.'
+  services: 'Runs the Nova Store: premium cosmetic goods and tickets.'
   interactRange: 3

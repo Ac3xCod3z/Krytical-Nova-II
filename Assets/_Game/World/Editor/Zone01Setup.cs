@@ -40,37 +40,37 @@ namespace KryticalNova.EditorTools
         private static readonly NpcSeed[] Npcs =
         {
             new NpcSeed { Id = "HerbMaster", Role = NpcRole.HerbMaster, Model = "SM_Chr_Medical_Male_01",
-                Name = "Herb Master", Title = "Remedies · Scrolls · Combinations",
-                Greeting = "Pills for the body, tabs for the spirit. Stock up before you leave the walls.",
-                Services = "Sells health and mana pills, tabs, Calabash bottles and Scrolls of Return (quick teleport back to town). Issues entry quests and handles basic item combinations for valuable rewards." },
+                Name = "Apothecary", Title = "Stims · Flasks · Recall Tags",
+                Greeting = "Stims for the body, Flux for the mind. Stock up before you leave the walls.",
+                Services = "Sells HP and Flux Stims, Flasks and Recall Tags (a quick trip back to town). Hands out starter Contracts and handles basic item combinations." },
             new NpcSeed { Id = "Blacksmith", Role = NpcRole.Blacksmith, Model = "SM_Chr_Muscle_Male_01",
-                Name = "Blacksmith", Title = "Weapons · Armor · Crafting",
+                Name = "Armorer", Title = "Weapons · Armor · Tempering",
                 Greeting = "Bring me steel and coin, and I'll make you something worth swinging.",
-                Services = "Buys, sells, upgrades and crafts early-game weapons and armor." },
+                Services = "Buys, sells and crafts weapons and armor. Tempering, Fusion and Tuning are done at this forge." },
             new NpcSeed { Id = "TrainerBlade", Role = NpcRole.Trainer, Model = "SM_Chr_Monk_Male_01",
-                Name = "Blade Trainer", Title = "Martial Arts · Blade",
+                Name = "Monoblade Instructor", Title = "Combat Skills · Monoblade",
                 Greeting = "A blade is only as sharp as the hand that guides it.",
-                Services = "Faction martial arts instructor specialising in blades. Learn and upgrade your combat skills." },
+                Services = "Hegemony Instructor for the Monoblade. Learn and upgrade your combat skills." },
             new NpcSeed { Id = "TrainerFist", Role = NpcRole.Trainer, Model = "SM_Chr_CyborgNinja_01",
-                Name = "Fist Trainer", Title = "Martial Arts · Unarmed",
+                Name = "Servo Claws Instructor", Title = "Combat Skills · Servo Claws",
                 Greeting = "Before the weapon, there is the body. Show me your stance.",
-                Services = "Faction martial arts instructor specialising in unarmed styles. Learn and upgrade your combat skills." },
+                Services = "Null Instructor for Servo Claws. Learn and upgrade your combat skills." },
             new NpcSeed { Id = "Trader", Role = NpcRole.Trader, Model = "SM_Chr_Rich_Female_01",
-                Name = "Trader", Title = "Community Marketplace",
+                Name = "Broker", Title = "The Exchange",
                 Greeting = "Everything has a buyer. Everything.",
-                Services = "With a Commission Receipt, list rare items (12% enchant or more) for sale, or browse and buy gear listed by other players." },
+                Services = "With a Commission Receipt, list Rare gear (12% Temper or more) on the Exchange, or browse and buy gear listed by other players." },
             new NpcSeed { Id = "MallManager", Role = NpcRole.MallManager, Model = "SM_Chr_Hologram_Female_01",
-                Name = "Mall Manager", Title = "Item Mall Services",
+                Name = "Store Clerk", Title = "Nova Store",
                 Greeting = "Premium goods, premium service. How may I assist?",
-                Services = "Manages Item Mall functions: downgrading, extracting and processing premium visual goods and tickets." },
+                Services = "Runs the Nova Store: premium cosmetic goods and tickets." },
             new NpcSeed { Id = "GuardCaptain", Role = NpcRole.GuardCaptain, Model = "SM_Chr_Cop_01",
-                Name = "Guard Captain", Title = "Quests · Battle Teleports",
+                Name = "Marshal", Title = "Contracts · Battle Transit",
                 Greeting = "Ready to earn your keep? The frontier won't defend itself.",
-                Services = "Standard leveling quests, and the gateway to level-appropriate formation battles, resistance battles and master maps." },
+                Services = "Standard leveling Contracts, and Transit to level-appropriate battles and Runs." },
             new NpcSeed { Id = "Agent", Role = NpcRole.Agent, Model = "SM_Chr_Hacker_Female_01",
-                Name = "Agent", Title = "Enhancement · Penetration",
-                Greeting = "Sockets, slots, penetration. Paid in Contribution Points.",
-                Services = "Item enhancement: buy penetration materials with Contribution Points (CP) to add socket slots to your gear." },
+                Name = "Fixer", Title = "Slotting · Cores",
+                Greeting = "Slots, Cores, cutters. Paid in Renown.",
+                Services = "Slotting: buy Slot Cutters with Renown to cut Core slots into your gear." },
         };
 
         // ---------------------------------------------------------------- all steps
@@ -280,6 +280,23 @@ namespace KryticalNova.EditorTools
 
                 PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
                 Object.DestroyImmediate(root);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>Re-applies the names and text above to the NPC definitions that already exist (role and prefab untouched).</summary>
+        [MenuItem("Krytical Nova/Zone/Refresh NPC Text From Seeds")]
+        public static void RefreshNpcText()
+        {
+            foreach (var seed in Npcs)
+            {
+                var def = AssetDatabase.LoadAssetAtPath<NpcDefinition>($"{NpcDataFolder}/NPC_{seed.Id}.asset");
+                if (def == null) continue;
+                def.displayName = seed.Name;
+                def.title = seed.Title;
+                def.greeting = seed.Greeting;
+                def.services = seed.Services;
+                EditorUtility.SetDirty(def);
             }
             AssetDatabase.SaveAssets();
         }

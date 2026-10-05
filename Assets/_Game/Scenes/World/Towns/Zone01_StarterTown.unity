@@ -957,7 +957,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
   poiId: mob-sw
-  displayName: Mob Area SW
+  displayName: Hostile Zone SW
 --- !u!1001 &1700607
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5078,7 +5078,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
   poiId: mob-ne
-  displayName: Mob Area NE
+  displayName: Hostile Zone NE
 --- !u!1 &15744274
 GameObject:
   m_ObjectHideFlags: 0
@@ -39417,7 +39417,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: GUILD HALL
+  m_text: CREW HALL
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4eccd51250cfa3948a3ac1e21d15fe34, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 979de75300f4754479419bf78e815759, type: 2}
@@ -77146,7 +77146,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'GATE MASTER
+  m_text: 'WAYFINDER
 
     <size=30%>COMING SOON</size>'
   m_isRightToLeft: 0
@@ -140558,7 +140558,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
   poiId: mob-se
-  displayName: Mob Area SE
+  displayName: Hostile Zone SE
 --- !u!1 &498425857 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1042918869242066, guid: 075662da41c3dea46a40c0917389e28c, type: 3}
@@ -190111,7 +190111,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "GUARD POST\n<size=28%>QUESTS \xB7 BATTLES</size>"
+  m_text: "MARSHAL POST\n<size=28%>CONTRACTS \xB7 BATTLES</size>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b8aa923455f5a64468504293db7cef18, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 40926f6e8cb640848bbfc92ec015c6fa, type: 2}
@@ -228265,7 +228265,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: GUILD HALL
+  m_text: CREW HALL
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4eccd51250cfa3948a3ac1e21d15fe34, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 979de75300f4754479419bf78e815759, type: 2}
@@ -340709,7 +340709,7 @@ Transform:
   m_GameObject: {fileID: 1197532474}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.9622498, y: 18.133127, z: -2.7930603}
+  m_LocalPosition: {x: -6.9622498, y: 18.133123, z: -2.7930603}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -340730,7 +340730,7 @@ MonoBehaviour:
   version: 2
   globalVolume: 0
   mode: 0
-  size: {x: 902.12354, y: 53.769157, z: 909.9071}
+  size: {x: 902.12354, y: 53.76915, z: 909.9071}
   overrideRendererFilters: 0
   minRendererVolumeSize: 0.1
   objectLayerMask:
@@ -400181,7 +400181,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'TAILOR
+  m_text: 'OUTFITTER
 
     <size=28%>COMING SOON</size>'
   m_isRightToLeft: 0
@@ -430791,7 +430791,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "BLACKSMITH\n<size=30%>FORGE \xB7 REPAIR</size>"
+  m_text: "ARMORER\n<size=30%>FORGE \xB7 TEMPERING</size>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 819507a38fa816a489de88dad2de2ce9, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 7eb2e945a33370d40ac2d421a68da72f, type: 2}
@@ -475406,7 +475406,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
   poiId: mob-nw
-  displayName: Mob Area NW
+  displayName: Hostile Zone NW
 --- !u!1001 &1647137256
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -501944,7 +501944,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "HERB MASTER\n<size=25%>REMEDIES \xB7 SCROLLS</size>"
+  m_text: "APOTHECARY\n<size=25%>STIMS \xB7 RECALL TAGS</size>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4eccd51250cfa3948a3ac1e21d15fe34, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: c39c7b7aa83c50b43a93378ca676575f, type: 2}
@@ -620498,7 +620498,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'ITEM MALL
+  m_text: 'NOVA STORE
 
     <size=25%>PREMIUM GOODS</size>'
   m_isRightToLeft: 0
@@ -628278,7 +628278,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
   poiId: elder
-  displayName: Elder Hall
+  displayName: Chancellor's Hall
 --- !u!1001 &2144608695
 PrefabInstance:
   m_ObjectHideFlags: 0

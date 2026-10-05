@@ -151,10 +151,10 @@ namespace KryticalNova.Social
                     }
                     break;
                 case ChatRoute.NotInGuild:
-                    ServerSystem("You are not in a guild.");
+                    ServerSystem("You are not in a crew.");
                     break;
                 case ChatRoute.NotInParty:
-                    ServerSystem("You are not in a party. Invite a player with /invite <name>.");
+                    ServerSystem("You are not in a squad. Invite a player with /invite <name>.");
                     break;
                 case ChatRoute.NoSuchPlayer:
                     ServerSystem($"No player named '{whisperTarget}' is online.");

@@ -123,7 +123,7 @@ namespace KryticalNova.Progression
             reason = string.Empty;
             if (!TryGetLearnedRank(skill, out var rank)) { reason = "Learn this skill first."; return false; }
             if (resources == null || !resources.IsAlive) { reason = "You need HP to use skills."; return false; }
-            if (!resources.CanSpendChi(rank.chiCost)) { reason = $"Not enough Chi. {GetDefinition(skill).displayName} needs {rank.chiCost:0.#} Chi per destination."; return false; }
+            if (!resources.CanSpendChi(rank.chiCost)) { reason = $"Not enough Flux. {GetDefinition(skill).displayName} needs {rank.chiCost:0.#} Flux per destination."; return false; }
             return true;
         }
 
@@ -132,7 +132,7 @@ namespace KryticalNova.Progression
         {
             paidCost = 0f;
             if (!CanPayForCommand(skill, out reason) || !TryGetLearnedRank(skill, out var rank)) return false;
-            if (!resources.TrySpendChi(rank.chiCost)) { reason = "Not enough Chi."; return false; }
+            if (!resources.TrySpendChi(rank.chiCost)) { reason = "Not enough Flux."; return false; }
             paidCost = rank.chiCost;
             return true;
         }

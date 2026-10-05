@@ -20,7 +20,7 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 0
   requiresSkillBook: 0
-  acquisitionNote: Faction Skill Trainer
+  acquisitionNote: Faction Instructor
   requiredCraftingArchives: []
   requiredCharacterLevel: 1
   minRank: 1

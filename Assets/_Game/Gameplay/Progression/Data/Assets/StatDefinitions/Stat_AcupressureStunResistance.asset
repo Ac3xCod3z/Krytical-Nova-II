@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Stat_AcupressureStunResistance
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.StatDefinitionData
   statType: 14
-  statName: Stun Resistance
-  abbreviation: STUN RES
-  description: Percentage resistance against incoming Stun effects.
+  statName: Lockup Resist
+  abbreviation: LOCKUP
+  description: Percentage resistance against incoming Lockup (stun) effects.
   minValue: 0
   maxValue: 999999
   isPercentage: 1

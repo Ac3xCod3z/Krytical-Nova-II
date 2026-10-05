@@ -196,7 +196,7 @@ namespace KryticalNova.Progression
             if (!unlockedDropSkills.Contains(skillId))
             {
                 unlockedDropSkills.Add(skillId);
-                SkillMessage?.Invoke($"Acquired secret martial arts book: {skillId} unlocked!");
+                SkillMessage?.Invoke($"Acquired Skill Chip: {skillId} unlocked!");
                 Commit();
             }
         }
@@ -218,7 +218,7 @@ namespace KryticalNova.Progression
                 if (skill != null && skill.requiresSkillBook)
                     unlockedDropSkills.Add(skill.skillId);
             }
-            SkillMessage?.Invoke("All Rare Drop Book Skills unlocked for testing!");
+            SkillMessage?.Invoke("All Skill Chip skills unlocked for testing!");
             Commit();
         }
 
@@ -226,7 +226,7 @@ namespace KryticalNova.Progression
         {
             if (!HasAuthority) return;
             unlockedDropSkills.Clear();
-            SkillMessage?.Invoke("All Rare Drop Book Skills locked.");
+            SkillMessage?.Invoke("All Skill Chip skills locked.");
             Commit();
         }
 
@@ -253,7 +253,7 @@ namespace KryticalNova.Progression
             if (progression == null) { reason = "Progression missing"; return false; }
             if (IsLocked(skill))
             {
-                reason = $"Requires skill book ({skill.acquisitionNote})";
+                reason = $"Requires Skill Chip ({skill.acquisitionNote})";
                 return false;
             }
             if (progression.CurrentLevel < skill.requiredCharacterLevel)
@@ -371,7 +371,7 @@ namespace KryticalNova.Progression
             if (!IsLearned(skill))
             {
                 reason = IsLocked(skill)
-                    ? $"{skill.displayName} requires a skill book ({skill.acquisitionNote})."
+                    ? $"{skill.displayName} requires a Skill Chip ({skill.acquisitionNote})."
                     : $"Learn {skill.displayName} with a skill point first.";
                 return false;
             }
@@ -393,7 +393,7 @@ namespace KryticalNova.Progression
             float chiCost = skill.GetChiCost(rank);
             if (!resources.CanSpendChi(chiCost))
             {
-                reason = $"Not enough Chi ({chiCost:0} Chi required, current: {resources.Chi:0}).";
+                reason = $"Not enough Flux ({chiCost:0} Flux required, current: {resources.Chi:0}).";
                 return false;
             }
             if (skill.IsAttack)
@@ -514,7 +514,7 @@ namespace KryticalNova.Progression
             {
                 if (resources != null && !resources.TrySpendChi(chiCost))
                 {
-                    reason = $"Not enough Chi ({chiCost:0} Chi required, current: {resources.Chi:0}).";
+                    reason = $"Not enough Flux ({chiCost:0} Flux required, current: {resources.Chi:0}).";
                     SkillMessage?.Invoke(reason);
                     return false;
                 }

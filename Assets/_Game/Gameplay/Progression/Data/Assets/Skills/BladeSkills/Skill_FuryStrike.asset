@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Skill_FuryStrike
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
   skillId: FuryStrike
-  displayName: Fury Strike
+  displayName: Perimeter Cut
   description: Sweeps the blade through every enemy around you. Hold the key to keep striking.
   category: 4
   targetType: 2
   executionType: 0
   acquisitionMethod: 0
   requiresSkillBook: 0
-  acquisitionNote: Faction Skill Trainer
+  acquisitionNote: Faction Instructor
   requiredCraftingArchives: []
   requiredCharacterLevel: 1
   minRank: 1
@@ -76,6 +76,13 @@ MonoBehaviour:
   hitTimesNormalized:
   - 0.32
   castLockNormalized: 0.85
+  attackCancelNormalized: 1
+  castLiftCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   chargeLoopClip: {fileID: 0}
   channelLoopClip: {fileID: 0}
   castVfxPrefab: {fileID: 0}

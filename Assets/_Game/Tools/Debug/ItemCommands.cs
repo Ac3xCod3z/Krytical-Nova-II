@@ -10,7 +10,7 @@ namespace KryticalNova.DevTools
     /// </summary>
     public static class ItemCommands
     {
-        private const string NoPlayer = "No local player inventory.";
+        private const string NoPlayer = "No local player Pack.";
 
         private static bool TryGetInventory(out PlayerInventory inventory, out string error)
         {
@@ -30,16 +30,16 @@ namespace KryticalNova.DevTools
             var def = inv.Catalog.Find(item);
             if (def == null) return $"Unknown item '{item}'. Try item.list.";
             int added = inv.ServerGive(def.itemId, count);
-            return added > 0 ? $"Gave {added}x {def.displayName}." : "Inventory is full.";
+            return added > 0 ? $"Gave {added}x {def.displayName}." : "Your Pack is full.";
         }
 
-        [Command("item.clear", "Empty the local player's bag (equipment is kept).")]
+        [Command("item.clear", "Empty the local player's Pack (equipment is kept).")]
         [Command("clear_inventory")]
         private static string Clear()
         {
             if (!TryGetInventory(out var inv, out var error)) return error;
             inv.ServerClear();
-            return "Inventory cleared.";
+            return "Pack cleared.";
         }
 
         [Command("item.list", "List every item id in the catalog, optionally filtered by slot (e.g. item.list Armor).")]

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: NPC_GuardCaptain
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 5
-  displayName: Guard Captain
-  title: "Quests \xB7 Battle Teleports"
+  displayName: Marshal
+  title: "Contracts \xB7 Battle Transit"
   greeting: Ready to earn your keep? The frontier won't defend itself.
-  services: Standard leveling quests, and the gateway to level-appropriate formation battles, resistance battles and master maps.
+  services: Standard leveling Contracts, and Transit to level-appropriate battles and Runs.
   interactRange: 3

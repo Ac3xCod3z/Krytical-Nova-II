@@ -9,7 +9,7 @@ namespace KryticalNova.Social
     /// </summary>
     public static class PartyChatCommands
     {
-        private const string Offline = "Parties need an online session with another player.";
+        private const string Offline = "Squads need an online session with another player.";
 
         // ChatCommands forgets its commands at SubsystemRegistration (no domain reload); this runs just after.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

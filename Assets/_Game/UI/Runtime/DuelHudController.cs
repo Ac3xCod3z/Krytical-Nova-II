@@ -110,7 +110,7 @@ namespace KryticalNova.UI
         public void ShowRequest(string challengerName, float seconds)
         {
             if (request == null) return;
-            requestText.text = $"{challengerName} challenges you to a duel";
+            requestText.text = $"{challengerName} calls you out";
             requestStarted = Time.unscaledTime;
             requestEnds = requestStarted + Mathf.Max(1f, seconds);
             requestFill.style.width = Length.Percent(100f);

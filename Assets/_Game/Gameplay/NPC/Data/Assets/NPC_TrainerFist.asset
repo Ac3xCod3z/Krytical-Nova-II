@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: NPC_TrainerFist
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 2
-  displayName: Fist Trainer
-  title: "Martial Arts \xB7 Unarmed"
+  displayName: Servo Claws Instructor
+  title: "Combat Skills \xB7 Servo Claws"
   greeting: Before the weapon, there is the body. Show me your stance.
-  services: Faction martial arts instructor specialising in unarmed styles. Learn and upgrade your combat skills.
+  services: Null Instructor for Servo Claws. Learn and upgrade your combat skills.
   interactRange: 3

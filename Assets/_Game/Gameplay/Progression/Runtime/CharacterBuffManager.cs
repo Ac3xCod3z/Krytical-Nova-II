@@ -94,7 +94,7 @@ namespace KryticalNova.Progression
                                 resources.RestoreChi(tickChi);
                             }
                             string healed = tickHealth > 0f ? $"+{tickHealth:0.#} HP, " : string.Empty;
-                            BuffMessage?.Invoke($"[{buff.Skill.displayName}] Restored {healed}+{tickChi:0.#} Chi");
+                            BuffMessage?.Invoke($"[{buff.Skill.displayName}] Restored {healed}+{tickChi:0.#} Flux");
                         }
                     }
                 }
