@@ -18,8 +18,10 @@ Each pet earns its own XP, separate from the player's, and that XP fills its gro
 
 | Source | Pet XP | Notes |
 | --- | --- | --- |
-| Hostile (mob) kills | 0.01 per kill | Lowest amount, most consistent source |
-| PvP events such as war (later) | 0.5 to each pet on the winning team or teams | 0.25 to pets on losing teams; players with no pet get nothing |
+| Hostile (mob) kills | 0.04 per kill | Lowest amount, most consistent source |
+| PvP events such as war (later) | 50 to each pet on the winning team or teams | 25 to pets on losing teams; players with no pet get nothing |
+
+Pacing target: about 2,000 hours of grinding alone to reach 100%. At 0.04 XP per kill that is 2,500,000 kills, about 2,083 hours at one kill every 3 seconds (50 XP an hour). PvP events shorten this: a win is worth about an hour of grinding and a loss half an hour.
 
 Pets evolve at 25%, 50%, 75% and 100% growth: those are the points where the pet changes to its next visual stage. The stat is paid out separately from the stages: every 1% of growth gives the player 1/100 of the pet's max value, so only a pet at 100% gives the full stat. The 25/50/75/100% columns in each creature's table show the stat the player has at each evolution point. The max values are high on purpose: the last evolution stage takes a very long time to reach.
 
@@ -39,7 +41,7 @@ Each pet has a hunger meter. It drains 0.05% per minute on the server clock, onl
 ## Open questions
 
 - [ ] Hunger drain: 0.05% per minute is 3% an hour, not 8%. Keep 0.05%, or use about 0.133% per minute for 8% an hour?
-- [ ] Kill count: 0.01 XP per kill means 10,000,000 kills for 100% (100,000 kills per 1%). Confirm.
+- [ ] PvP event rewards of 50 / 25 pet XP are proposed (about an hour / half an hour of grinding), and the 2,000-hour target assumes one kill every 3 seconds. Confirm both.
 - [ ] Pet Ration price, and which NPC sells it
 
 ## Tidecaller
