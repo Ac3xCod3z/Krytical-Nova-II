@@ -15,3 +15,11 @@ Read `Assets/_Game/_Docs/ProjectOrganization.md` before creating, moving, or gen
 - Editor builders that create assets must write into the owning system's folder (path constants).
 - Move assets through Unity (`AssetDatabase.MoveAsset`) or together with their `.meta`; then grep for old path literals.
 - Validate with menu **Krytical Nova ▸ Project ▸ Validate Project Organization**.
+
+## Names and systems (mandatory)
+
+Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a player sees or building a system.
+
+- `01_Systems_Build_List.md` is the glossary (Twelve Sky 2 term → Krytical Nova term → what the code calls it) and the build list. Use the Krytical Nova term in UI text and in new code; update a system's Status there when it lands.
+- `02_Gear_System_Spec.md` is the gear layer (ladder, stats, Tempering, Fusion, Tuning, Slotting); `04_Weapon_Classes.md` is the nine weapon classes and their skills. Keep their "as built" sections current.
+- Build only what is asked for: these docs describe many systems that are deliberately not built yet.

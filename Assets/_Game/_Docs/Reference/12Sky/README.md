@@ -7,6 +7,7 @@ Reference material for Krytical Nova's systems, exported from the Claude doc "12
 | `01_Systems_Build_List.md` | Master Glossary (Twelve Sky 2 term → Krytical Nova term → what the code calls it today), the 43-row build list with per-system Status, variance notes, ranked candidates, open questions. **This is the renaming scheme and the checklist.** |
 | `02_Gear_System_Spec.md` | Concrete spec for Tempering, Fusion, Tuning, Slotting + Cores, Epic Mk, Nova Rank, Titles, auxiliary slots, data model, build order. |
 | `03_Full_Transcription.md` | All 31 pages of the 12Sky in-game help, transcribed in Krytical Nova terms with the reference term in brackets, each with its screenshot. |
+| `04_Weapon_Classes.md` | The nine weapon classes (three per faction), the ten-slot skill structure, all 90 skill names, weapon meshes per class, Discipline, starter kit, GM gear commands, and what is built. |
 | `pages~/12sky_page_NN.jpg` | The 31 original screenshots. The `~` suffix makes Unity ignore the folder, so they are not imported as textures. |
 
 ## Rules for Claude Code
@@ -15,3 +16,4 @@ Reference material for Krytical Nova's systems, exported from the Claude doc "12
 2. **Status.** When a system lands, update its Status in `01_Systems_Build_List.md` (`Complete` / `Partial` / `To build` / `Candidate`) and tick it in the checklist view. Do not delete rows.
 3. **Gear.** Follow `02_Gear_System_Spec.md` sections 11–12 in order; numbers marked *(proposed)* are tunables in ScriptableObjects, not constants in code.
 4. **Design docs.** `../../Design/*.md` still use the TS2 vocabulary (Reinforcement, Combination, Refinement, CP, Silver). They are the long-form reference; when they conflict with these files on a name, these files win.
+5. **Rename depth.** For systems that already exist, only what a player reads or types changes (owner's decision, 4 Oct 2026): identifiers, asset file names, enum values, saved keys and GM command names stay, and old slash commands keep working beside the new ones. New code uses the Krytical Nova name from the start.

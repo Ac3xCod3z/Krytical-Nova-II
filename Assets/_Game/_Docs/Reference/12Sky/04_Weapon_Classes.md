@@ -146,10 +146,25 @@ Viking + Elven.
 - `gm.loadout <class>` wipes the Pack and re-equips the level-1 starter kit of that class.
 - Both mirrored in `GmToolsWindow` as dropdowns (Slot, Rarity, Level snapped to band steps, Class) with a Give button.
 
-## 8. As built
+## 8. As built (4 Oct 2026)
 
-Filled in as the classes land: the per-class builder table (mesh per band, clip set, reach, stance stat) and the list of stand-ins.
+| Piece | Where | Notes |
+| --- | --- | --- |
+| Class ids | `Gameplay/Progression/Data/WeaponClassId.cs` | `WeaponClassId` (None + 9, three per faction in role order), `WeaponClassRole`, `ClassSkillSlot`. Never renumber. |
+| Faction rules | `Gameplay/Items/Runtime/WeaponClassRules.cs` | which class belongs to which faction, the default (offense) class, Discipline validation. |
+| Class catalog | `Items/Data/Assets/WeaponClassCatalog.asset` | per class: name, faction, role, card text, ten skills by slot; plus the shared skills. Built by `ClassSkillBuilder`. |
+| Skills | `Progression/Data/Assets/Skills/<Class>Skills/` | Monoblade keeps its ten assets and ids (`BladeSkills/`). The other eight classes are copies per slot (`<Class>_<Slot>` ids) with their own names, clip set, reach and stance stat. Menu: Krytical Nova ▸ Progression ▸ Build Class Skills. |
+| Active class | `Items/Runtime/PlayerWeaponClass.cs` | the equipped weapon's class, else the Discipline. Derived on every peer from the replicated loadout and identity: no network state of its own. |
+| Ranks | `PlayerCombatSkills` | ranks, Skill Chip / Dossier unlocks and cooldowns are stored under the slot (`SkillDefinitionSO.RankKey`); a class skill only casts with its class's weapon in hand; a class change drops the old Stance / Guard. |
+| Hotbar and skills window | `PlayerSkillHotbar`, `ProgressionHUD` | slots re-point to the same slot of the new class; the window lists shared skills plus the class in hand. |
+| Discipline | `CharacterRecipe.weaponClass`, `CharacterNetState`, creator tab | chosen on the creator's Discipline tab, second in the bar: the Origin tiles become three class cards showing each class's starter weapon, with the role, the stance and the starting weapon below. Characters saved earlier read as their faction's offense class. |
+| Weapons | `GearDictionary` lines, `Items/Data/Assets/Weapons/Weapon_<Class>_NN.asset` | five look templates per class (Common, Uncommon, Rare I, Rare II, Epic), 27 tiers each. |
 
+**Weapon models.** Each look template's model is built from its Synty prefab with one convention, the one the katana grip was tuned for: grip at the pivot, long axis along +Z, broad side (blade width, a rifle's height, a bow's belly) along Y. Icons are captured looking at that broad side. The Bow Combat pack ships a Built-in pipeline material, so the bows use a URP copy in `Items/Data/Assets/Materials/`. A grip that needs a different hold is tuned on the template (`weaponLocalPosition` / `weaponLocalEuler`) and survives re-bakes; `Krytical Nova ▸ Items ▸ Rebuild Weapon Look Models` rebuilds every model from its mesh (and resets those poses).
+
+**Clip sets.** Monoblade: Grruzam katana (measured hit timings). Glaive, Harvester, Longaxe, Claymore: Grruzam great-sword, same clip per slot letter, default hit timings. Warbow: Synty Bow Combat (`Stand_Shoot_Reload`, `Stand_Shoot_Leaping` for S8), default hit timings. Carbine, Arc Caster, Servo Claws: the Monoblade's clips as stand-ins.
+
+**Stand-ins still to replace:** gun and unarmed animation sets; measured hit moments for the great-sword and bow clips; projectiles, and the cone / volley (S1) and called-in strike (S8) shapes for ranged classes (today ranged skills hit at reach 8–12 with no projectile, and their area skills are centred on the caster); one basic attack combo for every class (the katana combo); weapon grip poses per mesh (tuned on the look template).
 ## Sources
 
 - 12SKY M Global class guide (LDCloud): https://www.ldcloud.net/blog/12sky-m-global-class-guide
