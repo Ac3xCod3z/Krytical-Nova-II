@@ -157,7 +157,7 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 | 40 | Networking (no TS2 equivalent) | Complete | not in 12Sky help | Netcode for GameObjects, dedicated server boot, zone sessions, spatial interest management, spawn / respawn, offline handoff. | Scaling per architecture plan Phase 4. |
 | 41 | World: day cycle, weather, zones (no TS2 equivalent) | Complete | not in 12Sky help | World clock, weather catalog and blends, precipitation, lightning, wind, street lamps, grass, Zone01, portals, minimap bake. | More zones. |
 | 42 | Comic rendering and game feel (no TS2 equivalent) | Complete | not in 12Sky help | `ComicStyleFeature`, Color Bible, sun shafts, hit reactions, pooled VFX, skill feel catalog. | Per the art brief. |
-| 43 | Pets and mounts (TS2: Pets, Mounts) | Partial | not in 12Sky help | Cosmetic pet follower from the loadout, Pet equip slot. | Pet stats and mounts (design 04, 05). |
+| 43 | Pets and mounts (TS2: Pets, Mounts) | Partial | not in 12Sky help | Cosmetic pet follower from the loadout, Pet equip slot. | Pet stats and mounts (design 04, 05; pet growth, hunger and the first four pets are specified in `Design/12_pet_evolution_system.md`). |
 
 ### Checklist view (tick as systems land)
 
