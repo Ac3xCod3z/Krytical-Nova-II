@@ -23,7 +23,6 @@ namespace KryticalNova.EditorTools
         private const string FromLeft = Damages + "4__Right/M_katana_Blade@Damage_Right_Small_ver_A.FBX";
         private const string FromRight = Damages + "3__Left/M_katana_Blade@Damage_Left_Small_ver_A.FBX";
 
-        [MenuItem("Krytical Nova/Player/Assign Hit Reaction Clips")]
         public static void Assign()
         {
             GameObject root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);

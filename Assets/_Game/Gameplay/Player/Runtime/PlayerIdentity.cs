@@ -1,6 +1,7 @@
 using System;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Combat;
+using KryticalNova.Core;
 using KryticalNova.Factions;
 using KryticalNova.Items;
 using KryticalNova.Progression;
@@ -32,6 +33,9 @@ namespace KryticalNova.Player
             writePerm: NetworkVariableWritePermission.Server);
 
         private CharacterNetState current;
+        // Which saved character this is. Known where the game is decided and to the owner; never replicated to others.
+        private string accountId = string.Empty;
+        private string characterId = string.Empty;
         private PlayerDuel duel;
         private LineageDefinition lineage;
         private CharacterLook look;
@@ -54,6 +58,10 @@ namespace KryticalNova.Player
         /// <summary>The class chosen in the creator; characters saved before classes existed get their faction's offense class.</summary>
         public WeaponClassId Discipline => WeaponClassRules.Normalize(current.weaponClass, current.faction);
         public CharacterNetState State => current;
+        /// <summary>The account this character belongs to, or empty (no saved character). Server, offline and owner only.</summary>
+        public string AccountId => accountId;
+        /// <summary>The saved character's id (<see cref="CharacterProfile.id"/>), or empty. Server, offline and owner only.</summary>
+        public string CharacterId => characterId;
 
         /// <summary>The duel exception of the faction rule: true while this player and <paramref name="other"/> duel each other.</summary>
         public bool IsDuelling(IFactionMember other) =>
@@ -72,7 +80,7 @@ namespace KryticalNova.Player
         {
             // Offline avatar: nobody else will assign an identity.
             if (!IsSpawned && CharacterSession.TryGetActive(out var profile))
-                ServerAssign(CharacterNetState.From(profile.name, profile.recipe));
+                ServerAssign(CharacterNetState.From(profile.name, profile.recipe), CharacterSession.AccountId, profile.id);
         }
 
         public override void OnNetworkSpawn()
@@ -84,7 +92,14 @@ namespace KryticalNova.Player
             else FactionRules.CrossFactionPvp = netCrossFactionPvp.Value;
             if (!IsServer && !netState.Value.IsEmpty) Apply(netState.Value);
             if (IsOwner && CharacterSession.TryGetActive(out var profile))
-                SubmitIdentityRpc(CharacterNetState.From(profile.name, profile.recipe));
+            {
+                if (!IsServer)
+                {
+                    accountId = CharacterSession.AccountId;
+                    characterId = profile.id ?? string.Empty;
+                }
+                SubmitIdentityRpc(CharacterNetState.From(profile.name, profile.recipe), CharacterSession.AccountId, profile.id ?? string.Empty);
+            }
         }
 
         public override void OnNetworkDespawn()
@@ -112,10 +127,15 @@ namespace KryticalNova.Player
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SubmitIdentityRpc(CharacterNetState state) => ServerAssign(state);
+        private void SubmitIdentityRpc(CharacterNetState state, FixedString64Bytes account, FixedString64Bytes character) =>
+            ServerAssign(state, account.ToString(), character.ToString());
 
-        /// <summary>Server (or offline) only: validate and commit an identity. A character is assigned once per spawn.</summary>
-        private void ServerAssign(CharacterNetState state)
+        /// <summary>
+        /// Server (or offline) only: validate and commit an identity. A character is assigned once per spawn. The
+        /// two ids say which saved character this is; they are taken on trust until real sign-in exists, and a
+        /// malformed one simply means nothing is saved for this player.
+        /// </summary>
+        private void ServerAssign(CharacterNetState state, string account, string character)
         {
             if (IsSpawned && !IsServer) return;
             if (HasIdentity || state.IsEmpty) return;
@@ -133,6 +153,9 @@ namespace KryticalNova.Player
             }
 
             state.name.CopyFromTruncated(cleanName);
+            bool known = SaveKeys.IsId(account) && SaveKeys.IsId(character);
+            accountId = known ? account : string.Empty;
+            characterId = known ? character : string.Empty;
             Apply(state);
             if (IsSpawned) netState.Value = state;
         }

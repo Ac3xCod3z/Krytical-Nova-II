@@ -63,4 +63,5 @@
 .npc-heading { font-size: 20px; color: rgb(255, 214, 92); -unity-text-outline-width: 0.6px; -unity-text-outline-color: rgb(0, 0, 0); padding: 0; margin: 2px 0 0 0; }
 .npc-greeting { white-space: normal; font-size: 15px; -unity-font-style: italic; color: rgb(236, 240, 244); margin-top: 10px; }
 .npc-services { white-space: normal; font-size: 12px; color: rgb(156, 172, 188); margin-top: 8px; }
-.npc-actions { flex-direction: row; justify-content: flex-end; margin-top: 12px; }
+.npc-actions { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; margin-top: 12px; }
+.npc-actions > .npc-action { margin-left: 8px; margin-top: 4px; }

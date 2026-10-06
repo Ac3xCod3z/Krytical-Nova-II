@@ -23,7 +23,6 @@ namespace KryticalNova.EditorTools
         private const int PreviewRenderingLayerIndex = 7;
         private const string PreviewRenderingLayerName = "UI Preview";
 
-        [MenuItem("Krytical Nova/Items/4. Set Up Equipment Preview + HUD")]
         public static void Run()
         {
             EnsureLayers();

@@ -1,6 +1,19 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Template name="EconomyWindows" src="../Economy/EconomyWindows.uxml" />
     <Style src="Items.uss" />
+    <Style src="../HUD/Pet/PetPanels.uss" />
     <!-- Instanced into ProgressionHUD.uxml as a full-screen, click-through layer; driven by GearUIController. -->
+
+    <!-- Names over items on the ground (LootHudController); first, so every window covers them -->
+    <ui:VisualElement name="loot-labels" class="loot-labels" picking-mode="Ignore" />
+    <!-- What the local player dropped and how long it stays theirs alone -->
+    <ui:VisualElement name="loot-notice" class="loot-notice panel hud-movable" picking-mode="Ignore">
+        <ui:Label name="loot-notice-text" text="" class="loot-notice-text" picking-mode="Ignore" />
+        <ui:Label name="loot-notice-help" text="" class="help loot-notice-help" picking-mode="Ignore" />
+        <ui:VisualElement class="loot-notice-bar" picking-mode="Ignore">
+            <ui:VisualElement name="loot-notice-fill" class="loot-notice-fill" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
 
     <!-- Equipment page: slots around a live, rotatable 3D model -->
     <ui:VisualElement name="equipment-window" class="panel window blocks-world hud-movable">
@@ -55,8 +68,15 @@
             <ui:Button name="inventory-page-2" text="III" class="inventory-page" />
         </ui:VisualElement>
         <ui:VisualElement name="inventory-grid" class="inventory-grid" />
+        <ui:VisualElement class="row inventory-footer">
+            <ui:Label text="CREDS" class="muted inventory-creds-label" />
+            <ui:Label name="inventory-creds" text="0" class="accent inventory-creds" />
+        </ui:VisualElement>
         <ui:Label text="Right-click to equip or use  ·  Left-click for options  ·  Drag to move" class="help" />
     </ui:VisualElement>
+
+    <!-- Vault, Deep Vault (later Trade and Kiosk): here so the floating layers below draw over them too -->
+    <ui:Instance template="EconomyWindows" name="economy-layer" class="item-layer" picking-mode="Ignore" />
 
     <!-- Floating layers -->
     <ui:VisualElement name="item-tooltip" class="panel item-tooltip" picking-mode="Ignore">
@@ -64,6 +84,24 @@
         <ui:Label name="tooltip-type" text="Armor · Common" class="tooltip-type" />
         <ui:Label name="tooltip-requires" text="" class="tooltip-requires" />
         <ui:Label name="tooltip-desc" text="" class="tooltip-desc" />
+        <!-- A pet's own state, shown only for pet items (PetTooltip) -->
+        <ui:VisualElement name="tooltip-pet" class="tooltip-pet" picking-mode="Ignore">
+            <ui:VisualElement class="pet-panel-top" picking-mode="Ignore">
+                <ui:VisualElement name="tooltip-pet-pips" class="pet-pips" picking-mode="Ignore" />
+                <ui:Label name="tooltip-pet-stage" text="" class="pet-stage" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:Label name="tooltip-pet-bonus" text="" class="pet-bonus" picking-mode="Ignore" />
+            <ui:VisualElement class="pet-meter-row" picking-mode="Ignore">
+                <ui:Label text="GROWTH" class="pet-meter-label" picking-mode="Ignore" />
+                <ui:VisualElement class="pet-meter" picking-mode="Ignore"><ui:VisualElement name="tooltip-pet-growth-fill" class="pet-meter-fill" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:Label name="tooltip-pet-growth-value" text="0%" class="pet-meter-value" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement class="pet-meter-row" picking-mode="Ignore">
+                <ui:Label text="HUNGER" class="pet-meter-label" picking-mode="Ignore" />
+                <ui:VisualElement class="pet-meter" picking-mode="Ignore"><ui:VisualElement name="tooltip-pet-hunger-fill" class="pet-meter-fill pet-meter-fill--hunger" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:Label name="tooltip-pet-hunger-value" text="100%" class="pet-meter-value" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
         <ui:Label name="tooltip-stats" text="No stats yet" class="tooltip-stats" />
         <ui:Label name="tooltip-hint" text="" class="tooltip-hint" />
     </ui:VisualElement>
@@ -75,7 +113,7 @@
 
     <ui:VisualElement name="item-confirm" class="panel item-confirm blocks-world">
         <ui:Label name="item-confirm-text" text="Drop this item?" class="item-confirm-text" />
-        <ui:Label text="It will be destroyed. This can't be undone." class="help" />
+        <ui:Label name="item-confirm-help" text="It goes on the ground at your feet." class="help" />
         <ui:VisualElement class="row item-confirm-buttons">
             <ui:Button name="item-confirm-yes" text="DROP" class="kn-button-danger" />
             <ui:Button name="item-confirm-no" text="CANCEL" />

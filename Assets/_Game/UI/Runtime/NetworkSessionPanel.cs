@@ -10,7 +10,7 @@ namespace KryticalNova.UI
 {
     /// <summary>
     /// UI Toolkit replacement for the IMGUI <see cref="NetworkDebugHUD"/> on clients: host/join locally or through
-    /// online sessions, see the role and session code, disconnect. F1 or ~ toggles it. The IMGUI HUD stays on the
+    /// online sessions, see the role and session code, disconnect. F1 toggles it (~ is the pickup key). The IMGUI HUD stays on the
     /// NetworkManager prefab for headless/server use and is switched off while this panel exists.
     /// </summary>
     [DisallowMultipleComponent]
@@ -91,7 +91,7 @@ namespace KryticalNova.UI
 
             var keyboard = Keyboard.current;
             if (keyboard != null && !IsTyping()
-                && (keyboard.backquoteKey.wasPressedThisFrame || keyboard.f1Key.wasPressedThisFrame))
+                && keyboard.f1Key.wasPressedThisFrame)
                 SetVisible(panel, panel.resolvedStyle.display == DisplayStyle.None);
 
             if (Time.unscaledTime >= nextRefresh)

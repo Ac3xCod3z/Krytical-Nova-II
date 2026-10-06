@@ -35,6 +35,7 @@ namespace KryticalNova.NPC
         public string Title => definition != null ? definition.title : string.Empty;
         public string Greeting => definition != null ? definition.greeting : string.Empty;
         public string Services => definition != null ? definition.services : string.Empty;
+        public NpcOffer Offers => definition != null ? definition.offers : NpcOffer.None;
         public float InteractRange => definition != null ? definition.interactRange : 3f;
         public Vector3 Position => transform.position;
         public Vector3 InteractPoint
@@ -47,6 +48,24 @@ namespace KryticalNova.NPC
             }
         }
         public Vector3 NameplatePosition => transform.position + Vector3.up * NameplateHeight;
+
+        /// <summary>
+        /// True when an NPC offering <paramref name="offer"/> stands within its range (plus <paramref name="padding"/>)
+        /// of a point. NPCs are scene objects, so the server and every client get the same answer.
+        /// </summary>
+        public static bool IsOffered(NpcOffer offer, Vector3 position, float padding = 0f)
+        {
+            for (int i = 0; i < ActiveNpcs.Count; i++)
+            {
+                NpcInteractable npc = ActiveNpcs[i];
+                if (npc == null || (npc.Offers & offer) == 0) continue;
+                Vector3 offset = npc.transform.position - position;
+                offset.y = 0f;
+                float reach = npc.InteractRange + padding;
+                if (offset.sqrMagnitude <= reach * reach) return true;
+            }
+            return false;
+        }
 
         private void Awake()
         {

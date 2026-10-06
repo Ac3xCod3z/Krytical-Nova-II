@@ -35,6 +35,9 @@ namespace KryticalNova.EditorTools.GM
         private const string TeleportTab = "Teleport";
         private const string WorldTab = "World";
         private const string ItemsTab = "Items";
+        private const string EconomyTab = "Economy";
+        private const string SocialTab = "Social";
+        private const string PetsTab = "Pets";
         private const int MaxLogLines = 200;
         private const int MaxSearchResults = 40;
 
@@ -870,6 +873,106 @@ namespace KryticalNova.EditorTools.GM
                 yield return new ValueDropdownItem<string>($"{def.equipSlot}/{def.displayName}  ({def.itemId})", def.itemId.ToString());
             }
         }
+
+        // ================================================================ ECONOMY (Creds, storage, trade, Kiosks, saving)
+
+        [TabGroup(Tabs, EconomyTab), Title("Creds"), MinValue(0), EnableIf(nameof(IsReady)), LabelText("Amount"), PropertyOrder(600)]
+        [InfoBox("Until Hostile drops, Contracts and shops exist, this is the only way Creds enter the game.")]
+        [SerializeField] private long credsAmount = 1_000_000;
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Creds"), EnableIf(nameof(IsReady)), LabelText("Give"), PropertyOrder(601)]
+        private void GiveCreds() => Run($"gm.creds {credsAmount}");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Creds"), EnableIf(nameof(IsReady)), LabelText("Take"), PropertyOrder(602)]
+        private void TakeCreds() => Run($"gm.creds -{credsAmount}");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Creds"), EnableIf(nameof(IsReady)), LabelText("Set Balance"), PropertyOrder(603)]
+        private void SetCreds() => Run($"gm.creds.set {credsAmount}");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Creds"), EnableIf(nameof(IsReady)), LabelText("Ledger"), PropertyOrder(604)]
+        private void CredsReport() => Run("gm.creds.report");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Storage"), EnableIf(nameof(IsReady)), LabelText("Open Vault Here"), PropertyOrder(610)]
+        private void OpenVault() => Run("gm.vault");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Storage"), EnableIf(nameof(IsReady)), LabelText("Open Deep Vault Here"), PropertyOrder(611)]
+        private void OpenDeepVault() => Run("gm.vault deep");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Storage"), EnableIf(nameof(IsReady)), LabelText("Storage Needs Its NPC Again"), PropertyOrder(612)]
+        private void VaultRuleBack() => Run("gm.vault off");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Trade"), EnableIf(nameof(IsReady)), LabelText("Reset Daily Trade Limit"), PropertyOrder(620)]
+        private void ResetTradeLimit() => Run("gm.trade.reset");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Trade"), EnableIf(nameof(IsReady)), LabelText("List Kiosks"), PropertyOrder(621)]
+        private void ListKiosks() => Run("gm.kiosk");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Trade"), EnableIf(nameof(IsReady)), LabelText("Expire Player's Kiosk"), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(622)]
+        private void ExpireKiosk() => Run("gm.kiosk.expire");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Save"), EnableIf(nameof(IsReady)), LabelText("Save Everyone Now"), PropertyOrder(630)]
+        private void SaveNow() => Run("gm.save");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Save"), EnableIf(nameof(IsReady)), LabelText("Where Are The Saves?"), PropertyOrder(631)]
+        private void SaveWhere() => Run("gm.save.where");
+
+        // ================================================================ SOCIAL (Crews, Contacts)
+
+        [TabGroup(Tabs, SocialTab), Title("Crew"), EnableIf(nameof(IsReady)), LabelText("Crew Name"), PropertyOrder(700)]
+        [InfoBox("Puts the targeted player in that Crew, founding it when there is none: no fee, level or Vaultkeeper.")]
+        [SerializeField] private string crewName = "Test Crew";
+
+        [ButtonGroup(Tabs + "/" + SocialTab + "/Crew"), EnableIf(nameof(IsReady)), LabelText("Join / Found"), PropertyOrder(701)]
+        private void JoinCrew()
+        {
+            if (string.IsNullOrWhiteSpace(crewName)) { Log("Type a Crew name first."); return; }
+            Run($"gm.guild {Quote(crewName)}");
+        }
+
+        [ButtonGroup(Tabs + "/" + SocialTab + "/Crew"), EnableIf(nameof(IsReady)), LabelText("Take Out Of Crew"), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(702)]
+        private void LeaveCrew() => Run("gm.guild none");
+
+        [ButtonGroup(Tabs + "/" + SocialTab + "/Crew"), EnableIf(nameof(IsReady)), LabelText("Player's Crew"), PropertyOrder(703)]
+        private void ShowCrew() => Run("gm.guild");
+
+        [ButtonGroup(Tabs + "/" + SocialTab + "/Crew"), EnableIf(nameof(IsReady)), LabelText("List Crews"), PropertyOrder(704)]
+        private void ListCrews() => Run("gm.guild.list");
+
+        [TabGroup(Tabs, SocialTab), Title("Neutral Ground"), ShowInInspector, DisplayAsString, LabelText("Player Stands On"), PropertyOrder(710)]
+        [InfoBox("On neutral ground (a Trade Zone with Cross Faction ticked) players of different factions may trade, buy from each " +
+                 "other's Kiosks and add each other as contacts. A Crew is one faction everywhere.")]
+        private string NeutralGround => LocalPlayer == null ? "(enter Play Mode)"
+            : KryticalNova.Economy.TradeZone.CrossFactionAt(LocalPlayer.transform.position) ? "neutral ground" : "faction ground";
+
+        // ================================================================ PETS
+
+        [TabGroup(Tabs, PetsTab), Title("The Pet That Is Out"), PropertyRange(0f, 100f), EnableIf(nameof(IsReady)), LabelText("Growth %"), PropertyOrder(800)]
+        [InfoBox("Evolutions happen at 25, 50, 75 and 100. Growth and hunger travel with the pet item.")]
+        [SerializeField] private float petGrowth = 25f;
+
+        [ButtonGroup(Tabs + "/" + PetsTab + "/Growth"), EnableIf(nameof(IsReady)), LabelText("Set Growth"), PropertyOrder(801)]
+        private void SetPetGrowth() => Run($"gm.pet.growth {petGrowth.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+
+        [ButtonGroup(Tabs + "/" + PetsTab + "/Growth"), EnableIf(nameof(IsReady)), LabelText("Status"), PropertyOrder(802)]
+        private void PetStatus() => Run("gm.pet");
+
+        [TabGroup(Tabs, PetsTab), PropertyRange(0f, 100f), EnableIf(nameof(IsReady)), LabelText("Hunger %"), PropertyOrder(810)]
+        [SerializeField] private float petHunger = 100f;
+
+        [ButtonGroup(Tabs + "/" + PetsTab + "/Hunger"), EnableIf(nameof(IsReady)), LabelText("Set Hunger"), PropertyOrder(811)]
+        private void SetPetHunger() => Run($"gm.pet.hunger {petHunger.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+
+        [ButtonGroup(Tabs + "/" + PetsTab + "/Hunger"), EnableIf(nameof(IsReady)), LabelText("Feed To Full"), PropertyOrder(812)]
+        private void FeedPet() => Run("gm.pet.feed");
+
+        [ButtonGroup(Tabs + "/" + PetsTab + "/Hunger"), EnableIf(nameof(IsReady)), LabelText("Give 5 Pet Rations"), PropertyOrder(813)]
+        private void GivePetRations() => Run("item.give Pet_Ration 5");
+
+        [ButtonGroup(Tabs + "/" + PetsTab + "/Event"), EnableIf(nameof(IsReady)), LabelText("PvP Event Win (50 XP)"), PropertyOrder(820)]
+        private void PetEventWin() => Run("gm.pet.event win");
+
+        [ButtonGroup(Tabs + "/" + PetsTab + "/Event"), EnableIf(nameof(IsReady)), LabelText("PvP Event Loss (25 XP)"), PropertyOrder(821)]
+        private void PetEventLoss() => Run("gm.pet.event loss");
 
         // ================================================================ console + log (always visible)
 

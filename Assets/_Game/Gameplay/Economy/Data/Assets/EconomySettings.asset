@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e69714635fe3c604582db523cb676212, type: 3}
+  m_Name: EconomySettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.EconomySettings
+  walletCap: 999999999999
+  tradeCredsPerTrade: 5000000
+  tradeCredsPerDay: 20000000
+  tradeSlots: 12
+  tradeRange: 6
+  tradeRequestSeconds: 30
+  kioskPriceCapByRarity: 50c300000000000020a1070000000000404b4c0000000000002d310100000000002d310100000000l
+  kioskStackablePriceCap: 10000
+  kioskPetFullGrowthPriceCap: 20000000
+  kioskSalesTaxPercent: 5
+  kioskSlots: 24
+  kioskRange: 5
+  kioskTiers:
+  - label: 3 days
+    days: 3
+    permitItemId: 0
+    storePrice: 
+  - label: 14 days
+    days: 14
+    permitItemId: 9020
+    storePrice: $1.99
+  - label: 30 days
+    days: 30
+    permitItemId: 9021
+    storePrice: $3.99
+  incomeTarget:
+  - level: 1
+    credsPerHour: 3000
+  - level: 20
+    credsPerHour: 25000
+  - level: 40
+    credsPerHour: 90000
+  - level: 60
+    credsPerHour: 250000
+  - level: 80
+    credsPerHour: 600000
+  - level: 100
+    credsPerHour: 1200000
+  - level: 112
+    credsPerHour: 2000000
+  referenceCosts:
+  - label: Crew founding fee
+    creds: 10000000
+  - label: Fusion FS1 (gear spec)
+    creds: 100000
+  - label: Fusion FS1 to FS12 (gear spec)
+    creds: 4500000

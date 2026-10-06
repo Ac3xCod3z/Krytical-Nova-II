@@ -135,6 +135,8 @@ namespace KryticalNova.Combat
             { Tell($"{target.DuelistName} is too far away for a callout."); return; }
             if (target.challenger != null && Time.time <= target.challengeExpires && target.challenger != this)
             { Tell($"{target.DuelistName} is answering another request."); return; }
+            string blocked = KryticalNova.Core.SocialGate.Refusal(this, target);
+            if (blocked != null) { Tell(blocked); return; }
 
             target.challenger = this;
             target.challengeExpires = Time.time + requestSeconds;

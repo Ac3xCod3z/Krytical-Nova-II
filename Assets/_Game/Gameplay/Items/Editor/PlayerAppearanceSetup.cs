@@ -21,7 +21,6 @@ namespace KryticalNova.EditorTools
         private const string PlayerPrefabPath = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
         private const string WeaponMountName = "KatanaBlade";
 
-        [MenuItem("Krytical Nova/Items/3. Set Up Player Gear Components")]
         public static void Run()
         {
             var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(SidekickGearGenerator.CatalogPath);
@@ -29,7 +28,7 @@ namespace KryticalNova.EditorTools
             if (!SetUpModel()) return;
             SetUpPlayer(catalog);
             AssetDatabase.SaveAssets();
-            Debug.Log("[Items] Player gear components set up. Next: Krytical Nova/Items/4. Set Up Equipment Preview + HUD.");
+            Debug.Log("[Items] Player gear components set up.");
         }
 
         private static bool SetUpModel()

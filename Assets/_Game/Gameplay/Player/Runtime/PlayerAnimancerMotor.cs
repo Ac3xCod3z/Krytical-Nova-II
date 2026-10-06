@@ -22,10 +22,11 @@ namespace KryticalNova.Player
 
     /// <summary>
     /// Animancer-driven motor controlling character locomotion, multi-stage jump,
-    /// weapon draw/sheath animations and hit reactions, with server-authoritative state replication.
+    /// weapon draw/sheath animations, hit reactions and the pick-up gesture, with server-authoritative state
+    /// replication.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerAnimancerMotor : NetworkBehaviour
+    public sealed class PlayerAnimancerMotor : NetworkBehaviour, IBodyGestures
     {
         [Header("Animancer")]
         [SerializeField] private AnimancerComponent animancer;
@@ -133,6 +134,18 @@ namespace KryticalNova.Player
         [Tooltip("A single blow that takes at least this share of max health counts as heavy.")]
         [SerializeField, Range(0f, 1f)] private float heavyHitHealthFraction = 0.15f;
 
+        [Header("Pick Up (bend down, then stand up)")]
+        [Tooltip("Standing to crouched: the hand comes down to the item.")]
+        [SerializeField] private AnimationClip pickUpDownClip;
+        [Tooltip("Crouched back to standing. Empty: the idle simply fades back in.")]
+        [SerializeField] private AnimationClip pickUpUpClip;
+        [Tooltip("Playback speed of both halves. Looting happens often, so the dip is brisk.")]
+        [SerializeField, Min(0.1f)] private float pickUpSpeed = 1.5f;
+        [SerializeField, Min(0.01f)] private float pickUpFadeIn = 0.12f;
+        [SerializeField, Min(0.01f)] private float pickUpFadeOut = 0.2f;
+        [Tooltip("Seconds a pick-up waits for the body to come to rest. It never plays over a walk or a run.")]
+        [SerializeField, Min(0f)] private float pickUpSettleSeconds = 0.6f;
+
         [Header("Components")]
         [SerializeField] private NavMeshAgent agent;
 
@@ -174,8 +187,8 @@ namespace KryticalNova.Player
         private bool reportedRunning;
         private CombatEntity combatEntity;
         private PlayerMovementSkills movementSkills;
-        private Coroutine hitRoutine;
-        private bool hitHoldsBody;      // a full-body reaction is playing: locomotion waits for it
+        private Coroutine hitRoutine;   // a flinch or a pick-up: one body gesture at a time
+        private bool hitHoldsBody;      // a full-body gesture is playing: locomotion waits for it
         private float nextHitReactionTime;
 
         // Stance this instance is presenting. Leads the NetworkVariable while a draw/sheath plays
@@ -1033,6 +1046,83 @@ namespace KryticalNova.Player
             }
             hitRoutine = null;
         }
+
+        #endregion
+
+        #region Pick Up
+
+        /// <summary>
+        /// Shows this character bending down for something lying at <paramref name="point"/>, on every peer. Call
+        /// where the pick-up is decided (server or offline). Purely visual: it waits for the body to stand still and
+        /// gives way at once to walking off, striking, casting, jumping or being hit.
+        /// </summary>
+        public void ShowPickUp(Vector3 point)
+        {
+            if (IsSpawned && !IsServer) return;
+            // Whoever moves the body turns it to the item; the turn reaches everyone else with the transform.
+            if (TryGetComponent(out PointAndClickPlayer mover)) mover.FacePoint(point, pickUpSettleSeconds + PickUpDownSeconds);
+            if (!IsSpawned) PlayPickUp();
+            else PlayPickUpClientRpc();
+        }
+
+        private float PickUpDownSeconds => pickUpDownClip != null ? pickUpDownClip.length / pickUpSpeed : 0f;
+
+        [ClientRpc]
+        private void PlayPickUpClientRpc() => PlayPickUp();
+
+        private void PlayPickUp()
+        {
+            if (animancer == null || !isActiveAndEnabled || pickUpDownClip == null) return;
+            // One gesture at a time: a flinch is not cut short to bend down, and items taken in a row share one dip.
+            if (currentState != CharacterAnimState.Locomotion || hitRoutine != null) return;
+            hitRoutine = StartCoroutine(PickUpRoutine());
+        }
+
+        private IEnumerator PickUpRoutine()
+        {
+            // Asked for on arrival: give the last step time to finish. Still moving after that means the item was
+            // taken in passing, and nobody bends down at a run.
+            float waited = 0f;
+            while (IsTravelling && waited < pickUpSettleSeconds && currentState == CharacterAnimState.Locomotion)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            if (IsTravelling || currentState != CharacterAnimState.Locomotion)
+            {
+                hitRoutine = null;
+                yield break;
+            }
+
+            hitHoldsBody = true;
+            stopState = null;
+            AnimancerState state = PlayPickUpHalf(pickUpDownClip);
+            while (PickUpHolds(state) && state.Time < state.Length) yield return null;
+
+            if (PickUpHolds(state) && pickUpUpClip != null)
+            {
+                state = PlayPickUpHalf(pickUpUpClip);
+                float playFor = Mathf.Max(0.05f, state.Length - pickUpFadeOut * pickUpSpeed);
+                while (PickUpHolds(state) && state.Time < playFor) yield return null;
+            }
+
+            hitHoldsBody = false;
+            if (currentState == CharacterAnimState.Locomotion) currentLocomotionClip = null; // locomotion fades back in
+            hitRoutine = null;
+        }
+
+        private AnimancerState PlayPickUpHalf(AnimationClip clip)
+        {
+            AnimancerState state = animancer.Layers[0].Play(clip, pickUpFadeIn);
+            state.Time = 0f;
+            state.Speed = pickUpSpeed;
+            state.ApplyFootIK = locomotionFootIK;
+            return state;
+        }
+
+        // Moving off, striking, casting or jumping takes the body back at once.
+        private bool PickUpHolds(AnimancerState state) =>
+            currentState == CharacterAnimState.Locomotion && !IsTravelling && animancer.Layers[0].CurrentState == state;
 
         #endregion
 

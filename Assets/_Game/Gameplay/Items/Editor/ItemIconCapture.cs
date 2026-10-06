@@ -169,7 +169,7 @@ namespace KryticalNova.EditorTools
                 for (int i = 0; i < list.Length; i++)
                     if (list[i] != null && list[i].name == "UIPreview_Renderer") return i;
             }
-            Debug.LogWarning("[Items] UIPreview_Renderer not found; run 'Set Up Equipment Preview' first. Icons will lack the comic pass.");
+            Debug.LogWarning("[Items] UIPreview_Renderer not found; run Krytical Nova/Setup/Zone Scene (Open Scene) first. Icons will lack the comic pass.");
             return -1;
         }
 

@@ -91,7 +91,7 @@ namespace KryticalNova.UI
             if (markerShader == null || moveOuterRing == null || targetRing == null)
             {
                 Debug.LogWarning("WorldMarkerPresenter is missing its shader or ring textures; ground markers are disabled. "
-                    + "Run Tools > Krytical Nova > UI > Set Up HUD In Open Scene.", this);
+                    + "Run Krytical Nova > Setup > Zone Scene (Open Scene).", this);
                 enabled = false;
                 return;
             }

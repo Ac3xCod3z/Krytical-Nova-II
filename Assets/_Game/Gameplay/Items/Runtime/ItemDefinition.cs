@@ -82,6 +82,8 @@ namespace KryticalNova.Items
         [Header("Consumable (used from the bag; one is removed per use)")]
         [Min(0f)] public float restoreHealth;
         [Min(0f)] public float restoreChi;
+        [Tooltip("What using this item does besides restoring HP / Flux. Carried out by the system that owns the effect.")]
+        public ItemUseEffect useEffect;
         [Tooltip("Seconds before this player can use another consumable.")]
         [Min(0f)] public float useCooldown = 1f;
         [Tooltip("The item can be dragged onto a hotbar slot and used with that slot's key. Leave off for items that only live in the bag.")]
@@ -134,7 +136,8 @@ namespace KryticalNova.Items
 
         public bool IsEquippable => equipSlot != EquipSlot.None;
         public bool IsStackable => maxStack > 1;
-        public bool IsConsumable => restoreHealth > 0f || restoreChi > 0f;
+        /// <summary>Used up from the Pack: it restores something, or it has a use effect.</summary>
+        public bool IsConsumable => restoreHealth > 0f || restoreChi > 0f || useEffect != ItemUseEffect.None;
         /// <summary>Only usable items can go on the hotbar, and only when flagged for it.</summary>
         public bool IsHotbarUsable => usableFromHotbar && IsConsumable;
     }

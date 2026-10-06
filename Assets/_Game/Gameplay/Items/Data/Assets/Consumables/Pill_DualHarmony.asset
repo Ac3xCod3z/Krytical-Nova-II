@@ -19,9 +19,16 @@ MonoBehaviour:
   rarity: 1
   equipSlot: 0
   maxStack: 99
+  itemLevel: 0
+  lineId: 0
+  weaponClass: 0
+  baseStats: []
+  secondaryStats: []
+  skillModifiers: []
   statModifiers: []
   restoreHealth: 300
   restoreChi: 100
+  useEffect: 0
   useCooldown: 1
   usableFromHotbar: 1
   placeholderGlyph: HP+FLUX

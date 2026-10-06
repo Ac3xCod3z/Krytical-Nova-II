@@ -129,6 +129,7 @@ namespace KryticalNova.EditorTools
             BuildRageCharge();
 
             BuildDeathVfx();
+            BuildPetVfx();
             BuildAreaRing();
             BuildBladeTrail();
             UseUrpMaterials($"{GameplayVfxFolder}/FX_ComicSlash.prefab");
@@ -243,6 +244,71 @@ namespace KryticalNova.EditorTools
             so.FindProperty("critDeathTrailVfx").objectReferenceValue = Load(Vfx(DeathTrailName));
         }
 
+        // ---------------------------------------------------------------- pets
+
+        /// <summary>The glow that rides on an evolved pet. White: PetFollower tints it with the stage's colour.</summary>
+        public const string PetAuraPath = VfxFolder + "/PFX_Pet_Aura.prefab";
+        private static readonly string[] PetCameraPlayers = { "Pet Evolved" };
+        private static readonly string[] PetWorldPlayers = { "Pet Evolved" };
+
+        /// <summary>A pet reaching its next growth stage: a burst and rays on the pet, and the glow it wears afterwards.</summary>
+        private static void BuildPetVfx()
+        {
+            Make("FX_LevelUp_01", "PFX_Pet_Evolve", 0.42f);
+            Make("FX_LightRayRound_01", "PFX_Pet_EvolveRays", 0.45f, Yellow);
+            Make("FX_Sparkles_Large_01", "PFX_Pet_EvolveSparkles", 0.5f);
+            Make("FX_Sparkle_Orbit_01", "PFX_Pet_Aura", 0.3f, Color.white, loop: true);
+        }
+
+        /// <summary>
+        /// Rebuilds the pet evolution effects and their players on the game feel prefab without regenerating the rest
+        /// of it (a full build rewrites every effect and the whole prefab, tuning included).
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Pet Feel")]
+        public static void RebuildPetFeel()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            BuildPetVfx();
+            AssetDatabase.SaveAssets();
+
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                GameObject root = scope.prefabContentsRoot;
+                var presenter = root.GetComponent<GameFeelPresenter>();
+                Transform world = root.transform.Find("World");
+                if (presenter == null || world == null)
+                {
+                    Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
+                    return;
+                }
+                Remove(root.transform, PetCameraPlayers);
+                Remove(world, PetWorldPlayers);
+
+                var so = new SerializedObject(presenter);
+                AddPetFeel(root, world.gameObject, so);
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[GameFeel] Pet evolution feel rebuilt on {PrefabPath}. Assign a sound on the new MMF_Sound slot.");
+        }
+
+        private static void AddPetFeel(GameObject root, GameObject world, SerializedObject so)
+        {
+            // ---- camera / screen / sound: the local player's own pet
+            so.FindProperty("petEvolveFeel").objectReferenceValue = Player(root, "Pet Evolved", p =>
+            {
+                Sound(p, "Pet Evolved");
+                Impulse(p, new Vector3(0f, 0.14f, 0f), 0.25f);
+                Chromatic(p, "Chromatic Shimmer", 0.6f, 0.45f);
+            });
+
+            // ---- world particles: every client, riding on the pet
+            so.FindProperty("petEvolveWorldFeel").objectReferenceValue = World(world, "Pet Evolved",
+                new Fx("PFX_Pet_Evolve", Vector3.zero, follow: true),
+                new Fx("PFX_Pet_EvolveRays", Vector3.zero, follow: true),
+                new Fx("PFX_Pet_EvolveSparkles", Vector3.zero, follow: true));
+        }
+
         /// <summary>A buff aura: a looping POLYGON effect that rides on the character for as long as the buff lasts.</summary>
         private readonly struct AuraRecipe
         {
@@ -324,59 +390,10 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>
-        /// The changes of the second feel pass, applied to the existing assets without regenerating the rest (a full
-        /// build rewrites every effect and the whole prefab, tuning included): Spiritual Rage's colours, the large
-        /// white slash taken off Fury Strike and Thunderous Dragon, and the softer hurt tint.
-        /// </summary>
-        [MenuItem("Krytical Nova/GameFeel/Apply Feel Pass 2 (Rage colours, no large slash, soft hurt tint)")]
-        public static void ApplyFeelPass2()
-        {
-            BuildRageCharge();
-            RebuildSkillAuras("SpiritualRage");
-
-            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
-            {
-                GameObject root = scope.prefabContentsRoot;
-                int removed = 0;
-                foreach (var player in root.GetComponentsInChildren<MMF_Player>(true))
-                {
-                    if (player.name != "FuryStrike Cast" && player.name != "ThunderousDragon Cast") continue;
-                    for (int i = player.FeedbacksList.Count - 1; i >= 0; i--)
-                    {
-                        if (player.FeedbacksList[i] == null || player.FeedbacksList[i].Label != LargeSlashName) continue;
-                        player.FeedbacksList.RemoveAt(i);
-                        removed++;
-                    }
-                    EditorUtility.SetDirty(player);
-                }
-
-                int tints = 0;
-                foreach (var player in root.GetComponentsInChildren<MMF_Player>(true))
-                    foreach (var feedback in player.FeedbacksList)
-                    {
-                        if (!(feedback is MMF_BeautifyVignette vignette)) continue;
-                        vignette.Duration = HurtVignetteSeconds;
-                        vignette.Reach = HurtVignetteReach;
-                        vignette.PulseColor = HurtVignetteColor;
-                        vignette.DotOpacity = HurtVignetteDots;
-                        vignette.Shape = new MMF_BeautifyVignette().Shape;
-                        EditorUtility.SetDirty(player);
-                        tints++;
-                    }
-                Debug.Log($"[GameFeel] Feel pass 2: {removed} large slash effect(s) removed, {tints} hurt tint(s) softened.");
-            }
-            AssetDatabase.SaveAssets();
-        }
-
-        private const string LargeSlashName = "PFX_Cast_SlashLarge";
-
-        /// <summary>
         /// Rebuilds chosen buff auras and points their skills at them, without regenerating the rest of the game feel
-        /// (a full build rewrites every effect and the whole prefab, tuning included).
+        /// (a full build rewrites every effect and the whole prefab, tuning included). No menu item: call it with the
+        /// ids of the skills whose aura recipe changed, e.g. <c>RebuildSkillAuras("SpiritualRage")</c>.
         /// </summary>
-        [MenuItem("Krytical Nova/GameFeel/Rebuild Skill Auras (Rage, Serenity, Blow)")]
-        public static void RebuildChangedAuras() => RebuildSkillAuras("SpiritualRage", "HeavenlySerenity", "HeavenlyBlow");
-
         public static void RebuildSkillAuras(params string[] skillIds)
         {
             var looks = new List<SkillLook>();
@@ -896,6 +913,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("healWorldFeel").objectReferenceValue = World(world, "Heal", AtFeet("PFX_Heal"));
                 so.FindProperty("chiWorldFeel").objectReferenceValue = World(world, "Chi", AtFeet("PFX_Chi"));
                 AddDeathFeel(root, world, so);
+                AddPetFeel(root, world, so);
 
                 so.FindProperty("clickVfx").objectReferenceValue = Load(Vfx("PFX_Click_Ring"));
                 so.FindProperty("selectHostileVfx").objectReferenceValue = Load(Vfx("PFX_Select_Hostile"));
@@ -1013,7 +1031,6 @@ namespace KryticalNova.EditorTools
         // ---------------------------------------------------------------- scene wiring
 
         /// <summary>Scene half of <see cref="BuildAll"/> on its own, for wiring a second scene without rebuilding assets.</summary>
-        [MenuItem("Krytical Nova/GameFeel/Wire Open Scene")]
         public static void WireScene()
         {
             var scene = EditorSceneManager.GetActiveScene();

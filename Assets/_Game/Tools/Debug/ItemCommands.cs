@@ -24,7 +24,6 @@ namespace KryticalNova.DevTools
         }
 
         [Command("item.give", "Give an item by id, asset name or display name, e.g. item.give 10000 or item.give Armor_SOLD_C01")]
-        [Command("give_item")]
         private static string Give(string item, int count = 1)
         {
             if (!TryGetInventory(out var inv, out var error)) return error;
@@ -97,8 +96,22 @@ namespace KryticalNova.DevTools
             return sb.Append('.').ToString();
         }
 
+        [Command("gm.drop", "Put an item on the ground in front of the targeted player, free for anyone to take: " +
+                            "gm.drop <id|name> [count], e.g. gm.drop Pill_Vitality 5.")]
+        private static string Drop(string item, int count = 1)
+        {
+            if (!TryGetInventory(out var inv, out var error)) return error;
+            if (inv.Catalog == null) return NoPlayer;
+            var def = inv.Catalog.Find(item);
+            if (def == null) return $"Unknown item '{item}'. Try item.list.";
+            var loot = inv.GetComponent<PlayerLoot>();
+            if (loot == null) return "That player cannot drop items (run Krytical Nova/Setup/Player Prefab).";
+            count = System.Math.Max(1, System.Math.Min(count, def.maxStack));
+            var drop = loot.ServerPlace(new ItemStack(def.itemId, (ushort)count));
+            return drop != null ? $"Dropped {LootRules.Label(def, count)}." : "Nothing was dropped (no drop prefab on the player).";
+        }
+
         [Command("item.clear", "Empty the local player's Pack (equipment is kept).")]
-        [Command("clear_inventory")]
         private static string Clear()
         {
             if (!TryGetInventory(out var inv, out var error)) return error;
@@ -107,7 +120,6 @@ namespace KryticalNova.DevTools
         }
 
         [Command("item.list", "List every item id in the catalog, optionally filtered by slot (e.g. item.list Armor).")]
-        [Command("list_items")]
         private static string List(string slotFilter = "")
         {
             var inv = PlayerInventory.Local;

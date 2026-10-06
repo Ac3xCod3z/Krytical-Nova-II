@@ -53,7 +53,8 @@ MonoBehaviour:
     NetworkTransport: {fileID: 5150952881033661436}
     PlayerPrefab: {fileID: 0}
     Prefabs:
-      NetworkPrefabsLists: []
+      NetworkPrefabsLists:
+      - {fileID: 11400000, guid: 1032e09f66a6f1a429086c4d359d87c8, type: 2}
     TickRate: 30
     ClientConnectionBufferTimeout: 10
     ConnectionApproval: 0
@@ -123,6 +124,7 @@ MonoBehaviour:
   defaultListenAddress: 127.0.0.1
   defaultPort: 7777
   defaultMaxPlayers: 100
+  autoStartInEditor: 1
   activeSessionId: 
   activeSessionCode: 
   isServicesInitialized: 0

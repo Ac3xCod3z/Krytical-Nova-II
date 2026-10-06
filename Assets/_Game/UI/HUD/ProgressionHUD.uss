@@ -288,3 +288,12 @@
 .floating-combat-text.crit { font-size: 24px; color: rgb(255, 222, 84); -unity-text-outline-color: rgb(48, 26, 0); }
 .floating-combat-text.evade { font-size: 15px; color: rgb(140, 220, 250); -unity-text-outline-color: rgb(4, 18, 30); }
 .floating-combat-text.reflected { font-size: 16px; color: rgb(196, 156, 255); -unity-text-outline-color: rgb(18, 8, 34); }
+
+/* A full-screen, click-through layer for a template instanced into the HUD (banners, prompts, windows). */
+.hud-overlay-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}

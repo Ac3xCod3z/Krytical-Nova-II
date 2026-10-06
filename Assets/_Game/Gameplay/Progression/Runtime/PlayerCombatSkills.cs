@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.Core;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace KryticalNova.Progression
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacterProgression), typeof(PlayerResources), typeof(CharacterBuffManager))]
-    public sealed class PlayerCombatSkills : NetworkBehaviour
+    public sealed class PlayerCombatSkills : NetworkBehaviour, ISaveParticipant
     {
         /// <summary>A remote owner waits this long for the server's answer before it may ask to cast again.</summary>
         private const float CastRequestTimeout = 0.5f;
@@ -209,6 +210,53 @@ namespace KryticalNova.Progression
         {
             WriteNetState();
             Changed?.Invoke();
+        }
+
+        // ------------------------------------------------------------------ saving
+
+        [Serializable]
+        private struct SavedRank
+        {
+            public string key;
+            public int rank;
+        }
+
+        [Serializable]
+        private sealed class SkillsSave
+        {
+            public List<SavedRank> ranks = new List<SavedRank>();
+            public List<string> books = new List<string>();
+        }
+
+        public string SaveKey => "skills";
+        public SaveScope SaveScope => SaveScope.Character;
+
+        /// <summary>Ranks and Skill Chip unlocks by rank key, so they survive a change to the list of skills.</summary>
+        public string CaptureSave()
+        {
+            var save = new SkillsSave();
+            foreach (var pair in learnedRanks)
+                if (pair.Value > 0) save.ranks.Add(new SavedRank { key = pair.Key, rank = pair.Value });
+            save.ranks.Sort((a, b) => string.CompareOrdinal(a.key, b.key));
+            save.books.AddRange(unlockedDropSkills);
+            save.books.Sort(string.CompareOrdinal);
+            return JsonUtility.ToJson(save);
+        }
+
+        public void RestoreSave(string json)
+        {
+            if (!HasAuthority || string.IsNullOrEmpty(json)) return;
+            var save = JsonUtility.FromJson<SkillsSave>(json);
+            if (save == null) return;
+            learnedRanks.Clear();
+            unlockedDropSkills.Clear();
+            if (save.ranks != null)
+                foreach (var saved in save.ranks)
+                    if (!string.IsNullOrEmpty(saved.key) && saved.rank > 0) learnedRanks[saved.key] = saved.rank;
+            if (save.books != null)
+                foreach (string key in save.books)
+                    if (!string.IsNullOrEmpty(key)) unlockedDropSkills.Add(key);
+            Commit();
         }
 
         /// <summary>

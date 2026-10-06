@@ -1,0 +1,119 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="SocialPanels.uss" />
+    <!-- Instanced into ProgressionHUD.uxml. Shared .panel skin, so each faction sees these in its own HUD style.
+         Request prompt: RequestPromptController. Player menu: PlayerMenuController. Amount dialog: AmountDialogController. -->
+
+    <!-- Contacts [F] (ContactsWindowController): contacts, requests, players met this session, blocked. First, so
+         the prompt, the menu and the dialog below draw over it. -->
+    <ui:VisualElement name="contacts-window" class="panel window blocks-world hud-movable social-window">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="CONTACTS" class="heading" />
+            <ui:Label text="[F]" class="muted social-key" />
+            <ui:VisualElement class="social-spacer" picking-mode="Ignore" />
+            <ui:Label name="contacts-count" text="" class="accent social-count" />
+            <ui:Button name="close-contacts" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement class="row social-tabs">
+            <ui:Button name="contacts-tab-0" text="CONTACTS" class="social-tab" />
+            <ui:Button name="contacts-tab-1" text="REQUESTS" class="social-tab" />
+            <ui:Button name="contacts-tab-2" text="RECENT" class="social-tab" />
+            <ui:Button name="contacts-tab-3" text="BLOCKED" class="social-tab" />
+        </ui:VisualElement>
+        <ui:VisualElement name="contacts-add-row" class="row social-add-row">
+            <ui:TextField name="contacts-name" class="kn-textfield social-name" max-length="24" />
+            <ui:Button name="contacts-add" text="ADD" class="kn-button-primary social-add" />
+        </ui:VisualElement>
+        <ui:ScrollView name="contacts-list" class="social-list" />
+        <ui:Label name="contacts-help" text="" class="help" />
+    </ui:VisualElement>
+
+    <!-- Crew [G] (CrewWindowController): the roster and what a member may do by rank; the founding form when opened
+         at a Vaultkeeper by a player with no Crew. -->
+    <ui:VisualElement name="crew-window" class="panel window blocks-world hud-movable social-window">
+        <ui:VisualElement class="row kn-header">
+            <ui:VisualElement name="crew-symbol" class="crew-symbol" picking-mode="Ignore" />
+            <ui:Label name="crew-title" text="CREW" class="heading" />
+            <ui:Label text="[G]" class="muted social-key" />
+            <ui:VisualElement class="social-spacer" picking-mode="Ignore" />
+            <ui:Label name="crew-count" text="" class="accent social-count" />
+            <ui:Button name="close-crew" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="crew-none">
+            <ui:Label name="crew-none-text" text="" class="help crew-none-text" />
+            <ui:VisualElement name="crew-found">
+                <ui:VisualElement class="row social-add-row">
+                    <ui:Label text="CREW NAME" class="muted crew-label" />
+                    <ui:TextField name="crew-name" class="kn-textfield social-name" max-length="16" />
+                </ui:VisualElement>
+                <ui:Label text="SYMBOL" class="muted crew-label crew-symbol-label" />
+                <ui:VisualElement name="crew-symbols" class="row crew-symbols" />
+                <ui:VisualElement class="row crew-buttons">
+                    <ui:VisualElement class="social-spacer" picking-mode="Ignore" />
+                    <ui:Button name="crew-found-button" text="FOUND CREW" class="kn-button-primary" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="crew-some">
+            <ui:VisualElement class="crew-announcement">
+                <ui:Label text="ANNOUNCEMENT" class="eyebrow" />
+                <ui:Label name="crew-announcement" text="" class="crew-announcement-text" />
+            </ui:VisualElement>
+            <ui:ScrollView name="crew-list" class="social-list crew-list" />
+            <!-- One line of typing: who to invite, a member's title, the announcement -->
+            <ui:VisualElement name="crew-edit" class="row social-add-row">
+                <ui:Label name="crew-edit-label" text="" class="muted crew-label" />
+                <ui:TextField name="crew-edit-field" class="kn-textfield social-name" />
+                <ui:Button name="crew-edit-ok" text="OK" class="kn-button-primary social-add" />
+                <ui:Button name="crew-edit-cancel" text="CANCEL" class="social-add crew-edit-cancel" />
+            </ui:VisualElement>
+            <ui:VisualElement name="crew-symbols-edit" class="row crew-symbols" />
+            <ui:VisualElement class="row crew-buttons">
+                <ui:Button name="crew-invite" text="INVITE" />
+                <ui:Button name="crew-announce" text="ANNOUNCE" />
+                <ui:Button name="crew-symbol-button" text="SYMBOL" />
+                <ui:VisualElement class="social-spacer" picking-mode="Ignore" />
+                <ui:Button name="crew-leave" text="LEAVE" class="kn-button-danger" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="crew-help" text="" class="help" />
+    </ui:VisualElement>
+
+    <!-- A request from another player: a trade, a contact request, a Crew invitation. One at a time; the rest queue. -->
+    <ui:VisualElement name="request-prompt" class="request-prompt panel blocks-world">
+        <ui:Label name="request-eyebrow" text="REQUEST" class="eyebrow" />
+        <ui:Label name="request-text" text="" class="heading request-text" />
+        <ui:VisualElement class="request-buttons">
+            <ui:Button name="request-accept" text="ACCEPT  [Y]" class="kn-button-primary request-button" />
+            <ui:Button name="request-decline" text="DECLINE  [N]" class="kn-button-danger request-button" />
+        </ui:VisualElement>
+        <ui:VisualElement class="request-timer" picking-mode="Ignore">
+            <ui:VisualElement name="request-fill" class="request-timer-fill" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:Label name="request-more" text="" class="muted request-more" picking-mode="Ignore" />
+    </ui:VisualElement>
+
+    <!-- What can be done with another player: Shift+click them, MORE on the target strip, or a name in a list. -->
+    <ui:VisualElement name="player-menu" class="player-menu panel blocks-world">
+        <ui:Label name="player-menu-title" text="PLAYER" class="heading player-menu-title" />
+        <ui:VisualElement name="player-menu-actions" />
+    </ui:VisualElement>
+
+    <!-- A number: Creds to move, a price, how many of a stack. -->
+    <ui:VisualElement name="amount-dialog" class="amount-dialog panel blocks-world">
+        <ui:Label name="amount-title" text="AMOUNT" class="heading amount-title" />
+        <ui:Label name="amount-detail" text="" class="help amount-detail" />
+        <ui:TextField name="amount-field" class="kn-textfield amount-field" max-length="15" />
+        <ui:VisualElement class="row amount-quick">
+            <ui:Button name="amount-min" text="MIN" class="amount-quick-button" />
+            <ui:Button name="amount-half" text="HALF" class="amount-quick-button" />
+            <ui:Button name="amount-max" text="MAX" class="amount-quick-button" />
+        </ui:VisualElement>
+        <ui:Label name="amount-error" text="" class="amount-error" />
+        <ui:VisualElement class="row amount-buttons">
+            <ui:Button name="amount-ok" text="OK  [ENTER]" class="kn-button-primary" />
+            <ui:Button name="amount-cancel" text="CANCEL  [ESC]" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

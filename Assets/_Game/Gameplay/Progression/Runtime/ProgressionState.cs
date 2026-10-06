@@ -4,6 +4,7 @@ using Unity.Netcode;
 namespace KryticalNova.Progression
 {
     /// <summary>A player's whole progression as the server holds it. Small enough to resend on every change.</summary>
+    [Serializable]
     public struct ProgressionState : INetworkSerializable, IEquatable<ProgressionState>
     {
         public int level;

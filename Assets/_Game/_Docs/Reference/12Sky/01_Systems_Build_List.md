@@ -1,6 +1,6 @@
 # Krytical Nova — Systems Build List (12Sky / Twelve Sky 2 cross-reference)
 
-As of 4 Oct 2026 · first scan at repo commit 9623a17 · statuses last updated 4 Oct 2026 on branch `gear-ladder-and-naming` (naming pass, gear ladder, nine weapon classes) · companion doc: "12Sky Systems Transcription & Krytical Nova Build List" (Claude doc)
+As of 4 Oct 2026 · first scan at repo commit 9623a17 · statuses last updated 5 Oct 2026 on branch `economy-social-pets` (saving, Creds, pickup, Vault, Trade, Kiosks, Contacts, Crew, pets, tool cleanup; see `05_Economy_And_Social.md`) · companion doc: "12Sky Systems Transcription & Krytical Nova Build List" (Claude doc)
 
 The 86-second recording pages through all 31 screens of the 12Sky (Twelve Sky) in-game help; the audio is game ambience only, no narration. Statuses below come from a scan of the Krytical-Nova-II repo at commit 9623a17 (4 Oct 2026, "Hold props during prop emotes"): 11 of the 37 systems are built, 8 are partial, 18 are still to build. All 31 pages are transcribed in `03_Full_Transcription.md` with the original screenshots in `pages~/`.
 
@@ -14,15 +14,17 @@ Every system, item, place and stat in this doc has one Krytical Nova name, chose
 
 | Krytical Nova term | Twelve Sky 2 reference [12Sky] | In code today | Group |
 | --- | --- | --- | --- |
-| **Creds** | Silver [Silver Jeon] | name approved 4 Oct 2026; used in NPC text; no field yet | Currency |
+| **Creds** | Silver [Silver Jeon] | `PlayerWallet` (owner-only balance), `WalletRules`, `CredsLedger`; every number in `EconomySettings` | Currency |
 | **Renown** (RN) | Contribution Points, CP | name approved 4 Oct 2026; used in NPC text; no field yet | Currency |
 | **Valor** | Class Points | — | Currency |
 | **XP** | EXP | `ProgressionState` | Currency |
 | **Nova Store** | Item Mall / Item Shop (real money) | Mall Manager NPC | Economy |
 | **The Exchange** | Consignment [Consigner] | Trader NPC text, Exchange square in plaza | Economy |
-| **Kiosk** | Private Shop / stall (proxy selling) | stall props only | Economy |
-| **Vault** / **Deep Vault** | Storage per character / account Warehouse | bank building only | Economy |
-| **Trade** | Trade | — | Economy |
+| **Kiosk** | Private Shop / stall (proxy selling) | `PlayerKiosk`, `KioskService`, `KioskStand`, `KioskRules`; window on **T** | Economy |
+| **Vault** / **Deep Vault** | Storage per character / account Warehouse | `PlayerVault`, `PlayerDeepVault` (`PlayerStorage`), `StorageRules` | Economy |
+| **Trade** | Trade | `PlayerTrade`, `TradeRules`; `/trade`, TRADE on the target strip | Economy |
+| **Kiosk Permit** (14 Days / 30 Days) | (none: Nova Store item that lengthens a Kiosk) | items 9020 / 9021 from `UtilityItemGenerator`; tiers in `EconomySettings.kioskTiers` | Economy |
+| **Trade zone** / **neutral ground** | Central Plaza and Home City shop areas / (the planned non-combat zone) | `TradeZone` (`allowKiosks`, `crossFaction`) | Economy |
 | **Reboot** | Rebirth | — | Progression |
 | **Prime levels** | Master levels (Master 1+, Deity) | — | Progression |
 | **Nova Rank** (the halo is a **Nova**) | CP Reinforcement / halo bonus levels | — | Progression |
@@ -54,13 +56,15 @@ Every system, item, place and stat in this doc has one Krytical Nova name, chose
 | **Fixer** | Agent [Beggar] | `NpcRole.Agent`, shown as Fixer | NPC |
 | **Marshal** | Guard Captain [Chief Guard] | `NpcRole.GuardCaptain`, shown as Marshal | NPC |
 | **Chancellor** | Elder / Prime Minister [Law Enforced HQ] | Elder hall prop | NPC |
-| **Vaultkeeper** | Hermit (storage, guild) | — | NPC |
-| **Wayfinder** | Gate Master [Yellow Gateway Express] | Gate stall prop | NPC |
+| **Vaultkeeper** | Hermit (storage, guild) | `NpcRole.Vaultkeeper`, NPC id `GuildDirector`; offers Vault and Crew Registry | NPC |
+| **Wayfinder** | Gate Master [Yellow Gateway Express] | `NpcRole.Wayfinder`, NPC id `GateMaster`; offers the Deep Vault (Transit later) | NPC |
 | **Herald** (new) | — (TS2 puts CP Reinforcement on the Elder) | — | NPC |
 | **Outfitter**, **Stylist**, **Reshaper**, **Coach** | Tailor, (none), (none), (none) | Tailor stall prop | NPC |
-| **Crew** | Guild / Clan | chat channel `Guild`, shown as Crew; `/crew` (`/g` still works) | Social |
+| **Crew** | Guild / Clan | `PlayerCrew`, `CrewService`, `CrewRules`, `CrewSettings`; window on **G**; chat channel `Guild` shown as Crew (`/crew`, `/g`) | Social |
 | **Squad** | Party | `PlayerParty`, `PartyRules`, shown as Squad; `/squad` (`/p` still works) | Social |
-| **Contacts** | Friend list | — | Social |
+| **Contacts** | Friend list | `PlayerContacts`, `ContactsService`, `ContactRules`; window on **F**; `/contact`, `/block` | Social |
+| **Emberwing**, **Drone Core**, **Tidecaller**, **Kitsune Spirit** | (none: Krytical Nova's first four pets) | items 8001–8004, `PetDefinition` assets; `PlayerPet`, `PetRules`, `PetItemState` | Pets |
+| **Pet Ration** | Pet food | item 9010 (`ItemUseEffect.FeedPet`); GM only until shops exist | Pets |
 | **Sponsor / Recruit** | Mentor / Disciple (teacher / student) | — | Social |
 | **Accord** | Alliance | — | Social |
 | **Broadcast** / **Hailer** | Shout [Grand Force chat] / Megaphone | chat has Faction channel | Social |
@@ -115,7 +119,7 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 
 | # | Krytical Nova system (TS2 name) | Status | 12Sky pages | In the repo | Left to build |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Save system (TS2: server-side, no client save) | Partial | none | Character roster and HUD prefs in PlayerPrefs (`kn.*` keys, `PlayerPrefsCharacterStore`); `ICharacterStore` is the seam for a server store; `ProgressionState` is server-held and resent on change. | Server-side persistence of progression, Pack, equipment; decide Cloud Save vs own backend. |
+| 1 | Save system (TS2: server-side, no client save) | Complete | none | `ServerSave` behind `ISaveStore` (JSON files under `persistentDataPath/ServerSave/<profile>/`; `MemorySaveStore` for tests). One document per account (Deep Vault, daily trade total, its characters: progression, skills, Pack, worn gear with item state, Creds, Vault) and world documents for Crews, Kiosks and Contacts. Every system saves itself through `ISaveParticipant`; `PlayerSaveAgent` loads on entry, autosaves, saves on leave. Roster and HUD prefs stay in PlayerPrefs. | Real sign-in (the account id is client-generated and trusted); a database or Cloud Save store behind the same interface when files stop being enough. |
 | 2 | Player and gear stat sheet (TS2: Character Stats Distribution) | Complete | 2, 23, 24 | STR / VIT / AGI / Spirit, AP, DP, Hit Rate, Evasion, Max HP, Max Flux, Crit Rate, Crit Damage, Elemental Atk / Def, Lockup Resist, Luck, Move Speed, plus the gear stats Critical Defense, Kill-XP Rate / Amount (Attack Speed, Core Resist, Knockback Resist reserved for Tuning). Every ladder item carries baked base and secondary stats (`GearStatTable` → `GearStatBaker`); `PlayerEquipment` applies them through `GearStatResolver`; Character Sheet and gear tooltips show them. | Skill modifiers on gear and the Kill-XP stats are stored and shown but not consumed yet. |
 | 3 | Tempering (TS2: Reinforcement / Enchant %) [12Sky: Item Upgrade] | To build | 23 | Only NPC text (Broker lists items at "12% or more"). | Gear spec section 4. |
 | 4 | Fusion FS1–12 (TS2: Combination / Combine CS1–12) [12Sky: Item Combine] | To build | 24 | Nothing. | Gear spec section 5. |
@@ -126,15 +130,15 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 | 9 | Autopilot with Magnet (TS2: none; nearest Battue hunt + pickup) | To build | 15, 5, 7 | Nothing; no ground loot exists yet (`GearUIController` TODO). | Ground drops first, then pickup, then Autopilot / Magnet with the 5-Hostile cap as a tunable. |
 | 10 | Nova Rank, Renown-spent (TS2: CP Reinforcement / halo) | To build | 27 | Nothing (the only "halo" in code is the sun halo in `EnvironmentPresenter`). | At the Herald: Gear spec section 9. |
 | 11 | Titles + Bounty Board, Renown-spent (TS2: CP stat Titles L1–L12; bounty is ours) | To build | 28 | Nothing. | At the Herald: Gear spec section 9. Bounty Renown source still open. |
-| 12 | Trade + The Exchange (TS2: Trade + Consignment) | To build | 13 | Broker described as the Exchange (Commission Receipt, 12%+ items); no code. | Player-to-player trade window (page 13 flow) and the Exchange board. |
-| 13 | Item pickup (TS2: pickup key / click) | To build | 5, 7 | Pack, equip, quick-equip, sort, use, destroy all work (`PlayerInventory`); no world drops. | World drop object, pickup key and click, stack merge. |
-| 14 | Vault and Deep Vault (TS2: Storage and Warehouse) | To build | 20, 21 | Bank building, booth and ATMs placed in the Exchange square; no NPC or storage. | Per-character Vault (Vaultkeeper) and account-wide Deep Vault (Wayfinder), Creds deposit. |
-| 15 | Kiosks, proxy selling (TS2: Private Shop) | To build | 14 | Vendor stall props built around the plaza. | Kiosk system: name, items, prices, Start, sale messages, zone restriction, offline proxy mode. |
+| 12 | Trade + The Exchange (TS2: Trade + Consignment) | Partial | 13 | Player-to-player Trade is built: ask, accept, up to 12 stacks and Creds each, both lock, both confirm, all-or-nothing swap; capped per trade and per account per day (`EconomySettings`); same faction, or any faction on neutral ground. The Broker still only describes the Exchange. | The Exchange board (list, browse, buy with a Commission Receipt). |
+| 13 | Item pickup (TS2: pickup key / click) | Complete | 5, 7 | `WorldDrop` (networked, carries the whole item), click to walk over and take, **~** takes the nearest, crouch gesture, stack merge, full Pack leaves the rest. A dropped item is held for its dropper for 20 s with a countdown notice, then free for all. | Hostile drops (needs Hostiles, row 6); Magnet (row 9). |
+| 14 | Vault and Deep Vault (TS2: Storage and Warehouse) | Complete | 20, 21 | Vault (per character) at the Vaultkeeper and Deep Vault (per account) at the Wayfinder: 96 cells each plus Creds, drag or right-click between Pack and storage, partial stacks, sort. Both NPCs stand at their plaza stalls. | A Wayfinder in every town once there is more than one. |
+| 15 | Kiosks, proxy selling (TS2: Private Shop) | Complete | 14 | Set up on **T** inside a trade zone: shop name, up to 24 stacks, a price each (capped by rarity), a duration (3 days free, 14 or 30 days with a Kiosk Permit). A stand-in in the owner's look sells while the owner plays or is offline; 5 % sales tax; sale notices, an away summary, collect from anywhere, expiry by wall clock. | Selling Kiosk Permits (Nova Store, row 32); trade zones in the faction Home Cities when those zones exist. |
 | 16 | Squad (TS2: Party) | Complete | 17 | `PlayerParty` / `PartyRules`: same faction, max 5, members within 10 levels (TS2 uses 5: our variance), invite / join / refuse / leave / kick / promote, Squad chat (`/squad`, `/p`), movable Squad frames. `PartyRules.ExperienceBoost` (same-map rule) is written and tested but not hooked up to any XP award, by the owner's decision. | Hook the XP boost up when Hostile kill XP lands; formation auras (Phase 4). |
 | 17 | Sponsor / Recruit (TS2: Mentor / Disciple) | To build | 19 | Nothing. | Request, level gates, 1.5x XP in same area, no stacking with Squad, Sponsor points. |
 | 18 | Callouts (TS2: Duel / PvP request) | Complete | 12 | `PlayerDuel`: request / accept, countdown, hostile pair only, to the death, forfeit / distance / leave rules, server authoritative; `DuelHudController`; `/duel` chat commands; `gm.duel`. | Optional: 180 s timer and Stim toggle from page 12. |
 | 19 | Outfitter, Stylist, Reshaper, Coach (TS2: Tailor only) | Partial | 1 | Character creator covers lineage, body type, palettes, expressions, name rules, roster; Outfitter stall prop exists. | In-world NPCs that re-open those creator panels for Creds; gear dye. |
-| 20 | Tool cleanup (no TS2 equivalent) | To build | none | GM console (`gm.*` 42 commands, `item.*`, `time.*`, `weather.*`), `GmToolsWindow`, ~30 editor builders. | Decide which builders are one-shot and which stay as tools. |
+| 20 | Tool cleanup (no TS2 equivalent) | Complete | none | One-shot patch menus removed; player and zone wiring merged into **Krytical Nova ▸ Setup ▸ Player Prefab** and **▸ Zone Scene**, each a table a new system adds a row to (`PlayerSystemsSetup`, `GameplayPrefabsSetup`, `HudSetup`); `UtilityItemGenerator` and `PetAssetBuilder` own non-gear items and pets; bakers and zone builders kept. | Nothing. Keep new systems on the two setup steps instead of adding menus. |
 | 21 | Settings (TS2: Game Option Setup, ESC) | Partial | 4, 5 | Settings window on O: HUD toggles and a full HUD layout editor (move, resize, scale, persisted). | Graphics, audio mixer sliders, key rebinding (Input System rebind UI). |
 | 22 | NPC directory and town map (TS2: Main NPC Details) | Complete | 1 | Zone01: Apothecary, Armorer, Monoblade Instructor, Servo Claws Instructor, Broker, Store Clerk, Marshal, Fixer (code roles: HerbMaster, Blacksmith, Trainer, Trader, MallManager, GuardCaptain, Agent), each with nameplate, dialogue and services text in Krytical Nova terms; plaza signs and map labels renamed (Chancellor's Hall, Hostile Zones); world map with POIs, NPCs, portals, players, waypoint and travel; minimap. | NPC services behind the dialogue (shops, Instructors). |
 | 23 | Mouse and camera control (TS2: Mouse Control) | Complete | 3 | `PointAndClickPlayer`, occluder fader, jump and vault motors, target ring. | Done. |
@@ -143,11 +147,11 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 | 26 | Gear rarities and slots (TS2: Common / Unique / Rare / Elite, item slots) | Complete | 7 | `ItemRarity` Common / Uncommon / Rare / Epic (Legendary reserved, nothing generated); `EquipSlot` Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape, Pet. The gear ladder: `GearDictionary` lines (one look per run of level tiers) baked into one item per tier; Common 1–28, Uncommon 20–40, Rare 45–75 and 85–105 (two looks), Epic 100–112; six outfit / ring / amulet groups and nine weapon classes; level-gated equipping; frames white / blue / yellow / purple. Gear spec sections 2, 3 and 11. | Done. Drops and shops come with rows 6, 13 and the NPC services. |
 | 27 | Skill leveling, Respec Chip, Memory Wipe (TS2: skill levels, Stats Reset, Skill Reset Scroll) | Partial | 9 | Ranks with skill points, +1 / +5 / +10, rank-scaled cost and effect; `gm.dropskills`, `gm.resetstats`. | Respec Chip and Memory Wipe as drops or Nova Store goods. |
 | 28 | Siege Nights, Beacon Wars, Outpost Raids, The Pit (TS2: Regular Warfare, Holy Stone Battles, Outpost battles, Coliseum) | Candidate | 11 | Factions and cross-faction hostility exist; no battlegrounds. | Design 07 / 08 with the new names. |
-| 29 | Contacts (TS2: Friend List) | Candidate | 16 | Nothing (whisper works by name). | Contacts window, online status, click-to-whisper. |
+| 29 | Contacts (TS2: Friend List) | Complete | 16 | Mutual and per character: request and accept (also while the other is offline), online status and last seen, favourites, private notes, a Recent tab (Squad mates, trade partners, Callout opponents, whisperers), a block list that stops whispers, invitations, trades and requests both ways. Same faction, or face to face on neutral ground. | Nothing planned. |
 | 30 | Level, XP and death penalty (TS2: Level & Exp) | Partial | 18 | Levels to the cap of **112**, XP, stat and skill points; gear asks for its item level; death animation by blow direction, 8 s respawn, countdown in Combat tab. | Level-gap name tint, XP and drop gating, 5% XP loss on death. |
 | 31 | Stims, Flasks, Recall Tags (TS2: Pills / Tablets, Calabash, Scroll of Return) | Partial | 15, 7 | HP Stim, Flux Stim, Dual Stim (3:1), usable from Pack and Hotbar (assets still named `Pill_*`); a new character starts with ten Stims; Apothecary text lists the rest. | Apothecary shop, S / M / L sizes, Recall Tag, shift-click quantity buy. |
 | 32 | Nova Store, real money (TS2: Item Mall) | Candidate | 27 | Store Clerk NPC description only. | Unity IAP storefront; Renown is not spent here. |
-| 33 | Crew (TS2: Guild / Clan) | Candidate | 28 | Guild chat channel; `gm.guild` stub; Guild stall prop. | Create, invite, ranks, Crew titles, expel, disband. |
+| 33 | Crew (TS2: Guild / Clan) | Complete | 28 | Founded at the Vaultkeeper (level 30, 10,000,000 Creds: `CrewSettings`), one faction always. Leader, Officers, Members; invite, leave, expel, appoint, hand over, Crew Titles, symbol, announcement to every member, disband. Drives the Crew chat channel; saved; offline members listed with last seen. | Crew levels (the member cap table is ready), Crew Title and symbol over the head, Crew wars. |
 | 34 | Dossier crafting (TS2: Archives) [12Sky: Craft Scrolls] | Partial | 29 | HR / HD / RF assets flagged craftable with Archive names; dev toggle unlocks them. | Dossier Pages as drops and the craft action at the Chancellor. |
 | 35 | Warden, War Chest, Siege Rigs (TS2: Faction Leader, Faction Vault, Catapults) | Candidate | 30 | Nothing. | Design 08 with the new names. |
 | 36 | Accord (TS2: Alliance) | Candidate | 31 | Nothing. | Design 08. |
@@ -157,14 +161,14 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 | 40 | Networking (no TS2 equivalent) | Complete | not in 12Sky help | Netcode for GameObjects, dedicated server boot, zone sessions, spatial interest management, spawn / respawn, offline handoff. | Scaling per architecture plan Phase 4. |
 | 41 | World: day cycle, weather, zones (no TS2 equivalent) | Complete | not in 12Sky help | World clock, weather catalog and blends, precipitation, lightning, wind, street lamps, grass, Zone01, portals, minimap bake. | More zones. |
 | 42 | Comic rendering and game feel (no TS2 equivalent) | Complete | not in 12Sky help | `ComicStyleFeature`, Color Bible, sun shafts, hit reactions, pooled VFX, skill feel catalog. | Per the art brief. |
-| 43 | Pets and mounts (TS2: Pets, Mounts) | Partial | not in 12Sky help | Cosmetic pet follower from the loadout, Pet equip slot. | Pet stats and mounts (design 04, 05; pet growth, hunger and the first four pets are specified in `Design/12_pet_evolution_system.md`). |
+| 43 | Pets and mounts (TS2: Pets, Mounts) | Partial | not in 12Sky help | The pet system of `Design/12_pet_evolution_system.md`: four Common pets, growth 0–100 % that travels with the item, a stat that scales with growth, hunger, five stages with an evolution moment, XP from Hostile kills, Pet Ration. See that doc's "As built". | Real stage models; pet XP from wars (the hook exists); a Pet Ration shop; Legendary pets; mounts (design 05). |
 
 ### Checklist view (tick as systems land)
 
-- [x] 2 Stat sheet (gear side) · [x] 7 Monoblade combat skills · [x] 16 Squad · [x] 18 Callouts · [x] 22 NPC directory and town map · [x] 23 Mouse and camera · [x] 25 Chat channels · [x] 26 Gear rarities and slots · [x] 38 Factions and lore · [x] 39 Character creation · [x] 40 Networking · [x] 41 World · [x] 42 Comic rendering
-- [ ] 1 Save system · [ ] 19 Outfitter / Stylist / Reshaper / Coach · [ ] 21 Settings (graphics, audio, rebind) · [ ] 24 Hotbar (rebind, pages) · [ ] 27 Respec Chip / Memory Wipe · [ ] 30 Level-gap rules and death penalty · [ ] 31 Stims shop and Recall Tag · [ ] 34 Dossier crafting · [ ] 37 Transit NPC · [ ] 43 Pets and mounts
-- [ ] 3 Tempering · [ ] 4 Fusion · [ ] 5 Tuning / Slotting / Epic Mk · [ ] 6 Hostiles with AI · [ ] 8 Other 8 weapon lines · [ ] 9 Autopilot / Magnet · [ ] 10 Nova Rank · [ ] 11 Titles + Bounty Board · [ ] 12 Trade + Exchange · [ ] 13 Item pickup · [ ] 14 Vault / Deep Vault · [ ] 15 Kiosks · [ ] 17 Sponsor / Recruit · [ ] 20 Tool cleanup
-- [ ] 28 Siege Nights / Beacon Wars / Outpost Raids / The Pit · [ ] 29 Contacts · [ ] 32 Nova Store · [ ] 33 Crew · [ ] 35 Warden / War Chest / Siege Rigs · [ ] 36 Accord
+- [x] 1 Save system · [x] 2 Stat sheet (gear side) · [x] 7 Monoblade combat skills · [x] 13 Item pickup · [x] 14 Vault / Deep Vault · [x] 15 Kiosks · [x] 16 Squad · [x] 18 Callouts · [x] 20 Tool cleanup · [x] 22 NPC directory and town map · [x] 23 Mouse and camera · [x] 25 Chat channels · [x] 26 Gear rarities and slots · [x] 29 Contacts · [x] 33 Crew · [x] 38 Factions and lore · [x] 39 Character creation · [x] 40 Networking · [x] 41 World · [x] 42 Comic rendering
+- [ ] 12 Trade + Exchange (Trade done) · [ ] 19 Outfitter / Stylist / Reshaper / Coach · [ ] 21 Settings (graphics, audio, rebind) · [ ] 24 Hotbar (rebind, pages) · [ ] 27 Respec Chip / Memory Wipe · [ ] 30 Level-gap rules and death penalty · [ ] 31 Stims shop and Recall Tag · [ ] 34 Dossier crafting · [ ] 37 Transit NPC · [ ] 43 Pets and mounts (pets done)
+- [ ] 3 Tempering · [ ] 4 Fusion · [ ] 5 Tuning / Slotting / Epic Mk · [ ] 6 Hostiles with AI · [ ] 8 Other 8 weapon lines · [ ] 9 Autopilot / Magnet · [ ] 10 Nova Rank · [ ] 11 Titles + Bounty Board · [ ] 17 Sponsor / Recruit
+- [ ] 28 Siege Nights / Beacon Wars / Outpost Raids / The Pit · [ ] 32 Nova Store · [ ] 35 Warden / War Chest / Siege Rigs · [ ] 36 Accord
 
 ## Variance notes
 
@@ -194,7 +198,7 @@ For each item on the owner's list, how the Krytical Nova version differs from it
 
 **Vault and Deep Vault (TS2: Storage, Warehouse).** Twelve Sky has two tiers and the original list named one. Per-character Vault at the Vaultkeeper in the Home City, and account-wide Deep Vault at the Wayfinder in every town. The two-tier split is the thing to copy: the account-wide tier is what makes alt characters useful.
 
-**Kiosks (TS2: Private Shop).** Twelve Sky's private shops are player-manned: the seller is frozen while the shop is open. Proxy selling implies the Kiosk runs while the player is away or offline, which the reference does not do; the rest (shop name, price entry, Start, sale message, no take-back once sold, zone-restricted to the Central Plaza and Home Cities) transfers as-is.
+**Kiosks (TS2: Private Shop).** Twelve Sky's private shops are player-manned: the seller is frozen while the shop is open. Proxy selling implies the Kiosk runs while the player is away or offline, which the reference does not do; the rest (shop name, price entry, Start, sale message, no take-back once sold, zone-restricted to the Central Plaza and Home Cities) transfers as-is. **Decided 5 Oct 2026:** proxy selling, running while the owner is offline, with the duration chosen at set-up (3 days free, 14 or 30 days with a Kiosk Permit from the Nova Store).
 
 **Squad (TS2: Party).** Twelve Sky caps at 5 and requires members within 5 levels of each other, XP bonus +20 / 30 / 40 / 50% per extra member, same map only. The level-gap cap is the design choice to decide on; it stops power-leveling but kills mixed-level friend groups.
 
@@ -229,7 +233,10 @@ The repo answered most of the earlier questions (three factions, Spirit is the s
 - [x] Resource pool: **Flux** approved on 4 Oct 2026 as the display name. Code keeps `MaxChi` / `PlayerResources`.
 - [x] NPC display names approved on 4 Oct 2026: the roles keep their enum names (HerbMaster, Blacksmith, Trainer, Trader, MallManager, GuardCaptain, Agent) and show as Apothecary / Armorer / Instructor / Broker / Store Clerk / Marshal / Fixer. Rename depth for everything built: **player-facing text only**; identifiers, asset names and saved keys stay.
 - [ ] Bounty Board: a Renown source, design still open.
-- [ ] Proxy selling: should a Kiosk keep selling while the owner is offline (server-side Kiosk state), or only while the owner stands there?
-- [ ] Save backend: Unity Cloud Save, own database behind the dedicated server, or flat files on the server host?
+- [x] Proxy selling: decided 5 Oct 2026. A Kiosk keeps selling while its owner is offline (server-side record); the owner picks 3 days (free), 14 days or 30 days (a Kiosk Permit each: $1.99 and $3.99 in the Nova Store, not sold yet).
+- [x] Save backend: decided 5 Oct 2026. Full character on the server, as files on the server host behind `ISaveStore`, so a database or Cloud Save can replace them without touching the systems that save.
+- [x] Trade limits: decided 5 Oct 2026. A wallet holds a lot (999,999,999,999); a trade moves at most 5,000,000 Creds each way and an account sends at most 20,000,000 a day. All of it is tunable in `EconomySettings`, beside the income target the prices are judged against.
+- [x] Who may deal with whom: decided 5 Oct 2026. Trade, Kiosk purchases and Contacts are within a faction, and across factions only on neutral ground (the planned non-combat zone; the starter town is marked neutral until it exists). A Crew is one faction everywhere.
+- [ ] Creds faucets: nothing pays Creds yet (GM only). Hostile drops, Contracts and vendors must be tuned against the income target in `EconomySettings` when they are built.
 - [x] The nine weapon lines are fixed: see `04_Weapon_Classes.md`.
 - [ ] "Bounce" on the Amulet: treated as Knockback Resist; confirm.

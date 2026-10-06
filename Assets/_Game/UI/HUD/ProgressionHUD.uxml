@@ -10,6 +10,8 @@
     <ui:Template name="ChatWindow" src="Chat/ChatWindow.uxml" />
     <ui:Template name="DuelPanels" src="Duel/DuelPanels.uxml" />
     <ui:Template name="PartyPanels" src="Party/PartyPanels.uxml" />
+    <ui:Template name="PetPanels" src="Pet/PetPanels.uxml" />
+    <ui:Template name="SocialPanels" src="../Social/SocialPanels.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
         <!-- Player status frame -->
         <ui:VisualElement name="summary" class="panel blocks-world hud-movable">
@@ -295,7 +297,7 @@
                 <ui:Toggle name="setting-controls-hint" label="Show hotbar controls hint" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-minimap-rotate" label="Rotate minimap with camera" value="true" class="kn-toggle kn-card" />
                 <ui:Label text="KEYS" class="eyebrow section" />
-                <ui:Label text="I  Pack     U  Equipment     C  Character     K  Skills     M  Map     O  Settings&#10;1–0 and Q W E R  Hotbar     Esc  Close / cancel     F1 or ~  Network panel" class="help keys-help" />
+                <ui:Label text="I  Pack     U  Equipment     C  Character     K  Skills     M  Map     O  Settings&#10;1–0 and Q W E R  Hotbar     Esc  Close / cancel     ~  Pick up     F1  Network panel" class="help keys-help" />
             </ui:ScrollView>
         </ui:VisualElement>
 
@@ -330,7 +332,7 @@
                 </ui:VisualElement>
                 <ui:Button name="network-disconnect" text="DISCONNECT" class="kn-button-danger section" />
             </ui:VisualElement>
-            <ui:Label text="F1 or ~ toggles this panel" class="help" />
+            <ui:Label text="F1 toggles this panel" class="help" />
         </ui:VisualElement>
 
         <!-- HUD layout edit mode banner (HudSettingsController) -->
@@ -358,8 +360,15 @@
         <!-- Party: member frames and the invitation (PartyHudController) -->
         <ui:Instance template="PartyPanels" name="party-layer" class="party-layer" picking-mode="Ignore" />
 
+        <!-- Pets: the evolution banner (PetHudController). A pet's own state is in its item tooltip. -->
+        <ui:Instance template="PetPanels" name="pet-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+
         <!-- Duel: target strip, request, YOU WIN / YOU LOSE (DuelHudController). Last, so it draws over the windows. -->
         <ui:Instance template="DuelPanels" name="duel-layer" class="duel-layer" picking-mode="Ignore" />
+
+        <!-- Requests from other players, the player menu and the amount dialog (RequestPromptController,
+             PlayerMenuController, AmountDialogController). After the windows, so they draw over them. -->
+        <ui:Instance template="SocialPanels" name="social-layer" class="hud-overlay-layer" picking-mode="Ignore" />
 
         <ui:Label name="drag-ghost" text="RUN" picking-mode="Ignore" />
     </ui:VisualElement>

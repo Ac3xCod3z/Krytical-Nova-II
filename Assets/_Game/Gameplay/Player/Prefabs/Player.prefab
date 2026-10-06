@@ -75,6 +75,17 @@ GameObject:
   - component: {fileID: 7474861536265259682}
   - component: {fileID: 410367017437213386}
   - component: {fileID: 7132535965924402977}
+  - component: {fileID: 7318791287588534156}
+  - component: {fileID: 5420221607466137155}
+  - component: {fileID: 5461924341847997445}
+  - component: {fileID: 1588377443219459219}
+  - component: {fileID: 6581581302795105883}
+  - component: {fileID: 7828226315890265027}
+  - component: {fileID: 3650087151873527687}
+  - component: {fileID: 6494965091976104601}
+  - component: {fileID: 7066854715676927596}
+  - component: {fileID: 2192193173450388958}
+  - component: {fileID: 3734283269339307509}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -626,6 +637,12 @@ MonoBehaviour:
   hitFadeOut: 0.2
   hitReactionCooldown: 0.35
   heavyHitHealthFraction: 0.15
+  pickUpDownClip: {fileID: 2578180503831652655, guid: bb73aec9559616c44bb8710141f29037, type: 3}
+  pickUpUpClip: {fileID: -4187166379620506645, guid: 02e5d6f1e15548c43958d4bfd935df1f, type: 3}
+  pickUpSpeed: 1.5
+  pickUpFadeIn: 0.12
+  pickUpFadeOut: 0.2
+  pickUpSettleSeconds: 0.6
   agent: {fileID: 376469485258568685}
 --- !u!114 &6427914725768415556
 MonoBehaviour:
@@ -725,6 +742,7 @@ MonoBehaviour:
   turnSpeed: 6
   snapDistance: 8
   normalizedSize: 0.55
+  glowSize: 0.42
 --- !u!114 &5668717879715690075
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3527,6 +3545,159 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.PlayerWeaponClass
   catalog: {fileID: 11400000, guid: 49d0714ce7cf4af4887fa6425c0404c2, type: 2}
+--- !u!114 &7318791287588534156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ea557c96afd3884c82826a2245320d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Persistence.PlayerSaveAgent
+  ShowTopMostFoldoutHeaderGroup: 1
+  autosaveSeconds: 60
+--- !u!114 &5420221607466137155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 839afc337eb58184ea756683580389fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Persistence.PlayerHotbarMemory
+--- !u!114 &5461924341847997445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 924be4cd34eeca942baf9f974f05a93b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Pets.PlayerPet
+  ShowTopMostFoldoutHeaderGroup: 1
+  catalog: {fileID: 11400000, guid: 5a319d9b5f9e83d4cbd8368e019d329c, type: 2}
+--- !u!114 &1588377443219459219
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7fc7fb9bf8e1704abc510f446862ab1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.PlayerWallet
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+--- !u!114 &6581581302795105883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622b193be51694445b4fd4c292575c02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.PlayerLoot
+  ShowTopMostFoldoutHeaderGroup: 1
+  dropPrefab: {fileID: 8712291450168658136, guid: 38d345deaf0c638419ff66a9c7da67de, type: 3}
+  dropReserveSeconds: 20
+  dropsOpenToEveryone: 1
+  pickupKeyRange: 3.5
+--- !u!114 &7828226315890265027
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90ccbdbe6a2d24f40b5d4e3902ef3985, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.PlayerVault
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &3650087151873527687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76d53f4be146a674f906a093e7ef8321, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.PlayerDeepVault
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &6494965091976104601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fce5bc6a638e0e4a9cf5a3ad115c80b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.PlayerTrade
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+--- !u!114 &7066854715676927596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24c9df5787f06ce4c90640244fad9860, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.PlayerKiosk
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+  standPrefab: {fileID: 7830635931766854622, guid: 86d08a373f752434d9e1c1147f4cb635, type: 3}
+--- !u!114 &2192193173450388958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1217d6a4acf7d846a566fa2a333c6bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.PlayerContacts
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &3734283269339307509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a2a24d02c8c63b418ca4abe449a260d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.PlayerCrew
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: ffeff43fd896c2141adfa404d202f76c, type: 2}
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

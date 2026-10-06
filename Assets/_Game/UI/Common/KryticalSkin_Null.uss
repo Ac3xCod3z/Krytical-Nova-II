@@ -458,6 +458,31 @@
 .kn-faction-null .item-confirm-text {
     font-size: 17.92px;
 }
+.kn-faction-null .inventory-creds-label {
+    font-size: 14.08px;
+}
+.kn-faction-null .inventory-creds {
+    font-size: 20.48px;
+}
+.kn-faction-null .loot-label {
+    font-size: 15.36px;
+    background-color: rgba(21, 12, 24, 0.72);
+}
+.kn-faction-null .loot-label--mine {
+    background-color: rgba(52, 3, 5, 0.85);
+}
+.kn-faction-null .loot-notice-text {
+    font-size: 15.36px;
+}
+.kn-faction-null .loot-notice-help {
+    font-size: 12.8px;
+}
+.kn-faction-null .loot-notice-bar {
+    background-color: rgba(59, 39, 66, 0.9);
+}
+.kn-faction-null .loot-notice-fill {
+    background-color: rgb(222, 65, 73);
+}
 
 /* ---- Minimap.uss ---- */
 .kn-faction-null .minimap-backdrop {
@@ -663,6 +688,207 @@
 }
 .kn-faction-null .party-timer-fill {
     background-color: rgb(222, 65, 73);
+}
+
+/* ---- PetPanels.uss ---- */
+.kn-faction-null .tooltip-pet {
+    background-color: rgba(27, 16, 30, 0.94);
+    border-color: rgba(159, 128, 170, 0.28);
+}
+.kn-faction-null .pet-stage {
+    font-size: 14.08px;
+    color: rgb(194, 174, 200);
+}
+.kn-faction-null .pet-bonus {
+    font-size: 17.92px;
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .pet-pip {
+    background-color: rgba(59, 39, 66, 0.95);
+    border-color: rgba(159, 128, 170, 0.45);
+}
+.kn-faction-null .pet-pip--reached {
+    border-color: rgb(195, 160, 255);
+}
+.kn-faction-null .pet-meter-label {
+    font-size: 12.8px;
+    color: rgb(194, 174, 200);
+}
+.kn-faction-null .pet-meter {
+    background-color: rgba(59, 39, 66, 0.9);
+}
+.kn-faction-null .pet-meter-fill--hunger {
+    background-color: rgb(222, 65, 73);
+}
+.kn-faction-null .pet-meter-value {
+    font-size: 14.08px;
+}
+.kn-faction-null .pet-evolved-eyebrow {
+    font-size: 15.36px;
+}
+.kn-faction-null .pet-evolved-title {
+    font-size: 61.44px;
+}
+.kn-faction-null .pet-evolved-detail {
+    font-size: 19.2px;
+}
+
+/* ---- SocialPanels.uss ---- */
+.kn-faction-null .request-text {
+    font-size: 19.2px;
+}
+.kn-faction-null .request-button {
+    font-size: 15.36px;
+}
+.kn-faction-null .request-timer {
+    background-color: rgba(59, 39, 66, 0.9);
+}
+.kn-faction-null .request-timer-fill {
+    background-color: rgb(222, 65, 73);
+}
+.kn-faction-null .request-more {
+    font-size: 14.08px;
+}
+.kn-faction-null .player-menu-title {
+    font-size: 16.64px;
+}
+.kn-faction-null .amount-title {
+    font-size: 19.2px;
+}
+.kn-faction-null .amount-field > .unity-text-field__input, .kn-faction-null .amount-field .unity-base-text-field__input {
+    font-size: 23.04px;
+}
+.kn-faction-null .amount-quick-button {
+    font-size: 14.08px;
+}
+.kn-faction-null .amount-error {
+    font-size: 15.36px;
+}
+.kn-faction-null .social-key {
+    font-size: 14.08px;
+}
+.kn-faction-null .social-count {
+    font-size: 15.36px;
+}
+.kn-faction-null .social-tab {
+    font-size: 12.8px;
+}
+.kn-faction-null .social-tab.selected {
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .social-add {
+    font-size: 14.08px;
+}
+.kn-faction-null .contact-row {
+    background-color: rgba(34, 21, 38, 0.55);
+}
+.kn-faction-null .contact-row:hover {
+    background-color: rgba(59, 39, 66, 0.75);
+}
+.kn-faction-null .contact-name {
+    font-size: 17.92px;
+}
+.kn-faction-null .contact-detail {
+    font-size: 14.08px;
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .contact-status {
+    font-size: 14.08px;
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .contact-row.online .contact-status {
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .contact-row.offline .contact-name {
+    color: rgb(189, 174, 194);
+}
+.kn-faction-null .contact-dot {
+    background-color: rgb(89, 74, 94);
+}
+.kn-faction-null .contact-row.online .contact-dot {
+    background-color: rgb(222, 65, 73);
+}
+.kn-faction-null .contact-fav {
+    border-color: rgb(156, 143, 160);
+}
+.kn-faction-null .contact-button {
+    font-size: 12.8px;
+}
+.kn-faction-null .contact-note {
+    font-size: 14.08px;
+    color: rgb(165, 145, 172);
+}
+.kn-faction-null .crew-label {
+    font-size: 14.08px;
+}
+.kn-faction-null .crew-buttons Button {
+    font-size: 14.08px;
+}
+.kn-faction-null .crew-announcement {
+    background-color: rgba(34, 21, 38, 0.55);
+}
+.kn-faction-null .crew-announcement-text {
+    font-size: 16.64px;
+}
+.kn-faction-null .crew-rank {
+    font-size: 11.52px;
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .crew-rank-1 {
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .crew-member-title {
+    font-size: 14.08px;
+    color: rgb(144, 104, 214);
+}
+
+/* ---- EconomyWindows.uss ---- */
+.kn-faction-null .storage-creds-button {
+    font-size: 14.08px;
+}
+.kn-faction-null .trade-side {
+    background-color: rgba(23, 12, 26, 0.35);
+}
+.kn-faction-null .trade-state {
+    font-size: 14.08px;
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .trade-side.locked {
+    border-color: rgb(222, 65, 73);
+    background-color: rgba(60, 2, 5, 0.4);
+}
+.kn-faction-null .trade-side.locked .trade-state {
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .trade-notice {
+    font-size: 15.36px;
+}
+.kn-faction-null .trade-buttons Button {
+    font-size: 15.36px;
+}
+.kn-faction-null .kiosk-shop-name {
+    font-size: 20.48px;
+}
+.kn-faction-null .shop-owner {
+    font-size: 15.36px;
+}
+.kn-faction-null .kiosk-sold {
+    font-size: 14.08px;
+}
+.kn-faction-null .kiosk-price {
+    font-size: 12.8px;
+    background-color: rgba(16, 10, 18, 0.78);
+    -unity-font-definition: url("/Assets/Synty/InterfaceDarkFantasyHUD/Fonts/Markazi/MarkaziText-SemiBold.ttf");
+}
+.kn-faction-null .kiosk-tier {
+    font-size: 12.8px;
+}
+.kn-faction-null .kiosk-tier.selected {
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .kiosk-plate {
+    font-size: 16.64px;
+    background-color: rgba(21, 12, 24, 0.78);
 }
 
 /* ---- NpcInteraction.uss ---- */

@@ -34,6 +34,8 @@ namespace KryticalNova.UI
         private Label dialogueGreeting;
         private Label dialogueServices;
         private Button closeButton;
+        private VisualElement actions;
+        private Button comingSoon;
         private Label toast;
         private Camera targetCamera;
         private INpcDialogueSource currentNpc;
@@ -55,6 +57,8 @@ namespace KryticalNova.UI
             dialogueGreeting = root.Q<Label>("npc-greeting");
             dialogueServices = root.Q<Label>("npc-services");
             closeButton = root.Q<Button>("npc-close");
+            actions = root.Q("npc-actions");
+            comingSoon = root.Q<Button>("npc-shop");
             toast = root.Q<Label>("zone-toast");
             if (closeButton != null) closeButton.clicked += HideDialogue;
             SetVisible(dialogue, false);
@@ -102,7 +106,30 @@ namespace KryticalNova.UI
             dialogueTitle.text = npc.Title;
             dialogueGreeting.text = string.IsNullOrEmpty(npc.Greeting) ? "…" : $"“{npc.Greeting}”";
             dialogueServices.text = npc.Services;
+            BuildServiceButtons(npc);
             SetVisible(dialogue, true);
+        }
+
+        /// <summary>One button per working service this NPC offers; the "coming soon" button stands in when there is none.</summary>
+        private void BuildServiceButtons(INpcDialogueSource npc)
+        {
+            if (actions == null) return;
+            for (int i = actions.childCount - 1; i >= 0; i--)
+                if (actions[i] != comingSoon) actions.RemoveAt(i);
+
+            NpcOffer offers = npc is NpcInteractable interactable ? interactable.Offers : NpcOffer.None;
+            int shown = 0;
+            foreach (NpcServices.Entry entry in NpcServices.All)
+            {
+                if ((offers & entry.Offer) == 0) continue;
+                System.Action open = entry.Open;
+                var button = new Button(() => { HideDialogue(); open(); }) { text = entry.Label };
+                button.AddToClassList("npc-action");
+                button.AddToClassList("kn-button-primary");
+                actions.Add(button);
+                shown++;
+            }
+            SetVisible(comingSoon, shown == 0);
         }
 
         public void HideDialogue()

@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.Core;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ namespace KryticalNova.Progression
     [DefaultExecutionOrder(InitializationOrder)]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacterProgression), typeof(PlayerResources))]
-    public sealed class PlayerMovementSkills : NetworkBehaviour
+    public sealed class PlayerMovementSkills : NetworkBehaviour, ISaveParticipant
     {
         private const int InitializationOrder = -100;
         [SerializeField] private MovementSettings movementSettings;
@@ -92,6 +93,22 @@ namespace KryticalNova.Progression
         {
             if (IsSpawned && IsServer) netState.Value = Capture();
             Changed?.Invoke();
+        }
+
+        public string SaveKey => "movement";
+        public SaveScope SaveScope => SaveScope.Character;
+
+        public string CaptureSave() => JsonUtility.ToJson(Capture());
+
+        /// <summary>Learned ranks come back; the character always re-enters the world walking.</summary>
+        public void RestoreSave(string json)
+        {
+            if (!HasAuthority || string.IsNullOrEmpty(json) || runSkill == null || jumpSkill == null) return;
+            var state = JsonUtility.FromJson<MovementSkillState>(json);
+            runRank = Mathf.Clamp(state.runRank, 0, runSkill.MaxRank);
+            jumpRank = Mathf.Clamp(state.jumpRank, 0, jumpSkill.MaxRank);
+            selectedSkill = MovementSkillId.None;
+            Commit();
         }
 
         /// <summary>Returns the shared definition for a known movement skill.</summary>

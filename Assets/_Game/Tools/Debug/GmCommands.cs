@@ -127,6 +127,12 @@ namespace KryticalNova.DevTools
                 "PVP          gm.pvp [on|off]   (factions fight each other, for everyone) · gm.stance <faction|friendly|hostile>   (pin the targeted player)",
                 "GOD MODE     gm.god [on|off] · gm.infchi · gm.nocd · gm.oneshot · gm.speed <mult> · gm.reset",
                 "GAME SPEED   gm.slowmo [x]   (0.25 = quarter speed, 1 = normal; no value toggles quarter speed)",
+                "CREDS        gm.creds [n] · gm.creds.set <n> · gm.creds.report   (the only way Creds enter the game for now)",
+                "STORAGE      gm.vault [deep|off]   (opens it here; storage then works with no NPC near) · gm.drop <item> [n]",
+                "TRADE        gm.trade.reset   (daily Creds limit) · gm.kiosk · gm.kiosk.expire",
+                "SOCIAL       gm.guild [name|none] · gm.guild.list   (a Crew takes its own faction only, GM or not)",
+                "PETS         gm.pet · gm.pet.growth <0-100> · gm.pet.hunger <0-100> · gm.pet.feed · gm.pet.xp <n> · gm.pet.event <win|loss>",
+                "SAVING       gm.save · gm.save.where · gm.save.wipe confirm",
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",
                 "WEATHER      weather.set <name> [secs] · weather.clear · weather.lock <bool> · weather.list",
@@ -424,16 +430,37 @@ namespace KryticalNova.DevTools
             return reached > 0 ? $"Announced to {reached} player(s)." : "Nothing sent (empty text, or nobody is connected).";
         }
 
-        [Command("gm.guild", "Put the targeted player in a crew for crew chat: gm.guild <name>, or gm.guild none to take them out. " +
-                             "No value prints their crew. (Test stand-in until crews exist.)")]
+        [Command("gm.guild", "Put the targeted player in the Crew with that name, founding it when there is none (no fee, level or " +
+                             "Vaultkeeper; the Crew must be of their faction): gm.guild <name>. gm.guild none takes them out. " +
+                             "No value prints their Crew.")]
         private static string Guild(string guild = "")
         {
-            if (!TryGet<PlayerChat>(out var chat, out var error)) return error;
+            if (!TryGet<KryticalNova.Social.PlayerCrew>(out var crew, out var error)) return error;
             if (string.IsNullOrWhiteSpace(guild))
-                return string.IsNullOrEmpty(chat.Guild) ? $"{chat.SpeakerName} is in no crew." : $"{chat.SpeakerName} is in crew '{chat.Guild}'.";
-            bool leave = string.Equals(guild, "none", StringComparison.OrdinalIgnoreCase);
-            chat.ServerSetGuild(leave ? string.Empty : guild);
-            return leave ? $"{chat.SpeakerName} left their crew." : $"{chat.SpeakerName} is now in crew '{chat.Guild}'.";
+            {
+                var mine = KryticalNova.Social.CrewService.Of(crew.CharacterId);
+                return mine == null ? $"{crew.MemberName} is in no Crew."
+                    : $"{crew.MemberName} is {KryticalNova.Social.CrewRules.RankName(KryticalNova.Social.CrewRules.Find(mine, crew.CharacterId).Rank)} of the Crew '{mine.name}' ({mine.members.Count} member(s)).";
+            }
+            return string.Equals(guild, "none", StringComparison.OrdinalIgnoreCase)
+                ? KryticalNova.Social.CrewService.GmLeave(crew)
+                : KryticalNova.Social.CrewService.GmJoin(crew, guild);
+        }
+
+        [Command("gm.guild.list", "List every Crew the server knows with its members and their ranks.")]
+        private static string Guilds()
+        {
+            var all = KryticalNova.Social.CrewService.All;
+            if (all.Count == 0) return "No Crews.";
+            var lines = new System.Text.StringBuilder();
+            foreach (var crew in all)
+            {
+                lines.Append($"{crew.name} ({crew.members.Count}): ");
+                for (int i = 0; i < crew.members.Count; i++)
+                    lines.Append(i > 0 ? ", " : string.Empty).Append(crew.members[i].name).Append(" [").Append(KryticalNova.Social.CrewRules.RankName(crew.members[i].Rank)).Append(']');
+                lines.AppendLine();
+            }
+            return lines.ToString().TrimEnd();
         }
         #endregion
 
@@ -843,7 +870,6 @@ namespace KryticalNova.DevTools
 
         #region Time & weather shortcuts
         [Command("time.pause", "Freeze the world clock.")]
-        [Command("gm.timepause")]
         private static string PauseTime()
         {
             var env = WorldEnvironmentNetwork.Instance;
@@ -854,7 +880,6 @@ namespace KryticalNova.DevTools
         }
 
         [Command("time.resume", "Resume the world clock at its previous speed.")]
-        [Command("gm.timeresume")]
         private static string ResumeTime()
         {
             var env = WorldEnvironmentNetwork.Instance;

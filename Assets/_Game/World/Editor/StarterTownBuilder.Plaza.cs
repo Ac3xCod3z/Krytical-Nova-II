@@ -31,8 +31,8 @@ namespace KryticalNova.EditorTools
             new VendorStall("HerbMaster", false, StallKind.Market, 22.5f, -12.5f, 270f),
             new VendorStall("Blacksmith", false, StallKind.Forge, -12.5f, -22.5f, 0f),
             new VendorStall("Collector", true, StallKind.Collector, 12.5f, -22.5f, 0f),
-            new VendorStall("GuildDirector", true, StallKind.Guild, -14f, 22.5f, 180f),
-            new VendorStall("GateMaster", true, StallKind.Gate, 14f, 22.5f, 180f),
+            new VendorStall("GuildDirector", false, StallKind.Guild, -14f, 22.5f, 180f),
+            new VendorStall("GateMaster", false, StallKind.Gate, 14f, 22.5f, 180f),
         };
 
         private static readonly Vector2 ElderHall = new Vector2(0f, 18f);
@@ -131,8 +131,8 @@ namespace KryticalNova.EditorTools
                 case StallKind.HoloBooth: return new StallLook { Title = "NOVA STORE", Subtitle = "premium goods", Style = SignStyle.HoloPlate, Font = FontOrbitron, Ink = Color.white * 1.8f, Board = ColorBible.NeonCyan };
                 case StallKind.Watch: return new StallLook { Title = "MARSHAL POST", Subtitle = "contracts · battles", Style = SignStyle.Lightbox, Font = FontExo, Ink = ColorBible.Ink, Board = ColorBible.Hex("F4EBDD") };
                 case StallKind.Tailor: return new StallLook { Title = "OUTFITTER", Subtitle = "coming soon", Style = SignStyle.FabricBanner, Font = FontExo, Ink = Color.white, Board = ColorBible.NeonMagenta * 0.8f };
-                case StallKind.Guild: return new StallLook { Title = "CREW HALL", Subtitle = "coming soon", Style = SignStyle.BladeSign, Font = FontLato, Ink = ColorBible.SignalYellow, Board = ColorBible.ShadowIndigo };
-                case StallKind.Gate: return new StallLook { Title = "WAYFINDER", Subtitle = "coming soon", Style = SignStyle.NeonPanel, Font = FontExo, Ink = ColorBible.NeonCyan * 2f, Board = ColorBible.Ink };
+                case StallKind.Guild: return new StallLook { Title = "CREW HALL", Subtitle = "vault · crews", Style = SignStyle.BladeSign, Font = FontLato, Ink = ColorBible.SignalYellow, Board = ColorBible.ShadowIndigo };
+                case StallKind.Gate: return new StallLook { Title = "WAYFINDER", Subtitle = "deep vault · transit", Style = SignStyle.NeonPanel, Font = FontExo, Ink = ColorBible.NeonCyan * 2f, Board = ColorBible.Ink };
                 default: return new StallLook { Title = "COLLECTOR", Subtitle = "coming soon", Style = SignStyle.WoodBoard, Font = FontOrbitron, Ink = ColorBible.SignalYellow, Board = ColorBible.Hex("3E3A48") };
             }
         }
@@ -152,6 +152,44 @@ namespace KryticalNova.EditorTools
                 if (s.Slot) Marker(slots, "Slot_" + s.NpcId, npcPos.x, npcPos.y).transform.rotation = Quaternion.Euler(0f, s.Yaw, 0f);
                 else SpawnNpc(npcRoot, s.NpcId, npcPos, s.Yaw);
             }
+        }
+
+        /// <summary>
+        /// For a town that is already built: opens, in the open scene, every stall the table no longer marks as a
+        /// future slot. The vendor takes the slot marker's place and the sign is rebuilt lit with its current text.
+        /// Nothing else in the town is touched. Returns how many stalls were opened.
+        /// </summary>
+        internal static int OpenReadyStallsInScene()
+        {
+            int opened = 0;
+            var anyNpc = Object.FindAnyObjectByType<KryticalNova.NPC.NpcInteractable>(FindObjectsInactive.Include);
+            Transform npcRoot = anyNpc != null ? anyNpc.transform.parent : null;
+            foreach (VendorStall s in PlazaStalls)
+            {
+                if (s.Slot) continue;
+                GameObject stall = GameObject.Find($"Stall - {s.NpcId} (future)");
+                if (stall == null) continue; // already open, or this scene has no such stall
+
+                // The sign hangs from the canopy this stall was built with.
+                foreach (Transform child in stall.transform)
+                    if (child.name.StartsWith("SM_Prop_MarketCover_01") && TryGetBounds(child.gameObject, out Bounds cover))
+                        canopyUnderside = cover.max.y - 0.55f;
+                StallLook look = LookFor(s);
+                Transform oldSign = stall.transform.Find("Sign " + look.Title);
+                if (oldSign != null) Object.DestroyImmediate(oldSign.gameObject);
+                var origin = new Vector2(s.X, s.Z);
+                BuildStallSign(stall.transform, look, origin, s.Yaw, dim: false);
+
+                GameObject marker = GameObject.Find("Slot_" + s.NpcId);
+                Vector2 npcPosition = marker != null
+                    ? new Vector2(marker.transform.position.x, marker.transform.position.z)
+                    : origin + Rotate(new Vector2(0f, StallVendorZ), s.Yaw);
+                if (GameObject.Find("NPC_" + s.NpcId) == null) SpawnNpc(npcRoot, s.NpcId, npcPosition, s.Yaw);
+                if (marker != null) Object.DestroyImmediate(marker);
+                stall.name = $"Stall - {s.NpcId}"; // last: a stall that failed half way is tried again
+                opened++;
+            }
+            return opened;
         }
 
         // Stall frame, local frame (+Z = toward customers): back wall at z −1.6, canopy over z −1.4..+0.9, counter at
@@ -385,7 +423,8 @@ namespace KryticalNova.EditorTools
             if (font != null)
             {
                 tmp.font = font;
-                tmp.fontSharedMaterial = ColorBible.SignTextMaterial(font, ink);
+                Material textMaterial = ColorBible.SignTextMaterial(font, ink);
+                if (textMaterial != null) tmp.fontSharedMaterial = textMaterial;
             }
             tmp.text = subtitleShare > 0f && !string.IsNullOrEmpty(look.Subtitle)
                 ? $"{look.Title}\n<size={Mathf.RoundToInt(subtitleShare * 100f)}%>{look.Subtitle.ToUpperInvariant()}</size>"

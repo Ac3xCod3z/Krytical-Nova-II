@@ -32,6 +32,9 @@ namespace KryticalNova.EditorTools
             "Assets/_Game/UI/HUD/Chat/ChatWindow.uss",
             "Assets/_Game/UI/HUD/Duel/DuelPanels.uss",
             "Assets/_Game/UI/HUD/Party/PartyPanels.uss",
+            "Assets/_Game/UI/HUD/Pet/PetPanels.uss",
+            "Assets/_Game/UI/Social/SocialPanels.uss",
+            "Assets/_Game/UI/Economy/EconomyWindows.uss",
             "Assets/_Game/UI/NPC/NpcInteraction.uss"
         };
 

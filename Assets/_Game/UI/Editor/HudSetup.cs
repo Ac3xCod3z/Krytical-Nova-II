@@ -28,8 +28,21 @@ namespace KryticalNova.EditorTools
         private const string ChatType = "KryticalNova.UI.ChatWindowController, KryticalNova.UI";
         private const string DuelType = "KryticalNova.UI.DuelHudController, KryticalNova.UI";
         private const string PartyType = "KryticalNova.UI.PartyHudController, KryticalNova.UI";
+        // Controllers added by later systems: each is ensured on the HUD object when its type exists.
+        private static readonly string[] MoreControllers =
+        {
+            "KryticalNova.UI.PetHudController, KryticalNova.UI",
+            "KryticalNova.UI.AmountDialogController, KryticalNova.UI",
+            "KryticalNova.UI.RequestPromptController, KryticalNova.UI",
+            "KryticalNova.UI.PlayerMenuController, KryticalNova.UI",
+            "KryticalNova.UI.LootHudController, KryticalNova.UI",
+            "KryticalNova.UI.StorageWindowController, KryticalNova.UI",
+            "KryticalNova.UI.TradeWindowController, KryticalNova.UI",
+            "KryticalNova.UI.KioskWindowController, KryticalNova.UI",
+            "KryticalNova.UI.ContactsWindowController, KryticalNova.UI",
+            "KryticalNova.UI.CrewWindowController, KryticalNova.UI",
+        };
 
-        [MenuItem("Krytical Nova/UI/Set Up HUD In Open Scene")]
         public static void SetUpOpenScene()
         {
             var hudType = System.Type.GetType(HudType);
@@ -64,6 +77,12 @@ namespace KryticalNova.EditorTools
             if (duelType != null) EnsureComponent(hudObject, duelType);
             var partyType = System.Type.GetType(PartyType);
             if (partyType != null) EnsureComponent(hudObject, partyType);
+            foreach (string typeName in MoreControllers)
+            {
+                var type = System.Type.GetType(typeName);
+                if (type != null) EnsureComponent(hudObject, type);
+                else Debug.LogWarning($"[HudSetup] HUD controller {typeName} not found; skipped.");
+            }
 
             var markers = Object.FindAnyObjectByType(markersType, FindObjectsInactive.Include) as Component;
             if (markers == null)

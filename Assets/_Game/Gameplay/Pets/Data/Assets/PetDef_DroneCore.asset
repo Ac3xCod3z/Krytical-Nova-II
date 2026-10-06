@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05320cfaefa56394aad94290f49e9adb, type: 3}
+  m_Name: PetDef_DroneCore
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Pets.PetDefinition
+  itemId: 8002
+  displayName: Drone Core
+  description: A boxy little robot buddy that bolts on plating and cannon pods. It grows your Health as it matures.
+  stat: 8
+  maxValue: 2200
+  stages:
+  - name: 
+    model: {fileID: 0}
+    scale: 1
+    glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
+    glowStrength: 0
+  - name: 
+    model: {fileID: 0}
+    scale: 1.08
+    glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
+    glowStrength: 0.3
+  - name: 
+    model: {fileID: 0}
+    scale: 1.16
+    glow: {r: 0.9490196, g: 0.7607843, b: 0.1882353, a: 1}
+    glowStrength: 0.5
+  - name: 
+    model: {fileID: 0}
+    scale: 1.24
+    glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
+    glowStrength: 0.75
+  - name: Gunship
+    model: {fileID: 0}
+    scale: 1.35
+    glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
+    glowStrength: 1
