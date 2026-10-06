@@ -1,0 +1,193 @@
+/* Shared social panels of the HUD: the request prompt, the player menu and the amount dialog. The frame is the
+   shared .panel, so the faction skins (Build Faction Skins) restyle them with everything else. */
+
+/* ------------------------------------------------------------------ request prompt */
+
+.request-prompt {
+    position: absolute;
+    top: 196px;
+    left: 50%;
+    translate: -50% 0;
+    width: 360px;
+    align-items: center;
+    padding: 12px 18px 12px 18px;
+    display: none;
+}
+
+.request-text {
+    font-size: 15px;
+    margin: 4px 0 10px 0;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    color: rgb(255, 255, 255);
+}
+
+.request-buttons {
+    flex-direction: row;
+    align-self: stretch;
+}
+
+.request-button {
+    flex-grow: 1;
+    margin: 0 4px;
+    font-size: 12px;
+}
+
+.request-timer {
+    align-self: stretch;
+    height: 3px;
+    margin-top: 10px;
+    background-color: rgba(34, 52, 66, 0.9);
+}
+
+.request-timer-fill {
+    height: 100%;
+    width: 100%;
+    background-color: rgb(114, 222, 196);
+}
+
+.request-more {
+    font-size: 11px;
+    margin-top: 6px;
+}
+
+/* ------------------------------------------------------------------ player menu */
+
+.player-menu {
+    position: absolute;
+    min-width: 170px;
+    padding: 8px 10px;
+    display: none;
+}
+
+.player-menu-title {
+    font-size: 13px;
+    margin-bottom: 4px;
+    white-space: normal;
+    max-width: 220px;
+}
+
+.player-menu Button {
+    margin: 2px 0;
+    min-height: 26px;
+    -unity-text-align: middle-left;
+}
+
+/* ------------------------------------------------------------------ amount dialog */
+
+.amount-dialog {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    width: 320px;
+    translate: -50% -50%;
+    padding: 12px 16px 12px 16px;
+    display: none;
+}
+
+.amount-title { font-size: 15px; margin-bottom: 2px; }
+.amount-detail { white-space: normal; margin-bottom: 6px; }
+
+.amount-field { margin: 4px 0; }
+.amount-field > .unity-text-field__input, .amount-field .unity-base-text-field__input {
+    font-size: 18px;
+    min-height: 32px;
+    -unity-text-align: middle-right;
+}
+
+.amount-quick { margin-top: 2px; }
+.amount-quick-button {
+    flex-grow: 1;
+    margin: 0 2px;
+    min-height: 22px;
+    font-size: 11px;
+}
+
+.amount-error {
+    font-size: 12px;
+    min-height: 16px;
+    margin-top: 4px;
+    white-space: normal;
+    color: rgb(240, 58, 46);
+}
+
+.amount-buttons { justify-content: flex-end; margin-top: 4px; }
+.amount-buttons Button { margin-left: 8px; }
+
+/* ------------------------------------------------------------------ social windows (Contacts, Crew) */
+
+.social-window { left: 40px; top: 150px; width: 400px; display: none; }
+.social-key { font-size: 11px; margin-left: 6px; -unity-text-align: middle-left; }
+.social-spacer { flex-grow: 1; }
+.social-count { font-size: 12px; margin-right: 8px; -unity-text-align: middle-right; }
+
+.social-tabs { margin: 6px 10px 0 10px; }
+.social-tab { flex-grow: 1; flex-basis: 0; min-height: 22px; height: 22px; margin: 0 2px; padding: 0; font-size: 10px; opacity: 0.6; }
+.social-tab.selected { opacity: 1; color: rgb(114, 222, 196); }
+
+.social-add-row { align-items: center; margin: 6px 12px 0 12px; }
+.social-name { flex-grow: 1; margin-right: 6px; }
+.social-add { min-height: 24px; height: 24px; padding: 0 12px; font-size: 11px; }
+
+.social-list { height: 240px; margin: 6px 8px 0 8px; }
+
+.contact-row {
+    padding: 4px 6px 5px 6px;
+    margin-bottom: 2px;
+    background-color: rgba(18, 28, 38, 0.55);
+    border-radius: 3px;
+}
+.contact-row:hover { background-color: rgba(34, 52, 66, 0.75); }
+.contact-top { flex-direction: row; align-items: center; }
+.contact-name { font-size: 14px; color: rgb(236, 240, 244); margin: 0 6px 0 0; padding: 0; }
+.contact-detail { font-size: 11px; color: rgb(156, 172, 188); margin: 0 8px 0 0; padding: 0; }
+.contact-status { font-size: 11px; color: rgb(156, 172, 188); margin: 0 6px 0 0; padding: 0; }
+.contact-row.online .contact-status { color: rgb(114, 222, 196); }
+.contact-row.offline .contact-name { color: rgb(170, 182, 194); }
+
+/* Online: a lit dot. */
+.contact-dot { width: 8px; height: 8px; border-radius: 4px; margin: 0 6px 0 2px; background-color: rgb(70, 82, 94); }
+.contact-row.online .contact-dot { background-color: rgb(114, 222, 196); }
+
+/* Favourite: a diamond, filled when it is one. Click it to switch. */
+.contact-fav {
+    width: 9px;
+    height: 9px;
+    margin: 0 8px 0 3px;
+    rotate: 45deg;
+    border-width: 1px;
+    border-color: rgb(140, 150, 160);
+}
+.contact-fav:hover { border-color: rgb(255, 214, 92); }
+.contact-fav.on { background-color: rgb(255, 214, 92); border-color: rgb(255, 214, 92); }
+
+.contact-button { min-height: 20px; height: 20px; margin: 0 0 0 4px; padding: 0 8px; font-size: 10px; }
+.contact-note { font-size: 11px; color: rgb(140, 156, 172); -unity-font-style: italic; margin: 2px 0 0 26px; padding: 0; white-space: normal; }
+.contact-note:hover { color: rgb(214, 224, 232); }
+.contact-note-field { margin: 2px 0 0 22px; }
+
+/* ------------------------------------------------------------------ crew */
+
+#crew-window { left: 460px; }
+.crew-none-text { margin: 8px 12px 0 12px; }
+.crew-label { font-size: 11px; letter-spacing: 1px; margin-right: 8px; }
+.crew-symbol-label { margin: 8px 12px 0 12px; }
+.crew-buttons { align-items: center; margin: 8px 10px 0 10px; }
+.crew-buttons Button { min-height: 26px; margin: 0 2px; padding: 0 10px; font-size: 11px; }
+.crew-edit-cancel { margin-left: 4px; }
+.crew-list { height: 240px; }
+
+.crew-announcement { margin: 8px 12px 0 12px; padding: 6px 8px; background-color: rgba(18, 28, 38, 0.55); border-radius: 3px; }
+.crew-announcement-text { white-space: normal; font-size: 13px; color: rgb(236, 240, 244); margin: 2px 0 0 0; padding: 0; }
+
+/* A Crew's symbol: one of a few shapes in one of a few colours (CrewSymbols). */
+.crew-symbol { width: 16px; height: 16px; margin: 0 10px 0 2px; border-width: 2px; border-color: rgba(255, 255, 255, 0.85); }
+.crew-symbols { flex-wrap: wrap; margin: 6px 12px 0 12px; }
+.crew-symbol-choice { width: 20px; height: 20px; margin: 6px 9px; border-width: 2px; border-color: rgba(255, 255, 255, 0.35); }
+.crew-symbol-choice:hover { border-color: rgb(255, 255, 255); }
+.crew-symbol-choice.selected { border-color: rgb(255, 255, 255); scale: 1.25 1.25; }
+
+.crew-rank { font-size: 9px; letter-spacing: 1px; min-width: 52px; margin: 0 6px 0 0; padding: 0; color: rgb(156, 172, 188); }
+.crew-rank-2 { color: rgb(255, 214, 92); }
+.crew-rank-1 { color: rgb(114, 222, 196); }
+.crew-member-title { font-size: 11px; color: rgb(214, 178, 104); margin: 0 6px 0 0; padding: 0; }

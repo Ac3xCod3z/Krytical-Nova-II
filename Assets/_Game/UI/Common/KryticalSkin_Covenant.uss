@@ -458,6 +458,31 @@
 .kn-faction-covenant .item-confirm-text {
     font-size: 15.68px;
 }
+.kn-faction-covenant .inventory-creds-label {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .inventory-creds {
+    font-size: 17.92px;
+}
+.kn-faction-covenant .loot-label {
+    font-size: 13.44px;
+    background-color: rgba(24, 18, 12, 0.72);
+}
+.kn-faction-covenant .loot-label--mine {
+    background-color: rgba(52, 35, 3, 0.85);
+}
+.kn-faction-covenant .loot-notice-text {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .loot-notice-help {
+    font-size: 11.2px;
+}
+.kn-faction-covenant .loot-notice-bar {
+    background-color: rgba(66, 53, 39, 0.9);
+}
+.kn-faction-covenant .loot-notice-fill {
+    background-color: rgb(222, 167, 65);
+}
 
 /* ---- Minimap.uss ---- */
 .kn-faction-covenant .minimap-backdrop {
@@ -663,6 +688,207 @@
 }
 .kn-faction-covenant .party-timer-fill {
     background-color: rgb(222, 167, 65);
+}
+
+/* ---- PetPanels.uss ---- */
+.kn-faction-covenant .tooltip-pet {
+    background-color: rgba(30, 24, 16, 0.94);
+    border-color: rgba(170, 150, 128, 0.28);
+}
+.kn-faction-covenant .pet-stage {
+    font-size: 12.32px;
+    color: rgb(200, 188, 174);
+}
+.kn-faction-covenant .pet-bonus {
+    font-size: 15.68px;
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .pet-pip {
+    background-color: rgba(66, 53, 39, 0.95);
+    border-color: rgba(170, 150, 128, 0.45);
+}
+.kn-faction-covenant .pet-pip--reached {
+    border-color: rgb(160, 255, 192);
+}
+.kn-faction-covenant .pet-meter-label {
+    font-size: 11.2px;
+    color: rgb(200, 188, 174);
+}
+.kn-faction-covenant .pet-meter {
+    background-color: rgba(66, 53, 39, 0.9);
+}
+.kn-faction-covenant .pet-meter-fill--hunger {
+    background-color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .pet-meter-value {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .pet-evolved-eyebrow {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .pet-evolved-title {
+    font-size: 53.76px;
+}
+.kn-faction-covenant .pet-evolved-detail {
+    font-size: 16.8px;
+}
+
+/* ---- SocialPanels.uss ---- */
+.kn-faction-covenant .request-text {
+    font-size: 16.8px;
+}
+.kn-faction-covenant .request-button {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .request-timer {
+    background-color: rgba(66, 53, 39, 0.9);
+}
+.kn-faction-covenant .request-timer-fill {
+    background-color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .request-more {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .player-menu-title {
+    font-size: 14.56px;
+}
+.kn-faction-covenant .amount-title {
+    font-size: 16.8px;
+}
+.kn-faction-covenant .amount-field > .unity-text-field__input, .kn-faction-covenant .amount-field .unity-base-text-field__input {
+    font-size: 20.16px;
+}
+.kn-faction-covenant .amount-quick-button {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .amount-error {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .social-key {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .social-count {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .social-tab {
+    font-size: 11.2px;
+}
+.kn-faction-covenant .social-tab.selected {
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .social-add {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .contact-row {
+    background-color: rgba(38, 30, 21, 0.55);
+}
+.kn-faction-covenant .contact-row:hover {
+    background-color: rgba(66, 53, 39, 0.75);
+}
+.kn-faction-covenant .contact-name {
+    font-size: 15.68px;
+}
+.kn-faction-covenant .contact-detail {
+    font-size: 12.32px;
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .contact-status {
+    font-size: 12.32px;
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .contact-row.online .contact-status {
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .contact-row.offline .contact-name {
+    color: rgb(194, 184, 174);
+}
+.kn-faction-covenant .contact-dot {
+    background-color: rgb(94, 84, 74);
+}
+.kn-faction-covenant .contact-row.online .contact-dot {
+    background-color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .contact-fav {
+    border-color: rgb(160, 152, 143);
+}
+.kn-faction-covenant .contact-button {
+    font-size: 11.2px;
+}
+.kn-faction-covenant .contact-note {
+    font-size: 12.32px;
+    color: rgb(172, 159, 145);
+}
+.kn-faction-covenant .crew-label {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .crew-buttons Button {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .crew-announcement {
+    background-color: rgba(38, 30, 21, 0.55);
+}
+.kn-faction-covenant .crew-announcement-text {
+    font-size: 14.56px;
+}
+.kn-faction-covenant .crew-rank {
+    font-size: 10.08px;
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .crew-rank-1 {
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .crew-member-title {
+    font-size: 12.32px;
+    color: rgb(104, 214, 141);
+}
+
+/* ---- EconomyWindows.uss ---- */
+.kn-faction-covenant .storage-creds-button {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .trade-side {
+    background-color: rgba(26, 20, 12, 0.35);
+}
+.kn-faction-covenant .trade-state {
+    font-size: 12.32px;
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .trade-side.locked {
+    border-color: rgb(222, 167, 65);
+    background-color: rgba(60, 40, 2, 0.4);
+}
+.kn-faction-covenant .trade-side.locked .trade-state {
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .trade-notice {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .trade-buttons Button {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .kiosk-shop-name {
+    font-size: 17.92px;
+}
+.kn-faction-covenant .shop-owner {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .kiosk-sold {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .kiosk-price {
+    font-size: 11.2px;
+    background-color: rgba(18, 14, 10, 0.78);
+    -unity-font-definition: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Fonts/Grenze/Grenze-SemiBold.ttf");
+}
+.kn-faction-covenant .kiosk-tier {
+    font-size: 11.2px;
+}
+.kn-faction-covenant .kiosk-tier.selected {
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .kiosk-plate {
+    font-size: 14.56px;
+    background-color: rgba(24, 18, 12, 0.78);
 }
 
 /* ---- NpcInteraction.uss ---- */

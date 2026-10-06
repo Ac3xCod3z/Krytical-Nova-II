@@ -70,6 +70,10 @@ namespace KryticalNova.Core
         /// <summary>A consumable took effect on the actor.</summary>
         void Consumed(Transform actor, bool restoredHealth, bool restoredChi);
 
+        /// <summary>A pet reached its next growth stage, on every peer. <paramref name="glow"/> is the stage's colour.</summary>
+        /// <param name="ownerIsLocalPlayer">The pet belongs to the local player: screen and sound feedback play too.</param>
+        void PetEvolved(Transform pet, Color glow, bool ownerIsLocalPlayer);
+
         /// <summary>A character was killed, on every peer. A critical death throws the body.</summary>
         void Death(in DeathFeel death);
         /// <summary>The dying body hit the ground.</summary>

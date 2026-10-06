@@ -7,6 +7,7 @@ namespace KryticalNova.Items
     /// Pure inventory/equipment rules: no networking, no Unity objects beyond item definitions. The server runs these
     /// against a scratch copy of the player's state and writes back the result, so every mutation is validated in one place
     /// (and is unit-testable). Every Try* method leaves the state untouched when it returns false.
+    /// Items move as whole <see cref="ItemStack"/>s, so an item's own <see cref="ItemStack.data"/> goes with it.
     /// </summary>
     public static class InventoryRules
     {
@@ -26,7 +27,7 @@ namespace KryticalNova.Items
         /// </summary>
         public delegate string EquipGate(ItemDefinition item);
 
-        public static bool TryMove(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
+        public static bool TryMove(ItemStack[] bag, ref EquippedItems equipped, IItemLookup lookup,
             ItemLocation from, ItemLocation to, out string reason, EquipGate gate = null)
         {
             reason = null;
@@ -34,14 +35,14 @@ namespace KryticalNova.Items
             if (from.Equals(to)) return true;
 
             if (from.IsBag && to.IsBag) return MoveBagToBag(bag, lookup, from.index, to.index, out reason);
-            if (from.IsBag) return MoveBagToEquip(bag, ref loadout, lookup, from.index, to.Slot, out reason, gate);
-            if (to.IsBag) return MoveEquipToBag(bag, ref loadout, lookup, from.Slot, to.index, out reason, gate);
+            if (from.IsBag) return MoveBagToEquip(bag, ref equipped, lookup, from.index, to.Slot, out reason, gate);
+            if (to.IsBag) return MoveEquipToBag(bag, ref equipped, lookup, from.Slot, to.index, out reason, gate);
 
             reason = ReasonWrongSlot; // equip -> different equip slot: no two slots share an item type
             return false;
         }
 
-        public static bool TryQuickEquip(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
+        public static bool TryQuickEquip(ItemStack[] bag, ref EquippedItems equipped, IItemLookup lookup,
             int bagIndex, out string reason, EquipGate gate = null)
         {
             reason = null;
@@ -50,32 +51,39 @@ namespace KryticalNova.Items
             var def = lookup.Get(bag[bagIndex].itemId);
             if (def == null) { reason = ReasonUnknownItem; return false; }
             if (!def.IsEquippable) { reason = ReasonNotEquippable; return false; }
-            return MoveBagToEquip(bag, ref loadout, lookup, bagIndex, def.equipSlot, out reason, gate);
+            return MoveBagToEquip(bag, ref equipped, lookup, bagIndex, def.equipSlot, out reason, gate);
         }
 
-        public static bool TryQuickUnequip(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
+        public static bool TryQuickUnequip(ItemStack[] bag, ref EquippedItems equipped, IItemLookup lookup,
             EquipSlot slot, out string reason)
         {
             reason = null;
             if (!EquipSlots.IsValid(slot)) { reason = ReasonInvalidLocation; return false; }
-            if (loadout[slot] == 0) { reason = ReasonEmpty; return false; }
+            if (equipped.IsEmpty(slot)) { reason = ReasonEmpty; return false; }
             int cell = FirstEmpty(bag);
             if (cell < 0) { reason = ReasonBagFull; return false; }
-            return MoveEquipToBag(bag, ref loadout, lookup, slot, cell, out reason);
+            return MoveEquipToBag(bag, ref equipped, lookup, slot, cell, out reason);
         }
 
-        public static bool TryDestroy(ItemStack[] bag, ref EquipmentLoadout loadout, ItemLocation at, out string reason)
+        public static bool TryDestroy(ItemStack[] bag, ref EquippedItems equipped, ItemLocation at, out string reason) =>
+            TryTake(bag, ref equipped, at, out _, out reason);
+
+        /// <summary>Removes whatever is at <paramref name="at"/> and hands it back (to drop it on the ground, for one).</summary>
+        public static bool TryTake(ItemStack[] bag, ref EquippedItems equipped, ItemLocation at, out ItemStack taken, out string reason)
         {
             reason = null;
+            taken = ItemStack.Empty;
             if (!IsValid(bag, at)) { reason = ReasonInvalidLocation; return false; }
             if (at.IsBag)
             {
                 if (bag[at.index].IsEmpty) { reason = ReasonEmpty; return false; }
+                taken = bag[at.index];
                 bag[at.index] = ItemStack.Empty;
                 return true;
             }
-            if (loadout[at.Slot] == 0) { reason = ReasonEmpty; return false; }
-            loadout[at.Slot] = 0;
+            if (equipped.IsEmpty(at.Slot)) { reason = ReasonEmpty; return false; }
+            taken = equipped[at.Slot];
+            equipped[at.Slot] = ItemStack.Empty;
             return true;
         }
 
@@ -91,13 +99,13 @@ namespace KryticalNova.Items
             if (def == null) { reason = ReasonUnknownItem; return false; }
             if (!def.IsConsumable) { reason = ReasonNotUsable; return false; }
 
-            bag[bagIndex] = stack.count > 1 ? new ItemStack(stack.itemId, (ushort)(stack.count - 1)) : ItemStack.Empty;
+            bag[bagIndex] = stack.WithCount(stack.count - 1);
             used = def;
             return true;
         }
 
         /// <summary>Adds up to <paramref name="count"/>, topping up existing stacks first. Returns how many were added.</summary>
-        public static int TryAdd(ItemStack[] bag, IItemLookup lookup, ushort itemId, int count)
+        public static int TryAdd(ItemStack[] bag, IItemLookup lookup, ushort itemId, int count, ulong data = 0)
         {
             var def = lookup.Get(itemId);
             if (def == null || count <= 0) return 0;
@@ -108,9 +116,9 @@ namespace KryticalNova.Items
             {
                 for (int i = 0; i < bag.Length && remaining > 0; i++)
                 {
-                    if (bag[i].itemId != itemId || bag[i].count >= maxStack) continue;
+                    if (bag[i].itemId != itemId || bag[i].data != data || bag[i].count >= maxStack) continue;
                     int take = Math.Min(remaining, maxStack - bag[i].count);
-                    bag[i] = new ItemStack(itemId, (ushort)(bag[i].count + take));
+                    bag[i] = new ItemStack(itemId, (ushort)(bag[i].count + take), data);
                     remaining -= take;
                 }
             }
@@ -118,10 +126,30 @@ namespace KryticalNova.Items
             {
                 if (!bag[i].IsEmpty) continue;
                 int take = Math.Min(remaining, maxStack);
-                bag[i] = new ItemStack(itemId, (ushort)take);
+                bag[i] = new ItemStack(itemId, (ushort)take, data);
                 remaining -= take;
             }
             return count - remaining;
+        }
+
+        /// <summary>Adds a whole stack, state included. Returns how many of it fitted.</summary>
+        public static int TryAdd(ItemStack[] bag, IItemLookup lookup, in ItemStack stack) =>
+            stack.IsEmpty ? 0 : TryAdd(bag, lookup, stack.itemId, stack.count, stack.data);
+
+        /// <summary>
+        /// True when every stack of <paramref name="incoming"/> fits. <paramref name="scratch"/> is overwritten with
+        /// a copy of the bag as it would then be.
+        /// </summary>
+        public static bool Fits(ItemStack[] bag, ItemStack[] scratch, IItemLookup lookup, IReadOnlyList<ItemStack> incoming)
+        {
+            Array.Copy(bag, scratch, bag.Length);
+            for (int i = 0; i < incoming.Count; i++)
+            {
+                ItemStack stack = incoming[i];
+                if (stack.IsEmpty) continue;
+                if (TryAdd(scratch, lookup, stack) != stack.count) return false;
+            }
+            return true;
         }
 
         /// <summary>Merges partial stacks, then orders by equip slot, rarity (high first), item level (high first), name; empties last.</summary>
@@ -140,13 +168,13 @@ namespace KryticalNova.Items
                 var def = lookup.Get(s.itemId);
                 int maxStack = def != null ? Math.Max(1, (int)def.maxStack) : 1;
                 int remaining = s.count;
-                if (write > 0 && bag[write - 1].itemId == s.itemId && bag[write - 1].count < maxStack)
+                if (write > 0 && bag[write - 1].StacksWith(s) && bag[write - 1].count < maxStack)
                 {
                     int take = Math.Min(remaining, maxStack - bag[write - 1].count);
-                    bag[write - 1] = new ItemStack(s.itemId, (ushort)(bag[write - 1].count + take));
+                    bag[write - 1] = bag[write - 1].WithCount(bag[write - 1].count + take);
                     remaining -= take;
                 }
-                if (remaining > 0 && write < bag.Length) bag[write++] = new ItemStack(s.itemId, (ushort)remaining);
+                if (remaining > 0 && write < bag.Length) bag[write++] = s.WithCount(remaining);
             }
         }
 
@@ -172,11 +200,13 @@ namespace KryticalNova.Items
             c = string.Compare(da.displayName, db.displayName, StringComparison.OrdinalIgnoreCase);
             if (c != 0) return c;
             c = a.itemId.CompareTo(b.itemId);
+            if (c != 0) return c;
+            c = b.data.CompareTo(a.data); // same item: the further-grown one first, and equal states side by side
             return c != 0 ? c : b.count.CompareTo(a.count);
         }
 
         private static bool IsValid(ItemStack[] bag, ItemLocation loc) =>
-            loc.IsBag ? loc.index < bag.Length : EquipSlots.IsValid(loc.Slot);
+            loc.IsBag ? loc.index < bag.Length : loc.container == ItemContainer.Equipment && EquipSlots.IsValid(loc.Slot);
 
         private static bool MoveBagToBag(ItemStack[] bag, IItemLookup lookup, int from, int to, out string reason)
         {
@@ -185,16 +215,15 @@ namespace KryticalNova.Items
             if (src.IsEmpty) { reason = ReasonEmpty; return false; }
             var dst = bag[to];
 
-            if (!dst.IsEmpty && dst.itemId == src.itemId)
+            if (!dst.IsEmpty && dst.StacksWith(src))
             {
                 var def = lookup.Get(src.itemId);
                 int maxStack = def != null ? def.maxStack : 1;
                 if (maxStack > 1 && dst.count < maxStack)
                 {
                     int take = Math.Min(src.count, maxStack - dst.count);
-                    bag[to] = new ItemStack(dst.itemId, (ushort)(dst.count + take));
-                    int left = src.count - take;
-                    bag[from] = left > 0 ? new ItemStack(src.itemId, (ushort)left) : ItemStack.Empty;
+                    bag[to] = dst.WithCount(dst.count + take);
+                    bag[from] = src.WithCount(src.count - take);
                     return true;
                 }
             }
@@ -204,7 +233,7 @@ namespace KryticalNova.Items
             return true;
         }
 
-        private static bool MoveBagToEquip(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
+        private static bool MoveBagToEquip(ItemStack[] bag, ref EquippedItems equipped, IItemLookup lookup,
             int from, EquipSlot slot, out string reason, EquipGate gate)
         {
             reason = null;
@@ -217,24 +246,24 @@ namespace KryticalNova.Items
             if (src.count != 1) { reason = ReasonSplitStack; return false; }
             if (gate != null && (reason = gate(def)) != null) return false;
 
-            ushort previous = loadout[slot];
-            loadout[slot] = src.itemId;
-            bag[from] = previous != 0 ? new ItemStack(previous, 1) : ItemStack.Empty;
+            ItemStack previous = equipped[slot];
+            equipped[slot] = src;
+            bag[from] = previous;
             return true;
         }
 
-        private static bool MoveEquipToBag(ItemStack[] bag, ref EquipmentLoadout loadout, IItemLookup lookup,
+        private static bool MoveEquipToBag(ItemStack[] bag, ref EquippedItems equipped, IItemLookup lookup,
             EquipSlot slot, int to, out string reason, EquipGate gate = null)
         {
             reason = null;
-            ushort equipped = loadout[slot];
-            if (equipped == 0) { reason = ReasonEmpty; return false; }
+            ItemStack worn = equipped[slot];
+            if (worn.IsEmpty) { reason = ReasonEmpty; return false; }
             var dst = bag[to];
 
             if (dst.IsEmpty)
             {
-                bag[to] = new ItemStack(equipped, 1);
-                loadout[slot] = 0;
+                bag[to] = worn;
+                equipped[slot] = ItemStack.Empty;
                 return true;
             }
 
@@ -242,8 +271,8 @@ namespace KryticalNova.Items
             var def = lookup.Get(dst.itemId);
             if (def == null || def.equipSlot != slot || dst.count != 1) { reason = ReasonCannotSwap; return false; }
             if (gate != null && (reason = gate(def)) != null) return false;
-            loadout[slot] = dst.itemId;
-            bag[to] = new ItemStack(equipped, 1);
+            equipped[slot] = dst;
+            bag[to] = worn;
             return true;
         }
     }

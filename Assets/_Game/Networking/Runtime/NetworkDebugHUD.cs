@@ -7,7 +7,7 @@ namespace KryticalNova.Networking
 {
     /// <summary>
     /// Developer HUD for connecting via local host/client or mediated online sessions.
-    /// Accessible via GUI toggle (default key: Backquote/Tilde or F1).
+    /// Accessible via GUI toggle (F1).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class NetworkDebugHUD : MonoBehaviour
@@ -43,7 +43,7 @@ namespace KryticalNova.Networking
         private void Update()
         {
             var keyboard = Keyboard.current;
-            if (keyboard != null && (keyboard.backquoteKey.wasPressedThisFrame || keyboard.f1Key.wasPressedThisFrame))
+            if (keyboard != null && keyboard.f1Key.wasPressedThisFrame)
             {
                 showHUD = !showHUD;
             }

@@ -18,31 +18,112 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private float snapDistance = 8f;
         [Tooltip("Pets are normalised so their largest dimension is this many metres (x the item's petScale).")]
         [SerializeField] private float normalizedSize = 0.55f;
+        [Tooltip("Size of the stage glow relative to how its effect was authored: small enough to ride on the pet, not around the owner.")]
+        [SerializeField, Min(0.05f)] private float glowSize = 0.42f;
 
         private GameObject pet;
         private ItemDefinition current;
         private Vector3 velocity;
         private float bobPhase;
 
+        // The look of the pet's growth stage, set by whatever owns pet growth; defaults are the plain item.
+        private GameObject stageModel;
+        private float stageScale = 1f;
+        private GameObject auraPrefab;
+        private Color auraColor = Color.white;
+        private float auraStrength;
+        private GameObject aura;
+        private float baseScale = 1f;
+
+        /// <summary>The pet in the world, or null. For effects that play on it.</summary>
+        public Transform PetTransform => pet != null ? pet.transform : null;
+
         public void SetPet(ItemDefinition item)
         {
             if (current == item && (item == null || pet != null)) return;
             current = item;
+            Rebuild();
+        }
+
+        /// <summary>
+        /// How the pet looks at its current growth stage: its own model for the stage (null = the item's model), a
+        /// size step, and a glow effect riding on it in the stage's colour (strength 0 = none).
+        /// </summary>
+        public void SetStageLook(GameObject model, float scale, GameObject glowPrefab, Color glowColor, float glowStrength)
+        {
+            bool modelChanged = stageModel != model;
+            stageModel = model;
+            stageScale = Mathf.Max(0.1f, scale);
+            auraPrefab = glowPrefab;
+            auraColor = glowColor;
+            auraStrength = Mathf.Clamp01(glowStrength);
+            if (modelChanged) Rebuild();
+            else ApplyStage();
+        }
+
+        /// <summary>Back to the plain item look (no pet system on this object, or the pet was put away).</summary>
+        public void ClearStageLook() => SetStageLook(null, 1f, null, Color.white, 0f);
+
+        private void Rebuild()
+        {
             if (pet != null) Destroy(pet);
             pet = null;
-            if (item == null || item.petPrefab == null) return;
+            aura = null; // a child of the old pet
+            GameObject model = stageModel != null ? stageModel : current != null ? current.petPrefab : null;
+            if (current == null || model == null) return;
 
-            pet = Instantiate(item.petPrefab, TargetPosition(), transform.rotation);
-            pet.name = $"Pet ({item.displayName})";
+            pet = Instantiate(model, TargetPosition(), transform.rotation);
+            pet.name = $"Pet ({current.displayName})";
             VisualUtility.PrepareCosmetic(pet, gameObject.layer);
             // Prop art comes at any scale (Synty drones are metres across); normalise to a companion size.
             pet.transform.localScale = Vector3.one;
             float extent = MaxDimension(pet);
             float scale = extent > 0.001f ? normalizedSize / extent : 1f;
-            pet.transform.localScale = Vector3.one * scale * Mathf.Max(0.05f, item.petScale);
+            baseScale = scale * Mathf.Max(0.05f, current.petScale);
             pet.SetActive(isActiveAndEnabled);
             velocity = Vector3.zero;
             bobPhase = Random.value * 10f;
+            ApplyStage();
+        }
+
+        private void ApplyStage()
+        {
+            if (pet == null) return;
+            pet.transform.localScale = Vector3.one * baseScale * stageScale;
+
+            bool wanted = auraPrefab != null && auraStrength > 0f;
+            if (aura != null && (!wanted || aura.name != auraPrefab.name))
+            {
+                Destroy(aura);
+                aura = null;
+            }
+            if (!wanted) return;
+            if (aura == null)
+            {
+                aura = Instantiate(auraPrefab, pet.transform);
+                aura.name = auraPrefab.name;
+                aura.transform.localPosition = Vector3.zero;
+                aura.transform.localRotation = Quaternion.identity;
+                VisualUtility.PrepareCosmetic(aura, gameObject.layer);
+            }
+            // The pet is scaled down from prop size; undo that for the glow so it keeps its own size whatever the model.
+            float inherited = Mathf.Max(0.0001f, pet.transform.lossyScale.x);
+            aura.transform.localScale = Vector3.one * (glowSize * stageScale / inherited);
+            Color tint = auraColor;
+            tint.a = Mathf.Lerp(0.35f, 1f, auraStrength);
+            foreach (var particles in aura.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = particles.main;
+                main.startColor = tint;
+                var emission = particles.emission;
+                emission.rateOverTimeMultiplier = Mathf.Lerp(0.3f, 1f, auraStrength);
+                // Ribbons keep the colour they were authored with unless they take it from their particle.
+                var trails = particles.trails;
+                if (!trails.enabled) continue;
+                trails.inheritParticleColor = true;
+                trails.colorOverLifetime = Color.white;
+                trails.colorOverTrail = Color.white;
+            }
         }
 
         private static float MaxDimension(GameObject go)

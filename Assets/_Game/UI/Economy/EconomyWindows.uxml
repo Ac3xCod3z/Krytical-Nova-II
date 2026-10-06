@@ -1,0 +1,127 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="EconomyWindows.uss" />
+    <!-- Instanced inside ItemWindows.uxml, under its tooltip, menu and drag picture, so items dragged between these
+         windows and the Pack draw over both. Item cells use the Pack's own classes (Items.uss). -->
+
+    <!-- Shop names over Kiosk stands (KioskWindowController); first, so every window covers them -->
+    <ui:VisualElement name="kiosk-plates" class="kiosk-plates" picking-mode="Ignore" />
+
+    <!-- Vault and Deep Vault: one window, two storages (StorageWindowController) -->
+    <ui:VisualElement name="storage-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label name="storage-title" text="VAULT" class="heading" />
+            <ui:Label name="storage-scope" text="THIS CHARACTER" class="muted header-key" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Label name="storage-count" text="0 / 96" class="accent inventory-count" />
+            <ui:Button name="storage-sort" text="SORT" class="inventory-sort" />
+            <ui:Button name="close-storage" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement class="row inventory-pages">
+            <ui:Button name="storage-page-0" text="I" class="inventory-page" />
+            <ui:Button name="storage-page-1" text="II" class="inventory-page" />
+        </ui:VisualElement>
+        <ui:VisualElement name="storage-grid" class="inventory-grid" />
+        <ui:VisualElement class="row storage-creds-row">
+            <ui:Label text="CREDS STORED" class="muted inventory-creds-label" />
+            <ui:Label name="storage-creds" text="0" class="accent inventory-creds" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Button name="storage-deposit" text="DEPOSIT" class="storage-creds-button" />
+            <ui:Button name="storage-withdraw" text="WITHDRAW" class="storage-creds-button" />
+        </ui:VisualElement>
+        <ui:Label text="Right-click moves an item  ·  Shift+right-click asks how many  ·  Drag between here and your Pack" class="help" />
+    </ui:VisualElement>
+
+    <!-- Trade with another player (TradeWindowController): your offer on the left, theirs on the right -->
+    <ui:VisualElement name="trade-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="TRADE" class="heading" />
+            <ui:Label name="trade-partner" text="" class="muted header-key" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Button name="close-trade" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement class="row trade-body">
+            <ui:VisualElement name="trade-mine" class="trade-side">
+                <ui:VisualElement class="row trade-side-head">
+                    <ui:Label text="YOUR OFFER" class="eyebrow" />
+                    <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+                    <ui:Label name="trade-my-state" text="" class="trade-state" />
+                </ui:VisualElement>
+                <ui:VisualElement name="trade-my-grid" class="trade-grid" />
+                <ui:VisualElement class="row trade-creds-row">
+                    <ui:Label text="CREDS" class="muted inventory-creds-label" />
+                    <ui:Label name="trade-my-creds" text="0" class="accent inventory-creds" />
+                    <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+                    <ui:Button name="trade-set-creds" text="SET" class="storage-creds-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="trade-theirs" class="trade-side">
+                <ui:VisualElement class="row trade-side-head">
+                    <ui:Label name="trade-their-name" text="THEIR OFFER" class="eyebrow" />
+                    <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+                    <ui:Label name="trade-their-state" text="" class="trade-state" />
+                </ui:VisualElement>
+                <ui:VisualElement name="trade-their-grid" class="trade-grid" />
+                <ui:VisualElement class="row trade-creds-row">
+                    <ui:Label text="CREDS" class="muted inventory-creds-label" />
+                    <ui:Label name="trade-their-creds" text="0" class="accent inventory-creds" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="trade-allowance" text="" class="help trade-allowance" />
+        <ui:Label name="trade-notice" text="" class="trade-notice" />
+        <ui:VisualElement class="row trade-buttons">
+            <ui:Button name="trade-lock" text="LOCK OFFER" class="kn-button-primary" />
+            <ui:Button name="trade-confirm" text="CONFIRM TRADE" class="kn-button-primary" />
+            <ui:Button name="trade-cancel" text="CANCEL" class="kn-button-danger" />
+        </ui:VisualElement>
+        <ui:Label text="Right-click a Pack item to offer it  ·  Right-click an offered item to take it back  ·  Both lock, then both confirm" class="help" />
+    </ui:VisualElement>
+
+    <!-- The player's own Kiosk (KioskWindowController): set one up, or see how it is doing and collect -->
+    <ui:VisualElement name="kiosk-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="KIOSK" class="heading" />
+            <ui:Label text="[T]" class="muted header-key" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Label name="kiosk-status" text="" class="accent inventory-count" />
+            <ui:Button name="close-kiosk" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement name="kiosk-name-row" class="row kiosk-name-row">
+            <ui:Label text="SHOP NAME" class="muted inventory-creds-label" />
+            <ui:TextField name="kiosk-name" class="kn-textfield kiosk-name" max-length="24" />
+        </ui:VisualElement>
+        <ui:Label name="kiosk-shop-name" text="" class="heading kiosk-shop-name" />
+        <ui:VisualElement name="kiosk-grid" class="inventory-grid" />
+        <ui:VisualElement name="kiosk-tiers" class="row kiosk-tiers" />
+        <ui:Label name="kiosk-zone" text="" class="help kiosk-zone" />
+        <ui:VisualElement name="kiosk-till-row" class="row storage-creds-row">
+            <ui:Label text="TILL" class="muted inventory-creds-label" />
+            <ui:Label name="kiosk-till" text="0" class="accent inventory-creds" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Label name="kiosk-sold" text="" class="muted kiosk-sold" />
+        </ui:VisualElement>
+        <ui:VisualElement class="row trade-buttons">
+            <ui:Button name="kiosk-start" text="START KIOSK" class="kn-button-primary" />
+            <ui:Button name="kiosk-collect" text="COLLECT" class="kn-button-primary" />
+            <ui:Button name="kiosk-close-shop" text="CLOSE KIOSK" class="kn-button-danger" />
+        </ui:VisualElement>
+        <ui:Label name="kiosk-help" text="" class="help" />
+    </ui:VisualElement>
+
+    <!-- Another player's Kiosk, opened by clicking its stand -->
+    <ui:VisualElement name="shop-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label name="shop-title" text="KIOSK" class="heading" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Label name="shop-left" text="" class="accent inventory-count" />
+            <ui:Button name="close-shop" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:Label name="shop-owner" text="" class="muted shop-owner" />
+        <ui:VisualElement name="shop-grid" class="inventory-grid" />
+        <ui:VisualElement class="row storage-creds-row">
+            <ui:Label text="YOUR CREDS" class="muted inventory-creds-label" />
+            <ui:Label name="shop-creds" text="0" class="accent inventory-creds" />
+        </ui:VisualElement>
+        <ui:Label text="Right-click an item to buy it  ·  The price on each item is for one" class="help" />
+    </ui:VisualElement>
+</ui:UXML>

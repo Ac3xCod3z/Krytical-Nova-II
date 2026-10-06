@@ -299,7 +299,18 @@ namespace KryticalNova.EditorTools
             string path = $"{SignFolder}/M_Text_{font.name.Replace(" ", "")}_{ColorUtility.ToHtmlStringRGB(ink)}_{Mathf.RoundToInt(Mathf.Max(ink.r, Mathf.Max(ink.g, ink.b)) * 10f)}.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (mat != null) return mat;
-            mat = new Material(font.material);
+            // Some vendor font assets lose their material reference when TextMeshPro upgrades them, though the
+            // material is still inside the asset: take it from there.
+            Material source = font.material;
+            if (source == null)
+                foreach (Object sub in AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(font)))
+                    if (sub is Material inside) { source = inside; break; }
+            if (source == null)
+            {
+                Debug.LogWarning($"[ColorBible] Font asset {font.name} has no material; its sign text keeps the default look.");
+                return null;
+            }
+            mat = new Material(source);
             mat.SetColor("_FaceColor", ink);
             if (mat.HasProperty("_OutlineWidth"))
             {

@@ -263,6 +263,20 @@ namespace KryticalNova.Progression
             return true;
         }
 
+        /// <summary>
+        /// Puts a remembered layout back (the keys a character had when it last played). Not checked against what is
+        /// learned: ranks may still be on their way from the server, and a slot that cannot be used simply does nothing.
+        /// </summary>
+        public void RestoreSlot(int index, HotbarSlotEntry entry, bool notify = true)
+        {
+            if (!IsValidSlot(index)) return;
+            slots[index] = entry;
+            if (notify) Changed?.Invoke();
+        }
+
+        /// <summary>Raises <see cref="Changed"/> once after a batch of <see cref="RestoreSlot"/> calls.</summary>
+        public void NotifyRestored() => Changed?.Invoke();
+
         /// <summary>Moves a hotbar assignment to another slot, swapping occupied destinations.</summary>
         public void SwapSlots(int source, int destination)
         {

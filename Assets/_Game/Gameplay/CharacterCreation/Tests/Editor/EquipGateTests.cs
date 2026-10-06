@@ -18,7 +18,7 @@ namespace KryticalNova.Tests
         private const string Refusal = "Your faction cannot use this.";
         private Lookup lookup;
         private ItemStack[] bag;
-        private EquipmentLoadout loadout;
+        private EquippedItems loadout;
 
         [SetUp]
         public void SetUp()
@@ -48,7 +48,7 @@ namespace KryticalNova.Tests
             Assert.IsFalse(InventoryRules.TryQuickEquip(bag, ref loadout, lookup, 0, out string reason, _ => Refusal));
             Assert.AreEqual(Refusal, reason);
             Assert.AreEqual(ArmorA, bag[0].itemId);
-            Assert.AreEqual(0, loadout.armor);
+            Assert.AreEqual(0, loadout.ids.armor);
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace KryticalNova.Tests
         {
             bag[0] = new ItemStack(ArmorA, 1);
             Assert.IsTrue(InventoryRules.TryQuickEquip(bag, ref loadout, lookup, 0, out _, _ => null));
-            Assert.AreEqual(ArmorA, loadout.armor);
+            Assert.AreEqual(ArmorA, loadout.ids.armor);
             Assert.IsTrue(bag[0].IsEmpty);
         }
 
@@ -67,18 +67,18 @@ namespace KryticalNova.Tests
             Assert.IsFalse(InventoryRules.TryMove(bag, ref loadout, lookup, ItemLocation.Bag(0), ItemLocation.Equip(EquipSlot.Armor),
                 out string reason, _ => Refusal));
             Assert.AreEqual(Refusal, reason);
-            Assert.AreEqual(0, loadout.armor);
+            Assert.AreEqual(0, loadout.ids.armor);
         }
 
         [Test]
         public void SwappingWornGearForRefusedGearIsBlocked()
         {
-            loadout.armor = ArmorA;
+            loadout.ids.armor = ArmorA;
             bag[0] = new ItemStack(ArmorB, 1);
             Assert.IsFalse(InventoryRules.TryMove(bag, ref loadout, lookup, ItemLocation.Equip(EquipSlot.Armor), ItemLocation.Bag(0),
                 out string reason, item => item.itemId == ArmorB ? Refusal : null));
             Assert.AreEqual(Refusal, reason);
-            Assert.AreEqual(ArmorA, loadout.armor);
+            Assert.AreEqual(ArmorA, loadout.ids.armor);
             Assert.AreEqual(ArmorB, bag[0].itemId);
         }
     }

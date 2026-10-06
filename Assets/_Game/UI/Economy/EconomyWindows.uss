@@ -1,0 +1,100 @@
+/* Windows of the economy: the Vault / Deep Vault window today; Trade and the Kiosk follow. Builds on Items.uss
+   (item cells, page tabs, the .window frame), so the faction skins restyle these with the Pack. */
+
+#storage-window { left: 270px; top: 84px; width: 372px; display: none; }
+
+.storage-creds-row {
+    align-items: center;
+    margin: 6px 12px 0 12px;
+}
+
+.storage-creds-button {
+    min-height: 24px;
+    height: 24px;
+    margin: 0 0 0 6px;
+    padding: 0 10px;
+    font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ trade */
+
+#trade-window { left: 150px; top: 120px; width: 520px; display: none; }
+
+.trade-body { justify-content: space-between; margin-top: 8px; }
+.trade-side {
+    width: 236px;
+    padding: 6px 8px 8px 8px;
+    border-width: 1px;
+    border-color: rgba(84, 110, 130, 0.45);
+    border-radius: 4px;
+    background-color: rgba(10, 18, 26, 0.35);
+    transition-property: border-color, background-color;
+    transition-duration: 0.15s;
+}
+.trade-side-head { align-items: center; margin-bottom: 4px; }
+.trade-grid { flex-direction: row; flex-wrap: wrap; width: 216px; margin: 0 auto; }
+.trade-creds-row { align-items: center; margin-top: 6px; min-height: 26px; }
+.trade-state { font-size: 11px; letter-spacing: 1px; color: rgb(156, 172, 188); }
+
+/* A locked side cannot change any more; a confirmed one has agreed to both. */
+.trade-side.locked { border-color: rgb(114, 222, 196); background-color: rgba(20, 60, 54, 0.4); }
+.trade-side.locked .trade-state { color: rgb(114, 222, 196); }
+.trade-side.confirmed { border-color: rgb(255, 214, 92); }
+.trade-side.confirmed .trade-state { color: rgb(255, 214, 92); }
+
+.trade-allowance { margin-top: 8px; }
+.trade-notice {
+    white-space: normal;
+    min-height: 16px;
+    margin-top: 4px;
+    font-size: 12px;
+    color: rgb(240, 110, 96);
+}
+.trade-buttons { justify-content: flex-end; margin-top: 6px; }
+.trade-buttons Button { margin-left: 8px; min-height: 28px; font-size: 12px; }
+
+/* ------------------------------------------------------------------ kiosks */
+
+#kiosk-window { left: 270px; top: 84px; width: 372px; display: none; }
+#shop-window { left: 270px; top: 84px; width: 372px; display: none; }
+
+.kiosk-name-row { align-items: center; margin: 8px 12px 0 12px; }
+.kiosk-name { flex-grow: 1; margin-left: 8px; }
+.kiosk-shop-name { margin: 8px 12px 0 12px; font-size: 16px; white-space: normal; }
+.shop-owner { margin: 2px 12px 0 12px; font-size: 12px; }
+.kiosk-sold { font-size: 11px; }
+.kiosk-zone { margin: 6px 12px 0 12px; }
+
+/* The price of one, on the item itself. */
+.kiosk-price {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    bottom: 1px;
+    font-size: 10px;
+    padding: 0;
+    margin: 0;
+    -unity-text-align: lower-center;
+    color: rgb(255, 214, 92);
+    background-color: rgba(8, 12, 18, 0.78);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
+}
+/* The stack count moves up so the price does not cover it. */
+.kiosk-cell > .item-count { bottom: 13px; }
+
+.kiosk-tiers { margin: 6px 10px 0 10px; }
+.kiosk-tier { flex-grow: 1; flex-basis: 0; min-height: 34px; margin: 0 2px; padding: 2px 4px; font-size: 10px; white-space: normal; opacity: 0.75; }
+.kiosk-tier.selected { opacity: 1; color: rgb(114, 222, 196); }
+/* A tier whose permit the player does not hold. */
+.kiosk-tier.locked { opacity: 0.4; }
+
+.kiosk-plates { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.kiosk-plate {
+    position: absolute;
+    padding: 2px 9px 3px 9px;
+    font-size: 13px;
+    color: rgb(255, 214, 92);
+    background-color: rgba(10, 16, 24, 0.78);
+    border-radius: 3px;
+    -unity-text-align: middle-center;
+}

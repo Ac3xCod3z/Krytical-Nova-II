@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="PetPanels.uss" />
+    <!-- Instanced into ProgressionHUD.uxml; driven by PetHudController. Shared .panel skin, so each faction sees
+         these in its own HUD style. A pet's own state is shown in its item tooltip (ItemWindows.uxml). -->
+
+    <!-- The local player's pet reached its next growth stage. -->
+    <ui:VisualElement name="pet-evolved" class="pet-evolved panel" picking-mode="Ignore">
+        <ui:Label text="PET EVOLVED" class="eyebrow pet-evolved-eyebrow" picking-mode="Ignore" />
+        <ui:Label name="pet-evolved-title" text="EMBERWING" class="heading pet-evolved-title" picking-mode="Ignore" />
+        <ui:VisualElement name="pet-evolved-pips" class="pet-pips pet-evolved-pips" picking-mode="Ignore" />
+        <ui:Label name="pet-evolved-detail" text="" class="pet-evolved-detail" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

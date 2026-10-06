@@ -20,6 +20,22 @@ namespace KryticalNova.Core
         public static IChatSink Chat { get; private set; }
         public static IDuelSink Duel { get; private set; }
         public static IPartySink Party { get; private set; }
+        public static IRequestPromptSink Prompts { get; private set; }
+        public static IServiceWindowSink Services { get; private set; }
+
+        public static void RegisterServices(IServiceWindowSink sink) => Services = sink;
+
+        public static void UnregisterServices(IServiceWindowSink sink)
+        {
+            if (ReferenceEquals(Services, sink)) Services = null;
+        }
+
+        public static void RegisterPrompts(IRequestPromptSink sink) => Prompts = sink;
+
+        public static void UnregisterPrompts(IRequestPromptSink sink)
+        {
+            if (ReferenceEquals(Prompts, sink)) Prompts = null;
+        }
 
         public static void RegisterParty(IPartySink sink) => Party = sink;
 

@@ -1,0 +1,131 @@
+/* The pet block of the item tooltip and the evolution banner. Layout only: colours that belong to the
+   faction skin come from the shared .panel / .heading / .eyebrow classes. */
+
+/* ---------------------------------------------------------------- pet block (inside the item tooltip) */
+
+.tooltip-pet {
+    flex-direction: column;
+    margin: 6px 0 6px 0;
+    padding: 7px 8px 8px 8px;
+    background-color: rgba(14, 22, 30, 0.94);
+    border-width: 1px;
+    border-color: rgba(120, 150, 170, 0.28);
+}
+
+.pet-panel-top {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.pet-stage {
+    font-size: 11px;
+    color: rgb(170, 186, 200);
+    flex-grow: 1;
+}
+
+.pet-bonus {
+    font-size: 14px;
+    color: rgb(114, 222, 196);
+    margin-bottom: 4px;
+}
+
+.pet-panel--starving .pet-bonus { color: rgb(240, 58, 46); }
+
+.pet-pips {
+    flex-direction: row;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.pet-pip {
+    width: 9px;
+    height: 9px;
+    margin-right: 3px;
+    rotate: 45deg;
+    background-color: rgba(34, 52, 66, 0.95);
+    border-width: 1px;
+    border-color: rgba(120, 150, 170, 0.45);
+}
+
+.pet-pip--reached {
+    background-color: rgb(255, 201, 60);
+    border-color: rgb(255, 232, 160);
+}
+
+.pet-meter-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 3px;
+}
+
+.pet-meter-label {
+    width: 58px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgb(170, 186, 200);
+}
+
+.pet-meter {
+    flex-grow: 1;
+    height: 7px;
+    background-color: rgba(34, 52, 66, 0.9);
+}
+
+.pet-meter-fill {
+    height: 100%;
+    width: 0;
+    background-color: rgb(255, 201, 60);
+}
+
+.pet-meter-fill--hunger { background-color: rgb(114, 222, 196); }
+.pet-meter-fill--low { background-color: rgb(255, 158, 102); }
+.pet-meter-fill--empty { background-color: rgb(240, 58, 46); }
+
+.pet-meter-value {
+    width: 58px;
+    font-size: 11px;
+    -unity-text-align: middle-right;
+    color: rgb(226, 236, 242);
+}
+
+/* ---------------------------------------------------------------- evolution banner */
+
+.pet-evolved {
+    position: absolute;
+    top: 22%;
+    left: 50%;
+    translate: -50% 0;
+    min-width: 440px;
+    align-items: center;
+    padding: 16px 44px 18px 44px;
+    opacity: 0;
+    scale: 0.9 0.9;
+    transition-property: opacity, scale;
+    transition-duration: 0.25s, 0.3s;
+    transition-timing-function: ease-out, ease-out-back;
+}
+
+.pet-evolved--shown {
+    opacity: 1;
+    scale: 1 1;
+}
+
+.pet-evolved-eyebrow { font-size: 12px; letter-spacing: 3px; }
+
+.pet-evolved-title {
+    font-size: 48px;
+    letter-spacing: 4px;
+    margin: 2px 0 6px 0;
+    -unity-text-align: middle-center;
+    color: rgb(255, 201, 60);
+}
+
+.pet-evolved-pips { margin: 0 0 8px 0; }
+.pet-evolved-pips .pet-pip { width: 13px; height: 13px; margin: 0 5px; }
+
+.pet-evolved-detail {
+    font-size: 15px;
+    -unity-text-align: middle-center;
+    color: rgb(226, 236, 242);
+}

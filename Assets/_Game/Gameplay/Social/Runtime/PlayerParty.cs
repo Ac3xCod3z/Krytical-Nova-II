@@ -244,7 +244,7 @@ namespace KryticalNova.Social
             }
             if (target.invitedBy != null && target.invitedBy != this && Time.time <= target.inviteExpires)
             { Tell($"{target.MemberName} is answering another invitation."); return; }
-            string refusal = Refusal(target);
+            string refusal = Refusal(target) ?? SocialGate.Refusal(this, target);
             if (refusal != null) { Tell(refusal); return; }
 
             target.invitedBy = this;

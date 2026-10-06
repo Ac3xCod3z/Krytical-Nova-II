@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
+using KryticalNova.Economy;
 using KryticalNova.Items;
 using KryticalNova.Items.Visuals;
 using KryticalNova.Player;
@@ -37,6 +38,7 @@ namespace KryticalNova.UI
         private const string LevelClass = "item-level";
         private const string UnusableClass = "item-unusable";
         private const string UnmetClass = "tooltip-requires--unmet";
+        private const string LockedClass = "item-locked";
         private static readonly string[] GlyphToneClasses = { "glyph-health", "glyph-chi", "glyph-dual" };
         private static readonly string[] RarityClasses = { "rarity-0", "rarity-1", "rarity-2", "rarity-3", "rarity-4" };
         private static readonly string[] RarityTextClasses = { "rarity-text-0", "rarity-text-1", "rarity-text-2", "rarity-text-3", "rarity-text-4" };
@@ -44,8 +46,11 @@ namespace KryticalNova.UI
         private VisualElement root;
         private VisualElement equipmentWindow, inventoryWindow, grid, viewport, tryOnChip;
         private VisualElement tooltip, menu, menuActions, confirm, ghost;
-        private Label countLabel, tryOnLabel, menuTitle, confirmText;
+        private Label countLabel, credsLabel, tryOnLabel, menuTitle, confirmText, confirmHelp;
+        private Button confirmYes;
+        private bool confirmDestroys;
         private Label tipName, tipType, tipRequires, tipDesc, tipStats, tipHint;
+        private PetTooltip tipPet;
         private readonly VisualElement[] cells = new VisualElement[PlayerInventory.Capacity];
         private readonly Button[] pageTabs = new Button[PlayerInventory.PageCount];
         private int currentPage;
@@ -59,6 +64,7 @@ namespace KryticalNova.UI
         private PlayerInventory inventory;
         private PlayerEquipment equipment;
         private PlayerCharacterProgression progression; // a level-up changes what can be worn
+        private PlayerWallet wallet;
         private CharacterPreviewStage stage;
 
         // Press / drag state
@@ -79,6 +85,12 @@ namespace KryticalNova.UI
         private ItemLocation confirmLocation;
         private int suppressWorldInputFrame = -1;
 
+        // Other windows that take items from the Pack while they are open (Vault, Trade, Kiosk). Last opened first.
+        private readonly List<IPackTarget> packTargets = new List<IPackTarget>(4);
+
+        /// <summary>The HUD's item windows, or null (no HUD in this scene, dedicated server).</summary>
+        public static GearUIController Instance { get; private set; }
+
         // ------------------------------------------------------------------ lifecycle
 
         private void OnEnable()
@@ -98,6 +110,7 @@ namespace KryticalNova.UI
             tryOnChip = root.Q("try-on-chip");
             tryOnLabel = root.Q<Label>("try-on-label");
             countLabel = root.Q<Label>("inventory-count");
+            credsLabel = root.Q<Label>("inventory-creds");
             tooltip = root.Q("item-tooltip");
             tipName = root.Q<Label>("tooltip-name");
             tipType = root.Q<Label>("tooltip-type");
@@ -105,11 +118,14 @@ namespace KryticalNova.UI
             tipDesc = root.Q<Label>("tooltip-desc");
             tipStats = root.Q<Label>("tooltip-stats");
             tipHint = root.Q<Label>("tooltip-hint");
+            tipPet = new PetTooltip(tooltip);
             menu = root.Q("item-menu");
             menuActions = root.Q("item-menu-actions");
             menuTitle = root.Q<Label>("item-menu-title");
             confirm = root.Q("item-confirm");
             confirmText = root.Q<Label>("item-confirm-text");
+            confirmHelp = root.Q<Label>("item-confirm-help");
+            confirmYes = root.Q<Button>("item-confirm-yes");
             ghost = root.Q("item-drag-ghost");
 
             if (ghostGlyph == null)
@@ -136,6 +152,7 @@ namespace KryticalNova.UI
 
             ClientPresentationRegistry.RegisterPointerBlock(this);
             PlayerInventory.LocalChanged += OnLocalChanged;
+            Instance = this;
             initialized = true;
             OnLocalChanged();
         }
@@ -144,6 +161,7 @@ namespace KryticalNova.UI
         {
             if (!initialized) return;
             initialized = false;
+            if (Instance == this) Instance = null;
             PlayerInventory.LocalChanged -= OnLocalChanged;
             ClientPresentationRegistry.UnregisterPointerBlock(this);
             BindPlayer(null);
@@ -168,6 +186,7 @@ namespace KryticalNova.UI
                 inventory.RequestFailed -= OnRequestFailed;
                 if (progression != null) progression.Changed -= RefreshBag;
                 if (equipment != null) equipment.SlotChanged -= OnSlotChanged;
+                if (wallet != null) wallet.Changed -= RefreshCreds;
             }
             CancelDrag();
             HideMenu();
@@ -176,6 +195,8 @@ namespace KryticalNova.UI
             equipment = next != null ? next.Equipment : null;
             progression = next != null ? next.GetComponent<PlayerCharacterProgression>() : null;
             if (progression != null) progression.Changed += RefreshBag;
+            wallet = next != null ? next.GetComponent<PlayerWallet>() : null;
+            if (wallet != null) wallet.Changed += RefreshCreds;
             if (inventory != null)
             {
                 inventory.Changed += RefreshBag;
@@ -186,6 +207,12 @@ namespace KryticalNova.UI
             if (stage != null && inventory != null) BindStage();
             RefreshBag();
             RefreshEquipment();
+            RefreshCreds();
+        }
+
+        private void RefreshCreds()
+        {
+            if (credsLabel != null) credsLabel.text = WalletRules.Format(wallet != null ? wallet.Creds : 0);
         }
 
         // ------------------------------------------------------------------ input
@@ -368,7 +395,7 @@ namespace KryticalNova.UI
         }
 
         /// <summary>Adds icon / stack count / frame children. Frame goes last so it draws over the icon.</summary>
-        private static VisualElement CreateItemVisual(VisualElement host, bool withCount)
+        public static VisualElement CreateItemVisual(VisualElement host, bool withCount)
         {
             var icon = new VisualElement { pickingMode = PickingMode.Ignore };
             icon.AddToClassList("item-icon");
@@ -412,6 +439,7 @@ namespace KryticalNova.UI
                 if (def != null) used++;
                 bool unusable = def != null && def.IsEquippable && !inventory.CanEquip(def, out _);
                 SetItemVisual(cells[i], def, stack.count, null, unusable);
+                cells[i].EnableInClassList(LockedClass, def != null && IsLocked(i));
             }
             if (countLabel != null) countLabel.text = $"{used} / {PlayerInventory.Capacity}";
         }
@@ -429,7 +457,7 @@ namespace KryticalNova.UI
 
         private void OnSlotChanged(EquipSlot slot, ushort previous, ushort next) => RefreshEquipment();
 
-        private static void SetItemVisual(VisualElement host, ItemDefinition def, int count, Sprite silhouette, bool unusable = false)
+        public static void SetItemVisual(VisualElement host, ItemDefinition def, int count, Sprite silhouette = null, bool unusable = false)
         {
             host.EnableInClassList(UnusableClass, def != null && unusable);
             var levelLabel = host.Q<Label>(className: LevelClass);
@@ -488,6 +516,7 @@ namespace KryticalNova.UI
             evt.StopPropagation();
             HideMenu();
             if (DefinitionAt(loc) == null) return;
+            if (loc.IsBag && IsLocked(loc.index)) return; // promised to a trade or a Kiosk: hands off until that ends
 
             if (evt.button == RightButton)
             {
@@ -536,6 +565,12 @@ namespace KryticalNova.UI
             {
                 OpenMenu(from, pos);
                 return;
+            }
+
+            if (from.IsBag)
+            {
+                for (int i = packTargets.Count - 1; i >= 0; i--)
+                    if (packTargets[i].IsOpen && packTargets[i].TryDrop(from, pos)) return;
             }
 
             int hotbarSlot = HotbarSlotAt(pos);
@@ -660,6 +695,11 @@ namespace KryticalNova.UI
         {
             if (inventory == null) return;
             suppressWorldInputFrame = Time.frameCount;
+            if (loc.IsBag)
+            {
+                IPackTarget target = OpenPackTarget();
+                if (target != null && target.TryQuick(loc)) return;
+            }
             if (!loc.IsBag) inventory.RequestQuickUnequip(loc.Slot);
             else if (IsUsable(DefinitionAt(loc))) inventory.RequestUse(loc.index);
             else inventory.RequestQuickEquip(loc.index);
@@ -697,7 +737,8 @@ namespace KryticalNova.UI
             {
                 actions.Add(new MenuAction("Unequip", () => inventory.RequestQuickUnequip(loc.Slot)));
             }
-            actions.Add(new MenuAction("Drop", () => ShowConfirm(loc), danger: true));
+            actions.Add(new MenuAction("Drop", () => ShowConfirm(loc)));
+            actions.Add(new MenuAction("Destroy", () => ShowConfirm(loc, destroy: true), danger: true));
             return actions;
         }
 
@@ -726,12 +767,25 @@ namespace KryticalNova.UI
 
         private void HideMenu() => SetDisplay(menu, false);
 
-        private void ShowConfirm(ItemLocation loc)
+        /// <summary>Asks before an item leaves the Pack: onto the ground (others may pick it up), or destroyed for good.</summary>
+        private void ShowConfirm(ItemLocation loc, bool destroy = false)
         {
             var def = DefinitionAt(loc);
             if (def == null) return;
             confirmLocation = loc;
-            confirmText.text = $"Drop {def.displayName}?";
+            confirmDestroys = destroy;
+            confirmText.text = destroy ? $"Destroy {def.displayName}?" : $"Drop {def.displayName}?";
+            if (confirmHelp != null)
+            {
+                PlayerLoot loot = inventory != null ? inventory.GetComponent<PlayerLoot>() : null;
+                string after = loot == null || loot.DropsOpenToEveryone ? "it is free for all" : "others of your faction can take it";
+                confirmHelp.text = destroy
+                    ? "It will be destroyed. This can't be undone."
+                    : loot != null && loot.DropReserveSeconds > 0f
+                        ? $"It goes on the ground at your feet. It stays yours alone for {loot.DropReserveSeconds:0} seconds, then {after}."
+                        : "It goes on the ground at your feet, where anyone can take it.";
+            }
+            if (confirmYes != null) confirmYes.text = destroy ? "DESTROY" : "DROP";
             SetDisplay(confirm, true);
             confirm.BringToFront();
         }
@@ -740,7 +794,10 @@ namespace KryticalNova.UI
         {
             HideConfirm();
             suppressWorldInputFrame = Time.frameCount;
-            inventory?.RequestDestroy(confirmLocation); // TODO(loot): spawn a world drop instead once ground loot exists
+            if (inventory == null) return;
+            var loot = confirmDestroys ? null : inventory.GetComponent<PlayerLoot>();
+            if (loot != null) loot.RequestDrop(confirmLocation);
+            else inventory.RequestDestroy(confirmLocation);
         }
 
         private void HideConfirm() => SetDisplay(confirm, false);
@@ -753,6 +810,23 @@ namespace KryticalNova.UI
             var def = DefinitionAt(loc);
             if (def == null) { HideTooltip(); return; }
 
+            IPackTarget target = loc.IsBag ? OpenPackTarget() : null;
+            string hint = target != null && !string.IsNullOrEmpty(target.QuickHint) ? $"Right-click: {target.QuickHint}   ·   Drag to move"
+                : !loc.IsBag ? "Right-click: unequip   ·   Left-click: options"
+                : IsUsable(def) ? (def.IsHotbarUsable ? "Right-click: use   ·   Drag to the hotbar to bind a key" : "Right-click: use   ·   Left-click: options")
+                : def.IsEquippable ? "Right-click: equip   ·   Left-click: options"
+                : "Left-click: options";
+            ShowItemTooltip(element, def, inventory != null ? inventory.GetStack(loc) : ItemStack.Empty, hint);
+        }
+
+        /// <summary>
+        /// The item tooltip beside any element: for the Pack's own cells and for other windows that show items
+        /// (Vault, Trade, Kiosk). The stack carries the item's own state, so a pet reads the same everywhere.
+        /// </summary>
+        public void ShowItemTooltip(VisualElement element, ItemDefinition def, in ItemStack itemStack, string hint)
+        {
+            if (!initialized || element == null || def == null) { HideItemTooltip(); return; }
+
             tipName.text = def.displayName;
             ApplyRarityText(tipName, def.rarity);
             tipType.text = TypeLine(def);
@@ -764,11 +838,10 @@ namespace KryticalNova.UI
                 SetDisplay(tipRequires, requirement.Length > 0);
             }
             tipDesc.text = def.description;
-            tipStats.text = FormatStats(def);
-            tipHint.text = !loc.IsBag ? "Right-click: unequip   ·   Left-click: options"
-                : IsUsable(def) ? (def.IsHotbarUsable ? "Right-click: use   ·   Drag to the hotbar to bind a key" : "Right-click: use   ·   Left-click: options")
-                : def.IsEquippable ? "Right-click: equip   ·   Left-click: options"
-                : "Left-click: options";
+            // A pet's stage, growth, hunger and bonus are a block of their own; the line under it says what it grows.
+            string petLine = tipPet.Show(def, itemStack.IsEmpty ? new ItemStack(def.itemId, 1) : itemStack);
+            tipStats.text = petLine != null ? $"<color={SkillColor}>{petLine}</color>" : FormatStats(def);
+            tipHint.text = hint ?? string.Empty;
 
             SetDisplay(tooltip, true);
             tooltip.BringToFront();
@@ -784,6 +857,82 @@ namespace KryticalNova.UI
         }
 
         private void HideTooltip() => SetDisplay(tooltip, false);
+
+        public void HideItemTooltip()
+        {
+            if (initialized) HideTooltip();
+        }
+
+        // ------------------------------------------------------------------ other windows that work with the Pack
+
+        /// <summary>A window that takes Pack items while it is open. Register on enable, unregister on disable.</summary>
+        public void RegisterPackTarget(IPackTarget target)
+        {
+            if (target != null && !packTargets.Contains(target)) packTargets.Add(target);
+        }
+
+        public void UnregisterPackTarget(IPackTarget target) => packTargets.Remove(target);
+
+        private IPackTarget OpenPackTarget()
+        {
+            for (int i = packTargets.Count - 1; i >= 0; i--)
+                if (packTargets[i].IsOpen) return packTargets[i];
+            return null;
+        }
+
+        private bool IsLocked(int cell)
+        {
+            for (int i = 0; i < packTargets.Count; i++)
+                if (packTargets[i].IsOpen && packTargets[i].LocksCell(cell)) return true;
+            return false;
+        }
+
+        /// <summary>Redraws the Pack (a window changed which cells it holds on to).</summary>
+        public void RefreshPack() => RefreshBag();
+
+        /// <summary>The Pack cell under a point of the panel, or -1.</summary>
+        public int PackCellAt(Vector2 panelPosition)
+        {
+            if (!initialized || !IsOpen(inventoryWindow)) return -1;
+            int first = currentPage * PlayerInventory.PageSize;
+            for (int i = first; i < first + PlayerInventory.PageSize; i++)
+                if (cells[i].worldBound.Contains(panelPosition)) return i;
+            return -1;
+        }
+
+        /// <summary>True when the point is anywhere on the Pack window.</summary>
+        public bool IsOverPack(Vector2 panelPosition) =>
+            initialized && IsOpen(inventoryWindow) && inventoryWindow.worldBound.Contains(panelPosition);
+
+        public bool IsInventoryOpen => initialized && IsOpen(inventoryWindow);
+
+        /// <summary>The drag picture, for a window dragging an item of its own. Hide it when the drag ends.</summary>
+        public void ShowGhost(ItemDefinition def, Vector2 panelPosition)
+        {
+            if (!initialized || def == null) return;
+            ghost.style.backgroundImage = def.icon != null ? new StyleBackground(def.icon) : StyleKeyword.None;
+            SetGlyph(ghostGlyph, def);
+            SetDisplay(ghost, true);
+            ghost.BringToFront();
+            MoveGhost(panelPosition);
+        }
+
+        public void MoveGhost(Vector2 panelPosition)
+        {
+            if (!initialized) return;
+            ghost.style.left = panelPosition.x - GhostHalfSize;
+            ghost.style.top = panelPosition.y - GhostHalfSize;
+        }
+
+        public void HideGhost()
+        {
+            if (!initialized) return;
+            SetDisplay(ghost, false);
+            suppressWorldInputFrame = Time.frameCount;
+        }
+
+        /// <summary>Clicks that end on the HUD must not also move the character this frame.</summary>
+        public void SuppressWorldInput() => suppressWorldInputFrame = Time.frameCount;
 
         /// <summary>Consumables that aren't gear are used, not equipped, on right-click.</summary>
         private static bool IsUsable(ItemDefinition def) => def != null && def.IsConsumable && !def.IsEquippable;
@@ -847,7 +996,7 @@ namespace KryticalNova.UI
             return sb.ToString().TrimEnd();
         }
 
-        private static void ApplyRarityText(Label label, ItemRarity rarity)
+        public static void ApplyRarityText(Label label, ItemRarity rarity)
         {
             foreach (var c in RarityTextClasses) label.RemoveFromClassList(c);
             label.AddToClassList(RarityTextClasses[Mathf.Clamp((int)rarity, 0, RarityTextClasses.Length - 1)]);

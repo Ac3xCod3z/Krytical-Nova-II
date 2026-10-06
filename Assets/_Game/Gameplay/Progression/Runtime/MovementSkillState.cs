@@ -4,6 +4,7 @@ using Unity.Netcode;
 namespace KryticalNova.Progression
 {
     /// <summary>A player's learned movement ranks and the skill it is moving with, as the server holds them.</summary>
+    [Serializable]
     public struct MovementSkillState : INetworkSerializable, IEquatable<MovementSkillState>
     {
         public byte runRank;

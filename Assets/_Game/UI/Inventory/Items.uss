@@ -267,3 +267,65 @@
     display: none;
     -unity-background-scale-mode: scale-to-fit;
 }
+
+/* Pack footer: what the character carries in Creds. */
+.inventory-footer {
+    justify-content: flex-end;
+    align-items: center;
+    margin: 6px 12px 0 12px;
+}
+
+.inventory-creds-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-right: 8px;
+}
+
+.inventory-creds {
+    font-size: 16px;
+    -unity-text-align: middle-right;
+}
+
+/* A Pack cell whose item is promised elsewhere (offered in a trade, being listed in a Kiosk). */
+.item-locked { opacity: 0.38; }
+
+/* Names over items on the ground (LootHudController). */
+.loot-labels {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.loot-label {
+    position: absolute;
+    padding: 1px 7px 2px 7px;
+    font-size: 12px;
+    background-color: rgba(10, 16, 24, 0.72);
+    border-radius: 3px;
+    -unity-text-align: middle-center;
+}
+
+/* A drop still held for the player who dropped it: dimmed for everyone else. */
+.loot-label--held { opacity: 0.6; }
+.loot-label--mine { background-color: rgba(18, 52, 48, 0.85); }
+
+/* The local player's own drop, counting down to free for all. Small: two lines and a hairline bar, sitting
+   between the hotbar and the hint line (the player can move it in the HUD layout editor). */
+.loot-notice {
+    position: absolute;
+    left: 50%;
+    bottom: 58px;
+    translate: -50% 0;
+    width: 236px;
+    padding: 4px 10px 6px 10px;
+    align-items: center;
+    display: none;
+}
+.loot-notice-text { font-size: 12px; margin: 0; padding: 0; white-space: normal; -unity-text-align: middle-center; color: rgb(255, 255, 255); }
+.loot-notice-help { font-size: 10px; margin: 1px 0 0 0; padding: 0; -unity-text-align: middle-center; }
+.loot-notice-bar { align-self: stretch; height: 2px; margin-top: 4px; background-color: rgba(34, 52, 66, 0.9); }
+.loot-notice-fill { height: 100%; width: 100%; background-color: rgb(114, 222, 196); }
+.loot-notice.ending .loot-notice-fill { background-color: rgb(240, 110, 96); }
+.loot-notice.ending .loot-notice-text { color: rgb(255, 196, 150); }

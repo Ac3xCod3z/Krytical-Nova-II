@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.Progression;
 using Unity.Netcode;
@@ -13,7 +14,7 @@ namespace KryticalNova.Items
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerEquipment))]
-    public sealed class PlayerInventory : NetworkBehaviour, IHotbarItemSource
+    public sealed class PlayerInventory : NetworkBehaviour, IHotbarItemSource, ISaveParticipant
     {
         public const int PageSize = 48;
         public const int PageCount = 3;
@@ -23,7 +24,7 @@ namespace KryticalNova.Items
         private const string ReasonUseCooldown = "You can't use another item yet.";
         private const string ReasonAlreadyFull = "Already at full strength.";
 
-        private delegate bool Mutation(ItemStack[] bag, ref EquipmentLoadout loadout, out string reason);
+        private delegate bool Mutation(ItemStack[] bag, ref EquippedItems worn, out string reason);
 
         [SerializeField] private ItemCatalog catalog;
         [Tooltip("Who may wear which gear. Checked on every equip; also the source of the starter gear from the wearer's pack.")]
@@ -32,6 +33,10 @@ namespace KryticalNova.Items
         [SerializeField] private bool grantStarterLoadout = true;
 
         private NetworkList<ItemStack> netCells;
+        // What each worn item carries of its own (a pet's growth). The ids are public on PlayerEquipment; this is not.
+        private readonly NetworkVariable<EquipmentData> netEquippedData = new NetworkVariable<EquipmentData>(default,
+            NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
+        private EquipmentData equippedData;
         private readonly ItemStack[] cells = new ItemStack[Capacity];
         private readonly ItemStack[] scratch = new ItemStack[Capacity];
         private PlayerEquipment equipment;
@@ -45,6 +50,7 @@ namespace KryticalNova.Items
         private IGearWearer wearer;
         private PlayerCharacterProgression progression;
         private InventoryRules.EquipGate equipGate;
+        private IItemUseHandler[] useHandlers = Array.Empty<IItemUseHandler>();
 
         /// <summary>The inventory the local user controls: the owned networked player, else the offline scene avatar.</summary>
         public static PlayerInventory Local { get; private set; }
@@ -58,6 +64,17 @@ namespace KryticalNova.Items
         public GearDictionary Gear => gearDictionary;
         public PlayerEquipment Equipment => equipment;
         public ItemStack Get(int index) => index >= 0 && index < Capacity ? cells[index] : ItemStack.Empty;
+
+        /// <summary>The worn item in a slot with its own state, or empty. Known to the owner and the server only.</summary>
+        public ItemStack GetEquipped(EquipSlot slot)
+        {
+            ushort id = equipment != null ? equipment.Get(slot) : (ushort)0;
+            return id != 0 ? new ItemStack(id, 1, equippedData[slot]) : ItemStack.Empty;
+        }
+
+        /// <summary>The stack at a Pack cell or an equipment slot.</summary>
+        public ItemStack GetStack(ItemLocation at) =>
+            at.IsBag ? Get(at.index) : at.container == ItemContainer.Equipment ? GetEquipped(at.Slot) : ItemStack.Empty;
         public ItemDefinition GetDefinition(int index) => catalog != null ? catalog.Get(Get(index).itemId) : null;
 
         public int UsedCells
@@ -77,6 +94,7 @@ namespace KryticalNova.Items
             wearer = GetComponent<IGearWearer>();
             progression = GetComponent<PlayerCharacterProgression>();
             equipGate = EquipBlockedReason;
+            useHandlers = GetComponents<IItemUseHandler>();
             netCells = new NetworkList<ItemStack>(readPerm: NetworkVariableReadPermission.Owner,
                 writePerm: NetworkVariableWritePermission.Server);
         }
@@ -104,13 +122,16 @@ namespace KryticalNova.Items
         {
             base.OnNetworkSpawn();
             netCells.OnListChanged += OnNetCellsChanged;
+            netEquippedData.OnValueChanged += OnNetEquippedDataChanged;
             if (IsServer)
             {
                 GrantStarterLoadout();
                 WriteNetCells();
+                netEquippedData.Value = equippedData;
             }
             else if (IsOwner)
             {
+                equippedData = netEquippedData.Value;
                 PullNetCells();
             }
             if (IsOwner) SetLocal(this);
@@ -120,6 +141,7 @@ namespace KryticalNova.Items
         public override void OnNetworkDespawn()
         {
             netCells.OnListChanged -= OnNetCellsChanged;
+            netEquippedData.OnValueChanged -= OnNetEquippedDataChanged;
             if (Local == this) SetLocal(null);
             base.OnNetworkDespawn();
         }
@@ -238,10 +260,10 @@ namespace KryticalNova.Items
         // ---------------- Server logic ----------------
 
         private void ServerMove(ItemLocation from, ItemLocation to) =>
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryMove(b, ref l, catalog, from, to, out r, equipGate));
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) => InventoryRules.TryMove(b, ref l, catalog, from, to, out r, equipGate));
 
         private void ServerQuickEquip(byte bagIndex) =>
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryQuickEquip(b, ref l, catalog, bagIndex, out r, equipGate));
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) => InventoryRules.TryQuickEquip(b, ref l, catalog, bagIndex, out r, equipGate));
 
         /// <summary>
         /// The gear dictionary decides who may wear what (faction and body), then the piece's level must not be
@@ -277,17 +299,17 @@ namespace KryticalNova.Items
         {
             if (starterKitGranted || !CanMutate() || gearDictionary == null) return;
             starterKitGranted = true;
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) =>
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
             {
                 r = null;
-                if (placeholderWeaponId != 0 && l.weapon == placeholderWeaponId) l.weapon = 0;
+                if (placeholderWeaponId != 0 && l.ids.weapon == placeholderWeaponId) l[EquipSlot.Weapon] = ItemStack.Empty;
                 foreach (var slot in StarterSlots)
                 {
-                    if (l[slot] != 0) continue;
+                    if (!l.IsEmpty(slot)) continue;
                     if (slot != EquipSlot.Weapon && string.IsNullOrEmpty(pack)) continue; // no character: weapon only
                     if (gearDictionary.TryFindStarter(slot, faction, body, pack, discipline, out var entry)
                         && catalog.Get(entry.itemId) != null)
-                        l[slot] = entry.itemId;
+                        l[slot] = new ItemStack(entry.itemId, 1);
                 }
                 return true;
             });
@@ -305,7 +327,7 @@ namespace KryticalNova.Items
             string pack = wearer != null ? wearer.GearPack : null;
             if (!gearDictionary.TryFindStarter(EquipSlot.Weapon, faction, body, pack, weaponClass, out _)) return false;
 
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) =>
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
             {
                 r = null;
                 Array.Clear(b, 0, b.Length);
@@ -315,7 +337,7 @@ namespace KryticalNova.Items
                     if (slot != EquipSlot.Weapon && string.IsNullOrEmpty(pack)) continue;
                     if (gearDictionary.TryFindStarter(slot, faction, body, pack, weaponClass, out var entry)
                         && catalog.Get(entry.itemId) != null)
-                        l[slot] = entry.itemId;
+                        l[slot] = new ItemStack(entry.itemId, 1);
                 }
                 foreach (var s in catalog.StarterBag)
                     if (s.item != null) InventoryRules.TryAdd(b, catalog, s.item.itemId, s.count);
@@ -325,18 +347,18 @@ namespace KryticalNova.Items
         }
 
         private void ServerQuickUnequip(EquipSlot slot) =>
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryQuickUnequip(b, ref l, catalog, slot, out r));
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) => InventoryRules.TryQuickUnequip(b, ref l, catalog, slot, out r));
 
         private void ServerDestroy(ItemLocation at) =>
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => InventoryRules.TryDestroy(b, ref l, at, out r));
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) => InventoryRules.TryDestroy(b, ref l, at, out r));
 
         private void ServerSort() =>
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => { r = null; InventoryRules.Sort(b, catalog); return true; });
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) => { r = null; InventoryRules.Sort(b, catalog); return true; });
 
         private void ServerUse(byte bagIndex)
         {
             ItemDefinition used = null;
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) =>
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
             {
                 if (!InventoryRules.TryConsume(b, catalog, bagIndex, out used, out r)) return false;
                 r = UseBlockedReason(used);
@@ -349,9 +371,18 @@ namespace KryticalNova.Items
             nextUseTime = Time.time + used.useCooldown;
             if (used.restoreHealth > 0f) resources.Heal(used.restoreHealth);
             if (used.restoreChi > 0f) resources.RestoreChi(used.restoreChi);
+            if (used.useEffect != ItemUseEffect.None) HandlerFor(used.useEffect)?.ServerUse(used);
 
+            if (used.restoreHealth <= 0f && used.restoreChi <= 0f) return; // the effect's own system presents it
             if (IsSpawned) ItemUsedRpc(used.restoreHealth > 0f, used.restoreChi > 0f);
             else PresentItemUsed(used.restoreHealth > 0f, used.restoreChi > 0f);
+        }
+
+        private IItemUseHandler HandlerFor(ItemUseEffect effect)
+        {
+            foreach (IItemUseHandler handler in useHandlers)
+                if (handler.Effect == effect) return handler;
+            return null;
         }
 
         /// <summary>Everyone sees the pill take effect; the server alone knows it was actually consumed.</summary>
@@ -366,40 +397,186 @@ namespace KryticalNova.Items
         {
             if (resources == null || !resources.IsAlive) return ReasonDefeated;
             if (Time.time < nextUseTime) return ReasonUseCooldown;
+            if (def.useEffect != ItemUseEffect.None)
+            {
+                IItemUseHandler handler = HandlerFor(def.useEffect);
+                return handler == null ? InventoryRules.ReasonNotUsable : handler.UseBlockedReason(def);
+            }
             bool healthUseful = def.restoreHealth > 0f && resources.Health < resources.MaxHealth;
             bool chiUseful = def.restoreChi > 0f && resources.Chi < resources.MaxChi;
             return healthUseful || chiUseful ? null : ReasonAlreadyFull;
         }
 
-        /// <summary>Server/dev only. Returns how many were added.</summary>
-        public int ServerGive(ushort itemId, int count)
+        /// <summary>Server only. Adds up to <paramref name="count"/> of an item (with its own state, if any). Returns how many were added.</summary>
+        public int ServerGive(ushort itemId, int count, ulong data = 0)
         {
             if (!CanMutate()) return 0;
             int added = 0;
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) =>
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
             {
-                added = InventoryRules.TryAdd(b, catalog, itemId, count);
+                added = InventoryRules.TryAdd(b, catalog, itemId, count, data);
                 r = added > 0 ? null : InventoryRules.ReasonBagFull;
                 return added > 0;
             });
             return added;
         }
 
+        /// <summary>Server only. Adds a whole stack, state included. Returns how many of it fitted.</summary>
+        public int ServerGive(in ItemStack stack) => stack.IsEmpty ? 0 : ServerGive(stack.itemId, stack.count, stack.data);
+
+        /// <summary>
+        /// Server only: rewrites what the worn item in <paramref name="slot"/> carries of its own (the system that
+        /// owns that state keeps it current: a pet's growth and hunger). Ignored when the slot is empty.
+        /// </summary>
+        public void ServerSetEquippedData(EquipSlot slot, ulong data)
+        {
+            if (!CanMutate() || equipment == null || equipment.Get(slot) == 0 || equippedData[slot] == data) return;
+            var next = equippedData;
+            next[slot] = data;
+            SetEquippedData(next);
+            Changed?.Invoke();
+        }
+
+        /// <summary>
+        /// Server only: takes whatever is at a Pack cell or equipment slot out of the inventory and hands it over
+        /// (to be dropped, traded away, stored). False, with the player told why, when there is nothing there.
+        /// </summary>
+        public bool ServerTake(ItemLocation at, out ItemStack taken)
+        {
+            ItemStack result = ItemStack.Empty;
+            if (CanMutate())
+                Mutate((ItemStack[] b, ref EquippedItems l, out string r) => InventoryRules.TryTake(b, ref l, at, out result, out r));
+            taken = result;
+            return !taken.IsEmpty;
+        }
+
+        /// <summary>
+        /// Server only: takes <paramref name="count"/> from the stack in a Pack cell (all of it when the count is
+        /// the stack's). False when the cell does not hold that many.
+        /// </summary>
+        public bool ServerTakeFromCell(int cell, int count, out ItemStack taken)
+        {
+            ItemStack result = ItemStack.Empty;
+            if (CanMutate() && cell >= 0 && cell < Capacity && count > 0)
+                Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
+                {
+                    r = null;
+                    ItemStack held = b[cell];
+                    if (held.IsEmpty || held.count < count) { r = InventoryRules.ReasonEmpty; return false; }
+                    result = held.WithCount(count);
+                    b[cell] = held.WithCount(held.count - count);
+                    return true;
+                });
+            taken = result;
+            return !taken.IsEmpty;
+        }
+
+        /// <summary>
+        /// Server only: runs a change that touches the Pack and something outside it (a Vault, a trade partner's
+        /// Pack) on a scratch copy and commits it only when <paramref name="change"/> returns true. The change gets
+        /// the scratch Pack; whatever else it alters it must only alter on success.
+        /// </summary>
+        public bool ServerChangePack(Func<ItemStack[], bool> change, string failure = null)
+        {
+            bool done = false;
+            if (CanMutate() && change != null)
+                Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
+                {
+                    done = change(b);
+                    r = done ? null : failure;
+                    return done;
+                });
+            return done;
+        }
+
+        /// <summary>Server only: a copy of the Pack as it is now, for rules that plan a change before making it.</summary>
+        public void CopyPack(ItemStack[] into)
+        {
+            if (into != null) Array.Copy(cells, into, Math.Min(into.Length, Capacity));
+        }
+
         /// <summary>Server/dev only: empties the bag (equipment untouched).</summary>
         public void ServerClear()
         {
             if (!CanMutate()) return;
-            Mutate((ItemStack[] b, ref EquipmentLoadout l, out string r) => { r = null; Array.Clear(b, 0, b.Length); return true; });
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) => { r = null; Array.Clear(b, 0, b.Length); return true; });
         }
 
         private bool CanMutate() => !IsSpawned || IsServer;
+
+        // ---------------------------------------------------------------- saving
+
+        [Serializable]
+        private struct SavedItem
+        {
+            public int index;
+            public ItemStack stack;
+        }
+
+        [Serializable]
+        private sealed class InventorySave
+        {
+            public List<SavedItem> pack = new List<SavedItem>();
+            /// <summary>Worn items; index is the <see cref="EquipSlot"/>.</summary>
+            public List<SavedItem> worn = new List<SavedItem>();
+        }
+
+        public string SaveKey => "inventory";
+        public SaveScope SaveScope => SaveScope.Character;
+
+        public string CaptureSave()
+        {
+            var save = new InventorySave();
+            for (int i = 0; i < Capacity; i++)
+                if (!cells[i].IsEmpty) save.pack.Add(new SavedItem { index = i, stack = cells[i] });
+            foreach (var slot in EquipSlots.All)
+            {
+                ItemStack worn = GetEquipped(slot);
+                if (!worn.IsEmpty) save.worn.Add(new SavedItem { index = (int)slot, stack = worn });
+            }
+            return JsonUtility.ToJson(save);
+        }
+
+        /// <summary>
+        /// A saved character gets exactly what it had: this replaces the starter loadout handed out at spawn. Items
+        /// that no longer exist in the catalog are dropped. A new character (null) keeps the starter loadout.
+        /// </summary>
+        public void RestoreSave(string json)
+        {
+            if (!CanMutate() || catalog == null || string.IsNullOrEmpty(json)) return;
+            var save = JsonUtility.FromJson<InventorySave>(json);
+            if (save == null) return;
+
+            starterGranted = true;
+            starterKitGranted = true;
+            placeholderWeaponId = 0;
+            Array.Clear(cells, 0, Capacity);
+            if (save.pack != null)
+                foreach (SavedItem item in save.pack)
+                    if (item.index >= 0 && item.index < Capacity && !item.stack.IsEmpty && catalog.Get(item.stack.itemId) != null)
+                        cells[item.index] = item.stack;
+
+            var worn = default(EquippedItems);
+            if (save.worn != null)
+                foreach (SavedItem item in save.worn)
+                {
+                    var slot = (EquipSlot)item.index;
+                    var def = !item.stack.IsEmpty ? catalog.Get(item.stack.itemId) : null;
+                    if (def != null && EquipSlots.IsValid(slot) && def.equipSlot == slot) worn[slot] = new ItemStack(item.stack.itemId, 1, item.stack.data);
+                }
+
+            if (IsSpawned) WriteNetCells();
+            SetEquippedData(worn.data);
+            equipment.ServerSetLoadout(worn.ids);
+            Changed?.Invoke();
+        }
 
         private void Mutate(Mutation mutation)
         {
             if (!CanMutate() || catalog == null) return;
             Array.Copy(cells, scratch, Capacity);
-            var loadout = equipment.Loadout;
-            if (!mutation(scratch, ref loadout, out string reason))
+            var worn = new EquippedItems(equipment.Loadout, equippedData);
+            if (!mutation(scratch, ref worn, out string reason))
             {
                 if (!string.IsNullOrEmpty(reason))
                 {
@@ -410,7 +587,22 @@ namespace KryticalNova.Items
             }
             Array.Copy(scratch, cells, Capacity);
             if (IsSpawned) WriteNetCells();
-            equipment.ServerSetLoadout(loadout);
+            // Data first: whoever reacts to the new loadout (a pet coming out) reads the state that came with it.
+            SetEquippedData(worn.data);
+            equipment.ServerSetLoadout(worn.ids);
+            Changed?.Invoke();
+        }
+
+        private void SetEquippedData(EquipmentData data)
+        {
+            equippedData = data;
+            if (IsSpawned && IsServer) netEquippedData.Value = data;
+        }
+
+        private void OnNetEquippedDataChanged(EquipmentData previous, EquipmentData next)
+        {
+            if (IsServer) return; // already applied locally
+            equippedData = next;
             Changed?.Invoke();
         }
 

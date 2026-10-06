@@ -14,6 +14,17 @@ namespace KryticalNova.Items
         Pet = 8
     }
 
+    /// <summary>
+    /// What using an item from the Pack does, beyond restoring HP / Flux (which the item's own numbers say).
+    /// Each effect is carried out by the <see cref="IItemUseHandler"/> on the player that owns it. Append only.
+    /// </summary>
+    public enum ItemUseEffect : byte
+    {
+        None = 0,
+        /// <summary>Feeds the pet that is out (a Pet Ration).</summary>
+        FeedPet = 1
+    }
+
     public enum ItemRarity : byte
     {
         Common,

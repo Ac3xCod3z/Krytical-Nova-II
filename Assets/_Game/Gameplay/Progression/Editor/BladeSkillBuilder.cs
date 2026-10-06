@@ -124,7 +124,6 @@ namespace KryticalNova.EditorTools
         /// lowers into a kneel, holds it for the whole channel and rises when the channel ends. Left alone once it
         /// has a held pose, so a clip chosen in the Inspector survives a rebuild.
         /// </summary>
-        [MenuItem("Krytical Nova/Progression/Give Heavenly Serenity Its Kneel")]
         public static bool GiveSerenityItsKneel()
         {
             var skill = AssetDatabase.LoadAssetAtPath<SkillDefinitionSO>(HeavenlySerenityPath);
@@ -146,7 +145,6 @@ namespace KryticalNova.EditorTools
         /// and the caster is held in place for most of the clip, like an attack skill. Buffs that already have a clip
         /// (or get one in the Inspector) are left alone.
         /// </summary>
-        [MenuItem("Krytical Nova/Progression/Give Buffs The Shared Cast Animation")]
         public static int GiveBuffsSharedCast()
         {
             AnimationClip cast = SharedBuffCast();

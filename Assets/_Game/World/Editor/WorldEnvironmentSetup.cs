@@ -34,7 +34,6 @@ namespace KryticalNova.EditorTools
 
         // ---------------------------------------------------------------- assets
 
-        [MenuItem("Krytical Nova/World/Create Default Assets")]
         public static void CreateAssets()
         {
             WeatherVfxBuilder.EnsureFolder(WeatherFolder);
@@ -200,7 +199,6 @@ namespace KryticalNova.EditorTools
 
         // ---------------------------------------------------------------- scene
 
-        [MenuItem("Krytical Nova/World/Setup Scene Objects")]
         public static void SetupScene()
         {
             var dayCycle = AssetDatabase.LoadAssetAtPath<DayCycleProfile>(DayCyclePath);
@@ -209,7 +207,7 @@ namespace KryticalNova.EditorTools
             var noise = AssetDatabase.LoadAssetAtPath<Texture2D>(CloudNoiseBaker.DefaultPath);
             if (dayCycle == null || catalog == null || skyMaterial == null)
             {
-                Debug.LogError("[WorldEnvironmentSetup] Run 'Create Default Assets' first.");
+                Debug.LogError("[WorldEnvironmentSetup] Run Krytical Nova/World/Setup Sky + Weather (All Steps) first.");
                 return;
             }
             var startWeather = catalog.Get(catalog.IndexOf("WP_FewClouds"));

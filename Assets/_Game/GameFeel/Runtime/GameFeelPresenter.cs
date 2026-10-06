@@ -45,6 +45,8 @@ namespace KryticalNova.GameFeel
         [Tooltip("The thrown or falling body of that death hits the ground.")]
         [SerializeField] private MMF_Player bodyLandFeel;
         [SerializeField] private MMF_Player respawnFeel;
+        [Tooltip("The local player's pet evolved: a bright pulse and a sound.")]
+        [SerializeField] private MMF_Player petEvolveFeel;
 
         [Header("FEEL players (world particles, every client)")]
         [SerializeField] private MMF_Player hitWorldFeel;
@@ -66,6 +68,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player bodyLandWorldFeel;
         [SerializeField] private MMF_Player critBodyLandWorldFeel;
         [SerializeField] private MMF_Player respawnWorldFeel;
+        [Tooltip("Any pet evolved: the burst on the pet itself.")]
+        [SerializeField] private MMF_Player petEvolveWorldFeel;
 
         [Header("World VFX spawned directly")]
         [SerializeField] private GameObject clickVfx;
@@ -107,7 +111,7 @@ namespace KryticalNova.GameFeel
         {
             ClientPresentationRegistry.RegisterFeel(this);
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
-                attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, bodyLandFeel, respawnFeel };
+                attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, bodyLandFeel, respawnFeel, petEvolveFeel };
             if (skills == null) skills = GetComponent<SkillFeelCatalog>();
             GroundSurfaces.Palette = dustPalette;
             HudPreferences.Changed += ApplyScreenShakePreference;
@@ -319,6 +323,14 @@ namespace KryticalNova.GameFeel
             if (actor == null) return;
             PlayWorld(respawnWorldFeel, ActorAnchor.Feet(actor), Quaternion.identity, actor);
             if (isLocalPlayer) Play(respawnFeel, actor.position, 1f);
+        }
+
+        public void PetEvolved(Transform pet, Color glow, bool ownerIsLocalPlayer)
+        {
+            if (pet == null) return;
+            PlayWorld(petEvolveWorldFeel, pet.position, Quaternion.identity, pet);
+            PetPulse.Play(pet, glow);
+            if (ownerIsLocalPlayer) Play(petEvolveFeel, pet.position, 1f);
         }
 
         // ------------------------------------------------------------------ helpers

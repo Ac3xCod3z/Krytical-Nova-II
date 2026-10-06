@@ -39,6 +39,8 @@ namespace KryticalNova.Player
         private const float PausedTimeScale = 0f;
         private const int InitialUiHitCapacity = 8;
         private const float PendingInteractTimeout = 20f;
+        // Stop beside a thing that is picked up, not on top of it: an arm's length away.
+        private const float InstantInteractStandOff = 0.9f;
         private const float TravelSampleRadius = 6f;     // a map point is far coarser than a click on the ground
         private const float TravelArrivalDistance = 1.5f;
         private const float TravelStallSeconds = 2.5f;   // standing still this long mid-journey ends it (a cast, a blocked way)
@@ -105,6 +107,8 @@ namespace KryticalNova.Player
         private KryticalNova.Combat.PlayerMeleeCombat meleeCombat;
         private MovementSkillId previousMovementMode;
         public event Action<string> CommandMessage;
+        /// <summary>The local player Shift+clicked another player: (that player, the pointer's screen position).</summary>
+        public event Action<Transform, Vector2> PlayerMenuRequested;
         private NavMeshPath requestedPath;
         private InputActionMap gameplayActions;
         private InputAction pointerAction;
@@ -133,6 +137,8 @@ namespace KryticalNova.Player
         private Vector2 previousCursorPosition;
         private IInteractable pendingInteract;
         private float pendingInteractExpiry;
+        private Vector3 facePoint;
+        private float faceUntil;
         private bool isTravelling;
         private Vector3 travelDestination;
         private string travelName;
@@ -336,6 +342,7 @@ namespace KryticalNova.Player
                 ApplyMovementSettings();
                 UpdateArrival();
                 TurnTowardsTravel();
+                TurnTowardsFacePoint();
             }
 
             if (IsSpawned && !IsOwner)
@@ -496,6 +503,15 @@ namespace KryticalNova.Player
             {
                 bool hostile = KryticalNova.Combat.CombatHostility.IsHostile(transform, targetEntity);
 
+                // Shift+click on another player: select them and open the player menu (whisper, invite, trade...).
+                var keyboard = Keyboard.current;
+                if (keyboard != null && keyboard.shiftKey.isPressed && targetEntity.Transform.GetComponent<PlayerIdentity>() != null)
+                {
+                    if (!IsSelected(targetEntity.Transform)) Select(targetEntity.Transform, hostile ? WorldTargetKind.Hostile : WorldTargetKind.Friendly);
+                    PlayerMenuRequested?.Invoke(targetEntity.Transform, screenPosition);
+                    return;
+                }
+
                 // First click only selects.
                 if (!IsSelected(targetEntity.Transform))
                 {
@@ -554,7 +570,8 @@ namespace KryticalNova.Player
             if (interactable != null)
             {
                 Transform unit = interactable is Component interactableComponent ? interactableComponent.transform : null;
-                if (unit != null && !IsSelected(unit))
+                // An NPC is selected first and talked to on the next click; an item on the ground is simply taken.
+                if (unit != null && !IsSelected(unit) && !(interactable is IInstantInteractable))
                 {
                     Select(unit, WorldTargetKind.Friendly);
                     return;
@@ -799,6 +816,7 @@ namespace KryticalNova.Player
             pendingInteract = interactable;
             pendingInteractExpiry = Time.time + PendingInteractTimeout;
             Vector3 destination = interactable.InteractPoint;
+            if (interactable is IInstantInteractable) destination = ShortOf(destination, InstantInteractStandOff);
             if (IsSpawned && !IsServer)
             {
                 RequestMoveDestinationServerRpc(destination);
@@ -811,6 +829,12 @@ namespace KryticalNova.Player
         private void UpdatePendingInteract()
         {
             if (pendingInteract == null) return;
+            // What the player was walking to may be gone by now (someone else took the item).
+            if (pendingInteract is UnityEngine.Object pendingObject && pendingObject == null)
+            {
+                pendingInteract = null;
+                return;
+            }
             if (Time.time > pendingInteractExpiry || (resources != null && !resources.IsAlive))
             {
                 pendingInteract = null;
@@ -821,6 +845,15 @@ namespace KryticalNova.Player
             IInteractable target = pendingInteract;
             pendingInteract = null;
             target.Interact(gameObject);
+        }
+
+        /// <summary>The point <paramref name="standOff"/> metres short of <paramref name="point"/>, on this side of it.</summary>
+        private Vector3 ShortOf(Vector3 point, float standOff)
+        {
+            Vector3 back = transform.position - point;
+            back.y = 0f;
+            float distance = back.magnitude;
+            return distance <= standOff ? transform.position : point + back * (standOff / distance);
         }
 
         private bool IsWithinInteractRange(IInteractable interactable)
@@ -1091,6 +1124,31 @@ namespace KryticalNova.Player
             Quaternion facing = Quaternion.LookRotation(direction, Vector3.up)
                 * Quaternion.AngleAxis(modelForwardOffset, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, facing, agent.angularSpeed * Time.deltaTime);
+        }
+
+        /// <summary>
+        /// Server (or offline): turns the body to a point while it stands, for <paramref name="seconds"/> at most
+        /// (bending down for an item). Walking off ends it: travel then decides the facing.
+        /// </summary>
+        public void FacePoint(Vector3 point, float seconds)
+        {
+            facePoint = point;
+            faceUntil = Time.time + Mathf.Max(0f, seconds);
+        }
+
+        private void TurnTowardsFacePoint()
+        {
+            if (Time.time >= faceUntil) return;
+            bool hasAgent = agent != null && agent.isActiveAndEnabled;
+            if (hasAgent && agent.velocity.sqrMagnitude >= MinimumFacingSpeedSquared) return; // travel is turning the body
+
+            Vector3 direction = facePoint - transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < MinimumFacingSpeedSquared) return;
+            Quaternion facing = Quaternion.LookRotation(direction, Vector3.up)
+                * Quaternion.AngleAxis(modelForwardOffset, Vector3.up);
+            float degreesPerSecond = hasAgent ? agent.angularSpeed : 720f;
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, facing, degreesPerSecond * Time.deltaTime);
         }
 
         /// <summary>Releases an active camera drag when a UI window takes control of the cursor.</summary>

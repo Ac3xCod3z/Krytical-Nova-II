@@ -142,6 +142,8 @@ namespace KryticalNova.Social
                 case ChatRoute.Delivered:
                     if (channel == ChatChannel.Whisper)
                     {
+                        string refusal = SocialGate.Refusal(this, EveryoneChat[Picked[0]]);
+                        if (refusal != null) { ServerSystem(refusal); break; }
                         EveryoneChat[Picked[0]].Deliver(ChatChannel.Whisper, me.Name, text, false);
                         Deliver(ChatChannel.Whisper, Everyone[Picked[0]].Name, text, true);
                     }
@@ -291,9 +293,14 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
         private void ReceiveRpc(ChatChannel channel, string sender, string text, bool outgoing) => Show(channel, sender, text, outgoing);
 
+        /// <summary>Raised on this machine for every line its player is shown (the Contacts window notes who whispered).</summary>
+        public static event System.Action<ChatLine> LineShown;
+
         private static void Show(ChatChannel channel, string sender, string text, bool outgoing)
         {
-            ClientPresentationRegistry.Chat?.Add(new ChatLine { Channel = channel, Sender = sender, Text = text, Outgoing = outgoing });
+            var line = new ChatLine { Channel = channel, Sender = sender, Text = text, Outgoing = outgoing };
+            ClientPresentationRegistry.Chat?.Add(line);
+            LineShown?.Invoke(line);
         }
 
         // ------------------------------------------------------------------ combat log (server / offline -> owner)

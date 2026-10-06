@@ -17,7 +17,6 @@ namespace KryticalNova.EditorTools
         private const string ModelPrefabPath = "Assets/_Game/Characters/Player/Player_01/Player_01.prefab";
         private const string PlayerPrefabPath = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
 
-        [MenuItem("Krytical Nova/Characters/4. Set Up Player Identity Components")]
         public static void Run()
         {
             var database = AssetDatabase.LoadAssetAtPath<CharacterCreationDatabase>(CharacterDataBaker.DatabasePath);
@@ -34,7 +33,7 @@ namespace KryticalNova.EditorTools
                 var appearance = model.GetComponentInChildren<CharacterAppearance>(true);
                 if (appearance == null)
                 {
-                    Debug.LogError($"[Characters] {ModelPrefabPath} has no CharacterAppearance. Run Krytical Nova/Items/3 first.");
+                    Debug.LogError($"[Characters] {ModelPrefabPath} has no CharacterAppearance. Run Krytical Nova/Setup/Player Prefab.");
                     return;
                 }
                 Ensure<CharacterLook>(appearance.gameObject);

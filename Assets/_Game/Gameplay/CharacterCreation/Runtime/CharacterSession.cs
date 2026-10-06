@@ -1,3 +1,5 @@
+using System;
+using KryticalNova.Core;
 using KryticalNova.Networking;
 using UnityEngine;
 
@@ -14,6 +16,9 @@ namespace KryticalNova.CharacterCreation
         private static CharacterProfile active;
         private static int activeSlot = -1;
         private static bool resolved;
+        private static string accountId;
+
+        private const string AccountKey = "kn.account.v1";
 
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -23,6 +28,49 @@ namespace KryticalNova.CharacterCreation
             active = null;
             activeSlot = -1;
             resolved = false;
+            accountId = null;
+        }
+
+        /// <summary>
+        /// The id of this player's account: what its characters, and the things they share (the Deep Vault), are
+        /// saved under on the server. Made once per machine profile and kept in PlayerPrefs beside the roster, until
+        /// real sign-in replaces it.
+        /// </summary>
+        public static string AccountId
+        {
+            get
+            {
+                if (accountId != null) return accountId;
+                string profile = NetworkConnectionManager.LocalProfile();
+                string key = string.IsNullOrEmpty(profile) ? AccountKey : AccountKey + "." + profile;
+                accountId = PlayerPrefs.GetString(key, string.Empty);
+                if (!SaveKeys.IsId(accountId))
+                {
+                    accountId = Guid.NewGuid().ToString("N");
+                    PlayerPrefs.SetString(key, accountId);
+                    PlayerPrefs.Save();
+                }
+                return accountId;
+            }
+        }
+
+        /// <summary>The character being played, or null.</summary>
+        public static CharacterProfile Active => TryGetActive(out var profile) ? profile : null;
+
+        /// <summary>Keeps the level shown on the select screen in step with the character being played.</summary>
+        public static void RememberLevel(int level)
+        {
+            if (!TryGetActive(out var profile) || profile.level == level || level < 1) return;
+            var roster = Store.Load();
+            for (int slot = 0; slot < CharacterRoster.SlotCount; slot++)
+            {
+                var saved = roster.Get(slot);
+                if (saved == null || saved.id != profile.id) continue;
+                saved.level = level;
+                Store.Save(roster);
+                break;
+            }
+            profile.level = level;
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.Core;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace KryticalNova.Progression
     /// </summary>
     [DefaultExecutionOrder(InitializationOrder)]
     [DisallowMultipleComponent]
-    public sealed class PlayerCharacterProgression : NetworkBehaviour
+    public sealed class PlayerCharacterProgression : NetworkBehaviour, ISaveParticipant
     {
         private const int InitializationOrder = -200;
         private const int AttributeCount = 4;
@@ -281,6 +282,29 @@ namespace KryticalNova.Progression
             skillPoints = progressionData.startingSkillPoints;
             for (int index = 0; index < attributes.Length; index++)
                 attributes[index] = statData.GetStartingValue((CharacterAttribute)index);
+        }
+        #endregion
+
+        #region Saving
+        public string SaveKey => "progression";
+        public SaveScope SaveScope => SaveScope.Character;
+
+        public string CaptureSave() => JsonUtility.ToJson(Capture());
+
+        /// <summary>Puts a saved character back as it was: no level-up rewards are granted and nothing is announced.</summary>
+        public void RestoreSave(string json)
+        {
+            if (!HasAuthority || string.IsNullOrEmpty(json) || progressionData == null || statData == null) return;
+            var state = JsonUtility.FromJson<ProgressionState>(json);
+            if (state.level < FirstLevel) return;
+
+            currentLevel = Mathf.Clamp(state.level, FirstLevel, MaxLevel);
+            experience = IsAtLevelCap ? 0 : Mathf.Max(0, state.experience);
+            statPoints = Mathf.Max(0, state.statPoints);
+            skillPoints = Mathf.Max(0, state.skillPoints);
+            for (int index = 0; index < attributes.Length; index++)
+                attributes[index] = Mathf.Clamp(state[(CharacterAttribute)index], 0, statData.maximumAttributeValue);
+            Commit();
         }
         #endregion
 

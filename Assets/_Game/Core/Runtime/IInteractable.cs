@@ -13,4 +13,12 @@ namespace KryticalNova.Core
         Vector3 Position { get; }
         void Interact(GameObject player);
     }
+
+    /// <summary>
+    /// An interactable that needs no second thought: one click walks over and uses it (an item on the ground),
+    /// where an NPC is selected by the first click and talked to by the second.
+    /// </summary>
+    public interface IInstantInteractable : IInteractable
+    {
+    }
 }

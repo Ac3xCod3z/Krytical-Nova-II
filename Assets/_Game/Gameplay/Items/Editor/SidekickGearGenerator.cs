@@ -34,7 +34,8 @@ namespace KryticalNova.EditorTools
 
         // Legacy ID ranges of the look templates and pets. Ladder items live at GearDictionary.LadderIdBase and up.
         private const ushort ArmorBase = 2000, GlovesBase = 3000, BootsBase = 4000;
-        private const ushort RingBase = 5000, AmuletBase = 6000, CapeBase = 7000, PetBase = 8000;
+        // 8000–8999 belongs to the pets (PetAssetBuilder).
+        private const ushort RingBase = 5000, AmuletBase = 6000, CapeBase = 7000;
 
         // Band indices: the order of GearStatTable.bands (see GearStatBaker.SeedDefaults).
         public const int BandCommon = 0, BandUncommon = 1, BandRareOne = 2, BandRareTwo = 3, BandEpic = 4, BandCount = 5;
@@ -145,15 +146,6 @@ namespace KryticalNova.EditorTools
             } },
         };
 
-        private static readonly (string asset, string name, string prefab, ItemRarity rarity)[] Pets =
-        {
-            ("Pet_Drone", "Scout Drone", "Assets/Synty/PolygonSciFiCity/Prefabs/Props/SM_Prop_Drone_01.prefab", ItemRarity.Common),
-            ("Pet_DroneHeavy", "Guardian Drone", "Assets/Synty/PolygonSciFiCity/Prefabs/Props/SM_Prop_Drone_02.prefab", ItemRarity.Rare),
-            ("Pet_DroneBall", "Orb Companion", "Assets/Synty/PolygonSciFiCity/Prefabs/Props/SM_Prop_Drone_Ball_01.prefab", ItemRarity.Uncommon),
-            ("Pet_DroneInsect", "Mantis Drone", "Assets/Synty/PolygonSciFiCity/Prefabs/Props/SM_Prop_Drone_Insect_01.prefab", ItemRarity.Epic),
-            ("Pet_DroneQuad", "Quadcopter", "Assets/Synty/PolygonSciFiCity/Prefabs/Props/SM_Prop_Drone_Quad_01.prefab", ItemRarity.Legendary),
-        };
-
         // Icon templates only (Ring_01.., Amulet_01..): the gem colour follows the rarity.
         private static readonly (string name, ItemRarity rarity)[] Rings =
         {
@@ -190,15 +182,7 @@ namespace KryticalNova.EditorTools
             for (int i = 0; i < Amulets.Length; i++)
                 amulets[i] = Simple(EquipSlot.Amulet, (ushort)(AmuletBase + i + 1), $"Amulet_{i + 1:00}", Amulets[i].name, Amulets[i].rarity,
                     "An amulet.", created);
-            for (int i = 0; i < Pets.Length; i++)
-            {
-                var pet = Simple(EquipSlot.Pet, (ushort)(PetBase + i + 1), Pets[i].asset, Pets[i].name, Pets[i].rarity,
-                    "A loyal companion that follows you around.", created, out bool isNew);
-                if (!isNew) continue;
-                pet.petPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Pets[i].prefab);
-                pet.petScale = 1f; // multiplier on PetFollower's normalised size
-                EditorUtility.SetDirty(pet);
-            }
+            // Pets are not made here: they have their own data and builder (Krytical Nova/Items/7. Build Pets).
 
             int added = SeedLines(partCatalog, outfitLooks, weaponLooks, rings, amulets);
             AssetDatabase.SaveAssets();

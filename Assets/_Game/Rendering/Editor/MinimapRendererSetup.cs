@@ -17,7 +17,6 @@ namespace KryticalNova.EditorTools
         public const string RendererPath = Folder + "Minimap_Renderer.asset";
         private const string PcPipelinePath = Folder + "PC_RPAsset.asset";
 
-        [MenuItem("Krytical Nova/Lighting/Setup Live Minimap Renderer")]
         public static void Setup()
         {
             var data = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(RendererPath);

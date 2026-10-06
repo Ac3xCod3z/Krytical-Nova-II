@@ -63,6 +63,7 @@ namespace KryticalNova.UI
                 Bind(targetStrip, "duel-target-duel", AskSelected);
                 Bind(targetStrip, "duel-target-invite", InviteSelected);
                 Bind(targetStrip, "duel-target-whisper", WhisperSelected);
+                Bind(targetStrip, "duel-target-more", MoreForSelected);
                 Bind(request, "duel-accept", () => Answer(true));
                 Bind(request, "duel-decline", () => Answer(false));
             }
@@ -177,6 +178,14 @@ namespace KryticalNova.UI
             if (shownTarget == null) return;
             var chat = GetComponent<ChatWindowController>();
             if (chat != null) chat.BeginWhisper(shownTarget.DuelistName);
+        }
+
+        /// <summary>Everything else that can be done with the selected player (trade, Contacts, Crew): the player menu.</summary>
+        private void MoreForSelected()
+        {
+            if (shownTarget == null || PlayerMenuController.Instance == null) return;
+            Rect strip = targetStrip.worldBound;
+            PlayerMenuController.Instance.Open(PlayerMenuController.TargetOf(shownTarget.transform), new Vector2(strip.xMax - 60f, strip.yMax));
         }
 
         private void Answer(bool accept)

@@ -18,7 +18,6 @@ namespace KryticalNova.EditorTools
         private const string TerrainLitShader = "Universal Render Pipeline/Terrain/Lit";
         private const float MatteSmoothness = 0.05f;
 
-        [MenuItem("Krytical Nova/World/Make Terrain Matte")]
         public static void Run()
         {
             int layers = FixLayers();

@@ -358,24 +358,6 @@ namespace KryticalNova.EditorTools
             return any;
         }
 
-        /// <summary>Patches an already-built town: adds the paving colliders without a rebuild. Rebake the NavMesh after.</summary>
-        [MenuItem("Krytical Nova/Zone/Add Paving Colliders (Open Scene)")]
-        public static void AddPavingCollidersInScene()
-        {
-            int ground = LayerMask.NameToLayer("Ground");
-            int added = 0;
-            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                var go = t.gameObject;
-                if (go.layer != ground || !PrefabUtility.IsAnyPrefabInstanceRoot(go) || go.GetComponent<Terrain>() != null) continue;
-                string n = go.name;
-                if (!n.StartsWith("SM_Env_Ground_Tile") && !n.StartsWith("SM_Env_Sidewalk") && !n.StartsWith("SM_Env_Road")) continue;
-                if (AddPavingCollider(go)) { added++; EditorUtility.SetDirty(go); }
-            }
-            if (added > 0) UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
-            Debug.Log($"[StarterTown] Added {added} paving colliders.");
-        }
-
         // ---------------------------------------------------------------- wall
 
         private const double WallBreachChance = 0.18;     // share of wall spans swapped for a baked breach / rubble

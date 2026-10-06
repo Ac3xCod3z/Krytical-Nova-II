@@ -35,6 +35,7 @@ namespace KryticalNova.EditorTools
         {
             public string Id, Model, Name, Title, Greeting, Services;
             public NpcRole Role;
+            public NpcOffer Offers; // working services: a dialogue button each
         }
 
         private static readonly NpcSeed[] Npcs =
@@ -71,6 +72,15 @@ namespace KryticalNova.EditorTools
                 Name = "Fixer", Title = "Slotting · Cores",
                 Greeting = "Slots, Cores, cutters. Paid in Renown.",
                 Services = "Slotting: buy Slot Cutters with Renown to cut Core slots into your gear." },
+            // Ids match the plaza's stall table (StarterTownBuilder.PlazaStalls): Crew Hall and Wayfinder stalls.
+            new NpcSeed { Id = "GuildDirector", Role = NpcRole.Vaultkeeper, Model = "SM_Chr_Rich_Male_01",
+                Name = "Vaultkeeper", Title = "Vault · Crew Registry", Offers = NpcOffer.Vault | NpcOffer.CrewRegistry,
+                Greeting = "What you leave with me stays yours. What you sign here binds a Crew.",
+                Services = "Keeps your Vault: storage for this character's items and Creds. Registers new Crews." },
+            new NpcSeed { Id = "GateMaster", Role = NpcRole.Wayfinder, Model = "SM_Chr_Android_Female_01",
+                Name = "Wayfinder", Title = "Deep Vault · Transit", Offers = NpcOffer.DeepVault,
+                Greeting = "Every road starts here. So does everything you want waiting at the end of one.",
+                Services = "Opens your Deep Vault: storage shared by every character of your account. Transit to other zones comes later." },
         };
 
         // ---------------------------------------------------------------- all steps
@@ -95,6 +105,7 @@ namespace KryticalNova.EditorTools
             ZoneTerrainGenerator.RepaintDetailsMenu();
             GrassSystemBuilder.BuildAll();
             EnsureZoneUi();
+            EnsureTradeZone();
             AddInteractableToPlayerRaycasts();
             BakeNavMesh();
             MinimapBaker.Bake();
@@ -182,7 +193,7 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>Clicks must be able to hit NPC capsules: add the layer to every player's raycast mask.</summary>
-        private static void AddInteractableToPlayerRaycasts()
+        internal static void AddInteractableToPlayerRaycasts()
         {
             int layer = LayerMask.NameToLayer(InteractableLayerName);
             if (layer < 0) return;
@@ -212,7 +223,7 @@ namespace KryticalNova.EditorTools
 
         // ---------------------------------------------------------------- UI
 
-        private static void EnsureZoneUi()
+        internal static void EnsureZoneUi()
         {
             // Looked up by name: the UI assembly is excluded from server builds, so it isn't referenced here.
             var uiType = System.Type.GetType("KryticalNova.UI.NpcInteractionUI, KryticalNova.UI");
@@ -233,6 +244,62 @@ namespace KryticalNova.EditorTools
             doc.panelSettings = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelSettingsPath);
             doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(NpcUxmlPath);
             doc.sortingOrder = 1;
+        }
+
+        // ---------------------------------------------------------------- stalls that opened since the town was built
+
+        /// <summary>
+        /// Brings a town built earlier in line with the stall table, without rebuilding it: every stall that now has
+        /// an NPC but still stands as a "future" slot in the open scene gets its vendor and a lit sign. Does nothing
+        /// in a scene without such stalls, so it is safe on any zone. Returns how many it opened.
+        /// </summary>
+        public static int OpenReadyStalls()
+        {
+            CreateNpcAssets();
+            int opened = StarterTownBuilder.OpenReadyStallsInScene();
+            if (opened > 0)
+            {
+                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                Debug.Log($"[Zone01] {opened} stall(s) opened. Save the scene to keep them.");
+            }
+            return opened;
+        }
+
+        // ---------------------------------------------------------------- commerce
+
+        private const string TradeZoneName = "Trade Zone - Central Plaza";
+        private const string NeutralZoneName = "Neutral Ground - Starter Town (for testing)";
+
+        /// <summary>
+        /// The starter town's two zones for dealings between players. The Central Plaza is where Kiosks may be set
+        /// up. The whole walled town is neutral ground for now (factions may trade, buy and befriend each other
+        /// there) so cross-faction play can be tested before the dedicated non-combat zone exists: untick Cross
+        /// Faction on it, or delete it, when that zone is built. Each is created once and then left alone, so its
+        /// size and rules can be tuned in the Inspector. Does nothing in any other scene. Returns true when it added one.
+        /// </summary>
+        public static bool EnsureTradeZone()
+        {
+            if (EditorSceneManager.GetActiveScene().path != ScenePath) return false;
+            // The plaza: 30 m either side of the beacon. The town: out to the wall.
+            bool added = EnsureZone(TradeZoneName, "Central Plaza", new Vector2(60f, 60f), kiosks: true, neutral: false);
+            float town = StarterTownBuilder.WallHalf * 2f;
+            added |= EnsureZone(NeutralZoneName, "Starter Town", new Vector2(town, town), kiosks: false, neutral: true);
+            return added;
+        }
+
+        private static bool EnsureZone(string objectName, string zoneName, Vector2 size, bool kiosks, bool neutral)
+        {
+            if (GameObject.Find(objectName) != null) return false;
+            var zone = new GameObject(objectName).AddComponent<KryticalNova.Economy.TradeZone>();
+            var so = new SerializedObject(zone);
+            so.FindProperty("zoneName").stringValue = zoneName;
+            so.FindProperty("size").vector2Value = size;
+            so.FindProperty("allowKiosks").boolValue = kiosks;
+            so.FindProperty("crossFaction").boolValue = neutral;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorSceneManager.MarkSceneDirty(zone.gameObject.scene);
+            Debug.Log($"[Zone01] Added '{objectName}'. Save the scene to keep it.");
+            return true;
         }
 
         // ---------------------------------------------------------------- NPC assets
@@ -284,7 +351,7 @@ namespace KryticalNova.EditorTools
             AssetDatabase.SaveAssets();
         }
 
-        /// <summary>Re-applies the names and text above to the NPC definitions that already exist (role and prefab untouched).</summary>
+        /// <summary>Re-applies the names, text and services above to the NPC definitions that already exist (role and prefab untouched).</summary>
         [MenuItem("Krytical Nova/Zone/Refresh NPC Text From Seeds")]
         public static void RefreshNpcText()
         {
@@ -296,6 +363,7 @@ namespace KryticalNova.EditorTools
                 def.title = seed.Title;
                 def.greeting = seed.Greeting;
                 def.services = seed.Services;
+                def.offers = seed.Offers;
                 EditorUtility.SetDirty(def);
             }
             AssetDatabase.SaveAssets();
@@ -312,6 +380,7 @@ namespace KryticalNova.EditorTools
             def.title = seed.Title;
             def.greeting = seed.Greeting;
             def.services = seed.Services;
+            def.offers = seed.Offers;
             AssetDatabase.CreateAsset(def, path);
             return def;
         }

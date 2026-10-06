@@ -39,6 +39,15 @@ namespace KryticalNova.Progression
         /// from which side, and whether it was critical. <see cref="Died"/> is the bare notice every peer gets.
         /// </summary>
         public event Action<KillingBlow> Killed;
+        /// <summary>
+        /// Raised where combat is decided (server or offline) for every entity that is killed: (victim, blow).
+        /// For systems that reward a kill without knowing every entity: pet XP today, drops and Contracts later.
+        /// </summary>
+        public static event Action<CombatEntity, KillingBlow> AnyKilled;
+
+        // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetKillListeners() => AnyKilled = null;
         public event Action HealthChanged;
 
         // The hit being applied right now, so the death it may cause knows what caused it.
@@ -199,7 +208,10 @@ namespace KryticalNova.Progression
         private void RaiseDied()
         {
             Died?.Invoke();
-            if (HasAuthority) Killed?.Invoke(hasPendingBlow ? pendingBlow : KillingBlow.FromTheFront(transform));
+            if (!HasAuthority) return;
+            KillingBlow blow = hasPendingBlow ? pendingBlow : KillingBlow.FromTheFront(transform);
+            Killed?.Invoke(blow);
+            AnyKilled?.Invoke(this, blow);
         }
 
         /// <summary>
