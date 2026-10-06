@@ -43,6 +43,7 @@ MonoBehaviour:
   statModifiers: []
   restoreHealth: 0
   restoreChi: 0
+  useEffect: 0
   useCooldown: 1
   usableFromHotbar: 0
   placeholderGlyph: 

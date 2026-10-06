@@ -10,6 +10,8 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private CharacterAppearance appearance;
         [SerializeField] private WeaponVisualMount weaponMount;
         [SerializeField] private PetFollower petFollower;
+        [Tooltip("The glow a tempered weapon wears (M_TemperGlow). Without it tempered weapons look like any other.")]
+        [SerializeField] private Material temperGlow;
 
         private PlayerEquipment equipment;
 
@@ -26,20 +28,36 @@ namespace KryticalNova.Items.Visuals
         private void OnEnable()
         {
             equipment.SlotChanged += OnSlotChanged;
+            equipment.TemperChanged += OnTemperChanged;
             ApplyAll();
         }
 
         private void OnDisable()
         {
             equipment.SlotChanged -= OnSlotChanged;
+            equipment.TemperChanged -= OnTemperChanged;
         }
 
         private void ApplyAll()
         {
             foreach (var slot in EquipSlots.All) Apply(slot, equipment.GetDefinition(slot));
+            OnTemperChanged(EquipSlot.Weapon);
         }
 
         private void OnSlotChanged(EquipSlot slot, ushort previous, ushort next) => Apply(slot, equipment.Catalog?.Get(next));
+
+        /// <summary>The weapon glows in the colour of its Temper band, as strongly as its rarity allows.</summary>
+        private void OnTemperChanged(EquipSlot slot)
+        {
+            if (slot != EquipSlot.Weapon || weaponMount == null) return;
+            ItemDefinition weapon = equipment.GetDefinition(EquipSlot.Weapon);
+            GearProgressionSettings settings = equipment.Progression;
+            int temper = equipment.GetTemper(EquipSlot.Weapon);
+            TemperGlowBand band = default;
+            bool glows = weapon != null && settings != null && GearProgressionRules.TryGetGlow(settings.temper, temper, out band);
+            if (!glows) { weaponMount.SetGlow(null, false, default, default); return; }
+            weaponMount.SetGlow(temperGlow, true, band.color, GearProgressionRules.GlowLookOf(settings.temper, weapon.rarity));
+        }
 
         private void Apply(EquipSlot slot, ItemDefinition def)
         {

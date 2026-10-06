@@ -171,7 +171,7 @@ namespace KryticalNova.UI
             }
             var keyboard = Keyboard.current;
             if (keyboard == null || IsTyping()) return;
-            if (keyboard.mKey.wasPressedThisFrame) Toggle();
+            if (KeyBindings.Pressed(KeyBindings.Map)) Toggle();
             else if (keyboard.escapeKey.wasPressedThisFrame && IsOpen) Close();
         }
 

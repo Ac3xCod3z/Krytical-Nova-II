@@ -26,11 +26,15 @@ MonoBehaviour:
   - stat: 5
     modType: 0
     value: 6
-  secondaryStats: []
+  secondaryStats:
+  - stat: 15
+    modType: 0
+    value: 13
   skillModifiers: []
   statModifiers: []
   restoreHealth: 0
   restoreChi: 0
+  useEffect: 0
   useCooldown: 1
   usableFromHotbar: 0
   placeholderGlyph: 

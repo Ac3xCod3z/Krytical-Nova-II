@@ -36,10 +36,12 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 | Kiosk price cap per unit: stackable non-gear | 10,000 |
 | Kiosk price cap: a pet, rising with its growth from the Common cap to | 20,000,000 at 100 % |
 | Kiosk sales tax (a Creds sink) | 5 % |
+| The forge (a Creds sink; numbers in `GearProgressionSettings`, see the gear spec) | Tempering: item level × 500 × rarity multiplier, doubled from 120 % · Fusion: 100,000 + 50,000 a stage · Tuning: 50,000 / 150,000 / 400,000 by stage bracket · Reforge: 1,000,000 at level 45, +200,000 per ten levels |
 | Income target, Creds per hour at level 1 / 20 / 40 / 60 / 80 / 100 / 112 | 3k / 25k / 90k / 250k / 600k / 1.2M / 2M |
 
 - **Nothing pays Creds yet.** They enter only through `gm.creds`. The income target is the design number Hostile drops, Contracts and vendors must be tuned against when they are built.
 - **The ledger** (`CredsLedger`, `gm.creds.report`) counts Creds by source and sink since the server started, so real earn rates can be set beside the target.
+- **The forge is the first Creds sink a player chooses to pay** (`CredsSink.GearWork`, counted by the ledger). Tuning also costs Renown (10 / 25 / 50 an attempt), which nothing pays yet.
 - **Why the caps:** to make selling Creds for money slow. A full day's allowance is one Epic at its price cap.
 - **Known tension to tune:** at the level-30 income target the 10,000,000 Crew fee is about 200 hours of play.
 

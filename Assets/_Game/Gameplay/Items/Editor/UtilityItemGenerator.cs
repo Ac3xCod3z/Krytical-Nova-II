@@ -16,6 +16,8 @@ namespace KryticalNova.EditorTools
     {
         private const string ItemsRoot = "Assets/_Game/Gameplay/Items/Data/Assets";
         private const string Folder = ItemsRoot + "/Consumables";
+        /// <summary>What the forge uses up: Alloys, Failsafes, the Fusion Catalyst, Tuning Chips.</summary>
+        private const string MaterialFolder = ItemsRoot + "/GearMaterials";
         private const string CatalogPath = ItemsRoot + "/ItemCatalog.asset";
 
         private const ushort StimStack = 99;
@@ -34,6 +36,8 @@ namespace KryticalNova.EditorTools
             public float Health, Flux;
             public bool Hotbar;
             public ItemUseEffect Effect;
+            /// <summary>Null = the consumables folder.</summary>
+            public string Folder;
         }
 
         // Stims keep their first asset names (Pill_*): saves, hotbars and GM commands are keyed on them.
@@ -57,14 +61,46 @@ namespace KryticalNova.EditorTools
                 Description = "Opens your Kiosk for 14 days instead of 3. Used up when the Kiosk opens.", Stack = 99 },
             new Row { Id = KioskPermit30Id, Asset = "Permit_Kiosk30", Name = "Kiosk Permit (30 Days)", Glyph = "30D", Rarity = ItemRarity.Rare,
                 Description = "Opens your Kiosk for 30 days instead of 3. Used up when the Kiosk opens.", Stack = 99 },
+
+            // The forge (_Docs/Reference/12Sky/02_Gear_System_Spec.md). Ids are named in GearMaterialIds, which the
+            // settings asset reads; what each one does is decided there, not here.
+            Material(GearMaterialIds.Alumite, "Alloy_Alumite", "Alumite", "+3%", ItemRarity.Common,
+                "Alloy. Tempers a piece of gear by 3% on a success."),
+            Material(GearMaterialIds.Iridion, "Alloy_Iridion", "Iridion", "+6%", ItemRarity.Common,
+                "Alloy. Tempers a piece of gear by 6% on a success."),
+            Material(GearMaterialIds.Orichalc, "Alloy_Orichalc", "Orichalc", "+9%", ItemRarity.Uncommon,
+                "Alloy. Tempers a piece of gear by 9% on a success."),
+            Material(GearMaterialIds.Eversteel, "Alloy_Eversteel", "Eversteel", "+12%", ItemRarity.Rare,
+                "Alloy. Tempers a piece of gear by 12% on a success."),
+            Material(GearMaterialIds.TrinityPlatinum, "Alloy_TrinityPlatinum", "Trinity Platinum", "+15%", ItemRarity.Epic,
+                "Alloy. Tempers a piece of gear by 15% on a success."),
+            Material(GearMaterialIds.PrimeAlloy, "Alloy_Prime", "Prime Alloy", "PRIME", ItemRarity.Epic,
+                "The only Alloy that works from 120% Temper up. Adds 3% on a success."),
+            Material(GearMaterialIds.Failsafe, "Failsafe", "Failsafe", "SAFE", ItemRarity.Rare,
+                "Stops a failed Tempering from breaking the piece. Used up only when it does."),
+            Material(GearMaterialIds.AdvancedFailsafe, "Failsafe_Advanced", "Advanced Failsafe", "SAFE+", ItemRarity.Epic,
+                "A failed Tempering costs the piece nothing and never breaks it. Used up on a fail. Required from 133% Temper."),
+            Material(GearMaterialIds.LuckyFailsafe, "Failsafe_Lucky", "Lucky Failsafe", "LUCK", ItemRarity.Rare,
+                "Adds 5% to one Tempering attempt and stops that attempt from breaking the piece. Used up on the attempt."),
+            Material(GearMaterialIds.FusionCatalyst, "Fusion_Catalyst", "Fusion Catalyst", "FS", ItemRarity.Rare,
+                "Used up by every Fusion attempt."),
+            Material(GearMaterialIds.TuningChip, "Tuning_Chip", "Tuning Chip", "TUNE", ItemRarity.Rare,
+                "Used up by a Tuning attempt, stages 1 to 12."),
+            Material(GearMaterialIds.VioletChip, "Tuning_VioletChip", "Violet Chip", "VIOLET", ItemRarity.Epic,
+                "Used up by a Tuning attempt, stages 13 to 25."),
+            Material(GearMaterialIds.ResetChip, "Tuning_ResetChip", "Reset Chip", "RESET", ItemRarity.Rare,
+                "Returns a piece of gear to Tune 0. Nothing is refunded."),
         };
+
+        private static Row Material(ushort id, string asset, string name, string glyph, ItemRarity rarity, string description) =>
+            new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = rarity, Description = description, Stack = 999, Folder = MaterialFolder };
 
         // Ids other systems name. 9000–9999 belongs to this table.
         public const ushort PetRationId = 9010;
         public const ushort KioskPermit14Id = 9020;
         public const ushort KioskPermit30Id = 9021;
 
-        [MenuItem("Krytical Nova/Items/5. Generate Utility Items (Stims, Permits, Rations)")]
+        [MenuItem("Krytical Nova/Items/5. Generate Utility Items (Stims, Permits, Rations, Forge Materials)")]
         public static void Generate()
         {
             var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(CatalogPath);
@@ -75,6 +111,7 @@ namespace KryticalNova.EditorTools
             }
 
             WeatherVfxBuilder.EnsureFolder(Folder);
+            WeatherVfxBuilder.EnsureFolder(MaterialFolder);
             var made = new List<ItemDefinition>(Rows.Length);
             var bag = catalog.StarterBag.ToList();
             foreach (Row row in Rows)
@@ -93,7 +130,7 @@ namespace KryticalNova.EditorTools
 
         private static ItemDefinition Item(in Row row)
         {
-            string path = $"{Folder}/{row.Asset}.asset";
+            string path = $"{row.Folder ?? Folder}/{row.Asset}.asset";
             var def = AssetDatabase.LoadAssetAtPath<ItemDefinition>(path);
             bool created = def == null;
             if (created)

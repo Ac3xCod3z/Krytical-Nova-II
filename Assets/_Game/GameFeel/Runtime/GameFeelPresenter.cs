@@ -6,6 +6,7 @@ using KryticalNova.Networking;
 using KryticalNova.Player;
 using KryticalNova.UI;
 using MoreMountains.Feedbacks;
+using MoreMountains.FeedbacksForThirdParty;
 using UnityEngine;
 
 namespace KryticalNova.GameFeel
@@ -42,6 +43,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player deathFeel;
         [Tooltip("The same for a critical kill: the body is thrown.")]
         [SerializeField] private MMF_Player critDeathFeel;
+        [Tooltip("On top of the death feel when the local player is the one who killed. Full strength on a critical kill.")]
+        [SerializeField] private MMF_Player killConfirmFeel;
         [Tooltip("The thrown or falling body of that death hits the ground.")]
         [SerializeField] private MMF_Player bodyLandFeel;
         [SerializeField] private MMF_Player respawnFeel;
@@ -101,7 +104,13 @@ namespace KryticalNova.GameFeel
         [Range(0f, 0.2f)] [SerializeField] private float heavyHitStopSeconds = 0.11f;
         [Range(0f, 1f)] [SerializeField] private float hitStopSpeed = 0.05f;
         [Tooltip("The killer's own freeze on a kill (x) and on a critical kill (y). The dying body is never frozen: it is moving.")]
-        [SerializeField] private Vector2 killStopSeconds = new Vector2(0.1f, 0.18f);
+        [SerializeField] private Vector2 killStopSeconds = new Vector2(0.12f, 0.22f);
+
+        [Header("Kill confirm (the local player's own kills)")]
+        [Tooltip("How much of the kill confirm a normal kill gets; a critical kill gets all of it.")]
+        [Range(0f, 1f)] [SerializeField] private float normalKillStrength = 0.55f;
+        [Tooltip("How hard the camera is shoved the way the killing blow went (m/s) at full strength.")]
+        [Min(0f)] [SerializeField] private float killShove = 0.7f;
 
         private readonly Dictionary<AnimancerComponent, int> frozen = new Dictionary<AnimancerComponent, int>();
         private MMF_Player[] cameraPlayers;
@@ -111,7 +120,7 @@ namespace KryticalNova.GameFeel
         {
             ClientPresentationRegistry.RegisterFeel(this);
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
-                attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, bodyLandFeel, respawnFeel, petEvolveFeel };
+                attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, killConfirmFeel, bodyLandFeel, respawnFeel, petEvolveFeel };
             if (skills == null) skills = GetComponent<SkillFeelCatalog>();
             GroundSurfaces.Palette = dustPalette;
             HudPreferences.Changed += ApplyScreenShakePreference;
@@ -307,7 +316,22 @@ namespace KryticalNova.GameFeel
 
             if (death.VictimIsLocalPlayer || death.KillerIsLocalPlayer)
                 Play(death.IsCritical ? critDeathFeel : deathFeel, death.Point, 1f);
-            if (death.KillerIsLocalPlayer) HitStop(death.Killer, death.IsCritical ? killStopSeconds.y : killStopSeconds.x);
+            if (death.KillerIsLocalPlayer)
+            {
+                PlayKillConfirm(death);
+                HitStop(death.Killer, death.IsCritical ? killStopSeconds.y : killStopSeconds.x);
+            }
+        }
+
+        /// <summary>The local player's own kill: the camera is shoved the way the blow went, so the kill reads as theirs.</summary>
+        private void PlayKillConfirm(in DeathFeel death)
+        {
+            if (killConfirmFeel == null) return;
+            Vector3 along = death.Direction.sqrMagnitude > 0.001f ? death.Direction.normalized : Vector3.zero;
+            var feedbacks = killConfirmFeel.FeedbacksList;
+            for (int i = 0; i < feedbacks.Count; i++)
+                if (feedbacks[i] is MMF_CinemachineImpulse impulse) impulse.Velocity = (along + Vector3.up * 0.3f) * killShove;
+            Play(killConfirmFeel, death.Point, death.IsCritical ? 1f : normalKillStrength);
         }
 
         public void BodyLanded(Transform actor, bool critical, bool involvesLocalPlayer)
@@ -323,6 +347,30 @@ namespace KryticalNova.GameFeel
             if (actor == null) return;
             PlayWorld(respawnWorldFeel, ActorAnchor.Feet(actor), Quaternion.identity, actor);
             if (isLocalPlayer) Play(respawnFeel, actor.position, 1f);
+        }
+
+        /// <summary>
+        /// The forge has no effects of its own yet: a success borrows the buff cast, a fail the fading buff, a break
+        /// the heavy hit and the hurt flash.
+        /// </summary>
+        public void GearWorked(Transform actor, int outcome, bool isLocalPlayer)
+        {
+            if (actor == null) return;
+            Vector3 feet = ActorAnchor.Feet(actor);
+            switch (outcome)
+            {
+                case 0:
+                    PlayWorld(buffCastWorldFeel, feet, Facing(actor), actor);
+                    if (isLocalPlayer) Play(buffCastFeel, actor.position, 1f);
+                    break;
+                case 3:
+                    PlayWorld(heavyHitWorldFeel, actor.position, Facing(actor), actor);
+                    if (isLocalPlayer) Play(damagedFeel, actor.position, 1f);
+                    break;
+                default:
+                    PlayWorld(buffEndWorldFeel, feet, Quaternion.identity, actor);
+                    break;
+            }
         }
 
         public void PetEvolved(Transform pet, Color glow, bool ownerIsLocalPlayer)

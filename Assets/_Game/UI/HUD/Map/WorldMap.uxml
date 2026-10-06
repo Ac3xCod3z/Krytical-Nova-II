@@ -10,7 +10,7 @@
 
         <ui:VisualElement class="row kn-header">
             <ui:Label text="WORLD MAP" class="heading world-map-title" />
-            <ui:Label text="[M]" class="muted header-key" />
+            <ui:Label name="key-map" text="[M]" class="muted header-key" />
             <ui:Label name="world-map-zone" text="" class="accent world-map-zone" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
             <ui:Button name="world-map-center" text="CENTRE" class="world-map-center" />

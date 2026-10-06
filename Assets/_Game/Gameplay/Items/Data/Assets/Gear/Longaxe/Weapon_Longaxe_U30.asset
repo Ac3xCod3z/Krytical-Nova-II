@@ -33,12 +33,16 @@ MonoBehaviour:
   - stat: 12
     modType: 0
     value: 30
+  - stat: 15
+    modType: 0
+    value: 55
   skillModifiers:
   - line: 7
     levels: 1
   statModifiers: []
   restoreHealth: 0
   restoreChi: 0
+  useEffect: 0
   useCooldown: 1
   usableFromHotbar: 0
   placeholderGlyph: 

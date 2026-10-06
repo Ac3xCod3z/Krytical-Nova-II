@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 1
   displayName: Armorer
-  title: "Weapons \xB7 Armor \xB7 Tempering"
+  title: "Forge \xB7 Tempering \xB7 Fusion \xB7 Tuning"
   greeting: Bring me steel and coin, and I'll make you something worth swinging.
-  services: Buys, sells and crafts weapons and armor. Tempering, Fusion and Tuning are done at this forge.
+  services: 'Works your gear at the forge: Tempering with Alloys, Fusion of Rare and Epic pieces, Tuning for Renown, and Reforge of an untouched Rare. Buying and selling weapons and armor comes later.'
+  offers: 8
   interactRange: 3

@@ -1,3 +1,4 @@
+using KryticalNova.Player;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -191,7 +192,7 @@ namespace KryticalNova.UI
             bool amountOpen = AmountDialogController.Instance != null && AmountDialogController.Instance.IsOpen;
             if (keyboard != null && !typing && !amountOpen)
             {
-                if (keyboard.tKey.wasPressedThisFrame) SetOwnOpen(!Shown(window));
+                if (KeyBindings.Pressed(KeyBindings.Kiosk)) SetOwnOpen(!Shown(window));
                 if (keyboard.escapeKey.wasPressedThisFrame)
                 {
                     if (Shown(shop)) CloseShop();

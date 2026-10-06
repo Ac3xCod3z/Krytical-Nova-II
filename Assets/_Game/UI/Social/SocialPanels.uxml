@@ -8,7 +8,7 @@
     <ui:VisualElement name="contacts-window" class="panel window blocks-world hud-movable social-window">
         <ui:VisualElement class="row kn-header">
             <ui:Label text="CONTACTS" class="heading" />
-            <ui:Label text="[F]" class="muted social-key" />
+            <ui:Label name="key-contacts" text="[F]" class="muted social-key" />
             <ui:VisualElement class="social-spacer" picking-mode="Ignore" />
             <ui:Label name="contacts-count" text="" class="accent social-count" />
             <ui:Button name="close-contacts" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
@@ -33,7 +33,7 @@
         <ui:VisualElement class="row kn-header">
             <ui:VisualElement name="crew-symbol" class="crew-symbol" picking-mode="Ignore" />
             <ui:Label name="crew-title" text="CREW" class="heading" />
-            <ui:Label text="[G]" class="muted social-key" />
+            <ui:Label name="key-crew" text="[G]" class="muted social-key" />
             <ui:VisualElement class="social-spacer" picking-mode="Ignore" />
             <ui:Label name="crew-count" text="" class="accent social-count" />
             <ui:Button name="close-crew" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>

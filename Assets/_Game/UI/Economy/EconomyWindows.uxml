@@ -81,7 +81,7 @@
     <ui:VisualElement name="kiosk-window" class="panel window blocks-world hud-movable">
         <ui:VisualElement class="row kn-header">
             <ui:Label text="KIOSK" class="heading" />
-            <ui:Label text="[T]" class="muted header-key" />
+            <ui:Label name="key-kiosk" text="[T]" class="muted header-key" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
             <ui:Label name="kiosk-status" text="" class="accent inventory-count" />
             <ui:Button name="close-kiosk" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>

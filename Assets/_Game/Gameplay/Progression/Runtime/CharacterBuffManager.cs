@@ -208,7 +208,7 @@ namespace KryticalNova.Progression
                 if (buff.CurrentShieldCapacity >= remainingDamage)
                 {
                     buff.CurrentShieldCapacity -= remainingDamage;
-                    BuffMessage?.Invoke($"[Heavenly Shield] Absorbed {remainingDamage:0} dmg! (Shield HP: {buff.CurrentShieldCapacity:0}/{buff.MaxShieldCapacity:0})");
+                    BuffMessage?.Invoke($"[{buff.Skill.displayName}] Absorbed {remainingDamage:0} dmg! (Shield HP: {buff.CurrentShieldCapacity:0}/{buff.MaxShieldCapacity:0})");
                     remainingDamage = 0f;
                     changed = true;
                     break;
@@ -218,7 +218,7 @@ namespace KryticalNova.Progression
                     float absorbed = buff.CurrentShieldCapacity;
                     remainingDamage -= absorbed;
                     buff.CurrentShieldCapacity = 0f;
-                    BuffMessage?.Invoke($"[Heavenly Shield] Absorbed {absorbed:0} dmg and depleted!");
+                    BuffMessage?.Invoke($"[{buff.Skill.displayName}] Absorbed {absorbed:0} dmg and depleted!");
                     RemoveBuffAt(i);
                     changed = true;
                 }
@@ -242,7 +242,7 @@ namespace KryticalNova.Progression
             }
             if (shattered)
             {
-                BuffMessage?.Invoke("[Heavenly Destruction] Shattered Heavenly Shield!");
+                BuffMessage?.Invoke("[Shatterpoint] Shattered Aegis!");
                 BuffsChanged?.Invoke();
             }
         }
@@ -296,7 +296,7 @@ namespace KryticalNova.Progression
             }
             if (dispelled)
             {
-                BuffMessage?.Invoke("Stance buffs dispelled by Heavenly Destruction!");
+                BuffMessage?.Invoke("Stance buffs dispelled by Shatterpoint!");
                 BuffsChanged?.Invoke();
             }
         }
@@ -351,7 +351,7 @@ namespace KryticalNova.Progression
             IsChanneling = false;
             if (interrupted)
             {
-                BuffMessage?.Invoke("Heavenly Serenity meditation interrupted!");
+                BuffMessage?.Invoke("Second Wind interrupted!");
                 BuffsChanged?.Invoke();
             }
         }

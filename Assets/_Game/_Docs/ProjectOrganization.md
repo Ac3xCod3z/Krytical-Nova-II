@@ -76,8 +76,11 @@ _Game/
 │   │                      database)  Editor/ (bakers)  Tests/Editor/
 │   ├── Economy/           Runtime/ (Creds, Vault and Deep Vault, Trade, Kiosks, trade zones)  Data/ + Data/Assets/
 │   │                      (EconomySettings)  Editor/  Prefabs/ (KioskStand)  Tests/Editor/
-│   ├── Items/             Runtime/ (+Visuals/; world drops, pickup)  Data/Assets/ (items, part catalog, gear dictionary)
-│   │                      Editor/  Prefabs/ (WorldDrop)  Tests/Editor/
+│   ├── Forge/             Runtime/ (PlayerGearWork: Tempering, Fusion, Tuning and Reforge at the Armorer. Sits above Items,
+│   │                      Economy, Progression and NPC, which is why it is its own system)
+│   ├── Items/             Runtime/ (+Visuals/; world drops, pickup; gear state and progression rules)  Data/ (GearProgressionSettings)
+│   │                      Data/Assets/ (items, part catalog, gear dictionary, GearMaterials/ = forge materials)
+│   │                      Shaders/ (TemperGlow + its material)  Editor/  Prefabs/ (WorldDrop)  Tests/Editor/
 │   ├── NPC/               Runtime/  Data/Assets/
 │   ├── Persistence/       Runtime/ (ServerSave, account and character documents, PlayerSaveAgent)  Tests/Editor/
 │   ├── Pets/              Runtime/ (growth, hunger, PlayerPet)  Data/ + Data/Assets/ (settings, catalog, definitions)
@@ -113,9 +116,10 @@ _Game/
 ├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets)  Editor/ (Menus/ = front-end
 │                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/ Duel/ Party/ Pet/)  Inventory/
-│                          Economy/ (Vault, Trade and Kiosk windows)  Social/ (prompt, player menu, Contacts, Crew)  NPC/  Shaders/
+│                          (also the forge window)  Economy/ (Vault, Trade and Kiosk windows)  Social/ (prompt, player menu,
+│                          Contacts, Crew)  Settings/ (the Settings window; its code is Runtime/Settings/)  NPC/  Shaders/
 │                          Menus/ (Materials/, KeyGlyphs.asset: assets the front-end scenes use)
-│                          (future: Skills/ Character/ World/ Settings/)
+│                          (future: Skills/ Character/ World/)
 ├── VFX/                   Gameplay/  GameFeel/  Environment/{City,Portals,Vehicles,Weather}/  Materials/ (shared FX mats)
 ├── Input/Actions/         InputSystem_Actions.inputactions (project-wide actions)
 ├── Scenes/                MainMenu/ (Title, FactionSelect, CharacterCreator, CharacterSelect, Loading: generated, rebuild
@@ -127,7 +131,9 @@ _Game/
 │                          Setup/ = the two wiring steps: player prefab and zone scene, Hierarchy/ = vHierarchy data)
 │                          Debug/ (QC commands)
 │                          (future: Profiling/ Importers/)
-└── (future) Audio/{Music,SFX,Ambience,Voice}/  Art/ (shared-only art)  Tests/ (cross-system tests)
+├── Audio/                 Mixers/ (KN_Main.mixer: Master with Music, Sfx, UI and Ambience; the Settings sliders drive it)
+│                          (future: Music/ SFX/ Ambience/ Voice/)
+└── (future) Art/ (shared-only art)  Tests/ (cross-system tests)
 ```
 
 ### Anatomy of a system
@@ -161,9 +167,9 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 
 | Assembly                          | Defined in                                     | Covers (via .asmref)                                                     |
 |-----------------------------------|------------------------------------------------|---------------------------------------------------------------------------|
-| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets}/Runtime, {Progression,Factions,CharacterCreation,Social,Economy,Pets}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
+| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets,Forge}/Runtime, {Progression,Factions,CharacterCreation,Social,Economy,Pets,Items}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
-| `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime. Excluded from dedicated server (`!UNITY_SERVER`)      |
+| `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime and Vegetation.Grass (the graphics settings set grass density). Excluded from dedicated server (`!UNITY_SERVER`) |
 | `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
 | `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
 | `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, Economy, Pets, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel) |
@@ -288,9 +294,9 @@ Menu **Krytical Nova ▸ Setup** (the two wiring steps; both safe to run again a
 | Item                                         | What it does                                                                           |
 |----------------------------------------------|----------------------------------------------------------------------------------------|
 | Player Prefab                                | Wires every player component onto `Player.prefab` and hands each its settings asset (created with defaults when missing); builds the prefabs gameplay spawns (item drop, Kiosk stand) and registers them as network prefabs. **A new player system adds one row to `PlayerSystemsSetup`; a new spawned prefab adds its path to `GameplayPrefabsSetup.SpawnedPrefabs`** (a prefab that is not registered never appears on clients) |
-| Zone Scene (Open Scene)                      | Prepares the open scene as a zone: HUD and its controllers (`HudSetup.MoreControllers`), zone UI, game feel, matte terrain, post look, atmosphere, minimap renderer, lighting, hierarchy headers, the NetworkManager's prefab list; in the starter town also the stalls whose NPC has arrived and the trade zones |
+| Zone Scene (Open Scene)                      | Prepares the open scene as a zone: HUD and its controllers (`HudSetup.MoreControllers`), zone UI, game feel, the audio mixer and who plays into it (`AudioSetup`), matte terrain, post look, atmosphere, minimap renderer, lighting, hierarchy headers, the NetworkManager's prefab list; in the starter town also the stalls whose NPC has arrived and the trade zones |
 
-Menu **Krytical Nova ▸ Items** also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`).
+Menu **Krytical Nova ▸ Items** also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration, forge materials: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`).
 
 Menu **Krytical Nova ▸ Characters** (run in order, or use *Bake Everything*):
 

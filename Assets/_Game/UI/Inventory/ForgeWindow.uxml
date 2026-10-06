@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- The forge (GearWorkWindowController): Tempering, Fusion, Tuning and Reforge at an Armorer. The gear in the
+         Pack is listed on the left; the right side is what the chosen tab would do to the chosen piece. -->
+    <ui:VisualElement name="forge-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="FORGE" class="heading" />
+            <ui:Label name="forge-purse" class="muted forge-purse" />
+            <ui:Button name="close-forge" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement class="forge-tabs">
+            <ui:Button name="forge-tab-temper" text="TEMPERING" class="forge-tab" />
+            <ui:Button name="forge-tab-fusion" text="FUSION" class="forge-tab" />
+            <ui:Button name="forge-tab-tuning" text="TUNING" class="forge-tab" />
+            <ui:Button name="forge-tab-reforge" text="REFORGE" class="forge-tab" />
+        </ui:VisualElement>
+        <ui:Label name="forge-intro" class="help" />
+        <ui:VisualElement class="forge-body">
+            <ui:VisualElement class="forge-column forge-list-column">
+                <ui:Label text="GEAR IN YOUR PACK" class="eyebrow" />
+                <ui:ScrollView name="forge-items" class="forge-items" horizontal-scroller-visibility="Hidden" />
+            </ui:VisualElement>
+            <ui:VisualElement class="forge-column forge-detail">
+                <ui:Label name="forge-item-name" class="forge-item-name" />
+                <ui:Label name="forge-item-state" class="forge-item-state" />
+                <ui:Label name="forge-options-title" class="eyebrow section" />
+                <ui:VisualElement name="forge-options" class="forge-options" />
+                <ui:Label name="forge-odds" class="forge-odds" />
+                <ui:Label name="forge-reason" class="forge-reason" />
+                <ui:Button name="forge-act" text="TEMPER" class="kn-button-primary" />
+                <ui:Button name="forge-reset" text="RESET TUNING" class="kn-button-danger" />
+                <ui:Label name="forge-result" class="forge-result" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

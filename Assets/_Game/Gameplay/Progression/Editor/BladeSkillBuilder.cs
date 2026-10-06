@@ -291,8 +291,7 @@ namespace KryticalNova.EditorTools
                 return null;
             }
 
-            skill.description = "Hold to gather spiritual rage. Your next hit deals greatly increased damage with a higher critical rate "
-                              + "(only the first hit of a multi-hit skill). The rage fades if unused.";
+            // Its name and description come from ClassSkillBuilder.SharedSkillText, like every shared skill.
             skill.requiredCharacterLevel = 1;
             skill.requiresSkillBook = false;
             skill.minRank = 1;

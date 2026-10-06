@@ -36,6 +36,7 @@ namespace KryticalNova.UI
         private const string BlockingClass = "blocks-world";
         private const string GlyphClass = "item-glyph";
         private const string LevelClass = "item-level";
+        private const string TemperClass = "item-temper";
         private const string UnusableClass = "item-unusable";
         private const string UnmetClass = "tooltip-requires--unmet";
         private const string LockedClass = "item-locked";
@@ -230,8 +231,8 @@ namespace KryticalNova.UI
                     else if (dragging) CancelDrag();
                     else { SetEquipmentOpen(false); SetInventoryOpen(false); }
                 }
-                if (keyboard.iKey.wasPressedThisFrame) SetInventoryOpen(!IsOpen(inventoryWindow));
-                if (keyboard.uKey.wasPressedThisFrame) SetEquipmentOpen(!IsOpen(equipmentWindow)); // E is a skill slot
+                if (KeyBindings.Pressed(KeyBindings.Pack)) SetInventoryOpen(!IsOpen(inventoryWindow));
+                if (KeyBindings.Pressed(KeyBindings.Equipment)) SetEquipmentOpen(!IsOpen(equipmentWindow));
             }
 
             // Click anywhere outside the context menu closes it (the world never receives that click).
@@ -406,6 +407,9 @@ namespace KryticalNova.UI
             var level = new Label { pickingMode = PickingMode.Ignore };
             level.AddToClassList(LevelClass);
             host.Add(level);
+            var temper = new Label { pickingMode = PickingMode.Ignore };
+            temper.AddToClassList(TemperClass);
+            host.Add(temper);
             if (withCount)
             {
                 var count = new Label { pickingMode = PickingMode.Ignore };
@@ -439,6 +443,7 @@ namespace KryticalNova.UI
                 if (def != null) used++;
                 bool unusable = def != null && def.IsEquippable && !inventory.CanEquip(def, out _);
                 SetItemVisual(cells[i], def, stack.count, null, unusable);
+                SetTemperVisual(cells[i], def, stack);
                 cells[i].EnableInClassList(LockedClass, def != null && IsLocked(i));
             }
             if (countLabel != null) countLabel.text = $"{used} / {PlayerInventory.Capacity}";
@@ -452,6 +457,7 @@ namespace KryticalNova.UI
                 var def = equipment != null ? equipment.GetDefinition(kv.Key) : null;
                 silhouettes.TryGetValue(kv.Key, out var silhouette);
                 SetItemVisual(kv.Value, def, 1, silhouette);
+                SetTemperVisual(kv.Value, def, inventory != null ? inventory.GetEquipped(kv.Key) : ItemStack.Empty);
             }
         }
 
@@ -478,6 +484,18 @@ namespace KryticalNova.UI
             SetGlyph(host.Q<Label>(className: GlyphClass), def);
             var countLabel = host.Q<Label>(className: "item-count");
             if (countLabel != null) countLabel.text = def != null && count > 1 ? count.ToString() : string.Empty;
+        }
+
+        /// <summary>The Temper % of a piece of gear, in the corner of its icon and in its glow colour.</summary>
+        private void SetTemperVisual(VisualElement host, ItemDefinition def, in ItemStack stack)
+        {
+            var label = host.Q<Label>(className: TemperClass);
+            if (label == null) return;
+            int temper = def != null && def.IsLadderGear ? GearItemState.Of(stack).Temper : 0;
+            label.text = temper > 0 ? $"+{temper}" : string.Empty;
+            GearProgressionSettings settings = equipment != null ? equipment.Progression : null;
+            if (temper > 0 && settings != null && GearProgressionRules.TryGetGlow(settings.temper, temper, out TemperGlowBand band))
+                label.style.color = band.color;
         }
 
         /// <summary>Items without a sprite show their placeholder text, tinted by what they restore.</summary>
@@ -827,7 +845,8 @@ namespace KryticalNova.UI
         {
             if (!initialized || element == null || def == null) { HideItemTooltip(); return; }
 
-            tipName.text = def.displayName;
+            GearItemState gearState = def.IsLadderGear ? GearItemState.Of(itemStack) : default;
+            tipName.text = gearState.IsClean ? def.displayName : $"{def.displayName}  {gearState}";
             ApplyRarityText(tipName, def.rarity);
             tipType.text = TypeLine(def);
             string requirement = RequirementLine(def, out bool unmet);
@@ -840,7 +859,7 @@ namespace KryticalNova.UI
             tipDesc.text = def.description;
             // A pet's stage, growth, hunger and bonus are a block of their own; the line under it says what it grows.
             string petLine = tipPet.Show(def, itemStack.IsEmpty ? new ItemStack(def.itemId, 1) : itemStack);
-            tipStats.text = petLine != null ? $"<color={SkillColor}>{petLine}</color>" : FormatStats(def);
+            tipStats.text = petLine != null ? $"<color={SkillColor}>{petLine}</color>" : FormatStats(def) + FormatProgression(def, itemStack, gearState);
             tipHint.text = hint ?? string.Empty;
 
             SetDisplay(tooltip, true);
@@ -994,6 +1013,41 @@ namespace KryticalNova.UI
                 }
             }
             return sb.ToString().TrimEnd();
+        }
+
+        private readonly List<StatModifier> progressionScratch = new List<StatModifier>(8);
+
+        /// <summary>What the piece's own Temper, Fusion and Tuning add, under its baked stats.</summary>
+        private string FormatProgression(ItemDefinition def, in ItemStack stack, GearItemState state)
+        {
+            GearProgressionSettings settings = equipment != null ? equipment.Progression : null;
+            if (settings == null || state.IsClean) return string.Empty;
+            progressionScratch.Clear();
+            GearProgressionRules.AppendEffects(settings, stack, def, null, progressionScratch);
+            if (progressionScratch.Count == 0) return string.Empty;
+
+            string colour = GearProgressionRules.TryGetGlow(settings.temper, state.Temper, out TemperGlowBand band)
+                ? "#" + ColorUtility.ToHtmlStringRGB(band.color) : SkillColor;
+            var sb = new System.Text.StringBuilder();
+            sb.Append("\n<color=").Append(colour).Append('>');
+            if (state.Temper > 0) sb.Append("Temper +").Append(state.Temper).Append("%  ");
+            if (state.Fusion > 0) sb.Append("Fusion FS").Append(state.Fusion).Append("  ");
+            if (state.Tune > 0) sb.Append("Tune ").Append(state.Tune);
+            sb.Append("</color>");
+            // One line per stat, however many of the three systems feed it.
+            for (int i = 0; i < progressionScratch.Count; i++)
+            {
+                StatModifier first = progressionScratch[i];
+                bool counted = false;
+                for (int j = 0; j < i && !counted; j++)
+                    counted = progressionScratch[j].Stat == first.Stat && progressionScratch[j].ModType == first.ModType;
+                if (counted) continue;
+                float total = 0f;
+                for (int j = i; j < progressionScratch.Count; j++)
+                    if (progressionScratch[j].Stat == first.Stat && progressionScratch[j].ModType == first.ModType) total += progressionScratch[j].Value;
+                sb.Append("\n<color=").Append(SkillColor).Append('>').Append(StatDisplay.FormatModifier(first.Stat, first.ModType, total)).Append("</color>");
+            }
+            return sb.ToString();
         }
 
         public static void ApplyRarityText(Label label, ItemRarity rarity)

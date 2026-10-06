@@ -697,7 +697,7 @@ namespace KryticalNova.DevTools
             foreach (var buff in buffs.ActiveBuffs)
             {
                 if (buff?.Skill == null) continue;
-                // By id, or by the start of the name without spaces ("heavenlyblow" finds "Heavenly Blow (HB)").
+                // By id, or by the start of the name without spaces ("killerinst" finds "Killer Instinct").
                 bool match = string.Equals(buff.Skill.skillId, query, StringComparison.OrdinalIgnoreCase)
                     || (query.Length > 0 && (buff.Skill.displayName ?? string.Empty).Replace(" ", string.Empty)
                         .StartsWith(query, StringComparison.OrdinalIgnoreCase));

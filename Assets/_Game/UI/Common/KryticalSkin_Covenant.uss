@@ -343,6 +343,51 @@
     font-size: 17.92px;
 }
 
+/* ---- Settings.uss ---- */
+.kn-faction-covenant .settings-tab {
+    font-size: 12.32px;
+    -unity-background-image-tint-color: rgb(46, 37, 27);
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .settings-tab.active {
+    -unity-background-image-tint-color: rgb(112, 73, 0);
+}
+.kn-faction-covenant .settings-row-label {
+    font-size: 14.56px;
+    color: rgb(230, 221, 211);
+}
+.kn-faction-covenant .settings-row-value {
+    font-size: 13.44px;
+    color: rgb(140, 236, 172);
+}
+.kn-faction-covenant .settings-step {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .settings-slider-value {
+    font-size: 13.44px;
+    color: rgb(140, 236, 172);
+}
+.kn-faction-covenant .settings-slider .unity-base-slider__tracker {
+    background-color: rgb(72, 59, 45);
+}
+.kn-faction-covenant .settings-slider .unity-base-slider__dragger {
+    background-color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .settings-row.unavailable .settings-row-label {
+    color: rgb(132, 121, 108);
+}
+.kn-faction-covenant .settings-key {
+    font-size: 13.44px;
+    color: rgb(140, 236, 172);
+}
+.kn-faction-covenant .settings-key-reset {
+    font-size: 11.2px;
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .settings-row.fixed .settings-row-label, .kn-faction-covenant .settings-row.fixed .settings-row-value {
+    color: rgb(152, 141, 128);
+}
+
 /* ---- Items.uss ---- */
 .kn-faction-covenant .header-key {
     font-size: 12.32px;
@@ -482,6 +527,72 @@
 }
 .kn-faction-covenant .loot-notice-fill {
     background-color: rgb(222, 167, 65);
+}
+
+/* ---- Forge.uss ---- */
+.kn-faction-covenant .forge-purse {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .forge-tab {
+    font-size: 12.32px;
+    -unity-background-image-tint-color: rgb(46, 37, 27);
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .forge-tab.active {
+    -unity-background-image-tint-color: rgb(112, 73, 0);
+}
+.kn-faction-covenant .forge-item:hover {
+    -unity-background-image-tint-color: rgba(78, 63, 46, 0.95);
+}
+.kn-faction-covenant .forge-item.selected {
+    -unity-background-image-tint-color: rgba(96, 62, 0, 0.95);
+}
+.kn-faction-covenant .forge-item-title {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .forge-item-sub {
+    font-size: 11.2px;
+    color: rgb(178, 165, 151);
+}
+.kn-faction-covenant .forge-item-tag {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .forge-empty {
+    font-size: 13.44px;
+    color: rgb(178, 165, 151);
+}
+.kn-faction-covenant .forge-item-name {
+    font-size: 16.8px;
+}
+.kn-faction-covenant .forge-item-state {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .forge-option {
+    font-size: 12.32px;
+    -unity-background-image-tint-color: rgb(54, 44, 32);
+}
+.kn-faction-covenant .forge-option.chosen {
+    -unity-background-image-tint-color: rgb(112, 73, 0);
+}
+.kn-faction-covenant .forge-odds {
+    font-size: 13.44px;
+    color: rgb(230, 221, 211);
+}
+.kn-faction-covenant .forge-reason {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .forge-result {
+    font-size: 14.56px;
+}
+.kn-faction-covenant .forge-result.success {
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .forge-result.fail {
+    color: rgb(140, 236, 172);
+}
+.kn-faction-covenant .item-temper {
+    font-size: 10.08px;
+    text-shadow: 1px 1px 0 rgb(16, 13, 9);
 }
 
 /* ---- Minimap.uss ---- */

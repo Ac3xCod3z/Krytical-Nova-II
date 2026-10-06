@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Skill_HeavenlyBlow
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: HeavenlyBlow
-  displayName: Heavenly Blow (HB)
-  description: Skill to boost the reflex that can strike the enemy with the most fatal attack by channeling the whole body's energy into one spot. Increases chance of deadly blow by 12% - 75%.
+  displayName: Killer Instinct
+  description: Sharpens your eye for the fatal opening, raising your Critical chance by 12% - 75%.
   category: 1
+  weaponClass: 0
+  classSlot: 0
+  presentationId: 
   targetType: 0
   executionType: 0
   acquisitionMethod: 1
   requiresSkillBook: 1
-  acquisitionNote: Lvl 60 Drop Item
+  acquisitionNote: Level 60 Skill Chip
   requiredCraftingArchives: []
   requiredCharacterLevel: 60
   minRank: 1
@@ -33,7 +36,10 @@ MonoBehaviour:
   minDuration: 64
   maxDuration: 180
   channelTickInterval: 1
-  channelChiRecoveryPercent: 5
+  minChannelChiRecoveryPercent: 5
+  maxChannelChiRecoveryPercent: 5
+  minChannelHealthRecoveryPercent: 0
+  maxChannelHealthRecoveryPercent: 0
   isAbsorptionShield: 0
   minShieldPercent: 111
   maxShieldPercent: 150
@@ -64,6 +70,7 @@ MonoBehaviour:
   maxRange: 2
   minBonusDamagePercent: 100
   maxBonusDamagePercent: 100
+  canCrit: 1
   chargeTime: 0
   holdToRepeat: 0
   icon: {fileID: 21300000, guid: 8298c942857284e41a13dfbafe816783, type: 3}
@@ -71,7 +78,15 @@ MonoBehaviour:
   castClipSpeed: 1.2
   hitTimesNormalized: []
   castLockNormalized: 0.85
+  attackCancelNormalized: 1
+  castLiftCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   chargeLoopClip: {fileID: 0}
+  channelLoopClip: {fileID: 0}
   castVfxPrefab: {fileID: 0}
   hitVfxPrefab: {fileID: 0}
   chargeVfxPrefab: {fileID: 0}

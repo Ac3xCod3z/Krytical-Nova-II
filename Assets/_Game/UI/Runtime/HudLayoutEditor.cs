@@ -10,6 +10,9 @@ namespace KryticalNova.UI
     /// Custom placement is written as inline styles: left/top as a percentage of the parent (so layouts survive
     /// resolution changes) plus a uniform scale with a top-left transform origin. Elements without a saved entry
     /// keep their USS default position. Layouts persist through <see cref="HudPreferences.LayoutJson"/>.
+    /// While a panel is dragged it lines up with the other panels (edges and centres), with the screen's edges and
+    /// centre, and otherwise with a grid, so a layout stays tidy without being limited to preset spots. Holding Alt
+    /// places it freely; <see cref="HudPreferences.SnapToGrid"/> turns the whole thing off.
     /// </summary>
     public sealed class HudLayoutEditor
     {
@@ -21,6 +24,14 @@ namespace KryticalNova.UI
         private const float MaxScale = 2f;
         private const float ScaleStep = 0.05f;
         private const float MinVisiblePixels = 48f;
+        /// <summary>How close an edge must come to another panel's edge to jump onto it (panel units).</summary>
+        private const float GuideReach = 6f;
+        /// <summary>The gap the default layout keeps to the screen edge: panels line up with it too.</summary>
+        private const float ScreenMargin = 16f;
+        private const int MajorGridEvery = 4;
+        private static readonly Color GridColor = new Color(0.45f, 0.87f, 0.77f, 0.07f);
+        private static readonly Color MajorGridColor = new Color(0.45f, 0.87f, 0.77f, 0.16f);
+        private static readonly Color GuideColor = new Color(1f, 0.79f, 0.24f, 0.95f);
         private const int LeftButton = 0;
         private const int RightButton = 1;
 
@@ -57,6 +68,7 @@ namespace KryticalNova.UI
             { "character-window", "CHARACTER WINDOW" },
             { "skills-window", "SKILLS WINDOW" },
             { "settings-window", "SETTINGS WINDOW" },
+            { "forge-window", "FORGE WINDOW" },
             { "network-panel", "NETWORK PANEL" },
             { "npc-dialogue", "NPC DIALOGUE" },
             { "zone-toast", "ZONE NOTICE" },
@@ -77,6 +89,14 @@ namespace KryticalNova.UI
         private float scaleStart;
         private Vector2 sizeStart;
 
+        // The grid and the alignment guides are drawn on one layer under the panels.
+        private VisualElement layoutRoot;
+        private VisualElement gridLayer;
+        private readonly List<float> guideXs = new List<float>(2);
+        private readonly List<float> guideYs = new List<float>(2);
+        private readonly List<float> candidateXs = new List<float>(48);
+        private readonly List<float> candidateYs = new List<float>(48);
+
         public bool IsEditing { get; private set; }
         public event Action EditingChanged;
 
@@ -87,6 +107,7 @@ namespace KryticalNova.UI
         {
             foreach (VisualElement root in roots)
             {
+                if (layoutRoot == null && root != null) layoutRoot = root;
                 root?.Query(className: MovableClass).ForEach(element =>
                 {
                     if (string.IsNullOrEmpty(element.name)) return;
@@ -184,6 +205,7 @@ namespace KryticalNova.UI
         {
             if (IsEditing) return;
             IsEditing = true;
+            ShowGrid();
             foreach (VisualElement element in movables.Values)
             {
                 if (element.panel == null) continue;
@@ -218,6 +240,7 @@ namespace KryticalNova.UI
                 if (state.PreviousText != null && element is Label label) label.text = state.PreviousText;
             }
             editing.Clear();
+            HideGrid();
             IsEditing = false;
             Save();
             EditingChanged?.Invoke();
@@ -309,7 +332,7 @@ namespace KryticalNova.UI
             }
             else
             {
-                position += delta;
+                position = Snap(activeElement, position + delta, scale, evt.altKey);
             }
 
             position = ClampPixels(activeElement, position, scale);
@@ -352,9 +375,172 @@ namespace KryticalNova.UI
                 activeCapture.ReleasePointer(activePointerId);
             if (activeElement != null && editing.TryGetValue(activeElement, out EditState state))
                 state.Overlay.RemoveFromClassList("dragging");
+            ClearGuides();
             activeElement = null;
             activeCapture = null;
             activePointerId = -1;
+        }
+
+        // ------------------------------------------------------------------ grid & guides
+
+        /// <summary>
+        /// Where a dragged panel comes to rest. Each axis on its own: an edge or the centre jumps onto a line another
+        /// panel (or the screen) already keeps, when one is within reach; otherwise the top-left corner goes to the
+        /// nearest grid line. Positions are local to the panel's parent; lines are compared in panel space.
+        /// </summary>
+        private Vector2 Snap(VisualElement element, Vector2 position, float scale, bool free)
+        {
+            guideXs.Clear();
+            guideYs.Clear();
+            VisualElement parent = element.hierarchy.parent;
+            if (free || !HudPreferences.SnapToGrid || parent == null)
+            {
+                gridLayer?.MarkDirtyRepaint();
+                return position;
+            }
+
+            Vector2 origin = parent.worldBound.position;
+            Vector2 size = new Vector2(element.layout.width, element.layout.height) * scale;
+            Vector2 world = origin + position;
+            CollectCandidates(element);
+            world.x = SnapAxis(world.x, size.x, candidateXs, guideXs);
+            world.y = SnapAxis(world.y, size.y, candidateYs, guideYs);
+            gridLayer?.MarkDirtyRepaint();
+            return world - origin;
+        }
+
+        private static float SnapAxis(float start, float length, List<float> lines, List<float> guides)
+        {
+            float best = float.MaxValue;
+            float bestLine = 0f;
+            // The near edge, the middle and the far edge may each sit on a line.
+            for (int part = 0; part < 3; part++)
+            {
+                float at = start + length * part * 0.5f;
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    float offset = lines[i] - at;
+                    if (Mathf.Abs(offset) >= Mathf.Abs(best)) continue;
+                    best = offset;
+                    bestLine = lines[i];
+                }
+            }
+            if (Mathf.Abs(best) <= GuideReach)
+            {
+                guides.Add(bestLine);
+                return start + best;
+            }
+            float grid = HudPreferences.GridSize;
+            return Mathf.Round(start / grid) * grid;
+        }
+
+        /// <summary>The lines worth lining up with: the screen's margins and centre, and every other visible panel.</summary>
+        private void CollectCandidates(VisualElement dragged)
+        {
+            candidateXs.Clear();
+            candidateYs.Clear();
+            Rect screen = layoutRoot != null ? layoutRoot.worldBound : dragged.hierarchy.parent.worldBound;
+            candidateXs.Add(screen.xMin + ScreenMargin);
+            candidateXs.Add(screen.center.x);
+            candidateXs.Add(screen.xMax - ScreenMargin);
+            candidateYs.Add(screen.yMin + ScreenMargin);
+            candidateYs.Add(screen.center.y);
+            candidateYs.Add(screen.yMax - ScreenMargin);
+
+            foreach (VisualElement other in movables.Values)
+            {
+                if (other == dragged || other.panel == null || other.resolvedStyle.display == DisplayStyle.None) continue;
+                Rect bounds = other.worldBound;
+                if (bounds.width < 1f || bounds.height < 1f) continue;
+                candidateXs.Add(bounds.xMin);
+                candidateXs.Add(bounds.center.x);
+                candidateXs.Add(bounds.xMax);
+                candidateYs.Add(bounds.yMin);
+                candidateYs.Add(bounds.center.y);
+                candidateYs.Add(bounds.yMax);
+            }
+        }
+
+        private void ClearGuides()
+        {
+            guideXs.Clear();
+            guideYs.Clear();
+            gridLayer?.MarkDirtyRepaint();
+        }
+
+        private void ShowGrid()
+        {
+            if (layoutRoot == null) return;
+            if (gridLayer == null)
+            {
+                gridLayer = new VisualElement { name = "hud-edit-grid", pickingMode = PickingMode.Ignore };
+                gridLayer.style.position = Position.Absolute;
+                gridLayer.style.left = 0f;
+                gridLayer.style.top = 0f;
+                gridLayer.style.right = 0f;
+                gridLayer.style.bottom = 0f;
+                gridLayer.generateVisualContent += DrawGrid;
+            }
+            // Under every panel, so the lines never cover what is being placed.
+            if (gridLayer.parent != layoutRoot) layoutRoot.Insert(0, gridLayer);
+            HudPreferences.Changed += RepaintGrid;
+            gridLayer.MarkDirtyRepaint();
+        }
+
+        private void HideGrid()
+        {
+            HudPreferences.Changed -= RepaintGrid;
+            gridLayer?.RemoveFromHierarchy();
+        }
+
+        private void RepaintGrid() => gridLayer?.MarkDirtyRepaint();
+
+        private void DrawGrid(MeshGenerationContext context)
+        {
+            Rect area = gridLayer.contentRect;
+            if (area.width < 1f || area.height < 1f) return;
+            Painter2D painter = context.painter2D;
+            painter.lineWidth = 1f;
+
+            if (HudPreferences.SnapToGrid)
+            {
+                // Grid lines sit where panels snap: on multiples of the cell, counted from the screen's corner.
+                Vector2 origin = gridLayer.worldBound.position;
+                float cell = HudPreferences.GridSize;
+                // A very fine grid is drawn at every other line so it stays a hint, not a hatch.
+                int step = cell < 8f ? 2 : 1;
+                DrawLines(painter, area, origin.x, cell, step, true);
+                DrawLines(painter, area, origin.y, cell, step, false);
+            }
+
+            painter.strokeColor = GuideColor;
+            painter.lineWidth = 1.5f;
+            Vector2 offset = gridLayer.worldBound.position;
+            foreach (float x in guideXs) Line(painter, new Vector2(x - offset.x, 0f), new Vector2(x - offset.x, area.height));
+            foreach (float y in guideYs) Line(painter, new Vector2(0f, y - offset.y), new Vector2(area.width, y - offset.y));
+        }
+
+        private static void DrawLines(Painter2D painter, Rect area, float worldOrigin, float cell, int step, bool vertical)
+        {
+            float extent = vertical ? area.width : area.height;
+            int first = Mathf.CeilToInt(worldOrigin / cell);
+            for (int index = first; index * cell - worldOrigin <= extent; index++)
+            {
+                bool major = index % (MajorGridEvery * step) == 0;
+                if (!major && index % step != 0) continue;
+                float at = index * cell - worldOrigin;
+                painter.strokeColor = major ? MajorGridColor : GridColor;
+                if (vertical) Line(painter, new Vector2(at, 0f), new Vector2(at, area.height));
+                else Line(painter, new Vector2(0f, at), new Vector2(area.width, at));
+            }
+        }
+
+        private static void Line(Painter2D painter, Vector2 from, Vector2 to)
+        {
+            painter.BeginPath();
+            painter.MoveTo(from);
+            painter.LineTo(to);
+            painter.Stroke();
         }
 
         /// <summary>Converts the element's current on-screen placement into explicit pixel left/top and a top-left origin.</summary>

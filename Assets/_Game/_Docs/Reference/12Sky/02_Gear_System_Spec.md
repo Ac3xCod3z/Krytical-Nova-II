@@ -15,9 +15,11 @@ This table is the gear slice of the Glossary in `01_Systems_Build_List.md`. Refe
 | **Core** | Diamond (gem) | Diamonds | `CoreId` |
 | **Slot Cutter** / **Deep Cutter** | Unril Stone / Plus Penetrate Scroll | Unril Stones, Xcraft scrolls | items |
 | **Core Extractor** / **Slot Sealer** | Gem Removal Scroll / Socket Removal Stone | — | items |
-| **Alloy I–V** | Upgrade stones 3 / 6 / 9 / 12 / 15% | Reinforcement materials | `AlloyGrade` |
+| **Alumite**, **Iridion**, **Orichalc**, **Eversteel**, **Trinity Platinum** (the Alloys) | Upgrade stones 3 / 6 / 9 / 12 / 15%: Aluminium, Iridium, Oracite, Steel of Eternity, Holy Trinity Platinum | Reinforcement materials (owner's list, 5 Oct 2026) | `AlloyGrade`, `GearMaterialIds` |
 | **Prime Alloy** | Millennial Gold | Millenial Gold | item |
-| **Failsafe** / **Advanced Failsafe** | Protection Scroll / APS, Comrade Scroll | APS, protection charm | items |
+| **Failsafe** / **Advanced Failsafe** / **Lucky Failsafe** | Protection Charm / APS, Comrade Scroll / Lucky enchant | APS, protection charm | items |
+| **Reforge** | Item Exchange [12Sky: Item Exchange] | gear exchange | `ReforgeSettings` |
+| **The forge** | the Blacksmith's upgrade windows | — | `PlayerGearWork`, `NpcOffer.GearWork` |
 | **Fusion Catalyst** | Combine Scroll | Combine Scrolls | item |
 | **Tuning Chip** / **Violet Chip** | Refining Stone / Purple Stone | Refined Stones | items |
 | **Reset Chip** | Chaos Stone | — | item |
@@ -53,7 +55,7 @@ This table is the gear slice of the Glossary in `01_Systems_Build_List.md`. Refe
 | --- | --- | --- | --- | --- | --- | --- |
 | Common | Common | 1–30 | every 3 (1, 4, 7 … 28) | 10 | vendor gear, early leveling | 1.00 |
 | Uncommon | Unique | 20–40 | every 5 (20, 25, 30, 35, 40) | 5 | mini-boss and dungeon drops | 1.20 |
-| Rare | Rare | 45–105 | every 10 (45, 55 … 105) | 7 | endgame boss drops, high-tier crafting | 1.45 |
+| Rare | Rare | 45–110 | every 10 (45, 55 … 105), then 110 | 8 | endgame boss drops, high-tier crafting | 1.45 |
 | Epic | Elite / WarLord | 100–112 | every 3 (100, 103, 106, 109, 112) | 5 | endgame sets (Mk I, Mk II) | 1.70 |
 | Legendary | Requiem | 112+ | *(proposed)* one set | 1 | Reboot 12+, deferred | 2.00 *(proposed)* |
 
@@ -64,7 +66,7 @@ This table is the gear slice of the Glossary in `01_Systems_Build_List.md`. Refe
 | Common | 1, 4, 7 … 28 | 10 | one per group; outfits use the group's variant 01, the basic outfit a new character already wears |
 | Uncommon | 20, 25, 30, 35, 40 | 5 | one per group, a little more detailed |
 | Rare I | 45, 55, 65, 75 | 4 (40 levels) | first Rare look |
-| Rare II | 85, 95, 105 | 3 (30 levels) | second Rare look |
+| Rare II | 85, 95, 105, 110 | 4 | second Rare look. The level-110 tier was added on 6 Oct 2026 (owner: "rares last lvl is 110") so the top Rare sits just under the level-112 Epic; it is what an Epic 112 is fused with |
 | Epic | 100, 103, 106, 109, 112 | 5 | hero look |
 
 - **Groups.** Armor, Gloves, Boots, Cape, Ring and Amulet each have a line set per group: SOLD and CIVL (Hegemony), ROBO and SKTN (Null), VIKG and ELVN (Covenant), so skeletons, robots, soldiers… each have their own drops. Weapons have a line set per weapon class (nine; `04_Weapon_Classes.md`) and are locked to that class's faction.
@@ -170,69 +172,112 @@ Boots also carry +30–40 move / utility speed in the notes; keep that as `MoveS
 
 ## 4. Tempering (TS2: Reinforcement / Enchant %)
 
-Tempering scales an item's **primary** base stat (Attack Power on Weapon, Defense Power on everything else) by `1 + TemperPercent / 100`, applied before Fusion and Tuning bonuses. Done at the **Armorer**.
+**As built, 6 Oct 2026.** Done at the **Armorer's forge** (`NpcOffer.GearWork`, window `GearWorkWindowController`, service `PlayerGearWork`) on gear that is in the Pack. Every number below is in `Items/Data/Assets/GearProgressionSettings.asset` (section `temper`); the rules are `GearProgressionRules`. Where Twelve Sky 2's own behaviour is known it is followed (owner, 5 Oct 2026); the rest is marked *(proposed)*.
 
-**Materials.** Five Alloy grades (TS2: 3 / 6 / 9 / 12 / 15% upgrade stones), each worth a fixed step; higher grades are rarer and have a lower success chance *(proposed, TS2 lists the steps but not the odds)*:
+**What Tempering raises.** One thing per slot, as in 12Sky page 23. This replaces the earlier draft ("Defense on everything but the weapon") and is what makes a luck Amulet:
 
-| Alloy | Step | Success chance | Source |
-| --- | --- | --- | --- |
-| Alloy I | +3% | 90% | vendor, common drop |
-| Alloy II | +6% | 75% | drop |
-| Alloy III | +9% | 60% | drop, craft (4 × Alloy I) |
-| Alloy IV | +12% | 45% | boss drop, craft |
-| Alloy V | +15% | 30% | boss drop, craft, Mall |
-| Prime Alloy | +3% | 50% | required for every attempt above 120% |
+| Slot | 1% of Temper gives |
+| --- | --- |
+| Weapon | +1% of its Attack Power |
+| Armor, Cape | +1% of its Defense |
+| Gloves | +1% of its Hit Rate |
+| Boots | +1% of its Evasion |
+| Ring | +0.05% Critical *(proposed)*: +6% at 120% |
+| Amulet | +4 Luck × rarity multiplier *(proposed)*: +576 on an Uncommon at 120% |
 
-**Outcome rules** (12Sky page 23 + TS2 Classic + owner's notes):
+**Materials.** Five Alloys and Prime Alloy (items 9100–9105; nothing drops or sells them yet):
 
-| Temper band | On success | On fail | Break chance on fail | Glow |
-| --- | --- | --- | --- | --- |
-| 0–59% | + step | −3% (floor 0) | 0% | yellow (1–59) |
-| 60–89% | + step | −3% | 5% → 15% (linear) | blue |
-| 90–119% | + step | −3% | 15% → 30% | purple |
-| 120% | cap without Prime Alloy | — | — | orange |
-| 121–132% | + step (Prime Alloy only) | −3% | 35% | orange + ring |
-| 133–150% | + step (Prime Alloy + Advanced Failsafe only) | −3% | 50% | red |
+| Alloy | Twelve Sky 2 | Step |
+| --- | --- | --- |
+| Alumite | Aluminium | +3% |
+| Iridion | Iridium | +6% |
+| Orichalc | Oracite | +9% |
+| Eversteel | Steel of Eternity | +12% |
+| Trinity Platinum | Holy Trinity Platinum | +15% |
+| Prime Alloy | Millennial Gold | +3%, and the only Alloy that works from 120% up |
 
-- **Failsafe** consumed on the attempt: a fail still costs −3% but the item never breaks.
-- **Advanced Failsafe**: fail costs nothing and the item never breaks. Required above 132%.
-- A **break** destroys the item (no recovery). Fused or tuned items break the same way, so the UI warns when an item above FS0 / Tune 0 is being tempered without a Failsafe.
-- Creds cost per attempt *(proposed)*: `ItemLevel × 500 × RarityMultiplier`, doubled above 120%.
-- Thresholds other systems read: **12%** unlocks Fusion as a material and Exchange listing (Broker NPC text already says this); **132%** unlocks Fusion on Epic (owner's notes); **150%** is the hard cap.
-- Server rolls every outcome; the client only sends `TemperRequest(itemLocation, alloyLocation, failsafeLocation?)`.
+**Success chance** (Twelve Sky 2's formula; it replaces the per-Alloy odds of the earlier draft):
+
+```
+chance = 103 − (current Temper % + Alloy step) + Luck bonus      clamped to 5% .. 100%
+Luck bonus = Luck / 100, at most 25% (proposed cap)
+```
+
+So a bigger Alloy is a bigger step at worse odds, and the higher the piece the harder every step: Alumite on an untouched piece is certain, Trinity Platinum at 60% is 28%, anything past 98% is the 5% floor plus Luck.
+
+**Luck.** `StatType.Luck` existed and was read by nothing; the forge reads it (Tempering, Fusion, Reforge). It comes from:
+
+- **Common and Uncommon gear** *(proposed numbers)*: every piece carries flat Luck (Common 5 at level 1 to 30 at level 28; Uncommon 40 at level 20 to 70 at level 40). Rare and Epic carry none, so cheap gear stays worth keeping as a forge set, as in Twelve Sky 2.
+- **A tempered Amulet** (the table above): the higher its Temper, the more Luck.
+- **Hot Streak** (TS2: Garuda's Prayer): +13% Luck at rank 1 to +100% at rank 30.
+- The base 50 every character has.
+
+**A fail** takes 3% back (never below 0). From 60% it may also break the piece:
+
+| Temper before the attempt | Break chance on a fail | Glow |
+| --- | --- | --- |
+| 0 | none | none |
+| 1–29% | none | green |
+| 30–59% | none | yellow |
+| 60–89% | 5% rising to 15% | blue |
+| 90–119% | 15% rising to 30% | purple |
+| 120–132% (Prime Alloy only) | 35% | orange |
+| 133–150% (Prime Alloy and an Advanced Failsafe) | 50% | orange |
+
+- **Failsafe** (TS2: Protection Charm): stops one break, and is only used up when it does. A fail it saves still costs the 3%.
+- **Lucky Failsafe** (TS2: Lucky enchant): +5% to one attempt and no break on it. Used up on the attempt.
+- **Advanced Failsafe**: a fail costs nothing and never breaks. Used up on a fail. Required from 133%.
+- A **break** destroys the piece. 120% is the cap without Prime Alloy; 150% is the hard cap.
+- Cost per attempt *(proposed)*: `ItemLevel × 500 × RarityMultiplier` Creds, doubled from 120%, plus the Alloy.
+
+**Glow.** The bands in the table (green and yellow are the owner's memory of Twelve Sky 2 for the range below 60%: at launch Rares glowed green up to 57%, the Classic guide lists yellow for 1–59%). The colour is the same for every rarity; what differs is how it is shown (`temper.glowLooks`): Common, Uncommon and Rare a soft rim, Epic the same colour several times brighter with a pulse and sparkles. Shown on the weapon (`WeaponVisualMount.SetGlow`, shader `KryticalNova/TemperGlow`) and as the "+36" on item icons; outfits do not glow yet. Other players see it: the Temper % of each worn slot is replicated to everyone (`PlayerEquipment.GetTemper`).
+
+**The state** of a piece (Temper, Fusion stage, Tuning stage) is `GearItemState`, packed into `ItemStack.data`, so it travels with the item through Pack, slot, Vault, Trade, Kiosk and the ground and is saved with it.
 
 ## 5. Fusion FS1–FS12 (TS2: Combination / Combine CS1–CS12)
 
-Fusion (TS2: Combine) melds a **material item** into a **target item** of the same slot, rarity and item level, raising the target's Fusion Stage by one. Twelve stages. Done at the Armorer. The current stage shows under the item name ("FS7").
+**As built, 6 Oct 2026** (settings section `fusion`). Fusion melts a **material** into a **target**, raising the target's Fusion stage by one. Twelve stages. The stage shows after the item name ("FS7").
 
-**Requirements** (12Sky page 24, TS2 upgrading guide, owner's notes):
+**What is fed to what** (12Sky page 24: "Epic items can only be combined with lower rank 'Rare rank' item"; owner, 6 Oct 2026):
 
-- Target: Rare or Epic, Temper ≥ 12% (Rare) or ≥ 132% (Epic).
-- Material: same slot, rarity and level; **Temper 0%** and **FS0** (one source must be clean). The material is consumed.
-- One **Fusion Catalyst** per attempt (drop, craft, Mall).
-- Creds: 100,000 for FS1, +50,000 per stage (FS12 = 650,000).
+| Target | Material |
+| --- | --- |
+| Rare | an untouched Rare of the same kind and the same item level |
+| Epic | an untouched Rare of the same kind: only the closest Rare tier at or below the Epic's own level |
 
-**Outcome:** success chance *(proposed)* 100% for FS1–FS3, then −7% per stage (FS12 = 37%). A fail consumes the material, catalyst and Creds; **the target is never destroyed and never loses a stage**.
+| Epic level | Rare it takes |
+| --- | --- |
+| 100, 103 | 95 |
+| 106, 109 | 105 |
+| 112 | 110 |
 
-**Effect per stage.** Each stage adds a flat bonus scaled from the item's own base stat, so the same table works at every level:
+"The same kind" is the same slot, and for weapons the same weapon class. "Untouched" is no Temper, no Fusion, no Tuning. An Epic is never fed an Epic. The tier is worked out from the stat table's bands (`GearProgressionRules.FusionMaterialLevel`), not hard-coded.
+
+- **Target:** Temper of 12% or more for a Rare, 132% or more for an Epic (owner's notes).
+- **Cost:** one Fusion Catalyst, the material, and 100,000 Creds for FS1, +50,000 a stage (FS12 = 650,000).
+- **Success chance** *(proposed)*: 100% for FS1–FS3, then −7% a stage (FS12 = 37%), plus the Luck bonus (as for Tempering).
+- **A success takes 12% Temper off the target** (Twelve Sky 2: "successfully combining always takes away 12% enchant"). For an Epic that is 132% back to 120%, and Prime Alloy to climb again. Tunable: `temperCostOnSuccess`.
+- **A fail destroys only the material** (and uses up the Catalyst and the Creds). The target is never harmed and loses nothing. This is the owner's recollection; the 12Sky help page says nothing is destroyed on a fail, which is one switch away (`failConsumesMaterial`).
+
+**Effect per stage** *(proposed; no source gives Twelve Sky 2's numbers as text)*, scaled from the item's own baked stat so the same table works at every level:
 
 | Slot | Per stage | At FS12 |
 | --- | --- | --- |
-| Weapon | +3% base Attack Power, +2% base Hit Rate | +36% AP, +24% Hit |
-| Armor | +3% base Defense, +2% base Evasion, +1.5% Max HP | +36% DP, +24% Eva, +18% HP |
-| Gloves | +3% base Defense, +2% base Hit Rate | +36% DP, +24% Hit |
-| Boots | +3% base Defense, +2% base Evasion | +36% DP, +24% Eva |
-| Cape | +3% base Defense | +36% DP |
+| Weapon | +3% of its Attack Power, +2% of its Hit Rate | +36% AP, +24% Hit |
+| Armor | +3% of its Defense, +2% of its Evasion, +1.5% Max HP | +36% DP, +24% Eva, +18% HP |
+| Gloves | +3% of its Defense, +2% of its Hit Rate | +36% DP, +24% Hit |
+| Boots | +3% of its Defense, +2% of its Evasion | +36% DP, +24% Eva |
+| Cape | +3% of its Defense | +36% DP |
 | Ring | +8 Elemental Attack × RarityMultiplier | +96 × mult |
 | Amulet | +8 Elemental Defense × RarityMultiplier | +96 × mult |
 
-The note "+20,000 HP for a full purple set at CS12" is an Epic set bonus, which is excluded; the Armor HP line above is the per-item share of that idea and is a tunable.
+The note "+20,000 HP for a full purple set at CS12" is an Epic set bonus, which is excluded; the Armor HP line above is the per-item share of that idea.
 
-**Interaction rules:** Fusion stage is kept when the item is tempered further or tuned. A fused item cannot be used as fusion material. Fused items cannot be listed on the Exchange *(proposed, to keep FS12 items earned)*.
+Fusion stage is kept when the piece is tempered further or tuned. A fused piece cannot be a material.
 
 ## 6. Tuning, stages 1–25 (TS2: Refine)
 
-Tuning (TS2: Refine) adds **secondary** stats by slot, one stage at a time, up to stage 25. Rare and Epic only. Done at the Armorer (TS2 Reborn uses a dedicated Refine NPC; one NPC fewer here). Costs **Tuning Chips** and **Renown**.
+**As built, 6 Oct 2026** (settings section `tuning`). Tuning adds a second set of stats by slot, one stage at a time, up to stage 25. Rare and Epic only; the Cape is not tuned. At the Armorer's forge. Costs chips, **Renown** and Creds.
 
 **Per-slot gains** (owner's notes, verbatim):
 
@@ -243,11 +288,11 @@ Tuning (TS2: Refine) adds **secondary** stats by slot, one stage at a time, up t
 | Gloves | Attack Speed +0.5%, Agility +5 | Agility +5 |
 | Boots | Move Speed +0.5%, Agility +5 | Agility +5 |
 | Ring | Core Resistance +0.1%, Vitality +5 | Vitality +5 |
-| Amulet | Bounce +1%, Strength +5 | Strength +5 |
+| Amulet | Knockback Resist +1%, Strength +5 | Strength +5 |
 
-Three of those stats are new to `StatType` (see section 11): **Attack Speed**, **Core Resistance** (the "socket attribute resistance": reduces the elemental damage an enemy's Cores add) and **Bounce** (TS2's term; treated as **Knockback Resistance %** unless the owner means something else: flag).
+Attack Speed, Core Resistance and Knockback Resist are granted and shown but nothing consumes them yet. **To tune:** +400 Max HP a stage is +10,000 at stage 25, against about 2,000 Max HP on a level-112 character today: the number is from a game with far larger HP pools.
 
-**Materials and cost per attempt** *(proposed; the notes give the materials, not the amounts)*:
+**Cost per attempt** *(proposed)*:
 
 | Stages | Chips | Renown | Creds |
 | --- | --- | --- | --- |
@@ -255,9 +300,17 @@ Three of those stats are new to `StatType` (see section 11): **Attack Speed**, *
 | 13–20 | 1 Violet Chip | 25 | 150,000 |
 | 21–25 | 2 Violet Chips | 50 | 400,000 |
 
-**Outcome** *(proposed)*: success 100% to stage 10, then −5% per stage (stage 25 = 25%). A fail consumes materials; stages 1–12 never drop, stages 13+ drop by one on a fail. A **Reset Chip** returns the item to stage 0 and refunds nothing (needed so Legendary's randomized tuning, deferred, has a reset path).
+**Outcome** *(proposed)*: 100% to stage 10, then −5% a stage (stage 25 = 25%). A fail uses up the materials; stages 1–12 never drop, a piece at stage 13 or higher drops one stage. Luck does not help here. A **Reset Chip** returns the piece to stage 0 and refunds nothing.
 
-Tuning stacks additively with the item's own secondary stats and with Fusion.
+**Renown** is `ProgressionState.renown`: held by the server, saved with the character, shown in the forge window. Nothing earns it yet (`gm.renown`).
+
+## 6b. Reforge (12Sky: Item Exchange, page 25)
+
+**As built, 6 Oct 2026** (settings section `reforge`). Named Reforge because The Exchange is the Broker's consignment board. An **untouched Rare** (Weapon, Armor, Gloves, Boots, Ring or Amulet) becomes another Rare of the **same item level**, picked at random from every such piece the character's faction and body can wear. Twelve Sky 2: "you pay for a chance at a random rare; you never destroy your rare, only lose silver".
+
+- Cost: 1,000,000 Creds at level 45, +200,000 per ten levels (2,200,000 at 105, 2,300,000 at 110).
+- Success *(proposed)*: 50%, plus the Luck bonus. A fail costs only the Creds; the piece stays as it is.
+- Epic, tempered, fused or tuned pieces cannot be reforged.
 
 ## 7. Slotting and Cores (TS2: Item Penetration, sockets and Diamonds)
 
@@ -339,6 +392,19 @@ These cost more Creds than armor in TS2 and are where min-maxing lives; only the
 
 ## 11. Data model and code changes (for Claude Code)
 
+**As built (6 Oct 2026): steps 3 to 6 of section 12, and Reforge.** Sections 4, 5, 6 and 6b say what the rules are; this is where they live.
+
+- `GearItemState` (`Items/Runtime`): Temper 0–150, Fusion 0–12, Tune 0–25 in the low 17 bits of `ItemStack.data`. `ItemStack` did not grow new fields: the `data` word the pets already use carries it, and the bits above are left for sockets.
+- `GearProgressionSettings` (`Items/Data`, asset in `Items/Data/Assets/`): one asset with four sections (`temper`, `fusion`, `tuning`, `reforge`) instead of the four assets first planned, because the resolver, the forge and the window all need all of it. It points at `GearStatTable` for rarity multipliers and level tiers.
+- `GearProgressionRules` (`Items/Runtime`): the rules, pure and with every roll passed in. The server calls them with real rolls, the forge window calls them for odds and reasons, `GearProgressionTests` pins them.
+- `GearStatResolver.Resolve(stack, definition, source, results, progression)` adds what the state is worth. `PlayerEquipment` hands it the real stack on the server and the owner (the inventory passes the worn items' data on), and replicates one Temper byte per slot to everyone (`EquipmentTemper`) for the glow.
+- `PlayerGearWork` (`Gameplay/Forge/Runtime`, namespace `KryticalNova.Forge`): the networked service on the player. One owner-to-server request per action (`RequestTemper`, `RequestFuse`, `RequestTune`, `RequestResetTuning`, `RequestReforge`), a `GearWorkResult` back to the owner. It is its own system folder because it sits above Items, Economy (Creds through `CredsSink.GearWork`), Progression (Renown) and NPC (the Armorer must be in reach).
+- Materials: rows in `UtilityItemGenerator` (ids in `GearMaterialIds`, assets in `Items/Data/Assets/GearMaterials/`).
+- `GearStatBaker.UpgradeTable` adds the level-110 Rare tier and the Luck rows to an existing stat table without touching what was tuned in it; the bake runs it.
+- UI: `GearWorkWindowController` with `UI/Inventory/ForgeWindow.uxml` and `Forge.uss`; tooltips and item icons show the state (`GearUIController`).
+- GM: `gm.temper <percent> [slot]`, `gm.fuse <stage> [slot]`, `gm.tune <stage> [slot]`, `gm.renown [amount]`, `gm.forgekit [count]`, `gm.forge` (open it anywhere; `gm.forge off`).
+- Not built: Slotting and Cores, Epic Mk II, rank up / down, Alloy crafting (12Sky page 22), any drop or shop for the materials, any Renown income.
+
 **As built (4 Oct 2026): steps 1 and 2 of section 12.**
 
 - `GearDictionary` (`Gameplay/Items/Runtime`) holds two tables. **`lines`** is the hand-edited one: a line is one run of level tiers that share a look (`lineId`, `tag`, `slot`, `rarity`, `band`, `pack`, `factions`, `bodies`, `weaponClass`, `look`, `displayName`). **`entries`** is baked: one row per item, read by the equip rule, the GM commands and the starter kit.
@@ -387,10 +453,10 @@ Each step compiles and plays on its own; the GM console (`item.give`, `gm.attr`)
 
 - [x] **1. Stats and definitions.** *(done 4 Oct 2026: all four rarities baked, not only Common and Epic)* Add the seven `StatType`s and their definition assets; extend `ItemDefinition` and `ItemStack`; write `GearStatTable` and `GearStatBaker`; bake Common 1–30 and Epic 100–112 and pass the Epic acceptance test.
 - [x] **2. Resolver.** *(done 4 Oct 2026)* `GearStatResolver` and `PlayerEquipment` reading it; character sheet shows gear-derived values; equip a baked Epic weapon and see 884 AP at 0%.
-- [ ] **3. Materials.** `GearMaterialGenerator` creates every material and Core item; `item.give` works for all.
-- [ ] **4. Tempering.** `TemperTuning`, `TemperRequest`, Armorer panel tab, tooltip and glow. Test: 0 → 60% never breaks, 90–119% breaks sometimes, Failsafe never breaks, 120% cap without Prime Alloy.
-- [ ] **5. Fusion.** `FusionTuning`, `FuseRequest`, material validation (clean item rule), FS label under the name.
-- [ ] **6. Tuning.** `TuneTable`, `TuneRequest`, Renown spend path (add `ProgressionState.renown` if it is not there yet).
+- [x] **3. Materials.** *(done 6 Oct 2026 for the forge: Alloys, Failsafes, Fusion Catalyst, chips, as rows of `UtilityItemGenerator`; Cores, cutters and the Mark Stone come with their systems)* `item.give` works for all.
+- [x] **4. Tempering.** *(done 6 Oct 2026)* Settings section `temper`, `PlayerGearWork.RequestTemper`, forge window tab, tooltip and glow. Test: 0 → 60% never breaks, 90–119% breaks sometimes, Failsafe never breaks, 120% cap without Prime Alloy.
+- [x] **5. Fusion.** *(done 6 Oct 2026)* Settings section `fusion`, `RequestFuse`, material validation (an untouched Rare, the Epic tier rule), FS label after the name.
+- [x] **6. Tuning.** *(done 6 Oct 2026, with Reforge)* Settings section `tuning`, `RequestTune`, `ProgressionState.renown` and its spend path.
 - [ ] **7. Slotting and Cores.** `SocketTuning`, four socket requests, Fixer panel, Core crafting 3 → 1.
 - [ ] **8. Epic Mark.** Mk II definitions from the baker, `MarkUpgradeRequest`, carry-over test.
 - [ ] **9. Herald.** `NpcRole.Herald`, Zone01 seed, Nova Rank and Titles with their panels, 12 Nova prefabs, title on nameplates.
@@ -406,7 +472,13 @@ Deferred and out of scope here: set bonuses, Legendary / Requiem, Pets (design 0
 - Halos & CP Reinforcement, RedFox TS2 help: https://12sky-help.playredfox.com/en/support/solutions/articles/8000069522-halos-cp-reinforcement
 - Item Penetration, RedFox TS2 help: https://12sky-help.playredfox.com/en/support/solutions/articles/8000069287-item-penetration
 - Wings Crafting, Stat Options & Upgrading, RedFox TS2 help: https://12sky-help.playredfox.com/en/support/solutions/articles/8000031558-wings-crafting-stat-options-upgrading
-- Starting Player Guide, Steam Community (grades, enchant glow bands, break threshold, pets, mounts, CP titles): https://steamcommunity.com/sharedfiles/filedetails/?id=852102476
+- Starting Player Guide, Steam Community (grades, enchant glow bands, break threshold, luck gear, pets, mounts, CP titles): https://steamcommunity.com/sharedfiles/filedetails/?id=852102476
+- 12Sky wiki, Enchanting (materials, the −3% fail, breaking from 60%, Protection Charm and Lucky enchant, 100 Luck = 1%) and Upgrading: https://12sky.fandom.com/wiki/Enchanting · https://12sky.fandom.com/wiki/Upgrading
+- 12 Sky 2 blog, Upgrading, Combining, Downgrading and Exchanging (a combine takes 12% enchant; an exchange costs only Silver on a fail): http://12sky2.blogspot.com/2009/03/guide-upgrading-combining-downgrading.html
+- Twelve Sky 2 Reborn wiki, WarLord Items (combine rules): https://twelvesky2reborn.fandom.com/wiki/WarLord_Items
+- Twelve Sky 2 skill sheet (Garuda's Song: 30 points, Luck 13% to 100%, 66 s to 240 s): https://12skyjp.proboards.com/thread/72/skill-formation
+- Twelve Sky 2 compared with the first game (Rares glow green to 57%, blue from 60%, purple in the 90s; safe to 60%): https://www.freemmorpglist.com/Twelve_Sky_2-mmorpg.html
+- The enchant success formula `103 − (current % + material %) + Luck / 100`, floor 5%, is quoted from a community wiki (vietkings, "Enchanting and Upgrading") through a search result; the page itself could not be opened.
 - Twelve Sky 2 Upgrading Rares Guide, guidescroll: https://guidescroll.com/2011/10/twelve-sky-2-upgrading-rares-guide/
 - God 12, Craft and Reinforcement Expansion, Steam announcement: https://steamcommunity.com/games/539650/announcements/detail/1664521145471880050
 - TS2 Reborn wiki pages for Refine, WarLord Items, Requiem Items and Title Guide were unreachable (HTTP 402); their numbers come from the owner's notes and design 03 instead.

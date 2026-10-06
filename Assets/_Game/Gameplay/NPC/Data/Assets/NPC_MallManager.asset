@@ -17,4 +17,5 @@ MonoBehaviour:
   title: Nova Store
   greeting: Premium goods, premium service. How may I assist?
   services: 'Runs the Nova Store: premium cosmetic goods and tickets.'
+  offers: 0
   interactRange: 3

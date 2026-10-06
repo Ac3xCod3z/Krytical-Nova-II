@@ -29,6 +29,8 @@ namespace KryticalNova.NPC
         DeepVault = 1 << 1,
         /// <summary>Founding a Crew.</summary>
         CrewRegistry = 1 << 2,
+        /// <summary>The forge: Tempering, Fusion, Tuning and Reforge.</summary>
+        GearWork = 1 << 3,
     }
 
     /// <summary>Static data for one town NPC. Shops, quests and crafting hook in by role later.</summary>

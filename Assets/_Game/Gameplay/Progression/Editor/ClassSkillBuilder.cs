@@ -198,7 +198,9 @@ namespace KryticalNova.EditorTools
                 catalog = ScriptableObject.CreateInstance<WeaponClassCatalog>();
                 AssetDatabase.CreateAsset(catalog, CatalogPath);
             }
-            catalog.SetContents(entries.ToArray(), SharedSkills());
+            var shared = SharedSkills();
+            NameSharedSkills(shared);
+            catalog.SetContents(entries.ToArray(), shared);
             EditorUtility.SetDirty(catalog);
             AssetDatabase.SaveAssets();
 
@@ -215,6 +217,69 @@ namespace KryticalNova.EditorTools
             var combatSkills = prefab != null ? prefab.GetComponent<PlayerCombatSkills>() : null;
             if (combatSkills == null) return System.Array.Empty<SkillDefinitionSO>();
             return combatSkills.AvailableSkills.Where(s => s != null && !s.IsClassSkill && System.Array.IndexOf(MonobladeIds, s.skillId) < 0).ToArray();
+        }
+
+        /// <summary>
+        /// What the shared skills are called and say. They are the same assets for every class, so every faction
+        /// reads the same names. Ids, asset names and effect ids keep their first names (SpiritualRage, HeavenlyShield).
+        /// </summary>
+        private static readonly Dictionary<string, (string Name, string Description)> SharedSkillText =
+            new Dictionary<string, (string, string)>
+            {
+                ["SpiritualRage"] = ("Redline",
+                    "Hold to push past the redline. Your next hit deals greatly increased damage with a higher Critical rate " +
+                    "(only the first hit of a multi-hit skill). The charge fades if unused."),
+                ["HeavenlySerenity"] = ("Second Wind",
+                    "Take a knee and catch your breath, restoring HP and Flux every second for 20s. Higher ranks restore more " +
+                    "each second. Interrupted by taking damage or moving."),
+                ["HeavenlyShield"] = ("Aegis",
+                    "Raises a barrier worth 111% - 150% of your HP. Physical damage hits the barrier first; once it breaks, " +
+                    "damage reaches your HP. Elemental damage goes straight through it."),
+                ["HeavenlyBlow"] = ("Killer Instinct",
+                    "Sharpens your eye for the fatal opening, raising your Critical chance by 12% - 75%."),
+                ["GarudasPrayer"] = ("Hot Streak",
+                    "Fortune runs your way: Luck is raised by 13% - 100% (500 Luck becomes 1000 at max rank). " +
+                    "Luck improves your odds at the Armorer's forge."),
+                ["HeavenlyRepulsion"] = ("Backlash",
+                    "1% - 10% chance to throw a physical hit back at the attacker in full and take none of it " +
+                    "(no effect on Elemental damage; the returned damage ignores Aegis)."),
+                ["HeavenlyDestruction"] = ("Shatterpoint",
+                    "While active, every attack has a 1% - 20% chance to shatter the enemy's Aegis and strip one of their buffs."),
+                ["ReverseFlow"] = ("Iron Nerve",
+                    "Steels you against being locked down: Lockup resistance is raised by 1% - 20%."),
+            };
+
+        /// <summary>The display name of a shared skill by id, or null when it has none in the table.</summary>
+        public static string SharedSkillName(string skillId) =>
+            SharedSkillText.TryGetValue(skillId, out var text) ? text.Name : null;
+
+        /// <summary>Writes the table above onto the shared skill assets. Safe to run again.</summary>
+        public static int NameSharedSkills(IEnumerable<SkillDefinitionSO> shared)
+        {
+            int named = 0;
+            foreach (var skill in shared)
+            {
+                if (skill == null || !SharedSkillText.TryGetValue(skill.skillId, out var text)) continue;
+                // Where it comes from, in the same terms: an Instructor, a Skill Chip, or a Skill Chip / Dossier.
+                bool crafted = skill.requiredCraftingArchives != null && skill.requiredCraftingArchives.Length > 0;
+                string source = !skill.requiresSkillBook ? "Instructor"
+                    : $"Level {skill.requiredCharacterLevel} Skill Chip{(crafted ? " or Dossier" : string.Empty)}";
+                if (skill.displayName == text.Name && skill.description == text.Description && skill.acquisitionNote == source) continue;
+                skill.displayName = text.Name;
+                skill.description = text.Description;
+                skill.acquisitionNote = source;
+                EditorUtility.SetDirty(skill);
+                named++;
+            }
+            return named;
+        }
+
+        /// <summary>Names the shared skills without rebuilding the class kits.</summary>
+        public static int NameSharedSkills()
+        {
+            int named = NameSharedSkills(SharedSkills());
+            if (named > 0) AssetDatabase.SaveAssets();
+            return named;
         }
 
         private static SkillDefinitionSO LoadOrClone(ClassSeed seed, ClassSkillSlot slot, SkillDefinitionSO template, out bool isNew)

@@ -1097,7 +1097,7 @@ namespace KryticalNova.Player
                 if (result.IsEvaded)
                     CommandMessage?.Invoke($"Attack EVADED by {targetEntity.EntityName}!");
                 else if (result.IsReflected)
-                    CommandMessage?.Invoke($"Attack REFLECTED by {targetEntity.EntityName}'s Heavenly Repulsion!");
+                    CommandMessage?.Invoke($"Attack REFLECTED by {targetEntity.EntityName}'s Backlash!");
                 else if (result.IsCritical)
                     CommandMessage?.Invoke($"CRITICAL HIT on {targetEntity.EntityName} for {result.DamageDealt:0} dmg! (HP: {targetEntity.CurrentHealth:0}/{targetEntity.MaxHealth:0})");
                 else

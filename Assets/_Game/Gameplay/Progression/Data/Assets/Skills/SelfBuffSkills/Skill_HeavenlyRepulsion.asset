@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Skill_HeavenlyRepulsion
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: HeavenlyRepulsion
-  displayName: Heavenly Repulsion (HR)
-  description: 1% - 10% chance to return full physical damage back at the enemy and user receives 0 physical damage (no effect on elemental damage, returned damage bypasses Heavenly Shield).
+  displayName: Backlash
+  description: 1% - 10% chance to throw a physical hit back at the attacker in full and take none of it (no effect on Elemental damage; the returned damage ignores Aegis).
   category: 1
+  weaponClass: 0
+  classSlot: 0
+  presentationId: 
   targetType: 0
   executionType: 0
   acquisitionMethod: 3
   requiresSkillBook: 1
-  acquisitionNote: Lvl 80 Craftable / Drop Item
+  acquisitionNote: Level 80 Skill Chip or Dossier
   requiredCraftingArchives:
   - Fire Dragon Dossier
   - Munro's Finale

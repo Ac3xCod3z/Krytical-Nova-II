@@ -343,6 +343,51 @@
     font-size: 20.48px;
 }
 
+/* ---- Settings.uss ---- */
+.kn-faction-null .settings-tab {
+    font-size: 14.08px;
+    -unity-background-image-tint-color: rgb(41, 27, 46);
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .settings-tab.active {
+    -unity-background-image-tint-color: rgb(112, 0, 6);
+}
+.kn-faction-null .settings-row-label {
+    font-size: 16.64px;
+    color: rgb(225, 211, 230);
+}
+.kn-faction-null .settings-row-value {
+    font-size: 15.36px;
+    color: rgb(175, 140, 236);
+}
+.kn-faction-null .settings-step {
+    font-size: 15.36px;
+}
+.kn-faction-null .settings-slider-value {
+    font-size: 15.36px;
+    color: rgb(175, 140, 236);
+}
+.kn-faction-null .settings-slider .unity-base-slider__tracker {
+    background-color: rgb(65, 45, 72);
+}
+.kn-faction-null .settings-slider .unity-base-slider__dragger {
+    background-color: rgb(222, 65, 73);
+}
+.kn-faction-null .settings-row.unavailable .settings-row-label {
+    color: rgb(126, 108, 132);
+}
+.kn-faction-null .settings-key {
+    font-size: 15.36px;
+    color: rgb(175, 140, 236);
+}
+.kn-faction-null .settings-key-reset {
+    font-size: 12.8px;
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .settings-row.fixed .settings-row-label, .kn-faction-null .settings-row.fixed .settings-row-value {
+    color: rgb(146, 128, 152);
+}
+
 /* ---- Items.uss ---- */
 .kn-faction-null .header-key {
     font-size: 14.08px;
@@ -482,6 +527,72 @@
 }
 .kn-faction-null .loot-notice-fill {
     background-color: rgb(222, 65, 73);
+}
+
+/* ---- Forge.uss ---- */
+.kn-faction-null .forge-purse {
+    font-size: 15.36px;
+}
+.kn-faction-null .forge-tab {
+    font-size: 14.08px;
+    -unity-background-image-tint-color: rgb(41, 27, 46);
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .forge-tab.active {
+    -unity-background-image-tint-color: rgb(112, 0, 6);
+}
+.kn-faction-null .forge-item:hover {
+    -unity-background-image-tint-color: rgba(70, 46, 78, 0.95);
+}
+.kn-faction-null .forge-item.selected {
+    -unity-background-image-tint-color: rgba(96, 0, 5, 0.95);
+}
+.kn-faction-null .forge-item-title {
+    font-size: 15.36px;
+}
+.kn-faction-null .forge-item-sub {
+    font-size: 12.8px;
+    color: rgb(171, 151, 178);
+}
+.kn-faction-null .forge-item-tag {
+    font-size: 14.08px;
+}
+.kn-faction-null .forge-empty {
+    font-size: 15.36px;
+    color: rgb(171, 151, 178);
+}
+.kn-faction-null .forge-item-name {
+    font-size: 19.2px;
+}
+.kn-faction-null .forge-item-state {
+    font-size: 15.36px;
+}
+.kn-faction-null .forge-option {
+    font-size: 14.08px;
+    -unity-background-image-tint-color: rgb(48, 32, 54);
+}
+.kn-faction-null .forge-option.chosen {
+    -unity-background-image-tint-color: rgb(112, 0, 6);
+}
+.kn-faction-null .forge-odds {
+    font-size: 15.36px;
+    color: rgb(225, 211, 230);
+}
+.kn-faction-null .forge-reason {
+    font-size: 15.36px;
+}
+.kn-faction-null .forge-result {
+    font-size: 16.64px;
+}
+.kn-faction-null .forge-result.success {
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .forge-result.fail {
+    color: rgb(175, 140, 236);
+}
+.kn-faction-null .item-temper {
+    font-size: 11.52px;
+    text-shadow: 1px 1px 0 rgb(14, 9, 16);
 }
 
 /* ---- Minimap.uss ---- */

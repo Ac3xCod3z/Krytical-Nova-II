@@ -28,7 +28,7 @@ MonoBehaviour:
   - name: Rare II
     code: R
     rarity: 2
-    levels: 555f69y
+    levels: 555f696ey
   - name: Epic
     code: E
     rarity: 3
@@ -108,78 +108,78 @@ MonoBehaviour:
     stat: 12
     fromLevel: 45
     fromValue: 67
-    toLevel: 105
-    toValue: 115
+    toLevel: 110
+    toValue: 119
   - rarity: 2
     slot: 2
     stat: 8
     fromLevel: 45
     fromValue: 32
-    toLevel: 105
-    toValue: 76
+    toLevel: 110
+    toValue: 79.666664
   - rarity: 2
     slot: 2
     stat: 13
     fromLevel: 45
     fromValue: 22
-    toLevel: 105
-    toValue: 48
+    toLevel: 110
+    toValue: 50.166668
   - rarity: 2
     slot: 3
     stat: 12
     fromLevel: 45
     fromValue: 15
-    toLevel: 105
-    toValue: 28
+    toLevel: 110
+    toValue: 29.083334
   - rarity: 2
     slot: 4
     stat: 16
     fromLevel: 45
     fromValue: 10
-    toLevel: 105
-    toValue: 28
+    toLevel: 110
+    toValue: 29.5
   - rarity: 2
     slot: 5
     stat: 2
     fromLevel: 45
     fromValue: 11
-    toLevel: 105
-    toValue: 23
+    toLevel: 110
+    toValue: 24
   - rarity: 2
     slot: 5
     stat: 12
     fromLevel: 45
     fromValue: 55
-    toLevel: 105
-    toValue: 95
+    toLevel: 110
+    toValue: 98.333336
   - rarity: 2
     slot: 5
     stat: 11
     fromLevel: 45
     fromValue: 15
-    toLevel: 105
-    toValue: 17
+    toLevel: 110
+    toValue: 17.166666
   - rarity: 2
     slot: 6
     stat: 3
     fromLevel: 45
     fromValue: 11
-    toLevel: 105
-    toValue: 23
+    toLevel: 110
+    toValue: 24
   - rarity: 2
     slot: 6
     stat: 13
     fromLevel: 45
     fromValue: 40
-    toLevel: 105
-    toValue: 72
+    toLevel: 110
+    toValue: 74.666664
   - rarity: 2
     slot: 6
     stat: 21
     fromLevel: 45
     fromValue: 44
-    toLevel: 105
-    toValue: 49
+    toLevel: 110
+    toValue: 49.416668
   - rarity: 2
     slot: 6
     stat: 22
@@ -192,15 +192,15 @@ MonoBehaviour:
     stat: 22
     fromLevel: 55
     fromValue: 100
-    toLevel: 105
+    toLevel: 110
     toValue: 100
   - rarity: 2
     slot: 7
     stat: 20
     fromLevel: 45
     fromValue: 10
-    toLevel: 105
-    toValue: 24
+    toLevel: 110
+    toValue: 25.166666
   - rarity: 3
     slot: 4
     stat: 16
@@ -215,6 +215,104 @@ MonoBehaviour:
     fromValue: 26
     toLevel: 112
     toValue: 28
+  - rarity: 0
+    slot: 1
+    stat: 15
+    fromLevel: 1
+    fromValue: 5
+    toLevel: 28
+    toValue: 30
+  - rarity: 1
+    slot: 1
+    stat: 15
+    fromLevel: 20
+    fromValue: 40
+    toLevel: 40
+    toValue: 70
+  - rarity: 0
+    slot: 2
+    stat: 15
+    fromLevel: 1
+    fromValue: 5
+    toLevel: 28
+    toValue: 30
+  - rarity: 1
+    slot: 2
+    stat: 15
+    fromLevel: 20
+    fromValue: 40
+    toLevel: 40
+    toValue: 70
+  - rarity: 0
+    slot: 3
+    stat: 15
+    fromLevel: 1
+    fromValue: 5
+    toLevel: 28
+    toValue: 30
+  - rarity: 1
+    slot: 3
+    stat: 15
+    fromLevel: 20
+    fromValue: 40
+    toLevel: 40
+    toValue: 70
+  - rarity: 0
+    slot: 4
+    stat: 15
+    fromLevel: 1
+    fromValue: 5
+    toLevel: 28
+    toValue: 30
+  - rarity: 1
+    slot: 4
+    stat: 15
+    fromLevel: 20
+    fromValue: 40
+    toLevel: 40
+    toValue: 70
+  - rarity: 0
+    slot: 5
+    stat: 15
+    fromLevel: 1
+    fromValue: 5
+    toLevel: 28
+    toValue: 30
+  - rarity: 1
+    slot: 5
+    stat: 15
+    fromLevel: 20
+    fromValue: 40
+    toLevel: 40
+    toValue: 70
+  - rarity: 0
+    slot: 6
+    stat: 15
+    fromLevel: 1
+    fromValue: 5
+    toLevel: 28
+    toValue: 30
+  - rarity: 1
+    slot: 6
+    stat: 15
+    fromLevel: 20
+    fromValue: 40
+    toLevel: 40
+    toValue: 70
+  - rarity: 0
+    slot: 7
+    stat: 15
+    fromLevel: 1
+    fromValue: 5
+    toLevel: 28
+    toValue: 30
+  - rarity: 1
+    slot: 7
+    stat: 15
+    fromLevel: 20
+    fromValue: 40
+    toLevel: 40
+    toValue: 70
   skillLevels:
   - rarity: 1
     slot: 1
@@ -234,7 +332,7 @@ MonoBehaviour:
   - rarity: 2
     slot: 1
     fromLevel: 85
-    toLevel: 105
+    toLevel: 110
     levels: 4
   - rarity: 3
     slot: 1
@@ -259,7 +357,7 @@ MonoBehaviour:
   - rarity: 2
     slot: 3
     fromLevel: 85
-    toLevel: 105
+    toLevel: 110
     levels: 4
   - rarity: 3
     slot: 3
@@ -284,7 +382,7 @@ MonoBehaviour:
   - rarity: 2
     slot: 4
     fromLevel: 85
-    toLevel: 105
+    toLevel: 110
     levels: 4
   - rarity: 3
     slot: 4
@@ -309,7 +407,7 @@ MonoBehaviour:
   - rarity: 2
     slot: 5
     fromLevel: 85
-    toLevel: 105
+    toLevel: 110
     levels: 4
   - rarity: 3
     slot: 5

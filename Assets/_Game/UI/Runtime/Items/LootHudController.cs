@@ -1,3 +1,4 @@
+using KryticalNova.Player;
 using System.Collections.Generic;
 using KryticalNova.Items;
 using UnityEngine;
@@ -63,7 +64,7 @@ namespace KryticalNova.UI
         {
             if (layer == null) return;
             var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.backquoteKey.wasPressedThisFrame && !HudTyping.IsTyping(root))
+            if (keyboard != null && KeyBindings.Pressed(KeyBindings.PickUp) && !HudTyping.IsTyping(root))
             {
                 PlayerLoot loot = PlayerLoot.Local;
                 if (loot != null) loot.RequestPickupNearest();
@@ -150,7 +151,7 @@ namespace KryticalNova.UI
             notice.EnableInClassList("ending", left <= EndingSeconds);
             noticeText.text = $"{drop.DisplayName}  ·  yours alone for {Mathf.CeilToInt(left)}s";
             string then = freeForAll ? "Then free for all" : "Then open to your faction";
-            noticeHelp.text = count > 1 ? $"{then}  ·  [~] takes it back  ·  {count - 1} more dropped" : $"{then}  ·  [~] takes it back";
+            noticeHelp.text = count > 1 ? $"{then}  ·  [{KeyBindings.Label(KeyBindings.PickUp)}] takes it back  ·  {count - 1} more dropped" : $"{then}  ·  [{KeyBindings.Label(KeyBindings.PickUp)}] takes it back";
             float total = Mathf.Max(0.01f, drop.HoldSeconds);
             noticeFill.style.width = Length.Percent(Mathf.Clamp01(left / total) * 100f);
         }

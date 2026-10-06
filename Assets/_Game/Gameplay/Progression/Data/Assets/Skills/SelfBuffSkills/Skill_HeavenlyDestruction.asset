@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Skill_HeavenlyDestruction
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: HeavenlyDestruction
-  displayName: Heavenly Destruction (HD)
-  description: Skill to rattle the enemy's bodily order as if his spirit were sucked out of him. 1% - 20% chance to shatter enemy Heavenly Shield and remove an enemy buff as long as active. Works with all attacks.
+  displayName: Shatterpoint
+  description: While active, every attack has a 1% - 20% chance to shatter the enemy's Aegis and strip one of their buffs.
   category: 1
+  weaponClass: 0
+  classSlot: 0
+  presentationId: 
   targetType: 0
   executionType: 0
   acquisitionMethod: 3
   requiresSkillBook: 1
-  acquisitionNote: Lvl 80 Craftable / Drop Item
+  acquisitionNote: Level 80 Skill Chip or Dossier
   requiredCraftingArchives:
   - Bloody Sky Dossier
   - Demon Gate Dossier

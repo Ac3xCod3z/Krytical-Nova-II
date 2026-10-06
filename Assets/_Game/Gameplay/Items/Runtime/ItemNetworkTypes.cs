@@ -164,6 +164,62 @@ namespace KryticalNova.Items
         public override int GetHashCode() => HashCode.Combine(weapon, armor, gloves, boots, ring, amulet, cape, pet);
     }
 
+    /// <summary>The Temper % of each equipped item, one per <see cref="EquipSlot"/>. Readable by everyone: it drives the glow.</summary>
+    [Serializable]
+    public struct EquipmentTemper : INetworkSerializable, IEquatable<EquipmentTemper>
+    {
+        public byte weapon, armor, gloves, boots, ring, amulet, cape;
+
+        public byte this[EquipSlot slot]
+        {
+            get
+            {
+                switch (slot)
+                {
+                    case EquipSlot.Weapon: return weapon;
+                    case EquipSlot.Armor: return armor;
+                    case EquipSlot.Gloves: return gloves;
+                    case EquipSlot.Boots: return boots;
+                    case EquipSlot.Ring: return ring;
+                    case EquipSlot.Amulet: return amulet;
+                    case EquipSlot.Cape: return cape;
+                    default: return 0;
+                }
+            }
+            set
+            {
+                switch (slot)
+                {
+                    case EquipSlot.Weapon: weapon = value; break;
+                    case EquipSlot.Armor: armor = value; break;
+                    case EquipSlot.Gloves: gloves = value; break;
+                    case EquipSlot.Boots: boots = value; break;
+                    case EquipSlot.Ring: ring = value; break;
+                    case EquipSlot.Amulet: amulet = value; break;
+                    case EquipSlot.Cape: cape = value; break;
+                }
+            }
+        }
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref weapon);
+            serializer.SerializeValue(ref armor);
+            serializer.SerializeValue(ref gloves);
+            serializer.SerializeValue(ref boots);
+            serializer.SerializeValue(ref ring);
+            serializer.SerializeValue(ref amulet);
+            serializer.SerializeValue(ref cape);
+        }
+
+        public bool Equals(EquipmentTemper o) =>
+            weapon == o.weapon && armor == o.armor && gloves == o.gloves && boots == o.boots &&
+            ring == o.ring && amulet == o.amulet && cape == o.cape;
+
+        public override bool Equals(object obj) => obj is EquipmentTemper o && Equals(o);
+        public override int GetHashCode() => HashCode.Combine(weapon, armor, gloves, boots, ring, amulet, cape);
+    }
+
     /// <summary>
     /// What a character wears, as whole items: the ids everyone sees (<see cref="ids"/>) and each item's own
     /// <see cref="data"/>. The inventory rules work on this, so an item keeps its state on its way in and out of a slot.

@@ -17,4 +17,5 @@ MonoBehaviour:
   title: "Combat Skills \xB7 Servo Claws"
   greeting: Before the weapon, there is the body. Show me your stance.
   services: Null Instructor for Servo Claws. Learn and upgrade your combat skills.
+  offers: 0
   interactRange: 3

@@ -45,9 +45,11 @@ namespace KryticalNova.Vegetation.Grass
         /// <summary>Runtime quality overrides (NaN = use the rule set). Not saved to the asset.</summary>
         public static float DensityOverride = float.NaN;
         public static float DistanceOverride = float.NaN;
+        /// <summary>The player's graphics setting: scales whatever density is in force (1 = as authored).</summary>
+        public static float DensityMultiplier = 1f;
         /// <summary>Runtime switch for the fill pass (debug: compare the lawn with and without its filler).</summary>
         public static bool FillEnabled = true;
-        private float Density => float.IsNaN(DensityOverride) ? rules.densityScale : DensityOverride;
+        private float Density => (float.IsNaN(DensityOverride) ? rules.densityScale : DensityOverride) * DensityMultiplier;
         private float NearDistance => float.IsNaN(DistanceOverride) ? rules.maxDistance : DistanceOverride;
 
         private static readonly int DebugId = Shader.PropertyToID("_KN_GrassDebug");

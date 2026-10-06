@@ -7,6 +7,7 @@ namespace KryticalNova.Core
         public const string DeepVault = "deepvault";
         public const string CrewRegistry = "crew";
         public const string Kiosk = "kiosk";
+        public const string Forge = "forge";
     }
 
     /// <summary>
