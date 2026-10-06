@@ -41,6 +41,8 @@ namespace KryticalNova.World
 
         /// <summary>How foggy the air is town-wide, 0-1 (fog weather only; local water mist excluded). Presentation only.</summary>
         public static float FogAmount { get; private set; }
+        /// <summary>The player's graphics setting: off removes the volumetric fog and mist, whatever the weather.</summary>
+        public static bool UserEnabled = true;
 
         private Layer ground;
         private Layer[] water;
@@ -104,14 +106,15 @@ namespace KryticalNova.World
                 lastQualityLevel = quality;
                 tierDisabled = IsDisabledTier(quality);
             }
+            bool off = tierDisabled || !UserEnabled;
             if (publishedVolumetric < 0f) return;
 
             float k = 1f - Mathf.Exp(-Time.deltaTime / smoothingSeconds);
-            float weatherTarget = tierDisabled ? 0f : Mathf.Clamp01(publishedVolumetric);
+            float weatherTarget = off ? 0f : Mathf.Clamp01(publishedVolumetric);
             float dry = 1f - Mathf.Clamp01(publishedRain * 4f);
             // Night haze is the same ground volume at a fraction of its density, on dry nights only.
-            float groundTarget = tierDisabled ? 0f : Mathf.Max(weatherTarget, Mathf.Clamp01(publishedNightHaze) * dry);
-            float waterTarget = tierDisabled ? 0f : DuskWeight(publishedHours) * dry * (1f - weatherTarget);
+            float groundTarget = off ? 0f : Mathf.Max(weatherTarget, Mathf.Clamp01(publishedNightHaze) * dry);
+            float waterTarget = off ? 0f : DuskWeight(publishedHours) * dry * (1f - weatherTarget);
             weatherWeight = Mathf.Lerp(weatherWeight, weatherTarget, k);
 
             Apply(ref ground, groundTarget, k, false);

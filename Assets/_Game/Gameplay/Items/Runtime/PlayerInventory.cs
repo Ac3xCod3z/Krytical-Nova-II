@@ -132,6 +132,7 @@ namespace KryticalNova.Items
             else if (IsOwner)
             {
                 equippedData = netEquippedData.Value;
+                equipment.SetItemData(equippedData);
                 PullNetCells();
             }
             if (IsOwner) SetLocal(this);
@@ -597,12 +598,14 @@ namespace KryticalNova.Items
         {
             equippedData = data;
             if (IsSpawned && IsServer) netEquippedData.Value = data;
+            equipment.SetItemData(data);
         }
 
         private void OnNetEquippedDataChanged(EquipmentData previous, EquipmentData next)
         {
             if (IsServer) return; // already applied locally
             equippedData = next;
+            equipment.SetItemData(next);
             Changed?.Invoke();
         }
 

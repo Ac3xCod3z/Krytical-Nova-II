@@ -19,7 +19,7 @@
     <ui:VisualElement name="equipment-window" class="panel window blocks-world hud-movable">
         <ui:VisualElement class="row kn-header">
             <ui:Label text="EQUIPMENT" class="heading" />
-            <ui:Label text="[U]" class="muted header-key" />
+            <ui:Label name="key-equipment" text="[U]" class="muted header-key" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
             <ui:Button name="close-equipment" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
         </ui:VisualElement>
@@ -55,7 +55,7 @@
     <ui:VisualElement name="inventory-window" class="panel window blocks-world hud-movable">
         <ui:VisualElement class="row kn-header">
             <ui:Label text="PACK" class="heading" />
-            <ui:Label text="[I]" class="muted header-key" />
+            <ui:Label name="key-pack" text="[I]" class="muted header-key" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
             <ui:Label name="inventory-count" text="0 / 144" class="accent inventory-count" />
             <ui:Button name="inventory-sort" text="SORT" class="inventory-sort" />

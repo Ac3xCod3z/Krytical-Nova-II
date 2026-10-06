@@ -42,7 +42,9 @@ namespace KryticalNova.Progression
         private const string GameplayMapName = "PointAndClick";
         private static readonly string[] SlotActionNames =
             { "Slot1", "Slot2", "Slot3", "Slot4", "Slot5", "Slot6", "Slot7", "Slot8", "Slot9", "Slot10", "SlotQ", "SlotW", "SlotE", "SlotR" };
-        private static readonly string[] SlotKeyLabels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Q", "W", "E", "R" };
+        // What the local player's slot keys are called on screen: the defaults until their own bindings are read.
+        private static readonly string[] DefaultKeyLabels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Q", "W", "E", "R" };
+        private static readonly string[] SlotKeyLabels = (string[])DefaultKeyLabels.Clone();
         private const string CharacterActionName = "CharacterWindow";
         private const string SkillsActionName = "SkillsWindow";
         private const string CancelActionName = "CancelOrbit";
@@ -66,6 +68,7 @@ namespace KryticalNova.Progression
         public event Action<SkillDefinitionSO, bool> ChargeEnded;
         public bool InputSuppressed { get; set; }
 
+        private bool keyLabelsRead;
         private int chargingSlot = NoSlot;
         private SkillDefinitionSO chargingSkill;
         private float chargeStartTime;
@@ -87,6 +90,7 @@ namespace KryticalNova.Progression
 
         private void Start()
         {
+            KryticalNova.Player.KeyBindings.ApplyTo(playerInput.actions); // the keys this player chose in Settings
             commandMap = playerInput.actions.FindActionMap(CommandMapName, true);
             gameplayMap = playerInput.actions.FindActionMap(GameplayMapName, true);
             for (int index = 0; index < SlotCount; index++)
@@ -97,10 +101,26 @@ namespace KryticalNova.Progression
             commandMap.Enable();
         }
 
+        /// <summary>The player's own input actions: what the Controls list in Settings rebinds.</summary>
+        public InputActionAsset Actions => playerInput != null ? playerInput.actions : null;
+
+        /// <summary>Reads the slot keys' names again after a rebind, and tells the HUD to redraw them.</summary>
+        private void RefreshKeyLabels()
+        {
+            keyLabelsRead = true;
+            for (int index = 0; index < SlotCount; index++)
+            {
+                string label = slotActions[index] != null ? KryticalNova.Player.KeyBindings.Label(slotActions[index]) : string.Empty;
+                SlotKeyLabels[index] = string.IsNullOrEmpty(label) ? DefaultKeyLabels[index] : label;
+            }
+            Changed?.Invoke();
+        }
+
         private void OnEnable()
         {
             commandMap?.Enable();
             if (combatSkills != null) combatSkills.ActiveClassChanged += OnActiveClassChanged;
+            KryticalNova.Player.KeyBindings.Changed += OnKeyBindingsChanged;
         }
 
         private void OnDisable()
@@ -108,6 +128,12 @@ namespace KryticalNova.Progression
             EndCharge(false);
             commandMap?.Disable();
             if (combatSkills != null) combatSkills.ActiveClassChanged -= OnActiveClassChanged;
+            KryticalNova.Player.KeyBindings.Changed -= OnKeyBindingsChanged;
+        }
+
+        private void OnKeyBindingsChanged()
+        {
+            if (keyLabelsRead) RefreshKeyLabels();
         }
 
         /// <summary>
@@ -141,6 +167,8 @@ namespace KryticalNova.Progression
                 EndCharge(false);
                 return;
             }
+            // Only the player this machine controls gets here: its bindings name the keys on the HUD.
+            if (!keyLabelsRead) RefreshKeyLabels();
             if (cancelAction.WasPressedThisFrame()) { EndCharge(false); CancelRequested?.Invoke(); return; }
             if (InputSuppressed) { EndCharge(false); return; }
             if (characterAction.WasPressedThisFrame()) CharacterWindowRequested?.Invoke();

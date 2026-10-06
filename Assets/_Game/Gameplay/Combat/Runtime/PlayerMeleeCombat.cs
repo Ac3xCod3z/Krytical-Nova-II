@@ -721,7 +721,7 @@ namespace KryticalNova.Combat
             if (result.IsEvaded)
                 TellAttacker($"{stepLabel} EVADED by {target.EntityName}!");
             else if (result.IsReflected)
-                TellAttacker($"{stepLabel} REFLECTED by {target.EntityName}'s Heavenly Repulsion!");
+                TellAttacker($"{stepLabel} REFLECTED by {target.EntityName}'s Backlash!");
             else if (result.IsCritical)
                 TellAttacker($"CRITICAL {stepLabel} on {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
             else

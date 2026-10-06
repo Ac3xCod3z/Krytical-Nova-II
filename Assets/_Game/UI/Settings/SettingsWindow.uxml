@@ -1,0 +1,38 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Settings (HudSettingsController). Four pages, one shown at a time. The Graphics, Audio and Controls pages are
+         filled in code from the preference classes (UI/Runtime/Settings); the Interface page is laid out here. -->
+    <ui:VisualElement name="settings-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="SETTINGS" class="heading" />
+            <ui:Label name="key-settings" text="[O]" class="muted header-key" />
+            <ui:Button name="close-settings" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement name="settings-tabs" class="settings-tabs">
+            <ui:Button name="settings-tab-graphics" text="GRAPHICS" class="settings-tab" />
+            <ui:Button name="settings-tab-audio" text="AUDIO" class="settings-tab" />
+            <ui:Button name="settings-tab-interface" text="INTERFACE" class="settings-tab" />
+            <ui:Button name="settings-tab-controls" text="CONTROLS" class="settings-tab" />
+        </ui:VisualElement>
+        <ui:ScrollView name="settings-body" class="window-body" horizontal-scroller-visibility="Hidden">
+            <ui:VisualElement name="settings-page-graphics" class="settings-page" />
+            <ui:VisualElement name="settings-page-audio" class="settings-page" />
+            <ui:VisualElement name="settings-page-interface" class="settings-page">
+                <ui:Label text="HUD LAYOUT" class="eyebrow section" />
+                <ui:Label text="Move and resize HUD panels. Drag a panel to move it, drag the gold corner to resize, right-click a panel to put it back. Panels line up with the grid and with each other; hold Alt to place one freely. Your layout is saved on this computer." class="help" />
+                <ui:Button name="settings-edit-layout" text="CUSTOMIZE HUD LAYOUT" class="kn-button-primary section" />
+                <ui:Button name="settings-reset-layout" text="RESET HUD LAYOUT" class="kn-button-danger" />
+                <ui:Toggle name="setting-snap-grid" label="Snap panels to the grid and to each other" value="true" class="kn-toggle kn-card" />
+                <ui:VisualElement name="settings-layout-options" />
+                <ui:Label text="WORLD MARKERS" class="eyebrow section" />
+                <ui:Toggle name="setting-move-marker" label="Ring at move destination" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-target-ring" label="Ring under selected target" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-nameplates" label="NPC nameplates" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-screen-shake" label="Screen shake &amp; impact effects" value="true" class="kn-toggle kn-card" />
+                <ui:Label text="INTERFACE" class="eyebrow section" />
+                <ui:Toggle name="setting-controls-hint" label="Show hotbar controls hint" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-minimap-rotate" label="Rotate minimap with camera" value="true" class="kn-toggle kn-card" />
+            </ui:VisualElement>
+            <ui:VisualElement name="settings-page-controls" class="settings-page" />
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

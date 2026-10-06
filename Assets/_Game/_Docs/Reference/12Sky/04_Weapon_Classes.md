@@ -109,6 +109,23 @@ Monoblade's former names (TS2 Guanyin Blade) in parentheses.
 | Stance | Blood Oath | Shieldwall | Windwalk |
 | Guard | Ancestor's Ward | Stoneheart | Barkskin |
 
+### Shared skills (every class, every faction)
+
+Eight skills are not tied to a weapon: every character has the same eight under the same names. They are single
+assets, so a name cannot differ by faction. Renamed 6 Oct 2026 (display text only: ids, assets and effect ids keep the
+Twelve Sky names). The table is `ClassSkillBuilder.SharedSkillText`; **Krytical Nova ▸ Progression ▸ Build Class Skills** writes it.
+
+| Krytical Nova | Twelve Sky 2 | Id | What it does | From |
+| --- | --- | --- | --- | --- |
+| **Redline** | Spiritual Rage | `SpiritualRage` | hold to charge; the next hit lands far harder with a Critical bonus | Instructor, level 1 |
+| **Second Wind** | Heavenly Serenity | `HeavenlySerenity` | kneel and recover HP and Flux for 20 s | Instructor, level 1 |
+| **Aegis** | Heavenly Shield (HS) | `HeavenlyShield` | a barrier worth 111–150 % of HP; Elemental damage passes it | Skill Chip, level 60 |
+| **Killer Instinct** | Heavenly Blow (HB) | `HeavenlyBlow` | +12–75 % Critical chance | Skill Chip, level 60 |
+| **Hot Streak** | Garuda's Prayer (GP) | `GarudasPrayer` | +13 % Luck at rank 1 to +100 % at rank 30, 66 s to 240 s (the TS2 slope); Luck is what improves the odds at the forge | Skill Chip, level 70 |
+| **Backlash** | Heavenly Repulsion (HR) | `HeavenlyRepulsion` | 1–10 % chance to throw a physical hit back in full | Skill Chip or Dossier, level 80 |
+| **Shatterpoint** | Heavenly Destruction (HD) | `HeavenlyDestruction` | 1–20 % chance per hit to shatter an Aegis and strip a buff | Skill Chip or Dossier, level 80 |
+| **Iron Nerve** | Reverse Flow (RF) | `ReverseFlow` | +1–20 % Lockup resistance | Skill Chip or Dossier, level 80 |
+
 ## 4. Discipline in the creator
 
 A Discipline step after Origin in the character creator: three cards (offense / defense / ranged for that faction) showing the
@@ -124,15 +141,15 @@ Null or Covenant character; Null's two body packs stay separated by `BodyFit`.
 
 ## 6. How many looks, and the grading rule
 
-From the gear spec bands: Common 10 steps, Uncommon 5, Rare 7, Epic 5 = 27 level / rarity steps per slot. Owner's rule
-(4 Oct 2026): every Common tier shares one look, every Uncommon tier one look, Rare has two looks (levels 45–75 and 85–105),
+From the gear spec bands: Common 10 steps, Uncommon 5, Rare 8, Epic 5 = 28 level / rarity steps per slot (Rare gained its level-110 tier on 6 Oct 2026). Owner's rule
+(4 Oct 2026): every Common tier shares one look, every Uncommon tier one look, Rare has two looks (levels 45–75 and 85–110),
 Epic one. Outfit Commons are the pack's variant 01 (the basic outfit).
 
 | Rarity | Weapon | Outfit |
 | --- | --- | --- |
 | Common (10) | the pack's plainest mesh (Sword_Training, Tanto, small axe, dagger, pistol) | the basic outfit (variant 01) |
 | Uncommon (5) | standard mesh (Sword, Spear, Axe, Rifle) | a mid outfit per group |
-| Rare (7) | ornate mesh (Odachi, Zweihander, Elven Sword, Sniper / Alien), two looks | two top outfits |
+| Rare (8) | ornate mesh (Odachi, Zweihander, Elven Sword, Sniper / Alien), two looks | two top outfits |
 | Epic (5) | hero mesh (Odachi_Covered, Fantasy Kingdom blade, Heavy / Launcher); Temper glow band + trail VFX later | hero outfit (+ helmet attachment for skeletons) |
 
 That is 5 look slots per class, 45 weapon lines in total. Outfits: Hegemony Soldier + Civilian, Null Robot + Skeleton, Covenant
@@ -158,7 +175,7 @@ Viking + Elven.
 | Ranks | `PlayerCombatSkills` | ranks, Skill Chip / Dossier unlocks and cooldowns are stored under the slot (`SkillDefinitionSO.RankKey`); a class skill only casts with its class's weapon in hand; a class change drops the old Stance / Guard. |
 | Hotbar and skills window | `PlayerSkillHotbar`, `ProgressionHUD` | slots re-point to the same slot of the new class; the window lists shared skills plus the class in hand. |
 | Discipline | `CharacterRecipe.weaponClass`, `CharacterNetState`, creator tab | chosen on the creator's Discipline tab, second in the bar: the Origin tiles become three class cards showing each class's starter weapon, with the role, the stance and the starting weapon below. Characters saved earlier read as their faction's offense class. |
-| Weapons | `GearDictionary` lines, `Items/Data/Assets/Weapons/Weapon_<Class>_NN.asset` | five look templates per class (Common, Uncommon, Rare I, Rare II, Epic), 27 tiers each. |
+| Weapons | `GearDictionary` lines, `Items/Data/Assets/Weapons/Weapon_<Class>_NN.asset` | five look templates per class (Common, Uncommon, Rare I, Rare II, Epic), 28 tiers each. |
 
 **Weapon models.** Each look template's model is built from its Synty prefab with one convention, the one the katana grip was tuned for: grip at the pivot, long axis along +Z, broad side (blade width, a rifle's height, a bow's belly) along Y. Icons are captured looking at that broad side. The Bow Combat pack ships a Built-in pipeline material, so the bows use a URP copy in `Items/Data/Assets/Materials/`. A grip that needs a different hold is tuned on the template (`weaponLocalPosition` / `weaponLocalEuler`) and survives re-bakes; `Krytical Nova ▸ Items ▸ Rebuild Weapon Look Models` rebuilds every model from its mesh (and resets those poses).
 

@@ -3,6 +3,7 @@
     "rootNamespace": "KryticalNova.UI",
     "references": [
         "KryticalNova.Runtime",
+        "KryticalNova.Vegetation.Grass",
         "Unity.Netcode.Runtime",
         "Unity.Collections",
         "Unity.InputSystem",

@@ -229,7 +229,7 @@ namespace KryticalNova.UI
             var keyboard = Keyboard.current;
             if (keyboard != null && !HudTyping.IsTyping(root))
             {
-                if (keyboard.gKey.wasPressedThisFrame) SetOpen(!IsOpen);
+                if (KeyBindings.Pressed(KeyBindings.Crew)) SetOpen(!IsOpen);
                 else if (keyboard.escapeKey.wasPressedThisFrame && IsOpen) SetOpen(false);
             }
             if (!IsOpen) return;

@@ -17,4 +17,5 @@ MonoBehaviour:
   title: "Slotting \xB7 Cores"
   greeting: Slots, Cores, cutters. Paid in Renown.
   services: 'Slotting: buy Slot Cutters with Renown to cut Core slots into your gear.'
+  offers: 0
   interactRange: 3

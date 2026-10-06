@@ -763,7 +763,7 @@ namespace KryticalNova.UI
                     string reqStr = $"Requires Level {skill.requiredCharacterLevel} · {skill.acquisitionNote}";
                     if (skill.requiredCraftingArchives != null && skill.requiredCraftingArchives.Length > 0)
                     {
-                        reqStr += $"\nArchives: {string.Join(", ", skill.requiredCraftingArchives)}";
+                        reqStr += $"\nDossiers: {string.Join(", ", skill.requiredCraftingArchives)}";
                     }
                     reqLabel.text = reqStr;
                 }
@@ -783,9 +783,9 @@ namespace KryticalNova.UI
             {
                 if (isDropSkill && !isLearned)
                 {
-                    upgrade.text = "REQUIRES SKILL BOOK / CRAFT";
+                    upgrade.text = "REQUIRES SKILL CHIP / DOSSIER";
                     upgrade.SetEnabled(false);
-                    upgrade.tooltip = $"Acquire {skill.displayName} drop book or craft via required archives.";
+                    upgrade.tooltip = $"Find the {skill.displayName} Skill Chip, or craft it from its Dossiers.";
                 }
                 else
                 {

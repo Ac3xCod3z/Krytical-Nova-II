@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Skill_SpiritualRage
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: SpiritualRage
-  displayName: Spiritual Rage
-  description: Hold to gather spiritual rage. Your next hit deals greatly increased damage with a higher critical rate (only the first hit of a multi-hit skill). The rage fades if unused.
+  displayName: Redline
+  description: Hold to push past the redline. Your next hit deals greatly increased damage with a higher Critical rate (only the first hit of a multi-hit skill). The charge fades if unused.
   category: 0
+  weaponClass: 0
+  classSlot: 0
+  presentationId: 
   targetType: 0
   executionType: 0
   acquisitionMethod: 0
   requiresSkillBook: 0
-  acquisitionNote: Faction Instructor
+  acquisitionNote: Instructor
   requiredCraftingArchives: []
   requiredCharacterLevel: 1
   minRank: 1

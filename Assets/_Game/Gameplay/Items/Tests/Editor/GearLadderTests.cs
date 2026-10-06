@@ -111,7 +111,7 @@ namespace KryticalNova.Tests
             {
                 { ItemRarity.Common, new[] { 1, 4, 7, 10, 13, 16, 19, 22, 25, 28 } },
                 { ItemRarity.Uncommon, new[] { 20, 25, 30, 35, 40 } },
-                { ItemRarity.Rare, new[] { 45, 55, 65, 75, 85, 95, 105 } },
+                { ItemRarity.Rare, new[] { 45, 55, 65, 75, 85, 95, 105, 110 } },
                 { ItemRarity.Epic, new[] { 100, 103, 106, 109, 112 } },
             };
             foreach (var pair in expected)
@@ -134,7 +134,7 @@ namespace KryticalNova.Tests
                 Assert.AreEqual(1, Looks(ItemRarity.Uncommon), $"{pack} Uncommon looks");
                 Assert.AreEqual(2, Looks(ItemRarity.Rare), $"{pack} Rare looks");
                 Assert.AreEqual(1, Looks(ItemRarity.Epic), $"{pack} Epic looks");
-                // The first Rare look covers 45-75 (forty levels), the second 85-105 (thirty).
+                // The first Rare look covers 45-75 (four tiers), the second 85-110 (four tiers).
                 var first = dictionary.Entries.Where(e => e.pack == pack && e.slot == EquipSlot.Armor && e.rarity == ItemRarity.Rare && e.itemLevel <= 75)
                     .Select(e => e.lineId).Distinct().ToList();
                 Assert.AreEqual(1, first.Count, $"{pack} Rare 45-75 shares one look");
@@ -200,7 +200,7 @@ namespace KryticalNova.Tests
             foreach (var weaponClass in WeaponClasses.All)
             {
                 var weapons = dictionary.Entries.Where(e => e.slot == EquipSlot.Weapon && e.weaponClass == weaponClass).ToList();
-                Assert.AreEqual(27, weapons.Count, $"{weaponClass}: 10 Common + 5 Uncommon + 7 Rare + 5 Epic tiers");
+                Assert.AreEqual(28, weapons.Count, $"{weaponClass}: 10 Common + 5 Uncommon + 8 Rare + 5 Epic tiers");
                 var faction = WeaponClassRules.FactionOf(weaponClass);
                 foreach (var weapon in weapons)
                 {
@@ -238,7 +238,7 @@ namespace KryticalNova.Tests
         {
             foreach (var slot in new[] { EquipSlot.Ring, EquipSlot.Amulet })
                 foreach (string pack in Packs)
-                    Assert.AreEqual(27, dictionary.Entries.Count(e => e.slot == slot && e.pack == pack), $"{pack} {slot} tiers");
+                    Assert.AreEqual(28, dictionary.Entries.Count(e => e.slot == slot && e.pack == pack), $"{pack} {slot} tiers");
         }
 
         [Test]

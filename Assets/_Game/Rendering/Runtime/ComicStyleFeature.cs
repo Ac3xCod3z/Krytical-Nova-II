@@ -23,6 +23,8 @@ namespace KryticalNova.Rendering
         public static float ShadowTintWeight;
         public static float ShadowBrightnessMultiplier = 1f;
         public static float DotStartOffset;
+        /// <summary>The player's graphics setting for the ink outlines. Not part of <see cref="Reset"/>.</summary>
+        public static bool OutlinesEnabled = true;
 
         public static void Reset()
         {
@@ -146,7 +148,7 @@ namespace KryticalNova.Rendering
             if (cameraType == CameraType.Preview || cameraType == CameraType.Reflection)
                 return;
 
-            bool passNeeded = outlines.enabled || halftone.postProcessDots || shadows.enabled;
+            bool passNeeded = (outlines.enabled && ComicStyleRuntime.OutlinesEnabled) || halftone.postProcessDots || shadows.enabled;
 
             // Toon materials read these even when the full-screen pass is idle.
             PushGlobals(passNeeded && shadows.enabled);
@@ -247,7 +249,7 @@ namespace KryticalNova.Rendering
             public void Setup(Material material, OutlineSettings o, ShadowSettings sh, HalftoneSettings h, bool environment)
             {
                 _material = material;
-                material.SetFloat(ShaderIds.OutlineEnabled, o.enabled ? 1f : 0f);
+                material.SetFloat(ShaderIds.OutlineEnabled, o.enabled && ComicStyleRuntime.OutlinesEnabled ? 1f : 0f);
                 material.SetColor(ShaderIds.OutlineColor, o.color);
                 material.SetFloat(ShaderIds.OutlineThickness, o.thickness);
                 material.SetFloat(ShaderIds.OutlineOpacity, o.opacity);

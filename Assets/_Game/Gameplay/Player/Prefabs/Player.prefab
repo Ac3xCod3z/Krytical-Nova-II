@@ -86,6 +86,7 @@ GameObject:
   - component: {fileID: 7066854715676927596}
   - component: {fileID: 2192193173450388958}
   - component: {fileID: 3734283269339307509}
+  - component: {fileID: 7874937971853909128}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -708,6 +709,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.PlayerEquipment
   ShowTopMostFoldoutHeaderGroup: 1
   catalog: {fileID: 11400000, guid: e1c1b71ec31a0334586d7dae8888309c, type: 2}
+  progression: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
 --- !u!114 &6013858044858887643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -758,6 +760,7 @@ MonoBehaviour:
   appearance: {fileID: 0}
   weaponMount: {fileID: 0}
   petFollower: {fileID: 0}
+  temperGlow: {fileID: 2100000, guid: 5dbcffb4f259c134fb487f74986ae9f0, type: 2}
 --- !u!114 &1740344965673177520
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3698,6 +3701,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.PlayerCrew
   ShowTopMostFoldoutHeaderGroup: 1
   settings: {fileID: 11400000, guid: ffeff43fd896c2141adfa404d202f76c, type: 2}
+--- !u!114 &7874937971853909128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c87eba294347db04e8fe0b880106f0b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Forge.PlayerGearWork
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

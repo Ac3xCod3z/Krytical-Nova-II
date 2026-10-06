@@ -27,6 +27,9 @@ namespace KryticalNova.EditorTools
 
         private const string Runtime = ", KryticalNova.Runtime";
         public const string EconomySettingsPath = "Assets/_Game/Gameplay/Economy/Data/Assets/EconomySettings.asset";
+        public const string GearProgressionPath = "Assets/_Game/Gameplay/Items/Data/Assets/GearProgressionSettings.asset";
+        public const string TemperGlowMaterialPath = "Assets/_Game/Gameplay/Items/Shaders/M_TemperGlow.mat";
+        private const string TemperGlowShader = "KryticalNova/TemperGlow";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
         // the hand comes down to 0.48 m, the top of a drop.
         private const string Transitions = "Assets/Synty/AnimationBaseLocomotion/Animations/Sidekick/Masculine/Transitions/";
@@ -47,12 +50,17 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Social.PlayerContacts"),
             new Row("KryticalNova.Social.PlayerCrew", ("settings", "Assets/_Game/Gameplay/Social/Data/Assets/CrewSettings.asset")),
             new Row("KryticalNova.Player.PlayerAnimancerMotor", ("pickUpDownClip", PickUpDownClip), ("pickUpUpClip", PickUpUpClip)),
+            // Gear progression: worn gear reads its Temper / Fusion / Tuning, and the forge changes them.
+            new Row("KryticalNova.Items.PlayerEquipment", ("progression", GearProgressionPath)),
+            new Row("KryticalNova.Forge.PlayerGearWork", ("settings", GearProgressionPath)),
+            new Row("KryticalNova.Items.Visuals.EquipmentVisualBinder", ("temperGlow", TemperGlowMaterialPath)),
         };
 
         public static void Run()
         {
             if (Rows.Length == 0) return;
             GameplayPrefabsSetup.Run(); // the prefabs the player's systems put into the world
+            EnsureTemperGlowMaterial();
             GameObject root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
             try
             {
@@ -78,12 +86,32 @@ namespace KryticalNova.EditorTools
                     so.ApplyModifiedPropertiesWithoutUndo();
                 }
                 PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
+                LinkGearProgression();
                 Debug.Log($"[Setup] Player systems wired ({Rows.Length} component(s), {added} added).");
             }
             finally
             {
                 PrefabUtility.UnloadPrefabContents(root);
             }
+        }
+
+        /// <summary>The material every tempered weapon's glow is copied from. Its numbers are set per weapon at runtime.</summary>
+        private static void EnsureTemperGlowMaterial()
+        {
+            if (AssetDatabase.LoadAssetAtPath<Material>(TemperGlowMaterialPath) != null) return;
+            Shader shader = Shader.Find(TemperGlowShader);
+            if (shader == null) { Debug.LogWarning($"[Setup] Shader {TemperGlowShader} not found: tempered weapons will not glow."); return; }
+            AssetDatabase.CreateAsset(new Material(shader) { name = "M_TemperGlow" }, TemperGlowMaterialPath);
+        }
+
+        /// <summary>The gear progression settings read rarity multipliers and level tiers from the stat table.</summary>
+        private static void LinkGearProgression()
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<KryticalNova.Items.GearProgressionSettings>(GearProgressionPath);
+            var table = AssetDatabase.LoadAssetAtPath<KryticalNova.Items.GearStatTable>(GearStatBaker.StatTablePath);
+            if (settings == null || table == null || settings.statTable == table) return;
+            settings.statTable = table;
+            EditorUtility.SetDirty(settings);
         }
 
         /// <summary>The asset at a path as the field wants it: a prefab's component when the field is of a component type.</summary>

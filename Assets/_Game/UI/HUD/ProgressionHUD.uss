@@ -51,10 +51,8 @@
 .window { position: absolute; width: 330px; }
 #character-window { left: 16px; top: 236px; }
 #skills-window { right: 222px; top: 72px; } /* sits left of the minimap */
-#settings-window { left: 50%; top: 72px; width: 360px; translate: -50% 0; display: none; }
 #character-body { max-height: 340px; }
 #skills-body { max-height: 480px; }
-#settings-body { max-height: 380px; }
 .window .kn-header .heading { flex-shrink: 1; }
 
 .step-options-row { flex-direction: row; align-items: center; }

@@ -41,6 +41,7 @@ namespace KryticalNova.EditorTools
             "KryticalNova.UI.KioskWindowController, KryticalNova.UI",
             "KryticalNova.UI.ContactsWindowController, KryticalNova.UI",
             "KryticalNova.UI.CrewWindowController, KryticalNova.UI",
+            "KryticalNova.UI.GearWorkWindowController, KryticalNova.UI",
         };
 
         public static void SetUpOpenScene()
@@ -64,6 +65,7 @@ namespace KryticalNova.EditorTools
 
             GameObject hudObject = hud.gameObject;
             EnsureComponent(hudObject, settingsType);
+            AssignMixer(hudObject.GetComponent(settingsType));
             EnsureComponent(hudObject, networkType);
             var gearType = System.Type.GetType(GearType);
             if (gearType != null) EnsureComponent(hudObject, gearType);
@@ -96,6 +98,18 @@ namespace KryticalNova.EditorTools
 
             EditorSceneManager.MarkSceneDirty(hudObject.scene);
             Debug.Log($"[HudSetup] HUD wired in '{hudObject.scene.name}'. Save the scene to keep it.");
+        }
+
+        /// <summary>Hands the Settings controller the game's mixer, so its Audio page has something to drive.</summary>
+        private static void AssignMixer(Component settings)
+        {
+            var mixer = AudioSetup.EnsureMixer();
+            if (settings == null || mixer == null) return;
+            var so = new SerializedObject(settings);
+            SerializedProperty property = so.FindProperty("mixer");
+            if (property == null || property.objectReferenceValue == mixer) return;
+            property.objectReferenceValue = mixer;
+            so.ApplyModifiedProperties();
         }
 
         private static void EnsureComponent(GameObject go, System.Type type)

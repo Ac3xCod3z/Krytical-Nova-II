@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Skill_ReverseFlow
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: ReverseFlow
-  displayName: Reverse Flow (RF)
-  description: Increases acupressure (stun) defense by 1% - 20% on top of heavenly finger.
+  displayName: Iron Nerve
+  description: 'Steels you against being locked down: Lockup resistance is raised by 1% - 20%.'
   category: 1
+  weaponClass: 0
+  classSlot: 0
+  presentationId: 
   targetType: 0
   executionType: 0
   acquisitionMethod: 3
   requiresSkillBook: 1
-  acquisitionNote: Lvl 80 Craftable / Drop Item
+  acquisitionNote: Level 80 Skill Chip or Dossier
   requiredCraftingArchives:
   - Snow Legend
   - Northern Wind Legend
@@ -37,7 +40,10 @@ MonoBehaviour:
   minDuration: 61
   maxDuration: 180
   channelTickInterval: 1
-  channelChiRecoveryPercent: 5
+  minChannelChiRecoveryPercent: 5
+  maxChannelChiRecoveryPercent: 5
+  minChannelHealthRecoveryPercent: 0
+  maxChannelHealthRecoveryPercent: 0
   isAbsorptionShield: 0
   minShieldPercent: 111
   maxShieldPercent: 150
@@ -68,6 +74,7 @@ MonoBehaviour:
   maxRange: 2
   minBonusDamagePercent: 100
   maxBonusDamagePercent: 100
+  canCrit: 1
   chargeTime: 0
   holdToRepeat: 0
   icon: {fileID: 21300000, guid: ab47e70759667fc47b3430eef1ada7b9, type: 3}
@@ -75,7 +82,15 @@ MonoBehaviour:
   castClipSpeed: 1.2
   hitTimesNormalized: []
   castLockNormalized: 0.85
+  attackCancelNormalized: 1
+  castLiftCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   chargeLoopClip: {fileID: 0}
+  channelLoopClip: {fileID: 0}
   castVfxPrefab: {fileID: 0}
   hitVfxPrefab: {fileID: 0}
   chargeVfxPrefab: {fileID: 0}

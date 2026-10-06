@@ -1,6 +1,6 @@
 # Krytical Nova — Systems Build List (12Sky / Twelve Sky 2 cross-reference)
 
-As of 4 Oct 2026 · first scan at repo commit 9623a17 · statuses last updated 5 Oct 2026 on branch `economy-social-pets` (saving, Creds, pickup, Vault, Trade, Kiosks, Contacts, Crew, pets, tool cleanup; see `05_Economy_And_Social.md`) · companion doc: "12Sky Systems Transcription & Krytical Nova Build List" (Claude doc)
+As of 4 Oct 2026 · first scan at repo commit 9623a17 · statuses last updated 6 Oct 2026 on branch `gear-progression-and-settings` (Tempering, Fusion, Tuning, Reforge, Renown, the Settings page with key rebinding, the shared skill names; before that saving, Creds, pickup, Vault, Trade, Kiosks, Contacts, Crew, pets and tool cleanup on 5 Oct, see `05_Economy_And_Social.md`) · companion doc: "12Sky Systems Transcription & Krytical Nova Build List" (Claude doc)
 
 The 86-second recording pages through all 31 screens of the 12Sky (Twelve Sky) in-game help; the audio is game ambience only, no narration. Statuses below come from a scan of the Krytical-Nova-II repo at commit 9623a17 (4 Oct 2026, "Hold props during prop emotes"): 11 of the 37 systems are built, 8 are partial, 18 are still to build. All 31 pages are transcribed in `03_Full_Transcription.md` with the original screenshots in `pages~/`.
 
@@ -15,7 +15,7 @@ Every system, item, place and stat in this doc has one Krytical Nova name, chose
 | Krytical Nova term | Twelve Sky 2 reference [12Sky] | In code today | Group |
 | --- | --- | --- | --- |
 | **Creds** | Silver [Silver Jeon] | `PlayerWallet` (owner-only balance), `WalletRules`, `CredsLedger`; every number in `EconomySettings` | Currency |
-| **Renown** (RN) | Contribution Points, CP | name approved 4 Oct 2026; used in NPC text; no field yet | Currency |
+| **Renown** (RN) | Contribution Points, CP | `ProgressionState.renown` (`PlayerCharacterProgression.Renown`, `TrySpendRenown`); spent on Tuning; nothing earns it yet (`gm.renown`) | Currency |
 | **Valor** | Class Points | — | Currency |
 | **XP** | EXP | `ProgressionState` | Currency |
 | **Nova Store** | Item Mall / Item Shop (real money) | Mall Manager NPC | Economy |
@@ -32,18 +32,20 @@ Every system, item, place and stat in this doc has one Krytical Nova name, chose
 | **Spotlight** | Hero Rank (weekly) | — | Progression |
 | **Valor Rank** | Class System | — | Progression |
 | **Respec Chip** / **Memory Wipe** | Stats Reset item / Skill Reset Scroll | `gm.resetstats`, `gm.dropskills` | Progression |
-| **Tempering** (Temper %) | Reinforcement / Upgrade / Enchant % | — | Gear |
-| **Fusion** (FS1–12) | Combination, Combine (CS1–12) | — | Gear |
-| **Tuning** (Tune 1–25) | Refine / Refinement | — | Gear |
+| **Tempering** (Temper %) | Reinforcement / Upgrade / Enchant % | `GearItemState.Temper`, `GearProgressionRules`, `TemperSettings`; done at the forge (`PlayerGearWork`) | Gear |
+| **Fusion** (FS1–12) | Combination, Combine (CS1–12) | `GearItemState.Fusion`, `FusionSettings` | Gear |
+| **Tuning** (Tune 1–25) | Refine / Refinement | `GearItemState.Tune`, `TuningSettings` | Gear |
+| **Reforge** | Item Exchange [12Sky: Item Exchange] | `ReforgeSettings`, `PlayerGearWork.RequestReforge` (named Reforge because The Exchange is the Broker's board) | Gear |
+| **The forge** | the Blacksmith's upgrade windows | `NpcOffer.GearWork` on the Armorer, `GearWorkWindowController`, `gm.forge` | Gear |
 | **Slotting** + **Cores** | Item Penetration + Diamonds / gems | Agent NPC text | Gear |
 | **Epic Mk I / Mk II** | WarLord 1 / 2 | — | Gear |
 | **Legendary** (deferred) | Requiem | `ItemRarity.Legendary` | Gear |
 | Common / **Uncommon** / Rare / **Epic** / Legendary | Common / Unique / Rare / Elite (WarLord) / Requiem | `ItemRarity` | Gear |
 | Weapon, Armor, Gloves, Boots, Ring, **Amulet**, **Cape**, Pet | Weapon, Costume, Gloves, Shoes, Ring, Necklace, Cloak, Pet | `EquipSlot` | Gear |
-| **Alloy I–V**, **Prime Alloy** | Upgrade stones 3/6/9/12/15 %, Millennial Gold | — | Gear materials |
-| **Failsafe** / **Advanced Failsafe** | Protection Scroll / APS, Comrade Scroll | — | Gear materials |
-| **Fusion Catalyst** | Combine Scroll | — | Gear materials |
-| **Tuning Chip** / **Violet Chip** / **Reset Chip** | Refining Stone / Purple Stone / Chaos Stone | — | Gear materials |
+| **Alumite**, **Iridion**, **Orichalc**, **Eversteel**, **Trinity Platinum** (the Alloys: 3 / 6 / 9 / 12 / 15 %), **Prime Alloy** | Aluminium, Iridium, Oracite, Steel of Eternity, Holy Trinity Platinum (upgrade stones), Millennial Gold | items 9100–9105 (`GearMaterialIds`, `UtilityItemGenerator`) | Gear materials |
+| **Failsafe** / **Advanced Failsafe** / **Lucky Failsafe** | Protection Charm / APS, Comrade Scroll / Lucky enchant | items 9110–9112 | Gear materials |
+| **Fusion Catalyst** | Combine Scroll | item 9120 | Gear materials |
+| **Tuning Chip** / **Violet Chip** / **Reset Chip** | Refining Stone / Purple Stone / Chaos Stone | items 9130–9132 | Gear materials |
 | **Slot Cutter** / **Deep Cutter** / **Core Extractor** / **Slot Sealer** | Unril Stone / Plus Penetrate Scroll / Gem Removal Scroll / Socket Removal Stone | — | Gear materials |
 | **Mark Stone** | WarLord Upgrade Stone | — | Gear materials |
 | **Armorer** | Blacksmith [Forge] | `NpcRole.Blacksmith`, shown as Armorer | NPC |
@@ -91,6 +93,7 @@ Every system, item, place and stat in this doc has one Krytical Nova name, chose
 | **Lucky Drop** | Fortune Pouch | — | PvE |
 | **Contract** | Quest / Mission | — | PvE |
 | **Bounty Board** | (none) | — | PvE |
+| **Redline**, **Second Wind**, **Aegis**, **Killer Instinct**, **Hot Streak**, **Backlash**, **Shatterpoint**, **Iron Nerve** | Spiritual Rage, Heavenly Serenity, Heavenly Shield, Heavenly Blow, Garuda's Prayer, Heavenly Repulsion, Heavenly Destruction, Reverse Flow (the eight skills every character shares) | skill ids and assets keep the TS2 names (`SpiritualRage`, `HeavenlyShield` …); display names in `ClassSkillBuilder.SharedSkillText` | Skills |
 | **Stim** (HP Stim, Flux Stim, Dual Stim) | Pill / Tablet (Healing, Chi, Stamina) | `Pill_*` assets, shown as HP Stim / Flux Stim / Dual Stim | Items |
 | **Flask** | Calabash bottle | NPC text | Items |
 | **Recall Tag** | Scroll of Return [Return Scroll] | NPC text | Items |
@@ -107,7 +110,7 @@ Every system, item, place and stat in this doc has one Krytical Nova name, chose
 | **Knockback Resist** | Bounce | — | Stats |
 | **Core Resist** | Socket attribute resistance | — | Stats |
 | **Hotbar** | Shortcut Window (F1–F10, 1–0) | `PlayerSkillHotbar` | UI |
-| **Settings** (O) | Game Option Setup (ESC) | `HudSettingsController` | UI |
+| **Settings** (O) | Game Option Setup (ESC) | `HudSettingsController` with `GraphicsPreferences`, `AudioPreferences`, `KeyBindings` (rebindable keys) | UI |
 | **Character Sheet** (C) | Character Status Window | `ProgressionHUD` | UI |
 | **Transit** | Teleport | `ZonePortal`, `gm.tp` | World |
 | **Central Plaza** (Zone01) | Saigo Temple (neutral hub) | `StarterTownBuilder.Plaza` | World |
@@ -121,9 +124,9 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 | --- | --- | --- | --- | --- | --- |
 | 1 | Save system (TS2: server-side, no client save) | Complete | none | `ServerSave` behind `ISaveStore` (JSON files under `persistentDataPath/ServerSave/<profile>/`; `MemorySaveStore` for tests). One document per account (Deep Vault, daily trade total, its characters: progression, skills, Pack, worn gear with item state, Creds, Vault) and world documents for Crews, Kiosks and Contacts. Every system saves itself through `ISaveParticipant`; `PlayerSaveAgent` loads on entry, autosaves, saves on leave. Roster and HUD prefs stay in PlayerPrefs. | Real sign-in (the account id is client-generated and trusted); a database or Cloud Save store behind the same interface when files stop being enough. |
 | 2 | Player and gear stat sheet (TS2: Character Stats Distribution) | Complete | 2, 23, 24 | STR / VIT / AGI / Spirit, AP, DP, Hit Rate, Evasion, Max HP, Max Flux, Crit Rate, Crit Damage, Elemental Atk / Def, Lockup Resist, Luck, Move Speed, plus the gear stats Critical Defense, Kill-XP Rate / Amount (Attack Speed, Core Resist, Knockback Resist reserved for Tuning). Every ladder item carries baked base and secondary stats (`GearStatTable` → `GearStatBaker`); `PlayerEquipment` applies them through `GearStatResolver`; Character Sheet and gear tooltips show them. | Skill modifiers on gear and the Kill-XP stats are stored and shown but not consumed yet. |
-| 3 | Tempering (TS2: Reinforcement / Enchant %) [12Sky: Item Upgrade] | To build | 23 | Only NPC text (Broker lists items at "12% or more"). | Gear spec section 4. |
-| 4 | Fusion FS1–12 (TS2: Combination / Combine CS1–12) [12Sky: Item Combine] | To build | 24 | Nothing. | Gear spec section 5. |
-| 5 | Tuning 1–25 (TS2: Refine) + Slotting and Cores (TS2: Item Penetration + Diamonds) + Epic Mk (TS2: WarLord 1→2) | To build | 25, 26 nearest | `ItemStack` has room for the stage. | Gear spec sections 6, 7, 8. |
+| 3 | Tempering (TS2: Reinforcement / Enchant %) [12Sky: Item Upgrade] | Complete | 23 | At the Armorer's forge: five named Alloys (3 to 15 %), success by the TS2 formula `103 − (current % + Alloy %)` plus 1 % per 100 Luck, −3 % on a fail, break risk from 60 %, Failsafe / Lucky Failsafe / Advanced Failsafe, 120 % cap without Prime Alloy, 150 % hard cap. Each slot gains what it is for (Weapon Attack, Armor and Cape Defense, Gloves Hit Rate, Boots Evasion, Ring Critical, Amulet Luck). Luck gear on Common and Uncommon. Glow by Temper band, brighter on Epic. Gear spec section 4. | A source for the materials (drops, shops, Alloy crafting): `item.give` and `gm.forgekit` only. Glow on outfits (weapons and icons only). |
+| 4 | Fusion FS1–12 (TS2: Combination / Combine CS1–12) [12Sky: Item Combine] | Complete | 24 | Rare and Epic, twelve stages. The material is always an untouched Rare of the same kind: of the same level for a Rare, the closest Rare tier at or below its level for an Epic. A success takes 12 % Temper off the target; a fail destroys only the material. Gear spec section 5. | A source for Fusion Catalysts. |
+| 5 | Tuning 1–25 (TS2: Refine) + Reforge (12Sky: Item Exchange) + Slotting and Cores (TS2: Item Penetration + Diamonds) + Epic Mk (TS2: WarLord 1→2) | Partial | 25, 26 nearest | **Tuning** is built: the owner's per-slot gains to stage 25, paid in chips, Renown and Creds, stages 13+ drop one on a fail, Reset Chip. **Reforge** is built: an untouched Rare becomes a random other Rare of its level for Creds; a fail costs only the Creds. Gear spec sections 6 and 6b. | Slotting and Cores, Epic Mk II (gear spec sections 7, 8); a Renown source; rank up / down. |
 | 6 | Hostiles with AI and HP bars (TS2: monsters, level-gap rules) | To build | 15, 18 | Emerald AI is in `_ThirdParty` (only a demo animation is used); `CombatEntity` / `IDamageable` / `CombatHostility` already treat Hostiles as hostile; combat dummy; target ring; spatial interest culling counts them. | Emerald AI agents wired to `CombatEntity`, Hostile HP bar, name tint by level gap, XP / drop gating, 5-Hostile aggro cap. |
 | 7 | Blade combat skills (TS2: Guanyin Blade martial arts) | Complete | 8, 10 | `BladeSkillBuilder`: Stroke, Haeseo Stroke, Sunray's Strike, Fury Strike, Devil's Strike, Phantom Thunder, Flash of Rage, Gentleman's Pen, Thunderous Dragon (war god), Lightning Flash stance, Azure Wall; plus Tier 1 self-buffs. | Done. |
 | 8 | Combat skills for the other 8 weapons (TS2: weapon skill lines) | Partial | 8, 9, 10 | All nine classes exist (`04_Weapon_Classes.md`): 90 named skills in ten shared slots (`ClassSkillBuilder`, `WeaponClassCatalog`), a weapon line per class in the gear ladder, Discipline step in the creator. The class in use is the equipped weapon's; ranks, unlocks and cooldowns are shared by slot; the Hotbar and skills window follow a weapon swap. | Real animation sets for Carbine, Arc Caster and Servo Claws (they play Monoblade stand-ins); measured hit timings for the great-sword and bow clips; projectiles and cone / called-in shapes for ranged S1 and S8; per-class basic attacks; weapon grip poses. |
@@ -139,12 +142,12 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 | 18 | Callouts (TS2: Duel / PvP request) | Complete | 12 | `PlayerDuel`: request / accept, countdown, hostile pair only, to the death, forfeit / distance / leave rules, server authoritative; `DuelHudController`; `/duel` chat commands; `gm.duel`. | Optional: 180 s timer and Stim toggle from page 12. |
 | 19 | Outfitter, Stylist, Reshaper, Coach (TS2: Tailor only) | Partial | 1 | Character creator covers lineage, body type, palettes, expressions, name rules, roster; Outfitter stall prop exists. | In-world NPCs that re-open those creator panels for Creds; gear dye. |
 | 20 | Tool cleanup (no TS2 equivalent) | Complete | none | One-shot patch menus removed; player and zone wiring merged into **Krytical Nova ▸ Setup ▸ Player Prefab** and **▸ Zone Scene**, each a table a new system adds a row to (`PlayerSystemsSetup`, `GameplayPrefabsSetup`, `HudSetup`); `UtilityItemGenerator` and `PetAssetBuilder` own non-gear items and pets; bakers and zone builders kept. | Nothing. Keep new systems on the two setup steps instead of adding menus. |
-| 21 | Settings (TS2: Game Option Setup, ESC) | Partial | 4, 5 | Settings window on O: HUD toggles and a full HUD layout editor (move, resize, scale, persisted). | Graphics, audio mixer sliders, key rebinding (Input System rebind UI). |
+| 21 | Settings (TS2: Game Option Setup, ESC) | Complete | 4, 5 | One window on O with four pages. **Graphics**: resolution, window mode, VSync, frame cap, a Low / Medium / High / Ultra preset over render scale, shadows, anti-aliasing, grass density, volumetric fog, sun shafts and ink outlines. **Audio**: Master, Music, Effects, Ambience and Interface sliders on the game's mixer (`Audio/Mixers/KN_Main.mixer`), mute in background. **Interface**: the HUD layout editor (move, resize, scale, persisted) with snap to a grid and to other panels, interface size, the HUD toggles. **Controls**: every window key and every Hotbar key rebindable, a taken key swaps, reset per key and for all. | The front-end scenes (Title, character select) have no Settings button yet; the saved graphics options are applied there. Music has nothing to play yet. |
 | 22 | NPC directory and town map (TS2: Main NPC Details) | Complete | 1 | Zone01: Apothecary, Armorer, Monoblade Instructor, Servo Claws Instructor, Broker, Store Clerk, Marshal, Fixer (code roles: HerbMaster, Blacksmith, Trainer, Trader, MallManager, GuardCaptain, Agent), each with nameplate, dialogue and services text in Krytical Nova terms; plaza signs and map labels renamed (Chancellor's Hall, Hostile Zones); world map with POIs, NPCs, portals, players, waypoint and travel; minimap. | NPC services behind the dialogue (shops, Instructors). |
 | 23 | Mouse and camera control (TS2: Mouse Control) | Complete | 3 | `PointAndClickPlayer`, occluder fader, jump and vault motors, target ring. | Done. |
-| 24 | Hotbar (TS2: Shortcut Window) | Partial | 4, 9 | 1–0 + Q W E R slots, skills and usable items, cooldown badges, hold-to-repeat, charged skills, drag from skills window. | Rebinding, extra pages (Z / X), emote slots. |
+| 24 | Hotbar (TS2: Shortcut Window) | Partial | 4, 9 | 1–0 + Q W E R slots, skills and usable items, cooldown badges, hold-to-repeat, charged skills, drag from skills window. Every slot key can be rebound in Settings ▸ Controls; the slots and hints show the key in use. | Extra pages (Z / X), emote slots. |
 | 25 | Chat channels (TS2: Chat) | Complete | 6 | General, Faction, Squad, Crew, Whisper, GM, System, Combat tabs; `/s /f /p /g /w /r /gm` plus `/squad`, `/crew`, `/callout`; command registry used by Callouts and Squads. | Broadcast channel; Hailer item. |
-| 26 | Gear rarities and slots (TS2: Common / Unique / Rare / Elite, item slots) | Complete | 7 | `ItemRarity` Common / Uncommon / Rare / Epic (Legendary reserved, nothing generated); `EquipSlot` Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape, Pet. The gear ladder: `GearDictionary` lines (one look per run of level tiers) baked into one item per tier; Common 1–28, Uncommon 20–40, Rare 45–75 and 85–105 (two looks), Epic 100–112; six outfit / ring / amulet groups and nine weapon classes; level-gated equipping; frames white / blue / yellow / purple. Gear spec sections 2, 3 and 11. | Done. Drops and shops come with rows 6, 13 and the NPC services. |
+| 26 | Gear rarities and slots (TS2: Common / Unique / Rare / Elite, item slots) | Complete | 7 | `ItemRarity` Common / Uncommon / Rare / Epic (Legendary reserved, nothing generated); `EquipSlot` Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape, Pet. The gear ladder: `GearDictionary` lines (one look per run of level tiers) baked into one item per tier; Common 1–28, Uncommon 20–40, Rare 45–75 and 85–110 (two looks; the level-110 tier was added on 6 Oct 2026 so the top Rare sits just under the top Epic), Epic 100–112; six outfit / ring / amulet groups and nine weapon classes; level-gated equipping; frames white / blue / yellow / purple. Gear spec sections 2, 3 and 11. | Done. Drops and shops come with rows 6, 13 and the NPC services. |
 | 27 | Skill leveling, Respec Chip, Memory Wipe (TS2: skill levels, Stats Reset, Skill Reset Scroll) | Partial | 9 | Ranks with skill points, +1 / +5 / +10, rank-scaled cost and effect; `gm.dropskills`, `gm.resetstats`. | Respec Chip and Memory Wipe as drops or Nova Store goods. |
 | 28 | Siege Nights, Beacon Wars, Outpost Raids, The Pit (TS2: Regular Warfare, Holy Stone Battles, Outpost battles, Coliseum) | Candidate | 11 | Factions and cross-faction hostility exist; no battlegrounds. | Design 07 / 08 with the new names. |
 | 29 | Contacts (TS2: Friend List) | Complete | 16 | Mutual and per character: request and accept (also while the other is offline), online status and last seen, favourites, private notes, a Recent tab (Squad mates, trade partners, Callout opponents, whisperers), a block list that stops whispers, invitations, trades and requests both ways. Same faction, or face to face on neutral ground. | Nothing planned. |
@@ -166,8 +169,9 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 ### Checklist view (tick as systems land)
 
 - [x] 1 Save system · [x] 2 Stat sheet (gear side) · [x] 7 Monoblade combat skills · [x] 13 Item pickup · [x] 14 Vault / Deep Vault · [x] 15 Kiosks · [x] 16 Squad · [x] 18 Callouts · [x] 20 Tool cleanup · [x] 22 NPC directory and town map · [x] 23 Mouse and camera · [x] 25 Chat channels · [x] 26 Gear rarities and slots · [x] 29 Contacts · [x] 33 Crew · [x] 38 Factions and lore · [x] 39 Character creation · [x] 40 Networking · [x] 41 World · [x] 42 Comic rendering
-- [ ] 12 Trade + Exchange (Trade done) · [ ] 19 Outfitter / Stylist / Reshaper / Coach · [ ] 21 Settings (graphics, audio, rebind) · [ ] 24 Hotbar (rebind, pages) · [ ] 27 Respec Chip / Memory Wipe · [ ] 30 Level-gap rules and death penalty · [ ] 31 Stims shop and Recall Tag · [ ] 34 Dossier crafting · [ ] 37 Transit NPC · [ ] 43 Pets and mounts (pets done)
-- [ ] 3 Tempering · [ ] 4 Fusion · [ ] 5 Tuning / Slotting / Epic Mk · [ ] 6 Hostiles with AI · [ ] 8 Other 8 weapon lines · [ ] 9 Autopilot / Magnet · [ ] 10 Nova Rank · [ ] 11 Titles + Bounty Board · [ ] 17 Sponsor / Recruit
+- [x] 3 Tempering · [x] 4 Fusion · [x] 21 Settings
+- [ ] 12 Trade + Exchange (Trade done) · [ ] 19 Outfitter / Stylist / Reshaper / Coach · [ ] 24 Hotbar (pages, emote slots) · [ ] 27 Respec Chip / Memory Wipe · [ ] 30 Level-gap rules and death penalty · [ ] 31 Stims shop and Recall Tag · [ ] 34 Dossier crafting · [ ] 37 Transit NPC · [ ] 43 Pets and mounts (pets done)
+- [ ] 5 Slotting / Epic Mk (Tuning and Reforge done) · [ ] 6 Hostiles with AI · [ ] 8 Other 8 weapon lines · [ ] 9 Autopilot / Magnet · [ ] 10 Nova Rank · [ ] 11 Titles + Bounty Board · [ ] 17 Sponsor / Recruit
 - [ ] 28 Siege Nights / Beacon Wars / Outpost Raids / The Pit · [ ] 32 Nova Store · [ ] 35 Warden / War Chest / Siege Rigs · [ ] 36 Accord
 
 ## Variance notes

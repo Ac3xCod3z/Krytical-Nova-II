@@ -22,6 +22,7 @@ namespace KryticalNova.Progression
         private int experience;
         private int statPoints;
         private int skillPoints;
+        private int renown;
         private readonly int[] attributes = new int[AttributeCount];
 
         private readonly NetworkVariable<ProgressionState> netState = new NetworkVariable<ProgressionState>(
@@ -33,6 +34,8 @@ namespace KryticalNova.Progression
         public int Experience => experience;
         public int StatPoints => statPoints;
         public int SkillPoints => skillPoints;
+        /// <summary>Renown held: spent on Tuning. Server-held like the rest of the progression.</summary>
+        public int Renown => renown;
         public int MaxLevel => progressionData != null ? progressionData.MaxLevel : FirstLevel;
         public bool IsAtLevelCap => currentLevel >= MaxLevel;
         public int ExperienceRequired => progressionData != null && progressionData.TryGetStep(currentLevel, out var step) ? step.experienceRequired : 0;
@@ -82,6 +85,7 @@ namespace KryticalNova.Progression
                 experience = experience,
                 statPoints = statPoints,
                 skillPoints = skillPoints,
+                renown = renown,
             };
             for (int index = 0; index < attributes.Length; index++)
                 state[(CharacterAttribute)index] = attributes[index];
@@ -97,6 +101,7 @@ namespace KryticalNova.Progression
             experience = state.experience;
             statPoints = state.statPoints;
             skillPoints = state.skillPoints;
+            renown = state.renown;
             for (int index = 0; index < attributes.Length; index++)
                 attributes[index] = state[(CharacterAttribute)index];
 
@@ -204,6 +209,24 @@ namespace KryticalNova.Progression
             return true;
         }
 
+        /// <summary>Atomically spends Renown if the character holds that much. Authority only.</summary>
+        public bool TrySpendRenown(int cost)
+        {
+            if (!HasAuthority || !isActiveAndEnabled || cost < 0 || renown < cost) return false;
+            if (cost == 0) return true;
+            renown -= cost;
+            Commit();
+            return true;
+        }
+
+        /// <summary>Adds Renown (or with a negative value takes it away, never below zero). Authority only.</summary>
+        public void AddRenown(int amount)
+        {
+            if (!HasAuthority || !isActiveAndEnabled || amount == 0) return;
+            renown = (int)Math.Max(0L, Math.Min((long)renown + amount, int.MaxValue));
+            Commit();
+        }
+
         #region Development / GM tools (authority only)
         /// <summary>GM: jumps to a level. Raising grants each skipped level's rewards; lowering rebuilds the character at that level (attributes reset, points re-granted).</summary>
         public void SetLevel(int level)
@@ -302,6 +325,7 @@ namespace KryticalNova.Progression
             experience = IsAtLevelCap ? 0 : Mathf.Max(0, state.experience);
             statPoints = Mathf.Max(0, state.statPoints);
             skillPoints = Mathf.Max(0, state.skillPoints);
+            renown = Mathf.Max(0, state.renown); // a character saved before Renown existed reads as 0
             for (int index = 0; index < attributes.Length; index++)
                 attributes[index] = Mathf.Clamp(state[(CharacterAttribute)index], 0, statData.maximumAttributeValue);
             Commit();

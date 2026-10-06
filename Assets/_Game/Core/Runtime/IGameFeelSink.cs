@@ -81,5 +81,9 @@ namespace KryticalNova.Core
         void BodyLanded(Transform actor, bool critical, bool involvesLocalPlayer);
         /// <summary>A dead character is back on its feet at a spawn point.</summary>
         void Respawned(Transform actor, bool isLocalPlayer);
+
+        /// <summary>An attempt at the forge ended for this character.</summary>
+        /// <param name="outcome">0 success, 1 fail, 2 a fail a Failsafe absorbed, 3 the item broke.</param>
+        void GearWorked(Transform actor, int outcome, bool isLocalPlayer);
     }
 }

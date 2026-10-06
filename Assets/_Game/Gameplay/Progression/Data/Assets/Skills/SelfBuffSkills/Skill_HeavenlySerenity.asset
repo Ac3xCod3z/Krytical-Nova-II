@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Skill_HeavenlySerenity
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: HeavenlySerenity
-  displayName: Heavenly Serenity
-  description: Meditate in tranquil focus, restoring HP and Flux every second for 20s. Higher ranks restore more each second. Interrupted by taking damage or moving.
+  displayName: Second Wind
+  description: Take a knee and catch your breath, restoring HP and Flux every second for 20s. Higher ranks restore more each second. Interrupted by taking damage or moving.
   category: 0
+  weaponClass: 0
+  classSlot: 0
+  presentationId: 
   targetType: 0
   executionType: 1
   acquisitionMethod: 0
   requiresSkillBook: 0
-  acquisitionNote: Faction Instructor
+  acquisitionNote: Instructor
   requiredCraftingArchives: []
   requiredCharacterLevel: 1
   minRank: 1

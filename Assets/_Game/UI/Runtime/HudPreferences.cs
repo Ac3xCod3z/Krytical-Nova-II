@@ -19,6 +19,9 @@ namespace KryticalNova.UI
         private static readonly string MinimapRotatesKey = Prefix + "minimapRotates";
         private static readonly string ScreenShakeKey = Prefix + "screenShake";
         private static readonly string LayoutKey = Prefix + "layout.v1";
+        private static readonly string SnapToGridKey = Prefix + "layout.snap";
+        private static readonly string GridSizeKey = Prefix + "layout.grid";
+        private static readonly string InterfaceScaleKey = Prefix + "scale";
         private static readonly string WaypointKey = Prefix + "waypoint.";
         private static readonly string ChatWidthKey = Prefix + "chat.width";
         private static readonly string ChatHeightKey = Prefix + "chat.height";
@@ -67,6 +70,46 @@ namespace KryticalNova.UI
         {
             get => GetBool(ScreenShakeKey, true);
             set => SetBool(ScreenShakeKey, value);
+        }
+
+        /// <summary>The layout editor lines panels up with a grid and with each other while they are dragged.</summary>
+        public static bool SnapToGrid
+        {
+            get => GetBool(SnapToGridKey, true);
+            set => SetBool(SnapToGridKey, value);
+        }
+
+        public const int DefaultGridSize = 8;
+        public static readonly int[] GridSizes = { 4, 8, 16, 32 };
+
+        /// <summary>Grid cell of the layout editor, in panel units.</summary>
+        public static int GridSize
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetInt(GridSizeKey, DefaultGridSize), GridSizes[0], GridSizes[GridSizes.Length - 1]);
+            set
+            {
+                if (GridSize == value) return;
+                PlayerPrefs.SetInt(GridSizeKey, value);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
+        }
+
+        public const float MinInterfaceScale = 0.8f;
+        public const float MaxInterfaceScale = 1.3f;
+
+        /// <summary>Size of the whole in-game interface: 1 is the authored size.</summary>
+        public static float InterfaceScale
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetFloat(InterfaceScaleKey, 1f), MinInterfaceScale, MaxInterfaceScale);
+            set
+            {
+                value = Mathf.Clamp(value, MinInterfaceScale, MaxInterfaceScale);
+                if (Mathf.Approximately(InterfaceScale, value)) return;
+                PlayerPrefs.SetFloat(InterfaceScaleKey, value);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
         }
 
         public static string LayoutJson

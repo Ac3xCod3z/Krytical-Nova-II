@@ -31,6 +31,7 @@ namespace KryticalNova.EditorTools
                 return;
             }
             var table = LoadOrCreateTable();
+            if (UpgradeTable(table)) EditorUtility.SetDirty(table);
             EnsureStatDefinitions();
             var partCatalog = dictionary.Parts != null
                 ? dictionary.Parts
@@ -364,6 +365,67 @@ namespace KryticalNova.EditorTools
             Epic(EquipSlot.Amulet, StatType.KillExpRatePercent, 50, 52, 54, 56, 60);
             Epic(EquipSlot.Amulet, StatType.KillExpAmountPercent, 100, 105, 110, 115, 120);
             table.overrides = overrides.ToArray();
+            UpgradeTable(table);
+        }
+
+        /// <summary>The level the Rare ladder stopped at before the level-110 tier was added.</summary>
+        private const byte OldRareTop = 105;
+        private const byte RareTop = 110;
+
+        /// <summary>
+        /// Brings a stat table up to the current shape without touching what was tuned in it. Two changes, each made
+        /// once: the second Rare look gains a level-110 tier (so the top Rare sits just under the level-112 Epic), with
+        /// every Rare row that ended at 105 carried on to 110 along its own slope; and Common and Uncommon gear
+        /// gains Luck, which is what makes cheap gear worth keeping as a forge set. True when anything changed.
+        /// </summary>
+        public static bool UpgradeTable(GearStatTable table)
+        {
+            bool changed = false;
+
+            for (int i = 0; i < table.bands.Length; i++)
+            {
+                var band = table.bands[i];
+                if (band.rarity != ItemRarity.Rare || band.levels == null || band.levels.Length == 0) continue;
+                if (band.levels[band.levels.Length - 1] != OldRareTop) continue;
+                band.levels = band.levels.Concat(new[] { RareTop }).ToArray();
+                table.bands[i] = band;
+                changed = true;
+            }
+
+            for (int i = 0; i < table.ladder.Length; i++)
+            {
+                var row = table.ladder[i];
+                if (row.rarity != ItemRarity.Rare || row.toLevel != OldRareTop) continue;
+                // Unrounded on purpose: the tiers below 110 keep exactly the values they had.
+                if (row.toLevel > row.fromLevel)
+                    row.toValue = row.fromValue + (row.toValue - row.fromValue) * (RareTop - row.fromLevel) / (row.toLevel - row.fromLevel);
+                row.toLevel = RareTop;
+                table.ladder[i] = row;
+                changed = true;
+            }
+
+            for (int i = 0; i < table.skillLevels.Length; i++)
+            {
+                var row = table.skillLevels[i];
+                if (row.rarity != ItemRarity.Rare || row.toLevel != OldRareTop) continue;
+                row.toLevel = RareTop;
+                table.skillLevels[i] = row;
+                changed = true;
+            }
+
+            if (!table.ladder.Any(row => row.stat == StatType.Luck))
+            {
+                // Proposed numbers: a full Uncommon set at level 40 is worth about 5% at the forge before Hot Streak.
+                var ladder = table.ladder.ToList();
+                foreach (var slot in new[] { EquipSlot.Weapon, EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Ring, EquipSlot.Amulet, EquipSlot.Cape })
+                {
+                    ladder.Add(new GearStatTable.LadderRow { rarity = ItemRarity.Common, slot = slot, stat = StatType.Luck, fromLevel = 1, fromValue = 5, toLevel = 28, toValue = 30 });
+                    ladder.Add(new GearStatTable.LadderRow { rarity = ItemRarity.Uncommon, slot = slot, stat = StatType.Luck, fromLevel = 20, fromValue = 40, toLevel = 40, toValue = 70 });
+                }
+                table.ladder = ladder.ToArray();
+                changed = true;
+            }
+            return changed;
         }
     }
 }

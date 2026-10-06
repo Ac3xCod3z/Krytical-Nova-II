@@ -13,6 +13,8 @@ namespace KryticalNova.Rendering
     public static class SunShaftRuntime
     {
         public static float Intensity;
+        /// <summary>The player's graphics setting. Not part of <see cref="Reset"/>: it is theirs, not the weather's.</summary>
+        public static bool UserEnabled = true;
         /// <summary>Unit vector toward the light the shafts come from. Zero falls back to the sun (<c>_KN_SunDir</c>).</summary>
         public static Vector3 SourceDirection;
         /// <summary>Shaft colour; only its hue is used. Clear falls back to the sun colour (<c>_KN_SunColor</c>).</summary>
@@ -75,7 +77,7 @@ namespace KryticalNova.Rendering
             var cameraData = renderingData.cameraData;
             if (cameraData.cameraType == CameraType.Preview || cameraData.cameraType == CameraType.Reflection) return;
 
-            float strength = SunShaftRuntime.Intensity * settings.intensity;
+            float strength = SunShaftRuntime.UserEnabled ? SunShaftRuntime.Intensity * settings.intensity : 0f;
             if (strength <= 0.001f || shader == null) return;
 
             // Source (sun or moon) screen position; skip when it is behind the camera, fade as it leaves the screen.

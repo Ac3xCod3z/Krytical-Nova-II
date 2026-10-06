@@ -2907,6 +2907,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 4
     weaponClass: 0
+  - itemId: 10051
+    name: Bastion Armor
+    slot: 2
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 8
+    partIds: a402a502a602a702a802ab02ac02ad02b302b402b502b602b702b802b902ba02bb02bc02t
+    itemLevel: 110
+    lineId: 4
+    weaponClass: 0
   - itemId: 10064
     name: Commander Armor
     slot: 2
@@ -3229,6 +3241,18 @@ MonoBehaviour:
     variant: 8
     partIds: a902aa02t
     itemLevel: 105
+    lineId: 9
+    weaponClass: 0
+  - itemId: 10131
+    name: Bastion Gauntlets
+    slot: 3
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 8
+    partIds: a902aa02t
+    itemLevel: 110
     lineId: 9
     weaponClass: 0
   - itemId: 10144
@@ -3555,6 +3579,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 14
     weaponClass: 0
+  - itemId: 10211
+    name: Bastion Boots
+    slot: 4
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 8
+    partIds: ae02af02t
+    itemLevel: 110
+    lineId: 14
+    weaponClass: 0
   - itemId: 10224
     name: Commander Boots
     slot: 4
@@ -3817,6 +3853,18 @@ MonoBehaviour:
     variant: 8
     partIds: b202t
     itemLevel: 105
+    lineId: 18
+    weaponClass: 0
+  - itemId: 10275
+    name: Bastion Cape
+    slot: 7
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_SOLD
+    variant: 8
+    partIds: b202t
+    itemLevel: 110
     lineId: 18
     weaponClass: 0
   - itemId: 10288
@@ -4143,6 +4191,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 23
     weaponClass: 0
+  - itemId: 10355
+    name: Director Outfit
+    slot: 2
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 6
+    partIds: 310109010a010b010c013201330134013701t
+    itemLevel: 110
+    lineId: 23
+    weaponClass: 0
   - itemId: 10368
     name: Magnate Outfit
     slot: 2
@@ -4465,6 +4525,18 @@ MonoBehaviour:
     variant: 3
     partIds: 0d010e01t
     itemLevel: 105
+    lineId: 28
+    weaponClass: 0
+  - itemId: 10435
+    name: Courier Gloves
+    slot: 3
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 3
+    partIds: 0d010e01t
+    itemLevel: 110
     lineId: 28
     weaponClass: 0
   - itemId: 10448
@@ -4791,6 +4863,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 33
     weaponClass: 0
+  - itemId: 10515
+    name: Courier Shoes
+    slot: 4
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 3
+    partIds: 12011301t
+    itemLevel: 110
+    lineId: 33
+    weaponClass: 0
   - itemId: 10528
     name: Courier Shoes
     slot: 4
@@ -5053,6 +5137,18 @@ MonoBehaviour:
     variant: 6
     partIds: 3601t
     itemLevel: 105
+    lineId: 37
+    weaponClass: 0
+  - itemId: 10579
+    name: Director Pack
+    slot: 7
+    rarity: 2
+    factions: 1
+    bodies: 1
+    pack: SCFI_CIVL
+    variant: 6
+    partIds: 3601t
+    itemLevel: 110
     lineId: 37
     weaponClass: 0
   - itemId: 10592
@@ -5379,6 +5475,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 42
     weaponClass: 0
+  - itemId: 10659
+    name: Overseer Plating
+    slot: 2
+    rarity: 2
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 8
+    partIds: aa01ab01ac01ad01ae01420157015801af01b001t
+    itemLevel: 110
+    lineId: 42
+    weaponClass: 0
   - itemId: 10672
     name: Prime Plating
     slot: 2
@@ -5701,6 +5809,18 @@ MonoBehaviour:
     variant: 4
     partIds: 7a017b01t
     itemLevel: 105
+    lineId: 47
+    weaponClass: 0
+  - itemId: 10739
+    name: Sentry Servos
+    slot: 3
+    rarity: 2
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 4
+    partIds: 7a017b01t
+    itemLevel: 110
     lineId: 47
     weaponClass: 0
   - itemId: 10752
@@ -6027,6 +6147,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 52
     weaponClass: 0
+  - itemId: 10819
+    name: Sentry Stabilizers
+    slot: 4
+    rarity: 2
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 4
+    partIds: 7f018001t
+    itemLevel: 110
+    lineId: 52
+    weaponClass: 0
   - itemId: 10832
     name: Enforcer Stabilizers
     slot: 4
@@ -6289,6 +6421,18 @@ MonoBehaviour:
     variant: 5
     partIds: 9401t
     itemLevel: 105
+    lineId: 56
+    weaponClass: 0
+  - itemId: 10883
+    name: Enforcer Back Unit
+    slot: 7
+    rarity: 2
+    factions: 2
+    bodies: 2
+    pack: SCFI_ROBO
+    variant: 5
+    partIds: 9401t
+    itemLevel: 110
     lineId: 56
     weaponClass: 0
   - itemId: 10896
@@ -6615,6 +6759,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 61
     weaponClass: 0
+  - itemId: 10963
+    name: Lichbound Armor
+    slot: 2
+    rarity: 2
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 6
+    partIds: ca00cb00cc006d006e0071008b008c00cd00t
+    itemLevel: 110
+    lineId: 61
+    weaponClass: 0
   - itemId: 10976
     name: Revenant Armor
     slot: 2
@@ -6937,6 +7093,18 @@ MonoBehaviour:
     variant: 3
     partIds: 9f00a000t
     itemLevel: 105
+    lineId: 66
+    weaponClass: 0
+  - itemId: 11043
+    name: Cryptwarden Gauntlets
+    slot: 3
+    rarity: 2
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 3
+    partIds: 9f00a000t
+    itemLevel: 110
     lineId: 66
     weaponClass: 0
   - itemId: 11056
@@ -7263,6 +7431,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 71
     weaponClass: 0
+  - itemId: 11123
+    name: Cryptwarden Greaves
+    slot: 4
+    rarity: 2
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 3
+    partIds: a400a500t
+    itemLevel: 110
+    lineId: 71
+    weaponClass: 0
   - itemId: 11136
     name: Cryptwarden Greaves
     slot: 4
@@ -7525,6 +7705,18 @@ MonoBehaviour:
     variant: 6
     partIds: ce00t
     itemLevel: 105
+    lineId: 75
+    weaponClass: 0
+  - itemId: 11187
+    name: Lichbound Shroud
+    slot: 7
+    rarity: 2
+    factions: 2
+    bodies: 4
+    pack: FANT_SKTN
+    variant: 6
+    partIds: ce00t
+    itemLevel: 110
     lineId: 75
     weaponClass: 0
   - itemId: 11200
@@ -7851,6 +8043,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 80
     weaponClass: 0
+  - itemId: 11267
+    name: Jarl Armor
+    slot: 2
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 5
+    partIds: 6f0370037103720373037603770378037e037f038003810382038303840385038603t
+    itemLevel: 110
+    lineId: 80
+    weaponClass: 0
   - itemId: 11280
     name: Warlord Armor
     slot: 2
@@ -8173,6 +8377,18 @@ MonoBehaviour:
     variant: 5
     partIds: 74037503t
     itemLevel: 105
+    lineId: 85
+    weaponClass: 0
+  - itemId: 11347
+    name: Jarl Bracers
+    slot: 3
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 5
+    partIds: 74037503t
+    itemLevel: 110
     lineId: 85
     weaponClass: 0
   - itemId: 11360
@@ -8499,6 +8715,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 90
     weaponClass: 0
+  - itemId: 11427
+    name: Jarl Boots
+    slot: 4
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 5
+    partIds: 79037a03t
+    itemLevel: 110
+    lineId: 90
+    weaponClass: 0
   - itemId: 11440
     name: Warlord Boots
     slot: 4
@@ -8761,6 +8989,18 @@ MonoBehaviour:
     variant: 8
     partIds: aa03t
     itemLevel: 105
+    lineId: 94
+    weaponClass: 0
+  - itemId: 11491
+    name: Mark 08 Cloak
+    slot: 7
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: VIKG_WARR
+    variant: 8
+    partIds: aa03t
+    itemLevel: 110
     lineId: 94
     weaponClass: 0
   - itemId: 11504
@@ -9087,6 +9327,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 99
     weaponClass: 0
+  - itemId: 11571
+    name: Highguard Armor
+    slot: 2
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 5
+    partIds: 6200250026002700280063002c002d006600t
+    itemLevel: 110
+    lineId: 99
+    weaponClass: 0
   - itemId: 11584
     name: Sunlord Armor
     slot: 2
@@ -9409,6 +9661,18 @@ MonoBehaviour:
     variant: 3
     partIds: 45004600t
     itemLevel: 105
+    lineId: 104
+    weaponClass: 0
+  - itemId: 11651
+    name: Ranger Gloves
+    slot: 3
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 3
+    partIds: 45004600t
+    itemLevel: 110
     lineId: 104
     weaponClass: 0
   - itemId: 11664
@@ -9735,6 +9999,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 109
     weaponClass: 0
+  - itemId: 11731
+    name: Ranger Boots
+    slot: 4
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 3
+    partIds: 4a004b00t
+    itemLevel: 110
+    lineId: 109
+    weaponClass: 0
   - itemId: 11744
     name: Ranger Boots
     slot: 4
@@ -9997,6 +10273,18 @@ MonoBehaviour:
     variant: 4
     partIds: 5d00t
     itemLevel: 105
+    lineId: 113
+    weaponClass: 0
+  - itemId: 11795
+    name: Bladesinger Cloak
+    slot: 7
+    rarity: 2
+    factions: 4
+    bodies: 1
+    pack: ELVN_WARR
+    variant: 4
+    partIds: 5d00t
+    itemLevel: 110
     lineId: 113
     weaponClass: 0
   - itemId: 11808
@@ -10323,6 +10611,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 118
     weaponClass: 1
+  - itemId: 11875
+    name: Odachi
+    slot: 1
+    rarity: 2
+    factions: 1
+    bodies: 7
+    pack: 
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 118
+    weaponClass: 1
   - itemId: 11888
     name: Executive Odachi
     slot: 1
@@ -10645,6 +10945,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 123
+    weaponClass: 2
+  - itemId: 11955
+    name: Cross Spear
+    slot: 1
+    rarity: 2
+    factions: 1
+    bodies: 7
+    pack: 
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 123
     weaponClass: 2
   - itemId: 11968
@@ -10971,6 +11283,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 128
     weaponClass: 3
+  - itemId: 12035
+    name: Marksman Rifle
+    slot: 1
+    rarity: 2
+    factions: 1
+    bodies: 7
+    pack: 
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 128
+    weaponClass: 3
   - itemId: 12048
     name: Vanguard Carbine
     slot: 1
@@ -11293,6 +11617,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 133
+    weaponClass: 4
+  - itemId: 12115
+    name: Bonesaw
+    slot: 1
+    rarity: 2
+    factions: 2
+    bodies: 7
+    pack: 
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 133
     weaponClass: 4
   - itemId: 12128
@@ -11619,6 +11955,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 138
     weaponClass: 5
+  - itemId: 12195
+    name: Twin Spikes
+    slot: 1
+    rarity: 2
+    factions: 2
+    bodies: 7
+    pack: 
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 138
+    weaponClass: 5
   - itemId: 12208
     name: Apex Claw
     slot: 1
@@ -11941,6 +12289,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 143
+    weaponClass: 6
+  - itemId: 12275
+    name: Storm Projector
+    slot: 1
+    rarity: 2
+    factions: 2
+    bodies: 7
+    pack: 
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 143
     weaponClass: 6
   - itemId: 12288
@@ -12267,6 +12627,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 148
     weaponClass: 7
+  - itemId: 12355
+    name: Jarl's Axe
+    slot: 1
+    rarity: 2
+    factions: 4
+    bodies: 7
+    pack: 
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 148
+    weaponClass: 7
   - itemId: 12368
     name: Northfall Greataxe
     slot: 1
@@ -12591,6 +12963,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 153
     weaponClass: 8
+  - itemId: 12435
+    name: Kingdom Greatsword
+    slot: 1
+    rarity: 2
+    factions: 4
+    bodies: 7
+    pack: 
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 153
+    weaponClass: 8
   - itemId: 12448
     name: Zweihander
     slot: 1
@@ -12913,6 +13297,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 158
+    weaponClass: 9
+  - itemId: 12515
+    name: War Longbow
+    slot: 1
+    rarity: 2
+    factions: 4
+    bodies: 7
+    pack: 
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 158
     weaponClass: 9
   - itemId: 12528
@@ -13467,6 +13863,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 166
     weaponClass: 0
+  - itemId: 12643
+    name: Bastion Signet
+    slot: 5
+    rarity: 2
+    factions: 1
+    bodies: 7
+    pack: SCFI_SOLD
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 166
+    weaponClass: 0
   - itemId: 12656
     name: Bastion Tags
     slot: 6
@@ -13501,6 +13909,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 167
+    weaponClass: 0
+  - itemId: 12659
+    name: Bastion Tags
+    slot: 6
+    rarity: 2
+    factions: 1
+    bodies: 7
+    pack: SCFI_SOLD
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 167
     weaponClass: 0
   - itemId: 12672
@@ -14115,6 +14535,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 176
     weaponClass: 0
+  - itemId: 12803
+    name: Director Band
+    slot: 5
+    rarity: 2
+    factions: 1
+    bodies: 7
+    pack: SCFI_CIVL
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 176
+    weaponClass: 0
   - itemId: 12816
     name: Director Lanyard
     slot: 6
@@ -14149,6 +14581,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 177
+    weaponClass: 0
+  - itemId: 12819
+    name: Director Lanyard
+    slot: 6
+    rarity: 2
+    factions: 1
+    bodies: 7
+    pack: SCFI_CIVL
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 177
     weaponClass: 0
   - itemId: 12832
@@ -14763,6 +15207,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 186
     weaponClass: 0
+  - itemId: 12963
+    name: Overseer Coupling
+    slot: 5
+    rarity: 2
+    factions: 2
+    bodies: 7
+    pack: SCFI_ROBO
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 186
+    weaponClass: 0
   - itemId: 12976
     name: Overseer Capacitor
     slot: 6
@@ -14797,6 +15253,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 187
+    weaponClass: 0
+  - itemId: 12979
+    name: Overseer Capacitor
+    slot: 6
+    rarity: 2
+    factions: 2
+    bodies: 7
+    pack: SCFI_ROBO
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 187
     weaponClass: 0
   - itemId: 12992
@@ -15411,6 +15879,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 196
     weaponClass: 0
+  - itemId: 13123
+    name: Lichbound Knucklebone
+    slot: 5
+    rarity: 2
+    factions: 2
+    bodies: 7
+    pack: FANT_SKTN
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 196
+    weaponClass: 0
   - itemId: 13136
     name: Lichbound Phylactery
     slot: 6
@@ -15445,6 +15925,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 197
+    weaponClass: 0
+  - itemId: 13139
+    name: Lichbound Phylactery
+    slot: 6
+    rarity: 2
+    factions: 2
+    bodies: 7
+    pack: FANT_SKTN
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 197
     weaponClass: 0
   - itemId: 13152
@@ -16059,6 +16551,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 206
     weaponClass: 0
+  - itemId: 13283
+    name: Jarl Arm Ring
+    slot: 5
+    rarity: 2
+    factions: 4
+    bodies: 7
+    pack: VIKG_WARR
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 206
+    weaponClass: 0
   - itemId: 13296
     name: Jarl Torc
     slot: 6
@@ -16093,6 +16597,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 207
+    weaponClass: 0
+  - itemId: 13299
+    name: Jarl Torc
+    slot: 6
+    rarity: 2
+    factions: 4
+    bodies: 7
+    pack: VIKG_WARR
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 207
     weaponClass: 0
   - itemId: 13312
@@ -16707,6 +17223,18 @@ MonoBehaviour:
     itemLevel: 105
     lineId: 216
     weaponClass: 0
+  - itemId: 13443
+    name: Highguard Leaf Ring
+    slot: 5
+    rarity: 2
+    factions: 4
+    bodies: 7
+    pack: ELVN_WARR
+    variant: 0
+    partIds: 
+    itemLevel: 110
+    lineId: 216
+    weaponClass: 0
   - itemId: 13456
     name: Highguard Talisman
     slot: 6
@@ -16741,6 +17269,18 @@ MonoBehaviour:
     variant: 0
     partIds: 
     itemLevel: 105
+    lineId: 217
+    weaponClass: 0
+  - itemId: 13459
+    name: Highguard Talisman
+    slot: 6
+    rarity: 2
+    factions: 4
+    bodies: 7
+    pack: ELVN_WARR
+    variant: 0
+    partIds: 
+    itemLevel: 110
     lineId: 217
     weaponClass: 0
   - itemId: 13472

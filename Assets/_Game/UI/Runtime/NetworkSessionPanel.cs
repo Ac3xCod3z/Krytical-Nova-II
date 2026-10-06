@@ -1,3 +1,4 @@
+using KryticalNova.Player;
 using KryticalNova.Networking;
 using NetworkConnectionManager = KryticalNova.Networking.NetworkConnectionManager;
 using KryticalNova.Progression;
@@ -91,7 +92,7 @@ namespace KryticalNova.UI
 
             var keyboard = Keyboard.current;
             if (keyboard != null && !IsTyping()
-                && keyboard.f1Key.wasPressedThisFrame)
+                && KeyBindings.Pressed(KeyBindings.NetworkPanel))
                 SetVisible(panel, panel.resolvedStyle.display == DisplayStyle.None);
 
             if (Time.unscaledTime >= nextRefresh)

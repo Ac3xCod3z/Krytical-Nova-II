@@ -4,16 +4,19 @@ using KryticalNova.Progression;
 namespace KryticalNova.Items
 {
     /// <summary>
-    /// Turns one equipped item into the stat modifiers it grants. Today that is the item's baked stats; Tempering,
-    /// Fusion, Tuning and Cores will add to the result here, from the <see cref="ItemStack"/>, without any caller
-    /// changing. Pure, so it runs the same on the server, the owner and every observer.
+    /// Turns one equipped item into the stat modifiers it grants: the item's baked stats, plus what its own Temper,
+    /// Fusion and Tuning add (read from the <see cref="ItemStack"/>; Cores will join them here). Pure, so it runs
+    /// the same on the server, the owner and every observer.
     /// </summary>
     public static class GearStatResolver
     {
         /// <summary>Appends the modifiers of <paramref name="definition"/> to <paramref name="results"/>, tagged with <paramref name="source"/>.</summary>
-        public static void Resolve(in ItemStack stack, ItemDefinition definition, object source, List<StatModifier> results)
+        /// <param name="progression">The gear progression numbers; null gives the baked stats alone.</param>
+        public static void Resolve(in ItemStack stack, ItemDefinition definition, object source, List<StatModifier> results,
+            GearProgressionSettings progression = null)
         {
             if (definition == null || stack.IsEmpty) return;
+            GearProgressionRules.AppendEffects(progression, stack, definition, source, results);
             Append(definition.baseStats, source, results);
             Append(definition.secondaryStats, source, results);
             if (definition.statModifiers != null)
@@ -27,6 +30,24 @@ namespace KryticalNova.Items
             if (definition == null) return 0f;
             return Sum(definition.baseStats, stat) + Sum(definition.secondaryStats, stat) + Sum(definition.statModifiers, stat);
         }
+
+        /// <summary>
+        /// The same total for one item as it is now, its Temper, Fusion and Tuning counted in (flat modifiers only).
+        /// </summary>
+        public static float Total(in ItemStack stack, ItemDefinition definition, StatType stat, GearProgressionSettings progression)
+        {
+            float total = Total(definition, stat);
+            if (progression == null || definition == null) return total;
+            Scratch.Clear();
+            GearProgressionRules.AppendEffects(progression, stack, definition, null, Scratch);
+            foreach (var modifier in Scratch)
+                if (modifier.Stat == stat && modifier.ModType == ModifierType.Flat) total += modifier.Value;
+            Scratch.Clear();
+            return total;
+        }
+
+        // Main thread only, like everything that reads items.
+        private static readonly List<StatModifier> Scratch = new List<StatModifier>(8);
 
         private static void Append(ItemStatModifier[] stats, object source, List<StatModifier> results)
         {

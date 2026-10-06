@@ -138,7 +138,11 @@ namespace KryticalNova.EditorTools
         // ---------------------------------------------------------------- death & respawn
 
         private const string DeathTrailName = "PFX_CritDeath_Trail";
-        private static readonly string[] DeathCameraPlayers = { "Death", "Critical Death", "Body Land", "Respawn" };
+        /// <summary>The longest chromatic punch of the death players: the kill confirm's own wave starts as it ends.</summary>
+        private const float KillAftershockDelay = 0.4f;
+        // A pale gold wash from the corners: the opposite of the red hurt tint.
+        private static readonly Color KillFlashColor = new Color(1f, 0.86f, 0.45f, 0.18f);
+        private static readonly string[] DeathCameraPlayers = { "Death", "Critical Death", "Kill Confirm", "Body Land", "Respawn" };
         private static readonly string[] DeathWorldPlayers = { "Death", "Critical Death", "Body Land", "Critical Body Land", "Respawn" };
 
         /// <summary>Effects of a death of their own: the blow that kills, the thrown body's trail and crater, the return.</summary>
@@ -149,6 +153,7 @@ namespace KryticalNova.EditorTools
             Make("FX_Explosion_Body_01", "PFX_CritDeath_Blast", 0.9f, Red);        // a critical kill: bigger, in rage red
             Make("FX_Smoke_Trail_Small_01", DeathTrailName, 0.8f, loop: true);     // rides on the thrown body
             Make("FX_GroundCrack_Blast_01", "PFX_CritDeath_Crater", 0.5f);         // where the thrown body comes down
+            Make("FX_Cartoony_Rings_01", "PFX_CritKill_Shockwave", 1.5f, Yellow, then: GroundRings); // the killing blow, on the ground
             Make("FX_LightRayRound_01", "PFX_Respawn", 0.8f, Cyan);                // back on a spawn point
         }
 
@@ -181,6 +186,7 @@ namespace KryticalNova.EditorTools
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             AssetDatabase.SaveAssets();
+            WireScene(); // the kill confirm's lens punch needs its shaker on the global volume
             Debug.Log($"[GameFeel] Death and respawn feel rebuilt on {PrefabPath}. Assign sounds on the new MMF_Sound slots.");
         }
 
@@ -216,6 +222,35 @@ namespace KryticalNova.EditorTools
                 fov.RemapFieldOfViewOne = 7f;
                 fov.ShakeFieldOfView = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.12f, 1f), new Keyframe(1f, 0f));
             });
+            // Only for the local player's own kills, on top of the two above: full strength on a critical kill.
+            so.FindProperty("killConfirmFeel").objectReferenceValue = Player(root, "Kill Confirm", p =>
+            {
+                Sound(p, "Kill Confirm");
+                // The presenter points this along the killing blow.
+                Impulse(p, Vector3.zero, 0.3f);
+                // Takes over as the death's own chromatic punch ends: a second, longer wave with an echo.
+                var aftershock = p.AddFeedback(typeof(MMF_ChromaticAberration_URP)) as MMF_ChromaticAberration_URP;
+                aftershock.Label = "Chromatic Aftershock";
+                aftershock.Timing.InitialDelay = KillAftershockDelay;
+                aftershock.Duration = 0.7f;
+                aftershock.RemapIntensityOne = 0.85f;
+                aftershock.Intensity = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.15f, 1f), new Keyframe(0.45f, 0.25f),
+                    new Keyframe(0.6f, 0.7f), new Keyframe(1f, 0f));
+                var lens = p.AddFeedback(typeof(MMF_LensDistortion_URP)) as MMF_LensDistortion_URP;
+                lens.Label = "Lens Punch";
+                lens.Duration = 0.3f;
+                lens.RelativeIntensity = false;
+                lens.RemapIntensityZero = 0f;
+                lens.RemapIntensityOne = 0.3f;
+                lens.Intensity = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.15f, 1f), new Keyframe(1f, 0f));
+                var flash = p.AddFeedback(typeof(MMF_BeautifyVignette)) as MMF_BeautifyVignette;
+                flash.Label = "Kill Flash (Beautify)";
+                flash.Duration = 0.35f;
+                flash.Reach = 0.2f;
+                flash.PulseColor = KillFlashColor;
+                flash.DotOpacity = 0.35f;
+            });
+            so.FindProperty("killStopSeconds").vector2Value = new Vector2(0.12f, 0.22f);
             so.FindProperty("bodyLandFeel").objectReferenceValue = Player(root, "Body Land", p =>
             {
                 Sound(p, "Body Thud");
@@ -232,7 +267,8 @@ namespace KryticalNova.EditorTools
             so.FindProperty("deathWorldFeel").objectReferenceValue = World(world, "Death",
                 new Fx("PFX_Death_Burst"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"));
             so.FindProperty("critDeathWorldFeel").objectReferenceValue = World(world, "Critical Death",
-                new Fx("PFX_CritDeath_Blast"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"), Comic("PFX_Comic_Wham", 0.9f));
+                new Fx("PFX_CritDeath_Blast"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"), Comic("PFX_Comic_Wham", 0.9f),
+                OnGround("PFX_CritKill_Shockwave"));
             so.FindProperty("bodyLandWorldFeel").objectReferenceValue = World(world, "Body Land",
                 Dust("PFX_Dust_Land"), new Fx("PFX_Death_Stars", overBody, follow: true));
             so.FindProperty("critBodyLandWorldFeel").objectReferenceValue = World(world, "Critical Body Land",
@@ -1065,6 +1101,15 @@ namespace KryticalNova.EditorTools
                 ca.RemapIntensityOne = 0f;
                 Park(ca);
                 EnsureChromaticAberration(volume.sharedProfile);
+
+                if (volume.GetComponent<MMLensDistortionShaker_URP>() == null) Undo.AddComponent<MMLensDistortionShaker_URP>(volume.gameObject);
+                var lens = volume.GetComponent<MMLensDistortionShaker_URP>();
+                Undo.RecordObject(lens, "Park Lens Distortion Shaker");
+                lens.RelativeIntensity = true;
+                lens.RemapIntensityZero = 0f;
+                lens.RemapIntensityOne = 0f;
+                Park(lens);
+                EnsureLensDistortion(volume.sharedProfile);
             }
             else Debug.LogWarning("[GameFeel] Global volume using SampleSceneProfile not found: screen pulses will not show.");
 
@@ -1104,6 +1149,19 @@ namespace KryticalNova.EditorTools
             }
             ca.active = true;
             ca.intensity.Override(0f);
+            EditorUtility.SetDirty(profile);
+        }
+
+        /// <summary>The lens shaker needs an override to drive too; it rests at 0 until the local player kills.</summary>
+        private static void EnsureLensDistortion(VolumeProfile profile)
+        {
+            if (!profile.TryGet(out LensDistortion lens))
+            {
+                lens = profile.Add<LensDistortion>(false);
+                AssetDatabase.AddObjectToAsset(lens, profile);
+            }
+            lens.active = true;
+            lens.intensity.Override(0f);
             EditorUtility.SetDirty(profile);
         }
 

@@ -1,0 +1,308 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 267cef96002fbf54d9b53a31479c862d, type: 3}
+  m_Name: GearProgressionSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.GearProgressionSettings
+  statTable: {fileID: 11400000, guid: 2eab48a6a8a30f446938859f79a5bde6, type: 2}
+  temper:
+    alloys:
+    - itemId: 9100
+      step: 3
+      prime: 0
+    - itemId: 9101
+      step: 6
+      prime: 0
+    - itemId: 9102
+      step: 9
+      prime: 0
+    - itemId: 9103
+      step: 12
+      prime: 0
+    - itemId: 9104
+      step: 15
+      prime: 0
+    - itemId: 9105
+      step: 3
+      prime: 1
+    failsafeItemId: 9110
+    advancedFailsafeItemId: 9111
+    luckyFailsafeItemId: 9112
+    luckyFailsafeBonus: 5
+    baseChance: 103
+    minChance: 5
+    maxChance: 100
+    luckPerPercent: 100
+    maxLuckBonus: 25
+    failLoss: 3
+    softCap: 120
+    hardCap: 150
+    advancedFailsafeFrom: 133
+    breakBands:
+    - from: 60
+      to: 89
+      chanceFrom: 5
+      chanceTo: 15
+    - from: 90
+      to: 119
+      chanceFrom: 15
+      chanceTo: 30
+    - from: 120
+      to: 132
+      chanceFrom: 35
+      chanceTo: 35
+    - from: 133
+      to: 150
+      chanceFrom: 50
+      chanceTo: 50
+    credsPerItemLevel: 500
+    softCapCostMultiplier: 2
+    effects:
+    - slot: 1
+      stat: 4
+      kind: 0
+      value: 1
+    - slot: 2
+      stat: 5
+      kind: 0
+      value: 1
+    - slot: 7
+      stat: 5
+      kind: 0
+      value: 1
+    - slot: 3
+      stat: 6
+      kind: 0
+      value: 1
+    - slot: 4
+      stat: 7
+      kind: 0
+      value: 1
+    - slot: 5
+      stat: 10
+      kind: 1
+      value: 0.05
+    - slot: 6
+      stat: 15
+      kind: 2
+      value: 4
+    glowBands:
+    - from: 1
+      name: Green
+      color: {r: 0.3, g: 1, b: 0.42, a: 1}
+    - from: 30
+      name: Yellow
+      color: {r: 1, g: 0.86, b: 0.24, a: 1}
+    - from: 60
+      name: Blue
+      color: {r: 0.28, g: 0.62, b: 1, a: 1}
+    - from: 90
+      name: Purple
+      color: {r: 0.72, g: 0.36, b: 1, a: 1}
+    - from: 120
+      name: Orange
+      color: {r: 1, g: 0.52, b: 0.12, a: 1}
+    glowLooks:
+    - intensity: 0.55
+      rimPower: 3.2
+      pulse: 0.1
+      pulseSpeed: 0.5
+      sparkles: 0
+    - intensity: 0.65
+      rimPower: 3
+      pulse: 0.12
+      pulseSpeed: 0.5
+      sparkles: 0
+    - intensity: 0.8
+      rimPower: 2.8
+      pulse: 0.15
+      pulseSpeed: 0.6
+      sparkles: 0
+    - intensity: 2.6
+      rimPower: 1.9
+      pulse: 0.35
+      pulseSpeed: 1.1
+      sparkles: 1
+    - intensity: 3
+      rimPower: 1.8
+      pulse: 0.4
+      pulseSpeed: 1.2
+      sparkles: 1
+  fusion:
+    maxStage: 12
+    catalystItemId: 9120
+    minTemperRare: 12
+    minTemperEpic: 132
+    temperCostOnSuccess: 12
+    firstStageCreds: 100000
+    credsPerStage: 50000
+    certainStages: 3
+    chanceLossPerStage: 7
+    minChance: 5
+    luckPerPercent: 100
+    maxLuckBonus: 25
+    failConsumesMaterial: 1
+    effects:
+    - slot: 1
+      stat: 4
+      kind: 0
+      value: 3
+    - slot: 1
+      stat: 6
+      kind: 0
+      value: 2
+    - slot: 2
+      stat: 5
+      kind: 0
+      value: 3
+    - slot: 2
+      stat: 7
+      kind: 0
+      value: 2
+    - slot: 2
+      stat: 8
+      kind: 3
+      value: 1.5
+    - slot: 3
+      stat: 5
+      kind: 0
+      value: 3
+    - slot: 3
+      stat: 6
+      kind: 0
+      value: 2
+    - slot: 4
+      stat: 5
+      kind: 0
+      value: 3
+    - slot: 4
+      stat: 7
+      kind: 0
+      value: 2
+    - slot: 7
+      stat: 5
+      kind: 0
+      value: 3
+    - slot: 5
+      stat: 12
+      kind: 2
+      value: 8
+    - slot: 6
+      stat: 13
+      kind: 2
+      value: 8
+  tuning:
+    maxStage: 25
+    brackets:
+    - fromStage: 1
+      toStage: 12
+      chipItemId: 9130
+      chips: 1
+      renown: 10
+      creds: 50000
+    - fromStage: 13
+      toStage: 20
+      chipItemId: 9131
+      chips: 1
+      renown: 25
+      creds: 150000
+    - fromStage: 21
+      toStage: 25
+      chipItemId: 9131
+      chips: 2
+      renown: 50
+      creds: 400000
+    resetChipItemId: 9132
+    certainStages: 10
+    chanceLossPerStage: 5
+    minChance: 5
+    failDropsFromStage: 13
+    effects:
+    - slot: 1
+      stat: 10
+      kind: 1
+      value: 1
+    - slot: 1
+      stat: 3
+      kind: 1
+      value: 5
+    - slot: 2
+      stat: 8
+      kind: 1
+      value: 400
+    - slot: 2
+      stat: 3
+      kind: 1
+      value: 5
+    - slot: 3
+      stat: 17
+      kind: 1
+      value: 0.5
+    - slot: 3
+      stat: 2
+      kind: 1
+      value: 5
+    - slot: 4
+      stat: 16
+      kind: 1
+      value: 0.5
+    - slot: 4
+      stat: 2
+      kind: 1
+      value: 5
+    - slot: 5
+      stat: 18
+      kind: 1
+      value: 0.1
+    - slot: 5
+      stat: 1
+      kind: 1
+      value: 5
+    - slot: 6
+      stat: 19
+      kind: 1
+      value: 1
+    - slot: 6
+      stat: 0
+      kind: 1
+      value: 5
+    finalStageBonus:
+    - slot: 1
+      stat: 3
+      kind: 1
+      value: 5
+    - slot: 2
+      stat: 3
+      kind: 1
+      value: 5
+    - slot: 3
+      stat: 2
+      kind: 1
+      value: 5
+    - slot: 4
+      stat: 2
+      kind: 1
+      value: 5
+    - slot: 5
+      stat: 1
+      kind: 1
+      value: 5
+    - slot: 6
+      stat: 0
+      kind: 1
+      value: 5
+  reforge:
+    baseCreds: 1000000
+    firstLevel: 45
+    credsPerTenLevels: 200000
+    chance: 50
+    luckPerPercent: 100
+    maxLuckBonus: 25
