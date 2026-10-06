@@ -22,4 +22,6 @@ Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a pla
 
 - `01_Systems_Build_List.md` is the glossary (Twelve Sky 2 term → Krytical Nova term → what the code calls it) and the build list. Use the Krytical Nova term in UI text and in new code; update a system's Status there when it lands.
 - `02_Gear_System_Spec.md` is the gear layer (ladder, stats, Tempering, Fusion, Tuning, Slotting); `04_Weapon_Classes.md` is the nine weapon classes and their skills. Keep their "as built" sections current.
+- `05_Economy_And_Social.md` is saving, Creds, pickup, Vault, Trade, Kiosks, Contacts and Crews as built, with every tunable number and who may deal with whom. Keep it current; new numbers go in `EconomySettings` / `CrewSettings`, never in code.
+- A new player-side system adds a row to `PlayerSystemsSetup`; a prefab the server spawns adds its path to `GameplayPrefabsSetup.SpawnedPrefabs` (unregistered prefabs never appear on clients). Test networked features with a second client, not only as host.
 - Build only what is asked for: these docs describe many systems that are deliberately not built yet.

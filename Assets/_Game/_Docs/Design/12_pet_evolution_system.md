@@ -38,11 +38,34 @@ Kitsune Spirit's max is half the others on purpose: Attack is the most valuable 
 
 Each pet has a hunger meter. It drains 0.05% per minute on the server clock, only while the player is online: 3% an hour, about 33 hours of play from full to empty. At 0% hunger the owner stops receiving the pet's stat bonus and the pet gains no XP until it is fed. A Pet Ration, sold in NPC shops, restores hunger to 100%.
 
+## As built (5 Oct 2026)
+
+Code in `Assets/_Game/Gameplay/Pets/`; the numbers above are fields of `Pets/Data/Assets/PetSettings.asset` and of each `PetDef_*.asset`, built by **Krytical Nova ▸ Items ▸ 7. Build Pets** (`PetAssetBuilder`).
+
+- **The four pets replace the five cosmetic drones.** All Common, usable from level 1, no Legendary. Item ids are kept:
+
+| Id | Pet | Was | Stand-in model | Stat | At 100 % |
+| --- | --- | --- | --- | --- | --- |
+| 8001 | Emberwing | Scout Drone | Quadcopter | Flux (`MaxChi`) | 2,000 |
+| 8002 | Drone Core | Guardian Drone | Guardian Drone | Health (`MaxHP`) | 2,200 |
+| 8003 | Tidecaller | Orb Companion | Orb | Defense (`DefensePower`) | 2,200 |
+| 8004 | Kitsune Spirit | Mantis Drone | Mantis Drone | Attack (`AttackPower`) | 1,100 |
+
+- **Growth and hunger travel with the item** (`PetItemState` packed into `ItemStack.data`): a pet keeps them in the Pack, the Vault, a trade, a Kiosk and on the ground. Only the pet that is out gets hungry and earns XP.
+- **The stat** is `max × growth % ÷ 100`, added to the owner's stats while the pet is out and fed (`PlayerPet`). Growth is replicated to everyone, so every machine derives the same stat and stage.
+- **Stages:** until the real models exist each stage is the stand-in a size step larger with a stronger glow in the doc's palette. Crossing 25, 50, 75 or 100 % plays the evolution moment: a FEEL burst on the pet, a banner for the owner ("EMBERWING EVOLVED · STAGE 2 OF 5") and a chat line with the new bonus.
+- **Pet XP:** 0.04 per Hostile kill (only the combat dummy counts as one today). `PlayerPet.ServerAwardEventXp(won)` gives the 50 / 25 for a PvP event; nothing calls it yet.
+- **Hunger:** 0.05 % a minute while online. At 0 % the bonus and XP stop. **Pet Ration** (item 9010) refills it; it has no shop yet, so it is GM-only (`item.give Pet_Ration`).
+- **Where the player reads it:** the pet's tooltip, anywhere the item is shown (stage pips, growth, hunger, current bonus). Nothing is added to the Equipment window.
+- **Kiosk price cap** for a pet rises with its growth: from the Common cap at 0 % to 20,000,000 at 100 % (`EconomySettings`).
+- **GM:** `gm.pet`, `gm.pet.growth <0-100>`, `gm.pet.hunger <0-100>`, `gm.pet.feed`, `gm.pet.xp <n>`, `gm.pet.event <win|loss>`; the Pets tab of the GM Tools window.
+- **Not built:** the real stage models, pet XP from wars, a Pet Ration shop, Legendary pets.
+
 ## Open questions
 
-- [ ] Hunger drain: 0.05% per minute is 3% an hour, not 8%. Keep 0.05%, or use about 0.133% per minute for 8% an hour?
+- [x] Hunger drain: built at 0.05% per minute (3% an hour), as written above. It is one field of `PetSettings` if 8% an hour is wanted.
 - [ ] PvP event rewards of 50 / 25 pet XP are proposed (about an hour / half an hour of grinding), and the 2,000-hour target assumes one kill every 3 seconds. Confirm both.
-- [ ] Pet Ration price, and which NPC sells it
+- [ ] Pet Ration price, and which NPC sells it (GM-only until then)
 
 ## Tidecaller
 

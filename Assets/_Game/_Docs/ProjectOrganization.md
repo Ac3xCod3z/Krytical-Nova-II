@@ -67,18 +67,25 @@ Folders marked *(future)* don't exist yet. Create them when the first asset need
 _Game/
 ├── _Docs/                 Design docs (Design/), plans (Plans/), reference packs (Reference/: naming glossary, build list), this file
 ├── Core/Runtime/          Cross-cutting interfaces & registries. Defines KryticalNova.Runtime.asmdef
-│                          (future: Architecture/ Events/ Services/ SaveSystem/ Pooling/ Utilities/ Extensions/)
+│                          SaveSystem/ (ISaveStore, ISaveParticipant, file and memory stores)
+│                          (future: Architecture/ Events/ Services/ Pooling/ Utilities/ Extensions/)
 ├── Gameplay/
 │   ├── Combat/            Runtime/
 │   ├── Factions/          Runtime/ (ids, rules)  Data/ + Data/Assets/ (the three factions, catalog)  Editor/
 │   ├── CharacterCreation/ Runtime/ (recipe, look, roster, save, names)  Data/ + Data/Assets/ (lineages, palettes,
 │   │                      database)  Editor/ (bakers)  Tests/Editor/
-│   ├── Items/             Runtime/ (+Visuals/)  Data/Assets/ (items, part catalog, gear dictionary)  Editor/  Tests/Editor/
+│   ├── Economy/           Runtime/ (Creds, Vault and Deep Vault, Trade, Kiosks, trade zones)  Data/ + Data/Assets/
+│   │                      (EconomySettings)  Editor/  Prefabs/ (KioskStand)  Tests/Editor/
+│   ├── Items/             Runtime/ (+Visuals/; world drops, pickup)  Data/Assets/ (items, part catalog, gear dictionary)
+│   │                      Editor/  Prefabs/ (WorldDrop)  Tests/Editor/
 │   ├── NPC/               Runtime/  Data/Assets/
+│   ├── Persistence/       Runtime/ (ServerSave, account and character documents, PlayerSaveAgent)  Tests/Editor/
+│   ├── Pets/              Runtime/ (growth, hunger, PlayerPet)  Data/ + Data/Assets/ (settings, catalog, definitions)
+│   │                      Editor/ (PetAssetBuilder)  Tests/Editor/
 │   ├── Player/            Runtime/  Prefabs/ (Player.prefab = the networked gameplay player)
 │   ├── Progression/       Runtime/  Data/ (SO classes)  Data/Assets/ (SO instances)  Editor/
-│   ├── Social/            Runtime/ (chat channels and rules, PlayerChat, the combat log, parties; later guilds)
-│   │                      Tests/Editor/
+│   ├── Social/            Runtime/ (chat channels and rules, PlayerChat, the combat log, Squads, Contacts, Crews)
+│   │                      Data/ + Data/Assets/ (CrewSettings)  Tests/Editor/
 │   └── (future) Skills/ Quests/ Interaction/ StatusEffects/ Inventory/
 ├── Characters/            Representation only: models, rigs, materials, animations, visual prefabs
 │   ├── Player/            Player_01/ (Sidekick character)  Animations/
@@ -105,7 +112,8 @@ _Game/
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
 ├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets)  Editor/ (Menus/ = front-end
-│                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/ Duel/ Party/)  Inventory/  NPC/  Shaders/
+│                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/ Duel/ Party/ Pet/)  Inventory/
+│                          Economy/ (Vault, Trade and Kiosk windows)  Social/ (prompt, player menu, Contacts, Crew)  NPC/  Shaders/
 │                          Menus/ (Materials/, KeyGlyphs.asset: assets the front-end scenes use)
 │                          (future: Skills/ Character/ World/ Settings/)
 ├── VFX/                   Gameplay/  GameFeel/  Environment/{City,Portals,Vehicles,Weather}/  Materials/ (shared FX mats)
@@ -116,7 +124,8 @@ _Game/
 │                          (future: Bootstrap/ World/Overworld/ Dungeons/ Cinematics/)
 ├── Settings/              Project-level config assets for packages (Animancer Settings)
 ├── Tools/                 Editor/ (KryticalNova.Editor.asmdef, Organization/, GM/, Build/ = build scene order,
-│                          Hierarchy/ = vHierarchy data)  Debug/ (QC commands)
+│                          Setup/ = the two wiring steps: player prefab and zone scene, Hierarchy/ = vHierarchy data)
+│                          Debug/ (QC commands)
 │                          (future: Profiling/ Importers/)
 └── (future) Audio/{Music,SFX,Ambience,Voice}/  Art/ (shared-only art)  Tests/ (cross-system tests)
 ```
@@ -152,17 +161,20 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 
 | Assembly                          | Defined in                                     | Covers (via .asmref)                                                     |
 |-----------------------------------|------------------------------------------------|---------------------------------------------------------------------------|
-| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social}/Runtime, {Progression,Factions,CharacterCreation}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
+| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets}/Runtime, {Progression,Factions,CharacterCreation,Social,Economy,Pets}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime. Excluded from dedicated server (`!UNITY_SERVER`)      |
 | `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
 | `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
-| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel) |
+| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, Economy, Pets, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel) |
 | `KryticalNova.Editor.GM`          | `Tools/Editor/GM/`                             | GM tools window                                                           |
 | `KryticalNova.Editor.Menus`       | `UI/Editor/Menus/`                             | Front-end scene builder. Depends on Editor, UI, Runtime, uGUI, TextMesh Pro. `!UNITY_SERVER` |
 | `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
 | `KryticalNova.CharacterCreation.Tests.Editor` | `Gameplay/CharacterCreation/Tests/Editor/` | EditMode tests (names, roster, recipes, creator edits, gear rules) |
-| `KryticalNova.Social.Tests.Editor` | `Gameplay/Social/Tests/Editor/`               | EditMode tests (chat channel rules, typed chat lines, party rules)                     |
+| `KryticalNova.Social.Tests.Editor` | `Gameplay/Social/Tests/Editor/`               | EditMode tests (chat channel rules, typed chat lines, party rules, Contacts, Crews)    |
+| `KryticalNova.Economy.Tests.Editor` | `Gameplay/Economy/Tests/Editor/`             | EditMode tests (wallet, storage, trade and Kiosk rules)                                |
+| `KryticalNova.Persistence.Tests.Editor` | `Gameplay/Persistence/Tests/Editor/`     | EditMode tests (save stores, account documents)                                        |
+| `KryticalNova.Pets.Tests.Editor`  | `Gameplay/Pets/Tests/Editor/`                  | EditMode tests (pet growth, stages, hunger)                                            |
 
 **Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
 **New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`
@@ -270,6 +282,15 @@ Menu **Krytical Nova ▸ Project**:
 | Validate Project Organization                | Audits root entries, loose files, asset names, script folders, assembly coverage, `UnityEditor` usage in runtime code |
 
 | Organize Scene Hierarchy                     | Files a zone scene's loose root objects under `--- X ---` headers and colours/icons every header with vHierarchy 2 |
+
+Menu **Krytical Nova ▸ Setup** (the two wiring steps; both safe to run again at any time):
+
+| Item                                         | What it does                                                                           |
+|----------------------------------------------|----------------------------------------------------------------------------------------|
+| Player Prefab                                | Wires every player component onto `Player.prefab` and hands each its settings asset (created with defaults when missing); builds the prefabs gameplay spawns (item drop, Kiosk stand) and registers them as network prefabs. **A new player system adds one row to `PlayerSystemsSetup`; a new spawned prefab adds its path to `GameplayPrefabsSetup.SpawnedPrefabs`** (a prefab that is not registered never appears on clients) |
+| Zone Scene (Open Scene)                      | Prepares the open scene as a zone: HUD and its controllers (`HudSetup.MoreControllers`), zone UI, game feel, matte terrain, post look, atmosphere, minimap renderer, lighting, hierarchy headers, the NetworkManager's prefab list; in the starter town also the stalls whose NPC has arrived and the trade zones |
+
+Menu **Krytical Nova ▸ Items** also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`).
 
 Menu **Krytical Nova ▸ Characters** (run in order, or use *Bake Everything*):
 

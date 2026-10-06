@@ -1,0 +1,133 @@
+# Economy and Social Systems: as built
+
+As of 5 Oct 2026 · branch `economy-social-pets` · companion to `01_Systems_Build_List.md` (rows 1, 12, 13, 14, 15, 20, 29, 33) · pets are in `../../Design/12_pet_evolution_system.md`
+
+What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Trade, Kiosks, Contacts and Crews: the rules, the numbers and where each lives. Every number below is a field of a settings asset and marked *(proposed)* until the owner confirms it; none is a constant in code.
+
+## How every system here is built
+
+- **Rules** are plain static classes with no networking (`WalletRules`, `StorageRules`, `TradeRules`, `KioskRules`, `LootRules`, `ContactRules`, `CrewRules`), each with EditMode tests.
+- **The server decides.** Each system has a `NetworkBehaviour` on the player (`PlayerWallet`, `PlayerVault`, `PlayerDeepVault`, `PlayerTrade`, `PlayerKiosk`, `PlayerLoot`, `PlayerContacts`, `PlayerCrew`). The owner sends requests; the server checks them against the rules and replicates the result. What only the owner should know (Creds, storage, their own lists) is owner-readable.
+- **The HUD only shows and asks.** One UI Toolkit controller per window, in `UI/Runtime/Economy/` and `UI/Runtime/Social/`.
+- **Items move whole.** An `ItemStack` carries `data` (a pet's growth and hunger today; Temper, Fusion and Tuning later), so an item keeps its own state in the Pack, a slot, the Vault, a trade, a Kiosk and on the ground.
+
+## Saving (row 1)
+
+| | |
+| --- | --- |
+| Where | Files on the server host: `persistentDataPath/ServerSave/<profile>/` behind `ISaveStore` (`FileSaveStore`; `MemorySaveStore` in tests). A database or Cloud Save is another `ISaveStore`. |
+| Account document | `accounts/<accountId>`: the Deep Vault, the day's trade total, and the account's characters. |
+| Character | Progression, combat and movement skills, the Pack, worn items with their state, Creds, the Vault. |
+| World documents | `world/crews`, `world/kiosks`, `world/contacts`: they go on while their players are offline. |
+| How a system saves | It implements `ISaveParticipant` (a key, a scope, capture, restore) on its player component. `PlayerSaveAgent` does the rest: load on entry, autosave every 60 s, save on leave, save at once after a trade, a sale or a founding. |
+| Identity | The client sends an account id (generated locally, `kn.account.v1`) and its character id. Trusted until real sign-in exists. One character of an account in the world at a time. |
+| GM | `gm.save`, `gm.save.where`, `gm.save.wipe confirm` |
+
+## Creds and the economy model
+
+`Assets/_Game/Gameplay/Economy/Data/Assets/EconomySettings.asset` holds every number. Its inspector shows, per level, the income target and the hours of play each cap and cost takes to earn, and warns when a cost is out of reach.
+
+| Tunable *(proposed)* | Value |
+| --- | --- |
+| Wallet cap (the Vault and Deep Vault each hold as much again) | 999,999,999,999 |
+| Creds per trade, each way | 5,000,000 |
+| Creds an account sends in trades per day (UTC) | 20,000,000 |
+| Kiosk price cap per unit: Common / Uncommon / Rare / Epic | 50,000 / 500,000 / 5,000,000 / 20,000,000 |
+| Kiosk price cap per unit: stackable non-gear | 10,000 |
+| Kiosk price cap: a pet, rising with its growth from the Common cap to | 20,000,000 at 100 % |
+| Kiosk sales tax (a Creds sink) | 5 % |
+| Income target, Creds per hour at level 1 / 20 / 40 / 60 / 80 / 100 / 112 | 3k / 25k / 90k / 250k / 600k / 1.2M / 2M |
+
+- **Nothing pays Creds yet.** They enter only through `gm.creds`. The income target is the design number Hostile drops, Contracts and vendors must be tuned against when they are built.
+- **The ledger** (`CredsLedger`, `gm.creds.report`) counts Creds by source and sink since the server started, so real earn rates can be set beside the target.
+- **Why the caps:** to make selling Creds for money slow. A full day's allowance is one Epic at its price cap.
+- **Known tension to tune:** at the level-30 income target the 10,000,000 Crew fee is about 200 hours of play.
+
+## Item pickup (row 13)
+
+- `WorldDrop` is the item on the ground: networked, carries the whole stack, cleared after 180 s, at most 200 per zone (oldest goes). Several drops on one spot spread out in a spiral.
+- Click a drop to walk over and take it; **~** takes the nearest within 3.5 m. The server checks reach, who it is held for, and Pack space. What does not fit stays.
+- The character crouches (the Synty Base Locomotion Stand-to-Crouch and Crouch-to-Stand clips: no pack has a pick-up clip) and turns to the item; the parcel goes to the hand. Everyone sees it.
+- **Dropping from the Pack:** the item is held for its dropper for **20 seconds**, then it is free for all, whatever their faction (`PlayerLoot.dropsOpenToEveryone`; off limits it to the dropper's faction). The dropper sees a small countdown notice above the hotbar; labels over held drops show the seconds left.
+- Hostile drops come with Hostiles: `PlayerLoot.ServerPlace` is the call to make.
+
+## Vault and Deep Vault (row 14)
+
+- **Vault**: one per character, at a **Vaultkeeper**. **Deep Vault**: one per account, shared by all its characters, at a **Wayfinder**. 96 cells (two pages) and a Creds balance each.
+- Right-click moves an item between Pack and storage; Shift+right-click asks how many; drag onto a cell to place, top up or swap. The server refuses any request made away from an NPC offering the service.
+- Both NPCs stand at their plaza stalls (Crew Hall and Wayfinder). An NPC offers a service through `NpcDefinition.offers`; its dialogue then shows a button per service.
+
+## Trade (row 12, the Trade half)
+
+1. Ask: TRADE on the target strip, the player menu, or `/trade [name]`. Within 6 m.
+2. The other accepts (prompt, or `/trade accept`).
+3. Each lays out up to 12 stacks and Creds. Right-click a Pack item to offer it; offered cells are held.
+4. Both **Lock**. Any change after that unlocks both.
+5. Both **Confirm**. The server swaps everything at once, or nothing: both Packs must still hold what was offered and have room for what comes back; the Creds must be within the per-trade cap, the account's remaining daily allowance and the receiver's wallet cap.
+
+Walking more than 8 m apart, dying or leaving cancels. The trade window shows the caps and what the account may still send today.
+
+## Kiosks (row 15)
+
+- **Where:** inside a trade zone that allows Kiosks (`TradeZone.allowKiosks`): the Central Plaza of the starter town today. Not within 2.5 m of another Kiosk or a vendor.
+- **Setting up (T):** a shop name, up to 24 stacks from the Pack with a price for one of each, and how long it runs.
+
+| Duration | Cost |
+| --- | --- |
+| 3 days | free |
+| 14 days | one **Kiosk Permit (14 Days)**, item 9020, Nova Store $1.99 |
+| 30 days | one **Kiosk Permit (30 Days)**, item 9021, Nova Store $3.99 |
+
+  The Nova Store does not sell yet; `item.give Permit_Kiosk14` hands one out. A duration without its permit shows locked with its store price.
+- **The stand-in** is a doll of the owner as they looked when they opened it, with the shop's name over it. The items leave the Pack and the owner is free to go: it sells while they play or are offline, and survives a server restart.
+- **Buying:** click the stand, right-click an item, choose how many, confirm. The buyer pays the price; 5 % is tax; the rest goes to the till.
+- **The owner** is told of each sale in chat, or gets a summary on return. The till is collected from the Kiosk window anywhere. Closing, selling out or running out of time removes the stand and holds unsold items and the till until collected.
+- **GM:** `gm.kiosk` (list), `gm.kiosk.expire`.
+
+## Contacts (row 29)
+
+- **Mutual, per character.** One asks, the other accepts; then each is in the other's list. Removing takes both out. A request waits while either is offline.
+- **The window (F):** Contacts (favourites first, then online), Requests, Recent (Squad mates, trade partners, Callout opponents and whisperers of this session), Blocked. Each contact shows level, weapon class and when they were last seen, and has a private note.
+- **Block** is one-sided and never announced. It ends the contact and stops whispers, Squad invitations, Callouts, trade, contact requests and Crew invitations in both directions: every one of those asks `SocialGate` first.
+- `/contact add|remove <name>`, `/block <name>`, `/unblock <name>`; Add Contact and Block are in the player menu (Shift+click a player).
+
+## Crews (row 33)
+
+- **Founding:** at a Vaultkeeper, level 30, 10,000,000 Creds *(reference page 28)*. A name of 3 to 16 characters, unique, and one of 12 symbols.
+- **Ranks:** one **Leader**, up to 3 **Officers**, **Members**. 20 members at Crew level 1 (the table has later levels; Crews do not level yet).
+
+| | Member | Officer | Leader |
+| --- | --- | --- | --- |
+| Crew chat (`/g`), leave | yes | yes | yes |
+| Invite, expel Members, write the announcement | | yes | yes |
+| Appoint and remove Officers, Crew Titles, the symbol, expel Officers, hand over, disband | | | yes |
+
+- A Leader with other members hands the Crew over before leaving; the last member out closes it.
+- **The window (G):** roster with rank, title, level, class and last seen; the announcement, which reaches every online member when it changes and is shown at login.
+- `/cinvite [name]`, `/caccept`, `/cdecline`, `/cleave`, `/ckick <name>`. **GM:** `gm.guild [name|none]`, `gm.guild.list`.
+
+## Who may deal with whom
+
+| | Same faction | Another faction |
+| --- | --- | --- |
+| Trade, buying from a Kiosk | anywhere | on neutral ground only |
+| Contacts | anywhere, online or not | face to face on neutral ground only |
+| Crew | yes | **never** |
+| Picking up a dropped item (after its 20 s) | yes | yes |
+
+**Neutral ground** is a `TradeZone` with `crossFaction` ticked. The dedicated non-combat zone will be one. Until it exists the whole starter town is marked neutral (scene object "Neutral Ground - Starter Town (for testing)") so cross-faction play can be tested; combat there is unchanged. Untick or delete that object when the real zone is built.
+
+## Keys and commands
+
+| Key | Window | | Key | Window |
+| --- | --- | --- | --- | --- |
+| **F** | Contacts | | **T** | Kiosk |
+| **G** | Crew | | **~** | Pick up the nearest item |
+
+## Not built
+
+The Exchange board; selling Kiosk Permits (Nova Store); any Creds faucet (Hostile drops, Contracts, vendors); Crew levels; Crew Title and symbol over the head; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
+
+## Verified
+
+EditMode tests for every rules class (242 pass on 5 Oct 2026). Host plus a Multiplayer Play Mode client, two factions: pickup and its gesture, drop hold, Vault, Trade, Kiosk (open, buy, tax, away summary, expiry, collect), Contacts (request, offline request, favourite, note, block), Crew (found, ranks, title, announcement, chat, hand over, close), and the neutral-ground rules. Saves survive a restart.
