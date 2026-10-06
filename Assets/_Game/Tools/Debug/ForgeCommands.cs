@@ -55,9 +55,14 @@ namespace KryticalNova.DevTools
             return $"{item.displayName} (level {item.itemLevel}): {(next.IsClean ? "untouched" : next.ToString())}.";
         }
 
-        [Command("gm.temper", "Set the Temper % (0-150) of the first piece of gear in the targeted player's Pack: gm.temper <percent> [slot]. " +
-                              "Slot narrows it to weapon, armor, gloves, boots, ring, amulet or cape.")]
-        private static string Temper(int percent, string slot = "") => SetState(slot, state => state.WithTemper(percent));
+        [Command("gm.temper", "Set the Temper % of the first piece of gear in the targeted player's Pack, up to the cap (120): " +
+                              "gm.temper <percent> [slot]. Slot narrows it to weapon, armor, gloves, boots, ring, amulet or cape.")]
+        private static string Temper(int percent, string slot = "")
+        {
+            if (!TryGetForge(out var work, out var error)) return error;
+            int cap = work.Settings != null ? work.Settings.temper.hardCap : GearItemState.MaxTemper;
+            return SetState(slot, state => state.WithTemper(System.Math.Min(percent, cap)));
+        }
 
         [Command("gm.fuse", "Set the Fusion stage (0-12) of the first piece of gear in the Pack: gm.fuse <stage> [slot].")]
         private static string Fuse(int stage, string slot = "") => SetState(slot, state => state.WithFusion(stage));
@@ -75,7 +80,7 @@ namespace KryticalNova.DevTools
             return $"Renown {progression.Renown:N0}.";
         }
 
-        [Command("gm.forgekit", "Give the targeted player forge materials: every Alloy, Failsafe, the Fusion Catalyst and the Tuning chips, " +
+        [Command("gm.forgekit", "Give the targeted player forge materials: the five Alloys, every Failsafe, the Fusion Catalyst and the Tuning chips, " +
                                 "<count> of each (default 20).")]
         private static string ForgeKit(int count = 20)
         {
@@ -83,7 +88,7 @@ namespace KryticalNova.DevTools
             ushort[] ids =
             {
                 GearMaterialIds.Alumite, GearMaterialIds.Iridion, GearMaterialIds.Orichalc, GearMaterialIds.Eversteel, GearMaterialIds.TrinityPlatinum,
-                GearMaterialIds.PrimeAlloy, GearMaterialIds.Failsafe, GearMaterialIds.AdvancedFailsafe, GearMaterialIds.LuckyFailsafe,
+                GearMaterialIds.Failsafe, GearMaterialIds.AdvancedFailsafe, GearMaterialIds.LuckyFailsafe, // no Prime Alloy: it has no use yet
                 GearMaterialIds.FusionCatalyst, GearMaterialIds.TuningChip, GearMaterialIds.VioletChip, GearMaterialIds.ResetChip,
             };
             int kinds = 0;

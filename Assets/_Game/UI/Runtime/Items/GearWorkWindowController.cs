@@ -30,7 +30,7 @@ namespace KryticalNova.UI
         private static readonly string[] ActLabels = { "TEMPER", "FUSE", "TUNE", "REFORGE" };
         private static readonly string[] Intros =
         {
-            "Tempering raises what a piece is for. Each Alloy adds its percent on a success; a fail takes some back, and past 60% a fail can break the piece unless a Failsafe is used.",
+            "Tempering raises what a piece is for, up to 120%. Each Alloy adds its percent on a success; a fail takes some back, and past 60% a fail can break the piece unless a Failsafe is used.",
             "Fusion melts an untouched Rare of the same kind into a Rare or Epic piece. Twelve stages. A fail destroys the material and never harms the piece.",
             "Tuning adds a second set of stats to Rare and Epic gear, one stage at a time, for chips, Renown and Creds.",
             "Reforge turns an untouched Rare into another Rare of the same level. A fail costs only the Creds.",
@@ -316,7 +316,8 @@ namespace KryticalNova.UI
             TemperSettings temper = Settings.temper;
             optionsTitle.text = "ALLOY AND FAILSAFE";
             // The Alloy that fits where the piece is: Prime Alloy from the soft cap, the others below it.
-            bool wantPrime = state.Temper >= temper.softCap;
+            bool primeInUse = GearProgressionRules.PrimeAlloyInUse(temper);
+            bool wantPrime = primeInUse && state.Temper >= temper.softCap;
             GearProgressionRules.TryFindAlloy(temper, alloyItemId, out AlloyGrade alloy);
             if (alloy.itemId == 0 || alloy.prime != wantPrime || inventory.CountItem(alloy.itemId) == 0)
             {
@@ -327,6 +328,7 @@ namespace KryticalNova.UI
             }
             foreach (AlloyGrade candidate in temper.alloys)
             {
+                if (candidate.prime && !primeInUse) continue; // the Alloy of a later system: not offered until it has a use
                 AlloyGrade choice = candidate;
                 int have = inventory.CountItem(choice.itemId);
                 Option($"{NameOf(choice.itemId)} +{choice.step}%  x{have}", choice.itemId == alloyItemId, have > 0,
@@ -351,7 +353,7 @@ namespace KryticalNova.UI
                 float chance = GearProgressionRules.TemperChance(temper, state.Temper, alloy.step, work.Luck, protection);
                 float breaks = GearProgressionRules.BreakChance(temper, state.Temper);
                 float luck = GearProgressionRules.LuckBonus(work.Luck, temper.luckPerPercent, temper.maxLuckBonus);
-                int reach = Mathf.Min(alloy.prime ? temper.hardCap : Mathf.Max(temper.softCap, state.Temper), state.Temper + alloy.step);
+                int reach = Mathf.Min(alloy.prime ? temper.hardCap : Mathf.Min(temper.hardCap, Mathf.Max(temper.softCap, state.Temper)), state.Temper + alloy.step);
                 text.Append($"+{state.Temper}% to +{reach}%   ·   Success {chance:0.#}%");
                 if (luck > 0f) text.Append($" (Luck adds {luck:0.#}%)");
                 text.AppendLine();

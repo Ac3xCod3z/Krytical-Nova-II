@@ -269,6 +269,23 @@
 .hud-edit-banner-text { margin-right: 14px; }
 .hud-edit-banner-text .help { margin-top: 2px; }
 #hud-edit-banner Button { margin-left: 8px; }
+.hud-edit-pick { min-width: 190px; -unity-background-image-tint-color: rgb(96, 78, 30); color: rgb(255, 236, 180); }
+.hud-edit-pick:hover { -unity-background-image-tint-color: rgb(128, 104, 40); }
+
+/* The list the PANEL button opens, under the banner. */
+.hud-edit-list {
+    display: none;
+    position: absolute;
+    top: 92px;
+    left: 50%;
+    translate: -50% 0;
+    width: 280px;
+    max-height: 430px;
+    padding: 8px 10px;
+    -unity-background-image-tint-color: rgba(9, 15, 23, 0.97);
+}
+.hud-edit-list Button { margin: 2px 0; min-height: 26px; padding: 2px 10px; font-size: 12px; -unity-text-align: middle-left; }
+.hud-edit-list Button.chosen { -unity-background-image-tint-color: rgb(30, 112, 98); color: rgb(255, 255, 255); }
 
 /* ------------------------------------------------------------------ floating combat text (CombatFeedbackManager) */
 

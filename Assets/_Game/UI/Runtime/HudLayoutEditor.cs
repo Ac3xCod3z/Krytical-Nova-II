@@ -13,6 +13,8 @@ namespace KryticalNova.UI
     /// While a panel is dragged it lines up with the other panels (edges and centres), with the screen's edges and
     /// centre, and otherwise with a grid, so a layout stays tidy without being limited to preset spots. Holding Alt
     /// places it freely; <see cref="HudPreferences.SnapToGrid"/> turns the whole thing off.
+    /// A panel never leaves the screen: not while it is dragged or resized, and not when the screen or the interface
+    /// size changes afterwards. The player adjusts one panel at a time, chosen by name, or all of them at once.
     /// </summary>
     public sealed class HudLayoutEditor
     {
@@ -69,6 +71,17 @@ namespace KryticalNova.UI
             { "skills-window", "SKILLS WINDOW" },
             { "settings-window", "SETTINGS WINDOW" },
             { "forge-window", "FORGE WINDOW" },
+            { "inventory-window", "PACK" },
+            { "equipment-window", "EQUIPMENT" },
+            { "storage-window", "VAULT" },
+            { "trade-window", "TRADE" },
+            { "kiosk-window", "KIOSK" },
+            { "shop-window", "KIOSK SHOP" },
+            { "contacts-window", "CONTACTS" },
+            { "crew-window", "CREW" },
+            { "minimap", "MINIMAP" },
+            { "loot-notice", "LOOT NOTICE" },
+            { "chat-window", "CHAT" },
             { "network-panel", "NETWORK PANEL" },
             { "npc-dialogue", "NPC DIALOGUE" },
             { "zone-toast", "ZONE NOTICE" },
@@ -79,6 +92,7 @@ namespace KryticalNova.UI
         private readonly Dictionary<string, VisualElement> movables = new Dictionary<string, VisualElement>();
         private readonly Dictionary<VisualElement, EditState> editing = new Dictionary<VisualElement, EditState>();
         private readonly Dictionary<string, Entry> saved = new Dictionary<string, Entry>();
+        private readonly HashSet<VisualElement> watched = new HashSet<VisualElement>();
 
         private VisualElement activeElement;
         private VisualElement activeCapture;
@@ -112,6 +126,7 @@ namespace KryticalNova.UI
                 {
                     if (string.IsNullOrEmpty(element.name)) return;
                     movables[element.name] = element;
+                    if (watched.Add(element)) element.RegisterCallback<GeometryChangedEvent>(_ => OnPanelGeometry(element));
                 });
             }
         }
@@ -201,45 +216,99 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ edit mode
 
+        /// <summary>The choice that puts every panel in edit state at once.</summary>
+        public const string AllPanels = "*";
+        private string selection;
+
+        /// <summary>The panel being adjusted (its name), <see cref="AllPanels"/>, or null while the player has not chosen.</summary>
+        public string Selection => selection;
+
+        /// <summary>Every panel that can be placed, with the name the editor shows for it, in alphabetical order.</summary>
+        public void GetPanels(List<(string Name, string Label)> into)
+        {
+            into.Clear();
+            foreach (var pair in movables)
+                if (pair.Value.panel != null) into.Add((pair.Key, Describe(pair.Value)));
+            into.Sort((a, b) => string.CompareOrdinal(a.Label, b.Label));
+        }
+
+        /// <summary>What the editor calls a choice: a panel's name, "ALL PANELS", or "CHOOSE" for none.</summary>
+        public string LabelOf(string name)
+        {
+            if (name == AllPanels) return "ALL PANELS";
+            return name != null && movables.TryGetValue(name, out VisualElement element) ? Describe(element) : "CHOOSE";
+        }
+
+        /// <summary>Opens the editor with no panel chosen: the player picks one, or all, with <see cref="Select"/>.</summary>
         public void BeginEdit()
         {
             if (IsEditing) return;
             IsEditing = true;
+            selection = null;
             ShowGrid();
-            foreach (VisualElement element in movables.Values)
+            EditingChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Puts one panel (by name), every panel (<see cref="AllPanels"/>) or none (null) in edit state. The others
+        /// go back to looking and behaving as they do in play.
+        /// </summary>
+        public void Select(string name)
+        {
+            if (!IsEditing) return;
+            CancelInteraction();
+            selection = name;
+            foreach (var pair in movables)
             {
-                if (element.panel == null) continue;
-                var state = new EditState { PreviousDisplay = element.style.display };
-                // Hidden windows/dialogs are shown so they can be placed; restored when editing ends.
-                if (element.resolvedStyle.display == DisplayStyle.None) element.style.display = DisplayStyle.Flex;
-                if (element is Label label && string.IsNullOrEmpty(label.text))
-                {
-                    state.PreviousText = label.text;
-                    label.text = Describe(element);
-                }
-                element.AddToClassList(EditingClass);
-                state.Overlay = CreateOverlay(element, out state.ScaleLabel);
-                element.hierarchy.Add(state.Overlay);
-                editing[element] = state;
-                RefreshScaleLabel(element);
+                bool wanted = name == AllPanels || pair.Key == name;
+                bool active = editing.ContainsKey(pair.Value);
+                if (wanted && !active) EnterEdit(pair.Value);
+                else if (!wanted && active) ExitEdit(pair.Value);
             }
             EditingChanged?.Invoke();
+        }
+
+        /// <summary>Puts the chosen panel (or, with all chosen, every panel) back where the game places it.</summary>
+        public void ResetSelected()
+        {
+            if (selection == AllPanels) ResetAll();
+            else if (selection != null && movables.TryGetValue(selection, out VisualElement element)) ResetElement(element);
+        }
+
+        private void EnterEdit(VisualElement element)
+        {
+            if (element.panel == null) return;
+            var state = new EditState { PreviousDisplay = element.style.display };
+            // A hidden window or dialog is shown so it can be placed; restored when it leaves edit state.
+            if (element.resolvedStyle.display == DisplayStyle.None) element.style.display = DisplayStyle.Flex;
+            if (element is Label label && string.IsNullOrEmpty(label.text))
+            {
+                state.PreviousText = label.text;
+                label.text = Describe(element);
+            }
+            element.AddToClassList(EditingClass);
+            state.Overlay = CreateOverlay(element, out state.ScaleLabel);
+            element.hierarchy.Add(state.Overlay);
+            editing[element] = state;
+            RefreshScaleLabel(element);
+        }
+
+        private void ExitEdit(VisualElement element)
+        {
+            if (!editing.TryGetValue(element, out EditState state)) return;
+            state.Overlay.RemoveFromHierarchy();
+            element.RemoveFromClassList(EditingClass);
+            element.style.display = state.PreviousDisplay;
+            if (state.PreviousText != null && element is Label label) label.text = state.PreviousText;
+            editing.Remove(element);
         }
 
         public void EndEdit()
         {
             if (!IsEditing) return;
             CancelInteraction();
-            foreach (var pair in editing)
-            {
-                VisualElement element = pair.Key;
-                EditState state = pair.Value;
-                state.Overlay.RemoveFromHierarchy();
-                element.RemoveFromClassList(EditingClass);
-                element.style.display = state.PreviousDisplay;
-                if (state.PreviousText != null && element is Label label) label.text = state.PreviousText;
-            }
-            editing.Clear();
+            foreach (VisualElement element in new List<VisualElement>(editing.Keys)) ExitEdit(element);
+            selection = null;
             HideGrid();
             IsEditing = false;
             Save();
@@ -326,6 +395,14 @@ namespace KryticalNova.UI
                 float ratioY = sizeStart.y > 1f ? (sizeStart.y + delta.y) / sizeStart.y : 1f;
                 scale = scaleStart * (ratioX + ratioY) * 0.5f;
                 scale = Mathf.Clamp(Mathf.Round(scale / ScaleStep) * ScaleStep, MinScale, MaxScale);
+                // Never larger than the screen can hold.
+                Rect screen = ScreenOf(activeElement);
+                float width = activeElement.layout.width, height = activeElement.layout.height;
+                if (width > 1f && height > 1f)
+                {
+                    float fits = Mathf.Floor(Mathf.Min(screen.width / width, screen.height / height) / ScaleStep) * ScaleStep;
+                    scale = Mathf.Min(scale, Mathf.Max(MinScale, fits));
+                }
                 activeElement.style.scale = new Scale(new Vector2(scale, scale));
                 if (editing.TryGetValue(activeElement, out EditState state))
                     state.ScaleLabel.text = $"{Mathf.RoundToInt(scale * 100f)}%";
@@ -340,16 +417,27 @@ namespace KryticalNova.UI
             activeElement.style.top = position.y;
         }
 
-        /// <summary>Keeps at least a grab-able strip of the element inside its parent (pixel space, no layout lag).</summary>
-        private static Vector2 ClampPixels(VisualElement element, Vector2 position, float scale)
+        /// <summary>The area a panel must stay inside: the whole screen.</summary>
+        private Rect ScreenOf(VisualElement element) =>
+            layoutRoot != null && layoutRoot.panel != null ? layoutRoot.worldBound : element.hierarchy.parent.worldBound;
+
+        /// <summary>The top-left corner nearest to <paramref name="topLeft"/> that keeps a box of this size inside the area.</summary>
+        private static Vector2 ClampInto(Rect area, Vector2 topLeft, Vector2 size)
+        {
+            // A box larger than the area is pinned to its top-left corner.
+            float maxX = Mathf.Max(area.xMin, area.xMax - size.x);
+            float maxY = Mathf.Max(area.yMin, area.yMax - size.y);
+            return new Vector2(Mathf.Clamp(topLeft.x, area.xMin, maxX), Mathf.Clamp(topLeft.y, area.yMin, maxY));
+        }
+
+        /// <summary>Keeps the whole panel on screen while it is dragged or resized (pixel space, no layout lag).</summary>
+        private Vector2 ClampPixels(VisualElement element, Vector2 position, float scale)
         {
             VisualElement parent = element.hierarchy.parent;
             if (parent == null || parent.layout.width < 1f) return position;
-            float width = element.layout.width * scale;
-            float maxX = parent.layout.width - MinVisiblePixels;
-            float minX = Mathf.Min(0f, MinVisiblePixels - width);
-            float maxY = parent.layout.height - MinVisiblePixels;
-            return new Vector2(Mathf.Clamp(position.x, minX, Mathf.Max(minX, maxX)), Mathf.Clamp(position.y, 0f, Mathf.Max(0f, maxY)));
+            Vector2 origin = parent.worldBound.position;
+            Vector2 size = new Vector2(element.layout.width, element.layout.height) * scale;
+            return ClampInto(ScreenOf(element), origin + position, size) - origin;
         }
 
         private void OnPointerUp(PointerUpEvent evt)
@@ -586,23 +674,47 @@ namespace KryticalNova.UI
             Save();
         }
 
-        /// <summary>Pulls a saved (percentage-placed) element back on screen after the window shrinks.</summary>
-        private static void ClampIntoView(VisualElement element)
+        /// <summary>
+        /// Pulls a placed panel back so all of it is on screen: after the window or the interface size changes, when
+        /// a saved layout is loaded, and when a hidden panel is shown.
+        /// </summary>
+        private void ClampIntoView(VisualElement element)
         {
             VisualElement parent = element.hierarchy.parent;
-            if (parent == null || parent.layout.width < 1f || element.panel == null) return;
+            if (parent == null || parent.layout.width < 1f || parent.layout.height < 1f || element.panel == null) return;
             Rect bounds = element.worldBound;
-            Rect area = parent.worldBound;
-            float minX = Mathf.Min(area.xMin, area.xMin - bounds.width + MinVisiblePixels);
-            float maxX = area.xMax - MinVisiblePixels;
-            float maxY = area.yMax - MinVisiblePixels;
-            float x = Mathf.Clamp(bounds.x, minX, Mathf.Max(minX, maxX));
-            float y = Mathf.Clamp(bounds.y, area.yMin, Mathf.Max(area.yMin, maxY));
-            if (Mathf.Approximately(x, bounds.x) && Mathf.Approximately(y, bounds.y)) return;
+            if (bounds.width < 1f || bounds.height < 1f) return; // hidden: there is nothing to measure yet
+            Vector2 placed = ClampInto(ScreenOf(element), bounds.position, bounds.size);
+            if (Mathf.Abs(placed.x - bounds.x) < 0.5f && Mathf.Abs(placed.y - bounds.y) < 0.5f) return;
 
-            Vector2 local = parent.WorldToLocal(new Vector2(x, y));
+            Vector2 local = parent.WorldToLocal(placed);
             element.style.left = Length.Percent(local.x / parent.layout.width * 100f);
             element.style.top = Length.Percent(local.y / parent.layout.height * 100f);
+        }
+
+        // A hidden panel has no size, so it can only be brought back on screen once it is shown or resized.
+        private void OnPanelGeometry(VisualElement element)
+        {
+            if (element == activeElement || !saved.ContainsKey(element.name)) return;
+            ClampIntoView(element);
+        }
+
+        /// <summary>
+        /// A placed panel changed size by its own means (the chat window's grip): keeps it on screen and stores where
+        /// it is now. Does nothing for a panel the player never moved.
+        /// </summary>
+        public void Recommit(VisualElement element)
+        {
+            if (element == null || string.IsNullOrEmpty(element.name) || !saved.TryGetValue(element.name, out Entry entry)) return;
+            VisualElement parent = element.hierarchy.parent;
+            if (parent == null || parent.layout.width < 1f || parent.layout.height < 1f) return;
+            Rect bounds = element.worldBound;
+            if (bounds.width < 1f || bounds.height < 1f) return;
+            Vector2 local = parent.WorldToLocal(ClampInto(ScreenOf(element), bounds.position, bounds.size));
+            entry.x = local.x / parent.layout.width;
+            entry.y = local.y / parent.layout.height;
+            ApplyEntry(element, entry);
+            Save();
         }
     }
 }

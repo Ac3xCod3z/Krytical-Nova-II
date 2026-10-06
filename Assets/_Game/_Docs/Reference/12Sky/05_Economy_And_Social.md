@@ -22,6 +22,7 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 | How a system saves | It implements `ISaveParticipant` (a key, a scope, capture, restore) on its player component. `PlayerSaveAgent` does the rest: load on entry, autosave every 60 s, save on leave, save at once after a trade, a sale or a founding. |
 | Identity | The client sends an account id (generated locally, `kn.account.v1`) and its character id. Trusted until real sign-in exists. One character of an account in the world at a time. |
 | GM | `gm.save`, `gm.save.where`, `gm.save.wipe confirm` |
+| GM in a build | The host (or an offline player) opens the GM console with **F2** (`Windows/GmConsole`, rebindable; `GmConsoleGate`, prefab `Tools/Debug/Prefabs/GmConsole`). A joined client has no console and no GM commands; the host aims commands at a client with `gm.players` and `gm.target <clientId>`. In the Editor the GM Tools window does the same job. |
 
 ## Creds and the economy model
 

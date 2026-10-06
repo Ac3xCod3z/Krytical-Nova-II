@@ -185,7 +185,9 @@ Boots also carry +30–40 move / utility speed in the notes; keep that as `MoveS
 | Ring | +0.05% Critical *(proposed)*: +6% at 120% |
 | Amulet | +4 Luck × rarity multiplier *(proposed)*: +576 on an Uncommon at 120% |
 
-**Materials.** Five Alloys and Prime Alloy (items 9100–9105; nothing drops or sells them yet):
+**The cap is 120%** (owner, 6 Oct 2026). Going on to 150% is a system for later in the game; see "Later: beyond 120%" below. It is one number, `temper.hardCap`.
+
+**Materials.** Five Alloys (items 9100–9104; nothing drops or sells them yet). Prime Alloy (9105) exists as an item but has no use until the cap is raised: the forge does not offer it and refuses it.
 
 | Alloy | Twelve Sky 2 | Step |
 | --- | --- | --- |
@@ -194,7 +196,7 @@ Boots also carry +30–40 move / utility speed in the notes; keep that as `MoveS
 | Orichalc | Oracite | +9% |
 | Eversteel | Steel of Eternity | +12% |
 | Trinity Platinum | Holy Trinity Platinum | +15% |
-| Prime Alloy | Millennial Gold | +3%, and the only Alloy that works from 120% up |
+| Prime Alloy | Millennial Gold | later system: +3%, the only Alloy that works from 120% up |
 
 **Success chance** (Twelve Sky 2's formula; it replaces the per-Alloy odds of the earlier draft):
 
@@ -221,14 +223,33 @@ So a bigger Alloy is a bigger step at worse odds, and the higher the piece the h
 | 30–59% | none | yellow |
 | 60–89% | 5% rising to 15% | blue |
 | 90–119% | 15% rising to 30% | purple |
-| 120–132% (Prime Alloy only) | 35% | orange |
-| 133–150% (Prime Alloy and an Advanced Failsafe) | 50% | orange |
+| 120% (the cap: nothing more can be attempted) | none | orange |
 
 - **Failsafe** (TS2: Protection Charm): stops one break, and is only used up when it does. A fail it saves still costs the 3%.
 - **Lucky Failsafe** (TS2: Lucky enchant): +5% to one attempt and no break on it. Used up on the attempt.
-- **Advanced Failsafe**: a fail costs nothing and never breaks. Used up on a fail. Required from 133%.
-- A **break** destroys the piece. 120% is the cap without Prime Alloy; 150% is the hard cap.
-- Cost per attempt *(proposed)*: `ItemLevel × 500 × RarityMultiplier` Creds, doubled from 120%, plus the Alloy.
+- **Advanced Failsafe**: a fail costs nothing and never breaks. Used up on a fail.
+- A **break** destroys the piece. At 120% the forge answers "It is at 120%: the highest Temper there is." and takes nothing.
+- Cost per attempt *(proposed)*: `ItemLevel × 500 × RarityMultiplier` Creds, plus the Alloy.
+
+**Later: beyond 120%.** Kept in the settings and the rules, switched off by `hardCap = 120`, and still covered by a test that raises the cap. Raising `hardCap` above `softCap` (120) turns it back on with no new code:
+
+| Temper before the attempt | Needs | Break chance on a fail |
+| --- | --- | --- |
+| 120–132% | Prime Alloy | 35% |
+| 133–150% | Prime Alloy and an Advanced Failsafe | 50% |
+
+The Creds cost doubles from 120%.
+
+**Effects** (6 Oct 2026, built by `GameFeelBuilder`, menu **Krytical Nova ▸ GameFeel ▸ Rebuild Forge Feel**). Every player nearby sees the burst on the character; only the one who did it gets the screen effects and the result text (`PlayerGearWork.ShownRpc` to everyone, `FinishedRpc` to the owner).
+
+| Outcome | On the character | For the player who did it |
+| --- | --- | --- |
+| Success | rising gold burst, rays, sparkles, a comic "POW" | chromatic shimmer, a small upward camera nudge |
+| Fail | a dull spark and smoke puff | a small camera drop |
+| Failsafe held | the fail puff and a cyan shield flash | none |
+| Break | red shatter burst, sparks, a comic "WHAM" | camera jolt, chromatic punch, red vignette |
+
+Sound slots are on the prefab and empty.
 
 **Glow.** The bands in the table (green and yellow are the owner's memory of Twelve Sky 2 for the range below 60%: at launch Rares glowed green up to 57%, the Classic guide lists yellow for 1–59%). The colour is the same for every rarity; what differs is how it is shown (`temper.glowLooks`): Common, Uncommon and Rare a soft rim, Epic the same colour several times brighter with a pulse and sparkles. Shown on the weapon (`WeaponVisualMount.SetGlow`, shader `KryticalNova/TemperGlow`) and as the "+36" on item icons; outfits do not glow yet. Other players see it: the Temper % of each worn slot is replicated to everyone (`PlayerEquipment.GetTemper`).
 
@@ -253,10 +274,10 @@ So a bigger Alloy is a bigger step at worse odds, and the higher the piece the h
 
 "The same kind" is the same slot, and for weapons the same weapon class. "Untouched" is no Temper, no Fusion, no Tuning. An Epic is never fed an Epic. The tier is worked out from the stat table's bands (`GearProgressionRules.FusionMaterialLevel`), not hard-coded.
 
-- **Target:** Temper of 12% or more for a Rare, 132% or more for an Epic (owner's notes).
+- **Target:** Temper of 12% or more, Rare or Epic alike (owner, 6 Oct 2026; the earlier 132% for an Epic cannot be met under a 120% cap). `minTemperRare`, `minTemperEpic`.
 - **Cost:** one Fusion Catalyst, the material, and 100,000 Creds for FS1, +50,000 a stage (FS12 = 650,000).
 - **Success chance** *(proposed)*: 100% for FS1–FS3, then −7% a stage (FS12 = 37%), plus the Luck bonus (as for Tempering).
-- **A success takes 12% Temper off the target** (Twelve Sky 2: "successfully combining always takes away 12% enchant"). For an Epic that is 132% back to 120%, and Prime Alloy to climb again. Tunable: `temperCostOnSuccess`.
+- **A success takes 12% Temper off the target** (Twelve Sky 2: "successfully combining always takes away 12% enchant"). Tunable: `temperCostOnSuccess`.
 - **A fail destroys only the material** (and uses up the Catalyst and the Creds). The target is never harmed and loses nothing. This is the owner's recollection; the 12Sky help page says nothing is destroyed on a fail, which is one switch away (`failConsumesMaterial`).
 
 **Effect per stage** *(proposed; no source gives Twelve Sky 2's numbers as text)*, scaled from the item's own baked stat so the same table works at every level:
@@ -394,7 +415,7 @@ These cost more Creds than armor in TS2 and are where min-maxing lives; only the
 
 **As built (6 Oct 2026): steps 3 to 6 of section 12, and Reforge.** Sections 4, 5, 6 and 6b say what the rules are; this is where they live.
 
-- `GearItemState` (`Items/Runtime`): Temper 0–150, Fusion 0–12, Tune 0–25 in the low 17 bits of `ItemStack.data`. `ItemStack` did not grow new fields: the `data` word the pets already use carries it, and the bits above are left for sockets.
+- `GearItemState` (`Items/Runtime`): Temper 0–150 (what an item can store; the rule stops at `temper.hardCap`, 120), Fusion 0–12, Tune 0–25 in the low 17 bits of `ItemStack.data`. `ItemStack` did not grow new fields: the `data` word the pets already use carries it, and the bits above are left for sockets.
 - `GearProgressionSettings` (`Items/Data`, asset in `Items/Data/Assets/`): one asset with four sections (`temper`, `fusion`, `tuning`, `reforge`) instead of the four assets first planned, because the resolver, the forge and the window all need all of it. It points at `GearStatTable` for rarity multipliers and level tiers.
 - `GearProgressionRules` (`Items/Runtime`): the rules, pure and with every roll passed in. The server calls them with real rolls, the forge window calls them for odds and reasons, `GearProgressionTests` pins them.
 - `GearStatResolver.Resolve(stack, definition, source, results, progression)` adds what the state is worth. `PlayerEquipment` hands it the real stack on the server and the owner (the inventory passes the worn items' data on), and replicates one Temper byte per slot to everyone (`EquipmentTemper`) for the glow.
@@ -402,7 +423,7 @@ These cost more Creds than armor in TS2 and are where min-maxing lives; only the
 - Materials: rows in `UtilityItemGenerator` (ids in `GearMaterialIds`, assets in `Items/Data/Assets/GearMaterials/`).
 - `GearStatBaker.UpgradeTable` adds the level-110 Rare tier and the Luck rows to an existing stat table without touching what was tuned in it; the bake runs it.
 - UI: `GearWorkWindowController` with `UI/Inventory/ForgeWindow.uxml` and `Forge.uss`; tooltips and item icons show the state (`GearUIController`).
-- GM: `gm.temper <percent> [slot]`, `gm.fuse <stage> [slot]`, `gm.tune <stage> [slot]`, `gm.renown [amount]`, `gm.forgekit [count]`, `gm.forge` (open it anywhere; `gm.forge off`).
+- GM: `gm.temper <percent> [slot]`, `gm.fuse <stage> [slot]`, `gm.tune <stage> [slot]`, `gm.renown [amount]`, `gm.forgekit [count]`, `gm.forge` (open it anywhere; `gm.forge off`), `gm.kit temper [count]` (every Temper item that has a use). `gm.temper` stops at the cap.
 - Not built: Slotting and Cores, Epic Mk II, rank up / down, Alloy crafting (12Sky page 22), any drop or shop for the materials, any Renown income.
 
 **As built (4 Oct 2026): steps 1 and 2 of section 12.**
@@ -414,7 +435,7 @@ These cost more Creds than armor in TS2 and are where min-maxing lives; only the
 - `ItemDefinition` gained `itemLevel`, `lineId`, `weaponClass`, `baseStats` (primary: what Tempering scales), `secondaryStats`, `skillModifiers`. Not added yet: `maxSockets`, `setId`, `markTier`, `mkIIDefinition`, `fusionEligible`, `tuneEligible` (they arrive with their systems).
 - `ItemStack` and `EquipmentLoadout` are unchanged (item ID only on the wire). When Tempering lands, `ItemStack` grows its instance fields and the loadout carries stacks; `GearStatResolver.Resolve(stack, definition, …)` already takes the stack, so callers do not change.
 - `StatType` gained `AttackSpeedPercent`, `CoreResistancePercent`, `KnockbackResistancePercent`, `CriticalDefensePercent`, `KillExpRatePercent`, `KillExpAmountPercent`. Skill modifiers are `ItemDefinition.skillModifiers` (class + levels), not a stat type. Critical Defense is applied in `CombatCalculator`; skill modifiers and the Kill-XP stats are stored and shown only.
-- Menus: `Krytical Nova ▸ Items ▸ 1. Generate Gear Looks From Synty` (templates, seeds missing lines), `▸ 6. Bake Gear Ladder` (lines → items, entries, catalog), `▸ 2. Capture Item Icons` (per look), `▸ Rebuild Weapon Look Models`. GM: `gm.gear <slot> <level> <rarity> [class]`, `gm.loadout [class]`.
+- Menus: `Krytical Nova ▸ Items ▸ 1. Generate Gear Looks From Synty` (templates, seeds missing lines), `▸ 6. Bake Gear Ladder` (lines → items, entries, catalog), `▸ 2. Capture Item Icons` (per look), `▸ Rebuild Weapon Look Models`. GM: `gm.gear <slot> <level> <rarity> [class]`, `gm.loadout [class]`, and the kits: `gm.kit gear [level] [rarity]` (every piece the targeted character can wear at that tier, 112 Epic unless told, with the weapon of every class of its faction), `gm.kit temper [count]`, `gm.kit pets`, `gm.kit all`. A kit says how many pieces did not fit a full Pack.
 All paths follow `ProjectOrganization.md`: gear code in `Assets/_Game/Gameplay/Items/`, stat code in `Assets/_Game/Gameplay/Progression/`, NPC services in `Assets/_Game/Gameplay/NPC/`, UI in `Assets/_Game/UI/`. Namespaces `KryticalNova.Items`, `KryticalNova.Progression`, `KryticalNova.NPC`.
 
 **`StatType` additions** (`Gameplay/Progression/Data/StatType.cs`): `AttackSpeedPercent`, `CoreResistancePercent`, `KnockbackResistancePercent` (the "Bounce"), `CriticalDefensePercent`, `KillExpRatePercent`, `KillExpAmountPercent`, `SkillLineModifier` (carries a skill-line id + level in its modifier). Each needs a `StatDefinitionData` asset and a row in the character sheet.
@@ -454,7 +475,7 @@ Each step compiles and plays on its own; the GM console (`item.give`, `gm.attr`)
 - [x] **1. Stats and definitions.** *(done 4 Oct 2026: all four rarities baked, not only Common and Epic)* Add the seven `StatType`s and their definition assets; extend `ItemDefinition` and `ItemStack`; write `GearStatTable` and `GearStatBaker`; bake Common 1–30 and Epic 100–112 and pass the Epic acceptance test.
 - [x] **2. Resolver.** *(done 4 Oct 2026)* `GearStatResolver` and `PlayerEquipment` reading it; character sheet shows gear-derived values; equip a baked Epic weapon and see 884 AP at 0%.
 - [x] **3. Materials.** *(done 6 Oct 2026 for the forge: Alloys, Failsafes, Fusion Catalyst, chips, as rows of `UtilityItemGenerator`; Cores, cutters and the Mark Stone come with their systems)* `item.give` works for all.
-- [x] **4. Tempering.** *(done 6 Oct 2026)* Settings section `temper`, `PlayerGearWork.RequestTemper`, forge window tab, tooltip and glow. Test: 0 → 60% never breaks, 90–119% breaks sometimes, Failsafe never breaks, 120% cap without Prime Alloy.
+- [x] **4. Tempering.** *(done 6 Oct 2026)* Settings section `temper`, `PlayerGearWork.RequestTemper`, forge window tab, tooltip and glow. Test: 0 → 60% never breaks, 90–119% breaks sometimes, Failsafe never breaks, nothing works at the 120% cap.
 - [x] **5. Fusion.** *(done 6 Oct 2026)* Settings section `fusion`, `RequestFuse`, material validation (an untouched Rare, the Epic tier rule), FS label after the name.
 - [x] **6. Tuning.** *(done 6 Oct 2026, with Reforge)* Settings section `tuning`, `RequestTune`, `ProgressionState.renown` and its spend path.
 - [ ] **7. Slotting and Cores.** `SocketTuning`, four socket requests, Fixer panel, Core crafting 3 → 1.

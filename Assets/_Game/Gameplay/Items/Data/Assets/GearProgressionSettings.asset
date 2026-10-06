@@ -44,7 +44,7 @@ MonoBehaviour:
     maxLuckBonus: 25
     failLoss: 3
     softCap: 120
-    hardCap: 150
+    hardCap: 120
     advancedFailsafeFrom: 133
     breakBands:
     - from: 60
@@ -140,7 +140,7 @@ MonoBehaviour:
     maxStage: 12
     catalystItemId: 9120
     minTemperRare: 12
-    minTemperEpic: 132
+    minTemperEpic: 12
     temperCostOnSuccess: 12
     firstStageCreds: 100000
     credsPerStage: 50000

@@ -89,7 +89,7 @@ namespace KryticalNova.UI
                     float left = Mathf.InverseLerp(requestEnds, requestStarted, now);
                     requestFill.style.width = Length.Percent(100f * left);
                     var keyboard = Keyboard.current;
-                    if (keyboard != null && !IsTyping())
+                    if (keyboard != null && !IsTyping() && !KeyBindings.KeyboardTaken)
                     {
                         if (keyboard.yKey.wasPressedThisFrame) Answer(true);
                         else if (keyboard.nKey.wasPressedThisFrame) Answer(false);

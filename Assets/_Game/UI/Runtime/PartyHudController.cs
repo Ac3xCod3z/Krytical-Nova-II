@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using KryticalNova.Core;
+using KryticalNova.Player;
 using KryticalNova.Social;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -92,7 +93,7 @@ namespace KryticalNova.UI
                     inviteFill.style.width = Length.Percent(100f * Mathf.InverseLerp(inviteEnds, inviteStarted, now));
                     var keyboard = Keyboard.current;
                     // A duel request on screen owns Y / N; the invitation is then answered with its buttons.
-                    if (keyboard != null && !IsTyping() && (duelRequest == null || !IsVisible(duelRequest)))
+                    if (keyboard != null && !IsTyping() && !KeyBindings.KeyboardTaken && (duelRequest == null || !IsVisible(duelRequest)))
                     {
                         if (keyboard.yKey.wasPressedThisFrame) Answer(true);
                         else if (keyboard.nKey.wasPressedThisFrame) Answer(false);

@@ -296,6 +296,12 @@ Menu **Krytical Nova ▸ Setup** (the two wiring steps; both safe to run again a
 | Player Prefab                                | Wires every player component onto `Player.prefab` and hands each its settings asset (created with defaults when missing); builds the prefabs gameplay spawns (item drop, Kiosk stand) and registers them as network prefabs. **A new player system adds one row to `PlayerSystemsSetup`; a new spawned prefab adds its path to `GameplayPrefabsSetup.SpawnedPrefabs`** (a prefab that is not registered never appears on clients) |
 | Zone Scene (Open Scene)                      | Prepares the open scene as a zone: HUD and its controllers (`HudSetup.MoreControllers`), zone UI, game feel, the audio mixer and who plays into it (`AudioSetup`), matte terrain, post look, atmosphere, minimap renderer, lighting, hierarchy headers, the NetworkManager's prefab list; in the starter town also the stalls whose NPC has arrived and the trade zones |
 
+**Setup** also has **GM Console (Open Scene)** (`GmConsoleSetup`): builds `Tools/Debug/Prefabs/GmConsole.prefab` (the vendor Quantum Console prefab nested untouched, with `GmConsoleGate`) and puts it in the open zone scene.
+
+Menu **Krytical Nova ▸ Build ▸ Windows Test Build** (`TestBuildBuilder`): the Windows build handed to testers. It takes only the scenes of `BuildSceneOrder`, is not a development build, and writes to `Builds/Windows/KryticalNovaII` (ignored by git) with a size report, largest first, in `Builds/Windows/BuildReport.txt`. A first build compiles every shader variant and takes a long time; later ones reuse the cache.
+
+A vendor package whose runtime scripts cannot compile into a player build is kept out of builds with an Editor-only assembly definition in its own folder rather than by editing its files (owner, 6 Oct 2026): `_ThirdParty/GI/Scripts/GI.EditorOnly.asmdef`. The game must not use such a package at run time.
+
 Menu **Krytical Nova ▸ Items** also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration, forge materials: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`).
 
 Menu **Krytical Nova ▸ Characters** (run in order, or use *Bake Everything*):

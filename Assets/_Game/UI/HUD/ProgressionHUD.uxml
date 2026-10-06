@@ -328,11 +328,15 @@
         <ui:VisualElement name="hud-edit-banner" class="panel blocks-world" picking-mode="Position">
             <ui:VisualElement class="hud-edit-banner-text" picking-mode="Ignore">
                 <ui:Label text="HUD LAYOUT EDITOR" class="heading" />
-                <ui:Label text="Drag panels to move   ·   Drag the gold corner to resize   ·   Right-click a panel to reset it   ·   Hold Alt to place freely" class="help" />
+                <ui:Label text="Choose a panel to adjust, or all of them   ·   Drag to move   ·   Drag the gold corner to resize   ·   Hold Alt to place freely" class="help" />
             </ui:VisualElement>
+            <ui:Button name="hud-edit-pick" text="PANEL: CHOOSE" class="hud-edit-pick" tooltip="Choose which panel to adjust, or all of them" />
+            <ui:Button name="hud-edit-reset-one" text="RESET THIS PANEL" />
             <ui:Button name="hud-edit-reset" text="RESET ALL" class="kn-button-danger" />
             <ui:Button name="hud-edit-done" text="DONE" class="kn-button-primary" />
         </ui:VisualElement>
+        <!-- The panels the layout editor can adjust: ALL PANELS, then each by name (filled by HudSettingsController). -->
+        <ui:ScrollView name="hud-edit-list" class="panel blocks-world hud-edit-list" horizontal-scroller-visibility="Hidden" />
 
         <!-- Minimap (MinimapController) -->
         <ui:Instance template="Minimap" name="minimap-layer" class="minimap-layer" picking-mode="Ignore" />

@@ -48,6 +48,10 @@ namespace KryticalNova.UI
         private ControlsSettingsTab controlsTab;
         private string activePage = Pages[0];
         private Vector2Int authoredReferenceResolution;
+        private Button pickPanelButton, resetPanelButton;
+        private ScrollView panelList;
+        private const float PanelListGap = 6f;
+        private readonly List<(string Name, string Label)> panels = new List<(string, string)>();
         private InputActionAsset shownPlayerActions;
         private readonly HudLayoutEditor layout = new HudLayoutEditor();
         private readonly List<VisualElement> documentRoots = new List<VisualElement>();
@@ -77,6 +81,11 @@ namespace KryticalNova.UI
             editBanner = root.Q("hud-edit-banner");
             controlsHint = root.Q("controls-hint");
             editLayoutButton = root.Q<Button>("settings-edit-layout");
+            pickPanelButton = root.Q<Button>("hud-edit-pick");
+            resetPanelButton = root.Q<Button>("hud-edit-reset-one");
+            panelList = root.Q<ScrollView>("hud-edit-list");
+            // The banner grows when RESET THIS PANEL appears: the list follows its lower edge.
+            editBanner?.RegisterCallback<GeometryChangedEvent>(_ => PlacePanelList());
             if (settingsWindow == null)
             {
                 Debug.LogError("HudSettingsController needs a 'settings-window' element in its UXML.", this);
@@ -150,7 +159,8 @@ namespace KryticalNova.UI
 
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
-                if (layout.IsEditing) EndLayoutEdit();
+                if (layout.IsEditing && IsPanelListOpen) SetVisible(panelList, false);
+                else if (layout.IsEditing) EndLayoutEdit();
                 else if (IsSettingsOpen) CloseSettings();
                 return;
             }
@@ -270,8 +280,57 @@ namespace KryticalNova.UI
 
         private void BeginLayoutEdit()
         {
+            CloseSettings(); // the window would sit over the panels being placed; DONE on the banner ends the edit
             CollectMovables();
             layout.BeginEdit();
+            ShowPanelList(); // nothing is in edit state until the player says what to adjust
+        }
+
+        private bool IsPanelListOpen => panelList != null && panelList.resolvedStyle.display != DisplayStyle.None;
+
+        /// <summary>The choices of the layout editor: every panel at once, or one of them by name.</summary>
+        private void ShowPanelList()
+        {
+            if (panelList == null) return;
+            panelList.Clear();
+            layout.GetPanels(panels);
+            AddPanelChoice(HudLayoutEditor.AllPanels);
+            foreach (var panel in panels) AddPanelChoice(panel.Name);
+            SetVisible(panelList, true);
+            panelList.BringToFront();
+            PlacePanelList();
+        }
+
+        /// <summary>Puts the list just under the banner, whatever height the banner has now.</summary>
+        private void PlacePanelList()
+        {
+            if (panelList == null || editBanner == null || panelList.parent == null) return;
+            Rect banner = editBanner.worldBound;
+            if (banner.height < 1f) return; // not laid out yet: the style sheet's place stands until it is
+            panelList.style.top = panelList.parent.WorldToLocal(new Vector2(banner.xMin, banner.yMax)).y + PanelListGap;
+        }
+
+        private void AddPanelChoice(string name)
+        {
+            var choice = new Button(() =>
+            {
+                SetVisible(panelList, false);
+                layout.Select(name);
+            }) { text = layout.LabelOf(name) };
+            choice.EnableInClassList("chosen", layout.Selection == name);
+            panelList.Add(choice);
+        }
+
+        private void TogglePanelList()
+        {
+            if (IsPanelListOpen) SetVisible(panelList, false);
+            else ShowPanelList();
+        }
+
+        /// <summary>A panel that sizes itself (the chat window) changed: keep it on screen and store its place.</summary>
+        public void Replace(VisualElement element)
+        {
+            if (initialized) layout.Recommit(element);
         }
 
         private void EndLayoutEdit() => layout.EndEdit();
@@ -285,6 +344,10 @@ namespace KryticalNova.UI
         private void OnEditingChanged()
         {
             SetVisible(editBanner, layout.IsEditing);
+            if (!layout.IsEditing) SetVisible(panelList, false);
+            if (pickPanelButton != null) pickPanelButton.text = "PANEL: " + layout.LabelOf(layout.Selection);
+            // One panel chosen: it can be put back on its own. With all or none chosen, RESET ALL is the button.
+            SetVisible(resetPanelButton, layout.IsEditing && layout.Selection != null && layout.Selection != HudLayoutEditor.AllPanels);
             // The banner sits above everything else while editing.
             if (layout.IsEditing) editBanner?.BringToFront();
             SetHotbarSuppressed(layout.IsEditing);
@@ -345,6 +408,8 @@ namespace KryticalNova.UI
             Bind("settings-reset-layout", ResetLayout);
             Bind("hud-edit-done", EndLayoutEdit);
             Bind("hud-edit-reset", ResetLayout);
+            Bind("hud-edit-pick", TogglePanelList);
+            Bind("hud-edit-reset-one", () => layout.ResetSelected());
             BindToggle("setting-move-marker", HudPreferences.ShowMoveMarker, v => HudPreferences.ShowMoveMarker = v);
             BindToggle("setting-target-ring", HudPreferences.ShowTargetRing, v => HudPreferences.ShowTargetRing = v);
             BindToggle("setting-nameplates", HudPreferences.ShowNameplates, v => HudPreferences.ShowNameplates = v);

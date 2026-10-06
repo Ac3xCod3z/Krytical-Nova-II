@@ -112,7 +112,10 @@ namespace KryticalNova.Items
         [Min(0)] public int failLoss = 3;
         [Tooltip("At or above this only Prime Alloy works.")]
         [Min(1)] public int softCap = 120;
-        [Min(1)] public int hardCap = 150;
+        [Tooltip("The highest Temper there is. 120 for now: going beyond it (to 150, with Prime Alloy and an Advanced " +
+                 "Failsafe) is a later system, switched on by raising this above the soft cap. Until then Prime Alloy has " +
+                 "no use and the break rows above 120 are never reached.")]
+        [Min(1)] public int hardCap = 120;
         [Tooltip("At or above this an attempt needs an Advanced Failsafe.")]
         [Min(1)] public int advancedFailsafeFrom = 133;
 
@@ -171,8 +174,8 @@ namespace KryticalNova.Items
         [Header("What the target needs")]
         [Tooltip("Temper % a Rare must have to be fused.")]
         [Min(0)] public int minTemperRare = 12;
-        [Tooltip("Temper % an Epic must have to be fused.")]
-        [Min(0)] public int minTemperEpic = 132;
+        [Tooltip("Temper % an Epic must have to be fused. The same as a Rare while Temper stops at 120.")]
+        [Min(0)] public int minTemperEpic = 12;
         [Tooltip("Temper % a successful Fusion takes off the target.")]
         [Min(0)] public int temperCostOnSuccess = 12;
 
