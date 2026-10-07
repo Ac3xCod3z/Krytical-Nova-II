@@ -90,6 +90,66 @@ namespace KryticalNova.DevTools
                 : $"No starter weapon found for {WeaponClasses.DisplayName(cls)}. Re-bake the gear ladder.";
         }
 
+        [Command("gm.gearset", "Give the targeted player the whole gear set its character wears at a tier: gm.gearset [level] [rarity] [temper] [wear]. " +
+                               "Armor, Gloves, Boots, Ring, Amulet, the Cape when that tier has one, and the weapon of the class in use; 112 Epic " +
+                               "unless told, and the level snaps down to the nearest tier. temper sets the Temper % of every piece (0 to the cap, 120). " +
+                               "wear puts the set on and moves what was worn to the Pack, e.g. gm.gearset 112 epic 60 wear.")]
+        private static string GearSet(int level = KitLevel, string rarity = "epic", int temper = 0, string wear = "")
+        {
+            if (!TryGetInventory(out var inv, out var error)) return error;
+            if (inv.Gear == null || inv.Catalog == null) return NoPlayer;
+            if (!System.Enum.TryParse(rarity, true, out ItemRarity itemRarity))
+                return $"Unknown rarity '{rarity}'. Use common, uncommon, rare or epic.";
+            if (wear.Length > 0 && wear != "wear") return $"Unknown option '{wear}'. Add the word wear to put the set on.";
+
+            var wearer = inv.GetComponent<IGearWearer>();
+            FactionId faction = wearer != null ? wearer.Faction : FactionId.None;
+            BodyFit body = wearer != null ? wearer.Body : BodyFit.None;
+            string pack = wearer != null ? wearer.GearPack : null;
+            var source = inv.GetComponent<IWeaponClassSource>();
+            WeaponClassId cls = source != null ? source.ActiveClass : wearer != null ? wearer.Discipline : WeaponClassId.None;
+            var work = inv.GetComponent<PlayerGearWork>();
+            int cap = work != null && work.Settings != null ? work.Settings.temper.hardCap : GearItemState.MaxTemper;
+            temper = System.Math.Max(0, System.Math.Min(temper, cap));
+            ulong state = default(GearItemState).WithTemper(temper).Pack();
+
+            var pieces = new List<ItemStack>(8);
+            string setName = null;
+            int setLevel = level;
+            foreach (EquipSlot slot in EquipSlots.All)
+            {
+                if (slot == EquipSlot.Pet) continue;
+                if (!inv.Gear.TryFindItem(slot, itemRarity, level, faction, body, pack, slot == EquipSlot.Weapon ? cls : WeaponClassId.None, out var entry)) continue;
+                if (inv.Catalog.Get(entry.itemId) == null) continue;
+                pieces.Add(new ItemStack(entry.itemId, 1, state));
+                if (slot == EquipSlot.Armor)
+                {
+                    setLevel = entry.itemLevel;
+                    if (inv.Gear.TryGetLine(entry.lineId, out var line)) setName = line.set;
+                }
+            }
+            if (pieces.Count == 0) return $"No {itemRarity} gear fits this character. Re-bake the gear ladder.";
+
+            int worn = 0, packed = 0, lost = 0;
+            string notWorn = null;
+            if (wear.Length > 0)
+            {
+                // Said before the pieces move: afterwards the rule is asked of a character that already wears them.
+                foreach (ItemStack piece in pieces)
+                    if (notWorn == null && !inv.CanEquip(inv.Catalog.Get(piece.itemId), out string reason)) notWorn = reason;
+                worn = inv.ServerWear(pieces, out packed, out lost);
+            }
+            else
+                foreach (ItemStack piece in pieces)
+                    if (inv.ServerGive(piece) > 0) packed++; else lost++;
+
+            string name = string.IsNullOrEmpty(setName) ? $"{itemRarity} set" : $"{setName} set";
+            string tempered = temper > 0 ? $", Temper +{temper}%" : string.Empty;
+            string where = wear.Length > 0 ? $"{worn} worn, {packed} in the Pack" : $"{packed} in the Pack";
+            string why = packed > 0 && notWorn != null ? $" Not worn: {notWorn}" : string.Empty;
+            return $"Gave the {name} (level {setLevel} {itemRarity}{tempered}): {pieces.Count} pieces, {where}.{why}" + Unfitted(lost);
+        }
+
         private const int KitLevel = 112;
         private const int KitTemperCount = 20;
         private const string KitUsage = "Use gm.kit gear [level] [rarity], gm.kit temper [count], gm.kit pets or gm.kit all.";

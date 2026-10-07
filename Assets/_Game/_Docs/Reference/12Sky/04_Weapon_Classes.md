@@ -162,6 +162,9 @@ Viking + Elven.
   in the Pack.
 - `gm.loadout <class>` wipes the Pack and re-equips the level-1 starter kit of that class.
 - Both mirrored in `GmToolsWindow` as dropdowns (Slot, Rarity, Level snapped to band steps, Class) with a Give button.
+- `gm.gearset [level] [rarity] [temper] [wear]` (for example `gm.gearset 112 epic 60 wear`) gives one whole set with the weapon of
+  the class in use, tempered and optionally worn; `gm.temper.all <percent> [worn|pack|all]` sets the Temper of gear the player
+  already has. In `GmToolsWindow` they are the "Whole Gear Set" and "Temper" sections of the Items tab.
 
 ## 8. As built (4 Oct 2026)
 

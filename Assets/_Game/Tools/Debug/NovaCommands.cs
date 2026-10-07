@@ -55,6 +55,17 @@ namespace KryticalNova.DevTools
             return nova.ServerSetStanding(which, level) ? Describe(nova) + "." : "Could not change that Standing.";
         }
 
+        [Command("gm.standing.wear", "Choose the Nova Standing the targeted player wears: gm.standing.wear <vanguard|bulwark|ironblood|mindwell|none>. " +
+                                     "The player must hold a rank on that track.")]
+        private static string StandingWear(string track)
+        {
+            if (!TryGetNova(out var nova, out var error)) return error;
+            if (track == "none") return nova.ServerSetWorn(default, false) ? Describe(nova) + "." : "Could not change what that player wears.";
+            if (!System.Enum.TryParse(track, true, out StandingTrack which) || !System.Enum.IsDefined(typeof(StandingTrack), which))
+                return $"Unknown track '{track}'. Use vanguard, bulwark, ironblood, mindwell or none.";
+            return nova.ServerSetWorn(which, true) ? Describe(nova) + "." : $"That player holds no rank on {which} yet: give one with gm.standing first.";
+        }
+
         [Command("gm.herald", "Open the Herald's window here. It then works anywhere, with no Herald near, until the session ends; gm.herald off puts the rule back.")]
         private static string Herald(string which = "")
         {

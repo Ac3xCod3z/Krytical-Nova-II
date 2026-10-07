@@ -138,10 +138,10 @@ namespace KryticalNova.DevTools
                 "WEATHER      weather.set <name> [secs] · weather.clear · weather.lock <bool> · weather.list",
                 "SKY          sky.rainbow [0-1|off] · sky.moonphase <new|first|full|last|0-1|off> · sky.moon.next · sky.halo [sun|moon|both|off] · sky.shimmer <x|off> · sky.flare <x|off> · sky.lightning · sky.status · sky.reset",
                 "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear   (stims: Pill_Vitality, Pill_Chi, Pill_DualHarmony)",
-                "GEAR         gm.gear <slot> <level> <rarity> [class] · gm.loadout [class]   (e.g. gm.gear weapon 45 rare carbine)",
+                "GEAR         gm.gear <slot> <level> <rarity> [class] · gm.loadout [class]   (e.g. gm.gear weapon 45 rare carbine) · gm.gearset [level] [rarity] [temper] [wear]   (one whole set, e.g. gm.gearset 112 epic 60 wear)",
                 "KITS         gm.kit gear [level] [rarity] · gm.kit temper [n] · gm.kit pets · gm.kit all   (gear: every piece that fits, 112 Epic unless told)",
-                "FORGE        gm.forge [off]   (opens it here; the forge then works with no Armorer near) · gm.forgekit [n] · gm.temper <%> [slot] · gm.fuse <0-12> [slot] · gm.tune <0-25> [slot]",
-                "RENOWN       gm.renown [n]   (the only way Renown enters the game for now) · gm.ascension [0-96] · gm.standing <vanguard|bulwark|ironblood|mindwell|all> <0-12> · gm.herald [off]",
+                "FORGE        gm.forge [off]   (opens it here; the forge then works with no Armorer near) · gm.forgekit [n] · gm.temper <%> [slot] · gm.temper.all <%> [worn|pack|all] · gm.fuse <0-12> [slot] · gm.tune <0-25> [slot]",
+                "RENOWN       gm.renown [n] · gm.renown.set <n>   (the only way Renown enters the game for now) · gm.ascension [0-96] · gm.standing <vanguard|bulwark|ironblood|mindwell|all> <0-12> · gm.standing.wear <track|none> · gm.herald [off]",
             });
         }
         #endregion

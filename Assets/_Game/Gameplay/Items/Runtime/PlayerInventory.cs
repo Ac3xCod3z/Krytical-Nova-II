@@ -348,6 +348,45 @@ namespace KryticalNova.Items
             return true;
         }
 
+        /// <summary>
+        /// GM: puts pieces of gear on, each with the state it carries (its Temper). What was worn in a slot goes to
+        /// the Pack. A piece this character may not wear (its level, faction or class), or whose slot cannot be freed
+        /// because the Pack is full, goes to the Pack instead. Returns how many were put on.
+        /// </summary>
+        /// <param name="packed">How many went to the Pack instead.</param>
+        /// <param name="lost">How many fitted nowhere.</param>
+        public int ServerWear(IReadOnlyList<ItemStack> pieces, out int packed, out int lost)
+        {
+            int worn = 0, toPack = 0, dropped = 0;
+            if (pieces != null && CanMutate() && catalog != null)
+            {
+                Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
+                {
+                    r = null;
+                    foreach (ItemStack piece in pieces)
+                    {
+                        ItemDefinition def = piece.IsEmpty ? null : catalog.Get(piece.itemId);
+                        if (def == null) continue;
+                        if (def.IsEquippable && EquipBlockedReason(def) == null)
+                        {
+                            ItemStack old = l[def.equipSlot];
+                            if (old.IsEmpty || InventoryRules.TryAdd(b, catalog, old) > 0)
+                            {
+                                l[def.equipSlot] = new ItemStack(piece.itemId, 1, piece.data);
+                                worn++;
+                                continue;
+                            }
+                        }
+                        if (InventoryRules.TryAdd(b, catalog, piece) > 0) toPack++; else dropped++;
+                    }
+                    return true;
+                });
+            }
+            packed = toPack;
+            lost = dropped;
+            return worn;
+        }
+
         private void ServerQuickUnequip(EquipSlot slot) =>
             Mutate((ItemStack[] b, ref EquippedItems l, out string r) => InventoryRules.TryQuickUnequip(b, ref l, catalog, slot, out r));
 

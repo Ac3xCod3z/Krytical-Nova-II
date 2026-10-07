@@ -350,6 +350,16 @@ namespace KryticalNova.Progression
             return true;
         }
 
+        /// <summary>GM: wears a track's name (the character must hold a rank on it), or none. Server only.</summary>
+        public bool ServerSetWorn(StandingTrack track, bool wear)
+        {
+            if (!HasAuthority || settings == null) return false;
+            if (wear && state.Standing(track) <= 0) return false;
+            NovaState next = wear ? state.Wearing(track) : state.WearingNone();
+            if (!next.Equals(state)) Commit(next);
+            return true;
+        }
+
         // ------------------------------------------------------------------ save
 
         [Serializable]
