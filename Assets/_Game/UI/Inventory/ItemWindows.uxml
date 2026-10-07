@@ -1,5 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <ui:Template name="EconomyWindows" src="../Economy/EconomyWindows.uxml" />
+    <ui:Template name="ForgeWindow" src="ForgeWindow.uxml" />
     <Style src="Items.uss" />
     <Style src="../HUD/Pet/PetPanels.uss" />
     <!-- Instanced into ProgressionHUD.uxml as a full-screen, click-through layer; driven by GearUIController. -->
@@ -77,6 +78,9 @@
 
     <!-- Vault, Deep Vault (later Trade and Kiosk): here so the floating layers below draw over them too -->
     <ui:Instance template="EconomyWindows" name="economy-layer" class="item-layer" picking-mode="Ignore" />
+
+    <!-- The forge bench (GearWorkWindowController): here for the same reason, it takes pieces dragged from the Pack -->
+    <ui:Instance template="ForgeWindow" name="forge-layer" class="item-layer" picking-mode="Ignore" />
 
     <!-- Floating layers -->
     <ui:VisualElement name="item-tooltip" class="panel item-tooltip" picking-mode="Ignore">

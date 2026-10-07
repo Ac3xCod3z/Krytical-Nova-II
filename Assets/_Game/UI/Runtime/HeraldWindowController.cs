@@ -47,6 +47,7 @@ namespace KryticalNova.UI
         private TrackCard[] cards = new TrackCard[0];
         private Tab tab = Tab.Ascension;
         private PlayerNova nova;
+        private readonly ServicePanelPlacement placement = new ServicePanelPlacement();
         private bool initialized;
         private float nextRefresh;
 
@@ -141,6 +142,7 @@ namespace KryticalNova.UI
             SetOpen(true);
             window.parent?.BringToFront();
             nextRefresh = Time.unscaledTime + RefreshSeconds;
+            placement.Open(window, null);
             ShowTab(tab);
             GearUIController.Instance?.SuppressWorldInput();
         }
@@ -149,6 +151,7 @@ namespace KryticalNova.UI
         {
             if (!initialized || !IsOpen) return;
             SetOpen(false);
+            placement.Close();
             Bind(null);
             GearUIController.Instance?.SuppressWorldInput();
         }
@@ -165,6 +168,7 @@ namespace KryticalNova.UI
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame && !HudTyping.IsTyping(root)) { Close(); return; }
             if (nova == null) { Close(); return; }
+            placement.Tick();
             if (Time.unscaledTime < nextRefresh) return;
             nextRefresh = Time.unscaledTime + RefreshSeconds;
             if (!nova.InReach)

@@ -1,67 +1,119 @@
 /*
- * The forge window (GearWorkWindowController). Shared looks (panel, buttons, cards) come from
- * ../Common/KryticalTheme.uss; item icons and rarity colours from Items.uss.
+ * The forge bench (GearWorkWindowController). Shared looks (panel, buttons, cards) come from
+ * ../Common/KryticalTheme.uss; item icons, frames and rarity colours from Items.uss.
+ * Where it sits here is only a fallback: ServicePanelPlacement docks it beside the Pack when it opens.
  */
 
-#forge-window { left: 50%; top: 84px; width: 620px; translate: -50% 0; display: none; }
-.forge-purse { flex-grow: 1; margin-left: 14px; font-size: 12px; -unity-text-align: middle-left; }
+#forge-window { right: 420px; top: 84px; width: 336px; display: none; }
+.forge-header-space { flex-grow: 1; }
+.forge-purse { margin-top: 5px; font-size: 10px; -unity-text-align: middle-center; white-space: normal; }
 
 .forge-tabs { flex-direction: row; margin-top: 2px; }
 .forge-tab {
     flex-grow: 1;
     flex-basis: 0;
-    min-height: 28px;
-    margin: 4px 2px 0 2px;
-    padding: 4px 4px;
-    font-size: 11px;
+    min-height: 26px;
+    margin: 4px 1px 0 1px;
+    padding: 3px 2px;
+    font-size: 10px;
     -unity-background-image-tint-color: rgb(24, 34, 46);
     color: rgb(156, 172, 188);
 }
 .forge-tab.active { -unity-background-image-tint-color: rgb(30, 112, 98); color: rgb(255, 255, 255); }
 
-.forge-body { flex-direction: row; margin-top: 10px; }
-.forge-column { flex-basis: 0; }
-.forge-list-column { flex-grow: 5; margin-right: 12px; }
-.forge-detail { flex-grow: 6; }
-.forge-items { height: 340px; margin-top: 4px; }
+/* ------------------------------------------------------------------ the anvil */
 
-/* One piece of gear in the list. */
-.forge-item {
-    flex-direction: row;
-    align-items: center;
-    margin: 2px 0;
-    padding: 4px 6px;
-    min-height: 44px;
-    transition-property: -unity-background-image-tint-color;
-    transition-duration: 0.1s;
+.forge-anvil { height: 176px; margin-top: 8px; align-items: center; justify-content: center; }
+/* The gauge is drawn by the controller. Its colour here is what Fusion and Tuning fill it with. */
+.forge-gauge { position: absolute; left: 0; top: 0; right: 0; bottom: 0; color: rgb(114, 222, 196); }
+/* Two classes each: the Pack's own size for a cell (Items.uss) is read after this sheet and would win. */
+.item-cell.forge-piece { width: 72px; height: 72px; margin: 0; }
+.item-cell.forge-piece.empty { opacity: 0.55; }
+.forge-value {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 4px;
+    font-size: 22px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: rgb(255, 222, 130);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
+    transition-property: scale;
+    transition-duration: 0.18s;
 }
-.forge-item:hover { -unity-background-image-tint-color: rgba(40, 60, 78, 0.95); }
-.forge-item.selected { -unity-background-image-tint-color: rgba(28, 96, 86, 0.95); }
-.forge-item.material { -unity-background-image-tint-color: rgba(96, 78, 30, 0.95); }
-.forge-item-icon { width: 36px; height: 36px; flex-shrink: 0; margin-right: 8px; -unity-background-scale-mode: scale-to-fit; }
-.forge-item-text { flex-grow: 1; flex-shrink: 1; }
-.forge-item-title { font-size: 12px; white-space: normal; }
-.forge-item-sub { font-size: 10px; color: rgb(146, 162, 178); }
-.forge-item-tag { font-size: 11px; margin-left: 6px; -unity-font-style: bold; }
-.forge-empty { margin-top: 12px; white-space: normal; font-size: 12px; color: rgb(146, 162, 178); }
-
-.forge-item-name { font-size: 15px; white-space: normal; }
-.forge-item-state { font-size: 12px; margin-top: 2px; min-height: 16px; -unity-font-style: bold; }
-
-.forge-options { flex-direction: row; flex-wrap: wrap; }
-.forge-option {
-    min-height: 26px;
-    margin: 3px 4px 0 0;
-    padding: 2px 8px;
-    font-size: 11px;
-    -unity-background-image-tint-color: rgb(28, 40, 54);
+.forge-value.pop { scale: 1.35 1.35; transition-duration: 0s; }
+.forge-hint {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 0;
+    font-size: 10px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    color: rgb(146, 162, 178);
 }
-.forge-option.chosen { -unity-background-image-tint-color: rgb(30, 112, 98); color: rgb(255, 255, 255); }
+.forge-item-name { font-size: 14px; white-space: normal; -unity-text-align: middle-center; min-height: 18px; }
+.forge-item-state { font-size: 11px; -unity-text-align: middle-center; min-height: 14px; -unity-font-style: bold; color: rgb(146, 162, 178); }
 
-.forge-odds { margin-top: 10px; white-space: normal; font-size: 12px; color: rgb(208, 220, 230); }
-.forge-reason { margin-top: 6px; min-height: 16px; white-space: normal; font-size: 12px; color: rgb(236, 150, 110); }
-#forge-act { margin-top: 8px; min-height: 34px; }
-.forge-result { margin-top: 8px; min-height: 18px; white-space: normal; font-size: 13px; -unity-font-style: bold; }
+/* The flash of a result on the anvil. */
+.forge-anvil.hit-success .forge-piece > .item-frame { -unity-background-image-tint-color: rgb(114, 255, 206); }
+.forge-anvil.hit-fail .forge-piece > .item-frame { -unity-background-image-tint-color: rgb(255, 196, 96); }
+.forge-anvil.hit-broken .forge-piece > .item-frame { -unity-background-image-tint-color: rgb(255, 72, 64); }
+
+/* ------------------------------------------------------------------ materials */
+
+.forge-materials { margin-top: 6px; }
+.forge-material-row { margin-top: 4px; }
+.forge-material-label { font-size: 10px; letter-spacing: 1px; color: rgb(156, 172, 188); }
+.forge-picks { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.item-cell.forge-pick { margin: 1px 2px; }
+.forge-pick.chosen { -unity-background-image-tint-color: rgba(30, 112, 98, 0.95); }
+.forge-pick.chosen > .item-frame { -unity-background-image-tint-color: rgb(140, 255, 220); }
+.forge-pick.out > .item-icon { opacity: 0.25; }
+.forge-pick-tag {
+    position: absolute;
+    left: 3px;
+    top: 1px;
+    font-size: 9px;
+    -unity-font-style: bold;
+    color: rgb(255, 222, 130);
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
+}
+.forge-pick-none { position: absolute; left: 0; right: 0; top: 0; bottom: 0; font-size: 9px; -unity-text-align: middle-center; color: rgb(156, 172, 188); }
+.forge-material-note { font-size: 11px; white-space: normal; color: rgb(208, 220, 230); flex-grow: 1; flex-shrink: 1; }
+.forge-material-note.short { color: rgb(236, 150, 110); }
+.forge-empty { margin-top: 4px; white-space: normal; font-size: 11px; color: rgb(146, 162, 178); }
+
+/* ------------------------------------------------------------------ readout */
+
+.forge-readout { margin-top: 8px; padding: 6px 10px 8px 10px; }
+.forge-readout-top { flex-direction: row; align-items: center; }
+.forge-step { flex-grow: 1; font-size: 13px; color: rgb(226, 234, 242); }
+.forge-chance { font-size: 18px; -unity-font-style: bold; color: rgb(114, 222, 196); }
+.forge-chance.risky { color: rgb(255, 214, 110); }
+.forge-chance.poor { color: rgb(240, 110, 96); }
+.forge-chips { flex-direction: row; flex-wrap: wrap; margin-top: 4px; }
+.forge-chip {
+    font-size: 10px;
+    margin: 2px 4px 0 0;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background-color: rgba(40, 56, 72, 0.9);
+    color: rgb(208, 220, 230);
+}
+.forge-chip.danger { background-color: rgba(110, 30, 34, 0.95); color: rgb(255, 196, 190); }
+.forge-chip.safe { background-color: rgba(22, 84, 72, 0.95); color: rgb(190, 250, 232); }
+.forge-gain { margin-top: 4px; min-height: 13px; font-size: 11px; white-space: normal; color: rgb(170, 230, 214); }
+/* With nothing on the anvil the readout says what this bench does. */
+.forge-readout.idle .forge-gain { margin-top: 0; color: rgb(156, 172, 188); }
+.forge-readout.idle .forge-readout-top, .forge-readout.idle .forge-chips { display: none; }
+
+.forge-reason { margin-top: 6px; min-height: 14px; white-space: normal; font-size: 11px; color: rgb(236, 150, 110); }
+#forge-act { margin-top: 4px; min-height: 36px; }
+#forge-act.striking { opacity: 0.6; }
+#forge-reset { margin-top: 4px; min-height: 24px; font-size: 10px; }
+.forge-result { margin-top: 6px; min-height: 16px; white-space: normal; font-size: 12px; -unity-font-style: bold; -unity-text-align: middle-center; }
 .forge-result.success { color: rgb(114, 222, 196); }
 .forge-result.fail { color: rgb(236, 206, 140); }
 .forge-result.broken { color: rgb(240, 96, 88); }

@@ -16,7 +16,6 @@
     <ui:Template name="PetPanels" src="Pet/PetPanels.uxml" />
     <ui:Template name="SocialPanels" src="../Social/SocialPanels.uxml" />
     <ui:Template name="SettingsWindow" src="../Settings/SettingsWindow.uxml" />
-    <ui:Template name="ForgeWindow" src="../Inventory/ForgeWindow.uxml" />
     <ui:Template name="HeraldWindow" src="Herald/HeraldWindow.uxml" />
     <ui:Template name="EmoteWheel" src="../Social/EmoteWheel.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
@@ -298,8 +297,7 @@
         <!-- Settings window (HudSettingsController): its own template, UI/Settings/SettingsWindow.uxml -->
         <ui:Instance template="SettingsWindow" name="settings-layer" class="hud-overlay-layer" picking-mode="Ignore" />
 
-        <!-- The forge (GearWorkWindowController): UI/Inventory/ForgeWindow.uxml -->
-        <ui:Instance template="ForgeWindow" name="forge-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+        <!-- The forge bench (GearWorkWindowController) is instanced in UI/Inventory/ItemWindows.uxml, beside the Pack -->
 
         <!-- The Herald (HeraldWindowController): UI/HUD/Herald/HeraldWindow.uxml -->
         <ui:Instance template="HeraldWindow" name="herald-layer" class="hud-overlay-layer" picking-mode="Ignore" />

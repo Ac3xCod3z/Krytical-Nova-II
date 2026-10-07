@@ -3,7 +3,8 @@
  * come from ../../Common/KryticalTheme.uss.
  */
 
-#herald-window { left: 50%; top: 84px; width: 640px; translate: -50% 0; display: none; }
+/* Where it sits here is only a fallback: ServicePanelPlacement docks it to the right when it opens. */
+#herald-window { right: 220px; top: 84px; width: 540px; display: none; }
 .herald-purse { flex-grow: 1; margin-left: 14px; font-size: 12px; -unity-text-align: middle-left; }
 
 .herald-tabs { flex-direction: row; margin-top: 2px; }

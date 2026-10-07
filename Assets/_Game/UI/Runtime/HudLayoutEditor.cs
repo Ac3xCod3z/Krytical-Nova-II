@@ -140,8 +140,15 @@ namespace KryticalNova.UI
             }
         }
 
+        /// <summary>The layout of the HUD on screen. Windows that place themselves ask it whether the player already has.</summary>
+        public static HudLayoutEditor Current { get; private set; }
+
+        /// <summary>True when the player has put this panel somewhere in the layout editor: it is theirs to place.</summary>
+        public bool HasSavedPosition(string name) => !string.IsNullOrEmpty(name) && saved.ContainsKey(name);
+
         public void LoadAndApply()
         {
+            Current = this;
             saved.Clear();
             string json = HudPreferences.LayoutJson;
             if (!string.IsNullOrEmpty(json))
