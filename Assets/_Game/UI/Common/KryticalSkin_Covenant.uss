@@ -780,6 +780,33 @@
     font-size: 16.8px;
 }
 
+/* ---- GameMenu.uss ---- */
+.kn-faction-covenant .game-menu-veil {
+    background-color: rgba(12, 9, 5, 0.62);
+}
+.kn-faction-covenant .game-menu-veil.leaving-now {
+    background-color: rgb(12, 9, 5);
+}
+.kn-faction-covenant .game-menu-title {
+    font-size: 24.64px;
+}
+.kn-faction-covenant .game-menu-who {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .game-menu-button {
+    font-size: 15.68px;
+}
+.kn-faction-covenant .game-menu-note {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .game-menu-leaving-who {
+    font-size: 16.8px;
+}
+.kn-faction-covenant .game-menu-count {
+    font-size: 94.08px;
+    color: rgb(130, 255, 172);
+}
+
 /* ---- Minimap.uss ---- */
 .kn-faction-covenant .minimap-backdrop {
     background-color: rgba(23, 17, 11, 0.93);

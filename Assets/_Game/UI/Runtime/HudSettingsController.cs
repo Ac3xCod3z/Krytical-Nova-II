@@ -169,6 +169,12 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ settings window
 
+        /// <summary>Opens the settings window (the game menu's SETTINGS).</summary>
+        public void OpenSettings()
+        {
+            if (initialized && !IsSettingsOpen) ToggleSettings();
+        }
+
         private void ToggleSettings()
         {
             bool show = !IsSettingsOpen;

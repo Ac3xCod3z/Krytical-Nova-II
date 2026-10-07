@@ -36,6 +36,16 @@ namespace KryticalNova.UI.Menus
             HighlightSlot = -1;
         }
 
+        /// <summary>Closes the game. In the Editor it leaves Play mode.</summary>
+        public static void Quit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
         /// <summary>Go to another front-end scene through the halftone wipe.</summary>
         public static void Go(string scene)
         {

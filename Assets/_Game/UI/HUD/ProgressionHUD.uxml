@@ -4,6 +4,7 @@
     <Style src="../Settings/Settings.uss" />
     <Style src="../Inventory/Forge.uss" />
     <Style src="Herald/Herald.uss" />
+    <Style src="GameMenu/GameMenu.uss" />
     <!-- Faction skins: generated overrides that only apply under a .kn-faction-* class (see FactionSkin). -->
     <Style src="../Common/KryticalSkin_Null.uss" />
     <Style src="../Common/KryticalSkin_Covenant.uss" />
@@ -18,6 +19,7 @@
     <ui:Template name="SettingsWindow" src="../Settings/SettingsWindow.uxml" />
     <ui:Template name="HeraldWindow" src="Herald/HeraldWindow.uxml" />
     <ui:Template name="EmoteWheel" src="../Social/EmoteWheel.uxml" />
+    <ui:Template name="GameMenu" src="GameMenu/GameMenu.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
         <!-- Namecards over players' heads (PlayerNamecardController). First, so every panel draws over them. -->
         <ui:VisualElement name="player-namecards" class="player-namecards" picking-mode="Ignore" />
@@ -45,6 +47,7 @@
             <ui:Button name="open-character" text="CHARACTER  [C]" />
             <ui:Button name="open-skills" text="SKILLS  [K]" />
             <ui:Button name="open-settings" text="SETTINGS  [O]" />
+            <ui:Button name="open-menu" text="MENU  [Esc]" />
         </ui:VisualElement>
 
         <!-- Bottom HUD (before the windows so open windows draw on top): each piece moves independently -->
@@ -377,6 +380,9 @@
         <!-- Requests from other players, the player menu and the amount dialog (RequestPromptController,
              PlayerMenuController, AmountDialogController). After the windows, so they draw over them. -->
         <ui:Instance template="SocialPanels" name="social-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+
+        <!-- The game menu (GameMenuController): UI/HUD/GameMenu/GameMenu.uxml. Over everything else. -->
+        <ui:Instance template="GameMenu" name="game-menu-layer" class="hud-overlay-layer" picking-mode="Ignore" />
 
         <ui:Label name="drag-ghost" text="RUN" picking-mode="Ignore" />
     </ui:VisualElement>

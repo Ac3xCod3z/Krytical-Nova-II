@@ -780,6 +780,33 @@
     font-size: 19.2px;
 }
 
+/* ---- GameMenu.uss ---- */
+.kn-faction-null .game-menu-veil {
+    background-color: rgba(10, 5, 12, 0.62);
+}
+.kn-faction-null .game-menu-veil.leaving-now {
+    background-color: rgb(10, 5, 12);
+}
+.kn-faction-null .game-menu-title {
+    font-size: 28.16px;
+}
+.kn-faction-null .game-menu-who {
+    font-size: 15.36px;
+}
+.kn-faction-null .game-menu-button {
+    font-size: 17.92px;
+}
+.kn-faction-null .game-menu-note {
+    font-size: 15.36px;
+}
+.kn-faction-null .game-menu-leaving-who {
+    font-size: 19.2px;
+}
+.kn-faction-null .game-menu-count {
+    font-size: 107.52px;
+    color: rgb(176, 130, 255);
+}
+
 /* ---- Minimap.uss ---- */
 .kn-faction-null .minimap-backdrop {
     background-color: rgba(20, 11, 23, 0.93);
