@@ -33,6 +33,8 @@ namespace KryticalNova.EditorTools
         public const string NovaSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/NovaSettings.asset";
         public const string NovaMaterialPath = "Assets/_Game/Gameplay/Progression/Shaders/M_Nova.mat";
         private const string NovaShader = "KryticalNova/Nova";
+        public const string EmoteWheelSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/EmoteWheelSettings.asset";
+        private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
         // the hand comes down to 0.48 m, the top of a drop.
         private const string Transitions = "Assets/Synty/AnimationBaseLocomotion/Animations/Sidekick/Masculine/Transitions/";
@@ -59,6 +61,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Items.Visuals.EquipmentVisualBinder", ("temperGlow", TemperGlowMaterialPath)),
             // The Renown ladders at the Herald: Ascension (the Nova) and Nova Standings.
             new Row("KryticalNova.Progression.PlayerNova", ("settings", NovaSettingsPath)),
+            // Emotes picked on the emote wheel.
+            new Row("KryticalNova.Social.PlayerEmotes", ("settings", EmoteWheelSettingsPath)),
         };
 
         public static void Run()
@@ -93,6 +97,7 @@ namespace KryticalNova.EditorTools
                 PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
                 LinkGearProgression();
                 LinkNovaMaterial();
+                LinkEmoteLibrary();
                 Debug.Log($"[Setup] Player systems wired ({Rows.Length} component(s), {added} added).");
             }
             finally
@@ -108,6 +113,16 @@ namespace KryticalNova.EditorTools
             Shader shader = Shader.Find(TemperGlowShader);
             if (shader == null) { Debug.LogWarning($"[Setup] Shader {TemperGlowShader} not found: tempered weapons will not glow."); return; }
             AssetDatabase.CreateAsset(new Material(shader) { name = "M_TemperGlow" }, TemperGlowMaterialPath);
+        }
+
+        /// <summary>The emote wheel performs the motions of the library the character creator shows.</summary>
+        private static void LinkEmoteLibrary()
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<KryticalNova.Social.EmoteWheelSettings>(EmoteWheelSettingsPath);
+            if (settings == null || settings.library != null) return;
+            settings.library = AssetDatabase.LoadAssetAtPath<KryticalNova.CharacterCreation.CharacterExpressionLibrary>(ExpressionLibraryPath);
+            if (settings.library == null) Debug.LogWarning($"[Setup] No expression library at {ExpressionLibraryPath}: the emote wheel will be empty.");
+            EditorUtility.SetDirty(settings);
         }
 
         /// <summary>The material every character's Nova is copied from. Its numbers are set per tier at runtime.</summary>

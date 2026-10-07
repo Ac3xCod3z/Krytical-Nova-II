@@ -18,6 +18,7 @@
     <ui:Template name="SettingsWindow" src="../Settings/SettingsWindow.uxml" />
     <ui:Template name="ForgeWindow" src="../Inventory/ForgeWindow.uxml" />
     <ui:Template name="HeraldWindow" src="Herald/HeraldWindow.uxml" />
+    <ui:Template name="EmoteWheel" src="../Social/EmoteWheel.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
         <!-- Namecards over players' heads (PlayerNamecardController). First, so every panel draws over them. -->
         <ui:VisualElement name="player-namecards" class="player-namecards" picking-mode="Ignore" />
@@ -302,6 +303,9 @@
 
         <!-- The Herald (HeraldWindowController): UI/HUD/Herald/HeraldWindow.uxml -->
         <ui:Instance template="HeraldWindow" name="herald-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+
+        <!-- The emote wheel (EmoteWheelController): UI/Social/EmoteWheel.uxml -->
+        <ui:Instance template="EmoteWheel" name="emote-layer" class="hud-overlay-layer" picking-mode="Ignore" />
 
         <!-- Network panel (NetworkSessionPanel) -->
         <ui:VisualElement name="network-panel" class="panel blocks-world hud-movable">

@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29054eb938b080447ae07d816d0c49ae, type: 3}
+  m_Name: EmoteWheelSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.EmoteWheelSettings
+  library: {fileID: 11400000, guid: 208796a40243f7d4ebda58783c89a3e9, type: 2}
+  pageSize: 8
+  cooldownSeconds: 1
+  categories:
+  - name: Greet
+    groups:
+    - Greet
+    - Wave
+    - Head Nod
+    - Head Shake
+  - name: Cheer
+    groups:
+    - Happy
+    - Celebrate
+  - name: Moves
+    groups:
+    - Dance
+    - Sporty
+  - name: Taunt
+    groups:
+    - Taunt
+    - Aggressive
+    - Angry
+    - Reproach
+  - name: Feels
+    groups:
+    - Sad
+    - Affection
+    - Plead
+    - Pray
+    - Bored
+    - Yawn
+  - name: Gestures
+    groups:
+    - Point Hand
+    - Look
+    - Thoughtful
+    - Inspect
+    - Stretch
+    - Check Watch
+    - Play With Hair
+    - Weight Shift
+  - name: Props
+    groups:
+    - Use Phone
+    - Eat
+    - Drink
+  - name: Stances
+    groups:
+    - Lean
+    - Arms Folded
+    - Hands On Hips
+    - Posture
+    - Sway
+    - Pick Nose

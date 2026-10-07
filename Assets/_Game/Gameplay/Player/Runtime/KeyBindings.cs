@@ -27,6 +27,7 @@ namespace KryticalNova.Player
         public const string PickUp = "PickUp";
         public const string NetworkPanel = "NetworkPanel";
         public const string GmConsole = "GmConsole";
+        public const string EmoteWheel = "EmoteWheel";
 
         /// <summary>A window key: its action in the asset's Windows map, and what the Controls list calls it.</summary>
         public readonly struct WindowKey
@@ -48,6 +49,7 @@ namespace KryticalNova.Player
             new WindowKey(PickUp, "Pick up nearest"),
             new WindowKey(NetworkPanel, "Network panel"),
             new WindowKey(GmConsole, "GM console (host)"),
+            new WindowKey(EmoteWheel, "Emote wheel (hold)"),
         };
 
         /// <summary>The player-asset actions the Controls list offers, by map, with the name it shows for each.</summary>
@@ -149,6 +151,14 @@ namespace KryticalNova.Player
             if (Listening || KeyboardTaken) return false;
             InputAction found = Window(action);
             return found != null && found.WasPressedThisFrame();
+        }
+
+        /// <summary>The window key is being held down. For keys that work while held (the emote wheel).</summary>
+        public static bool Held(string action)
+        {
+            if (Listening || KeyboardTaken) return false;
+            InputAction found = Window(action);
+            return found != null && found.IsPressed();
         }
 
         /// <summary>The key a window action is on, as text for a button or a hint ("I", "F1").</summary>
