@@ -31,8 +31,7 @@ namespace KryticalNova.EditorTools
         public const string TemperGlowMaterialPath = "Assets/_Game/Gameplay/Items/Shaders/M_TemperGlow.mat";
         private const string TemperGlowShader = "KryticalNova/TemperGlow";
         public const string NovaSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/NovaSettings.asset";
-        public const string NovaMaterialPath = "Assets/_Game/Gameplay/Progression/Shaders/M_Nova.mat";
-        private const string NovaShader = "KryticalNova/Nova";
+        private const string NovaShaderFolder = "Assets/_Game/Gameplay/Progression/Shaders/";
         public const string EmoteWheelSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/EmoteWheelSettings.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
@@ -96,7 +95,7 @@ namespace KryticalNova.EditorTools
                 }
                 PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
                 LinkGearProgression();
-                LinkNovaMaterial();
+                LinkNovaMaterials();
                 LinkEmoteLibrary();
                 Debug.Log($"[Setup] Player systems wired ({Rows.Length} component(s), {added} added).");
             }
@@ -125,22 +124,48 @@ namespace KryticalNova.EditorTools
             EditorUtility.SetDirty(settings);
         }
 
-        /// <summary>The material every character's Nova is copied from. Its numbers are set per tier at runtime.</summary>
-        private static void LinkNovaMaterial()
+        /// <summary>
+        /// The four materials every character's Nova is drawn with: the star, the rings, the glow round it and the
+        /// sparks in orbit. The settings hold them, so they ship in a build. Their numbers are set per tier at runtime.
+        /// </summary>
+        public static void LinkNovaMaterials()
         {
             var settings = AssetDatabase.LoadAssetAtPath<KryticalNova.Progression.NovaSettings>(NovaSettingsPath);
             if (settings == null) return;
-            var material = AssetDatabase.LoadAssetAtPath<Material>(NovaMaterialPath);
+            KryticalNova.Progression.NovaLookSettings look = settings.look;
+            Material core = NovaMaterial("M_NovaCore", "KryticalNova/NovaCore");
+            Material ring = NovaMaterial("M_NovaRing", "KryticalNova/NovaRing");
+            Material corona = NovaMaterial("M_Nova", "KryticalNova/Nova");
+            Material motes = NovaMaterial("M_NovaMotes", "KryticalNova/NovaMotes");
+            if (look.coreMaterial == core && look.ringMaterial == ring && look.coronaMaterial == corona && look.motesMaterial == motes) return;
+            look.coreMaterial = core;
+            look.ringMaterial = ring;
+            look.coronaMaterial = corona;
+            look.motesMaterial = motes;
+            EditorUtility.SetDirty(settings);
+        }
+
+        private static Material NovaMaterial(string name, string shaderName)
+        {
+            string path = NovaShaderFolder + name + ".mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            Shader shader = Shader.Find(shaderName);
+            if (shader == null)
+            {
+                Debug.LogWarning($"[Setup] Shader {shaderName} not found: part of every Nova will be missing.");
+                return material;
+            }
             if (material == null)
             {
-                Shader shader = Shader.Find(NovaShader);
-                if (shader == null) { Debug.LogWarning($"[Setup] Shader {NovaShader} not found: no character will show a Nova."); return; }
-                material = new Material(shader) { name = "M_Nova" };
-                AssetDatabase.CreateAsset(material, NovaMaterialPath);
+                material = new Material(shader) { name = name };
+                AssetDatabase.CreateAsset(material, path);
             }
-            if (settings.look.material == material) return;
-            settings.look.material = material;
-            EditorUtility.SetDirty(settings);
+            else if (material.shader != shader)
+            {
+                material.shader = shader;
+                EditorUtility.SetDirty(material);
+            }
+            return material;
         }
 
         /// <summary>The gear progression settings read rarity multipliers and level tiers from the stat table.</summary>

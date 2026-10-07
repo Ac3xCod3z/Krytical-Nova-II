@@ -230,18 +230,48 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void EveryTierHasALook_FromAThinRingToAFullRayedNova()
+        public void EveryTierHasALook_FromAStarWithOneRingToAFullRayedNova()
         {
-            NovaTierLook[] tiers = settings.look.tiers;
+            NovaLookSettings look = settings.look;
+            NovaTierLook[] tiers = look.tiers;
             Assert.AreEqual(NovaRules.TierCount(Ascension), tiers.Length);
-            Assert.AreEqual(0, tiers[0].innerRings + tiers[0].spokes + tiers[0].glyphs + tiers[0].rays, "tier 1 is a ring and nothing else");
-            Assert.AreEqual(0f, tiers[0].fill);
+            Assert.AreEqual(1, RingsAt(look, 1), "tier 1 is a star with one ring");
+            Assert.AreEqual(0, tiers[0].rays + tiers[0].motes, "and nothing else");
+            Assert.AreEqual(0f, tiers[0].prism);
             NovaTierLook last = tiers[tiers.Length - 1];
+            Assert.AreEqual(look.rings.Length, RingsAt(look, tiers.Length), "the last tier turns every ring there is");
             Assert.Greater(last.rays, 0);
-            Assert.Greater(last.glyphs, 0);
-            Assert.Greater(last.spokes, 0);
+            Assert.Greater(last.motes, 0);
+            Assert.Greater(last.prism, 0f);
             for (int i = 1; i < tiers.Length; i++)
-                Assert.GreaterOrEqual(tiers[i].ringDiameter, tiers[i - 1].ringDiameter, $"tier {i + 1} is no smaller than the one before");
+            {
+                Assert.GreaterOrEqual(tiers[i].radius, tiers[i - 1].radius, $"tier {i + 1} is no smaller than the one before");
+                Assert.GreaterOrEqual(RingsAt(look, i + 1), RingsAt(look, i), $"tier {i + 1} loses no ring");
+                Assert.GreaterOrEqual(look.Reach(i + 1), look.Reach(i), $"tier {i + 1} reaches no less far");
+            }
+        }
+
+        [Test]
+        public void EveryRingFitsItsNova()
+        {
+            NovaLookSettings look = settings.look;
+            foreach (NovaRing ring in look.rings)
+            {
+                Assert.That(ring.fromTier, Is.InRange(1, look.tiers.Length));
+                Assert.Greater(ring.radius, 0f);
+                Assert.Greater(ring.width, 0f);
+                Assert.Less(ring.width, ring.radius, "a band is narrower than the ring it lies on");
+                NovaTierLook first = look.tiers[ring.fromTier - 1];
+                Assert.Greater(ring.radius - ring.width * 0.5f, first.core, "it turns clear of the star");
+            }
+        }
+
+        private static int RingsAt(NovaLookSettings look, int tier)
+        {
+            int count = 0;
+            foreach (NovaRing ring in look.rings)
+                if (ring.fromTier <= tier) count++;
+            return count;
         }
     }
 }

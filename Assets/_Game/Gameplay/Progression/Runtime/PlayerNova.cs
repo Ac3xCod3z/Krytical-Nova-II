@@ -306,6 +306,7 @@ namespace KryticalNova.Progression
         {
             // A Standing bought reads as a success; an Ascension attempt as what it was.
             int outcome = result.kind == NovaWorkKind.Standing ? (int)AscensionOutcome.Rise : (int)result.outcome;
+            if (result.kind == NovaWorkKind.Ascend && halo != null) halo.React(result.outcome, result.newTier);
             ClientPresentationRegistry.Feel?.NovaWorked(transform, outcome, result.newTier, isLocalPlayer);
         }
 
