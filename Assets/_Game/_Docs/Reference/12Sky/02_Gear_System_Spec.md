@@ -186,6 +186,17 @@ Boots also carry +30–40 move / utility speed in the notes; keep that as `MoveS
 
 **As built, 6 Oct 2026.** Done at the **Armorer's forge** (`NpcOffer.GearWork`, window `GearWorkWindowController`, service `PlayerGearWork`) on gear that is in the Pack. Every number below is in `Items/Data/Assets/GearProgressionSettings.asset` (section `temper`); the rules are `GearProgressionRules`. Where Twelve Sky 2's own behaviour is known it is followed (owner, 5 Oct 2026); the rest is marked *(proposed)*.
 
+**The forge bench (rebuilt 7 Oct 2026).** Tempering, Fusion, Tuning and Reforge share one narrow bench that opens docked at the right edge with the Pack open beside it (`UI/Inventory/ForgeWindow.uxml`, `Forge.uss`). The original game's Upgrade window (12Sky pages 23 and 24) is the same idea, a small panel beside the open bag with the character in view; the layout here is our own. How a player uses it:
+
+1. Talk to the Armorer and choose the forge. The bench and the Pack open on the right, and the camera slides so the character stands in the middle of the part of the screen left free (`ServicePanelPlacement`, `PointAndClickPlayer.SetScreenFraming`). A panel the player has placed by hand in the layout editor stays where it was put. The Herald's window is kept off the character the same way.
+2. Pick the work on the tabs: TEMPER, FUSION, TUNING, REFORGE.
+3. Put the piece on the anvil: right-click it in the Pack (its tooltip says "place on the forge") or drag it onto the socket. A ring round the socket shows its Temper against the cap, with the stretch where a fail can break the piece marked red. A click on the socket takes the piece off again.
+4. Load what the work needs from the picks under the anvil, which show what the Pack holds, with counts: an Alloy and, if wanted, a Failsafe (Tempering), the Rare to fuse in (Fusion), chips (Tuning). The best Alloy that can be used is loaded already.
+5. Read the numbers: the change ("+45 % to +54 %"), the chance, and chips for what a fail costs and whether it can break.
+6. Press the one button, which carries the cost. The bench strikes for 0.45 s and then shows the answer: the ring sweeps up on a success, drops on a fail, empties on a break. The piece and the Alloy stay loaded, so the next attempt is one press.
+
+The bench is an `IPackTarget`, as the Vault, Trade and Kiosk windows are, and a piece on it is locked in the Pack. Closing the bench closes the Pack again if the bench opened it, and puts the camera back. The rules and the server side (`PlayerGearWork`) are what they were; where a panel docks and how far the camera slides is pinned by `ServicePlacementRulesTests`.
+
 **What Tempering raises.** One thing per slot, as in 12Sky page 23. This replaces the earlier draft ("Defense on everything but the weapon") and is what makes a luck Amulet:
 
 | Slot | 1% of Temper gives |
@@ -395,16 +406,33 @@ Cores drop from PvP, bosses and boxes; three of a grade craft one of the next gr
 | Cap | +96 | TS2 shows tiers to 89+ |
 | Nova (halo) | one tier per 8 levels: +1 to +8 is Nova I … +89 to +96 is Nova XII | a new halo per 8 levels |
 
-**The Nova.** A disc of light floating just above the head (`NovaHalo`), upright and turned to the camera so it always reads as a disc; `NovaSettings.look` holds the gap above the head, the tilt (90 lays it flat) and each tier's look. It is drawn whole by one shader (`KryticalNova/Nova`, material `Gameplay/Progression/Shaders/M_Nova.mat`), so there are no per-tier prefabs. Each tier adds one thing to the one before:
+**The Nova** (rebuilt 7 Oct 2026; it was one flat disc before). A small star floating above the head with rings of light turning round it (`NovaHalo`): the star is a sphere of slow-moving plasma, and each ring is a real ring on its own tilted axis. Some turn against the others, and each axis swings slowly so a ring is never seen from one side only. Round it are a glow, rays for the upper tiers and sparks in orbit. It follows the head's place but never its turning, and the namecard rises to clear it. `NovaSettings.look` holds the gap above the head, the list of rings (radius, width, tilt, spin, pattern and the first tier that shows it) and each tier's look (two colours, size, star, glow, rays, sparks). A higher tier is the lower one with more turning in it, so there are no per-tier prefabs:
 
 | Tier | Looks like | Colour |
 | --- | --- | --- |
-| I | a thin ring | silver |
-| II – IV | one, two, then three inner rings, and a little light inside | silver-blue, cyan, teal |
-| V – VI | four, then eight spokes | green, yellow-green |
-| VII – VIII | a turning band of glyphs; then twelve spokes | gold, ember |
-| IX – XI | rays past the ring: 8, 12, then 16 | ember-red, crimson, violet |
-| XII | a full Nova of 24 rays in every colour | prismatic |
+| I | a star with one flat ring | silver |
+| II – III | a second, then a third ring, each leaning its own way: a gyroscope | silver-blue, cyan |
+| IV | a stronger glow and the first sparks in orbit | teal |
+| V – VI | dashed orbits, one wide and one inside | green, yellow-green |
+| VII | an upright hoop with a row of glyphs round it | gold |
+| VIII | a small fast ring close to the star | ember |
+| IX – XI | rays from the star (4, 6, then 8) and lights running round the rings | ember-red, crimson, violet |
+| XII | a last wide orbit, ten rays, every colour | prismatic |
+
+Four shaders draw it, all in `Gameplay/Progression/Shaders/` with one material each: `KryticalNova/NovaCore` (the star: solid, so rings pass behind it and in front of it), `NovaRing` (every ring; a far ring is kept a couple of pixels wide, so the rings still read at play distance), `Nova` (the glow and the rays, over a dark patch with a few faint stars so the added light still reads against a noon sky) and `NovaMotes` (the sparks; their motion is a function of time, so every machine shows the same thing). The materials are linked from `NovaSettings` by **Setup ▸ Player Prefab** (`PlayerSystemsSetup.LinkNovaMaterials`), so they ship in a build.
+
+**The moment** (7 Oct 2026; built by `GameFeelBuilder`, menu **Krytical Nova ▸ GameFeel ▸ Rebuild Nova Feel**). Everyone nearby sees what happens at the Nova, in the tier's colour (one white set of effects, tinted as they spawn). Only the player whose moment it is gets the screen effects, the answer in the window and the banner (`PlayerNova.ShownRpc` to everyone, `FinishedRpc` to the owner).
+
+| Outcome | The Nova itself | In the world | For the player |
+| --- | --- | --- | --- |
+| A level gained | flares and spins up | a ring of light off the Nova, sparks | camera nudge, shimmer, a light wash of the tier's colour; the level jumps and settles on the Herald's card |
+| A new Nova tier | flashes, and the new set of rings unfolds one after another | the star bursts, light rises through the character, a ring runs out over the ground | view punch, lens bulge, a strong wash, a short hold of the pose; banner "NOVA VI" with its pips counting up |
+| No change | dims for a moment | a dull spit of sparks | a small camera drop |
+| A level lost | sputters and all but stops | red shards | camera jolt, chromatic punch, red wash |
+| A slip the Nova held | a hard, bright hold | a cyan flash | a light cyan wash |
+| A Standing rank | (none) | a seal at the feet, rising light, sparks | camera nudge, shimmer, gold wash; banner "VANGUARD THANE" with the rank's pips |
+
+Pressing ASCEND charges for 0.45 s before the attempt goes, so the answer lands as a beat. The banner keeps clear of the Herald's window, and a plain level with the window open is told by the window alone. The GM tools play all of it: raising Ascension or a Standing sends the same result an attempt would, so every tier can be looked at. A reaction that reaches a machine before the Nova's new tier does waits for it. Sound slots are on the prefab and empty.
 
 **Nova Standings** (TS2 Classic CP stat titles L1–L12):
 

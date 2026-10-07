@@ -144,17 +144,27 @@ Hold **B** (rebindable): a ring of eight categories; a click turns it into that 
 
 **Neutral ground** is a `TradeZone` with `crossFaction` ticked. The dedicated non-combat zone will be one. Until it exists the whole starter town is marked neutral (scene object "Neutral Ground - Starter Town (for testing)") so cross-faction play can be tested; combat there is unchanged. Untick or delete that object when the real zone is built.
 
+## Leaving: Log Out and Exit Game (row 46)
+
+**Esc** opens the game menu when nothing else has a use for the key: an open window, a dialogue, a context menu, a target and a journey on the map all take the Esc first, as before. The MENU button in the top bar opens it too. It offers Resume, Settings, **Log Out** (back to character select, with the character just played highlighted) and **Exit Game** (closes the application).
+
+- Both count down (`GameMenuController.leaveSeconds`, 5 s) and can be cancelled until the count ends. A host is told how many other players leaving disconnects.
+- When the count ends: everything is saved where this machine decides the game (`ServerSave.FlushAll`: a host, or a game with no session); the session is closed and waited for; a host saves every player as they leave the world (`PlayerSaveAgent.OnNetworkDespawn`), so a client's character is written by the host. Then the game closes, or the session objects are destroyed and character select loads. The NetworkManager and what rides on it outlive scene changes and hold on to that world's player; they are destroyed so the next world brings its own, which is what lets the world be entered again in the same run.
+- A player whose session ends under them (the host left, the connection dropped) is shown **Session Ended**: Character Select, Exit Game, or Stay (they stand where they were, offline, and can join or host again from the network panel). Leaving through the menu or the network panel's Disconnect is the player's own choice and shows nothing.
+- When the host leaves, the session ends for everyone: nobody takes it over.
+- The title screen shows "Esc  Exit Game" and asks before closing (Enter exits, Esc stays). Character select already has Back to the title.
+
 ## Keys and commands
 
 | Key | Window | | Key | Window |
 | --- | --- | --- | --- | --- |
 | **F** | Contacts | | **T** | Kiosk |
 | **G** | Crew | | **~** | Pick up the nearest item |
-| **B** (held) | Emote wheel | | | |
+| **B** (held) | Emote wheel | | **Esc** | Game menu (when nothing else is open) |
 
 ## Not built
 
-The Exchange board; selling Kiosk Permits (Nova Store); any Creds faucet (Hostile drops, Contracts, vendors); Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
+The Exchange board; selling Kiosk Permits (Nova Store); any Creds faucet (Hostile drops, Contracts, vendors); Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; handing a session on when its host leaves; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
 
 ## Verified
 

@@ -88,7 +88,7 @@ _Game/
 │   │                      Editor/ (PetAssetBuilder)  Tests/Editor/
 │   ├── Player/            Runtime/  Prefabs/ (Player.prefab = the networked gameplay player)
 │   ├── Progression/       Runtime/ (also PlayerNova, NovaRules, NovaHalo: Ascension and Nova Standings)  Data/ (SO classes,
-│   │                      NovaSettings)  Data/Assets/ (SO instances)  Shaders/ (Nova + its material)  Editor/  Tests/Editor/
+│   │                      NovaSettings)  Data/Assets/ (SO instances)  Shaders/ (the Nova's four shaders and their materials)  Editor/  Tests/Editor/
 │   ├── Social/            Runtime/ (chat channels and rules, PlayerChat, the combat log, Squads, Contacts, Crews, NamecardRules,
 │   │                      PlayerEmotes, EmoteCatalog)  Data/ + Data/Assets/ (CrewSettings, EmoteWheelSettings)  Tests/Editor/
 │   └── (future) Skills/ Quests/ Interaction/ StatusEffects/ Inventory/
@@ -117,8 +117,8 @@ _Game/
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
 ├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets)  Editor/ (Menus/ = front-end
-│                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/ Duel/ Party/ Pet/ Herald/)  Inventory/
-│                          (also the forge window)  Economy/ (Vault, Trade and Kiosk windows)  Social/ (prompt, player menu,
+│                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/ Duel/ Party/ Pet/ Herald/ GameMenu/)  Inventory/
+│                          (also the forge bench)  Economy/ (Vault, Trade and Kiosk windows)  Social/ (prompt, player menu,
 │                          Contacts, Crew, the emote wheel)  Settings/ (the Settings window; its code is Runtime/Settings/)  NPC/  Shaders/
 │                          Menus/ (Materials/, KeyGlyphs.asset: assets the front-end scenes use)
 │                          (future: Skills/ Character/ World/)
@@ -184,6 +184,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Economy.Tests.Editor` | `Gameplay/Economy/Tests/Editor/`             | EditMode tests (wallet, storage, trade and Kiosk rules)                                |
 | `KryticalNova.Persistence.Tests.Editor` | `Gameplay/Persistence/Tests/Editor/`     | EditMode tests (save stores, account documents)                                        |
 | `KryticalNova.Pets.Tests.Editor`  | `Gameplay/Pets/Tests/Editor/`                  | EditMode tests (pet growth, stages, hunger)                                            |
+| `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides)            |
 
 **Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
 **New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`
