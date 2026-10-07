@@ -370,6 +370,21 @@
 .kn-faction-null .renown-value-plain {
     font-size: 15.36px;
 }
+.kn-faction-null .namecard {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Gradient_Outwards_01.png#SPR_HUD_DarkFantasy_Gradient_Outwards_01");
+    -unity-background-image-tint-color: rgba(15, 8, 18, 0.66);
+}
+.kn-faction-null .namecard-name {
+    font-size: 20.48px;
+}
+.kn-faction-null .namecard-standing {
+    font-size: 15.36px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .namecard-crew {
+    font-size: 15.36px;
+    color: rgb(225, 210, 230);
+}
 
 /* ---- Settings.uss ---- */
 .kn-faction-null .settings-tab {

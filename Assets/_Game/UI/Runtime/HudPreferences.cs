@@ -16,6 +16,7 @@ namespace KryticalNova.UI
         private static readonly string TargetRingKey = Prefix + "targetRing";
         private static readonly string ControlsHintKey = Prefix + "controlsHint";
         private static readonly string NameplatesKey = Prefix + "nameplates";
+        private static readonly string OwnNamecardKey = Prefix + "ownNamecard";
         private static readonly string MinimapRotatesKey = Prefix + "minimapRotates";
         private static readonly string ScreenShakeKey = Prefix + "screenShake";
         private static readonly string LayoutKey = Prefix + "layout.v1";
@@ -52,10 +53,18 @@ namespace KryticalNova.UI
             set => SetBool(ControlsHintKey, value);
         }
 
+        /// <summary>Names over heads: NPC nameplates and player namecards.</summary>
         public static bool ShowNameplates
         {
             get => GetBool(NameplatesKey, true);
             set => SetBool(NameplatesKey, value);
+        }
+
+        /// <summary>The namecard over the player's own head. Other players see it whatever this says.</summary>
+        public static bool ShowOwnNamecard
+        {
+            get => GetBool(OwnNamecardKey, true);
+            set => SetBool(OwnNamecardKey, value);
         }
 
         /// <summary>True: the minimap turns with the camera (forward is up). False: fixed north-up.</summary>

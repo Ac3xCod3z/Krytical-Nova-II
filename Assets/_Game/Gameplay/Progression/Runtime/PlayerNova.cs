@@ -64,6 +64,7 @@ namespace KryticalNova.Progression
         private IFactionMember member;
         private PlayerSaveAgent saveAgent;
         private NovaHalo halo;
+        private Transform head;
         private NovaState state;
 
         // One stable source object so both ladders' bonuses can be replaced in one step.
@@ -96,8 +97,12 @@ namespace KryticalNova.Progression
         public int Renown => progression != null ? progression.Renown : 0;
         /// <summary>True while a Herald is in reach (or the GM switch is on): the window closes when it stops being so.</summary>
         public bool InReach => GmAnywhere || NpcInteractable.IsOffered(NpcOffer.Herald, transform.position, ReachPadding);
-        /// <summary>The crown of the head, and how far above it the Nova reaches: where a namecard goes.</summary>
+        /// <summary>The Nova being worn, or null while there is none.</summary>
         public NovaHalo Halo => halo;
+        /// <summary>The crown of this character's head in the world.</summary>
+        public Vector3 Crown => NovaHalo.CrownOf(transform, ref head);
+        /// <summary>How far above the crown the Nova reaches (metres): what a namecard has to clear. 0 with no Nova.</summary>
+        public float NovaHeight => halo != null ? halo.TopAboveHead : 0f;
 
         private bool HasAuthority => !IsSpawned || IsServer;
 

@@ -370,6 +370,21 @@
 .kn-faction-covenant .renown-value-plain {
     font-size: 13.44px;
 }
+.kn-faction-covenant .namecard {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_Gradient_Outwards_Smooth_01.png#SPR_HUD_FantasyWarrior_Gradient_Outwards_Smooth_01");
+    -unity-background-image-tint-color: rgba(18, 13, 8, 0.66);
+}
+.kn-faction-covenant .namecard-name {
+    font-size: 17.92px;
+}
+.kn-faction-covenant .namecard-standing {
+    font-size: 13.44px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .namecard-crew {
+    font-size: 13.44px;
+    color: rgb(230, 220, 210);
+}
 
 /* ---- Settings.uss ---- */
 .kn-faction-covenant .settings-tab {

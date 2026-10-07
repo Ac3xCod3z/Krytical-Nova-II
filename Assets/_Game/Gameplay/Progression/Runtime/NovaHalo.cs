@@ -12,7 +12,7 @@ namespace KryticalNova.Progression
     {
         private const string HeadBone = "head";
         private const float HeadTop = 0.2f;        // from the head joint to the crown, at scale 1
-        private const float FallbackHeight = 1.75f; // a body with no head joint
+        private const float FallbackHeight = 0.72f; // above the root (itself a metre up), for a body with no head joint
         private const float GlowMargin = 0.3f;      // room round the Nova for its light to fall away, in ring radii
 
         private static readonly int InnerId = Shader.PropertyToID("_Inner");
@@ -55,15 +55,18 @@ namespace KryticalNova.Progression
             }
         }
 
-        /// <summary>The crown of the character's head in the world: where a Nova and a namecard are measured from.</summary>
-        public Vector3 Crown
+        /// <summary>The crown of the character's head in the world: where the Nova is measured from.</summary>
+        public Vector3 Crown => owner != null ? CrownOf(owner, ref head) : transform.position;
+
+        /// <summary>
+        /// The crown of a character's head in the world. <paramref name="head"/> is the caller's own cache of the
+        /// head joint: it is looked up once and handed back.
+        /// </summary>
+        public static Vector3 CrownOf(Transform owner, ref Transform head)
         {
-            get
-            {
-                float scale = owner != null ? owner.lossyScale.y : 1f;
-                if (head != null) return head.position + Vector3.up * (HeadTop * scale);
-                return owner != null ? owner.position + Vector3.up * (FallbackHeight * scale) : transform.position;
-            }
+            if (head == null) head = FindDeep(owner, HeadBone);
+            float scale = owner.lossyScale.y;
+            return head != null ? head.position + Vector3.up * (HeadTop * scale) : owner.position + Vector3.up * (FallbackHeight * scale);
         }
 
         public static NovaHalo Create(Transform owner)
@@ -132,7 +135,6 @@ namespace KryticalNova.Progression
         private void Place()
         {
             if (owner == null || look == null) return;
-            if (head == null) head = FindDeep(owner, HeadBone);
             float radius = tierLook.ringDiameter * 0.5f;
             float upright = Mathf.Cos(look.tilt * Mathf.Deg2Rad);
             Vector3 forward = owner.forward;

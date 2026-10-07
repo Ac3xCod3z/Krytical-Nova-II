@@ -19,6 +19,8 @@
     <ui:Template name="ForgeWindow" src="../Inventory/ForgeWindow.uxml" />
     <ui:Template name="HeraldWindow" src="Herald/HeraldWindow.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
+        <!-- Namecards over players' heads (PlayerNamecardController). First, so every panel draws over them. -->
+        <ui:VisualElement name="player-namecards" class="player-namecards" picking-mode="Ignore" />
         <!-- Player status frame -->
         <ui:VisualElement name="summary" class="panel blocks-world hud-movable">
             <ui:VisualElement class="row summary-top">

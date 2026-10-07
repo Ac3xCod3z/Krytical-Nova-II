@@ -43,6 +43,7 @@ namespace KryticalNova.EditorTools
             "KryticalNova.UI.CrewWindowController, KryticalNova.UI",
             "KryticalNova.UI.GearWorkWindowController, KryticalNova.UI",
             "KryticalNova.UI.HeraldWindowController, KryticalNova.UI",
+            "KryticalNova.UI.PlayerNamecardController, KryticalNova.UI",
         };
 
         public static void SetUpOpenScene()
