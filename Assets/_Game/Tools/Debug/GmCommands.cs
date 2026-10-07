@@ -124,7 +124,7 @@ namespace KryticalNova.DevTools
                 "SKILLS       gm.skillpoints <n> · gm.skills.max · gm.skills · gm.dropskills <true|false> · gm.unlockskill <id> · gm.lockskill <id>",
                 "BUFFS        gm.buffs · gm.buff.remove <id|name> · gm.buff.clear   (take down active skills)",
                 "COMBAT       gm.dummy.hit [times] · gm.dummy.reset · gm.dummy.hp <n> · gm.dummy.maxhp <n> (0 = base) · gm.dummy.inf [on|off]",
-                "PVP          gm.pvp [on|off]   (factions fight each other, for everyone) · gm.stance <faction|friendly|hostile>   (pin the targeted player)",
+                "PVP          gm.pvp [on|off]   (factions fight each other, for everyone) · gm.duel <clientIdA> <clientIdB>   (a Callout between two players, no request) · gm.duel.end",
                 "GOD MODE     gm.god [on|off] · gm.infchi · gm.nocd · gm.oneshot · gm.speed <mult> · gm.reset",
                 "GAME SPEED   gm.slowmo [x]   (0.25 = quarter speed, 1 = normal; no value toggles quarter speed)",
                 "CREDS        gm.creds [n] · gm.creds.set <n> · gm.creds.report   (the only way Creds enter the game for now)",
