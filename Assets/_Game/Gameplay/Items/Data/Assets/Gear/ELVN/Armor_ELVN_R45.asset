@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 11552
   displayName: Bladesinger Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: 06cc1acf459ada345b6b70386764bc25, type: 3}
+  icon: {fileID: 21300000, guid: 80016bbb71e2df74991891350eaf591c, type: 3}
   rarity: 2
   equipSlot: 2
   maxStack: 1
@@ -47,6 +47,9 @@ MonoBehaviour:
   appearancePartIds: 5a000700080009000a005b000e000f005e005f006000t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 22
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 2b4a5a606a707778797a80888a9098a0a1a2a8c0cbd0e0e1e2ebf0fby
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

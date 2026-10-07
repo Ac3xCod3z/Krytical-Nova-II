@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 11539
   displayName: Wildrunner Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: dd1c3fa9c840c0f48a1fd63c4dfdeec7, type: 3}
+  icon: {fileID: 21300000, guid: 0295bdab35f79624c9cd6c9e7d4c7faf, type: 3}
   rarity: 1
   equipSlot: 2
   maxStack: 1
@@ -50,6 +50,9 @@ MonoBehaviour:
   appearancePartIds: 240025002600270028002b002c002d0033003400350036003700380039003a003b003c00t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 21
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 4b5a6a717278808182888a8b90919298a0a1a2a8b0c0d0d1d2e0e5e6eaebf0f1f2f5f6fafbfey
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

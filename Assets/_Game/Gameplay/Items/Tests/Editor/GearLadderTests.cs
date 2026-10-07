@@ -185,6 +185,51 @@ namespace KryticalNova.Tests
             }
         }
 
+        // ---------------------------------------------------------------- colour themes
+
+        [Test]
+        public void EverySetAboveCommonWearsItsOwnTheme()
+        {
+            var themes = AssetDatabase.LoadAssetAtPath<GearThemeLibrary>(Root + "GearThemes.asset");
+            Assert.IsNotNull(themes, "GearThemes.asset (generate the gear looks)");
+            var outfit = new[] { EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape };
+            var owners = new Dictionary<string, string>();
+            foreach (var group in dictionary.Lines.Where(l => l.IsValid && outfit.Contains(l.slot)).GroupBy(l => $"{l.tag} band {l.band}"))
+            {
+                var names = group.Select(l => l.theme ?? string.Empty).Distinct().ToList();
+                Assert.AreEqual(1, names.Count, $"{group.Key} wears more than one theme: {string.Join(", ", names)}");
+                string theme = names[0];
+                if (group.First().band == 0)
+                {
+                    Assert.IsEmpty(theme, $"{group.Key}: the basic outfit keeps its wearer's colours");
+                    continue;
+                }
+                ushort id = themes.IdOf(theme);
+                Assert.AreNotEqual(0, id, $"{group.Key}: the theme '{theme}' is not in GearThemes.asset");
+                Assert.IsTrue(themes.TryGet(id, out _), $"{group.Key}: the theme '{theme}' has no baked colours");
+                Assert.IsFalse(owners.TryGetValue(theme, out string other), $"{group.Key} and {other} share the theme {theme}");
+                owners[theme] = group.Key;
+                foreach (var line in group)
+                    foreach (var entry in dictionary.Entries.Where(e => e.lineId == line.lineId))
+                    {
+                        var item = catalog.Get(entry.itemId);
+                        Assert.AreEqual(id, item.colorTheme, $"{item.name}: bake the gear ladder");
+                        Assert.AreEqual(themes, item.colorThemes, item.name);
+                        Assert.IsNotEmpty(item.colorCells, $"{item.name} paints no colour cell");
+                    }
+            }
+        }
+
+        [Test]
+        public void AThemeNeverRecoloursSkinOrBone()
+        {
+            // Sidekick's colour grid: Skin 01-03 at (0, 5..3), Bone 01-02 at (9, 2..1). A cell's index is v * 16 + u.
+            var kept = new HashSet<byte> { 5 * 16, 4 * 16, 3 * 16, 2 * 16 + 9, 1 * 16 + 9 };
+            foreach (var item in catalog.Items.Where(d => d != null && d.IsLadderGear && d.colorCells != null))
+                foreach (byte cell in item.colorCells)
+                    Assert.IsFalse(kept.Contains(cell), $"{item.name} would recolour cell {cell % 16},{cell / 16}");
+        }
+
         [Test]
         public void ItemIdsComeFromTheLineAndNeverCollide()
         {

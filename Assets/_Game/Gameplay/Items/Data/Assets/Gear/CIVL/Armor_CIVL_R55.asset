@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10337
   displayName: Analyst Outfit
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: f49ce6b153fa2de4aaccfe27e120e30c, type: 3}
+  icon: {fileID: 21300000, guid: d14f3552b56bb184e9c2268c0f7e36fb, type: 3}
   rarity: 2
   equipSlot: 2
   maxStack: 1
@@ -47,6 +47,9 @@ MonoBehaviour:
   appearancePartIds: 1f01d700d800d900da002001210122012601270128012901t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 6
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 59696a8890919298a0a1a2b7e0e1e2f0f1fey
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

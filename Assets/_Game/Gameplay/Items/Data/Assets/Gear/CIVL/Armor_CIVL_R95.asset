@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10353
   displayName: Director Outfit
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: db2af74bf7aaa9f4490f68596f29aad1, type: 3}
+  icon: {fileID: 21300000, guid: c304814ae3cd9764ab80fa0f3358ca44, type: 3}
   rarity: 2
   equipSlot: 2
   maxStack: 1
@@ -47,6 +47,9 @@ MonoBehaviour:
   appearancePartIds: 310109010a010b010c013201330134013701t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 7
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 282a5859696a8890919298a0a8aae1f0f1f2fey
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

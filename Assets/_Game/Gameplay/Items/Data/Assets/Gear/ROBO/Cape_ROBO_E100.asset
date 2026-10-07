@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10896
   displayName: Prime Back Unit
   description: Worn across the back.
-  icon: {fileID: 21300000, guid: 3ce37f7488ceccf49bbda16ae9e2f014, type: 3}
+  icon: {fileID: 21300000, guid: b03422957f9e8934bb3d462347e5c679, type: 3}
   rarity: 3
   equipSlot: 7
   maxStack: 1
@@ -41,6 +41,9 @@ MonoBehaviour:
   appearancePartIds: 9f01t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 12
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 18286978889798a7a8y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

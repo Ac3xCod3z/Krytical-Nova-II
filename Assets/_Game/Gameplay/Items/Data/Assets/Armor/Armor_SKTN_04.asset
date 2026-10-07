@@ -35,6 +35,9 @@ MonoBehaviour:
   appearancePartIds: ae00af00b000b100b200b300b400b500b800b900ba00bb00bc00bd00b600t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 0
+  colorThemes: {fileID: 0}
+  colorCells: 2a6a80888a9098a0a1a2a8f1f2y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

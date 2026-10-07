@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 11570
   displayName: Highguard Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: 0664808b669c4c94287c7b82284daf1e, type: 3}
+  icon: {fileID: 21300000, guid: cda0160a35dd8b7409e2fa2734aaeffa, type: 3}
   rarity: 2
   equipSlot: 2
   maxStack: 1
@@ -47,6 +47,9 @@ MonoBehaviour:
   appearancePartIds: 6200250026002700280063002c002d006600t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 23
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 4a585a6070717278808182888a8b90919298a0a1a2a8d1d2f0f1f2fby
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

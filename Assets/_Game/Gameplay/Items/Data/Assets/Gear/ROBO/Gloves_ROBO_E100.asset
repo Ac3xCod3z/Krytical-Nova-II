@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10752
   displayName: Prime Servos
   description: Worn on the hands.
-  icon: {fileID: 21300000, guid: d797eded4d1bfda4eb8e270b6b884702, type: 3}
+  icon: {fileID: 21300000, guid: 17614a646a84e1f4681bca22cf6a73e9, type: 3}
   rarity: 3
   equipSlot: 3
   maxStack: 1
@@ -46,6 +46,9 @@ MonoBehaviour:
   appearancePartIds: 8d018e01t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 12
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 2a788898a8e3f3y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

@@ -50,6 +50,10 @@ namespace KryticalNova.Items
             public ItemDefinition look;
             [Tooltip("The set this piece belongs to (Sunlord, Commander...): every piece of a set carries it in its name. Empty for weapons.")]
             public string set;
+            [Tooltip("Outfit pieces: the colour theme in GearThemes this line wears. Empty = the wearer's own colours (the basic outfit).")]
+            public string theme;
+            [Tooltip("Icon of this line's tiers. Empty = the look's own icon. Captured in the line's theme colours.")]
+            public Sprite icon;
             [Tooltip("Name shown on every tier of this line.")]
             public string displayName;
             [TextArea] public string description;

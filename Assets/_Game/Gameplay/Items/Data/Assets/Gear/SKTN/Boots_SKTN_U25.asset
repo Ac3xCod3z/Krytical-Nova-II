@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 11089
   displayName: Cryptwarden Greaves
   description: Worn on the feet.
-  icon: {fileID: 21300000, guid: 9ef0b5ec336fb1c44844bd003c135a3a, type: 3}
+  icon: {fileID: 21300000, guid: c07b722b84352ea459fcf495ed6c725f, type: 3}
   rarity: 1
   equipSlot: 4
   maxStack: 1
@@ -44,6 +44,9 @@ MonoBehaviour:
   appearancePartIds: 8d008e00t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 13
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 88a3a4y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

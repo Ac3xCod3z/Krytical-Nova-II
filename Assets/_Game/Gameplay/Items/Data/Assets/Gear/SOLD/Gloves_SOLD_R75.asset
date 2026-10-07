@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10115
   displayName: Striker Gauntlets
   description: Worn on the hands.
-  icon: {fileID: 21300000, guid: 8c623e37d0258fa479339205b8bcb8c2, type: 3}
+  icon: {fileID: 21300000, guid: 5403f03fc53253a40b21e96472467b2e, type: 3}
   rarity: 2
   equipSlot: 3
   maxStack: 1
@@ -46,6 +46,9 @@ MonoBehaviour:
   appearancePartIds: 67026802t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 2
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 2898d3d4e3e4y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

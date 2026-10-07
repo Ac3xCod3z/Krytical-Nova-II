@@ -99,6 +99,12 @@ namespace KryticalNova.Items
         public KryticalNova.Items.Visuals.SidekickPartCatalog partCatalog;
         [Tooltip("Direct part references. Used only when no part IDs are set (hand-made items).")]
         public List<SidekickPartRef> appearanceParts = new List<SidekickPartRef>();
+        [Tooltip("Outfit pieces: the colour theme of the set this piece belongs to. 0 = it takes its wearer's own colours.")]
+        public ushort colorTheme;
+        [Tooltip("The library the theme ID above belongs to.")]
+        public GearThemeLibrary colorThemes;
+        [Tooltip("Cells of the 16x16 colour grid this piece's meshes paint (index = v * 16 + u), skin and bone left out. Baked.")]
+        public byte[] colorCells = Array.Empty<byte>();
         [Tooltip("Weapon: model parented under the weapon mount (local pose identity).")]
         public GameObject weaponPrefab;
         public Vector3 weaponLocalPosition;

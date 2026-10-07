@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10048
   displayName: Bastion Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: 16a9597097187f94e8714121e85e87e8, type: 3}
+  icon: {fileID: 21300000, guid: 3db131ad33f8fa14bb36b4c5dab4afae, type: 3}
   rarity: 2
   equipSlot: 2
   maxStack: 1
@@ -47,6 +47,9 @@ MonoBehaviour:
   appearancePartIds: a402a502a602a702a802ab02ac02ad02b302b402b502b602b702b802b902ba02bb02bc02t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 3
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 2859696a81828990919298a0a1a2a8c0d0d1d2e0e1e2e7e8e9eaebecedeef0f1f2f5f6f7f8f9fafbfcfdfey
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

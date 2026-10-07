@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10068
   displayName: Commander Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: 4348aa883d8034d40be4fd070e2053af, type: 3}
+  icon: {fileID: 21300000, guid: 14cc2792f0ed1fb4e81cea379b63c59c, type: 3}
   rarity: 3
   equipSlot: 2
   maxStack: 1
@@ -47,6 +47,9 @@ MonoBehaviour:
   appearancePartIds: e602e702e802e902ea02ed02ee02ef02f502f602f702f802f902fa02fb02fc02fd02fe02t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 4
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 2838686a7080818290919298a0a1a2bdc0cdd0d1d2dcdde0e1e2e5e6e7e8e9eaebecedeef0f1f2f5f6f7f8f9fafbfcfdfey
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

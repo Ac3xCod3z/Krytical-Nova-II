@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10400
   displayName: Courier Gloves
   description: Worn on the hands.
-  icon: {fileID: 21300000, guid: 2d0e6ada717e3884a8f523077f4b0d65, type: 3}
+  icon: {fileID: 21300000, guid: bcd658132173d8b4a8129118d91957da, type: 3}
   rarity: 1
   equipSlot: 3
   maxStack: 1
@@ -47,6 +47,9 @@ MonoBehaviour:
   appearancePartIds: f400f500t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 5
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 8898a8d3y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

@@ -185,6 +185,7 @@ namespace KryticalNova.EditorTools
             // Pets are not made here: they have their own data and builder (Krytical Nova/Items/7. Build Pets).
 
             int added = SeedLines(partCatalog, outfitLooks, weaponLooks, rings, amulets);
+            GearThemeBuilder.Build();
             AssetDatabase.SaveAssets();
             Debug.Log($"[Items] Gear looks: {created.Count} new template assets, {added} new dictionary lines. Baking the ladder...");
             GearStatBaker.Bake();
@@ -341,6 +342,7 @@ namespace KryticalNova.EditorTools
                         def.partCatalog = catalog;
                         def.appearancePartIds = ids.ToArray();
                         def.appearanceParts = new List<SidekickPartRef>(); // no direct mesh references: loaded on demand
+                        def.colorCells = GearThemeBuilder.PaintedCells(def); // what a set's colour theme may recolour
                         EditorUtility.SetDirty(def);
                         looks.Add(new OutfitLook { template = def, variant = vv, name = name, description = description });
                     }

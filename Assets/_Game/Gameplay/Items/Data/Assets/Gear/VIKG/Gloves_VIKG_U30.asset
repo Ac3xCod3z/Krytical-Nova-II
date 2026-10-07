@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 11314
   displayName: Huscarl Bracers
   description: Worn on the hands.
-  icon: {fileID: 21300000, guid: 75e920e72f1278a4f90459d87b12129b, type: 3}
+  icon: {fileID: 21300000, guid: 03f5c855f433da042a65b69892db68fc, type: 3}
   rarity: 1
   equipSlot: 3
   maxStack: 1
@@ -47,6 +47,9 @@ MonoBehaviour:
   appearancePartIds: 23032403t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 17
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: e3e4f3f4y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

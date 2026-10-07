@@ -341,7 +341,7 @@ namespace KryticalNova.Items.Visuals
             clone.name = "Preview Doll";
             foreach (var mb in clone.GetComponentsInChildren<MonoBehaviour>(true))
             {
-                if (mb is CharacterAppearance || mb is WeaponVisualMount || mb is AnimancerComponent) continue;
+                if (mb is CharacterAppearance || mb is WeaponVisualMount || mb is AnimancerComponent || mb is IPreviewDollPart) continue;
                 DestroyImmediate(mb);
             }
             foreach (var c in clone.GetComponentsInChildren<Collider>(true)) DestroyImmediate(c);
@@ -361,6 +361,7 @@ namespace KryticalNova.Items.Visuals
             }
             doll = clone;
             dollAppearance = clone.GetComponent<CharacterAppearance>();
+            foreach (var part in clone.GetComponentsInChildren<IPreviewDollPart>(true)) part.BindToOriginal(sourceAppearance.gameObject);
             dollAppearance.Rebuilt += () => ApplyPreviewLayers(doll);
             ApplyPreviewLayers(doll);
             doll.SetActive(IsOpen || previewCamera.enabled);

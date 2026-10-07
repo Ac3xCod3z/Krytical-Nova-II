@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10209
   displayName: Bastion Boots
   description: Worn on the feet.
-  icon: {fileID: 21300000, guid: f248635539da4ef43ab889d600190d9c, type: 3}
+  icon: {fileID: 21300000, guid: fd6c08b059e194045800b3d1afdd3473, type: 3}
   rarity: 2
   equipSlot: 4
   maxStack: 1
@@ -46,6 +46,9 @@ MonoBehaviour:
   appearancePartIds: ae02af02t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 3
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 83849394y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10019
   displayName: Sentinel Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: 1b3ae2ce15f297d4db4c734bdf81abde, type: 3}
+  icon: {fileID: 21300000, guid: 143e930526c8b4f44a728c8aa6fdc3fe, type: 3}
   rarity: 1
   equipSlot: 2
   maxStack: 1
@@ -50,6 +50,9 @@ MonoBehaviour:
   appearancePartIds: ff0100020102020203020602070208020e020f0210021102120213021402150216021702t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 1
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 283a596a717280818290919298a0a1a2a8c0d0e0e1e2e5e6e7e8e9eaebecedeef0f1f2f5f6f7f8f9fafbfcfdfey
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

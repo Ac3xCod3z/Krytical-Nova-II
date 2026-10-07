@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10737
   displayName: Overseer Servos
   description: Worn on the hands.
-  icon: {fileID: 21300000, guid: 3b3d973a5b66a064893f083726ba24f5, type: 3}
+  icon: {fileID: 21300000, guid: 6a5e0b073aa893b44bc99ef008276a9b, type: 3}
   rarity: 2
   equipSlot: 3
   maxStack: 1
@@ -46,6 +46,9 @@ MonoBehaviour:
   appearancePartIds: 7a017b01t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 11
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 7898y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

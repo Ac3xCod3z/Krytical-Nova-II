@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 11204
   displayName: Revenant Shroud
   description: Worn across the back.
-  icon: {fileID: 21300000, guid: dca19261a3d24b446bd23a1386d6e5f6, type: 3}
+  icon: {fileID: 21300000, guid: 7f84bdb93eb8f9f4b8f8cef9427bf7ef, type: 3}
   rarity: 3
   equipSlot: 7
   maxStack: 1
@@ -41,6 +41,9 @@ MonoBehaviour:
   appearancePartIds: d100t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 16
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 7b8a8by
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}
