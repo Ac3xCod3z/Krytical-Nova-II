@@ -208,7 +208,7 @@ namespace KryticalNova.Items.Visuals
                 case EquipSlot.Weapon:
                     if (dollWeapon == null) return false;
                     dollWeapon.SetWeapon(item);
-                    ApplyPreviewLayers(dollWeapon.gameObject);
+                    ApplyPreviewLayers(doll); // a paired or hip-carried weapon is not under the mount
                     break;
                 case EquipSlot.Armor:
                 case EquipSlot.Gloves:
@@ -240,7 +240,7 @@ namespace KryticalNova.Items.Visuals
             if (dollWeapon != null && (tryOnItem == null || tryOnItem.equipSlot != EquipSlot.Weapon))
             {
                 dollWeapon.SetWeapon(sourceEquipment != null ? sourceEquipment.GetDefinition(EquipSlot.Weapon) : null);
-                ApplyPreviewLayers(dollWeapon.gameObject);
+                ApplyPreviewLayers(doll);
             }
         }
 
@@ -348,8 +348,7 @@ namespace KryticalNova.Items.Visuals
             foreach (var rb in clone.GetComponentsInChildren<Rigidbody>(true)) DestroyImmediate(rb);
 
             dollWeapon = clone.GetComponentInChildren<WeaponVisualMount>(true);
-            if (dollWeapon != null)
-                for (int i = dollWeapon.transform.childCount - 1; i >= 0; i--) DestroyImmediate(dollWeapon.transform.GetChild(i).gameObject);
+            if (dollWeapon != null) dollWeapon.ClearInherited(); // the original's weapon models, wherever they were riding
 
             clone.transform.SetParent(transform, false);
             clone.transform.localPosition = Vector3.zero;

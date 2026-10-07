@@ -21,7 +21,8 @@ namespace KryticalNova.EditorTools
             PlayerAppearanceSetup.Run();   // gear: equipment, Pack, visuals, catalog
             PlayerIdentitySetup.Run();     // identity, look, gear dictionary
             HitReactionSetup.Assign();     // hit reaction clips
-            PlayerSystemsSetup.Run();      // saving, pets, Creds, storage, trade, Kiosks, Contacts, Crew
+            WeaponSocketsSetup.Run();      // left hand and hips: paired and hip-carried weapons
+            PlayerSystemsSetup.Run();     // saving, pets, Creds, storage, trade, Kiosks, Contacts, Crew
             AssetDatabase.SaveAssets();
             Debug.Log("[Setup] Player prefab wired.");
         }

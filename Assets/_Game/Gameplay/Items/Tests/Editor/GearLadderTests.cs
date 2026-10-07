@@ -290,13 +290,25 @@ namespace KryticalNova.Tests
             {
                 var any = dictionary.Entries.First(e => e.pack == pack && e.slot == EquipSlot.Armor);
                 FactionId faction = new[] { FactionId.Hegemony, FactionId.Null, FactionId.Covenant }.First(f => FactionRules.Includes(any.factions, f));
-                foreach (var slot in new[] { EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape, EquipSlot.Ring, EquipSlot.Amulet })
+                foreach (var slot in new[] { EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Ring, EquipSlot.Amulet })
                 {
                     Assert.IsTrue(dictionary.TryFindStarter(slot, faction, any.bodies, pack, WeaponClassId.None, out var starter), $"{pack} {slot}");
                     Assert.AreEqual(pack, starter.pack, $"{pack} {slot} comes from its own group");
                     Assert.AreEqual(1, starter.itemLevel, $"{pack} {slot}");
                     Assert.AreEqual(ItemRarity.Common, starter.rarity, $"{pack} {slot}");
                 }
+            }
+        }
+
+        [Test]
+        public void CapesComeWithRareGearAndUp()
+        {
+            Assert.IsFalse(dictionary.Entries.Any(e => e.slot == EquipSlot.Cape && e.rarity < ItemRarity.Rare),
+                "The basic tiers (Common, Uncommon) have no cape");
+            foreach (string pack in Packs)
+            {
+                var levels = dictionary.Entries.Where(e => e.slot == EquipSlot.Cape && e.pack == pack).Select(e => (int)e.itemLevel).OrderBy(l => l).ToArray();
+                CollectionAssert.AreEqual(new[] { 45, 55, 65, 75, 85, 95, 100, 103, 105, 106, 109, 110, 112 }, levels, $"{pack} cape levels");
             }
         }
 

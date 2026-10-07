@@ -54,10 +54,17 @@ MonoBehaviour:
   colorCells: 
   weaponPrefab: {fileID: 5674030789883248331, guid: 9d126d28bd1966a4db390d81ed045eef, type: 3}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
-  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 180}
   weaponLocalScale: {x: 1, y: 1, z: 1}
   hitboxCenter: {x: 0, y: -0.019613951, z: 0.5268618}
   hitboxSize: {x: 0.3768506, y: 0.6337422, z: 0.95372355}
+  paired: 0
+  offHandLocalPosition: {x: 0, y: 0, z: 0}
+  offHandLocalEuler: {x: 0, y: 0, z: 0}
+  leftHanded: 1
+  carry: 0
+  carryLocalPosition: {x: 0, y: 0, z: 0.4962764}
+  carryLocalEuler: {x: 0, y: 0, z: 0}
   petPrefab: {fileID: 0}
   petScale: 1
   petOffset: {x: 0.45, y: 0.75, z: -0.15}

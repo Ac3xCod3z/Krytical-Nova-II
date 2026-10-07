@@ -122,6 +122,13 @@ namespace KryticalNova.EditorTools
                     def.weaponLocalScale = look.weaponLocalScale;
                     def.hitboxCenter = look.hitboxCenter;
                     def.hitboxSize = look.hitboxSize;
+                    def.paired = look.paired;
+                    def.offHandLocalPosition = look.offHandLocalPosition;
+                    def.offHandLocalEuler = look.offHandLocalEuler;
+                    def.leftHanded = look.leftHanded;
+                    def.carry = look.carry;
+                    def.carryLocalPosition = look.carryLocalPosition;
+                    def.carryLocalEuler = look.carryLocalEuler;
                     def.petPrefab = null;
                     EditorUtility.SetDirty(def);
                     baked.Add(def);

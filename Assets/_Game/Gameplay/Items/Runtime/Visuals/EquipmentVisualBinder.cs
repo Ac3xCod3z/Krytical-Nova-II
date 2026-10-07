@@ -75,6 +75,7 @@ namespace KryticalNova.Items.Visuals
                     break; // stats only
                 default:
                     if (appearance != null) appearance.SetSlot(slot, def);
+                    if (slot == EquipSlot.Cape && weaponMount != null) weaponMount.SetCapeWorn(def != null);
                     break;
             }
         }

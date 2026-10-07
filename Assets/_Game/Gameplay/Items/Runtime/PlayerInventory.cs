@@ -287,8 +287,9 @@ namespace KryticalNova.Items
             return reason == null;
         }
 
+        // No cape: capes come with Rare gear and up.
         private static readonly EquipSlot[] StarterSlots =
-            { EquipSlot.Weapon, EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape };
+            { EquipSlot.Weapon, EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots };
 
         /// <summary>
         /// Server/offline: what a new character starts with, once per spawn, called when its identity is known. The
