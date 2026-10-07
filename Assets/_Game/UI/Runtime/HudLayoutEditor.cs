@@ -111,6 +111,14 @@ namespace KryticalNova.UI
         private readonly List<float> candidateXs = new List<float>(48);
         private readonly List<float> candidateYs = new List<float>(48);
 
+        // Click-to-select: what the pointer is over, the frame that marks it, and where the clicks are heard.
+        private const string EditChromePrefix = "hud-edit";
+        private static readonly Color HoverFrame = new Color(1f, 0.79f, 0.24f, 0.9f);
+        private static readonly Color HoverFill = new Color(1f, 0.79f, 0.24f, 0.08f);
+        private VisualElement pickRoot;
+        private VisualElement hovered;
+        private VisualElement hoverFrame;
+
         public bool IsEditing { get; private set; }
         public event Action EditingChanged;
 
@@ -246,6 +254,7 @@ namespace KryticalNova.UI
             IsEditing = true;
             selection = null;
             ShowGrid();
+            ListenForPicks(true);
             EditingChanged?.Invoke();
         }
 
@@ -309,6 +318,7 @@ namespace KryticalNova.UI
             CancelInteraction();
             foreach (VisualElement element in new List<VisualElement>(editing.Keys)) ExitEdit(element);
             selection = null;
+            ListenForPicks(false);
             HideGrid();
             IsEditing = false;
             Save();
@@ -367,18 +377,114 @@ namespace KryticalNova.UI
                 return;
             }
             if (evt.button != LeftButton) return;
+            StartGesture(element, capture, evt.pointerId, evt.position, resize);
+        }
 
+        private void StartGesture(VisualElement element, VisualElement capture, int pointerId, Vector2 pointer, bool resize)
+        {
             MakeExplicit(element);
             activeElement = element;
             activeCapture = capture;
-            activePointerId = evt.pointerId;
+            activePointerId = pointerId;
             resizing = resize;
-            pointerStart = evt.position;
+            pointerStart = pointer;
             positionStart = new Vector2(element.style.left.value.value, element.style.top.value.value);
             scaleStart = element.resolvedStyle.scale.value.x;
             sizeStart = new Vector2(element.layout.width, element.layout.height) * scaleStart;
-            capture.CapturePointer(evt.pointerId);
+            capture.CapturePointer(pointerId);
             editing[element].Overlay.AddToClassList("dragging");
+        }
+
+        // ------------------------------------------------------------------ click a panel to select it
+
+        /// <summary>
+        /// While the editor is open, a press on any panel that is on screen selects it and starts dragging it in the
+        /// same press. Heard on the way down from the top of the panel tree, so it reaches panels that ignore the
+        /// pointer in play and gets there before a button under the pointer does. A closed window has no place on
+        /// screen to click: those are still chosen from the list.
+        /// </summary>
+        private void ListenForPicks(bool on)
+        {
+            if (on)
+            {
+                pickRoot = layoutRoot != null && layoutRoot.panel != null ? layoutRoot.panel.visualTree : null;
+                if (pickRoot == null) return;
+                pickRoot.RegisterCallback<PointerDownEvent>(OnPickDown, TrickleDown.TrickleDown);
+                pickRoot.RegisterCallback<PointerMoveEvent>(OnPickMove, TrickleDown.TrickleDown);
+                return;
+            }
+            SetHovered(null);
+            if (pickRoot == null) return;
+            pickRoot.UnregisterCallback<PointerDownEvent>(OnPickDown, TrickleDown.TrickleDown);
+            pickRoot.UnregisterCallback<PointerMoveEvent>(OnPickMove, TrickleDown.TrickleDown);
+            pickRoot = null;
+        }
+
+        private void OnPickDown(PointerDownEvent evt)
+        {
+            if (evt.button != LeftButton || activeElement != null) return;
+            VisualElement panel = PanelUnder(evt.target as VisualElement, evt.position);
+            if (panel == null || editing.ContainsKey(panel)) return; // already in edit state: its own frame takes the press
+            evt.StopPropagation();
+            SetHovered(null);
+            Select(panel.name);
+            if (editing.TryGetValue(panel, out EditState state)) StartGesture(panel, state.Overlay, evt.pointerId, evt.position, false);
+        }
+
+        private void OnPickMove(PointerMoveEvent evt)
+        {
+            if (activeElement != null) return;
+            VisualElement panel = PanelUnder(evt.target as VisualElement, evt.position);
+            SetHovered(panel != null && !editing.ContainsKey(panel) ? panel : null);
+        }
+
+        /// <summary>The panel a press at this point is for, or null: over the editor's own controls, or over none.</summary>
+        private VisualElement PanelUnder(VisualElement target, Vector2 point)
+        {
+            // What the pointer is actually on, walking outward: the editor's bar and list are never a panel to move.
+            for (VisualElement at = target; at != null; at = at.hierarchy.parent)
+            {
+                if (at.name != null && at.name.StartsWith(EditChromePrefix, StringComparison.Ordinal)) return null;
+                if (at.ClassListContains(OverlayClass)) return null;
+                if (IsMovable(at)) return at;
+            }
+            // Panels that ignore the pointer in play are never a target: find them by where they are, smallest first.
+            VisualElement best = null;
+            float bestArea = float.MaxValue;
+            foreach (VisualElement element in movables.Values)
+            {
+                if (element.panel == null || element.resolvedStyle.display == DisplayStyle.None) continue;
+                Rect bounds = element.worldBound;
+                float area = bounds.width * bounds.height;
+                if (area < 1f || area >= bestArea || !bounds.Contains(point)) continue;
+                best = element;
+                bestArea = area;
+            }
+            return best;
+        }
+
+        private bool IsMovable(VisualElement element) =>
+            !string.IsNullOrEmpty(element.name) && movables.TryGetValue(element.name, out VisualElement known) && known == element;
+
+        /// <summary>Frames the panel a click would take, so it is plain which one that is before clicking.</summary>
+        private void SetHovered(VisualElement panel)
+        {
+            if (hovered == panel) return;
+            hoverFrame?.RemoveFromHierarchy();
+            hovered = panel;
+            if (panel == null) return;
+            if (hoverFrame == null)
+            {
+                hoverFrame = new VisualElement { pickingMode = PickingMode.Ignore };
+                hoverFrame.style.position = Position.Absolute;
+                hoverFrame.style.left = hoverFrame.style.top = hoverFrame.style.right = hoverFrame.style.bottom = 0f;
+                hoverFrame.style.borderLeftWidth = hoverFrame.style.borderRightWidth = 2f;
+                hoverFrame.style.borderTopWidth = hoverFrame.style.borderBottomWidth = 2f;
+                hoverFrame.style.borderLeftColor = hoverFrame.style.borderRightColor = HoverFrame;
+                hoverFrame.style.borderTopColor = hoverFrame.style.borderBottomColor = HoverFrame;
+                hoverFrame.style.backgroundColor = HoverFill;
+            }
+            panel.hierarchy.Add(hoverFrame);
         }
 
         private void OnPointerMove(PointerMoveEvent evt)

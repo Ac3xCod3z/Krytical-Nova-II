@@ -328,7 +328,7 @@
         <ui:VisualElement name="hud-edit-banner" class="panel blocks-world" picking-mode="Position">
             <ui:VisualElement class="hud-edit-banner-text" picking-mode="Ignore">
                 <ui:Label text="HUD LAYOUT EDITOR" class="heading" />
-                <ui:Label text="Choose a panel to adjust, or all of them   ·   Drag to move   ·   Drag the gold corner to resize   ·   Hold Alt to place freely" class="help" />
+                <ui:Label text="Click a panel to adjust it, or choose one (or all) from the list   ·   Drag to move   ·   Drag the gold corner to resize   ·   Hold Alt to place freely" class="help" />
             </ui:VisualElement>
             <ui:Button name="hud-edit-pick" text="PANEL: CHOOSE" class="hud-edit-pick" tooltip="Choose which panel to adjust, or all of them" />
             <ui:Button name="hud-edit-reset-one" text="RESET THIS PANEL" />
