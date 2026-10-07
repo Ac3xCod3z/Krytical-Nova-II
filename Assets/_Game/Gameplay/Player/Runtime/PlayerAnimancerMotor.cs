@@ -187,7 +187,7 @@ namespace KryticalNova.Player
         private bool reportedRunning;
         private CombatEntity combatEntity;
         private PlayerMovementSkills movementSkills;
-        private Coroutine hitRoutine;   // a flinch or a pick-up: one body gesture at a time
+        private Coroutine hitRoutine;   // a flinch, a pick-up or an emote: one body gesture at a time
         private bool hitHoldsBody;      // a full-body gesture is playing: locomotion waits for it
         private float nextHitReactionTime;
 
@@ -326,6 +326,7 @@ namespace KryticalNova.Player
             reportedRunning = false;
             hitHoldsBody = false;
             hitRoutine = null;
+            EndEmote(true);
             if (combatEntity != null) combatEntity.Damaged -= OnDamaged;
         }
 
@@ -995,6 +996,7 @@ namespace KryticalNova.Player
 
             nextHitReactionTime = Time.time + hitReactionCooldown;
             if (hitRoutine != null) StopCoroutine(hitRoutine);
+            EndEmote(true); // a flinch takes the body from an emote
             hitRoutine = StartCoroutine(HitReactionRoutine(clip, fullBody));
         }
 
@@ -1126,6 +1128,163 @@ namespace KryticalNova.Player
 
         #endregion
 
+        #region Emotes
+
+        private const string PropBoneName = "prop_r";
+        private const float EmoteFade = 0.2f;
+        private const float EmoteSheatheWaitSeconds = 3f;
+        private const float PropGrowSeconds = 0.25f;
+
+        private bool emoting;
+        private Transform propBone;
+        private GameObject emoteProp;
+        private Vector3 emotePropScale;
+        private float emotePropGrown;
+
+        /// <summary>True while an emote or a held stance has the body.</summary>
+        public bool IsEmoting => emoting;
+        /// <summary>
+        /// The body is free for an emote: standing still, and doing nothing but perhaps putting its weapon away
+        /// (an emote waits for that to finish).
+        /// </summary>
+        public bool CanStartEmote =>
+            (currentState == CharacterAnimState.Locomotion || IsWeaponDrawActionPlaying) && !IsTravelling;
+        /// <summary>
+        /// Raised on this machine when an emote or stance ends by itself or is cut short (moving off, striking,
+        /// casting, jumping, a draw, a hit, death). Not raised when another emote takes its place.
+        /// </summary>
+        public event Action EmoteEnded;
+
+        /// <summary>
+        /// Plays a gesture on this machine's copy of the character: once, or as a stance that is held (through
+        /// <paramref name="enter"/>, its way in, when it has one) until the body is taken back. <paramref name="prop"/>
+        /// is held in the right hand for as long as it lasts. Purely visual. False when the body is busy.
+        /// </summary>
+        public bool PlayEmote(AnimationClip clip, AnimationClip enter = null, bool hold = false, GameObject prop = null)
+        {
+            if (animancer == null || !isActiveAndEnabled || clip == null || !CanStartEmote) return false;
+            if (!hold) enter = null; // only a stance has a way in
+            if (hitRoutine != null) StopCoroutine(hitRoutine);
+            EndEmote(false); // the new one takes over: nobody is told the old one ended
+            hitHoldsBody = false;
+            emoting = true;
+            hitRoutine = StartCoroutine(EmoteRoutine(clip, enter, hold, prop));
+            if (!emoting) hitRoutine = null; // it gave up before its first wait
+            return emoting;
+        }
+
+        /// <summary>Ends the emote or stance being played, if any, and lets the body go back to standing.</summary>
+        public void StopEmote()
+        {
+            if (!emoting) return;
+            if (hitRoutine != null) StopCoroutine(hitRoutine);
+            hitRoutine = null;
+            ReleaseEmote();
+        }
+
+        private IEnumerator EmoteRoutine(AnimationClip clip, AnimationClip enter, bool hold, GameObject prop)
+        {
+            // The weapon is put away first (the owner asks for that before the emote): let the sheathe finish.
+            float waited = 0f;
+            while (IsWeaponDrawActionPlaying && waited < EmoteSheatheWaitSeconds && !IsTravelling)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            if (currentState != CharacterAnimState.Locomotion || IsTravelling)
+            {
+                hitRoutine = null;
+                EndEmote(true);
+                yield break;
+            }
+
+            hitHoldsBody = true;
+            stopState = null;
+            HoldEmoteProp(prop);
+            AnimancerState state = PlayEmoteClip(enter != null ? enter : clip);
+            float playFor = Mathf.Max(0.05f, state.Length - (hold && enter == null ? 0f : EmoteFade));
+            while (EmoteHolds(state) && (state.Time < playFor || (hold && enter == null)))
+            {
+                // Many of the pack's stance loops are not marked as looping: wrap them here.
+                if (hold && enter == null && !state.IsLooping && state.Time >= state.Length) state.Time -= state.Length;
+                GrowEmoteProp();
+                yield return null;
+            }
+
+            if (hold && enter != null && EmoteHolds(state))
+            {
+                state = PlayEmoteClip(clip);
+                while (EmoteHolds(state))
+                {
+                    if (!state.IsLooping && state.Time >= state.Length) state.Time -= state.Length;
+                    GrowEmoteProp();
+                    yield return null;
+                }
+            }
+
+            hitRoutine = null;
+            ReleaseEmote();
+        }
+
+        // Moving off, striking, casting, jumping or drawing the weapon takes the body back at once.
+        private bool EmoteHolds(AnimancerState state) =>
+            currentState == CharacterAnimState.Locomotion && !IsTravelling && !IsWeaponDrawActionPlaying
+            && animancer.Layers[0].CurrentState == state;
+
+        private AnimancerState PlayEmoteClip(AnimationClip clip)
+        {
+            AnimancerState state = animancer.Layers[0].Play(clip, EmoteFade);
+            state.Time = 0f;
+            state.Speed = 1f;
+            state.ApplyFootIK = locomotionFootIK;
+            return state;
+        }
+
+        /// <summary>The emote is over and the body is this motor's again: standing fades back in.</summary>
+        private void ReleaseEmote()
+        {
+            hitHoldsBody = false;
+            if (currentState == CharacterAnimState.Locomotion) currentLocomotionClip = null; // locomotion fades back in
+            EndEmote(true);
+        }
+
+        /// <summary>Puts the prop away and, when asked, says the emote ended. Does nothing when none is playing.</summary>
+        private void EndEmote(bool announce)
+        {
+            if (emoteProp != null) Destroy(emoteProp);
+            emoteProp = null;
+            if (!emoting) return;
+            emoting = false;
+            if (announce) EmoteEnded?.Invoke();
+        }
+
+        private void HoldEmoteProp(GameObject prefab)
+        {
+            if (prefab == null || animancer == null) return;
+            if (propBone == null)
+            {
+                foreach (Transform bone in animancer.GetComponentsInChildren<Transform>(true))
+                    if (bone.name == PropBoneName) { propBone = bone; break; }
+            }
+            if (propBone == null) return;
+            emoteProp = Instantiate(prefab, propBone);
+            emoteProp.name = prefab.name;
+            emoteProp.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            foreach (Transform part in emoteProp.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = propBone.gameObject.layer;
+            emotePropScale = prefab.transform.localScale;
+            emoteProp.transform.localScale = Vector3.zero;
+            emotePropGrown = 0f;
+        }
+
+        private void GrowEmoteProp()
+        {
+            if (emoteProp == null || emotePropGrown >= 1f) return;
+            emotePropGrown = Mathf.Min(1f, emotePropGrown + Time.deltaTime / PropGrowSeconds);
+            emoteProp.transform.localScale = emotePropScale * Mathf.SmoothStep(0f, 1f, emotePropGrown);
+        }
+
+        #endregion
+
         #region Death
 
         public bool IsDead => currentState == CharacterAnimState.Dead;
@@ -1146,6 +1305,7 @@ namespace KryticalNova.Player
                     StopCoroutine(hitRoutine);
                     hitRoutine = null;
                 }
+                EndEmote(true);
                 hitHoldsBody = false;
                 warpedJumpActive = false;
                 warpedJumpState = null;

@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="EmoteWheel.uss" />
+    <!-- The emote wheel (EmoteWheelController). Instanced into ProgressionHUD.uxml. Shown while its key is held: a
+         ring of categories, then a ring of that category's emotes. The whole screen is its own while it is open, so
+         a click on a wedge never sends the character walking. -->
+    <ui:VisualElement name="emote-wheel-screen" class="emote-wheel-screen blocks-world">
+        <ui:VisualElement name="emote-wheel" class="emote-wheel" picking-mode="Ignore">
+            <ui:VisualElement name="emote-wheel-canvas" class="emote-wheel-layer" picking-mode="Ignore" />
+            <ui:VisualElement name="emote-wheel-labels" class="emote-wheel-layer" picking-mode="Ignore" />
+            <ui:VisualElement name="emote-wheel-hub" class="emote-wheel-hub" picking-mode="Ignore">
+                <ui:Label name="emote-wheel-title" text="EMOTES" class="emote-wheel-title" picking-mode="Ignore" />
+                <ui:Label name="emote-wheel-hint" text="" class="emote-wheel-hint" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <!-- The colours the wedges are drawn in. The controller reads them from these, so the faction skins
+                 recolour the wheel like any other panel. -->
+            <ui:VisualElement name="emote-wheel-fill" class="emote-wheel-swatch emote-wheel-fill" picking-mode="Ignore" />
+            <ui:VisualElement name="emote-wheel-hover" class="emote-wheel-swatch emote-wheel-hover" picking-mode="Ignore" />
+            <ui:VisualElement name="emote-wheel-line" class="emote-wheel-swatch emote-wheel-line" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

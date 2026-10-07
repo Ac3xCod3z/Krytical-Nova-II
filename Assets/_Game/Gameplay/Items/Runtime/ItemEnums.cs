@@ -25,6 +25,15 @@ namespace KryticalNova.Items
         FeedPet = 1
     }
 
+    /// <summary>Where a weapon rides while it is not in the hand. Append only.</summary>
+    public enum WeaponCarry : byte
+    {
+        /// <summary>Slung across the back: blades, polearms, rifles, bows.</summary>
+        Back = 0,
+        /// <summary>At the hip: sidearms and claws. A paired weapon takes both hips.</summary>
+        Hips = 1
+    }
+
     public enum ItemRarity : byte
     {
         Common,

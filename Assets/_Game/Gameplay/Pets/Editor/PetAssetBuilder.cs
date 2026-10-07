@@ -85,9 +85,14 @@ namespace KryticalNova.EditorTools
             var settings = LoadOrCreate<PetSettings>(SettingsPath);
             if (settings.auraPrefab == null)
             {
-                settings.auraPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(GameFeelBuilder.PetAuraPath);
+                settings.auraPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(GameFeelBuilder.PetGlowPath);
                 if (settings.auraPrefab == null)
                     Debug.LogWarning("[Pets] No pet glow effect yet. Run Krytical Nova/GameFeel/Rebuild Pet Feel, then build the pets again.");
+                EditorUtility.SetDirty(settings);
+            }
+            if (settings.glowMaterial == null)
+            {
+                settings.glowMaterial = AssetDatabase.LoadAssetAtPath<Material>(PlayerSystemsSetup.TemperGlowMaterialPath);
                 EditorUtility.SetDirty(settings);
             }
 

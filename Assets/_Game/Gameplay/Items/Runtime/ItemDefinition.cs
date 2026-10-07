@@ -99,6 +99,12 @@ namespace KryticalNova.Items
         public KryticalNova.Items.Visuals.SidekickPartCatalog partCatalog;
         [Tooltip("Direct part references. Used only when no part IDs are set (hand-made items).")]
         public List<SidekickPartRef> appearanceParts = new List<SidekickPartRef>();
+        [Tooltip("Outfit pieces: the colour theme of the set this piece belongs to. 0 = it takes its wearer's own colours.")]
+        public ushort colorTheme;
+        [Tooltip("The library the theme ID above belongs to.")]
+        public GearThemeLibrary colorThemes;
+        [Tooltip("Cells of the 16x16 colour grid this piece's meshes paint (index = v * 16 + u), skin and bone left out. Baked.")]
+        public byte[] colorCells = Array.Empty<byte>();
         [Tooltip("Weapon: model parented under the weapon mount (local pose identity).")]
         public GameObject weaponPrefab;
         public Vector3 weaponLocalPosition;
@@ -106,6 +112,18 @@ namespace KryticalNova.Items
         public Vector3 weaponLocalScale = Vector3.one;
         public Vector3 hitboxCenter = new Vector3(0f, 0.01f, 0.55f);
         public Vector3 hitboxSize = new Vector3(0.18f, 0.18f, 1.15f);
+        [Tooltip("Weapon: worn as a pair. A second, mirrored copy sits in the left hand (sidearms, claws). Still one item with one set of stats.")]
+        public bool paired;
+        [Tooltip("Paired weapons: the left copy's pose in the off-hand socket. Both zero = the mirror image of the right hand's.")]
+        public Vector3 offHandLocalPosition;
+        public Vector3 offHandLocalEuler;
+        [Tooltip("Weapon: held in the left hand while drawn (bows: the right hand draws the string). The pose above is then in the off-hand socket.")]
+        public bool leftHanded;
+        [Tooltip("Weapon: where it rides while it is not drawn.")]
+        public WeaponCarry carry;
+        [Tooltip("Weapon: its pose while carried, in the carry socket (the back sheath or the right hip). A pair's second copy mirrors it.")]
+        public Vector3 carryLocalPosition;
+        public Vector3 carryLocalEuler;
         [Tooltip("Pet: cosmetic follower spawned client-side.")]
         public GameObject petPrefab;
         public float petScale = 1f;

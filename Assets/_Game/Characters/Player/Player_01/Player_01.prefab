@@ -61,7 +61,8 @@ Transform:
   m_LocalPosition: {x: -0.063454054, y: -0.021303682, z: -0.18443985}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 770717085400841007}
   m_Father: {fileID: 2301738255811950310}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &207043346446611982
@@ -221,6 +222,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5577802220055202811}
+  - {fileID: 1358229195446727910}
   m_Father: {fileID: 2301738255811950310}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &459816481617092609
@@ -543,6 +545,7 @@ Transform:
   - {fileID: 9212995302771995021}
   - {fileID: 2652838491537741507}
   - {fileID: 7695471167693083545}
+  - {fileID: 2273096606156603837}
   m_Father: {fileID: 7070746443947702473}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1175215384971352028
@@ -1425,6 +1428,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponVisualMount
   builtInRenderer: {fileID: 0}
   hitbox: {fileID: 0}
+  handSocket: {fileID: 7505028969665146294}
+  offHandSocket: {fileID: 2273096606156603837}
+  hipSocketRight: {fileID: 770717085400841007}
+  hipSocketLeft: {fileID: 1358229195446727910}
+  settleSeconds: 0.1
+  bareBackOffset: {x: 0.08, y: 0, z: 0}
 --- !u!1 &3393757526565711776
 GameObject:
   m_ObjectHideFlags: 0
@@ -1584,6 +1593,37 @@ Transform:
   m_Children:
   - {fileID: 2006324804335424498}
   m_Father: {fileID: 3210627762733316010}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3658073308288332681
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1358229195446727910}
+  m_Layer: 0
+  m_Name: HipSocket_L
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1358229195446727910
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3658073308288332681}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
+  m_LocalPosition: {x: -0.045499995, y: -0.10000005, z: -0.0000000037252903}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4837154029250880882}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3712811856050526267
 GameObject:
@@ -2742,99 +2782,6 @@ MonoBehaviour:
     usesWrap: 0
   - region: 37
     mesh: {fileID: -7507895210473912596, guid: b005a7422f4d71842ae80386a96264a8, type: 3}
-    boneNames:
-    - backAttach
-    - ball_l
-    - ball_r
-    - calf_l
-    - calf_r
-    - calf_twist_01_l
-    - calf_twist_01_r
-    - clavicle_l
-    - clavicle_r
-    - elbowAttach_l
-    - elbowAttach_r
-    - eyeLight_l
-    - eyeLight_r
-    - eye_l
-    - eye_r
-    - faceAttach
-    - foot_l
-    - foot_r
-    - hand_l
-    - hand_r
-    - head
-    - headAttach
-    - hipAttachBack
-    - hipAttachFront
-    - hipAttach_l
-    - hipAttach_r
-    - ik_foot_l
-    - ik_foot_r
-    - ik_foot_root
-    - ik_hand_gun
-    - ik_hand_l
-    - ik_hand_r
-    - ik_hand_root
-    - index_01_l
-    - index_01_r
-    - index_02_l
-    - index_02_r
-    - index_03_l
-    - index_03_r
-    - jaw
-    - kneeAttach_l
-    - kneeAttach_r
-    - lowerarm_l
-    - lowerarm_r
-    - lowerarm_twist_01_l
-    - lowerarm_twist_01_r
-    - middle_01_l
-    - middle_01_r
-    - middle_02_l
-    - middle_02_r
-    - middle_03_l
-    - middle_03_r
-    - neck_01
-    - pelvis
-    - pinky_01_l
-    - pinky_01_r
-    - pinky_02_l
-    - pinky_02_r
-    - pinky_03_l
-    - pinky_03_r
-    - prop_l
-    - prop_r
-    - ring_01_l
-    - ring_01_r
-    - ring_02_l
-    - ring_02_r
-    - ring_03_l
-    - ring_03_r
-    - root
-    - shoulderAttach_l
-    - shoulderAttach_r
-    - spine_01
-    - spine_02
-    - spine_03
-    - thigh_l
-    - thigh_r
-    - thigh_twist_01_l
-    - thigh_twist_01_r
-    - thumb_01_l
-    - thumb_01_r
-    - thumb_02_l
-    - thumb_02_r
-    - thumb_03_l
-    - thumb_03_r
-    - upperarm_l
-    - upperarm_r
-    - upperarm_twist_01_l
-    - upperarm_twist_01_r
-    extraBones: []
-    usesWrap: 0
-  - region: 22
-    mesh: {fileID: 5942856181524171363, guid: c3f37e75dd595ae4095b9e1e16726e16, type: 3}
     boneNames:
     - backAttach
     - ball_l
@@ -7295,6 +7242,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 562713849035012977}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6651426528401865812
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 770717085400841007}
+  m_Layer: 0
+  m_Name: HipSocket_R
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &770717085400841007
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6651426528401865812}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0.049999997, y: -0.10000005, z: -0.0000000037252903}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2472701079115170913}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6679574379905088283
 GameObject:
   m_ObjectHideFlags: 0
@@ -7583,6 +7561,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7553862109039087276}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7149975308325482268
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2273096606156603837}
+  m_Layer: 0
+  m_Name: OffHandSocket
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2273096606156603837
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7149975308325482268}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6981339, y: 0.6490212, z: 0.17623468, w: -0.24560526}
+  m_LocalPosition: {x: -0.09737836, y: 0.032324336, z: 0.020971384}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7867431998515864195}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7262103768620102797
 GameObject:

@@ -136,6 +136,14 @@
 .kn-faction-null .hud-resize-handle {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Arrow_Small_01_Clean.png#SPR_HUD_DarkFantasy_Arrow_Small_01_Clean");
 }
+.kn-faction-null .text-tooltip-title {
+    font-size: 16.64px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .text-tooltip-body {
+    font-size: 14.08px;
+    color: rgb(225, 211, 230);
+}
 
 /* ---- ProgressionHUD.uss ---- */
 .kn-faction-null .heading {
@@ -327,6 +335,15 @@
 .kn-faction-null #hud-edit-banner {
     -unity-background-image-tint-color: rgba(20, 11, 23, 0.96);
 }
+.kn-faction-null .hud-edit-list {
+    -unity-background-image-tint-color: rgba(20, 11, 23, 0.97);
+}
+.kn-faction-null .hud-edit-list Button {
+    font-size: 15.36px;
+}
+.kn-faction-null .hud-edit-list Button.chosen {
+    -unity-background-image-tint-color: rgb(112, 0, 6);
+}
 .kn-faction-null .floating-combat-text {
     -unity-font-definition: url("/Assets/Synty/InterfaceDarkFantasyHUD/Fonts/Pirata One/PirataOne-Regular.ttf");
     font-size: 23.04px;
@@ -341,6 +358,32 @@
 }
 .kn-faction-null .floating-combat-text.reflected {
     font-size: 20.48px;
+}
+.kn-faction-null .renown-label {
+    font-size: 15.36px;
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .renown-value {
+    font-size: 16.64px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .renown-value-plain {
+    font-size: 15.36px;
+}
+.kn-faction-null .namecard {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Gradient_Outwards_01.png#SPR_HUD_DarkFantasy_Gradient_Outwards_01");
+    -unity-background-image-tint-color: rgba(15, 8, 18, 0.66);
+}
+.kn-faction-null .namecard-name {
+    font-size: 20.48px;
+}
+.kn-faction-null .namecard-standing {
+    font-size: 15.36px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .namecard-crew {
+    font-size: 15.36px;
+    color: rgb(225, 210, 230);
 }
 
 /* ---- Settings.uss ---- */
@@ -593,6 +636,87 @@
 .kn-faction-null .item-temper {
     font-size: 11.52px;
     text-shadow: 1px 1px 0 rgb(14, 9, 16);
+}
+
+/* ---- Herald.uss ---- */
+.kn-faction-null .herald-purse {
+    font-size: 15.36px;
+}
+.kn-faction-null .herald-tab {
+    font-size: 14.08px;
+    -unity-background-image-tint-color: rgb(41, 27, 46);
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .herald-tab.active {
+    -unity-background-image-tint-color: rgb(112, 0, 6);
+}
+.kn-faction-null .herald-level {
+    font-size: 58.88px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .herald-tier {
+    font-size: 17.92px;
+    color: rgb(225, 211, 230);
+}
+.kn-faction-null .herald-pip {
+    border-color: rgb(97, 75, 104);
+    background-color: rgba(23, 14, 26, 0.9);
+}
+.kn-faction-null .herald-pip.filled {
+    background-color: rgb(163, 110, 255);
+}
+.kn-faction-null .herald-pip.partial {
+    background-color: rgb(82, 60, 120);
+    border-color: rgb(137, 100, 200);
+}
+.kn-faction-null .herald-pip.small.filled {
+    background-color: rgb(222, 65, 73);
+    border-color: rgb(240, 138, 144);
+}
+.kn-faction-null .herald-line {
+    font-size: 15.36px;
+    color: rgb(225, 211, 230);
+}
+.kn-faction-null .herald-reason {
+    font-size: 15.36px;
+}
+.kn-faction-null .herald-result {
+    font-size: 16.64px;
+}
+.kn-faction-null .herald-result.success {
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .herald-result.fail {
+    color: rgb(175, 140, 236);
+}
+.kn-faction-null .herald-worn {
+    font-size: 16.64px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .herald-track.worn {
+    -unity-background-image-tint-color: rgba(38, 26, 60, 0.95);
+}
+.kn-faction-null .herald-track-name {
+    font-size: 17.92px;
+}
+.kn-faction-null .herald-track-level {
+    font-size: 14.08px;
+    color: rgb(171, 151, 178);
+}
+.kn-faction-null .herald-track-rank {
+    font-size: 15.36px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .herald-track-bonus {
+    font-size: 15.36px;
+    color: rgb(225, 211, 230);
+}
+.kn-faction-null .herald-track-next {
+    font-size: 14.08px;
+    color: rgb(171, 151, 178);
+}
+.kn-faction-null .herald-track-buttons > Button {
+    font-size: 14.08px;
 }
 
 /* ---- Minimap.uss ---- */
@@ -951,6 +1075,35 @@
 .kn-faction-null .crew-member-title {
     font-size: 14.08px;
     color: rgb(144, 104, 214);
+}
+
+/* ---- EmoteWheel.uss ---- */
+.kn-faction-null .emote-wheel-label {
+    font-size: 16.64px;
+    color: rgb(230, 217, 234);
+}
+.kn-faction-null .emote-wheel-label.category {
+    font-size: 20.48px;
+}
+.kn-faction-null .emote-wheel-label.stance {
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .emote-wheel-title {
+    font-size: 20.48px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .emote-wheel-hint {
+    font-size: 14.08px;
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .emote-wheel-fill {
+    background-color: rgba(21, 12, 24, 0.88);
+}
+.kn-faction-null .emote-wheel-hover {
+    background-color: rgba(112, 0, 6, 0.96);
+}
+.kn-faction-null .emote-wheel-line {
+    background-color: rgba(222, 65, 73, 0.9);
 }
 
 /* ---- EconomyWindows.uss ---- */

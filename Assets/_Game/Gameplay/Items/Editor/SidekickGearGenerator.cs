@@ -58,7 +58,28 @@ namespace KryticalNova.EditorTools
             public string pack;   // folder under Assets/Synty
             public string prefab; // prefab file name, without extension
             public string name;   // item name of the tiers that wear it
+            public bool paired;   // one in each hand, carried on the hips: sidearms and claws
+            public Hold hold;     // how the hand takes it
+            public float scale;   // model scale, where a pack's mesh is out of proportion (0 = as it comes)
         }
+
+        /// <summary>How a weapon sits in the hand. The mount's own convention is the katana's: <see cref="Blade"/>.</summary>
+        private enum Hold
+        {
+            /// <summary>Long axis out of the top of the fist: swords, axes, polearms.</summary>
+            Blade,
+            /// <summary>Long axis along the forearm, the grip across the fist: guns, punch daggers, claws.</summary>
+            Forward,
+            /// <summary>In the left hand, upright: bows. The right hand draws the string.</summary>
+            Bow
+        }
+
+        // A model's long axis is +Z and its top +Y. Turned so the top lies along the fist and the long axis points
+        // where the arm points (worked out from the hand socket's frame, checked on the Sidearm in Play).
+        private static readonly Vector3 ForwardHoldEuler = new Vector3(270f, 0f, 180f);
+        // A bow stands along the fist as a blade does, turned so its string is on the archer's side (checked at the
+        // aim of Synty's shooting clip, which holds the bow in the left hand).
+        private static readonly Vector3 BowHoldEuler = new Vector3(0f, 0f, 180f);
 
         private sealed class ClassWeapons
         {
@@ -66,7 +87,11 @@ namespace KryticalNova.EditorTools
             public WeaponLook[] looks; // one per band: Common, Uncommon, Rare I, Rare II, Epic
         }
 
-        private static WeaponLook Look(string pack, string prefab, string name) => new WeaponLook { pack = pack, prefab = prefab, name = name };
+        private static WeaponLook Look(string pack, string prefab, string name, bool paired = false, Hold hold = Hold.Blade, float scale = 0f) =>
+            new WeaponLook { pack = pack, prefab = prefab, name = name, paired = paired, hold = hold, scale = scale };
+
+        private static WeaponLook Gun(string pack, string prefab, string name, bool paired = false, float scale = 0f) =>
+            Look(pack, prefab, name, paired, Hold.Forward, scale);
 
         // Starting picks, plainest to hero mesh. To change a look, edit the line in GearDictionary.asset: this table
         // only seeds lines that do not exist yet.
@@ -90,11 +115,11 @@ namespace KryticalNova.EditorTools
             } },
             new ClassWeapons { id = WeaponClassId.Carbine, looks = new[]
             {
-                Look("PolygonSciFiCity", "SM_Wep_Pistol_01", "Sidearm"),
-                Look("PolygonSamuraiEmpire", "SM_Wep_Rifle_01", "Service Rifle"),
-                Look("PolygonSciFiWorlds", "SM_Wep_Assault_01", "Assault Carbine"),
-                Look("PolygonSciFiWorlds", "SM_Wep_Sniper_01", "Marksman Rifle"),
-                Look("PolygonSciFiWorlds", "SM_Wep_Assault_03", "Vanguard Carbine"),
+                Gun("PolygonSciFiCity", "SM_Wep_Pistol_01", "Sidearm", paired: true),
+                Gun("PolygonSamuraiEmpire", "SM_Wep_Rifle_01", "Service Rifle", scale: 0.65f), // the pack models it over two metres long
+                Gun("PolygonSciFiWorlds", "SM_Wep_Assault_01", "Assault Carbine"),
+                Gun("PolygonSciFiWorlds", "SM_Wep_Sniper_01", "Marksman Rifle", scale: 0.85f),
+                Gun("PolygonSciFiWorlds", "SM_Wep_Assault_03", "Vanguard Carbine"),
             } },
             new ClassWeapons { id = WeaponClassId.Harvester, looks = new[]
             {
@@ -106,19 +131,19 @@ namespace KryticalNova.EditorTools
             } },
             new ClassWeapons { id = WeaponClassId.ServoClaws, looks = new[]
             {
-                Look("PolygonSamuraiEmpire", "SM_Wep_Spike_01", "Piston Spike"),
-                Look("PolygonFantasyKingdom", "SM_Wep_KnuckleDagger_01", "Knuckle Blade"),
-                Look("PolygonSciFiWorlds", "SM_Wep_Dagger_03", "Servo Dagger"),
-                Look("PolygonSamuraiEmpire", "SM_Wep_Spikes_01", "Twin Spikes"),
-                Look("PolygonSamuraiEmpire", "SM_Wep_Claw_01", "Apex Claw"),
+                Look("PolygonSamuraiEmpire", "SM_Wep_Spike_01", "Piston Spike", paired: true, hold: Hold.Forward, scale: 2.5f), // eight centimetres as it comes
+                Look("PolygonFantasyKingdom", "SM_Wep_KnuckleDagger_01", "Knuckle Blade", paired: true, hold: Hold.Forward),
+                Look("PolygonSciFiWorlds", "SM_Wep_Dagger_03", "Servo Dagger", paired: true),
+                Look("PolygonSamuraiEmpire", "SM_Wep_Spikes_01", "Twin Spikes", paired: true, hold: Hold.Forward),
+                Look("PolygonSamuraiEmpire", "SM_Wep_Claw_01", "Apex Claw", paired: true, hold: Hold.Forward),
             } },
             new ClassWeapons { id = WeaponClassId.ArcCaster, looks = new[]
             {
-                Look("PolygonSciFiCity", "SM_Wep_Rifle_Laser_01", "Laser Emitter"),
-                Look("PolygonSciFiWorlds", "SM_Wep_Alien_01", "Arc Projector"),
-                Look("PolygonSciFiCity", "SM_Wep_Rifle_Plasma_01", "Plasma Caster"),
-                Look("PolygonSciFiWorlds", "SM_Wep_Alien_03", "Storm Projector"),
-                Look("PolygonSciFiWorlds", "SM_Wep_Launcher_01", "Extinction Launcher"),
+                Gun("PolygonSciFiCity", "SM_Wep_Rifle_Laser_01", "Laser Emitter"),
+                Gun("PolygonSciFiWorlds", "SM_Wep_Alien_01", "Arc Projector"),
+                Gun("PolygonSciFiCity", "SM_Wep_Rifle_Plasma_01", "Plasma Caster"),
+                Gun("PolygonSciFiWorlds", "SM_Wep_Alien_03", "Storm Projector"),
+                Gun("PolygonSciFiWorlds", "SM_Wep_Launcher_01", "Extinction Launcher"),
             } },
             new ClassWeapons { id = WeaponClassId.Longaxe, looks = new[]
             {
@@ -138,11 +163,11 @@ namespace KryticalNova.EditorTools
             } },
             new ClassWeapons { id = WeaponClassId.Warbow, looks = new[]
             {
-                Look("AnimationBowCombat", "Wep_RecurveBow_01", "Hunting Bow"),
-                Look("AnimationBowCombat", "Wep_RecurveBow_04", "Ranger Bow"),
-                Look("AnimationBowCombat", "Wep_LongBow_01", "Longbow"),
-                Look("AnimationBowCombat", "Wep_LongBow_03", "War Longbow"),
-                Look("AnimationBowCombat", "Wep_CompoundBow_02", "Stormflight Bow"),
+                Look("AnimationBowCombat", "Wep_RecurveBow_01", "Hunting Bow", hold: Hold.Bow),
+                Look("AnimationBowCombat", "Wep_RecurveBow_04", "Ranger Bow", hold: Hold.Bow),
+                Look("AnimationBowCombat", "Wep_LongBow_01", "Longbow", hold: Hold.Bow),
+                Look("AnimationBowCombat", "Wep_LongBow_03", "War Longbow", hold: Hold.Bow),
+                Look("AnimationBowCombat", "Wep_CompoundBow_02", "Stormflight Bow", hold: Hold.Bow),
             } },
         };
 
@@ -185,6 +210,7 @@ namespace KryticalNova.EditorTools
             // Pets are not made here: they have their own data and builder (Krytical Nova/Items/7. Build Pets).
 
             int added = SeedLines(partCatalog, outfitLooks, weaponLooks, rings, amulets);
+            GearThemeBuilder.Build();
             AssetDatabase.SaveAssets();
             Debug.Log($"[Items] Gear looks: {created.Count} new template assets, {added} new dictionary lines. Baking the ladder...");
             GearStatBaker.Bake();
@@ -200,7 +226,8 @@ namespace KryticalNova.EditorTools
             public FactionMask factions;
             public BodyFit bodies;
             public bool helmets;       // armor carries the head attachment with the same variant number
-            public string[] sets;      // set name per variant
+            public string[] sets;      // look name per mesh variant: names the look templates only
+            public string[] bandSets;  // the set of each band (Common, Uncommon, Rare I, Rare II, Epic): what its pieces are called
             public string armor, gloves, boots, cape, ring, amulet;
         }
 
@@ -212,37 +239,43 @@ namespace KryticalNova.EditorTools
             new GearPack
             {
                 code = "SCFI_SOLD", tag = "SOLD", idOffset = 0, factions = FactionMask.Hegemony, bodies = BodyFit.Humanoid,
-                sets = OutfitNames, armor = "Armor", gloves = "Gauntlets", boots = "Boots", cape = "Cape",
-                ring = "Signet", amulet = "Tags"
+                sets = OutfitNames, bandSets = new[] { "Recruit", "Sentinel", "Striker", "Bastion", "Commander" },
+                armor = "Armor", gloves = "Gauntlets", boots = "Boots", cape = "Cape", ring = "Signet", amulet = "Tags"
             },
             new GearPack
             {
                 code = "SCFI_CIVL", tag = "CIVL", idOffset = 100, factions = FactionMask.Hegemony, bodies = BodyFit.Humanoid,
                 sets = new[] { "Commuter", "Technician", "Courier", "Analyst", "Executive", "Director", "Magnate" },
+                bandSets = new[] { "Commuter", "Courier", "Analyst", "Director", "Magnate" },
                 armor = "Outfit", gloves = "Gloves", boots = "Shoes", cape = "Pack", ring = "Band", amulet = "Lanyard"
             },
             new GearPack
             {
                 code = "SCFI_ROBO", tag = "ROBO", idOffset = 200, factions = FactionMask.Null, bodies = BodyFit.Robot,
                 sets = new[] { "Servitor", "Hauler", "Welder", "Sentry", "Enforcer", "Ravager", "Juggernaut", "Overseer", "Annihilator", "Prime" },
+                bandSets = new[] { "Servitor", "Welder", "Ravager", "Overseer", "Prime" },
                 armor = "Plating", gloves = "Servos", boots = "Stabilizers", cape = "Back Unit", ring = "Coupling", amulet = "Capacitor"
             },
             new GearPack
             {
                 code = "FANT_SKTN", tag = "SKTN", idOffset = 300, factions = FactionMask.Null, bodies = BodyFit.Skeleton, helmets = true,
                 sets = new[] { "Graveworn", "Boneguard", "Cryptwarden", "Deathsworn", "Dreadknight", "Lichbound", "Revenant" },
+                bandSets = new[] { "Graveworn", "Cryptwarden", "Deathsworn", "Lichbound", "Revenant" },
                 armor = "Armor", gloves = "Gauntlets", boots = "Greaves", cape = "Shroud", ring = "Knucklebone", amulet = "Phylactery"
             },
             new GearPack
             {
                 code = "VIKG_WARR", tag = "VIKG", idOffset = 400, factions = FactionMask.Covenant, bodies = BodyFit.Humanoid,
                 sets = new[] { "Thrall", "Huscarl", "Reaver", "Berserker", "Jarl", "Warlord" },
+                bandSets = new[] { "Thrall", "Huscarl", "Berserker", "Jarl", "Warlord" },
                 armor = "Armor", gloves = "Bracers", boots = "Boots", cape = "Cloak", ring = "Arm Ring", amulet = "Torc"
             },
             new GearPack
             {
                 code = "ELVN_WARR", tag = "ELVN", idOffset = 500, factions = FactionMask.Covenant, bodies = BodyFit.Humanoid,
                 sets = new[] { "Scout", "Warden", "Ranger", "Bladesinger", "Highguard", "Sunlord" },
+                // Uncommon is Wildrunner, not the look's "Warden": a Warden is a faction's leader (the glossary).
+                bandSets = new[] { "Scout", "Wildrunner", "Bladesinger", "Highguard", "Sunlord" },
                 armor = "Armor", gloves = "Gloves", boots = "Boots", cape = "Cloak", ring = "Leaf Ring", amulet = "Talisman"
             },
         };
@@ -271,8 +304,29 @@ namespace KryticalNova.EditorTools
             public string description;
         }
 
+        /// <summary>Names a look template after its mesh variant. Players never read it: a line is named after its set.</summary>
         private static string SetName(GearPack pack, byte variant) =>
             variant - 1 < pack.sets.Length ? pack.sets[variant - 1] : $"Mark {variant:00}";
+
+        /// <summary>
+        /// The set a pack's pieces of one band belong to. Every piece carries it, whichever mesh variant it wears: a
+        /// pack has fewer glove and boot meshes than armors, so naming a piece after its mesh split the sets.
+        /// </summary>
+        private static string SetOf(GearPack pack, int band) => pack.bandSets[Mathf.Clamp(band, 0, pack.bandSets.Length - 1)];
+
+        private static string NounOf(GearPack pack, EquipSlot slot)
+        {
+            switch (slot)
+            {
+                case EquipSlot.Armor: return pack.armor;
+                case EquipSlot.Gloves: return pack.gloves;
+                case EquipSlot.Boots: return pack.boots;
+                case EquipSlot.Cape: return pack.cape;
+                case EquipSlot.Ring: return pack.ring;
+                case EquipSlot.Amulet: return pack.amulet;
+                default: return null;
+            }
+        }
 
         /// <summary>Creates / refreshes a template per (pack, slot, variant). Result: looks per (pack index, slot), lowest variant first.</summary>
         private static Dictionary<(int pack, EquipSlot slot), List<OutfitLook>> GenerateOutfitLooks(SidekickPartCatalog catalog, List<string> created)
@@ -313,6 +367,7 @@ namespace KryticalNova.EditorTools
                         def.partCatalog = catalog;
                         def.appearancePartIds = ids.ToArray();
                         def.appearanceParts = new List<SidekickPartRef>(); // no direct mesh references: loaded on demand
+                        def.colorCells = GearThemeBuilder.PaintedCells(def); // what a set's colour theme may recolour
                         EditorUtility.SetDirty(def);
                         looks.Add(new OutfitLook { template = def, variant = vv, name = name, description = description });
                     }
@@ -390,6 +445,14 @@ namespace KryticalNova.EditorTools
                         $"{WeaponClasses.DisplayName(cls.id)} look.", created, out bool isNew);
                     templates[band] = def;
                     if (def.weaponClass != cls.id) { def.weaponClass = cls.id; EditorUtility.SetDirty(def); }
+                    // Which looks are pairs, and which hand holds a look, is this table's to say.
+                    bool leftHanded = look.hold == Hold.Bow;
+                    if (def.paired != look.paired || def.leftHanded != leftHanded)
+                    {
+                        def.paired = look.paired;
+                        def.leftHanded = leftHanded;
+                        EditorUtility.SetDirty(def);
+                    }
                     if (!force && !isNew && def.weaponPrefab != null) continue; // keeps a hand-tuned grip; the Rebuild menu forces it
 
                     string source = FindPrefab(look.pack, look.prefab);
@@ -397,10 +460,20 @@ namespace KryticalNova.EditorTools
                     string prefabPath = $"{WeaponPrefabFolder}/W_{cls.id}_{band + 1:00}.prefab";
                     var prefab = BuildWeaponPrefab(source, prefabPath, out Bounds bounds);
                     if (prefab == null) continue;
+                    float scale = look.scale > 0f ? look.scale : 1f;
+                    bounds = new Bounds(bounds.center * scale, bounds.size * scale);
                     def.weaponPrefab = prefab;
+                    // The starting pose of a look. From here it is tuned on the template, in the hand and carried.
                     def.weaponLocalPosition = Vector3.zero;
-                    def.weaponLocalEuler = Vector3.zero;
-                    def.weaponLocalScale = Vector3.one;
+                    def.weaponLocalEuler = look.hold == Hold.Forward ? ForwardHoldEuler : look.hold == Hold.Bow ? BowHoldEuler : Vector3.zero;
+                    def.weaponLocalScale = Vector3.one * scale;
+                    def.offHandLocalPosition = Vector3.zero;
+                    def.offHandLocalEuler = Vector3.zero;
+                    def.carry = look.paired ? WeaponCarry.Hips : WeaponCarry.Back;
+                    def.carryLocalPosition = look.paired
+                        ? Vector3.zero
+                        : new Vector3(0f, 0f, BackCarryShift(bounds.min.z, bounds.max.z) + BackCarryDrop(look.hold));
+                    def.carryLocalEuler = Vector3.zero;
                     float length = Mathf.Max(0.3f, bounds.max.z);
                     def.hitboxCenter = new Vector3(0f, bounds.center.y, length * 0.5f + 0.05f);
                     def.hitboxSize = new Vector3(Mathf.Max(0.18f, bounds.size.x), Mathf.Max(0.18f, bounds.size.y), length);
@@ -410,6 +483,29 @@ namespace KryticalNova.EditorTools
             }
             return result;
         }
+
+        /// <summary>
+        /// How far along its own length a weapon is slid on the back sheath, which sits at the right shoulder with
+        /// the weapon running down across the back. A blade hangs there by its grip. A polearm or a bow has its grip
+        /// in the middle, so as it comes half of it would stand over the head and the other half drag on the ground:
+        /// it is slid until a short length shows above the shoulder, and a very long one further, until its foot is
+        /// clear of the ground.
+        /// </summary>
+        private static float BackCarryShift(float gripEnd, float farEnd)
+        {
+            const float above = 0.45f; // what may stand above the shoulder
+            const float below = 1.3f;  // how far down the back a weapon reaches before it drags
+            if (gripEnd >= -above) return 0f;
+            float atShoulder = gripEnd + above;                       // this point of the weapon sits on the sheath
+            if (farEnd - atShoulder > below) atShoulder = farEnd - below;
+            return -atShoulder;
+        }
+
+        /// <summary>
+        /// The sheath was placed for a katana, whose hilt stands at the head. A gun's stock and a bow's upper limb
+        /// look wrong that high: they ride lower down the back.
+        /// </summary>
+        private static float BackCarryDrop(Hold hold) => hold == Hold.Forward ? 0.25f : hold == Hold.Bow ? 0.15f : 0f;
 
         /// <summary>Finds a Synty prefab by file name inside a pack, wherever the pack keeps it.</summary>
         private static string FindPrefab(string pack, string prefabName)
@@ -463,13 +559,14 @@ namespace KryticalNova.EditorTools
                     if (!outfitLooks.TryGetValue((packIndex, slot), out var looks) || looks.Count == 0) continue;
                     for (int band = 0; band < BandCount; band++)
                     {
-                        if (slot == EquipSlot.Cape && band == BandUncommon) continue; // gear spec: no Uncommon cape
+                        if (slot == EquipSlot.Cape && band < BandRareOne) continue; // a cape comes with Rare gear and up
                         var look = looks[LookIndex(band, looks.Count)];
+                        string set = SetOf(pack, band);
                         Add(new GearDictionary.Line
                         {
                             tag = pack.tag, slot = slot, rarity = BandRarity[band], band = (byte)band, pack = pack.code,
                             factions = pack.factions, bodies = pack.bodies, look = look.template,
-                            displayName = look.name, description = look.description
+                            set = set, displayName = $"{set} {NounOf(pack, slot)}", description = look.description
                         });
                     }
                 }
@@ -492,34 +589,63 @@ namespace KryticalNova.EditorTools
             }
 
             // Rings and amulets belong to a group like the outfits do. They fit every body of that group's faction,
-            // and are named after the same set as the group's armor of that band.
+            // and are named after the same set as the group's outfit of that band.
             for (int packIndex = 0; packIndex < Packs.Length; packIndex++)
             {
                 var pack = Packs[packIndex];
-                outfitLooks.TryGetValue((packIndex, EquipSlot.Armor), out var armorLooks);
                 for (int band = 0; band < BandCount; band++)
                 {
-                    string set = armorLooks != null && armorLooks.Count > 0
-                        ? SetName(pack, armorLooks[LookIndex(band, armorLooks.Count)].variant)
-                        : SetName(pack, (byte)(band + 1));
+                    string set = SetOf(pack, band);
                     Add(new GearDictionary.Line
                     {
                         tag = pack.tag, slot = EquipSlot.Ring, rarity = BandRarity[band], band = (byte)band, pack = pack.code,
                         factions = pack.factions, bodies = BodyFit.All, look = rings[BandJewelleryTemplate[band]],
-                        displayName = $"{set} {pack.ring}", description = "Worn on a finger."
+                        set = set, displayName = $"{set} {pack.ring}", description = "Worn on a finger."
                     });
                     Add(new GearDictionary.Line
                     {
                         tag = pack.tag, slot = EquipSlot.Amulet, rarity = BandRarity[band], band = (byte)band, pack = pack.code,
                         factions = pack.factions, bodies = BodyFit.All, look = amulets[BandJewelleryTemplate[band]],
-                        displayName = $"{set} {pack.amulet}", description = "Worn around the neck."
+                        set = set, displayName = $"{set} {pack.amulet}", description = "Worn around the neck."
                     });
                 }
             }
 
+            int renamed = NameLinesAfterSets(lines);
+            if (renamed > 0) Debug.Log($"[Items] {renamed} gear lines named after their set.");
+
+            // The basic tiers have no cape (owner, 6 Oct 2026). Lines seeded before that rule go; their IDs are not reused.
+            int capes = lines.RemoveAll(l => l.slot == EquipSlot.Cape && l.band < BandRareOne);
+            if (capes > 0) Debug.Log($"[Items] {capes} cape lines below Rare removed: capes come with Rare gear and up.");
+
             dictionary.SetLines(catalog, lines);
             EditorUtility.SetDirty(dictionary);
             return added;
+        }
+
+        /// <summary>
+        /// Gives every outfit, ring and amulet line that names no set its pack's set for that band, and the name that
+        /// goes with it ("Sunlord Gloves"). A line that already names a set is left alone, so a name edited by hand
+        /// in the dictionary survives. Returns how many lines changed.
+        /// </summary>
+        private static int NameLinesAfterSets(List<GearDictionary.Line> lines)
+        {
+            int changed = 0;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var line = lines[i];
+                if (line.slot == EquipSlot.Weapon || !string.IsNullOrEmpty(line.set)) continue;
+                GearPack pack = null;
+                foreach (var candidate in Packs)
+                    if (candidate.tag == line.tag) { pack = candidate; break; }
+                string noun = pack != null ? NounOf(pack, line.slot) : null;
+                if (noun == null) continue;
+                line.set = SetOf(pack, line.band);
+                line.displayName = $"{line.set} {noun}";
+                lines[i] = line;
+                changed++;
+            }
+            return changed;
         }
 
         /// <summary>Common wears the pack's first variant (the basic outfit); the rest spread towards the last one.</summary>

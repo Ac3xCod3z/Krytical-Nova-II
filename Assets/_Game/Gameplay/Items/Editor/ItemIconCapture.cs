@@ -50,6 +50,7 @@ namespace KryticalNova.EditorTools
         {
             Capture(IconSubjects());
             GearStatBaker.Bake(); // hand each look's icon to its tiers
+            if (CaptureLineIcons(missingOnly: false) > 0) GearStatBaker.Bake();
         }
 
         /// <summary>Only the items that have no icon yet (new gear), leaving every existing icon as it is.</summary>
@@ -57,9 +58,14 @@ namespace KryticalNova.EditorTools
         public static void CaptureMissing()
         {
             var missing = IconSubjects().Where(i => i.icon == null).ToList();
-            if (missing.Count == 0) { Debug.Log("[Items] Every look already has an icon."); return; }
-            Capture(missing);
-            GearStatBaker.Bake();
+            if (missing.Count > 0)
+            {
+                Capture(missing);
+                GearStatBaker.Bake();
+            }
+            int lines = CaptureLineIcons(missingOnly: true);
+            if (lines > 0) GearStatBaker.Bake();
+            if (missing.Count == 0 && lines == 0) Debug.Log("[Items] Every look and every themed line already has an icon.");
         }
 
         [MenuItem("Krytical Nova/Items/Capture Icons (Selected Items)")]
@@ -68,7 +74,53 @@ namespace KryticalNova.EditorTools
             Capture(Selection.objects.OfType<ItemDefinition>().ToList());
         }
 
-        public static void Capture(List<ItemDefinition> items)
+        /// <summary>
+        /// The icons of the lines that wear a colour theme: one per line, drawn in its set's colours, because two
+        /// lines can share a look and differ only in colour. The line's first tier stands for all of them, so the
+        /// ladder has to be baked first. Returns how many were captured.
+        /// </summary>
+        public static int CaptureLineIcons(bool missingOnly)
+        {
+            var dictionary = AssetDatabase.LoadAssetAtPath<GearDictionary>(SidekickGearGenerator.DictionaryPath);
+            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(SidekickGearGenerator.CatalogPath);
+            if (dictionary == null || catalog == null) return 0;
+
+            var lines = dictionary.Lines.ToList();
+            var subjects = new List<ItemDefinition>();
+            var lineOf = new Dictionary<ItemDefinition, int>();
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var line = lines[i];
+                if (!line.IsValid || line.look == null || string.IsNullOrEmpty(line.theme)) continue;
+                if (missingOnly && line.icon != null) continue;
+                var first = catalog.Get(line.FirstItemId);
+                if (first == null || first.colorTheme == 0) continue;
+                subjects.Add(first);
+                lineOf[first] = i;
+            }
+            if (subjects.Count == 0) return 0;
+
+            Capture(subjects, item => $"{lines[lineOf[item]].look.name}_{lines[lineOf[item]].theme}", (item, sprite) =>
+            {
+                var line = lines[lineOf[item]];
+                line.icon = sprite;
+                lines[lineOf[item]] = line;
+            });
+            dictionary.SetLines(dictionary.Parts, lines);
+            EditorUtility.SetDirty(dictionary);
+            AssetDatabase.SaveAssets();
+            return subjects.Count;
+        }
+
+        public static void Capture(List<ItemDefinition> items) =>
+            Capture(items, item => item.name, (item, sprite) =>
+            {
+                item.icon = sprite;
+                EditorUtility.SetDirty(item);
+            });
+
+        private static void Capture(List<ItemDefinition> items, System.Func<ItemDefinition, string> fileName,
+            System.Action<ItemDefinition, Sprite> assign)
         {
             if (items.Count == 0) return;
             WeatherVfxBuilder.EnsureFolder(IconFolder);
@@ -96,7 +148,7 @@ namespace KryticalNova.EditorTools
                     var subject = BuildSubject(item, material, temp, out Vector3 viewDir);
                     if (subject == null) continue;
                     SceneManager.MoveGameObjectToScene(subject, scene);
-                    string path = $"{IconFolder}/{item.name}.png";
+                    string path = $"{IconFolder}/{fileName(item)}.png";
                     RenderToPng(cam, rt, subject.transform, viewDir, path);
                     Object.DestroyImmediate(subject);
                     written.Add((item, path));
@@ -110,8 +162,7 @@ namespace KryticalNova.EditorTools
 
                 foreach (var w in written)
                 {
-                    w.item.icon = AssetDatabase.LoadAssetAtPath<Sprite>(w.path);
-                    EditorUtility.SetDirty(w.item);
+                    assign(w.item, AssetDatabase.LoadAssetAtPath<Sprite>(w.path));
                     done++;
                 }
                 AssetDatabase.SaveAssets();
@@ -186,15 +237,17 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>
-        /// Gear is drawn in its own pack's colours: the palette the lineage of that pack starts with. Worn in the game
-        /// it takes its wearer's palette, so this is the look it has on the characters it was made for.
+        /// Gear is drawn in its own pack's colours: the palette the lineage of that pack starts with, and over it the
+        /// colours of the piece's set when it has a theme. A piece without one (the basic outfit) takes its wearer's
+        /// palette in the game, so this is the look it has on the characters it was made for.
         /// </summary>
         private static Material PackMaterial(ItemDefinition item, Material baseMaterial, CharacterCreationDatabase characters,
             Dictionary<string, Material> cache, List<Object> temp)
         {
             string pack = PackOf(item);
             if (pack == null || characters == null || baseMaterial == null) return baseMaterial;
-            if (cache.TryGetValue(pack, out var cached)) return cached;
+            string key = $"{pack}:{item.colorTheme}";
+            if (cache.TryGetValue(key, out var cached)) return cached;
 
             var result = baseMaterial;
             foreach (var lineage in characters.Lineages)
@@ -203,16 +256,17 @@ namespace KryticalNova.EditorTools
                 var recipe = RecipeEdit.Default(lineage, BodyType.Masculine);
                 var pixels = new Color32[CharacterColorMap.PixelCount];
                 CharacterColorMap.Fill(recipe, characters, pixels);
-                var map = CharacterColorMap.CreateTexture($"IconPalette_{pack}");
+                CharacterColorMap.OverlayGear(item, pixels);
+                var map = CharacterColorMap.CreateTexture($"IconPalette_{key}");
                 map.SetPixels32(pixels);
                 map.Apply(false);
-                result = new Material(baseMaterial) { name = $"IconMaterial_{pack}" };
+                result = new Material(baseMaterial) { name = $"IconMaterial_{key}" };
                 result.SetTexture(ColorMapId, map);
                 temp.Add(map);
                 temp.Add(result);
                 break;
             }
-            cache[pack] = result;
+            cache[key] = result;
             return result;
         }
 

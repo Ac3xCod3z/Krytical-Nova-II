@@ -135,8 +135,8 @@ faction instead of the hard-wired blade set; `SkillDefinitionSO.weaponClass` let
 
 ## 5. Starting gear
 
-Level-1 Common set of the character's own outfit pack in Armor / Gloves / Boots / Cape, the level-1 Common weapon of the chosen
-Discipline in the Weapon slot, 10 Stims, nothing else. Weapon lines carry the class's faction mask so a Carbine never reaches a
+Level-1 Common set of the character's own outfit pack in Armor / Gloves / Boots (no Cape: Capes exist from Rare up, owner
+6 Oct 2026), the level-1 Common weapon of the chosen Discipline in the Weapon slot, 10 Stims, nothing else. Weapon lines carry the class's faction mask so a Carbine never reaches a
 Null or Covenant character; Null's two body packs stay separated by `BodyFit`.
 
 ## 6. How many looks, and the grading rule
@@ -162,6 +162,9 @@ Viking + Elven.
   in the Pack.
 - `gm.loadout <class>` wipes the Pack and re-equips the level-1 starter kit of that class.
 - Both mirrored in `GmToolsWindow` as dropdowns (Slot, Rarity, Level snapped to band steps, Class) with a Give button.
+- `gm.gearset [level] [rarity] [temper] [wear]` (for example `gm.gearset 112 epic 60 wear`) gives one whole set with the weapon of
+  the class in use, tempered and optionally worn; `gm.temper.all <percent> [worn|pack|all]` sets the Temper of gear the player
+  already has. In `GmToolsWindow` they are the "Whole Gear Set" and "Temper" sections of the Items tab.
 
 ## 8. As built (4 Oct 2026)
 
@@ -179,9 +182,21 @@ Viking + Elven.
 
 **Weapon models.** Each look template's model is built from its Synty prefab with one convention, the one the katana grip was tuned for: grip at the pivot, long axis along +Z, broad side (blade width, a rifle's height, a bow's belly) along Y. Icons are captured looking at that broad side. The Bow Combat pack ships a Built-in pipeline material, so the bows use a URP copy in `Items/Data/Assets/Materials/`. A grip that needs a different hold is tuned on the template (`weaponLocalPosition` / `weaponLocalEuler`) and survives re-bakes; `Krytical Nova ▸ Items ▸ Rebuild Weapon Look Models` rebuilds every model from its mesh (and resets those poses).
 
+**Paired weapons, holds and carry (as built, 6 Oct 2026).** Each weapon look says how it is held and where it goes when it is put away (`ItemDefinition`: `paired`, `offHandLocal…`, `leftHanded`, `carry`, `carryLocal…`; set per look in `SidekickGearGenerator`'s weapon table and baked onto every tier).
+
+| Weapons | In the hands | Put away |
+| --- | --- | --- |
+| The Carbine's Common look (the **Sidearm**, a pistol) | **one in each hand**; the off hand is the main hand's mirror | a holster on each hip (`WeaponCarry.Hips`) |
+| Servo Claws, all five looks | **one on each hand** | on the hips |
+| The Carbine's rifles, Arc Caster | one weapon, held pointing forward (`Hold.Forward`), not blade-up like a sword | across the back, moved down so the muzzle does not stand over the head |
+| Warbow | in the **left** hand, as Synty's bow clips draw it (`leftHanded`); a right-hand bow would need mirrored clips, which is possible per weapon but not needed | across the back |
+| Monoblade, Glaive, Harvester, Longaxe, Claymore | main hand, blade up | across the back; long ones are shifted so they neither stand over the head nor reach the ground |
+
+`WeaponVisualMount` does the work: it spawns the second copy on `OffHandSocket` (left hand), follows the draw and sheathe the animation motor already replicates, and when the weapon is on the back with no Cape worn it sits 8 cm closer in. The sockets are made by `WeaponSocketsSetup` (part of **Setup ▸ Player Prefab**). Combat is unchanged: the hit box stays on the main hand. Every look was checked in Play on a body of its own faction, sheathed, drawn and mid-attack, and every Cape on both body types with a weapon on the back.
+
 **Clip sets.** Monoblade: Grruzam katana (measured hit timings). Glaive, Harvester, Longaxe, Claymore: Grruzam great-sword, same clip per slot letter, default hit timings. Warbow: Synty Bow Combat (`Stand_Shoot_Reload`, `Stand_Shoot_Leaping` for S8), default hit timings. Carbine, Arc Caster, Servo Claws: the Monoblade's clips as stand-ins.
 
-**Stand-ins still to replace:** gun and unarmed animation sets; measured hit moments for the great-sword and bow clips; projectiles, and the cone / volley (S1) and called-in strike (S8) shapes for ranged classes (today ranged skills hit at reach 8–12 with no projectile, and their area skills are centred on the caster); one basic attack combo for every class (the katana combo); weapon grip poses per mesh (tuned on the look template).
+**Stand-ins still to replace:** gun and unarmed animation sets (so a Sidearm or Servo Claws draw still reaches over the shoulder before the weapons appear in the hands); measured hit moments for the great-sword and bow clips; projectiles, and the cone / volley (S1) and called-in strike (S8) shapes for ranged classes (today ranged skills hit at reach 8–12 with no projectile, and their area skills are centred on the caster); one basic attack combo for every class (the katana combo); weapon grip poses per mesh (tuned on the look template).
 ## Sources
 
 - 12SKY M Global class guide (LDCloud): https://www.ldcloud.net/blog/12sky-m-global-class-guide

@@ -36,6 +36,7 @@ namespace KryticalNova.EditorTools
             var partCatalog = dictionary.Parts != null
                 ? dictionary.Parts
                 : AssetDatabase.LoadAssetAtPath<SidekickPartCatalog>(SidekickPartCatalogBaker.CatalogPath);
+            var themes = AssetDatabase.LoadAssetAtPath<GearThemeLibrary>(GearThemeBuilder.LibraryPath);
 
             var entries = new List<GearDictionary.Entry>();
             var baked = new List<ItemDefinition>();
@@ -63,6 +64,9 @@ namespace KryticalNova.EditorTools
 
                 var look = line.look;
                 string folder = $"{GearRoot}/{line.tag}";
+                ushort theme = themes != null ? themes.IdOf(line.theme) : (ushort)0;
+                if (theme == 0 && !string.IsNullOrEmpty(line.theme))
+                    Debug.LogWarning($"[Items] Line {line.lineId} ({line.displayName}) names the theme '{line.theme}', which {GearThemeBuilder.LibraryPath} does not have: it keeps its wearer's colours.", dictionary);
                 byte variant = 0;
                 if (partCatalog != null && look.appearancePartIds != null)
                     foreach (ushort partId in look.appearancePartIds)
@@ -89,7 +93,7 @@ namespace KryticalNova.EditorTools
                     def.itemId = itemId;
                     def.displayName = line.displayName;
                     def.description = line.description;
-                    def.icon = look.icon;
+                    def.icon = line.icon != null ? line.icon : look.icon;
                     def.rarity = line.rarity;
                     def.equipSlot = line.slot;
                     def.maxStack = 1;
@@ -109,12 +113,22 @@ namespace KryticalNova.EditorTools
                     def.partCatalog = look.partCatalog;
                     def.appearancePartIds = look.appearancePartIds != null ? (ushort[])look.appearancePartIds.Clone() : System.Array.Empty<ushort>();
                     def.appearanceParts = new List<SidekickPartRef>();
+                    def.colorTheme = theme;
+                    def.colorThemes = theme != 0 ? themes : null;
+                    def.colorCells = look.colorCells != null ? (byte[])look.colorCells.Clone() : System.Array.Empty<byte>();
                     def.weaponPrefab = look.weaponPrefab;
                     def.weaponLocalPosition = look.weaponLocalPosition;
                     def.weaponLocalEuler = look.weaponLocalEuler;
                     def.weaponLocalScale = look.weaponLocalScale;
                     def.hitboxCenter = look.hitboxCenter;
                     def.hitboxSize = look.hitboxSize;
+                    def.paired = look.paired;
+                    def.offHandLocalPosition = look.offHandLocalPosition;
+                    def.offHandLocalEuler = look.offHandLocalEuler;
+                    def.leftHanded = look.leftHanded;
+                    def.carry = look.carry;
+                    def.carryLocalPosition = look.carryLocalPosition;
+                    def.carryLocalEuler = look.carryLocalEuler;
                     def.petPrefab = null;
                     EditorUtility.SetDirty(def);
                     baked.Add(def);

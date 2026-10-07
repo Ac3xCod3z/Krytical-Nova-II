@@ -647,6 +647,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "EmoteWheel",
+                    "type": "Button",
+                    "id": "772bd0a0-88a1-4bfe-9388-01300000000b",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -757,6 +766,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "GmConsole",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "282bd0a0-88a1-4bfe-9388-01300000000b",
+                    "path": "<Keyboard>/b",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "EmoteWheel",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

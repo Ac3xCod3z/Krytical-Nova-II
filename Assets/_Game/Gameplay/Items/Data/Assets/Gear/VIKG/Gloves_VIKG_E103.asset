@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 11361
   displayName: Warlord Bracers
   description: Worn on the hands.
-  icon: {fileID: 21300000, guid: c06467108c03b2a40a46ea54df055b87, type: 3}
+  icon: {fileID: 21300000, guid: 7c21dfaf8d90cc04cb7758584bc41e69, type: 3}
   rarity: 3
   equipSlot: 3
   maxStack: 1
@@ -46,12 +46,22 @@ MonoBehaviour:
   appearancePartIds: 8e038f03t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 20
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 88e3e4y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}
   weaponLocalScale: {x: 1, y: 1, z: 1}
   hitboxCenter: {x: 0, y: 0.01, z: 0.55}
   hitboxSize: {x: 0.18, y: 0.18, z: 1.15}
+  paired: 0
+  offHandLocalPosition: {x: 0, y: 0, z: 0}
+  offHandLocalEuler: {x: 0, y: 0, z: 0}
+  leftHanded: 0
+  carry: 0
+  carryLocalPosition: {x: 0, y: 0, z: 0}
+  carryLocalEuler: {x: 0, y: 0, z: 0}
   petPrefab: {fileID: 0}
   petScale: 1
   petOffset: {x: 0.45, y: 0.75, z: -0.15}

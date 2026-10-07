@@ -14,6 +14,13 @@ namespace KryticalNova.Items.Visuals
     public sealed class CharacterAppearance : MonoBehaviour
     {
         private static readonly EquipSlot[] VisualSlots = { EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape };
+        private static readonly EquipSlot[] ColorSlots = { EquipSlot.Cape, EquipSlot.Boots, EquipSlot.Gloves, EquipSlot.Armor };
+
+        /// <summary>
+        /// The visual slots in the order their set colours are laid down. The armor comes last: metal, straps and
+        /// lights are shared by every piece, and the armor is the piece that should decide them.
+        /// </summary>
+        public static IReadOnlyList<EquipSlot> ColorOrder => ColorSlots;
 
         [Tooltip("The character's single skinned renderer. Its original mesh supplies the reference bones/bindposes.")]
         [SerializeField] private SkinnedMeshRenderer targetRenderer;
@@ -44,6 +51,7 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private SidekickPartRef wrapPart;
 
         private readonly Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>> slotParts = new Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>>();
+        private readonly Dictionary<EquipSlot, ItemDefinition> worn = new Dictionary<EquipSlot, ItemDefinition>();
         private readonly SortedDictionary<BodyRegion, SidekickPartRef> resolved = new SortedDictionary<BodyRegion, SidekickPartRef>();
         private readonly List<SidekickPartRef> partList = new List<SidekickPartRef>(48);
         private readonly List<Transform> boneBuffer = new List<Transform>(160);
@@ -56,6 +64,11 @@ namespace KryticalNova.Items.Visuals
 
         /// <summary>Raised after every rebuild, so mirrors (the equipment preview doll) can re-share the mesh.</summary>
         public event Action Rebuilt;
+        /// <summary>Raised when the piece in a visual slot changes: the colours a piece brings change with it.</summary>
+        public event Action WornChanged;
+
+        /// <summary>The piece shown in a visual slot, or null.</summary>
+        public ItemDefinition GetWorn(EquipSlot slot) => worn.TryGetValue(slot, out var item) ? item : null;
 
         public bool IsConfigured => fixedParts.Count > 0 || defaultParts.Count > 0;
         public SkinnedMeshRenderer Renderer => targetRenderer;
@@ -121,6 +134,11 @@ namespace KryticalNova.Items.Visuals
         public void SetSlot(EquipSlot slot, ItemDefinition item)
         {
             if (Array.IndexOf(VisualSlots, slot) < 0) return;
+            if (GetWorn(slot) != item)
+            {
+                if (item == null) worn.Remove(slot); else worn[slot] = item;
+                WornChanged?.Invoke();
+            }
             IReadOnlyList<SidekickPartRef> parts = item != null ? item.GetAppearanceParts() : null;
             if (parts != null && parts.Count == 0) parts = null;
             if (slotParts.TryGetValue(slot, out var existing) && ReferenceEquals(existing, parts)) return;
@@ -150,6 +168,9 @@ namespace KryticalNova.Items.Visuals
             }
             slotParts.Clear();
             foreach (var kv in source.slotParts) slotParts[kv.Key] = kv.Value;
+            worn.Clear();
+            foreach (var kv in source.worn) worn[kv.Key] = kv.Value;
+            WornChanged?.Invoke();
             // The source's own look can change after this clone was made (a recipe applied at runtime): a later
             // try-on must merge from the current look, not the one copied at Instantiate.
             fixedParts.Clear();

@@ -29,6 +29,7 @@ namespace KryticalNova.EditorTools
             "Assets/_Game/UI/Settings/Settings.uss",
             "Assets/_Game/UI/Inventory/Items.uss",
             "Assets/_Game/UI/Inventory/Forge.uss",
+            "Assets/_Game/UI/HUD/Herald/Herald.uss",
             "Assets/_Game/UI/HUD/Minimap/Minimap.uss",
             "Assets/_Game/UI/HUD/Map/WorldMap.uss",
             "Assets/_Game/UI/HUD/Chat/ChatWindow.uss",
@@ -36,6 +37,7 @@ namespace KryticalNova.EditorTools
             "Assets/_Game/UI/HUD/Party/PartyPanels.uss",
             "Assets/_Game/UI/HUD/Pet/PetPanels.uss",
             "Assets/_Game/UI/Social/SocialPanels.uss",
+            "Assets/_Game/UI/Social/EmoteWheel.uss",
             "Assets/_Game/UI/Economy/EconomyWindows.uss",
             "Assets/_Game/UI/NPC/NpcInteraction.uss"
         };

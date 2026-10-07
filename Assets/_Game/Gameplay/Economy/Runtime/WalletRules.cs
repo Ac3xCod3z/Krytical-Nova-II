@@ -30,6 +30,8 @@ namespace KryticalNova.Economy
         Vendor = 5,
         /// <summary>Not charged by anything yet: Tempering, Fusion, Tuning.</summary>
         GearWork = 6,
+        /// <summary>Ascension attempts at the Herald.</summary>
+        Herald = 7,
     }
 
     /// <summary>

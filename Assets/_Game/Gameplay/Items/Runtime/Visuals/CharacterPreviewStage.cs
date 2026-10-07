@@ -208,7 +208,7 @@ namespace KryticalNova.Items.Visuals
                 case EquipSlot.Weapon:
                     if (dollWeapon == null) return false;
                     dollWeapon.SetWeapon(item);
-                    ApplyPreviewLayers(dollWeapon.gameObject);
+                    ApplyPreviewLayers(doll); // a paired or hip-carried weapon is not under the mount
                     break;
                 case EquipSlot.Armor:
                 case EquipSlot.Gloves:
@@ -240,7 +240,7 @@ namespace KryticalNova.Items.Visuals
             if (dollWeapon != null && (tryOnItem == null || tryOnItem.equipSlot != EquipSlot.Weapon))
             {
                 dollWeapon.SetWeapon(sourceEquipment != null ? sourceEquipment.GetDefinition(EquipSlot.Weapon) : null);
-                ApplyPreviewLayers(dollWeapon.gameObject);
+                ApplyPreviewLayers(doll);
             }
         }
 
@@ -341,15 +341,14 @@ namespace KryticalNova.Items.Visuals
             clone.name = "Preview Doll";
             foreach (var mb in clone.GetComponentsInChildren<MonoBehaviour>(true))
             {
-                if (mb is CharacterAppearance || mb is WeaponVisualMount || mb is AnimancerComponent) continue;
+                if (mb is CharacterAppearance || mb is WeaponVisualMount || mb is AnimancerComponent || mb is IPreviewDollPart) continue;
                 DestroyImmediate(mb);
             }
             foreach (var c in clone.GetComponentsInChildren<Collider>(true)) DestroyImmediate(c);
             foreach (var rb in clone.GetComponentsInChildren<Rigidbody>(true)) DestroyImmediate(rb);
 
             dollWeapon = clone.GetComponentInChildren<WeaponVisualMount>(true);
-            if (dollWeapon != null)
-                for (int i = dollWeapon.transform.childCount - 1; i >= 0; i--) DestroyImmediate(dollWeapon.transform.GetChild(i).gameObject);
+            if (dollWeapon != null) dollWeapon.ClearInherited(); // the original's weapon models, wherever they were riding
 
             clone.transform.SetParent(transform, false);
             clone.transform.localPosition = Vector3.zero;
@@ -361,6 +360,7 @@ namespace KryticalNova.Items.Visuals
             }
             doll = clone;
             dollAppearance = clone.GetComponent<CharacterAppearance>();
+            foreach (var part in clone.GetComponentsInChildren<IPreviewDollPart>(true)) part.BindToOriginal(sourceAppearance.gameObject);
             dollAppearance.Rebuilt += () => ApplyPreviewLayers(doll);
             ApplyPreviewLayers(doll);
             doll.SetActive(IsOpen || previewCamera.enabled);

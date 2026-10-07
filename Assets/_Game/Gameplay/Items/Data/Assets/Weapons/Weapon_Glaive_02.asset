@@ -28,18 +28,29 @@ MonoBehaviour:
   statModifiers: []
   restoreHealth: 0
   restoreChi: 0
+  useEffect: 0
   useCooldown: 1
   usableFromHotbar: 0
   placeholderGlyph: 
   appearancePartIds: 
   partCatalog: {fileID: 0}
   appearanceParts: []
+  colorTheme: 0
+  colorThemes: {fileID: 0}
+  colorCells: 
   weaponPrefab: {fileID: 5131788775879038660, guid: 1b5c908e2fb737647a3d4838f3084a21, type: 3}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}
   weaponLocalScale: {x: 1, y: 1, z: 1}
   hitboxCenter: {x: 0, y: 0.0005450994, z: 0.68415385}
   hitboxSize: {x: 0.18, y: 0.31651717, z: 1.2683077}
+  paired: 0
+  offHandLocalPosition: {x: 0, y: 0, z: 0}
+  offHandLocalEuler: {x: 0, y: 0, z: 0}
+  leftHanded: 0
+  carry: 0
+  carryLocalPosition: {x: 0, y: 0, z: 0.031692266}
+  carryLocalEuler: {x: 0, y: 0, z: 0}
   petPrefab: {fileID: 0}
   petScale: 1
   petOffset: {x: 0.45, y: 0.75, z: -0.15}

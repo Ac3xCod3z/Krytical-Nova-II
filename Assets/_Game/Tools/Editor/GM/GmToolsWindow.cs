@@ -5,6 +5,7 @@ using System.Text;
 using KryticalNova.Core;
 using KryticalNova.DevTools;
 using KryticalNova.Factions;
+using KryticalNova.Forge;
 using KryticalNova.Items;
 using KryticalNova.Player;
 using KryticalNova.Progression;
@@ -38,6 +39,7 @@ namespace KryticalNova.EditorTools.GM
         private const string EconomyTab = "Economy";
         private const string SocialTab = "Social";
         private const string PetsTab = "Pets";
+        private const string RenownTab = "Renown";
         private const int MaxLogLines = 200;
         private const int MaxSearchResults = 40;
 
@@ -863,6 +865,136 @@ namespace KryticalNova.EditorTools.GM
             foreach (int level in seen) yield return new ValueDropdownItem<int>($"Level {level}", level);
         }
 
+        // ---- a whole set: the same lookup as gm.gearset
+
+        [TabGroup(Tabs, ItemsTab), Title("Whole Gear Set"), ValueDropdown(nameof(GearSetChoices)), EnableIf(nameof(IsReady)), LabelText("Set"), PropertyOrder(520)]
+        [InfoBox("The sets this character can wear. One click gives Armor, Gloves, Boots, Ring, Amulet, the Cape when the set has one, " +
+                 "and the weapon of the class in use, all at the Temper % below. A character below the set's level gets it in the " +
+                 "Pack instead of on: raise its level first (Player tab).")]
+        [SerializeField] private int gearSetLine;
+
+        [TabGroup(Tabs, ItemsTab), ValueDropdown(nameof(GearSetLevelChoices)), EnableIf(nameof(IsReady)), LabelText("Level"), PropertyOrder(521)]
+        [SerializeField] private int gearSetLevel = 112;
+
+        [TabGroup(Tabs, ItemsTab), PropertyRange(0, nameof(TemperCap)), EnableIf(nameof(IsReady)), LabelText("Temper %"), PropertyOrder(522)]
+        [SerializeField] private int gearTemper;
+
+        [TabGroup(Tabs, ItemsTab), ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Put it on (what is worn goes to the Pack)"), PropertyOrder(523)]
+        [SerializeField] private bool gearSetWear = true;
+
+        [TabGroup(Tabs, ItemsTab), Button("Give Whole Set", ButtonSizes.Large), GUIColor(0.55f, 0.9f, 0.75f), EnableIf(nameof(IsReady)), PropertyOrder(524)]
+        private void GiveGearSet()
+        {
+            var inv = LocalInventory;
+            if (inv == null || inv.Gear == null || !inv.Gear.TryGetLine((ushort)gearSetLine, out var line) || !FitsTarget(line))
+            {
+                Log("Pick a set first.");
+                return;
+            }
+            int level = gearSetLevel;
+            if (!LineHasLevel(inv.Gear, line.lineId, level)) level = LowestLevel(inv.Gear, line.lineId);
+            Run($"gm.gearset {level} {line.rarity.ToString().ToLowerInvariant()} {gearTemper}{(gearSetWear ? " wear" : string.Empty)}");
+        }
+
+        // ---- Temper on gear the player already has: gm.temper.all
+
+        [TabGroup(Tabs, ItemsTab), Title("Temper"), ShowInInspector, DisplayAsString, LabelText("Worn Now"), PropertyOrder(530)]
+        [InfoBox("Sets the Temper % above on gear the player already has. A Temper of 0 clears it.")]
+        private string WornTemper
+        {
+            get
+            {
+                var inv = LocalInventory;
+                if (inv == null || inv.Catalog == null) return "(enter Play Mode)";
+                var sb = new StringBuilder();
+                foreach (EquipSlot slot in EquipSlots.All)
+                {
+                    ItemStack stack = inv.GetEquipped(slot);
+                    ItemDefinition item = stack.IsEmpty ? null : inv.Catalog.Get(stack.itemId);
+                    if (item == null || !item.IsLadderGear) continue;
+                    if (sb.Length > 0) sb.Append("  ·  ");
+                    sb.Append(slot).Append(" +").Append(GearItemState.Of(stack).Temper).Append('%');
+                }
+                return sb.Length > 0 ? sb.ToString() : "no gear worn";
+            }
+        }
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Temper"), EnableIf(nameof(IsReady)), LabelText("Set On Worn Gear"), PropertyOrder(531)]
+        private void TemperWorn() => Run($"gm.temper.all {gearTemper} worn");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Temper"), EnableIf(nameof(IsReady)), LabelText("Set On Pack Gear"), PropertyOrder(532)]
+        private void TemperPack() => Run($"gm.temper.all {gearTemper} pack");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Temper"), EnableIf(nameof(IsReady)), LabelText("Set On Everything"), PropertyOrder(533)]
+        private void TemperEverything() => Run($"gm.temper.all {gearTemper} all");
+
+        /// <summary>How far Temper goes today (the forge's cap), so the slider cannot ask for more.</summary>
+        private static int TemperCap
+        {
+            get
+            {
+                var work = LocalPlayer != null ? LocalPlayer.GetComponent<PlayerGearWork>() : null;
+                return work != null && work.Settings != null ? work.Settings.temper.hardCap : 120;
+            }
+        }
+
+        /// <summary>True when a gear line is one the targeted character wears: its own outfit group, faction and body.</summary>
+        private static bool FitsTarget(GearDictionary.Line line)
+        {
+            var wearer = LocalPlayer != null ? LocalPlayer.GetComponent<IGearWearer>() : null;
+            if (wearer == null) return true;
+            if (wearer.Faction != FactionId.None && !FactionRules.Includes(line.factions, wearer.Faction)) return false;
+            if (wearer.Body != BodyFit.None && (line.bodies & wearer.Body) == 0) return false;
+            return string.IsNullOrEmpty(wearer.GearPack) || string.IsNullOrEmpty(line.pack) || line.pack == wearer.GearPack;
+        }
+
+        private static bool LineHasLevel(GearDictionary gear, ushort lineId, int level)
+        {
+            foreach (var entry in gear.Entries)
+                if (entry.lineId == lineId && entry.itemLevel == level) return true;
+            return false;
+        }
+
+        private static int LowestLevel(GearDictionary gear, ushort lineId)
+        {
+            int lowest = int.MaxValue;
+            foreach (var entry in gear.Entries)
+                if (entry.lineId == lineId && entry.itemLevel < lowest) lowest = entry.itemLevel;
+            return lowest == int.MaxValue ? 1 : lowest;
+        }
+
+        /// <summary>One choice per set this character can wear, named as the game names it: "Sunlord  (Epic 100–112)".</summary>
+        private static IEnumerable<ValueDropdownItem<int>> GearSetChoices()
+        {
+            var inv = LocalInventory;
+            if (inv == null || inv.Gear == null) yield break;
+            foreach (var line in inv.Gear.Lines)
+            {
+                if (line.slot != EquipSlot.Armor || !FitsTarget(line)) continue;
+                int lowest = int.MaxValue, highest = int.MinValue;
+                foreach (var entry in inv.Gear.Entries)
+                {
+                    if (entry.lineId != line.lineId) continue;
+                    lowest = Mathf.Min(lowest, entry.itemLevel);
+                    highest = Mathf.Max(highest, entry.itemLevel);
+                }
+                if (lowest == int.MaxValue) continue;
+                string name = string.IsNullOrEmpty(line.set) ? line.displayName : line.set;
+                yield return new ValueDropdownItem<int>($"{name}  ({line.rarity} {lowest}–{highest})", line.lineId);
+            }
+        }
+
+        /// <summary>The level tiers of the chosen set.</summary>
+        private IEnumerable<ValueDropdownItem<int>> GearSetLevelChoices()
+        {
+            var inv = LocalInventory;
+            if (inv == null || inv.Gear == null) yield break;
+            var seen = new SortedSet<int>();
+            foreach (var entry in inv.Gear.Entries)
+                if (entry.lineId == gearSetLine) seen.Add(entry.itemLevel);
+            foreach (int level in seen) yield return new ValueDropdownItem<int>($"Level {level}", level);
+        }
+
         private static IEnumerable<ValueDropdownItem<string>> ItemChoices()
         {
             var inv = LocalInventory;
@@ -973,6 +1105,127 @@ namespace KryticalNova.EditorTools.GM
 
         [ButtonGroup(Tabs + "/" + PetsTab + "/Event"), EnableIf(nameof(IsReady)), LabelText("PvP Event Loss (25 XP)"), PropertyOrder(821)]
         private void PetEventLoss() => Run("gm.pet.event loss");
+
+        // ================================================================ RENOWN (Renown, Ascension, Nova Standings)
+
+        private static PlayerNova TargetNova => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerNova>() : null;
+
+        [TabGroup(Tabs, RenownTab), Title("Renown"), ShowInInspector, DisplayAsString, LabelText("Held"), PropertyOrder(900)]
+        [InfoBox("Nothing in the game pays Renown yet, so this is the only way to get it. It is spent on Tuning at the forge, " +
+                 "and on Ascension and Nova Standings at the Herald.")]
+        private string RenownHeld => Progression != null ? Progression.Renown.ToString("N0") : "(enter Play Mode)";
+
+        [TabGroup(Tabs, RenownTab), MinValue(0), EnableIf(nameof(IsReady)), LabelText("Amount"), PropertyOrder(901)]
+        [SerializeField] private int renownAmount = 10_000;
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Renown"), EnableIf(nameof(IsReady)), LabelText("Give"), PropertyOrder(902)]
+        private void GiveRenown() => Run($"gm.renown {renownAmount}");
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Renown"), EnableIf(nameof(IsReady)), LabelText("Take"), PropertyOrder(903)]
+        private void TakeRenown() => Run($"gm.renown -{renownAmount}");
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Renown"), EnableIf(nameof(IsReady)), LabelText("Set Balance"), PropertyOrder(904)]
+        private void SetRenown() => Run($"gm.renown.set {renownAmount}");
+
+        // ---- Ascension
+
+        [TabGroup(Tabs, RenownTab), Title("Ascension"), ShowInInspector, DisplayAsString, LabelText("Now"), PropertyOrder(910)]
+        private string AscensionNow
+        {
+            get
+            {
+                PlayerNova nova = TargetNova;
+                if (nova == null || nova.Settings == null) return "(enter Play Mode)";
+                return NovaRules.AscensionLine(nova.Settings.ascension, nova.Ascension);
+            }
+        }
+
+        [TabGroup(Tabs, RenownTab), PropertyRange(0, nameof(AscensionCap)), EnableIf(nameof(IsReady)), LabelText("Level +"), PropertyOrder(911)]
+        [InfoBox("Each level is +1 Strength, Agility, Vitality and Spirit. Every 8 levels is the next Nova.")]
+        [SerializeField] private int ascensionLevel = 8;
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Ascension"), EnableIf(nameof(IsReady)), LabelText("Set Level"), PropertyOrder(912)]
+        private void SetAscension() => Run($"gm.ascension {ascensionLevel}");
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Ascension"), EnableIf(nameof(IsReady)), LabelText("None (+0)"), PropertyOrder(913)]
+        private void ClearAscension() => Run("gm.ascension 0");
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Ascension"), EnableIf(nameof(IsReady)), LabelText("Max"), PropertyOrder(914)]
+        private void MaxAscension() => Run($"gm.ascension {AscensionCap}");
+
+        [TabGroup(Tabs, RenownTab), PropertyRange(1, nameof(NovaTierCount)), EnableIf(nameof(IsReady)), LabelText("Nova Tier"), PropertyOrder(915)]
+        [SerializeField] private int novaTier = 1;
+
+        [TabGroup(Tabs, RenownTab), Button("Set To The First Level Of That Nova"), EnableIf(nameof(IsReady)), PropertyOrder(916)]
+        private void SetNovaTier()
+        {
+            PlayerNova nova = TargetNova;
+            int perTier = nova != null && nova.Settings != null ? nova.Settings.ascension.levelsPerTier : 8;
+            Run($"gm.ascension {(Mathf.Max(1, novaTier) - 1) * perTier + 1}");
+        }
+
+        private static int AscensionCap => TargetNova != null && TargetNova.Settings != null ? TargetNova.Settings.ascension.maxLevel : 96;
+        private static int NovaTierCount => TargetNova != null && TargetNova.Settings != null ? NovaRules.TierCount(TargetNova.Settings.ascension) : 12;
+
+        // ---- Nova Standings
+
+        private enum StandingChoice { All, Vanguard, Bulwark, Ironblood, Mindwell }
+
+        [TabGroup(Tabs, RenownTab), Title("Nova Standings"), ShowInInspector, DisplayAsString, LabelText("Now"), PropertyOrder(920)]
+        private string StandingsNow
+        {
+            get
+            {
+                PlayerNova nova = TargetNova;
+                if (nova == null || nova.Settings == null) return "(enter Play Mode)";
+                NovaState state = nova.State;
+                var sb = new StringBuilder();
+                foreach (StandingTrackInfo info in nova.Settings.standings.tracks)
+                    sb.Append(info.name).Append(' ').Append(state.Standing(info.track)).Append("  ·  ");
+                return sb.Append("worn: ").Append(nova.WornStanding ?? "none").ToString();
+            }
+        }
+
+        [TabGroup(Tabs, RenownTab), EnableIf(nameof(IsReady)), LabelText("Track"), PropertyOrder(921)]
+        [InfoBox("Every track the player holds a rank on raises its stat by 1 % a rank, whichever one is worn.")]
+        [SerializeField] private StandingChoice standingTrack = StandingChoice.All;
+
+        [TabGroup(Tabs, RenownTab), PropertyRange(0, nameof(StandingCap)), EnableIf(nameof(IsReady)), LabelText("Rank"), PropertyOrder(922)]
+        [SerializeField] private int standingRank = 12;
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Standing"), EnableIf(nameof(IsReady)), LabelText("Set Rank"), PropertyOrder(923)]
+        private void SetStanding() => Run($"gm.standing {standingTrack.ToString().ToLowerInvariant()} {standingRank}");
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Standing"), EnableIf(nameof(CanWearStanding)), LabelText("Wear This Track"), PropertyOrder(924)]
+        private void WearStanding() => Run($"gm.standing.wear {standingTrack.ToString().ToLowerInvariant()}");
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Standing"), EnableIf(nameof(IsReady)), LabelText("Wear None"), PropertyOrder(925)]
+        private void WearNoStanding() => Run("gm.standing.wear none");
+
+        private bool CanWearStanding => IsReady && standingTrack != StandingChoice.All;
+        private static int StandingCap => TargetNova != null && TargetNova.Settings != null ? TargetNova.Settings.standings.MaxLevel : 12;
+
+        // ---- both at once, and the Herald
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Both"), EnableIf(nameof(IsReady)), LabelText("Max Both Ladders"), GUIColor(0.55f, 0.9f, 0.75f), PropertyOrder(930)]
+        private void MaxLadders()
+        {
+            Run($"gm.ascension {AscensionCap}");
+            Run($"gm.standing all {StandingCap}");
+        }
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Both"), EnableIf(nameof(IsReady)), LabelText("Clear Both Ladders"), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(931)]
+        private void ClearLadders()
+        {
+            Run("gm.ascension 0");
+            Run("gm.standing all 0");
+        }
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Herald"), EnableIf(nameof(IsReady)), LabelText("Open Herald Here"), PropertyOrder(940)]
+        private void OpenHerald() => Run("gm.herald");
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Herald"), EnableIf(nameof(IsReady)), LabelText("Herald Needs Its NPC Again"), PropertyOrder(941)]
+        private void HeraldRuleBack() => Run("gm.herald off");
 
         // ================================================================ console + log (always visible)
 

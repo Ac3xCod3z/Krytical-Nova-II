@@ -81,6 +81,11 @@ namespace KryticalNova.EditorTools
                 Name = "Wayfinder", Title = "Deep Vault · Transit", Offers = NpcOffer.DeepVault,
                 Greeting = "Every road starts here. So does everything you want waiting at the end of one.",
                 Services = "Opens your Deep Vault: storage shared by every character of your account. Transit to other zones comes later." },
+            // The Herald stands at the plaza stall first kept for a Collector, so its id is that stall's.
+            new NpcSeed { Id = "Collector", Role = NpcRole.Herald, Model = "SM_Chr_Augmented_Male_01",
+                Name = "Herald", Title = "Ascension · Nova Standings", Offers = NpcOffer.Herald,
+                Greeting = "Renown is only a number until someone speaks it aloud. Let me speak yours.",
+                Services = "Spends your Renown. Ascension: 100 Renown and Creds for a chance to rise a level; each level raises all four attributes, and every eighth level changes your Nova. Nova Standings: buy ranks on four tracks that each raise one stat, and wear one as your title." },
         };
 
         // ---------------------------------------------------------------- all steps

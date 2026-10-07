@@ -3,6 +3,7 @@
     <Style src="ProgressionHUD.uss" />
     <Style src="../Settings/Settings.uss" />
     <Style src="../Inventory/Forge.uss" />
+    <Style src="Herald/Herald.uss" />
     <!-- Faction skins: generated overrides that only apply under a .kn-faction-* class (see FactionSkin). -->
     <Style src="../Common/KryticalSkin_Null.uss" />
     <Style src="../Common/KryticalSkin_Covenant.uss" />
@@ -16,7 +17,11 @@
     <ui:Template name="SocialPanels" src="../Social/SocialPanels.uxml" />
     <ui:Template name="SettingsWindow" src="../Settings/SettingsWindow.uxml" />
     <ui:Template name="ForgeWindow" src="../Inventory/ForgeWindow.uxml" />
+    <ui:Template name="HeraldWindow" src="Herald/HeraldWindow.uxml" />
+    <ui:Template name="EmoteWheel" src="../Social/EmoteWheel.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
+        <!-- Namecards over players' heads (PlayerNamecardController). First, so every panel draws over them. -->
+        <ui:VisualElement name="player-namecards" class="player-namecards" picking-mode="Ignore" />
         <!-- Player status frame -->
         <ui:VisualElement name="summary" class="panel blocks-world hud-movable">
             <ui:VisualElement class="row summary-top">
@@ -72,6 +77,12 @@
         <ui:VisualElement name="character-window" class="panel window blocks-world hud-movable">
             <ui:VisualElement class="row kn-header"><ui:Label text="CHARACTER" class="heading" /><ui:Button name="close-character" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button></ui:VisualElement>
             <ui:ScrollView name="character-body" class="window-body" horizontal-scroller-visibility="Hidden">
+            <ui:Label text="RENOWN" class="eyebrow section" />
+            <ui:VisualElement name="renown-block" class="renown-block kn-card">
+                <ui:VisualElement class="renown-row" picking-mode="Ignore"><ui:Label text="Renown" class="renown-label" picking-mode="Ignore" /><ui:Label name="renown-value" text="0" class="renown-value" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement class="renown-row" picking-mode="Ignore"><ui:Label text="Ascension" class="renown-label" picking-mode="Ignore" /><ui:Label name="renown-ascension" text="+0" class="renown-value-plain" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement class="renown-row" picking-mode="Ignore"><ui:Label text="Standing worn" class="renown-label" picking-mode="Ignore" /><ui:Label name="renown-standing" text="None" class="renown-value-plain" picking-mode="Ignore" /></ui:VisualElement>
+            </ui:VisualElement>
             <ui:Label text="ATTRIBUTES" class="eyebrow section" />
             <ui:VisualElement class="row">
                 <ui:Label name="stat-points" text="5 points available" class="accent" />
@@ -290,6 +301,12 @@
         <!-- The forge (GearWorkWindowController): UI/Inventory/ForgeWindow.uxml -->
         <ui:Instance template="ForgeWindow" name="forge-layer" class="hud-overlay-layer" picking-mode="Ignore" />
 
+        <!-- The Herald (HeraldWindowController): UI/HUD/Herald/HeraldWindow.uxml -->
+        <ui:Instance template="HeraldWindow" name="herald-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+
+        <!-- The emote wheel (EmoteWheelController): UI/Social/EmoteWheel.uxml -->
+        <ui:Instance template="EmoteWheel" name="emote-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+
         <!-- Network panel (NetworkSessionPanel) -->
         <ui:VisualElement name="network-panel" class="panel blocks-world hud-movable">
             <ui:VisualElement class="row kn-header"><ui:Label text="NETWORK" class="heading" /><ui:Button name="network-close" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button></ui:VisualElement>
@@ -328,7 +345,7 @@
         <ui:VisualElement name="hud-edit-banner" class="panel blocks-world" picking-mode="Position">
             <ui:VisualElement class="hud-edit-banner-text" picking-mode="Ignore">
                 <ui:Label text="HUD LAYOUT EDITOR" class="heading" />
-                <ui:Label text="Choose a panel to adjust, or all of them   ·   Drag to move   ·   Drag the gold corner to resize   ·   Hold Alt to place freely" class="help" />
+                <ui:Label text="Click a panel to adjust it, or choose one (or all) from the list   ·   Drag to move   ·   Drag the gold corner to resize   ·   Hold Alt to place freely" class="help" />
             </ui:VisualElement>
             <ui:Button name="hud-edit-pick" text="PANEL: CHOOSE" class="hud-edit-pick" tooltip="Choose which panel to adjust, or all of them" />
             <ui:Button name="hud-edit-reset-one" text="RESET THIS PANEL" />

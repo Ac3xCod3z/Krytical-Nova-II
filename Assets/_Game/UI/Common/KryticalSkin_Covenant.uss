@@ -136,6 +136,14 @@
 .kn-faction-covenant .hud-resize-handle {
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_Triangle_Small_01_Clean.png#SPR_HUD_FantasyWarrior_Triangle_Small_01_Clean");
 }
+.kn-faction-covenant .text-tooltip-title {
+    font-size: 14.56px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .text-tooltip-body {
+    font-size: 12.32px;
+    color: rgb(230, 221, 211);
+}
 
 /* ---- ProgressionHUD.uss ---- */
 .kn-faction-covenant .heading {
@@ -327,6 +335,15 @@
 .kn-faction-covenant #hud-edit-banner {
     -unity-background-image-tint-color: rgba(23, 17, 11, 0.96);
 }
+.kn-faction-covenant .hud-edit-list {
+    -unity-background-image-tint-color: rgba(23, 17, 11, 0.97);
+}
+.kn-faction-covenant .hud-edit-list Button {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .hud-edit-list Button.chosen {
+    -unity-background-image-tint-color: rgb(112, 73, 0);
+}
 .kn-faction-covenant .floating-combat-text {
     -unity-font-definition: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Fonts/Texturina/Texturina_18pt-SemiBold.ttf");
     font-size: 20.16px;
@@ -341,6 +358,32 @@
 }
 .kn-faction-covenant .floating-combat-text.reflected {
     font-size: 17.92px;
+}
+.kn-faction-covenant .renown-label {
+    font-size: 13.44px;
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .renown-value {
+    font-size: 14.56px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .renown-value-plain {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .namecard {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_Gradient_Outwards_Smooth_01.png#SPR_HUD_FantasyWarrior_Gradient_Outwards_Smooth_01");
+    -unity-background-image-tint-color: rgba(18, 13, 8, 0.66);
+}
+.kn-faction-covenant .namecard-name {
+    font-size: 17.92px;
+}
+.kn-faction-covenant .namecard-standing {
+    font-size: 13.44px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .namecard-crew {
+    font-size: 13.44px;
+    color: rgb(230, 220, 210);
 }
 
 /* ---- Settings.uss ---- */
@@ -593,6 +636,87 @@
 .kn-faction-covenant .item-temper {
     font-size: 10.08px;
     text-shadow: 1px 1px 0 rgb(16, 13, 9);
+}
+
+/* ---- Herald.uss ---- */
+.kn-faction-covenant .herald-purse {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .herald-tab {
+    font-size: 12.32px;
+    -unity-background-image-tint-color: rgb(46, 37, 27);
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .herald-tab.active {
+    -unity-background-image-tint-color: rgb(112, 73, 0);
+}
+.kn-faction-covenant .herald-level {
+    font-size: 51.52px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .herald-tier {
+    font-size: 15.68px;
+    color: rgb(230, 221, 211);
+}
+.kn-faction-covenant .herald-pip {
+    border-color: rgb(104, 91, 75);
+    background-color: rgba(26, 20, 14, 0.9);
+}
+.kn-faction-covenant .herald-pip.filled {
+    background-color: rgb(110, 255, 158);
+}
+.kn-faction-covenant .herald-pip.partial {
+    background-color: rgb(60, 120, 80);
+    border-color: rgb(100, 200, 133);
+}
+.kn-faction-covenant .herald-pip.small.filled {
+    background-color: rgb(222, 167, 65);
+    border-color: rgb(240, 204, 138);
+}
+.kn-faction-covenant .herald-line {
+    font-size: 13.44px;
+    color: rgb(230, 221, 211);
+}
+.kn-faction-covenant .herald-reason {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .herald-result {
+    font-size: 14.56px;
+}
+.kn-faction-covenant .herald-result.success {
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .herald-result.fail {
+    color: rgb(140, 236, 172);
+}
+.kn-faction-covenant .herald-worn {
+    font-size: 14.56px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .herald-track.worn {
+    -unity-background-image-tint-color: rgba(26, 60, 37, 0.95);
+}
+.kn-faction-covenant .herald-track-name {
+    font-size: 15.68px;
+}
+.kn-faction-covenant .herald-track-level {
+    font-size: 12.32px;
+    color: rgb(178, 165, 151);
+}
+.kn-faction-covenant .herald-track-rank {
+    font-size: 13.44px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .herald-track-bonus {
+    font-size: 13.44px;
+    color: rgb(230, 221, 211);
+}
+.kn-faction-covenant .herald-track-next {
+    font-size: 12.32px;
+    color: rgb(178, 165, 151);
+}
+.kn-faction-covenant .herald-track-buttons > Button {
+    font-size: 12.32px;
 }
 
 /* ---- Minimap.uss ---- */
@@ -951,6 +1075,35 @@
 .kn-faction-covenant .crew-member-title {
     font-size: 12.32px;
     color: rgb(104, 214, 141);
+}
+
+/* ---- EmoteWheel.uss ---- */
+.kn-faction-covenant .emote-wheel-label {
+    font-size: 14.56px;
+    color: rgb(234, 226, 217);
+}
+.kn-faction-covenant .emote-wheel-label.category {
+    font-size: 17.92px;
+}
+.kn-faction-covenant .emote-wheel-label.stance {
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .emote-wheel-title {
+    font-size: 17.92px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .emote-wheel-hint {
+    font-size: 12.32px;
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .emote-wheel-fill {
+    background-color: rgba(24, 18, 12, 0.88);
+}
+.kn-faction-covenant .emote-wheel-hover {
+    background-color: rgba(112, 73, 0, 0.96);
+}
+.kn-faction-covenant .emote-wheel-line {
+    background-color: rgba(222, 167, 65, 0.9);
 }
 
 /* ---- EconomyWindows.uss ---- */

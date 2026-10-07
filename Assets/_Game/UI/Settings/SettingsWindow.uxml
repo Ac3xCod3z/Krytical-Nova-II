@@ -26,7 +26,8 @@
                 <ui:Label text="WORLD MARKERS" class="eyebrow section" />
                 <ui:Toggle name="setting-move-marker" label="Ring at move destination" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-target-ring" label="Ring under selected target" value="true" class="kn-toggle kn-card" />
-                <ui:Toggle name="setting-nameplates" label="NPC nameplates" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-nameplates" label="Names over NPCs and players" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-own-namecard" label="My own namecard" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-screen-shake" label="Screen shake &amp; impact effects" value="true" class="kn-toggle kn-card" />
                 <ui:Label text="INTERFACE" class="eyebrow section" />
                 <ui:Toggle name="setting-controls-hint" label="Show hotbar controls hint" value="true" class="kn-toggle kn-card" />

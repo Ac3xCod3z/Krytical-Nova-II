@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 10324
   displayName: Courier Outfit
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: 9a12a658231c90f4a979537a51fa62f3, type: 3}
+  icon: {fileID: 21300000, guid: 924db59566507b6429d53fb9e27dbcd5, type: 3}
   rarity: 1
   equipSlot: 2
   maxStack: 1
@@ -50,12 +50,22 @@ MonoBehaviour:
   appearancePartIds: 080109010a010b010c010f01100111011701180119011a011b011c011d011e01t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
+  colorTheme: 5
+  colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
+  colorCells: 1828696a7880888990919298a0a1a2a8aac0d0e0e1e5f0f1f2f6f9fafcfdy
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}
   weaponLocalScale: {x: 1, y: 1, z: 1}
   hitboxCenter: {x: 0, y: 0.01, z: 0.55}
   hitboxSize: {x: 0.18, y: 0.18, z: 1.15}
+  paired: 0
+  offHandLocalPosition: {x: 0, y: 0, z: 0}
+  offHandLocalEuler: {x: 0, y: 0, z: 0}
+  leftHanded: 0
+  carry: 0
+  carryLocalPosition: {x: 0, y: 0, z: 0}
+  carryLocalEuler: {x: 0, y: 0, z: 0}
   petPrefab: {fileID: 0}
   petScale: 1
   petOffset: {x: 0.45, y: 0.75, z: -0.15}

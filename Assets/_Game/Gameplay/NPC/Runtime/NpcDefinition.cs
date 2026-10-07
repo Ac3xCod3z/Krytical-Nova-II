@@ -12,7 +12,8 @@ namespace KryticalNova.NPC
         GuardCaptain,
         Agent,
         Vaultkeeper,
-        Wayfinder
+        Wayfinder,
+        Herald
     }
 
     /// <summary>
@@ -31,6 +32,8 @@ namespace KryticalNova.NPC
         CrewRegistry = 1 << 2,
         /// <summary>The forge: Tempering, Fusion, Tuning and Reforge.</summary>
         GearWork = 1 << 3,
+        /// <summary>The Renown ladders: Ascension and Nova Standings.</summary>
+        Herald = 1 << 4,
     }
 
     /// <summary>Static data for one town NPC. Shops, quests and crafting hook in by role later.</summary>

@@ -64,6 +64,47 @@ namespace KryticalNova.DevTools
             return SetState(slot, state => state.WithTemper(System.Math.Min(percent, cap)));
         }
 
+        [Command("gm.temper.all", "Set the Temper % of every piece of gear the targeted player has: gm.temper.all <percent> [worn|pack|all]. " +
+                                  "worn: what is equipped. pack: what is in the Pack. all (the default): both. Stops at the cap (120).")]
+        private static string TemperAll(int percent, string where = "all")
+        {
+            if (!TryGetForge(out var work, out var error)) return error;
+            bool worn = where == "worn" || where == "all", pack = where == "pack" || where == "all";
+            if (!worn && !pack) return $"Unknown place '{where}'. Use worn, pack or all.";
+            int cap = work.Settings != null ? work.Settings.temper.hardCap : GearItemState.MaxTemper;
+            percent = System.Math.Max(0, System.Math.Min(percent, cap));
+            PlayerInventory inventory = work.Inventory;
+
+            int changedWorn = 0, changedPack = 0;
+            if (worn)
+            {
+                foreach (EquipSlot slot in EquipSlots.All)
+                {
+                    ItemStack stack = inventory.GetEquipped(slot);
+                    ItemDefinition item = stack.IsEmpty || inventory.Catalog == null ? null : inventory.Catalog.Get(stack.itemId);
+                    if (item == null || !item.IsLadderGear) continue;
+                    inventory.ServerSetEquippedData(slot, GearItemState.Of(stack).WithTemper(percent).PackInto(stack.data));
+                    changedWorn++;
+                }
+            }
+            if (pack)
+            {
+                inventory.ServerChangePack(cells =>
+                {
+                    for (int cell = 0; cell < cells.Length; cell++)
+                    {
+                        ItemDefinition item = cells[cell].IsEmpty ? null : inventory.Catalog.Get(cells[cell].itemId);
+                        if (item == null || !item.IsLadderGear) continue;
+                        cells[cell] = new ItemStack(cells[cell].itemId, 1, GearItemState.Of(cells[cell]).WithTemper(percent).PackInto(cells[cell].data));
+                        changedPack++;
+                    }
+                    return changedPack > 0;
+                });
+            }
+            if (changedWorn + changedPack == 0) return "That player has no gear there to temper.";
+            return $"Temper set to +{percent}% on {changedWorn} worn and {changedPack} Pack piece(s).";
+        }
+
         [Command("gm.fuse", "Set the Fusion stage (0-12) of the first piece of gear in the Pack: gm.fuse <stage> [slot].")]
         private static string Fuse(int stage, string slot = "") => SetState(slot, state => state.WithFusion(stage));
 
@@ -77,6 +118,16 @@ namespace KryticalNova.DevTools
             var progression = player.GetComponent<PlayerCharacterProgression>();
             if (progression == null) return "That player has no progression.";
             if (amount != 0) progression.AddRenown(amount);
+            return $"Renown {progression.Renown:N0}.";
+        }
+
+        [Command("gm.renown.set", "Set the targeted player's Renown outright: gm.renown.set <amount>.")]
+        private static string RenownSet(int amount)
+        {
+            if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
+            var progression = player.GetComponent<PlayerCharacterProgression>();
+            if (progression == null) return "That player has no progression.";
+            progression.AddRenown(System.Math.Max(0, amount) - progression.Renown);
             return $"Renown {progression.Renown:N0}.";
         }
 

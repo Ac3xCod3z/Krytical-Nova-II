@@ -1,0 +1,67 @@
+/*
+ * The Herald's window (HeraldWindowController): Ascension and Nova Standings. Shared looks (panel, buttons, cards)
+ * come from ../../Common/KryticalTheme.uss.
+ */
+
+#herald-window { left: 50%; top: 84px; width: 640px; translate: -50% 0; display: none; }
+.herald-purse { flex-grow: 1; margin-left: 14px; font-size: 12px; -unity-text-align: middle-left; }
+
+.herald-tabs { flex-direction: row; margin-top: 2px; }
+.herald-tab {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-height: 28px;
+    margin: 4px 2px 0 2px;
+    padding: 4px 4px;
+    font-size: 11px;
+    -unity-background-image-tint-color: rgb(24, 34, 46);
+    color: rgb(156, 172, 188);
+}
+.herald-tab.active { -unity-background-image-tint-color: rgb(30, 112, 98); color: rgb(255, 255, 255); }
+
+/* Ascension */
+.herald-body { flex-direction: row; margin-top: 10px; }
+.herald-column { flex-basis: 0; }
+.herald-nova { flex-grow: 5; margin-right: 12px; padding: 10px 12px; align-items: center; }
+.herald-detail { flex-grow: 6; }
+.herald-level { font-size: 46px; -unity-font-style: bold; color: rgb(255, 222, 130); margin-top: 6px; }
+.herald-tier { font-size: 14px; -unity-font-style: bold; letter-spacing: 2px; color: rgb(208, 220, 230); }
+.herald-next-tier { margin-top: 8px; -unity-text-align: middle-center; white-space: normal; }
+
+.herald-pips { flex-direction: row; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+.herald-pip {
+    width: 12px;
+    height: 12px;
+    margin: 2px;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: rgb(70, 86, 104);
+    background-color: rgba(12, 18, 26, 0.9);
+}
+.herald-pip.filled { background-color: rgb(255, 214, 110); border-color: rgb(255, 236, 170); }
+.herald-pip.partial { background-color: rgb(120, 104, 60); border-color: rgb(200, 176, 100); }
+.herald-pip.small { width: 9px; height: 9px; border-radius: 5px; margin: 1px; }
+.herald-pip.small.filled { background-color: rgb(114, 222, 196); border-color: rgb(170, 240, 222); }
+
+.herald-line { margin-top: 4px; white-space: normal; font-size: 12px; color: rgb(208, 220, 230); }
+.herald-reason { margin-top: 8px; min-height: 16px; white-space: normal; font-size: 12px; color: rgb(236, 150, 110); }
+#herald-ascend { margin-top: 8px; min-height: 34px; }
+.herald-result { margin-top: 8px; min-height: 18px; white-space: normal; font-size: 13px; -unity-font-style: bold; }
+.herald-result.success { color: rgb(114, 222, 196); }
+.herald-result.fail { color: rgb(236, 206, 140); }
+.herald-result.slip { color: rgb(240, 96, 88); }
+
+/* Nova Standings */
+.herald-standings { margin-top: 10px; }
+.herald-worn { font-size: 13px; -unity-font-style: bold; color: rgb(255, 222, 130); margin-bottom: 4px; white-space: normal; }
+.herald-tracks { flex-direction: row; flex-wrap: wrap; }
+.herald-track { width: 48%; margin: 4px 1%; padding: 8px 10px; }
+.herald-track.worn { -unity-background-image-tint-color: rgba(60, 54, 26, 0.95); }
+.herald-track-head { flex-direction: row; align-items: center; }
+.herald-track-name { font-size: 14px; -unity-font-style: bold; letter-spacing: 1px; flex-grow: 1; }
+.herald-track-level { font-size: 11px; color: rgb(146, 162, 178); }
+.herald-track-rank { font-size: 12px; color: rgb(255, 222, 130); margin-top: 2px; min-height: 15px; }
+.herald-track-bonus { font-size: 12px; color: rgb(208, 220, 230); margin-top: 4px; white-space: normal; }
+.herald-track-next { font-size: 11px; color: rgb(146, 162, 178); margin-top: 2px; white-space: normal; min-height: 28px; }
+.herald-track-buttons { flex-direction: row; margin-top: 6px; }
+.herald-track-buttons > Button { flex-grow: 1; flex-basis: 0; min-height: 28px; margin: 0 2px; font-size: 11px; }

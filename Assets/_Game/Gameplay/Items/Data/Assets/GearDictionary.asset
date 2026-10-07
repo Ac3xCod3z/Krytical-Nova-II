@@ -24,6 +24,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 95526b45e941d544283e1ad4e69669a0, type: 2}
+    set: Recruit
+    theme: 
+    icon: {fileID: 0}
     displayName: Recruit Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 2
@@ -36,6 +39,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 763b58126dd79c34fba292587a514ee2, type: 2}
+    set: Sentinel
+    theme: SOLD_Sentinel
+    icon: {fileID: 21300000, guid: 143e930526c8b4f44a728c8aa6fdc3fe, type: 3}
     displayName: Sentinel Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 3
@@ -48,6 +54,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 64638f91fa4b2ce43a89a1781fc057ea, type: 2}
+    set: Striker
+    theme: SOLD_Striker
+    icon: {fileID: 21300000, guid: 538669789aebf1349bf363764f312903, type: 3}
     displayName: Striker Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 4
@@ -60,6 +69,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 3a39e076ed6f73447ace98ba6677f8e8, type: 2}
+    set: Bastion
+    theme: SOLD_Bastion
+    icon: {fileID: 21300000, guid: 3db131ad33f8fa14bb36b4c5dab4afae, type: 3}
     displayName: Bastion Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 5
@@ -72,6 +84,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: aedd295f57eda6d40ad448061a4378d6, type: 2}
+    set: Commander
+    theme: SOLD_Commander
+    icon: {fileID: 21300000, guid: 14cc2792f0ed1fb4e81cea379b63c59c, type: 3}
     displayName: Commander Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 6
@@ -84,6 +99,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: dde3e9685823b0f408bc842cb0c93177, type: 2}
+    set: Recruit
+    theme: 
+    icon: {fileID: 0}
     displayName: Recruit Gauntlets
     description: Worn on the hands.
   - lineId: 7
@@ -96,6 +114,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: a94cd052d02adff468a542ec8bc7022d, type: 2}
+    set: Sentinel
+    theme: SOLD_Sentinel
+    icon: {fileID: 21300000, guid: 98a8dcd4b701a4b45924db1d63454709, type: 3}
     displayName: Sentinel Gauntlets
     description: Worn on the hands.
   - lineId: 8
@@ -108,6 +129,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 97bf81a33f6725040923a0cc7dcfc3d7, type: 2}
+    set: Striker
+    theme: SOLD_Striker
+    icon: {fileID: 21300000, guid: 5403f03fc53253a40b21e96472467b2e, type: 3}
     displayName: Striker Gauntlets
     description: Worn on the hands.
   - lineId: 9
@@ -120,6 +144,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 119248c015a629744a2b1414c0c08ccd, type: 2}
+    set: Bastion
+    theme: SOLD_Bastion
+    icon: {fileID: 21300000, guid: 32c30b0c3d43def43afd0edc61b21d28, type: 3}
     displayName: Bastion Gauntlets
     description: Worn on the hands.
   - lineId: 10
@@ -132,6 +159,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 50edff705b2278b4b9744e96e57dd580, type: 2}
+    set: Commander
+    theme: SOLD_Commander
+    icon: {fileID: 21300000, guid: 67cd51eb06bb6e346998f6be62babae3, type: 3}
     displayName: Commander Gauntlets
     description: Worn on the hands.
   - lineId: 11
@@ -144,6 +174,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: d132aea13f9569c4f8e7f978682caadb, type: 2}
+    set: Recruit
+    theme: 
+    icon: {fileID: 0}
     displayName: Recruit Boots
     description: Worn on the feet.
   - lineId: 12
@@ -156,6 +189,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 606ed7ca64cd6994f9463c94f250e54f, type: 2}
+    set: Sentinel
+    theme: SOLD_Sentinel
+    icon: {fileID: 21300000, guid: b1b3a9462742cc949a4095353262092b, type: 3}
     displayName: Sentinel Boots
     description: Worn on the feet.
   - lineId: 13
@@ -168,6 +204,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 94aa1d167ec2d7a4fad87b1c9c8031e1, type: 2}
+    set: Striker
+    theme: SOLD_Striker
+    icon: {fileID: 21300000, guid: 0f197ab54d527fa4baaa9dc6073282af, type: 3}
     displayName: Striker Boots
     description: Worn on the feet.
   - lineId: 14
@@ -180,6 +219,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 6ead7612a993c7446bc21a28ddb8afbe, type: 2}
+    set: Bastion
+    theme: SOLD_Bastion
+    icon: {fileID: 21300000, guid: fd6c08b059e194045800b3d1afdd3473, type: 3}
     displayName: Bastion Boots
     description: Worn on the feet.
   - lineId: 15
@@ -192,20 +234,11 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 893b3937f66a1b44298175caad2fa50a, type: 2}
+    set: Commander
+    theme: SOLD_Commander
+    icon: {fileID: 21300000, guid: be7719ed58d84c84bb479996dca322ae, type: 3}
     displayName: Commander Boots
     description: Worn on the feet.
-  - lineId: 16
-    tag: SOLD
-    slot: 7
-    rarity: 0
-    band: 0
-    pack: SCFI_SOLD
-    factions: 1
-    bodies: 1
-    weaponClass: 0
-    look: {fileID: 11400000, guid: aae543a2fe878364b961343f1defd25b, type: 2}
-    displayName: Recruit Cape
-    description: Worn across the back.
   - lineId: 17
     tag: SOLD
     slot: 7
@@ -216,6 +249,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 1531e8f3ff9d52049a314aff69426ad7, type: 2}
+    set: Striker
+    theme: SOLD_Striker
+    icon: {fileID: 21300000, guid: 227c0c0a52b28c24e90054f6a03f0729, type: 3}
     displayName: Striker Cape
     description: Worn across the back.
   - lineId: 18
@@ -228,6 +264,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: e998347f66a0aef47943a213bd5049b4, type: 2}
+    set: Bastion
+    theme: SOLD_Bastion
+    icon: {fileID: 21300000, guid: c0f4847831bc1d94396a4afda7152950, type: 3}
     displayName: Bastion Cape
     description: Worn across the back.
   - lineId: 19
@@ -240,6 +279,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: cd6b11bcd8889314fa8837f8fc12d215, type: 2}
+    set: Commander
+    theme: SOLD_Commander
+    icon: {fileID: 21300000, guid: f88f11b00e8af4b4f8328ae46f990f66, type: 3}
     displayName: Commander Cape
     description: Worn across the back.
   - lineId: 20
@@ -252,6 +294,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 50c207afb5fd7c149b74706af03f3940, type: 2}
+    set: Commuter
+    theme: 
+    icon: {fileID: 0}
     displayName: Commuter Outfit
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 21
@@ -264,6 +309,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 7ff0a39425cd0334b9885e631c6a0c88, type: 2}
+    set: Courier
+    theme: CIVL_Courier
+    icon: {fileID: 21300000, guid: 924db59566507b6429d53fb9e27dbcd5, type: 3}
     displayName: Courier Outfit
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 22
@@ -276,6 +324,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 84023e38551bb0640a67217f6b9fa227, type: 2}
+    set: Analyst
+    theme: CIVL_Analyst
+    icon: {fileID: 21300000, guid: d14f3552b56bb184e9c2268c0f7e36fb, type: 3}
     displayName: Analyst Outfit
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 23
@@ -288,6 +339,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: ef3e55da364c96349bb7dbff4e6197ce, type: 2}
+    set: Director
+    theme: CIVL_Director
+    icon: {fileID: 21300000, guid: c304814ae3cd9764ab80fa0f3358ca44, type: 3}
     displayName: Director Outfit
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 24
@@ -300,6 +354,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: f0a60d0a310e9934996ab5a4d424f966, type: 2}
+    set: Magnate
+    theme: CIVL_Magnate
+    icon: {fileID: 21300000, guid: a73a450050cb7ae4c922d0430801d2ec, type: 3}
     displayName: Magnate Outfit
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 25
@@ -312,6 +369,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 21a07f2306d77d34cb6fea3246dbab31, type: 2}
+    set: Commuter
+    theme: 
+    icon: {fileID: 0}
     displayName: Commuter Gloves
     description: Worn on the hands.
   - lineId: 26
@@ -324,7 +384,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 2b0f6d3d341c97941a683e3a6f48d991, type: 2}
-    displayName: Technician Gloves
+    set: Courier
+    theme: CIVL_Courier
+    icon: {fileID: 21300000, guid: bcd658132173d8b4a8129118d91957da, type: 3}
+    displayName: Courier Gloves
     description: Worn on the hands.
   - lineId: 27
     tag: CIVL
@@ -336,7 +399,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 2b0f6d3d341c97941a683e3a6f48d991, type: 2}
-    displayName: Technician Gloves
+    set: Analyst
+    theme: CIVL_Analyst
+    icon: {fileID: 21300000, guid: 8efbb4ee4293cd14b90fe472004e118f, type: 3}
+    displayName: Analyst Gloves
     description: Worn on the hands.
   - lineId: 28
     tag: CIVL
@@ -348,7 +414,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: d53c498e478333043b61e11d284650fd, type: 2}
-    displayName: Courier Gloves
+    set: Director
+    theme: CIVL_Director
+    icon: {fileID: 21300000, guid: 64d1168205c30884697aa1f4a999b4fa, type: 3}
+    displayName: Director Gloves
     description: Worn on the hands.
   - lineId: 29
     tag: CIVL
@@ -360,7 +429,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: d53c498e478333043b61e11d284650fd, type: 2}
-    displayName: Courier Gloves
+    set: Magnate
+    theme: CIVL_Magnate
+    icon: {fileID: 21300000, guid: 4dfd4b746f8361a458472044dc1ce221, type: 3}
+    displayName: Magnate Gloves
     description: Worn on the hands.
   - lineId: 30
     tag: CIVL
@@ -372,6 +444,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 655785adea2566843b6b37a0dad962b4, type: 2}
+    set: Commuter
+    theme: 
+    icon: {fileID: 0}
     displayName: Commuter Shoes
     description: Worn on the feet.
   - lineId: 31
@@ -384,7 +459,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 943786edb2a32a84888dc095206538cf, type: 2}
-    displayName: Technician Shoes
+    set: Courier
+    theme: CIVL_Courier
+    icon: {fileID: 21300000, guid: 29abd437dcbc71844a7223a6d5c32cde, type: 3}
+    displayName: Courier Shoes
     description: Worn on the feet.
   - lineId: 32
     tag: CIVL
@@ -396,7 +474,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 943786edb2a32a84888dc095206538cf, type: 2}
-    displayName: Technician Shoes
+    set: Analyst
+    theme: CIVL_Analyst
+    icon: {fileID: 21300000, guid: a13bf24b91bca0947861c4af42d3ee99, type: 3}
+    displayName: Analyst Shoes
     description: Worn on the feet.
   - lineId: 33
     tag: CIVL
@@ -408,7 +489,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 1db74e82e076eaf4290b78e02feea2c9, type: 2}
-    displayName: Courier Shoes
+    set: Director
+    theme: CIVL_Director
+    icon: {fileID: 21300000, guid: f8627cf4700a96d4492a63960aa3d7e2, type: 3}
+    displayName: Director Shoes
     description: Worn on the feet.
   - lineId: 34
     tag: CIVL
@@ -420,20 +504,11 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 1db74e82e076eaf4290b78e02feea2c9, type: 2}
-    displayName: Courier Shoes
+    set: Magnate
+    theme: CIVL_Magnate
+    icon: {fileID: 21300000, guid: 03f7576b83fee3248bc88481b274cf4d, type: 3}
+    displayName: Magnate Shoes
     description: Worn on the feet.
-  - lineId: 35
-    tag: CIVL
-    slot: 7
-    rarity: 0
-    band: 0
-    pack: SCFI_CIVL
-    factions: 1
-    bodies: 1
-    weaponClass: 0
-    look: {fileID: 11400000, guid: ff7b5eb4329a6f049a0ea22fabd122e8, type: 2}
-    displayName: Commuter Pack
-    description: Worn across the back.
   - lineId: 36
     tag: CIVL
     slot: 7
@@ -444,6 +519,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 4c6bc6a650113954fa1acde0ea8c75a1, type: 2}
+    set: Analyst
+    theme: CIVL_Analyst
+    icon: {fileID: 21300000, guid: e9b69222792db724a8bca46d86e50be5, type: 3}
     displayName: Analyst Pack
     description: Worn across the back.
   - lineId: 37
@@ -456,6 +534,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 36e504e494432f847a7416ae2fb5142d, type: 2}
+    set: Director
+    theme: CIVL_Director
+    icon: {fileID: 21300000, guid: 064c2c023bdacae40b6cc9af44578c70, type: 3}
     displayName: Director Pack
     description: Worn across the back.
   - lineId: 38
@@ -468,6 +549,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 304a455b9f4c9214293cfd2cb44913c1, type: 2}
+    set: Magnate
+    theme: CIVL_Magnate
+    icon: {fileID: 21300000, guid: b8e9a91d5cd4eb2418217a0f97ce787b, type: 3}
     displayName: Magnate Pack
     description: Worn across the back.
   - lineId: 39
@@ -480,6 +564,9 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: df2059a8f1e78b74a94d1ad0da431dbd, type: 2}
+    set: Servitor
+    theme: 
+    icon: {fileID: 0}
     displayName: Servitor Plating
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 40
@@ -492,6 +579,9 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: decc24d19f665f74ca34ce35bd1dd441, type: 2}
+    set: Welder
+    theme: ROBO_Welder
+    icon: {fileID: 21300000, guid: c100c2fccf77e2145bcfd22f76209ffc, type: 3}
     displayName: Welder Plating
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 41
@@ -504,6 +594,9 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: 7066931c84ddab44f830065212b6f73b, type: 2}
+    set: Ravager
+    theme: ROBO_Ravager
+    icon: {fileID: 21300000, guid: 2abafceb3d9341647b84a006c51d5d4d, type: 3}
     displayName: Ravager Plating
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 42
@@ -516,6 +609,9 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: 6250b3dc7e8efed49b31da4a6a8da141, type: 2}
+    set: Overseer
+    theme: ROBO_Overseer
+    icon: {fileID: 21300000, guid: 30b7cbb27b376d742b6c086a12253c3e, type: 3}
     displayName: Overseer Plating
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 43
@@ -528,6 +624,9 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: cec333226cef8de4ba68d192d1522b72, type: 2}
+    set: Prime
+    theme: ROBO_Prime
+    icon: {fileID: 21300000, guid: 97cb97cd458f65943af66e3663c8d570, type: 3}
     displayName: Prime Plating
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 44
@@ -540,6 +639,9 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: df52dffde7f771a4db981b85c97e279c, type: 2}
+    set: Servitor
+    theme: 
+    icon: {fileID: 0}
     displayName: Servitor Servos
     description: Worn on the hands.
   - lineId: 45
@@ -552,7 +654,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: 58b638d7a73f37a4c9e9fda9c9afe6d0, type: 2}
-    displayName: Hauler Servos
+    set: Welder
+    theme: ROBO_Welder
+    icon: {fileID: 21300000, guid: 3da4eb8d5f709ef4e95cf603dbf3fe74, type: 3}
+    displayName: Welder Servos
     description: Worn on the hands.
   - lineId: 46
     tag: ROBO
@@ -564,7 +669,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: 72ce6de26266aeb438aebd76d1afc36c, type: 2}
-    displayName: Welder Servos
+    set: Ravager
+    theme: ROBO_Ravager
+    icon: {fileID: 21300000, guid: fc2cc904f9f78e144a006d8ae5ff5aa3, type: 3}
+    displayName: Ravager Servos
     description: Worn on the hands.
   - lineId: 47
     tag: ROBO
@@ -576,7 +684,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: f4fd18797c1726a499c10922706fee2e, type: 2}
-    displayName: Sentry Servos
+    set: Overseer
+    theme: ROBO_Overseer
+    icon: {fileID: 21300000, guid: 6a5e0b073aa893b44bc99ef008276a9b, type: 3}
+    displayName: Overseer Servos
     description: Worn on the hands.
   - lineId: 48
     tag: ROBO
@@ -588,7 +699,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: 6451586a1c2a5084098408856fce6d4f, type: 2}
-    displayName: Enforcer Servos
+    set: Prime
+    theme: ROBO_Prime
+    icon: {fileID: 21300000, guid: 17614a646a84e1f4681bca22cf6a73e9, type: 3}
+    displayName: Prime Servos
     description: Worn on the hands.
   - lineId: 49
     tag: ROBO
@@ -600,6 +714,9 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: af0c2ca985ac80e419295659e5cc59b1, type: 2}
+    set: Servitor
+    theme: 
+    icon: {fileID: 0}
     displayName: Servitor Stabilizers
     description: Worn on the feet.
   - lineId: 50
@@ -612,7 +729,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: b0cc24baed695024b913898cd0a44bf1, type: 2}
-    displayName: Hauler Stabilizers
+    set: Welder
+    theme: ROBO_Welder
+    icon: {fileID: 21300000, guid: 1595b72bfc189b841b27896f2e5aaf40, type: 3}
+    displayName: Welder Stabilizers
     description: Worn on the feet.
   - lineId: 51
     tag: ROBO
@@ -624,7 +744,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: 05ff14d587105294ab27f4f08f693e6b, type: 2}
-    displayName: Welder Stabilizers
+    set: Ravager
+    theme: ROBO_Ravager
+    icon: {fileID: 21300000, guid: 7f756ae1b1041da4d9632ee99f501c32, type: 3}
+    displayName: Ravager Stabilizers
     description: Worn on the feet.
   - lineId: 52
     tag: ROBO
@@ -636,7 +759,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: a675c30f5e7ae7a4b92c4acfe7a21c5e, type: 2}
-    displayName: Sentry Stabilizers
+    set: Overseer
+    theme: ROBO_Overseer
+    icon: {fileID: 21300000, guid: ce2f0ce8f962fbc42b491c9031d2eb64, type: 3}
+    displayName: Overseer Stabilizers
     description: Worn on the feet.
   - lineId: 53
     tag: ROBO
@@ -648,20 +774,11 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: c699fa1ff2764c240a8b4c77b20452d8, type: 2}
-    displayName: Enforcer Stabilizers
+    set: Prime
+    theme: ROBO_Prime
+    icon: {fileID: 21300000, guid: e772b59796b26d743a8fbacdf258ed85, type: 3}
+    displayName: Prime Stabilizers
     description: Worn on the feet.
-  - lineId: 54
-    tag: ROBO
-    slot: 7
-    rarity: 0
-    band: 0
-    pack: SCFI_ROBO
-    factions: 2
-    bodies: 2
-    weaponClass: 0
-    look: {fileID: 11400000, guid: 03f0fcf2f805ab94abf5f499bd42a823, type: 2}
-    displayName: Servitor Back Unit
-    description: Worn across the back.
   - lineId: 55
     tag: ROBO
     slot: 7
@@ -672,7 +789,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: adde2d52023f20c45b7a5640be78c566, type: 2}
-    displayName: Sentry Back Unit
+    set: Ravager
+    theme: ROBO_Ravager
+    icon: {fileID: 21300000, guid: 4e757479f2078b2439d53de5f8e0d16d, type: 3}
+    displayName: Ravager Back Unit
     description: Worn across the back.
   - lineId: 56
     tag: ROBO
@@ -684,7 +804,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: e2c8339f266a1ae499884dd05163ee53, type: 2}
-    displayName: Enforcer Back Unit
+    set: Overseer
+    theme: ROBO_Overseer
+    icon: {fileID: 21300000, guid: 726e7c20fa11c614eb37a37fac12bec7, type: 3}
+    displayName: Overseer Back Unit
     description: Worn across the back.
   - lineId: 57
     tag: ROBO
@@ -696,7 +819,10 @@ MonoBehaviour:
     bodies: 2
     weaponClass: 0
     look: {fileID: 11400000, guid: cb45b8bf42df0c34f948d743124465a2, type: 2}
-    displayName: Ravager Back Unit
+    set: Prime
+    theme: ROBO_Prime
+    icon: {fileID: 21300000, guid: b03422957f9e8934bb3d462347e5c679, type: 3}
+    displayName: Prime Back Unit
     description: Worn across the back.
   - lineId: 58
     tag: SKTN
@@ -708,6 +834,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: 4f1349656815c0d419742382152fcfe9, type: 2}
+    set: Graveworn
+    theme: 
+    icon: {fileID: 0}
     displayName: Graveworn Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 59
@@ -720,6 +849,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: 589925c4e723288479b9f4ee91ae127c, type: 2}
+    set: Cryptwarden
+    theme: SKTN_Cryptwarden
+    icon: {fileID: 21300000, guid: a12e492347d82f047a6004d8c895c1d2, type: 3}
     displayName: Cryptwarden Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 60
@@ -732,6 +864,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: b6dfa3f872dfb2142bf5b9b1082fb523, type: 2}
+    set: Deathsworn
+    theme: SKTN_Deathsworn
+    icon: {fileID: 21300000, guid: af948fa416a58ce48a18a48bc038a971, type: 3}
     displayName: Deathsworn Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 61
@@ -744,6 +879,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: ee7562d151e70164481e622dec4b8114, type: 2}
+    set: Lichbound
+    theme: SKTN_Lichbound
+    icon: {fileID: 21300000, guid: 8714969ca15413a46835f9b6dce02f96, type: 3}
     displayName: Lichbound Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 62
@@ -756,6 +894,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: 02b668cafeb62f94d97387140919b786, type: 2}
+    set: Revenant
+    theme: SKTN_Revenant
+    icon: {fileID: 21300000, guid: 4789735a1cb83c04e8c0dec2851b3be1, type: 3}
     displayName: Revenant Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 63
@@ -768,6 +909,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: 41782b0667c14734a8d11572bc18d385, type: 2}
+    set: Graveworn
+    theme: 
+    icon: {fileID: 0}
     displayName: Graveworn Gauntlets
     description: Worn on the hands.
   - lineId: 64
@@ -780,7 +924,10 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: aac3a8d81a165e84a86ffcbebf9ee48e, type: 2}
-    displayName: Boneguard Gauntlets
+    set: Cryptwarden
+    theme: SKTN_Cryptwarden
+    icon: {fileID: 21300000, guid: 0666735160ebc5d47b4b8a29a75a4c59, type: 3}
+    displayName: Cryptwarden Gauntlets
     description: Worn on the hands.
   - lineId: 65
     tag: SKTN
@@ -792,7 +939,10 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: aac3a8d81a165e84a86ffcbebf9ee48e, type: 2}
-    displayName: Boneguard Gauntlets
+    set: Deathsworn
+    theme: SKTN_Deathsworn
+    icon: {fileID: 21300000, guid: 746ca9f4d6c97584f9072d5203ed4e54, type: 3}
+    displayName: Deathsworn Gauntlets
     description: Worn on the hands.
   - lineId: 66
     tag: SKTN
@@ -804,7 +954,10 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: f9e4ceef71b3ca14a9ed3e1c3e895d41, type: 2}
-    displayName: Cryptwarden Gauntlets
+    set: Lichbound
+    theme: SKTN_Lichbound
+    icon: {fileID: 21300000, guid: 5081f6b5db8ddc24d8c78e02ef3ca65c, type: 3}
+    displayName: Lichbound Gauntlets
     description: Worn on the hands.
   - lineId: 67
     tag: SKTN
@@ -816,7 +969,10 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: f9e4ceef71b3ca14a9ed3e1c3e895d41, type: 2}
-    displayName: Cryptwarden Gauntlets
+    set: Revenant
+    theme: SKTN_Revenant
+    icon: {fileID: 21300000, guid: 6cfb911ff9b5b8349be6ccfa57ab64c9, type: 3}
+    displayName: Revenant Gauntlets
     description: Worn on the hands.
   - lineId: 68
     tag: SKTN
@@ -828,6 +984,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: 74314c8b00d2c0c449d2e46c4383c36d, type: 2}
+    set: Graveworn
+    theme: 
+    icon: {fileID: 0}
     displayName: Graveworn Greaves
     description: Worn on the feet.
   - lineId: 69
@@ -840,7 +999,10 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: 5ae9ec0a294473646a08c33eaee7567a, type: 2}
-    displayName: Boneguard Greaves
+    set: Cryptwarden
+    theme: SKTN_Cryptwarden
+    icon: {fileID: 21300000, guid: c07b722b84352ea459fcf495ed6c725f, type: 3}
+    displayName: Cryptwarden Greaves
     description: Worn on the feet.
   - lineId: 70
     tag: SKTN
@@ -852,7 +1014,10 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: 5ae9ec0a294473646a08c33eaee7567a, type: 2}
-    displayName: Boneguard Greaves
+    set: Deathsworn
+    theme: SKTN_Deathsworn
+    icon: {fileID: 21300000, guid: 2af6cf3419da0274bae6f7b6c503e726, type: 3}
+    displayName: Deathsworn Greaves
     description: Worn on the feet.
   - lineId: 71
     tag: SKTN
@@ -864,7 +1029,10 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: eb5ff3fa979329a4db53897d3e7b0b72, type: 2}
-    displayName: Cryptwarden Greaves
+    set: Lichbound
+    theme: SKTN_Lichbound
+    icon: {fileID: 21300000, guid: bd0398dc2aec0b044af8d6752c9a9c6c, type: 3}
+    displayName: Lichbound Greaves
     description: Worn on the feet.
   - lineId: 72
     tag: SKTN
@@ -876,20 +1044,11 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: eb5ff3fa979329a4db53897d3e7b0b72, type: 2}
-    displayName: Cryptwarden Greaves
+    set: Revenant
+    theme: SKTN_Revenant
+    icon: {fileID: 21300000, guid: 4ec2a2d07e63e7842859820e433ead4c, type: 3}
+    displayName: Revenant Greaves
     description: Worn on the feet.
-  - lineId: 73
-    tag: SKTN
-    slot: 7
-    rarity: 0
-    band: 0
-    pack: FANT_SKTN
-    factions: 2
-    bodies: 4
-    weaponClass: 0
-    look: {fileID: 11400000, guid: 73849553a4f293b4fa320426e0ff9654, type: 2}
-    displayName: Graveworn Shroud
-    description: Worn across the back.
   - lineId: 74
     tag: SKTN
     slot: 7
@@ -900,6 +1059,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: 5f746e51e00554544be9242f5f712113, type: 2}
+    set: Deathsworn
+    theme: SKTN_Deathsworn
+    icon: {fileID: 21300000, guid: 5d54e7b0b42140e47a3d2eda2f55c3fc, type: 3}
     displayName: Deathsworn Shroud
     description: Worn across the back.
   - lineId: 75
@@ -912,6 +1074,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: f7b085935748a34458b4480720924b51, type: 2}
+    set: Lichbound
+    theme: SKTN_Lichbound
+    icon: {fileID: 21300000, guid: 4997e6ebb2685bd46b844e1449ae74b1, type: 3}
     displayName: Lichbound Shroud
     description: Worn across the back.
   - lineId: 76
@@ -924,6 +1089,9 @@ MonoBehaviour:
     bodies: 4
     weaponClass: 0
     look: {fileID: 11400000, guid: 7c6982fe4427a2b4383d7459f30536bd, type: 2}
+    set: Revenant
+    theme: SKTN_Revenant
+    icon: {fileID: 21300000, guid: 7f84bdb93eb8f9f4b8f8cef9427bf7ef, type: 3}
     displayName: Revenant Shroud
     description: Worn across the back.
   - lineId: 77
@@ -936,6 +1104,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 852ffccfe643ae940ab8d67e74e27680, type: 2}
+    set: Thrall
+    theme: 
+    icon: {fileID: 0}
     displayName: Thrall Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 78
@@ -948,6 +1119,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 08418f162ca7f4240aec41c6e57033b8, type: 2}
+    set: Huscarl
+    theme: VIKG_Huscarl
+    icon: {fileID: 21300000, guid: 5fa280a7e76e34146b8e487e7f8cc7c6, type: 3}
     displayName: Huscarl Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 79
@@ -960,6 +1134,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 5f5c18ca6cfd5f945b903c5ff5eda25d, type: 2}
+    set: Berserker
+    theme: VIKG_Berserker
+    icon: {fileID: 21300000, guid: c6972add31340fb45a0086acb6f06643, type: 3}
     displayName: Berserker Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 80
@@ -972,6 +1149,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 5b16e613105e82c42924904c55f99f79, type: 2}
+    set: Jarl
+    theme: VIKG_Jarl
+    icon: {fileID: 21300000, guid: e064b51d5b365ba40b1e08b6b7982851, type: 3}
     displayName: Jarl Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 81
@@ -984,6 +1164,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: bd98487fdefafa342b6729e7a9d1f626, type: 2}
+    set: Warlord
+    theme: VIKG_Warlord
+    icon: {fileID: 21300000, guid: e3239882ca7cbd7449f44d0b5efc5a10, type: 3}
     displayName: Warlord Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 82
@@ -996,6 +1179,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: b364a7d2529858e45a6ddddedd630570, type: 2}
+    set: Thrall
+    theme: 
+    icon: {fileID: 0}
     displayName: Thrall Bracers
     description: Worn on the hands.
   - lineId: 83
@@ -1008,6 +1194,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: c47a232e28f50f442b2640826b63d55d, type: 2}
+    set: Huscarl
+    theme: VIKG_Huscarl
+    icon: {fileID: 21300000, guid: 03f5c855f433da042a65b69892db68fc, type: 3}
     displayName: Huscarl Bracers
     description: Worn on the hands.
   - lineId: 84
@@ -1020,6 +1209,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: bc3525218d77b6c42a06f3faac5ff79a, type: 2}
+    set: Berserker
+    theme: VIKG_Berserker
+    icon: {fileID: 21300000, guid: 94bd92b4920f6db4d8a942ca95641e7c, type: 3}
     displayName: Berserker Bracers
     description: Worn on the hands.
   - lineId: 85
@@ -1032,6 +1224,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: f224f70c778cb184f88bdbe34a156d68, type: 2}
+    set: Jarl
+    theme: VIKG_Jarl
+    icon: {fileID: 21300000, guid: 8c322e7383413394ca4facb252c82860, type: 3}
     displayName: Jarl Bracers
     description: Worn on the hands.
   - lineId: 86
@@ -1044,6 +1239,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: b6a6fdf9c16f25f4682dec4accda55e9, type: 2}
+    set: Warlord
+    theme: VIKG_Warlord
+    icon: {fileID: 21300000, guid: 7c21dfaf8d90cc04cb7758584bc41e69, type: 3}
     displayName: Warlord Bracers
     description: Worn on the hands.
   - lineId: 87
@@ -1056,6 +1254,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 39f10418b830c1f48aa244cb9a402711, type: 2}
+    set: Thrall
+    theme: 
+    icon: {fileID: 0}
     displayName: Thrall Boots
     description: Worn on the feet.
   - lineId: 88
@@ -1068,6 +1269,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 540dbe17fe1828941b9d98896aac0b66, type: 2}
+    set: Huscarl
+    theme: VIKG_Huscarl
+    icon: {fileID: 21300000, guid: 93daa6bfc14068b4195335ccb2f662d2, type: 3}
     displayName: Huscarl Boots
     description: Worn on the feet.
   - lineId: 89
@@ -1080,6 +1284,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: cd701b4284bd9e6419d20ff89526a1e5, type: 2}
+    set: Berserker
+    theme: VIKG_Berserker
+    icon: {fileID: 21300000, guid: abd448209b3206549a981b34562904cf, type: 3}
     displayName: Berserker Boots
     description: Worn on the feet.
   - lineId: 90
@@ -1092,6 +1299,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 151da1afb6dc6964a8b6dbc81e9eed3e, type: 2}
+    set: Jarl
+    theme: VIKG_Jarl
+    icon: {fileID: 21300000, guid: f5948cd76dda722469bd22ba45b0e067, type: 3}
     displayName: Jarl Boots
     description: Worn on the feet.
   - lineId: 91
@@ -1104,20 +1314,11 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 20656439a4222b24d944004fb50b9955, type: 2}
+    set: Warlord
+    theme: VIKG_Warlord
+    icon: {fileID: 21300000, guid: 509ca83359ad9e64ebb7aa70e47d2ea6, type: 3}
     displayName: Warlord Boots
     description: Worn on the feet.
-  - lineId: 92
-    tag: VIKG
-    slot: 7
-    rarity: 0
-    band: 0
-    pack: VIKG_WARR
-    factions: 4
-    bodies: 1
-    weaponClass: 0
-    look: {fileID: 11400000, guid: d75cb7ea8c3506f40bb5042d810b0b08, type: 2}
-    displayName: Thrall Cloak
-    description: Worn across the back.
   - lineId: 93
     tag: VIKG
     slot: 7
@@ -1128,7 +1329,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 0d379f5abda53764bbaf66bc6d62c970, type: 2}
-    displayName: Warlord Cloak
+    set: Berserker
+    theme: VIKG_Berserker
+    icon: {fileID: 21300000, guid: 0c87ff39a10c2f44c9339c0a56af9f44, type: 3}
+    displayName: Berserker Cloak
     description: Worn across the back.
   - lineId: 94
     tag: VIKG
@@ -1140,7 +1344,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: c0e6ffa0c48e47a429609aad88b6638d, type: 2}
-    displayName: Mark 08 Cloak
+    set: Jarl
+    theme: VIKG_Jarl
+    icon: {fileID: 21300000, guid: 560889785144aa74ea83dd5848e06938, type: 3}
+    displayName: Jarl Cloak
     description: Worn across the back.
   - lineId: 95
     tag: VIKG
@@ -1152,7 +1359,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: f721645739e90ab4ebd0934f9fc70a51, type: 2}
-    displayName: Mark 10 Cloak
+    set: Warlord
+    theme: VIKG_Warlord
+    icon: {fileID: 21300000, guid: 3d81f163411dfd141bf589ea7033f476, type: 3}
+    displayName: Warlord Cloak
     description: Worn across the back.
   - lineId: 96
     tag: ELVN
@@ -1164,6 +1374,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 282df44de4d5e774f991e21029930998, type: 2}
+    set: Scout
+    theme: 
+    icon: {fileID: 0}
     displayName: Scout Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 97
@@ -1176,7 +1389,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: bd334508cf01a7848be0a85f600d3c5e, type: 2}
-    displayName: Warden Armor
+    set: Wildrunner
+    theme: ELVN_Wildrunner
+    icon: {fileID: 21300000, guid: 0295bdab35f79624c9cd6c9e7d4c7faf, type: 3}
+    displayName: Wildrunner Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 98
     tag: ELVN
@@ -1188,6 +1404,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 0ceff3854adcb0a46813511eb4e95b3c, type: 2}
+    set: Bladesinger
+    theme: ELVN_Bladesinger
+    icon: {fileID: 21300000, guid: 80016bbb71e2df74991891350eaf591c, type: 3}
     displayName: Bladesinger Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 99
@@ -1200,6 +1419,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: ec5bdd6aa59cdb44cae4cfd3cfb55cc2, type: 2}
+    set: Highguard
+    theme: ELVN_Highguard
+    icon: {fileID: 21300000, guid: cda0160a35dd8b7409e2fa2734aaeffa, type: 3}
     displayName: Highguard Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 100
@@ -1212,6 +1434,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 066a65690c7bd8d44a509047aabba0d4, type: 2}
+    set: Sunlord
+    theme: ELVN_Sunlord
+    icon: {fileID: 21300000, guid: 2246c99bac6736642a13c9394d439393, type: 3}
     displayName: Sunlord Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 101
@@ -1224,6 +1449,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 152041830cd7f294abbdf4ae3ea9a61b, type: 2}
+    set: Scout
+    theme: 
+    icon: {fileID: 0}
     displayName: Scout Gloves
     description: Worn on the hands.
   - lineId: 102
@@ -1236,7 +1464,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 35075b88d8fb4ef4b8adda5b56fad7fa, type: 2}
-    displayName: Warden Gloves
+    set: Wildrunner
+    theme: ELVN_Wildrunner
+    icon: {fileID: 21300000, guid: 62f0fe7b71391e24794de8dcba578571, type: 3}
+    displayName: Wildrunner Gloves
     description: Worn on the hands.
   - lineId: 103
     tag: ELVN
@@ -1248,7 +1479,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 35075b88d8fb4ef4b8adda5b56fad7fa, type: 2}
-    displayName: Warden Gloves
+    set: Bladesinger
+    theme: ELVN_Bladesinger
+    icon: {fileID: 21300000, guid: 4968659fae8b1334992521b1c104dd46, type: 3}
+    displayName: Bladesinger Gloves
     description: Worn on the hands.
   - lineId: 104
     tag: ELVN
@@ -1260,7 +1494,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: a3c0b4e4c1b9d6545991c1cc67312cb7, type: 2}
-    displayName: Ranger Gloves
+    set: Highguard
+    theme: ELVN_Highguard
+    icon: {fileID: 21300000, guid: 6dffd40dcc9a3d3488b24c110033dabe, type: 3}
+    displayName: Highguard Gloves
     description: Worn on the hands.
   - lineId: 105
     tag: ELVN
@@ -1272,7 +1509,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: a3c0b4e4c1b9d6545991c1cc67312cb7, type: 2}
-    displayName: Ranger Gloves
+    set: Sunlord
+    theme: ELVN_Sunlord
+    icon: {fileID: 21300000, guid: 82ff8bcbf49c61744a72b8692590766c, type: 3}
+    displayName: Sunlord Gloves
     description: Worn on the hands.
   - lineId: 106
     tag: ELVN
@@ -1284,6 +1524,9 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 72a28bf9f8e3b93499bbc89e5402fd02, type: 2}
+    set: Scout
+    theme: 
+    icon: {fileID: 0}
     displayName: Scout Boots
     description: Worn on the feet.
   - lineId: 107
@@ -1296,7 +1539,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: cc9a069c02586e4419952f792b33d414, type: 2}
-    displayName: Warden Boots
+    set: Wildrunner
+    theme: ELVN_Wildrunner
+    icon: {fileID: 21300000, guid: a0feb39f55b997a489d42d117c87a058, type: 3}
+    displayName: Wildrunner Boots
     description: Worn on the feet.
   - lineId: 108
     tag: ELVN
@@ -1308,7 +1554,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: cc9a069c02586e4419952f792b33d414, type: 2}
-    displayName: Warden Boots
+    set: Bladesinger
+    theme: ELVN_Bladesinger
+    icon: {fileID: 21300000, guid: e3f556ebd627612498781d303e05f7c8, type: 3}
+    displayName: Bladesinger Boots
     description: Worn on the feet.
   - lineId: 109
     tag: ELVN
@@ -1320,7 +1569,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 9661b5cd22a4dd2439210e883677fba3, type: 2}
-    displayName: Ranger Boots
+    set: Highguard
+    theme: ELVN_Highguard
+    icon: {fileID: 21300000, guid: 5626ff4dd73f4ca42b634de3ca984031, type: 3}
+    displayName: Highguard Boots
     description: Worn on the feet.
   - lineId: 110
     tag: ELVN
@@ -1332,20 +1584,11 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 9661b5cd22a4dd2439210e883677fba3, type: 2}
-    displayName: Ranger Boots
+    set: Sunlord
+    theme: ELVN_Sunlord
+    icon: {fileID: 21300000, guid: 839d053264f91d041b6f96461ab93e71, type: 3}
+    displayName: Sunlord Boots
     description: Worn on the feet.
-  - lineId: 111
-    tag: ELVN
-    slot: 7
-    rarity: 0
-    band: 0
-    pack: ELVN_WARR
-    factions: 4
-    bodies: 1
-    weaponClass: 0
-    look: {fileID: 11400000, guid: 458d3669938e9c94b9f2559ade518d13, type: 2}
-    displayName: Scout Cloak
-    description: Worn across the back.
   - lineId: 112
     tag: ELVN
     slot: 7
@@ -1356,7 +1599,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 214c32b8850f46d488cf22816ddccf95, type: 2}
-    displayName: Ranger Cloak
+    set: Bladesinger
+    theme: ELVN_Bladesinger
+    icon: {fileID: 21300000, guid: 0a6579cad49bcd34c887939c2bd87671, type: 3}
+    displayName: Bladesinger Cloak
     description: Worn across the back.
   - lineId: 113
     tag: ELVN
@@ -1368,7 +1614,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 563b32ff73b97ac4c9ddd39464aa93fc, type: 2}
-    displayName: Bladesinger Cloak
+    set: Highguard
+    theme: ELVN_Highguard
+    icon: {fileID: 21300000, guid: 9fecd7bfba0c8d8469d969af9cdd4910, type: 3}
+    displayName: Highguard Cloak
     description: Worn across the back.
   - lineId: 114
     tag: ELVN
@@ -1380,7 +1629,10 @@ MonoBehaviour:
     bodies: 1
     weaponClass: 0
     look: {fileID: 11400000, guid: 061673b5619f6cb4d8fc4a048e1e4c7d, type: 2}
-    displayName: Highguard Cloak
+    set: Sunlord
+    theme: ELVN_Sunlord
+    icon: {fileID: 21300000, guid: 44ee82fae0adcae43aa5323e464c2a59, type: 3}
+    displayName: Sunlord Cloak
     description: Worn across the back.
   - lineId: 115
     tag: Monoblade
@@ -1392,6 +1644,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 1
     look: {fileID: 11400000, guid: 7de9e0f72a938a04992752223e76fced, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Training Blade
     description: 'Monoblade: the offense weapon of the Hegemony.'
   - lineId: 116
@@ -1404,6 +1659,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 1
     look: {fileID: 11400000, guid: 4f3da0e0fb77f1c41950bf7b34fd23f6, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Service Blade
     description: 'Monoblade: the offense weapon of the Hegemony.'
   - lineId: 117
@@ -1416,6 +1674,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 1
     look: {fileID: 11400000, guid: fee2369791262a54ca50aa0b8b099d1b, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Ninjato
     description: 'Monoblade: the offense weapon of the Hegemony.'
   - lineId: 118
@@ -1428,6 +1689,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 1
     look: {fileID: 11400000, guid: 2b367f42d4f794c4f9069ffefeafdbd3, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Odachi
     description: 'Monoblade: the offense weapon of the Hegemony.'
   - lineId: 119
@@ -1440,6 +1704,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 1
     look: {fileID: 11400000, guid: 8b2eb62c7e36d964db732f73ab79f0d0, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Executive Odachi
     description: 'Monoblade: the offense weapon of the Hegemony.'
   - lineId: 120
@@ -1452,6 +1719,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 2
     look: {fileID: 11400000, guid: 2bd3726a4826d4844a2b58e56e944815, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Riot Staff
     description: 'Glaive: the defense weapon of the Hegemony.'
   - lineId: 121
@@ -1464,6 +1734,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 2
     look: {fileID: 11400000, guid: add8d7450cca29d46ad8dba8207a1087, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Patrol Spear
     description: 'Glaive: the defense weapon of the Hegemony.'
   - lineId: 122
@@ -1476,6 +1749,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 2
     look: {fileID: 11400000, guid: 6157e2fcf8bc89e44ac32195dd990a43, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Naginata
     description: 'Glaive: the defense weapon of the Hegemony.'
   - lineId: 123
@@ -1488,6 +1764,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 2
     look: {fileID: 11400000, guid: 8347ead1262faf84caf6cd5eace9ea28, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Cross Spear
     description: 'Glaive: the defense weapon of the Hegemony.'
   - lineId: 124
@@ -1500,6 +1779,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 2
     look: {fileID: 11400000, guid: 8d35723aa8911cb45bd493b5ed1ff299, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Warden Naginata
     description: 'Glaive: the defense weapon of the Hegemony.'
   - lineId: 125
@@ -1512,6 +1794,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 3
     look: {fileID: 11400000, guid: 6e52a95380165ad46a2b502117272f0e, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Sidearm
     description: 'Carbine: the ranged weapon of the Hegemony.'
   - lineId: 126
@@ -1524,6 +1809,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 3
     look: {fileID: 11400000, guid: 8a7c82c5122f4344ebcbb161bc9f16b6, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Service Rifle
     description: 'Carbine: the ranged weapon of the Hegemony.'
   - lineId: 127
@@ -1536,6 +1824,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 3
     look: {fileID: 11400000, guid: 47b4adc1017a39f45923ff83e334561b, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Assault Carbine
     description: 'Carbine: the ranged weapon of the Hegemony.'
   - lineId: 128
@@ -1548,6 +1839,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 3
     look: {fileID: 11400000, guid: 228b0cab7946d4b448680ae08c7f8734, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Marksman Rifle
     description: 'Carbine: the ranged weapon of the Hegemony.'
   - lineId: 129
@@ -1560,6 +1854,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 3
     look: {fileID: 11400000, guid: c7e62155cddb9574d8723eaa62d65b81, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Vanguard Carbine
     description: 'Carbine: the ranged weapon of the Hegemony.'
   - lineId: 130
@@ -1572,6 +1869,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 4
     look: {fileID: 11400000, guid: 069a209374b42a849b185707df331726, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Scrap Sickle
     description: 'Harvester: the offense weapon of the Null.'
   - lineId: 131
@@ -1584,6 +1884,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 4
     look: {fileID: 11400000, guid: 2932cf0b22c3dc74c9687c03e9c5dce3, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Reaping Sickle
     description: 'Harvester: the offense weapon of the Null.'
   - lineId: 132
@@ -1596,6 +1899,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 4
     look: {fileID: 11400000, guid: 5dac2ac50276f8249b00e4eeafcf1260, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Rendering Cleaver
     description: 'Harvester: the offense weapon of the Null.'
   - lineId: 133
@@ -1608,6 +1914,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 4
     look: {fileID: 11400000, guid: dc7809686242cfe4dba781c0e8af7c91, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Bonesaw
     description: 'Harvester: the offense weapon of the Null.'
   - lineId: 134
@@ -1620,6 +1929,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 4
     look: {fileID: 11400000, guid: 572aec4330241a5499b2560b7639b7fa, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Terminus Scythe
     description: 'Harvester: the offense weapon of the Null.'
   - lineId: 135
@@ -1632,6 +1944,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 5
     look: {fileID: 11400000, guid: 91edffc170789ab42967ddd1063e7b2e, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Piston Spike
     description: 'Servo Claws: the defense weapon of the Null.'
   - lineId: 136
@@ -1644,6 +1959,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 5
     look: {fileID: 11400000, guid: 235b81071d3624a4f8968bb7a6749c3a, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Knuckle Blade
     description: 'Servo Claws: the defense weapon of the Null.'
   - lineId: 137
@@ -1656,6 +1974,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 5
     look: {fileID: 11400000, guid: db31732a69a854d4b912e4c3d9077961, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Servo Dagger
     description: 'Servo Claws: the defense weapon of the Null.'
   - lineId: 138
@@ -1668,6 +1989,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 5
     look: {fileID: 11400000, guid: 253c632ca51d92d45af3b4a3acba2a27, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Twin Spikes
     description: 'Servo Claws: the defense weapon of the Null.'
   - lineId: 139
@@ -1680,6 +2004,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 5
     look: {fileID: 11400000, guid: fa4e280ea727a7a409ac0621a69979f8, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Apex Claw
     description: 'Servo Claws: the defense weapon of the Null.'
   - lineId: 140
@@ -1692,6 +2019,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 6
     look: {fileID: 11400000, guid: d1f5fc42d5d23f342b0610c31e3923e7, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Laser Emitter
     description: 'Arc Caster: the ranged weapon of the Null.'
   - lineId: 141
@@ -1704,6 +2034,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 6
     look: {fileID: 11400000, guid: 0d8040cfb654323408923916be8c7c02, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Arc Projector
     description: 'Arc Caster: the ranged weapon of the Null.'
   - lineId: 142
@@ -1716,6 +2049,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 6
     look: {fileID: 11400000, guid: 24bf6d32991bb4b499709a2fe23f6bc3, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Plasma Caster
     description: 'Arc Caster: the ranged weapon of the Null.'
   - lineId: 143
@@ -1728,6 +2064,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 6
     look: {fileID: 11400000, guid: 98cd21bcab2bfa040a62169347cb8cf7, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Storm Projector
     description: 'Arc Caster: the ranged weapon of the Null.'
   - lineId: 144
@@ -1740,6 +2079,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 6
     look: {fileID: 11400000, guid: 3d3ef8b49a78f7542921e4894ab4cb68, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Extinction Launcher
     description: 'Arc Caster: the ranged weapon of the Null.'
   - lineId: 145
@@ -1752,6 +2094,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 7
     look: {fileID: 11400000, guid: a1a5508f54c8a3a4db7fc816b1982add, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Hewing Axe
     description: 'Longaxe: the offense weapon of the Covenant.'
   - lineId: 146
@@ -1764,6 +2109,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 7
     look: {fileID: 11400000, guid: 17cb5a974f4c7c04481c81460e604168, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Raider Axe
     description: 'Longaxe: the offense weapon of the Covenant.'
   - lineId: 147
@@ -1776,6 +2124,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 7
     look: {fileID: 11400000, guid: 23dd7b12f49258642a0e78784cb391f9, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Elven Axe
     description: 'Longaxe: the offense weapon of the Covenant.'
   - lineId: 148
@@ -1788,6 +2139,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 7
     look: {fileID: 11400000, guid: 8b71cfd3b6393d54a959798366cb7603, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Jarl's Axe
     description: 'Longaxe: the offense weapon of the Covenant.'
   - lineId: 149
@@ -1800,6 +2154,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 7
     look: {fileID: 11400000, guid: 057e77d142acbeb4b84712914c289259, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Northfall Greataxe
     description: 'Longaxe: the offense weapon of the Covenant.'
   - lineId: 150
@@ -1812,6 +2169,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 8
     look: {fileID: 11400000, guid: 9f2d584d56909c04ca2cf09983e79774, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Clan Sword
     description: 'Claymore: the defense weapon of the Covenant.'
   - lineId: 151
@@ -1824,6 +2184,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 8
     look: {fileID: 11400000, guid: aacd6796c98fc57478b10a7cbed3a4b7, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Broadsword
     description: 'Claymore: the defense weapon of the Covenant.'
   - lineId: 152
@@ -1836,6 +2199,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 8
     look: {fileID: 11400000, guid: 7010678e816628041935d44a2dbefcad, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Elven Blade
     description: 'Claymore: the defense weapon of the Covenant.'
   - lineId: 153
@@ -1848,6 +2214,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 8
     look: {fileID: 11400000, guid: 5096cca343be13746af099560bfc2327, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Kingdom Greatsword
     description: 'Claymore: the defense weapon of the Covenant.'
   - lineId: 154
@@ -1860,6 +2229,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 8
     look: {fileID: 11400000, guid: 36192a2314f88be4eaa765c44330addd, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Zweihander
     description: 'Claymore: the defense weapon of the Covenant.'
   - lineId: 155
@@ -1872,6 +2244,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 9
     look: {fileID: 11400000, guid: d79da8b777c2cfe49af7ba7533f4eb8c, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Hunting Bow
     description: 'Warbow: the ranged weapon of the Covenant.'
   - lineId: 156
@@ -1884,6 +2259,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 9
     look: {fileID: 11400000, guid: 2450770377066c244b7f11e9d6e609a6, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Ranger Bow
     description: 'Warbow: the ranged weapon of the Covenant.'
   - lineId: 157
@@ -1896,6 +2274,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 9
     look: {fileID: 11400000, guid: a873fa1e89ab73b4b873c5acbd66eca4, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Longbow
     description: 'Warbow: the ranged weapon of the Covenant.'
   - lineId: 158
@@ -1908,6 +2289,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 9
     look: {fileID: 11400000, guid: 0daa6c538ee2f7848960a43fc1ec62bb, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: War Longbow
     description: 'Warbow: the ranged weapon of the Covenant.'
   - lineId: 159
@@ -1920,6 +2304,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 9
     look: {fileID: 11400000, guid: d40e12ec200c8d14693c33b3d3ff1414, type: 2}
+    set: 
+    theme: 
+    icon: {fileID: 0}
     displayName: Stormflight Bow
     description: 'Warbow: the ranged weapon of the Covenant.'
   - lineId: 160
@@ -1932,6 +2319,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2f1bfdb91653b6c4da8165cf6988b417, type: 2}
+    set: Recruit
+    theme: 
+    icon: {fileID: 0}
     displayName: Recruit Signet
     description: Worn on a finger.
   - lineId: 161
@@ -1944,6 +2334,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: fd352a2229ca17f4cb878d521a790693, type: 2}
+    set: Recruit
+    theme: 
+    icon: {fileID: 0}
     displayName: Recruit Tags
     description: Worn around the neck.
   - lineId: 162
@@ -1956,6 +2349,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 9fa6164e162cac64187b8f7ae3f37348, type: 2}
+    set: Sentinel
+    theme: 
+    icon: {fileID: 0}
     displayName: Sentinel Signet
     description: Worn on a finger.
   - lineId: 163
@@ -1968,6 +2364,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 5fbcdd201b3bf704bab209a2b3fe1d71, type: 2}
+    set: Sentinel
+    theme: 
+    icon: {fileID: 0}
     displayName: Sentinel Tags
     description: Worn around the neck.
   - lineId: 164
@@ -1980,6 +2379,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Striker
+    theme: 
+    icon: {fileID: 0}
     displayName: Striker Signet
     description: Worn on a finger.
   - lineId: 165
@@ -1992,6 +2394,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Striker
+    theme: 
+    icon: {fileID: 0}
     displayName: Striker Tags
     description: Worn around the neck.
   - lineId: 166
@@ -2004,6 +2409,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Bastion
+    theme: 
+    icon: {fileID: 0}
     displayName: Bastion Signet
     description: Worn on a finger.
   - lineId: 167
@@ -2016,6 +2424,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Bastion
+    theme: 
+    icon: {fileID: 0}
     displayName: Bastion Tags
     description: Worn around the neck.
   - lineId: 168
@@ -2028,6 +2439,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 8290f42131989844b80056cdaa1b9b4d, type: 2}
+    set: Commander
+    theme: 
+    icon: {fileID: 0}
     displayName: Commander Signet
     description: Worn on a finger.
   - lineId: 169
@@ -2040,6 +2454,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2ab59020f275ac54bbccfb23841ac70a, type: 2}
+    set: Commander
+    theme: 
+    icon: {fileID: 0}
     displayName: Commander Tags
     description: Worn around the neck.
   - lineId: 170
@@ -2052,6 +2469,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2f1bfdb91653b6c4da8165cf6988b417, type: 2}
+    set: Commuter
+    theme: 
+    icon: {fileID: 0}
     displayName: Commuter Band
     description: Worn on a finger.
   - lineId: 171
@@ -2064,6 +2484,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: fd352a2229ca17f4cb878d521a790693, type: 2}
+    set: Commuter
+    theme: 
+    icon: {fileID: 0}
     displayName: Commuter Lanyard
     description: Worn around the neck.
   - lineId: 172
@@ -2076,6 +2499,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 9fa6164e162cac64187b8f7ae3f37348, type: 2}
+    set: Courier
+    theme: 
+    icon: {fileID: 0}
     displayName: Courier Band
     description: Worn on a finger.
   - lineId: 173
@@ -2088,6 +2514,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 5fbcdd201b3bf704bab209a2b3fe1d71, type: 2}
+    set: Courier
+    theme: 
+    icon: {fileID: 0}
     displayName: Courier Lanyard
     description: Worn around the neck.
   - lineId: 174
@@ -2100,6 +2529,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Analyst
+    theme: 
+    icon: {fileID: 0}
     displayName: Analyst Band
     description: Worn on a finger.
   - lineId: 175
@@ -2112,6 +2544,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Analyst
+    theme: 
+    icon: {fileID: 0}
     displayName: Analyst Lanyard
     description: Worn around the neck.
   - lineId: 176
@@ -2124,6 +2559,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Director
+    theme: 
+    icon: {fileID: 0}
     displayName: Director Band
     description: Worn on a finger.
   - lineId: 177
@@ -2136,6 +2574,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Director
+    theme: 
+    icon: {fileID: 0}
     displayName: Director Lanyard
     description: Worn around the neck.
   - lineId: 178
@@ -2148,6 +2589,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 8290f42131989844b80056cdaa1b9b4d, type: 2}
+    set: Magnate
+    theme: 
+    icon: {fileID: 0}
     displayName: Magnate Band
     description: Worn on a finger.
   - lineId: 179
@@ -2160,6 +2604,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2ab59020f275ac54bbccfb23841ac70a, type: 2}
+    set: Magnate
+    theme: 
+    icon: {fileID: 0}
     displayName: Magnate Lanyard
     description: Worn around the neck.
   - lineId: 180
@@ -2172,6 +2619,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2f1bfdb91653b6c4da8165cf6988b417, type: 2}
+    set: Servitor
+    theme: 
+    icon: {fileID: 0}
     displayName: Servitor Coupling
     description: Worn on a finger.
   - lineId: 181
@@ -2184,6 +2634,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: fd352a2229ca17f4cb878d521a790693, type: 2}
+    set: Servitor
+    theme: 
+    icon: {fileID: 0}
     displayName: Servitor Capacitor
     description: Worn around the neck.
   - lineId: 182
@@ -2196,6 +2649,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 9fa6164e162cac64187b8f7ae3f37348, type: 2}
+    set: Welder
+    theme: 
+    icon: {fileID: 0}
     displayName: Welder Coupling
     description: Worn on a finger.
   - lineId: 183
@@ -2208,6 +2664,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 5fbcdd201b3bf704bab209a2b3fe1d71, type: 2}
+    set: Welder
+    theme: 
+    icon: {fileID: 0}
     displayName: Welder Capacitor
     description: Worn around the neck.
   - lineId: 184
@@ -2220,6 +2679,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Ravager
+    theme: 
+    icon: {fileID: 0}
     displayName: Ravager Coupling
     description: Worn on a finger.
   - lineId: 185
@@ -2232,6 +2694,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Ravager
+    theme: 
+    icon: {fileID: 0}
     displayName: Ravager Capacitor
     description: Worn around the neck.
   - lineId: 186
@@ -2244,6 +2709,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Overseer
+    theme: 
+    icon: {fileID: 0}
     displayName: Overseer Coupling
     description: Worn on a finger.
   - lineId: 187
@@ -2256,6 +2724,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Overseer
+    theme: 
+    icon: {fileID: 0}
     displayName: Overseer Capacitor
     description: Worn around the neck.
   - lineId: 188
@@ -2268,6 +2739,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 8290f42131989844b80056cdaa1b9b4d, type: 2}
+    set: Prime
+    theme: 
+    icon: {fileID: 0}
     displayName: Prime Coupling
     description: Worn on a finger.
   - lineId: 189
@@ -2280,6 +2754,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2ab59020f275ac54bbccfb23841ac70a, type: 2}
+    set: Prime
+    theme: 
+    icon: {fileID: 0}
     displayName: Prime Capacitor
     description: Worn around the neck.
   - lineId: 190
@@ -2292,6 +2769,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2f1bfdb91653b6c4da8165cf6988b417, type: 2}
+    set: Graveworn
+    theme: 
+    icon: {fileID: 0}
     displayName: Graveworn Knucklebone
     description: Worn on a finger.
   - lineId: 191
@@ -2304,6 +2784,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: fd352a2229ca17f4cb878d521a790693, type: 2}
+    set: Graveworn
+    theme: 
+    icon: {fileID: 0}
     displayName: Graveworn Phylactery
     description: Worn around the neck.
   - lineId: 192
@@ -2316,6 +2799,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 9fa6164e162cac64187b8f7ae3f37348, type: 2}
+    set: Cryptwarden
+    theme: 
+    icon: {fileID: 0}
     displayName: Cryptwarden Knucklebone
     description: Worn on a finger.
   - lineId: 193
@@ -2328,6 +2814,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 5fbcdd201b3bf704bab209a2b3fe1d71, type: 2}
+    set: Cryptwarden
+    theme: 
+    icon: {fileID: 0}
     displayName: Cryptwarden Phylactery
     description: Worn around the neck.
   - lineId: 194
@@ -2340,6 +2829,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Deathsworn
+    theme: 
+    icon: {fileID: 0}
     displayName: Deathsworn Knucklebone
     description: Worn on a finger.
   - lineId: 195
@@ -2352,6 +2844,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Deathsworn
+    theme: 
+    icon: {fileID: 0}
     displayName: Deathsworn Phylactery
     description: Worn around the neck.
   - lineId: 196
@@ -2364,6 +2859,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Lichbound
+    theme: 
+    icon: {fileID: 0}
     displayName: Lichbound Knucklebone
     description: Worn on a finger.
   - lineId: 197
@@ -2376,6 +2874,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Lichbound
+    theme: 
+    icon: {fileID: 0}
     displayName: Lichbound Phylactery
     description: Worn around the neck.
   - lineId: 198
@@ -2388,6 +2889,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 8290f42131989844b80056cdaa1b9b4d, type: 2}
+    set: Revenant
+    theme: 
+    icon: {fileID: 0}
     displayName: Revenant Knucklebone
     description: Worn on a finger.
   - lineId: 199
@@ -2400,6 +2904,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2ab59020f275ac54bbccfb23841ac70a, type: 2}
+    set: Revenant
+    theme: 
+    icon: {fileID: 0}
     displayName: Revenant Phylactery
     description: Worn around the neck.
   - lineId: 200
@@ -2412,6 +2919,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2f1bfdb91653b6c4da8165cf6988b417, type: 2}
+    set: Thrall
+    theme: 
+    icon: {fileID: 0}
     displayName: Thrall Arm Ring
     description: Worn on a finger.
   - lineId: 201
@@ -2424,6 +2934,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: fd352a2229ca17f4cb878d521a790693, type: 2}
+    set: Thrall
+    theme: 
+    icon: {fileID: 0}
     displayName: Thrall Torc
     description: Worn around the neck.
   - lineId: 202
@@ -2436,6 +2949,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 9fa6164e162cac64187b8f7ae3f37348, type: 2}
+    set: Huscarl
+    theme: 
+    icon: {fileID: 0}
     displayName: Huscarl Arm Ring
     description: Worn on a finger.
   - lineId: 203
@@ -2448,6 +2964,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 5fbcdd201b3bf704bab209a2b3fe1d71, type: 2}
+    set: Huscarl
+    theme: 
+    icon: {fileID: 0}
     displayName: Huscarl Torc
     description: Worn around the neck.
   - lineId: 204
@@ -2460,6 +2979,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Berserker
+    theme: 
+    icon: {fileID: 0}
     displayName: Berserker Arm Ring
     description: Worn on a finger.
   - lineId: 205
@@ -2472,6 +2994,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Berserker
+    theme: 
+    icon: {fileID: 0}
     displayName: Berserker Torc
     description: Worn around the neck.
   - lineId: 206
@@ -2484,6 +3009,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Jarl
+    theme: 
+    icon: {fileID: 0}
     displayName: Jarl Arm Ring
     description: Worn on a finger.
   - lineId: 207
@@ -2496,6 +3024,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Jarl
+    theme: 
+    icon: {fileID: 0}
     displayName: Jarl Torc
     description: Worn around the neck.
   - lineId: 208
@@ -2508,6 +3039,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 8290f42131989844b80056cdaa1b9b4d, type: 2}
+    set: Warlord
+    theme: 
+    icon: {fileID: 0}
     displayName: Warlord Arm Ring
     description: Worn on a finger.
   - lineId: 209
@@ -2520,6 +3054,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2ab59020f275ac54bbccfb23841ac70a, type: 2}
+    set: Warlord
+    theme: 
+    icon: {fileID: 0}
     displayName: Warlord Torc
     description: Worn around the neck.
   - lineId: 210
@@ -2532,6 +3069,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2f1bfdb91653b6c4da8165cf6988b417, type: 2}
+    set: Scout
+    theme: 
+    icon: {fileID: 0}
     displayName: Scout Leaf Ring
     description: Worn on a finger.
   - lineId: 211
@@ -2544,6 +3084,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: fd352a2229ca17f4cb878d521a790693, type: 2}
+    set: Scout
+    theme: 
+    icon: {fileID: 0}
     displayName: Scout Talisman
     description: Worn around the neck.
   - lineId: 212
@@ -2556,7 +3099,10 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 9fa6164e162cac64187b8f7ae3f37348, type: 2}
-    displayName: Warden Leaf Ring
+    set: Wildrunner
+    theme: 
+    icon: {fileID: 0}
+    displayName: Wildrunner Leaf Ring
     description: Worn on a finger.
   - lineId: 213
     tag: ELVN
@@ -2568,7 +3114,10 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 5fbcdd201b3bf704bab209a2b3fe1d71, type: 2}
-    displayName: Warden Talisman
+    set: Wildrunner
+    theme: 
+    icon: {fileID: 0}
+    displayName: Wildrunner Talisman
     description: Worn around the neck.
   - lineId: 214
     tag: ELVN
@@ -2580,6 +3129,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Bladesinger
+    theme: 
+    icon: {fileID: 0}
     displayName: Bladesinger Leaf Ring
     description: Worn on a finger.
   - lineId: 215
@@ -2592,6 +3144,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Bladesinger
+    theme: 
+    icon: {fileID: 0}
     displayName: Bladesinger Talisman
     description: Worn around the neck.
   - lineId: 216
@@ -2604,6 +3159,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
+    set: Highguard
+    theme: 
+    icon: {fileID: 0}
     displayName: Highguard Leaf Ring
     description: Worn on a finger.
   - lineId: 217
@@ -2616,6 +3174,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
+    set: Highguard
+    theme: 
+    icon: {fileID: 0}
     displayName: Highguard Talisman
     description: Worn around the neck.
   - lineId: 218
@@ -2628,6 +3189,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 8290f42131989844b80056cdaa1b9b4d, type: 2}
+    set: Sunlord
+    theme: 
+    icon: {fileID: 0}
     displayName: Sunlord Leaf Ring
     description: Worn on a finger.
   - lineId: 219
@@ -2640,6 +3204,9 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 2ab59020f275ac54bbccfb23841ac70a, type: 2}
+    set: Sunlord
+    theme: 
+    icon: {fileID: 0}
     displayName: Sunlord Talisman
     description: Worn around the neck.
   entries:
@@ -3651,126 +4218,6 @@ MonoBehaviour:
     itemLevel: 112
     lineId: 15
     weaponClass: 0
-  - itemId: 10240
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 1
-    lineId: 16
-    weaponClass: 0
-  - itemId: 10241
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 4
-    lineId: 16
-    weaponClass: 0
-  - itemId: 10242
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 7
-    lineId: 16
-    weaponClass: 0
-  - itemId: 10243
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 10
-    lineId: 16
-    weaponClass: 0
-  - itemId: 10244
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 13
-    lineId: 16
-    weaponClass: 0
-  - itemId: 10245
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 16
-    lineId: 16
-    weaponClass: 0
-  - itemId: 10246
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 19
-    lineId: 16
-    weaponClass: 0
-  - itemId: 10247
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 22
-    lineId: 16
-    weaponClass: 0
-  - itemId: 10248
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 25
-    lineId: 16
-    weaponClass: 0
-  - itemId: 10249
-    name: Recruit Cape
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_SOLD
-    variant: 1
-    partIds: cb01t
-    itemLevel: 28
-    lineId: 16
-    weaponClass: 0
   - itemId: 10256
     name: Striker Cape
     slot: 7
@@ -4384,7 +4831,7 @@ MonoBehaviour:
     lineId: 25
     weaponClass: 0
   - itemId: 10400
-    name: Technician Gloves
+    name: Courier Gloves
     slot: 3
     rarity: 1
     factions: 1
@@ -4396,7 +4843,7 @@ MonoBehaviour:
     lineId: 26
     weaponClass: 0
   - itemId: 10401
-    name: Technician Gloves
+    name: Courier Gloves
     slot: 3
     rarity: 1
     factions: 1
@@ -4408,7 +4855,7 @@ MonoBehaviour:
     lineId: 26
     weaponClass: 0
   - itemId: 10402
-    name: Technician Gloves
+    name: Courier Gloves
     slot: 3
     rarity: 1
     factions: 1
@@ -4420,7 +4867,7 @@ MonoBehaviour:
     lineId: 26
     weaponClass: 0
   - itemId: 10403
-    name: Technician Gloves
+    name: Courier Gloves
     slot: 3
     rarity: 1
     factions: 1
@@ -4432,7 +4879,7 @@ MonoBehaviour:
     lineId: 26
     weaponClass: 0
   - itemId: 10404
-    name: Technician Gloves
+    name: Courier Gloves
     slot: 3
     rarity: 1
     factions: 1
@@ -4444,7 +4891,7 @@ MonoBehaviour:
     lineId: 26
     weaponClass: 0
   - itemId: 10416
-    name: Technician Gloves
+    name: Analyst Gloves
     slot: 3
     rarity: 2
     factions: 1
@@ -4456,7 +4903,7 @@ MonoBehaviour:
     lineId: 27
     weaponClass: 0
   - itemId: 10417
-    name: Technician Gloves
+    name: Analyst Gloves
     slot: 3
     rarity: 2
     factions: 1
@@ -4468,7 +4915,7 @@ MonoBehaviour:
     lineId: 27
     weaponClass: 0
   - itemId: 10418
-    name: Technician Gloves
+    name: Analyst Gloves
     slot: 3
     rarity: 2
     factions: 1
@@ -4480,7 +4927,7 @@ MonoBehaviour:
     lineId: 27
     weaponClass: 0
   - itemId: 10419
-    name: Technician Gloves
+    name: Analyst Gloves
     slot: 3
     rarity: 2
     factions: 1
@@ -4492,7 +4939,7 @@ MonoBehaviour:
     lineId: 27
     weaponClass: 0
   - itemId: 10432
-    name: Courier Gloves
+    name: Director Gloves
     slot: 3
     rarity: 2
     factions: 1
@@ -4504,7 +4951,7 @@ MonoBehaviour:
     lineId: 28
     weaponClass: 0
   - itemId: 10433
-    name: Courier Gloves
+    name: Director Gloves
     slot: 3
     rarity: 2
     factions: 1
@@ -4516,7 +4963,7 @@ MonoBehaviour:
     lineId: 28
     weaponClass: 0
   - itemId: 10434
-    name: Courier Gloves
+    name: Director Gloves
     slot: 3
     rarity: 2
     factions: 1
@@ -4528,7 +4975,7 @@ MonoBehaviour:
     lineId: 28
     weaponClass: 0
   - itemId: 10435
-    name: Courier Gloves
+    name: Director Gloves
     slot: 3
     rarity: 2
     factions: 1
@@ -4540,7 +4987,7 @@ MonoBehaviour:
     lineId: 28
     weaponClass: 0
   - itemId: 10448
-    name: Courier Gloves
+    name: Magnate Gloves
     slot: 3
     rarity: 3
     factions: 1
@@ -4552,7 +4999,7 @@ MonoBehaviour:
     lineId: 29
     weaponClass: 0
   - itemId: 10449
-    name: Courier Gloves
+    name: Magnate Gloves
     slot: 3
     rarity: 3
     factions: 1
@@ -4564,7 +5011,7 @@ MonoBehaviour:
     lineId: 29
     weaponClass: 0
   - itemId: 10450
-    name: Courier Gloves
+    name: Magnate Gloves
     slot: 3
     rarity: 3
     factions: 1
@@ -4576,7 +5023,7 @@ MonoBehaviour:
     lineId: 29
     weaponClass: 0
   - itemId: 10451
-    name: Courier Gloves
+    name: Magnate Gloves
     slot: 3
     rarity: 3
     factions: 1
@@ -4588,7 +5035,7 @@ MonoBehaviour:
     lineId: 29
     weaponClass: 0
   - itemId: 10452
-    name: Courier Gloves
+    name: Magnate Gloves
     slot: 3
     rarity: 3
     factions: 1
@@ -4720,7 +5167,7 @@ MonoBehaviour:
     lineId: 30
     weaponClass: 0
   - itemId: 10480
-    name: Technician Shoes
+    name: Courier Shoes
     slot: 4
     rarity: 1
     factions: 1
@@ -4732,7 +5179,7 @@ MonoBehaviour:
     lineId: 31
     weaponClass: 0
   - itemId: 10481
-    name: Technician Shoes
+    name: Courier Shoes
     slot: 4
     rarity: 1
     factions: 1
@@ -4744,7 +5191,7 @@ MonoBehaviour:
     lineId: 31
     weaponClass: 0
   - itemId: 10482
-    name: Technician Shoes
+    name: Courier Shoes
     slot: 4
     rarity: 1
     factions: 1
@@ -4756,7 +5203,7 @@ MonoBehaviour:
     lineId: 31
     weaponClass: 0
   - itemId: 10483
-    name: Technician Shoes
+    name: Courier Shoes
     slot: 4
     rarity: 1
     factions: 1
@@ -4768,7 +5215,7 @@ MonoBehaviour:
     lineId: 31
     weaponClass: 0
   - itemId: 10484
-    name: Technician Shoes
+    name: Courier Shoes
     slot: 4
     rarity: 1
     factions: 1
@@ -4780,7 +5227,7 @@ MonoBehaviour:
     lineId: 31
     weaponClass: 0
   - itemId: 10496
-    name: Technician Shoes
+    name: Analyst Shoes
     slot: 4
     rarity: 2
     factions: 1
@@ -4792,7 +5239,7 @@ MonoBehaviour:
     lineId: 32
     weaponClass: 0
   - itemId: 10497
-    name: Technician Shoes
+    name: Analyst Shoes
     slot: 4
     rarity: 2
     factions: 1
@@ -4804,7 +5251,7 @@ MonoBehaviour:
     lineId: 32
     weaponClass: 0
   - itemId: 10498
-    name: Technician Shoes
+    name: Analyst Shoes
     slot: 4
     rarity: 2
     factions: 1
@@ -4816,7 +5263,7 @@ MonoBehaviour:
     lineId: 32
     weaponClass: 0
   - itemId: 10499
-    name: Technician Shoes
+    name: Analyst Shoes
     slot: 4
     rarity: 2
     factions: 1
@@ -4828,7 +5275,7 @@ MonoBehaviour:
     lineId: 32
     weaponClass: 0
   - itemId: 10512
-    name: Courier Shoes
+    name: Director Shoes
     slot: 4
     rarity: 2
     factions: 1
@@ -4840,7 +5287,7 @@ MonoBehaviour:
     lineId: 33
     weaponClass: 0
   - itemId: 10513
-    name: Courier Shoes
+    name: Director Shoes
     slot: 4
     rarity: 2
     factions: 1
@@ -4852,7 +5299,7 @@ MonoBehaviour:
     lineId: 33
     weaponClass: 0
   - itemId: 10514
-    name: Courier Shoes
+    name: Director Shoes
     slot: 4
     rarity: 2
     factions: 1
@@ -4864,7 +5311,7 @@ MonoBehaviour:
     lineId: 33
     weaponClass: 0
   - itemId: 10515
-    name: Courier Shoes
+    name: Director Shoes
     slot: 4
     rarity: 2
     factions: 1
@@ -4876,7 +5323,7 @@ MonoBehaviour:
     lineId: 33
     weaponClass: 0
   - itemId: 10528
-    name: Courier Shoes
+    name: Magnate Shoes
     slot: 4
     rarity: 3
     factions: 1
@@ -4888,7 +5335,7 @@ MonoBehaviour:
     lineId: 34
     weaponClass: 0
   - itemId: 10529
-    name: Courier Shoes
+    name: Magnate Shoes
     slot: 4
     rarity: 3
     factions: 1
@@ -4900,7 +5347,7 @@ MonoBehaviour:
     lineId: 34
     weaponClass: 0
   - itemId: 10530
-    name: Courier Shoes
+    name: Magnate Shoes
     slot: 4
     rarity: 3
     factions: 1
@@ -4912,7 +5359,7 @@ MonoBehaviour:
     lineId: 34
     weaponClass: 0
   - itemId: 10531
-    name: Courier Shoes
+    name: Magnate Shoes
     slot: 4
     rarity: 3
     factions: 1
@@ -4924,7 +5371,7 @@ MonoBehaviour:
     lineId: 34
     weaponClass: 0
   - itemId: 10532
-    name: Courier Shoes
+    name: Magnate Shoes
     slot: 4
     rarity: 3
     factions: 1
@@ -4934,126 +5381,6 @@ MonoBehaviour:
     partIds: 12011301t
     itemLevel: 112
     lineId: 34
-    weaponClass: 0
-  - itemId: 10544
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 1
-    lineId: 35
-    weaponClass: 0
-  - itemId: 10545
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 4
-    lineId: 35
-    weaponClass: 0
-  - itemId: 10546
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 7
-    lineId: 35
-    weaponClass: 0
-  - itemId: 10547
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 10
-    lineId: 35
-    weaponClass: 0
-  - itemId: 10548
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 13
-    lineId: 35
-    weaponClass: 0
-  - itemId: 10549
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 16
-    lineId: 35
-    weaponClass: 0
-  - itemId: 10550
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 19
-    lineId: 35
-    weaponClass: 0
-  - itemId: 10551
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 22
-    lineId: 35
-    weaponClass: 0
-  - itemId: 10552
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 25
-    lineId: 35
-    weaponClass: 0
-  - itemId: 10553
-    name: Commuter Pack
-    slot: 7
-    rarity: 0
-    factions: 1
-    bodies: 1
-    pack: SCFI_CIVL
-    variant: 1
-    partIds: e400t
-    itemLevel: 28
-    lineId: 35
     weaponClass: 0
   - itemId: 10560
     name: Analyst Pack
@@ -5668,7 +5995,7 @@ MonoBehaviour:
     lineId: 44
     weaponClass: 0
   - itemId: 10704
-    name: Hauler Servos
+    name: Welder Servos
     slot: 3
     rarity: 1
     factions: 2
@@ -5680,7 +6007,7 @@ MonoBehaviour:
     lineId: 45
     weaponClass: 0
   - itemId: 10705
-    name: Hauler Servos
+    name: Welder Servos
     slot: 3
     rarity: 1
     factions: 2
@@ -5692,7 +6019,7 @@ MonoBehaviour:
     lineId: 45
     weaponClass: 0
   - itemId: 10706
-    name: Hauler Servos
+    name: Welder Servos
     slot: 3
     rarity: 1
     factions: 2
@@ -5704,7 +6031,7 @@ MonoBehaviour:
     lineId: 45
     weaponClass: 0
   - itemId: 10707
-    name: Hauler Servos
+    name: Welder Servos
     slot: 3
     rarity: 1
     factions: 2
@@ -5716,7 +6043,7 @@ MonoBehaviour:
     lineId: 45
     weaponClass: 0
   - itemId: 10708
-    name: Hauler Servos
+    name: Welder Servos
     slot: 3
     rarity: 1
     factions: 2
@@ -5728,7 +6055,7 @@ MonoBehaviour:
     lineId: 45
     weaponClass: 0
   - itemId: 10720
-    name: Welder Servos
+    name: Ravager Servos
     slot: 3
     rarity: 2
     factions: 2
@@ -5740,7 +6067,7 @@ MonoBehaviour:
     lineId: 46
     weaponClass: 0
   - itemId: 10721
-    name: Welder Servos
+    name: Ravager Servos
     slot: 3
     rarity: 2
     factions: 2
@@ -5752,7 +6079,7 @@ MonoBehaviour:
     lineId: 46
     weaponClass: 0
   - itemId: 10722
-    name: Welder Servos
+    name: Ravager Servos
     slot: 3
     rarity: 2
     factions: 2
@@ -5764,7 +6091,7 @@ MonoBehaviour:
     lineId: 46
     weaponClass: 0
   - itemId: 10723
-    name: Welder Servos
+    name: Ravager Servos
     slot: 3
     rarity: 2
     factions: 2
@@ -5776,7 +6103,7 @@ MonoBehaviour:
     lineId: 46
     weaponClass: 0
   - itemId: 10736
-    name: Sentry Servos
+    name: Overseer Servos
     slot: 3
     rarity: 2
     factions: 2
@@ -5788,7 +6115,7 @@ MonoBehaviour:
     lineId: 47
     weaponClass: 0
   - itemId: 10737
-    name: Sentry Servos
+    name: Overseer Servos
     slot: 3
     rarity: 2
     factions: 2
@@ -5800,7 +6127,7 @@ MonoBehaviour:
     lineId: 47
     weaponClass: 0
   - itemId: 10738
-    name: Sentry Servos
+    name: Overseer Servos
     slot: 3
     rarity: 2
     factions: 2
@@ -5812,7 +6139,7 @@ MonoBehaviour:
     lineId: 47
     weaponClass: 0
   - itemId: 10739
-    name: Sentry Servos
+    name: Overseer Servos
     slot: 3
     rarity: 2
     factions: 2
@@ -5824,7 +6151,7 @@ MonoBehaviour:
     lineId: 47
     weaponClass: 0
   - itemId: 10752
-    name: Enforcer Servos
+    name: Prime Servos
     slot: 3
     rarity: 3
     factions: 2
@@ -5836,7 +6163,7 @@ MonoBehaviour:
     lineId: 48
     weaponClass: 0
   - itemId: 10753
-    name: Enforcer Servos
+    name: Prime Servos
     slot: 3
     rarity: 3
     factions: 2
@@ -5848,7 +6175,7 @@ MonoBehaviour:
     lineId: 48
     weaponClass: 0
   - itemId: 10754
-    name: Enforcer Servos
+    name: Prime Servos
     slot: 3
     rarity: 3
     factions: 2
@@ -5860,7 +6187,7 @@ MonoBehaviour:
     lineId: 48
     weaponClass: 0
   - itemId: 10755
-    name: Enforcer Servos
+    name: Prime Servos
     slot: 3
     rarity: 3
     factions: 2
@@ -5872,7 +6199,7 @@ MonoBehaviour:
     lineId: 48
     weaponClass: 0
   - itemId: 10756
-    name: Enforcer Servos
+    name: Prime Servos
     slot: 3
     rarity: 3
     factions: 2
@@ -6004,7 +6331,7 @@ MonoBehaviour:
     lineId: 49
     weaponClass: 0
   - itemId: 10784
-    name: Hauler Stabilizers
+    name: Welder Stabilizers
     slot: 4
     rarity: 1
     factions: 2
@@ -6016,7 +6343,7 @@ MonoBehaviour:
     lineId: 50
     weaponClass: 0
   - itemId: 10785
-    name: Hauler Stabilizers
+    name: Welder Stabilizers
     slot: 4
     rarity: 1
     factions: 2
@@ -6028,7 +6355,7 @@ MonoBehaviour:
     lineId: 50
     weaponClass: 0
   - itemId: 10786
-    name: Hauler Stabilizers
+    name: Welder Stabilizers
     slot: 4
     rarity: 1
     factions: 2
@@ -6040,7 +6367,7 @@ MonoBehaviour:
     lineId: 50
     weaponClass: 0
   - itemId: 10787
-    name: Hauler Stabilizers
+    name: Welder Stabilizers
     slot: 4
     rarity: 1
     factions: 2
@@ -6052,7 +6379,7 @@ MonoBehaviour:
     lineId: 50
     weaponClass: 0
   - itemId: 10788
-    name: Hauler Stabilizers
+    name: Welder Stabilizers
     slot: 4
     rarity: 1
     factions: 2
@@ -6064,7 +6391,7 @@ MonoBehaviour:
     lineId: 50
     weaponClass: 0
   - itemId: 10800
-    name: Welder Stabilizers
+    name: Ravager Stabilizers
     slot: 4
     rarity: 2
     factions: 2
@@ -6076,7 +6403,7 @@ MonoBehaviour:
     lineId: 51
     weaponClass: 0
   - itemId: 10801
-    name: Welder Stabilizers
+    name: Ravager Stabilizers
     slot: 4
     rarity: 2
     factions: 2
@@ -6088,7 +6415,7 @@ MonoBehaviour:
     lineId: 51
     weaponClass: 0
   - itemId: 10802
-    name: Welder Stabilizers
+    name: Ravager Stabilizers
     slot: 4
     rarity: 2
     factions: 2
@@ -6100,7 +6427,7 @@ MonoBehaviour:
     lineId: 51
     weaponClass: 0
   - itemId: 10803
-    name: Welder Stabilizers
+    name: Ravager Stabilizers
     slot: 4
     rarity: 2
     factions: 2
@@ -6112,7 +6439,7 @@ MonoBehaviour:
     lineId: 51
     weaponClass: 0
   - itemId: 10816
-    name: Sentry Stabilizers
+    name: Overseer Stabilizers
     slot: 4
     rarity: 2
     factions: 2
@@ -6124,7 +6451,7 @@ MonoBehaviour:
     lineId: 52
     weaponClass: 0
   - itemId: 10817
-    name: Sentry Stabilizers
+    name: Overseer Stabilizers
     slot: 4
     rarity: 2
     factions: 2
@@ -6136,7 +6463,7 @@ MonoBehaviour:
     lineId: 52
     weaponClass: 0
   - itemId: 10818
-    name: Sentry Stabilizers
+    name: Overseer Stabilizers
     slot: 4
     rarity: 2
     factions: 2
@@ -6148,7 +6475,7 @@ MonoBehaviour:
     lineId: 52
     weaponClass: 0
   - itemId: 10819
-    name: Sentry Stabilizers
+    name: Overseer Stabilizers
     slot: 4
     rarity: 2
     factions: 2
@@ -6160,7 +6487,7 @@ MonoBehaviour:
     lineId: 52
     weaponClass: 0
   - itemId: 10832
-    name: Enforcer Stabilizers
+    name: Prime Stabilizers
     slot: 4
     rarity: 3
     factions: 2
@@ -6172,7 +6499,7 @@ MonoBehaviour:
     lineId: 53
     weaponClass: 0
   - itemId: 10833
-    name: Enforcer Stabilizers
+    name: Prime Stabilizers
     slot: 4
     rarity: 3
     factions: 2
@@ -6184,7 +6511,7 @@ MonoBehaviour:
     lineId: 53
     weaponClass: 0
   - itemId: 10834
-    name: Enforcer Stabilizers
+    name: Prime Stabilizers
     slot: 4
     rarity: 3
     factions: 2
@@ -6196,7 +6523,7 @@ MonoBehaviour:
     lineId: 53
     weaponClass: 0
   - itemId: 10835
-    name: Enforcer Stabilizers
+    name: Prime Stabilizers
     slot: 4
     rarity: 3
     factions: 2
@@ -6208,7 +6535,7 @@ MonoBehaviour:
     lineId: 53
     weaponClass: 0
   - itemId: 10836
-    name: Enforcer Stabilizers
+    name: Prime Stabilizers
     slot: 4
     rarity: 3
     factions: 2
@@ -6219,128 +6546,8 @@ MonoBehaviour:
     itemLevel: 112
     lineId: 53
     weaponClass: 0
-  - itemId: 10848
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 1
-    lineId: 54
-    weaponClass: 0
-  - itemId: 10849
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 4
-    lineId: 54
-    weaponClass: 0
-  - itemId: 10850
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 7
-    lineId: 54
-    weaponClass: 0
-  - itemId: 10851
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 10
-    lineId: 54
-    weaponClass: 0
-  - itemId: 10852
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 13
-    lineId: 54
-    weaponClass: 0
-  - itemId: 10853
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 16
-    lineId: 54
-    weaponClass: 0
-  - itemId: 10854
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 19
-    lineId: 54
-    weaponClass: 0
-  - itemId: 10855
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 22
-    lineId: 54
-    weaponClass: 0
-  - itemId: 10856
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 25
-    lineId: 54
-    weaponClass: 0
-  - itemId: 10857
-    name: Servitor Back Unit
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 2
-    pack: SCFI_ROBO
-    variant: 1
-    partIds: 4701t
-    itemLevel: 28
-    lineId: 54
-    weaponClass: 0
   - itemId: 10864
-    name: Sentry Back Unit
+    name: Ravager Back Unit
     slot: 7
     rarity: 2
     factions: 2
@@ -6352,7 +6559,7 @@ MonoBehaviour:
     lineId: 55
     weaponClass: 0
   - itemId: 10865
-    name: Sentry Back Unit
+    name: Ravager Back Unit
     slot: 7
     rarity: 2
     factions: 2
@@ -6364,7 +6571,7 @@ MonoBehaviour:
     lineId: 55
     weaponClass: 0
   - itemId: 10866
-    name: Sentry Back Unit
+    name: Ravager Back Unit
     slot: 7
     rarity: 2
     factions: 2
@@ -6376,7 +6583,7 @@ MonoBehaviour:
     lineId: 55
     weaponClass: 0
   - itemId: 10867
-    name: Sentry Back Unit
+    name: Ravager Back Unit
     slot: 7
     rarity: 2
     factions: 2
@@ -6388,7 +6595,7 @@ MonoBehaviour:
     lineId: 55
     weaponClass: 0
   - itemId: 10880
-    name: Enforcer Back Unit
+    name: Overseer Back Unit
     slot: 7
     rarity: 2
     factions: 2
@@ -6400,7 +6607,7 @@ MonoBehaviour:
     lineId: 56
     weaponClass: 0
   - itemId: 10881
-    name: Enforcer Back Unit
+    name: Overseer Back Unit
     slot: 7
     rarity: 2
     factions: 2
@@ -6412,7 +6619,7 @@ MonoBehaviour:
     lineId: 56
     weaponClass: 0
   - itemId: 10882
-    name: Enforcer Back Unit
+    name: Overseer Back Unit
     slot: 7
     rarity: 2
     factions: 2
@@ -6424,7 +6631,7 @@ MonoBehaviour:
     lineId: 56
     weaponClass: 0
   - itemId: 10883
-    name: Enforcer Back Unit
+    name: Overseer Back Unit
     slot: 7
     rarity: 2
     factions: 2
@@ -6436,7 +6643,7 @@ MonoBehaviour:
     lineId: 56
     weaponClass: 0
   - itemId: 10896
-    name: Ravager Back Unit
+    name: Prime Back Unit
     slot: 7
     rarity: 3
     factions: 2
@@ -6448,7 +6655,7 @@ MonoBehaviour:
     lineId: 57
     weaponClass: 0
   - itemId: 10897
-    name: Ravager Back Unit
+    name: Prime Back Unit
     slot: 7
     rarity: 3
     factions: 2
@@ -6460,7 +6667,7 @@ MonoBehaviour:
     lineId: 57
     weaponClass: 0
   - itemId: 10898
-    name: Ravager Back Unit
+    name: Prime Back Unit
     slot: 7
     rarity: 3
     factions: 2
@@ -6472,7 +6679,7 @@ MonoBehaviour:
     lineId: 57
     weaponClass: 0
   - itemId: 10899
-    name: Ravager Back Unit
+    name: Prime Back Unit
     slot: 7
     rarity: 3
     factions: 2
@@ -6484,7 +6691,7 @@ MonoBehaviour:
     lineId: 57
     weaponClass: 0
   - itemId: 10900
-    name: Ravager Back Unit
+    name: Prime Back Unit
     slot: 7
     rarity: 3
     factions: 2
@@ -6952,7 +7159,7 @@ MonoBehaviour:
     lineId: 63
     weaponClass: 0
   - itemId: 11008
-    name: Boneguard Gauntlets
+    name: Cryptwarden Gauntlets
     slot: 3
     rarity: 1
     factions: 2
@@ -6964,7 +7171,7 @@ MonoBehaviour:
     lineId: 64
     weaponClass: 0
   - itemId: 11009
-    name: Boneguard Gauntlets
+    name: Cryptwarden Gauntlets
     slot: 3
     rarity: 1
     factions: 2
@@ -6976,7 +7183,7 @@ MonoBehaviour:
     lineId: 64
     weaponClass: 0
   - itemId: 11010
-    name: Boneguard Gauntlets
+    name: Cryptwarden Gauntlets
     slot: 3
     rarity: 1
     factions: 2
@@ -6988,7 +7195,7 @@ MonoBehaviour:
     lineId: 64
     weaponClass: 0
   - itemId: 11011
-    name: Boneguard Gauntlets
+    name: Cryptwarden Gauntlets
     slot: 3
     rarity: 1
     factions: 2
@@ -7000,7 +7207,7 @@ MonoBehaviour:
     lineId: 64
     weaponClass: 0
   - itemId: 11012
-    name: Boneguard Gauntlets
+    name: Cryptwarden Gauntlets
     slot: 3
     rarity: 1
     factions: 2
@@ -7012,7 +7219,7 @@ MonoBehaviour:
     lineId: 64
     weaponClass: 0
   - itemId: 11024
-    name: Boneguard Gauntlets
+    name: Deathsworn Gauntlets
     slot: 3
     rarity: 2
     factions: 2
@@ -7024,7 +7231,7 @@ MonoBehaviour:
     lineId: 65
     weaponClass: 0
   - itemId: 11025
-    name: Boneguard Gauntlets
+    name: Deathsworn Gauntlets
     slot: 3
     rarity: 2
     factions: 2
@@ -7036,7 +7243,7 @@ MonoBehaviour:
     lineId: 65
     weaponClass: 0
   - itemId: 11026
-    name: Boneguard Gauntlets
+    name: Deathsworn Gauntlets
     slot: 3
     rarity: 2
     factions: 2
@@ -7048,7 +7255,7 @@ MonoBehaviour:
     lineId: 65
     weaponClass: 0
   - itemId: 11027
-    name: Boneguard Gauntlets
+    name: Deathsworn Gauntlets
     slot: 3
     rarity: 2
     factions: 2
@@ -7060,7 +7267,7 @@ MonoBehaviour:
     lineId: 65
     weaponClass: 0
   - itemId: 11040
-    name: Cryptwarden Gauntlets
+    name: Lichbound Gauntlets
     slot: 3
     rarity: 2
     factions: 2
@@ -7072,7 +7279,7 @@ MonoBehaviour:
     lineId: 66
     weaponClass: 0
   - itemId: 11041
-    name: Cryptwarden Gauntlets
+    name: Lichbound Gauntlets
     slot: 3
     rarity: 2
     factions: 2
@@ -7084,7 +7291,7 @@ MonoBehaviour:
     lineId: 66
     weaponClass: 0
   - itemId: 11042
-    name: Cryptwarden Gauntlets
+    name: Lichbound Gauntlets
     slot: 3
     rarity: 2
     factions: 2
@@ -7096,7 +7303,7 @@ MonoBehaviour:
     lineId: 66
     weaponClass: 0
   - itemId: 11043
-    name: Cryptwarden Gauntlets
+    name: Lichbound Gauntlets
     slot: 3
     rarity: 2
     factions: 2
@@ -7108,7 +7315,7 @@ MonoBehaviour:
     lineId: 66
     weaponClass: 0
   - itemId: 11056
-    name: Cryptwarden Gauntlets
+    name: Revenant Gauntlets
     slot: 3
     rarity: 3
     factions: 2
@@ -7120,7 +7327,7 @@ MonoBehaviour:
     lineId: 67
     weaponClass: 0
   - itemId: 11057
-    name: Cryptwarden Gauntlets
+    name: Revenant Gauntlets
     slot: 3
     rarity: 3
     factions: 2
@@ -7132,7 +7339,7 @@ MonoBehaviour:
     lineId: 67
     weaponClass: 0
   - itemId: 11058
-    name: Cryptwarden Gauntlets
+    name: Revenant Gauntlets
     slot: 3
     rarity: 3
     factions: 2
@@ -7144,7 +7351,7 @@ MonoBehaviour:
     lineId: 67
     weaponClass: 0
   - itemId: 11059
-    name: Cryptwarden Gauntlets
+    name: Revenant Gauntlets
     slot: 3
     rarity: 3
     factions: 2
@@ -7156,7 +7363,7 @@ MonoBehaviour:
     lineId: 67
     weaponClass: 0
   - itemId: 11060
-    name: Cryptwarden Gauntlets
+    name: Revenant Gauntlets
     slot: 3
     rarity: 3
     factions: 2
@@ -7288,7 +7495,7 @@ MonoBehaviour:
     lineId: 68
     weaponClass: 0
   - itemId: 11088
-    name: Boneguard Greaves
+    name: Cryptwarden Greaves
     slot: 4
     rarity: 1
     factions: 2
@@ -7300,7 +7507,7 @@ MonoBehaviour:
     lineId: 69
     weaponClass: 0
   - itemId: 11089
-    name: Boneguard Greaves
+    name: Cryptwarden Greaves
     slot: 4
     rarity: 1
     factions: 2
@@ -7312,7 +7519,7 @@ MonoBehaviour:
     lineId: 69
     weaponClass: 0
   - itemId: 11090
-    name: Boneguard Greaves
+    name: Cryptwarden Greaves
     slot: 4
     rarity: 1
     factions: 2
@@ -7324,7 +7531,7 @@ MonoBehaviour:
     lineId: 69
     weaponClass: 0
   - itemId: 11091
-    name: Boneguard Greaves
+    name: Cryptwarden Greaves
     slot: 4
     rarity: 1
     factions: 2
@@ -7336,7 +7543,7 @@ MonoBehaviour:
     lineId: 69
     weaponClass: 0
   - itemId: 11092
-    name: Boneguard Greaves
+    name: Cryptwarden Greaves
     slot: 4
     rarity: 1
     factions: 2
@@ -7348,7 +7555,7 @@ MonoBehaviour:
     lineId: 69
     weaponClass: 0
   - itemId: 11104
-    name: Boneguard Greaves
+    name: Deathsworn Greaves
     slot: 4
     rarity: 2
     factions: 2
@@ -7360,7 +7567,7 @@ MonoBehaviour:
     lineId: 70
     weaponClass: 0
   - itemId: 11105
-    name: Boneguard Greaves
+    name: Deathsworn Greaves
     slot: 4
     rarity: 2
     factions: 2
@@ -7372,7 +7579,7 @@ MonoBehaviour:
     lineId: 70
     weaponClass: 0
   - itemId: 11106
-    name: Boneguard Greaves
+    name: Deathsworn Greaves
     slot: 4
     rarity: 2
     factions: 2
@@ -7384,7 +7591,7 @@ MonoBehaviour:
     lineId: 70
     weaponClass: 0
   - itemId: 11107
-    name: Boneguard Greaves
+    name: Deathsworn Greaves
     slot: 4
     rarity: 2
     factions: 2
@@ -7396,7 +7603,7 @@ MonoBehaviour:
     lineId: 70
     weaponClass: 0
   - itemId: 11120
-    name: Cryptwarden Greaves
+    name: Lichbound Greaves
     slot: 4
     rarity: 2
     factions: 2
@@ -7408,7 +7615,7 @@ MonoBehaviour:
     lineId: 71
     weaponClass: 0
   - itemId: 11121
-    name: Cryptwarden Greaves
+    name: Lichbound Greaves
     slot: 4
     rarity: 2
     factions: 2
@@ -7420,7 +7627,7 @@ MonoBehaviour:
     lineId: 71
     weaponClass: 0
   - itemId: 11122
-    name: Cryptwarden Greaves
+    name: Lichbound Greaves
     slot: 4
     rarity: 2
     factions: 2
@@ -7432,7 +7639,7 @@ MonoBehaviour:
     lineId: 71
     weaponClass: 0
   - itemId: 11123
-    name: Cryptwarden Greaves
+    name: Lichbound Greaves
     slot: 4
     rarity: 2
     factions: 2
@@ -7444,7 +7651,7 @@ MonoBehaviour:
     lineId: 71
     weaponClass: 0
   - itemId: 11136
-    name: Cryptwarden Greaves
+    name: Revenant Greaves
     slot: 4
     rarity: 3
     factions: 2
@@ -7456,7 +7663,7 @@ MonoBehaviour:
     lineId: 72
     weaponClass: 0
   - itemId: 11137
-    name: Cryptwarden Greaves
+    name: Revenant Greaves
     slot: 4
     rarity: 3
     factions: 2
@@ -7468,7 +7675,7 @@ MonoBehaviour:
     lineId: 72
     weaponClass: 0
   - itemId: 11138
-    name: Cryptwarden Greaves
+    name: Revenant Greaves
     slot: 4
     rarity: 3
     factions: 2
@@ -7480,7 +7687,7 @@ MonoBehaviour:
     lineId: 72
     weaponClass: 0
   - itemId: 11139
-    name: Cryptwarden Greaves
+    name: Revenant Greaves
     slot: 4
     rarity: 3
     factions: 2
@@ -7492,7 +7699,7 @@ MonoBehaviour:
     lineId: 72
     weaponClass: 0
   - itemId: 11140
-    name: Cryptwarden Greaves
+    name: Revenant Greaves
     slot: 4
     rarity: 3
     factions: 2
@@ -7502,126 +7709,6 @@ MonoBehaviour:
     partIds: a400a500t
     itemLevel: 112
     lineId: 72
-    weaponClass: 0
-  - itemId: 11152
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 1
-    lineId: 73
-    weaponClass: 0
-  - itemId: 11153
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 4
-    lineId: 73
-    weaponClass: 0
-  - itemId: 11154
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 7
-    lineId: 73
-    weaponClass: 0
-  - itemId: 11155
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 10
-    lineId: 73
-    weaponClass: 0
-  - itemId: 11156
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 13
-    lineId: 73
-    weaponClass: 0
-  - itemId: 11157
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 16
-    lineId: 73
-    weaponClass: 0
-  - itemId: 11158
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 19
-    lineId: 73
-    weaponClass: 0
-  - itemId: 11159
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 22
-    lineId: 73
-    weaponClass: 0
-  - itemId: 11160
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 25
-    lineId: 73
-    weaponClass: 0
-  - itemId: 11161
-    name: Graveworn Shroud
-    slot: 7
-    rarity: 0
-    factions: 2
-    bodies: 4
-    pack: FANT_SKTN
-    variant: 1
-    partIds: 7800t
-    itemLevel: 28
-    lineId: 73
     weaponClass: 0
   - itemId: 11168
     name: Deathsworn Shroud
@@ -8787,128 +8874,8 @@ MonoBehaviour:
     itemLevel: 112
     lineId: 91
     weaponClass: 0
-  - itemId: 11456
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 1
-    lineId: 92
-    weaponClass: 0
-  - itemId: 11457
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 4
-    lineId: 92
-    weaponClass: 0
-  - itemId: 11458
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 7
-    lineId: 92
-    weaponClass: 0
-  - itemId: 11459
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 10
-    lineId: 92
-    weaponClass: 0
-  - itemId: 11460
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 13
-    lineId: 92
-    weaponClass: 0
-  - itemId: 11461
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 16
-    lineId: 92
-    weaponClass: 0
-  - itemId: 11462
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 19
-    lineId: 92
-    weaponClass: 0
-  - itemId: 11463
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 22
-    lineId: 92
-    weaponClass: 0
-  - itemId: 11464
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 25
-    lineId: 92
-    weaponClass: 0
-  - itemId: 11465
-    name: Thrall Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: VIKG_WARR
-    variant: 1
-    partIds: 1103t
-    itemLevel: 28
-    lineId: 92
-    weaponClass: 0
   - itemId: 11472
-    name: Warlord Cloak
+    name: Berserker Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -8920,7 +8887,7 @@ MonoBehaviour:
     lineId: 93
     weaponClass: 0
   - itemId: 11473
-    name: Warlord Cloak
+    name: Berserker Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -8932,7 +8899,7 @@ MonoBehaviour:
     lineId: 93
     weaponClass: 0
   - itemId: 11474
-    name: Warlord Cloak
+    name: Berserker Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -8944,7 +8911,7 @@ MonoBehaviour:
     lineId: 93
     weaponClass: 0
   - itemId: 11475
-    name: Warlord Cloak
+    name: Berserker Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -8956,7 +8923,7 @@ MonoBehaviour:
     lineId: 93
     weaponClass: 0
   - itemId: 11488
-    name: Mark 08 Cloak
+    name: Jarl Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -8968,7 +8935,7 @@ MonoBehaviour:
     lineId: 94
     weaponClass: 0
   - itemId: 11489
-    name: Mark 08 Cloak
+    name: Jarl Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -8980,7 +8947,7 @@ MonoBehaviour:
     lineId: 94
     weaponClass: 0
   - itemId: 11490
-    name: Mark 08 Cloak
+    name: Jarl Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -8992,7 +8959,7 @@ MonoBehaviour:
     lineId: 94
     weaponClass: 0
   - itemId: 11491
-    name: Mark 08 Cloak
+    name: Jarl Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -9004,7 +8971,7 @@ MonoBehaviour:
     lineId: 94
     weaponClass: 0
   - itemId: 11504
-    name: Mark 10 Cloak
+    name: Warlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -9016,7 +8983,7 @@ MonoBehaviour:
     lineId: 95
     weaponClass: 0
   - itemId: 11505
-    name: Mark 10 Cloak
+    name: Warlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -9028,7 +8995,7 @@ MonoBehaviour:
     lineId: 95
     weaponClass: 0
   - itemId: 11506
-    name: Mark 10 Cloak
+    name: Warlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -9040,7 +9007,7 @@ MonoBehaviour:
     lineId: 95
     weaponClass: 0
   - itemId: 11507
-    name: Mark 10 Cloak
+    name: Warlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -9052,7 +9019,7 @@ MonoBehaviour:
     lineId: 95
     weaponClass: 0
   - itemId: 11508
-    name: Mark 10 Cloak
+    name: Warlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -9184,7 +9151,7 @@ MonoBehaviour:
     lineId: 96
     weaponClass: 0
   - itemId: 11536
-    name: Warden Armor
+    name: Wildrunner Armor
     slot: 2
     rarity: 1
     factions: 4
@@ -9196,7 +9163,7 @@ MonoBehaviour:
     lineId: 97
     weaponClass: 0
   - itemId: 11537
-    name: Warden Armor
+    name: Wildrunner Armor
     slot: 2
     rarity: 1
     factions: 4
@@ -9208,7 +9175,7 @@ MonoBehaviour:
     lineId: 97
     weaponClass: 0
   - itemId: 11538
-    name: Warden Armor
+    name: Wildrunner Armor
     slot: 2
     rarity: 1
     factions: 4
@@ -9220,7 +9187,7 @@ MonoBehaviour:
     lineId: 97
     weaponClass: 0
   - itemId: 11539
-    name: Warden Armor
+    name: Wildrunner Armor
     slot: 2
     rarity: 1
     factions: 4
@@ -9232,7 +9199,7 @@ MonoBehaviour:
     lineId: 97
     weaponClass: 0
   - itemId: 11540
-    name: Warden Armor
+    name: Wildrunner Armor
     slot: 2
     rarity: 1
     factions: 4
@@ -9520,7 +9487,7 @@ MonoBehaviour:
     lineId: 101
     weaponClass: 0
   - itemId: 11616
-    name: Warden Gloves
+    name: Wildrunner Gloves
     slot: 3
     rarity: 1
     factions: 4
@@ -9532,7 +9499,7 @@ MonoBehaviour:
     lineId: 102
     weaponClass: 0
   - itemId: 11617
-    name: Warden Gloves
+    name: Wildrunner Gloves
     slot: 3
     rarity: 1
     factions: 4
@@ -9544,7 +9511,7 @@ MonoBehaviour:
     lineId: 102
     weaponClass: 0
   - itemId: 11618
-    name: Warden Gloves
+    name: Wildrunner Gloves
     slot: 3
     rarity: 1
     factions: 4
@@ -9556,7 +9523,7 @@ MonoBehaviour:
     lineId: 102
     weaponClass: 0
   - itemId: 11619
-    name: Warden Gloves
+    name: Wildrunner Gloves
     slot: 3
     rarity: 1
     factions: 4
@@ -9568,7 +9535,7 @@ MonoBehaviour:
     lineId: 102
     weaponClass: 0
   - itemId: 11620
-    name: Warden Gloves
+    name: Wildrunner Gloves
     slot: 3
     rarity: 1
     factions: 4
@@ -9580,7 +9547,7 @@ MonoBehaviour:
     lineId: 102
     weaponClass: 0
   - itemId: 11632
-    name: Warden Gloves
+    name: Bladesinger Gloves
     slot: 3
     rarity: 2
     factions: 4
@@ -9592,7 +9559,7 @@ MonoBehaviour:
     lineId: 103
     weaponClass: 0
   - itemId: 11633
-    name: Warden Gloves
+    name: Bladesinger Gloves
     slot: 3
     rarity: 2
     factions: 4
@@ -9604,7 +9571,7 @@ MonoBehaviour:
     lineId: 103
     weaponClass: 0
   - itemId: 11634
-    name: Warden Gloves
+    name: Bladesinger Gloves
     slot: 3
     rarity: 2
     factions: 4
@@ -9616,7 +9583,7 @@ MonoBehaviour:
     lineId: 103
     weaponClass: 0
   - itemId: 11635
-    name: Warden Gloves
+    name: Bladesinger Gloves
     slot: 3
     rarity: 2
     factions: 4
@@ -9628,7 +9595,7 @@ MonoBehaviour:
     lineId: 103
     weaponClass: 0
   - itemId: 11648
-    name: Ranger Gloves
+    name: Highguard Gloves
     slot: 3
     rarity: 2
     factions: 4
@@ -9640,7 +9607,7 @@ MonoBehaviour:
     lineId: 104
     weaponClass: 0
   - itemId: 11649
-    name: Ranger Gloves
+    name: Highguard Gloves
     slot: 3
     rarity: 2
     factions: 4
@@ -9652,7 +9619,7 @@ MonoBehaviour:
     lineId: 104
     weaponClass: 0
   - itemId: 11650
-    name: Ranger Gloves
+    name: Highguard Gloves
     slot: 3
     rarity: 2
     factions: 4
@@ -9664,7 +9631,7 @@ MonoBehaviour:
     lineId: 104
     weaponClass: 0
   - itemId: 11651
-    name: Ranger Gloves
+    name: Highguard Gloves
     slot: 3
     rarity: 2
     factions: 4
@@ -9676,7 +9643,7 @@ MonoBehaviour:
     lineId: 104
     weaponClass: 0
   - itemId: 11664
-    name: Ranger Gloves
+    name: Sunlord Gloves
     slot: 3
     rarity: 3
     factions: 4
@@ -9688,7 +9655,7 @@ MonoBehaviour:
     lineId: 105
     weaponClass: 0
   - itemId: 11665
-    name: Ranger Gloves
+    name: Sunlord Gloves
     slot: 3
     rarity: 3
     factions: 4
@@ -9700,7 +9667,7 @@ MonoBehaviour:
     lineId: 105
     weaponClass: 0
   - itemId: 11666
-    name: Ranger Gloves
+    name: Sunlord Gloves
     slot: 3
     rarity: 3
     factions: 4
@@ -9712,7 +9679,7 @@ MonoBehaviour:
     lineId: 105
     weaponClass: 0
   - itemId: 11667
-    name: Ranger Gloves
+    name: Sunlord Gloves
     slot: 3
     rarity: 3
     factions: 4
@@ -9724,7 +9691,7 @@ MonoBehaviour:
     lineId: 105
     weaponClass: 0
   - itemId: 11668
-    name: Ranger Gloves
+    name: Sunlord Gloves
     slot: 3
     rarity: 3
     factions: 4
@@ -9856,7 +9823,7 @@ MonoBehaviour:
     lineId: 106
     weaponClass: 0
   - itemId: 11696
-    name: Warden Boots
+    name: Wildrunner Boots
     slot: 4
     rarity: 1
     factions: 4
@@ -9868,7 +9835,7 @@ MonoBehaviour:
     lineId: 107
     weaponClass: 0
   - itemId: 11697
-    name: Warden Boots
+    name: Wildrunner Boots
     slot: 4
     rarity: 1
     factions: 4
@@ -9880,7 +9847,7 @@ MonoBehaviour:
     lineId: 107
     weaponClass: 0
   - itemId: 11698
-    name: Warden Boots
+    name: Wildrunner Boots
     slot: 4
     rarity: 1
     factions: 4
@@ -9892,7 +9859,7 @@ MonoBehaviour:
     lineId: 107
     weaponClass: 0
   - itemId: 11699
-    name: Warden Boots
+    name: Wildrunner Boots
     slot: 4
     rarity: 1
     factions: 4
@@ -9904,7 +9871,7 @@ MonoBehaviour:
     lineId: 107
     weaponClass: 0
   - itemId: 11700
-    name: Warden Boots
+    name: Wildrunner Boots
     slot: 4
     rarity: 1
     factions: 4
@@ -9916,7 +9883,7 @@ MonoBehaviour:
     lineId: 107
     weaponClass: 0
   - itemId: 11712
-    name: Warden Boots
+    name: Bladesinger Boots
     slot: 4
     rarity: 2
     factions: 4
@@ -9928,7 +9895,7 @@ MonoBehaviour:
     lineId: 108
     weaponClass: 0
   - itemId: 11713
-    name: Warden Boots
+    name: Bladesinger Boots
     slot: 4
     rarity: 2
     factions: 4
@@ -9940,7 +9907,7 @@ MonoBehaviour:
     lineId: 108
     weaponClass: 0
   - itemId: 11714
-    name: Warden Boots
+    name: Bladesinger Boots
     slot: 4
     rarity: 2
     factions: 4
@@ -9952,7 +9919,7 @@ MonoBehaviour:
     lineId: 108
     weaponClass: 0
   - itemId: 11715
-    name: Warden Boots
+    name: Bladesinger Boots
     slot: 4
     rarity: 2
     factions: 4
@@ -9964,7 +9931,7 @@ MonoBehaviour:
     lineId: 108
     weaponClass: 0
   - itemId: 11728
-    name: Ranger Boots
+    name: Highguard Boots
     slot: 4
     rarity: 2
     factions: 4
@@ -9976,7 +9943,7 @@ MonoBehaviour:
     lineId: 109
     weaponClass: 0
   - itemId: 11729
-    name: Ranger Boots
+    name: Highguard Boots
     slot: 4
     rarity: 2
     factions: 4
@@ -9988,7 +9955,7 @@ MonoBehaviour:
     lineId: 109
     weaponClass: 0
   - itemId: 11730
-    name: Ranger Boots
+    name: Highguard Boots
     slot: 4
     rarity: 2
     factions: 4
@@ -10000,7 +9967,7 @@ MonoBehaviour:
     lineId: 109
     weaponClass: 0
   - itemId: 11731
-    name: Ranger Boots
+    name: Highguard Boots
     slot: 4
     rarity: 2
     factions: 4
@@ -10012,7 +9979,7 @@ MonoBehaviour:
     lineId: 109
     weaponClass: 0
   - itemId: 11744
-    name: Ranger Boots
+    name: Sunlord Boots
     slot: 4
     rarity: 3
     factions: 4
@@ -10024,7 +9991,7 @@ MonoBehaviour:
     lineId: 110
     weaponClass: 0
   - itemId: 11745
-    name: Ranger Boots
+    name: Sunlord Boots
     slot: 4
     rarity: 3
     factions: 4
@@ -10036,7 +10003,7 @@ MonoBehaviour:
     lineId: 110
     weaponClass: 0
   - itemId: 11746
-    name: Ranger Boots
+    name: Sunlord Boots
     slot: 4
     rarity: 3
     factions: 4
@@ -10048,7 +10015,7 @@ MonoBehaviour:
     lineId: 110
     weaponClass: 0
   - itemId: 11747
-    name: Ranger Boots
+    name: Sunlord Boots
     slot: 4
     rarity: 3
     factions: 4
@@ -10060,7 +10027,7 @@ MonoBehaviour:
     lineId: 110
     weaponClass: 0
   - itemId: 11748
-    name: Ranger Boots
+    name: Sunlord Boots
     slot: 4
     rarity: 3
     factions: 4
@@ -10071,128 +10038,8 @@ MonoBehaviour:
     itemLevel: 112
     lineId: 110
     weaponClass: 0
-  - itemId: 11760
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 1
-    lineId: 111
-    weaponClass: 0
-  - itemId: 11761
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 4
-    lineId: 111
-    weaponClass: 0
-  - itemId: 11762
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 7
-    lineId: 111
-    weaponClass: 0
-  - itemId: 11763
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 10
-    lineId: 111
-    weaponClass: 0
-  - itemId: 11764
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 13
-    lineId: 111
-    weaponClass: 0
-  - itemId: 11765
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 16
-    lineId: 111
-    weaponClass: 0
-  - itemId: 11766
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 19
-    lineId: 111
-    weaponClass: 0
-  - itemId: 11767
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 22
-    lineId: 111
-    weaponClass: 0
-  - itemId: 11768
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 25
-    lineId: 111
-    weaponClass: 0
-  - itemId: 11769
-    name: Scout Cloak
-    slot: 7
-    rarity: 0
-    factions: 4
-    bodies: 1
-    pack: ELVN_WARR
-    variant: 1
-    partIds: 1400t
-    itemLevel: 28
-    lineId: 111
-    weaponClass: 0
   - itemId: 11776
-    name: Ranger Cloak
+    name: Bladesinger Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -10204,7 +10051,7 @@ MonoBehaviour:
     lineId: 112
     weaponClass: 0
   - itemId: 11777
-    name: Ranger Cloak
+    name: Bladesinger Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -10216,7 +10063,7 @@ MonoBehaviour:
     lineId: 112
     weaponClass: 0
   - itemId: 11778
-    name: Ranger Cloak
+    name: Bladesinger Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -10228,7 +10075,7 @@ MonoBehaviour:
     lineId: 112
     weaponClass: 0
   - itemId: 11779
-    name: Ranger Cloak
+    name: Bladesinger Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -10240,7 +10087,7 @@ MonoBehaviour:
     lineId: 112
     weaponClass: 0
   - itemId: 11792
-    name: Bladesinger Cloak
+    name: Highguard Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -10252,7 +10099,7 @@ MonoBehaviour:
     lineId: 113
     weaponClass: 0
   - itemId: 11793
-    name: Bladesinger Cloak
+    name: Highguard Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -10264,7 +10111,7 @@ MonoBehaviour:
     lineId: 113
     weaponClass: 0
   - itemId: 11794
-    name: Bladesinger Cloak
+    name: Highguard Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -10276,7 +10123,7 @@ MonoBehaviour:
     lineId: 113
     weaponClass: 0
   - itemId: 11795
-    name: Bladesinger Cloak
+    name: Highguard Cloak
     slot: 7
     rarity: 2
     factions: 4
@@ -10288,7 +10135,7 @@ MonoBehaviour:
     lineId: 113
     weaponClass: 0
   - itemId: 11808
-    name: Highguard Cloak
+    name: Sunlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -10300,7 +10147,7 @@ MonoBehaviour:
     lineId: 114
     weaponClass: 0
   - itemId: 11809
-    name: Highguard Cloak
+    name: Sunlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -10312,7 +10159,7 @@ MonoBehaviour:
     lineId: 114
     weaponClass: 0
   - itemId: 11810
-    name: Highguard Cloak
+    name: Sunlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -10324,7 +10171,7 @@ MonoBehaviour:
     lineId: 114
     weaponClass: 0
   - itemId: 11811
-    name: Highguard Cloak
+    name: Sunlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -10336,7 +10183,7 @@ MonoBehaviour:
     lineId: 114
     weaponClass: 0
   - itemId: 11812
-    name: Highguard Cloak
+    name: Sunlord Cloak
     slot: 7
     rarity: 3
     factions: 4
@@ -16972,7 +16819,7 @@ MonoBehaviour:
     lineId: 211
     weaponClass: 0
   - itemId: 13376
-    name: Warden Leaf Ring
+    name: Wildrunner Leaf Ring
     slot: 5
     rarity: 1
     factions: 4
@@ -16984,7 +16831,7 @@ MonoBehaviour:
     lineId: 212
     weaponClass: 0
   - itemId: 13377
-    name: Warden Leaf Ring
+    name: Wildrunner Leaf Ring
     slot: 5
     rarity: 1
     factions: 4
@@ -16996,7 +16843,7 @@ MonoBehaviour:
     lineId: 212
     weaponClass: 0
   - itemId: 13378
-    name: Warden Leaf Ring
+    name: Wildrunner Leaf Ring
     slot: 5
     rarity: 1
     factions: 4
@@ -17008,7 +16855,7 @@ MonoBehaviour:
     lineId: 212
     weaponClass: 0
   - itemId: 13379
-    name: Warden Leaf Ring
+    name: Wildrunner Leaf Ring
     slot: 5
     rarity: 1
     factions: 4
@@ -17020,7 +16867,7 @@ MonoBehaviour:
     lineId: 212
     weaponClass: 0
   - itemId: 13380
-    name: Warden Leaf Ring
+    name: Wildrunner Leaf Ring
     slot: 5
     rarity: 1
     factions: 4
@@ -17032,7 +16879,7 @@ MonoBehaviour:
     lineId: 212
     weaponClass: 0
   - itemId: 13392
-    name: Warden Talisman
+    name: Wildrunner Talisman
     slot: 6
     rarity: 1
     factions: 4
@@ -17044,7 +16891,7 @@ MonoBehaviour:
     lineId: 213
     weaponClass: 0
   - itemId: 13393
-    name: Warden Talisman
+    name: Wildrunner Talisman
     slot: 6
     rarity: 1
     factions: 4
@@ -17056,7 +16903,7 @@ MonoBehaviour:
     lineId: 213
     weaponClass: 0
   - itemId: 13394
-    name: Warden Talisman
+    name: Wildrunner Talisman
     slot: 6
     rarity: 1
     factions: 4
@@ -17068,7 +16915,7 @@ MonoBehaviour:
     lineId: 213
     weaponClass: 0
   - itemId: 13395
-    name: Warden Talisman
+    name: Wildrunner Talisman
     slot: 6
     rarity: 1
     factions: 4
@@ -17080,7 +16927,7 @@ MonoBehaviour:
     lineId: 213
     weaponClass: 0
   - itemId: 13396
-    name: Warden Talisman
+    name: Wildrunner Talisman
     slot: 6
     rarity: 1
     factions: 4

@@ -46,12 +46,22 @@ MonoBehaviour:
   appearancePartIds: 
   partCatalog: {fileID: 0}
   appearanceParts: []
+  colorTheme: 0
+  colorThemes: {fileID: 0}
+  colorCells: 
   weaponPrefab: {fileID: 4286267127627927373, guid: f275ab62ab3d05c4fb32efd62b5bd506, type: 3}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}
   weaponLocalScale: {x: 1, y: 1, z: 1}
   hitboxCenter: {x: 0, y: 0.067405626, z: 0.39173585}
   hitboxSize: {x: 0.18, y: 0.32519895, z: 0.6834717}
+  paired: 0
+  offHandLocalPosition: {x: 0, y: 0, z: 0}
+  offHandLocalEuler: {x: 0, y: 0, z: 0}
+  leftHanded: 0
+  carry: 0
+  carryLocalPosition: {x: 0, y: 0, z: 0}
+  carryLocalEuler: {x: 0, y: 0, z: 0}
   petPrefab: {fileID: 0}
   petScale: 1
   petOffset: {x: 0.45, y: 0.75, z: -0.15}

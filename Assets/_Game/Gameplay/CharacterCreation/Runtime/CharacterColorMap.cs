@@ -1,3 +1,4 @@
+using KryticalNova.Items;
 using UnityEngine;
 
 namespace KryticalNova.CharacterCreation
@@ -5,7 +6,7 @@ namespace KryticalNova.CharacterCreation
     /// <summary>
     /// Builds a character's Sidekick colour map: a 32x32 texture where each cell of the 16x16 colour grid is a 2x2
     /// texel block (the layout Sidekick's own tool writes). Order: base palette, then skin tone, then the colours
-    /// the player picked.
+    /// the player picked, then the set colours of what the character wears.
     /// </summary>
     public static class CharacterColorMap
     {
@@ -36,6 +37,19 @@ namespace KryticalNova.CharacterCreation
                 if (!database.TryGetChannel(pick.channel, out var channel) || channel.targets == null) continue;
                 foreach (var target in channel.targets) SetCell(pixels, target.u, target.v, Shade(pick.color, target.shade));
             }
+        }
+
+        /// <summary>
+        /// Paints a worn piece's set colours over the map: only the cells that piece's own meshes use, so skin, hair
+        /// and whatever the piece does not cover keep the character's colours. A piece without a theme (the basic
+        /// outfit) changes nothing.
+        /// </summary>
+        public static void OverlayGear(ItemDefinition item, Color32[] pixels)
+        {
+            if (item == null || item.colorTheme == 0 || item.colorThemes == null || item.colorCells == null) return;
+            if (!item.colorThemes.TryGet(item.colorTheme, out var theme)) return;
+            foreach (byte cell in item.colorCells)
+                SetCell(pixels, cell % CharacterPaletteLibrary.Grid, cell / CharacterPaletteLibrary.Grid, theme.cells[cell]);
         }
 
         public static Texture2D CreateTexture(string name)

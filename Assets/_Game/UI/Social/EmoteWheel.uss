@@ -1,0 +1,42 @@
+/*
+ * The emote wheel (EmoteWheelController). The wedges are drawn by the controller; this sheet gives it their
+ * colours (the three swatches), and lays out the labels and the hub.
+ */
+
+.emote-wheel-screen { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none; }
+.emote-wheel { position: absolute; left: 50%; top: 50%; width: 580px; height: 580px; translate: -50% -50%; }
+.emote-wheel-layer { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+
+.emote-wheel-label {
+    position: absolute;
+    width: 128px;
+    translate: -50% -50%;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    font-size: 13px;
+    color: rgb(214, 224, 234);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
+    padding: 0;
+    margin: 0;
+}
+.emote-wheel-label.category { font-size: 16px; -unity-font-style: bold; letter-spacing: 1px; }
+.emote-wheel-label.stance { color: rgb(255, 222, 130); }
+.emote-wheel-label.hovered { color: rgb(255, 255, 255); -unity-font-style: bold; }
+
+.emote-wheel-hub {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 136px;
+    height: 136px;
+    translate: -50% -50%;
+    align-items: center;
+    justify-content: center;
+}
+.emote-wheel-title { font-size: 16px; -unity-font-style: bold; letter-spacing: 2px; color: rgb(255, 222, 130); -unity-text-align: middle-center; }
+.emote-wheel-hint { font-size: 11px; margin-top: 4px; color: rgb(156, 172, 188); white-space: normal; -unity-text-align: middle-center; }
+
+.emote-wheel-swatch { position: absolute; width: 0; height: 0; }
+.emote-wheel-fill { background-color: rgba(10, 16, 24, 0.88); }
+.emote-wheel-hover { background-color: rgba(30, 112, 98, 0.96); }
+.emote-wheel-line { background-color: rgba(114, 222, 196, 0.9); }

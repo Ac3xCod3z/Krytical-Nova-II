@@ -38,11 +38,13 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 | Kiosk price cap: a pet, rising with its growth from the Common cap to | 20,000,000 at 100 % |
 | Kiosk sales tax (a Creds sink) | 5 % |
 | The forge (a Creds sink; numbers in `GearProgressionSettings`, see the gear spec) | Tempering: item level × 500 × rarity multiplier, doubled from 120 % · Fusion: 100,000 + 50,000 a stage · Tuning: 50,000 / 150,000 / 400,000 by stage bracket · Reforge: 1,000,000 at level 45, +200,000 per ten levels |
+| The Herald (a Creds sink; numbers in `NovaSettings`, see the gear spec section 9) | Ascension: 500,000 an attempt, with 100 Renown. On average +0 to +24 takes about 51 attempts (25.7M Creds, 5,100 Renown) and +0 to +96 about 275 (138M Creds, 27,500 Renown). Nova Standings cost Renown only: 65,800 a track |
 | Income target, Creds per hour at level 1 / 20 / 40 / 60 / 80 / 100 / 112 | 3k / 25k / 90k / 250k / 600k / 1.2M / 2M |
 
 - **Nothing pays Creds yet.** They enter only through `gm.creds`. The income target is the design number Hostile drops, Contracts and vendors must be tuned against when they are built.
 - **The ledger** (`CredsLedger`, `gm.creds.report`) counts Creds by source and sink since the server started, so real earn rates can be set beside the target.
 - **The forge is the first Creds sink a player chooses to pay** (`CredsSink.GearWork`, counted by the ledger). Tuning also costs Renown (10 / 25 / 50 an attempt), which nothing pays yet.
+- **The Herald is the second** (`CredsSink.Herald`): every Ascension attempt takes its Creds whether it rises, holds or slips. It is the long sink of the end game, and the one that makes Renown worth earning; both of its ladders wait on a Renown source.
 - **Why the caps:** to make selling Creds for money slow. A full day's allowance is one Epic at its price cap.
 - **Known tension to tune:** at the level-30 income target the 10,000,000 Crew fee is about 200 hours of play.
 
@@ -109,10 +111,32 @@ Walking more than 8 m apart, dying or leaving cancels. The trade window shows th
 - **The window (G):** roster with rank, title, level, class and last seen; the announcement, which reaches every online member when it changes and is shown at login.
 - `/cinvite [name]`, `/caccept`, `/cdecline`, `/cleave`, `/ckick <name>`. **GM:** `gm.guild [name|none]`, `gm.guild.list`.
 
+## Namecards (row 44)
+
+Over every player's head: the Standing they wear, their faction's crest, their name and level in the faction's colour, and their Crew (`<Crew Name>`). A Callout opponent's name is red while the duel lasts. The card sits just above the head and rises to clear a Nova.
+
+- **Who sees whose** is one rule, `NamecardRules.Visible`: your own if the setting "My own namecard" is on (Settings ▸ Interface; on by default), your faction's always, another faction's only while that player stands on neutral ground. The setting "Names over NPCs and players" switches all of them, with the NPC nameplates.
+- Everything on the card was already replicated (identity, level, Crew tag, the Nova state), so namecards send nothing. `PlayerNamecardController` draws them; hidden past 38 m, like NPC nameplates.
+
+## Emote wheel (row 45)
+
+Hold **B** (rebindable): a ring of eight categories; a click turns it into that category's emotes, eight a page (the mouse wheel turns the page, the hub or a right-click goes back); a click on an emote performs it and closes the wheel; letting go of the key closes it at any time.
+
+| Tunable (`EmoteWheelSettings.asset`) | Value |
+| --- | --- |
+| Categories, clockwise from the top | Greet, Cheer, Moves, Taunt, Feels, Gestures, Props, Stances: each a list of the expression library's groups |
+| Emotes on a page | 8 |
+| Seconds before the same player may start another | 1 |
+
+- The motions are the creator's expression library (`CharacterExpressionLibrary`): 127 emotes and 34 stances. A character only performs the ones made for its body type, and props (a cup, a phone, food) are held in the right hand.
+- `PlayerEmotes` asks the server, which checks that the character is alive, standing still and not striking, casting or jumping, then tells everyone. The weapon is put away first. An emote plays once; a **stance** (the names shown in colour on the wheel) is held until the character moves, strikes, casts, jumps, draws, is hit or dies, and a player who arrives meanwhile sees it held.
+- A motion is named on the wire by its kind, group and name (`EmoteCatalog.Key`, for example `E/Greet/Bow`), never by its place in the library: a re-bake reorders the library.
+
 ## Who may deal with whom
 
 | | Same faction | Another faction |
 | --- | --- | --- |
+| Seeing a namecard | anywhere | only while that player is on neutral ground |
 | Trade, buying from a Kiosk | anywhere | on neutral ground only |
 | Contacts | anywhere, online or not | face to face on neutral ground only |
 | Crew | yes | **never** |
@@ -126,10 +150,11 @@ Walking more than 8 m apart, dying or leaving cancels. The trade window shows th
 | --- | --- | --- | --- | --- |
 | **F** | Contacts | | **T** | Kiosk |
 | **G** | Crew | | **~** | Pick up the nearest item |
+| **B** (held) | Emote wheel | | | |
 
 ## Not built
 
-The Exchange board; selling Kiosk Permits (Nova Store); any Creds faucet (Hostile drops, Contracts, vendors); Crew levels; Crew Title and symbol over the head; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
+The Exchange board; selling Kiosk Permits (Nova Store); any Creds faucet (Hostile drops, Contracts, vendors); Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
 
 ## Verified
 

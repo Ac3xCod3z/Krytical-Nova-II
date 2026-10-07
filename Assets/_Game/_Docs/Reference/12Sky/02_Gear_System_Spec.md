@@ -47,7 +47,7 @@ This table is the gear slice of the Glossary in `01_Systems_Build_List.md`. Refe
 
 ## 2. Slots, rarities, level bands (TS2: Common / Unique / Rare / Elite / WarLord / Requiem)
 
-**Slots.** Six core slots carry the progression systems: Weapon, Armor, Gloves, Boots, Ring, Amulet. Cape and Pet (`EquipSlot` 7 and 8) are auxiliary: Cape takes Tempering and one Core slot only; Pet takes none (pet growth is its own system, design 04).
+**Slots.** Six core slots carry the progression systems: Weapon, Armor, Gloves, Boots, Ring, Amulet. Cape and Pet (`EquipSlot` 7 and 8) are auxiliary; **a Cape exists from Rare up only** (owner, 6 Oct 2026: basic-tier gear has no cape, so Common and Uncommon have no Cape lines and a new character starts without one): Cape takes Tempering and one Core slot only; Pet takes none (pet growth is its own system, design 04).
 
 **Rarities** (`ItemRarity`, already in the repo):
 
@@ -73,6 +73,18 @@ This table is the gear slice of the Glossary in `01_Systems_Build_List.md`. Refe
 - **Player level cap: 112**, so the top Epic tier is the cap gear. A piece can only be equipped at or above its item level.
 - **Frame colours:** Common white, Uncommon blue, Rare yellow, Epic purple (Legendary, reserved, orange). They are the same in every faction skin.
 - **Legendary** stays in the enum; nothing of that rarity is generated.
+- **Set names (as built, 6 Oct 2026).** Every piece of a set carries the set's name: the Epic Elven set is Sunlord Armor, Sunlord Gloves, Sunlord Boots, Sunlord Cloak, Sunlord Leaf Ring, Sunlord Talisman. A set is one group at one band (`GearDictionary.Line.set`, hand-editable like the rest of a line). Weapons keep their own names: a weapon class belongs to a faction, not to one outfit group.
+
+| Group | Common | Uncommon | Rare I | Rare II | Epic |
+| --- | --- | --- | --- | --- | --- |
+| SOLD | Recruit | Sentinel | Striker | Bastion | Commander |
+| CIVL | Commuter | Courier | Analyst | Director | Magnate |
+| ROBO | Servitor | Welder | Ravager | Overseer | Prime |
+| SKTN | Graveworn | Cryptwarden | Deathsworn | Lichbound | Revenant |
+| VIKG | Thrall | Huscarl | Berserker | Jarl | Warlord |
+| ELVN | Scout | Wildrunner | Bladesinger | Highguard | Sunlord |
+
+- **Colour themes (as built, 6 Oct 2026).** Common gear shows the colours the player picked in the creator (it is the basic set). Every set above Common has its own theme (`GearThemeLibrary`, `Items/Data/Assets/GearThemes.asset`: 24 themes named `<GROUP>_<Set>`, each a handful of role colours: primary, secondary, under-layer, accent, four metals, trim, leather, glow). A worn piece paints its own part of the character's colour map with its theme (`CharacterColorMap.OverlayGear`), so a full set is coherent by construction and a mixed outfit shows each piece in its own set's colours. Only item ids travel the network; every machine works the colours out. Icons and the try-on doll use the same overlay. A theme never recolours skin or bone (`GearLadderTests`).
 - **Rank up / down** (12Sky page 26, future): the next tier of a piece is the next item of the same line (`GearDictionary.TryGetNextTier`); crossing from Rare I to Rare II or into another rarity is a design decision for that feature.
 **Which systems apply per rarity:**
 
@@ -368,50 +380,93 @@ Cores drop from PvP, bosses and boxes; three of a grade craft one of the next gr
 
 **Legendary** (TS2 Requiem) is reserved, not built: Reboot 12+ (TS2 Rebirth), six-piece set, own Tuning table with up to five randomized results and Reset Chip, mixes with Epic. The only thing to do now is keep `ItemRarity.Legendary` in the enum and the multiplier slot in the stat table.
 
-## 9. Nova Rank (TS2: CP Reinforcement halo) and Titles (TS2: CP stat Titles), at the Herald
+## 9. Ascension (TS2: CP Reinforcement halo) and Nova Standings (TS2: CP stat Titles), at the Herald
 
-Both are Renown-bought **character** progression, not gear, and both live on one new NPC: the **Herald** (`NpcRole.Herald`), who also hosts the Bounty Board later. The Nova Store stays real-money only (Store Clerk), and the Fixer stays Renown-for-materials.
+**As built (7 Oct 2026).** Both are Renown-bought **character** progression, not gear, and both are worked at one NPC: the **Herald** (`NpcRole.Herald`, offer `NpcOffer.Herald`), who stands at the plaza stall first kept for a Collector and will host the Bounty Board later. The Nova Store stays real-money only (Store Clerk), and the Fixer stays Renown-for-materials. The owner named them on 6 Oct 2026: the halo ladder is **Ascension** (the halo itself is still a **Nova**), the title ladder is **Nova Standings**. Every number below is in `NovaSettings.asset` (`Gameplay/Progression/Data/Assets/`).
 
-**Nova Rank** (TS2 "CP Reinforcement", whose visual tiers are the halos):
+**Ascension** (TS2 "CP Reinforcement", whose visual tiers are the halos):
 
-| Rule | Value |
-| --- | --- |
-| Cost per attempt | 100 Renown + 1,000,000 Creds (TS2: 100 CP + 1M Silver); *(proposed)* scale Creds as `250,000 × (1 + rank / 10)` so rank 1 is cheap and rank 60 is ~1.75M |
-| Outcomes | success: rank +1 · fail: rank +0 · slip: rank −1 (TS2 lists all three; *(proposed)* 55 / 35 / 10% to rank 24, 45 / 40 / 15% after) |
-| Effect per rank | +1 Strength, +1 Agility, +1 Vitality, +1 Spirit (as a `StatModifier` with source `NovaRank`, so derived stats follow automatically) |
-| Max rank | 96 *(proposed; TS2 shows tiers to 89+)* |
-| Nova (halo) visual | one tier per 8 ranks: 1–8, 9–16, 17–24, 25–32, 33–40, 41–48, 49–56, 57–64, 65–72, 73–80, 81–88, 89+ → 12 Nova prefabs in `Assets/_Game/Gameplay/Progression/Data/Assets/Nova/`, spawned by `ActorVfx` from `ProgressionState.novaRank` |
-| Persistence | `ProgressionState.novaRank` (byte), server authoritative |
-
-**Titles** (TS2 Classic CP stat titles L1–L12; 800 CP at L1 to 10,000 at L12):
-
-| Level | Renown (interpolated between TS2's two CP endpoints) | Bonus per track |
+| Rule | Value | Twelve Sky 2 |
 | --- | --- | --- |
-| 1 | 800 | +1% |
-| 2 | 1,200 | +2% |
-| 3 | 1,600 | +3% |
-| 4 | 2,200 | +4% |
-| 5 | 2,900 | +5% |
-| 6 | 3,700 | +6% |
-| 7 | 4,600 | +7% |
-| 8 | 5,600 | +8% |
-| 9 | 6,800 | +9% |
-| 10 | 8,000 | +10% |
-| 11 | 9,000 | +11% |
-| 12 | 10,000 | +12% |
+| Cost per attempt | 100 Renown + 500,000 Creds | 100 CP + 1,000,000 Silver. Ours is half the Creds (owner, 6 Oct 2026) |
+| Outcomes | rise +1 · hold +0 · slip −1, at 55 / 35 / 10 % while the level is +24 or lower, 45 / 40 / 15 % above | +1, +0 or −1 "by luck"; TS2 publishes no odds, so these are ours |
+| Floor | never below +0, and **a slip never takes a Nova tier once it is reached**: at +1, +9, +17 … +89 a slip changes nothing (owner, 6 Oct 2026). `slipKeepsTier` switches the rule | TS2 lets a slip cross a halo tier |
+| Effect per level | +1 Strength, +1 Agility, +1 Vitality, +1 Spirit, as flat stat modifiers, so every derived stat follows | the same |
+| Cap | +96 | TS2 shows tiers to 89+ |
+| Nova (halo) | one tier per 8 levels: +1 to +8 is Nova I … +89 to +96 is Nova XII | a new halo per 8 levels |
 
-Four tracks, matching TS2's STR / DEF / HP / CHI titles: **Vanguard** (Attack Power %), **Bulwark** (Defense Power %), **Ironblood** (Max HP %), **Mindwell** (Max Flux %). Levels are bought in order; the player equips one Title at a time (`ProgressionState.activeTitle`) and it shows in front of the name on nameplates and in chat. Levels never slip. The **bounty** half of the owner's note is a separate Renown source, not a Title mechanic: Bounty Board kills pay Renown that funds these levels; its design is still open.
+**The Nova.** A disc of light floating just above the head (`NovaHalo`), upright and turned to the camera so it always reads as a disc; `NovaSettings.look` holds the gap above the head, the tilt (90 lays it flat) and each tier's look. It is drawn whole by one shader (`KryticalNova/Nova`, material `Gameplay/Progression/Shaders/M_Nova.mat`), so there are no per-tier prefabs. Each tier adds one thing to the one before:
+
+| Tier | Looks like | Colour |
+| --- | --- | --- |
+| I | a thin ring | silver |
+| II – IV | one, two, then three inner rings, and a little light inside | silver-blue, cyan, teal |
+| V – VI | four, then eight spokes | green, yellow-green |
+| VII – VIII | a turning band of glyphs; then twelve spokes | gold, ember |
+| IX – XI | rays past the ring: 8, 12, then 16 | ember-red, crimson, violet |
+| XII | a full Nova of 24 rays in every colour | prismatic |
+
+**Nova Standings** (TS2 Classic CP stat titles L1–L12):
+
+| Rank | Renown (TS2's own list) | Bonus held on that track |
+| --- | --- | --- |
+| 1 | 800 | +1 % |
+| 2 | 1,700 | +2 % |
+| 3 | 2,500 | +3 % |
+| 4 | 3,400 | +4 % |
+| 5 | 4,200 | +5 % |
+| 6 | 5,100 | +6 % |
+| 7 | 5,900 | +7 % |
+| 8 | 6,800 | +8 % |
+| 9 | 7,600 | +9 % |
+| 10 | 8,500 | +10 % |
+| 11 | 9,300 | +11 % |
+| 12 | 10,000 | +12 % |
+
+A whole track costs 65,800 Renown; all four cost 263,200. Four tracks, matching TS2's STR / DEF / HP / CHI titles: **Vanguard** (Attack Power), **Bulwark** (Defense), **Ironblood** (Max HP), **Mindwell** (Max Flux). Ranks are bought in order, always succeed and are never lost. The +1 % per rank is ours (no source gives TS2's bonus); it is one number, `percentPerLevel`.
+
+- **Every track a character holds counts**, worn or not (owner, 6 Oct 2026). TS2 applies only the title equipped.
+- One track's name is **worn** as the title: the first rank bought is worn at once, and the Herald's window changes it for free. It shows on the namecard, on the Character Sheet and in the Herald's window.
+- A rank is named by the track and the **faction's own rank word** (owner, 6 Oct 2026), so a Covenant character's sixth Vanguard rank is "Vanguard Thane" and a Null character's is "Vanguard Cipher":
+
+| Rank | Hegemony | Null | Covenant |
+| --- | --- | --- | --- |
+| 1 | Associate | Unit | Kinsworn |
+| 2 | Operative | Routine | Oathsworn |
+| 3 | Specialist | Process | Hearthguard |
+| 4 | Agent | Daemon | Shieldbearer |
+| 5 | Auditor | Kernel | Runebearer |
+| 6 | Captain | Cipher | Thane |
+| 7 | Controller | Override | Bannerlord |
+| 8 | Prefect | Vector | Stormborn |
+| 9 | Executor | Architect | High Thane |
+| 10 | Consul | Apex | Elderblood |
+| 11 | Regent | Zenith | Dawnbringer |
+| 12 | Hegemon | Singularity | Mythborn |
+
+**Where it lives.** `PlayerNova` (`Gameplay/Progression/Runtime`) holds both ladders in one replicated `NovaState` (Ascension level, four track levels, the track worn): the server decides and saves it (save key `nova`; a character saved before it existed loads as +0), and every machine works out the stat modifiers and the Nova from it, the way worn gear does. `NovaRules` is the rules, pure, with the roll passed in; the Herald's window (`HeraldWindowController`, `UI/HUD/Herald/`) calls the same rules for odds, costs and reasons, and `NovaRulesTests` pins them. An attempt is refused away from a Herald, while defeated, or without the Renown and the Creds (`CredsSink.Herald`); nothing is spent when it is refused. GM: `gm.renown [amount]`, `gm.renown.set <amount>`, `gm.ascension [0-96]`, `gm.standing <track|all> <0-12>`, `gm.standing.wear <track|none>`, `gm.herald` (open it anywhere; `gm.herald off`); all of it is on the **Renown** tab of the GM Tools window (Renown give / take / set, Ascension by level or by Nova tier, a rank per track, the track worn, max and clear both ladders).
+
+**Not built:** any way to earn Renown (it comes from `gm.renown` only). The **bounty** half of the owner's note is a separate Renown source, not a Standings mechanic: Bounty Board kills would pay the Renown that funds both ladders; its design is still open.
 
 ## 10. Auxiliary slots: Cape (TS2: Cloak), Pet, Mount, Wings
 
 These cost more Creds than armor in TS2 and are where min-maxing lives; only the Cape is in this gear build.
 
-- **Cape** (`EquipSlot.Cape`): Tempering and one Core slot; base Defense via the secondary slope; ladder adds **Critical Defense %** at Rare (TS2 Tier 2 Eternal Capes carry ~28%). Critical Defense is a new `StatType` (reduces incoming crit damage). Cape bands: Common "Chi cape" L1–30, Rare L45–105, Epic L100–112.
+- **Cape** (`EquipSlot.Cape`): Tempering and one Core slot; base Defense via the secondary slope; ladder adds **Critical Defense %** at Rare (TS2 Tier 2 Eternal Capes carry ~28%). Critical Defense is a new `StatType` (reduces incoming crit damage). Cape bands as built: Rare I 45–75, Rare II 85–110, Epic 100–112 (no Common or Uncommon Capes: owner, 6 Oct 2026).
 - **Pet** (`EquipSlot.Pet`, cosmetic follower exists): TS2 pets add flat Damage / Defense / HP / Chi scaled by a growth % (100–200%), with +50 damage per 25% over 100%; 3 × level-1 pets combine into one M1, 3 × M1 into one M15. Deferred to design 04; the gear build only reserves `ItemDefinition.petGrowthPercent`.
 - **Mount**: no slot yet. TS2 tiers 5% → 10% → 15% (each crafted from a maxed lower tier) adding % HP, Damage, Elemental, Chi, Defense, Evasion; the notes cite +17–20% HP and Damage at the top. Deferred to design 05; add `EquipSlot.Mount = 9` now so the enum does not shift later.
 - **Wings** (TS2 Classic): crafted from feathers + 50–100 Renown at the Outfitter (TS2 Tailor), tempered to 120% with their own protection item, stat options re-rolled with Arch Wingstones. Not in the notes; listed only as a possible cosmetic-plus-stat slot for the Outfitter.
 
 ## 11. Data model and code changes (for Claude Code)
+
+**As built (7 Oct 2026): set names, colour themes, paired weapons, the glow, Ascension and Nova Standings.**
+
+- `GearDictionary.Line` gained `set` (the set a piece is named after), `theme` (a `GearThemeLibrary` theme by name) and `icon` (an icon of its own; a themed line has one, since a look is shared by lines of different colours). `SidekickGearGenerator` names lines after their set and seeds Capes from Rare up only; `GearThemeBuilder` seeds the themes and bakes which colour-map cells each theme paints for each look.
+- `ItemDefinition` gained `colorTheme`, `colorThemes`, `colorCells` (the theme and the cells this piece paints), and for weapons `paired`, `offHandLocalPosition / Euler`, `leftHanded`, `carry` (`WeaponCarry.Back` or `Hips`) and `carryLocalPosition / Euler`. `GearStatBaker` copies them from the look template to every tier.
+- `CharacterAppearance` remembers what is worn per slot and raises `WornChanged`; `CharacterLook` refills the colour map as recipe, skin, the player's picks, then the gear overlay. `CharacterPreviewStage` and `ItemIconCapture` do the same for the try-on doll and the icons (`CaptureLineIcons`).
+- `WeaponVisualMount` shows a paired weapon in both hands (the off hand is the main hand's mirror), wears the carry pose when sheathed (back, or a holster on each hip: sockets from `WeaponSocketsSetup`) and moves a back-carried weapon out a little when no Cape is worn. See `04_Weapon_Classes.md`.
+- The Temper glow is a rim of light, not a tint: `TemperGlow.shader` draws the faces turned away from the camera pushed outward (a hull with skirts, so hard-edged meshes show no cracks), and `GlowRim` stacks four such bands, each wider and fainter, so the light falls away from the model without relying on bloom. Evolved pets wear the same glow (`PetFollower`).
+- Ascension and Nova Standings: section 9.
 
 **As built (6 Oct 2026): steps 3 to 6 of section 12, and Reforge.** Sections 4, 5, 6 and 6b say what the rules are; this is where they live.
 
@@ -423,7 +478,7 @@ These cost more Creds than armor in TS2 and are where min-maxing lives; only the
 - Materials: rows in `UtilityItemGenerator` (ids in `GearMaterialIds`, assets in `Items/Data/Assets/GearMaterials/`).
 - `GearStatBaker.UpgradeTable` adds the level-110 Rare tier and the Luck rows to an existing stat table without touching what was tuned in it; the bake runs it.
 - UI: `GearWorkWindowController` with `UI/Inventory/ForgeWindow.uxml` and `Forge.uss`; tooltips and item icons show the state (`GearUIController`).
-- GM: `gm.temper <percent> [slot]`, `gm.fuse <stage> [slot]`, `gm.tune <stage> [slot]`, `gm.renown [amount]`, `gm.forgekit [count]`, `gm.forge` (open it anywhere; `gm.forge off`), `gm.kit temper [count]` (every Temper item that has a use). `gm.temper` stops at the cap.
+- GM: `gm.temper <percent> [slot]`, `gm.fuse <stage> [slot]`, `gm.tune <stage> [slot]`, `gm.renown [amount]`, `gm.forgekit [count]`, `gm.forge` (open it anywhere; `gm.forge off`), `gm.kit temper [count]` (every Temper item that has a use). `gm.temper` stops at the cap. `gm.temper.all <percent> [worn|pack|all]` sets the Temper of every piece the targeted player wears, carries, or both; the GM Tools window's Items tab has it as a Temper % slider with three buttons.
 - Not built: Slotting and Cores, Epic Mk II, rank up / down, Alloy crafting (12Sky page 22), any drop or shop for the materials, any Renown income.
 
 **As built (4 Oct 2026): steps 1 and 2 of section 12.**
@@ -435,7 +490,7 @@ These cost more Creds than armor in TS2 and are where min-maxing lives; only the
 - `ItemDefinition` gained `itemLevel`, `lineId`, `weaponClass`, `baseStats` (primary: what Tempering scales), `secondaryStats`, `skillModifiers`. Not added yet: `maxSockets`, `setId`, `markTier`, `mkIIDefinition`, `fusionEligible`, `tuneEligible` (they arrive with their systems).
 - `ItemStack` and `EquipmentLoadout` are unchanged (item ID only on the wire). When Tempering lands, `ItemStack` grows its instance fields and the loadout carries stacks; `GearStatResolver.Resolve(stack, definition, …)` already takes the stack, so callers do not change.
 - `StatType` gained `AttackSpeedPercent`, `CoreResistancePercent`, `KnockbackResistancePercent`, `CriticalDefensePercent`, `KillExpRatePercent`, `KillExpAmountPercent`. Skill modifiers are `ItemDefinition.skillModifiers` (class + levels), not a stat type. Critical Defense is applied in `CombatCalculator`; skill modifiers and the Kill-XP stats are stored and shown only.
-- Menus: `Krytical Nova ▸ Items ▸ 1. Generate Gear Looks From Synty` (templates, seeds missing lines), `▸ 6. Bake Gear Ladder` (lines → items, entries, catalog), `▸ 2. Capture Item Icons` (per look), `▸ Rebuild Weapon Look Models`. GM: `gm.gear <slot> <level> <rarity> [class]`, `gm.loadout [class]`, and the kits: `gm.kit gear [level] [rarity]` (every piece the targeted character can wear at that tier, 112 Epic unless told, with the weapon of every class of its faction), `gm.kit temper [count]`, `gm.kit pets`, `gm.kit all`. A kit says how many pieces did not fit a full Pack.
+- Menus: `Krytical Nova ▸ Items ▸ 1. Generate Gear Looks From Synty` (templates, seeds missing lines), `▸ 6. Bake Gear Ladder` (lines → items, entries, catalog), `▸ 2. Capture Item Icons` (per look), `▸ Rebuild Weapon Look Models`. GM: `gm.gear <slot> <level> <rarity> [class]`, `gm.loadout [class]`, and the kits: `gm.kit gear [level] [rarity]` (every piece the targeted character can wear at that tier, 112 Epic unless told, with the weapon of every class of its faction), `gm.kit temper [count]`, `gm.kit pets`, `gm.kit all`. A kit says how many pieces did not fit a full Pack. **One whole set:** `gm.gearset [level] [rarity] [temper] [wear]` gives the set the targeted character wears at that tier (Armor, Gloves, Boots, Ring, Amulet, the Cape when the tier has one, and the weapon of the class in use), every piece at that Temper %; `wear` puts it on and moves what was worn to the Pack, and a character below the set's level gets it in the Pack with the reason. The GM Tools window's Items tab lists the character's sets by name ("Sunlord (Epic 100–112)") with a level, a Temper % and a "put it on" tick.
 All paths follow `ProjectOrganization.md`: gear code in `Assets/_Game/Gameplay/Items/`, stat code in `Assets/_Game/Gameplay/Progression/`, NPC services in `Assets/_Game/Gameplay/NPC/`, UI in `Assets/_Game/UI/`. Namespaces `KryticalNova.Items`, `KryticalNova.Progression`, `KryticalNova.NPC`.
 
 **`StatType` additions** (`Gameplay/Progression/Data/StatType.cs`): `AttackSpeedPercent`, `CoreResistancePercent`, `KnockbackResistancePercent` (the "Bounce"), `CriticalDefensePercent`, `KillExpRatePercent`, `KillExpAmountPercent`, `SkillLineModifier` (carries a skill-line id + level in its modifier). Each needs a `StatDefinitionData` asset and a row in the character sheet.
@@ -462,7 +517,7 @@ All paths follow `ProjectOrganization.md`: gear code in `Assets/_Game/Gameplay/I
 
 **Services** (server authoritative, one `ServerRpc` each, client gets a result event + updated `ItemStack`): `TemperRequest`, `FuseRequest`, `TuneRequest`, `CutSocketRequest`, `SeatCoreRequest`, `ExtractCoreRequest`, `SealSocketRequest`, `MarkUpgradeRequest`, `NovaRankRequest`, `BuyTitleRequest`, `EquipTitleRequest`. All live on a `GearServices` NetworkBehaviour on the player; the NPC only opens the matching panel when the player is within `interactRange`.
 
-**NPC routing** (`NpcRole`): Armorer (role Blacksmith) → Tempering, Fusion, Tuning, Mark upgrade. Fixer (role Agent) → Slotting, Cores, Renown materials. **Herald (new)** → Nova Rank, Titles, Bounty Board. Store Clerk (role MallManager) → real-money Nova Store only. Add `NpcRole.Herald`, a seed in `Zone01Setup`, and a stall kind in `StarterTownBuilder.Plaza` (the unused `Collector` kind can become the Herald's booth).
+**NPC routing** (`NpcRole`): Armorer (role Blacksmith) → Tempering, Fusion, Tuning, Mark upgrade. Fixer (role Agent) → Slotting, Cores, Renown materials. **Herald (built)** → Ascension, Nova Standings, later the Bounty Board. Store Clerk (role MallManager) → real-money Nova Store only. Add `NpcRole.Herald`, a seed in `Zone01Setup`, and a stall kind in `StarterTownBuilder.Plaza` (the unused `Collector` kind can become the Herald's booth).
 
 **UI** (UI Toolkit, matching `GearUIController`): one `GearServicePanel.uxml` with a tab per service, a two-slot drop target (item + material), a cost line, a result toast. Item tooltips gain lines for Temper %, FS, Tune stage, sockets, and the glow colour from section 4 on the icon frame. Nameplates show the active Title; `ActorVfx` shows the Nova.
 
