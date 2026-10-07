@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 570cf01d73c717346a7b8859c5892c40
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/Demo_built-in/material_built-in/Grenadier/Eyes_built-in.mat
+  uploadId: 686845

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fbd000fb89c256446bd71c124c2f9906
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/Demo_hdrp/material_HDRP/Grenadier/core_hdrp.mat
+  uploadId: 686845

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ca89f8353a4b9904b9c6830c742a9a08
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 404962
+  packageName: Vault Animation Pack
+  packageVersion: 1.0
+  assetPath: Assets/Vault Animation Pack/Assets/Animations/AS_Idle_To_Run_Start_R.anim
+  uploadId: 987876

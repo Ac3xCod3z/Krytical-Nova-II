@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 8b5066d8e019fc944b4f0ebc7ef307ce
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 625f186215c104763be7675aa2d941aa, type: 3}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/Demo_hdrp/shader/smear_hdrp.shadergraph
+  uploadId: 686845

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ece22cf4344b34f4ba7f1b8420ca9b55
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255179
+  packageName: Cartoon Emotion Package
+  packageVersion: 1.2
+  assetPath: Assets/Bitnas/Timeline/BitnasCartoonEmotionPack_Timeline.playable
+  uploadId: 625402

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c6e9afd822418d04f925486cfeb94306
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/Demo_urp/material_urp/Ground_urp.mat
+  uploadId: 686845

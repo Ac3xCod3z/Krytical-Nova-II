@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 71eb15126bc11584ea6630292b88966e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/scripts/Demo/Demo_control.cs
+  uploadId: 686845

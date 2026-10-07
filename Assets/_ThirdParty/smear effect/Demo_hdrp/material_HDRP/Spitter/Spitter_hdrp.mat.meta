@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3bee6781022c2d9469858caf23788185
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/Demo_hdrp/material_HDRP/Spitter/Spitter_hdrp.mat
+  uploadId: 686845

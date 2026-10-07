@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 058af661af9002447bcd349ac539d74d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 13400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/Demo_hdrp/material_HDRP/Sphere/ball.physicMaterial
+  uploadId: 686845
