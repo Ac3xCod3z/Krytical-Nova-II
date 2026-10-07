@@ -48,6 +48,8 @@ namespace KryticalNova.Items
             public WeaponClassId weaponClass;
             [Tooltip("The look every tier of this line wears: a look template item (its parts, icon and weapon model are copied).")]
             public ItemDefinition look;
+            [Tooltip("The set this piece belongs to (Sunlord, Commander...): every piece of a set carries it in its name. Empty for weapons.")]
+            public string set;
             [Tooltip("Name shown on every tier of this line.")]
             public string displayName;
             [TextArea] public string description;

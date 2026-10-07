@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Gloves_ROBO_U40
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 10708
-  displayName: Hauler Servos
+  displayName: Welder Servos
   description: Worn on the hands.
   icon: {fileID: 21300000, guid: a7648d9a94341b040a415f01a5e2afa7, type: 3}
   rarity: 1

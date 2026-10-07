@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Boots_ROBO_E109
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 10835
-  displayName: Enforcer Stabilizers
+  displayName: Prime Stabilizers
   description: Worn on the feet.
   icon: {fileID: 21300000, guid: da49e5a29b20f80448eef0a0acf2a3c2, type: 3}
   rarity: 3

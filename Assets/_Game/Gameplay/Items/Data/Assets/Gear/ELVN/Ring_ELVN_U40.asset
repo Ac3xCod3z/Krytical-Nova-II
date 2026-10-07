@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Ring_ELVN_U40
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 13380
-  displayName: Warden Leaf Ring
+  displayName: Wildrunner Leaf Ring
   description: Worn on a finger.
   icon: {fileID: 21300000, guid: 34f1779dce1ce3e46adbde6845b0d278, type: 3}
   rarity: 1

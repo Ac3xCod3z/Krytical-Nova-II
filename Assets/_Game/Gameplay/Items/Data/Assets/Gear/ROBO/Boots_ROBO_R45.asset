@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Boots_ROBO_R45
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 10800
-  displayName: Welder Stabilizers
+  displayName: Ravager Stabilizers
   description: Worn on the feet.
   icon: {fileID: 21300000, guid: 2e9a0f0fa71ff9b4b9b422147dee8c28, type: 3}
   rarity: 2

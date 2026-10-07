@@ -164,6 +164,28 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void EveryPieceOfASetCarriesItsName()
+        {
+            var owners = new Dictionary<string, string>();
+            foreach (var group in dictionary.Lines.Where(l => l.IsValid && l.slot != EquipSlot.Weapon).GroupBy(l => $"{l.tag} band {l.band}"))
+            {
+                var sets = group.Select(l => l.set).Distinct().ToList();
+                Assert.AreEqual(1, sets.Count, $"{group.Key} names more than one set: {string.Join(", ", sets)}");
+                string set = sets[0];
+                Assert.IsFalse(string.IsNullOrEmpty(set), $"{group.Key} names no set");
+                foreach (var line in group)
+                {
+                    StringAssert.StartsWith(set + " ", line.displayName, $"Line {line.lineId} of {group.Key}");
+                    StringAssert.DoesNotContain("Mark ", line.displayName, $"Line {line.lineId} of {group.Key}");
+                    foreach (var entry in dictionary.Entries.Where(e => e.lineId == line.lineId))
+                        Assert.AreEqual(line.displayName, catalog.Get(entry.itemId).displayName, $"Item {entry.itemId}: bake the gear ladder");
+                }
+                Assert.IsFalse(owners.TryGetValue(set, out string other), $"{group.Key} and {other} are both the {set} set");
+                owners[set] = group.Key;
+            }
+        }
+
+        [Test]
         public void ItemIdsComeFromTheLineAndNeverCollide()
         {
             var seen = new HashSet<ushort>();

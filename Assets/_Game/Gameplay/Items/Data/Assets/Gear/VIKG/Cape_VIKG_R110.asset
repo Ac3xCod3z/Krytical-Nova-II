@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Cape_VIKG_R110
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 11491
-  displayName: Mark 08 Cloak
+  displayName: Jarl Cloak
   description: Worn across the back.
   icon: {fileID: 21300000, guid: bcdf49fc6eb6e1c4caaff16a762616bf, type: 3}
   rarity: 2

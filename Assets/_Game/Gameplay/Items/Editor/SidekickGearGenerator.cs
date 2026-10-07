@@ -200,7 +200,8 @@ namespace KryticalNova.EditorTools
             public FactionMask factions;
             public BodyFit bodies;
             public bool helmets;       // armor carries the head attachment with the same variant number
-            public string[] sets;      // set name per variant
+            public string[] sets;      // look name per mesh variant: names the look templates only
+            public string[] bandSets;  // the set of each band (Common, Uncommon, Rare I, Rare II, Epic): what its pieces are called
             public string armor, gloves, boots, cape, ring, amulet;
         }
 
@@ -212,37 +213,43 @@ namespace KryticalNova.EditorTools
             new GearPack
             {
                 code = "SCFI_SOLD", tag = "SOLD", idOffset = 0, factions = FactionMask.Hegemony, bodies = BodyFit.Humanoid,
-                sets = OutfitNames, armor = "Armor", gloves = "Gauntlets", boots = "Boots", cape = "Cape",
-                ring = "Signet", amulet = "Tags"
+                sets = OutfitNames, bandSets = new[] { "Recruit", "Sentinel", "Striker", "Bastion", "Commander" },
+                armor = "Armor", gloves = "Gauntlets", boots = "Boots", cape = "Cape", ring = "Signet", amulet = "Tags"
             },
             new GearPack
             {
                 code = "SCFI_CIVL", tag = "CIVL", idOffset = 100, factions = FactionMask.Hegemony, bodies = BodyFit.Humanoid,
                 sets = new[] { "Commuter", "Technician", "Courier", "Analyst", "Executive", "Director", "Magnate" },
+                bandSets = new[] { "Commuter", "Courier", "Analyst", "Director", "Magnate" },
                 armor = "Outfit", gloves = "Gloves", boots = "Shoes", cape = "Pack", ring = "Band", amulet = "Lanyard"
             },
             new GearPack
             {
                 code = "SCFI_ROBO", tag = "ROBO", idOffset = 200, factions = FactionMask.Null, bodies = BodyFit.Robot,
                 sets = new[] { "Servitor", "Hauler", "Welder", "Sentry", "Enforcer", "Ravager", "Juggernaut", "Overseer", "Annihilator", "Prime" },
+                bandSets = new[] { "Servitor", "Welder", "Ravager", "Overseer", "Prime" },
                 armor = "Plating", gloves = "Servos", boots = "Stabilizers", cape = "Back Unit", ring = "Coupling", amulet = "Capacitor"
             },
             new GearPack
             {
                 code = "FANT_SKTN", tag = "SKTN", idOffset = 300, factions = FactionMask.Null, bodies = BodyFit.Skeleton, helmets = true,
                 sets = new[] { "Graveworn", "Boneguard", "Cryptwarden", "Deathsworn", "Dreadknight", "Lichbound", "Revenant" },
+                bandSets = new[] { "Graveworn", "Cryptwarden", "Deathsworn", "Lichbound", "Revenant" },
                 armor = "Armor", gloves = "Gauntlets", boots = "Greaves", cape = "Shroud", ring = "Knucklebone", amulet = "Phylactery"
             },
             new GearPack
             {
                 code = "VIKG_WARR", tag = "VIKG", idOffset = 400, factions = FactionMask.Covenant, bodies = BodyFit.Humanoid,
                 sets = new[] { "Thrall", "Huscarl", "Reaver", "Berserker", "Jarl", "Warlord" },
+                bandSets = new[] { "Thrall", "Huscarl", "Berserker", "Jarl", "Warlord" },
                 armor = "Armor", gloves = "Bracers", boots = "Boots", cape = "Cloak", ring = "Arm Ring", amulet = "Torc"
             },
             new GearPack
             {
                 code = "ELVN_WARR", tag = "ELVN", idOffset = 500, factions = FactionMask.Covenant, bodies = BodyFit.Humanoid,
                 sets = new[] { "Scout", "Warden", "Ranger", "Bladesinger", "Highguard", "Sunlord" },
+                // Uncommon is Wildrunner, not the look's "Warden": a Warden is a faction's leader (the glossary).
+                bandSets = new[] { "Scout", "Wildrunner", "Bladesinger", "Highguard", "Sunlord" },
                 armor = "Armor", gloves = "Gloves", boots = "Boots", cape = "Cloak", ring = "Leaf Ring", amulet = "Talisman"
             },
         };
@@ -271,8 +278,29 @@ namespace KryticalNova.EditorTools
             public string description;
         }
 
+        /// <summary>Names a look template after its mesh variant. Players never read it: a line is named after its set.</summary>
         private static string SetName(GearPack pack, byte variant) =>
             variant - 1 < pack.sets.Length ? pack.sets[variant - 1] : $"Mark {variant:00}";
+
+        /// <summary>
+        /// The set a pack's pieces of one band belong to. Every piece carries it, whichever mesh variant it wears: a
+        /// pack has fewer glove and boot meshes than armors, so naming a piece after its mesh split the sets.
+        /// </summary>
+        private static string SetOf(GearPack pack, int band) => pack.bandSets[Mathf.Clamp(band, 0, pack.bandSets.Length - 1)];
+
+        private static string NounOf(GearPack pack, EquipSlot slot)
+        {
+            switch (slot)
+            {
+                case EquipSlot.Armor: return pack.armor;
+                case EquipSlot.Gloves: return pack.gloves;
+                case EquipSlot.Boots: return pack.boots;
+                case EquipSlot.Cape: return pack.cape;
+                case EquipSlot.Ring: return pack.ring;
+                case EquipSlot.Amulet: return pack.amulet;
+                default: return null;
+            }
+        }
 
         /// <summary>Creates / refreshes a template per (pack, slot, variant). Result: looks per (pack index, slot), lowest variant first.</summary>
         private static Dictionary<(int pack, EquipSlot slot), List<OutfitLook>> GenerateOutfitLooks(SidekickPartCatalog catalog, List<string> created)
@@ -465,11 +493,12 @@ namespace KryticalNova.EditorTools
                     {
                         if (slot == EquipSlot.Cape && band == BandUncommon) continue; // gear spec: no Uncommon cape
                         var look = looks[LookIndex(band, looks.Count)];
+                        string set = SetOf(pack, band);
                         Add(new GearDictionary.Line
                         {
                             tag = pack.tag, slot = slot, rarity = BandRarity[band], band = (byte)band, pack = pack.code,
                             factions = pack.factions, bodies = pack.bodies, look = look.template,
-                            displayName = look.name, description = look.description
+                            set = set, displayName = $"{set} {NounOf(pack, slot)}", description = look.description
                         });
                     }
                 }
@@ -492,34 +521,59 @@ namespace KryticalNova.EditorTools
             }
 
             // Rings and amulets belong to a group like the outfits do. They fit every body of that group's faction,
-            // and are named after the same set as the group's armor of that band.
+            // and are named after the same set as the group's outfit of that band.
             for (int packIndex = 0; packIndex < Packs.Length; packIndex++)
             {
                 var pack = Packs[packIndex];
-                outfitLooks.TryGetValue((packIndex, EquipSlot.Armor), out var armorLooks);
                 for (int band = 0; band < BandCount; band++)
                 {
-                    string set = armorLooks != null && armorLooks.Count > 0
-                        ? SetName(pack, armorLooks[LookIndex(band, armorLooks.Count)].variant)
-                        : SetName(pack, (byte)(band + 1));
+                    string set = SetOf(pack, band);
                     Add(new GearDictionary.Line
                     {
                         tag = pack.tag, slot = EquipSlot.Ring, rarity = BandRarity[band], band = (byte)band, pack = pack.code,
                         factions = pack.factions, bodies = BodyFit.All, look = rings[BandJewelleryTemplate[band]],
-                        displayName = $"{set} {pack.ring}", description = "Worn on a finger."
+                        set = set, displayName = $"{set} {pack.ring}", description = "Worn on a finger."
                     });
                     Add(new GearDictionary.Line
                     {
                         tag = pack.tag, slot = EquipSlot.Amulet, rarity = BandRarity[band], band = (byte)band, pack = pack.code,
                         factions = pack.factions, bodies = BodyFit.All, look = amulets[BandJewelleryTemplate[band]],
-                        displayName = $"{set} {pack.amulet}", description = "Worn around the neck."
+                        set = set, displayName = $"{set} {pack.amulet}", description = "Worn around the neck."
                     });
                 }
             }
 
+            int renamed = NameLinesAfterSets(lines);
+            if (renamed > 0) Debug.Log($"[Items] {renamed} gear lines named after their set.");
+
             dictionary.SetLines(catalog, lines);
             EditorUtility.SetDirty(dictionary);
             return added;
+        }
+
+        /// <summary>
+        /// Gives every outfit, ring and amulet line that names no set its pack's set for that band, and the name that
+        /// goes with it ("Sunlord Gloves"). A line that already names a set is left alone, so a name edited by hand
+        /// in the dictionary survives. Returns how many lines changed.
+        /// </summary>
+        private static int NameLinesAfterSets(List<GearDictionary.Line> lines)
+        {
+            int changed = 0;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var line = lines[i];
+                if (line.slot == EquipSlot.Weapon || !string.IsNullOrEmpty(line.set)) continue;
+                GearPack pack = null;
+                foreach (var candidate in Packs)
+                    if (candidate.tag == line.tag) { pack = candidate; break; }
+                string noun = pack != null ? NounOf(pack, line.slot) : null;
+                if (noun == null) continue;
+                line.set = SetOf(pack, line.band);
+                line.displayName = $"{line.set} {noun}";
+                lines[i] = line;
+                changed++;
+            }
+            return changed;
         }
 
         /// <summary>Common wears the pack's first variant (the basic outfit); the rest spread towards the last one.</summary>
