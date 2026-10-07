@@ -30,6 +30,9 @@ namespace KryticalNova.EditorTools
         public const string GearProgressionPath = "Assets/_Game/Gameplay/Items/Data/Assets/GearProgressionSettings.asset";
         public const string TemperGlowMaterialPath = "Assets/_Game/Gameplay/Items/Shaders/M_TemperGlow.mat";
         private const string TemperGlowShader = "KryticalNova/TemperGlow";
+        public const string NovaSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/NovaSettings.asset";
+        public const string NovaMaterialPath = "Assets/_Game/Gameplay/Progression/Shaders/M_Nova.mat";
+        private const string NovaShader = "KryticalNova/Nova";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
         // the hand comes down to 0.48 m, the top of a drop.
         private const string Transitions = "Assets/Synty/AnimationBaseLocomotion/Animations/Sidekick/Masculine/Transitions/";
@@ -54,6 +57,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Items.PlayerEquipment", ("progression", GearProgressionPath)),
             new Row("KryticalNova.Forge.PlayerGearWork", ("settings", GearProgressionPath)),
             new Row("KryticalNova.Items.Visuals.EquipmentVisualBinder", ("temperGlow", TemperGlowMaterialPath)),
+            // The Renown ladders at the Herald: Ascension (the Nova) and Nova Standings.
+            new Row("KryticalNova.Progression.PlayerNova", ("settings", NovaSettingsPath)),
         };
 
         public static void Run()
@@ -87,6 +92,7 @@ namespace KryticalNova.EditorTools
                 }
                 PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
                 LinkGearProgression();
+                LinkNovaMaterial();
                 Debug.Log($"[Setup] Player systems wired ({Rows.Length} component(s), {added} added).");
             }
             finally
@@ -102,6 +108,24 @@ namespace KryticalNova.EditorTools
             Shader shader = Shader.Find(TemperGlowShader);
             if (shader == null) { Debug.LogWarning($"[Setup] Shader {TemperGlowShader} not found: tempered weapons will not glow."); return; }
             AssetDatabase.CreateAsset(new Material(shader) { name = "M_TemperGlow" }, TemperGlowMaterialPath);
+        }
+
+        /// <summary>The material every character's Nova is copied from. Its numbers are set per tier at runtime.</summary>
+        private static void LinkNovaMaterial()
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<KryticalNova.Progression.NovaSettings>(NovaSettingsPath);
+            if (settings == null) return;
+            var material = AssetDatabase.LoadAssetAtPath<Material>(NovaMaterialPath);
+            if (material == null)
+            {
+                Shader shader = Shader.Find(NovaShader);
+                if (shader == null) { Debug.LogWarning($"[Setup] Shader {NovaShader} not found: no character will show a Nova."); return; }
+                material = new Material(shader) { name = "M_Nova" };
+                AssetDatabase.CreateAsset(material, NovaMaterialPath);
+            }
+            if (settings.look.material == material) return;
+            settings.look.material = material;
+            EditorUtility.SetDirty(settings);
         }
 
         /// <summary>The gear progression settings read rarity multipliers and level tiers from the stat table.</summary>

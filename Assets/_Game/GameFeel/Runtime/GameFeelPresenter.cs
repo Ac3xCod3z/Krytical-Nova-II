@@ -82,6 +82,7 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player forgeFailWorldFeel;
         [SerializeField] private MMF_Player forgeSavedWorldFeel;
         [SerializeField] private MMF_Player forgeBreakWorldFeel;
+        private const float NovaBurstHeight = 2f; // where a new Nova tier bursts, above the feet
 
         [Header("World VFX spawned directly")]
         [SerializeField] private GameObject clickVfx;
@@ -385,6 +386,37 @@ namespace KryticalNova.GameFeel
                 default: // a fail
                     PlayWorld(forgeFailWorldFeel, feet, facing, actor);
                     if (isLocalPlayer) Play(forgeFailFeel, actor.position, 1f);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// A request at the Herald ended. It reads like the forge's answer (the same bursts on the character); a new
+        /// Nova tier adds the burst of a pet evolving, up at the head where the Nova has just changed.
+        /// </summary>
+        public void NovaWorked(Transform actor, int outcome, bool newTier, bool isLocalPlayer)
+        {
+            if (actor == null) return;
+            Vector3 feet = ActorAnchor.Feet(actor);
+            Quaternion facing = Facing(actor);
+            switch (outcome)
+            {
+                case 0: // a level gained
+                    PlayWorld(forgeSuccessWorldFeel, feet, facing, actor);
+                    if (newTier) PlayWorld(petEvolveWorldFeel, feet + Vector3.up * NovaBurstHeight, Quaternion.identity, actor);
+                    if (isLocalPlayer) Play(newTier ? petEvolveFeel : forgeSuccessFeel, actor.position, 1f);
+                    break;
+                case 3: // a slip the Nova held
+                    PlayWorld(forgeSavedWorldFeel, feet, facing, actor);
+                    if (isLocalPlayer) Play(forgeFailFeel, actor.position, 0.6f);
+                    break;
+                case 2: // a level lost
+                    PlayWorld(forgeFailWorldFeel, feet, facing, actor);
+                    if (isLocalPlayer) Play(forgeFailFeel, actor.position, 1f);
+                    break;
+                default: // nothing changed
+                    PlayWorld(forgeFailWorldFeel, feet, facing, actor);
+                    if (isLocalPlayer) Play(forgeFailFeel, actor.position, 0.5f);
                     break;
             }
         }

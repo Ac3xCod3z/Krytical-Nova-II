@@ -1,0 +1,44 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- The Herald (HeraldWindowController): the two Renown ladders. Ascension is a chance at a level for Renown and
+         Creds; Nova Standings are ranks on four tracks bought with Renown, one of which is worn as a title. -->
+    <ui:VisualElement name="herald-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="HERALD" class="heading" />
+            <ui:Label name="herald-purse" class="muted herald-purse" />
+            <ui:Button name="close-herald" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement class="herald-tabs">
+            <ui:Button name="herald-tab-ascension" text="ASCENSION" class="herald-tab" />
+            <ui:Button name="herald-tab-standings" text="NOVA STANDINGS" class="herald-tab" />
+        </ui:VisualElement>
+        <ui:Label name="herald-intro" class="help" />
+
+        <!-- Ascension -->
+        <ui:VisualElement name="herald-ascension" class="herald-body">
+            <ui:VisualElement class="herald-column herald-nova kn-card">
+                <ui:Label text="YOUR ASCENSION" class="eyebrow" />
+                <ui:Label name="herald-level" text="+0" class="herald-level" />
+                <ui:Label name="herald-tier" text="NO NOVA YET" class="herald-tier" />
+                <ui:VisualElement name="herald-tier-pips" class="herald-pips" />
+                <ui:Label name="herald-next-tier" class="help herald-next-tier" />
+            </ui:VisualElement>
+            <ui:VisualElement class="herald-column herald-detail">
+                <ui:Label text="WHAT IT GIVES" class="eyebrow" />
+                <ui:Label name="herald-gain" class="herald-line" />
+                <ui:Label text="ONE ATTEMPT" class="eyebrow section" />
+                <ui:Label name="herald-odds" class="herald-line" />
+                <ui:Label name="herald-cost" class="herald-line" />
+                <ui:Label name="herald-reason" class="herald-reason" />
+                <ui:Button name="herald-ascend" text="ASCEND" class="kn-button-primary" />
+                <ui:Label name="herald-result" class="herald-result" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Nova Standings: one card per track, built by the controller -->
+        <ui:VisualElement name="herald-standings" class="herald-standings">
+            <ui:Label name="herald-worn" class="herald-worn" />
+            <ui:VisualElement name="herald-tracks" class="herald-tracks" />
+            <ui:Label name="herald-standing-result" class="herald-result" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -30,7 +30,7 @@ namespace KryticalNova.EditorTools
             new VendorStall("GuardCaptain", false, StallKind.Watch, 22.5f, 12.5f, 270f),
             new VendorStall("HerbMaster", false, StallKind.Market, 22.5f, -12.5f, 270f),
             new VendorStall("Blacksmith", false, StallKind.Forge, -12.5f, -22.5f, 0f),
-            new VendorStall("Collector", true, StallKind.Collector, 12.5f, -22.5f, 0f),
+            new VendorStall("Collector", false, StallKind.Collector, 12.5f, -22.5f, 0f), // the Herald's stall
             new VendorStall("GuildDirector", false, StallKind.Guild, -14f, 22.5f, 180f),
             new VendorStall("GateMaster", false, StallKind.Gate, 14f, 22.5f, 180f),
         };
@@ -133,7 +133,7 @@ namespace KryticalNova.EditorTools
                 case StallKind.Tailor: return new StallLook { Title = "OUTFITTER", Subtitle = "coming soon", Style = SignStyle.FabricBanner, Font = FontExo, Ink = Color.white, Board = ColorBible.NeonMagenta * 0.8f };
                 case StallKind.Guild: return new StallLook { Title = "CREW HALL", Subtitle = "vault · crews", Style = SignStyle.BladeSign, Font = FontLato, Ink = ColorBible.SignalYellow, Board = ColorBible.ShadowIndigo };
                 case StallKind.Gate: return new StallLook { Title = "WAYFINDER", Subtitle = "deep vault · transit", Style = SignStyle.NeonPanel, Font = FontExo, Ink = ColorBible.NeonCyan * 2f, Board = ColorBible.Ink };
-                default: return new StallLook { Title = "COLLECTOR", Subtitle = "coming soon", Style = SignStyle.WoodBoard, Font = FontOrbitron, Ink = ColorBible.SignalYellow, Board = ColorBible.Hex("3E3A48") };
+                default: return new StallLook { Title = "HERALD", Subtitle = "ascension · standings", Style = SignStyle.WoodBoard, Font = FontOrbitron, Ink = ColorBible.SignalYellow, Board = ColorBible.Hex("3E3A48") };
             }
         }
 
@@ -175,8 +175,9 @@ namespace KryticalNova.EditorTools
                     if (child.name.StartsWith("SM_Prop_MarketCover_01") && TryGetBounds(child.gameObject, out Bounds cover))
                         canopyUnderside = cover.max.y - 0.55f;
                 StallLook look = LookFor(s);
-                Transform oldSign = stall.transform.Find("Sign " + look.Title);
-                if (oldSign != null) Object.DestroyImmediate(oldSign.gameObject);
+                // The sign the slot was built with may carry another name (a stall renamed since): take every one down.
+                for (int i = stall.transform.childCount - 1; i >= 0; i--)
+                    if (stall.transform.GetChild(i).name.StartsWith("Sign ")) Object.DestroyImmediate(stall.transform.GetChild(i).gameObject);
                 var origin = new Vector2(s.X, s.Z);
                 BuildStallSign(stall.transform, look, origin, s.Yaw, dim: false);
 
@@ -266,7 +267,7 @@ namespace KryticalNova.EditorTools
                     Grounded(p, "SM_Prop_ChargingStation_01", o, yaw, -2.9f, 0.2f, 90f);
                     Grounded(p, "SM_Prop_ChargingStation_01", o, yaw, 2.9f, 0.2f, 270f);
                     break;
-                default: // Collector: crates and curios
+                default: // Herald (the stall once kept for a Collector): crates and curios
                     Counter(p, "SM_Prop_MarketTable_01", o, yaw);
                     OnCounter(p, "SM_Prop_Jar_01", o, yaw, -0.6f, StallCounterZ);
                     OnCounter(p, "SM_Prop_Bottle_02", o, yaw, 0.3f, StallCounterZ);

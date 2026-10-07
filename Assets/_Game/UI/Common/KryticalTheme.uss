@@ -290,3 +290,8 @@ Button:hover > .kn-close-glyph { -unity-background-image-tint-color: rgb(255, 12
 
 /* Gives empty movables (e.g. the buff bar) something to grab while editing. */
 .hud-movable.hud-editing { min-width: 140px; min-height: 30px; }
+
+/* A plain text tooltip beside any HUD element (HudTextTooltip). */
+.text-tooltip { position: absolute; max-width: 320px; padding: 10px 12px; display: none; }
+.text-tooltip-title { font-size: 13px; -unity-font-style: bold; color: rgb(255, 222, 130); margin-bottom: 4px; white-space: normal; }
+.text-tooltip-body { font-size: 11px; white-space: normal; color: rgb(208, 220, 230); }

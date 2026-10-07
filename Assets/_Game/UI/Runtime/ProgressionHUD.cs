@@ -33,6 +33,8 @@ namespace KryticalNova.UI
         [SerializeField] private CharacterBuffManager buffManager;
         private VisualElement root;
         private VisualElement characterWindow;
+        private PlayerNova boundNova;
+        private bool renownTipAttached;
 
         /// <summary>The local hotbar, shared with the settings/network panels so they can suppress its keys while typing.</summary>
         public PlayerSkillHotbar Hotbar => hotbar;
@@ -372,6 +374,7 @@ namespace KryticalNova.UI
             combatStats = player.GetComponent<CharacterCombatStats>();
             combatSkills = player.GetComponent<PlayerCombatSkills>();
             buffManager = player.GetComponent<CharacterBuffManager>();
+            boundNova = player.GetComponent<PlayerNova>();
             if (progression == null || skills == null || hotbar == null || movement == null || resources == null || jumpMotor == null)
             {
                 Debug.LogError($"ProgressionHUD: '{player.name}' is missing progression, skills, hotbar, movement, resources or jump components.", this);
@@ -396,6 +399,7 @@ namespace KryticalNova.UI
             }
             progression.Changed += Refresh;
             progression.LevelGained += OnLevelGained;
+            if (boundNova != null) boundNova.Changed += Refresh; // the Standing worn changes no stat
             skills.Changed += Refresh;
             hotbar.Changed += Refresh;
             hotbar.CharacterWindowRequested += ToggleCharacter;
@@ -431,6 +435,8 @@ namespace KryticalNova.UI
             }
             progression.Changed -= Refresh;
             progression.LevelGained -= OnLevelGained;
+            if (boundNova != null) boundNova.Changed -= Refresh;
+            boundNova = null;
             skills.Changed -= Refresh;
             hotbar.Changed -= Refresh;
             hotbar.CharacterWindowRequested -= ToggleCharacter;
@@ -563,6 +569,54 @@ namespace KryticalNova.UI
             return false;
         }
 
+        /// <summary>The Renown block at the top of the Character Sheet: what is held, the Ascension and the Standing worn.</summary>
+        private void RefreshRenown()
+        {
+            VisualElement block = root.Q("renown-block");
+            if (block == null) return;
+            if (!renownTipAttached)
+            {
+                renownTipAttached = true;
+                HudTextTooltip.Attach(block, () => "RENOWN", RenownBreakdown);
+            }
+            NovaSettings rules = boundNova != null ? boundNova.Settings : null;
+            root.Q<Label>("renown-value").text = progression.Renown.ToString("N0");
+            root.Q<Label>("renown-ascension").text = rules != null
+                ? NovaRules.AscensionLine(rules.ascension, boundNova.Ascension).Replace("Ascension ", string.Empty) : "+0";
+            root.Q<Label>("renown-standing").text = (boundNova != null ? boundNova.WornStanding : null) ?? "None";
+        }
+
+        /// <summary>What the hover on the Renown block says: where Renown goes, and what both ladders give right now.</summary>
+        private string RenownBreakdown()
+        {
+            var text = new System.Text.StringBuilder(320);
+            text.Append("Spent at a Herald on Ascension and Nova Standings, and at the forge on Tuning.");
+            NovaSettings rules = boundNova != null ? boundNova.Settings : null;
+            if (rules == null) return text.ToString();
+
+            int level = boundNova.Ascension;
+            text.Append("\n\n").Append(NovaRules.AscensionLine(rules.ascension, level));
+            text.Append("\n+").Append(level * rules.ascension.attributesPerLevel).Append(" Strength, Agility, Vitality and Spirit");
+            int toNext = NovaRules.LevelsToNextTier(rules.ascension, level);
+            if (toNext > 0)
+                text.Append("\n").Append(toNext).Append(toNext == 1 ? " more level" : " more levels").Append(" to Nova ")
+                    .Append(NovaRules.Numeral(NovaRules.Tier(rules.ascension, level) + 1));
+
+            text.Append("\n\nNova Standings (every one you hold counts)");
+            NovaState state = boundNova.State;
+            foreach (StandingTrackInfo info in rules.standings.tracks)
+            {
+                int held = state.Standing(info.track);
+                text.Append("\n");
+                if (held <= 0) { text.Append(info.name).Append(": not held"); continue; }
+                text.Append(NovaRules.StandingName(rules.standings, boundNova.Faction, info.track, held))
+                    .Append(" (").Append(held).Append(" / ").Append(rules.standings.MaxLevel).Append("): ")
+                    .Append(StatDisplay.Name(info.stat)).Append(" +")
+                    .Append(NovaRules.StandingPercent(rules.standings, held).ToString("0.#")).Append('%');
+            }
+            return text.ToString();
+        }
+
         private void Refresh()
         {
             if (!initialized) return;
@@ -573,6 +627,7 @@ namespace KryticalNova.UI
             ProgressBar xp = root.Q<ProgressBar>("xp-bar");
             xp.value = progression.IsAtLevelCap ? ProgressBarScale : ProgressBarScale * progression.Experience / Mathf.Max(1f, progression.ExperienceRequired);
             xp.title = progression.IsAtLevelCap ? "MAXIMUM LEVEL" : $"{progression.Experience:N0} / {progression.ExperienceRequired:N0} XP";
+            RefreshRenown();
             root.Q<Label>("stat-points").text = $"{progression.StatPoints} points available";
             root.Q<Label>("stat-note").text = $"Spend {progression.AllocationCost} point(s) per increase. Vitality raises HP; Spirit raises Chi. "
                 + (resources.Data != null && resources.Data.fillGainedCapacity ? "New capacity also raises current resources. " : "Only maximum capacity increases. ")

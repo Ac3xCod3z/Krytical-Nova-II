@@ -1,0 +1,245 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51876e4ac0ddad748888c14a5bde7048, type: 3}
+  m_Name: NovaSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.NovaSettings
+  ascension:
+    maxLevel: 96
+    levelsPerTier: 8
+    renownCost: 100
+    credsCost: 500000
+    attributesPerLevel: 1
+    slipKeepsTier: 1
+    odds:
+    - upTo: 24
+      rise: 55
+      hold: 35
+      slip: 10
+    - upTo: 96
+      rise: 45
+      hold: 40
+      slip: 15
+  standings:
+    renownCosts: 20030000a4060000c4090000480d000068100000ec1300000c170000901a0000b01d0000342100005424000010270000i
+    percentPerLevel: 1
+    tracks:
+    - track: 0
+      name: Vanguard
+      stat: 4
+      blurb: First into the fight. Raises Attack Power.
+    - track: 1
+      name: Bulwark
+      stat: 5
+      blurb: The line that holds. Raises Defense.
+    - track: 2
+      name: Ironblood
+      stat: 8
+      blurb: Still standing when the rest are down. Raises Max HP.
+    - track: 3
+      name: Mindwell
+      stat: 9
+      blurb: A deeper reserve to draw on. Raises Max Flux.
+    rankWords:
+    - faction: 1
+      words:
+      - Associate
+      - Operative
+      - Specialist
+      - Agent
+      - Auditor
+      - Captain
+      - Controller
+      - Prefect
+      - Executor
+      - Consul
+      - Regent
+      - Hegemon
+    - faction: 2
+      words:
+      - Unit
+      - Routine
+      - Process
+      - Daemon
+      - Kernel
+      - Cipher
+      - Override
+      - Vector
+      - Architect
+      - Apex
+      - Zenith
+      - Singularity
+    - faction: 3
+      words:
+      - Kinsworn
+      - Oathsworn
+      - Hearthguard
+      - Shieldbearer
+      - Runebearer
+      - Thane
+      - Bannerlord
+      - Stormborn
+      - High Thane
+      - Elderblood
+      - Dawnbringer
+      - Mythborn
+  look:
+    material: {fileID: 2100000, guid: 78e96efad16b9474e841a452f240f716, type: 2}
+    gapAboveHead: 0.06
+    behindHead: 0.05
+    tilt: 0
+    faceCamera: 1
+    spinPerMinute: 4
+    tiers:
+    - inner: {r: 0.8, g: 0.86, b: 0.95, a: 1}
+      outer: {r: 0.62, g: 0.7, b: 0.85, a: 1}
+      ringDiameter: 0.4
+      ringWidth: 0.035
+      fill: 0
+      innerRings: 0
+      spokes: 0
+      glyphs: 0
+      rays: 0
+      rayLength: 0
+      prism: 0
+      brightness: 1.5
+    - inner: {r: 0.78, g: 0.92, b: 1, a: 1}
+      outer: {r: 0.45, g: 0.75, b: 0.95, a: 1}
+      ringDiameter: 0.42
+      ringWidth: 0.045
+      fill: 0.04
+      innerRings: 1
+      spokes: 0
+      glyphs: 0
+      rays: 0
+      rayLength: 0
+      prism: 0
+      brightness: 1.5
+    - inner: {r: 0.55, g: 0.95, b: 1, a: 1}
+      outer: {r: 0.15, g: 0.7, b: 1, a: 1}
+      ringDiameter: 0.44
+      ringWidth: 0.045
+      fill: 0.06
+      innerRings: 2
+      spokes: 0
+      glyphs: 0
+      rays: 0
+      rayLength: 0
+      prism: 0
+      brightness: 1.5
+    - inner: {r: 0.45, g: 1, b: 0.85, a: 1}
+      outer: {r: 0.1, g: 0.85, b: 0.7, a: 1}
+      ringDiameter: 0.46
+      ringWidth: 0.045
+      fill: 0.08
+      innerRings: 3
+      spokes: 0
+      glyphs: 0
+      rays: 0
+      rayLength: 0
+      prism: 0
+      brightness: 1.5
+    - inner: {r: 0.55, g: 1, b: 0.45, a: 1}
+      outer: {r: 0.2, g: 0.85, b: 0.25, a: 1}
+      ringDiameter: 0.48
+      ringWidth: 0.05
+      fill: 0.08
+      innerRings: 3
+      spokes: 4
+      glyphs: 0
+      rays: 0
+      rayLength: 0
+      prism: 0
+      brightness: 1.5
+    - inner: {r: 0.9, g: 1, b: 0.4, a: 1}
+      outer: {r: 0.55, g: 0.85, b: 0.15, a: 1}
+      ringDiameter: 0.5
+      ringWidth: 0.05
+      fill: 0.08
+      innerRings: 3
+      spokes: 8
+      glyphs: 0
+      rays: 0
+      rayLength: 0
+      prism: 0
+      brightness: 1.5
+    - inner: {r: 1, g: 0.88, b: 0.35, a: 1}
+      outer: {r: 1, g: 0.66, b: 0.1, a: 1}
+      ringDiameter: 0.52
+      ringWidth: 0.05
+      fill: 0.08
+      innerRings: 3
+      spokes: 8
+      glyphs: 16
+      rays: 0
+      rayLength: 0
+      prism: 0
+      brightness: 1.5
+    - inner: {r: 1, g: 0.7, b: 0.28, a: 1}
+      outer: {r: 1, g: 0.42, b: 0.08, a: 1}
+      ringDiameter: 0.54
+      ringWidth: 0.055
+      fill: 0.08
+      innerRings: 3
+      spokes: 12
+      glyphs: 20
+      rays: 0
+      rayLength: 0
+      prism: 0
+      brightness: 1.5
+    - inner: {r: 1, g: 0.5, b: 0.25, a: 1}
+      outer: {r: 1, g: 0.22, b: 0.1, a: 1}
+      ringDiameter: 0.56
+      ringWidth: 0.055
+      fill: 0.08
+      innerRings: 3
+      spokes: 12
+      glyphs: 20
+      rays: 8
+      rayLength: 0.35
+      prism: 0
+      brightness: 1.6
+    - inner: {r: 1, g: 0.35, b: 0.35, a: 1}
+      outer: {r: 0.95, g: 0.08, b: 0.2, a: 1}
+      ringDiameter: 0.58
+      ringWidth: 0.06
+      fill: 0.08
+      innerRings: 3
+      spokes: 12
+      glyphs: 24
+      rays: 12
+      rayLength: 0.45
+      prism: 0
+      brightness: 1.6
+    - inner: {r: 0.85, g: 0.5, b: 1, a: 1}
+      outer: {r: 0.55, g: 0.2, b: 1, a: 1}
+      ringDiameter: 0.6
+      ringWidth: 0.06
+      fill: 0.08
+      innerRings: 3
+      spokes: 12
+      glyphs: 24
+      rays: 16
+      rayLength: 0.55
+      prism: 0
+      brightness: 1.7
+    - inner: {r: 1, g: 0.95, b: 0.85, a: 1}
+      outer: {r: 1, g: 0.8, b: 0.45, a: 1}
+      ringDiameter: 0.62
+      ringWidth: 0.065
+      fill: 0.1
+      innerRings: 3
+      spokes: 12
+      glyphs: 24
+      rays: 24
+      rayLength: 0.7
+      prism: 1
+      brightness: 1.8

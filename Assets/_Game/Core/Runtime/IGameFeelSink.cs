@@ -85,5 +85,10 @@ namespace KryticalNova.Core
         /// <summary>An attempt at the forge ended for this character.</summary>
         /// <param name="outcome">0 success, 1 fail, 2 a fail a Failsafe absorbed, 3 the item broke.</param>
         void GearWorked(Transform actor, int outcome, bool isLocalPlayer);
+
+        /// <summary>A request at the Herald ended for this character: an Ascension attempt, or a Standing bought.</summary>
+        /// <param name="outcome">0 a level gained, 1 nothing changed, 2 a level lost, 3 a slip the Nova held.</param>
+        /// <param name="newTier">The character reached a new Nova tier: the big moment.</param>
+        void NovaWorked(Transform actor, int outcome, bool newTier, bool isLocalPlayer);
     }
 }

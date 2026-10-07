@@ -312,3 +312,10 @@
     right: 0;
     bottom: 0;
 }
+
+/* Character Sheet: Renown, Ascension and the Standing worn, at the top. Hover for the breakdown. */
+.renown-block { padding: 8px 10px; }
+.renown-row { flex-direction: row; align-items: center; min-height: 20px; }
+.renown-label { flex-grow: 1; font-size: 12px; color: rgb(156, 172, 188); }
+.renown-value { font-size: 13px; -unity-font-style: bold; color: rgb(255, 222, 130); }
+.renown-value-plain { font-size: 12px; color: rgb(226, 234, 242); }

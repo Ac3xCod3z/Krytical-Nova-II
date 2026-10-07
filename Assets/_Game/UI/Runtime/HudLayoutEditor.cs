@@ -71,6 +71,7 @@ namespace KryticalNova.UI
             { "skills-window", "SKILLS WINDOW" },
             { "settings-window", "SETTINGS WINDOW" },
             { "forge-window", "FORGE WINDOW" },
+            { "herald-window", "HERALD WINDOW" },
             { "inventory-window", "PACK" },
             { "equipment-window", "EQUIPMENT" },
             { "storage-window", "VAULT" },
