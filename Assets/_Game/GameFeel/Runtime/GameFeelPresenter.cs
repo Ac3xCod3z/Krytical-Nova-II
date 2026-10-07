@@ -50,6 +50,10 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player respawnFeel;
         [Tooltip("The local player's pet evolved: a bright pulse and a sound.")]
         [SerializeField] private MMF_Player petEvolveFeel;
+        [Tooltip("The local player's own attempt at the forge: it worked, it failed, the piece broke.")]
+        [SerializeField] private MMF_Player forgeSuccessFeel;
+        [SerializeField] private MMF_Player forgeFailFeel;
+        [SerializeField] private MMF_Player forgeBreakFeel;
 
         [Header("FEEL players (world particles, every client)")]
         [SerializeField] private MMF_Player hitWorldFeel;
@@ -73,6 +77,11 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player respawnWorldFeel;
         [Tooltip("Any pet evolved: the burst on the pet itself.")]
         [SerializeField] private MMF_Player petEvolveWorldFeel;
+        [Tooltip("Anyone's attempt at the forge, on their character: a success, a fail, a fail a Failsafe took, a break.")]
+        [SerializeField] private MMF_Player forgeSuccessWorldFeel;
+        [SerializeField] private MMF_Player forgeFailWorldFeel;
+        [SerializeField] private MMF_Player forgeSavedWorldFeel;
+        [SerializeField] private MMF_Player forgeBreakWorldFeel;
 
         [Header("World VFX spawned directly")]
         [SerializeField] private GameObject clickVfx;
@@ -120,7 +129,8 @@ namespace KryticalNova.GameFeel
         {
             ClientPresentationRegistry.RegisterFeel(this);
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
-                attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, killConfirmFeel, bodyLandFeel, respawnFeel, petEvolveFeel };
+                attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, killConfirmFeel, bodyLandFeel, respawnFeel, petEvolveFeel,
+                forgeSuccessFeel, forgeFailFeel, forgeBreakFeel };
             if (skills == null) skills = GetComponent<SkillFeelCatalog>();
             GroundSurfaces.Palette = dustPalette;
             HudPreferences.Changed += ApplyScreenShakePreference;
@@ -350,25 +360,31 @@ namespace KryticalNova.GameFeel
         }
 
         /// <summary>
-        /// The forge has no effects of its own yet: a success borrows the buff cast, a fail the fading buff, a break
-        /// the heavy hit and the hurt flash.
+        /// An attempt at the forge ended. The burst rides on the character for everyone who can see it; the screen
+        /// only answers for the player whose piece it was.
         /// </summary>
         public void GearWorked(Transform actor, int outcome, bool isLocalPlayer)
         {
             if (actor == null) return;
             Vector3 feet = ActorAnchor.Feet(actor);
+            Quaternion facing = Facing(actor);
             switch (outcome)
             {
-                case 0:
-                    PlayWorld(buffCastWorldFeel, feet, Facing(actor), actor);
-                    if (isLocalPlayer) Play(buffCastFeel, actor.position, 1f);
+                case 0: // success
+                    PlayWorld(forgeSuccessWorldFeel, feet, facing, actor);
+                    if (isLocalPlayer) Play(forgeSuccessFeel, actor.position, 1f);
                     break;
-                case 3:
-                    PlayWorld(heavyHitWorldFeel, actor.position, Facing(actor), actor);
-                    if (isLocalPlayer) Play(damagedFeel, actor.position, 1f);
+                case 2: // a fail a Failsafe took
+                    PlayWorld(forgeSavedWorldFeel, feet, facing, actor);
+                    if (isLocalPlayer) Play(forgeFailFeel, actor.position, 0.6f);
                     break;
-                default:
-                    PlayWorld(buffEndWorldFeel, feet, Quaternion.identity, actor);
+                case 3: // the piece broke
+                    PlayWorld(forgeBreakWorldFeel, feet, facing, actor);
+                    if (isLocalPlayer) Play(forgeBreakFeel, actor.position, 1f);
+                    break;
+                default: // a fail
+                    PlayWorld(forgeFailWorldFeel, feet, facing, actor);
+                    if (isLocalPlayer) Play(forgeFailFeel, actor.position, 1f);
                     break;
             }
         }

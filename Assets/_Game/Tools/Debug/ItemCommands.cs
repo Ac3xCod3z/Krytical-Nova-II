@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Text;
 using KryticalNova.Factions;
+using KryticalNova.Forge;
 using KryticalNova.Items;
 using KryticalNova.Progression;
 using QFSW.QC;
@@ -87,6 +89,118 @@ namespace KryticalNova.DevTools
                 ? $"Pack emptied; wearing the level-1 {WeaponClasses.DisplayName(cls)} starter kit."
                 : $"No starter weapon found for {WeaponClasses.DisplayName(cls)}. Re-bake the gear ladder.";
         }
+
+        private const int KitLevel = 112;
+        private const int KitTemperCount = 20;
+        private const string KitUsage = "Use gm.kit gear [level] [rarity], gm.kit temper [count], gm.kit pets or gm.kit all.";
+
+        [Command("gm.kit", "Give the targeted player a whole kit at once. gm.kit gear [level] [rarity]: every piece that character can " +
+                           "wear at that tier (112 Epic unless told), the weapon of every class of its faction included. gm.kit temper " +
+                           "[count]: every Temper item that has a use (20 of each). gm.kit pets: one of each pet. gm.kit all: the three together.")]
+        private static string Kit(string kit, string first = "", string second = "")
+        {
+            if (!TryGetInventory(out var inv, out var error)) return error;
+            if (inv.Catalog == null) return NoPlayer;
+            switch (kit.ToLowerInvariant())
+            {
+                case "gear": return KitGear(inv, first, second);
+                case "temper": return KitTemper(inv, first);
+                case "pets": return KitPets(inv);
+                case "all": return KitGear(inv, string.Empty, string.Empty) + "\n" + KitTemper(inv, string.Empty) + "\n" + KitPets(inv);
+                default: return $"Unknown kit '{kit}'. {KitUsage}";
+            }
+        }
+
+        /// <summary>One of every piece the wearer can use at the tier a level snaps to, slot by slot.</summary>
+        private static string KitGear(PlayerInventory inv, string levelText, string rarityText)
+        {
+            if (inv.Gear == null) return NoPlayer;
+            int level = KitLevel;
+            if (levelText.Length > 0 && !int.TryParse(levelText, out level)) return $"'{levelText}' is not a level. {KitUsage}";
+            ItemRarity rarity = ItemRarity.Epic;
+            if (rarityText.Length > 0 && !System.Enum.TryParse(rarityText, true, out rarity))
+                return $"Unknown rarity '{rarityText}'. Use common, uncommon, rare or epic.";
+
+            var wearer = inv.GetComponent<IGearWearer>();
+            FactionId faction = wearer != null ? wearer.Faction : FactionId.None;
+            BodyFit body = wearer != null ? wearer.Body : BodyFit.None;
+            string pack = wearer != null ? wearer.GearPack : null;
+
+            var fits = new List<GearDictionary.Entry>(16);
+            int given = 0, lost = 0, slots = 0;
+            foreach (EquipSlot slot in EquipSlots.All)
+            {
+                if (slot == EquipSlot.Pet) continue;
+                // The same matching as gm.gear, but every line of the slot instead of the first.
+                fits.Clear();
+                foreach (var entry in inv.Gear.Entries)
+                {
+                    if (entry.slot != slot || entry.rarity != rarity) continue;
+                    if (faction != FactionId.None && !FactionRules.Includes(entry.factions, faction)) continue;
+                    if (body != BodyFit.None && (entry.bodies & body) == 0) continue;
+                    if (slot != EquipSlot.Weapon && !string.IsNullOrEmpty(pack) && !string.IsNullOrEmpty(entry.pack) && entry.pack != pack) continue;
+                    fits.Add(entry);
+                }
+                if (fits.Count == 0) continue;
+
+                // The level snaps down to the nearest tier this slot has (and up, when there is none below).
+                int below = int.MinValue, above = int.MaxValue;
+                foreach (var entry in fits)
+                {
+                    if (entry.itemLevel <= level && entry.itemLevel > below) below = entry.itemLevel;
+                    if (entry.itemLevel > level && entry.itemLevel < above) above = entry.itemLevel;
+                }
+                int tier = below != int.MinValue ? below : above;
+                slots++;
+                foreach (var entry in fits)
+                {
+                    if (entry.itemLevel != tier || inv.Catalog.Get(entry.itemId) == null) continue;
+                    if (inv.ServerGive(entry.itemId, 1) > 0) given++; else lost++;
+                }
+            }
+            if (given == 0 && lost == 0) return $"No {rarity} gear fits this character. Re-bake the gear ladder.";
+            return $"Gear kit: {given} {rarity} pieces near level {level} across {slots} slots." + Unfitted(lost);
+        }
+
+        /// <summary>Every Temper material that can be used today, straight from the forge's settings.</summary>
+        private static string KitTemper(PlayerInventory inv, string countText)
+        {
+            int count = KitTemperCount;
+            if (countText.Length > 0 && (!int.TryParse(countText, out count) || count < 1)) return $"'{countText}' is not a count. {KitUsage}";
+            var work = inv.GetComponent<PlayerGearWork>();
+            if (work == null || work.Settings == null) return "That player has no forge (run Krytical Nova/Setup/Player Prefab).";
+            TemperSettings temper = work.Settings.temper;
+
+            var ids = new List<ushort>(10);
+            foreach (AlloyGrade alloy in temper.alloys)
+                if (!alloy.prime || GearProgressionRules.PrimeAlloyInUse(temper)) ids.Add(alloy.itemId);
+            ids.Add(temper.failsafeItemId);
+            ids.Add(temper.luckyFailsafeItemId);
+            ids.Add(temper.advancedFailsafeItemId);
+
+            int kinds = 0, lost = 0;
+            foreach (ushort id in ids)
+            {
+                if (id == 0 || inv.Catalog.Get(id) == null) continue;
+                if (inv.ServerGive(id, count) > 0) kinds++; else lost++;
+            }
+            return $"Temper kit: {count} each of {kinds} materials." + Unfitted(lost);
+        }
+
+        /// <summary>One of each pet in the catalog.</summary>
+        private static string KitPets(PlayerInventory inv)
+        {
+            int given = 0, lost = 0;
+            foreach (ItemDefinition def in inv.Catalog.Items)
+            {
+                if (def == null || def.equipSlot != EquipSlot.Pet) continue;
+                if (inv.ServerGive(def.itemId, 1) > 0) given++; else lost++;
+            }
+            if (given == 0 && lost == 0) return "There are no pets in the catalog.";
+            return $"Pet kit: {given} pets." + Unfitted(lost);
+        }
+
+        private static string Unfitted(int lost) => lost > 0 ? $" {lost} did not fit: the Pack is full." : string.Empty;
 
         private static string ClassList()
         {

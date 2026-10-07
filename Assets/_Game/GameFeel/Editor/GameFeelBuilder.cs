@@ -130,6 +130,7 @@ namespace KryticalNova.EditorTools
 
             BuildDeathVfx();
             BuildPetVfx();
+            BuildForgeVfx();
             BuildAreaRing();
             BuildBladeTrail();
             UseUrpMaterials($"{GameplayVfxFolder}/FX_ComicSlash.prefab");
@@ -343,6 +344,93 @@ namespace KryticalNova.EditorTools
                 new Fx("PFX_Pet_Evolve", Vector3.zero, follow: true),
                 new Fx("PFX_Pet_EvolveRays", Vector3.zero, follow: true),
                 new Fx("PFX_Pet_EvolveSparkles", Vector3.zero, follow: true));
+        }
+
+        // ---------------------------------------------------------------- the forge
+
+        private static readonly string[] ForgeCameraPlayers = { "Forge Success", "Forge Fail", "Forge Break" };
+        private static readonly string[] ForgeWorldPlayers = { "Forge Success", "Forge Fail", "Forge Saved", "Forge Break" };
+        private static readonly Color ForgeAsh = new Color(0.62f, 0.64f, 0.7f);
+
+        /// <summary>An attempt at the forge: a success, a fail, the flash of a Failsafe holding, a piece breaking.</summary>
+        private static void BuildForgeVfx()
+        {
+            Make("FX_LevelUp_01", "PFX_Forge_Success", 0.55f, Yellow);           // the work took: light rising round the character
+            Make("FX_LightRayRound_01", "PFX_Forge_Rays", 0.6f, Yellow);
+            Make("FX_Sparkles_Large_01", "PFX_Forge_Sparkles", 0.6f, Yellow);
+            Make("FX_Sparks_01", "PFX_Forge_Fail", 0.75f, ForgeAsh);             // it did not: a dull spit of sparks
+            Make("FX_MagicBlast_02", "PFX_Forge_Saved", 0.6f, Cyan);             // the Failsafe holding
+            Make("FX_Explosion_Body_01", "PFX_Forge_Break", 0.6f, Red);          // the piece gone
+        }
+
+        /// <summary>
+        /// Rebuilds the forge effects and their players on the game feel prefab without regenerating the rest of it
+        /// (a full build rewrites every effect and the whole prefab, tuning included).
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Forge Feel")]
+        public static void RebuildForgeFeel()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            BuildForgeVfx();
+            AssetDatabase.SaveAssets();
+
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                GameObject root = scope.prefabContentsRoot;
+                var presenter = root.GetComponent<GameFeelPresenter>();
+                Transform world = root.transform.Find("World");
+                if (presenter == null || world == null)
+                {
+                    Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
+                    return;
+                }
+                Remove(root.transform, ForgeCameraPlayers);
+                Remove(world, ForgeWorldPlayers);
+
+                var so = new SerializedObject(presenter);
+                AddForgeFeel(root, world.gameObject, so);
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[GameFeel] Forge feel rebuilt on {PrefabPath}. Assign sounds on the new MMF_Sound slots.");
+        }
+
+        private static void AddForgeFeel(GameObject root, GameObject world, SerializedObject so)
+        {
+            // ---- camera / screen / sound: the player whose piece it was
+            so.FindProperty("forgeSuccessFeel").objectReferenceValue = Player(root, "Forge Success", p =>
+            {
+                Sound(p, "Forge Success");
+                Impulse(p, new Vector3(0f, 0.14f, 0f), 0.24f);
+                Chromatic(p, "Chromatic Shimmer", 0.45f, 0.4f);
+            });
+            so.FindProperty("forgeFailFeel").objectReferenceValue = Player(root, "Forge Fail", p =>
+            {
+                Sound(p, "Forge Fail");
+                Impulse(p, new Vector3(0f, -0.14f, 0f), 0.18f);
+            });
+            so.FindProperty("forgeBreakFeel").objectReferenceValue = Player(root, "Forge Break", p =>
+            {
+                Sound(p, "Forge Break");
+                Impulse(p, new Vector3(0.5f, 0.32f, 0f), 0.36f);
+                Chromatic(p, "Chromatic Punch", 0.3f, 0.8f);
+                var v = p.AddFeedback(typeof(MMF_BeautifyVignette)) as MMF_BeautifyVignette;
+                v.Label = "Break Vignette (Beautify)";
+                v.Duration = HurtVignetteSeconds;
+                v.Reach = HurtVignetteReach;
+                v.PulseColor = HurtVignetteColor;
+                v.DotOpacity = HurtVignetteDots;
+            });
+
+            // ---- world particles: every client, riding on the character
+            so.FindProperty("forgeSuccessWorldFeel").objectReferenceValue = World(world, "Forge Success",
+                AtFeet("PFX_Forge_Success"), AtFeet("PFX_Forge_Rays"), OnCaster("PFX_Forge_Sparkles"), Comic("PFX_Comic_Pow", 1.9f));
+            so.FindProperty("forgeFailWorldFeel").objectReferenceValue = World(world, "Forge Fail",
+                OnCaster("PFX_Forge_Fail"), Dust("PFX_Dust_Run"));
+            so.FindProperty("forgeSavedWorldFeel").objectReferenceValue = World(world, "Forge Saved",
+                OnCaster("PFX_Forge_Fail"), OnCaster("PFX_Forge_Saved"));
+            so.FindProperty("forgeBreakWorldFeel").objectReferenceValue = World(world, "Forge Break",
+                OnCaster("PFX_Forge_Break"), OnCaster("PFX_Hit_Heavy"), Comic("PFX_Comic_Wham", 1.9f));
         }
 
         /// <summary>A buff aura: a looping POLYGON effect that rides on the character for as long as the buff lasts.</summary>
@@ -950,6 +1038,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("chiWorldFeel").objectReferenceValue = World(world, "Chi", AtFeet("PFX_Chi"));
                 AddDeathFeel(root, world, so);
                 AddPetFeel(root, world, so);
+                AddForgeFeel(root, world, so);
 
                 so.FindProperty("clickVfx").objectReferenceValue = Load(Vfx("PFX_Click_Ring"));
                 so.FindProperty("selectHostileVfx").objectReferenceValue = Load(Vfx("PFX_Select_Hostile"));

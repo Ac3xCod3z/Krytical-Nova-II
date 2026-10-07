@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 9105
   displayName: Prime Alloy
-  description: The only Alloy that works from 120% Temper up. Adds 3% on a success.
+  description: 'For a later system: Tempering beyond 120%. It has no use yet.'
   icon: {fileID: 0}
   rarity: 3
   equipSlot: 0

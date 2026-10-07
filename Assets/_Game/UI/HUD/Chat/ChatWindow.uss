@@ -8,8 +8,8 @@
     bottom: 0;
 }
 
-/* Always the bottom-left corner of the HUD. The player resizes it from the grip in its top-right corner; the
-   controller keeps the size between min-width/min-height and max-width/max-height. */
+/* Starts in the bottom-left corner of the HUD; the layout editor can move it. The player resizes it from the grip in
+   its top-right corner; the controller keeps the size between min-width/min-height and max-width/max-height. */
 .chat-window {
     position: absolute;
     left: 16px;

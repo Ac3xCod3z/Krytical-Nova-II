@@ -137,27 +137,58 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void OrdinaryAlloyStopsAtTheSoftCapAndPrimeAlloyStartsThere()
+        public void TemperStopsAtOneHundredAndTwenty()
         {
             TemperSettings temper = settings.temper;
             ItemDefinition weapon = Gear(EquipSlot.Weapon, ItemRarity.Epic, 100);
-            AlloyGrade big = Alloy(temper, 15), prime = Alloy(temper, 3, prime: true);
+            AlloyGrade small = Alloy(temper, 3), big = Alloy(temper, 15), prime = Alloy(temper, 3, prime: true);
+            Assert.AreEqual(120, temper.hardCap, "120% is the cap for now");
+            Assert.IsFalse(GearProgressionRules.PrimeAlloyInUse(temper));
 
             var next = GearProgressionRules.ResolveTemper(temper, new GearItemState(110, 0, 0), big, 100f, TemperProtection.None, 0f, 0f, out _, out _);
             Assert.AreEqual(120, next.Temper, "110 + 15 stops at 120");
+            Assert.IsNull(GearProgressionRules.TemperBlockedReason(settings, weapon, new GearItemState(117, 0, 0), small, TemperProtection.None));
 
-            Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(settings, weapon, new GearItemState(120, 0, 0), big, TemperProtection.None));
-            Assert.IsNull(GearProgressionRules.TemperBlockedReason(settings, weapon, new GearItemState(120, 0, 0), prime, TemperProtection.None));
+            var atCap = new GearItemState(120, 0, 0);
+            Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(settings, weapon, atCap, small, TemperProtection.None), "nothing works at the cap");
+            Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(settings, weapon, atCap, prime, TemperProtection.Advanced), "not even Prime Alloy");
             Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(settings, weapon, new GearItemState(60, 0, 0), prime, TemperProtection.None),
-                "Prime Alloy is not for pieces below the cap");
-            Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(settings, weapon, new GearItemState(133, 0, 0), prime, TemperProtection.Failsafe),
-                "from 133% only an Advanced Failsafe will do");
-            Assert.IsNull(GearProgressionRules.TemperBlockedReason(settings, weapon, new GearItemState(133, 0, 0), prime, TemperProtection.Advanced));
-            Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(settings, weapon, new GearItemState(150, 0, 0), prime, TemperProtection.Advanced),
-                "150% is the end");
+                "Prime Alloy has no use while the cap is 120");
+        }
 
-            next = GearProgressionRules.ResolveTemper(temper, new GearItemState(149, 0, 0), prime, 100f, TemperProtection.Advanced, 0f, 0f, out _, out _);
-            Assert.AreEqual(150, next.Temper);
+        /// <summary>The system for later: with the cap raised, Prime Alloy carries a piece from 120% to 150%.</summary>
+        [Test]
+        public void RaisingTheCapBringsPrimeAlloyBack()
+        {
+            var later = ScriptableObject.CreateInstance<GearProgressionSettings>();
+            try
+            {
+                later.statTable = settings.statTable;
+                later.temper.hardCap = 150;
+                TemperSettings temper = later.temper;
+                ItemDefinition weapon = Gear(EquipSlot.Weapon, ItemRarity.Epic, 100);
+                AlloyGrade big = Alloy(temper, 15), prime = Alloy(temper, 3, prime: true);
+                Assert.IsTrue(GearProgressionRules.PrimeAlloyInUse(temper));
+
+                var next = GearProgressionRules.ResolveTemper(temper, new GearItemState(110, 0, 0), big, 100f, TemperProtection.None, 0f, 0f, out _, out _);
+                Assert.AreEqual(120, next.Temper, "ordinary Alloy still stops at 120");
+                Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(later, weapon, new GearItemState(120, 0, 0), big, TemperProtection.None));
+                Assert.IsNull(GearProgressionRules.TemperBlockedReason(later, weapon, new GearItemState(120, 0, 0), prime, TemperProtection.None));
+                Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(later, weapon, new GearItemState(60, 0, 0), prime, TemperProtection.None),
+                    "Prime Alloy is not for pieces below 120");
+                Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(later, weapon, new GearItemState(133, 0, 0), prime, TemperProtection.Failsafe),
+                    "from 133% only an Advanced Failsafe will do");
+                Assert.IsNull(GearProgressionRules.TemperBlockedReason(later, weapon, new GearItemState(133, 0, 0), prime, TemperProtection.Advanced));
+                Assert.IsNotNull(GearProgressionRules.TemperBlockedReason(later, weapon, new GearItemState(150, 0, 0), prime, TemperProtection.Advanced),
+                    "150% is the end");
+
+                next = GearProgressionRules.ResolveTemper(temper, new GearItemState(149, 0, 0), prime, 100f, TemperProtection.Advanced, 0f, 0f, out _, out _);
+                Assert.AreEqual(150, next.Temper);
+            }
+            finally
+            {
+                Object.DestroyImmediate(later);
+            }
         }
 
         [Test]
@@ -261,7 +292,7 @@ namespace KryticalNova.Tests
         [Test]
         public void FusionAcceptsOnlyTheRightUntouchedRare()
         {
-            var ready = new GearItemState(132, 0, 0);
+            var ready = new GearItemState(12, 0, 0); // an Epic is fused at 12% Temper, like a Rare
             ItemDefinition epic112 = Gear(EquipSlot.Armor, ItemRarity.Epic, 112), epic106 = Gear(EquipSlot.Armor, ItemRarity.Epic, 106);
             ItemDefinition rare110 = Gear(EquipSlot.Armor, ItemRarity.Rare, 110), rare105 = Gear(EquipSlot.Armor, ItemRarity.Rare, 105),
                 rare95 = Gear(EquipSlot.Armor, ItemRarity.Rare, 95);
@@ -274,11 +305,11 @@ namespace KryticalNova.Tests
             Assert.IsNotNull(Blocked(epic106, ready, rare95), "not a lower tier");
             Assert.IsNotNull(Blocked(epic106, ready, rare110), "not a higher one");
             Assert.IsNotNull(Blocked(epic112, ready, epic112), "an Epic is never fed an Epic");
-            Assert.IsNotNull(Blocked(epic112, new GearItemState(120, 0, 0), rare110), "an Epic needs 132% Temper");
+            Assert.IsNotNull(Blocked(epic112, new GearItemState(9, 0, 0), rare110), "an Epic needs 12% Temper");
             Assert.IsNotNull(Blocked(epic112, ready, rare110, new GearItemState(3, 0, 0)), "a tempered material is refused");
             Assert.IsNotNull(Blocked(epic112, ready, rare110, new GearItemState(0, 1, 0)), "a fused material is refused");
             Assert.IsNotNull(Blocked(epic112, ready, Gear(EquipSlot.Boots, ItemRarity.Rare, 110)), "another kind of piece is refused");
-            Assert.IsNotNull(Blocked(epic112, new GearItemState(132, 12, 0), rare110), "FS12 is the end");
+            Assert.IsNotNull(Blocked(epic112, new GearItemState(120, 12, 0), rare110), "FS12 is the end");
 
             ItemDefinition rare45 = Gear(EquipSlot.Armor, ItemRarity.Rare, 45);
             Assert.IsNull(Blocked(rare45, new GearItemState(12, 0, 0), rare45), "a Rare takes a Rare of its level at 12% Temper");

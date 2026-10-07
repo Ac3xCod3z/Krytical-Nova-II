@@ -7,11 +7,13 @@ using UnityEngine.InputSystem;
 namespace KryticalNova.Player
 {
     /// <summary>
-    /// The keys a player may change, and where their choices are kept. Two groups: the window keys (Pack, Map,
-    /// Settings ...), which are actions built here because every HUD controller reads them, and the actions of the
-    /// player's own input asset (Hotbar slots, Character and Skills windows, weapon and camera keys), which each
-    /// player object loads its overrides for when it starts. Overrides are saved as JSON in PlayerPrefs, per local
-    /// profile like the HUD preferences. Esc, Enter, Y / N and the mouse buttons are fixed and are not listed.
+    /// The keys a player may change, and where their choices are kept. Every one is an action of the project's input
+    /// asset (Input/Actions/InputSystem_Actions). Two groups: the window keys (Pack, Map, Settings ...) in its
+    /// Windows map, read by every HUD controller from the project-wide copy of the asset, which exists in every
+    /// scene and before any player does; and the player's own actions (Hotbar slots, Character and Skills windows,
+    /// weapon and camera keys), which each player object loads its overrides for when it starts. Overrides are saved
+    /// as JSON in PlayerPrefs, per local profile like the HUD preferences. Esc, Enter, Y / N and the mouse buttons
+    /// are fixed and are not listed.
     /// </summary>
     public static class KeyBindings
     {
@@ -24,25 +26,28 @@ namespace KryticalNova.Player
         public const string Contacts = "Contacts";
         public const string PickUp = "PickUp";
         public const string NetworkPanel = "NetworkPanel";
+        public const string GmConsole = "GmConsole";
 
-        /// <summary>A window key: its action name, what the Controls list calls it, and the key it starts on.</summary>
+        /// <summary>A window key: its action in the asset's Windows map, and what the Controls list calls it.</summary>
         public readonly struct WindowKey
         {
-            public readonly string Action, Label, Path;
-            public WindowKey(string action, string label, string path) { Action = action; Label = label; Path = path; }
+            public readonly string Action, Label;
+            public WindowKey(string action, string label) { Action = action; Label = label; }
         }
 
+        // The keys themselves are in the asset. An action named here and missing there is reported once.
         public static readonly WindowKey[] WindowKeys =
         {
-            new WindowKey(Pack, "Pack", "<Keyboard>/i"),
-            new WindowKey(Equipment, "Equipment", "<Keyboard>/u"),
-            new WindowKey(Map, "Map", "<Keyboard>/m"),
-            new WindowKey(Settings, "Settings", "<Keyboard>/o"),
-            new WindowKey(Kiosk, "Kiosk", "<Keyboard>/t"),
-            new WindowKey(Crew, "Crew", "<Keyboard>/g"),
-            new WindowKey(Contacts, "Contacts", "<Keyboard>/f"),
-            new WindowKey(PickUp, "Pick up nearest", "<Keyboard>/backquote"),
-            new WindowKey(NetworkPanel, "Network panel", "<Keyboard>/f1"),
+            new WindowKey(Pack, "Pack"),
+            new WindowKey(Equipment, "Equipment"),
+            new WindowKey(Map, "Map"),
+            new WindowKey(Settings, "Settings"),
+            new WindowKey(Kiosk, "Kiosk"),
+            new WindowKey(Crew, "Crew"),
+            new WindowKey(Contacts, "Contacts"),
+            new WindowKey(PickUp, "Pick up nearest"),
+            new WindowKey(NetworkPanel, "Network panel"),
+            new WindowKey(GmConsole, "GM console (host)"),
         };
 
         /// <summary>The player-asset actions the Controls list offers, by map, with the name it shows for each.</summary>
@@ -59,6 +64,7 @@ namespace KryticalNova.Player
 
         private const string WindowMapName = "Windows";
         private static InputActionMap windows;
+        private static bool reportedMissing;
         private static readonly string Prefix = BuildPrefix();
         private static string WindowsKey => Prefix + "windows";
         private static string PlayerKey => Prefix + "player";
@@ -75,35 +81,75 @@ namespace KryticalNova.Player
         /// <summary>True while the Controls list waits for a key: no window key acts on that press.</summary>
         public static bool Listening { get; set; }
 
+        /// <summary>
+        /// True while something that is not part of the HUD has the keyboard (the GM console): window keys do
+        /// nothing, and the fixed keys (Enter for chat, Y / N) wait as well.
+        /// </summary>
+        public static bool KeyboardTaken { get; set; }
+
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
-            windows?.Dispose();
-            windows = null;
+            windows = null; // the asset's own map: looked up again, never disposed
+            reportedMissing = false;
             Listening = false;
+            KeyboardTaken = false;
             Changed = null;
         }
 
+        /// <summary>
+        /// The Windows map of the project-wide input asset, with the player's saved keys on it. Null (and reported
+        /// once) when the asset has no such map.
+        /// </summary>
         private static InputActionMap Windows
         {
             get
             {
-                if (windows != null) return windows;
-                windows = new InputActionMap(WindowMapName);
-                foreach (WindowKey key in WindowKeys) windows.AddAction(key.Action, InputActionType.Button, key.Path);
-                string saved = PlayerPrefs.GetString(WindowsKey, string.Empty);
-                if (!string.IsNullOrEmpty(saved)) TryLoad(windows, saved);
-                windows.Enable();
+                // The asset can be reimported under a running Editor: a map of a destroyed asset is never pressed.
+                if (windows != null && windows.asset == null) windows = null;
+                if (windows == null)
+                {
+                    InputActionAsset asset = InputSystem.actions;
+                    windows = asset != null ? asset.FindActionMap(WindowMapName, false) : null;
+                    if (windows == null)
+                    {
+                        Report($"The project-wide input actions have no '{WindowMapName}' map: window keys will not work.");
+                        return null;
+                    }
+                    // The asset outlives a Play session in the Editor: start from what is saved, not from what was left.
+                    windows.RemoveAllBindingOverrides();
+                    string saved = PlayerPrefs.GetString(WindowsKey, string.Empty);
+                    if (!string.IsNullOrEmpty(saved)) TryLoad(windows, saved);
+                }
+                // A player object using the same copy of the asset may switch maps off: this one is always on.
+                if (!windows.enabled) windows.Enable();
                 return windows;
             }
         }
 
-        /// <summary>The action of a window key (see the constants above).</summary>
-        public static InputAction Window(string action) => Windows.FindAction(action, true);
+        private static void Report(string message)
+        {
+            if (reportedMissing) return;
+            reportedMissing = true;
+            Debug.LogError(message);
+        }
+
+        /// <summary>The action of a window key (see the constants above), or null when the asset does not have it.</summary>
+        public static InputAction Window(string action)
+        {
+            InputAction found = Windows?.FindAction(action, false);
+            if (found == null && Windows != null) Report($"The '{WindowMapName}' input map has no '{action}' action.");
+            return found;
+        }
 
         /// <summary>The window key was pressed this frame. Callers still check that the player is not typing.</summary>
-        public static bool Pressed(string action) => !Listening && Window(action).WasPressedThisFrame();
+        public static bool Pressed(string action)
+        {
+            if (Listening || KeyboardTaken) return false;
+            InputAction found = Window(action);
+            return found != null && found.WasPressedThisFrame();
+        }
 
         /// <summary>The key a window action is on, as text for a button or a hint ("I", "F1").</summary>
         public static string Label(string action) => Label(Window(action));
@@ -127,7 +173,11 @@ namespace KryticalNova.Player
         public static void Collect(InputActionAsset playerActions, List<(InputAction Action, string Label, string Group)> into)
         {
             into.Clear();
-            foreach (WindowKey key in WindowKeys) into.Add((Window(key.Action), key.Label, "WINDOWS"));
+            foreach (WindowKey key in WindowKeys)
+            {
+                InputAction window = Window(key.Action);
+                if (window != null) into.Add((window, key.Label, "WINDOWS"));
+            }
             if (playerActions == null) return;
             foreach (var key in PlayerKeys)
             {
@@ -139,7 +189,7 @@ namespace KryticalNova.Player
         /// <summary>Keeps the bindings as they are now. Call after a rebind.</summary>
         public static void Save(InputActionAsset playerActions)
         {
-            PlayerPrefs.SetString(WindowsKey, Windows.SaveBindingOverridesAsJson());
+            if (Windows != null) PlayerPrefs.SetString(WindowsKey, Windows.SaveBindingOverridesAsJson());
             if (playerActions != null) PlayerPrefs.SetString(PlayerKey, playerActions.SaveBindingOverridesAsJson());
             PlayerPrefs.Save();
             Changed?.Invoke();
@@ -148,7 +198,7 @@ namespace KryticalNova.Player
         /// <summary>Every key back to the one it shipped on.</summary>
         public static void ResetAll(InputActionAsset playerActions)
         {
-            Windows.RemoveAllBindingOverrides();
+            Windows?.RemoveAllBindingOverrides();
             playerActions?.RemoveAllBindingOverrides();
             PlayerPrefs.DeleteKey(WindowsKey);
             PlayerPrefs.DeleteKey(PlayerKey);

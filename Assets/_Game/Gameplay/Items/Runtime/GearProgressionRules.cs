@@ -59,6 +59,11 @@ namespace KryticalNova.Items
             return false;
         }
 
+        /// <summary>
+        /// True once Temper can go past the soft cap. Until then Prime Alloy (the Alloy for that stretch) has no use.
+        /// </summary>
+        public static bool PrimeAlloyInUse(TemperSettings settings) => settings != null && settings.hardCap > settings.softCap;
+
         /// <summary>Which protection an item is, or None when it is not one.</summary>
         public static TemperProtection ProtectionOf(TemperSettings settings, ushort itemId)
         {
@@ -78,6 +83,7 @@ namespace KryticalNova.Items
             if (item == null || !item.IsLadderGear || !HasEffect(temper.effects, item.equipSlot)) return "This cannot be tempered.";
             if (state.Temper >= temper.hardCap) return $"It is at {temper.hardCap}%: the highest Temper there is.";
             if (alloy.itemId == 0) return "Add an Alloy.";
+            if (alloy.prime && !PrimeAlloyInUse(temper)) return "Prime Alloy has no use yet.";
             if (state.Temper >= temper.softCap && !alloy.prime) return $"From {temper.softCap}% only Prime Alloy works.";
             if (state.Temper < temper.softCap && alloy.prime) return $"Prime Alloy is for {temper.softCap}% and above.";
             if (state.Temper >= temper.advancedFailsafeFrom && protection != TemperProtection.Advanced)
@@ -127,7 +133,7 @@ namespace KryticalNova.Items
             {
                 outcome = GearWorkOutcome.Success;
                 // Ordinary Alloy tops out at the soft cap; Prime Alloy carries on to the hard cap.
-                int cap = alloy.prime ? settings.hardCap : Mathf.Max(settings.softCap, state.Temper);
+                int cap = alloy.prime ? settings.hardCap : Mathf.Min(settings.hardCap, Mathf.Max(settings.softCap, state.Temper));
                 return state.WithTemper(Mathf.Min(cap, state.Temper + alloy.step));
             }
             if (protection == TemperProtection.Advanced)

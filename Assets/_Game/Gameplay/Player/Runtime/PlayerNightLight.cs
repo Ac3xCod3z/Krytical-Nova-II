@@ -48,7 +48,9 @@ namespace KryticalNova.Player
             fill.range = 6.5f;
             fill.color = FillColor;
             fill.shadows = LightShadows.None;
-            fill.lightmapBakeType = LightmapBakeType.Realtime;
+#if UNITY_EDITOR
+            fill.lightmapBakeType = LightmapBakeType.Realtime; // Editor-only property; a light made at run time is realtime anyway
+#endif
             fill.renderMode = LightRenderMode.ForcePixel;
             fill.intensity = 0f;
             fill.enabled = false;

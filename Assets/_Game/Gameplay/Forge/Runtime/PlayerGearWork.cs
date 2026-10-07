@@ -323,18 +323,28 @@ namespace KryticalNova.Forge
         private void Finish(GearWorkKind kind, GearWorkOutcome outcome, ItemStack before, ItemStack after)
         {
             var result = new GearWorkResult { kind = kind, outcome = outcome, before = before, after = after };
-            if (IsSpawned) FinishedRpc(result);
-            else Announce(result);
+            if (IsSpawned)
+            {
+                FinishedRpc(result);
+                ShownRpc(outcome);
+            }
+            else
+            {
+                Finished?.Invoke(result);
+                Show(outcome, true);
+            }
         }
 
+        /// <summary>The owner alone learns what became of the piece.</summary>
         [Rpc(SendTo.Owner)]
-        private void FinishedRpc(GearWorkResult result) => Announce(result);
+        private void FinishedRpc(GearWorkResult result) => Finished?.Invoke(result);
 
-        private void Announce(GearWorkResult result)
-        {
-            Finished?.Invoke(result);
-            ClientPresentationRegistry.Feel?.GearWorked(transform, (int)result.outcome, true);
-        }
+        /// <summary>Everyone sees that it worked, failed or broke: the burst on the character.</summary>
+        [Rpc(SendTo.Everyone)]
+        private void ShownRpc(GearWorkOutcome outcome) => Show(outcome, IsOwner);
+
+        private void Show(GearWorkOutcome outcome, bool isLocalPlayer) =>
+            ClientPresentationRegistry.Feel?.GearWorked(transform, (int)outcome, isLocalPlayer);
 
         private void Tell(string text)
         {

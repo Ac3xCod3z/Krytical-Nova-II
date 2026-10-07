@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using KryticalNova.Core;
+using KryticalNova.Player;
 using KryticalNova.Progression;
 using KryticalNova.Social;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace KryticalNova.UI
     /// The chat window in the bottom-left corner of the HUD: a tab per channel, the message log, the input line and
     /// the Combat tab with the player's own damage, evades and misses. It only shows lines the server sent this
     /// player (<see cref="IChatSink"/>) and hands typed lines to <see cref="PlayerChat"/>; who hears what is decided
-    /// on the server. Enter starts typing, Enter sends, Escape leaves. The window stays in its corner and is resized
+    /// on the server. Enter starts typing, Enter sends, Escape leaves. The window starts in its corner, can be moved in the HUD layout editor, and is resized
     /// from the grip in its top-right corner, within the sizes the style sheet allows.
     /// </summary>
     [DisallowMultipleComponent]
@@ -86,6 +87,10 @@ namespace KryticalNova.UI
         private int resizePointer = -1;
         private Vector2 resizeStartPointer;
         private Vector2 resizeStartSize;
+        // Once the layout editor has moved the window it hangs from its top edge, not from the bottom of the screen.
+        private bool resizeMovesTop;
+        private float resizeStartTop;
+        private float resizeScale = 1f;
 
         private void Awake()
         {
@@ -154,7 +159,7 @@ namespace KryticalNova.UI
             }
 
             var keyboard = Keyboard.current;
-            if (keyboard == null || typing || leftFrame == Time.frameCount) return;
+            if (keyboard == null || typing || KeyBindings.KeyboardTaken || leftFrame == Time.frameCount) return;
             bool enter = keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame;
             if (enter && input.enabledSelf && !AnyTextFieldFocused())
             {
@@ -423,6 +428,9 @@ namespace KryticalNova.UI
             resizePointer = evt.pointerId;
             resizeStartPointer = evt.position;
             resizeStartSize = new Vector2(window.resolvedStyle.width, window.resolvedStyle.height);
+            resizeScale = Mathf.Max(0.01f, window.resolvedStyle.scale.value.x);
+            resizeMovesTop = window.style.top.keyword == StyleKeyword.Undefined; // an inline top: placed by the layout editor
+            resizeStartTop = window.resolvedStyle.top;
             resizeGrip.CapturePointer(evt.pointerId);
             resizeGrip.AddToClassList(ResizingClass);
             evt.StopPropagation();
@@ -431,9 +439,11 @@ namespace KryticalNova.UI
         private void OnResizeMove(PointerMoveEvent evt)
         {
             if (evt.pointerId != resizePointer) return;
-            // Anchored bottom-left: dragging right widens it, dragging up makes it taller.
-            Vector2 delta = (Vector2)evt.position - resizeStartPointer;
+            // The bottom-left corner stays put: dragging right widens it, dragging up makes it taller.
+            Vector2 delta = ((Vector2)evt.position - resizeStartPointer) / resizeScale;
             SetSize(new Vector2(resizeStartSize.x + delta.x, resizeStartSize.y - delta.y));
+            // Hanging from its top edge, it would grow downward: move the top by what the height gained instead.
+            if (resizeMovesTop) window.style.top = resizeStartTop - (window.style.height.value.value - resizeStartSize.y) * resizeScale;
             evt.StopPropagation();
         }
 
@@ -451,6 +461,9 @@ namespace KryticalNova.UI
             resizePointer = -1;
             resizeGrip.RemoveFromClassList(ResizingClass);
             if (save) HudPreferences.SetChatSize(new Vector2(window.resolvedStyle.width, window.resolvedStyle.height));
+            // Its place changed with its size: once laid out, the layout editor keeps it on screen and stores it.
+            if (resizeMovesTop) window.schedule.Execute(() => GetComponent<HudSettingsController>()?.Replace(window));
+            resizeMovesTop = false;
         }
 
         /// <summary>Sizes the window, held between the minimum and maximum the style sheet sets.</summary>
