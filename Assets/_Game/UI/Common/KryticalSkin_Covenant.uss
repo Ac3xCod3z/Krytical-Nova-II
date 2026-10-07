@@ -689,6 +689,12 @@
 .kn-faction-covenant .herald-tab.active {
     -unity-background-image-tint-color: rgb(112, 73, 0);
 }
+.kn-faction-covenant .herald-nova.rise {
+    -unity-background-image-tint-color: rgba(104, 71, 8, 0.95);
+}
+.kn-faction-covenant .herald-nova.hold {
+    -unity-background-image-tint-color: rgba(38, 74, 50, 0.95);
+}
 .kn-faction-covenant .herald-level {
     font-size: 51.52px;
     color: rgb(130, 255, 172);
@@ -718,6 +724,12 @@
 }
 .kn-faction-covenant .herald-reason {
     font-size: 13.44px;
+}
+.kn-faction-covenant .herald-charge {
+    background-color: rgba(26, 20, 14, 0.9);
+}
+.kn-faction-covenant .herald-charge-fill {
+    background-color: rgb(110, 255, 158);
 }
 .kn-faction-covenant .herald-result {
     font-size: 14.56px;
@@ -756,6 +768,16 @@
 }
 .kn-faction-covenant .herald-track-buttons > Button {
     font-size: 12.32px;
+}
+.kn-faction-covenant .nova-banner-eyebrow {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .nova-banner-title {
+    font-size: 51.52px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .nova-banner-detail {
+    font-size: 16.8px;
 }
 
 /* ---- Minimap.uss ---- */

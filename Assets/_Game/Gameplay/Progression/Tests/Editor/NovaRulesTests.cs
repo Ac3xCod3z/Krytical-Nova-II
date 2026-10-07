@@ -266,6 +266,22 @@ namespace KryticalNova.Tests
             }
         }
 
+        [Test]
+        public void ANovaIsKnownByItsRingColour_AndFloatsNoLowerAsItGrows()
+        {
+            NovaLookSettings look = settings.look;
+            Assert.AreEqual(Color.white, look.ColourOf(0), "no Nova, no colour");
+            Assert.AreEqual(look.tiers[0].outer, look.ColourOf(1));
+            Assert.AreEqual(look.tiers[look.tiers.Length - 1].outer, look.ColourOf(99), "a tier past the last uses the last");
+            Assert.Greater(look.CentreAboveHead(0), look.gapAboveHead, "where a first Nova will appear");
+            for (int tier = 1; tier <= look.tiers.Length; tier++)
+            {
+                float centre = look.CentreAboveHead(tier);
+                Assert.Greater(centre, look.gapAboveHead, $"tier {tier} clears the head");
+                if (tier > 1) Assert.GreaterOrEqual(centre, look.CentreAboveHead(tier - 1), $"tier {tier} floats no lower");
+            }
+        }
+
         private static int RingsAt(NovaLookSettings look, int tier)
         {
             int count = 0;

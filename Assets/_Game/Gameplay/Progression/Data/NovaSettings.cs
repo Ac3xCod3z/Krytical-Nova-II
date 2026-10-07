@@ -197,6 +197,8 @@ namespace KryticalNova.Progression
         [Range(0f, 1f)] public float backdrop = 0.4f;
         [Tooltip("Every ring turns this much faster or slower.")]
         [Min(0f)] public float spinScale = 1f;
+        [Tooltip("The colour of the burst and the banner when a Nova Standing rank is bought.")]
+        [ColorUsage(false, true)] public Color standingColour = new Color(1f, 0.8f, 0.34f, 1f);
         public NovaRing[] rings = DefaultRings();
         public NovaTierLook[] tiers = DefaultTiers();
 
@@ -208,6 +210,18 @@ namespace KryticalNova.Progression
             foreach (NovaRing ring in rings)
                 if (ring.fromTier <= tier) reach = Mathf.Max(reach, ring.radius + ring.width * 0.5f);
             return reach;
+        }
+
+        /// <summary>The colour a tier is known by: its rings'. White with no Nova.</summary>
+        public Color ColourOf(int tier) =>
+            tiers == null || tiers.Length == 0 || tier <= 0 ? Color.white : tiers[Mathf.Min(tier, tiers.Length) - 1].outer;
+
+        /// <summary>How far above the crown of the head the middle of a tier's Nova floats (metres).</summary>
+        public float CentreAboveHead(int tier)
+        {
+            float gap = Mathf.Max(0f, gapAboveHead);
+            if (tiers == null || tiers.Length == 0 || tier <= 0) return gap + 0.15f; // where the first one will appear
+            return gap + tiers[Mathf.Min(tier, tiers.Length) - 1].radius * Reach(tier);
         }
 
         /// <summary>

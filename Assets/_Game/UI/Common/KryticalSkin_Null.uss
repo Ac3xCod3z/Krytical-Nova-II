@@ -689,6 +689,12 @@
 .kn-faction-null .herald-tab.active {
     -unity-background-image-tint-color: rgb(112, 0, 6);
 }
+.kn-faction-null .herald-nova.rise {
+    -unity-background-image-tint-color: rgba(104, 8, 13, 0.95);
+}
+.kn-faction-null .herald-nova.hold {
+    -unity-background-image-tint-color: rgba(51, 38, 74, 0.95);
+}
 .kn-faction-null .herald-level {
     font-size: 58.88px;
     color: rgb(176, 130, 255);
@@ -718,6 +724,12 @@
 }
 .kn-faction-null .herald-reason {
     font-size: 15.36px;
+}
+.kn-faction-null .herald-charge {
+    background-color: rgba(23, 14, 26, 0.9);
+}
+.kn-faction-null .herald-charge-fill {
+    background-color: rgb(163, 110, 255);
 }
 .kn-faction-null .herald-result {
     font-size: 16.64px;
@@ -756,6 +768,16 @@
 }
 .kn-faction-null .herald-track-buttons > Button {
     font-size: 14.08px;
+}
+.kn-faction-null .nova-banner-eyebrow {
+    font-size: 15.36px;
+}
+.kn-faction-null .nova-banner-title {
+    font-size: 58.88px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .nova-banner-detail {
+    font-size: 19.2px;
 }
 
 /* ---- Minimap.uss ---- */

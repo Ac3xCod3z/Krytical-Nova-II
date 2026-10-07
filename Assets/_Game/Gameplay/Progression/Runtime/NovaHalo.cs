@@ -244,7 +244,7 @@ namespace KryticalNova.Progression
         private void Place()
         {
             if (owner == null || look == null) return;
-            Vector3 centre = Crown + Vector3.up * (Mathf.Max(0f, look.gapAboveHead) + Reach);
+            Vector3 centre = Crown + Vector3.up * look.CentreAboveHead(Tier);
             transform.SetPositionAndRotation(centre, Quaternion.identity);
             float ownerScale = Mathf.Max(0.0001f, owner.lossyScale.y);
             transform.localScale = Vector3.one / ownerScale; // children are sized in metres

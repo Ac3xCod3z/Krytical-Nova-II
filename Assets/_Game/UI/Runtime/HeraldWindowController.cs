@@ -14,6 +14,9 @@ namespace KryticalNova.UI
     /// one is worn. It sends requests to <see cref="PlayerNova"/>; the server decides. Odds, costs and reasons come
     /// from the same rules the server uses (<see cref="NovaRules"/>), so the window never offers what the server
     /// refuses. Opened from the Herald's dialogue and closed when the player walks away.
+    /// It also gives the moment its weight on the HUD: a short charge on the button before an attempt goes, the answer
+    /// landing on the level, and a banner when the player's own Ascension rises, their Nova changes or they take a
+    /// Standing rank (the banner shows with the window shut too: the GM tools raise both without it).
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -22,7 +25,14 @@ namespace KryticalNova.UI
         private enum Tab { Ascension, Standings }
 
         private const float RefreshSeconds = 0.25f;
+        private const float RebindSeconds = 0.5f;
+        private const float ChargeSeconds = 0.45f;   // the bar under the button fills in this long (Herald.uss)
+        private const float BannerSeconds = 3.6f, BannerShortSeconds = 2.2f;
+        private const int PopMs = 60, FlashMs = 450, PipFirstMs = 220, PipStepMs = 55;
         private const string FilledClass = "filled";
+        private const string ChargingClass = "charging", PopClass = "pop", NewClass = "new", SmallClass = "small";
+        private const string BannerShownClass = "nova-banner--shown";
+        private static readonly string[] CardTones = { "rise", "hold", "slip" };
         private static readonly string[] TabNames = { "ascension", "standings" };
         private static readonly string[] Tones = { "success", "fail", "slip" };
         private static readonly string[] Intros =
@@ -41,7 +51,9 @@ namespace KryticalNova.UI
         }
 
         private VisualElement root, window, ascensionBody, standingsBody, tierPips, levelPips, tracks;
+        private VisualElement novaCard, chargeFill, banner, bannerPips;
         private Label purse, intro, level, tier, nextTier, gain, odds, cost, reason, result, worn, standingResult;
+        private Label bannerEyebrow, bannerTitle, bannerDetail;
         private Button ascend;
         private readonly Button[] tabButtons = new Button[TabNames.Length];
         private TrackCard[] cards = new TrackCard[0];
@@ -49,7 +61,9 @@ namespace KryticalNova.UI
         private PlayerNova nova;
         private readonly ServicePanelPlacement placement = new ServicePanelPlacement();
         private bool initialized;
-        private float nextRefresh;
+        private float nextRefresh, nextRebind;
+        private float chargeEnds = -1f, bannerEnds = -1f;
+        private int bannerVersion;
 
         // ------------------------------------------------------------------ lifecycle
 
@@ -80,7 +94,19 @@ namespace KryticalNova.UI
             worn = window.Q<Label>("herald-worn");
             standingResult = window.Q<Label>("herald-standing-result");
             ascend = window.Q<Button>("herald-ascend");
-            ascend.clicked += () => { if (nova != null) nova.RequestAscend(); };
+            ascend.clicked += BeginAscend;
+            novaCard = window.Q(className: "herald-nova");
+            chargeFill = window.Q("herald-charge-fill");
+            banner = root.Q("nova-banner");
+            if (banner != null)
+            {
+                bannerEyebrow = banner.Q<Label>("nova-banner-eyebrow");
+                bannerTitle = banner.Q<Label>("nova-banner-title");
+                bannerDetail = banner.Q<Label>("nova-banner-detail");
+                bannerPips = banner.Q("nova-banner-pips");
+                banner.RemoveFromClassList(BannerShownClass);
+                banner.style.display = DisplayStyle.None;
+            }
             window.Q<Button>("close-herald").clicked += Close;
             for (int i = 0; i < TabNames.Length; i++)
             {
@@ -150,9 +176,9 @@ namespace KryticalNova.UI
         public void Close()
         {
             if (!initialized || !IsOpen) return;
+            CancelCharge();
             SetOpen(false);
             placement.Close();
-            Bind(null);
             GearUIController.Instance?.SuppressWorldInput();
         }
 
@@ -164,13 +190,32 @@ namespace KryticalNova.UI
 
         private void Update()
         {
+            if (!initialized) return;
+            float now = Time.unscaledTime;
+            TickBanner(now);
+            // Polled: the local player object changes when a session starts, and the banner needs it with the window shut.
+            if (now >= nextRebind)
+            {
+                nextRebind = now + RebindSeconds;
+                PlayerNova local = PlayerNova.Local;
+                if (local != nova)
+                {
+                    Close();
+                    Bind(local);
+                }
+            }
             if (!IsOpen) return;
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame && !HudTyping.IsTyping(root)) { Close(); return; }
             if (nova == null) { Close(); return; }
             placement.Tick();
-            if (Time.unscaledTime < nextRefresh) return;
-            nextRefresh = Time.unscaledTime + RefreshSeconds;
+            if (chargeEnds >= 0f && now >= chargeEnds)
+            {
+                CancelCharge();
+                nova.RequestAscend();
+            }
+            if (now < nextRefresh) return;
+            nextRefresh = now + RefreshSeconds;
             if (!nova.InReach)
             {
                 Close();
@@ -314,7 +359,7 @@ namespace KryticalNova.UI
 
             string blocked = NovaRules.AscendBlocked(rules, now, nova.Renown, nova.Creds);
             reason.text = blocked ?? string.Empty;
-            ascend.SetEnabled(blocked == null);
+            ascend.SetEnabled(blocked == null && chargeEnds < 0f);
         }
 
         private void RefreshStandings()
@@ -349,16 +394,165 @@ namespace KryticalNova.UI
             }
         }
 
+        // ------------------------------------------------------------------ the attempt
+
+        /// <summary>The press: a short charge under the button before the request goes, so the answer lands as a beat.</summary>
+        private void BeginAscend()
+        {
+            if (nova == null || chargeEnds >= 0f) return;
+            chargeEnds = Time.unscaledTime + ChargeSeconds;
+            ascend.SetEnabled(false);
+            ascend.text = "ASCENDING";
+            chargeFill?.AddToClassList(ChargingClass);
+            SetResult(result, string.Empty, null);
+        }
+
+        private void CancelCharge()
+        {
+            if (chargeEnds < 0f) return;
+            chargeEnds = -1f;
+            ascend.text = "ASCEND";
+            chargeFill?.RemoveFromClassList(ChargingClass);
+        }
+
+        /// <summary>The answer lands on the card: it takes the colour of the outcome for a moment, and a level that moved jumps and settles.</summary>
+        private void Reveal(AscensionOutcome outcome)
+        {
+            if (!IsOpen || novaCard == null) return;
+            string tone = outcome == AscensionOutcome.Rise ? "rise" : outcome == AscensionOutcome.Slip ? "slip" : "hold";
+            foreach (string name in CardTones) novaCard.EnableInClassList(name, name == tone);
+            novaCard.schedule.Execute(() => novaCard.RemoveFromClassList(tone)).StartingIn(FlashMs);
+            if (outcome != AscensionOutcome.Rise && outcome != AscensionOutcome.Slip) return; // the level did not move
+            level.AddToClassList(PopClass);
+            level.schedule.Execute(() => level.RemoveFromClassList(PopClass)).StartingIn(PopMs);
+        }
+
+        // ------------------------------------------------------------------ the banner
+
+        private void AnnounceAscension(NovaWorkResult finished)
+        {
+            AscensionSettings rules = nova.Settings.ascension;
+            int now = finished.after;
+            int tiers = NovaRules.TierCount(rules);
+            int reached = NovaRules.Tier(rules, now);
+            string attributes = $"all four attributes +{now * rules.attributesPerLevel}";
+            Color colour = nova.Settings.look.ColourOf(reached);
+            if (finished.newTier)
+            {
+                ShowBanner("YOUR NOVA HAS RISEN", "NOVA " + NovaRules.Numeral(reached), $"Ascension +{now}  ·  {attributes}",
+                    reached, tiers, false, colour, BannerSeconds);
+                return;
+            }
+            // A plain level with the window open is told by the window itself: the level jumps on its card.
+            if (IsOpen) return;
+            int toNext = NovaRules.LevelsToNextTier(rules, now);
+            string ahead = now >= rules.maxLevel ? "Ascension complete"
+                : reached >= tiers ? $"{rules.maxLevel - now} to complete"
+                : $"{toNext} to Nova {NovaRules.Numeral(reached + 1)}";
+            int inTier = reached > 0 ? now - NovaRules.TierFloor(rules, now) + 1 : 0;
+            ShowBanner("ASCENSION", "+" + now, $"{ahead}  ·  {attributes}", inTier, rules.levelsPerTier, true, colour, BannerShortSeconds);
+        }
+
+        private void AnnounceStanding(NovaWorkResult finished, string name)
+        {
+            StandingSettings rules = nova.Settings.standings;
+            string detail = NovaRules.TryGetTrack(rules, finished.track, out StandingTrackInfo info)
+                ? $"{StatDisplay.Name(info.stat)} +{NovaRules.StandingPercent(rules, finished.after):0.#}%" : string.Empty;
+            ShowBanner("NOVA STANDING", (name ?? "Standing").ToUpperInvariant(), detail, finished.after, rules.MaxLevel, true,
+                nova.Settings.look.standingColour, BannerSeconds);
+        }
+
+        /// <summary>
+        /// The banner comes up with its pips empty; they fill one after another, and the last (the one just earned)
+        /// lands bigger and settles.
+        /// </summary>
+        private void ShowBanner(string eyebrow, string title, string detail, int filled, int total, bool small, Color colour, float seconds)
+        {
+            if (banner == null) return;
+            int version = ++bannerVersion; // a banner shown over this one cancels what this one still had to do
+            bannerEyebrow.text = eyebrow;
+            bannerTitle.text = title;
+            bannerTitle.style.color = Legible(colour);
+            bannerDetail.text = detail;
+
+            total = Mathf.Max(0, total);
+            if (bannerPips.childCount != total)
+            {
+                bannerPips.Clear();
+                for (int i = 0; i < total; i++) Pip(bannerPips, small);
+            }
+            filled = Mathf.Clamp(filled, 0, total);
+            for (int i = 0; i < total; i++)
+            {
+                VisualElement pip = bannerPips[i];
+                pip.EnableInClassList(SmallClass, small);
+                pip.RemoveFromClassList(FilledClass);
+                pip.RemoveFromClassList(NewClass);
+                if (i >= filled) continue;
+                bool last = i == filled - 1;
+                // Those already held are there at once on a plain level; on anything bigger they count up.
+                int delay = PipFirstMs + (seconds > BannerShortSeconds || last ? i * PipStepMs : 0);
+                pip.schedule.Execute(() =>
+                {
+                    if (version != bannerVersion) return;
+                    pip.AddToClassList(FilledClass);
+                    if (!last) return;
+                    pip.AddToClassList(NewClass);
+                    pip.schedule.Execute(() => pip.RemoveFromClassList(NewClass)).StartingIn(PopMs);
+                }).StartingIn(delay);
+            }
+
+            PlaceBanner();
+            banner.style.display = DisplayStyle.Flex;
+            banner.BringToFront();
+            // The class goes on a frame later so the transition has a state to start from.
+            banner.schedule.Execute(() => { if (version == bannerVersion) banner.AddToClassList(BannerShownClass); });
+            bannerEnds = Time.unscaledTime + seconds;
+        }
+
+        /// <summary>Over the middle of the screen, or of the wider side the open window leaves free: never over the window.</summary>
+        private void PlaceBanner()
+        {
+            float screen = root.resolvedStyle.width;
+            if (float.IsNaN(screen) || screen <= 0f) return;
+            float centre = screen * 0.5f;
+            if (IsOpen)
+            {
+                Rect taken = window.worldBound;
+                float left = Mathf.Max(0f, taken.xMin), right = Mathf.Max(0f, screen - taken.xMax);
+                centre = left >= right ? left * 0.5f : taken.xMax + right * 0.5f;
+            }
+            banner.style.left = centre;
+        }
+
+        private void TickBanner(float now)
+        {
+            if (banner == null || bannerEnds < 0f || now < bannerEnds) return;
+            bannerEnds = -1f;
+            banner.RemoveFromClassList(BannerShownClass);
+            banner.schedule.Execute(() => { if (bannerEnds < 0f) banner.style.display = DisplayStyle.None; }).StartingIn(350);
+        }
+
+        /// <summary>A tier's colour as text: its hue at full strength, lifted toward white so the dark tiers still read.</summary>
+        private static Color Legible(Color colour)
+        {
+            float max = colour.maxColorComponent;
+            if (max < 0.01f) return Color.white;
+            var vivid = new Color(colour.r / max, colour.g / max, colour.b / max, 1f);
+            return Color.Lerp(vivid, Color.white, 0.3f);
+        }
+
         // ------------------------------------------------------------------ results
 
         private void OnFinished(NovaWorkResult finished)
         {
-            if (nova == null) return;
+            if (nova == null || nova.Settings == null) return;
             if (finished.kind == NovaWorkKind.Standing)
             {
                 string name = NovaRules.StandingName(nova.Settings.standings, nova.Faction, finished.track, finished.after);
                 SetResult(standingResult, $"You are now {name}.", "success");
                 Refresh();
+                AnnounceStanding(finished, name);
                 return;
             }
 
@@ -387,6 +581,8 @@ namespace KryticalNova.UI
             }
             SetResult(result, text, tone);
             Refresh();
+            Reveal(finished.outcome);
+            if (finished.outcome == AscensionOutcome.Rise) AnnounceAscension(finished);
         }
 
         private static void SetResult(Label label, string text, string tone)
