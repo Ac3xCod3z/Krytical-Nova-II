@@ -103,6 +103,8 @@ namespace KryticalNova.Economy
             new ReferenceCost { label = "Crew founding fee", creds = 10_000_000 },
             new ReferenceCost { label = "Fusion FS1 (gear spec)", creds = 100_000 },
             new ReferenceCost { label = "Fusion FS1 to FS12 (gear spec)", creds = 4_500_000 },
+            new ReferenceCost { label = "Ascension, one attempt (Herald)", creds = 500_000 },
+            new ReferenceCost { label = "Ascension +0 to +96, on average (Herald)", creds = 137_700_000 },
         };
 
         /// <summary>The income target at a level, read between the points on a straight line.</summary>

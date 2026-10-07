@@ -59,3 +59,7 @@ MonoBehaviour:
     creds: 100000
   - label: Fusion FS1 to FS12 (gear spec)
     creds: 4500000
+  - label: Ascension, one attempt (Herald)
+    creds: 500000
+  - label: Ascension +0 to +96, on average (Herald)
+    creds: 137700000
