@@ -9895,7 +9895,7 @@ MonoBehaviour:
         MaxVolume: 1
         MinPitch: 1
         MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        SfxAudioMixerGroup: {fileID: -3165942800488051908, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -11105,7 +11105,7 @@ MonoBehaviour:
         MaxVolume: 1
         MinPitch: 1
         MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        SfxAudioMixerGroup: {fileID: -3165942800488051908, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -16120,7 +16120,7 @@ MonoBehaviour:
         MaxVolume: 1
         MinPitch: 1
         MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        SfxAudioMixerGroup: {fileID: -3165942800488051908, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -19501,7 +19501,7 @@ MonoBehaviour:
         MaxVolume: 1
         MinPitch: 1
         MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        SfxAudioMixerGroup: {fileID: -3165942800488051908, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
