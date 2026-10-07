@@ -19,4 +19,7 @@ MonoBehaviour:
   hungerDrainPercentPerMinute: 0.05
   hungerWarningPercent: 20
   hungerWriteSeconds: 10
-  auraPrefab: {fileID: 7616508248384595124, guid: bf53ab9b4f2a3e84c8c935b7559a539c, type: 3}
+  auraPrefab: {fileID: 1712996573071194680, guid: 73f84b55d4a740c49a5e5959354b6a5e, type: 3}
+  glowMaterial: {fileID: 2100000, guid: 5dbcffb4f259c134fb487f74986ae9f0, type: 2}
+  rimIntensity: {x: 0.9, y: 2.4}
+  sparkleRate: {x: 3, y: 16}

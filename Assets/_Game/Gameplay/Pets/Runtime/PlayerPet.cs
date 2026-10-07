@@ -187,9 +187,15 @@ namespace KryticalNova.Pets
                 else
                 {
                     PetStageLook look = pet.Stage(Stage);
-                    GameObject aura = Settings != null ? Settings.auraPrefab : null;
-                    // A starving pet loses its glow with its bonus.
-                    follower.SetStageLook(look.model, look.scale, aura, look.glow, shown.fed ? look.glowStrength : 0f);
+                    var glow = new PetGlowLook { color = look.glow, strength = shown.fed ? look.glowStrength : 0f }; // a starving pet loses its glow with its bonus
+                    if (Settings != null)
+                    {
+                        glow.sparkles = Settings.auraPrefab;
+                        glow.rim = Settings.glowMaterial;
+                        glow.rimIntensity = Settings.rimIntensity;
+                        glow.sparkleRate = Settings.sparkleRate;
+                    }
+                    follower.SetStageLook(look.model, look.scale, glow);
                 }
             }
             Changed?.Invoke();

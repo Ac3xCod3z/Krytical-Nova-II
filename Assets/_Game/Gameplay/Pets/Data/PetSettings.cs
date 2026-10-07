@@ -27,9 +27,15 @@ namespace KryticalNova.Pets
         [Tooltip("Seconds between the server writing the pet's hunger back to the item. Play shorter than this is not counted when the pet is put away.")]
         [Min(1f)] public float hungerWriteSeconds = 10f;
 
-        [Header("Looks")]
-        [Tooltip("Looping effect that rides on an evolved pet, tinted with the stage's glow colour. Built by the game feel builder.")]
+        [Header("Looks: the glow of an evolved pet (how strong at each stage is on the pet's own stages)")]
+        [Tooltip("Soft sparkles that come off an evolved pet's body, tinted with the stage's glow colour. Built by the game feel builder.")]
         public GameObject auraPrefab;
+        [Tooltip("The rim of light around an evolved pet's outline (the Temper glow material). Each pet works on a copy.")]
+        public Material glowMaterial;
+        [Tooltip("Rim brightness at the first evolved stage (x) and at the last (y). Above 1 it blooms as well.")]
+        public Vector2 rimIntensity = new Vector2(0.9f, 2.4f);
+        [Tooltip("Sparkles per second at the first evolved stage (x) and at the last (y).")]
+        public Vector2 sparkleRate = new Vector2(3f, 16f);
 
         public PetTuning Tuning => new PetTuning(xpToFullGrowth, xpPerHostileKill, xpPerEventWin, xpPerEventLoss, hungerDrainPercentPerMinute);
     }

@@ -15,8 +15,8 @@ namespace KryticalNova.Items.Visuals
     /// second, mirrored copy in the left hand and on the left hip. It learns that the weapon was drawn or put away
     /// from its own parent changing, so nothing else has to tell it.
     ///
-    /// A tempered weapon also wears a glow: a second, additive material laid over the model's own (see
-    /// <see cref="SetGlow"/>), so it works on any weapon whatever shader that uses.
+    /// A tempered weapon also wears a glow: a rim of light around its outline (see <see cref="SetGlow"/> and
+    /// <see cref="GlowRim"/>), drawn over the model's own material so it works on any weapon whatever shader that uses.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class WeaponVisualMount : MonoBehaviour
@@ -46,13 +46,7 @@ namespace KryticalNova.Items.Visuals
         private bool capeWorn;
         private Coroutine settleRoutine;
 
-        private static readonly int GlowColorId = Shader.PropertyToID("_GlowColor");
-        private static readonly int IntensityId = Shader.PropertyToID("_Intensity");
-        private static readonly int RimPowerId = Shader.PropertyToID("_RimPower");
-        private static readonly int PulseId = Shader.PropertyToID("_Pulse");
-        private static readonly int PulseSpeedId = Shader.PropertyToID("_PulseSpeed");
-        private static readonly int SparkleId = Shader.PropertyToID("_Sparkle");
-        private Material glow;          // this mount's own copy: every weapon glows in its own colour
+        private GlowRim glow;           // this mount's own: every weapon glows in its own colour
         private bool glowOn;
 
         /// <summary>True while the weapon is in the hand rather than carried.</summary>
@@ -296,13 +290,8 @@ namespace KryticalNova.Items.Visuals
                 glowOn = false;
                 return;
             }
-            if (glow == null) glow = new Material(template) { name = template.name + " (weapon)" };
-            glow.SetColor(GlowColorId, color);
-            glow.SetFloat(IntensityId, look.intensity);
-            glow.SetFloat(RimPowerId, look.rimPower);
-            glow.SetFloat(PulseId, look.pulse);
-            glow.SetFloat(PulseSpeedId, look.pulseSpeed);
-            glow.SetFloat(SparkleId, look.sparkles ? 1.5f : 0f);
+            if (glow == null) glow = new GlowRim(template, "weapon");
+            glow.Set(color, look.intensity, look.rimPower, look.pulse, look.pulseSpeed, look.sparkles ? 1.5f : 0f);
             if (!glowOn) AttachGlow();
             glowOn = true;
         }
@@ -310,19 +299,19 @@ namespace KryticalNova.Items.Visuals
         private void AttachGlow()
         {
             if (glow == null) return;
-            if (spawned != null) GlowShell.Attach(spawned, glow);
-            if (spawnedOff != null) GlowShell.Attach(spawnedOff, glow);
+            if (spawned != null) glow.Attach(spawned);
+            if (spawnedOff != null) glow.Attach(spawnedOff);
         }
 
         private void DetachGlow()
         {
-            if (spawned != null) GlowShell.Detach(spawned);
-            if (spawnedOff != null) GlowShell.Detach(spawnedOff);
+            if (spawned != null) GlowRim.Detach(spawned);
+            if (spawnedOff != null) GlowRim.Detach(spawnedOff);
         }
 
         private void OnDestroy()
         {
-            if (glow != null) Destroy(glow);
+            glow?.Destroy();
         }
 
 #if UNITY_EDITOR

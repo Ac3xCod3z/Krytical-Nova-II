@@ -18,7 +18,7 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private float snapDistance = 8f;
         [Tooltip("Pets are normalised so their largest dimension is this many metres (x the item's petScale).")]
         [SerializeField] private float normalizedSize = 0.55f;
-        [Tooltip("Size of the stage glow relative to how its effect was authored: small enough to ride on the pet, not around the owner.")]
+        [Tooltip("Size of the sparkle effect relative to how it was authored: small enough to come off the pet, not surround the owner.")]
         [SerializeField, Min(0.05f)] private float glowSize = 0.42f;
 
         private GameObject pet;
@@ -29,10 +29,10 @@ namespace KryticalNova.Items.Visuals
         // The look of the pet's growth stage, set by whatever owns pet growth; defaults are the plain item.
         private GameObject stageModel;
         private float stageScale = 1f;
-        private GameObject auraPrefab;
-        private Color auraColor = Color.white;
-        private float auraStrength;
-        private GameObject aura;
+        private PetGlowLook glow;
+        private GameObject sparkles;
+        private GlowRim rim;       // this pet's own: every pet glows in its own colour
+        private bool rimOn;
         private float baseScale = 1f;
 
         /// <summary>The pet in the world, or null. For effects that play on it.</summary>
@@ -47,28 +47,28 @@ namespace KryticalNova.Items.Visuals
 
         /// <summary>
         /// How the pet looks at its current growth stage: its own model for the stage (null = the item's model), a
-        /// size step, and a glow effect riding on it in the stage's colour (strength 0 = none).
+        /// size step, and its glow (strength 0 = none).
         /// </summary>
-        public void SetStageLook(GameObject model, float scale, GameObject glowPrefab, Color glowColor, float glowStrength)
+        public void SetStageLook(GameObject model, float scale, in PetGlowLook stageGlow)
         {
             bool modelChanged = stageModel != model;
             stageModel = model;
             stageScale = Mathf.Max(0.1f, scale);
-            auraPrefab = glowPrefab;
-            auraColor = glowColor;
-            auraStrength = Mathf.Clamp01(glowStrength);
+            glow = stageGlow;
+            glow.strength = Mathf.Clamp01(glow.strength);
             if (modelChanged) Rebuild();
             else ApplyStage();
         }
 
         /// <summary>Back to the plain item look (no pet system on this object, or the pet was put away).</summary>
-        public void ClearStageLook() => SetStageLook(null, 1f, null, Color.white, 0f);
+        public void ClearStageLook() => SetStageLook(null, 1f, default);
 
         private void Rebuild()
         {
             if (pet != null) Destroy(pet);
             pet = null;
-            aura = null; // a child of the old pet
+            sparkles = null; // children of the old pet, like its rim shell
+            rimOn = false;
             GameObject model = stageModel != null ? stageModel : current != null ? current.petPrefab : null;
             if (current == null || model == null) return;
 
@@ -90,39 +90,61 @@ namespace KryticalNova.Items.Visuals
         {
             if (pet == null) return;
             pet.transform.localScale = Vector3.one * baseScale * stageScale;
+            ApplyRim();
+            ApplySparkles();
+        }
 
-            bool wanted = auraPrefab != null && auraStrength > 0f;
-            if (aura != null && (!wanted || aura.name != auraPrefab.name))
+        /// <summary>
+        /// A rim of light around the pet's outline, breathing: wider, brighter and livelier the further it has grown.
+        /// The pet's own colours are left alone.
+        /// </summary>
+        private void ApplyRim()
+        {
+            if (glow.rim == null || glow.strength <= 0f)
             {
-                Destroy(aura);
-                aura = null;
+                if (rimOn) GlowRim.Detach(pet);
+                rimOn = false;
+                return;
+            }
+            if (rim == null) rim = new GlowRim(glow.rim, "pet");
+            float s = glow.strength;
+            rim.Set(glow.color, Mathf.Lerp(glow.rimIntensity.x, glow.rimIntensity.y, s), Mathf.Lerp(3.4f, 2f, s),
+                Mathf.Lerp(0.15f, 0.4f, s), Mathf.Lerp(0.6f, 1.1f, s), 0f); // no surface sparkles: the pet's are an effect of their own
+            if (!rimOn) rim.Attach(pet);
+            rimOn = true;
+        }
+
+        /// <summary>Soft sparkles coming off the body: more of them, larger and more solid, with every stage.</summary>
+        private void ApplySparkles()
+        {
+            bool wanted = glow.sparkles != null && glow.strength > 0f;
+            if (sparkles != null && (!wanted || sparkles.name != glow.sparkles.name))
+            {
+                Destroy(sparkles);
+                sparkles = null;
             }
             if (!wanted) return;
-            if (aura == null)
+            if (sparkles == null)
             {
-                aura = Instantiate(auraPrefab, pet.transform);
-                aura.name = auraPrefab.name;
-                aura.transform.localPosition = Vector3.zero;
-                aura.transform.localRotation = Quaternion.identity;
-                VisualUtility.PrepareCosmetic(aura, gameObject.layer);
+                sparkles = Instantiate(glow.sparkles, pet.transform);
+                sparkles.name = glow.sparkles.name;
+                sparkles.transform.localPosition = Vector3.zero;
+                sparkles.transform.localRotation = Quaternion.identity;
+                VisualUtility.PrepareCosmetic(sparkles, gameObject.layer);
             }
-            // The pet is scaled down from prop size; undo that for the glow so it keeps its own size whatever the model.
+            // The pet is scaled down from prop size; undo that for the effect so it keeps its own size whatever the model.
             float inherited = Mathf.Max(0.0001f, pet.transform.lossyScale.x);
-            aura.transform.localScale = Vector3.one * (glowSize * stageScale / inherited);
-            Color tint = auraColor;
-            tint.a = Mathf.Lerp(0.35f, 1f, auraStrength);
-            foreach (var particles in aura.GetComponentsInChildren<ParticleSystem>(true))
+            sparkles.transform.localScale = Vector3.one * (glowSize * stageScale / inherited);
+            float s = glow.strength;
+            Color tint = glow.color;
+            tint.a = Mathf.Lerp(0.55f, 1f, s);
+            foreach (var particles in sparkles.GetComponentsInChildren<ParticleSystem>(true))
             {
                 var main = particles.main;
                 main.startColor = tint;
+                main.startSizeMultiplier = Mathf.Lerp(0.8f, 1.3f, s);
                 var emission = particles.emission;
-                emission.rateOverTimeMultiplier = Mathf.Lerp(0.3f, 1f, auraStrength);
-                // Ribbons keep the colour they were authored with unless they take it from their particle.
-                var trails = particles.trails;
-                if (!trails.enabled) continue;
-                trails.inheritParticleColor = true;
-                trails.colorOverLifetime = Color.white;
-                trails.colorOverTrail = Color.white;
+                emission.rateOverTime = Mathf.Lerp(glow.sparkleRate.x, glow.sparkleRate.y, s);
             }
         }
 
@@ -184,6 +206,7 @@ namespace KryticalNova.Items.Visuals
         private void OnDestroy()
         {
             if (pet != null) Destroy(pet);
+            rim?.Destroy();
         }
     }
 }

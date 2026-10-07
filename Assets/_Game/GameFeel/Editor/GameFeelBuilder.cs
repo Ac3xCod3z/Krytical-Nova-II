@@ -283,8 +283,9 @@ namespace KryticalNova.EditorTools
 
         // ---------------------------------------------------------------- pets
 
-        /// <summary>The glow that rides on an evolved pet. White: PetFollower tints it with the stage's colour.</summary>
-        public const string PetAuraPath = VfxFolder + "/PFX_Pet_Aura.prefab";
+        /// <summary>The sparkles that come off an evolved pet. White: PetFollower tints them with the stage's colour.</summary>
+        public const string PetGlowPath = VfxFolder + "/PFX_Pet_Glow.prefab";
+        private const string OldPetAuraPath = VfxFolder + "/PFX_Pet_Aura.prefab"; // orbiting ribbons, replaced 6 Oct 2026
         private static readonly string[] PetCameraPlayers = { "Pet Evolved" };
         private static readonly string[] PetWorldPlayers = { "Pet Evolved" };
 
@@ -294,7 +295,69 @@ namespace KryticalNova.EditorTools
             Make("FX_LevelUp_01", "PFX_Pet_Evolve", 0.42f);
             Make("FX_LightRayRound_01", "PFX_Pet_EvolveRays", 0.45f, Yellow);
             Make("FX_Sparkles_Large_01", "PFX_Pet_EvolveSparkles", 0.5f);
-            Make("FX_Sparkle_Orbit_01", "PFX_Pet_Aura", 0.3f, Color.white, loop: true);
+            Make("FX_Sparkles_Small_01", "PFX_Pet_Glow", 1f, Color.white, loop: true, then: ShapePetGlow);
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(OldPetAuraPath) != null) AssetDatabase.DeleteAsset(OldPetAuraPath);
+        }
+
+        /// <summary>
+        /// Soft sparkles born on the pet's body that drift out and up and fade: no orbit, no ribbons. One system, in
+        /// world space so they stay behind when the pet moves. How many there are is set per stage at run time.
+        /// </summary>
+        private static void ShapePetGlow(GameObject root)
+        {
+            var systems = root.GetComponentsInChildren<ParticleSystem>(true);
+            ParticleSystem keep = systems.Length > 0 ? systems[0] : null;
+            foreach (var extra in systems)
+                if (extra != keep && extra != null && extra.gameObject != root) UnityEngine.Object.DestroyImmediate(extra.gameObject);
+            if (keep == null) return;
+
+            var main = keep.main;
+            main.loop = true;
+            main.duration = 2f;
+            main.playOnAwake = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.9f, 1.6f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.12f, 0.4f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.07f, 0.18f);
+            main.startColor = Color.white;
+            main.gravityModifier = -0.04f; // they rise a little
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            main.maxParticles = 60;
+
+            var emission = keep.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 8f;
+            emission.SetBursts(Array.Empty<ParticleSystem.Burst>());
+
+            var shape = keep.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.7f;
+            shape.radiusThickness = 0.2f; // from the surface, not the middle
+
+            var velocity = keep.velocityOverLifetime;
+            velocity.enabled = false;
+            var trails = keep.trails;
+            trails.enabled = false;
+            var sub = keep.subEmitters;
+            sub.enabled = false;
+            var noise = keep.noise;
+            noise.enabled = true;
+            noise.strength = 0.08f;
+            noise.frequency = 0.6f;
+
+            var fade = new Gradient();
+            fade.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(0f, 1f) });
+            var colour = keep.colorOverLifetime;
+            colour.enabled = true;
+            colour.color = fade;
+            var size = keep.sizeOverLifetime;
+            size.enabled = true;
+            size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.4f), new Keyframe(0.3f, 1f), new Keyframe(1f, 0f)));
+
+            var renderer = keep.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null) renderer.trailMaterial = null;
         }
 
         /// <summary>
