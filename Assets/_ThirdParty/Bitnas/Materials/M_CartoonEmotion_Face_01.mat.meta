@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 37e3643026d72554481d63d4a9db0486
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 255179
+  packageName: Cartoon Emotion Package
+  packageVersion: 1.2
+  assetPath: Assets/Bitnas/Materials/M_CartoonEmotion_Face_01.mat
+  uploadId: 625402

@@ -32,6 +32,23 @@ namespace KryticalNova.Core
         public bool KillerIsLocalPlayer;
     }
 
+    /// <summary>A moment at the Herald as every client sees it: an Ascension attempt, or a Standing rank bought.</summary>
+    public struct NovaFeel
+    {
+        public Transform Actor;
+        /// <summary>0 a level gained, 1 nothing changed, 2 a level lost, 3 a slip the Nova held.</summary>
+        public int Outcome;
+        /// <summary>The character reached a new Nova tier: the big moment.</summary>
+        public bool NewTier;
+        /// <summary>A Nova Standing rank was bought (<see cref="Outcome"/> is 0), not an Ascension attempt.</summary>
+        public bool IsStanding;
+        /// <summary>The colour of the Nova's tier, or of the Standings: the bursts and the screen take it.</summary>
+        public Color Colour;
+        /// <summary>The middle of the Nova in the world, or where one would float for a character with none.</summary>
+        public Vector3 NovaPoint;
+        public bool IsLocalPlayer;
+    }
+
     /// <summary>
     /// Client-only "juice" (screen shake, hit flash, squash, dust, auras, trails, sounds). Implemented by the GameFeel
     /// assembly and registered in <see cref="ClientPresentationRegistry.Feel"/>; null on dedicated servers, so callers
@@ -86,9 +103,7 @@ namespace KryticalNova.Core
         /// <param name="outcome">0 success, 1 fail, 2 a fail a Failsafe absorbed, 3 the item broke.</param>
         void GearWorked(Transform actor, int outcome, bool isLocalPlayer);
 
-        /// <summary>A request at the Herald ended for this character: an Ascension attempt, or a Standing bought.</summary>
-        /// <param name="outcome">0 a level gained, 1 nothing changed, 2 a level lost, 3 a slip the Nova held.</param>
-        /// <param name="newTier">The character reached a new Nova tier: the big moment.</param>
-        void NovaWorked(Transform actor, int outcome, bool newTier, bool isLocalPlayer);
+        /// <summary>A request at the Herald ended for a character, on every peer.</summary>
+        void NovaWorked(in NovaFeel moment);
     }
 }

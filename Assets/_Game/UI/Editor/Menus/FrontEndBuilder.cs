@@ -88,12 +88,43 @@ namespace KryticalNova.EditorTools
             foreach (var label in Labels(screen, "Title_Menus")) SetText(label, " <size=330><cspace=-10>N<size=270><cspace=-8>OVA <size=330><cspace=4>II");
             // "Press [key] to Continue": the pack ships an Xbox button here.
             StandaloneGlyph(MenuUi.Find(screen, "Input_Button"), Key.Enter);
+            // The way out: a quieter line under the prompt, and the popup that asks before the game closes.
+            AddExitHint(screen);
+            var popup = AddScreen(canvas, Menus + "Popups/Popup_FantasyMenus_Save_Confirmation_01.prefab", "Popup_ExitGame");
 
             var controller = new GameObject("Title Controller");
             Parent(controller, "--- Systems ---");
-            controller.AddComponent<TitleScreenController>();
+            var hotkeys = AddHotkeys(controller);
+            var title = controller.AddComponent<TitleScreenController>();
+            SetRef(title, "screen", screen);
+            SetRef(title, "exitPopup", popup.gameObject);
+            SetRef(title, "hotkeys", hotkeys);
             AddTransition();
             End(build);
+        }
+
+        /// <summary>"Esc  Exit Game" under the title's prompt, in the prompt's own lettering.</summary>
+        private static void AddExitHint(Transform screen)
+        {
+            var source = MenuUi.Find<TMP_Text>(screen, "Label_Continue");
+            if (source == null) return;
+            var go = Object.Instantiate(source.gameObject, screen);
+            go.name = TitleScreenController.ExitHintName;
+            // Only the lettering is wanted: the copy sat in a layout row and must not bring its sizing along.
+            foreach (var extra in go.GetComponents<Component>())
+                if (!(extra is RectTransform) && !(extra is TMP_Text) && !(extra is CanvasRenderer)) Object.DestroyImmediate(extra);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0f, 230f);
+            rect.sizeDelta = new Vector2(1400f, 100f);
+            var label = go.GetComponent<TMP_Text>();
+            label.enableAutoSizing = false;
+            label.fontSize = source.fontSize * 0.62f;
+            label.alignment = TextAlignmentOptions.Center;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.text = "Esc   Exit Game";
+            label.alpha = 0.8f;
         }
 
         private static void BuildLoading(CharacterCreationDatabase database)

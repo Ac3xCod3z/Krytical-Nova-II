@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d807e510d879a50459ef30180a197357
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 404962
+  packageName: Vault Animation Pack
+  packageVersion: 1.0
+  assetPath: Assets/Vault Animation Pack/Demo/Animator Controller/AS_Run_Stop_RController.controller
+  uploadId: 987876

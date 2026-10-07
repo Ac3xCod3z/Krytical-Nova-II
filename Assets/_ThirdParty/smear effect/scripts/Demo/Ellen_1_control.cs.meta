@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 288f3105eb9b48b47aa0ad9fe3ae7ff6
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/scripts/Demo/Ellen_1_control.cs
+  uploadId: 686845

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0e4d408cc8051ba49a11a3e98844bd60
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/Demo_hdrp/material_HDRP/Ground.mat
+  uploadId: 686845

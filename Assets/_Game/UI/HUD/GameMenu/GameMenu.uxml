@@ -1,0 +1,34 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- The game menu (GameMenuController): Esc with nothing else open, or the MENU button. One veil dims the world
+         and takes its clicks; one of the three panels shows on it at a time. -->
+    <ui:VisualElement name="game-menu-veil" class="game-menu-veil blocks-world">
+        <!-- Resume / Settings / Log Out / Exit Game -->
+        <ui:VisualElement name="game-menu" class="panel game-menu">
+            <ui:Label text="GAME MENU" class="heading game-menu-title" />
+            <ui:Label name="game-menu-who" class="muted game-menu-who" />
+            <ui:Button name="game-menu-resume" text="RESUME" class="kn-button-primary game-menu-button" />
+            <ui:Button name="game-menu-settings" text="SETTINGS" class="game-menu-button" />
+            <ui:Button name="game-menu-logout" text="LOG OUT" class="game-menu-button" />
+            <ui:Button name="game-menu-exit" text="EXIT GAME" class="kn-button-danger game-menu-button" />
+            <ui:Label text="Log Out returns to character select. Exit Game closes the game." class="muted game-menu-note" />
+        </ui:VisualElement>
+
+        <!-- Leaving: a count that can be cancelled, then the saving and the way out -->
+        <ui:VisualElement name="game-menu-leaving" class="panel game-menu">
+            <ui:Label name="game-menu-leaving-title" text="LOGGING OUT" class="heading game-menu-title" />
+            <ui:Label name="game-menu-leaving-who" class="game-menu-leaving-who" />
+            <ui:Label name="game-menu-count" text="5" class="heading game-menu-count" />
+            <ui:Label name="game-menu-leaving-note" class="muted game-menu-note" />
+            <ui:Button name="game-menu-cancel" text="CANCEL" class="game-menu-button" />
+        </ui:VisualElement>
+
+        <!-- The session this player had joined is gone (the host left, or the connection was lost) -->
+        <ui:VisualElement name="game-menu-ended" class="panel game-menu">
+            <ui:Label text="SESSION ENDED" class="heading game-menu-title" />
+            <ui:Label name="game-menu-ended-note" class="muted game-menu-note" />
+            <ui:Button name="game-menu-ended-select" text="CHARACTER SELECT" class="kn-button-primary game-menu-button" />
+            <ui:Button name="game-menu-ended-exit" text="EXIT GAME" class="kn-button-danger game-menu-button" />
+            <ui:Button name="game-menu-ended-stay" text="STAY" class="game-menu-button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

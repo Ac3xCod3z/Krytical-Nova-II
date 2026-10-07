@@ -131,6 +131,7 @@ namespace KryticalNova.EditorTools
             BuildDeathVfx();
             BuildPetVfx();
             BuildForgeVfx();
+            BuildNovaVfx();
             BuildAreaRing();
             BuildBladeTrail();
             UseUrpMaterials($"{GameplayVfxFolder}/FX_ComicSlash.prefab");
@@ -494,6 +495,168 @@ namespace KryticalNova.EditorTools
                 OnCaster("PFX_Forge_Fail"), OnCaster("PFX_Forge_Saved"));
             so.FindProperty("forgeBreakWorldFeel").objectReferenceValue = World(world, "Forge Break",
                 OnCaster("PFX_Forge_Break"), OnCaster("PFX_Hit_Heavy"), Comic("PFX_Comic_Wham", 1.9f));
+        }
+
+        // ---------------------------------------------------------------- the Herald: Ascension and Nova Standings
+
+        private static readonly string[] NovaCameraPlayers = { "Nova Rise", "Nova Tier", "Nova Hold", "Nova Slip", "Nova Held", "Standing Rank" };
+        private static readonly string[] NovaWorldPlayers =
+            { "Nova Rise", "Nova Tier", "Nova Tier Ground", "Nova Hold", "Nova Slip", "Nova Held", "Standing Rank" };
+        // The washes that come in from the corners. The presenter gives the first three the colour of the moment
+        // (the Nova tier's, or the Standings'); what is set here is how strong each gets.
+        private static readonly Color NovaRiseWash = new Color(1f, 1f, 1f, 0.14f);
+        private static readonly Color NovaTierWash = new Color(1f, 1f, 1f, 0.3f);
+        private static readonly Color StandingWash = new Color(1f, 0.8f, 0.34f, 0.2f);
+        private static readonly Color NovaHeldWash = new Color(0.31f, 0.89f, 0.94f, 0.16f);
+        private static readonly Color NovaSlipWash = new Color(0.75f, 0.05f, 0.08f, 0.2f);
+
+        /// <summary>
+        /// A moment at the Herald. The effects that take the Nova's colour are made white: the presenter tints them
+        /// with the tier's colour as they spawn (MMF_PooledVfx.TintWithMoment), so one set serves all twelve tiers.
+        /// </summary>
+        private static void BuildNovaVfx()
+        {
+            Make("FX_Cartoony_Rings_01", "PFX_Nova_Ring", 0.9f, Color.white, then: GroundRings);       // a ring of light off the Nova
+            Make("FX_Sparkles_Large_01", "PFX_Nova_Sparkles", 0.7f, Color.white);                      // sparks rising from it
+            Make("FX_MagicBlast_02", "PFX_Nova_Burst", 0.55f, Color.white);                            // a new tier: the star bursts,
+            Make("FX_LightRayRound_01", "PFX_Nova_Rays", 0.7f, Color.white);                           // light stands round the character,
+            Make("FX_LevelUp_01", "PFX_Nova_Column", 0.7f, Color.white);                               // rises through it,
+            Make("FX_Cartoony_Rings_01", "PFX_Nova_Shockwave", 1.9f, Color.white, then: GroundRings);  // and a ring runs out over the ground
+            Make("FX_Sparks_01", "PFX_Nova_Dud", 0.45f, ForgeAsh);                                     // nothing changed: a dull spit
+            Make("FX_ShardMagic_Explosion_01", "PFX_Nova_Shards", 0.13f, Red);                         // a level lost: the light breaks
+            Make("FX_MagicBlast_02", "PFX_Nova_Held", 0.35f, Cyan);                                    // a slip the Nova held
+            Make("FX_Ritual_Circle_01", "PFX_Standing_Seal", 0.55f, Color.white);                      // a Standing rank: a seal at the feet
+        }
+
+        /// <summary>
+        /// Rebuilds the Ascension and Nova Standing effects and their players on the game feel prefab without
+        /// regenerating the rest of it (a full build rewrites every effect and the whole prefab, tuning included).
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Nova Feel")]
+        public static void RebuildNovaFeel()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            BuildNovaVfx();
+            AssetDatabase.SaveAssets();
+
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                GameObject root = scope.prefabContentsRoot;
+                var presenter = root.GetComponent<GameFeelPresenter>();
+                Transform world = root.transform.Find("World");
+                if (presenter == null || world == null)
+                {
+                    Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
+                    return;
+                }
+                Remove(root.transform, NovaCameraPlayers);
+                Remove(world, NovaWorldPlayers);
+
+                var so = new SerializedObject(presenter);
+                AddNovaFeel(root, world.gameObject, so);
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[GameFeel] Ascension and Standing feel rebuilt on {PrefabPath}. Assign sounds on the new MMF_Sound slots.");
+        }
+
+        private static void AddNovaFeel(GameObject root, GameObject world, SerializedObject so)
+        {
+            // ---- camera / screen / sound: the player whose moment it is
+            so.FindProperty("novaRiseFeel").objectReferenceValue = Player(root, "Nova Rise", p =>
+            {
+                Sound(p, "Ascension Rise");
+                Impulse(p, new Vector3(0f, 0.16f, 0f), 0.24f);
+                Chromatic(p, "Chromatic Shimmer", 0.45f, 0.4f);
+                Wash(p, "Rise Wash (Beautify)", 0.5f, 0.16f, NovaRiseWash, 0f);
+            });
+            // The big one: the view punches out and settles, the lens bulges, colour comes in from the corners.
+            so.FindProperty("novaTierFeel").objectReferenceValue = Player(root, "Nova Tier", p =>
+            {
+                Sound(p, "Nova Tier");
+                Impulse(p, new Vector3(0f, 0.5f, 0f), 0.42f);
+                Chromatic(p, "Chromatic Slam", 0.4f, 0.9f);
+                var aftershock = p.AddFeedback(typeof(MMF_ChromaticAberration_URP)) as MMF_ChromaticAberration_URP;
+                aftershock.Label = "Chromatic Aftershock";
+                aftershock.Timing.InitialDelay = 0.4f;
+                aftershock.Duration = 0.7f;
+                aftershock.RemapIntensityOne = 0.55f;
+                aftershock.Intensity = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.15f, 1f), new Keyframe(0.45f, 0.25f),
+                    new Keyframe(0.6f, 0.7f), new Keyframe(1f, 0f));
+                var fov = p.AddFeedback(typeof(MMF_CameraFieldOfView)) as MMF_CameraFieldOfView;
+                fov.Label = "FOV Punch";
+                fov.Duration = 0.7f;
+                fov.RelativeFieldOfView = true;
+                fov.RemapFieldOfViewZero = 0f;
+                fov.RemapFieldOfViewOne = 6f;
+                fov.ShakeFieldOfView = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.12f, 1f), new Keyframe(1f, 0f));
+                var lens = p.AddFeedback(typeof(MMF_LensDistortion_URP)) as MMF_LensDistortion_URP;
+                lens.Label = "Lens Punch";
+                lens.Duration = 0.35f;
+                lens.RelativeIntensity = false;
+                lens.RemapIntensityZero = 0f;
+                lens.RemapIntensityOne = 0.28f;
+                lens.Intensity = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.15f, 1f), new Keyframe(1f, 0f));
+                Wash(p, "Tier Wash (Beautify)", 1f, 0.34f, NovaTierWash, 0.4f);
+            });
+            so.FindProperty("novaHoldFeel").objectReferenceValue = Player(root, "Nova Hold", p =>
+            {
+                Sound(p, "Ascension Hold");
+                Impulse(p, new Vector3(0f, -0.08f, 0f), 0.14f);
+            });
+            so.FindProperty("novaSlipFeel").objectReferenceValue = Player(root, "Nova Slip", p =>
+            {
+                Sound(p, "Ascension Slip");
+                Impulse(p, new Vector3(0.3f, -0.25f, 0f), 0.3f);
+                Chromatic(p, "Chromatic Punch", 0.3f, 0.6f);
+                Wash(p, "Slip Wash (Beautify)", 0.5f, 0.24f, NovaSlipWash, 0.4f);
+            });
+            so.FindProperty("novaHeldFeel").objectReferenceValue = Player(root, "Nova Held", p =>
+            {
+                Sound(p, "Nova Held");
+                Impulse(p, new Vector3(0f, -0.1f, 0f), 0.16f);
+                Chromatic(p, "Chromatic Shimmer", 0.3f, 0.3f);
+                Wash(p, "Held Wash (Beautify)", 0.45f, 0.16f, NovaHeldWash, 0f);
+            });
+            so.FindProperty("standingFeel").objectReferenceValue = Player(root, "Standing Rank", p =>
+            {
+                Sound(p, "Standing Rank");
+                Impulse(p, new Vector3(0f, 0.2f, 0f), 0.28f);
+                Chromatic(p, "Chromatic Shimmer", 0.5f, 0.4f);
+                Wash(p, "Standing Wash (Beautify)", 0.6f, 0.2f, StandingWash, 0.2f);
+            });
+
+            // ---- world particles: every client. Those "at the Nova" are played at the star and ride with the character.
+            so.FindProperty("novaRiseWorldFeel").objectReferenceValue = World(world, "Nova Rise",
+                AtNova("PFX_Nova_Ring"), AtNova("PFX_Nova_Sparkles"));
+            so.FindProperty("novaTierWorldFeel").objectReferenceValue = World(world, "Nova Tier",
+                AtNova("PFX_Nova_Burst"), AtNova("PFX_Nova_Ring"), AtNova("PFX_Nova_Sparkles"));
+            so.FindProperty("novaTierGroundWorldFeel").objectReferenceValue = World(world, "Nova Tier Ground",
+                new Fx("PFX_Nova_Column", Feet, follow: true, tint: true), new Fx("PFX_Nova_Rays", Feet, follow: true, tint: true),
+                new Fx("PFX_Nova_Shockwave", ground: true, tint: true));
+            so.FindProperty("novaHoldWorldFeel").objectReferenceValue = World(world, "Nova Hold",
+                new Fx("PFX_Nova_Dud", follow: true));
+            so.FindProperty("novaSlipWorldFeel").objectReferenceValue = World(world, "Nova Slip",
+                new Fx("PFX_Nova_Shards", follow: true), new Fx("PFX_Nova_Dud", follow: true));
+            so.FindProperty("novaHeldWorldFeel").objectReferenceValue = World(world, "Nova Held",
+                new Fx("PFX_Nova_Held", follow: true));
+            so.FindProperty("standingWorldFeel").objectReferenceValue = World(world, "Standing Rank",
+                new Fx("PFX_Standing_Seal", ground: true, tint: true), new Fx("PFX_Nova_Burst", Feet, follow: true, tint: true),
+                new Fx("PFX_Nova_Rays", Feet, follow: true, tint: true), new Fx("PFX_Nova_Sparkles", Chest, follow: true, tint: true));
+        }
+
+        /// <summary>An effect at the Nova itself (the player is played there), riding with the character, in the tier's colour.</summary>
+        private static Fx AtNova(string prefab) => new Fx(prefab, follow: true, tint: true);
+
+        /// <summary>A soft wash of colour in from the corners of the screen (Beautify's vignette), with or without comic dots.</summary>
+        private static void Wash(MMF_Player player, string label, float seconds, float reach, Color colour, float dots)
+        {
+            var wash = player.AddFeedback(typeof(MMF_BeautifyVignette)) as MMF_BeautifyVignette;
+            wash.Label = label;
+            wash.Duration = seconds;
+            wash.Reach = reach;
+            wash.PulseColor = colour;
+            wash.DotOpacity = dots;
         }
 
         /// <summary>A buff aura: a looping POLYGON effect that rides on the character for as long as the buff lasts.</summary>
@@ -943,10 +1106,11 @@ namespace KryticalNova.EditorTools
         {
             public readonly string Prefab;
             public readonly Vector3 Offset;
-            public readonly bool Ground, Follow, FaceCamera, Dust;
-            public Fx(string prefab, Vector3 offset = default, bool ground = false, bool follow = false, bool faceCamera = false, bool dust = false)
+            public readonly bool Ground, Follow, FaceCamera, Dust, Tint;
+            public Fx(string prefab, Vector3 offset = default, bool ground = false, bool follow = false, bool faceCamera = false, bool dust = false,
+                bool tint = false)
             {
-                Prefab = prefab; Offset = offset; Ground = ground; Follow = follow; FaceCamera = faceCamera; Dust = dust;
+                Prefab = prefab; Offset = offset; Ground = ground; Follow = follow; FaceCamera = faceCamera; Dust = dust; Tint = tint;
             }
         }
 
@@ -1102,6 +1266,7 @@ namespace KryticalNova.EditorTools
                 AddDeathFeel(root, world, so);
                 AddPetFeel(root, world, so);
                 AddForgeFeel(root, world, so);
+                AddNovaFeel(root, world, so);
 
                 so.FindProperty("clickVfx").objectReferenceValue = Load(Vfx("PFX_Click_Ring"));
                 so.FindProperty("selectHostileVfx").objectReferenceValue = Load(Vfx("PFX_Select_Hostile"));
@@ -1188,6 +1353,7 @@ namespace KryticalNova.EditorTools
                     vfx.FaceCamera = fx.FaceCamera;
                     vfx.Upright = fx.Ground || fx.Follow;
                     vfx.TintWithGroundDust = fx.Dust;
+                    vfx.TintWithMoment = fx.Tint;
                 }
             });
         }

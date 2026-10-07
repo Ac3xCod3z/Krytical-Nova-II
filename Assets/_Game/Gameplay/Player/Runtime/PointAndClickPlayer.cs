@@ -131,6 +131,8 @@ namespace KryticalNova.Player
         private bool pitchAtGroundStop;
         private float skyLook;          // requested aim lift (m)
         private float skyLookSmoothed;  // applied aim lift (m)
+        private float screenFraming;        // where across the screen the character is wanted: 0 the middle
+        private float screenFramingShown;
         private bool ownsCursor;
         private CursorLockMode previousCursorLock;
         private bool previousCursorVisibility;
@@ -350,6 +352,7 @@ namespace KryticalNova.Player
 
             UpdatePendingInteract();
             UpdateTravel();
+            ApplyScreenFraming(); // asked for by the HUD, not by input: it runs whatever the checks below say
 
             if (gameplayActions == null || !gameplayActions.enabled || !playerInput.inputIsActive
                 || !Application.isFocused || Time.timeScale <= PausedTimeScale)
@@ -1295,6 +1298,26 @@ namespace KryticalNova.Player
                 verticalDelta -= used / skyLookPerDegree;
             }
             orbitCamera.VerticalAxis.Value = orbitCamera.VerticalAxis.ClampValue(orbitCamera.VerticalAxis.Value + verticalDelta);
+        }
+
+        private const float ScreenFramingLimit = 0.4f;
+        private const float ScreenFramingEase = 5f;
+
+        /// <summary>
+        /// Stands the character to one side of the screen: 0 is the middle, -0.5 the left edge, +0.5 the right. The
+        /// camera eases there. The HUD uses it while a service window covers the middle (see ServicePanelPlacement).
+        /// </summary>
+        public void SetScreenFraming(float across) => screenFraming = Mathf.Clamp(across, -ScreenFramingLimit, ScreenFramingLimit);
+
+        private void ApplyScreenFraming()
+        {
+            if (orbitComposer == null) return;
+            screenFramingShown = Mathf.Lerp(screenFramingShown, screenFraming, 1f - Mathf.Exp(-Time.unscaledDeltaTime * ScreenFramingEase));
+            if (Mathf.Abs(screenFramingShown - screenFraming) < 0.0005f) screenFramingShown = screenFraming;
+            var composition = orbitComposer.Composition;
+            if (Mathf.Approximately(composition.ScreenPosition.x, screenFramingShown)) return;
+            composition.ScreenPosition = new Vector2(screenFramingShown, composition.ScreenPosition.y);
+            orbitComposer.Composition = composition;
         }
 
         /// <summary>Raises the composer's aim point by the sky-look lift (smoothed), so the ground-held camera looks up.</summary>

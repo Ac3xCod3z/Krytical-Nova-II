@@ -47,6 +47,11 @@ namespace KryticalNova.Networking
         public bool IsConnected => NetworkManager.Singleton != null && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer);
         /// <summary>An online session is being created or joined; the NetworkManager has not started yet.</summary>
         public bool IsStartingSession { get; private set; }
+        /// <summary>
+        /// When this player last asked to leave the session (unscaled time). A session that ends right after was
+        /// their own doing; one that ends at any other moment ended under them.
+        /// </summary>
+        public float LastDisconnectRequest { get; private set; } = float.NegativeInfinity;
 
         private void Awake()
         {
@@ -293,6 +298,7 @@ namespace KryticalNova.Networking
         /// <summary>Disconnects any active network session and shuts down NetworkManager.</summary>
         public async Task DisconnectAsync()
         {
+            LastDisconnectRequest = Time.unscaledTime;
             StatusChanged?.Invoke("Disconnecting...");
 
             if (activeSession != null)

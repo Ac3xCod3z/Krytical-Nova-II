@@ -30,6 +30,9 @@
                 <ui:Label name="herald-cost" class="herald-line" />
                 <ui:Label name="herald-reason" class="herald-reason" />
                 <ui:Button name="herald-ascend" text="ASCEND" class="kn-button-primary" />
+                <ui:VisualElement class="herald-charge" picking-mode="Ignore">
+                    <ui:VisualElement name="herald-charge-fill" class="herald-charge-fill" picking-mode="Ignore" />
+                </ui:VisualElement>
                 <ui:Label name="herald-result" class="herald-result" />
             </ui:VisualElement>
         </ui:VisualElement>
@@ -40,5 +43,14 @@
             <ui:VisualElement name="herald-tracks" class="herald-tracks" />
             <ui:Label name="herald-standing-result" class="herald-result" />
         </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- What the player is told when their own Ascension rises or they buy a Standing rank: shown with the window
+         open or shut (the GM tools raise both without it). -->
+    <ui:VisualElement name="nova-banner" class="nova-banner panel" picking-mode="Ignore">
+        <ui:Label name="nova-banner-eyebrow" text="ASCENSION" class="eyebrow nova-banner-eyebrow" picking-mode="Ignore" />
+        <ui:Label name="nova-banner-title" text="+1" class="heading nova-banner-title" picking-mode="Ignore" />
+        <ui:VisualElement name="nova-banner-pips" class="herald-pips nova-banner-pips" picking-mode="Ignore" />
+        <ui:Label name="nova-banner-detail" text="" class="nova-banner-detail" picking-mode="Ignore" />
     </ui:VisualElement>
 </ui:UXML>

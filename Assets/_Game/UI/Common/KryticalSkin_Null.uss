@@ -574,58 +574,97 @@
 
 /* ---- Forge.uss ---- */
 .kn-faction-null .forge-purse {
-    font-size: 15.36px;
+    font-size: 12.8px;
 }
 .kn-faction-null .forge-tab {
-    font-size: 14.08px;
+    font-size: 12.8px;
     -unity-background-image-tint-color: rgb(41, 27, 46);
     color: rgb(181, 161, 188);
 }
 .kn-faction-null .forge-tab.active {
     -unity-background-image-tint-color: rgb(112, 0, 6);
 }
-.kn-faction-null .forge-item:hover {
-    -unity-background-image-tint-color: rgba(70, 46, 78, 0.95);
+.kn-faction-null .forge-gauge {
+    color: rgb(222, 65, 73);
 }
-.kn-faction-null .forge-item.selected {
-    -unity-background-image-tint-color: rgba(96, 0, 5, 0.95);
+.kn-faction-null .forge-value {
+    font-size: 28.16px;
+    color: rgb(176, 130, 255);
 }
-.kn-faction-null .forge-item-title {
-    font-size: 15.36px;
-}
-.kn-faction-null .forge-item-sub {
+.kn-faction-null .forge-hint {
     font-size: 12.8px;
     color: rgb(171, 151, 178);
 }
-.kn-faction-null .forge-item-tag {
-    font-size: 14.08px;
-}
-.kn-faction-null .forge-empty {
-    font-size: 15.36px;
-    color: rgb(171, 151, 178);
-}
 .kn-faction-null .forge-item-name {
-    font-size: 19.2px;
+    font-size: 17.92px;
 }
 .kn-faction-null .forge-item-state {
-    font-size: 15.36px;
-}
-.kn-faction-null .forge-option {
     font-size: 14.08px;
-    -unity-background-image-tint-color: rgb(48, 32, 54);
+    color: rgb(171, 151, 178);
 }
-.kn-faction-null .forge-option.chosen {
-    -unity-background-image-tint-color: rgb(112, 0, 6);
+.kn-faction-null .forge-anvil.hit-success .forge-piece > .item-frame {
+    -unity-background-image-tint-color: rgb(255, 51, 61);
 }
-.kn-faction-null .forge-odds {
-    font-size: 15.36px;
+.kn-faction-null .forge-material-label {
+    font-size: 12.8px;
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .forge-pick.chosen {
+    -unity-background-image-tint-color: rgba(112, 0, 6, 0.95);
+}
+.kn-faction-null .forge-pick.chosen > .item-frame {
+    -unity-background-image-tint-color: rgb(255, 88, 97);
+}
+.kn-faction-null .forge-pick-tag {
+    font-size: 11.52px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .forge-pick-none {
+    font-size: 11.52px;
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .forge-material-note {
+    font-size: 14.08px;
     color: rgb(225, 211, 230);
 }
+.kn-faction-null .forge-empty {
+    font-size: 14.08px;
+    color: rgb(171, 151, 178);
+}
+.kn-faction-null .forge-step {
+    font-size: 16.64px;
+}
+.kn-faction-null .forge-chance {
+    font-size: 23.04px;
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .forge-chance.risky {
+    color: rgb(163, 110, 255);
+}
+.kn-faction-null .forge-chip {
+    font-size: 12.8px;
+    background-color: rgba(65, 45, 72, 0.9);
+    color: rgb(225, 211, 230);
+}
+.kn-faction-null .forge-chip.safe {
+    background-color: rgba(84, 0, 4, 0.95);
+    color: rgb(250, 163, 167);
+}
+.kn-faction-null .forge-gain {
+    font-size: 14.08px;
+    color: rgb(230, 143, 147);
+}
+.kn-faction-null .forge-readout.idle .forge-gain {
+    color: rgb(181, 161, 188);
+}
 .kn-faction-null .forge-reason {
-    font-size: 15.36px;
+    font-size: 14.08px;
+}
+.kn-faction-null #forge-reset {
+    font-size: 12.8px;
 }
 .kn-faction-null .forge-result {
-    font-size: 16.64px;
+    font-size: 15.36px;
 }
 .kn-faction-null .forge-result.success {
     color: rgb(222, 65, 73);
@@ -649,6 +688,12 @@
 }
 .kn-faction-null .herald-tab.active {
     -unity-background-image-tint-color: rgb(112, 0, 6);
+}
+.kn-faction-null .herald-nova.rise {
+    -unity-background-image-tint-color: rgba(104, 8, 13, 0.95);
+}
+.kn-faction-null .herald-nova.hold {
+    -unity-background-image-tint-color: rgba(51, 38, 74, 0.95);
 }
 .kn-faction-null .herald-level {
     font-size: 58.88px;
@@ -679,6 +724,12 @@
 }
 .kn-faction-null .herald-reason {
     font-size: 15.36px;
+}
+.kn-faction-null .herald-charge {
+    background-color: rgba(23, 14, 26, 0.9);
+}
+.kn-faction-null .herald-charge-fill {
+    background-color: rgb(163, 110, 255);
 }
 .kn-faction-null .herald-result {
     font-size: 16.64px;
@@ -717,6 +768,43 @@
 }
 .kn-faction-null .herald-track-buttons > Button {
     font-size: 14.08px;
+}
+.kn-faction-null .nova-banner-eyebrow {
+    font-size: 15.36px;
+}
+.kn-faction-null .nova-banner-title {
+    font-size: 58.88px;
+    color: rgb(176, 130, 255);
+}
+.kn-faction-null .nova-banner-detail {
+    font-size: 19.2px;
+}
+
+/* ---- GameMenu.uss ---- */
+.kn-faction-null .game-menu-veil {
+    background-color: rgba(10, 5, 12, 0.62);
+}
+.kn-faction-null .game-menu-veil.leaving-now {
+    background-color: rgb(10, 5, 12);
+}
+.kn-faction-null .game-menu-title {
+    font-size: 28.16px;
+}
+.kn-faction-null .game-menu-who {
+    font-size: 15.36px;
+}
+.kn-faction-null .game-menu-button {
+    font-size: 17.92px;
+}
+.kn-faction-null .game-menu-note {
+    font-size: 15.36px;
+}
+.kn-faction-null .game-menu-leaving-who {
+    font-size: 19.2px;
+}
+.kn-faction-null .game-menu-count {
+    font-size: 107.52px;
+    color: rgb(176, 130, 255);
 }
 
 /* ---- Minimap.uss ---- */

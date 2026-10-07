@@ -3,7 +3,8 @@
  * come from ../../Common/KryticalTheme.uss.
  */
 
-#herald-window { left: 50%; top: 84px; width: 640px; translate: -50% 0; display: none; }
+/* Where it sits here is only a fallback: ServicePanelPlacement docks it to the right when it opens. */
+#herald-window { right: 220px; top: 84px; width: 540px; display: none; }
 .herald-purse { flex-grow: 1; margin-left: 14px; font-size: 12px; -unity-text-align: middle-left; }
 
 .herald-tabs { flex-direction: row; margin-top: 2px; }
@@ -22,9 +23,30 @@
 /* Ascension */
 .herald-body { flex-direction: row; margin-top: 10px; }
 .herald-column { flex-basis: 0; }
-.herald-nova { flex-grow: 5; margin-right: 12px; padding: 10px 12px; align-items: center; }
+.herald-nova {
+    flex-grow: 5;
+    margin-right: 12px;
+    padding: 10px 12px;
+    align-items: center;
+    transition-property: -unity-background-image-tint-color;
+    transition-duration: 0.45s;
+}
+/* The answer to an attempt washes over the card for a moment. */
+.herald-nova.rise { -unity-background-image-tint-color: rgba(38, 104, 90, 0.95); transition-duration: 0s; }
+.herald-nova.hold { -unity-background-image-tint-color: rgba(74, 66, 38, 0.95); transition-duration: 0s; }
+.herald-nova.slip { -unity-background-image-tint-color: rgba(120, 34, 34, 0.95); transition-duration: 0s; }
 .herald-detail { flex-grow: 6; }
-.herald-level { font-size: 46px; -unity-font-style: bold; color: rgb(255, 222, 130); margin-top: 6px; }
+.herald-level {
+    font-size: 46px;
+    -unity-font-style: bold;
+    color: rgb(255, 222, 130);
+    margin-top: 6px;
+    transition-property: scale;
+    transition-duration: 0.4s;
+    transition-timing-function: ease-out-back;
+}
+/* Jumps to full size at once, then settles back with a bounce when the class comes off. */
+.herald-level.pop { scale: 1.45 1.45; transition-duration: 0s; }
 .herald-tier { font-size: 14px; -unity-font-style: bold; letter-spacing: 2px; color: rgb(208, 220, 230); }
 .herald-next-tier { margin-top: 8px; -unity-text-align: middle-center; white-space: normal; }
 
@@ -46,6 +68,15 @@
 .herald-line { margin-top: 4px; white-space: normal; font-size: 12px; color: rgb(208, 220, 230); }
 .herald-reason { margin-top: 8px; min-height: 16px; white-space: normal; font-size: 12px; color: rgb(236, 150, 110); }
 #herald-ascend { margin-top: 8px; min-height: 34px; }
+/* The attempt: a bar fills under the button, then the answer lands. */
+.herald-charge { height: 4px; margin: 3px 2px 0 2px; background-color: rgba(12, 18, 26, 0.9); overflow: hidden; }
+.herald-charge-fill { height: 100%; width: 0; background-color: rgb(255, 214, 110); }
+.herald-charge-fill.charging {
+    width: 100%;
+    transition-property: width;
+    transition-duration: 0.45s;
+    transition-timing-function: ease-in;
+}
 .herald-result { margin-top: 8px; min-height: 18px; white-space: normal; font-size: 13px; -unity-font-style: bold; }
 .herald-result.success { color: rgb(114, 222, 196); }
 .herald-result.fail { color: rgb(236, 206, 140); }
@@ -65,3 +96,36 @@
 .herald-track-next { font-size: 11px; color: rgb(146, 162, 178); margin-top: 2px; white-space: normal; min-height: 28px; }
 .herald-track-buttons { flex-direction: row; margin-top: 6px; }
 .herald-track-buttons > Button { flex-grow: 1; flex-basis: 0; min-height: 28px; margin: 0 2px; font-size: 11px; }
+
+/* ---------------------------------------------------------------- the banner: a level, a new Nova, a Standing rank */
+
+.nova-banner {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    translate: -50% 0;
+    min-width: 440px;
+    align-items: center;
+    padding: 14px 44px 16px 44px;
+    opacity: 0;
+    scale: 0.9 0.9;
+    display: none;
+    transition-property: opacity, scale;
+    transition-duration: 0.25s, 0.3s;
+    transition-timing-function: ease-out, ease-out-back;
+}
+.nova-banner--shown { opacity: 1; scale: 1 1; }
+.nova-banner-eyebrow { font-size: 12px; letter-spacing: 3px; }
+.nova-banner-title {
+    font-size: 46px;
+    letter-spacing: 4px;
+    margin: 2px 0 2px 0;
+    -unity-text-align: middle-center;
+    color: rgb(255, 222, 130);
+}
+.nova-banner-pips { margin: 2px 0 8px 0; }
+.nova-banner-pips .herald-pip { width: 13px; height: 13px; border-radius: 7px; margin: 0 4px; transition-property: scale; transition-duration: 0.3s; transition-timing-function: ease-out-back; }
+.nova-banner-pips .herald-pip.small { width: 11px; height: 11px; border-radius: 6px; margin: 0 3px; }
+/* The one just earned lands bigger and settles. */
+.nova-banner-pips .herald-pip.new { scale: 1.7 1.7; transition-duration: 0s; }
+.nova-banner-detail { font-size: 15px; -unity-text-align: middle-center; color: rgb(226, 236, 242); }

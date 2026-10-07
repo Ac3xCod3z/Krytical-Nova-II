@@ -106,53 +106,148 @@ namespace KryticalNova.Progression
         public int MaxLevel => renownCosts != null ? renownCosts.Length : 0;
     }
 
-    /// <summary>How the Nova of one tier is drawn (the Nova shader's inputs). Tier 1 is a thin ring; the last is a full rayed Nova.</summary>
+    /// <summary>What a ring of the Nova is made of.</summary>
+    public enum NovaRingPattern : byte
+    {
+        /// <summary>An unbroken band of light.</summary>
+        Plain = 0,
+        /// <summary>Cut into dashes.</summary>
+        Dashed = 1,
+        /// <summary>A row of glyphs, like an inscription.</summary>
+        Glyphs = 2,
+    }
+
+    /// <summary>
+    /// One ring of the Nova: a band turning about the star on its own tilted axis. A character's Nova shows every
+    /// ring whose <see cref="fromTier"/> it has reached, so a higher tier is the lower one with more turning in it.
+    /// </summary>
+    [Serializable]
+    public struct NovaRing
+    {
+        [Tooltip("The first Nova tier that shows this ring.")]
+        [Range(1, 12)] public int fromTier;
+        [Tooltip("How far out it turns, as a share of the Nova's radius.")]
+        [Range(0.2f, 1.4f)] public float radius;
+        [Tooltip("How wide the band is, as a share of the Nova's radius.")]
+        [Range(0.01f, 0.4f)] public float width;
+        [Tooltip("How it leans, in degrees, before it turns: about the X axis, then about Z. (0, 0) lies flat like a halo.")]
+        public Vector2 tilt;
+        [Tooltip("Degrees a second it turns about its own axis. Negative turns the other way.")]
+        public float spin;
+        [Tooltip("Degrees a second its axis itself swings round the vertical, so the tilt is never seen from one side only.")]
+        public float tumble;
+        [Tooltip("On: the band stands on its edge, like a hoop with writing round it. Off: it lies in its own plane, like a planet's ring.")]
+        public bool upright;
+        public NovaRingPattern pattern;
+        [Tooltip("Dashes or glyphs round the ring.")]
+        [Range(0, 64)] public int marks;
+        [Tooltip("Turns a second of a bright point running round the ring. 0 = none.")]
+        public float comet;
+        [Range(0f, 2f)] public float brightness;
+
+        public NovaRing(int fromTier, float radius, float width, float tiltX, float tiltZ, float spin, float tumble,
+            NovaRingPattern pattern = NovaRingPattern.Plain, int marks = 0, float comet = 0f, bool upright = false, float brightness = 1f)
+        {
+            this.fromTier = fromTier; this.radius = radius; this.width = width; tilt = new Vector2(tiltX, tiltZ);
+            this.spin = spin; this.tumble = tumble; this.pattern = pattern; this.marks = marks; this.comet = comet;
+            this.upright = upright; this.brightness = brightness;
+        }
+    }
+
+    /// <summary>What changes from one Nova tier to the next: its colours, its size, and how much burns round the star.</summary>
     [Serializable]
     public struct NovaTierLook
     {
+        [Tooltip("The star itself, and the hot middle of everything.")]
         [ColorUsage(false, true)] public Color inner;
+        [Tooltip("The rings, the glow and the rays.")]
         [ColorUsage(false, true)] public Color outer;
-        [Tooltip("Width of the outer ring across (metres).")]
-        [Min(0.1f)] public float ringDiameter;
-        [Tooltip("Thickness of the rings, as a part of the ring's radius.")]
-        [Range(0.005f, 0.2f)] public float ringWidth;
-        [Tooltip("How much light fills the disc inside the ring.")]
-        [Range(0f, 1f)] public float fill;
-        [Range(0, 3)] public int innerRings;
-        [Range(0, 24)] public int spokes;
-        [Tooltip("Marks in the band of glyphs that turns inside the ring. 0 = no band.")]
-        [Range(0, 48)] public int glyphs;
-        [Range(0, 32)] public int rays;
-        [Tooltip("How far the rays reach past the ring, as a part of the ring's radius.")]
-        [Range(0f, 1f)] public float rayLength;
-        [Tooltip("Colour runs round the Nova through the whole spectrum.")]
+        [Tooltip("Radius of the Nova (metres): where a ring of radius 1 turns.")]
+        [Range(0.05f, 0.6f)] public float radius;
+        [Tooltip("Radius of the star, as a share of the Nova's radius.")]
+        [Range(0.05f, 0.6f)] public float core;
+        [Tooltip("How strongly the star glows into the air round it.")]
+        [Range(0f, 1.5f)] public float corona;
+        [Tooltip("Rays of light from the star. 0 = none.")]
+        [Range(0, 16)] public int rays;
+        [Tooltip("How far the rays reach, as a share of the Nova's radius.")]
+        [Range(0f, 2f)] public float rayLength;
+        [Tooltip("Sparks in orbit round the star.")]
+        [Range(0, 40)] public int motes;
+        [Tooltip("Colour runs through the whole spectrum round the rings.")]
         [Range(0f, 1f)] public float prism;
         [Min(0f)] public float brightness;
     }
 
-    /// <summary>Where the Nova sits and how each tier looks.</summary>
+    /// <summary>Where the Nova sits, what it is made of, and how each tier looks.</summary>
     [Serializable]
     public sealed class NovaLookSettings
     {
-        [Tooltip("The Nova material (shader KryticalNova/Nova). Each character gets its own copy.")]
-        public Material material;
-        [Tooltip("Gap between the top of the head and the bottom of the Nova's ring (metres).")]
-        public float gapAboveHead = 0.06f;
-        [Tooltip("How far behind the head the Nova hangs (metres).")]
-        public float behindHead = 0.05f;
-        [Tooltip("0 = upright like a halo behind the head; 90 = lying flat above it.")]
-        [Range(0f, 90f)] public float tilt;
-        [Tooltip("On: an upright Nova turns to face the camera, so it always reads as a disc.")]
-        public bool faceCamera = true;
-        [Tooltip("Turns of the glyph band and spokes per minute.")]
-        public float spinPerMinute = 4f;
+        [Tooltip("Shader KryticalNova/NovaCore: the star.")]
+        public Material coreMaterial;
+        [Tooltip("Shader KryticalNova/NovaRing: every ring.")]
+        public Material ringMaterial;
+        [Tooltip("Shader KryticalNova/Nova: the glow and rays round the star, and the dark patch behind it.")]
+        public Material coronaMaterial;
+        [Tooltip("Shader KryticalNova/NovaMotes: the sparks in orbit.")]
+        public Material motesMaterial;
+        [Tooltip("Gap between the top of the head and the lowest the Nova reaches (metres).")]
+        public float gapAboveHead = 0.08f;
+        [Tooltip("How dark the patch of night behind the Nova is. It is what lets the rings read against a bright sky.")]
+        [Range(0f, 1f)] public float backdrop = 0.4f;
+        [Tooltip("Every ring turns this much faster or slower.")]
+        [Min(0f)] public float spinScale = 1f;
+        [Tooltip("The colour of the burst and the banner when a Nova Standing rank is bought.")]
+        [ColorUsage(false, true)] public Color standingColour = new Color(1f, 0.8f, 0.34f, 1f);
+        public NovaRing[] rings = DefaultRings();
         public NovaTierLook[] tiers = DefaultTiers();
 
-        private static NovaTierLook Tier(Color inner, Color outer, float diameter, float width, float fill, int rings, int spokes,
-            int glyphs, int rays, float rayLength, float prism, float brightness) => new NovaTierLook
+        /// <summary>The largest share of the Nova's radius any ring shown at a tier reaches.</summary>
+        public float Reach(int tier)
         {
-            inner = inner, outer = outer, ringDiameter = diameter, ringWidth = width, fill = fill, innerRings = rings,
-            spokes = spokes, glyphs = glyphs, rays = rays, rayLength = rayLength, prism = prism, brightness = brightness,
+            float reach = 1f;
+            if (rings == null) return reach;
+            foreach (NovaRing ring in rings)
+                if (ring.fromTier <= tier) reach = Mathf.Max(reach, ring.radius + ring.width * 0.5f);
+            return reach;
+        }
+
+        /// <summary>The colour a tier is known by: its rings'. White with no Nova.</summary>
+        public Color ColourOf(int tier) =>
+            tiers == null || tiers.Length == 0 || tier <= 0 ? Color.white : tiers[Mathf.Min(tier, tiers.Length) - 1].outer;
+
+        /// <summary>How far above the crown of the head the middle of a tier's Nova floats (metres).</summary>
+        public float CentreAboveHead(int tier)
+        {
+            float gap = Mathf.Max(0f, gapAboveHead);
+            if (tiers == null || tiers.Length == 0 || tier <= 0) return gap + 0.15f; // where the first one will appear
+            return gap + tiers[Mathf.Min(tier, tiers.Length) - 1].radius * Reach(tier);
+        }
+
+        /// <summary>
+        /// A halo first, then a gyroscope: one flat ring at tier I, two leaning rings by III, a dashed orbit at V
+        /// and VI, the inscribed hoop at VII, an inner fast ring at VIII, running lights from IX, and a last wide
+        /// orbit at XII.
+        /// </summary>
+        public static NovaRing[] DefaultRings() => new[]
+        {
+            new NovaRing(1, 1.00f, 0.060f, 12f, 0f, 40f, 14f),
+            new NovaRing(2, 0.84f, 0.050f, 62f, 20f, -55f, 22f),
+            new NovaRing(3, 0.68f, 0.045f, -58f, 64f, 70f, -18f),
+            new NovaRing(5, 1.14f, 0.040f, 8f, -6f, -24f, 9f, NovaRingPattern.Dashed, 24),
+            new NovaRing(6, 0.76f, 0.035f, 34f, -48f, 90f, 26f, NovaRingPattern.Dashed, 16),
+            new NovaRing(7, 0.93f, 0.150f, 0f, 0f, 20f, 0f, NovaRingPattern.Glyphs, 22, 0f, true, 0.9f),
+            new NovaRing(8, 0.50f, 0.040f, 84f, 30f, 150f, -40f),
+            new NovaRing(9, 1.00f, 0.020f, 12f, 0f, 40f, 14f, NovaRingPattern.Plain, 0, 0.35f, false, 1.4f),
+            new NovaRing(10, 0.84f, 0.018f, 62f, 20f, -55f, 22f, NovaRingPattern.Plain, 0, -0.5f, false, 1.4f),
+            new NovaRing(12, 1.28f, 0.050f, -10f, 14f, 30f, -12f, NovaRingPattern.Dashed, 36, 0.25f),
+        };
+
+        private static NovaTierLook Tier(Color inner, Color outer, float radius, float core, float corona, int rays, float rayLength,
+            int motes, float prism, float brightness) => new NovaTierLook
+        {
+            inner = inner, outer = outer, radius = radius, core = core, corona = corona, rays = rays, rayLength = rayLength,
+            motes = motes, prism = prism, brightness = brightness,
         };
 
         private static Color Rgb(float r, float g, float b) => new Color(r, g, b, 1f);
@@ -160,19 +255,18 @@ namespace KryticalNova.Progression
         /// <summary>Silver, cyan, green, gold, ember, crimson, violet, then every colour at once.</summary>
         public static NovaTierLook[] DefaultTiers() => new[]
         {
-            // Each tier adds one thing to the one before. The light inside stays low so the later tiers keep their detail.
-            Tier(Rgb(0.80f, 0.86f, 0.95f), Rgb(0.62f, 0.70f, 0.85f), 0.40f, 0.035f, 0.00f, 0, 0, 0, 0, 0.00f, 0f, 1.5f),
-            Tier(Rgb(0.78f, 0.92f, 1.00f), Rgb(0.45f, 0.75f, 0.95f), 0.42f, 0.045f, 0.04f, 1, 0, 0, 0, 0.00f, 0f, 1.5f),
-            Tier(Rgb(0.55f, 0.95f, 1.00f), Rgb(0.15f, 0.70f, 1.00f), 0.44f, 0.045f, 0.06f, 2, 0, 0, 0, 0.00f, 0f, 1.5f),
-            Tier(Rgb(0.45f, 1.00f, 0.85f), Rgb(0.10f, 0.85f, 0.70f), 0.46f, 0.045f, 0.08f, 3, 0, 0, 0, 0.00f, 0f, 1.5f),
-            Tier(Rgb(0.55f, 1.00f, 0.45f), Rgb(0.20f, 0.85f, 0.25f), 0.48f, 0.050f, 0.08f, 3, 4, 0, 0, 0.00f, 0f, 1.5f),
-            Tier(Rgb(0.90f, 1.00f, 0.40f), Rgb(0.55f, 0.85f, 0.15f), 0.50f, 0.050f, 0.08f, 3, 8, 0, 0, 0.00f, 0f, 1.5f),
-            Tier(Rgb(1.00f, 0.88f, 0.35f), Rgb(1.00f, 0.66f, 0.10f), 0.52f, 0.050f, 0.08f, 3, 8, 16, 0, 0.00f, 0f, 1.5f),
-            Tier(Rgb(1.00f, 0.70f, 0.28f), Rgb(1.00f, 0.42f, 0.08f), 0.54f, 0.055f, 0.08f, 3, 12, 20, 0, 0.00f, 0f, 1.5f),
-            Tier(Rgb(1.00f, 0.50f, 0.25f), Rgb(1.00f, 0.22f, 0.10f), 0.56f, 0.055f, 0.08f, 3, 12, 20, 8, 0.35f, 0f, 1.6f),
-            Tier(Rgb(1.00f, 0.35f, 0.35f), Rgb(0.95f, 0.08f, 0.20f), 0.58f, 0.060f, 0.08f, 3, 12, 24, 12, 0.45f, 0f, 1.6f),
-            Tier(Rgb(0.85f, 0.50f, 1.00f), Rgb(0.55f, 0.20f, 1.00f), 0.60f, 0.060f, 0.08f, 3, 12, 24, 16, 0.55f, 0f, 1.7f),
-            Tier(Rgb(1.00f, 0.95f, 0.85f), Rgb(1.00f, 0.80f, 0.45f), 0.62f, 0.065f, 0.10f, 3, 12, 24, 24, 0.70f, 1f, 1.8f),
+            Tier(Rgb(0.90f, 0.94f, 1.00f), Rgb(0.62f, 0.70f, 0.85f), 0.125f, 0.20f, 0.30f, 0, 0.0f, 0, 0f, 1.5f),
+            Tier(Rgb(0.85f, 0.95f, 1.00f), Rgb(0.45f, 0.75f, 0.95f), 0.132f, 0.21f, 0.35f, 0, 0.0f, 0, 0f, 1.5f),
+            Tier(Rgb(0.70f, 0.97f, 1.00f), Rgb(0.15f, 0.70f, 1.00f), 0.139f, 0.22f, 0.40f, 0, 0.0f, 0, 0f, 1.6f),
+            Tier(Rgb(0.65f, 1.00f, 0.90f), Rgb(0.10f, 0.85f, 0.70f), 0.146f, 0.23f, 0.60f, 0, 0.0f, 6, 0f, 1.6f),
+            Tier(Rgb(0.75f, 1.00f, 0.60f), Rgb(0.20f, 0.85f, 0.25f), 0.152f, 0.24f, 0.65f, 0, 0.0f, 8, 0f, 1.7f),
+            Tier(Rgb(0.95f, 1.00f, 0.55f), Rgb(0.55f, 0.85f, 0.15f), 0.158f, 0.25f, 0.70f, 0, 0.0f, 10, 0f, 1.7f),
+            Tier(Rgb(1.00f, 0.92f, 0.55f), Rgb(1.00f, 0.66f, 0.10f), 0.164f, 0.26f, 0.75f, 0, 0.0f, 12, 0f, 1.8f),
+            Tier(Rgb(1.00f, 0.80f, 0.45f), Rgb(1.00f, 0.42f, 0.08f), 0.170f, 0.27f, 0.80f, 0, 0.0f, 14, 0f, 1.8f),
+            Tier(Rgb(1.00f, 0.68f, 0.45f), Rgb(1.00f, 0.22f, 0.10f), 0.176f, 0.28f, 0.65f, 4, 1.0f, 18, 0f, 1.9f),
+            Tier(Rgb(1.00f, 0.60f, 0.55f), Rgb(0.95f, 0.08f, 0.20f), 0.182f, 0.29f, 0.70f, 6, 1.2f, 22, 0f, 1.9f),
+            Tier(Rgb(0.92f, 0.70f, 1.00f), Rgb(0.55f, 0.20f, 1.00f), 0.188f, 0.30f, 0.75f, 8, 1.4f, 28, 0f, 1.9f),
+            Tier(Rgb(1.00f, 0.93f, 0.80f), Rgb(1.00f, 0.80f, 0.45f), 0.195f, 0.28f, 0.55f, 10, 1.5f, 36, 1f, 1.45f),
         };
     }
 

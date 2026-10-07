@@ -92,154 +92,242 @@ MonoBehaviour:
       - Dawnbringer
       - Mythborn
   look:
-    material: {fileID: 2100000, guid: 78e96efad16b9474e841a452f240f716, type: 2}
-    gapAboveHead: 0.06
-    behindHead: 0.05
-    tilt: 0
-    faceCamera: 1
-    spinPerMinute: 4
+    coreMaterial: {fileID: 2100000, guid: 8e9094783b080584f8829a3a96914c9c, type: 2}
+    ringMaterial: {fileID: 2100000, guid: c02a72c6c38104b4d85ab7d68fa742c7, type: 2}
+    coronaMaterial: {fileID: 2100000, guid: 78e96efad16b9474e841a452f240f716, type: 2}
+    motesMaterial: {fileID: 2100000, guid: ce20c3914b87cbf469ba73c40bd96dd1, type: 2}
+    gapAboveHead: 0.08
+    backdrop: 0.4
+    spinScale: 1
+    rings:
+    - fromTier: 1
+      radius: 1
+      width: 0.06
+      tilt: {x: 12, y: 0}
+      spin: 40
+      tumble: 14
+      upright: 0
+      pattern: 0
+      marks: 0
+      comet: 0
+      brightness: 1
+    - fromTier: 2
+      radius: 0.84
+      width: 0.05
+      tilt: {x: 62, y: 20}
+      spin: -55
+      tumble: 22
+      upright: 0
+      pattern: 0
+      marks: 0
+      comet: 0
+      brightness: 1
+    - fromTier: 3
+      radius: 0.68
+      width: 0.045
+      tilt: {x: -58, y: 64}
+      spin: 70
+      tumble: -18
+      upright: 0
+      pattern: 0
+      marks: 0
+      comet: 0
+      brightness: 1
+    - fromTier: 5
+      radius: 1.14
+      width: 0.04
+      tilt: {x: 8, y: -6}
+      spin: -24
+      tumble: 9
+      upright: 0
+      pattern: 1
+      marks: 24
+      comet: 0
+      brightness: 1
+    - fromTier: 6
+      radius: 0.76
+      width: 0.035
+      tilt: {x: 34, y: -48}
+      spin: 90
+      tumble: 26
+      upright: 0
+      pattern: 1
+      marks: 16
+      comet: 0
+      brightness: 1
+    - fromTier: 7
+      radius: 0.93
+      width: 0.15
+      tilt: {x: 0, y: 0}
+      spin: 20
+      tumble: 0
+      upright: 1
+      pattern: 2
+      marks: 22
+      comet: 0
+      brightness: 0.9
+    - fromTier: 8
+      radius: 0.5
+      width: 0.04
+      tilt: {x: 84, y: 30}
+      spin: 150
+      tumble: -40
+      upright: 0
+      pattern: 0
+      marks: 0
+      comet: 0
+      brightness: 1
+    - fromTier: 9
+      radius: 1
+      width: 0.02
+      tilt: {x: 12, y: 0}
+      spin: 40
+      tumble: 14
+      upright: 0
+      pattern: 0
+      marks: 0
+      comet: 0.35
+      brightness: 1.4
+    - fromTier: 10
+      radius: 0.84
+      width: 0.018
+      tilt: {x: 62, y: 20}
+      spin: -55
+      tumble: 22
+      upright: 0
+      pattern: 0
+      marks: 0
+      comet: -0.5
+      brightness: 1.4
+    - fromTier: 12
+      radius: 1.28
+      width: 0.05
+      tilt: {x: -10, y: 14}
+      spin: 30
+      tumble: -12
+      upright: 0
+      pattern: 1
+      marks: 36
+      comet: 0.25
+      brightness: 1
     tiers:
-    - inner: {r: 0.8, g: 0.86, b: 0.95, a: 1}
+    - inner: {r: 0.9, g: 0.94, b: 1, a: 1}
       outer: {r: 0.62, g: 0.7, b: 0.85, a: 1}
-      ringDiameter: 0.4
-      ringWidth: 0.035
-      fill: 0
-      innerRings: 0
-      spokes: 0
-      glyphs: 0
+      radius: 0.125
+      core: 0.2
+      corona: 0.3
       rays: 0
       rayLength: 0
+      motes: 0
       prism: 0
       brightness: 1.5
-    - inner: {r: 0.78, g: 0.92, b: 1, a: 1}
+    - inner: {r: 0.85, g: 0.95, b: 1, a: 1}
       outer: {r: 0.45, g: 0.75, b: 0.95, a: 1}
-      ringDiameter: 0.42
-      ringWidth: 0.045
-      fill: 0.04
-      innerRings: 1
-      spokes: 0
-      glyphs: 0
+      radius: 0.132
+      core: 0.21
+      corona: 0.35
       rays: 0
       rayLength: 0
+      motes: 0
       prism: 0
       brightness: 1.5
-    - inner: {r: 0.55, g: 0.95, b: 1, a: 1}
+    - inner: {r: 0.7, g: 0.97, b: 1, a: 1}
       outer: {r: 0.15, g: 0.7, b: 1, a: 1}
-      ringDiameter: 0.44
-      ringWidth: 0.045
-      fill: 0.06
-      innerRings: 2
-      spokes: 0
-      glyphs: 0
+      radius: 0.139
+      core: 0.22
+      corona: 0.4
       rays: 0
       rayLength: 0
+      motes: 0
       prism: 0
-      brightness: 1.5
-    - inner: {r: 0.45, g: 1, b: 0.85, a: 1}
+      brightness: 1.6
+    - inner: {r: 0.65, g: 1, b: 0.9, a: 1}
       outer: {r: 0.1, g: 0.85, b: 0.7, a: 1}
-      ringDiameter: 0.46
-      ringWidth: 0.045
-      fill: 0.08
-      innerRings: 3
-      spokes: 0
-      glyphs: 0
+      radius: 0.146
+      core: 0.23
+      corona: 0.6
       rays: 0
       rayLength: 0
+      motes: 6
       prism: 0
-      brightness: 1.5
-    - inner: {r: 0.55, g: 1, b: 0.45, a: 1}
+      brightness: 1.6
+    - inner: {r: 0.75, g: 1, b: 0.6, a: 1}
       outer: {r: 0.2, g: 0.85, b: 0.25, a: 1}
-      ringDiameter: 0.48
-      ringWidth: 0.05
-      fill: 0.08
-      innerRings: 3
-      spokes: 4
-      glyphs: 0
+      radius: 0.152
+      core: 0.24
+      corona: 0.65
       rays: 0
       rayLength: 0
-      prism: 0
-      brightness: 1.5
-    - inner: {r: 0.9, g: 1, b: 0.4, a: 1}
-      outer: {r: 0.55, g: 0.85, b: 0.15, a: 1}
-      ringDiameter: 0.5
-      ringWidth: 0.05
-      fill: 0.08
-      innerRings: 3
-      spokes: 8
-      glyphs: 0
-      rays: 0
-      rayLength: 0
-      prism: 0
-      brightness: 1.5
-    - inner: {r: 1, g: 0.88, b: 0.35, a: 1}
-      outer: {r: 1, g: 0.66, b: 0.1, a: 1}
-      ringDiameter: 0.52
-      ringWidth: 0.05
-      fill: 0.08
-      innerRings: 3
-      spokes: 8
-      glyphs: 16
-      rays: 0
-      rayLength: 0
-      prism: 0
-      brightness: 1.5
-    - inner: {r: 1, g: 0.7, b: 0.28, a: 1}
-      outer: {r: 1, g: 0.42, b: 0.08, a: 1}
-      ringDiameter: 0.54
-      ringWidth: 0.055
-      fill: 0.08
-      innerRings: 3
-      spokes: 12
-      glyphs: 20
-      rays: 0
-      rayLength: 0
-      prism: 0
-      brightness: 1.5
-    - inner: {r: 1, g: 0.5, b: 0.25, a: 1}
-      outer: {r: 1, g: 0.22, b: 0.1, a: 1}
-      ringDiameter: 0.56
-      ringWidth: 0.055
-      fill: 0.08
-      innerRings: 3
-      spokes: 12
-      glyphs: 20
-      rays: 8
-      rayLength: 0.35
-      prism: 0
-      brightness: 1.6
-    - inner: {r: 1, g: 0.35, b: 0.35, a: 1}
-      outer: {r: 0.95, g: 0.08, b: 0.2, a: 1}
-      ringDiameter: 0.58
-      ringWidth: 0.06
-      fill: 0.08
-      innerRings: 3
-      spokes: 12
-      glyphs: 24
-      rays: 12
-      rayLength: 0.45
-      prism: 0
-      brightness: 1.6
-    - inner: {r: 0.85, g: 0.5, b: 1, a: 1}
-      outer: {r: 0.55, g: 0.2, b: 1, a: 1}
-      ringDiameter: 0.6
-      ringWidth: 0.06
-      fill: 0.08
-      innerRings: 3
-      spokes: 12
-      glyphs: 24
-      rays: 16
-      rayLength: 0.55
+      motes: 8
       prism: 0
       brightness: 1.7
-    - inner: {r: 1, g: 0.95, b: 0.85, a: 1}
-      outer: {r: 1, g: 0.8, b: 0.45, a: 1}
-      ringDiameter: 0.62
-      ringWidth: 0.065
-      fill: 0.1
-      innerRings: 3
-      spokes: 12
-      glyphs: 24
-      rays: 24
-      rayLength: 0.7
-      prism: 1
+    - inner: {r: 0.95, g: 1, b: 0.55, a: 1}
+      outer: {r: 0.55, g: 0.85, b: 0.15, a: 1}
+      radius: 0.158
+      core: 0.25
+      corona: 0.7
+      rays: 0
+      rayLength: 0
+      motes: 10
+      prism: 0
+      brightness: 1.7
+    - inner: {r: 1, g: 0.92, b: 0.55, a: 1}
+      outer: {r: 1, g: 0.66, b: 0.1, a: 1}
+      radius: 0.164
+      core: 0.26
+      corona: 0.75
+      rays: 0
+      rayLength: 0
+      motes: 12
+      prism: 0
       brightness: 1.8
+    - inner: {r: 1, g: 0.8, b: 0.45, a: 1}
+      outer: {r: 1, g: 0.42, b: 0.08, a: 1}
+      radius: 0.17
+      core: 0.27
+      corona: 0.8
+      rays: 0
+      rayLength: 0
+      motes: 14
+      prism: 0
+      brightness: 1.8
+    - inner: {r: 1, g: 0.68, b: 0.45, a: 1}
+      outer: {r: 1, g: 0.22, b: 0.1, a: 1}
+      radius: 0.176
+      core: 0.28
+      corona: 0.65
+      rays: 4
+      rayLength: 1
+      motes: 18
+      prism: 0
+      brightness: 1.9
+    - inner: {r: 1, g: 0.6, b: 0.55, a: 1}
+      outer: {r: 0.95, g: 0.08, b: 0.2, a: 1}
+      radius: 0.182
+      core: 0.29
+      corona: 0.7
+      rays: 6
+      rayLength: 1.2
+      motes: 22
+      prism: 0
+      brightness: 1.9
+    - inner: {r: 0.92, g: 0.7, b: 1, a: 1}
+      outer: {r: 0.55, g: 0.2, b: 1, a: 1}
+      radius: 0.188
+      core: 0.3
+      corona: 0.75
+      rays: 8
+      rayLength: 1.4
+      motes: 28
+      prism: 0
+      brightness: 1.9
+    - inner: {r: 1, g: 0.93, b: 0.8, a: 1}
+      outer: {r: 1, g: 0.8, b: 0.45, a: 1}
+      radius: 0.195
+      core: 0.28
+      corona: 0.55
+      rays: 10
+      rayLength: 1.5
+      motes: 36
+      prism: 1
+      brightness: 1.45

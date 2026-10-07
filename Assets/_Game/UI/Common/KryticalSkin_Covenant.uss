@@ -574,58 +574,97 @@
 
 /* ---- Forge.uss ---- */
 .kn-faction-covenant .forge-purse {
-    font-size: 13.44px;
+    font-size: 11.2px;
 }
 .kn-faction-covenant .forge-tab {
-    font-size: 12.32px;
+    font-size: 11.2px;
     -unity-background-image-tint-color: rgb(46, 37, 27);
     color: rgb(188, 175, 161);
 }
 .kn-faction-covenant .forge-tab.active {
     -unity-background-image-tint-color: rgb(112, 73, 0);
 }
-.kn-faction-covenant .forge-item:hover {
-    -unity-background-image-tint-color: rgba(78, 63, 46, 0.95);
+.kn-faction-covenant .forge-gauge {
+    color: rgb(222, 167, 65);
 }
-.kn-faction-covenant .forge-item.selected {
-    -unity-background-image-tint-color: rgba(96, 62, 0, 0.95);
+.kn-faction-covenant .forge-value {
+    font-size: 24.64px;
+    color: rgb(130, 255, 172);
 }
-.kn-faction-covenant .forge-item-title {
-    font-size: 13.44px;
-}
-.kn-faction-covenant .forge-item-sub {
+.kn-faction-covenant .forge-hint {
     font-size: 11.2px;
     color: rgb(178, 165, 151);
 }
-.kn-faction-covenant .forge-item-tag {
-    font-size: 12.32px;
-}
-.kn-faction-covenant .forge-empty {
-    font-size: 13.44px;
-    color: rgb(178, 165, 151);
-}
 .kn-faction-covenant .forge-item-name {
-    font-size: 16.8px;
+    font-size: 15.68px;
 }
 .kn-faction-covenant .forge-item-state {
-    font-size: 13.44px;
-}
-.kn-faction-covenant .forge-option {
     font-size: 12.32px;
-    -unity-background-image-tint-color: rgb(54, 44, 32);
+    color: rgb(178, 165, 151);
 }
-.kn-faction-covenant .forge-option.chosen {
-    -unity-background-image-tint-color: rgb(112, 73, 0);
+.kn-faction-covenant .forge-anvil.hit-success .forge-piece > .item-frame {
+    -unity-background-image-tint-color: rgb(255, 183, 51);
 }
-.kn-faction-covenant .forge-odds {
-    font-size: 13.44px;
+.kn-faction-covenant .forge-material-label {
+    font-size: 11.2px;
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .forge-pick.chosen {
+    -unity-background-image-tint-color: rgba(112, 73, 0, 0.95);
+}
+.kn-faction-covenant .forge-pick.chosen > .item-frame {
+    -unity-background-image-tint-color: rgb(255, 197, 88);
+}
+.kn-faction-covenant .forge-pick-tag {
+    font-size: 10.08px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .forge-pick-none {
+    font-size: 10.08px;
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .forge-material-note {
+    font-size: 12.32px;
     color: rgb(230, 221, 211);
 }
+.kn-faction-covenant .forge-empty {
+    font-size: 12.32px;
+    color: rgb(178, 165, 151);
+}
+.kn-faction-covenant .forge-step {
+    font-size: 14.56px;
+}
+.kn-faction-covenant .forge-chance {
+    font-size: 20.16px;
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .forge-chance.risky {
+    color: rgb(110, 255, 158);
+}
+.kn-faction-covenant .forge-chip {
+    font-size: 11.2px;
+    background-color: rgba(72, 59, 45, 0.9);
+    color: rgb(230, 221, 211);
+}
+.kn-faction-covenant .forge-chip.safe {
+    background-color: rgba(84, 55, 0, 0.95);
+    color: rgb(250, 220, 163);
+}
+.kn-faction-covenant .forge-gain {
+    font-size: 12.32px;
+    color: rgb(230, 200, 143);
+}
+.kn-faction-covenant .forge-readout.idle .forge-gain {
+    color: rgb(188, 175, 161);
+}
 .kn-faction-covenant .forge-reason {
-    font-size: 13.44px;
+    font-size: 12.32px;
+}
+.kn-faction-covenant #forge-reset {
+    font-size: 11.2px;
 }
 .kn-faction-covenant .forge-result {
-    font-size: 14.56px;
+    font-size: 13.44px;
 }
 .kn-faction-covenant .forge-result.success {
     color: rgb(222, 167, 65);
@@ -649,6 +688,12 @@
 }
 .kn-faction-covenant .herald-tab.active {
     -unity-background-image-tint-color: rgb(112, 73, 0);
+}
+.kn-faction-covenant .herald-nova.rise {
+    -unity-background-image-tint-color: rgba(104, 71, 8, 0.95);
+}
+.kn-faction-covenant .herald-nova.hold {
+    -unity-background-image-tint-color: rgba(38, 74, 50, 0.95);
 }
 .kn-faction-covenant .herald-level {
     font-size: 51.52px;
@@ -679,6 +724,12 @@
 }
 .kn-faction-covenant .herald-reason {
     font-size: 13.44px;
+}
+.kn-faction-covenant .herald-charge {
+    background-color: rgba(26, 20, 14, 0.9);
+}
+.kn-faction-covenant .herald-charge-fill {
+    background-color: rgb(110, 255, 158);
 }
 .kn-faction-covenant .herald-result {
     font-size: 14.56px;
@@ -717,6 +768,43 @@
 }
 .kn-faction-covenant .herald-track-buttons > Button {
     font-size: 12.32px;
+}
+.kn-faction-covenant .nova-banner-eyebrow {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .nova-banner-title {
+    font-size: 51.52px;
+    color: rgb(130, 255, 172);
+}
+.kn-faction-covenant .nova-banner-detail {
+    font-size: 16.8px;
+}
+
+/* ---- GameMenu.uss ---- */
+.kn-faction-covenant .game-menu-veil {
+    background-color: rgba(12, 9, 5, 0.62);
+}
+.kn-faction-covenant .game-menu-veil.leaving-now {
+    background-color: rgb(12, 9, 5);
+}
+.kn-faction-covenant .game-menu-title {
+    font-size: 24.64px;
+}
+.kn-faction-covenant .game-menu-who {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .game-menu-button {
+    font-size: 15.68px;
+}
+.kn-faction-covenant .game-menu-note {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .game-menu-leaving-who {
+    font-size: 16.8px;
+}
+.kn-faction-covenant .game-menu-count {
+    font-size: 94.08px;
+    color: rgb(130, 255, 172);
 }
 
 /* ---- Minimap.uss ---- */

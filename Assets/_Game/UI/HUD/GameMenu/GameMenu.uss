@@ -1,0 +1,41 @@
+/*
+ * The game menu (GameMenuController): Resume, Settings, Log Out, Exit Game; the count before leaving; and what a
+ * player is shown when the session they had joined ends. Shared looks (panel, buttons) come from
+ * ../../Common/KryticalTheme.uss.
+ */
+
+/* Dims the world and takes its clicks while any of the panels is up. */
+.game-menu-veil {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(4, 6, 12, 0.62);
+    display: none;
+    transition-property: background-color;
+    transition-duration: 0.3s;
+}
+/* The count has ended: the world goes dark while the character is saved and the session closes. */
+.game-menu-veil.leaving-now { background-color: rgb(4, 6, 12); }
+
+.game-menu {
+    width: 360px;
+    padding: 22px 28px 18px 28px;
+    align-items: stretch;
+    display: none;
+}
+.game-menu-title { font-size: 22px; letter-spacing: 3px; -unity-text-align: middle-center; }
+.game-menu-who { font-size: 12px; -unity-text-align: middle-center; margin: 2px 0 12px 0; min-height: 14px; }
+.game-menu-button { min-height: 42px; margin: 5px 0; font-size: 14px; letter-spacing: 2px; }
+.game-menu-note { font-size: 12px; -unity-text-align: middle-center; white-space: normal; margin: 8px 0 4px 0; }
+
+.game-menu-leaving-who { font-size: 15px; -unity-text-align: middle-center; margin-top: 4px; color: rgb(226, 236, 242); }
+.game-menu-count {
+    font-size: 84px;
+    -unity-text-align: middle-center;
+    color: rgb(255, 222, 130);
+    margin: 2px 0 0 0;
+}

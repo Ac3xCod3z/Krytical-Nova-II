@@ -42,11 +42,16 @@ namespace KryticalNova.GameFeel
         public float Lifetime;
         [Tooltip("Colour the effect like the dust of the ground it plays on (pale on paving, grey on roads, earthy on grass and dirt).")]
         public bool TintWithGroundDust;
+        [Tooltip("Colour the effect with the colour of the moment it plays for (a Nova tier's), handed over by the presenter. " +
+                 "Use it on effects of their own only: a pooled instance keeps the last colour it was given.")]
+        public bool TintWithMoment;
 
         /// <summary>Facing for the next play; set by the presenter, identity otherwise.</summary>
         [System.NonSerialized] public Quaternion Rotation = Quaternion.identity;
         /// <summary>Character the next play belongs to (needed by <see cref="FollowTarget"/>).</summary>
         [System.NonSerialized] public Transform Target;
+        /// <summary>Colour for the next play of a <see cref="TintWithMoment"/> effect; set by the presenter.</summary>
+        [System.NonSerialized] public Color MomentTint = Color.white;
 
         protected override void CustomPlayFeedback(Vector3 position, float feedbacksIntensity = 1f)
         {
@@ -74,6 +79,8 @@ namespace KryticalNova.GameFeel
             instance.transform.localScale = Prefab.transform.localScale * Scale;
             if (TintWithGroundDust)
                 GroundSurfaces.Tint(instance.GetComponentsInChildren<ParticleSystem>(), GroundSurfaces.DustAt(position, Target));
+            else if (TintWithMoment)
+                GroundSurfaces.Tint(instance.GetComponentsInChildren<ParticleSystem>(), MomentTint);
         }
 
         private Vector3 Place(Vector3 position, Quaternion rotation)

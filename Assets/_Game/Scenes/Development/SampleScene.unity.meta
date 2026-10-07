@@ -5,3 +5,10 @@ DefaultImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 17826
+  packageName: MegaBook
+  packageVersion: 1.51
+  assetPath: Assets/_Game/Scenes/Development/SampleScene.unity
+  uploadId: 504307

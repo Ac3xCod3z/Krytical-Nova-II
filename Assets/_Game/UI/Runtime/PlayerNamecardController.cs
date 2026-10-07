@@ -24,6 +24,7 @@ namespace KryticalNova.UI
         private const float GapAboveHead = 0.14f;      // from the crown (or the top of the Nova) to the card's foot
         private const float FallbackCrown = 0.72f;     // above the player's root, for a body with no head joint found
         private const float HeightFollow = 7f;         // how fast the card follows the head up and down (per second)
+        private const string WindowClass = "blocks-world";
         private static readonly Color DuelColor = new Color(1f, 0.36f, 0.32f);
         private static readonly Color NoFactionColor = new Color(0.9f, 0.93f, 0.96f);
 
@@ -105,11 +106,17 @@ namespace KryticalNova.UI
                     && (card.Identity == null || card.Identity.HasIdentity)
                     && (world - cameraPosition).sqrMagnitude <= maxDistance * maxDistance
                     && NamecardRules.Visible(isSelf, showOwn, viewerFaction, faction, !isSelf && faction != viewerFaction && TradeZone.CrossFactionAt(body.position));
+                Vector2 point = default;
+                if (visible)
+                {
+                    // Windows are a little see-through: a name behind one would read through it.
+                    point = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(screen.x, Screen.height - screen.y));
+                    visible = !UnderWindow(point);
+                }
                 card.Root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
                 if (!visible) continue;
 
                 Fill(card, faction, viewer);
-                Vector2 point = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(screen.x, Screen.height - screen.y));
                 card.Root.style.left = point.x - card.Root.resolvedStyle.width * 0.5f;
                 card.Root.style.top = point.y - card.Root.resolvedStyle.height;
             }
@@ -122,6 +129,14 @@ namespace KryticalNova.UI
                 if (cards.TryGetValue(gone, out Card card)) card.Root.RemoveFromHierarchy();
                 cards.Remove(gone);
             }
+        }
+
+        /// <summary>True when a point of the screen is covered by a window (anything that blocks clicks on the world).</summary>
+        private bool UnderWindow(Vector2 panelPoint)
+        {
+            for (VisualElement at = root.panel.Pick(panelPoint); at != null; at = at.parent)
+                if (at.ClassListContains(WindowClass)) return true;
+            return false;
         }
 
         private Card Create(PointAndClickPlayer player)

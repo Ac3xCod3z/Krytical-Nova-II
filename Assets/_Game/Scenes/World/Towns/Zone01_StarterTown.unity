@@ -153948,6 +153948,7 @@ GameObject:
   - component: {fileID: 546974366}
   - component: {fileID: 546974367}
   - component: {fileID: 546974368}
+  - component: {fileID: 546974369}
   m_Layer: 0
   m_Name: Progression UI
   m_TagString: Untagged
@@ -154295,6 +154296,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 671506a64783bc9469969b007e626f5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.EmoteWheelController
+--- !u!114 &546974369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 498af65f898cafa4ea02b85c7bb8fb61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.GameMenuController
+  leaveSeconds: 5
+  shutdownTimeoutSeconds: 6
 --- !u!1001 &547846542
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -342038,7 +342053,7 @@ Transform:
   m_GameObject: {fileID: 1197532474}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.9622498, y: 18.133127, z: -2.7930603}
+  m_LocalPosition: {x: -6.9622498, y: 18.133123, z: -2.7930603}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -342059,7 +342074,7 @@ MonoBehaviour:
   version: 2
   globalVolume: 0
   mode: 0
-  size: {x: 902.12354, y: 53.769157, z: 909.9071}
+  size: {x: 902.12354, y: 53.76915, z: 909.9071}
   overrideRendererFilters: 0
   minRendererVolumeSize: 0.1
   objectLayerMask:

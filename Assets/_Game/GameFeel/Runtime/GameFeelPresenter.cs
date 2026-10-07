@@ -54,6 +54,14 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player forgeSuccessFeel;
         [SerializeField] private MMF_Player forgeFailFeel;
         [SerializeField] private MMF_Player forgeBreakFeel;
+        [Tooltip("The local player's own moment at the Herald: a level gained, a new Nova tier, no change, a level lost, " +
+                 "a slip the Nova held, a Standing rank bought. Their vignettes take the colour of the moment.")]
+        [SerializeField] private MMF_Player novaRiseFeel;
+        [SerializeField] private MMF_Player novaTierFeel;
+        [SerializeField] private MMF_Player novaHoldFeel;
+        [SerializeField] private MMF_Player novaSlipFeel;
+        [SerializeField] private MMF_Player novaHeldFeel;
+        [SerializeField] private MMF_Player standingFeel;
 
         [Header("FEEL players (world particles, every client)")]
         [SerializeField] private MMF_Player hitWorldFeel;
@@ -82,7 +90,15 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player forgeFailWorldFeel;
         [SerializeField] private MMF_Player forgeSavedWorldFeel;
         [SerializeField] private MMF_Player forgeBreakWorldFeel;
-        private const float NovaBurstHeight = 2f; // where a new Nova tier bursts, above the feet
+        [Tooltip("Anyone's moment at the Herald. All but the last two burst at the Nova itself, in its tier's colour; a new " +
+                 "tier also lights the ground under the character, and a Standing rank is a seal at the feet.")]
+        [SerializeField] private MMF_Player novaRiseWorldFeel;
+        [SerializeField] private MMF_Player novaTierWorldFeel;
+        [SerializeField] private MMF_Player novaHoldWorldFeel;
+        [SerializeField] private MMF_Player novaSlipWorldFeel;
+        [SerializeField] private MMF_Player novaHeldWorldFeel;
+        [SerializeField] private MMF_Player novaTierGroundWorldFeel;
+        [SerializeField] private MMF_Player standingWorldFeel;
 
         [Header("World VFX spawned directly")]
         [SerializeField] private GameObject clickVfx;
@@ -115,6 +131,8 @@ namespace KryticalNova.GameFeel
         [Range(0f, 1f)] [SerializeField] private float hitStopSpeed = 0.05f;
         [Tooltip("The killer's own freeze on a kill (x) and on a critical kill (y). The dying body is never frozen: it is moving.")]
         [SerializeField] private Vector2 killStopSeconds = new Vector2(0.12f, 0.22f);
+        [Tooltip("The local player's own pose holds this long as a new Nova tier lands: the beat before everything bursts.")]
+        [Range(0f, 0.3f)] [SerializeField] private float novaTierStopSeconds = 0.14f;
 
         [Header("Kill confirm (the local player's own kills)")]
         [Tooltip("How much of the kill confirm a normal kill gets; a critical kill gets all of it.")]
@@ -131,7 +149,8 @@ namespace KryticalNova.GameFeel
             ClientPresentationRegistry.RegisterFeel(this);
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
                 attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, killConfirmFeel, bodyLandFeel, respawnFeel, petEvolveFeel,
-                forgeSuccessFeel, forgeFailFeel, forgeBreakFeel };
+                forgeSuccessFeel, forgeFailFeel, forgeBreakFeel,
+                novaRiseFeel, novaTierFeel, novaHoldFeel, novaSlipFeel, novaHeldFeel, standingFeel };
             if (skills == null) skills = GetComponent<SkillFeelCatalog>();
             GroundSurfaces.Palette = dustPalette;
             HudPreferences.Changed += ApplyScreenShakePreference;
@@ -391,34 +410,71 @@ namespace KryticalNova.GameFeel
         }
 
         /// <summary>
-        /// A request at the Herald ended. It reads like the forge's answer (the same bursts on the character); a new
-        /// Nova tier adds the burst of a pet evolving, up at the head where the Nova has just changed.
+        /// A moment at the Herald. The bursts happen at the Nova itself, in its tier's colour, for everyone who can
+        /// see the character; the screen only answers for the player whose moment it is. A new tier is the big one:
+        /// the star bursts, light stands round the character and a ring runs out over the ground.
         /// </summary>
-        public void NovaWorked(Transform actor, int outcome, bool newTier, bool isLocalPlayer)
+        public void NovaWorked(in NovaFeel moment)
         {
+            Transform actor = moment.Actor;
             if (actor == null) return;
             Vector3 feet = ActorAnchor.Feet(actor);
-            Quaternion facing = Facing(actor);
-            switch (outcome)
+            Vector3 nova = moment.NovaPoint;
+            Color colour = Vivid(moment.Colour);
+            bool local = moment.IsLocalPlayer;
+            if (moment.IsStanding)
             {
+                PlayWorld(standingWorldFeel, feet, Facing(actor), actor, 1f, colour);
+                if (local) PlayTinted(standingFeel, actor.position, colour);
+                return;
+            }
+            switch (moment.Outcome)
+            {
+                case 0 when moment.NewTier:
+                    PlayWorld(novaTierWorldFeel, nova, Quaternion.identity, actor, 1f, colour);
+                    PlayWorld(novaTierGroundWorldFeel, feet, Quaternion.identity, actor, 1f, colour);
+                    if (local)
+                    {
+                        PlayTinted(novaTierFeel, actor.position, colour);
+                        HitStop(actor, novaTierStopSeconds);
+                    }
+                    break;
                 case 0: // a level gained
-                    PlayWorld(forgeSuccessWorldFeel, feet, facing, actor);
-                    if (newTier) PlayWorld(petEvolveWorldFeel, feet + Vector3.up * NovaBurstHeight, Quaternion.identity, actor);
-                    if (isLocalPlayer) Play(newTier ? petEvolveFeel : forgeSuccessFeel, actor.position, 1f);
+                    PlayWorld(novaRiseWorldFeel, nova, Quaternion.identity, actor, 1f, colour);
+                    if (local) PlayTinted(novaRiseFeel, actor.position, colour);
                     break;
                 case 3: // a slip the Nova held
-                    PlayWorld(forgeSavedWorldFeel, feet, facing, actor);
-                    if (isLocalPlayer) Play(forgeFailFeel, actor.position, 0.6f);
+                    PlayWorld(novaHeldWorldFeel, nova, Quaternion.identity, actor);
+                    if (local) Play(novaHeldFeel, actor.position, 1f);
                     break;
                 case 2: // a level lost
-                    PlayWorld(forgeFailWorldFeel, feet, facing, actor);
-                    if (isLocalPlayer) Play(forgeFailFeel, actor.position, 1f);
+                    PlayWorld(novaSlipWorldFeel, nova, Quaternion.identity, actor);
+                    if (local) Play(novaSlipFeel, actor.position, 1f);
                     break;
                 default: // nothing changed
-                    PlayWorld(forgeFailWorldFeel, feet, facing, actor);
-                    if (isLocalPlayer) Play(forgeFailFeel, actor.position, 0.5f);
+                    PlayWorld(novaHoldWorldFeel, nova, Quaternion.identity, actor);
+                    if (local) Play(novaHoldFeel, actor.position, 1f);
                     break;
             }
+        }
+
+        /// <summary>A colour at full strength whatever its brightness was: tints want the hue, not the glow.</summary>
+        private static Color Vivid(Color colour)
+        {
+            float max = colour.maxColorComponent;
+            if (max < 0.01f) return Color.white;
+            return new Color(colour.r / max, colour.g / max, colour.b / max, 1f);
+        }
+
+        /// <summary>Plays a screen player with its vignette pulses in the colour of the moment (each keeps its own strength).</summary>
+        private static void PlayTinted(MMF_Player player, Vector3 position, Color colour)
+        {
+            if (player == null) return;
+            var feedbacks = player.FeedbacksList;
+            for (int i = 0; i < feedbacks.Count; i++)
+                if (feedbacks[i] is MMF_BeautifyVignette vignette)
+                    vignette.PulseColor = new Color(colour.r, colour.g, colour.b, vignette.PulseColor.a);
+            player.PlayFeedbacks(position, 1f);
         }
 
         public void PetEvolved(Transform pet, Color glow, bool ownerIsLocalPlayer)
@@ -480,7 +536,9 @@ namespace KryticalNova.GameFeel
         }
 
         /// <summary>Plays a world player, first telling its pooled-VFX feedbacks which way to face and whom to follow.</summary>
-        private static void PlayWorld(MMF_Player player, Vector3 position, Quaternion rotation, Transform target, float intensity = 1f)
+        /// <param name="tint">The colour of the moment, for the effects that take one (<see cref="MMF_PooledVfx.TintWithMoment"/>).</param>
+        private static void PlayWorld(MMF_Player player, Vector3 position, Quaternion rotation, Transform target, float intensity = 1f,
+            Color? tint = null)
         {
             if (player == null) return;
             var feedbacks = player.FeedbacksList;
@@ -489,6 +547,7 @@ namespace KryticalNova.GameFeel
                 if (!(feedbacks[i] is MMF_PooledVfx vfx)) continue;
                 vfx.Rotation = rotation;
                 vfx.Target = target;
+                if (tint.HasValue) vfx.MomentTint = tint.Value;
             }
             player.PlayFeedbacks(position, intensity);
         }

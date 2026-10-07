@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 78ac2f876017b13418fd5d320bf92c1b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/Demo_hdrp/material_HDRP/wall.mat
+  uploadId: 686845

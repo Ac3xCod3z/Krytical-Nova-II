@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ed35c9d4c96356541b3e7719f0ed863d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 404962
+  packageName: Vault Animation Pack
+  packageVersion: 1.0
+  assetPath: Assets/Vault Animation Pack/Demo/Animator Controller/AS_Vault_L_02Controller.controller
+  uploadId: 987876

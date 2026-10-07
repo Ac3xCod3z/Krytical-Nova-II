@@ -51,6 +51,7 @@ namespace KryticalNova.Progression
         private const float ReachPadding = 2.5f;
         private const string ReasonDefeated = "You can't do that while defeated.";
         private const string ReasonWhere = "Visit a Herald to do that.";
+        private const float PendingSeconds = 1.5f; // how long a moment waits for the Nova it belongs to
 
         [SerializeField] private NovaSettings settings;
 
@@ -66,6 +67,9 @@ namespace KryticalNova.Progression
         private NovaHalo halo;
         private Transform head;
         private NovaState state;
+        // The moment and the new state travel separately: a reaction that arrives first waits for its Nova.
+        private NovaWorkResult pendingReaction;
+        private float pendingUntil = -1f;
 
         // One stable source object so both ladders' bonuses can be replaced in one step.
         private readonly object statSource = new object();
@@ -166,6 +170,11 @@ namespace KryticalNova.Progression
             {
                 if (halo == null && Tier > 0) halo = NovaHalo.Create(transform);
                 if (halo != null) halo.Show(settings.look, Tier);
+                if (halo != null && Time.time < pendingUntil && halo.Tier == NovaRules.Tier(settings.ascension, pendingReaction.after))
+                {
+                    pendingUntil = -1f;
+                    halo.React(pendingReaction.outcome, pendingReaction.newTier);
+                }
             }
             Changed?.Invoke();
         }
@@ -304,9 +313,38 @@ namespace KryticalNova.Progression
 
         private void Show(NovaWorkResult result, bool isLocalPlayer)
         {
-            // A Standing bought reads as a success; an Ascension attempt as what it was.
-            int outcome = result.kind == NovaWorkKind.Standing ? (int)AscensionOutcome.Rise : (int)result.outcome;
-            ClientPresentationRegistry.Feel?.NovaWorked(transform, outcome, result.newTier, isLocalPlayer);
+            if (settings == null) return;
+            bool standing = result.kind == NovaWorkKind.Standing;
+            // The tier the moment belongs to: the one just reached, or the one a slip was held in.
+            int tier = NovaRules.Tier(settings.ascension, standing ? state.ascension : result.after);
+            if (!standing) React(result, tier);
+
+            NovaLookSettings look = settings.look;
+            ClientPresentationRegistry.Feel?.NovaWorked(new NovaFeel
+            {
+                Actor = transform,
+                // A Standing bought reads as a success; an Ascension attempt as what it was.
+                Outcome = standing ? (int)AscensionOutcome.Rise : (int)result.outcome,
+                NewTier = !standing && result.newTier,
+                IsStanding = standing,
+                Colour = standing ? look.standingColour : look.ColourOf(tier),
+                NovaPoint = Crown + Vector3.up * look.CentreAboveHead(tier),
+                IsLocalPlayer = isLocalPlayer,
+            });
+        }
+
+        /// <summary>The Nova itself answers the attempt, now or as soon as it shows the tier the attempt ended in.</summary>
+        private void React(NovaWorkResult result, int tier)
+        {
+            if (tier <= 0) return;
+            if (halo != null && halo.Tier == tier)
+            {
+                pendingUntil = -1f;
+                halo.React(result.outcome, result.newTier);
+                return;
+            }
+            pendingReaction = result;
+            pendingUntil = Time.time + PendingSeconds;
         }
 
         private void Tell(string text)
@@ -325,9 +363,18 @@ namespace KryticalNova.Progression
         public bool ServerSetAscension(int level)
         {
             if (!HasAuthority || settings == null) return false;
+            AscensionSettings rules = settings.ascension;
+            int before = state.ascension;
             NovaState next = state;
-            next.ascension = (byte)Mathf.Clamp(level, 0, settings.ascension.maxLevel);
+            next.ascension = (byte)Mathf.Clamp(level, 0, rules.maxLevel);
             Commit(next);
+            // A rise is shown as one won at the Herald would be, so the moment of every tier can be looked at.
+            if (next.ascension > before)
+                Finish(new NovaWorkResult
+                {
+                    kind = NovaWorkKind.Ascend, outcome = AscensionOutcome.Rise, before = (byte)before, after = next.ascension,
+                    newTier = NovaRules.Tier(rules, next.ascension) > NovaRules.Tier(rules, before),
+                });
             return true;
         }
 
@@ -335,6 +382,7 @@ namespace KryticalNova.Progression
         public bool ServerSetStanding(StandingTrack track, int level)
         {
             if (!HasAuthority || settings == null) return false;
+            int before = state.Standing(track);
             NovaState next = state.WithStanding(track, Mathf.Clamp(level, 0, settings.standings.MaxLevel));
             if (!next.TryGetWorn(out _))
             {
@@ -347,6 +395,9 @@ namespace KryticalNova.Progression
                 }
             }
             Commit(next);
+            int after = next.Standing(track);
+            if (after > before)
+                Finish(new NovaWorkResult { kind = NovaWorkKind.Standing, track = track, before = (byte)before, after = (byte)after });
             return true;
         }
 

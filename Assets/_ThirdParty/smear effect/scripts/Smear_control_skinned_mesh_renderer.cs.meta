@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 6f901716b3ef1b24099fe19ae5199fb2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 293435
+  packageName: Smear Effect Tool
+  packageVersion: 1.0
+  assetPath: Assets/smear effect/scripts/Smear_control_skinned_mesh_renderer.cs
+  uploadId: 686845

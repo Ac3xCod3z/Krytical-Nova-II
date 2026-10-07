@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5ad378423147e8647bd0c02658040675
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 404962
+  packageName: Vault Animation Pack
+  packageVersion: 1.0
+  assetPath: Assets/Vault Animation Pack/Demo/Animator Controller/AS_Idle_To_Run_Start_LController.controller
+  uploadId: 987876
