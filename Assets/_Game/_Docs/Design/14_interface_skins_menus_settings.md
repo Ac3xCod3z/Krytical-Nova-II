@@ -35,6 +35,41 @@ Base sheets: `KryticalTheme`, `ProgressionHUD`, `Settings`, `Items`, `Forge`, `H
 `WorldMap`, `ChatWindow`, `DuelPanels`, `PartyPanels`, `PetPanels`, `SocialPanels`, `EmoteWheel`, `EconomyWindows`,
 `NpcInteraction`. That is every in-game document: a new sheet must be added to the builder's list.
 
+**The pieces drawn with the packs' own prefabs (the faction HUD).** A recolour of one layout is not a faction's HUD.
+What the packs draw themselves is taken from them: `FactionHudBuilder` (menu **Krytical Nova ▸ UI ▸ Build Faction
+HUD**) composes one uGUI prefab per faction and piece from that faction's HUD pack into `UI/HUD/Faction/<Faction>/`,
+and lists them in `UI/Skins/FactionHudKit_<Faction>.asset`. Every faction has every piece (`FactionHudTests`).
+
+| Piece | What it is | Stands on | Hegemony | Null | Covenant |
+| --- | --- | --- | --- | --- | --- |
+| Hotbar | Slots 1 to 0 with the XP bar; Q W E R on a small bar beside it | `#hotbar` | `ARPGBar_01` + `XPBar_01` + `HotBar_03` | `ARPGBar_02` + `HotBar_01` | `ARPGBar_05` + `HotBar_01` |
+| Player plate | Live portrait, level, HP and Flux with their numbers, the walk/run line, points left | `#summary` | `Comms_01` + two `HealthBar_02` | `HealthStats_05` + `PlayerLevel_02` | `CharacterPortrait_05` + `PlayerLevel_01` + two `HealthBar_01` |
+| Minimap dial | The frame round the map | `#minimap`, by its glass | `Minimap_Dial_01` | `Minimap_Dial_02` | `Minimap_Dial_04` |
+
+How it works: `HudChrome` (on the HUD object, wired by `HudSetup`) puts the kit's pieces on one overlay canvas under
+the UI Toolkit panel. A piece (`HudChromePiece`) is a view only. It stands on one of the HUD's own elements (it takes
+that element's rectangle every frame, and the element takes the piece's size) and shows what the elements show: the
+Hotbar reads each slot's icon, key, cooldown, count and states and the XP bar; the plate reads the HP and Flux bars, the
+level, the mode line and the points line. So `ProgressionHUD` is unchanged, and everything the player does (click,
+right-click, drag, drop, the layout editor, click blocking) still happens on the elements, which lose only their own
+look while pieces are showing (class `hud-chrome` on the panel's root). A piece may stand by a part of itself
+(`standOn`): the dial stands by its glass, and its frame reaches out round it. An ornament that lies on the glass is
+drawn as an element over the map (`MinimapChromeView.overMap`: the Covenant dial's jewel).
+
+- The packs' containers (orbs, flasks, canisters) and level badges on the action bars are switched off: HP, Flux and the
+  level are on the plate only.
+- Sizes are the builder's: every faction's main bar, plate and dial glass is as wide as the others' (`MainBarPanelWidth`,
+  `VitalsPanelWidth`, `MinimapGlassPanelWidth` in `FactionHudBuilder`). The main bar is centred on the screen and clears
+  the chat at the default sizes.
+- The live portrait is `CharacterPortraitStage` (`Gameplay/Items/Runtime/Visuals/`): a stripped doll that shares the
+  player's merged mesh, as the Equipment page's does, drawn by its own camera into a 256 px texture with a clear
+  background. While an Equipment preview is lit it puts its own lights out (both are on the preview layer).
+- Labels that follow things in the world (namecards, nameplates, loot labels, Kiosk plates, combat numbers) are UI
+  Toolkit and would draw over the pieces: each hides while it is over one (`HudChrome.HideOver`).
+- Not yet in the packs' art: the menu row, chat, buffs, Squad frames, the Callout strip, prompts and every window.
+  `FactionVariantBuilder` and `SpriteRecolourer` are a spike for the pieces a faction's own pack lacks (a recoloured
+  prefab variant of the pack that has it); only one variant exists, and nothing in the game uses it.
+
 **Colours that mean something are not skinned.** Selectors with `.rarity-` (rarity colours) and `-bubble` (the pets'
 comic bubbles) are left out of the recolour; `UiSkinTests` holds this. A namecard's name is coloured in code from the
 faction's own accent, and red for a Callout opponent (`PlayerNamecardController`), outside the sheets. The names on
