@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
+using KryticalNova.UI;
 using KryticalNova.UI.Menus;
 using TMPro;
 using UnityEditor;
@@ -35,7 +36,21 @@ namespace KryticalNova.EditorTools
             var build = Begin(FrontEnd.FactionSelectScene);
             AddCamera(Ink);
             var canvas = AddCanvas();
-            var screen = AddScreen(canvas, Menus + "Screens/Screen_FantasyMenus_SelectDifficulty_01.prefab", "Screen_FactionSelect");
+            var groups = new List<MenuSkinSwitch.Group>();
+            foreach (UiSkin each in Skins())
+            {
+                BeginSkin(canvas, each);
+                BuildFactionSelectScreen(canvas, database);
+                EndSkin(groups);
+            }
+            AddSkinSwitch(canvas, groups);
+            AddTransition();
+            End(build);
+        }
+
+        private static void BuildFactionSelectScreen(Transform canvas, CharacterCreationDatabase database)
+        {
+            var screen = AddScreen(canvas, skin.choiceScreen, "Screen_FactionSelect");
             ComicBackground(screen);
 
             // One difficulty card per faction. The controller fills them from the faction catalog when the scene opens.
@@ -59,12 +74,11 @@ namespace KryticalNova.EditorTools
                 row.sizeDelta = new Vector2(-40f, row.sizeDelta.y);
                 Record(row);
             }
-            // The pack hangs a bigger crest beside its middle and right cards.
-            Hide(MenuUi.Find(screen, "FantasyWarrior_Crest_Difficulty_02"));
-            Hide(MenuUi.Find(screen, "FantasyWarrior_Crest_Difficulty_03"));
+            // The pack hangs a bigger crest beside its middle and right cards (under one name or the other).
+            foreach (string crest in new[] { "FantasyWarrior_Crest_Difficulty_02", "FantasyWarrior_Crest_Difficulty_03", "Crest_Difficulty_02", "Crest_Difficulty_03" })
+                Hide(MenuUi.Find(screen, crest));
 
-            var controller = new GameObject("Faction Select Controller");
-            Parent(controller, "--- Systems ---");
+            var controller = SkinObject("Faction Select Controller");
             var hotkeys = AddHotkeys(controller);
             var select = controller.AddComponent<FactionSelectController>();
             SetRef(select, "screen", screen);
@@ -73,8 +87,6 @@ namespace KryticalNova.EditorTools
             SetRefs(select, "cards", cards);
             var background = MenuUi.Find(screen, "Background");
             if (background != null) SetRef(select, "glow", MenuUi.Find<Image>(background, "SPR_Glow"));
-            AddTransition();
-            End(build);
         }
 
         /// <summary>
@@ -140,11 +152,28 @@ namespace KryticalNova.EditorTools
             var studio = AddPortraitStudio(database);
             var canvas = AddCanvas();
             AddDragSurface(canvas, showroom);
+            var groups = new List<MenuSkinSwitch.Group>();
+            foreach (UiSkin each in Skins())
+            {
+                BeginSkin(canvas, each);
+                BuildCharacterCreatorScreen(canvas, database, showroom, studio);
+                EndSkin(groups);
+            }
+            AddSkinSwitch(canvas, groups);
+            AddTransition();
+            End(build);
+        }
+
+        /// <summary>
+        /// One faction's creator. None of the menu packs has a character creator: the layout is Fantasy Screens' in
+        /// every skin, with the skin's own option rows and body text, and lettered in the skin's fonts.
+        /// </summary>
+        private static void BuildCharacterCreatorScreen(Transform canvas, CharacterCreationDatabase database, CharacterShowroom showroom, PortraitStudio studio)
+        {
             var screen = AddScreen(canvas, Screens + "Prefabs/Screens/Screen_FantasyScreens_CharacterCreator_01.prefab", "Screen_CharacterCreator");
             ShowroomBackground(screen);
 
-            var controller = new GameObject("Character Creator Controller");
-            Parent(controller, "--- Systems ---");
+            var controller = SkinObject("Character Creator Controller");
             var hotkeys = AddHotkeys(controller);
             var creator = controller.AddComponent<CharacterCreatorController>();
             SetRef(creator, "screen", screen);
@@ -160,7 +189,6 @@ namespace KryticalNova.EditorTools
             if (panels == null)
             {
                 Debug.LogError("[FrontEnd] The character creator screen has no 'Panels'; has the pack changed?");
-                End(build);
                 return;
             }
             // The pack paints an example character on every section; ours is live, in the showroom.
@@ -174,9 +202,29 @@ namespace KryticalNova.EditorTools
             PrepareColours(MenuUi.Find(panels, "Section_Colour"), creator);
             PrepareFinalise(MenuUi.Find(panels, "Section_Finalise"), creator);
             PrepareCreatorFooter(screen);
+            LetterInSkin(screen);
+        }
 
-            AddTransition();
-            End(build);
+        /// <summary>
+        /// Sets a screen that is not of the skin's own pack in the skin's lettering: the pack's display face where the
+        /// screen used one, its reading face everywhere else (<see cref="MenuLettering"/> does it as the screen wakes).
+        /// The faces are read off the skin's own screens.
+        /// </summary>
+        private static void LetterInSkin(Transform screen)
+        {
+            if (skin == null) return;
+            TMP_FontAsset display = FontOf(skin.listScreen, "Screen_Header"), reading = FontOf(skin.titleScreen, "Label_Press");
+            // One of the sci-fi pack's faces ships without its material and draws nothing where it is set: the display face reads well too.
+            if (reading == null) reading = display;
+            if (display == null && reading == null) return;
+            screen.gameObject.AddComponent<MenuLettering>().Set(display, reading);
+        }
+
+        private static TMP_FontAsset FontOf(GameObject prefab, string labelName)
+        {
+            if (prefab == null) return null;
+            var label = MenuUi.Find<TMP_Text>(prefab.transform, labelName);
+            return label != null && label.font != null && label.font.material != null ? label.font : null;
         }
 
         /// <summary>The pack's seven tabs become ours: Origin, Discipline, Body, Head, Preview, Colour, Finalise.</summary>
@@ -283,7 +331,7 @@ namespace KryticalNova.EditorTools
 
             var options = new List<MenuOptionRow>();
             for (int i = 0; i < OptionRowCount; i++)
-                options.Add(AddVendorPrefab(OptionRowPrefab, list, $"Row_Option_{i:00}").AddComponent<MenuOptionRow>());
+                options.Add(AddVendorPrefab(skin != null && skin.optionRow != null ? skin.optionRow : Load(OptionRowPrefab), list, $"Row_Option_{i:00}").AddComponent<MenuOptionRow>());
             var sliders = new List<MenuSliderRow>();
             for (int i = 0; i < SliderRowCount; i++)
                 sliders.Add(AddVendorPrefab(SliderRowPrefab, list, $"Row_Slider_{i:00}").AddComponent<MenuSliderRow>());
@@ -341,7 +389,7 @@ namespace KryticalNova.EditorTools
             var suggestion = MenuUi.Find(list, "Array_Difficulty");
             if (suggestion != null) SetRef(creator, "nameSuggestion", suggestion.gameObject.AddComponent<MenuOptionRow>());
 
-            var message = AddVendorPrefab(BodyLabelPrefab, list, "Label_NameMessage");
+            var message = AddVendorPrefab(skin != null && skin.bodyLabel != null ? skin.bodyLabel : Load(BodyLabelPrefab), list, "Label_NameMessage");
             if (nameRow != null) message.transform.SetSiblingIndex(nameRow.GetSiblingIndex() + 1);
             var messageRect = (RectTransform)message.transform;
             messageRect.sizeDelta = new Vector2(messageRect.sizeDelta.x, 70f); // the list leaves row heights alone
@@ -468,14 +516,21 @@ namespace KryticalNova.EditorTools
         // ---------------------------------------------------------------- helpers
 
         /// <summary>Adds another instance of a vendor prefab (a row, a swatch, a label) under a vendor container.</summary>
-        private static GameObject AddVendorPrefab(string prefabPath, Transform parent, string name)
+        private static GameObject AddVendorPrefab(string prefabPath, Transform parent, string name) => AddVendorPrefab(Load(prefabPath), parent, name);
+
+        private static GameObject Load(string prefabPath)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefab == null) Debug.LogError($"[FrontEnd] Vendor prefab missing: {prefabPath}");
+            return prefab;
+        }
+
+        private static GameObject AddVendorPrefab(GameObject prefab, Transform parent, string name)
+        {
             GameObject go;
             if (prefab != null) go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             else
             {
-                Debug.LogError($"[FrontEnd] Vendor prefab missing: {prefabPath}");
                 go = new GameObject(name, typeof(RectTransform));
                 go.transform.SetParent(parent, false);
             }

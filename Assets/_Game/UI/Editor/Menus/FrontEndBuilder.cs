@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using KryticalNova.CharacterCreation;
+using KryticalNova.Factions;
 using KryticalNova.Player;
+using KryticalNova.UI;
 using KryticalNova.UI.Menus;
 using TMPro;
 using UnityEditor;
@@ -43,6 +45,9 @@ namespace KryticalNova.EditorTools
         private static Material wipeMaterial, dotsMaterial, backdropMaterial, pedestalMaterial;
         private static KeyGlyphSet glyphs;
         private static Scene buildScene;
+        // The faction skin whose version of a scene's UI is being built, and the object all of it hangs under.
+        private static UiSkin skin;
+        private static Transform skinGroup;
 
         [MenuItem("Krytical Nova/Front End/1. Build Front-End Scenes")]
         public static void BuildAll()
@@ -81,26 +86,88 @@ namespace KryticalNova.EditorTools
             var build = Begin(FrontEnd.TitleScene);
             AddCamera(Ink);
             var canvas = AddCanvas();
-            var screen = AddScreen(canvas, Menus + "Screens/Screen_FantasyMenus_Title_01.prefab", "Screen_Title");
-            ComicBackground(screen);
-            // The pack sets its two title halves with a large first letter; keep that shape for our name.
-            foreach (var label in Labels(screen, "Title_Fantasy")) SetText(label, "<size=330><cspace=-16>K<size=270><cspace=-4>RYTICAL");
-            foreach (var label in Labels(screen, "Title_Menus")) SetText(label, " <size=330><cspace=-10>N<size=270><cspace=-8>OVA <size=330><cspace=4>II");
-            // "Press [key] to Continue": the pack ships an Xbox button here.
-            StandaloneGlyph(MenuUi.Find(screen, "Input_Button"), Key.Enter);
-            // The way out: a quieter line under the prompt, and the popup that asks before the game closes.
-            AddExitHint(screen);
-            var popup = AddScreen(canvas, Menus + "Popups/Popup_FantasyMenus_Save_Confirmation_01.prefab", "Popup_ExitGame");
+            var groups = new List<MenuSkinSwitch.Group>();
+            foreach (UiSkin each in Skins())
+            {
+                BeginSkin(canvas, each);
+                var screen = AddScreen(canvas, skin.titleScreen, "Screen_Title");
+                ComicBackground(screen);
+                TitleLettering(screen);
+                // "Press [key] to Continue": the pack ships an Xbox button here.
+                StandaloneGlyph(MenuUi.Find(screen, "Input_Button"), Key.Enter);
+                // The way out: a quieter line under the prompt, and the popup that asks before the game closes.
+                AddExitHint(screen);
+                var popup = AddScreen(canvas, skin.confirmPopup, "Popup_ExitGame");
 
-            var controller = new GameObject("Title Controller");
-            Parent(controller, "--- Systems ---");
-            var hotkeys = AddHotkeys(controller);
-            var title = controller.AddComponent<TitleScreenController>();
-            SetRef(title, "screen", screen);
-            SetRef(title, "exitPopup", popup.gameObject);
-            SetRef(title, "hotkeys", hotkeys);
+                var controller = SkinObject("Title Controller");
+                var hotkeys = AddHotkeys(controller);
+                var title = controller.AddComponent<TitleScreenController>();
+                SetRef(title, "screen", screen);
+                SetRef(title, "exitPopup", popup.gameObject);
+                SetRef(title, "hotkeys", hotkeys);
+                EndSkin(groups);
+            }
+            AddSkinSwitch(canvas, groups);
             AddTransition();
             End(build);
+        }
+
+        /// <summary>
+        /// The game's name in the pack's own title lettering. Every pack sets its title in two halves, each with a
+        /// large first letter ("FANTASY" "MENUS", "SCI-FI" "MENUS"): the halves keep their sizes and spacing and take
+        /// our letters, a little smaller because our halves are longer.
+        /// </summary>
+        private static void TitleLettering(Transform screen)
+        {
+            var title = MenuUi.Find(screen, "Title");
+            if (title == null || title.childCount < 2) return;
+            // Two parts ("FANTASY" "MENUS") or three ("DARK" "FANTASY" "MENUS"): the numeral is the third, or ends the second.
+            bool three = title.childCount >= 3;
+            foreach (var label in title.GetChild(0).GetComponentsInChildren<TMP_Text>(true)) SetTitle(label, "K", "RYTICAL", null);
+            foreach (var label in title.GetChild(1).GetComponentsInChildren<TMP_Text>(true)) SetTitle(label, "N", three ? "OVA" : "OVA ", three ? null : "II");
+            if (three)
+                foreach (var label in title.GetChild(2).GetComponentsInChildren<TMP_Text>(true)) SetTitle(label, "II", string.Empty, null);
+        }
+
+        /// <summary>One part of the title, on one line, made smaller until it fits the room the pack gave that part.</summary>
+        private static void SetTitle(TMP_Text label, string first, string rest, string tail)
+        {
+            label.text = InTitleShape(label.text, first, rest, tail, out float size);
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.enableAutoSizing = false;
+            label.fontSize = size;
+            // Our word is longer than the pack's: where it does not fit the room the pack gave that part, it is set
+            // smaller by as much as it is too wide (never broken in two, never sized by the room's height).
+            Canvas.ForceUpdateCanvases();
+            float room = label.rectTransform.rect.width;
+            float needed = label.GetPreferredValues(label.text, 100000f, 100000f).x;
+            if (room > 1f && needed > room) label.fontSize = size * room / needed;
+            Record(label);
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex TitleShape = new System.Text.RegularExpressions.Regex(
+            @"^(\s*)<size=(\d+)><cspace=(-?\d+)\s*>\s*(\S)<size=(\d+)><cspace=(-?\d+)\s*>(.*)$", System.Text.RegularExpressions.RegexOptions.Singleline);
+        private const float TitleShrink = 0.9f;
+
+        /// <summary>
+        /// Our letters in the pack's title shape. The sizes are written as shares of the label's own size, which is
+        /// handed back: the label can then be sized to fit and keep the large first letter.
+        /// </summary>
+        private static string InTitleShape(string packText, string first, string rest, string tail, out float size)
+        {
+            var shape = TitleShape.Match(packText ?? string.Empty);
+            size = 270f;
+            if (!shape.Success) return first + rest + tail;
+            string lead = shape.Groups[1].Value;
+            float large = float.Parse(shape.Groups[2].Value), small = float.Parse(shape.Groups[5].Value);
+            size = small * TitleShrink;
+            int raised = Mathf.RoundToInt(large / small * 100f);
+            string wide = shape.Groups[3].Value, narrow = shape.Groups[6].Value;
+            if (rest.Length == 0) return $"{lead}<cspace={narrow}><size={raised}%>{first}";
+            string text = $"{lead}<size={raised}%><cspace={wide}>{first}<size=100%><cspace={narrow}>{rest}";
+            // A numeral at the end stands as tall as the first letter.
+            if (!string.IsNullOrEmpty(tail)) text += $"<size={raised}%>{tail}";
+            return text;
         }
 
         /// <summary>"Esc  Exit Game" under the title's prompt, in the prompt's own lettering.</summary>
@@ -132,14 +199,20 @@ namespace KryticalNova.EditorTools
             var build = Begin(FrontEnd.LoadingScene);
             AddCamera(Ink);
             var canvas = AddCanvas();
-            var screen = AddScreen(canvas, Menus + "Screens/Screen_FantasyMenus_Loading_01.prefab", "Screen_Loading");
-            ComicBackground(screen);
+            var groups = new List<MenuSkinSwitch.Group>();
+            foreach (UiSkin each in Skins())
+            {
+                BeginSkin(canvas, each);
+                var screen = AddScreen(canvas, skin.loadingScreen, "Screen_Loading");
+                ComicBackground(screen);
 
-            var controller = new GameObject("Loading Controller");
-            Parent(controller, "--- Systems ---");
-            var loading = controller.AddComponent<LoadingScreenController>();
-            SetRef(loading, "screen", screen);
-            SetRef(loading, "database", database);
+                var controller = SkinObject("Loading Controller");
+                var loading = controller.AddComponent<LoadingScreenController>();
+                SetRef(loading, "screen", screen);
+                SetRef(loading, "database", database);
+                EndSkin(groups);
+            }
+            AddSkinSwitch(canvas, groups);
             AddTransition();
             End(build);
         }
@@ -151,19 +224,25 @@ namespace KryticalNova.EditorTools
             var showroom = AddShowroom(camera, database, 0.42f);
             var canvas = AddCanvas();
             AddDragSurface(canvas, showroom);
-            var screen = AddScreen(canvas, Menus + "Screens/Screen_FantasyMenus_Load_Game_01.prefab", "Screen_CharacterSelect");
-            ShowroomBackground(screen);
-            InkBands(screen);
-            var popup = AddScreen(canvas, Menus + "Popups/Popup_FantasyMenus_Save_Confirmation_01.prefab", "Popup_DeleteCharacter");
+            var groups = new List<MenuSkinSwitch.Group>();
+            foreach (UiSkin each in Skins())
+            {
+                BeginSkin(canvas, each);
+                var screen = AddScreen(canvas, skin.listScreen, "Screen_CharacterSelect");
+                ShowroomBackground(screen);
+                InkBands(screen);
+                var popup = AddScreen(canvas, skin.confirmPopup, "Popup_DeleteCharacter");
 
-            var controller = new GameObject("Character Select Controller");
-            Parent(controller, "--- Systems ---");
-            var hotkeys = AddHotkeys(controller);
-            var select = controller.AddComponent<CharacterSelectController>();
-            SetRef(select, "screen", screen);
-            SetRef(select, "deletePopup", popup.gameObject);
-            SetRef(select, "showroom", showroom);
-            SetRef(select, "hotkeys", hotkeys);
+                var controller = SkinObject("Character Select Controller");
+                var hotkeys = AddHotkeys(controller);
+                var select = controller.AddComponent<CharacterSelectController>();
+                SetRef(select, "screen", screen);
+                SetRef(select, "deletePopup", popup.gameObject);
+                SetRef(select, "showroom", showroom);
+                SetRef(select, "hotkeys", hotkeys);
+                EndSkin(groups);
+            }
+            AddSkinSwitch(canvas, groups);
             AddTransition();
             End(build);
         }
@@ -298,21 +377,89 @@ namespace KryticalNova.EditorTools
             return go.transform;
         }
 
-        /// <summary>Instances a vendor screen under the canvas, stretched to fill it. The link to the vendor prefab is kept.</summary>
-        private static Transform AddScreen(Transform canvas, string prefabPath, string name)
+        // ---------------------------------------------------------------- one version of the UI per faction skin
+
+        /// <summary>The three factions' skins: each names the screens of its own Synty menu pack.</summary>
+        private static List<UiSkin> Skins()
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            FactionSkinBuilder.EnsureSkins();
+            var skins = new List<UiSkin>();
+            foreach (FactionId faction in FactionSkinBuilder.Factions)
+            {
+                UiSkin each = FactionSkinBuilder.LoadSkin(faction);
+                if (each != null) skins.Add(each);
+            }
+            return skins;
+        }
+
+        /// <summary>
+        /// Starts one faction's version of the scene's UI. Its screens, its popups and its controller all hang under
+        /// one object on the canvas, which the scene's <see cref="MenuSkinSwitch"/> switches on when the menus wear
+        /// that faction's skin.
+        /// </summary>
+        private static void BeginSkin(Transform canvas, UiSkin of)
+        {
+            skin = of;
+            var go = new GameObject("Skin_" + of.faction, typeof(RectTransform));
+            go.layer = canvas.gameObject.layer;
+            go.transform.SetParent(canvas, false);
+            Stretch((RectTransform)go.transform);
+            skinGroup = go.transform;
+        }
+
+        /// <summary>A plain object under the skin's root: its controller lives and sleeps with its screens.</summary>
+        private static GameObject SkinObject(string name)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(skinGroup, false);
+            return go;
+        }
+
+        private static void EndSkin(List<MenuSkinSwitch.Group> groups)
+        {
+            groups.Add(new MenuSkinSwitch.Group { faction = skin.faction, root = skinGroup.gameObject });
+            skinGroup.gameObject.SetActive(false); // the switch wakes the one the menus wear
+            skin = null;
+            skinGroup = null;
+        }
+
+        private static void AddSkinSwitch(Transform canvas, List<MenuSkinSwitch.Group> groups)
+        {
+            var skinSwitch = canvas.gameObject.AddComponent<MenuSkinSwitch>();
+            var so = new SerializedObject(skinSwitch);
+            SerializedProperty list = so.FindProperty("groups");
+            list.arraySize = groups.Count;
+            for (int i = 0; i < groups.Count; i++)
+            {
+                SerializedProperty element = list.GetArrayElementAtIndex(i);
+                element.FindPropertyRelative("faction").intValue = (int)groups[i].faction;
+                element.FindPropertyRelative("root").objectReferenceValue = groups[i].root;
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>Instances a vendor screen under the skin's root (or the canvas), stretched to fill it. The link to the vendor prefab is kept.</summary>
+        private static Transform AddScreen(Transform canvas, GameObject prefab, string name)
+        {
+            Transform parent = skinGroup != null ? skinGroup : canvas;
             if (prefab == null)
             {
-                Debug.LogError($"[FrontEnd] Vendor prefab missing: {prefabPath}");
+                Debug.LogError($"[FrontEnd] The {(skin != null ? skin.faction.ToString() : "front end")} skin has no screen for '{name}'.");
                 var missing = new GameObject(name, typeof(RectTransform));
-                missing.transform.SetParent(canvas, false);
+                missing.transform.SetParent(parent, false);
                 return missing.transform;
             }
-            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, canvas);
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             go.name = name;
             Stretch((RectTransform)go.transform);
             return go.transform;
+        }
+
+        private static Transform AddScreen(Transform canvas, string prefabPath, string name)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefab == null) Debug.LogError($"[FrontEnd] Vendor prefab missing: {prefabPath}");
+            return AddScreen(canvas, prefab, name);
         }
 
         /// <summary>The halftone wipe, on its own top-most canvas so it covers every screen, popup and nested vendor canvas.</summary>
@@ -361,8 +508,9 @@ namespace KryticalNova.EditorTools
                 fill.material = dotsMaterial;
                 Record(fill);
             }
-            Tint(MenuUi.Find<Image>(background, "SPR_Glow"), ShadowIndigo, 0.55f);
-            if (vignette != null) Tint(MenuUi.Find<Image>(vignette, "SPR_Vignette"), Ink, 0.9f);
+            // The glow behind the dots is the one thing of the comic field that is the skin's own colour.
+            Tint(MenuUi.Find<Image>(background, "SPR_Glow"), skin != null ? Color.Lerp(ShadowIndigo, skin.menuAccent, 0.6f) : ShadowIndigo, 0.55f);
+            Tint(MenuUi.Find<Image>(vignette != null ? vignette : background, "SPR_Vignette"), Ink, 0.9f);
         }
 
         /// <summary>
