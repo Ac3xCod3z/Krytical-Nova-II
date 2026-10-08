@@ -56,6 +56,7 @@ MonoBehaviour:
     y: -147.19873
     width: 276
     height: 276
+  overMap: []
 --- !u!1001 &3134663086134186348
 PrefabInstance:
   m_ObjectHideFlags: 0

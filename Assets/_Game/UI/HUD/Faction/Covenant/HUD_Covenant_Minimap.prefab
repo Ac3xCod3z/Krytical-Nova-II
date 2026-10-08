@@ -56,6 +56,8 @@ MonoBehaviour:
     y: -123
     width: 246
     height: 246
+  overMap:
+  - {fileID: 2689624945737830360}
 --- !u!1001 &5919229913396189507
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -74,10 +76,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1642807160380733624, guid: afc9154b6b293844987a4c3ca4ddca67, type: 3}
       propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3264650788001280237, guid: afc9154b6b293844987a4c3ca4ddca67, type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3351843227242457802, guid: afc9154b6b293844987a4c3ca4ddca67, type: 3}
@@ -190,3 +188,14 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6007672346180748418, guid: afc9154b6b293844987a4c3ca4ddca67, type: 3}
   m_PrefabInstance: {fileID: 5919229913396189507}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2689624945737830360 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8608106898847372955, guid: afc9154b6b293844987a4c3ca4ddca67, type: 3}
+  m_PrefabInstance: {fileID: 5919229913396189507}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

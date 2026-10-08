@@ -25,6 +25,8 @@ namespace KryticalNova.UI.Hud
         protected VisualElement Anchor { get; private set; }
         /// <summary>The size the piece was composed at, in the packs' canvas units.</summary>
         protected Vector2 ComposedSize => composedSize;
+        /// <summary>The part of the piece that lies on the element, in the packs' units from the piece's middle.</summary>
+        protected Rect Stand => stand;
         /// <summary>False once the element has left its panel (the HUD's tree was rebuilt).</summary>
         public bool IsAttached => Anchor != null && Anchor.panel != null;
         /// <summary>How wide the piece is drawn, in panel pixels.</summary>
@@ -44,10 +46,10 @@ namespace KryticalNova.UI.Hud
             if (!TryGetComponent(out group)) group = gameObject.AddComponent<CanvasGroup>();
             group.blocksRaycasts = false;
             group.interactable = false;
+            stand = standOn.width > 0f ? standOn : new Rect(-composedSize * 0.5f, composedSize);
             Anchor = OnAttach(hudRoot);
             if (Anchor == null) return false;
             // The stand-in takes the size of the part that stands on it, whatever room its parent has.
-            stand = standOn.width > 0f ? standOn : new Rect(-composedSize * 0.5f, composedSize);
             Anchor.style.width = stand.width * unitsToPanel;
             Anchor.style.height = stand.height * unitsToPanel;
             Anchor.style.flexShrink = 0f;

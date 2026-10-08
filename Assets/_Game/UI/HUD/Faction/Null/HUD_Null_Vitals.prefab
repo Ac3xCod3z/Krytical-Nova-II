@@ -137,7 +137,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &1453719940600918835
+--- !u!1 &5415626042941886288
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -145,9 +145,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5310057167631455094}
-  - component: {fileID: 6654491056799121928}
-  - component: {fileID: 3463328692243151183}
+  - component: {fileID: 3289985453979734880}
+  - component: {fileID: 6219992697192514226}
+  - component: {fileID: 6587497976096511903}
   m_Layer: 5
   m_Name: Label_Numbers
   m_TagString: Untagged
@@ -155,13 +155,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &5310057167631455094
+--- !u!224 &3289985453979734880
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1453719940600918835}
+  m_GameObject: {fileID: 5415626042941886288}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -174,21 +174,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0}
---- !u!222 &6654491056799121928
+--- !u!222 &6219992697192514226
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1453719940600918835}
+  m_GameObject: {fileID: 5415626042941886288}
   m_CullTransparentMesh: 1
---- !u!114 &3463328692243151183
+--- !u!114 &6587497976096511903
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1453719940600918835}
+  m_GameObject: {fileID: 5415626042941886288}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
@@ -337,7 +337,7 @@ MonoBehaviour:
   health: {fileID: 6843114710409838879}
   flux: {fileID: 75059362369739971}
   healthLabel: {fileID: 5312356775572310634}
-  fluxLabel: {fileID: 3463328692243151183}
+  fluxLabel: {fileID: 6587497976096511903}
   level: {fileID: 2525532435602110684}
   mode: {fileID: 8208550887073406498}
   points: {fileID: 3191048585762293611}
@@ -840,7 +840,7 @@ PrefabInstance:
       addedObject: {fileID: 7063401092862698465}
     - targetCorrespondingSourceObject: {fileID: 5631361212595636818, guid: 4b9651fb3a7b2134cb9329eb24ff9cbe, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5310057167631455094}
+      addedObject: {fileID: 3289985453979734880}
     - targetCorrespondingSourceObject: {fileID: 4839061652354627692, guid: 4b9651fb3a7b2134cb9329eb24ff9cbe, type: 3}
       insertIndex: 3
       addedObject: {fileID: 6529161541357617956}

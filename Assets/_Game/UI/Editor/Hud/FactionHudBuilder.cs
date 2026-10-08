@@ -56,7 +56,8 @@ namespace KryticalNova.EditorTools
             public Action<Spec, RectTransform, Vitals> LayVitals; // puts the pack's parts of the player's plate in place
             public string Minimap;       // the minimap dial
             public float MinimapGlass;   // how much of the dial's map circle shows inside its frame (1 = all of it)
-            public string[] MinimapOff;  // parts of the dial that would lie on the map, which is drawn over the dial
+            public string[] MinimapOff;  // parts of the dial that are not shown
+            public string[] MinimapOver; // ornaments of the dial that lie on its glass: the view draws them over the map
             public string Lettering;     // a label of the pack: its font is the plate's
             public Color Flux;           // the Flux bar's fill
         }
@@ -94,7 +95,7 @@ namespace KryticalNova.EditorTools
             {
                 Faction = FactionId.Covenant, Pack = "InterfaceFantasyWarriorHUD",
                 Main = "ActionBar/HUD_FantasyWarrior_ARPGBar_05", Letters = "ActionBar/HUD_FantasyWarrior_HotBar_01",
-                Minimap = "Minimap/HUD_FantasyWarrior_Minimap_Dial_04", MinimapGlass = 0.82f, MinimapOff = new[] { "SPR_Curlicue_Bottom" },
+                Minimap = "Minimap/HUD_FantasyWarrior_Minimap_Dial_04", MinimapGlass = 0.82f, MinimapOver = new[] { "SPR_Curlicue_Bottom" },
                 LayVitals = LayCovenantVitals, Lettering = "_CommonComponents/Label_FantasyWarrior_SemiBold", Flux = new Color(0.19f, 0.73f, 0.95f),
             },
         };
@@ -308,6 +309,16 @@ namespace KryticalNova.EditorTools
                     foreach (string part in spec.MinimapOff) Off(placed, part);
                 float glass = Mathf.Min(circle.size.x, circle.size.y) * spec.MinimapGlass;
                 var so = new SerializedObject(view);
+                SerializedProperty over = so.FindProperty("overMap");
+                over.arraySize = 0;
+                if (spec.MinimapOver != null)
+                    foreach (string part in spec.MinimapOver)
+                    {
+                        Image ornament = ImageNamed(placed, part);
+                        if (ornament == null) { Debug.LogError($"[HUD] {spec.Faction}: the minimap dial has no '{part}'."); continue; }
+                        over.arraySize++;
+                        over.GetArrayElementAtIndex(over.arraySize - 1).objectReferenceValue = ornament;
+                    }
                 so.FindProperty("standOn").rectValue = new Rect(circle.center.x - glass * 0.5f, circle.center.y - glass * 0.5f, glass, glass);
                 so.ApplyModifiedPropertiesWithoutUndo();
                 return glass;
