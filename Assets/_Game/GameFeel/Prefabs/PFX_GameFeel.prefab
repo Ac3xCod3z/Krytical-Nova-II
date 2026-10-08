@@ -6050,6 +6050,7 @@ MonoBehaviour:
   - rid: 6309249643151360135
   - rid: 6309249643151360136
   - rid: 6309249643151360137
+  - rid: 6309249643151360610
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -6490,6 +6491,83 @@ MonoBehaviour:
         Lifetime: 0
         TintWithGroundDust: 0
         TintWithMoment: 0
+    - rid: 6309249643151360610
+      type: {class: MMF_Smear, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: -1078149132
+        Label: Smear (death throw)
+        OriginalLabel: Smear (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 3952499701466984986}
+        DebugActive: 0
+        Settings: {fileID: 11400000, guid: cc541f1c58a552f418ffeccbb48e58d0, type: 2}
+        Kind: 1
 --- !u!1 &1116884725868747759
 GameObject:
   m_ObjectHideFlags: 0
@@ -14080,6 +14158,8 @@ MonoBehaviour:
   novaTierStopSeconds: 0.14
   normalKillStrength: 0.55
   killShove: 0.7
+  critKillSlowSeconds: {x: 0.12, y: 0.26}
+  critKillSlowRate: 0.25
 --- !u!114 &9074143639501137624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18871,6 +18951,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249592969920984
+  - rid: 6309249643151360608
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -18971,6 +19052,83 @@ MonoBehaviour:
         Lifetime: 0
         TintWithGroundDust: 1
         TintWithMoment: 0
+    - rid: 6309249643151360608
+      type: {class: MMF_Smear, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: -742254588
+        Label: Smear (take-off)
+        OriginalLabel: Smear (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 4039640629274132460}
+        DebugActive: 0
+        Settings: {fileID: 11400000, guid: cc541f1c58a552f418ffeccbb48e58d0, type: 2}
+        Kind: 0
 --- !u!1 &5261999118437863238
 GameObject:
   m_ObjectHideFlags: 0
@@ -27044,6 +27202,7 @@ MonoBehaviour:
   - rid: 6309249643151360130
   - rid: 6309249643151360131
   - rid: 6309249643151360132
+  - rid: 6309249643151360609
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -27314,6 +27473,83 @@ MonoBehaviour:
         Lifetime: 0
         TintWithGroundDust: 0
         TintWithMoment: 0
+    - rid: 6309249643151360609
+      type: {class: MMF_Smear, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: 803303237
+        Label: Smear (death throw)
+        OriginalLabel: Smear (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 2220207994774412293}
+        DebugActive: 0
+        Settings: {fileID: 11400000, guid: cc541f1c58a552f418ffeccbb48e58d0, type: 2}
+        Kind: 1
 --- !u!1 &8421403702511687934
 GameObject:
   m_ObjectHideFlags: 0

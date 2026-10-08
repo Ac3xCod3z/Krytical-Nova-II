@@ -142,7 +142,8 @@ namespace KryticalNova.GameFeel
                 flashMats.Clear();
                 foreach (var r in renderers)
                 {
-                    if (r == null || r is ParticleSystemRenderer) continue;
+                    // The smear's second skin has a material of its own that the smear drives: flashing it would copy it.
+                    if (r == null || r is ParticleSystemRenderer || r.name == ActorSmear.SkinName) continue;
                     foreach (var mat in r.materials) // per-renderer instances; OccluderFader swaps are re-read next hit
                     {
                         if (mat == null || !mat.HasProperty(EmissionColorId)) continue;

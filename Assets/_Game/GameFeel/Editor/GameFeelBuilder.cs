@@ -41,6 +41,10 @@ namespace KryticalNova.EditorTools
         private const float GroundArtRadius = 0.95f;
         private const string AllIn1SlashMaterial = "Assets/Plugins/AllIn1ShaderNodes/Demo/Materials/DemoMaterials/MAT_Demo_VfxSlash.mat";
         private const string CartoonFx = "Assets/_ThirdParty/Cartoon FX Pack v2/Assets/Prefabs/";
+        /// <summary>The smear package's URP shader. Linked from the smear settings, never edited.</summary>
+        private const string SmearShaderPath = "Assets/_ThirdParty/smear effect/Demo_urp/shader/smear_urp.shadergraph";
+        public const string SmearSettingsPath = "Assets/_Game/GameFeel/Data/Assets/SmearSettings.asset";
+        private const string RunStartPlayer = "Run Start", DeathPlayer = "Death", CritDeathPlayer = "Critical Death";
         private const string PlayerPrefabPath = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
         private const string VolumeProfilePath = "Assets/_Game/Rendering/Settings/SampleSceneProfile.asset";
         private const string OrbitCameraName = "Player Orbit Camera";
@@ -266,11 +270,11 @@ namespace KryticalNova.EditorTools
 
             // ---- world particles: every client
             var overBody = new Vector3(0f, 0.7f, 0f);
-            so.FindProperty("deathWorldFeel").objectReferenceValue = World(world, "Death",
-                new Fx("PFX_Death_Burst"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"));
-            so.FindProperty("critDeathWorldFeel").objectReferenceValue = World(world, "Critical Death",
+            so.FindProperty("deathWorldFeel").objectReferenceValue = Smeared(World(world, DeathPlayer,
+                new Fx("PFX_Death_Burst"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy")), SmearKind.DeathThrow);
+            so.FindProperty("critDeathWorldFeel").objectReferenceValue = Smeared(World(world, CritDeathPlayer,
                 new Fx("PFX_CritDeath_Blast"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"), Comic("PFX_Comic_Wham", 0.9f),
-                OnGround("PFX_CritKill_Shockwave"));
+                OnGround("PFX_CritKill_Shockwave")), SmearKind.DeathThrow);
             so.FindProperty("bodyLandWorldFeel").objectReferenceValue = World(world, "Body Land",
                 Dust("PFX_Dust_Land"), new Fx("PFX_Death_Stars", overBody, follow: true));
             so.FindProperty("critBodyLandWorldFeel").objectReferenceValue = World(world, "Critical Body Land",
@@ -1254,7 +1258,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("hitWorldFeel").objectReferenceValue = World(world, "Hit", new Fx("PFX_Hit_Sparks"), Comic("PFX_Comic_Hit"));
                 so.FindProperty("heavyHitWorldFeel").objectReferenceValue = World(world, "Heavy Hit", new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"));
                 so.FindProperty("critWorldFeel").objectReferenceValue = World(world, "Critical", Comic("PFX_Comic_Pow", 0.9f));
-                so.FindProperty("runWorldFeel").objectReferenceValue = World(world, "Run Start", Dust("PFX_Dust_Run"));
+                so.FindProperty("runWorldFeel").objectReferenceValue = Smeared(World(world, RunStartPlayer, Dust("PFX_Dust_Run")), SmearKind.TakeOff);
                 so.FindProperty("jumpWorldFeel").objectReferenceValue = World(world, "Jump", Dust("PFX_Dust_Jump"), Dust("PFX_Jump_Burst"));
                 so.FindProperty("landWorldFeel").objectReferenceValue = World(world, "Land", Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"));
                 so.FindProperty("attackCastWorldFeel").objectReferenceValue = World(world, "Attack Skill", Slash());
@@ -1356,6 +1360,83 @@ namespace KryticalNova.EditorTools
                     vfx.TintWithMoment = fx.Tint;
                 }
             });
+        }
+
+        // ---------------------------------------------------------------- smear
+
+        /// <summary>
+        /// Puts the comic motion smear on the moments that have one (taking off at a run, the throw of a death)
+        /// without regenerating the rest of the game feel prefab, and makes its settings asset if there is none.
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Smear Feel")]
+        public static void RebuildSmearFeel()
+        {
+            if (EnsureSmearSettings() == null) return;
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                Transform world = scope.prefabContentsRoot.transform.Find("World");
+                if (world == null)
+                {
+                    Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
+                    return;
+                }
+                int done = 0;
+                foreach (var (name, kind) in new[] { (RunStartPlayer, SmearKind.TakeOff), (DeathPlayer, SmearKind.DeathThrow), (CritDeathPlayer, SmearKind.DeathThrow) })
+                {
+                    Transform child = world.Find(name);
+                    if (child == null || !child.TryGetComponent(out MMF_Player player))
+                    {
+                        Debug.LogWarning($"[GameFeel] No '{name}' player under World: no smear put on it.");
+                        continue;
+                    }
+                    Smeared(player, kind);
+                    done++;
+                }
+                Debug.Log($"[GameFeel] Smear put on {done} moment(s) of {PrefabPath}. Tune it in {SmearSettingsPath}.");
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>The player with exactly one smear feedback of this kind on it.</summary>
+        private static MMF_Player Smeared(MMF_Player player, SmearKind kind)
+        {
+            SmearSettings settings = EnsureSmearSettings();
+            if (player == null || settings == null) return player;
+            player.FeedbacksList.RemoveAll(feedback => feedback is MMF_Smear);
+            var smear = player.AddFeedback(typeof(MMF_Smear)) as MMF_Smear;
+            smear.Label = kind == SmearKind.TakeOff ? "Smear (take-off)" : "Smear (death throw)";
+            smear.Settings = settings;
+            smear.Kind = kind;
+            EditorUtility.SetDirty(player);
+            return player;
+        }
+
+        /// <summary>
+        /// The smear's settings asset, made on first use with the smear package's shader linked. Null (and an error)
+        /// when the package is not in the project: nothing is put in its place.
+        /// </summary>
+        private static SmearSettings EnsureSmearSettings()
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<SmearSettings>(SmearSettingsPath);
+            var shader = AssetDatabase.LoadAssetAtPath<Shader>(SmearShaderPath);
+            if (shader == null)
+            {
+                Debug.LogError($"[GameFeel] The smear package's shader is not at {SmearShaderPath}: no smear was set up.");
+                return null;
+            }
+            if (settings == null)
+            {
+                WeatherVfxBuilder.EnsureFolder(System.IO.Path.GetDirectoryName(SmearSettingsPath).Replace('\\', '/'));
+                settings = ScriptableObject.CreateInstance<SmearSettings>();
+                AssetDatabase.CreateAsset(settings, SmearSettingsPath);
+            }
+            if (settings.shader != shader)
+            {
+                settings.shader = shader;
+                EditorUtility.SetDirty(settings);
+                AssetDatabase.SaveAssetIfDirty(settings);
+            }
+            return settings;
         }
 
         private static void Sound(MMF_Player player, string label)

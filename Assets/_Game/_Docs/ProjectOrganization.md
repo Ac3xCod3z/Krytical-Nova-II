@@ -113,7 +113,8 @@ _Game/
 │   ├── Ruins/             Meshes/  Prefabs/  Profiles/ (Quick Destruction profile)  Editor/ (RuinBaker)
 │   ├── Water/             Shaders/
 │   └── (future) Rocks/ Props/ Architecture/
-├── GameFeel/              Runtime/ (KryticalNova.GameFeel, client-only)  Editor/ (GameFeelBuilder)  Prefabs/ (PFX_GameFeel)
+├── GameFeel/              Runtime/ (KryticalNova.GameFeel, client-only)  Data/ (SmearSettings; Data/Assets/ = its asset)
+│                          Editor/ (GameFeelBuilder)  Prefabs/ (PFX_GameFeel)  Tests/Editor/
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
 ├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets)  Editor/ (Menus/ = front-end
@@ -172,7 +173,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets,Forge}/Runtime, {Progression,Factions,CharacterCreation,Social,Economy,Pets,Items}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime and Vegetation.Grass (the graphics settings set grass density). Excluded from dedicated server (`!UNITY_SERVER`) |
-| `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
+| `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | GameFeel/Data. FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
 | `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
 | `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, Economy, Pets, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel) |
 | `KryticalNova.Editor.GM`          | `Tools/Editor/GM/`                             | GM tools window                                                           |
@@ -185,6 +186,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Persistence.Tests.Editor` | `Gameplay/Persistence/Tests/Editor/`     | EditMode tests (save stores, account documents)                                        |
 | `KryticalNova.Pets.Tests.Editor`  | `Gameplay/Pets/Tests/Editor/`                  | EditMode tests (pet growth, stages, hunger)                                            |
 | `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides)            |
+| `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab). `!UNITY_SERVER` |
 
 **Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
 **New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`

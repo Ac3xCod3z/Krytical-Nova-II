@@ -402,6 +402,62 @@ above wear all three; lower rarities glow plainly. At most 32 things in one view
 background the light covers, so it does not burn out on a bright sky), halo width clamped to 3–56 px, `depthFade`
 0.05 m, fade-out from 55 to 80 m, `halfResolution` on. PC renderer only (it needs the depth texture).
 
+## 6f. Motion smear, and the slow motion of a critical kill
+
+**The smear.** For a moment a character's trailing side is pulled back, in streaks, to where it was a tenth of a
+second ago: when a run takes off, and when the blow that kills throws the body. It is the smear package's own shader
+(`WuHaipeng/smear_urp`, `Assets/_ThirdParty/smear effect/Demo_urp/shader`, untouched) drawn as a **second skin** over
+the body: the same mesh and bones, the body's colour texture, switched on only while a smear plays (`ActorSmear`,
+`GameFeel/Runtime`). The body's own comic materials are never swapped, so its ink, tone and hit flash carry on
+underneath. The skin casts no shadow, and weapons and pets are not smeared.
+
+The package's control scripts (`Smear_control_*`) are not used. They need the body's own materials to be the smear
+shader, they smear every movement all the time (a walk, a teleport, a network correction alike), and they sample in
+`FixedUpdate` over a fixed count of frames, so the trail changes with the frame rate. `ActorSmear` hands the same
+shader the same properties (`position_current`, `position_previous`, `_smear_strength`, `_noise_scale`) under the
+rules below.
+
+**When.** A FEEL feedback (`MMF_Smear`) on the world half of the **Run Start**, **Death** and **Critical Death**
+moments of `PFX_GameFeel`, so it plays on every client for every character and is timed, and switched on or off,
+with the moment's dust and comic text. Run Start fires only when the run clip starts (the Run skill: 10 m/s at rank 1
+up to 29 m/s at rank 20), never for a walk. `GameFeelBuilder` puts the feedbacks there: **Krytical Nova ▸ GameFeel ▸
+Rebuild Smear Feel** does only that (and makes the settings asset when it is missing); **Build Game Feel** and
+**Rebuild Death Feel** include it.
+
+**The rules.** Every number is in `GameFeel/Data/Assets/SmearSettings.asset`, one profile per moment:
+
+| | Take-off | Death throw | What it does |
+|---|---|---|---|
+| `seconds` | 0.45 | 0.5 | how long the smear lasts from the start of the motion |
+| `trailSeconds` | 0.1 | 0.1 | the body is stretched back to where it was this long ago |
+| `shape` | whole to 45 % of its life, then fading out | whole to 40 %, then fading out | how much of the stretch shows over its life: strong at the start, gone by the end |
+| `strength` | 1.25 | 1.25 | the package's smear strength |
+| `longest` | 1.8 m | 1.6 m | never longer than this, however fast the body goes |
+| `slowest` | 7 m/s | 4 m/s | nothing is smeared below this speed (a walk is 5 m/s, a knock-down about 2.5); the smear is whole from a third above it |
+
+`placedSpeed` (200 m/s): a body that covers ground faster than this between two frames was put there (a spawn, a
+teleport, a large network correction), and its smear is dropped at once. It sits well above the fastest real motion:
+the first frame of a critical death's throw is about 80 m/s. `noiseScale` (100) is how finely the smear breaks into
+streaks.
+
+**Which deaths.** The thrown body of a critical death (5.5 m, backwards from a blow to the front, forwards from a
+blow to the back) smears through the fast first half second of its flight. A normal death only knocks the body
+over (it moves 0.4 to 0.7 m, at up to about 2.5 m/s): that is below the death smear's `slowest`, so it is not
+smeared; lower `slowest` to smear it too. A throw that a wall cuts short moves too little and is not smeared either.
+
+**Cost.** One more draw of the body's skinned meshes on the frames that have a stretch to see (half a second at
+most). A skin with nothing to show is not drawn, and between smears the skins are switched off; they are made on a
+character's first smear and kept.
+
+**The slow motion.** When *your* critical blow kills another player, the thrown body hangs for a blink on *your*
+screen only: it is shown at a quarter of real speed for 0.12 s, then catches up with where it really is over the
+next 0.26 s (`ActorTimeSlow`; `critKillSlowSeconds` and `critKillSlowRate` on the game feel prefab's presenter, 0
+seconds = off). At its furthest the picture is 0.09 s behind. It is a picture only: the body's drawn parts are shown
+where its root was a little while ago, and its animation runs at the same slowed, then quickened, pace so pose and
+place stay together. The game's clock, the body's real place and the network are never touched, so it is safe on the
+host, nobody else sees it and the victim's own screen is never slowed. It rides with the kill's hit stop, chromatic
+punch and comic text. Not played for a normal kill, for a kill by a GM command, or when the victim is not a player.
+
 ## 7. Performance budgets (PC, 1080p)
 
 | Item | Budget | Notes |
@@ -452,6 +508,13 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black.
 
 ## Changelog
+
+- **2026-10-08 (polish pass: the smear)**:
+  - Motion smear on a run's take-off and on the throw of a death (section 6f): the smear package's shader as a second
+    skin over the body, played by a FEEL feedback, tuned in `SmearSettings`. A walk, standing still and being put
+    somewhere never smear.
+  - A critical kill of another player hangs the thrown body in slow motion for a blink, on the killer's screen only
+    (section 6f).
 
 - **2026-10-07 (polish pass: the glow)**:
   - The Temper and pet glow is rebuilt as a screen-space halo (section 6e, frame order 6b): the stacked hull

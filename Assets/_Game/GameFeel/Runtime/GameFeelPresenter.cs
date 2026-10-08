@@ -139,6 +139,10 @@ namespace KryticalNova.GameFeel
         [Range(0f, 1f)] [SerializeField] private float normalKillStrength = 0.55f;
         [Tooltip("How hard the camera is shoved the way the killing blow went (m/s) at full strength.")]
         [Min(0f)] [SerializeField] private float killShove = 0.7f;
+        [Tooltip("A critical kill of another player, on the killer's screen only: the thrown body is shown in slow motion for x seconds, then catches up with where it really is over y seconds. 0 = off. Only this screen's picture of the body lags: the game's clock, the body's real place and the network are untouched.")]
+        [SerializeField] private Vector2 critKillSlowSeconds = new Vector2(0.12f, 0.26f);
+        [Tooltip("How fast that slow motion runs: 0.25 = a quarter of real speed.")]
+        [Range(0.05f, 1f)] [SerializeField] private float critKillSlowRate = 0.25f;
 
         private readonly Dictionary<AnimancerComponent, int> frozen = new Dictionary<AnimancerComponent, int>();
         private MMF_Player[] cameraPlayers;
@@ -350,7 +354,17 @@ namespace KryticalNova.GameFeel
             {
                 PlayKillConfirm(death);
                 HitStop(death.Killer, death.IsCritical ? killStopSeconds.y : killStopSeconds.x);
+                // The punch of a critical kill on another player: for a blink the body hangs in the air.
+                if (death.IsCritical && !death.VictimIsLocalPlayer && critKillSlowSeconds.x > 0f && IsPlayer(death.Target))
+                    ActorTimeSlow.For(death.Target)?.Play(critKillSlowSeconds.x, critKillSlowRate, critKillSlowSeconds.y);
             }
+        }
+
+        private static bool IsPlayer(Transform actor)
+        {
+            if (actor == null) return false;
+            var net = actor.GetComponentInParent<Unity.Netcode.NetworkObject>();
+            return net != null && net.IsPlayerObject;
         }
 
         /// <summary>The local player's own kill: the camera is shoved the way the blow went, so the kill reads as theirs.</summary>
@@ -544,6 +558,11 @@ namespace KryticalNova.GameFeel
             var feedbacks = player.FeedbacksList;
             for (int i = 0; i < feedbacks.Count; i++)
             {
+                if (feedbacks[i] is MMF_Smear smear)
+                {
+                    smear.Target = target;
+                    continue;
+                }
                 if (!(feedbacks[i] is MMF_PooledVfx vfx)) continue;
                 vfx.Rotation = rotation;
                 vfx.Target = target;

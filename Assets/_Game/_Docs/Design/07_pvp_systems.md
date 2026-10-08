@@ -67,7 +67,8 @@ A player can therefore be valuable without simply having the highest damage.
   faction only in an accepted **duel**, pairwise and to the death.
 - **Death:** the killing blow picks the animation. A blow from the front half turns the body to face it and knocks
   it over backwards; a blow from behind is taken as the body stands and knocks it down forwards. A critical kill
-  throws the body about 5.5 m away from the killer. The body lies where it lands, then the server respawns the
+  throws the body about 5.5 m away from the killer, smeared as it flies; on the killer's own screen it hangs in
+  slow motion for a blink first (a picture only: see `Rendering-Bible.md` 6f). The body lies where it lands, then the server respawns the
   player on one of the map's spawn points after 8 s (Zone01: the Central Plaza). The countdown is in the chat's
   Combat tab. Code: `PlayerDeathMotor`, `CombatEntity.Killed`, `PlayerSpawnService.Respawn`.
 - Not built: group, guild and faction warfare, contribution and class points, hero rank.
