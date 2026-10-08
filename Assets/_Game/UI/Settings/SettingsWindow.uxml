@@ -1,6 +1,8 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <!-- Settings (HudSettingsController). Four pages, one shown at a time. The Graphics, Audio and Controls pages are
-         filled in code from the preference classes (UI/Runtime/Settings); the Interface page is laid out here. -->
+    <!-- Settings (SettingsPages; shown in the game by HudSettingsController and from character select by MenuSettings).
+         Four pages, one shown at a time. The Graphics, Audio and Controls pages are filled in code from the preference
+         classes (UI/Runtime/Settings); the Interface page is laid out here. Elements with the class in-game-only need
+         a character in the world and are hidden in the menus. -->
     <ui:VisualElement name="settings-window" class="panel window blocks-world hud-movable">
         <ui:VisualElement class="row kn-header">
             <ui:Label text="SETTINGS" class="heading" />
@@ -17,12 +19,12 @@
             <ui:VisualElement name="settings-page-graphics" class="settings-page" />
             <ui:VisualElement name="settings-page-audio" class="settings-page" />
             <ui:VisualElement name="settings-page-interface" class="settings-page">
-                <ui:Label text="HUD LAYOUT" class="eyebrow section" />
-                <ui:Label text="Move and resize HUD panels. Drag a panel to move it, drag the gold corner to resize, right-click a panel to put it back. Panels line up with the grid and with each other; hold Alt to place one freely. Your layout is saved on this computer." class="help" />
-                <ui:Button name="settings-edit-layout" text="CUSTOMIZE HUD LAYOUT" class="kn-button-primary section" />
-                <ui:Button name="settings-reset-layout" text="RESET HUD LAYOUT" class="kn-button-danger" />
-                <ui:Toggle name="setting-snap-grid" label="Snap panels to the grid and to each other" value="true" class="kn-toggle kn-card" />
-                <ui:VisualElement name="settings-layout-options" />
+                <ui:Label text="HUD LAYOUT" class="eyebrow section in-game-only" />
+                <ui:Label text="Move and resize HUD panels. Drag a panel to move it, drag the gold corner to resize, right-click a panel to put it back. Panels line up with the grid and with each other; hold Alt to place one freely. Your layout is saved on this computer." class="help in-game-only" />
+                <ui:Button name="settings-edit-layout" text="CUSTOMIZE HUD LAYOUT" class="kn-button-primary section in-game-only" />
+                <ui:Button name="settings-reset-layout" text="RESET HUD LAYOUT" class="kn-button-danger in-game-only" />
+                <ui:Toggle name="setting-snap-grid" label="Snap panels to the grid and to each other" value="true" class="kn-toggle kn-card in-game-only" />
+                <ui:VisualElement name="settings-layout-options" class="in-game-only" />
                 <ui:Label text="WORLD MARKERS" class="eyebrow section" />
                 <ui:Toggle name="setting-move-marker" label="Ring at move destination" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-target-ring" label="Ring under selected target" value="true" class="kn-toggle kn-card" />
@@ -33,8 +35,17 @@
                 <ui:Toggle name="setting-controls-hint" label="Show hotbar controls hint" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-pet-chatter" label="Pet chatter (my pet's speech bubbles)" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-minimap-rotate" label="Rotate minimap with camera" value="true" class="kn-toggle kn-card" />
+                <ui:VisualElement name="settings-interface-options" />
             </ui:VisualElement>
             <ui:VisualElement name="settings-page-controls" class="settings-page" />
         </ui:ScrollView>
+        <!-- A setting takes effect as it is changed. APPLY keeps the changes, REVERT puts back what was there when the
+             window opened (or was last applied), RESET TO DEFAULTS sets the page shown to its defaults. -->
+        <ui:VisualElement name="settings-footer" class="settings-footer">
+            <ui:Button name="settings-reset" text="RESET TO DEFAULTS" class="settings-footer-button" tooltip="Sets the page shown back to the game's own values. REVERT undoes it." />
+            <ui:VisualElement class="settings-footer-gap" />
+            <ui:Button name="settings-revert" text="REVERT" class="settings-footer-button" tooltip="Puts back what was set when this window opened, or was last applied." />
+            <ui:Button name="settings-apply" text="APPLY" class="settings-footer-button kn-button-primary" tooltip="Keeps the changes." />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

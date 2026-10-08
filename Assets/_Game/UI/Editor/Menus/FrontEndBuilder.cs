@@ -231,6 +231,7 @@ namespace KryticalNova.EditorTools
                 var screen = AddScreen(canvas, skin.listScreen, "Screen_CharacterSelect");
                 ShowroomBackground(screen);
                 InkBands(screen);
+                AddSettingsPrompt(screen);
                 var popup = AddScreen(canvas, skin.confirmPopup, "Popup_DeleteCharacter");
 
                 var controller = SkinObject("Character Select Controller");
@@ -243,9 +244,41 @@ namespace KryticalNova.EditorTools
                 EndSkin(groups);
             }
             AddSkinSwitch(canvas, groups);
+            AddMenuSettings();
             AddTransition();
             End(build);
         }
+
+        /// <summary>A fourth prompt in the pack's footer row, a copy of its Back prompt: SETTINGS.</summary>
+        private static void AddSettingsPrompt(Transform screen)
+        {
+            var back = MenuUi.Find(screen, "Hotkey_Back");
+            if (back == null) return;
+            var go = Object.Instantiate(back.gameObject, back.parent);
+            go.name = CharacterSelectController.SettingsPromptName;
+            go.transform.SetSiblingIndex(back.GetSiblingIndex()); // before Back, which stays last
+        }
+
+        /// <summary>
+        /// The game's Settings window for a menu scene: a UI Toolkit document of its own over the scene's canvas
+        /// (the same window, pages and stores as in the world), opened by the screen's SETTINGS prompt.
+        /// </summary>
+        private static void AddMenuSettings()
+        {
+            var go = new GameObject("Menu Settings");
+            Parent(go, "--- UI ---");
+            var document = go.AddComponent<UnityEngine.UIElements.UIDocument>();
+            document.panelSettings = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.PanelSettings>(MenuPanelSettingsPath);
+            document.visualTreeAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.VisualTreeAsset>(MenuSettingsDocumentPath);
+            if (document.panelSettings == null || document.visualTreeAsset == null)
+                Debug.LogError($"[FrontEnd] Menu Settings needs {MenuPanelSettingsPath} and {MenuSettingsDocumentPath}.");
+            var settings = go.AddComponent<MenuSettings>();
+            SetRef(settings, "mixer", AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>(AudioSetup.MixerPath));
+        }
+
+        // The in-game UI's panel (its theme and scale): the window is the same one, so it is drawn the same way.
+        private const string MenuPanelSettingsPath = "Assets/_Game/UI/HUD/ProgressionPanelSettings.asset";
+        private const string MenuSettingsDocumentPath = "Assets/_Game/UI/Settings/MenuSettings.uxml";
 
         // ---------------------------------------------------------------- scene scaffolding
 

@@ -147,10 +147,27 @@ namespace KryticalNova.UI.Menus
             enterPrompt = Prompt("Hotkey_Select", Key.Enter, "Enter World", Confirm);
             deletePrompt = Prompt("Hotkey_Delete_Save", Key.Delete, "Delete Character", AskDelete);
             Prompt("Hotkey_Back", Key.Escape, "Back", Back);
+            // The game's Settings, from here: the same window and the same values as in the world.
+            var settingsPrompt = MenuUi.Find(screen, SettingsPromptName);
+            if (settingsPrompt != null)
+            {
+                MenuUi.SetText(settingsPrompt, "Label_Action", "Settings");
+                MenuUi.MakeClickable(settingsPrompt.gameObject, OpenSettings);
+                if (hotkeys != null) hotkeys.Bind(Key.O, OpenSettings, settingsPrompt);
+            }
             if (hotkeys == null) return;
             hotkeys.Bind(Key.NumpadEnter, Confirm);
             hotkeys.Bind(Key.UpArrow, () => Select(Mathf.Max(selected - 1, 0)));
             hotkeys.Bind(Key.DownArrow, () => Select(Mathf.Min(selected + 1, CharacterRoster.SlotCount - 1)));
+        }
+
+        /// <summary>The footer prompt the scene builder adds for Settings.</summary>
+        public const string SettingsPromptName = "Hotkey_Settings";
+
+        private static void OpenSettings()
+        {
+            MenuSettings settings = MenuSettings.Current;
+            if (settings != null && !settings.IsOpen) settings.Open();
         }
 
         /// <summary>A footer prompt: its keyboard key (glyph and shortcut), its label, and a click that does the same.</summary>

@@ -433,6 +433,15 @@
 .kn-faction-covenant .settings-row.fixed .settings-row-label, .kn-faction-covenant .settings-row.fixed .settings-row-value {
     color: rgb(152, 141, 128);
 }
+.kn-faction-covenant .settings-footer {
+    border-top-color: rgba(160, 144, 126, 0.35);
+}
+.kn-faction-covenant .settings-footer-button {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .menu-settings-shade {
+    background-color: rgba(43, 33, 22, 0.62);
+}
 
 /* ---- Items.uss ---- */
 .kn-faction-covenant .header-key {

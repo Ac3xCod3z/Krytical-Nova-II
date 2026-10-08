@@ -190,6 +190,22 @@ namespace KryticalNova.UI
             PlayerPrefs.Save();
         }
 
+        /// <summary>
+        /// Every option of the Interface page back to what the game ships with. The HUD layout, waypoints and the
+        /// chat's size are not options: they are left as they are.
+        /// </summary>
+        public static void ResetToDefaults()
+        {
+            foreach (string key in new[]
+                     {
+                         MoveMarkerKey, TargetRingKey, ControlsHintKey, NameplatesKey, OwnNamecardKey, PetChatterKey, MinimapRotatesKey,
+                         ScreenShakeKey, MenuThemeKey, SnapToGridKey, GridSizeKey, InterfaceScaleKey
+                     })
+                PlayerPrefs.DeleteKey(key);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
+        }
+
         private static bool GetBool(string key, bool fallback) => PlayerPrefs.GetInt(key, fallback ? 1 : 0) != 0;
 
         private static void SetBool(string key, bool value)

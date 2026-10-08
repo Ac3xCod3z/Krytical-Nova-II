@@ -157,7 +157,7 @@ namespace KryticalNova.Tests
         [Test]
         public void TheHudDocuments_ListEverySkinSheet()
         {
-            foreach (string document in new[] { "Assets/_Game/UI/HUD/ProgressionHUD.uxml", "Assets/_Game/UI/NPC/NpcInteraction.uxml" })
+            foreach (string document in new[] { "Assets/_Game/UI/HUD/ProgressionHUD.uxml", "Assets/_Game/UI/NPC/NpcInteraction.uxml", "Assets/_Game/UI/Settings/MenuSettings.uxml" })
             {
                 string text = File.ReadAllText(document);
                 foreach (FactionId faction in Factions)

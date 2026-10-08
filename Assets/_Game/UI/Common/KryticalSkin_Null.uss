@@ -433,6 +433,15 @@
 .kn-faction-null .settings-row.fixed .settings-row-label, .kn-faction-null .settings-row.fixed .settings-row-value {
     color: rgb(146, 128, 152);
 }
+.kn-faction-null .settings-footer {
+    border-top-color: rgba(152, 126, 160, 0.35);
+}
+.kn-faction-null .settings-footer-button {
+    font-size: 14.08px;
+}
+.kn-faction-null .menu-settings-shade {
+    background-color: rgba(38, 22, 43, 0.62);
+}
 
 /* ---- Items.uss ---- */
 .kn-faction-null .header-key {

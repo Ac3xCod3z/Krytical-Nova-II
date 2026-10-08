@@ -205,6 +205,39 @@ namespace KryticalNova.Player
             Changed?.Invoke();
         }
 
+        // Between the two halves of a capture; never part of a binding's text.
+        private const char CaptureSeparator = '\u001F';
+
+        /// <summary>The keys as they are now, in one string: for putting them back later with <see cref="Restore"/>.</summary>
+        public static string Capture(InputActionAsset playerActions)
+        {
+            string windowKeys = Windows != null ? Windows.SaveBindingOverridesAsJson() : string.Empty;
+            string playerKeys = playerActions != null ? playerActions.SaveBindingOverridesAsJson() : PlayerPrefs.GetString(PlayerKey, string.Empty);
+            return windowKeys + CaptureSeparator + playerKeys;
+        }
+
+        /// <summary>Puts the keys back as <see cref="Capture"/> found them, and keeps them.</summary>
+        public static void Restore(string captured, InputActionAsset playerActions)
+        {
+            int cut = captured != null ? captured.IndexOf(CaptureSeparator) : -1;
+            if (cut < 0) return;
+            string windowKeys = captured.Substring(0, cut), playerKeys = captured.Substring(cut + 1);
+            if (Windows != null)
+            {
+                Windows.RemoveAllBindingOverrides();
+                if (windowKeys.Length > 0) TryLoad(Windows, windowKeys);
+                PlayerPrefs.SetString(WindowsKey, windowKeys);
+            }
+            if (playerActions != null)
+            {
+                playerActions.RemoveAllBindingOverrides();
+                if (playerKeys.Length > 0) TryLoad(playerActions, playerKeys);
+            }
+            PlayerPrefs.SetString(PlayerKey, playerKeys);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
+        }
+
         /// <summary>Every key back to the one it shipped on.</summary>
         public static void ResetAll(InputActionAsset playerActions)
         {

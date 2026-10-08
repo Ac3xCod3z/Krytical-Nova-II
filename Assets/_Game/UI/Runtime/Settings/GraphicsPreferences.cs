@@ -125,6 +125,14 @@ namespace KryticalNova.UI
             Commit();
         }
 
+        /// <summary>Every graphics option back to what the game ships with (the High preset, the display's own size).</summary>
+        public static void ResetToDefaults()
+        {
+            foreach (string key in new[] { "preset", "renderScale", "shadows", "aa", "grass", "fog", "shafts", "outlines", "vsync", "frameCap", "window", "width", "height" })
+                PlayerPrefs.DeleteKey(Prefix + key);
+            Commit();
+        }
+
         private static int GetInt(string key, int fallback) => PlayerPrefs.GetInt(Prefix + key, fallback);
         private static float GetFloat(string key, float fallback) => PlayerPrefs.GetFloat(Prefix + key, fallback);
 

@@ -43,6 +43,7 @@ namespace KryticalNova.UI
             row.Add(value);
             row.Add(StepButton(">", () => Step(1)));
             Show();
+            SettingsLedger.Recording?.Add(get, set, Show);
             return Show;
         }
 
@@ -72,6 +73,7 @@ namespace KryticalNova.UI
             row.Add(slider);
             row.Add(value);
             Show();
+            SettingsLedger.Recording?.Add(get, set, Show);
             return Show;
         }
 
@@ -80,10 +82,17 @@ namespace KryticalNova.UI
             var toggle = new Toggle(label);
             toggle.AddToClassList("kn-toggle");
             toggle.AddToClassList("kn-card");
-            toggle.RegisterValueChangedCallback(evt => set(evt.newValue));
             page.Add(toggle);
+            return Bind(toggle, get, set);
+        }
+
+        /// <summary>A toggle that is already laid out in the window's markup.</summary>
+        public static Action Bind(Toggle toggle, Func<bool> get, Action<bool> set)
+        {
+            toggle.RegisterValueChangedCallback(evt => set(evt.newValue));
             void Show() => toggle.SetValueWithoutNotify(get());
             Show();
+            SettingsLedger.Recording?.Add(get, set, Show);
             return Show;
         }
 

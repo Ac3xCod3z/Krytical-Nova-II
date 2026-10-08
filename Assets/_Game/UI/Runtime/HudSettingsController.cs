@@ -25,7 +25,6 @@ namespace KryticalNova.UI
         [Tooltip("The game's mixer: the Audio page's sliders drive its exposed volumes. Assigned by the zone scene setup.")]
         [SerializeField] private AudioMixer mixer;
 
-        private static readonly string[] Pages = { "graphics", "audio", "interface", "controls" };
         // Menu buttons that show the key that opens their window: button, its caption, the window key (null = a player-asset action).
         private static readonly (string Button, string Caption, string WindowKey, string PlayerAction)[] MenuKeys =
         {
@@ -43,10 +42,9 @@ namespace KryticalNova.UI
             ("key-map", KeyBindings.Map), ("key-kiosk", KeyBindings.Kiosk), ("key-contacts", KeyBindings.Contacts), ("key-crew", KeyBindings.Crew),
         };
 
-        private readonly GraphicsSettingsTab graphicsTab = new GraphicsSettingsTab();
-        private readonly AudioSettingsTab audioTab = new AudioSettingsTab();
-        private ControlsSettingsTab controlsTab;
-        private string activePage = Pages[0];
+        // The window's pages, shared with the Settings the menus open (MenuSettings).
+        private readonly SettingsPages pages = new SettingsPages();
+        private ControlsSettingsTab controlsTab => pages.Controls;
         private Vector2Int authoredReferenceResolution;
         private Button pickPanelButton, resetPanelButton;
         private ScrollView panelList;
@@ -92,7 +90,6 @@ namespace KryticalNova.UI
                 return;
             }
             hud = GetComponent<ProgressionHUD>();
-            if (controlsTab == null) controlsTab = new ControlsSettingsTab(PlayerActions, OnListeningChanged);
             if (document.panelSettings != null) authoredReferenceResolution = document.panelSettings.referenceResolution;
             AudioPreferences.Bind(mixer);
 
@@ -148,7 +145,7 @@ namespace KryticalNova.UI
             if (actions != shownPlayerActions)
             {
                 shownPlayerActions = actions;
-                if (controlsTab != null && !controlsTab.IsListening) controlsTab.Build(root.Q("settings-page-controls"));
+                pages.RebuildControls();
                 RefreshKeyLabels();
             }
 
@@ -183,7 +180,7 @@ namespace KryticalNova.UI
             if (!show) return;
             // The window lives in a layer of its own: the layer, not the window, is what stacks against the others.
             settingsWindow.parent?.BringToFront();
-            graphicsTab.Refresh();
+            pages.Opened();
         }
 
         private void CloseSettings()
@@ -210,44 +207,11 @@ namespace KryticalNova.UI
 
         private void BuildPages()
         {
-            foreach (string page in Pages)
-            {
-                string name = page;
-                Bind("settings-tab-" + name, () => ShowPage(name));
-            }
-            graphicsTab.Build(root.Q("settings-page-graphics"));
-            audioTab.Build(root.Q("settings-page-audio"));
-            controlsTab.Build(root.Q("settings-page-controls"));
-
-            VisualElement layoutOptions = root.Q("settings-layout-options");
-            if (layoutOptions != null)
-            {
-                string[] sizes = System.Array.ConvertAll(HudPreferences.GridSizes, size => size + " PX");
-                SettingsRows.Choice(layoutOptions, "Grid size", sizes,
-                    () => Mathf.Max(0, System.Array.IndexOf(HudPreferences.GridSizes, HudPreferences.GridSize)),
-                    index => HudPreferences.GridSize = HudPreferences.GridSizes[index]);
-                SettingsRows.Slider(layoutOptions, "Interface size", HudPreferences.MinInterfaceScale, HudPreferences.MaxInterfaceScale,
-                    () => HudPreferences.InterfaceScale, value => HudPreferences.InterfaceScale = Mathf.Round(value * 20f) / 20f);
-                // The skin of the title screens only: the game itself always wears the character's faction.
-                SettingsRows.Choice(layoutOptions, "Menu theme", MenuThemeNames,
-                    () => (int)HudPreferences.MenuTheme, index => HudPreferences.MenuTheme = (MenuTheme)index);
-            }
-            ShowPage(activePage);
+            pages.Build(root, PlayerActions, OnListeningChanged, true);
             RefreshKeyLabels();
         }
 
-        private static readonly string[] MenuThemeNames = { "ROTATE", "HEGEMONY", "NULL", "COVENANT" };
-
-        private void ShowPage(string page)
-        {
-            if (page != "controls") controlsTab?.Cancel();
-            activePage = page;
-            foreach (string name in Pages)
-            {
-                root.Q("settings-page-" + name)?.EnableInClassList("active", name == page);
-                root.Q<Button>("settings-tab-" + name)?.EnableInClassList("active", name == page);
-            }
-        }
+        private void ShowPage(string page) => pages.Show(page);
 
         private void OnListeningChanged(bool listening)
         {
@@ -421,29 +385,12 @@ namespace KryticalNova.UI
             Bind("hud-edit-reset", ResetLayout);
             Bind("hud-edit-pick", TogglePanelList);
             Bind("hud-edit-reset-one", () => layout.ResetSelected());
-            BindToggle("setting-move-marker", HudPreferences.ShowMoveMarker, v => HudPreferences.ShowMoveMarker = v);
-            BindToggle("setting-target-ring", HudPreferences.ShowTargetRing, v => HudPreferences.ShowTargetRing = v);
-            BindToggle("setting-nameplates", HudPreferences.ShowNameplates, v => HudPreferences.ShowNameplates = v);
-            BindToggle("setting-own-namecard", HudPreferences.ShowOwnNamecard, v => HudPreferences.ShowOwnNamecard = v);
-            BindToggle("setting-pet-chatter", HudPreferences.PetChatter, v => HudPreferences.PetChatter = v);
-            BindToggle("setting-controls-hint", HudPreferences.ShowControlsHint, v => HudPreferences.ShowControlsHint = v);
-            BindToggle("setting-minimap-rotate", HudPreferences.MinimapRotates, v => HudPreferences.MinimapRotates = v);
-            BindToggle("setting-screen-shake", HudPreferences.ScreenShake, v => HudPreferences.ScreenShake = v);
-            BindToggle("setting-snap-grid", HudPreferences.SnapToGrid, v => HudPreferences.SnapToGrid = v);
         }
 
         private void Bind(string elementName, System.Action callback)
         {
             Button button = root.Q<Button>(elementName);
             if (button != null) button.clicked += callback;
-        }
-
-        private void BindToggle(string elementName, bool initialValue, System.Action<bool> onChanged)
-        {
-            Toggle toggle = root.Q<Toggle>(elementName);
-            if (toggle == null) return;
-            toggle.SetValueWithoutNotify(initialValue);
-            toggle.RegisterValueChangedCallback(evt => onChanged(evt.newValue));
         }
 
         private static void SetVisible(VisualElement element, bool visible)
