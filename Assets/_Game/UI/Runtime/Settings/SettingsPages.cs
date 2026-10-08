@@ -1,5 +1,6 @@
 using System;
 using KryticalNova.Player;
+using KryticalNova.UI.Menus;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
@@ -29,6 +30,7 @@ namespace KryticalNova.UI
         private Button applyButton, revertButton;
         private string activePage = Pages[0];
         private bool inGame;
+        private VisualElement watched;
 
         public ControlsSettingsTab Controls => controlsTab;
         public string ActivePage => activePage;
@@ -45,10 +47,23 @@ namespace KryticalNova.UI
             inGame = inTheGame;
             if (controlsTab == null) controlsTab = new ControlsSettingsTab(actions, listeningChanged);
 
+            // Every control of the window says when it is touched, for the feel of it.
+            VisualElement window = root.Q("settings-window") ?? root;
+            if (watched != window)
+            {
+                WindowMoments.Watch(window);
+                watched = window;
+            }
+
             foreach (string page in Pages)
             {
                 string name = page;
-                Click("settings-tab-" + name, () => Show(name));
+                Click("settings-tab-" + name, () =>
+                {
+                    bool another = activePage != name;
+                    Show(name);
+                    if (another) MenuMoments.Raise(MenuMoment.Tab, root.Q("settings-page-" + name));
+                });
             }
 
             ledger.Clear();
@@ -118,6 +133,7 @@ namespace KryticalNova.UI
             ledger.Mark();
             ShowFooter();
             Acted?.Invoke("apply");
+            MenuMoments.Raise(MenuMoment.Confirm, applyButton);
         }
 
         private void Revert()
@@ -127,6 +143,7 @@ namespace KryticalNova.UI
             graphicsTab.Refresh();
             ShowFooter();
             Acted?.Invoke("revert");
+            MenuMoments.Raise(MenuMoment.Back, revertButton);
         }
 
         /// <summary>The page shown goes back to the values the game ships with. REVERT can still undo it.</summary>
@@ -151,6 +168,7 @@ namespace KryticalNova.UI
             graphicsTab.Refresh();
             ShowFooter();
             Acted?.Invoke("reset");
+            MenuMoments.Raise(MenuMoment.Tab, root.Q("settings-page-" + activePage));
         }
 
         private void ShowFooter()

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KryticalNova.Player;
+using KryticalNova.UI.Menus;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -149,6 +150,7 @@ namespace KryticalNova.UI
                 ListeningEndedFrame = Time.frameCount;
                 KeyBindings.Listening = false;
                 listeningChanged?.Invoke(false);
+                MenuMoments.Raise(completed ? MenuMoment.Confirm : MenuMoment.Back, button);
             }
 
             operation = rebind.OnComplete(_ => Finish(true)).OnCancel(_ => Finish(false)).Start();

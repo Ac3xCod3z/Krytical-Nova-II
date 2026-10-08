@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.Player;
 using KryticalNova.Progression;
+using KryticalNova.UI.Menus;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
@@ -181,11 +182,13 @@ namespace KryticalNova.UI
             // The window lives in a layer of its own: the layer, not the window, is what stacks against the others.
             settingsWindow.parent?.BringToFront();
             pages.Opened();
+            MenuMoments.Raise(MenuMoment.Open, settingsWindow);
         }
 
         private void CloseSettings()
         {
             controlsTab?.Cancel();
+            if (IsSettingsOpen) MenuMoments.Raise(MenuMoment.Back);
             SetVisible(settingsWindow, false);
         }
 

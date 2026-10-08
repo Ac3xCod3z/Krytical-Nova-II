@@ -73,6 +73,7 @@ namespace KryticalNova.UI.Menus
                 {
                     Select(index);
                     picked?.Invoke(index);
+                    MenuMoments.Raise(MenuMoment.Toggle, swatch);
                 };
                 swatches.Add(row);
                 fills.Add(MenuUi.Find<Image>(swatch, "COLOUR"));

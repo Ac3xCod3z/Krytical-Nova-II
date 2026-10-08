@@ -58,7 +58,11 @@ namespace KryticalNova.UI.Menus
             maxLabel = MenuUi.Find<TMP_Text>(transform, "Label_Value_Max");
             slider = GetComponentInChildren<Slider>(true);
             if (slider == null) return;
-            slider.onValueChanged.AddListener(v => changed?.Invoke(v));
+            slider.onValueChanged.AddListener(v =>
+            {
+                changed?.Invoke(v);
+                MenuMoments.Raise(MenuMoment.Slide, slider.handleRect != null ? slider.handleRect : slider.transform);
+            });
             Arrow("Button_Arrow_Left", -1);
             Arrow("Button_Arrow_Right", 1);
         }
@@ -67,6 +71,7 @@ namespace KryticalNova.UI.Menus
         {
             var button = MenuUi.Find<Button>(transform, buttonName);
             if (button == null) return;
+            MenuTouch.On(button.gameObject);
             button.onClick.AddListener(() =>
             {
                 float nudge = Mathf.Max((slider.maxValue - slider.minValue) / ArrowSteps, 1f);

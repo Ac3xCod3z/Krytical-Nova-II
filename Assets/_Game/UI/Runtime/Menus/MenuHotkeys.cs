@@ -18,6 +18,8 @@ namespace KryticalNova.UI.Menus
         [SerializeField] private KeyGlyphSet glyphs;
 
         private readonly List<(Key key, Action action)> bindings = new List<(Key, Action)>();
+        // The prompt that shows a key: it answers the key as it answers a click.
+        private readonly Dictionary<Key, Transform> prompts = new Dictionary<Key, Transform>();
 
         /// <summary>Set while a popup owns the keyboard.</summary>
         public bool Suspended { get; set; }
@@ -34,6 +36,7 @@ namespace KryticalNova.UI.Menus
         {
             Bind(key, action);
             ShowKey(prompt, key);
+            if (prompt != null) prompts[key] = prompt;
         }
 
         /// <summary>Puts a keyboard glyph on a Synty hotkey prompt, replacing the gamepad button it ships with.</summary>
@@ -50,7 +53,11 @@ namespace KryticalNova.UI.Menus
             if (prompt != null && glyphs != null) glyphs.ShowMouse(prompt, button);
         }
 
-        public void Clear() => bindings.Clear();
+        public void Clear()
+        {
+            bindings.Clear();
+            prompts.Clear();
+        }
 
         private void Update()
         {
@@ -68,6 +75,7 @@ namespace KryticalNova.UI.Menus
                 var (key, action) = bindings[i];
                 if (typing && key != Key.Enter && key != Key.NumpadEnter && key != Key.Escape) continue;
                 if (!keyboard[key].wasPressedThisFrame) continue;
+                if (prompts.TryGetValue(key, out Transform prompt) && prompt != null) MenuMoments.Raise(MenuMoment.Press, prompt);
                 action?.Invoke();
                 return;
             }

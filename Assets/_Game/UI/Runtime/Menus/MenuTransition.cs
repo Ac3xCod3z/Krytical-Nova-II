@@ -148,7 +148,6 @@ namespace KryticalNova.UI.Menus
             pendingForward = forward;
             ShowStill(picture);
             if (cover != null) SetCovering(false);
-            MenuMoments.Raise(forward ? MenuMoment.PageForward : MenuMoment.PageBack);
 
             if (!carryIntoNextScene)
             {
@@ -201,6 +200,10 @@ namespace KryticalNova.UI.Menus
             still.enabled = false;
             // From here the screen underneath is the player's: the page takes no clicks and holds no keys back.
             opening = false;
+            // The page lifts: the moment has its own feel, and the screen it uncovers is what answers it.
+            var skins = FindAnyObjectByType<MenuSkinSwitch>();
+            MenuMoments.Raise(forward ? MenuMoment.PageForward : MenuMoment.PageBack,
+                skins != null && skins.ShowingRoot != null ? skins.ShowingRoot.transform : null);
 
             float seconds = Mathf.Max(0.05f, settings.turnSeconds);
             float elapsed = 0f;

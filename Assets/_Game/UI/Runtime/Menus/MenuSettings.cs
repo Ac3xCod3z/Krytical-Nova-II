@@ -83,6 +83,7 @@ namespace KryticalNova.UI.Menus
             WearSkin();
             Show(true);
             pages.Opened();
+            MenuMoments.Raise(MenuMoment.Open, window);
         }
 
         public void Close()
@@ -90,6 +91,7 @@ namespace KryticalNova.UI.Menus
             if (!IsOpen) return;
             pages.Controls?.Cancel();
             Show(false);
+            MenuMoments.Raise(MenuMoment.Back);
             Action done = closed;
             closed = null;
             done?.Invoke();

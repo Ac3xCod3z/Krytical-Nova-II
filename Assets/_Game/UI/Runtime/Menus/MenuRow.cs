@@ -55,6 +55,7 @@ namespace KryticalNova.UI.Menus
         {
             hovered = true;
             Refresh();
+            MenuMoments.Raise(MenuMoment.Hover, transform);
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -66,6 +67,7 @@ namespace KryticalNova.UI.Menus
         public void OnPointerClick(PointerEventData eventData)
         {
             if (eventData.button != PointerEventData.InputButton.Left) return;
+            MenuMoments.Raise(MenuMoment.Press, transform);
             Clicked?.Invoke();
             if (eventData.clickCount >= 2) DoubleClicked?.Invoke();
         }

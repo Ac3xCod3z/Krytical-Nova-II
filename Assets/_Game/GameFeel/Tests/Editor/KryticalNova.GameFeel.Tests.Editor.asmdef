@@ -4,6 +4,7 @@
     "references": [
         "KryticalNova.Runtime",
         "KryticalNova.GameFeel",
+        "KryticalNova.UI",
         "MoreMountains.Tools",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

@@ -126,6 +126,7 @@ namespace KryticalNova.UI.Menus
         {
             if (slot < 0 || slot >= CharacterRoster.SlotCount) return;
             if (deletePopup != null && deletePopup.activeSelf) return; // the popup is about the selected character
+            if (slot != selected && rows[slot] != null) MenuMoments.Raise(MenuMoment.Toggle, rows[slot].transform);
             selected = slot;
             for (int i = 0; i < rows.Length; i++)
                 if (rows[i] != null) rows[i].SetSelected(i == slot);
@@ -185,6 +186,7 @@ namespace KryticalNova.UI.Menus
         private void Confirm()
         {
             if (deletePopup != null && deletePopup.activeSelf) return;
+            MenuMoments.Raise(MenuMoment.Confirm, rows[selected] != null ? rows[selected].transform : null);
             if (roster.IsUsed(selected))
             {
                 CharacterSession.Enter(roster, selected);
@@ -199,6 +201,7 @@ namespace KryticalNova.UI.Menus
 
         private void Back()
         {
+            MenuMoments.Raise(MenuMoment.Back);
             if (deletePopup != null && deletePopup.activeSelf) { ClosePopup(); return; }
             FrontEnd.Go(FrontEnd.TitleScene);
         }
@@ -231,7 +234,11 @@ namespace KryticalNova.UI.Menus
             {
                 if (hotkeys != null) hotkeys.ShowKey(cancel, Key.Escape);
                 MenuUi.SetText(cancel, "Label_Action", "Cancel");
-                MenuUi.MakeClickable(cancel.gameObject, ClosePopup);
+                MenuUi.MakeClickable(cancel.gameObject, () =>
+                {
+                    MenuMoments.Raise(MenuMoment.Back);
+                    ClosePopup();
+                });
             }
             deletePopup.SetActive(false);
         }
@@ -246,6 +253,7 @@ namespace KryticalNova.UI.Menus
             MenuUi.SetText(popup, "Label_TypeMessageHere", profile.name);
             if (hotkeys != null) hotkeys.Suspended = true;
             deletePopup.SetActive(true);
+            MenuMoments.Raise(MenuMoment.Open, popup);
             if (deleteInput != null)
             {
                 deleteInput.text = string.Empty;
@@ -271,7 +279,13 @@ namespace KryticalNova.UI.Menus
 
         private void ConfirmDelete()
         {
-            if (!DeleteNameMatches()) return;
+            if (!DeleteNameMatches())
+            {
+                // The name typed is not this character's: the field says no.
+                MenuMoments.Raise(MenuMoment.Error, deleteInput != null ? deleteInput.transform : null);
+                return;
+            }
+            MenuMoments.Raise(MenuMoment.Confirm);
             if (CharacterSession.ActiveSlot == selected) CharacterSession.Clear();
             roster.Clear(selected);
             CharacterSession.Store.Save(roster);

@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.UI.Menus;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -38,6 +39,7 @@ namespace KryticalNova.UI
                 if (options.Length == 0) return;
                 set((Mathf.Clamp(get(), 0, options.Length - 1) + by + options.Length) % options.Length);
                 Show();
+                MenuMoments.Raise(MenuMoment.Toggle, value);
             }
             row.Add(StepButton("<", () => Step(-1)));
             row.Add(value);

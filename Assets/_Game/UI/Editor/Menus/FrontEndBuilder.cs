@@ -558,6 +558,20 @@ namespace KryticalNova.EditorTools
             var transition = go.AddComponent<MenuTransition>();
             SetRef(transition, "cover", cover);
             AddPageTurn(go, transition);
+            AddMenuFeel();
+        }
+
+        /// <summary>
+        /// The feel of the menus (hover, press, confirm, back, error, the page turn): the game feel's menu prefab,
+        /// one in every menu scene. It listens to what the screens say happened; they know nothing of it.
+        /// </summary>
+        private static void AddMenuFeel()
+        {
+            GameObject prefab = GameFeelBuilder.EnsureMenuFeel();
+            if (prefab == null) return;
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, buildScene);
+            go.name = "Menu Feel";
+            Parent(go, "--- Systems ---");
         }
 
         // ---------------------------------------------------------------- comic layer
