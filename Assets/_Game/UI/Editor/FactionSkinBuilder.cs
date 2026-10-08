@@ -1,26 +1,42 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using KryticalNova.Factions;
+using KryticalNova.UI;
 using UnityEditor;
 using UnityEngine;
 
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Generates the faction skins of the in-game UI. The layout belongs to the Hegemony sheets (the base): this tool
-    /// reads them and writes, for each other faction, a sheet of overrides that only swaps what a skin is made of:
-    /// sprites (same role, the faction's own Synty HUD pack), fonts and colours. Every override selector is prefixed
-    /// with the faction class, so the base sheets are never edited and the Hegemony UI cannot change.
-    /// Re-run after editing a base sheet. A generated sheet may be hand-tuned, but a re-run replaces it.
+    /// Generates the faction skins of the in-game UI from the factions' <see cref="UiSkin"/> assets (UI/Skins). The
+    /// layout belongs to the base sheets: this tool reads them and writes, for each faction, a sheet of overrides
+    /// that only swaps what a skin is made of: sprites (the same part, from the skin asset), fonts and colours. Every
+    /// override selector is prefixed with the faction's class, so the base sheets are never edited and a skin can
+    /// never change a layout. A skin that names the base sheets' own sprites, fonts and colours (the Hegemony's, as
+    /// shipped) comes out as an empty sheet.
+    /// Runs by itself when a skin asset is saved (<see cref="UiSkinWatcher"/>); re-run it after editing a base sheet.
+    /// A generated sheet is never tuned by hand: change the asset.
     /// </summary>
     public static class FactionSkinBuilder
     {
+        public const string SkinFolder = "Assets/_Game/UI/Skins";
         private const string OutputFolder = "Assets/_Game/UI/Common";
-        private const string SciFiHud = "/Assets/Synty/InterfaceSciFiSoldierHUD/";
-        private const string DarkFantasy = "/Assets/Synty/InterfaceDarkFantasyHUD/";
-        private const string FantasyWarrior = "/Assets/Synty/InterfaceFantasyWarriorHUD/";
+        private const string SciFiHud = "Assets/Synty/InterfaceSciFiSoldierHUD/";
+        private const string DarkFantasy = "Assets/Synty/InterfaceDarkFantasyHUD/";
+        private const string FantasyWarrior = "Assets/Synty/InterfaceFantasyWarriorHUD/";
+        private const string SciFiMenus = "Assets/Synty/InterfaceSciFiMenus/";
+        private const string DarkFantasyMenus = "Assets/Synty/InterfaceDarkFantasyMenus/";
+        private const string FantasyMenus = "Assets/Synty/InterfaceFantasyMenus/";
+        // The base sheets' own sprites and fonts: a skin that names the same ones overrides nothing.
+        private const string BaseSpritePrefix = "SPR_HUD_SciFiSoldier_";
+        private const string BaseBodyFont = SciFiHud + "Fonts/exo-2-0/Exo2.0-SemiBold.otf";
+        private const string BaseTitleFont = SciFiHud + "Fonts/Orbitron/Orbitron-ExtraBold.ttf";
+
+        public static readonly FactionId[] Factions = { FactionId.Hegemony, FactionId.Null, FactionId.Covenant };
 
         private static readonly string[] BaseSheets =
         {
@@ -43,99 +59,245 @@ namespace KryticalNova.EditorTools
             "Assets/_Game/UI/NPC/NpcInteraction.uss"
         };
 
+        // Each part of a skin, and the base sprite (SPR_HUD_SciFiSoldier_<key>) that stands for it in the base sheets.
+        // Rings and map shapes are not parts of a skin: they must match the round minimap, and only take its colours.
+        private static readonly (string key, Func<UiSkin, Sprite> get, Action<UiSkin, Sprite> set)[] Parts =
+        {
+            ("Box_02", s => s.panel, (s, v) => s.panel = v),
+            ("Box_04", s => s.card, (s, v) => s.card = v),
+            ("Box_03", s => s.token, (s, v) => s.token = v),
+            ("Box_Glass_04", s => s.itemSlot, (s, v) => s.itemSlot = v),
+            ("Frame_02", s => s.frame, (s, v) => s.frame = v),
+            ("Frame_04", s => s.frameSmall, (s, v) => s.frameSmall = v),
+            ("Bar_Angled_01", s => s.bar, (s, v) => s.bar = v),
+            ("Pip_Hexagon_01_Active", s => s.pipOn, (s, v) => s.pipOn = v),
+            ("Pip_Hexagon_01_Inactive", s => s.pipOff, (s, v) => s.pipOff = v),
+            ("Icon_InactiveItem_01", s => s.closeIcon, (s, v) => s.closeIcon = v),
+            ("Triangle_02", s => s.arrowIcon, (s, v) => s.arrowIcon = v),
+            ("Gradient_Outwards_Smooth_01", s => s.softBacking, (s, v) => s.softBacking = v),
+        };
+
+        // The sci-fi packs' patterns behind the world map and the larger panels: a skin has them or has none.
+        private static readonly string[] TechPatterns =
+        {
+            "SPR_HUD_SciFiSoldier_Background_Hexagons_01", "SPR_SciFiMenus_Background_Hexagons_01",
+            "SPR_SciFiMenus_Background_Crosses_01", "SPR_SciFiMenus_Background_ScanLines_01"
+        };
+
+        /// <summary>A skin asset, resolved to what the conversion works with.</summary>
         private sealed class Skin
         {
             public string name, cssClass, pack;
+            /// <summary>Null: the base sheets' own font stays.</summary>
             public string bodyFont, titleFont;
-            /// <summary>Base sprite file name (no extension) to this skin's sprite path, or null to remove the image.</summary>
-            public Dictionary<string, string> sprites;
+            /// <summary>Base sprite file name (no extension) to this skin's sprite, or null to remove the image.</summary>
+            public Dictionary<string, Sprite> sprites;
+            public bool recolour;
             /// <summary>Hue the base accent (teal) becomes, the hue of the dark panel tones, and the hue of small gold labels.</summary>
             public float accentHue, neutralHue, labelHue;
-            public float accentSaturation = 1.45f, neutralSaturation = 0.85f;
-            /// <summary>The pack's fonts are smaller on the line than Exo 2 at the same size; text is scaled up to match.</summary>
-            public float fontScale = 1f;
+            public float accentSaturation, neutralSaturation;
+            public float fontScale;
         }
 
-        // Roles: panel fill, inset card / button, token, item slot, outlines, bars, pips, close glyph, grab handle,
-        // soft backing. Rings and map shapes keep the base sprites (they must match the round minimap) and only recolour.
-        private static Skin Null() => new Skin
-        {
-            name = "Null", cssClass = "kn-faction-null", pack = "Synty INTERFACE - Dark Fantasy HUD",
-            bodyFont = DarkFantasy + "Fonts/Markazi/MarkaziText-SemiBold.ttf",
-            titleFont = DarkFantasy + "Fonts/Pirata One/PirataOne-Regular.ttf",
-            accentHue = 357f, neutralHue = 285f, labelHue = 262f, fontScale = 1.28f,
-            sprites = HudSprites(DarkFantasy + "Sprites/HUD/SPR_HUD_DarkFantasy_", new Dictionary<string, string>
-            {
-                { "Box_02", "Box_Medium_Parchment_01" }, { "Box_04", "Box_Small_Parchment_01" },
-                { "Box_03", "Box_Small_Parchment_02" }, { "Box_Glass_04", "Box_Small_Parchment_03" },
-                { "Frame_02", "Frame_Box_01" }, { "Frame_04", "Frame_Box_03" },
-                { "Bar_Angled_01", "Bar_01_Clean" },
-                { "Pip_Hexagon_01_Active", "Circle_01_Med_Clean" }, { "Pip_Hexagon_01_Inactive", "Ring_Medium_01_Clean" },
-                { "Icon_InactiveItem_01", "Close_01_Clean" }, { "Triangle_02", "Arrow_Small_01_Clean" },
-                { "Gradient_Outwards_Smooth_01", "Gradient_Outwards_01" }, { "Background_Hexagons_01", null }
-            })
-        };
+        public static string SkinPath(FactionId faction) => $"{SkinFolder}/UiSkin_{faction}.asset";
+        public static string SheetPath(FactionId faction) => $"{OutputFolder}/KryticalSkin_{faction}.uss";
 
-        private static Skin Covenant() => new Skin
-        {
-            name = "Covenant", cssClass = "kn-faction-covenant", pack = "Synty INTERFACE - Fantasy Warrior HUD",
-            bodyFont = FantasyWarrior + "Fonts/Grenze/Grenze-SemiBold.ttf",
-            titleFont = FantasyWarrior + "Fonts/Texturina/Texturina_18pt-SemiBold.ttf",
-            accentHue = 39f, neutralHue = 32f, labelHue = 140f, fontScale = 1.12f,
-            sprites = HudSprites(FantasyWarrior + "Sprites/HUD/SPR_HUD_FantasyWarrior_", new Dictionary<string, string>
-            {
-                { "Box_02", "Box_Medium_Parchment_01" }, { "Box_04", "Box_Small_Parchment_01" },
-                { "Box_03", "Box_Small_Parchment_02" }, { "Box_Glass_04", "Box_Small_Parchment_03" },
-                { "Frame_02", "Frame_Box_Medium_01" }, { "Frame_04", "Frame_Box_Small_01" },
-                { "Bar_Angled_01", "Bar_Diamond_01" },
-                { "Pip_Hexagon_01_Active", "Circle_Small_01_Clean" }, { "Pip_Hexagon_01_Inactive", "Ring_Small_01_Clean" },
-                { "Icon_InactiveItem_01", "Icon_InactiveItem_01" }, { "Triangle_02", "Triangle_Small_01_Clean" },
-                { "Gradient_Outwards_Smooth_01", "Gradient_Outwards_Smooth_01" }, { "Background_Hexagons_01", null }
-            })
-        };
-
-        // Keys are the short role names above; the base files are SPR_HUD_SciFiSoldier_<key>.png. The Sci-Fi Menus
-        // patterns behind the world map (hexagons, crosses, scan lines) have no fantasy counterpart and are removed.
-        private static Dictionary<string, string> HudSprites(string prefix, Dictionary<string, string> roles)
-        {
-            var map = new Dictionary<string, string>();
-            foreach (var role in roles)
-                map["SPR_HUD_SciFiSoldier_" + role.Key] = role.Value != null ? prefix + role.Value + ".png" : null;
-            map["SPR_SciFiMenus_Background_Hexagons_01"] = null;
-            map["SPR_SciFiMenus_Background_Crosses_01"] = null;
-            map["SPR_SciFiMenus_Background_ScanLines_01"] = null;
-            return map;
-        }
+        public static UiSkin LoadSkin(FactionId faction) => AssetDatabase.LoadAssetAtPath<UiSkin>(SkinPath(faction));
 
         [MenuItem("Krytical Nova/UI/Build Faction Skins")]
         public static void Build()
         {
-            foreach (var skin in new[] { Null(), Covenant() })
+            EnsureSkins();
+            bool wrote = false;
+            foreach (FactionId faction in Factions)
             {
-                var output = new StringBuilder();
-                output.AppendLine("/*");
-                output.AppendLine($" * {skin.name} skin of the in-game UI ({skin.pack}).");
-                output.AppendLine(" * GENERATED by Krytical Nova > UI > Build Faction Skins from the Hegemony sheets: same layout, other sprites,");
-                output.AppendLine(" * fonts and colours. It applies under the ." + skin.cssClass + " class, which FactionSkin puts on the UI when the");
-                output.AppendLine(" * local player belongs to this faction. Re-run the tool after changing a base sheet.");
-                output.AppendLine(" */");
-                int rules = 0;
-                foreach (string path in BaseSheets)
-                {
-                    if (!File.Exists(path))
-                    {
-                        Debug.LogWarning($"[UI] Base sheet missing: {path}");
-                        continue;
-                    }
-                    output.AppendLine();
-                    output.AppendLine($"/* ---- {Path.GetFileName(path)} ---- */");
-                    rules += Convert(File.ReadAllText(path), skin, output);
-                }
-                string target = $"{OutputFolder}/KryticalSkin_{skin.name}.uss";
-                File.WriteAllText(target, output.ToString().Replace("\r\n", "\n").Replace("\n", "\r\n"));
-                Debug.Log($"[UI] {skin.name} skin: {rules} override rules in {target}.");
+                UiSkin asset = LoadSkin(faction);
+                if (asset == null) continue;
+                string text = Generate(asset, out int rules);
+                string target = SheetPath(faction);
+                // An unchanged sheet is left alone: writing it would re-import it and rebuild every open UI.
+                if (File.Exists(target) && File.ReadAllText(target) == text) continue;
+                File.WriteAllText(target, text);
+                wrote = true;
+                Debug.Log($"[UI] {faction} skin: {rules} override rules in {target}.");
             }
-            AssetDatabase.Refresh();
+            if (wrote) AssetDatabase.Refresh();
+        }
+
+        /// <summary>The whole skin sheet of one faction, as it is written to disk.</summary>
+        public static string Generate(UiSkin asset, out int rules)
+        {
+            Skin skin = Resolve(asset);
+            var output = new StringBuilder();
+            output.AppendLine("/*");
+            output.AppendLine($" * {skin.name} skin of the in-game UI ({skin.pack}).");
+            output.AppendLine($" * GENERATED by Krytical Nova > UI > Build Faction Skins from {SkinPath(asset.faction)} and the base sheets:");
+            output.AppendLine(" * same layout, the skin's sprites, fonts and colours. It applies under the ." + skin.cssClass + " class, which FactionSkin");
+            output.AppendLine(" * puts on the UI when the local player belongs to this faction. Do not edit: change the skin asset.");
+            output.AppendLine(" */");
+            rules = 0;
+            foreach (string path in BaseSheets)
+            {
+                if (!File.Exists(path))
+                {
+                    Debug.LogWarning($"[UI] Base sheet missing: {path}");
+                    continue;
+                }
+                var sheet = new StringBuilder();
+                int count = Convert(File.ReadAllText(path), skin, sheet);
+                if (count == 0) continue;
+                output.AppendLine();
+                output.AppendLine($"/* ---- {Path.GetFileName(path)} ---- */");
+                output.Append(sheet);
+                rules += count;
+            }
+            return output.ToString().Replace("\r\n", "\n").Replace("\n", "\r\n");
+        }
+
+        private static Skin Resolve(UiSkin asset)
+        {
+            var skin = new Skin
+            {
+                name = asset.faction.ToString(), cssClass = UiSkin.ClassOf(asset.faction), pack = asset.hudPack,
+                recolour = asset.recolour, accentSaturation = asset.accentSaturation, neutralSaturation = asset.panelSaturation,
+                fontScale = asset.fontScale, sprites = new Dictionary<string, Sprite>(),
+            };
+            Color.RGBToHSV(asset.accent, out float accent, out _, out _);
+            Color.RGBToHSV(asset.panelTone, out float neutral, out _, out _);
+            Color.RGBToHSV(asset.label, out float label, out _, out _);
+            skin.accentHue = accent * 360f;
+            skin.neutralHue = neutral * 360f;
+            skin.labelHue = label * 360f;
+
+            string body = asset.bodyFont != null ? AssetDatabase.GetAssetPath(asset.bodyFont) : null;
+            string title = asset.titleFont != null ? AssetDatabase.GetAssetPath(asset.titleFont) : null;
+            skin.bodyFont = string.IsNullOrEmpty(body) || body == BaseBodyFont ? null : "/" + body;
+            skin.titleFont = string.IsNullOrEmpty(title) || title == BaseTitleFont ? null : "/" + title;
+
+            foreach (var part in Parts)
+            {
+                Sprite sprite = part.get(asset);
+                if (sprite == null)
+                {
+                    Debug.LogWarning($"[UI] {SkinPath(asset.faction)} has no sprite for '{part.key}': the base one stays.");
+                    continue;
+                }
+                skin.sprites[BaseSpritePrefix + part.key] = sprite;
+            }
+            if (!asset.techPatterns)
+                foreach (string pattern in TechPatterns) skin.sprites[pattern] = null;
+            return skin;
+        }
+
+        // ---------------------------------------------------------------- the skin assets
+
+        /// <summary>
+        /// Makes the three skin assets where one is missing, with the parts each faction's packs have for them. An
+        /// asset that is there is left exactly as it is: it is the place a skin is tuned.
+        /// </summary>
+        public static void EnsureSkins()
+        {
+            WeatherVfxBuilder.EnsureFolder(SkinFolder);
+            Ensure(FactionId.Hegemony, skin =>
+            {
+                skin.hudPack = "Synty INTERFACE - Sci-Fi Soldier HUD";
+                skin.menuPack = "Synty INTERFACE - Sci-Fi Menus";
+                skin.bodyFont = Load<Font>(BaseBodyFont);
+                skin.titleFont = Load<Font>(BaseTitleFont);
+                skin.fontScale = 1f;
+                skin.recolour = false; // the base sheets' colours are the Hegemony's own
+                skin.accent = Color.HSVToRGB(170f / 360f, 0.72f, 0.85f);
+                skin.panelTone = Color.HSVToRGB(225f / 360f, 0.35f, 0.3f);
+                skin.label = Color.HSVToRGB(42f / 360f, 0.5f, 0.85f);
+                skin.techPatterns = true;
+                foreach (var part in Parts)
+                    part.set(skin, Load<Sprite>($"{SciFiHud}Sprites/HUD/{BaseSpritePrefix}{part.key}.png"));
+                Menus(skin, SciFiMenus, "SciFiMenus", new Color32(0x4F, 0xE3, 0xF0, 0xFF));
+            });
+            Ensure(FactionId.Null, skin =>
+            {
+                skin.hudPack = "Synty INTERFACE - Dark Fantasy HUD";
+                skin.menuPack = "Synty INTERFACE - Dark Fantasy Menus";
+                skin.bodyFont = Load<Font>(DarkFantasy + "Fonts/Markazi/MarkaziText-SemiBold.ttf");
+                skin.titleFont = Load<Font>(DarkFantasy + "Fonts/Pirata One/PirataOne-Regular.ttf");
+                skin.fontScale = 1.28f;
+                skin.recolour = true;
+                skin.accent = Color.HSVToRGB(357f / 360f, 0.8f, 0.85f);
+                skin.panelTone = Color.HSVToRGB(285f / 360f, 0.35f, 0.3f);
+                skin.label = Color.HSVToRGB(262f / 360f, 0.5f, 0.85f);
+                skin.accentSaturation = 1.45f;
+                skin.panelSaturation = 0.85f;
+                skin.techPatterns = false;
+                HudParts(skin, DarkFantasy + "Sprites/HUD/SPR_HUD_DarkFantasy_", new[]
+                {
+                    "Box_Medium_Parchment_01", "Box_Small_Parchment_01", "Box_Small_Parchment_02", "Box_Small_Parchment_03",
+                    "Frame_Box_01", "Frame_Box_03", "Bar_01_Clean", "Circle_01_Med_Clean", "Ring_Medium_01_Clean",
+                    "Close_01_Clean", "Arrow_Small_01_Clean", "Gradient_Outwards_01"
+                });
+                Menus(skin, DarkFantasyMenus, "DarkFantasyMenus", new Color32(0xD8, 0x34, 0x3C, 0xFF));
+            });
+            Ensure(FactionId.Covenant, skin =>
+            {
+                skin.hudPack = "Synty INTERFACE - Fantasy Warrior HUD";
+                skin.menuPack = "Synty INTERFACE - Fantasy Menus";
+                skin.bodyFont = Load<Font>(FantasyWarrior + "Fonts/Grenze/Grenze-SemiBold.ttf");
+                skin.titleFont = Load<Font>(FantasyWarrior + "Fonts/Texturina/Texturina_18pt-SemiBold.ttf");
+                skin.fontScale = 1.12f;
+                skin.recolour = true;
+                skin.accent = Color.HSVToRGB(39f / 360f, 0.8f, 0.85f);
+                skin.panelTone = Color.HSVToRGB(32f / 360f, 0.35f, 0.3f);
+                skin.label = Color.HSVToRGB(140f / 360f, 0.5f, 0.85f);
+                skin.accentSaturation = 1.45f;
+                skin.panelSaturation = 0.85f;
+                skin.techPatterns = false;
+                HudParts(skin, FantasyWarrior + "Sprites/HUD/SPR_HUD_FantasyWarrior_", new[]
+                {
+                    "Box_Medium_Parchment_01", "Box_Small_Parchment_01", "Box_Small_Parchment_02", "Box_Small_Parchment_03",
+                    "Frame_Box_Medium_01", "Frame_Box_Small_01", "Bar_Diamond_01", "Circle_Small_01_Clean", "Ring_Small_01_Clean",
+                    "Icon_InactiveItem_01", "Triangle_Small_01_Clean", "Gradient_Outwards_Smooth_01"
+                });
+                Menus(skin, FantasyMenus, "FantasyMenus", new Color32(0xE8, 0xB0, 0x4A, 0xFF));
+            });
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void Ensure(FactionId faction, Action<UiSkin> defaults)
+        {
+            if (LoadSkin(faction) != null) return;
+            var skin = ScriptableObject.CreateInstance<UiSkin>();
+            skin.faction = faction;
+            defaults(skin);
+            AssetDatabase.CreateAsset(skin, SkinPath(faction));
+        }
+
+        /// <summary>The sprites of a pack for the parts, in the order of <see cref="Parts"/>.</summary>
+        private static void HudParts(UiSkin skin, string prefix, string[] names)
+        {
+            for (int i = 0; i < Parts.Length && i < names.Length; i++)
+                Parts[i].set(skin, Load<Sprite>(prefix + names[i] + ".png"));
+        }
+
+        /// <summary>The three menu packs are made to one template: the same screens under the pack's own name.</summary>
+        private static void Menus(UiSkin skin, string pack, string token, Color accent)
+        {
+            string prefabs = pack + "Prefabs/";
+            skin.titleScreen = Load<GameObject>($"{prefabs}Screens/Screen_{token}_Title_01.prefab");
+            skin.choiceScreen = Load<GameObject>($"{prefabs}Screens/Screen_{token}_SelectDifficulty_01.prefab");
+            skin.listScreen = Load<GameObject>($"{prefabs}Screens/Screen_{token}_Load_Game_01.prefab");
+            skin.loadingScreen = Load<GameObject>($"{prefabs}Screens/Screen_{token}_Loading_01.prefab");
+            skin.confirmPopup = Load<GameObject>($"{prefabs}Popups/Popup_{token}_Save_Confirmation_01.prefab");
+            skin.optionRow = Load<GameObject>($"{prefabs}Settings/Settings_{token}_Item_Array_01.prefab");
+            // The Dark Fantasy pack numbers its labels.
+            string label = $"{prefabs}_CommonComponents/Label_{token}_Body.prefab";
+            skin.bodyLabel = Load<GameObject>(File.Exists(label) ? label : $"{prefabs}_CommonComponents/Label_{token}_Body_01.prefab");
+            skin.menuAccent = accent;
+        }
+
+        private static T Load<T>(string path) where T : UnityEngine.Object
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (asset == null) Debug.LogWarning($"[UI] Skin part not found: {path}");
+            return asset;
         }
 
         // ---------------------------------------------------------------- conversion
@@ -154,8 +316,9 @@ namespace KryticalNova.EditorTools
                 string selectors = rule.Groups[1].Value.Trim();
                 if (selectors.Length == 0 || selectors.StartsWith("@")) continue;
 
-                // Rarity colours mean the same thing in every faction, so they are never moved into a skin's palette.
-                bool keepColours = selectors.Contains(".rarity-");
+                // Rarity colours mean the same thing in every faction, and a speech bubble is comic ink on paper in every
+                // one of them: neither is ever moved into a skin's palette.
+                bool keepColours = !skin.recolour || selectors.Contains(".rarity-") || selectors.Contains("-bubble");
                 var changed = new List<string>();
                 float sliceRatio = 1f; // how much larger the new sprite's border is: the slice scale shrinks by it
                 string sliceDeclaration = null;
@@ -211,24 +374,25 @@ namespace KryticalNova.EditorTools
                 {
                     // The base uses a display face (Orbitron, Zen Dots) for titles and Exo 2 for everything else.
                     bool title = file.Contains("Orbitron") || file.Contains("ZenDots");
-                    return $"url(\"{(title ? skin.titleFont : skin.bodyFont)}\")";
+                    string font = title ? skin.titleFont : skin.bodyFont;
+                    return font != null ? $"url(\"{font}\")" : value;
                 }
 
                 string key = Path.GetFileNameWithoutExtension(file);
-                if (!skin.sprites.TryGetValue(key, out string replacement)) return value;
+                if (!skin.sprites.TryGetValue(key, out Sprite replacement)) return value;
                 if (replacement == null) return "none";
+                string replacementPath = AssetDatabase.GetAssetPath(replacement);
+                if (replacementPath == file.TrimStart('/')) return value; // the base sprite itself
                 sliceRatio = BorderRatio(file, replacement);
-                return $"url(\"{replacement}#{Path.GetFileNameWithoutExtension(replacement)}\")";
+                return $"url(\"/{replacementPath}#{replacement.name}\")";
             }
             return keepColours ? value : Rgb.Replace(value, match => Recolour(match, skin));
         }
 
         /// <summary>New border size over old border size, so the corners keep their on-screen size.</summary>
-        private static float BorderRatio(string basePath, string skinPath)
+        private static float BorderRatio(string basePath, Sprite to)
         {
             var from = AssetDatabase.LoadAssetAtPath<Sprite>(basePath.TrimStart('/'));
-            var to = AssetDatabase.LoadAssetAtPath<Sprite>(skinPath.TrimStart('/'));
-            if (to == null) Debug.LogWarning($"[UI] Skin sprite not found: {skinPath}");
             if (from == null || to == null) return 1f;
             float fromBorder = Mathf.Max(from.border.x, from.border.y, from.border.z, from.border.w);
             float toBorder = Mathf.Max(to.border.x, to.border.y, to.border.z, to.border.w);

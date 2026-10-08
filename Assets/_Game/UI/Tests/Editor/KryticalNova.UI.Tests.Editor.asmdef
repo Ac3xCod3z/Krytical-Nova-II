@@ -4,6 +4,7 @@
     "references": [
         "KryticalNova.Runtime",
         "KryticalNova.UI",
+        "KryticalNova.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

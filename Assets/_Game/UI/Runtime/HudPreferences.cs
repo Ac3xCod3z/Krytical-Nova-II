@@ -20,6 +20,7 @@ namespace KryticalNova.UI
         private static readonly string PetChatterKey = Prefix + "petChatter";
         private static readonly string MinimapRotatesKey = Prefix + "minimapRotates";
         private static readonly string ScreenShakeKey = Prefix + "screenShake";
+        private static readonly string MenuThemeKey = Prefix + "menuTheme";
         private static readonly string LayoutKey = Prefix + "layout.v1";
         private static readonly string SnapToGridKey = Prefix + "layout.snap";
         private static readonly string GridSizeKey = Prefix + "layout.grid";
@@ -87,6 +88,19 @@ namespace KryticalNova.UI
         {
             get => GetBool(ScreenShakeKey, true);
             set => SetBool(ScreenShakeKey, value);
+        }
+
+        /// <summary>Which faction's skin the menus wear: one picked at random each start of the game, or always the same.</summary>
+        public static MenuTheme MenuTheme
+        {
+            get => (MenuTheme)Mathf.Clamp(PlayerPrefs.GetInt(MenuThemeKey, (int)MenuTheme.Rotate), 0, 3);
+            set
+            {
+                if (MenuTheme == value) return;
+                PlayerPrefs.SetInt(MenuThemeKey, (int)value);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
         }
 
         /// <summary>The layout editor lines panels up with a grid and with each other while they are dragged.</summary>

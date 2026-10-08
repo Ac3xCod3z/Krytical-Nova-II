@@ -5,7 +5,8 @@
     <Style src="../Inventory/Forge.uss" />
     <Style src="Herald/Herald.uss" />
     <Style src="GameMenu/GameMenu.uss" />
-    <!-- Faction skins: generated overrides that only apply under a .kn-faction-* class (see FactionSkin). -->
+    <!-- Faction skins: generated from the UiSkin assets; each only applies under its .kn-faction-* class (see FactionSkin). -->
+    <Style src="../Common/KryticalSkin_Hegemony.uss" />
     <Style src="../Common/KryticalSkin_Null.uss" />
     <Style src="../Common/KryticalSkin_Covenant.uss" />
     <ui:Template name="ItemWindows" src="../Inventory/ItemWindows.uxml" />

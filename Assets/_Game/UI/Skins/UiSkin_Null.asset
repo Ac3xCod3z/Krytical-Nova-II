@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36591b8b8a5ad2444b1384147699e1d6, type: 3}
+  m_Name: UiSkin_Null
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.UiSkin
+  faction: 2
+  hudPack: Synty INTERFACE - Dark Fantasy HUD
+  menuPack: Synty INTERFACE - Dark Fantasy Menus
+  bodyFont: {fileID: 12800000, guid: 98886f0f284dda24e99e94dc6c320dce, type: 3}
+  titleFont: {fileID: 12800000, guid: 015b51f4ca0c2fe498f3e71c347c8a89, type: 3}
+  fontScale: 1.28
+  recolour: 1
+  accent: {r: 0.85, g: 0.17, b: 0.20399997, a: 1}
+  panelTone: {r: 0.27375004, g: 0.19500001, b: 0.3, a: 1}
+  label: {r: 0.5808334, g: 0.425, b: 0.85, a: 1}
+  accentSaturation: 1.45
+  panelSaturation: 0.85
+  panel: {fileID: 21300000, guid: 45bfd774240def841b94064767cae266, type: 3}
+  card: {fileID: 21300000, guid: 1b03e3aed8723c246ba1c548a51c5300, type: 3}
+  token: {fileID: 21300000, guid: 80a3d81d6b4f9194495bbe6b3be5a886, type: 3}
+  itemSlot: {fileID: 21300000, guid: aa9f7c0ba00ac9d40acd46009203270a, type: 3}
+  frame: {fileID: 21300000, guid: 799371749a80d1447a527cda61edc782, type: 3}
+  frameSmall: {fileID: 21300000, guid: 7e80ff644949b9c4fb689c3cd308d96a, type: 3}
+  bar: {fileID: 21300000, guid: 97836392e91b68b42aa60e200fa7c6f0, type: 3}
+  pipOn: {fileID: 21300000, guid: da4da7976a719a241b86e8bbe34db33b, type: 3}
+  pipOff: {fileID: 21300000, guid: cb13652b48ecf0544aa0694d0412f3d8, type: 3}
+  closeIcon: {fileID: 21300000, guid: ba7b4727ea2eb5d44b735adf6d65ec8c, type: 3}
+  arrowIcon: {fileID: 21300000, guid: 7c8b3ca1982f839459afefe1c96fb924, type: 3}
+  softBacking: {fileID: 21300000, guid: e6ba3c8dcc143ef49af5cab4c76bd989, type: 3}
+  techPatterns: 0
+  titleScreen: {fileID: 7972974810867652038, guid: d5e20384d9b4c014cae9ef0a76a64915, type: 3}
+  choiceScreen: {fileID: 7972974810867652038, guid: b32f9479afca89748aa854123915f6a9, type: 3}
+  listScreen: {fileID: 7972974810867652038, guid: 797077d7bf96b2f4faee6deff84776ff, type: 3}
+  loadingScreen: {fileID: 7972974810867652038, guid: 22aef62e21e54cf4587386317aa8d4a1, type: 3}
+  confirmPopup: {fileID: 9006508306731448467, guid: d0df45e3f41565a4193d48069d298049, type: 3}
+  optionRow: {fileID: 7476782851927854031, guid: af1527fd700f07c40a09c862d279916e, type: 3}
+  bodyLabel: {fileID: 378538600947842191, guid: f595f25c4a4d06346b389fc2194cc431, type: 3}
+  menuAccent: {r: 0.84705883, g: 0.20392157, b: 0.23529412, a: 1}

@@ -228,10 +228,15 @@ namespace KryticalNova.UI
                     index => HudPreferences.GridSize = HudPreferences.GridSizes[index]);
                 SettingsRows.Slider(layoutOptions, "Interface size", HudPreferences.MinInterfaceScale, HudPreferences.MaxInterfaceScale,
                     () => HudPreferences.InterfaceScale, value => HudPreferences.InterfaceScale = Mathf.Round(value * 20f) / 20f);
+                // The skin of the title screens only: the game itself always wears the character's faction.
+                SettingsRows.Choice(layoutOptions, "Menu theme", MenuThemeNames,
+                    () => (int)HudPreferences.MenuTheme, index => HudPreferences.MenuTheme = (MenuTheme)index);
             }
             ShowPage(activePage);
             RefreshKeyLabels();
         }
+
+        private static readonly string[] MenuThemeNames = { "ROTATE", "HEGEMONY", "NULL", "COVENANT" };
 
         private void ShowPage(string page)
         {
