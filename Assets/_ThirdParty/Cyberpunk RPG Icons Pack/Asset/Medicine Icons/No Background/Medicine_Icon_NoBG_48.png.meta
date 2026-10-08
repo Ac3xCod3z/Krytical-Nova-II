@@ -1,0 +1,423 @@
+fileFormatVersion: 2
+guid: 42088856d2e810649acdd0dcd46462e6
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -9180629569755404576
+    second: Medicine_Icon_NoBG_48_0
+  - first:
+      213: -4904502045764530208
+    second: Medicine_Icon_NoBG_48_1
+  - first:
+      213: -7746369080709633484
+    second: Medicine_Icon_NoBG_48_2
+  - first:
+      213: 4355779090259296426
+    second: Medicine_Icon_NoBG_48_3
+  - first:
+      213: -1297317863481155083
+    second: Medicine_Icon_NoBG_48_4
+  - first:
+      213: 1629506957822116294
+    second: Medicine_Icon_NoBG_48_5
+  - first:
+      213: -7658915230274913124
+    second: Medicine_Icon_NoBG_48_6
+  - first:
+      213: 1941873074386658085
+    second: Medicine_Icon_NoBG_48_7
+  - first:
+      213: -6300864282749127180
+    second: Medicine_Icon_NoBG_48_8
+  - first:
+      213: 7300286522280927906
+    second: Medicine_Icon_NoBG_48_9
+  - first:
+      213: 8378897275224024416
+    second: Medicine_Icon_NoBG_48_10
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 512
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 511
+        height: 498
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e628402c0ad79080800000000000000
+      internalID: -9180629569755404576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_1
+      rect:
+        serializedVersion: 2
+        x: 494
+        y: 306
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ef4702ef55bfebb0800000000000000
+      internalID: -4904502045764530208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_2
+      rect:
+        serializedVersion: 2
+        x: 494
+        y: 301
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43aab35fc5e5f7490800000000000000
+      internalID: -7746369080709633484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_3
+      rect:
+        serializedVersion: 2
+        x: 492
+        y: 289
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa0caf23106d27c30800000000000000
+      internalID: 4355779090259296426
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_4
+      rect:
+        serializedVersion: 2
+        x: 492
+        y: 277
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f1ef62d6400ffde0800000000000000
+      internalID: -1297317863481155083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_5
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 211
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c1c304d1fb2d9610800000000000000
+      internalID: 1629506957822116294
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_6
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 221
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c9c72ae3d2116b590800000000000000
+      internalID: -7658915230274913124
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_7
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 192
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52366bdc54be2fa10800000000000000
+      internalID: 1941873074386658085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_8
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 176
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f5bac87155de88a0800000000000000
+      internalID: -6300864282749127180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_9
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 2
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a26027d9e3df4560800000000000000
+      internalID: 7300286522280927906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Medicine_Icon_NoBG_48_10
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 3
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0656733bda2d74470800000000000000
+      internalID: 8378897275224024416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Medicine_Icon_NoBG_48_0: -9180629569755404576
+      Medicine_Icon_NoBG_48_1: -4904502045764530208
+      Medicine_Icon_NoBG_48_10: 8378897275224024416
+      Medicine_Icon_NoBG_48_2: -7746369080709633484
+      Medicine_Icon_NoBG_48_3: 4355779090259296426
+      Medicine_Icon_NoBG_48_4: -1297317863481155083
+      Medicine_Icon_NoBG_48_5: 1629506957822116294
+      Medicine_Icon_NoBG_48_6: -7658915230274913124
+      Medicine_Icon_NoBG_48_7: 1941873074386658085
+      Medicine_Icon_NoBG_48_8: -6300864282749127180
+      Medicine_Icon_NoBG_48_9: 7300286522280927906
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377986
+  packageName: 2700 Cyberpunk RPG Icons Pack
+  packageVersion: 1.0
+  assetPath: Assets/Cyberpunk RPG Icons Pack/Asset/Medicine Icons/No Background/Medicine_Icon_NoBG_48.png
+  uploadId: 924490

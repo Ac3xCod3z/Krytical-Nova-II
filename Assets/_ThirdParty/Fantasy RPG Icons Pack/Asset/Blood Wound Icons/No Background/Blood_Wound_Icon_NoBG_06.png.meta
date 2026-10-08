@@ -1,0 +1,449 @@
+fileFormatVersion: 2
+guid: b1b12720fa3d6444496b10ef760ecd0c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3597593921286814524
+    second: Blood_Wound_Icon_NoBG_06_0
+  - first:
+      213: -5800263434124359024
+    second: Blood_Wound_Icon_NoBG_06_1
+  - first:
+      213: 1371518773497291797
+    second: Blood_Wound_Icon_NoBG_06_2
+  - first:
+      213: 4964653190272521182
+    second: Blood_Wound_Icon_NoBG_06_3
+  - first:
+      213: 1220238182821252897
+    second: Blood_Wound_Icon_NoBG_06_4
+  - first:
+      213: 6364048012917301540
+    second: Blood_Wound_Icon_NoBG_06_5
+  - first:
+      213: 8106936210361591251
+    second: Blood_Wound_Icon_NoBG_06_6
+  - first:
+      213: -4252204787366342506
+    second: Blood_Wound_Icon_NoBG_06_7
+  - first:
+      213: -4891904073247461156
+    second: Blood_Wound_Icon_NoBG_06_8
+  - first:
+      213: -2218720817324681486
+    second: Blood_Wound_Icon_NoBG_06_9
+  - first:
+      213: -274486907684901834
+    second: Blood_Wound_Icon_NoBG_06_10
+  - first:
+      213: -9083185348591664178
+    second: Blood_Wound_Icon_NoBG_06_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 512
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_0
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 465
+        width: 18
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3bb76c4c983de130800000000000000
+      internalID: 3597593921286814524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_1
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 0
+        width: 64
+        height: 474
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09a84554323518fa0800000000000000
+      internalID: -5800263434124359024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_2
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 194
+        width: 58
+        height: 291
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 514e511de0d980310800000000000000
+      internalID: 1371518773497291797
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_3
+      rect:
+        serializedVersion: 2
+        x: 452
+        y: 400
+        width: 30
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed3143fc5cdf5e440800000000000000
+      internalID: 4964653190272521182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_4
+      rect:
+        serializedVersion: 2
+        x: 46
+        y: 83
+        width: 54
+        height: 371
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12fcd6489282fe010800000000000000
+      internalID: 1220238182821252897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_5
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 390
+        width: 26
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 421677713f3a15850800000000000000
+      internalID: 6364048012917301540
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_6
+      rect:
+        serializedVersion: 2
+        x: 150
+        y: 411
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d5aa5be78f918070800000000000000
+      internalID: 8106936210361591251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_7
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 318
+        width: 26
+        height: 94
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69050d866422df4c0800000000000000
+      internalID: -4252204787366342506
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_8
+      rect:
+        serializedVersion: 2
+        x: 218
+        y: 364
+        width: 30
+        height: 88
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd07ccee9277c1cb0800000000000000
+      internalID: -4891904073247461156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 364
+        width: 26
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f619930c258531e0800000000000000
+      internalID: -2218720817324681486
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_10
+      rect:
+        serializedVersion: 2
+        x: 119
+        y: 365
+        width: 22
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63c22fb9c93d03cf0800000000000000
+      internalID: -274486907684901834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Blood_Wound_Icon_NoBG_06_11
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 373
+        width: 25
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec3492cdc0b02f180800000000000000
+      internalID: -9083185348591664178
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Blood_Wound_Icon_NoBG_06_0: 3597593921286814524
+      Blood_Wound_Icon_NoBG_06_1: -5800263434124359024
+      Blood_Wound_Icon_NoBG_06_10: -274486907684901834
+      Blood_Wound_Icon_NoBG_06_11: -9083185348591664178
+      Blood_Wound_Icon_NoBG_06_2: 1371518773497291797
+      Blood_Wound_Icon_NoBG_06_3: 4964653190272521182
+      Blood_Wound_Icon_NoBG_06_4: 1220238182821252897
+      Blood_Wound_Icon_NoBG_06_5: 6364048012917301540
+      Blood_Wound_Icon_NoBG_06_6: 8106936210361591251
+      Blood_Wound_Icon_NoBG_06_7: -4252204787366342506
+      Blood_Wound_Icon_NoBG_06_8: -4891904073247461156
+      Blood_Wound_Icon_NoBG_06_9: -2218720817324681486
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 229460
+  packageName: 6200 Fantasy RPG Icons Pack
+  packageVersion: 1.6
+  assetPath: Assets/Fantasy RPG Icons Pack/Asset/Blood Wound Icons/No Background/Blood_Wound_Icon_NoBG_06.png
+  uploadId: 916020

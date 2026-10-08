@@ -1,0 +1,475 @@
+fileFormatVersion: 2
+guid: a55743aa43833624eb84658de6d30ae1
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1171072350882907495
+    second: Monster_Loot_Icon_NoBG_45_0
+  - first:
+      213: 7068693599841703775
+    second: Monster_Loot_Icon_NoBG_45_1
+  - first:
+      213: 2690394536358654007
+    second: Monster_Loot_Icon_NoBG_45_2
+  - first:
+      213: 3511783734805523118
+    second: Monster_Loot_Icon_NoBG_45_3
+  - first:
+      213: 2356980909583024120
+    second: Monster_Loot_Icon_NoBG_45_4
+  - first:
+      213: 354338464697982095
+    second: Monster_Loot_Icon_NoBG_45_5
+  - first:
+      213: -2652267536546290303
+    second: Monster_Loot_Icon_NoBG_45_6
+  - first:
+      213: -3303233117015996027
+    second: Monster_Loot_Icon_NoBG_45_7
+  - first:
+      213: -5994308008422629961
+    second: Monster_Loot_Icon_NoBG_45_8
+  - first:
+      213: 6878685679019286564
+    second: Monster_Loot_Icon_NoBG_45_9
+  - first:
+      213: 661908672120738547
+    second: Monster_Loot_Icon_NoBG_45_10
+  - first:
+      213: -2459669177090973793
+    second: Monster_Loot_Icon_NoBG_45_11
+  - first:
+      213: -6005631976838936438
+    second: Monster_Loot_Icon_NoBG_45_12
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 512
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_0
+      rect:
+        serializedVersion: 2
+        x: 388
+        y: 501
+        width: 12
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76548a8391c704010800000000000000
+      internalID: 1171072350882907495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_1
+      rect:
+        serializedVersion: 2
+        x: 406
+        y: 496
+        width: 12
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5754a4a06b091260800000000000000
+      internalID: 7068693599841703775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_2
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 481
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7303f459393365520800000000000000
+      internalID: 2690394536358654007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_3
+      rect:
+        serializedVersion: 2
+        x: 415
+        y: 455
+        width: 97
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eaae31953bc5cb030800000000000000
+      internalID: 3511783734805523118
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_4
+      rect:
+        serializedVersion: 2
+        x: 115
+        y: 471
+        width: 40
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ffb21246ada5b020800000000000000
+      internalID: 2356980909583024120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_5
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 0
+        width: 445
+        height: 462
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8c949ec4fcdae400800000000000000
+      internalID: 354338464697982095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_6
+      rect:
+        serializedVersion: 2
+        x: 476
+        y: 424
+        width: 36
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 185abd25ab0413bd0800000000000000
+      internalID: -2652267536546290303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_7
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 321
+        width: 99
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58984f93bfe8822d0800000000000000
+      internalID: -3303233117015996027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_8
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 308
+        width: 91
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bd90b320a0ffcca0800000000000000
+      internalID: -5994308008422629961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_9
+      rect:
+        serializedVersion: 2
+        x: 415
+        y: 156
+        width: 97
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 420e2832e20067f50800000000000000
+      internalID: 6878685679019286564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_10
+      rect:
+        serializedVersion: 2
+        x: 456
+        y: 224
+        width: 56
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f2d18b2e629f2900800000000000000
+      internalID: 661908672120738547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_11
+      rect:
+        serializedVersion: 2
+        x: 344
+        y: 69
+        width: 168
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9fd3825aef7dddd0800000000000000
+      internalID: -2459669177090973793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Loot_Icon_NoBG_45_12
+      rect:
+        serializedVersion: 2
+        x: 346
+        y: 62
+        width: 166
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a88c9c84985b7aca0800000000000000
+      internalID: -6005631976838936438
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Monster_Loot_Icon_NoBG_45_0: 1171072350882907495
+      Monster_Loot_Icon_NoBG_45_1: 7068693599841703775
+      Monster_Loot_Icon_NoBG_45_10: 661908672120738547
+      Monster_Loot_Icon_NoBG_45_11: -2459669177090973793
+      Monster_Loot_Icon_NoBG_45_12: -6005631976838936438
+      Monster_Loot_Icon_NoBG_45_2: 2690394536358654007
+      Monster_Loot_Icon_NoBG_45_3: 3511783734805523118
+      Monster_Loot_Icon_NoBG_45_4: 2356980909583024120
+      Monster_Loot_Icon_NoBG_45_5: 354338464697982095
+      Monster_Loot_Icon_NoBG_45_6: -2652267536546290303
+      Monster_Loot_Icon_NoBG_45_7: -3303233117015996027
+      Monster_Loot_Icon_NoBG_45_8: -5994308008422629961
+      Monster_Loot_Icon_NoBG_45_9: 6878685679019286564
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 229460
+  packageName: 6200 Fantasy RPG Icons Pack
+  packageVersion: 1.6
+  assetPath: Assets/Fantasy RPG Icons Pack/Asset/Monster Loot Icons/No Background/Monster_Loot_Icon_NoBG_45.png
+  uploadId: 916020

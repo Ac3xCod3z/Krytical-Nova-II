@@ -1,0 +1,179 @@
+# Fantasy RPG Icons Pack - Release Notes 
+
+---
+
+Version : 1.6 (current)
+Date : May 2026
+Details : Added 500 icons and renaming all icons
+
+- Arrow Icons
+- Blood Wound Icons
+- Currency Icons
+- Death Attribute Icons
+- Key Icons
+- Sea Theme Icons
+- Splash Icons
+- Stone Age Icons
+- Tailor Skill Icons
+- Viking Icons
+
+---
+
+Version : 1.5
+Date : October 2024
+Details : Added 500 icons 
+
+- Berry Icons
+- Dragon Egg Icons
+- Emoji Icons
+- Engineering Skill Icons
+- Flower Icons
+- Liquid Icons
+- Monk Skill Icons
+- Monster Hand Icons
+- Warrior Skill Icons
+- Wing Icons
+
+---
+
+Version : 1.4
+Date : February 2024
+Details : Added 500 icons
+
+- Demon Loot Icons 2
+- Dragon Loot Icons
+- Fruit Icons
+- Kobold Loot Icons
+- Loot Icons 2
+- Loot Icons 3
+- Monster Loot Icons
+- Sea Loot Icons
+- Spider Loot Icons
+- Vegetable Icons
+
+---
+
+Version : 1.3
+Date : November 2023
+Details : Added 550 icons
+
+- Avatar Dwarf Icons
+- Avatar Pirate Icons
+- Dwarf Skill Icons
+- Forest Elf Skill Icons
+- Illusionist Skill Icons
+- Lightning Mage Skill Icons
+- Magician Skill Icons
+- Night Elf Skill Icons
+- Pirate Skill Icons 2
+- Summoner Skill Icons
+- Werewolf Skill Icons
+
+---
+
+Version : 1.2
+Date : June 2023
+Details : Added 450 icons
+
+- Added Weapon Icons
+- Avatar Fairy Icons
+- Avatar Goblin Icons
+- Bard Skill Icons
+- Blood Mage Skill Icons
+- Game Achievements Icons (1024x1024)
+- Pirate Loot Icons
+- Profession Achievements Icons 1 (1024x1024)
+- Profession Achievements Icons 2 (1024x1024)
+- Weapon Achievements Icons 1 (1024x1024)
+- Weapon Achievements Icons 2 (1024x1024)
+
+---
+
+Version : 1.1
+Date : October 2022
+Details : Added 300 icons
+
+- Avatar Demon Icons
+- Dwarf Loot Icons
+- Fairy Loot Icons
+- Fairy Skill Icons
+- Goblin Loot Icons
+- Goblin Skill Icons
+
+---
+
+Version : 1.0
+Date : August 2022
+Details : First release with 3450 icons
+
+- Aeromancer Skill Icons
+- Armor Icons
+- Alchemical Herbs Icons
+- Alchemical Ingredients Icons
+- Alchemical Potions Icons
+- Alchemist Skill Icons
+- Archer Skill Icons
+- Avatar Fantasy Icons
+- Avatar Undead Icons
+- Axe Icons
+- Belt Icons
+- Berry and Seed Icons
+- Berserker Skill Icons
+- Blacksmith Icons
+- Blacksmith Skill Icons
+- Bones Icons
+- Book Icons
+- Boot Icons
+- Bow Icons
+- Buff Skill Icons
+- Cooking Ingredients Icons
+- Cooking Skill Icons
+- Craft Resources Icons
+- Crossbowman Skill Icons
+- Crushing Weapons Icons
+- Cryomancer Skill Icons
+- Dagger Icons
+- Debuff Skill Icons
+- Demon Loot Icons 1
+- Demon Skill Icons 1
+- Demon Skill Icons 2
+- Druid Skill Icons
+- Elixir Icons
+- Farmer Skill Icons
+- Farming Icons
+- Fishing Icons
+- Food Icons
+- Glove Icons
+- Greaves Icons
+- Halloween Icons
+- Helmet Icons
+- Hunting Icons 1
+- Hunting Icons 2
+- Jeweler Skill Icons
+- Jewelry Icons
+- Lance Icons
+- Loot Icons 1
+- Magical Artifact Icons
+- Mining Icons
+- Mushroom Icons
+- Paint Icons
+- Paladin Skill Icons
+- Pirate Icons
+- Pirate Skill Icons 1
+- Priest Skill Icons
+- Pyromancer Skill Icons
+- Rune Icons
+- Scroll Icons
+- Shield Icons
+- Spearman Skill Icons
+- Staff Icons
+- Sword Icons
+- Swordman Skill Icons
+- Tannery Skill Icons
+- Thief Skill Icons
+- Treasure Chests Icons
+- Undead Loot Icons
+- Undead Skill Icons
+- Warlock Skill Icons
+
+---
