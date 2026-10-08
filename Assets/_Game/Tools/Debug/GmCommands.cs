@@ -131,7 +131,7 @@ namespace KryticalNova.DevTools
                 "STORAGE      gm.vault [deep|off]   (opens it here; storage then works with no NPC near) · gm.drop <item> [n]",
                 "TRADE        gm.trade.reset   (daily Creds limit) · gm.kiosk · gm.kiosk.expire",
                 "SOCIAL       gm.guild [name|none] · gm.guild.list   (a Crew takes its own faction only, GM or not)",
-                "PETS         gm.pet · gm.pet.growth <0-100> · gm.pet.hunger <0-100> · gm.pet.feed · gm.pet.xp <n> · gm.pet.event <win|loss>",
+                "PETS         gm.pet · gm.pet.growth <0-100> · gm.pet.hunger <0-100> · gm.pet.feed · gm.pet.xp <n> · gm.pet.event <win|loss> · gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>",
                 "SAVING       gm.save · gm.save.where · gm.save.wipe confirm",
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",

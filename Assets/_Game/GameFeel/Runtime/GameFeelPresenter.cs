@@ -191,6 +191,13 @@ namespace KryticalNova.GameFeel
 
         public void Hit(in HitFeel hit)
         {
+            // The local player's pet has something to say about a critical hit, and knows its owner is not idle.
+            PetChatterDirector pet = PetChatterDirector.Instance;
+            if (pet != null && (hit.AttackerIsLocalPlayer || hit.TargetIsLocalPlayer))
+            {
+                pet.MarkActive();
+                if (hit.IsCritical && hit.AttackerIsLocalPlayer) pet.Notify(KryticalNova.Pets.PetChatterTrigger.CriticalHit);
+            }
             bool heavy = hit.IsCritical || hit.ComboStep >= 3;
             Quaternion facing = hit.TowardAttacker.sqrMagnitude > 0.001f ? Quaternion.LookRotation(hit.TowardAttacker, Vector3.up) : Quaternion.identity;
             PlayWorld(heavy ? heavyHitWorldFeel : hitWorldFeel, hit.Point, facing, hit.Target);
@@ -337,6 +344,7 @@ namespace KryticalNova.GameFeel
 
         public void Death(in DeathFeel death)
         {
+            if (death.VictimIsLocalPlayer) PetChatterDirector.Instance?.Notify(KryticalNova.Pets.PetChatterTrigger.OwnerDied);
             // Effects face the way the body goes, so sparks and debris trail behind it.
             Quaternion along = death.Direction.sqrMagnitude > 0.001f ? Quaternion.LookRotation(death.Direction, Vector3.up) : Quaternion.identity;
             PlayWorld(death.IsCritical ? critDeathWorldFeel : deathWorldFeel, death.Point, along, death.Target);

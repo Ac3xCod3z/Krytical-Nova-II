@@ -180,6 +180,19 @@ namespace KryticalNova.UI
             UpdateTargetPose();
         }
 
+        /// <summary>
+        /// The selected target and the marker under it, for anything on the HUD that must keep clear of them: the
+        /// target, the middle of its ring and how wide the ring is. False when nothing is selected.
+        /// </summary>
+        public bool TryGetTargetMarker(out Transform marked, out Vector3 ringCentre, out float ringDiameter)
+        {
+            marked = target;
+            bool shown = target != null && targetRing3D != null && targetRing3D.Root != null;
+            ringCentre = shown ? targetRing3D.Root.position : Vector3.zero;
+            ringDiameter = shown ? targetDiameter : 0f;
+            return shown;
+        }
+
         public void ClearTarget()
         {
             target = null;

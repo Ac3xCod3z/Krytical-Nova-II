@@ -23,6 +23,7 @@
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
         <!-- Namecards over players' heads (PlayerNamecardController). First, so every panel draws over them. -->
         <ui:VisualElement name="player-namecards" class="player-namecards" picking-mode="Ignore" />
+        <ui:VisualElement name="pet-bubbles" class="pet-bubbles" picking-mode="Ignore" />
         <!-- Player status frame -->
         <ui:VisualElement name="summary" class="panel blocks-world hud-movable">
             <ui:VisualElement class="row summary-top">

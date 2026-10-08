@@ -420,6 +420,7 @@ namespace KryticalNova.UI
             BindToggle("setting-target-ring", HudPreferences.ShowTargetRing, v => HudPreferences.ShowTargetRing = v);
             BindToggle("setting-nameplates", HudPreferences.ShowNameplates, v => HudPreferences.ShowNameplates = v);
             BindToggle("setting-own-namecard", HudPreferences.ShowOwnNamecard, v => HudPreferences.ShowOwnNamecard = v);
+            BindToggle("setting-pet-chatter", HudPreferences.PetChatter, v => HudPreferences.PetChatter = v);
             BindToggle("setting-controls-hint", HudPreferences.ShowControlsHint, v => HudPreferences.ShowControlsHint = v);
             BindToggle("setting-minimap-rotate", HudPreferences.MinimapRotates, v => HudPreferences.MinimapRotates = v);
             BindToggle("setting-screen-shake", HudPreferences.ScreenShake, v => HudPreferences.ScreenShake = v);

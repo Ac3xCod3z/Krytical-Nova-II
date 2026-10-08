@@ -14013,6 +14013,7 @@ GameObject:
   - component: {fileID: 2950265580643760927}
   - component: {fileID: 2261704719579256328}
   - component: {fileID: 9074143639501137624}
+  - component: {fileID: 2430772476998623506}
   m_Layer: 0
   m_Name: PFX_GameFeel
   m_TagString: Untagged
@@ -14299,6 +14300,21 @@ MonoBehaviour:
     auraAnchor: 0
     charge: {fileID: 0}
     chargeGround: {fileID: 0}
+--- !u!114 &2430772476998623506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3514794766457463837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6ea653cfdec9dd4681f6263c4f9a6f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.GameFeel::KryticalNova.GameFeel.PetChatterDirector
+  settings: {fileID: 11400000, guid: 382e4db0e79fce5488d90a8ba434518f, type: 2}
+  dropWatchDistance: 6
+  idleSlack: 0.3
 --- !u!1 &3694003426351630226
 GameObject:
   m_ObjectHideFlags: 0

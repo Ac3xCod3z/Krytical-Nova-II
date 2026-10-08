@@ -31,6 +31,7 @@
                 <ui:Toggle name="setting-screen-shake" label="Screen shake &amp; impact effects" value="true" class="kn-toggle kn-card" />
                 <ui:Label text="INTERFACE" class="eyebrow section" />
                 <ui:Toggle name="setting-controls-hint" label="Show hotbar controls hint" value="true" class="kn-toggle kn-card" />
+                <ui:Toggle name="setting-pet-chatter" label="Pet chatter (my pet's speech bubbles)" value="true" class="kn-toggle kn-card" />
                 <ui:Toggle name="setting-minimap-rotate" label="Rotate minimap with camera" value="true" class="kn-toggle kn-card" />
             </ui:VisualElement>
             <ui:VisualElement name="settings-page-controls" class="settings-page" />

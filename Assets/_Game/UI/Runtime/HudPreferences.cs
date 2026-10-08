@@ -17,6 +17,7 @@ namespace KryticalNova.UI
         private static readonly string ControlsHintKey = Prefix + "controlsHint";
         private static readonly string NameplatesKey = Prefix + "nameplates";
         private static readonly string OwnNamecardKey = Prefix + "ownNamecard";
+        private static readonly string PetChatterKey = Prefix + "petChatter";
         private static readonly string MinimapRotatesKey = Prefix + "minimapRotates";
         private static readonly string ScreenShakeKey = Prefix + "screenShake";
         private static readonly string LayoutKey = Prefix + "layout.v1";
@@ -65,6 +66,13 @@ namespace KryticalNova.UI
         {
             get => GetBool(OwnNamecardKey, true);
             set => SetBool(OwnNamecardKey, value);
+        }
+
+        /// <summary>The bubbles a pet reacts with: its lines, or its emoji. Off = pets stay quiet.</summary>
+        public static bool PetChatter
+        {
+            get => GetBool(PetChatterKey, true);
+            set => SetBool(PetChatterKey, value);
         }
 
         /// <summary>True: the minimap turns with the camera (forward is up). False: fixed north-up.</summary>

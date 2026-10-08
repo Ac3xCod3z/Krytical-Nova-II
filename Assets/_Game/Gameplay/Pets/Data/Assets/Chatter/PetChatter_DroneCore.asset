@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 160c0dedae91cbe41ae19ee969945b08, type: 3}
+  m_Name: PetChatter_DroneCore
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Pets.PetChatterSet
+  voice: 0
+  moments:
+  - trigger: 0
+    lines:
+    - Skill issue. Respectfully.
+    - We don't talk about that one.
+    - Respawn speedrun, any%.
+    - 'Floor inspection: complete.'
+    - I blinked. What happened?
+    - Bold strategy. Zero stars.
+    - Logging that as a tactical nap.
+    - It's giving... horizontal.
+    - GG, go next. I believe in you.
+    - That was a choice. Run it back!
+    emoji: []
+  - trigger: 1
+    lines:
+    - Ooooh, shiny! Dibs. Kidding.
+    - RNG said yes today.
+    - 'Loot goblin mode: engaged.'
+    - That goes in the good Pack slot.
+    - The drop gods are watching.
+    - Screenshot it. Frame it.
+    - It's giving... expensive.
+    - Don't blow it all at a Kiosk.
+    - Rare! Act like you've been here.
+    - Your Luck is doing overtime.
+    emoji: []
+  - trigger: 2
+    lines:
+    - Level up! Glow-up confirmed.
+    - New level, who dis?
+    - We are so back.
+    - Numbers went up. So proud.
+    - Certified grinder.
+    - That's growth. Literally.
+    - W. Massive W.
+    - Built different. Built better.
+    - 'Patch notes: you, but stronger.'
+    - Ding! I love that sound.
+    emoji: []
+  - trigger: 3
+    lines:
+    - Bruiser down! Who's the boss now?
+    - Big guy, bigger L.
+    - And they said bring a Squad.
+    - 'Boss music: cancelled.'
+    - That Bruiser got ratioed.
+    - Put it on the highlight reel.
+    - Size isn't everything, big guy.
+    - Tell your friends. Loudly.
+    - Bruiser? More like snoozer.
+    - Top of the food chain, baby.
+    emoji: []
+  - trigger: 4
+    lines:
+    - CRIT! Clip that!
+    - Sheeesh. Call a medic.
+    - Okay, main character.
+    - Emotional damage!
+    - That one had a name on it.
+    - Big number go brrr.
+    - No notes. Chef's kiss.
+    - Cooked. Absolutely cooked.
+    - They felt that tomorrow.
+    - Now do it again.
+    emoji: []
+  - trigger: 5
+    lines:
+    - Uh, your HP is looking spicy.
+    - Stim. Now. Please.
+    - This is fine. It is not fine.
+    - Red bar bad. Very bad.
+    - I can't carry you. No arms.
+    - Maybe try not getting hit?
+    - Heal up. I like having you.
+    - Low HP speedrun? Don't.
+    - A tactical retreat is still tactical.
+    - Blink twice if you need a Stim.
+    emoji: []
+  - trigger: 6
+    lines:
+    - Hello? Anyone piloting this?
+    - AFK check. I'm telling everyone.
+    - I'll just hover. Menacingly.
+    - Touch grass? We're on pavement.
+    - Snack break. Respect.
+    - Loading... still loading...
+    - I counted the tiles. All of them.
+    - Are we vibing or are we stuck?
+    - Wake me when there's loot.
+    - 'Idle animation: the sequel.'
+    emoji: []

@@ -62,6 +62,16 @@ namespace KryticalNova.Items.Visuals
         /// <summary>The pet in the world, or null. For effects that play on it.</summary>
         public Transform PetTransform => pet != null ? pet.transform : null;
 
+        /// <summary>
+        /// The pet's own box in the space of <see cref="PetTransform"/>: its meshes, without its glow or sparkles.
+        /// False when no pet is out. For what is placed beside it on the screen.
+        /// </summary>
+        public bool TryGetBodyBox(out Bounds box)
+        {
+            box = unitBounds;
+            return pet != null && hasBounds;
+        }
+
         public void SetPet(ItemDefinition item)
         {
             if (current == item && (item == null || pet != null)) return;

@@ -43,4 +43,5 @@ MonoBehaviour:
     scale: 1.35
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 1
+  chatter: {fileID: 11400000, guid: 723124e015ae46e4c8609d00697651b4, type: 2}
   followGapAdjust: 0

@@ -45,6 +45,7 @@ namespace KryticalNova.EditorTools
         private const string SmearShaderPath = "Assets/_ThirdParty/smear effect/Demo_urp/shader/smear_urp.shadergraph";
         public const string SmearSettingsPath = "Assets/_Game/GameFeel/Data/Assets/SmearSettings.asset";
         private const string RunStartPlayer = "Run Start", DeathPlayer = "Death", CritDeathPlayer = "Critical Death";
+        public const string PetChatterSettingsPath = "Assets/_Game/Gameplay/Pets/Data/Assets/PetChatterSettings.asset";
         private const string PlayerPrefabPath = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
         private const string VolumeProfilePath = "Assets/_Game/Rendering/Settings/SampleSceneProfile.asset";
         private const string OrbitCameraName = "Player Orbit Camera";
@@ -392,9 +393,38 @@ namespace KryticalNova.EditorTools
                 var so = new SerializedObject(presenter);
                 AddPetFeel(root, world.gameObject, so);
                 so.ApplyModifiedPropertiesWithoutUndo();
+                AddPetChatter(root);
             }
             AssetDatabase.SaveAssets();
             Debug.Log($"[GameFeel] Pet evolution feel rebuilt on {PrefabPath}. Assign a sound on the new MMF_Sound slot.");
+        }
+
+        /// <summary>Puts the pet's reactions on the game feel prefab without regenerating anything else of it.</summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Pet Chatter")]
+        public static void RebuildPetChatter()
+        {
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath)) AddPetChatter(scope.prefabContentsRoot);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[GameFeel] Pet chatter is on {PrefabPath}. How often a pet speaks: {PetChatterSettingsPath}.");
+        }
+
+        /// <summary>
+        /// The pet's reactions to what its owner does (<see cref="PetChatterDirector"/>): on the game feel prefab,
+        /// with the settings asset that says how often a pet may speak (made with its defaults when missing).
+        /// </summary>
+        private static void AddPetChatter(GameObject root)
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<KryticalNova.Pets.PetChatterSettings>(PetChatterSettingsPath);
+            if (settings == null)
+            {
+                WeatherVfxBuilder.EnsureFolder(System.IO.Path.GetDirectoryName(PetChatterSettingsPath).Replace('\\', '/'));
+                settings = ScriptableObject.CreateInstance<KryticalNova.Pets.PetChatterSettings>();
+                AssetDatabase.CreateAsset(settings, PetChatterSettingsPath);
+            }
+            if (!root.TryGetComponent(out PetChatterDirector director)) director = root.AddComponent<PetChatterDirector>();
+            var so = new SerializedObject(director);
+            so.FindProperty("settings").objectReferenceValue = settings;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void AddPetFeel(GameObject root, GameObject world, SerializedObject so)
@@ -1269,6 +1299,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("chiWorldFeel").objectReferenceValue = World(world, "Chi", AtFeet("PFX_Chi"));
                 AddDeathFeel(root, world, so);
                 AddPetFeel(root, world, so);
+                AddPetChatter(root);
                 AddForgeFeel(root, world, so);
                 AddNovaFeel(root, world, so);
 

@@ -73,5 +73,25 @@ namespace KryticalNova.DevTools
             pet.ServerAwardEventXp(won);
             return Describe(pet);
         }
+
+        [Command("gm.pet.say", "Make your own pet react as if a moment had just happened to you: gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>. " +
+                               "It still waits out its quiet (Pet Chatter Settings) and stays silent with Pet chatter off in Settings.")]
+        private static string Say(string moment = "crit")
+        {
+            PetChatterTrigger trigger;
+            switch (moment.ToLowerInvariant())
+            {
+                case "died": case "death": trigger = PetChatterTrigger.OwnerDied; break;
+                case "drop": case "rare": trigger = PetChatterTrigger.RareDrop; break;
+                case "level": case "levelup": trigger = PetChatterTrigger.LevelUp; break;
+                case "bruiser": trigger = PetChatterTrigger.BruiserKill; break;
+                case "crit": trigger = PetChatterTrigger.CriticalHit; break;
+                case "lowhp": case "low": trigger = PetChatterTrigger.LowHealth; break;
+                case "idle": trigger = PetChatterTrigger.LongIdle; break;
+                default: return "Use: gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>";
+            }
+            PetChatterMoments.Raise(trigger);
+            return $"Told your pet: {trigger}.";
+        }
     }
 }

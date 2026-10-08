@@ -41,6 +41,10 @@ namespace KryticalNova.Pets
         [Header("Looks (base, 25 %, 50 %, 75 %, 100 %)")]
         public PetStageLook[] stages = new PetStageLook[PetRules.StageCount];
 
+        [Header("Chatter")]
+        [Tooltip("What this pet says when its owner dies, lands a critical hit, levels up and so on: words for a pet that talks, emoji for an animal.")]
+        public PetChatterSet chatter;
+
         [Header("Follow")]
         [Tooltip("Added to the pet settings' follow gap for this pet only, in metres. More hovers further from its owner.")]
         public float followGapAdjust;

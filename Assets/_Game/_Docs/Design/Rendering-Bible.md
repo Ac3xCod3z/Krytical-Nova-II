@@ -499,6 +499,11 @@ keywords, and records which icon every skill and item has. No icon is ever given
 without a model gets its icon there: choose it on the left, pick from the best free matches, press Give. **Check
 Icons** lists anything left without one.
 
+**Comic speech bubbles** (pets today, `ComicBubble` in the HUD): paper `#F4EEDF`, a 3 px ink outline, a hard ink
+shadow 4 px down and to the right, shadow-indigo Ben-Day dots on a 7 px 45° grid growing toward the lower right
+corner, and a tail on the side the speaker is. Every number is a `--bubble-*` value of `.comic-bubble` in
+`ProgressionHUD.uss`. The animal pets' emoji are drawn in the same ink, with one fill and one accent of the Colour Bible.
+
 ## 7. Performance budgets (PC, 1080p)
 
 | Item | Budget | Notes |
@@ -549,6 +554,10 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black.
 
 ## Changelog
+
+- **2026-10-08 (polish pass: pets)**:
+  - Pets react to what their owner does in a comic speech bubble (end of section 6g): words for the Drone Core,
+    emoji for the animal pets.
 
 - **2026-10-08 (polish pass: icons)**:
   - Skill icons, and the icons of items that have no model, now come from the CraftPix icon packs, redrawn in the
