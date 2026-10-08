@@ -66,6 +66,7 @@ namespace KryticalNova.EditorTools
             WeatherVfxBuilder.EnsureFolder(SceneFolder);
             EnsureMaterials();
             EnsureGlyphs();
+            EnsureBook();
 
             BuildTitle();
             BuildFactionSelect(database);
@@ -205,6 +206,7 @@ namespace KryticalNova.EditorTools
                 BeginSkin(canvas, each);
                 var screen = AddScreen(canvas, skin.loadingScreen, "Screen_Loading");
                 ComicBackground(screen);
+                EnsureLoadingTip(screen);
 
                 var controller = SkinObject("Loading Controller");
                 var loading = controller.AddComponent<LoadingScreenController>();
@@ -215,6 +217,40 @@ namespace KryticalNova.EditorTools
             AddSkinSwitch(canvas, groups);
             AddTransition();
             End(build);
+        }
+
+        /// <summary>
+        /// The tip line of the Loading screen. A pack whose screen has none (Sci-Fi Menus) gets one at the foot of
+        /// the screen, lettered like the pack's own line under the bar, so every skin shows the same words.
+        /// </summary>
+        private static void EnsureLoadingTip(Transform screen)
+        {
+            if (MenuUi.Find(screen, LoadingScreenController.TipName) != null) return;
+            var like = MenuUi.Find<TMP_Text>(screen, "Label_LoadingPercentage");
+            Transform content = screen.Find("Content"); // the screen's own, not one of the many deeper in it
+            if (like == null || content == null)
+            {
+                Debug.LogWarning($"[FrontEnd] The {skin.faction} Loading screen has no tip line and no place to add one.");
+                return;
+            }
+            var holder = new GameObject("Tooltip", typeof(RectTransform)) { layer = screen.gameObject.layer };
+            var rect = (RectTransform)holder.transform;
+            rect.SetParent(content, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.sizeDelta = new Vector2(3120f, 100f); // the other packs' tip line, on the 3840 x 2160 canvas
+            // This pack's bar sits at the foot of the screen, where the others have their tip: the tip goes over it.
+            rect.anchoredPosition = new Vector2(0f, 400f);
+
+            TMP_Text tip = Object.Instantiate(like, rect);
+            tip.name = LoadingScreenController.TipName;
+            Stretch(tip.rectTransform);
+            tip.alignment = TextAlignmentOptions.Center;
+            tip.textWrappingMode = TextWrappingModes.Normal;
+            tip.overflowMode = TextOverflowModes.Overflow;
+            tip.enableAutoSizing = false;
+            tip.fontSize = Mathf.Min(like.fontSize, 52f);
+            tip.text = string.Empty;
         }
 
         private static void BuildCharacterSelect(CharacterCreationDatabase database)
@@ -495,7 +531,10 @@ namespace KryticalNova.EditorTools
             return AddScreen(canvas, prefab, name);
         }
 
-        /// <summary>The halftone wipe, on its own top-most canvas so it covers every screen, popup and nested vendor canvas.</summary>
+        /// <summary>
+        /// The way to the next scene, on its own top-most canvas so it covers every screen, popup and nested vendor
+        /// canvas: the page turn of the menus' comic book, and the halftone wipe for when there is no page to turn.
+        /// </summary>
         private static void AddTransition()
         {
             // A root canvas (its header parent is a plain object): the Loading scene carries it into the world.
@@ -518,6 +557,7 @@ namespace KryticalNova.EditorTools
 
             var transition = go.AddComponent<MenuTransition>();
             SetRef(transition, "cover", cover);
+            AddPageTurn(go, transition);
         }
 
         // ---------------------------------------------------------------- comic layer

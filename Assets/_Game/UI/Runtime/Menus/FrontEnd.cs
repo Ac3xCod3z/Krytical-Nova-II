@@ -46,7 +46,24 @@ namespace KryticalNova.UI.Menus
 #endif
         }
 
-        /// <summary>Go to another front-end scene through the halftone wipe.</summary>
+        /// <summary>
+        /// Where a scene is in the menus' comic book. Going to a later page turns the page forward, to an earlier
+        /// one turns it back. Anything that is not a menu (the world) comes after the last page.
+        /// </summary>
+        public static int PageOf(string scene)
+        {
+            switch (scene)
+            {
+                case TitleScene: return 0;
+                case CharacterSelectScene: return 1;
+                case FactionSelectScene: return 2;
+                case CharacterCreatorScene: return 3;
+                case LoadingScene: return 4;
+                default: return 5;
+            }
+        }
+
+        /// <summary>Go to another front-end scene by a turn of the page.</summary>
         public static void Go(string scene)
         {
             var transition = MenuTransition.Current;
