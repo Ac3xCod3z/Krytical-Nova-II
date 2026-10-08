@@ -6,6 +6,8 @@
         "KryticalNova.UI",
         "KryticalNova.Editor",
         "KryticalNova.Editor.Menus",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

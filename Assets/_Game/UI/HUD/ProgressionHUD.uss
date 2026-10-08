@@ -180,6 +180,19 @@
 .hotbar-slot.charging > .kn-frame { -unity-background-image-tint-color: rgb(255, 146, 156); }
 .hotbar-slot-letter .slot-key { color: rgb(140, 238, 212); }
 .hotbar-divider { width: 1px; margin: 6px 7px; background-color: rgba(114, 222, 196, 0.35); }
+
+/* ---- Faction HUD pieces (HudChrome): the faction's Synty prefab is what is seen; these stay what is clicked.
+        They keep their rectangles (the piece sets each slot's place) and lose their look. Never hide the slots or
+        the dock themselves: the layout editor, the pet bubbles and click blocking all need to find them. ---- */
+.hud-chrome #game-ui #hotbar { padding: 0; background-image: none; background-color: rgba(0, 0, 0, 0); border-width: 0; }
+.hud-chrome #game-ui #hotbar > .kn-frame, .hud-chrome #game-ui #hotbar > .kn-pip, .hud-chrome #game-ui .hotbar-divider { display: none; }
+.hud-chrome #game-ui .hotbar-slot { margin: 0; padding: 0; background-image: none; background-color: rgba(0, 0, 0, 0); opacity: 1; scale: 1 1; }
+.hud-chrome #game-ui .hotbar-slot:hover, .hud-chrome #game-ui .hotbar-slot.charging { scale: 1 1; }
+.hud-chrome #game-ui .hotbar-slot > * { visibility: hidden; }
+/* The faction's Hotbar stands taller and wider than the old strip: what sat on it by default sits above it. */
+.hud-chrome .feedback { bottom: 162px; }
+.hud-chrome .active-buffs-bar { bottom: 196px; }
+.hud-chrome .chat-window { bottom: 162px; }
 .blade-token { -unity-background-image-tint-color: rgb(58, 40, 92); }
 .blade-token:hover { -unity-background-image-tint-color: rgb(78, 54, 124); }
 .blade-token .skill-icon { color: rgb(206, 170, 255); }
