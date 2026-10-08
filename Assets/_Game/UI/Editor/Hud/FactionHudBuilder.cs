@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using KryticalNova.Factions;
 using KryticalNova.UI.Hud;
@@ -15,8 +16,10 @@ namespace KryticalNova.EditorTools
     /// Assets/Synty is changed. Every faction gets the same pieces with the same parts, so the HUD works the same in
     /// all three and only the art differs.
     ///
-    /// The Hotbar: the pack's ARPG bar widened to ten slots (keys 1 to 0) between its HP and Flux containers, its XP
-    /// bar and level badge, and the pack's small item bar cut to four slots for Q W E R.
+    /// The Hotbar: the pack's ARPG bar widened to ten slots (keys 1 to 0) with its XP bar and without its HP and Flux
+    /// containers, and the pack's small item bar cut to four slots for Q W E R.
+    /// The player's plate: the pack's portrait frame for a live picture of the character, the level, and the HP and
+    /// Flux bars with their numbers.
     /// </summary>
     public static class FactionHudBuilder
     {
@@ -26,22 +29,42 @@ namespace KryticalNova.EditorTools
         private const float LetterGap = 50f;
         /// <summary>The Q W E R bar's slots are drawn larger than the main bar's in every pack: brought down to match.</summary>
         private const float LetterScale = 0.72f;
-        /// <summary>How wide every faction's Hotbar is drawn, in panel pixels of the 1280 x 720 interface.</summary>
-        private const float PanelWidth = 640f;
+        /// <summary>
+        /// How wide every faction's main bar (slots 1 to 0 with its ends) is drawn, in panel pixels of the 1280 x 720
+        /// interface. It sits in the middle of the screen, so this is what must fit between the chat and the right side.
+        /// </summary>
+        private const float MainBarPanelWidth = 380f;
+        /// <summary>How wide every faction's player plate is drawn, in panel pixels.</summary>
+        private const float VitalsPanelWidth = 400f;
+        /// <summary>The smallest lettering on a piece, in the packs' units: about 11 panel pixels on the plate.</summary>
+        private const float SmallLine = 40f;
+        private const float LineWidth = 520f;
         private static readonly Color CooldownShade = new Color(0.03f, 0.03f, 0.08f, 0.72f);
 
         private sealed class Spec
         {
             public FactionId Faction;
             public string Pack;          // folder under Assets/Synty
-            public string Main;          // the ARPG bar
+            public string Main;          // the bar that holds slots 1 to 0
             public string Letters;       // the small bar for Q W E R
-            public string Experience;    // an XP bar of its own, when the ARPG bar has none
-            public string Level;         // the level badge
-            public Vector2 LevelAt;      // the badge's nudge from sitting centred on top of the HP container (units)
+            public string Experience;    // an XP bar of its own, when the main bar has none
             public Vector2 ExperienceAt; // where a separate XP bar sits, from the main bar's top centre
             public float ExperienceHeight; // how tall a separate XP bar is drawn (units)
             public bool SlotsOnTop;      // the bar's own art is drawn over the ends of its row: the slots and keys go over it
+            public Action<Spec, RectTransform, Vitals> LayVitals; // puts the pack's parts of the player's plate in place
+            public string Lettering;     // a label of the pack: its font is the plate's
+            public Color Flux;           // the Flux bar's fill
+        }
+
+        /// <summary>What the player's plate is made of, found while its parts are put in place.</summary>
+        private sealed class Vitals
+        {
+            public Image ExamplePortrait;   // the pack's sample picture: the live one takes its place
+            public float PortraitScale = 1f;
+            public Slider Health, Flux;
+            public TMP_Text Level;
+            public string LevelFormat = "{0}";
+            public Vector2 ModeAt, PointsAt; // the two small lines, by their left end (units from the root's middle)
         }
 
         private static readonly Spec[] Specs =
@@ -50,40 +73,53 @@ namespace KryticalNova.EditorTools
             {
                 Faction = FactionId.Hegemony, Pack = "InterfaceSciFiSoldierHUD",
                 Main = "ActionBar/HUD_SciFiSoldier_ARPGBar_01", Letters = "ActionBar/HUD_SciFiSoldier_HotBar_03",
-                Experience = "Player_Health_Equipment/_Parts/HUD_SciFiSoldier_XPBar_01", Level = "ActionBar/_Parts/HUD_SciFiSoldier_PlayerLevel_01",
-                LevelAt = new Vector2(70f, -50f), ExperienceAt = new Vector2(0f, -24f), ExperienceHeight = 40f, SlotsOnTop = true,
+                Experience = "Player_Health_Equipment/_Parts/HUD_SciFiSoldier_XPBar_01",
+                ExperienceAt = new Vector2(0f, -24f), ExperienceHeight = 40f, SlotsOnTop = true,
+                LayVitals = LayHegemonyVitals, Lettering = "_CommonComponents/Label_SciFiSoldier_SemiBold", Flux = new Color(0.12f, 0.72f, 1f),
             },
             new Spec
             {
                 Faction = FactionId.Null, Pack = "InterfaceDarkFantasyHUD",
                 Main = "ActionBar/HUD_DarkFantasy_ARPGBar_02", Letters = "ActionBar/HUD_DarkFantasy_HotBar_01",
-                Level = "ActionBar/_Parts/HUD_DarkFantasy_PlayerLevel_02", LevelAt = new Vector2(0f, -170f),
+                LayVitals = LayNullVitals, Lettering = "_CommonComponents/Label_DarkFantasy_Bold", Flux = new Color(0.17f, 0.45f, 0.95f),
             },
             new Spec
             {
                 Faction = FactionId.Covenant, Pack = "InterfaceFantasyWarriorHUD",
                 Main = "ActionBar/HUD_FantasyWarrior_ARPGBar_05", Letters = "ActionBar/HUD_FantasyWarrior_HotBar_01",
-                Level = "ActionBar/_Parts/HUD_FantasyWarrior_PlayerLevel_01", LevelAt = new Vector2(-110f, -110f),
+                LayVitals = LayCovenantVitals, Lettering = "_CommonComponents/Label_FantasyWarrior_SemiBold", Flux = new Color(0.19f, 0.73f, 0.95f),
             },
         };
 
         public static string HotbarPath(FactionId faction) => $"{Folder}/{faction}/HUD_{faction}_Hotbar.prefab";
+
+        public static string VitalsPath(FactionId faction) => $"{Folder}/{faction}/HUD_{faction}_Vitals.prefab";
 
         public static string KitPath(FactionId faction) => $"{KitFolder}/FactionHudKit_{faction}.asset";
 
         [MenuItem("Krytical Nova/UI/Build Faction HUD")]
         public static void Build()
         {
-            foreach (Spec spec in Specs) BuildHotbar(spec);
+            foreach (Spec spec in Specs)
+            {
+                HotbarChromeView hotbar = BuildHotbar(spec);
+                VitalsChromeView vitals = BuildVitals(spec);
+                EnsureKit(spec.Faction, hotbar, vitals);
+            }
             AssetDatabase.SaveAssets();
             Debug.Log($"[HUD] Faction HUD pieces composed in {Folder}.");
         }
 
-        private static void BuildHotbar(Spec spec)
-        {
-            GameObject main = Load(spec, spec.Main), letters = Load(spec, spec.Letters), badge = Load(spec, spec.Level);
-            if (main == null || letters == null || badge == null) return;
+        // ------------------------------------------------------------------ one piece
 
+        /// <summary>
+        /// Makes one piece: <paramref name="lay"/> puts the packs' parts under an empty root and fills in the view;
+        /// the root then takes the size of what is drawn in it, centred on it, the packs' own behaviour is switched
+        /// off, and the piece is saved as a prefab. <paramref name="lay"/> returns the width (in the packs' units) of
+        /// the part that will be drawn <paramref name="panelWidth"/> panel pixels wide, or 0 for the whole piece.
+        /// </summary>
+        private static T Compose<T>(string path, float panelWidth, Func<RectTransform, T, float> lay) where T : HudChromePiece
+        {
             var scene = EditorSceneManager.NewPreviewScene();
             try
             {
@@ -94,19 +130,87 @@ namespace KryticalNova.EditorTools
                 var canvasRect = (RectTransform)canvasGo.transform;
                 canvasRect.sizeDelta = new Vector2(3840f, 2160f);
 
-                var rootGo = new GameObject($"HUD_{spec.Faction}_Hotbar", typeof(RectTransform));
+                var rootGo = new GameObject(System.IO.Path.GetFileNameWithoutExtension(path), typeof(RectTransform));
                 rootGo.layer = LayerMask.NameToLayer("UI");
                 var root = (RectTransform)rootGo.transform;
                 root.SetParent(canvasRect, false);
+                var view = rootGo.AddComponent<T>();
 
+                float measured = lay(root, view);
+                Canvas.ForceUpdateCanvases();
+
+                // The root takes the size of everything drawn in it, centred on it.
+                Bounds all = Drawn(root, root);
+                foreach (RectTransform child in root) child.anchoredPosition -= (Vector2)all.center;
+                root.sizeDelta = all.size;
+                Canvas.ForceUpdateCanvases();
+
+                var so = new SerializedObject(view);
+                so.FindProperty("unitsToPanel").floatValue = panelWidth / Mathf.Max(1f, measured > 0f ? measured : all.size.x);
+                so.ApplyModifiedPropertiesWithoutUndo();
+                Finished(root, view);
+
+                // Views only: nothing of the packs' own behaviour may fight what the game shows.
+                foreach (Animator animator in rootGo.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
+                foreach (Selectable selectable in rootGo.GetComponentsInChildren<Selectable>(true))
+                {
+                    selectable.transition = Selectable.Transition.None;
+                    selectable.interactable = true;
+                    if (!(selectable is Slider)) selectable.enabled = false;
+                }
+                foreach (Graphic graphic in rootGo.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
+
+                WeatherVfxBuilder.EnsureFolder(System.IO.Path.GetDirectoryName(path).Replace('\\', '/'));
+                root.SetParent(null, false);
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(rootGo, scene);
+                GameObject saved = PrefabUtility.SaveAsPrefabAsset(rootGo, path);
+                return saved != null ? saved.GetComponent<T>() : null;
+            }
+            finally
+            {
+                EditorSceneManager.ClosePreviewScene(scene);
+            }
+        }
+
+        /// <summary>What can only be measured once the root has its final size.</summary>
+        private static void Finished(RectTransform root, HudChromePiece view)
+        {
+            if (!(view is HotbarChromeView)) return;
+            // The view puts the middle of the row of slots 1 to 0 on the screen's middle.
+            var so = new SerializedObject(view);
+            SerializedProperty slots = so.FindProperty("slots");
+            var first = slots.GetArrayElementAtIndex(0).FindPropertyRelative("area").objectReferenceValue as RectTransform;
+            var last = slots.GetArrayElementAtIndex(NumberSlots - 1).FindPropertyRelative("area").objectReferenceValue as RectTransform;
+            if (first == null || last == null) return;
+            Bounds firstSlot = RectTransformUtility.CalculateRelativeRectTransformBounds(root, first);
+            Bounds lastSlot = RectTransformUtility.CalculateRelativeRectTransformBounds(root, last);
+            so.FindProperty("mainCentre").floatValue = Mathf.Clamp01(((firstSlot.min.x + lastSlot.max.x) * 0.5f - root.rect.xMin) / Mathf.Max(1f, root.rect.width));
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        // ------------------------------------------------------------------ the Hotbar
+
+        private static HotbarChromeView BuildHotbar(Spec spec)
+        {
+            GameObject main = Load(spec, spec.Main), letters = Load(spec, spec.Letters);
+            if (main == null || letters == null) return null;
+
+            return Compose<HotbarChromeView>(HotbarPath(spec.Faction), MainBarPanelWidth, (root, view) =>
+            {
                 RectTransform mainBar = Place(main, root, "Main");
                 RectTransform letterBar = Place(letters, root, "Letters");
                 letterBar.localScale = new Vector3(LetterScale, LetterScale, 1f);
                 List<RectTransform> numberSlots = SetSlots(mainBar, NumberSlots);
                 List<RectTransform> letterSlots = SetSlots(letterBar, LetterSlots);
+                // HP and Flux are on the player's plate: the bar's own containers are not shown.
+                foreach (string holder in new[] { "Container_L", "Container_R", "Container_Left", "Container_Right" })
+                {
+                    Transform found = Find(mainBar, holder);
+                    if (found != null) found.gameObject.SetActive(false);
+                }
                 Canvas.ForceUpdateCanvases();
 
-                // The XP bar the ARPG bar carries (some ship it switched off), or one of its own over the bar.
+                // The XP bar the main bar carries (some ship it switched off), or one of its own over the bar.
                 Transform experience = Find(mainBar, "XPBar");
                 if (experience != null) experience.gameObject.SetActive(true);
                 else if (!string.IsNullOrEmpty(spec.Experience))
@@ -136,36 +240,18 @@ namespace KryticalNova.EditorTools
                     over.sortingOrder = HudChrome.CanvasOrder + 1;
                 }
 
-                // The Q W E R bar to the right of the Flux container, its slots level with the main slots. Measured
-                // from the slots and the container, not from the bars' soft shadows.
-                Transform healthHolder = Find(mainBar, "Container_L") ?? Find(mainBar, "Container_Left");
-                Transform fluxHolder = Find(mainBar, "Container_R") ?? Find(mainBar, "Container_Right");
-                Bounds fluxBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(root, fluxHolder);
+                // The Q W E R bar to the right of the main bar's art, its slots level with the main slots.
+                Bounds mainDrawn = Drawn(root, mainBar);
                 Bounds firstLetter = RectTransformUtility.CalculateRelativeRectTransformBounds(root, letterSlots[0]);
                 Bounds firstNumber = RectTransformUtility.CalculateRelativeRectTransformBounds(root, numberSlots[0]);
-                letterBar.anchoredPosition += new Vector2(fluxBounds.max.x - firstLetter.min.x + LetterGap, firstNumber.center.y - firstLetter.center.y);
-
-                // The level badge on top of the HP container.
-                RectTransform level = Place(badge, root, "Level");
-                Bounds healthBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(root, healthHolder);
-                Bounds badgeBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(root, level);
-                level.anchoredPosition += new Vector2(healthBounds.center.x - badgeBounds.center.x + spec.LevelAt.x, healthBounds.max.y - badgeBounds.min.y + spec.LevelAt.y);
+                letterBar.anchoredPosition += new Vector2(mainDrawn.max.x - firstLetter.min.x + LetterGap, firstNumber.center.y - firstLetter.center.y);
                 Canvas.ForceUpdateCanvases();
 
-                // The root takes the size of everything in it, centred on it.
-                Bounds all = Around(root);
-                foreach (RectTransform child in root) child.anchoredPosition -= (Vector2)all.center;
-                root.sizeDelta = all.size;
-                Canvas.ForceUpdateCanvases();
-
-                var view = rootGo.AddComponent<HotbarChromeView>();
                 var so = new SerializedObject(view);
                 SerializedProperty slots = so.FindProperty("slots");
                 slots.arraySize = NumberSlots + LetterSlots;
                 for (int i = 0; i < NumberSlots + LetterSlots; i++)
                     WireSlot(slots.GetArrayElementAtIndex(i), i < NumberSlots ? numberSlots[i] : letterSlots[i - NumberSlots]);
-                so.FindProperty("health").objectReferenceValue = SliderUnder(mainBar, "Container_L", "Container_Left");
-                so.FindProperty("flux").objectReferenceValue = SliderUnder(mainBar, "Container_R", "Container_Right");
                 so.FindProperty("experience").objectReferenceValue = experience != null ? experience.GetComponentInChildren<Slider>(true) : null;
                 // One line of text on the XP bar: a bar that ships two shows the one on the fill.
                 TMP_Text experienceLabel = experience != null ? Label(experience, "Label_XP", "Label_Number", "Label_PlayerXP") : null;
@@ -173,34 +259,206 @@ namespace KryticalNova.EditorTools
                     foreach (TMP_Text other in experience.GetComponentsInChildren<TMP_Text>(true))
                         if (other != experienceLabel) other.gameObject.SetActive(false);
                 so.FindProperty("experienceLabel").objectReferenceValue = experienceLabel;
-                so.FindProperty("level").objectReferenceValue = Label(level, "Label_PlayerLevel");
-                // The containers frame the screen's middle: the view puts the middle of the row of slots there.
-                Bounds firstSlot = RectTransformUtility.CalculateRelativeRectTransformBounds(root, numberSlots[0]);
-                Bounds lastSlot = RectTransformUtility.CalculateRelativeRectTransformBounds(root, numberSlots[numberSlots.Count - 1]);
-                so.FindProperty("mainCentre").floatValue = Mathf.Clamp01(((firstSlot.min.x + lastSlot.max.x) * 0.5f - root.rect.xMin) / Mathf.Max(1f, root.rect.width));
+                so.FindProperty("mainWidth").floatValue = mainDrawn.size.x;
                 so.ApplyModifiedPropertiesWithoutUndo();
+                return mainDrawn.size.x;
+            });
+        }
 
-                // Views only: nothing of the packs' own behaviour may fight what the game shows.
-                foreach (Animator animator in rootGo.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
-                foreach (Selectable selectable in rootGo.GetComponentsInChildren<Selectable>(true))
-                {
-                    selectable.transition = Selectable.Transition.None;
-                    selectable.interactable = true;
-                    if (!(selectable is Slider)) selectable.enabled = false;
-                }
-                foreach (Graphic graphic in rootGo.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
+        // ------------------------------------------------------------------ the player's plate
 
-                string path = HotbarPath(spec.Faction);
-                WeatherVfxBuilder.EnsureFolder(System.IO.Path.GetDirectoryName(path).Replace('\\', '/'));
-                root.SetParent(null, false);
-                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(rootGo, scene);
-                GameObject saved = PrefabUtility.SaveAsPrefabAsset(rootGo, path);
-                EnsureKit(spec.Faction, saved != null ? saved.GetComponent<HotbarChromeView>() : null, PanelWidth / Mathf.Max(1f, all.size.x));
-            }
-            finally
+        private static VitalsChromeView BuildVitals(Spec spec)
+        {
+            GameObject lettering = Load(spec, spec.Lettering);
+            TMP_Text like = lettering != null ? lettering.GetComponentInChildren<TMP_Text>(true) : null;
+            if (like == null) return null;
+
+            return Compose<VitalsChromeView>(VitalsPath(spec.Faction), VitalsPanelWidth, (root, view) =>
             {
-                EditorSceneManager.ClosePreviewScene(scene);
+                var parts = new Vitals();
+                spec.LayVitals(spec, root, parts);
+                Canvas.ForceUpdateCanvases();
+                if (parts.Health == null || parts.Flux == null || parts.Level == null || parts.ExamplePortrait == null)
+                {
+                    Debug.LogError($"[HUD] {spec.Faction}: the player's plate is missing a part (HP {parts.Health != null}, Flux {parts.Flux != null}, level {parts.Level != null}, portrait {parts.ExamplePortrait != null}).");
+                    return 0f;
+                }
+
+                // Flux in the colour it has everywhere else.
+                if (parts.Flux.fillRect != null && parts.Flux.fillRect.TryGetComponent(out Image fluxFill)) fluxFill.color = spec.Flux;
+
+                // The live picture where the pack's sample picture was.
+                parts.ExamplePortrait.enabled = false;
+                var liveGo = new GameObject("Live", typeof(RectTransform));
+                liveGo.layer = root.gameObject.layer;
+                var liveRect = (RectTransform)liveGo.transform;
+                var holder = (RectTransform)parts.ExamplePortrait.transform.parent;
+                liveRect.SetParent(holder, false);
+                liveRect.SetSiblingIndex(parts.ExamplePortrait.transform.GetSiblingIndex() + 1);
+                liveRect.anchorMin = liveRect.anchorMax = liveRect.pivot = new Vector2(0.5f, 0.5f);
+                float side = Mathf.Max(holder.rect.width, holder.rect.height) * parts.PortraitScale;
+                liveRect.sizeDelta = new Vector2(side, side);
+                var live = liveGo.AddComponent<RawImage>();
+                live.enabled = false;
+
+                TMP_Text healthLabel = OnBar(parts.Health, like);
+                TMP_Text fluxLabel = OnBar(parts.Flux, like);
+                TMP_Text mode = Line(root, "Label_Mode", like, parts.ModeAt, SmallLine);
+                TMP_Text points = Line(root, "Label_Points", like, parts.PointsAt, SmallLine);
+                parts.Level.textWrappingMode = TextWrappingModes.NoWrap;
+
+                var so = new SerializedObject(view);
+                so.FindProperty("portrait").objectReferenceValue = live;
+                so.FindProperty("health").objectReferenceValue = parts.Health;
+                so.FindProperty("flux").objectReferenceValue = parts.Flux;
+                so.FindProperty("healthLabel").objectReferenceValue = healthLabel;
+                so.FindProperty("fluxLabel").objectReferenceValue = fluxLabel;
+                so.FindProperty("level").objectReferenceValue = parts.Level;
+                so.FindProperty("levelFormat").stringValue = parts.LevelFormat;
+                so.FindProperty("mode").objectReferenceValue = mode;
+                so.FindProperty("points").objectReferenceValue = points;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                return 0f;
+            });
+        }
+
+        // Sci-Fi Soldier: a comms screen for the picture with the level on its name plate, and two of the pack's health bars.
+        private static void LayHegemonyVitals(Spec spec, RectTransform root, Vitals parts)
+        {
+            RectTransform screen = Place(Load(spec, "Radio/HUD_SciFiSoldier_Comms_01"), root, "Portrait");
+            GameObject bar = Load(spec, "Player_Health_Equipment/HUD_SciFiSoldier_HealthBar_02");
+            RectTransform health = Place(bar, root, "Health");
+            RectTransform flux = Place(bar, root, "Flux");
+            // The screen is 330 x 400 round the root's middle: the bars beside its upper half.
+            PutLeftAt(root, health, 195f, 80f);
+            PutLeftAt(root, flux, 195f, -20f);
+            Off(screen, "SPR_Static");
+
+            parts.ExamplePortrait = ImageNamed(screen, "SPR_Portrait");
+            parts.Health = health.GetComponentInChildren<Slider>(true);
+            parts.Flux = flux.GetComponentInChildren<Slider>(true);
+            parts.Level = Label(screen, "Label_Name");
+            parts.LevelFormat = "LV {0}";
+            parts.ModeAt = new Vector2(275f, -95f);
+            parts.PointsAt = new Vector2(275f, -145f);
+            Image fluxIcon = ImageNamed(flux, "ICON");
+            Sprite bolt = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Synty/{spec.Pack}/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Lightning_01.png");
+            if (fluxIcon != null && bolt != null) fluxIcon.sprite = bolt;
+        }
+
+        // Dark Fantasy: the pack's own plate (picture in a diamond, a long bar and a short one), and its level badge under the picture.
+        private static void LayNullVitals(Spec spec, RectTransform root, Vitals parts)
+        {
+            RectTransform plate = Place(Load(spec, "Player_Health_Equipment/HUD_DarkFantasy_HealthStats_05"), root, "Plate");
+            RectTransform badge = Place(Load(spec, "ActionBar/_Parts/HUD_DarkFantasy_PlayerLevel_02"), root, "Level");
+            badge.localScale = new Vector3(0.5f, 0.5f, 1f);
+            badge.anchoredPosition = new Vector2(-500f, -190f);
+
+            parts.ExamplePortrait = ImageNamed(plate, "SPR_Portrait");
+            parts.PortraitScale = 1.15f;
+            parts.Health = SliderUnder(plate, "Bar_HP");
+            parts.Flux = SliderUnder(plate, "Bar_SP");
+            parts.Level = Label(badge, "Label_PlayerLevel");
+            parts.ModeAt = new Vector2(215f, -100f);
+            parts.PointsAt = new Vector2(-250f, -165f);
+            // The short bar's ring was the green of the pack's stamina: Flux blue, with the mark of the stat that feeds it.
+            Transform ring = Find(Find(plate, "Bar_SP"), "IconBox");
+            Image ringBack = ImageNamed(ring, "SPR_Background"), ringIcon = ImageNamed(ring, "ICON");
+            if (ringBack != null) ringBack.color = new Color(0.03f, 0.12f, 0.3f);
+            Sprite spirit = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Synty/{spec.Pack}/Sprites/Icons_Stats/ICON_DarkFantasy_Stat_Spirit_01_Underlay.png");
+            if (ringIcon != null && spirit != null) ringIcon.sprite = spirit;
+        }
+
+        // Fantasy Warrior: the pack's hero portrait, its level gem on the portrait's corner, and two of its health bars.
+        private static void LayCovenantVitals(Spec spec, RectTransform root, Vitals parts)
+        {
+            RectTransform picture = Place(Load(spec, "Portraits/HUD_FantasyWarrior_CharacterPortrait_05"), root, "Portrait");
+            GameObject bar = Load(spec, "Player_Health_Equipment/HUD_FantasyWarrior_HealthBar_01");
+            RectTransform health = Place(bar, root, "Health");
+            RectTransform flux = Place(bar, root, "Flux");
+            RectTransform gem = Place(Load(spec, "ActionBar/_Parts/HUD_FantasyWarrior_PlayerLevel_01"), root, "Level");
+            gem.localScale = new Vector3(0.8f, 0.8f, 1f);
+            // The portrait's pivot is its right middle: its corner goes under the gem, and the bars start at the gem.
+            picture.anchoredPosition = new Vector2(-40f, 0f);
+            gem.anchoredPosition = new Vector2(-20f, -120f);
+            PutLeftAt(root, health, 40f, 70f);
+            PutLeftAt(root, flux, 40f, -30f);
+            Off(picture, "HitPoints");
+
+            parts.ExamplePortrait = ImageNamed(picture, "SPR_Example_HeroPortrait");
+            parts.PortraitScale = 1.05f;
+            parts.Health = health.GetComponentInChildren<Slider>(true);
+            parts.Flux = flux.GetComponentInChildren<Slider>(true);
+            parts.Level = Label(gem, "Label_PlayerLevel");
+            parts.ModeAt = new Vector2(150f, -105f);
+            parts.PointsAt = new Vector2(150f, -155f);
+            Image fluxIcon = ImageNamed(flux, "ICON");
+            Sprite spirit = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Synty/{spec.Pack}/Sprites/Icons_Stats/ICON_FantasyWarrior_Stat_Spirit_01_Underlay.png");
+            if (fluxIcon != null && spirit != null)
+            {
+                fluxIcon.sprite = spirit;
+                fluxIcon.color = new Color(0.78f, 0.92f, 1f); // the heart's red tint is not Flux's
             }
+        }
+
+        /// <summary>Moves a part so that its rectangle's left edge and its middle height are at these places under the root.</summary>
+        private static void PutLeftAt(RectTransform root, RectTransform part, float left, float middle)
+        {
+            Canvas.ForceUpdateCanvases();
+            Bounds now = RectTransformUtility.CalculateRelativeRectTransformBounds(root, part);
+            part.anchoredPosition += new Vector2(left - now.min.x, middle - now.center.y);
+        }
+
+        /// <summary>The numbers on a bar, in the pack's lettering: over the whole bar, in the middle.</summary>
+        private static TMP_Text OnBar(Slider bar, TMP_Text like)
+        {
+            var rect = (RectTransform)bar.transform;
+            TextMeshProUGUI text = NewLabel(rect.parent, "Label_Numbers", like, Mathf.Max(SmallLine, rect.rect.height * 0.6f), TextAlignmentOptions.Center);
+            var own = text.rectTransform;
+            own.anchorMin = rect.anchorMin;
+            own.anchorMax = rect.anchorMax;
+            own.pivot = rect.pivot;
+            own.anchoredPosition = rect.anchoredPosition;
+            own.sizeDelta = rect.sizeDelta;
+            own.SetAsLastSibling();
+            return text;
+        }
+
+        /// <summary>One small line of text, by its left end.</summary>
+        private static TMP_Text Line(RectTransform root, string name, TMP_Text like, Vector2 at, float size)
+        {
+            TextMeshProUGUI text = NewLabel(root, name, like, size, TextAlignmentOptions.Left);
+            var own = text.rectTransform;
+            own.anchorMin = own.anchorMax = new Vector2(0.5f, 0.5f);
+            own.pivot = new Vector2(0f, 0.5f);
+            own.sizeDelta = new Vector2(LineWidth, size * 1.3f);
+            own.anchoredPosition = at;
+            return text;
+        }
+
+        private static TextMeshProUGUI NewLabel(Transform parent, string name, TMP_Text like, float size, TextAlignmentOptions alignment)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.layer = parent.gameObject.layer;
+            go.transform.SetParent(parent, false);
+            var text = go.AddComponent<TextMeshProUGUI>();
+            text.font = like.font;
+            text.fontSharedMaterial = like.fontSharedMaterial;
+            text.fontSize = size;
+            text.alignment = alignment;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.overflowMode = TextOverflowModes.Overflow;
+            text.color = Color.white;
+            text.outlineWidth = 0.22f;
+            text.outlineColor = new Color32(0x10, 0x10, 0x1C, 0xFF);
+            text.text = string.Empty;
+            return text;
+        }
+
+        private static void Off(Transform root, string name)
+        {
+            Transform found = Find(root, name);
+            if (found != null) found.gameObject.SetActive(false);
         }
 
         private static GameObject Load(Spec spec, string relative)
@@ -398,7 +656,7 @@ namespace KryticalNova.EditorTools
             frame.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
         }
 
-        private static void EnsureKit(FactionId faction, HotbarChromeView hotbar, float unitsToPanel)
+        private static void EnsureKit(FactionId faction, HotbarChromeView hotbar, VitalsChromeView vitals)
         {
             string path = KitPath(faction);
             var kit = AssetDatabase.LoadAssetAtPath<FactionHudKit>(path);
@@ -410,23 +668,41 @@ namespace KryticalNova.EditorTools
             }
             kit.faction = faction;
             kit.hotbar = hotbar;
-            kit.unitsToPanel = unitsToPanel;
+            kit.vitals = vitals;
             EditorUtility.SetDirty(kit);
         }
 
         // ------------------------------------------------------------------ finding things in the packs' prefabs
 
-        /// <summary>The rectangle round everything under <paramref name="root"/>, in its own space.</summary>
-        private static Bounds Around(RectTransform root)
+        /// <summary>
+        /// The rectangle round what is drawn under <paramref name="under"/>, in <paramref name="root"/>'s space:
+        /// pictures that are switched on, without the soft shadows and glows that fade to nothing, and without what a
+        /// mask cuts away.
+        /// </summary>
+        private static Bounds Drawn(RectTransform root, RectTransform under)
         {
             bool any = false;
             var all = new Bounds();
-            foreach (RectTransform child in root)
+            var corners = new Vector3[4];
+            foreach (Graphic graphic in under.GetComponentsInChildren<Graphic>(false))
             {
-                if (!child.gameObject.activeSelf) continue;
-                Bounds each = RectTransformUtility.CalculateRelativeRectTransformBounds(root, child);
-                if (!any) { all = each; any = true; }
-                else all.Encapsulate(each);
+                if (!graphic.enabled || graphic.color.a < 0.02f || graphic is TMP_Text) continue;
+                if (graphic is Image image && image.sprite == null && image.GetComponent<Mask>() != null) continue;
+                string name = graphic.name;
+                if (name.Contains("Shadow") || name.Contains("Glow") || name.Contains("Vignette") || name.Contains("Flash")) continue;
+                // A mask cuts only what agrees to be cut: a frame drawn round a masked picture does not.
+                bool cut = false;
+                if (graphic is MaskableGraphic maskable && maskable.maskable)
+                    for (Transform up = graphic.transform.parent; up != null && up != root.parent; up = up.parent)
+                        if ((up.TryGetComponent(out Mask mask) && mask.enabled) || (up.TryGetComponent(out RectMask2D rectMask) && rectMask.enabled)) { cut = true; break; }
+                if (cut) continue;
+                graphic.rectTransform.GetWorldCorners(corners);
+                for (int i = 0; i < 4; i++)
+                {
+                    Vector3 point = root.InverseTransformPoint(corners[i]);
+                    if (!any) { all = new Bounds(point, Vector3.zero); any = true; }
+                    else all.Encapsulate(point);
+                }
             }
             return all;
         }

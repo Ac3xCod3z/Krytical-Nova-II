@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: FactionHudKit_Hegemony
   m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.Hud.FactionHudKit
   faction: 1
-  unitsToPanel: 0.22287226
   hotbar: {fileID: 1010016207730337810, guid: 3cbdd2ec8578d3d49bb6dc9964d7c421, type: 3}
+  vitals: {fileID: 7950972494452641313, guid: 09067d66468beeb499b08f9bc05ca05e, type: 3}

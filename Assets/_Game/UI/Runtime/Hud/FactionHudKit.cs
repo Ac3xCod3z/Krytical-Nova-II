@@ -13,15 +13,16 @@ namespace KryticalNova.UI.Hud
     {
         public FactionId faction;
 
-        [Tooltip("How large the pieces are drawn: panel pixels (of the 1280 x 720 interface) per canvas unit of the packs (drawn for 3840 x 2160). 0.333 is the size Synty shows them at. The builder sets it so that every faction's Hotbar is as wide as the others.")]
-        [Range(0.15f, 0.6f)] public float unitsToPanel = 0.24f;
-
-        [Tooltip("The Hotbar: HP container, slots 1 to 0, Flux container, XP bar, level badge, and the Q W E R bar.")]
+        [Tooltip("The Hotbar: slots 1 to 0 with the XP bar, and the Q W E R bar.")]
         public HotbarChromeView hotbar;
+
+        [Tooltip("The player's plate: live portrait, level, HP and Flux.")]
+        public VitalsChromeView vitals;
 
         public IEnumerable<HudChromePiece> Pieces()
         {
             yield return hotbar;
+            yield return vitals;
         }
     }
 }

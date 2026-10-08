@@ -48,7 +48,7 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void EveryHotbar_HasItsFourteenSlots_Containers_XpAndLevel()
+        public void EveryHotbar_HasItsFourteenSlots_AndTheXpBar()
         {
             foreach (FactionId faction in Factions)
             {
@@ -62,22 +62,47 @@ namespace KryticalNova.Tests
                     foreach (string part in new[] { "area", "icon", "cooldown", "cooldownFill", "count", "key" })
                         Assert.IsNotNull(slot.FindPropertyRelative(part).objectReferenceValue, $"{faction}: slot {i} has no {part}");
                 }
-                foreach (string part in new[] { "health", "flux", "experience", "experienceLabel", "level" })
+                foreach (string part in new[] { "experience", "experienceLabel" })
                     Assert.IsNotNull(so.FindProperty(part).objectReferenceValue, $"{faction}: the Hotbar has no {part}");
             }
         }
 
         [Test]
-        public void EveryHotbar_IsAsWideOnScreenAsTheOthers_WithItsMainBarLeftOfItsMiddle()
+        public void EveryPlayerPlate_HasThePortrait_Level_HpAndFlux_WithTheirNumbers()
         {
-            float first = -1f;
+            foreach (FactionId faction in Factions)
+            {
+                var so = new SerializedObject(Kit(faction).vitals);
+                foreach (string part in new[] { "portrait", "health", "flux", "healthLabel", "fluxLabel", "level", "mode", "points" })
+                    Assert.IsNotNull(so.FindProperty(part).objectReferenceValue, $"{faction}: the player's plate has no {part}");
+                StringAssert.Contains("{0}", so.FindProperty("levelFormat").stringValue, $"{faction}: the level's wording has no place for the number");
+            }
+        }
+
+        [Test]
+        public void EveryPiece_IsAsWideOnScreenAsTheOtherFactions()
+        {
+            float plate = -1f, bar = -1f;
             foreach (FactionId faction in Factions)
             {
                 FactionHudKit kit = Kit(faction);
-                float width = ((RectTransform)kit.hotbar.transform).rect.width * kit.unitsToPanel;
-                if (first < 0f) first = width;
-                Assert.AreEqual(first, width, 1f, $"{faction}: Hotbar width in panel pixels");
-                Assert.Less(width, 1280f * 0.6f, "the Hotbar leaves the corners of the screen to the other panels");
+                if (plate < 0f) plate = kit.vitals.PanelWidth;
+                if (bar < 0f) bar = kit.hotbar.MainBarPanelWidth;
+                Assert.AreEqual(plate, kit.vitals.PanelWidth, 1f, $"{faction}: width of the player's plate in panel pixels");
+                // The Q W E R bars differ from pack to pack: it is the main bar, in the middle of the screen, that is the same.
+                Assert.AreEqual(bar, kit.hotbar.MainBarPanelWidth, 1f, $"{faction}: width of the main bar in panel pixels");
+            }
+        }
+
+        [Test]
+        public void EveryHotbar_LeavesTheCornersFree_WithItsMainBarLeftOfItsMiddle()
+        {
+            foreach (FactionId faction in Factions)
+            {
+                FactionHudKit kit = Kit(faction);
+                // The main bar is centred: with the chat's 16 + 390 pixels on its left it must end short of both.
+                Assert.Less(kit.hotbar.MainBarPanelWidth, 1280f - 2f * (16f + 390f), "the main bar leaves the chat's corner free");
+                Assert.Less(kit.hotbar.PanelWidth, 1280f * 0.6f, "the Hotbar leaves the corners of the screen to the other panels");
                 // Q W E R hang off the right end, so the middle of slots 1 to 0 is left of the piece's middle.
                 float centre = new SerializedObject(kit.hotbar).FindProperty("mainCentre").floatValue;
                 Assert.That(centre, Is.InRange(0.3f, 0.5f), $"{faction}: where the main bar's middle is across the piece");
@@ -89,11 +114,13 @@ namespace KryticalNova.Tests
         {
             foreach (FactionId faction in Factions)
             {
-                HotbarChromeView hotbar = Kit(faction).hotbar;
-                foreach (Graphic graphic in hotbar.GetComponentsInChildren<Graphic>(true))
-                    Assert.IsFalse(graphic.raycastTarget, $"{faction}: {graphic.name} would take clicks meant for the HUD's own elements");
-                foreach (Animator animator in hotbar.GetComponentsInChildren<Animator>(true))
-                    Assert.IsFalse(animator.enabled, $"{faction}: the animator on {animator.name} would fight what the game shows");
+                foreach (HudChromePiece piece in Kit(faction).Pieces())
+                {
+                    foreach (Graphic graphic in piece.GetComponentsInChildren<Graphic>(true))
+                        Assert.IsFalse(graphic.raycastTarget, $"{faction}: {graphic.name} would take clicks meant for the HUD's own elements");
+                    foreach (Animator animator in piece.GetComponentsInChildren<Animator>(true))
+                        Assert.IsFalse(animator.enabled, $"{faction}: the animator on {animator.name} would fight what the game shows");
+                }
             }
         }
 
@@ -108,7 +135,7 @@ namespace KryticalNova.Tests
                 try
                 {
                     HotbarChromeView view = Object.Instantiate(Kit(faction).hotbar, canvas.transform, false);
-                    VisualElement root = HudLike(out VisualElement[] slots, out ProgressBar health, out ProgressBar flux, out ProgressBar experience, out Label level);
+                    VisualElement root = HudLike(out VisualElement[] slots, out _, out _, out ProgressBar experience, out _);
 
                     var art = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero);
                     slots[0].Q(className: "slot-icon").style.backgroundImage = new StyleBackground(art);
@@ -123,13 +150,10 @@ namespace KryticalNova.Tests
                     slots[5].AddToClassList("on-cooldown"); // an item that has run out: no sweep, greyed
                     slots[5].Q<Label>(className: "slot-rank").text = "x0";
                     slots[10].Q<Label>(className: "slot-key").text = "Q";
-                    health.value = 50f;
-                    flux.value = 25f;
                     experience.value = 80f;
                     experience.title = "800 / 1000 XP";
-                    level.text = "LEVEL 37";
 
-                    Assert.IsTrue(view.Attach(root, 0.25f), $"{faction}: the Hotbar found no place in the HUD");
+                    Assert.IsTrue(view.Attach(root), $"{faction}: the Hotbar found no place in the HUD");
                     view.Tick();
 
                     var so = new SerializedObject(view);
@@ -153,11 +177,8 @@ namespace KryticalNova.Tests
                     Shown(Part<GameObject>(4, "highlighted"), true, $"{faction}: a drop would land here");
                     Assert.IsFalse(Part<GameObject>(5, "cooldown").activeSelf, $"{faction}: nothing to sweep on an item that has run out");
 
-                    Assert.AreEqual(0.5f, ((Slider)so.FindProperty("health").objectReferenceValue).normalizedValue, 0.001f, $"{faction}: HP");
-                    Assert.AreEqual(0.25f, ((Slider)so.FindProperty("flux").objectReferenceValue).normalizedValue, 0.001f, $"{faction}: Flux");
                     Assert.AreEqual(0.8f, ((Slider)so.FindProperty("experience").objectReferenceValue).normalizedValue, 0.001f, $"{faction}: XP");
                     Assert.AreEqual("800 / 1000 XP", ((TMP_Text)so.FindProperty("experienceLabel").objectReferenceValue).text);
-                    Assert.AreEqual("37", ((TMP_Text)so.FindProperty("level").objectReferenceValue).text, $"{faction}: the badge says the number only");
 
                     // Leaving gives the elements back as they were.
                     view.Detach();
@@ -165,6 +186,47 @@ namespace KryticalNova.Tests
                     Assert.AreEqual(StyleKeyword.Null, root.Q("hotbar").style.width.keyword);
                     Assert.AreEqual(StyleKeyword.Null, root.Q("hotbar-dock").style.translate.keyword);
                     Object.DestroyImmediate(art);
+                }
+                finally
+                {
+                    Object.DestroyImmediate(canvas);
+                }
+            }
+        }
+
+        [Test]
+        public void ThePlayerPlate_ShowsWhatTheStatusPanelShows()
+        {
+            foreach (FactionId faction in Factions)
+            {
+                var canvas = new GameObject("Test Canvas", typeof(RectTransform), typeof(Canvas));
+                try
+                {
+                    VitalsChromeView view = Object.Instantiate(Kit(faction).vitals, canvas.transform, false);
+                    VisualElement root = HudLike(out _, out ProgressBar health, out ProgressBar flux, out _, out Label level);
+                    health.value = 50f;
+                    health.title = "HP 2100 / 4200";
+                    flux.value = 25f;
+                    flux.title = "FLUX 480 / 1920";
+                    level.text = "LEVEL 37";
+                    root.Q<Label>("mode-label").text = "RUN · 9.5 m/s";
+                    root.Q<Label>("points-summary").text = "3 stat points  |  1 skill point";
+
+                    Assert.IsTrue(view.Attach(root), $"{faction}: the player's plate found no place in the HUD");
+                    view.Tick();
+
+                    var so = new SerializedObject(view);
+                    Assert.AreEqual(0.5f, ((Slider)so.FindProperty("health").objectReferenceValue).normalizedValue, 0.001f, $"{faction}: HP");
+                    Assert.AreEqual(0.25f, ((Slider)so.FindProperty("flux").objectReferenceValue).normalizedValue, 0.001f, $"{faction}: Flux");
+                    Assert.AreEqual("2100 / 4200", ((TMP_Text)so.FindProperty("healthLabel").objectReferenceValue).text, $"{faction}: the bar is red; it says the numbers");
+                    Assert.AreEqual("480 / 1920", ((TMP_Text)so.FindProperty("fluxLabel").objectReferenceValue).text);
+                    StringAssert.EndsWith("37", ((TMP_Text)so.FindProperty("level").objectReferenceValue).text, $"{faction}: the level");
+                    Assert.AreEqual("RUN · 9.5 m/s", ((TMP_Text)so.FindProperty("mode").objectReferenceValue).text);
+                    Assert.AreEqual("3 stat points  |  1 skill point", ((TMP_Text)so.FindProperty("points").objectReferenceValue).text);
+                    Assert.IsFalse(((RawImage)so.FindProperty("portrait").objectReferenceValue).enabled, $"{faction}: no picture is shown until there is a player to draw");
+
+                    view.Detach();
+                    Assert.AreEqual(StyleKeyword.Null, root.Q("summary").style.width.keyword);
                 }
                 finally
                 {
@@ -211,10 +273,14 @@ namespace KryticalNova.Tests
             flux = new ProgressBar { name = "chi-bar", lowValue = 0f, highValue = 100f };
             experience = new ProgressBar { name = "xp-bar", lowValue = 0f, highValue = 100f };
             level = new Label { name = "level-label" };
-            root.Add(health);
-            root.Add(flux);
-            root.Add(experience);
-            root.Add(level);
+            var summary = new VisualElement { name = "summary" };
+            root.Add(summary);
+            summary.Add(level);
+            summary.Add(new Label { name = "mode-label" });
+            summary.Add(health);
+            summary.Add(flux);
+            summary.Add(experience);
+            summary.Add(new Label { name = "points-summary" });
             return root;
         }
     }

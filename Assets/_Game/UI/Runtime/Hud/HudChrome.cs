@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using KryticalNova.Factions;
+using KryticalNova.Items;
+using KryticalNova.Items.Visuals;
+using KryticalNova.Player;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -29,6 +32,11 @@ namespace KryticalNova.UI.Hud
         [SerializeField] private FactionHudKit[] kits;
 
         private static readonly List<HudChromePiece> Showing = new List<HudChromePiece>();
+        private static CharacterPortraitStage portraitStage;
+        private const float PortraitRetry = 0.5f;
+
+        /// <summary>A live picture of the local player's head and shoulders, on a clear background. Null until there is a player to draw.</summary>
+        public static Texture Portrait => portraitStage != null ? portraitStage.Texture : null;
 
         private UIDocument document;
         private Canvas canvas;
@@ -37,25 +45,54 @@ namespace KryticalNova.UI.Hud
 
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => Showing.Clear();
+        private static void ResetStatics()
+        {
+            Showing.Clear();
+            portraitStage = null;
+        }
 
         private void OnEnable()
         {
             document = GetComponent<UIDocument>();
             FactionSkin.Changed += Refresh;
+            PlayerInventory.LocalChanged += BindPortrait;
             Refresh();
+            BindPortrait();
         }
 
         private void OnDisable()
         {
             FactionSkin.Changed -= Refresh;
+            PlayerInventory.LocalChanged -= BindPortrait;
             Clear();
+            if (portraitStage != null) portraitStage.Show(false);
+        }
+
+        private void OnDestroy()
+        {
+            if (portraitStage != null) Destroy(portraitStage.gameObject);
+            portraitStage = null;
         }
 
         private void Update()
         {
             // The document's tree is rebuilt when the HUD is re-enabled: the pieces must find their elements again.
             if (shown != null && pieces.Count > 0 && !pieces[0].IsAttached) Refresh(true);
+            // A player's model is dressed a little after the player appears: the picture waits for it.
+            if (portraitStage != null && !portraitStage.HasSitter && Time.unscaledTime >= nextPortraitTry) BindPortrait();
+        }
+
+        private float nextPortraitTry;
+
+        private void BindPortrait()
+        {
+            nextPortraitTry = Time.unscaledTime + PortraitRetry;
+            PlayerInventory local = PlayerInventory.Local;
+            var binder = local != null ? local.GetComponent<EquipmentVisualBinder>() : null;
+            var motor = local != null ? local.GetComponent<PlayerAnimancerMotor>() : null;
+            if (portraitStage == null) portraitStage = CharacterPortraitStage.Create();
+            portraitStage.Bind(binder != null ? binder.Appearance : null, motor != null ? motor.IdleClip : null);
+            portraitStage.Show(pieces.Count > 0);
         }
 
         private void Refresh() => Refresh(false);
@@ -76,7 +113,7 @@ namespace KryticalNova.UI.Hud
                 if (prefab == null) continue;
                 HudChromePiece piece = Instantiate(prefab, canvas.transform, false);
                 piece.name = prefab.name;
-                if (!piece.Attach(root, kit.unitsToPanel))
+                if (!piece.Attach(root))
                 {
                     Destroy(piece.gameObject);
                     continue;
@@ -85,6 +122,7 @@ namespace KryticalNova.UI.Hud
                 Showing.Add(piece);
             }
             Top(root).EnableInClassList(ActiveClass, pieces.Count > 0);
+            if (portraitStage != null) portraitStage.Show(pieces.Count > 0);
         }
 
         private void Clear()

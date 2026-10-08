@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UIElements;
+using Slider = UnityEngine.UI.Slider;
 
 namespace KryticalNova.UI.Hud
 {
@@ -10,6 +11,9 @@ namespace KryticalNova.UI.Hud
     /// </summary>
     public abstract class HudChromePiece : MonoBehaviour
     {
+        [Tooltip("How large the piece is drawn: panel pixels (of the 1280 x 720 interface) per canvas unit of the packs (drawn for 3840 x 2160; 0.333 is the size Synty shows them at). The builder sets it from the width the piece is given, so every faction's piece is as wide as the others.")]
+        [SerializeField, Range(0.05f, 1f)] private float unitsToPanel = 0.3f;
+
         private RectTransform rect;
         private CanvasGroup group;
         private Vector2 composedSize;
@@ -20,20 +24,27 @@ namespace KryticalNova.UI.Hud
         protected Vector2 ComposedSize => composedSize;
         /// <summary>False once the element has left its panel (the HUD's tree was rebuilt).</summary>
         public bool IsAttached => Anchor != null && Anchor.panel != null;
+        /// <summary>How wide the piece is drawn, in panel pixels.</summary>
+        public float PanelWidth => ((RectTransform)transform).rect.width * unitsToPanel;
+        /// <summary>Panel pixels per unit of the packs' canvas.</summary>
+        protected float UnitsToPanel => unitsToPanel;
 
         /// <summary>
-        /// Finds the piece's elements under the HUD's root and takes its place. <paramref name="unitsToPanel"/> is
-        /// how many panel pixels one canvas unit of the piece becomes. False when the HUD has no place for it.
+        /// Finds the piece's elements under the HUD's root and takes its place. False when the HUD has no place for it.
         /// </summary>
-        public bool Attach(VisualElement hudRoot, float unitsToPanel)
+        public bool Attach(VisualElement hudRoot)
         {
             rect = (RectTransform)transform;
             composedSize = rect.rect.size;
             if (!TryGetComponent(out group)) group = gameObject.AddComponent<CanvasGroup>();
             group.blocksRaycasts = false;
             group.interactable = false;
-            Anchor = OnAttach(hudRoot, unitsToPanel);
+            Anchor = OnAttach(hudRoot);
             if (Anchor == null) return false;
+            // The stand-in takes the piece's size, whatever room its parent has.
+            Anchor.style.width = composedSize.x * unitsToPanel;
+            Anchor.style.height = composedSize.y * unitsToPanel;
+            Anchor.style.flexShrink = 0f;
             Anchor.RegisterCallback<GeometryChangedEvent>(OnGeometry);
             Follow();
             return true;
@@ -43,6 +54,12 @@ namespace KryticalNova.UI.Hud
         {
             if (Anchor != null) Anchor.UnregisterCallback<GeometryChangedEvent>(OnGeometry);
             OnDetach();
+            if (Anchor != null)
+            {
+                Anchor.style.width = StyleKeyword.Null;
+                Anchor.style.height = StyleKeyword.Null;
+                Anchor.style.flexShrink = StyleKeyword.Null;
+            }
             Anchor = null;
         }
 
@@ -53,7 +70,7 @@ namespace KryticalNova.UI.Hud
         }
 
         /// <summary>Binds the piece's elements; returns the element it stands on, or null.</summary>
-        protected abstract VisualElement OnAttach(VisualElement hudRoot, float unitsToPanel);
+        protected abstract VisualElement OnAttach(VisualElement hudRoot);
 
         protected virtual void OnDetach() { }
 
@@ -82,6 +99,23 @@ namespace KryticalNova.UI.Hud
             rect.position = new Vector3(pixels.center.x, pixels.center.y, 0f);
             float scale = pixels.width / Mathf.Max(1f, composedSize.x);
             rect.localScale = new Vector3(scale, scale, 1f);
+        }
+
+        /// <summary>Fills a pack's bar as far as the HUD's own bar is full.</summary>
+        protected static void Fill(Slider slider, ProgressBar bar)
+        {
+            if (slider == null || bar == null) return;
+            float share = Mathf.InverseLerp(bar.lowValue, bar.highValue, bar.value);
+            if (!Mathf.Approximately(slider.normalizedValue, share)) slider.normalizedValue = share;
+        }
+
+        /// <summary>What a line says from its first digit on: "LEVEL 112" is "112", "HP 40 / 200" is "40 / 200".</summary>
+        protected static string FromFirstDigit(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            int start = 0;
+            while (start < text.Length && !char.IsDigit(text[start])) start++;
+            return start < text.Length ? text.Substring(start) : text;
         }
 
         // An element hidden by a parent still has a size, but it is not drawn.

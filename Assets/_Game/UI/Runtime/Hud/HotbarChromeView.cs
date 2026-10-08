@@ -9,10 +9,10 @@ using Slider = UnityEngine.UI.Slider;
 namespace KryticalNova.UI.Hud
 {
     /// <summary>
-    /// The Hotbar as the faction's Synty action bar: HP container, slots 1 to 0, Flux container, XP bar and level
-    /// badge, and the small Q W E R bar beside it. It decides nothing. Each frame it reads what the HUD's own
-    /// elements show (the slot's icon, key, cooldown sweep and text, and its state classes; the HP, Flux and XP
-    /// bars; the level) and shows the same on the prefab's parts, so whatever the Hotbar does, this shows.
+    /// The Hotbar as the faction's Synty action bar: slots 1 to 0 with the XP bar, and the small Q W E R bar
+    /// beside it. It decides nothing. Each frame it reads what the HUD's own elements show (the slot's icon, key,
+    /// cooldown sweep and text, and its state classes; the XP bar) and shows the same on the prefab's parts, so
+    /// whatever the Hotbar does, this shows. HP, Flux and the level are on <see cref="VitalsChromeView"/>.
     ///
     /// The UI Toolkit slots are laid exactly over the prefab's slots and stay what the player clicks, drags and
     /// drops on. The parts below are wired by FactionHudBuilder when it composes the prefab.
@@ -36,10 +36,12 @@ namespace KryticalNova.UI.Hud
         }
 
         [SerializeField] private Slot[] slots = Array.Empty<Slot>();
-        [SerializeField] private Slider health, flux, experience;
-        [SerializeField] private TMP_Text experienceLabel, level;
-        [Tooltip("Where the middle of the row of slots 1 to 0 is across the piece (0 its left edge, 1 its right edge). That point is put on the screen's middle, so the two containers frame it.")]
+        [SerializeField] private Slider experience;
+        [SerializeField] private TMP_Text experienceLabel;
+        [Tooltip("Where the middle of the row of slots 1 to 0 is across the piece (0 its left edge, 1 its right edge). That point is put on the screen's middle.")]
         [SerializeField, Range(0f, 1f)] private float mainCentre = 0.5f;
+        [Tooltip("How wide the main bar (slots 1 to 0 with its ends) is, in the packs' units. Every faction's is drawn as wide as the others'.")]
+        [SerializeField, Min(0f)] private float mainWidth;
 
         private const string DockName = "hotbar";
         private const float ChargeSwell = 1.08f;
@@ -47,23 +49,20 @@ namespace KryticalNova.UI.Hud
         private VisualElement[] slotElements, slotIcons, slotSweeps;
         private Label[] slotKeys, slotRanks;
         private bool[] hovered;
-        private ProgressBar healthBar, fluxBar, experienceBar;
-        private Label levelLabel;
-        private string shownLevel, shownExperience;
+        private ProgressBar experienceBar;
+        private string shownExperience;
         private VisualElement holder;
         private Translate centring;
 
         public int SlotCount => slots.Length;
+        /// <summary>How wide the main bar is drawn, in panel pixels.</summary>
+        public float MainBarPanelWidth => mainWidth * UnitsToPanel;
 
-        protected override VisualElement OnAttach(VisualElement hudRoot, float unitsToPanel)
+        protected override VisualElement OnAttach(VisualElement hudRoot)
         {
             VisualElement dock = hudRoot.Q(DockName);
             if (dock == null) return null;
-            // The stand-in takes the piece's size; its slots take the places of the prefab's slots.
-            dock.style.width = ComposedSize.x * unitsToPanel;
-            dock.style.height = ComposedSize.y * unitsToPanel;
-            dock.style.flexShrink = 0f; // its parent starts at the screen's middle: it must not be squeezed into half
-
+            // The stand-in's slots take the places of the prefab's slots.
             Canvas.ForceUpdateCanvases();
             var root = (RectTransform)transform;
             int count = slots.Length;
@@ -99,10 +98,7 @@ namespace KryticalNova.UI.Hud
                 element.RegisterCallback<PointerLeaveEvent>(_ => hovered[index] = false);
             }
 
-            healthBar = hudRoot.Q<ProgressBar>("hp-bar");
-            fluxBar = hudRoot.Q<ProgressBar>("chi-bar");
             experienceBar = hudRoot.Q<ProgressBar>("xp-bar");
-            levelLabel = hudRoot.Q<Label>("level-label");
             holder = dock.parent;
             centring = new Translate(Length.Percent(-100f * mainCentre), 0f);
             Centre();
@@ -114,12 +110,6 @@ namespace KryticalNova.UI.Hud
             if (holder != null && holder.style.translate.keyword == StyleKeyword.Undefined && holder.style.translate.value == centring)
                 holder.style.translate = StyleKeyword.Null;
             holder = null;
-            if (Anchor != null)
-            {
-                Anchor.style.width = StyleKeyword.Null;
-                Anchor.style.height = StyleKeyword.Null;
-                Anchor.style.flexShrink = StyleKeyword.Null;
-            }
             if (slotElements == null) return;
             foreach (VisualElement element in slotElements)
             {
@@ -185,40 +175,17 @@ namespace KryticalNova.UI.Hud
                 }
             }
 
-            Fill(health, healthBar);
-            Fill(flux, fluxBar);
             Fill(experience, experienceBar);
             if (experienceLabel != null && experienceBar != null && shownExperience != experienceBar.title)
             {
                 shownExperience = experienceBar.title;
                 experienceLabel.text = shownExperience;
             }
-            if (level != null && levelLabel != null && shownLevel != levelLabel.text)
-            {
-                shownLevel = levelLabel.text;
-                level.text = Digits(shownLevel);
-            }
-        }
-
-        private static void Fill(Slider slider, ProgressBar bar)
-        {
-            if (slider == null || bar == null) return;
-            float share = Mathf.InverseLerp(bar.lowValue, bar.highValue, bar.value);
-            if (!Mathf.Approximately(slider.normalizedValue, share)) slider.normalizedValue = share;
         }
 
         private static void Show(GameObject part, bool on)
         {
             if (part != null && part.activeSelf != on) part.SetActive(on);
-        }
-
-        /// <summary>"LEVEL 112" on the old plate is "112" on a badge.</summary>
-        private static string Digits(string text)
-        {
-            if (string.IsNullOrEmpty(text)) return string.Empty;
-            int start = 0;
-            while (start < text.Length && !char.IsDigit(text[start])) start++;
-            return start < text.Length ? text.Substring(start) : text;
         }
     }
 }
