@@ -13,10 +13,13 @@ namespace KryticalNova.UI.Hud
     {
         [Tooltip("How large the piece is drawn: panel pixels (of the 1280 x 720 interface) per canvas unit of the packs (drawn for 3840 x 2160; 0.333 is the size Synty shows them at). The builder sets it from the width the piece is given, so every faction's piece is as wide as the others.")]
         [SerializeField, Range(0.05f, 1f)] private float unitsToPanel = 0.3f;
+        [Tooltip("The part of the piece that lies on the HUD's element, in the packs' units from the piece's middle. Empty: the whole piece. A dial stands on its element by its glass only, and its frame reaches out round it.")]
+        [SerializeField] private Rect standOn;
 
         private RectTransform rect;
         private CanvasGroup group;
         private Vector2 composedSize;
+        private Rect stand;
 
         /// <summary>The element this piece stands on.</summary>
         protected VisualElement Anchor { get; private set; }
@@ -26,6 +29,8 @@ namespace KryticalNova.UI.Hud
         public bool IsAttached => Anchor != null && Anchor.panel != null;
         /// <summary>How wide the piece is drawn, in panel pixels.</summary>
         public float PanelWidth => ((RectTransform)transform).rect.width * unitsToPanel;
+        /// <summary>The size of the HUD's element under the piece, in panel pixels.</summary>
+        public Vector2 StandPanelSize => (standOn.width > 0f ? standOn.size : ((RectTransform)transform).rect.size) * unitsToPanel;
         /// <summary>Panel pixels per unit of the packs' canvas.</summary>
         protected float UnitsToPanel => unitsToPanel;
 
@@ -41,9 +46,10 @@ namespace KryticalNova.UI.Hud
             group.interactable = false;
             Anchor = OnAttach(hudRoot);
             if (Anchor == null) return false;
-            // The stand-in takes the piece's size, whatever room its parent has.
-            Anchor.style.width = composedSize.x * unitsToPanel;
-            Anchor.style.height = composedSize.y * unitsToPanel;
+            // The stand-in takes the size of the part that stands on it, whatever room its parent has.
+            stand = standOn.width > 0f ? standOn : new Rect(-composedSize * 0.5f, composedSize);
+            Anchor.style.width = stand.width * unitsToPanel;
+            Anchor.style.height = stand.height * unitsToPanel;
             Anchor.style.flexShrink = 0f;
             Anchor.RegisterCallback<GeometryChangedEvent>(OnGeometry);
             Follow();
@@ -96,8 +102,8 @@ namespace KryticalNova.UI.Hud
             group.alpha = seen ? 1f : 0f;
             if (!seen) return;
             // The canvas has no scaler: its units are screen pixels, and the piece's pivot is its centre.
-            rect.position = new Vector3(pixels.center.x, pixels.center.y, 0f);
-            float scale = pixels.width / Mathf.Max(1f, composedSize.x);
+            float scale = pixels.width / Mathf.Max(1f, stand.width);
+            rect.position = new Vector3(pixels.center.x - stand.center.x * scale, pixels.center.y - stand.center.y * scale, 0f);
             rect.localScale = new Vector3(scale, scale, 1f);
         }
 

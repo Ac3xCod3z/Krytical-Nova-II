@@ -82,12 +82,17 @@ namespace KryticalNova.Tests
         [Test]
         public void EveryPiece_IsAsWideOnScreenAsTheOtherFactions()
         {
-            float plate = -1f, bar = -1f;
+            float plate = -1f, bar = -1f, glass = -1f;
             foreach (FactionId faction in Factions)
             {
                 FactionHudKit kit = Kit(faction);
                 if (plate < 0f) plate = kit.vitals.PanelWidth;
                 if (bar < 0f) bar = kit.hotbar.MainBarPanelWidth;
+                if (glass < 0f) glass = kit.minimap.StandPanelSize.x;
+                // The dials' frames differ; the map inside them is one size, and round.
+                Assert.AreEqual(glass, kit.minimap.StandPanelSize.x, 1f, $"{faction}: width of the minimap's glass in panel pixels");
+                Assert.AreEqual(kit.minimap.StandPanelSize.x, kit.minimap.StandPanelSize.y, 0.5f, $"{faction}: the minimap's glass is round");
+                Assert.Less(kit.minimap.StandPanelSize.x, kit.minimap.PanelWidth, $"{faction}: the dial's frame reaches out round its glass");
                 Assert.AreEqual(plate, kit.vitals.PanelWidth, 1f, $"{faction}: width of the player's plate in panel pixels");
                 // The Q W E R bars differ from pack to pack: it is the main bar, in the middle of the screen, that is the same.
                 Assert.AreEqual(bar, kit.hotbar.MainBarPanelWidth, 1f, $"{faction}: width of the main bar in panel pixels");

@@ -19,10 +19,14 @@ namespace KryticalNova.UI.Hud
         [Tooltip("The player's plate: live portrait, level, HP and Flux.")]
         public VitalsChromeView vitals;
 
+        [Tooltip("The minimap's dial: the frame round the map.")]
+        public MinimapChromeView minimap;
+
         public IEnumerable<HudChromePiece> Pieces()
         {
             yield return hotbar;
             yield return vitals;
+            yield return minimap;
         }
     }
 }

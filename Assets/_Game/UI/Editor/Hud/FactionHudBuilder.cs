@@ -34,6 +34,8 @@ namespace KryticalNova.EditorTools
         /// interface. It sits in the middle of the screen, so this is what must fit between the chat and the right side.
         /// </summary>
         private const float MainBarPanelWidth = 380f;
+        /// <summary>How wide the glass of every faction's minimap dial is drawn, in panel pixels: the size of the map.</summary>
+        private const float MinimapGlassPanelWidth = 176f;
         /// <summary>How wide every faction's player plate is drawn, in panel pixels.</summary>
         private const float VitalsPanelWidth = 400f;
         /// <summary>The smallest lettering on a piece, in the packs' units: about 11 panel pixels on the plate.</summary>
@@ -52,6 +54,9 @@ namespace KryticalNova.EditorTools
             public float ExperienceHeight; // how tall a separate XP bar is drawn (units)
             public bool SlotsOnTop;      // the bar's own art is drawn over the ends of its row: the slots and keys go over it
             public Action<Spec, RectTransform, Vitals> LayVitals; // puts the pack's parts of the player's plate in place
+            public string Minimap;       // the minimap dial
+            public float MinimapGlass;   // how much of the dial's map circle shows inside its frame (1 = all of it)
+            public string[] MinimapOff;  // parts of the dial that would lie on the map, which is drawn over the dial
             public string Lettering;     // a label of the pack: its font is the plate's
             public Color Flux;           // the Flux bar's fill
         }
@@ -75,18 +80,21 @@ namespace KryticalNova.EditorTools
                 Main = "ActionBar/HUD_SciFiSoldier_ARPGBar_01", Letters = "ActionBar/HUD_SciFiSoldier_HotBar_03",
                 Experience = "Player_Health_Equipment/_Parts/HUD_SciFiSoldier_XPBar_01",
                 ExperienceAt = new Vector2(0f, -24f), ExperienceHeight = 40f, SlotsOnTop = true,
+                Minimap = "Minimap/HUD_SciFiSoldier_Minimap_Dial_01", MinimapGlass = 0.92f, MinimapOff = new[] { "ParticleFX_Glow" },
                 LayVitals = LayHegemonyVitals, Lettering = "_CommonComponents/Label_SciFiSoldier_SemiBold", Flux = new Color(0.12f, 0.72f, 1f),
             },
             new Spec
             {
                 Faction = FactionId.Null, Pack = "InterfaceDarkFantasyHUD",
                 Main = "ActionBar/HUD_DarkFantasy_ARPGBar_02", Letters = "ActionBar/HUD_DarkFantasy_HotBar_01",
+                Minimap = "Minimap/HUD_DarkFantasy_Minimap_Dial_02", MinimapGlass = 0.65f,
                 LayVitals = LayNullVitals, Lettering = "_CommonComponents/Label_DarkFantasy_Bold", Flux = new Color(0.17f, 0.45f, 0.95f),
             },
             new Spec
             {
                 Faction = FactionId.Covenant, Pack = "InterfaceFantasyWarriorHUD",
                 Main = "ActionBar/HUD_FantasyWarrior_ARPGBar_05", Letters = "ActionBar/HUD_FantasyWarrior_HotBar_01",
+                Minimap = "Minimap/HUD_FantasyWarrior_Minimap_Dial_04", MinimapGlass = 0.82f, MinimapOff = new[] { "SPR_Curlicue_Bottom" },
                 LayVitals = LayCovenantVitals, Lettering = "_CommonComponents/Label_FantasyWarrior_SemiBold", Flux = new Color(0.19f, 0.73f, 0.95f),
             },
         };
@@ -94,6 +102,8 @@ namespace KryticalNova.EditorTools
         public static string HotbarPath(FactionId faction) => $"{Folder}/{faction}/HUD_{faction}_Hotbar.prefab";
 
         public static string VitalsPath(FactionId faction) => $"{Folder}/{faction}/HUD_{faction}_Vitals.prefab";
+
+        public static string MinimapPath(FactionId faction) => $"{Folder}/{faction}/HUD_{faction}_Minimap.prefab";
 
         public static string KitPath(FactionId faction) => $"{KitFolder}/FactionHudKit_{faction}.asset";
 
@@ -104,7 +114,8 @@ namespace KryticalNova.EditorTools
             {
                 HotbarChromeView hotbar = BuildHotbar(spec);
                 VitalsChromeView vitals = BuildVitals(spec);
-                EnsureKit(spec.Faction, hotbar, vitals);
+                MinimapChromeView minimap = BuildMinimap(spec);
+                EnsureKit(spec.Faction, hotbar, vitals, minimap);
             }
             AssetDatabase.SaveAssets();
             Debug.Log($"[HUD] Faction HUD pieces composed in {Folder}.");
@@ -146,6 +157,10 @@ namespace KryticalNova.EditorTools
                 Canvas.ForceUpdateCanvases();
 
                 var so = new SerializedObject(view);
+                // A part the piece stands on was measured before the root moved under it.
+                SerializedProperty standOn = so.FindProperty("standOn");
+                Rect stand = standOn.rectValue;
+                if (stand.width > 0f) standOn.rectValue = new Rect(stand.position - (Vector2)all.center, stand.size);
                 so.FindProperty("unitsToPanel").floatValue = panelWidth / Mathf.Max(1f, measured > 0f ? measured : all.size.x);
                 so.ApplyModifiedPropertiesWithoutUndo();
                 Finished(root, view);
@@ -262,6 +277,40 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("mainWidth").floatValue = mainDrawn.size.x;
                 so.ApplyModifiedPropertiesWithoutUndo();
                 return mainDrawn.size.x;
+            });
+        }
+
+        // ------------------------------------------------------------------ the minimap's dial
+
+        private static MinimapChromeView BuildMinimap(Spec spec)
+        {
+            GameObject dial = Load(spec, spec.Minimap);
+            if (dial == null) return null;
+
+            return Compose<MinimapChromeView>(MinimapPath(spec.Faction), MinimapGlassPanelWidth, (root, view) =>
+            {
+                RectTransform placed = Place(dial, root, "Dial");
+                Canvas.ForceUpdateCanvases();
+                // The pack's sample map and markers go: the game's map is drawn in their place, over the piece.
+                Transform contents = Find(placed, "Minimap_Contents") ?? Find(placed, "HUD_Minimap_Contents");
+                if (contents == null)
+                {
+                    Debug.LogError($"[HUD] {spec.Faction}: the minimap dial has no map circle to stand on.");
+                    return 0f;
+                }
+                // Its own rectangle, not its children's: the sample map inside it is four times its size.
+                var corners = new Vector3[4];
+                ((RectTransform)contents).GetWorldCorners(corners);
+                var circle = new Bounds(root.InverseTransformPoint(corners[0]), Vector3.zero);
+                circle.Encapsulate(root.InverseTransformPoint(corners[2]));
+                contents.gameObject.SetActive(false);
+                if (spec.MinimapOff != null)
+                    foreach (string part in spec.MinimapOff) Off(placed, part);
+                float glass = Mathf.Min(circle.size.x, circle.size.y) * spec.MinimapGlass;
+                var so = new SerializedObject(view);
+                so.FindProperty("standOn").rectValue = new Rect(circle.center.x - glass * 0.5f, circle.center.y - glass * 0.5f, glass, glass);
+                so.ApplyModifiedPropertiesWithoutUndo();
+                return glass;
             });
         }
 
@@ -656,7 +705,7 @@ namespace KryticalNova.EditorTools
             frame.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
         }
 
-        private static void EnsureKit(FactionId faction, HotbarChromeView hotbar, VitalsChromeView vitals)
+        private static void EnsureKit(FactionId faction, HotbarChromeView hotbar, VitalsChromeView vitals, MinimapChromeView minimap)
         {
             string path = KitPath(faction);
             var kit = AssetDatabase.LoadAssetAtPath<FactionHudKit>(path);
@@ -669,6 +718,7 @@ namespace KryticalNova.EditorTools
             kit.faction = faction;
             kit.hotbar = hotbar;
             kit.vitals = vitals;
+            kit.minimap = minimap;
             EditorUtility.SetDirty(kit);
         }
 

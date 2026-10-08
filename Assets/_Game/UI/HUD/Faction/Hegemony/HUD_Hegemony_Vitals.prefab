@@ -483,7 +483,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &5159248761819529682
+--- !u!1 &6827844747427662913
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -491,9 +491,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 9157854471943784323}
-  - component: {fileID: 4454533829797320339}
-  - component: {fileID: 231581236187951250}
+  - component: {fileID: 877936843566133412}
+  - component: {fileID: 751228524152107028}
+  - component: {fileID: 4293688931219001619}
   m_Layer: 5
   m_Name: Label_Numbers
   m_TagString: Untagged
@@ -501,13 +501,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &9157854471943784323
+--- !u!224 &877936843566133412
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5159248761819529682}
+  m_GameObject: {fileID: 6827844747427662913}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -520,21 +520,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0}
---- !u!222 &4454533829797320339
+--- !u!222 &751228524152107028
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5159248761819529682}
+  m_GameObject: {fileID: 6827844747427662913}
   m_CullTransparentMesh: 1
---- !u!114 &231581236187951250
+--- !u!114 &4293688931219001619
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5159248761819529682}
+  m_GameObject: {fileID: 6827844747427662913}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
@@ -674,11 +674,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.Hud.VitalsChromeView
   unitsToPanel: 0.35273367
+  standOn:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
   portrait: {fileID: 6999720279139257261}
   health: {fileID: 4462629422614827674}
   flux: {fileID: 7794735534966292747}
   healthLabel: {fileID: 2792039108860603403}
-  fluxLabel: {fileID: 231581236187951250}
+  fluxLabel: {fileID: 4293688931219001619}
   level: {fileID: 3262655953132222803}
   mode: {fileID: 1934544987679329778}
   points: {fileID: 3206101491786222514}
@@ -949,7 +955,7 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7303605616070184167, guid: 205617e095271684cb9ca653e8de6e7e, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 9157854471943784323}
+      addedObject: {fileID: 877936843566133412}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 205617e095271684cb9ca653e8de6e7e, type: 3}
 --- !u!224 &998326953372716062 stripped

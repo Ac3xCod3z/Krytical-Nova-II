@@ -15,3 +15,4 @@ MonoBehaviour:
   faction: 1
   hotbar: {fileID: 1010016207730337810, guid: 3cbdd2ec8578d3d49bb6dc9964d7c421, type: 3}
   vitals: {fileID: 7950972494452641313, guid: 09067d66468beeb499b08f9bc05ca05e, type: 3}
+  minimap: {fileID: 3204899205617949135, guid: 572e7817c0b294040be6ce3fd0f8e842, type: 3}

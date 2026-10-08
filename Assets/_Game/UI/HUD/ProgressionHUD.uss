@@ -192,6 +192,10 @@
 .hud-chrome #game-ui #summary { padding: 0; background-image: none; background-color: rgba(0, 0, 0, 0); border-width: 0; }
 .hud-chrome #game-ui #summary > .kn-frame, .hud-chrome #game-ui #summary > .kn-pip { display: none; }
 .hud-chrome #game-ui #summary > * { visibility: hidden; position: absolute; }
+/* The minimap keeps its map, markers, north mark and buttons; the dial round them is the faction's, and reaches out past the element. */
+.hud-chrome .minimap { right: 40px; top: 92px; }
+.hud-chrome .minimap > .minimap-frame, .hud-chrome .minimap > .minimap-ring { display: none; }
+.hud-chrome .minimap > .minimap-mask, .hud-chrome .minimap > .minimap-backdrop { left: 0; top: 0; right: 0; bottom: 0; }
 /* The faction's Hotbar reaches a little further left than the old strip did at this size: the chat stops short of it. */
 .hud-chrome .chat-window { width: 390px; }
 .blade-token { -unity-background-image-tint-color: rgb(58, 40, 92); }
