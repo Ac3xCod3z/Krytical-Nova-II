@@ -188,14 +188,31 @@ namespace KryticalNova.Pets
                 {
                     PetStageLook look = pet.Stage(Stage);
                     var glow = new PetGlowLook { color = look.glow, strength = shown.fed ? look.glowStrength : 0f }; // a starving pet loses its glow with its bonus
+                    var spacing = default(PetFollowLook);
                     if (Settings != null)
                     {
                         glow.sparkles = Settings.auraPrefab;
-                        glow.rim = Settings.glowMaterial;
                         glow.rimIntensity = Settings.rimIntensity;
+                        glow.rimWidth = Settings.rimWidth;
+                        glow.rimPulse = Settings.rimPulse;
+                        glow.rimPulseSpeed = Settings.rimPulseSpeed;
+                        glow.rimPulseWidth = Settings.rimPulseWidth;
                         glow.sparkleRate = Settings.sparkleRate;
+                        // The halo at the top of its breath is the widest the pet is ever seen.
+                        float reach = glow.strength > 0f
+                            ? Mathf.Lerp(glow.rimWidth.x, glow.rimWidth.y, glow.strength) * (1f + Mathf.Lerp(glow.rimPulseWidth.x, glow.rimPulseWidth.y, glow.strength))
+                            : 0f;
+                        spacing = new PetFollowLook
+                        {
+                            spaced = true,
+                            ownerHalfWidth = Settings.ownerHalfWidth,
+                            gap = Settings.followGap + pet.followGapAdjust,
+                            glowReach = reach,
+                            gapGrowth = Settings.followGapGrowth,
+                            cameraClearance = Settings.cameraClearance,
+                        };
                     }
-                    follower.SetStageLook(look.model, look.scale, glow);
+                    follower.SetStageLook(look.model, look.scale, glow, spacing);
                 }
             }
             Changed?.Invoke();

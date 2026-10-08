@@ -52,6 +52,16 @@ namespace KryticalNova.UI
             Changed?.Invoke();
         }
 
+        /// <summary>Every volume back to full, and silence in the background on.</summary>
+        public static void ResetToDefaults()
+        {
+            foreach (string key in Keys) PlayerPrefs.DeleteKey(Prefix + key);
+            PlayerPrefs.DeleteKey(Prefix + "muteBackground");
+            PlayerPrefs.Save();
+            Apply();
+            Changed?.Invoke();
+        }
+
         /// <summary>No sound while the game window is not the one in front.</summary>
         public static bool MuteInBackground
         {

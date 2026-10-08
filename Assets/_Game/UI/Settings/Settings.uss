@@ -66,3 +66,14 @@
 .settings-key.listening { -unity-background-image-tint-color: rgb(150, 120, 50); color: rgb(255, 255, 255); }
 .settings-key-reset { min-width: 50px; min-height: 26px; margin: 0; padding: 0 6px; font-size: 10px; color: rgb(156, 172, 188); }
 .settings-row.fixed .settings-row-label, .settings-row.fixed .settings-row-value { color: rgb(124, 138, 152); }
+
+/* Apply, Revert and Reset to Defaults, under the pages. */
+.settings-footer { flex-direction: row; align-items: center; margin-top: 8px; padding-top: 8px; border-top-width: 1px; border-top-color: rgba(120, 140, 160, 0.35); flex-shrink: 0; }
+.settings-footer-gap { flex-grow: 1; }
+.settings-footer-button { min-height: 28px; margin: 0 0 0 6px; padding: 2px 12px; font-size: 11px; }
+.settings-footer-button:disabled { opacity: 0.45; }
+#settings-reset { margin-left: 0; }
+
+/* The menus dim the screen behind the window (MenuSettings). */
+#menu-settings { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.menu-settings-shade { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(20, 18, 43, 0.62); display: none; }

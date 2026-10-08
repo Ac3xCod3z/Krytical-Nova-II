@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 
-#if UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 using UnityEngine.Rendering;
 #endif
 
@@ -128,7 +128,7 @@ public class MegaBookBuilderEditor : Editor
 
 		undoManager.CheckUndo();
 
-#if !UNITY_5 && !UNITY_2017 && !UNITY_2018 && !UNITY_2019 && !UNITY_2020 && !UNITY_2021 && !UNITY_2022
+#if !UNITY_5 && !UNITY_2017 && !UNITY_2018 && !UNITY_2019 && !UNITY_2020 && !UNITY_2021 && !UNITY_2022 && !UNITY_2023 && !UNITY_6000
 		EditorGUIUtility.LookLikeControls();
 #endif
 

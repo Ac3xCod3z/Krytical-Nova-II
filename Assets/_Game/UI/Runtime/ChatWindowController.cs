@@ -45,6 +45,8 @@ namespace KryticalNova.UI
         {
             public long Order;
             public ChatLine Line;
+            /// <summary>When the line arrived, by this machine's clock (shown if the player asks for the time on lines).</summary>
+            public System.DateTime At;
         }
 
         private static readonly string[] ChannelNames = { "GENERAL", "FACTION", "CREW", "WHISPER", "GM", "SYSTEM", "COMBAT", "SQUAD" };
@@ -79,6 +81,10 @@ namespace KryticalNova.UI
         private bool typing;
         private bool pinnedToBottom = true;
         private bool welcomed;
+        // The player's chat options as the lines on show were written with them.
+        private bool shownTimestamps;
+        private float shownTextScale = 1f;
+        private Label sizeProbe;
         private bool isGameMaster;
         private float nextGameMasterRefresh;
         private int focusedFrame = -1;
@@ -121,6 +127,7 @@ namespace KryticalNova.UI
             if (boundRoot != root)
             {
                 boundRoot = root;
+                sizeProbe = null; // it belonged to the interface that was there before
                 BuildTabs();
                 BindInput();
                 BindResize();
@@ -128,6 +135,10 @@ namespace KryticalNova.UI
             }
 
             ClientPresentationRegistry.RegisterChat(this);
+            shownTimestamps = HudPreferences.ChatTimestamps;
+            shownTextScale = HudPreferences.ChatTextScale;
+            HudPreferences.Changed -= OnPreferencesChanged;
+            HudPreferences.Changed += OnPreferencesChanged;
             SelectTab(activeTab ?? tabs[0]);
             if (!welcomed)
             {
@@ -138,6 +149,7 @@ namespace KryticalNova.UI
 
         private void OnDisable()
         {
+            HudPreferences.Changed -= OnPreferencesChanged;
             ClientPresentationRegistry.UnregisterChat(this);
             SetTyping(false);
         }
@@ -175,7 +187,7 @@ namespace KryticalNova.UI
             int channel = (int)line.Channel;
             if (channel < 0 || channel >= history.Length || string.IsNullOrEmpty(line.Text)) return;
 
-            var stored = new Stored { Order = ++order, Line = line };
+            var stored = new Stored { Order = ++order, Line = line, At = System.DateTime.Now };
             var list = history[channel];
             if (list.Count >= LinesPerChannel) list.RemoveAt(0);
             list.Add(stored);
@@ -185,7 +197,7 @@ namespace KryticalNova.UI
 
             if ((activeTab.Shows & Bit(line.Channel)) != 0)
             {
-                Append(line);
+                Append(stored);
                 while (log.contentContainer.childCount > LinesShown) log.contentContainer.RemoveAt(0);
                 return;
             }
@@ -194,15 +206,61 @@ namespace KryticalNova.UI
                 if (tab.Talks == line.Channel) tab.Button.AddToClassList(UnreadTabClass);
         }
 
-        private void Append(in ChatLine line)
+        private void Append(in Stored stored)
         {
             var scroller = log.verticalScroller;
             pinnedToBottom = scroller.highValue <= 0f || scroller.value >= scroller.highValue - BottomTolerance;
 
-            var label = new Label(Format(line)) { enableRichText = false, pickingMode = PickingMode.Ignore };
+            ChatLine line = stored.Line;
+            string text = shownTimestamps ? $"[{stored.At:HH:mm}] {Format(line)}" : Format(line);
+            var label = new Label(text) { enableRichText = false, pickingMode = PickingMode.Ignore };
             label.AddToClassList(LineClass);
             label.AddToClassList(LineClasses[(int)line.Channel]);
+            float size = LineSize();
+            if (size > 0f) label.style.fontSize = size;
             log.Add(label);
+        }
+
+        // ------------------------------------------------------------------ the player's chat options
+
+        /// <summary>Settings, Interface: the time on each line, or the size of the text, was changed.</summary>
+        private void OnPreferencesChanged()
+        {
+            if (window == null || activeTab == null) return;
+            bool timestamps = HudPreferences.ChatTimestamps;
+            float scale = HudPreferences.ChatTextScale;
+            if (timestamps == shownTimestamps && Mathf.Approximately(scale, shownTextScale)) return;
+            shownTimestamps = timestamps;
+            shownTextScale = scale;
+            Rebuild();
+        }
+
+        /// <summary>
+        /// The size a line's text is given, or 0 to leave it to the style sheets (the size as shipped). The player's
+        /// size is a share of what the skin gives a chat line, which is read off a line that is never shown.
+        /// </summary>
+        private float LineSize()
+        {
+            if (Mathf.Approximately(shownTextScale, 1f)) return 0f;
+            if (sizeProbe == null)
+            {
+                sizeProbe = new Label("Ag") { pickingMode = PickingMode.Ignore };
+                sizeProbe.AddToClassList(LineClass);
+                sizeProbe.style.position = Position.Absolute;
+                sizeProbe.style.visibility = Visibility.Hidden;
+                window.Add(sizeProbe);
+                // Its size is known after the next layout, and changes with the faction's skin: size the lines again then.
+                sizeProbe.RegisterCallback<GeometryChangedEvent>(_ => ResizeLines());
+            }
+            float skinSize = sizeProbe.resolvedStyle.fontSize;
+            return skinSize > 0f ? skinSize * shownTextScale : 0f;
+        }
+
+        private void ResizeLines()
+        {
+            float size = LineSize();
+            foreach (VisualElement line in log.contentContainer.Children())
+                line.style.fontSize = size > 0f ? size : new StyleLength(StyleKeyword.Null);
         }
 
         private static string Format(in ChatLine line)
@@ -227,7 +285,7 @@ namespace KryticalNova.UI
             merged.Sort((a, b) => a.Order.CompareTo(b.Order));
 
             log.Clear();
-            for (int i = Mathf.Max(0, merged.Count - LinesShown); i < merged.Count; i++) Append(merged[i].Line);
+            for (int i = Mathf.Max(0, merged.Count - LinesShown); i < merged.Count; i++) Append(merged[i]);
             pinnedToBottom = true;
         }
 

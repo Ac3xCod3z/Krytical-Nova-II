@@ -342,7 +342,7 @@ namespace KryticalNova.Combat
         {
             var pool = NetworkCombatVFXPool.Instance;
             if (pool != null && skill.hitVfxPrefab != null) pool.Spawn(skill.hitVfxPrefab, position, Quaternion.identity);
-            ClientPresentationRegistry.Feel?.SkillHit(transform, skill.PresentationId, position);
+            ClientPresentationRegistry.Feel?.SkillHit(transform, skill.PresentationId, position, (int)skill.classSlot);
         }
 
         private GameObject SpawnAtCaster(GameObject prefab, Vector3 offset, float lifetime = 0f)

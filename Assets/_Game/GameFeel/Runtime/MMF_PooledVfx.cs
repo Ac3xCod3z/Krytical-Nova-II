@@ -45,6 +45,10 @@ namespace KryticalNova.GameFeel
         [Tooltip("Colour the effect with the colour of the moment it plays for (a Nova tier's), handed over by the presenter. " +
                  "Use it on effects of their own only: a pooled instance keeps the last colour it was given.")]
         public bool TintWithMoment;
+        [Tooltip("A comic effect (ComicFx) is drawn in the colour ramp of the moment (a faction's, a rarity's) when the presenter hands one over. Without one it is drawn in the colours it was built in.")]
+        public bool RampWithMoment;
+        [Tooltip("Copies of this effect made ready before any fight, so none has to be created during one.")]
+        [Min(1)] public int Warm = 2;
 
         /// <summary>Facing for the next play; set by the presenter, identity otherwise.</summary>
         [System.NonSerialized] public Quaternion Rotation = Quaternion.identity;
@@ -52,6 +56,15 @@ namespace KryticalNova.GameFeel
         [System.NonSerialized] public Transform Target;
         /// <summary>Colour for the next play of a <see cref="TintWithMoment"/> effect; set by the presenter.</summary>
         [System.NonSerialized] public Color MomentTint = Color.white;
+        /// <summary>Ramp for the next play of a <see cref="RampWithMoment"/> effect; set by the presenter, and used once.</summary>
+        [System.NonSerialized] public ComicRamp MomentRamp;
+        [System.NonSerialized] public bool HasMomentRamp;
+        /// <summary>
+        /// For the next play only: the effect is shown if a copy lies ready in the pool and left out if none does,
+        /// instead of being created. Set by the presenter for fights the local player is no part of, so that a
+        /// crowd cannot make the pool grow in the middle of a fight.
+        /// </summary>
+        [System.NonSerialized] public bool OnlyIfReady;
 
         protected override void CustomPlayFeedback(Vector3 position, float feedbacksIntensity = 1f)
         {
@@ -65,18 +78,31 @@ namespace KryticalNova.GameFeel
                 Vector3 toCamera = Camera.main.transform.position - position;
                 if (toCamera.sqrMagnitude > 0.001f) rotation = Quaternion.LookRotation(toCamera);
             }
+            bool onlyIfReady = OnlyIfReady;
+            OnlyIfReady = false;
             GameObject instance;
             if (FollowTarget && Target != null)
             {
                 Vector3 local = Target.InverseTransformPoint(Place(position, rotation));
-                instance = pool.SpawnAttached(Prefab, Target, local, Quaternion.Inverse(Target.rotation) * rotation, Lifetime);
+                Quaternion localRotation = Quaternion.Inverse(Target.rotation) * rotation;
+                instance = onlyIfReady ? pool.TrySpawnAttached(Prefab, Target, local, localRotation, Lifetime)
+                    : pool.SpawnAttached(Prefab, Target, local, localRotation, Lifetime);
             }
             else
             {
-                instance = pool.Spawn(Prefab, Place(position, rotation), rotation, Lifetime);
+                instance = onlyIfReady ? pool.TrySpawn(Prefab, Place(position, rotation), rotation, Lifetime)
+                    : pool.Spawn(Prefab, Place(position, rotation), rotation, Lifetime);
             }
+            bool ramped = RampWithMoment && HasMomentRamp;
+            HasMomentRamp = false;
             if (instance == null) return;
             instance.transform.localScale = Prefab.transform.localScale * Scale;
+            // A comic effect keeps the colours it was last drawn in, so it is always told which to wear.
+            if (instance.TryGetComponent(out ComicFx comic))
+            {
+                if (ramped) comic.Apply(MomentRamp);
+                else comic.ApplyAuthored();
+            }
             if (TintWithGroundDust)
                 GroundSurfaces.Tint(instance.GetComponentsInChildren<ParticleSystem>(), GroundSurfaces.DustAt(position, Target));
             else if (TintWithMoment)
@@ -86,6 +112,9 @@ namespace KryticalNova.GameFeel
         private Vector3 Place(Vector3 position, Quaternion rotation)
         {
             if (SnapToGround) position = GroundSnap.Snap(position, Target) + Vector3.up * 0.05f;
+            // An effect turned to the camera is still lifted straight up. Along its own up, a camera that looks
+            // down would carry a word over a character's head back behind them instead.
+            if (FaceCamera) rotation = Quaternion.Euler(0f, rotation.eulerAngles.y, 0f);
             return position + rotation * Offset;
         }
     }

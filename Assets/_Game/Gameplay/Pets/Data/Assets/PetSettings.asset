@@ -20,6 +20,13 @@ MonoBehaviour:
   hungerWarningPercent: 20
   hungerWriteSeconds: 10
   auraPrefab: {fileID: 1712996573071194680, guid: 73f84b55d4a740c49a5e5959354b6a5e, type: 3}
-  glowMaterial: {fileID: 2100000, guid: 5dbcffb4f259c134fb487f74986ae9f0, type: 2}
-  rimIntensity: {x: 0.9, y: 2.4}
+  rimIntensity: {x: 0.7, y: 1.7}
+  rimWidth: {x: 0.05, y: 0.11}
+  rimPulse: {x: 0.35, y: 0.55}
+  rimPulseSpeed: {x: 0.45, y: 0.75}
+  rimPulseWidth: {x: 0.2, y: 0.4}
   sparkleRate: {x: 3, y: 16}
+  ownerHalfWidth: 0.18
+  followGap: 0.07
+  followGapGrowth: 0.25
+  cameraClearance: 0.6

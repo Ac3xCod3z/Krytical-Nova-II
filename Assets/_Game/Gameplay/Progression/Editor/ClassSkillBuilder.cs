@@ -176,7 +176,6 @@ namespace KryticalNova.EditorTools
                         skill.skillId = $"{seed.id}_{slot}";
                         skill.presentationId = templates[i].skillId;
                         skill.description = Describe(seed.id, role, slot);
-                        if (skill.icon == null) skill.icon = templates[i].icon;
                     }
                     skill.displayName = seed.names[i];
                     skill.weaponClass = seed.id;

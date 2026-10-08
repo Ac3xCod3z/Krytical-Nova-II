@@ -123,6 +123,7 @@ namespace KryticalNova.UI.Menus
         private void Select(int index)
         {
             if (index < 0 || index >= factions.Count) return;
+            if (index != selected && index < rows.Count && rows[index] != null) MenuMoments.Raise(MenuMoment.Toggle, rows[index].transform);
             selected = index;
             for (int i = 0; i < rows.Count; i++) rows[i].SetSelected(i == index);
             if (glow != null) glow.color = WithAlpha(factions[index].accentColor, glowAlpha);
@@ -132,6 +133,7 @@ namespace KryticalNova.UI.Menus
         {
             if (selected < 0 || selected >= factions.Count) return;
             FrontEnd.PendingFaction = factions[selected].id;
+            MenuMoments.Raise(MenuMoment.Confirm, selected < rows.Count && rows[selected] != null ? rows[selected].transform : null);
             FrontEnd.Go(FrontEnd.CharacterCreatorScene);
         }
 
@@ -139,6 +141,7 @@ namespace KryticalNova.UI.Menus
         private void Back()
         {
             FrontEnd.PendingFaction = FactionId.None;
+            MenuMoments.Raise(MenuMoment.Back);
             FrontEnd.Go(CharacterSession.Store.Load().Count > 0 ? FrontEnd.CharacterSelectScene : FrontEnd.TitleScene);
         }
 

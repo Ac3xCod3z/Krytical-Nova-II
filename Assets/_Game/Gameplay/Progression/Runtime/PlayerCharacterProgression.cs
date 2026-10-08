@@ -108,9 +108,16 @@ namespace KryticalNova.Progression
             if (announceLevels)
             {
                 for (int level = previousLevel + 1; level <= currentLevel; level++)
-                    LevelGained?.Invoke(level);
+                    Announce(level);
             }
             Changed?.Invoke();
+        }
+
+        /// <summary>A level was gained here, on whichever machine this is: listeners are told, and the game feel shows it.</summary>
+        private void Announce(int level)
+        {
+            LevelGained?.Invoke(level);
+            ClientPresentationRegistry.Feel?.LevelUp(transform, !IsSpawned || IsOwner);
         }
 
         /// <summary>Publishes a change made here, where the progression is decided.</summary>
@@ -131,7 +138,7 @@ namespace KryticalNova.Progression
                 currentLevel++;
                 statPoints = SaturatingAdd(statPoints, step.statPointReward);
                 skillPoints = SaturatingAdd(skillPoints, step.skillPointReward);
-                LevelGained?.Invoke(currentLevel);
+                Announce(currentLevel);
             }
             experience = IsAtLevelCap ? 0 : (int)Math.Min(remainingExperience, int.MaxValue);
             Commit();
@@ -242,7 +249,7 @@ namespace KryticalNova.Progression
                 currentLevel++;
                 statPoints = SaturatingAdd(statPoints, step.statPointReward);
                 skillPoints = SaturatingAdd(skillPoints, step.skillPointReward);
-                LevelGained?.Invoke(currentLevel);
+                Announce(currentLevel);
             }
             experience = 0;
             Commit();

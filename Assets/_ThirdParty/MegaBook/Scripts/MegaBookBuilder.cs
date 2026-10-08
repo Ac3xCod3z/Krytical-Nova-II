@@ -1,6 +1,6 @@
 
 using UnityEngine;
-#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 using UnityEngine.Events;
 #endif
 using System.Collections.Generic;
@@ -10,11 +10,11 @@ using System.Collections;
 using System.Threading;
 #endif
 
-#if UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 using UnityEngine.Rendering;
 #endif
 
-#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 [System.Serializable]
 public class MegaBookBuiltEvent : UnityEvent<MegaBookBuilder> {}
 [System.Serializable]
@@ -186,7 +186,7 @@ public class MegaBookBuilder : MonoBehaviour
 
 #if UNITY_5_4_OR_NEWER
 	public Transform			anchorOverride = null;
-#if UNITY_5_4_OR_NEWER || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5_4_OR_NEWER || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 	public ReflectionProbeUsage	reflectionProbes = ReflectionProbeUsage.Off;
 #else
 	public ReflectionProbeUsage	reflectionProbes = false;
@@ -200,7 +200,7 @@ public class MegaBookBuilder : MonoBehaviour
 #endif
 
 	// Events
-#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 	public MegaBookBuiltEvent	bookBuiltEvent;
 	public	MegaBookPageTurnEvent	pageTurnEvent;
 #endif
@@ -706,7 +706,7 @@ public class MegaBookBuilder : MonoBehaviour
 
 	void Start()
 	{
-#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 		if ( bookBuiltEvent == null )
 			bookBuiltEvent = new MegaBookBuiltEvent();
 
@@ -813,7 +813,7 @@ public class MegaBookBuilder : MonoBehaviour
 		MeshFilter mf = cobj.AddComponent<MeshFilter>();
 		MeshRenderer cmr = cobj.AddComponent<MeshRenderer>();
 
-#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 		cmr.shadowCastingMode = castshadows ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
 #else
 		cmr.castShadows = castshadows;
@@ -1112,7 +1112,7 @@ public class MegaBookBuilder : MonoBehaviour
 		MeshFilter mf = page.obj.GetComponent<MeshFilter>();
 		MeshRenderer cmr = page.obj.GetComponent<MeshRenderer>();
 
-#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 		cmr.shadowCastingMode = castshadows ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
 #else
 		cmr.castShadows = castshadows;
@@ -2376,7 +2376,7 @@ public class MegaBookBuilder : MonoBehaviour
 				turnspd = 0.0f;
 			}
 
-#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 			pageTurnEvent.Invoke(this, delta);
 #endif
 		}
@@ -2560,7 +2560,7 @@ public class MegaBookBuilder : MonoBehaviour
 		Quaternion rot = transform.rotation;
 		transform.rotation = Quaternion.identity;
 		pageindex = 0;
-#if UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 		Random.InitState(seed);
 #else
 		Random.seed = seed;
@@ -2601,7 +2601,7 @@ public class MegaBookBuilder : MonoBehaviour
 
 		UpdateSettings();
 		transform.rotation = rot;
-#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 		bookBuiltEvent.Invoke(this);
 #endif
 	}
@@ -2738,7 +2738,7 @@ public class MegaBookBuilder : MonoBehaviour
 		Flex_RandomSeed = seed;
 		Flex_RandomDegree = newVal;
 
-#if UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022
+#if UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2017 || UNITY_2018 || UNITY_2019 || UNITY_2020 || UNITY_2021 || UNITY_2022 || UNITY_2023 || UNITY_6000
 		Random.InitState(Flex_RandomSeed);
 #else
 		Random.seed = Flex_RandomSeed;

@@ -1,0 +1,253 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6a9f82fe14b3d44b3b0658f767dadb, type: 3}
+  m_Name: PetEmojiLibrary
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Pets.PetEmojiLibrary
+  ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  size: 128
+  padding: 6
+  emoji:
+  - name: Face_Angry_01
+    source: {fileID: 8114313557905708944, guid: 05bf02fdcd00e524e9386bec1d96844a, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: a97edb4336612b24c9c7ac82ac178b67, type: 3}
+  - name: Face_Annoying_01
+    source: {fileID: 7336002309693090930, guid: 7c166da9be5dba949a07335b779ff92f, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: d82dbff091fd4dd40bf83dda8aa44d69, type: 3}
+  - name: Face_Annoying_02
+    source: {fileID: 2178546603871553173, guid: eec9163e447d36c4e8a5404797477acb, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: 0872087639f63474f9ad21ac421ef004, type: 3}
+  - name: Face_Annoying_03
+    source: {fileID: 636602712045835678, guid: be0836b7da8f9bc4da410a570d05b90c, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: 080b882c927dc694a8ca4571e8a014b5, type: 3}
+  - name: Face_Annoying_04
+    source: {fileID: 7714013912299135188, guid: c8338ffda1d5c694d86fb308f81d277b, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: bf0e4b049e8b69140900f0ca46623988, type: 3}
+  - name: Face_Boring_01
+    source: {fileID: 4354013505038176013, guid: bf63f3521544c47418666b1f530e4398, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: eb947581f0ae8094c9e4dddcf733453f, type: 3}
+  - name: Face_Curious_01
+    source: {fileID: 2535172437407355700, guid: db6468b61a50ef245932924f58ad4e4a, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: bc67d3631d5f6a7499f9e8fbbe924887, type: 3}
+  - name: Face_Curious_02
+    source: {fileID: 3594587800982857484, guid: bb3b91a820c83a545a18d03dbcb5a605, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: f84f16884d3ed744da1de4658f03a57a, type: 3}
+  - name: Face_Curious_03
+    source: {fileID: 5772975915025531818, guid: 7585f8e19dba3c5428b79946a17aa1fe, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: 7205ef4ec468d1940ad2b72c1c228198, type: 3}
+  - name: Face_Dizzy_01
+    source: {fileID: 5824695535292677478, guid: af12256e0d536214aa70fda9dba457b1, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: 42f184074f3683444ae98a89ac46bcb1, type: 3}
+  - name: Face_Expectant_01
+    source: {fileID: 6247211859288926254, guid: 71bd6fd8a7f22c14c9ef057bf4946e27, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: 4de94fe26a690e64eab89c19220fac1e, type: 3}
+  - name: Face_Glaring_01
+    source: {fileID: 2833648678820159008, guid: 87cd464c09e255d49aa7cd8cb594cda9, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: b2066b54efe68984fbc32e0d6390e4e1, type: 3}
+  - name: Face_Glaring_02
+    source: {fileID: 3872735172330705122, guid: acf08a525d0a56b4cb391603f7aa5899, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: cfe9ba4c5635a024b8c4526371055db8, type: 3}
+  - name: Face_Glaring_03
+    source: {fileID: 7272051133837626305, guid: a57ed3ebf7f38f344b4de07acdbb5851, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: 47bc77126ff6afe4da79ff4c4abc0c3f, type: 3}
+  - name: Face_Glaring_04
+    source: {fileID: 623509583446170995, guid: d10f8317c0def6b4fb6785686834ee8c, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: 4b6616914a0c7fe44978a400f42fabcb, type: 3}
+  - name: Face_Glaring_05
+    source: {fileID: 7265020340397216717, guid: f2493c15614f4fe4fa4cbdf83b111800, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: 041d3defb3a20be49974bd2a3cb12cf6, type: 3}
+  - name: Face_Hurt_01
+    source: {fileID: 3542005033910457360, guid: df7e75c2c835d104092bd9931d09e2d9, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: 71a4d79ae93ed1240b9a6dd2fa2fca28, type: 3}
+  - name: Face_Indifference_01
+    source: {fileID: 6320608214694279655, guid: c281106c5aeaf9740ba8a482a1112dbe, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: effc01ddb611c8b47bca588bddfb1bbf, type: 3}
+  - name: Face_Love_01
+    source: {fileID: 8984254329695087906, guid: e0e991fce836e4346a5a496791c99e6a, type: 3}
+    fill: {r: 0.8784314, g: 0.30980393, b: 0.72156864, a: 1}
+    accent: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    sprite: {fileID: 21300000, guid: 487a48236e8232f4c8ceff5d66dddf49, type: 3}
+  - name: Face_Monster_01
+    source: {fileID: 7163369374253909564, guid: ba1f830b0b048d448985a5c474498c3c, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: 06cf9849bf0323d4bade7255f96552e6, type: 3}
+  - name: Face_Monster_02
+    source: {fileID: 3110082910205089865, guid: 93bde38d733fe554087d46bf0c1492ae, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: 55e48dabdf4e4f548a582ef3a13820ec, type: 3}
+  - name: Face_Monster_03
+    source: {fileID: 7218440123346032597, guid: aeb014bf16efe80408d7d6d39c2fd70a, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: 5008186a25145584a81ca09dc052c60c, type: 3}
+  - name: Face_Muzzled_01
+    source: {fileID: 7614577714185973548, guid: ece165a5a423c7446902df5fdeb4e3f0, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: f501019224559de44bfc63f75aa8d2d8, type: 3}
+  - name: Face_Sad_01
+    source: {fileID: 5824312020068601588, guid: 14b1cec3402b37d4591bd7aba36e2175, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.6784314, g: 0.8784314, b: 0.9490196, a: 1}
+    sprite: {fileID: 21300000, guid: 6fe36fc734fa1e54297b120fe11ac9cd, type: 3}
+  - name: Face_Sad_02
+    source: {fileID: 2810748286301103514, guid: ed8152fa26b5a404eb31d6efbde68fba, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.6784314, g: 0.8784314, b: 0.9490196, a: 1}
+    sprite: {fileID: 21300000, guid: a129e44c10123bf47a10aa8f83f954b4, type: 3}
+  - name: Face_ShowingOff_01
+    source: {fileID: 5095606452344699780, guid: 03483d60e98e4da4e9cd4a3ab18fe3d3, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    sprite: {fileID: 21300000, guid: 73c34bb0def910e4d960af8cde8babe6, type: 3}
+  - name: Face_ShowingOff_02
+    source: {fileID: 3670207397983230750, guid: 761089af21c2d7a48a3207f204e5be93, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    sprite: {fileID: 21300000, guid: 58d2294f25ea58a4db54fefe8e22e566, type: 3}
+  - name: Face_ShowingOff_03
+    source: {fileID: 5336856035502627394, guid: 549d63b620d299c40bca5ad41637e1b5, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    sprite: {fileID: 21300000, guid: 37c402743eda3ea4bb23ac6574c0370b, type: 3}
+  - name: Face_Sleep_01
+    source: {fileID: 229817848288369107, guid: 2d73c20c742a9214fb3155ab69121812, type: 3}
+    fill: {r: 0.6784314, g: 0.8784314, b: 0.9490196, a: 1}
+    accent: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    sprite: {fileID: 21300000, guid: 4fb89c2eb23d69a468dea47559c882b1, type: 3}
+  - name: Face_Smile_01
+    source: {fileID: 2276793892943312514, guid: cf762bf44cbf4e041bb5a04ae0f928bf, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: be6a2077f0da94b4d814f62e4b868595, type: 3}
+  - name: Face_Smile_02
+    source: {fileID: 1213407435479743900, guid: c7d2d179b123614439093b8d32fd5b34, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: 087d4a89226cfca4699abe1249e4f110, type: 3}
+  - name: Face_Smile_03
+    source: {fileID: 871297131426168133, guid: 4d48a6ae28be4a64199089e1fa1f7532, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: d0a97f8d51cb9be4bbb990346aaed879, type: 3}
+  - name: Face_Smile_04
+    source: {fileID: 5587880687115648781, guid: 29e486283934ee5498bdc820005ffdd3, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: 21f59f2785b9d4541ba318571ab2bea0, type: 3}
+  - name: Face_Taunt_01
+    source: {fileID: 5761978794988144357, guid: 96536e087103ed04a9ea9c5a55dc8482, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.8784314, g: 0.30980393, b: 0.72156864, a: 1}
+    sprite: {fileID: 21300000, guid: bd93589c11494f4438d05dab81a4b862, type: 3}
+  - name: Face_Taunt_02
+    source: {fileID: 6927250267007716720, guid: 5f4a470d907d3c74daac92eede3c34ad, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.8784314, g: 0.30980393, b: 0.72156864, a: 1}
+    sprite: {fileID: 21300000, guid: d8360793d74bddf4ab52e5d191a55cbc, type: 3}
+  - name: Face_Taunt_03
+    source: {fileID: 3624056614112592947, guid: 803c2a237a8b43e48b8da6b146acc0c5, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.8784314, g: 0.30980393, b: 0.72156864, a: 1}
+    sprite: {fileID: 21300000, guid: 54d54b9747b9bc84083628980765c385, type: 3}
+  - name: Face_Terrified_01
+    source: {fileID: 23212655258237373, guid: dcb481ea3059acb40979f9a4a0dc176e, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.6784314, g: 0.8784314, b: 0.9490196, a: 1}
+    sprite: {fileID: 21300000, guid: 8b5a87477c563184fa0209027fef449c, type: 3}
+  - name: Face_Tired_01
+    source: {fileID: 7957651659744542760, guid: 7a98ae84d9a76074d869b7b09b2d06e4, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: 6b2063a208ff80a4193d55a874811379, type: 3}
+  - name: Face_Wink_01
+    source: {fileID: 7959801494636332900, guid: b6c0b04199f3cb04cbce07d1a90f9b68, type: 3}
+    fill: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    accent: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    sprite: {fileID: 21300000, guid: 602bf0f6496f6084d84eae7da9d1ad57, type: 3}
+  - name: Icon_Agree_01
+    source: {fileID: 1740930692158838421, guid: ab5598b4d108e404cae21973560439bc, type: 3}
+    fill: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    accent: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    sprite: {fileID: 21300000, guid: cb264bd77d615dc469dbf1d523ca74df, type: 3}
+  - name: Icon_Coin_01
+    source: {fileID: 4564185854463854357, guid: 7396614d1a220df478359d8b38a490f7, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: b6855bc8e7f79e14aaa23ca07a5aee1d, type: 3}
+  - name: Icon_Disagree_01
+    source: {fileID: 3375860266645845095, guid: 6c23613bde01c844eb49a79726c0fd29, type: 3}
+    fill: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    accent: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    sprite: {fileID: 21300000, guid: 93769717099721444ad8d3f6efcf0f83, type: 3}
+  - name: Icon_ExclamationMark_01
+    source: {fileID: 1240833242244441067, guid: 54a6cff7b9d533949abcec6302491615, type: 3}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    accent: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    sprite: {fileID: 21300000, guid: 90a907dc6e19a7646add8e44aa7a7da1, type: 3}
+  - name: Icon_Frowning_01
+    source: {fileID: 4669237620688231403, guid: e76c71cd0c565de498095e2a6356fde3, type: 3}
+    fill: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    accent: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    sprite: {fileID: 21300000, guid: dc101bf31b65697448a62db5b786aa0b, type: 3}
+  - name: Icon_Heart_01
+    source: {fileID: 3962663563349598471, guid: 71c0357c5ce5e7743a7b40968cf4a5fb, type: 3}
+    fill: {r: 0.8784314, g: 0.30980393, b: 0.72156864, a: 1}
+    accent: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    sprite: {fileID: 21300000, guid: 89acbd55ef6170e4fb5b60c243d5691b, type: 3}
+  - name: Icon_QuestionMark_01
+    source: {fileID: 2473357054193793284, guid: bcd5df57c4faa0a45a041fee07fbc172, type: 3}
+    fill: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    accent: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    sprite: {fileID: 21300000, guid: 45516a387fe43d44ea36a0492a644ad1, type: 3}
+  - name: Icon_Sleep_01
+    source: {fileID: 6451664146786433480, guid: 94b4c9b86e7dd0d40bf105b65d34a7a8, type: 3}
+    fill: {r: 0.6784314, g: 0.8784314, b: 0.9490196, a: 1}
+    accent: {r: 0.95686275, g: 0.93333334, b: 0.8745098, a: 1}
+    sprite: {fileID: 21300000, guid: 852910980a17d3e4bba8f850a37e3c13, type: 3}

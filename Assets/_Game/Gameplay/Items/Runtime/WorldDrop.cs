@@ -67,6 +67,8 @@ namespace KryticalNova.Items
         private const float TakenFlightSeconds = 0.2f;
 
         private ItemStack stack;
+        // How rare what lies here is, kept for the moment the last of it is taken: by then the stack is empty.
+        private ItemRarity shownRarity;
         private ulong reservedFor = Nobody;
         private FactionId faction;
         private float reservedUntil;      // local clock (Time.time): what the machine that decides goes by
@@ -307,6 +309,11 @@ namespace KryticalNova.Items
         /// <summary>Leaves the parcel behind as a local effect that goes to the taker; the drop itself is removed.</summary>
         private void HandOver(Transform taker)
         {
+            if (taker != null)
+            {
+                bool mine = taker.TryGetComponent(out NetworkObject takerObject) ? !takerObject.IsSpawned || takerObject.IsOwner : false;
+                ClientPresentationRegistry.Feel?.PickedUp(taker, transform.position, (int)shownRarity, mine);
+            }
             if (visual == null || taker == null) return;
             Transform parcel = visual;
             visual = null;
@@ -317,6 +324,7 @@ namespace KryticalNova.Items
         private void ApplyLook()
         {
             name = stack.IsEmpty ? "Drop" : $"Drop ({DisplayName})";
+            if (!stack.IsEmpty) shownRarity = Rarity;
             if (visual == null) return;
             block ??= new MaterialPropertyBlock();
             Color tint = RarityTint[Mathf.Clamp((int)Rarity, 0, RarityTint.Length - 1)];

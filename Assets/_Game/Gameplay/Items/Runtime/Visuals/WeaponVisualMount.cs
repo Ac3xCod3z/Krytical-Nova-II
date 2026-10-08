@@ -1,7 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using KryticalNova.Combat;
+using KryticalNova.Core;
+using KryticalNova.Rendering;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace KryticalNova.Items.Visuals
 {
@@ -15,8 +18,10 @@ namespace KryticalNova.Items.Visuals
     /// second, mirrored copy in the left hand and on the left hip. It learns that the weapon was drawn or put away
     /// from its own parent changing, so nothing else has to tell it.
     ///
-    /// A tempered weapon also wears a glow: a rim of light around its outline (see <see cref="SetGlow"/> and
-    /// <see cref="GlowRim"/>), drawn over the model's own material so it works on any weapon whatever shader that uses.
+    /// A tempered weapon also wears a glow: a halo of light round its outline (see <see cref="SetGlow"/> and
+    /// <see cref="GlowRim"/>), drawn on the screen so it works on any weapon whatever its shape or shader.
+    ///
+    /// A long weapon is kept out of the ground: where its far end would sink in, it is tipped up about the grip.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class WeaponVisualMount : MonoBehaviour
@@ -38,9 +43,23 @@ namespace KryticalNova.Items.Visuals
         [SerializeField, Min(0f)] private float settleSeconds = 0.1f;
         [Tooltip("The back sheath stands off far enough to clear a cape. With no cape worn, a back-carried weapon moves in by this much (the mount's X points at the spine).")]
         [SerializeField] private Vector3 bareBackOffset = new Vector3(0.08f, 0f, 0f);
+        [Tooltip("A weapon's lowest point is kept at least this far (metres) above the ground: a long axe, scythe or glaive is tipped up about the grip instead of sinking in. 0 = never.")]
+        [SerializeField, Min(0f)] private float groundClearance = 0.03f;
+
+        // Keeping long weapons out of the ground: how near the ground a weapon must be before the ground under its
+        // tip is looked up, how far above or below the owner's feet that ground may be and still count (a kerb, a
+        // slope; not a table the tip is under), and the least reach from the grip worth tipping.
+        private const float NearGround = 0.5f;
+        private const float StepLimit = 0.6f;
+        private const float LeastReach = 0.1f;
+        private const int GroundPasses = 2;
 
         private GameObject spawned;     // the weapon, or the right-hand one of a pair
         private GameObject spawnedOff;  // the left-hand one of a pair
+        private Vector3[] spawnedReach, spawnedOffReach;    // each model's outermost points in its own space (null = unknown)
+        private float spawnedRadius, spawnedOffRadius;      // and how far the furthest of them is from its grip
+        private NavMeshAgent owner;     // whose feet say where the ground is
+        private bool ownerSought;
         private ItemDefinition current;
         private bool drawn;
         private bool capeWorn;
@@ -86,7 +105,12 @@ namespace KryticalNova.Items.Visuals
             if (item == null || item.weaponPrefab == null) return; // unarmed: mount stays, nothing visible
 
             spawned = Spawn(item);
-            if (item.paired && offHandSocket != null) spawnedOff = Spawn(item);
+            spawnedReach = ReachOf(spawned, out spawnedRadius);
+            if (item.paired && offHandSocket != null)
+            {
+                spawnedOff = Spawn(item);
+                spawnedOffReach = ReachOf(spawnedOff, out spawnedOffRadius);
+            }
             Place(settle: false);
             if (hitbox != null) hitbox.Configure(item.hitboxCenter, item.hitboxSize);
             if (glowOn) AttachGlow(); // a new model for the same glow (the look changed, not the Temper)
@@ -111,6 +135,8 @@ namespace KryticalNova.Items.Visuals
             if (spawnedOff != null) Destroy(spawnedOff);
             spawned = null;
             spawnedOff = null;
+            spawnedReach = null;
+            spawnedOffReach = null;
         }
 
         /// <summary>
@@ -266,6 +292,104 @@ namespace KryticalNova.Items.Visuals
             settleRoutine = null;
         }
 
+        // ---------------------------------------------------------------- out of the ground
+
+        /// <summary>
+        /// After the animation has moved the hand: a weapon whose far end would sink into the ground is tipped up
+        /// about its grip just far enough to clear it. Looks only: the hitbox is the mount's and does not move.
+        /// </summary>
+        private void LateUpdate()
+        {
+            if (groundClearance <= 0f || current == null || spawned == null) return;
+            if (!ownerSought)
+            {
+                owner = GetComponentInParent<NavMeshAgent>();
+                ownerSought = true;
+            }
+            if (owner == null) return; // a preview doll stands on nothing
+            float feet = owner.transform.position.y - owner.baseOffset;
+            // While a model eases from one socket to the other the easing has just placed it; otherwise it goes back
+            // to where the item puts it first. Either way it is tipped as far as the ground asks this frame and no
+            // further, so nothing builds up.
+            bool easing = settleRoutine != null;
+            if (spawnedReach != null) KeepOffGround(spawned.transform, MainPose(), spawnedReach, spawnedRadius, feet, easing);
+            if (spawnedOff != null && spawnedOffReach != null)
+                KeepOffGround(spawnedOff.transform, OffPose(), spawnedOffReach, spawnedOffRadius, feet, easing);
+        }
+
+        private void KeepOffGround(Transform model, Pose pose, Vector3[] points, float radius, float feet, bool placed)
+        {
+            if (!placed)
+            {
+                model.localPosition = pose.position;
+                model.localRotation = pose.rotation;
+            }
+            // Out of reach of any ground that counts, whichever way it points: most weapons, most of the time.
+            Vector3 size = model.lossyScale;
+            float furthest = radius * Mathf.Max(Mathf.Abs(size.x), Mathf.Max(Mathf.Abs(size.y), Mathf.Abs(size.z)));
+            if (model.position.y - furthest >= feet + StepLimit + groundClearance) return;
+
+            for (int pass = 0; pass < GroundPasses; pass++)
+            {
+                Vector3 lowest = LowestPoint(model, points);
+                float floor = feet + groundClearance;
+                if (lowest.y >= floor + NearGround) return;
+                // The ground the eye sees under the tip, where there is some near the level of the owner's feet (a
+                // slope ahead, a kerb; the feet themselves ride a little above it).
+                if (GroundSnap.TryGetGround(lowest, out RaycastHit ground, owner.transform) && Mathf.Abs(ground.point.y - feet) <= StepLimit)
+                    floor = ground.point.y + groundClearance;
+                if (lowest.y >= floor) return;
+
+                Vector3 grip = model.position;
+                Vector3 reach = lowest - grip;
+                float length = reach.magnitude;
+                Vector3 axis = Vector3.Cross(reach, Vector3.up);
+                if (length < LeastReach || axis.sqrMagnitude < 1e-8f) return; // hanging straight down: tipping gains nothing
+                float now = Mathf.Asin(Mathf.Clamp(reach.y / length, -1f, 1f));
+                float wanted = Mathf.Asin(Mathf.Clamp((floor - grip.y) / length, -1f, 1f));
+                if (wanted <= now) return;
+                model.rotation = Quaternion.AngleAxis((wanted - now) * Mathf.Rad2Deg, axis.normalized) * model.rotation;
+            }
+        }
+
+        /// <summary>
+        /// A model's outermost points in its own space, and how far the furthest is from its origin: the ones baked
+        /// on its prefab (<see cref="WeaponReach"/>), or failing that the corners of its box.
+        /// </summary>
+        private static Vector3[] ReachOf(GameObject model, out float radius)
+        {
+            radius = 0f;
+            Vector3[] points = model.TryGetComponent(out WeaponReach reach) && reach.points != null && reach.points.Length > 0 ? reach.points : null;
+            if (points == null)
+            {
+                if (!PetPlacement.TryMeasure(model, out Bounds box)) return null;
+                points = new Vector3[8];
+                for (int corner = 0; corner < 8; corner++)
+                {
+                    var sign = new Vector3((corner & 1) == 0 ? -1f : 1f, (corner & 2) == 0 ? -1f : 1f, (corner & 4) == 0 ? -1f : 1f);
+                    points[corner] = box.center + Vector3.Scale(box.extents, sign);
+                }
+            }
+            foreach (Vector3 point in points) radius = Mathf.Max(radius, point.magnitude);
+            return points;
+        }
+
+        private static Vector3 LowestPoint(Transform model, Vector3[] reach)
+        {
+            Matrix4x4 toWorld = model.localToWorldMatrix;
+            int lowest = 0;
+            float least = float.MaxValue;
+            for (int i = 0; i < reach.Length; i++)
+            {
+                Vector3 p = reach[i];
+                float height = toWorld.m10 * p.x + toWorld.m11 * p.y + toWorld.m12 * p.z + toWorld.m13;
+                if (height >= least) continue;
+                least = height;
+                lowest = i;
+            }
+            return toWorld.MultiplyPoint3x4(reach[lowest]);
+        }
+
         private void OnDisable()
         {
             // A coroutine does not survive a disable: finish the move it was making.
@@ -279,19 +403,24 @@ namespace KryticalNova.Items.Visuals
         // ---------------------------------------------------------------- Temper glow
 
         /// <summary>
-        /// Turns the glow on in a Temper band's colour at a rarity's strength, or off when <paramref name="template"/>
-        /// is null or <paramref name="on"/> is false. The template is the shared glow material; each mount works on a copy.
+        /// Turns the glow on in a Temper band's colour at a rarity's strength, or off when <paramref name="on"/> is
+        /// false.
         /// </summary>
-        public void SetGlow(Material template, bool on, Color color, TemperGlowLook look)
+        public void SetGlow(bool on, Color color, TemperGlowLook look)
         {
-            if (!on || template == null)
+            if (!on)
             {
                 if (glowOn) DetachGlow();
                 glowOn = false;
                 return;
             }
-            if (glow == null) glow = new GlowRim(template, "weapon");
-            glow.Set(color, look.intensity, look.rimPower, look.pulse, look.pulseSpeed, look.sparkles ? 1.5f : 0f);
+            if (glow == null) glow = new GlowRim();
+            glow.Set(new GlowHaloLook
+            {
+                color = color, intensity = look.intensity, width = look.width,
+                pulse = look.pulse, pulseSpeed = look.pulseSpeed, pulseWidth = look.pulseWidth,
+                twinkle = look.twinkle, lightning = look.lightning, flame = look.flame,
+            });
             if (!glowOn) AttachGlow();
             glowOn = true;
         }
@@ -299,19 +428,16 @@ namespace KryticalNova.Items.Visuals
         private void AttachGlow()
         {
             if (glow == null) return;
+            glow.Detach(); // the models it was on may be gone: a new look spawns new ones
             if (spawned != null) glow.Attach(spawned);
             if (spawnedOff != null) glow.Attach(spawnedOff);
         }
 
-        private void DetachGlow()
-        {
-            if (spawned != null) GlowRim.Detach(spawned);
-            if (spawnedOff != null) GlowRim.Detach(spawnedOff);
-        }
+        private void DetachGlow() => glow?.Detach();
 
         private void OnDestroy()
         {
-            glow?.Destroy();
+            glow?.Detach();
         }
 
 #if UNITY_EDITOR

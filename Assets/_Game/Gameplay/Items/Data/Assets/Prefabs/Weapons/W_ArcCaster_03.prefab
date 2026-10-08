@@ -190,6 +190,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2017148209808058203}
+  - component: {fileID: 7944443368478610497}
+  - component: {fileID: 6858377331720689162}
   m_Layer: 0
   m_Name: W_ArcCaster_03
   m_TagString: Untagged
@@ -213,3 +215,57 @@ Transform:
   - {fileID: 1256525944765266106}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7944443368478610497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8349965750577355173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 1
+    box:
+      m_Center: {x: 0, y: 0, z: 0.4}
+      m_Extent: {x: 0.5, y: 0.4, z: 0.5}
+    dark:
+      m_Center: {x: 0, y: -0.09, z: -0.0075000003}
+      m_Extent: {x: 0.5, y: 0.11, z: 0.0925}
+  exclude: []
+  keepAsSet: 1
+--- !u!114 &6858377331720689162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8349965750577355173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.0106755765, y: 0.2008287, z: 0.11357025}
+  - {x: -0.013805604, y: 0.18978965, z: 0.7536044}
+  - {x: 0, y: 0.15703575, z: -0.41705215}
+  - {x: 0.013805604, y: 0.18978965, z: 0.7536044}
+  - {x: -0.015983569, y: 0.19793472, z: -0.038149413}
+  - {x: 0.025588058, y: 0.15053916, z: -0.41705215}
+  - {x: -0.025588058, y: 0.15053916, z: -0.41705215}
+  - {x: -0.029078554, y: 0.17549331, z: 0.76242673}
+  - {x: 0.029078554, y: 0.17549331, z: 0.76242673}
+  - {x: -0.029078554, y: 0.058591995, z: 0.76242673}
+  - {x: -0.025588058, y: -0.018906478, z: -0.41705}
+  - {x: 0.029078554, y: 0.058591995, z: 0.76242673}
+  - {x: 0.025588058, y: -0.018906478, z: -0.41705}
+  - {x: 0, y: -0.032469444, z: -0.4170526}
+  - {x: -0.019630354, y: -0.09468101, z: -0.03843582}
+  - {x: 0.019630354, y: -0.09468101, z: -0.03843582}
+  - {x: -0.008294263, y: 0.03646042, z: 0.72960556}
+  - {x: 0.008294263, y: 0.03646042, z: 0.72960556}
+  - {x: 0, y: -0.105671, z: -0.033338927}

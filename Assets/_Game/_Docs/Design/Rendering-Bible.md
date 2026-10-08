@@ -51,6 +51,15 @@ Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights d
 6. **SunShafts** (BeforeRenderingPostProcessing + 1): sky / cloud god rays from the key light (sun by day, faint
    moon rays at night), added before post so Bloom catches them.
    Kept alongside the mist: the shafts own the sky, the mist owns the streets.
+6b. **Glow Halo** (BeforeRenderingPostProcessing + 2): the light round tempered weapons and evolved pets (section 6e).
+   Laid over the inked, toned frame, so the comic ink and dots stay under it, it is never outlined or dotted itself,
+   and it does not lean on bloom to read. Adds no pass at all when nothing on screen glows.
+6c. **Comic lettering** (BeforeRenderingPostProcessing + 3): the marks and words of a hit and every other comic effect
+   (section 6h), which are on the `ComicLettering` layer. They are laid over the finished frame the way lettering is
+   laid over a drawn page: not inked, dotted or lit over, still hidden by what really stands in front of them (they
+   test the scene's depth), and under URP's own post like everything else. The renderer's transparent pass leaves the
+   layer out (`PostProcessSetup.EnsureComicLettering`), so nothing is drawn twice. They are drawn after Beautify, so
+   their colours are the Colour Bible's own and do not bloom.
 7. **Beautify 3** (AfterRenderingTransparents — i.e. *before* URP post, on the HDR frame) owns **tonemapping
    (PBR Neutral)**, **bloom** (threshold 1, intensity 0.4, spread 0.58, warm `#FFF1E0` tint) and the **ink vignette**
    (rings 0.1 → 0.5, ink `#14122B` at 60 %, **fade 0** — Beautify's "fade" fades the whole frame to the
@@ -352,6 +361,187 @@ farther away than the original 0.065 / 0.1.
   - Rebuild with **Krytical Nova > Zone > Rebuild Water**.
   - The water needs the depth and opaque textures, which are now on for the PC and Mobile URP assets.
 
+## 6e. Glow halo (tempered weapons, evolved pets)
+
+The glow is light **round** a thing, never a tint on it. It is drawn on the screen, not on the model
+(`GlowHaloFeature`, shader `Hidden/KryticalNova/GlowHalo`, both in `Assets/_Game/Rendering`), so it follows any
+outline exactly (thin blades, hollow shapes, hard-edged low-poly meshes) and falls away evenly. Before 7 Oct 2026 it
+was a hull pushed out along the mesh normals in four stacked bands, which is why it had hard steps, gaps at hard
+edges and a pulse that only changed brightness.
+
+**How a frame is made.** Every glowing renderer still on screen is drawn into a mask (colour × brightness, halo width
+in pixels, depth; only the parts the camera can see). The mask is jump-flooded at half resolution, so every pixel
+near it learns which glowing pixel is nearest and how far away it is. One pass then lays the light over the frame
+from that distance: `pow(1 - distance / width, softness)`, starting one pixel outside the model so its ink outline
+stays black, and hidden by anything standing in front of the glowing thing. All passes are scissored to the glowing
+things' screen rectangle. Render Graph only; nothing is added to the models (no shells, no extra materials).
+
+**Who glows.** Anything that registers a `GlowHalo` (`Rendering/Runtime/GlowHalo.cs`): today tempered weapons
+(`WeaponVisualMount` through `GlowRim`) and evolved pets (`PetFollower`). The look comes from data: a Temper band's
+colour and its rarity's `TemperGlowLook` (`GearProgressionSettings.temper.glowLooks`), a pet's stage
+(`PetSettings.rim…`).
+
+**The breath.** Each halo breathes on its own beat (so a crowd does not pulse in step): a smooth swell that is
+brightest and widest together. `pulse` is the share of brightness lost at the low point, `pulseSpeed` is breaths a
+second, `pulseWidth` is how much wider it is at the top of a breath.
+
+**Only part of a model can glow** (`GlowZone`: a box the glow is kept to, and a box kept dark). The dark parts go
+into the mask too and are flooded alongside: air whose nearest piece of the model is a dark one gets no light, so the
+glow of a blade stops at its hilt instead of spilling round it, and ends softly where the two meet (`zoneSoftness`).
+Weapons carry their zone on their model prefab (`WeaponGlowZone`): blades glow past the guard, axes and scythes on the
+head (the shaft beside a beard or between horns stays dark), guns everywhere but the grip, bows everywhere but the
+string. Baked from the meshes by **Krytical Nova ▸ Items ▸ 8**; the ten guns, the compound bow, the cleaver and one
+knuckle blade are set by hand and ticked "keep as set".
+
+**What the strongest looks add**, in the same pass and always in the glow's own colour, never where there is no light:
+
+| | What it is | Per look | Tuned on the feature |
+|---|---|---|---|
+| Sparks | a few small dots with a thin four-point glint that swell and fade, in the light and on the glowing part | `twinkle` (brightness) | `twinkleSize` (room per spark: larger = fewer), `twinkleShare`, `twinkleRate`, `twinkleDot`, `twinkleRay`, `twinkleWhite` |
+| Lightning | thin jagged arcs that stand off the outline for an instant and flicker out | `lightning` | `boltLength`, `boltRate`, `boltChance`, `boltWidthPixels`, `boltBrightness`, `boltWander`, `boltWhite` |
+| Flame | tongues that rise from the outline, lean towards the tip and stream to it | `flame` (share of the light) | `flameSize`, `flameSpeed`, `flameDepth`, `flameLean`, `flameHeat` |
+
+They are pinned to the glowing thing (its origin and the way its tip points), so they travel with it. Epic and
+above wear all three; lower rarities glow plainly. At most 32 things in one view carry them (the rest only glow).
+
+**Feature settings** (`PC_Renderer` ▸ Glow Halo): `softness` 1.8, `inkGap` 1 px, `solidity` 0.45 (how much of the
+background the light covers, so it does not burn out on a bright sky), halo width clamped to 3–56 px, `depthFade`
+0.05 m, fade-out from 55 to 80 m, `halfResolution` on. PC renderer only (it needs the depth texture).
+
+## 6f. Motion smear, and the slow motion of a critical kill
+
+**The smear.** For a moment a character's trailing side is pulled back, in streaks, to where it was a tenth of a
+second ago: when a run takes off, and when the blow that kills throws the body. It is the smear package's own shader
+(`WuHaipeng/smear_urp`, `Assets/_ThirdParty/smear effect/Demo_urp/shader`, untouched) drawn as a **second skin** over
+the body: the same mesh and bones, the body's colour texture, switched on only while a smear plays (`ActorSmear`,
+`GameFeel/Runtime`). The body's own comic materials are never swapped, so its ink, tone and hit flash carry on
+underneath. The skin casts no shadow, and weapons and pets are not smeared.
+
+The package's control scripts (`Smear_control_*`) are not used. They need the body's own materials to be the smear
+shader, they smear every movement all the time (a walk, a teleport, a network correction alike), and they sample in
+`FixedUpdate` over a fixed count of frames, so the trail changes with the frame rate. `ActorSmear` hands the same
+shader the same properties (`position_current`, `position_previous`, `_smear_strength`, `_noise_scale`) under the
+rules below.
+
+**When.** A FEEL feedback (`MMF_Smear`) on the world half of the **Run Start**, **Death** and **Critical Death**
+moments of `PFX_GameFeel`, so it plays on every client for every character and is timed, and switched on or off,
+with the moment's dust and comic text. Run Start fires only when the run clip starts (the Run skill: 10 m/s at rank 1
+up to 29 m/s at rank 20), never for a walk. `GameFeelBuilder` puts the feedbacks there: **Krytical Nova ▸ GameFeel ▸
+Rebuild Smear Feel** does only that (and makes the settings asset when it is missing); **Build Game Feel** and
+**Rebuild Death Feel** include it.
+
+**The rules.** Every number is in `GameFeel/Data/Assets/SmearSettings.asset`, one profile per moment:
+
+| | Take-off | Death throw | What it does |
+|---|---|---|---|
+| `seconds` | 0.45 | 0.5 | how long the smear lasts from the start of the motion |
+| `trailSeconds` | 0.1 | 0.1 | the body is stretched back to where it was this long ago |
+| `shape` | whole to 45 % of its life, then fading out | whole to 40 %, then fading out | how much of the stretch shows over its life: strong at the start, gone by the end |
+| `strength` | 1.25 | 1.25 | the package's smear strength |
+| `longest` | 1.8 m | 1.6 m | never longer than this, however fast the body goes |
+| `slowest` | 7 m/s | 4 m/s | nothing is smeared below this speed (a walk is 5 m/s, a knock-down about 2.5); the smear is whole from a third above it |
+
+`placedSpeed` (200 m/s): a body that covers ground faster than this between two frames was put there (a spawn, a
+teleport, a large network correction), and its smear is dropped at once. It sits well above the fastest real motion:
+the first frame of a critical death's throw is about 80 m/s. `noiseScale` (100) is how finely the smear breaks into
+streaks.
+
+**Which deaths.** The thrown body of a critical death (5.5 m, backwards from a blow to the front, forwards from a
+blow to the back) smears through the fast first half second of its flight. A normal death only knocks the body
+over (it moves 0.4 to 0.7 m, at up to about 2.5 m/s): that is below the death smear's `slowest`, so it is not
+smeared; lower `slowest` to smear it too. A throw that a wall cuts short moves too little and is not smeared either.
+
+**Cost.** One more draw of the body's skinned meshes on the frames that have a stretch to see (half a second at
+most). A skin with nothing to show is not drawn, and between smears the skins are switched off; they are made on a
+character's first smear and kept.
+
+**The slow motion.** When *your* critical blow kills another player, the thrown body hangs for a blink on *your*
+screen only: it is shown at a quarter of real speed for 0.12 s, then catches up with where it really is over the
+next 0.26 s (`ActorTimeSlow`; `critKillSlowSeconds` and `critKillSlowRate` on the game feel prefab's presenter, 0
+seconds = off). At its furthest the picture is 0.09 s behind. It is a picture only: the body's drawn parts are shown
+where its root was a little while ago, and its animation runs at the same slowed, then quickened, pace so pose and
+place stay together. The game's clock, the body's real place and the network are never touched, so it is safe on the
+host, nobody else sees it and the victim's own screen is never slowed. It rides with the kill's hit stop, chromatic
+punch and comic text. Not played for a normal kill, for a kill by a GM command, or when the victim is not a player.
+
+## 6g. Icons
+
+Two families, made to sit side by side in the HUD:
+
+- **Pictures of the real thing.** Gear and pets are rendered from their own models through the comic pass
+  (`ItemIconCapture`): the icon is what you will wear. A tier of the gear ladder wears its look's icon.
+- **Pack icons in the comic treatment.** Skills, and every item that has no model (forge materials, Stims, Kiosk
+  Permits, the Pet Ration, jewellery), take a painted icon from the two CraftPix packs: `_ThirdParty/Fantasy RPG Icons
+  Pack` for skills, `_ThirdParty/Cyberpunk RPG Icons Pack` for items. `ComicIconTreatment` (`Assets/_Game/Icons/Editor`)
+  redraws each one. The packs' files are only read, never changed: the game shows treated copies, written to
+  `Gameplay/Progression/Data/Assets/Icons` and `Gameplay/Items/Data/Assets/Icons`.
+
+**The treatment.** Every number is in `Icons/Data/Assets/IconTreatmentSettings.asset`; change one, then **Krytical
+Nova ▸ Icons ▸ Bake Every Assigned Icon**. Sizes are in pixels of the finished 256 px icon (drawn at twice the size
+and reduced).
+
+| Step | What it does | Settings |
+|---|---|---|
+| Fit | a skill painting becomes a rounded tile; an item keeps its own outline, scaled into the same box | `margin` 18, `cornerRadius` 30 |
+| Flat colour | an edge-keeping blur gathers soft paint into even patches and leaves the edges between shapes sharp | `flattenRadius` 4, `flattenPasses` 2, `flattenTolerance` 0.14 |
+| Tones | each pixel is drawn in one of five flat tones by how bright its colour is (its strongest channel, so a pure red stays red) | `tones` 5, `toneAdapt` 0.35, `toneLow` 0.24, `toneHigh` 0.95, `toneContrast` 0.55, `toneSettle` 1 |
+| Ben-Day dots | the second darkest tone is drawn as dots, on the same 45° grid as the world's dots | `dotCell` 9, `dotRadius` 0.36, `dotContrast` 0.5 |
+| Ink | a line where two patches meet with a clear step in colour; never over the lightest tone, so a bolt of lightning or a blade's edge keeps its light | `inkEdge` 0.24, `inkWidth` 5, `inkSpeck` 30, `inkSpareTones` 1 |
+| Colour | stronger, and pulled toward the nearest colour of the Colour Bible or of a faction; the darkest tone leans to shadow indigo | `saturation` 1.4, `palettePull` 0.35, `palette`, `shadeTint` 0.45, `shadeColor` `#4C52BF` |
+| Sticker | the ink outline, paper keyline and hard shadow every icon of this family wears | `outlineWidth` 7, `keylineWidth` 3.5, `shadowOffset` 5, `shadowAlpha` 0.55, `ink` `#14122B`, `paper` `#F4EEDF` |
+
+An item icon has a clear ground, so the bag's rarity frame and glow show round it.
+
+**One colour per class.** A class's ten skills come from one set of the pack, so its Hotbar has one colour:
+Monoblade blue, Glaive magenta, Carbine cyan; Harvester red, Servo Claws teal, Arc Caster violet; Longaxe
+red-orange, Claymore orange-gold, Warbow green. The eight shared skills, Run and Jump come from the many-coloured
+Buff set. A set can have its own colour moved round the colour wheel when a class wears a set painted in another
+faction's colour (`IconLibrary.Set.moveHue`): the Arc Caster's set is painted electric blue and is moved to Null's
+violet, while skin and metal in the picture are left alone.
+
+**The library** (`Icons/Data/Assets/IconLibrary.asset`, edited in **Krytical Nova ▸ Icons ▸ Icon Library**) lists the
+packs' sets, tags icons by use (attack, buff, debuff, passive, movement, item), faction, class, lineage and
+keywords, and records which icon every skill and item has. No icon is ever given twice. A new skill or a new item
+without a model gets its icon there: choose it on the left, pick from the best free matches, press Give. **Check
+Icons** lists anything left without one.
+
+## 6h. Comic marks and words
+
+The comic layer of a fight: `Design/13_comic_effects.md` has every effect, word and number. The rules of the look:
+
+- **Shape, word and lettering say who hit; colour says what kind of hit it was.** A weapon class owns one shape of
+  impact mark, one font and three words. A kind of hit (Normal, Elemental, Critical, Shattered, Reflected) owns one
+  ramp of four colours (core, fill, back, ink), the same for every class. `HitLookSettings.asset` holds both.
+- Every comic effect is flat art that carries its own ink outline and its own dots, in the Colour Bible's ink
+  `#14122B`. It is lettering: it is drawn over the inked frame (section 2, 6c), never through the ComicStyle pass.
+- A word is read or it is noise: a word of a hit is at most 1.7 m wide with capitals a third of a metre tall, sits
+  above the hit and stays at least 0.55 s; a mark is at least 0.18 s. Of fights the local player is no part of, five
+  words at most are on screen.
+- The look of a critical hit by one player on another is the largest lettering in a fight and is used for nothing else.
+- Effects come from the Cartoon FX pack through `GameFeelBuilder.Comic.cs`; the pack's files are only read.
+
+**Comic speech bubbles** (pets today, `ComicBubble` in the HUD): paper `#F4EEDF`, a 3 px ink outline, a hard ink
+shadow 4 px down and to the right, shadow-indigo Ben-Day dots on a 7 px 45° grid growing toward the lower right
+corner, and a tail on the side the speaker is. Every number is a `--bubble-*` value of `.comic-bubble` in
+`ProgressionHUD.uss`. The animal pets' emoji are drawn in the same ink, with one fill and one accent of the Colour Bible.
+
+## 6i. The interface: faction skins and the menus' comic book
+
+`Design/14_interface_skins_menus_settings.md` has all of it. The rules of the look:
+
+- **One skin per faction, in an asset** (`UI/Skins/UiSkin_<Faction>.asset`). No screen names a faction's art or colour
+  itself: the game's style sheets are generated from the assets, and the title flow is built from the menu pack the
+  asset names. The comic layer (ink `#14122B`, paper `#F4EEDF`, Ben-Day dots on the shared screen grid) is ours and is
+  the same in every skin.
+- **Colours that mean something are never skinned:** rarity colours, the pets' comic bubbles, a namecard's faction
+  colour and the red of a Callout opponent.
+- **A menu screen is a page of a comic book.** The page that turns is the screen that was left, unlit: where it curls
+  away from the reader it is shaded with Ben-Day dots on the same grid as the rest of the frame, never with a
+  gradient; its back is paper with dots in the menus' accent and an ink line round it; the cover is solid ink. The
+  flat page shows the screen in exactly its own colours (shader `KryticalNova/UI/Comic Page`).
+- **Feedback moves the thing that was touched and nothing else:** a swell, a squash, a nudge or a shake of a few
+  percent or pixels, over in a quarter of a second, added to the pack's own animation, never in place of it.
+
 ## 7. Performance budgets (PC, 1080p)
 
 | Item | Budget | Notes |
@@ -365,9 +555,12 @@ farther away than the original 0.065 / 0.1.
 | Volumetric mist + Beautify | < 2 ms together | mist at half res, 0.6 m min step, 300 m max distance; mist volumes off when unused |
 | Lamp cones | < 0.5 ms at night in fog | Faster raymarch preset, no shadows, off beyond 65 m, off by day |
 | Live minimap | ~8 renders/s, 512² | opaque-only Forward+ renderer, no shadows/post/features |
+| Menus' page turn | nothing while a screen is at rest; during a turn one picture of the screen and one mesh drawn by one camera for 0.7 s | not measured against a budget yet |
+| Comic marks and words | nothing created in a fight, 0 B GC a hit, < 1 ms a frame in a crowd | measured in the Editor at 30 hits a second by other players: +0.6 ms mean frame, 0 effects created, 0 B allocated by the layer's own calls; the pool is filled when a scene starts (about 86 MB of sleeping comic effects by the Editor's count) |
+| Glow Halo | < 0.5 ms GPU, < 0.3 ms CPU with 40 glowing weapons | measured 0.22 ms GPU / 0.18 ms CPU with 42 halos (flame, lightning, sparks) at 925×1067 in the Editor, 0.07 / 0.06 ms with 2; the flood runs at half res inside the glowing things' screen rectangle only; nothing glowing = no pass |
 
 Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Editor. Look for each feature's
-`ProfilingSampler` name ("Comic Style", "Sun Shafts").
+`ProfilingSampler` name ("Comic Style", "Sun Shafts", "Glow Halo", "Comic Lettering").
 
 ## 8. Roadmap
 
@@ -401,6 +594,47 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black.
 
 ## Changelog
+
+- **2026-10-08 (polish pass: interface)**:
+  - One interface skin per faction, in an asset; the game's style sheets are generated from it (section 6i,
+    `Design/14_interface_skins_menus_settings.md`).
+  - The title flow is built once per skin from each faction's own Synty menu pack and wears one skin a run.
+  - The menus are the pages of a comic book: a MegaBook leaf carries the screen that is left and turns away, shaded
+    with Ben-Day dots (shader `KryticalNova/UI/Comic Page`); the book's cover opens the menus.
+  - Menus and Settings answer what is done in them with Feel (`PFX_MenuFeel`, the Menu Punch feedback).
+
+- **2026-10-08 (polish pass: comic effects)**:
+  - Hits look like the weapon that dealt them: a mark, a font and three words for each of the nine weapon classes,
+    one colour ramp for each kind of hit, words of their own for a death, the forge, a level gained, a find and a
+    pet's evolution, and a look kept for a critical hit on another player (section 6h, `Design/13_comic_effects.md`).
+  - Comic lettering has a layer and a pass of its own, after the glow (section 2, 6c).
+  - The effect pool is filled before a fight and takes an effect back when its particles are done; effects of
+    fights the local player is no part of are never created during one.
+
+- **2026-10-08 (polish pass: pets)**:
+  - Pets react to what their owner does in a comic speech bubble (end of section 6g): words for the Drone Core,
+    emoji for the animal pets.
+
+- **2026-10-08 (polish pass: icons)**:
+  - Skill icons, and the icons of items that have no model, now come from the CraftPix icon packs, redrawn in the
+    comic style by `ComicIconTreatment` and handed out by the icon library (section 6g). Every skill has an icon of
+    its own (before, the nine classes shared ten). The Synty-glyph icons and their bakers (`SkillIconBuilder`,
+    `ComicIconBaker`) are gone, and so is the procedural jewellery `ItemIconCapture` used to render.
+
+- **2026-10-08 (polish pass: the smear)**:
+  - Motion smear on a run's take-off and on the throw of a death (section 6f): the smear package's shader as a second
+    skin over the body, played by a FEEL feedback, tuned in `SmearSettings`. A walk, standing still and being put
+    somewhere never smear.
+  - A critical kill of another player hangs the thrown body in slow motion for a blink, on the killer's screen only
+    (section 6f).
+
+- **2026-10-07 (polish pass: the glow)**:
+  - The Temper and pet glow is rebuilt as a screen-space halo (section 6e, frame order 6b): the stacked hull
+    (`TemperGlow.shader`, its material and the sparkle shell) is gone.
+  - Only part of a weapon glows now (`GlowZone`, `WeaponGlowZone`), and the dark parts keep the light off the air
+    beside them.
+  - Epic and above add sparks, lightning and flame in the Temper band's own colour, drawn in the halo pass.
+  - Budget row added: Glow Halo.
 
 - **2026-10-04 (front end and factions)**:
   - Showroom lighting rules added (section 3): one shadowed key, faction-coloured rim and fill, dotted burst backdrop.

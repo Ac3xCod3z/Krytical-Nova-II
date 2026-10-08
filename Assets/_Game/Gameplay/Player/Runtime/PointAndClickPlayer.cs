@@ -421,7 +421,9 @@ namespace KryticalNova.Player
         {
             if (orbitCamera == null || gameplayCamera == null) return;
 
-            orbitCamera.Radius = Mathf.Clamp(orbitCamera.Radius, minimumZoomDistance, maximumZoomDistance);
+            // How far out, and how fast the wheel gets there, are the player's to set (Settings, Gameplay).
+            float furthest = CameraPreferences.FurthestDistance(minimumZoomDistance, maximumZoomDistance);
+            orbitCamera.Radius = Mathf.Clamp(orbitCamera.Radius, minimumZoomDistance, furthest);
             float scrollDelta = zoomAction.ReadValue<float>();
             if (Mathf.Approximately(scrollDelta, 0f))
                 return;
@@ -435,9 +437,9 @@ namespace KryticalNova.Player
 
             // Scroll is a per-update delta. Multiplying by deltaTime would make zoom frame-rate dependent.
             orbitCamera.Radius = Mathf.Clamp(
-                orbitCamera.Radius - scrollDelta * zoomSensitivity,
+                orbitCamera.Radius - scrollDelta * zoomSensitivity * CameraPreferences.ZoomSpeed,
                 minimumZoomDistance,
-                maximumZoomDistance);
+                furthest);
         }
 
         // Units win over props: a vendor inside a stall sits within the canopy's convex hull, so the
@@ -1280,9 +1282,10 @@ namespace KryticalNova.Player
         private void ApplyOrbitDelta()
         {
             if (orbitCamera == null) return;
-            Vector2 delta = orbitDeltaAction.ReadValue<Vector2>() * orbitSensitivity;
+            // The player's own taste (Settings, Gameplay) goes over the rig's numbers.
+            Vector2 delta = CameraPreferences.Turn(orbitDeltaAction.ReadValue<Vector2>(), orbitSensitivity, invertVerticalOrbit);
             orbitCamera.HorizontalAxis.Value = orbitCamera.HorizontalAxis.ClampValue(orbitCamera.HorizontalAxis.Value + delta.x);
-            float verticalDelta = invertVerticalOrbit ? delta.y : -delta.y;
+            float verticalDelta = delta.y;
 
             // Scraping the ground: keep dragging down to tilt the view up to the sky; dragging back up undoes the tilt
             // before the orbit rises again.

@@ -127,7 +127,7 @@ namespace KryticalNova.Items
         [Tooltip("Pet: cosmetic follower spawned client-side.")]
         public GameObject petPrefab;
         public float petScale = 1f;
-        [Tooltip("Hover point relative to the owner (x right, y up, z forward).")]
+        [Tooltip("Where the pet hovers at its base size, relative to the owner (x right, y up, z forward). On a player, x and z only pick the side: how far out it sits comes from the pet settings' follow gap, and it rises as it grows.")]
         public Vector3 petOffset = new Vector3(0.45f, 0.75f, -0.15f); // player root is at capsule centre (~1 m)
 
         [NonSerialized] private List<SidekickPartRef> loadedParts;

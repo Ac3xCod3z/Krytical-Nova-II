@@ -1,0 +1,579 @@
+fileFormatVersion: 2
+guid: 90d3e436d62587445a56ed55fbaf6675
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1426022819073467913
+    second: Product_Icon_NoBG_22_0
+  - first:
+      213: -6062881388924520982
+    second: Product_Icon_NoBG_22_1
+  - first:
+      213: 5629570417162990922
+    second: Product_Icon_NoBG_22_2
+  - first:
+      213: -2201290448093849844
+    second: Product_Icon_NoBG_22_3
+  - first:
+      213: -5383208223206608525
+    second: Product_Icon_NoBG_22_4
+  - first:
+      213: -9194582643044708211
+    second: Product_Icon_NoBG_22_5
+  - first:
+      213: -7064994993270279791
+    second: Product_Icon_NoBG_22_6
+  - first:
+      213: -6354630859911118335
+    second: Product_Icon_NoBG_22_7
+  - first:
+      213: 1228080875112701013
+    second: Product_Icon_NoBG_22_8
+  - first:
+      213: -7079697456187284468
+    second: Product_Icon_NoBG_22_9
+  - first:
+      213: -4929177757694068807
+    second: Product_Icon_NoBG_22_10
+  - first:
+      213: 4793010010243379641
+    second: Product_Icon_NoBG_22_11
+  - first:
+      213: -3798530578359809073
+    second: Product_Icon_NoBG_22_12
+  - first:
+      213: -6062965466956838593
+    second: Product_Icon_NoBG_22_13
+  - first:
+      213: 2424460706493224826
+    second: Product_Icon_NoBG_22_14
+  - first:
+      213: -4207259138608806223
+    second: Product_Icon_NoBG_22_15
+  - first:
+      213: -3538226890280532990
+    second: Product_Icon_NoBG_22_16
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 512
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_0
+      rect:
+        serializedVersion: 2
+        x: 25
+        y: 10
+        width: 436
+        height: 493
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f9568b2dcfb53ce0800000000000000
+      internalID: -1426022819073467913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_1
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 447
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae5b3d1df715cdba0800000000000000
+      internalID: -6062881388924520982
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_2
+      rect:
+        serializedVersion: 2
+        x: 455
+        y: 423
+        width: 11
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a453c09b770402e40800000000000000
+      internalID: 5629570417162990922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_3
+      rect:
+        serializedVersion: 2
+        x: 25
+        y: 369
+        width: 12
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c07d7e910027371e0800000000000000
+      internalID: -2201290448093849844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_4
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 317
+        width: 11
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 371fec774a00b45b0800000000000000
+      internalID: -5383208223206608525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_5
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 324
+        width: 10
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8019571dc7466080800000000000000
+      internalID: -9194582643044708211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_6
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 292
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 191363e4c7814fd90800000000000000
+      internalID: -7064994993270279791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_7
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 282
+        width: 13
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1024344b6e0dfc7a0800000000000000
+      internalID: -6354630859911118335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_8
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 260
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55c1b8c9c050b0110800000000000000
+      internalID: 1228080875112701013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_9
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 264
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0468b66cacdfbd90800000000000000
+      internalID: -7079697456187284468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_10
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 249
+        width: 15
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b773edf1fa089bb0800000000000000
+      internalID: -4929177757694068807
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_11
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 213
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b1b279b531348240800000000000000
+      internalID: 4793010010243379641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_12
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 221
+        width: 13
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fcb87608098e84bc0800000000000000
+      internalID: -3798530578359809073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_13
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 192
+        width: 23
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f39c390e7050cdba0800000000000000
+      internalID: -6062965466956838593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_14
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 213
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a77db6eca2a65a120800000000000000
+      internalID: 2424460706493224826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_15
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 0
+        width: 26
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b6c43dba10dc95c0800000000000000
+      internalID: -4207259138608806223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Product_Icon_NoBG_22_16
+      rect:
+        serializedVersion: 2
+        x: 380
+        y: 4
+        width: 26
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 204081eb361b5eec0800000000000000
+      internalID: -3538226890280532990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Product_Icon_NoBG_22_0: -1426022819073467913
+      Product_Icon_NoBG_22_1: -6062881388924520982
+      Product_Icon_NoBG_22_10: -4929177757694068807
+      Product_Icon_NoBG_22_11: 4793010010243379641
+      Product_Icon_NoBG_22_12: -3798530578359809073
+      Product_Icon_NoBG_22_13: -6062965466956838593
+      Product_Icon_NoBG_22_14: 2424460706493224826
+      Product_Icon_NoBG_22_15: -4207259138608806223
+      Product_Icon_NoBG_22_16: -3538226890280532990
+      Product_Icon_NoBG_22_2: 5629570417162990922
+      Product_Icon_NoBG_22_3: -2201290448093849844
+      Product_Icon_NoBG_22_4: -5383208223206608525
+      Product_Icon_NoBG_22_5: -9194582643044708211
+      Product_Icon_NoBG_22_6: -7064994993270279791
+      Product_Icon_NoBG_22_7: -6354630859911118335
+      Product_Icon_NoBG_22_8: 1228080875112701013
+      Product_Icon_NoBG_22_9: -7079697456187284468
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377986
+  packageName: 2700 Cyberpunk RPG Icons Pack
+  packageVersion: 1.0
+  assetPath: Assets/Cyberpunk RPG Icons Pack/Asset/Product Icons/No Background/Product_Icon_NoBG_22.png
+  uploadId: 924490

@@ -91,6 +91,7 @@ namespace KryticalNova.UI.Menus
             }
             button.onClick.RemoveAllListeners();
             if (onClick != null) button.onClick.AddListener(onClick);
+            MenuTouch.On(target); // it answers the pointer like everything else that can be clicked
             return button;
         }
 

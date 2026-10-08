@@ -25,6 +25,11 @@ namespace KryticalNova.UI.Menus
         [Tooltip("Give up waiting for a registered task after this long and enter anyway (it is named in the log).")]
         [SerializeField, Min(1f)] private float taskTimeoutSeconds = 30f;
 
+        // The line over the bar: each menu pack names it its own way.
+        private static readonly string[] HeaderNames = { "Label_FantasyMenus_Header", "Label_Header" };
+        /// <summary>The line the tip is written on. A pack whose screen has none is given one by the scene builder.</summary>
+        public const string TipName = "Label_Tooltip";
+
         private static readonly string[] GeneralTips =
         {
             "Drag to turn your character on the equipment page. Scroll to zoom.",
@@ -36,8 +41,13 @@ namespace KryticalNova.UI.Menus
         {
             var slider = screen != null ? screen.GetComponentInChildren<Slider>(true) : null;
             string who = CharacterSession.TryGetActive(out var profile) ? profile.name : null;
-            MenuUi.SetLine(screen, "Label_FantasyMenus_Header", who != null ? $"{who} enters Starter Town" : "Entering Starter Town");
-            MenuUi.SetText(screen, "Label_Tooltip", PickTip(profile));
+            foreach (string header in HeaderNames)
+            {
+                if (MenuUi.Find(screen, header) == null) continue;
+                MenuUi.SetLine(screen, header, who != null ? $"{who} enters Starter Town" : "Entering Starter Town");
+                break;
+            }
+            MenuUi.SetText(screen, TipName, PickTip(profile));
             if (slider != null) slider.value = 0f;
 
             var load = SceneManager.LoadSceneAsync(FrontEnd.WorldScene);

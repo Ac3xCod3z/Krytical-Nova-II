@@ -1,0 +1,553 @@
+fileFormatVersion: 2
+guid: 377cb1bf4a8094247932d682de16c6df
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3524472536119563447
+    second: Goblin_Loot_Icon_NoBG_40_0
+  - first:
+      213: 4873527004731063404
+    second: Goblin_Loot_Icon_NoBG_40_1
+  - first:
+      213: -8354936083582853858
+    second: Goblin_Loot_Icon_NoBG_40_2
+  - first:
+      213: 5183438824510096467
+    second: Goblin_Loot_Icon_NoBG_40_3
+  - first:
+      213: 7093339668273695745
+    second: Goblin_Loot_Icon_NoBG_40_4
+  - first:
+      213: -6175975382807759246
+    second: Goblin_Loot_Icon_NoBG_40_5
+  - first:
+      213: -568007595798563638
+    second: Goblin_Loot_Icon_NoBG_40_6
+  - first:
+      213: -2556962004911057137
+    second: Goblin_Loot_Icon_NoBG_40_7
+  - first:
+      213: -100273813104046363
+    second: Goblin_Loot_Icon_NoBG_40_8
+  - first:
+      213: 753982065600168365
+    second: Goblin_Loot_Icon_NoBG_40_9
+  - first:
+      213: -1644579889055279137
+    second: Goblin_Loot_Icon_NoBG_40_10
+  - first:
+      213: -5006554764497230072
+    second: Goblin_Loot_Icon_NoBG_40_11
+  - first:
+      213: 5748198555723668016
+    second: Goblin_Loot_Icon_NoBG_40_12
+  - first:
+      213: -3408399594613262171
+    second: Goblin_Loot_Icon_NoBG_40_13
+  - first:
+      213: -2460594455546430073
+    second: Goblin_Loot_Icon_NoBG_40_14
+  - first:
+      213: 206989463930376704
+    second: Goblin_Loot_Icon_NoBG_40_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 512
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_0
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 412
+        width: 137
+        height: 78
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 94b29ffd6ee861fc0800000000000000
+      internalID: -3524472536119563447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_1
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 380
+        width: 140
+        height: 85
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6cb4406dfe32a340800000000000000
+      internalID: 4873527004731063404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_2
+      rect:
+        serializedVersion: 2
+        x: 428
+        y: 458
+        width: 58
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e1d53f8f5ed4d0c80800000000000000
+      internalID: -8354936083582853858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_3
+      rect:
+        serializedVersion: 2
+        x: 152
+        y: 324
+        width: 128
+        height: 122
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35484e9d5264fe740800000000000000
+      internalID: 5183438824510096467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_4
+      rect:
+        serializedVersion: 2
+        x: 465
+        y: 418
+        width: 30
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10c04ae98da907260800000000000000
+      internalID: 7093339668273695745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_5
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 347
+        width: 8
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 276bf2e6c178a4aa0800000000000000
+      internalID: -6175975382807759246
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_6
+      rect:
+        serializedVersion: 2
+        x: 273
+        y: 201
+        width: 225
+        height: 184
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ac4f3bed9180e18f0800000000000000
+      internalID: -568007595798563638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_7
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 343
+        width: 19
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f071b199a98d38cd0800000000000000
+      internalID: -2556962004911057137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_8
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 39
+        width: 339
+        height: 301
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5eec8ad8f71cb9ef0800000000000000
+      internalID: -100273813104046363
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_9
+      rect:
+        serializedVersion: 2
+        x: 376
+        y: 94
+        width: 122
+        height: 111
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da10d13a1bea67a00800000000000000
+      internalID: 753982065600168365
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_10
+      rect:
+        serializedVersion: 2
+        x: 440
+        y: 199
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd7db14ed474d29e0800000000000000
+      internalID: -1644579889055279137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_11
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 18
+        width: 103
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8076a91b7f4258ab0800000000000000
+      internalID: -5006554764497230072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_12
+      rect:
+        serializedVersion: 2
+        x: 129
+        y: 27
+        width: 62
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03a92549124b5cf40800000000000000
+      internalID: 5748198555723668016
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_13
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 0
+        width: 53
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a8bd7e80aee2b0d0800000000000000
+      internalID: -3408399594613262171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_14
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 14
+        width: 23
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78dfbd421663addd0800000000000000
+      internalID: -2460594455546430073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goblin_Loot_Icon_NoBG_40_15
+      rect:
+        serializedVersion: 2
+        x: 178
+        y: 7
+        width: 21
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00291dd12df5fd200800000000000000
+      internalID: 206989463930376704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Goblin_Loot_Icon_NoBG_40_0: -3524472536119563447
+      Goblin_Loot_Icon_NoBG_40_1: 4873527004731063404
+      Goblin_Loot_Icon_NoBG_40_10: -1644579889055279137
+      Goblin_Loot_Icon_NoBG_40_11: -5006554764497230072
+      Goblin_Loot_Icon_NoBG_40_12: 5748198555723668016
+      Goblin_Loot_Icon_NoBG_40_13: -3408399594613262171
+      Goblin_Loot_Icon_NoBG_40_14: -2460594455546430073
+      Goblin_Loot_Icon_NoBG_40_15: 206989463930376704
+      Goblin_Loot_Icon_NoBG_40_2: -8354936083582853858
+      Goblin_Loot_Icon_NoBG_40_3: 5183438824510096467
+      Goblin_Loot_Icon_NoBG_40_4: 7093339668273695745
+      Goblin_Loot_Icon_NoBG_40_5: -6175975382807759246
+      Goblin_Loot_Icon_NoBG_40_6: -568007595798563638
+      Goblin_Loot_Icon_NoBG_40_7: -2556962004911057137
+      Goblin_Loot_Icon_NoBG_40_8: -100273813104046363
+      Goblin_Loot_Icon_NoBG_40_9: 753982065600168365
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 229460
+  packageName: 6200 Fantasy RPG Icons Pack
+  packageVersion: 1.6
+  assetPath: Assets/Fantasy RPG Icons Pack/Asset/Goblin Loot Icons/No Background/Goblin_Loot_Icon_NoBG_40.png
+  uploadId: 916020

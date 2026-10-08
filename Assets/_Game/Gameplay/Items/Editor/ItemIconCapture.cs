@@ -14,8 +14,9 @@ namespace KryticalNova.EditorTools
 {
     /// <summary>
     /// Renders inventory icons for items in an isolated preview scene: orthographic camera, three-point lighting and a
-    /// transparent background, framed from each item's bounds with a per-slot view angle. Rings/amulets get simple
-    /// procedural jewellery meshes (the Synty packs have none). Output: 256px sprites in Gameplay/Items/Data/Assets/Icons.
+    /// transparent background, framed from each item's bounds with a per-slot view angle. Items with no model
+    /// (jewellery, materials, consumables) are not pictured here: they take a pack icon from the icon library
+    /// (<see cref="IconTargets.TakesLibraryIcon"/>). Output: 256px sprites in Gameplay/Items/Data/Assets/Icons.
     /// </summary>
     public static class ItemIconCapture
     {
@@ -42,6 +43,8 @@ namespace KryticalNova.EditorTools
             var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(SidekickGearGenerator.CatalogPath);
             if (catalog != null)
                 subjects.AddRange(catalog.Items.Where(i => i != null && !i.IsLadderGear && i.IsEquippable && !subjects.Contains(i)));
+            // Jewellery has no model: its looks take their icons from the icon library, and their tiers from them.
+            subjects.RemoveAll(IconTargets.TakesLibraryIcon);
             return subjects;
         }
 
@@ -311,14 +314,6 @@ namespace KryticalNova.EditorTools
                     if (item.petPrefab == null) break;
                     Object.Instantiate(item.petPrefab, root.transform, false);
                     break;
-                case EquipSlot.Ring:
-                    AddJewellery(root, item, temp, amulet: false);
-                    viewDir = new Vector3(-0.3f, 0.9f, 1f).normalized;
-                    break;
-                case EquipSlot.Amulet:
-                    AddJewellery(root, item, temp, amulet: true);
-                    viewDir = new Vector3(-0.15f, 0.15f, 1f).normalized;
-                    break;
             }
 
             foreach (var c in root.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
@@ -430,114 +425,6 @@ namespace KryticalNova.EditorTools
             importer.maxTextureSize = Size;
             importer.textureCompression = TextureImporterCompression.CompressedHQ;
             importer.SaveAndReimport();
-        }
-
-        // ---------------- Procedural jewellery ----------------
-
-        private static readonly Color[] RarityGem =
-        {
-            new Color(0.75f, 0.78f, 0.82f), new Color(0.25f, 0.85f, 0.35f), new Color(0.2f, 0.5f, 1f),
-            new Color(0.7f, 0.3f, 1f), new Color(1f, 0.55f, 0.1f)
-        };
-
-        private static void AddJewellery(GameObject root, ItemDefinition item, List<Object> temp, bool amulet)
-        {
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
-            var metal = new Material(shader) { name = "IconMetal" };
-            metal.SetColor("_BaseColor", item.rarity >= ItemRarity.Rare ? new Color(1f, 0.78f, 0.35f) : new Color(0.78f, 0.8f, 0.85f));
-            metal.SetFloat("_Metallic", 0.35f); // no reflection probe in the preview scene
-            metal.SetFloat("_Smoothness", 0.7f);
-            var gem = new Material(shader) { name = "IconGem" };
-            Color gemColor = RarityGem[Mathf.Clamp((int)item.rarity, 0, RarityGem.Length - 1)];
-            gem.SetColor("_BaseColor", gemColor);
-            gem.SetFloat("_Smoothness", 0.9f);
-            gem.EnableKeyword("_EMISSION");
-            gem.SetColor("_EmissionColor", gemColor * 0.6f);
-            temp.Add(metal); temp.Add(gem);
-
-            if (!amulet)
-            {
-                var band = Torus(0.5f, 0.1f, 40, 14, temp);
-                AddMesh(root, "Band", band, metal, Vector3.zero, Quaternion.Euler(90f, 0f, 0f), Vector3.one);
-                AddMesh(root, "Setting", Torus(0.16f, 0.05f, 24, 10, temp), metal, new Vector3(0f, 0f, 0.58f), Quaternion.identity, Vector3.one);
-                AddMesh(root, "Gem", Gem(temp), gem, new Vector3(0f, 0f, 0.62f), Quaternion.Euler(-90f, 0f, 0f), Vector3.one * 0.2f);
-            }
-            else
-            {
-                // Chain loop, a pendant frame and a gem.
-                AddMesh(root, "Chain", Torus(0.55f, 0.025f, 48, 8, temp), metal, new Vector3(0f, 0.55f, 0f), Quaternion.identity, new Vector3(1f, 1.2f, 1f));
-                AddMesh(root, "Frame", Torus(0.22f, 0.06f, 32, 10, temp), metal, new Vector3(0f, -0.15f, 0f), Quaternion.identity, Vector3.one);
-                AddMesh(root, "Gem", Gem(temp), gem, new Vector3(0f, -0.15f, 0f), Quaternion.identity, new Vector3(0.3f, 0.36f, 0.2f));
-            }
-        }
-
-        private static void AddMesh(GameObject root, string name, Mesh mesh, Material mat, Vector3 pos, Quaternion rot, Vector3 scale)
-        {
-            var go = new GameObject(name);
-            go.transform.SetParent(root.transform, false);
-            go.transform.SetLocalPositionAndRotation(pos, rot);
-            go.transform.localScale = scale;
-            go.AddComponent<MeshFilter>().sharedMesh = mesh;
-            go.AddComponent<MeshRenderer>().sharedMaterial = mat;
-        }
-
-        /// <summary>Torus in the XY plane (hole along Z).</summary>
-        private static Mesh Torus(float major, float minor, int segments, int sides, List<Object> temp)
-        {
-            var verts = new List<Vector3>();
-            var normals = new List<Vector3>();
-            var tris = new List<int>();
-            for (int s = 0; s <= segments; s++)
-            {
-                float a = s / (float)segments * Mathf.PI * 2f;
-                var ringCenter = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f) * major;
-                var outward = ringCenter.normalized;
-                for (int k = 0; k <= sides; k++)
-                {
-                    float b = k / (float)sides * Mathf.PI * 2f;
-                    var n = outward * Mathf.Cos(b) + Vector3.forward * Mathf.Sin(b);
-                    verts.Add(ringCenter + n * minor);
-                    normals.Add(n);
-                }
-            }
-            int row = sides + 1;
-            for (int s = 0; s < segments; s++)
-            for (int k = 0; k < sides; k++)
-            {
-                int i0 = s * row + k, i1 = i0 + row, i2 = i0 + 1, i3 = i1 + 1;
-                tris.AddRange(new[] { i0, i2, i1, i2, i3, i1 });
-            }
-            var mesh = new Mesh { name = "Torus" };
-            mesh.SetVertices(verts);
-            mesh.SetNormals(normals);
-            mesh.SetTriangles(tris, 0);
-            mesh.RecalculateBounds();
-            temp.Add(mesh);
-            return mesh;
-        }
-
-        /// <summary>Faceted octahedron gem (flat-shaded).</summary>
-        private static Mesh Gem(List<Object> temp)
-        {
-            Vector3[] p = { Vector3.up, Vector3.down, Vector3.left, Vector3.right, Vector3.forward, Vector3.back };
-            int[][] faces =
-            {
-                new[] { 0, 4, 3 }, new[] { 0, 3, 5 }, new[] { 0, 5, 2 }, new[] { 0, 2, 4 },
-                new[] { 1, 3, 4 }, new[] { 1, 5, 3 }, new[] { 1, 2, 5 }, new[] { 1, 4, 2 }
-            };
-            var verts = new List<Vector3>();
-            var tris = new List<int>();
-            foreach (var f in faces)
-            {
-                foreach (int idx in f) { tris.Add(verts.Count); verts.Add(p[idx]); }
-            }
-            var mesh = new Mesh { name = "Gem" };
-            mesh.SetVertices(verts);
-            mesh.SetTriangles(tris, 0);
-            mesh.RecalculateNormals();
-            mesh.RecalculateBounds();
-            temp.Add(mesh);
-            return mesh;
         }
     }
 }

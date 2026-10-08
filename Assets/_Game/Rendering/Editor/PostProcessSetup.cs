@@ -57,6 +57,8 @@ namespace KryticalNova.EditorTools
             motion.active = false;
 
             ApplyBeautify(profile);
+            EnsureGlowHalo();
+            EnsureComicLettering();
 
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();
@@ -73,6 +75,25 @@ namespace KryticalNova.EditorTools
                 EditorSceneManager.MarkSceneDirty(cam.gameObject.scene);
             }
             Debug.Log("[PostProcess] Post look applied to " + ProfilePath + (cam != null ? " and SMAA set on the main camera." : "."));
+        }
+
+        /// <summary>
+        /// The halo of light round tempered weapons and evolved pets (see Rendering-Bible.md, "Glow halo"): makes sure
+        /// the PC renderer carries the feature. Its numbers are left as they are, so tuning on the renderer asset survives.
+        /// </summary>
+        public static void EnsureGlowHalo()
+        {
+            var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(PcRendererPath);
+            if (renderer == null) { Debug.LogError($"[PostProcess] Missing {PcRendererPath}"); return; }
+            RendererFeatureUtil.Ensure<KryticalNova.Rendering.GlowHaloFeature>(renderer, "GlowHalo", f =>
+            {
+                // Referenced, not found by name: a hidden shader nothing points at is left out of a build.
+                var feature = new SerializedObject(f);
+                SerializedProperty shader = feature.FindProperty("shader");
+                if (shader.objectReferenceValue != null) return;
+                shader.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(GlowHaloShaderPath);
+                feature.ApplyModifiedPropertiesWithoutUndo();
+            });
         }
 
         /// <summary>
@@ -132,7 +153,59 @@ namespace KryticalNova.EditorTools
             b.eyeAdaptation.Override(false);
         }
 
+        /// <summary>
+        /// Comic lettering, the words and marks of a hit (see Rendering-Bible.md, "Frame order"): makes sure the
+        /// project has its layer, that the PC renderer carries the feature that draws the layer over the finished
+        /// frame, and that the renderer's own transparent pass leaves the layer out, so it is not also drawn under
+        /// the ink. Returns the layer, or -1 when the project has no room for one.
+        /// </summary>
+        public static int EnsureComicLettering()
+        {
+            int layer = EnsureLayer(KryticalNova.Rendering.ComicLetteringFeature.LayerName);
+            if (layer < 0) return -1;
+            var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(PcRendererPath);
+            if (renderer == null) { Debug.LogError($"[PostProcess] Missing {PcRendererPath}"); return layer; }
+
+            bool has = false;
+            foreach (ScriptableRendererFeature each in renderer.rendererFeatures)
+                if (each is KryticalNova.Rendering.ComicLetteringFeature) has = true;
+            if (!has) RendererFeatureUtil.Ensure<KryticalNova.Rendering.ComicLetteringFeature>(renderer, "ComicLettering", null);
+
+            var so = new SerializedObject(renderer);
+            SerializedProperty transparent = so.FindProperty("m_TransparentLayerMask");
+            int without = transparent.intValue & ~(1 << layer);
+            if (without != transparent.intValue)
+            {
+                transparent.intValue = without;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(renderer);
+                AssetDatabase.SaveAssetIfDirty(renderer);
+            }
+            return layer;
+        }
+
+        /// <summary>The layer of that name, made in the first free place if the project has none.</summary>
+        private static int EnsureLayer(string name)
+        {
+            int existing = LayerMask.NameToLayer(name);
+            if (existing >= 0) return existing;
+
+            var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            SerializedProperty layers = tagManager.FindProperty("layers");
+            for (int i = 6; i < layers.arraySize; i++)
+            {
+                SerializedProperty layer = layers.GetArrayElementAtIndex(i);
+                if (!string.IsNullOrEmpty(layer.stringValue)) continue;
+                layer.stringValue = name;
+                tagManager.ApplyModifiedProperties();
+                return i;
+            }
+            Debug.LogError($"[PostProcess] No free layer for '{name}'.");
+            return -1;
+        }
+
         private const string PcRendererPath = "Assets/_Game/Rendering/Settings/PC_Renderer.asset";
+        private const string GlowHaloShaderPath = "Assets/_Game/Rendering/Shaders/Comic/GlowHalo.shader";
 
         private static T Get<T>(VolumeProfile profile) where T : VolumeComponent
         {

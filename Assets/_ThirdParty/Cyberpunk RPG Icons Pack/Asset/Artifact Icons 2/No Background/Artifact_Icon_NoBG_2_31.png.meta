@@ -1,0 +1,423 @@
+fileFormatVersion: 2
+guid: 40c58b085cac35d48aad23b748bcd722
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7815687420757978473
+    second: Artifact_Icon_NoBG_2_31_0
+  - first:
+      213: 1185710061468519
+    second: Artifact_Icon_NoBG_2_31_1
+  - first:
+      213: -461258769455031980
+    second: Artifact_Icon_NoBG_2_31_2
+  - first:
+      213: 2116500500558299296
+    second: Artifact_Icon_NoBG_2_31_3
+  - first:
+      213: -5374359136204885884
+    second: Artifact_Icon_NoBG_2_31_4
+  - first:
+      213: 7194242511340934350
+    second: Artifact_Icon_NoBG_2_31_5
+  - first:
+      213: 8760786518173389787
+    second: Artifact_Icon_NoBG_2_31_6
+  - first:
+      213: 5589387105723691606
+    second: Artifact_Icon_NoBG_2_31_7
+  - first:
+      213: -8284636219688682215
+    second: Artifact_Icon_NoBG_2_31_8
+  - first:
+      213: -6371581535656639200
+    second: Artifact_Icon_NoBG_2_31_9
+  - first:
+      213: 6674772224734685038
+    second: Artifact_Icon_NoBG_2_31_10
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 512
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_0
+      rect:
+        serializedVersion: 2
+        x: 122
+        y: 475
+        width: 23
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96da4c5cc46e67c60800000000000000
+      internalID: 7815687420757978473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_1
+      rect:
+        serializedVersion: 2
+        x: 170
+        y: 486
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76b3503a566340000800000000000000
+      internalID: 1185710061468519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_2
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 0
+        width: 306
+        height: 482
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4595911d7974999f0800000000000000
+      internalID: -461258769455031980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_3
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 473
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a0c6b6ddf15f5d10800000000000000
+      internalID: 2116500500558299296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_4
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 474
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 480f12717d07a65b0800000000000000
+      internalID: -5374359136204885884
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_5
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 472
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec49d74827517d360800000000000000
+      internalID: 7194242511340934350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_6
+      rect:
+        serializedVersion: 2
+        x: 317
+        y: 302
+        width: 16
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd391c0fbe0949970800000000000000
+      internalID: 8760786518173389787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_7
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 228
+        width: 16
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6523fc475fd719d40800000000000000
+      internalID: 5589387105723691606
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_8
+      rect:
+        serializedVersion: 2
+        x: 318
+        y: 218
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91dfe18804f070d80800000000000000
+      internalID: -8284636219688682215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_9
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 202
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0258fb5f9589397a0800000000000000
+      internalID: -6371581535656639200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Artifact_Icon_NoBG_2_31_10
+      rect:
+        serializedVersion: 2
+        x: 8
+        y: 177
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6764f359fd81ac50800000000000000
+      internalID: 6674772224734685038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Artifact_Icon_NoBG_2_31_0: 7815687420757978473
+      Artifact_Icon_NoBG_2_31_1: 1185710061468519
+      Artifact_Icon_NoBG_2_31_10: 6674772224734685038
+      Artifact_Icon_NoBG_2_31_2: -461258769455031980
+      Artifact_Icon_NoBG_2_31_3: 2116500500558299296
+      Artifact_Icon_NoBG_2_31_4: -5374359136204885884
+      Artifact_Icon_NoBG_2_31_5: 7194242511340934350
+      Artifact_Icon_NoBG_2_31_6: 8760786518173389787
+      Artifact_Icon_NoBG_2_31_7: 5589387105723691606
+      Artifact_Icon_NoBG_2_31_8: -8284636219688682215
+      Artifact_Icon_NoBG_2_31_9: -6371581535656639200
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377986
+  packageName: 2700 Cyberpunk RPG Icons Pack
+  packageVersion: 1.0
+  assetPath: Assets/Cyberpunk RPG Icons Pack/Asset/Artifact Icons 2/No Background/Artifact_Icon_NoBG_2_31.png
+  uploadId: 924490

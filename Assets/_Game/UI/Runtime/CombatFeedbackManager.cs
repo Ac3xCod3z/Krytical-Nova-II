@@ -108,6 +108,7 @@ namespace KryticalNova.UI
         public void ShowCombatFeedback(Vector3 worldPosition, DamageResult result)
         {
             if (rootContainer == null || rootContainer.panel == null) return;
+            if (!HudPreferences.DamageNumbers) return; // the player turned them off (Settings, Gameplay)
 
             Label label = new Label();
             label.AddToClassList("floating-combat-text");

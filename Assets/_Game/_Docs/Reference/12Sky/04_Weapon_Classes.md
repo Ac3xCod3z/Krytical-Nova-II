@@ -197,6 +197,50 @@ Viking + Elven.
 **Clip sets.** Monoblade: Grruzam katana (measured hit timings). Glaive, Harvester, Longaxe, Claymore: Grruzam great-sword, same clip per slot letter, default hit timings. Warbow: Synty Bow Combat (`Stand_Shoot_Reload`, `Stand_Shoot_Leaping` for S8), default hit timings. Carbine, Arc Caster, Servo Claws: the Monoblade's clips as stand-ins.
 
 **Stand-ins still to replace:** gun and unarmed animation sets (so a Sidearm or Servo Claws draw still reaches over the shoulder before the weapons appear in the hands); measured hit moments for the great-sword and bow clips; projectiles, and the cone / volley (S1) and called-in strike (S8) shapes for ranged classes (today ranged skills hit at reach 8–12 with no projectile, and their area skills are centred on the caster); one basic attack combo for every class (the katana combo); weapon grip poses per mesh (tuned on the look template).
+## Hit looks (as built, 8 Oct 2026)
+
+A class is also told by how its hits look: the mark it leaves, the font of its words and the words themselves. The
+colour is the kind of hit (Normal, Elemental, Critical, Shattered, Reflected), the same for every class. Full detail,
+sizes and rules: `Design/13_comic_effects.md`.
+
+| Class | Mark | Lettering | Heavy hit | Critical hit | Signature skill (S4, S6, S8) | Blade trail |
+| --- | --- | --- | --- | --- | --- | --- |
+| Monoblade | a crossed cut | Shojumaru | SHING! | SLASH! | SLICE! | blue |
+| Glaive | a sweep | Black Ops One | SWISH! | THWACK! | WHOOSH! | magenta |
+| Carbine | a muzzle star | Bungee | BANG! | BLAM! | RATATAT! | cyan |
+| Harvester | streaks of a scythe | Creepster | SHRED! | REAP! | CULL! | red |
+| Servo Claws | a claw's rake | Rubik Glitch | RAKE! | REND! | RIP! | teal |
+| Arc Caster | rays | Rubik Wet Paint | ZAP! | KRAKL! | BZZZT! | violet |
+| Longaxe | a star | Caesar Dressing | CHOP! | KRAK! | THOOM! | orange |
+| Claymore | a cloud | Berkshire Swash | KLANG! | BASH! | KRASH! | gold |
+| Warbow | a ring | Jolly Lodger | THWIP! | THUNK! | TWANG! | green |
+
+The class is the weapon in hand, so a character that changes weapon changes its marks and words with it. A new class
+needs a row in `GameFeelBuilder.Comic.cs` (`ClassComics`) and **Krytical Nova ▸ GameFeel ▸ Build Comic Effects**;
+`HitLookTests` fails while a class has no look of its own.
+
+## Skill icons (as built, 8 Oct 2026)
+
+Every one of the hundred skills has an icon of its own, from the fantasy icon pack and redrawn in the comic
+treatment (`Design/Rendering-Bible.md` 6g). A class draws its ten from one set, so each class has one colour:
+
+| Class | Set of the pack | Colour |
+| --- | --- | --- |
+| Monoblade | Swordman | blue |
+| Glaive | Spearman | magenta |
+| Carbine | Crossbowman | cyan |
+| Harvester | Blood Mage | red |
+| Servo Claws | Undead | teal |
+| Arc Caster | Lightning Mage, its colour moved to Null's violet | violet |
+| Longaxe | Berserker | red-orange |
+| Claymore | Warrior | orange-gold |
+| Warbow | Archer | green |
+| the eight shared skills, Run, Jump | Buff (Shatterpoint: Debuff) | many |
+
+Which icon each skill has is recorded in the icon library (`Icons/Data/Assets/IconLibrary.asset`); change one in
+**Krytical Nova ▸ Icons ▸ Icon Library**. **Build Class Skills** no longer hands a new class skill another skill's
+icon: it stays without one until the library gives it its own, and **Check Icons** says so.
+
 ## Sources
 
 - 12SKY M Global class guide (LDCloud): https://www.ldcloud.net/blog/12sky-m-global-class-guide

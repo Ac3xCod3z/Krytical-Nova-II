@@ -355,3 +355,43 @@
     padding: 0;
     margin: 0;
 }
+
+/* A pet's speech bubble (PetBubbleController, ComicBubble). The bubble is drawn in code from the --bubble values
+   below: Colour Bible ink and paper, shadow indigo dots. It sits in the world layer, under every window. */
+.pet-bubbles { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.comic-bubble {
+    position: absolute;
+    --bubble-ink: rgb(20, 18, 43);
+    --bubble-paper: rgb(244, 238, 223);
+    --bubble-dot: rgba(76, 82, 191, 0.6);
+    --bubble-shadow: rgba(20, 18, 43, 0.55);
+    --bubble-line: 3;
+    --bubble-radius: 14;
+    --bubble-tail: 14;
+    --bubble-shadow-offset: 4;
+    --bubble-dot-cell: 7;
+    --bubble-dot-reach: 0.4;
+    /* room for the outline, the tail (on the right unless the bubble has flipped) and the shadow */
+    padding: 9px 31px 13px 13px;
+    opacity: 0;
+    scale: 0.6 0.6;
+    transform-origin: right center;
+    transition-property: opacity, scale;
+    transition-duration: 0.14s;
+    transition-timing-function: ease-out-back;
+}
+.comic-bubble--tail-left { padding: 9px 17px 13px 27px; transform-origin: left center; }
+.comic-bubble--shown { opacity: 1; scale: 1 1; }
+.pet-bubble-text {
+    color: rgb(20, 18, 43);
+    font-size: 15px;
+    -unity-font-style: bold;
+    white-space: nowrap;
+    padding: 0;
+    margin: 0;
+}
+.pet-bubble-emoji {
+    width: 46px;
+    height: 46px;
+    -unity-background-scale-mode: scale-to-fit;
+}

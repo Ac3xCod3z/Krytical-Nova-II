@@ -99,6 +99,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4705830086147968247}
+  - component: {fileID: 7567584636927631590}
+  - component: {fileID: 4241424437004622561}
   m_Layer: 0
   m_Name: W_Monoblade_01
   m_TagString: Untagged
@@ -122,3 +124,62 @@ Transform:
   - {fileID: 5696884733140045529}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7567584636927631590
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7906710580062671574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 1
+    box:
+      m_Center: {x: -0.000038810074, y: -0.0024705231, z: 0.8329371}
+      m_Extent: {x: 0.06618989, y: 0.075387165, z: 0.6129371}
+    dark:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+  exclude: []
+  keepAsSet: 0
+--- !u!114 &4241424437004622561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7906710580062671574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.014290718, y: 0.052825082, z: 0.18115696}
+  - {x: -0.0031708707, y: 0.03230692, z: 1.4258741}
+  - {x: -8.9406965e-10, y: 0.02515002, z: -0.20051499}
+  - {x: -0.014231772, y: 0.052916635, z: 0.18115696}
+  - {x: 0.0150672905, y: 0.011625525, z: -0.20051499}
+  - {x: -8.9406965e-10, y: 0.016114578, z: -0.20956652}
+  - {x: 0.0119514465, y: 0.0072918944, z: -0.2095665}
+  - {x: -0.0119514465, y: 0.007291895, z: -0.2095665}
+  - {x: -0.0150672905, y: 0.011625526, z: -0.200515}
+  - {x: 0.041242804, y: 0.031140814, z: 0.18115695}
+  - {x: 0.007057392, y: 0.016087972, z: 1.4056416}
+  - {x: -0.0119514465, y: -0.01035649, z: -0.2095665}
+  - {x: -0.013277441, y: 0.01910164, z: 1.405622}
+  - {x: 0.0119514465, y: -0.0103564905, z: -0.2095665}
+  - {x: 0.011145334, y: -0.008275342, z: 1.3739352}
+  - {x: -8.9406965e-10, y: -0.019179173, z: -0.2095665}
+  - {x: -0.0150672905, y: -0.01542497, z: -0.200515}
+  - {x: -0.015473673, y: -0.0048216484, z: 1.3732537}
+  - {x: 0.0150672905, y: -0.015424971, z: -0.20051499}
+  - {x: -0.041320425, y: -0.036081787, z: 0.18115695}
+  - {x: -8.9406965e-10, y: -0.028949464, z: -0.20051499}
+  - {x: -0.002378408, y: -0.026037246, z: 1.3475392}
+  - {x: 0.014154153, y: -0.05785761, z: 0.18115695}
+  - {x: -0.0143683385, y: -0.05776621, z: 0.18115695}

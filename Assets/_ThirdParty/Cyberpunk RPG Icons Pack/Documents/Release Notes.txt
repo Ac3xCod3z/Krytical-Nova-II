@@ -1,0 +1,60 @@
+# Cyberpunk RPG Icons Pack - Release Notes 
+
+---
+
+Version : 1.0 (current)
+Date : May 2026
+Details : First release with 2700 icons
+
+- Ammunition Icons
+- Armor Icons 1
+- Armor Icons 2
+- Armor Icons 3
+- Artifact Icons 1
+- Artifact Icons 2
+- Avatar Emotes Icons 1
+- Avatar Emotes Icons 2
+- Avatar Emotes Icons 3
+- Avatar Emotes Icons 4
+- Avatar Emotes Icons 5
+- Botany Icons
+- Car Upgrade Icons
+- Clothing Icons 1
+- Clothing Icons 2
+- Clothing Icons 3
+- Drone Icons 
+- Energy Icons 
+- Food Icons 1
+- Food Icons 2
+- Food Icons 3
+- Gadget Icons 
+- Game Icons 1
+- Game Icons 2
+- Game Icons 3
+- Game Icons 4
+- Game Icons 5
+- Genetic Icons 
+- Gloves and Cloak Icons 
+- Headphones and Glasses Icons 
+- Household Icons 
+- Implant Icons 1
+- Implant Icons 2
+- Jewelry Icons 1
+- Jewelry Icons 2
+- Medicine Icons 
+- Melee Weapon Icons 1
+- Melee Weapon Icons 2
+- Minerals Icons 
+- Pets Icons 
+- Pocket Thing Icons 
+- Product Icons 
+- Radiation Icons 
+- Rank Icons 
+- Resource Icons 1 
+- Resource Icons 2
+- Resource Icons 3
+- Social Media Icons
+- Weapon Icons 1 
+- Weapon Icons 2
+
+---

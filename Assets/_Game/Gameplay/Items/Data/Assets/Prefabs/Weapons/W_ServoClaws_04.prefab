@@ -9,6 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9209144904133900718}
+  - component: {fileID: 7127295718698998814}
+  - component: {fileID: 4410955022868281133}
   m_Layer: 0
   m_Name: W_ServoClaws_04
   m_TagString: Untagged
@@ -32,6 +34,52 @@ Transform:
   - {fileID: 4248880049618264477}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7127295718698998814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001793400012583161}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 0
+    box:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+    dark:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+  exclude: []
+  keepAsSet: 0
+--- !u!114 &4410955022868281133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001793400012583161}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.011577747, y: 0.112561285, z: 0.11600624}
+  - {x: 0.00948592, y: 0.10347732, z: -0.11614273}
+  - {x: 0.0121430885, y: 0.08059926, z: 0.19373505}
+  - {x: 0.016689219, y: 0.067991056, z: -0.19198792}
+  - {x: -0.04657037, y: 0.074228466, z: 0.14590462}
+  - {x: -0.046334546, y: 0.064596005, z: -0.15002373}
+  - {x: -0.04657035, y: -0.093754284, z: 0.07697845}
+  - {x: -0.046570346, y: -0.14073673, z: -0.114392966}
+  - {x: 0.014397454, y: -0.18607709, z: -0.10210464}
+  - {x: 0.011577776, y: -0.12945734, z: -0.1616803}
+  - {x: 0.012143111, y: -0.106765494, z: 0.123443946}
 --- !u!1 &2521568325227375318
 GameObject:
   m_ObjectHideFlags: 0

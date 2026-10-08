@@ -190,6 +190,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7129961672541784453}
+  - component: {fileID: 3449172069902104019}
+  - component: {fileID: 1689994536750577367}
   m_Layer: 0
   m_Name: W_ArcCaster_02
   m_TagString: Untagged
@@ -213,3 +215,74 @@ Transform:
   - {fileID: 590714941238548601}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3449172069902104019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2849276624213658431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 0
+    box:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+    dark:
+      m_Center: {x: 0, y: -0.085, z: -0.072500005}
+      m_Extent: {x: 0.5, y: 0.105, z: 0.13749999}
+  exclude: []
+  keepAsSet: 1
+--- !u!114 &1689994536750577367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2849276624213658431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.010304717, y: 0.2333414, z: 0.2867278}
+  - {x: -0.023285218, y: 0.1856858, z: 0.5686471}
+  - {x: 0, y: 0.1866022, z: -0.09309898}
+  - {x: 0.023285218, y: 0.1856858, z: 0.5686471}
+  - {x: -0.010304717, y: 0.2333414, z: 0.2867278}
+  - {x: -0.031393584, y: 0.15213725, z: 0.6391001}
+  - {x: 0.031393584, y: 0.15213725, z: 0.6391001}
+  - {x: -0.016973725, y: 0.17508292, z: -0.08992851}
+  - {x: 0.016973725, y: 0.17508292, z: -0.08992851}
+  - {x: -0.016070556, y: 0.10985531, z: -0.18031165}
+  - {x: 0.016070403, y: 0.10985531, z: -0.18031165}
+  - {x: 0.030493774, y: 0.14810634, z: -0.08154198}
+  - {x: -0.030493774, y: 0.14810634, z: -0.08154198}
+  - {x: 0.029733123, y: 0.10016819, z: -0.15040001}
+  - {x: -0.031393584, y: 0.13005543, z: 0.6391001}
+  - {x: -0.015369263, y: 0.09074859, z: -0.18031165}
+  - {x: 0.031393584, y: 0.05436981, z: 0.63404095}
+  - {x: -0.031393584, y: 0.05436981, z: 0.63404095}
+  - {x: 0.0069424435, y: -0.07301815, z: -0.17529869}
+  - {x: 0.025611725, y: 0.039506722, z: 0.63404095}
+  - {x: -0.0069424435, y: -0.07301815, z: -0.17529869}
+  - {x: 0.030571898, y: -0.08469974, z: 0.31125298}
+  - {x: -0.027918242, y: -0.08846607, z: -0.10427216}
+  - {x: -0.025611725, y: 0.039506722, z: 0.63404095}
+  - {x: 0.030083923, y: -0.091083184, z: -0.09071777}
+  - {x: -0.030571898, y: -0.10206547, z: 0.108915895}
+  - {x: 0.011802673, y: -0.10164157, z: 0.4046496}
+  - {x: -0.01100769, y: -0.10420738, z: -0.11101196}
+  - {x: 0.01100769, y: -0.10420738, z: -0.11101196}
+  - {x: -0.011759796, y: -0.11199108, z: 0.34899437}
+  - {x: 0.008735351, y: -0.08770622, z: -0.15400009}
+  - {x: -0.008735351, y: -0.08770622, z: -0.15400009}
+  - {x: 0.011759796, y: -0.1304298, z: 0.10860409}
+  - {x: -0.011802673, y: -0.10164157, z: 0.4046496}
+  - {x: -0.011759796, y: -0.1304298, z: 0.10860409}
+  - {x: 0.011759796, y: -0.11720584, z: -0.048975755}

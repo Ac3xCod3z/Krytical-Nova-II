@@ -56,10 +56,12 @@ namespace KryticalNova.UI.Menus
         {
             var button = MenuUi.Find<Button>(transform, buttonName);
             if (button == null) return;
+            MenuTouch.On(button.gameObject);
             button.onClick.AddListener(() =>
             {
                 step?.Invoke(direction);
                 Refresh();
+                MenuMoments.Raise(MenuMoment.Toggle, value != null ? value.transform : transform);
             });
         }
     }

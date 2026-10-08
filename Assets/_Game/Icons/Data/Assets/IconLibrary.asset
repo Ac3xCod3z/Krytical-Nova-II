@@ -1,0 +1,4291 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee7b7fa0e296b884492fc645290639b2, type: 3}
+  m_Name: IconLibrary
+  m_EditorClassIdentifier: KryticalNova.Editor::KryticalNova.EditorTools.IconLibrary
+  sets:
+  - id: Cyberpunk/Ammunition
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Ammunition Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Armor 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Armor Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Armor 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Armor Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Armor 3
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Armor Icons 3/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Artifact 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Artifact Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Artifact 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Artifact Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Avatar Emotes 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Avatar Emotes Icons 1/No Background
+    shape: 1
+    count: 18
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Avatar Emotes 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Avatar Emotes Icons 2/No Background
+    shape: 1
+    count: 18
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Avatar Emotes 3
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Avatar Emotes Icons 3/No Background
+    shape: 1
+    count: 18
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Avatar Emotes 4
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Avatar Emotes Icons 4/No Background
+    shape: 1
+    count: 18
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Avatar Emotes 5
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Avatar Emotes Icons 5/No Background
+    shape: 1
+    count: 18
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Botany
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Botany Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Car Upgrade
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Car Upgrade Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Clothing 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Clothing Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Clothing 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Clothing Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Clothing 3
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Clothing Icons 3/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Clothing 4
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Clothing Icons 4/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Drone
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Drone Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Energy
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Energy Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Food 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Food Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Food 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Food Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Food 3
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Food Icons 3/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Gadget
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Gadget Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords:
+    - permit
+    - card
+    - device
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Genetic
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Genetic Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Gloves and Cloak
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Gloves and Cloak Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Headphones and Glasses
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Headphones and Glasses Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Household
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Household Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Implant 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Implant Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Implants 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Implants Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Jewelry 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Jewelry Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords:
+    - ring
+    - amulet
+    - jewellery
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Jewelry 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Jewelry Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords:
+    - ring
+    - amulet
+    - jewellery
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Medicine
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Medicine Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords:
+    - stim
+    - medicine
+    - ration
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Melee Weapon 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Melee Weapon Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Melee Weapon 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Melee Weapon Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Minerals
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Minerals Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords:
+    - alloy
+    - ingot
+    - ore
+    - metal
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Pets
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Pets Icons/No Background
+    shape: 1
+    count: 16
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Pocket Thing
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Pocket Thing Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Product
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Product Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Radiation
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Radiation Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Rank
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Rank Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Resource 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Resource Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords:
+    - failsafe
+    - canister
+    - part
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Resource 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Resource Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords:
+    - chip
+    - catalyst
+    - part
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Resource 3
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Resource Icons 3/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords:
+    - chip
+    - part
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Soldier Emotes
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Soldier Emotes Icons/No Background
+    shape: 1
+    count: 18
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Weapon 1
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Weapon Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Cyberpunk/Weapon 2
+    folder: Assets/_ThirdParty/Cyberpunk RPG Icons Pack/Asset/Weapon Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Added Weapon
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Added Weapon Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Aeromancer Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Aeromancer Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Alchemical Herbs
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Alchemical Herbs Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Alchemical Ingredients
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Alchemical Ingredients Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Alchemical Potions
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Alchemical Potions Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Alchemist Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Alchemist Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Archer Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Archer Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 4
+    weaponClasses: 09y
+    races:
+    - Elf
+    - Viking
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Armor
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Armor Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Arrow
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Arrow Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Avatar Demon
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Avatar Demon Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Avatar Dwarf
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Avatar Dwarf Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Avatar Fairy
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Avatar Fairy Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Avatar Fantasy
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Avatar Fantasy Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Avatar Goblin
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Avatar Goblin Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Avatar Pirate
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Avatar Pirate Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Avatar Undead
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Avatar Undead Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races:
+    - Skeleton
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Axe
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Axe Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Bard Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Bard Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Belt
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Belt Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Berry
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Berry Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Berry and Seed
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Berry and Seed Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Berserker Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Berserker Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 4
+    weaponClasses: 07y
+    races:
+    - Elf
+    - Viking
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Blacksmith
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Blacksmith Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Blacksmith Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Blacksmith Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Blood Mage Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Blood Mage Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 2
+    weaponClasses: 04y
+    races:
+    - Robot
+    - Skeleton
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Blood Wound
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Blood Wound Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Bones
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Bones Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Book
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Book Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Boot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Boot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Bow
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Bow Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Buff Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Buff Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 2
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Cooking Ingredients
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Cooking Ingredients Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Cooking Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Cooking Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Craft Resources
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Craft Resources Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Crossbowman Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Crossbowman Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 1
+    weaponClasses: 03y
+    races:
+    - Civilian
+    - Soldier
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Crushing Weapons
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Crushing Weapons Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Cryomancer Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Cryomancer Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Currency
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Currency Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Dagger
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Dagger Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Death Attribute
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Death Attribute Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Debuff Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Debuff Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 3
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Demon Loot 1
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Demon Loot Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Demon Loot 2
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Demon Loot Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Demon Skill 1
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Demon Skill Icons 1/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Demon Skill 2
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Demon Skill Icons 2/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Dragon Egg
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Dragon Egg Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Dragon Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Dragon Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Druid Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Druid Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Dwarf Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Dwarf Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Dwarf Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Dwarf Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Elixir
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Elixir Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Emoji
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Emoji Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Engineering Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Engineering Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races:
+    - Robot
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Fairy Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Fairy Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Fairy Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Fairy Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Farmer Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Farmer Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Farming
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Farming Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Fishing
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Fishing Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Flower
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Flower Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Food
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Food Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Forest Elf Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Forest Elf Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races:
+    - Elf
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Fruit
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Fruit Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Game Achievements
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Game Achievements Icons/PNG
+    shape: 0
+    count: 30
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Glove
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Glove Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Goblin Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Goblin Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Goblin Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Goblin Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Greaves
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Greaves Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Halloween
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Halloween Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Helmet
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Helmet Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Hunting 1
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Hunting Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Hunting 2
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Hunting Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Illusionist Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Illusionist Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Jeweler Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Jeweler Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Jewelry
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Jewelry Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Key
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Key Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Kobold Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Kobold Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Lance
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Lance Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Lightning Mage Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Lightning Mage Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 2
+    weaponClasses: 06y
+    races:
+    - Robot
+    - Skeleton
+    keywords: []
+    moveHue: 1
+    hueFrom: 203
+    hueTo: 262
+    hueBand: 46
+  - id: Fantasy/Liquid
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Liquid Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Loot 1
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Loot Icons 1/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Loot 2
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Loot Icons 2/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Loot 3
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Loot Icons 3/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Magical Artifact
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Magical Artifact Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Magician Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Magician Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Mining
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Mining Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Monk Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Monk Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Monster Hand
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Monster Hand Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Monster Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Monster Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Mushroom
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Mushroom Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Night Elf Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Night Elf Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races:
+    - Elf
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Paint
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Paint Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Paladin Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Paladin Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Pirate
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Pirate Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Pirate Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Pirate Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Pirate Skill 1
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Pirate Skill Icons 1/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Pirate Skill 2
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Pirate Skill Icons 2/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Priest Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Priest Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Profession Achievements 1
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Profession Achievements Icons 1/PNG
+    shape: 0
+    count: 30
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Profession Achievements 2
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Profession Achievements Icons 2/PNG
+    shape: 0
+    count: 30
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Pyromancer Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Pyromancer Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Rune
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Rune Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Scroll
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Scroll Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Sea Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Sea Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Sea Theme
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Sea Theme Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Shield
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Shield Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Spearman Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Spearman Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 1
+    weaponClasses: 02y
+    races:
+    - Civilian
+    - Soldier
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Spider Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Spider Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Splash
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Splash Icons/PNG
+    shape: 0
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Staff
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Staff Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Stone Age
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Stone Age Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Summoner Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Summoner Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Sword
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Sword Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Swordman Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Swordman Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 1
+    weaponClasses: 01y
+    races:
+    - Civilian
+    - Soldier
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Tailor Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Tailor Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Tannery Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Tannery Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Thief Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Thief Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Treasure Chests
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Treasure Chests Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Undead Loot
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Undead Loot Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Undead Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Undead Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 2
+    weaponClasses: 05y
+    races:
+    - Robot
+    - Skeleton
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Vegetable
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Vegetable Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Viking
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Viking Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races:
+    - Viking
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Warlock Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Warlock Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Warrior Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Warrior Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 4
+    weaponClasses: 08y
+    races:
+    - Elf
+    - Viking
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Weapon Achievements 1
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Weapon Achievements Icons 1/PNG
+    shape: 0
+    count: 30
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Weapon Achievements 2
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Weapon Achievements Icons 2/PNG
+    shape: 0
+    count: 30
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Werewolf Skill
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Werewolf Skill Icons/PNG
+    shape: 0
+    count: 50
+    use: 1
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  - id: Fantasy/Wing
+    folder: Assets/_ThirdParty/Fantasy RPG Icons Pack/Asset/Wing Icons/No Background
+    shape: 1
+    count: 50
+    use: 6
+    factions: 7
+    weaponClasses: 
+    races: []
+    keywords: []
+    moveHue: 0
+    hueFrom: 0
+    hueTo: 0
+    hueBand: 45
+  icons:
+  - set: Fantasy/Swordman Skill
+    number: 47
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - sweep
+    - area
+    shows: a ring of blade light sweeping round
+  - set: Fantasy/Swordman Skill
+    number: 34
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    shows: one clean diagonal cut
+  - set: Fantasy/Swordman Skill
+    number: 16
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    shows: a row of blades striking one after another
+  - set: Fantasy/Swordman Skill
+    number: 30
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - heavy
+    - single
+    shows: a blade driven down into breaking ground
+  - set: Fantasy/Swordman Skill
+    number: 14
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - flurry
+    - triple
+    shows: two blades clashing
+  - set: Fantasy/Swordman Skill
+    number: 4
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    - bright
+    shows: a blade blazing gold
+  - set: Fantasy/Swordman Skill
+    number: 37
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    - bright
+    shows: three bright slashes
+  - set: Fantasy/Swordman Skill
+    number: 31
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - leap
+    - area
+    shows: the ground torn open by a wave
+  - set: Fantasy/Swordman Skill
+    number: 41
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - stance
+    shows: 'a winged, glowing blade: power raised'
+  - set: Fantasy/Swordman Skill
+    number: 10
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - guard
+    - shield
+    shows: a shield emblem
+  - set: Fantasy/Spearman Skill
+    number: 5
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - sweep
+    - area
+    shows: a polearm swept in a wide swirl
+  - set: Fantasy/Spearman Skill
+    number: 37
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    shows: one straight thrust
+  - set: Fantasy/Spearman Skill
+    number: 12
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    shows: several spearheads in a row
+  - set: Fantasy/Spearman Skill
+    number: 28
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - heavy
+    - single
+    shows: a spear slammed into cracking ground
+  - set: Fantasy/Spearman Skill
+    number: 13
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - flurry
+    - triple
+    shows: two polearms crossed
+  - set: Fantasy/Spearman Skill
+    number: 20
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    - bright
+    shows: a spearhead glinting
+  - set: Fantasy/Spearman Skill
+    number: 30
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    - bright
+    shows: a thrust repeated in a blur
+  - set: Fantasy/Spearman Skill
+    number: 18
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - leap
+    - area
+    shows: a spear striking the ground in a burst
+  - set: Fantasy/Spearman Skill
+    number: 14
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - stance
+    shows: a shield with a spear behind it
+  - set: Fantasy/Spearman Skill
+    number: 50
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - guard
+    - shield
+    shows: a spear inside a sphere
+  - set: Fantasy/Crossbowman Skill
+    number: 9
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - sweep
+    - area
+    shows: shots fanning out from one point
+  - set: Fantasy/Crossbowman Skill
+    number: 1
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    shows: a single shot
+  - set: Fantasy/Crossbowman Skill
+    number: 14
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    shows: three shots side by side
+  - set: Fantasy/Crossbowman Skill
+    number: 38
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - heavy
+    - single
+    shows: a crosshair on a head
+  - set: Fantasy/Crossbowman Skill
+    number: 12
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - flurry
+    - triple
+    shows: three fast shots
+  - set: Fantasy/Crossbowman Skill
+    number: 16
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    - bright
+    shows: a shot dead centre in a target
+  - set: Fantasy/Crossbowman Skill
+    number: 35
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    - bright
+    shows: three shots bursting
+  - set: Fantasy/Crossbowman Skill
+    number: 30
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - leap
+    - area
+    shows: a beam coming down from a ring above
+  - set: Fantasy/Crossbowman Skill
+    number: 11
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - stance
+    shows: 'a shot ringed: locked on'
+  - set: Fantasy/Crossbowman Skill
+    number: 17
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - guard
+    - shield
+    shows: a shot breaking on a shield
+  - set: Fantasy/Blood Mage Skill
+    number: 7
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - sweep
+    - area
+    shows: a red vortex turning
+  - set: Fantasy/Blood Mage Skill
+    number: 15
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    shows: one white crescent cut
+  - set: Fantasy/Blood Mage Skill
+    number: 31
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    shows: three red slashes
+  - set: Fantasy/Blood Mage Skill
+    number: 16
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - heavy
+    - single
+    shows: a blade driven into molten ground
+  - set: Fantasy/Blood Mage Skill
+    number: 23
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - flurry
+    - triple
+    shows: three blades flying
+  - set: Fantasy/Blood Mage Skill
+    number: 18
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    - bright
+    shows: a red comet
+  - set: Fantasy/Blood Mage Skill
+    number: 24
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    - bright
+    shows: a red spiral
+  - set: Fantasy/Blood Mage Skill
+    number: 28
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - leap
+    - area
+    shows: a red wave crashing
+  - set: Fantasy/Blood Mage Skill
+    number: 17
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - stance
+    shows: red eyes in the dark
+  - set: Fantasy/Blood Mage Skill
+    number: 27
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - guard
+    - shield
+    shows: a drop sealed in a shell
+  - set: Fantasy/Undead Skill
+    number: 12
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - sweep
+    - area
+    shows: a strike on the ground and its shock wave
+  - set: Fantasy/Undead Skill
+    number: 35
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    shows: a fist driven straight ahead
+  - set: Fantasy/Undead Skill
+    number: 9
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    shows: three streaks
+  - set: Fantasy/Undead Skill
+    number: 33
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - heavy
+    - single
+    shows: a blow cracking a plate
+  - set: Fantasy/Undead Skill
+    number: 19
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - flurry
+    - triple
+    shows: four crackling sparks
+  - set: Fantasy/Undead Skill
+    number: 45
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    - bright
+    shows: a clawed hand in flame
+  - set: Fantasy/Undead Skill
+    number: 32
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    - bright
+    shows: three claws through a figure
+  - set: Fantasy/Undead Skill
+    number: 18
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - leap
+    - area
+    shows: a ring opening on the ground
+  - set: Fantasy/Undead Skill
+    number: 34
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - stance
+    shows: a plate taking a bolt of lightning
+  - set: Fantasy/Undead Skill
+    number: 10
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - guard
+    - shield
+    shows: a web of lightning
+  - set: Fantasy/Lightning Mage Skill
+    number: 37
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - sweep
+    - area
+    shows: a blast of lightning
+  - set: Fantasy/Lightning Mage Skill
+    number: 25
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    shows: one beam of lightning
+  - set: Fantasy/Lightning Mage Skill
+    number: 4
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    shows: three balls of lightning
+  - set: Fantasy/Lightning Mage Skill
+    number: 45
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - heavy
+    - single
+    shows: a spear of lightning
+  - set: Fantasy/Lightning Mage Skill
+    number: 7
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - flurry
+    - triple
+    shows: strikes falling one after another
+  - set: Fantasy/Lightning Mage Skill
+    number: 35
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    - bright
+    shows: an orb in a ring of lightning
+  - set: Fantasy/Lightning Mage Skill
+    number: 1
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    - bright
+    shows: lightning branching across the sky
+  - set: Fantasy/Lightning Mage Skill
+    number: 9
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - leap
+    - area
+    shows: a column of lightning coming down
+  - set: Fantasy/Lightning Mage Skill
+    number: 18
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - stance
+    shows: a figure dashing on a trail of lightning
+  - set: Fantasy/Lightning Mage Skill
+    number: 22
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - guard
+    - shield
+    shows: a figure inside a sphere of lightning
+  - set: Fantasy/Berserker Skill
+    number: 37
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - sweep
+    - area
+    shows: a ring of fire swept round
+  - set: Fantasy/Berserker Skill
+    number: 11
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    shows: one axe head
+  - set: Fantasy/Berserker Skill
+    number: 13
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    shows: three axes
+  - set: Fantasy/Berserker Skill
+    number: 33
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - heavy
+    - single
+    shows: an axe brought down in a burst
+  - set: Fantasy/Berserker Skill
+    number: 31
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - flurry
+    - triple
+    shows: an axe swung fast
+  - set: Fantasy/Berserker Skill
+    number: 39
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    - bright
+    shows: an axe rising in a spiral of fire
+  - set: Fantasy/Berserker Skill
+    number: 30
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    - bright
+    shows: two axes crossed
+  - set: Fantasy/Berserker Skill
+    number: 49
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - leap
+    - area
+    shows: an axe striking the ground, a wave going out
+  - set: Fantasy/Berserker Skill
+    number: 32
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - stance
+    shows: 'a figure flexing: strength raised'
+  - set: Fantasy/Berserker Skill
+    number: 29
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - guard
+    - shield
+    shows: a totem ringed with light
+  - set: Fantasy/Warrior Skill
+    number: 1
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - sweep
+    - area
+    shows: a sword swung in a full circle
+  - set: Fantasy/Warrior Skill
+    number: 3
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    shows: one sword, one cut
+  - set: Fantasy/Warrior Skill
+    number: 34
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    shows: three swords set in the ground
+  - set: Fantasy/Warrior Skill
+    number: 7
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - heavy
+    - single
+    shows: a sword driven down in a burst
+  - set: Fantasy/Warrior Skill
+    number: 8
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - flurry
+    - triple
+    shows: a sword trailing fire
+  - set: Fantasy/Warrior Skill
+    number: 44
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    - bright
+    shows: a sword raised into the sun
+  - set: Fantasy/Warrior Skill
+    number: 17
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    - bright
+    shows: two swords crossed over a sunburst
+  - set: Fantasy/Warrior Skill
+    number: 18
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - leap
+    - area
+    shows: a sword falling in flame
+  - set: Fantasy/Warrior Skill
+    number: 9
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - stance
+    shows: swords crossed over a shield
+  - set: Fantasy/Warrior Skill
+    number: 16
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - guard
+    - shield
+    shows: a shield turning fire aside
+  - set: Fantasy/Archer Skill
+    number: 45
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - sweep
+    - area
+    shows: arrows raining down
+  - set: Fantasy/Archer Skill
+    number: 47
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    shows: a crosshair on a head
+  - set: Fantasy/Archer Skill
+    number: 13
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    shows: three arrows on one string
+  - set: Fantasy/Archer Skill
+    number: 41
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - heavy
+    - single
+    shows: a heart in a crosshair
+  - set: Fantasy/Archer Skill
+    number: 15
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - flurry
+    - triple
+    shows: three arrows in flight
+  - set: Fantasy/Archer Skill
+    number: 8
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - single
+    - bright
+    shows: one blazing arrow
+  - set: Fantasy/Archer Skill
+    number: 7
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - triple
+    - bright
+    shows: an arrow of lightning
+  - set: Fantasy/Archer Skill
+    number: 35
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - leap
+    - area
+    shows: a beam coming down from a ring above
+  - set: Fantasy/Archer Skill
+    number: 25
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - stance
+    shows: a boot at speed
+  - set: Fantasy/Archer Skill
+    number: 39
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - guard
+    - shield
+    shows: bark
+  - set: Fantasy/Buff Skill
+    number: 41
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - rage
+    - charge
+    shows: 'a face roaring in fire: rage held, then let go'
+  - set: Fantasy/Buff Skill
+    number: 17
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - rest
+    - heal
+    - recover
+    shows: a figure at rest inside a healing bubble
+  - set: Fantasy/Buff Skill
+    number: 13
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - shield
+    - barrier
+    shows: a dome of plates
+  - set: Fantasy/Buff Skill
+    number: 43
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - critical
+    shows: a head with burning eyes
+  - set: Fantasy/Buff Skill
+    number: 28
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - luck
+    shows: a four-leaf clover
+  - set: Fantasy/Buff Skill
+    number: 33
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - reflect
+    - shield
+    shows: a shield throwing a blow back
+  - set: Fantasy/Debuff Skill
+    number: 36
+    ownUse: 1
+    use: 2
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - shatter
+    - break
+    - shield
+    shows: a shield cracked through
+  - set: Fantasy/Buff Skill
+    number: 15
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - resist
+    - nerve
+    shows: 'a head with lightning round it: nerves of iron'
+  - set: Fantasy/Buff Skill
+    number: 27
+    ownUse: 1
+    use: 5
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - run
+    - speed
+    shows: a runner
+  - set: Fantasy/Buff Skill
+    number: 22
+    ownUse: 1
+    use: 5
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords:
+    - jump
+    shows: a winged boot
+  - set: Cyberpunk/Minerals
+    number: 35
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a silver-white ingot
+  - set: Cyberpunk/Minerals
+    number: 5
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a steel-blue ingot
+  - set: Cyberpunk/Minerals
+    number: 30
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: an orange ingot
+  - set: Cyberpunk/Minerals
+    number: 45
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a bright blue ingot
+  - set: Cyberpunk/Minerals
+    number: 15
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a violet ingot
+  - set: Cyberpunk/Minerals
+    number: 10
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a gold ingot
+  - set: Cyberpunk/Resource 1
+    number: 22
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a steel canister
+  - set: Cyberpunk/Resource 1
+    number: 28
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a gold canister
+  - set: Cyberpunk/Resource 1
+    number: 29
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a canister of molten red
+  - set: Cyberpunk/Resource 2
+    number: 40
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a cracked sphere of plasma
+  - set: Cyberpunk/Resource 2
+    number: 38
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a green processor
+  - set: Cyberpunk/Resource 3
+    number: 8
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a chip with a violet core
+  - set: Cyberpunk/Resource 2
+    number: 47
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a green card chip
+  - set: Cyberpunk/Medicine
+    number: 3
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a red capsule
+  - set: Cyberpunk/Medicine
+    number: 11
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a blue capsule
+  - set: Cyberpunk/Medicine
+    number: 17
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a violet capsule
+  - set: Cyberpunk/Gadget
+    number: 1
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a pale data card
+  - set: Cyberpunk/Gadget
+    number: 8
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a dark data card
+  - set: Cyberpunk/Medicine
+    number: 45
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a ration bar and pellets
+  - set: Cyberpunk/Jewelry 1
+    number: 1
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a plain steel band
+  - set: Cyberpunk/Jewelry 1
+    number: 9
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a silver ring with a stone
+  - set: Cyberpunk/Jewelry 1
+    number: 8
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a ring with a lens
+  - set: Cyberpunk/Jewelry 2
+    number: 36
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a red-gold loop
+  - set: Cyberpunk/Jewelry 1
+    number: 10
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a gold ring with a red stone
+  - set: Cyberpunk/Jewelry 1
+    number: 24
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a tooth on a cord
+  - set: Cyberpunk/Jewelry 1
+    number: 23
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: green beads on a chain
+  - set: Cyberpunk/Jewelry 2
+    number: 43
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a circuit seal on a cord
+  - set: Cyberpunk/Jewelry 2
+    number: 38
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a red-gold knot on a chain
+  - set: Cyberpunk/Jewelry 2
+    number: 33
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a collar of blue crystal
+  assignments:
+  - kind: 0
+    target: FuryStrike
+    set: Fantasy/Swordman Skill
+    number: 47
+    chosen: 1
+  - kind: 0
+    target: HaeseoStroke
+    set: Fantasy/Swordman Skill
+    number: 34
+    chosen: 1
+  - kind: 0
+    target: GentlemansPen
+    set: Fantasy/Swordman Skill
+    number: 16
+    chosen: 1
+  - kind: 0
+    target: DevilsStrike
+    set: Fantasy/Swordman Skill
+    number: 30
+    chosen: 1
+  - kind: 0
+    target: FlashOfRage
+    set: Fantasy/Swordman Skill
+    number: 14
+    chosen: 1
+  - kind: 0
+    target: SunraysStroke
+    set: Fantasy/Swordman Skill
+    number: 4
+    chosen: 1
+  - kind: 0
+    target: PhantomThunder
+    set: Fantasy/Swordman Skill
+    number: 37
+    chosen: 1
+  - kind: 0
+    target: ThunderousDragon
+    set: Fantasy/Swordman Skill
+    number: 31
+    chosen: 1
+  - kind: 0
+    target: LightningFlash
+    set: Fantasy/Swordman Skill
+    number: 41
+    chosen: 1
+  - kind: 0
+    target: AzureWall
+    set: Fantasy/Swordman Skill
+    number: 10
+    chosen: 1
+  - kind: 0
+    target: Glaive_S1
+    set: Fantasy/Spearman Skill
+    number: 5
+    chosen: 1
+  - kind: 0
+    target: Glaive_S2
+    set: Fantasy/Spearman Skill
+    number: 37
+    chosen: 1
+  - kind: 0
+    target: Glaive_S3
+    set: Fantasy/Spearman Skill
+    number: 12
+    chosen: 1
+  - kind: 0
+    target: Glaive_S4
+    set: Fantasy/Spearman Skill
+    number: 28
+    chosen: 1
+  - kind: 0
+    target: Glaive_S5
+    set: Fantasy/Spearman Skill
+    number: 13
+    chosen: 1
+  - kind: 0
+    target: Glaive_S6
+    set: Fantasy/Spearman Skill
+    number: 20
+    chosen: 1
+  - kind: 0
+    target: Glaive_S7
+    set: Fantasy/Spearman Skill
+    number: 30
+    chosen: 1
+  - kind: 0
+    target: Glaive_S8
+    set: Fantasy/Spearman Skill
+    number: 18
+    chosen: 1
+  - kind: 0
+    target: Glaive_Stance
+    set: Fantasy/Spearman Skill
+    number: 14
+    chosen: 1
+  - kind: 0
+    target: Glaive_Guard
+    set: Fantasy/Spearman Skill
+    number: 50
+    chosen: 1
+  - kind: 0
+    target: Carbine_S1
+    set: Fantasy/Crossbowman Skill
+    number: 9
+    chosen: 1
+  - kind: 0
+    target: Carbine_S2
+    set: Fantasy/Crossbowman Skill
+    number: 1
+    chosen: 1
+  - kind: 0
+    target: Carbine_S3
+    set: Fantasy/Crossbowman Skill
+    number: 14
+    chosen: 1
+  - kind: 0
+    target: Carbine_S4
+    set: Fantasy/Crossbowman Skill
+    number: 38
+    chosen: 1
+  - kind: 0
+    target: Carbine_S5
+    set: Fantasy/Crossbowman Skill
+    number: 12
+    chosen: 1
+  - kind: 0
+    target: Carbine_S6
+    set: Fantasy/Crossbowman Skill
+    number: 16
+    chosen: 1
+  - kind: 0
+    target: Carbine_S7
+    set: Fantasy/Crossbowman Skill
+    number: 35
+    chosen: 1
+  - kind: 0
+    target: Carbine_S8
+    set: Fantasy/Crossbowman Skill
+    number: 30
+    chosen: 1
+  - kind: 0
+    target: Carbine_Stance
+    set: Fantasy/Crossbowman Skill
+    number: 11
+    chosen: 1
+  - kind: 0
+    target: Carbine_Guard
+    set: Fantasy/Crossbowman Skill
+    number: 17
+    chosen: 1
+  - kind: 0
+    target: Harvester_S1
+    set: Fantasy/Blood Mage Skill
+    number: 7
+    chosen: 1
+  - kind: 0
+    target: Harvester_S2
+    set: Fantasy/Blood Mage Skill
+    number: 15
+    chosen: 1
+  - kind: 0
+    target: Harvester_S3
+    set: Fantasy/Blood Mage Skill
+    number: 31
+    chosen: 1
+  - kind: 0
+    target: Harvester_S4
+    set: Fantasy/Blood Mage Skill
+    number: 16
+    chosen: 1
+  - kind: 0
+    target: Harvester_S5
+    set: Fantasy/Blood Mage Skill
+    number: 23
+    chosen: 1
+  - kind: 0
+    target: Harvester_S6
+    set: Fantasy/Blood Mage Skill
+    number: 18
+    chosen: 1
+  - kind: 0
+    target: Harvester_S7
+    set: Fantasy/Blood Mage Skill
+    number: 24
+    chosen: 1
+  - kind: 0
+    target: Harvester_S8
+    set: Fantasy/Blood Mage Skill
+    number: 28
+    chosen: 1
+  - kind: 0
+    target: Harvester_Stance
+    set: Fantasy/Blood Mage Skill
+    number: 17
+    chosen: 1
+  - kind: 0
+    target: Harvester_Guard
+    set: Fantasy/Blood Mage Skill
+    number: 27
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_S1
+    set: Fantasy/Undead Skill
+    number: 12
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_S2
+    set: Fantasy/Undead Skill
+    number: 35
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_S3
+    set: Fantasy/Undead Skill
+    number: 9
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_S4
+    set: Fantasy/Undead Skill
+    number: 33
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_S5
+    set: Fantasy/Undead Skill
+    number: 19
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_S6
+    set: Fantasy/Undead Skill
+    number: 45
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_S7
+    set: Fantasy/Undead Skill
+    number: 32
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_S8
+    set: Fantasy/Undead Skill
+    number: 18
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_Stance
+    set: Fantasy/Undead Skill
+    number: 34
+    chosen: 1
+  - kind: 0
+    target: ServoClaws_Guard
+    set: Fantasy/Undead Skill
+    number: 10
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_S1
+    set: Fantasy/Lightning Mage Skill
+    number: 37
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_S2
+    set: Fantasy/Lightning Mage Skill
+    number: 25
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_S3
+    set: Fantasy/Lightning Mage Skill
+    number: 4
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_S4
+    set: Fantasy/Lightning Mage Skill
+    number: 45
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_S5
+    set: Fantasy/Lightning Mage Skill
+    number: 7
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_S6
+    set: Fantasy/Lightning Mage Skill
+    number: 35
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_S7
+    set: Fantasy/Lightning Mage Skill
+    number: 1
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_S8
+    set: Fantasy/Lightning Mage Skill
+    number: 9
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_Stance
+    set: Fantasy/Lightning Mage Skill
+    number: 18
+    chosen: 1
+  - kind: 0
+    target: ArcCaster_Guard
+    set: Fantasy/Lightning Mage Skill
+    number: 22
+    chosen: 1
+  - kind: 0
+    target: Longaxe_S1
+    set: Fantasy/Berserker Skill
+    number: 37
+    chosen: 1
+  - kind: 0
+    target: Longaxe_S2
+    set: Fantasy/Berserker Skill
+    number: 11
+    chosen: 1
+  - kind: 0
+    target: Longaxe_S3
+    set: Fantasy/Berserker Skill
+    number: 13
+    chosen: 1
+  - kind: 0
+    target: Longaxe_S4
+    set: Fantasy/Berserker Skill
+    number: 33
+    chosen: 1
+  - kind: 0
+    target: Longaxe_S5
+    set: Fantasy/Berserker Skill
+    number: 31
+    chosen: 1
+  - kind: 0
+    target: Longaxe_S6
+    set: Fantasy/Berserker Skill
+    number: 39
+    chosen: 1
+  - kind: 0
+    target: Longaxe_S7
+    set: Fantasy/Berserker Skill
+    number: 30
+    chosen: 1
+  - kind: 0
+    target: Longaxe_S8
+    set: Fantasy/Berserker Skill
+    number: 49
+    chosen: 1
+  - kind: 0
+    target: Longaxe_Stance
+    set: Fantasy/Berserker Skill
+    number: 32
+    chosen: 1
+  - kind: 0
+    target: Longaxe_Guard
+    set: Fantasy/Berserker Skill
+    number: 29
+    chosen: 1
+  - kind: 0
+    target: Claymore_S1
+    set: Fantasy/Warrior Skill
+    number: 1
+    chosen: 1
+  - kind: 0
+    target: Claymore_S2
+    set: Fantasy/Warrior Skill
+    number: 3
+    chosen: 1
+  - kind: 0
+    target: Claymore_S3
+    set: Fantasy/Warrior Skill
+    number: 34
+    chosen: 1
+  - kind: 0
+    target: Claymore_S4
+    set: Fantasy/Warrior Skill
+    number: 7
+    chosen: 1
+  - kind: 0
+    target: Claymore_S5
+    set: Fantasy/Warrior Skill
+    number: 8
+    chosen: 1
+  - kind: 0
+    target: Claymore_S6
+    set: Fantasy/Warrior Skill
+    number: 44
+    chosen: 1
+  - kind: 0
+    target: Claymore_S7
+    set: Fantasy/Warrior Skill
+    number: 17
+    chosen: 1
+  - kind: 0
+    target: Claymore_S8
+    set: Fantasy/Warrior Skill
+    number: 18
+    chosen: 1
+  - kind: 0
+    target: Claymore_Stance
+    set: Fantasy/Warrior Skill
+    number: 9
+    chosen: 1
+  - kind: 0
+    target: Claymore_Guard
+    set: Fantasy/Warrior Skill
+    number: 16
+    chosen: 1
+  - kind: 0
+    target: Warbow_S1
+    set: Fantasy/Archer Skill
+    number: 45
+    chosen: 1
+  - kind: 0
+    target: Warbow_S2
+    set: Fantasy/Archer Skill
+    number: 47
+    chosen: 1
+  - kind: 0
+    target: Warbow_S3
+    set: Fantasy/Archer Skill
+    number: 13
+    chosen: 1
+  - kind: 0
+    target: Warbow_S4
+    set: Fantasy/Archer Skill
+    number: 41
+    chosen: 1
+  - kind: 0
+    target: Warbow_S5
+    set: Fantasy/Archer Skill
+    number: 15
+    chosen: 1
+  - kind: 0
+    target: Warbow_S6
+    set: Fantasy/Archer Skill
+    number: 8
+    chosen: 1
+  - kind: 0
+    target: Warbow_S7
+    set: Fantasy/Archer Skill
+    number: 7
+    chosen: 1
+  - kind: 0
+    target: Warbow_S8
+    set: Fantasy/Archer Skill
+    number: 35
+    chosen: 1
+  - kind: 0
+    target: Warbow_Stance
+    set: Fantasy/Archer Skill
+    number: 25
+    chosen: 1
+  - kind: 0
+    target: Warbow_Guard
+    set: Fantasy/Archer Skill
+    number: 39
+    chosen: 1
+  - kind: 0
+    target: SpiritualRage
+    set: Fantasy/Buff Skill
+    number: 41
+    chosen: 1
+  - kind: 0
+    target: HeavenlySerenity
+    set: Fantasy/Buff Skill
+    number: 17
+    chosen: 1
+  - kind: 0
+    target: HeavenlyShield
+    set: Fantasy/Buff Skill
+    number: 13
+    chosen: 1
+  - kind: 0
+    target: HeavenlyBlow
+    set: Fantasy/Buff Skill
+    number: 43
+    chosen: 1
+  - kind: 0
+    target: GarudasPrayer
+    set: Fantasy/Buff Skill
+    number: 28
+    chosen: 1
+  - kind: 0
+    target: HeavenlyRepulsion
+    set: Fantasy/Buff Skill
+    number: 33
+    chosen: 1
+  - kind: 0
+    target: HeavenlyDestruction
+    set: Fantasy/Debuff Skill
+    number: 36
+    chosen: 1
+  - kind: 0
+    target: ReverseFlow
+    set: Fantasy/Buff Skill
+    number: 15
+    chosen: 1
+  - kind: 1
+    target: Run
+    set: Fantasy/Buff Skill
+    number: 27
+    chosen: 1
+  - kind: 1
+    target: Jump
+    set: Fantasy/Buff Skill
+    number: 22
+    chosen: 1
+  - kind: 2
+    target: Alloy_Alumite
+    set: Cyberpunk/Minerals
+    number: 35
+    chosen: 1
+  - kind: 2
+    target: Alloy_Iridion
+    set: Cyberpunk/Minerals
+    number: 5
+    chosen: 1
+  - kind: 2
+    target: Alloy_Orichalc
+    set: Cyberpunk/Minerals
+    number: 30
+    chosen: 1
+  - kind: 2
+    target: Alloy_Eversteel
+    set: Cyberpunk/Minerals
+    number: 45
+    chosen: 1
+  - kind: 2
+    target: Alloy_TrinityPlatinum
+    set: Cyberpunk/Minerals
+    number: 15
+    chosen: 1
+  - kind: 2
+    target: Alloy_Prime
+    set: Cyberpunk/Minerals
+    number: 10
+    chosen: 1
+  - kind: 2
+    target: Failsafe
+    set: Cyberpunk/Resource 1
+    number: 22
+    chosen: 1
+  - kind: 2
+    target: Failsafe_Lucky
+    set: Cyberpunk/Resource 1
+    number: 28
+    chosen: 1
+  - kind: 2
+    target: Failsafe_Advanced
+    set: Cyberpunk/Resource 1
+    number: 29
+    chosen: 1
+  - kind: 2
+    target: Fusion_Catalyst
+    set: Cyberpunk/Resource 2
+    number: 40
+    chosen: 1
+  - kind: 2
+    target: Tuning_Chip
+    set: Cyberpunk/Resource 2
+    number: 38
+    chosen: 1
+  - kind: 2
+    target: Tuning_VioletChip
+    set: Cyberpunk/Resource 3
+    number: 8
+    chosen: 1
+  - kind: 2
+    target: Tuning_ResetChip
+    set: Cyberpunk/Resource 2
+    number: 47
+    chosen: 1
+  - kind: 2
+    target: Pill_Vitality
+    set: Cyberpunk/Medicine
+    number: 3
+    chosen: 1
+  - kind: 2
+    target: Pill_Chi
+    set: Cyberpunk/Medicine
+    number: 11
+    chosen: 1
+  - kind: 2
+    target: Pill_DualHarmony
+    set: Cyberpunk/Medicine
+    number: 17
+    chosen: 1
+  - kind: 2
+    target: Permit_Kiosk14
+    set: Cyberpunk/Gadget
+    number: 1
+    chosen: 1
+  - kind: 2
+    target: Permit_Kiosk30
+    set: Cyberpunk/Gadget
+    number: 8
+    chosen: 1
+  - kind: 2
+    target: Pet_Ration
+    set: Cyberpunk/Medicine
+    number: 45
+    chosen: 1
+  - kind: 2
+    target: Ring_01
+    set: Cyberpunk/Jewelry 1
+    number: 1
+    chosen: 1
+  - kind: 2
+    target: Ring_02
+    set: Cyberpunk/Jewelry 1
+    number: 9
+    chosen: 1
+  - kind: 2
+    target: Ring_03
+    set: Cyberpunk/Jewelry 1
+    number: 8
+    chosen: 1
+  - kind: 2
+    target: Ring_04
+    set: Cyberpunk/Jewelry 2
+    number: 36
+    chosen: 1
+  - kind: 2
+    target: Ring_05
+    set: Cyberpunk/Jewelry 1
+    number: 10
+    chosen: 1
+  - kind: 2
+    target: Amulet_01
+    set: Cyberpunk/Jewelry 1
+    number: 24
+    chosen: 1
+  - kind: 2
+    target: Amulet_02
+    set: Cyberpunk/Jewelry 1
+    number: 23
+    chosen: 1
+  - kind: 2
+    target: Amulet_03
+    set: Cyberpunk/Jewelry 2
+    number: 43
+    chosen: 1
+  - kind: 2
+    target: Amulet_04
+    set: Cyberpunk/Jewelry 2
+    number: 38
+    chosen: 1
+  - kind: 2
+    target: Amulet_05
+    set: Cyberpunk/Jewelry 2
+    number: 33
+    chosen: 1

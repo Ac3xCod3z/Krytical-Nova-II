@@ -1,0 +1,501 @@
+fileFormatVersion: 2
+guid: 17fed96fac27e7344ab955de55c828d3
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5024910256642978303
+    second: Implant_Icon_NoBG_1_27_0
+  - first:
+      213: 843491041083281261
+    second: Implant_Icon_NoBG_1_27_1
+  - first:
+      213: -172404314948251930
+    second: Implant_Icon_NoBG_1_27_2
+  - first:
+      213: -1085511910886887260
+    second: Implant_Icon_NoBG_1_27_3
+  - first:
+      213: 4787526969291832820
+    second: Implant_Icon_NoBG_1_27_4
+  - first:
+      213: 752725849753098208
+    second: Implant_Icon_NoBG_1_27_5
+  - first:
+      213: -2691882571295018652
+    second: Implant_Icon_NoBG_1_27_6
+  - first:
+      213: -7970768004758939352
+    second: Implant_Icon_NoBG_1_27_7
+  - first:
+      213: 8861894531187684720
+    second: Implant_Icon_NoBG_1_27_8
+  - first:
+      213: 3151476979580241313
+    second: Implant_Icon_NoBG_1_27_9
+  - first:
+      213: -7804076138275393137
+    second: Implant_Icon_NoBG_1_27_10
+  - first:
+      213: 4975837784870057777
+    second: Implant_Icon_NoBG_1_27_11
+  - first:
+      213: 7816082025376525450
+    second: Implant_Icon_NoBG_1_27_12
+  - first:
+      213: -183073986691040687
+    second: Implant_Icon_NoBG_1_27_13
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 512
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_0
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 17
+        width: 457
+        height: 476
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10e0494aebee34ab0800000000000000
+      internalID: -5024910256642978303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_1
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 183
+        width: 277
+        height: 314
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6f4ef202aea4bb00800000000000000
+      internalID: 843491041083281261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_2
+      rect:
+        serializedVersion: 2
+        x: 279
+        y: 377
+        width: 125
+        height: 123
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6eec3c1603f7b9df0800000000000000
+      internalID: -172404314948251930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_3
+      rect:
+        serializedVersion: 2
+        x: 396
+        y: 313
+        width: 83
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a0b1281bac7fe0f0800000000000000
+      internalID: -1085511910886887260
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_4
+      rect:
+        serializedVersion: 2
+        x: 413
+        y: 236
+        width: 72
+        height: 147
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4fdfd35c966b07240800000000000000
+      internalID: 4787526969291832820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_5
+      rect:
+        serializedVersion: 2
+        x: 418
+        y: 383
+        width: 68
+        height: 116
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e799c71c28327a00800000000000000
+      internalID: 752725849753098208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 75
+        width: 165
+        height: 153
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46135e8401384aad0800000000000000
+      internalID: -2691882571295018652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_7
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 43
+        width: 8
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8295b490bb4226190800000000000000
+      internalID: -7970768004758939352
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_8
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 16
+        width: 57
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0753b60bf16cbfa70800000000000000
+      internalID: 8861894531187684720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_9
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 80
+        width: 115
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a583bd9d9b4cbb20800000000000000
+      internalID: 3151476979580241313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_10
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 0
+        width: 325
+        height: 230
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f813ef9991a52b390800000000000000
+      internalID: -7804076138275393137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_11
+      rect:
+        serializedVersion: 2
+        x: 110
+        y: 15
+        width: 261
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 137752b2a1abd0540800000000000000
+      internalID: 4975837784870057777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_12
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 1
+        width: 88
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8c22e1d03d487c60800000000000000
+      internalID: 7816082025376525450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Implant_Icon_NoBG_1_27_13
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 13
+        width: 26
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15a7aa7dd27957df0800000000000000
+      internalID: -183073986691040687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Implant_Icon_NoBG_1_27_0: -5024910256642978303
+      Implant_Icon_NoBG_1_27_1: 843491041083281261
+      Implant_Icon_NoBG_1_27_10: -7804076138275393137
+      Implant_Icon_NoBG_1_27_11: 4975837784870057777
+      Implant_Icon_NoBG_1_27_12: 7816082025376525450
+      Implant_Icon_NoBG_1_27_13: -183073986691040687
+      Implant_Icon_NoBG_1_27_2: -172404314948251930
+      Implant_Icon_NoBG_1_27_3: -1085511910886887260
+      Implant_Icon_NoBG_1_27_4: 4787526969291832820
+      Implant_Icon_NoBG_1_27_5: 752725849753098208
+      Implant_Icon_NoBG_1_27_6: -2691882571295018652
+      Implant_Icon_NoBG_1_27_7: -7970768004758939352
+      Implant_Icon_NoBG_1_27_8: 8861894531187684720
+      Implant_Icon_NoBG_1_27_9: 3151476979580241313
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377986
+  packageName: 2700 Cyberpunk RPG Icons Pack
+  packageVersion: 1.0
+  assetPath: Assets/Cyberpunk RPG Icons Pack/Asset/Implant Icons 1/No Background/Implant_Icon_NoBG_1_27.png
+  uploadId: 924490

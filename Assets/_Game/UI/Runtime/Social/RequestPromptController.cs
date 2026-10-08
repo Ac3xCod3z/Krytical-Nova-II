@@ -65,9 +65,27 @@ namespace KryticalNova.UI
         {
             if (panel == null || string.IsNullOrEmpty(id)) return;
             Hide(id);
+            // A kind of request the player refuses (Settings, Gameplay) is answered no for them, as the Decline button would.
+            if (Refused(heading))
+            {
+                answer?.Invoke(false);
+                return;
+            }
             float now = Time.unscaledTime;
             queue.Add(new Request { Id = id, Eyebrow = heading, Text = message, Started = now, Ends = now + Mathf.Max(1f, seconds), Answer = answer });
             Present();
+        }
+
+        /// <summary>The kinds of request, by the heading they arrive under, that the player has asked not to be shown.</summary>
+        public static bool Refused(string heading)
+        {
+            switch (heading)
+            {
+                case "TRADE": return HudPreferences.RefuseTrades;
+                case "CONTACT REQUEST": return HudPreferences.RefuseContacts;
+                case "CREW INVITATION": return HudPreferences.RefuseCrewInvites;
+                default: return false;
+            }
         }
 
         public void Hide(string id)

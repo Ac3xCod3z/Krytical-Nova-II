@@ -8,13 +8,14 @@ using UnityEngine.UIElements;
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// Shows the in-game UI in the local player's faction skin. Every faction uses the same layout (the Hegemony
-    /// sheets, the base); the Null and Covenant skins (KryticalSkin_*.uss, listed in the HUD documents) only swap
-    /// sprites, fonts and colours, and only under a faction class. This puts that class on every UI panel once the
-    /// local player's identity is known. The Hegemony needs no class: it is the base.
+    /// Shows the in-game UI in the local player's faction skin. Every faction uses the same layout (the base
+    /// sheets); a faction's skin (KryticalSkin_*.uss, generated from its <see cref="UiSkin"/> asset and listed in the
+    /// HUD documents) only swaps sprites, fonts and colours, and only under that faction's class. This puts the class
+    /// on every UI panel once the local player's identity is known. The Menu Theme setting has no say here.
     /// </summary>
     public static class FactionSkin
     {
+        public const string HegemonyClass = "kn-faction-hegemony";
         public const string NullClass = "kn-faction-null";
         public const string CovenantClass = "kn-faction-covenant";
 
@@ -63,6 +64,7 @@ namespace KryticalNova.UI
                 if (root == null) continue;
                 // The class goes on the panel's own root, above every document that shares the panel.
                 var top = root.panel != null ? root.panel.visualTree : root;
+                top.EnableInClassList(HegemonyClass, faction == FactionId.Hegemony);
                 top.EnableInClassList(NullClass, faction == FactionId.Null);
                 top.EnableInClassList(CovenantClass, faction == FactionId.Covenant);
             }

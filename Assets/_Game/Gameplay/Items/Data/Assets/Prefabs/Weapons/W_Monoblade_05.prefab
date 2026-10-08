@@ -101,6 +101,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3178148922721486371}
+  - component: {fileID: 990479422647485354}
+  - component: {fileID: 1406629491291960792}
   m_Layer: 0
   m_Name: W_Monoblade_05
   m_TagString: Untagged
@@ -124,3 +126,57 @@ Transform:
   - {fileID: 7254666050298329405}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &990479422647485354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8299031588620387155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 1
+    box:
+      m_Center: {x: -0.009430423, y: -0.040456355, z: 0.5345327}
+      m_Extent: {x: 0.06584935, y: 0.12065202, z: 0.51453274}
+    dark:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+  exclude: []
+  keepAsSet: 0
+--- !u!114 &1406629491291960792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8299031588620387155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: -0.0023116954, y: 0.06019566, z: -0.019640991}
+  - {x: -0.012295753, y: -0.048045345, z: 0.9835219}
+  - {x: -0.0028991587, y: 0.02162138, z: -0.48419762}
+  - {x: 0.007672362, y: -0.056868616, z: 1.0290655}
+  - {x: -0.021675099, y: 0.052299235, z: -0.019637892}
+  - {x: -0.012295753, y: -0.056868616, z: 1.0290655}
+  - {x: -0.015071858, y: 0.014365826, z: -0.48363423}
+  - {x: 0.0092697255, y: 0.014365826, z: -0.48363423}
+  - {x: -0.047848653, y: 0.032379024, z: 0.17003252}
+  - {x: 0.019714367, y: -0.017189354, z: -0.4811827}
+  - {x: -0.025516499, y: -0.017189354, z: -0.48118258}
+  - {x: 0.012247537, y: -0.08494853, z: 1.023496}
+  - {x: -0.016870927, y: -0.11302845, z: 1.0179266}
+  - {x: 0.012247537, y: -0.11302845, z: 1.0179266}
+  - {x: 0.0092697255, y: -0.048691142, z: -0.4787357}
+  - {x: -0.012295753, y: -0.14110838, z: 1.0123574}
+  - {x: -0.015068043, y: -0.048691142, z: -0.4787357}
+  - {x: 0.007672362, y: -0.14110838, z: 1.0123574}
+  - {x: -0.0028991587, y: -0.055939067, z: -0.47817242}

@@ -1434,6 +1434,7 @@ MonoBehaviour:
   hipSocketLeft: {fileID: 1358229195446727910}
   settleSeconds: 0.1
   bareBackOffset: {x: 0.08, y: 0, z: 0}
+  groundClearance: 0.03
 --- !u!1 &3393757526565711776
 GameObject:
   m_ObjectHideFlags: 0

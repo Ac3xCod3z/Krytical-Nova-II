@@ -17,8 +17,16 @@ namespace KryticalNova.UI
         private static readonly string ControlsHintKey = Prefix + "controlsHint";
         private static readonly string NameplatesKey = Prefix + "nameplates";
         private static readonly string OwnNamecardKey = Prefix + "ownNamecard";
+        private static readonly string PetChatterKey = Prefix + "petChatter";
         private static readonly string MinimapRotatesKey = Prefix + "minimapRotates";
         private static readonly string ScreenShakeKey = Prefix + "screenShake";
+        private static readonly string MenuThemeKey = Prefix + "menuTheme";
+        private static readonly string DamageNumbersKey = Prefix + "damageNumbers";
+        private static readonly string RefuseTradesKey = Prefix + "refuse.trade";
+        private static readonly string RefuseContactsKey = Prefix + "refuse.contact";
+        private static readonly string RefuseCrewKey = Prefix + "refuse.crew";
+        private static readonly string RefuseSquadKey = Prefix + "refuse.squad";
+        private static readonly string RefuseCalloutsKey = Prefix + "refuse.callout";
         private static readonly string LayoutKey = Prefix + "layout.v1";
         private static readonly string SnapToGridKey = Prefix + "layout.snap";
         private static readonly string GridSizeKey = Prefix + "layout.grid";
@@ -26,6 +34,8 @@ namespace KryticalNova.UI
         private static readonly string WaypointKey = Prefix + "waypoint.";
         private static readonly string ChatWidthKey = Prefix + "chat.width";
         private static readonly string ChatHeightKey = Prefix + "chat.height";
+        private static readonly string ChatTimestampsKey = Prefix + "chat.timestamps";
+        private static readonly string ChatTextScaleKey = Prefix + "chat.textScale";
 
         private static string BuildPrefix()
         {
@@ -67,6 +77,13 @@ namespace KryticalNova.UI
             set => SetBool(OwnNamecardKey, value);
         }
 
+        /// <summary>The bubbles a pet reacts with: its lines, or its emoji. Off = pets stay quiet.</summary>
+        public static bool PetChatter
+        {
+            get => GetBool(PetChatterKey, true);
+            set => SetBool(PetChatterKey, value);
+        }
+
         /// <summary>True: the minimap turns with the camera (forward is up). False: fixed north-up.</summary>
         public static bool MinimapRotates
         {
@@ -79,6 +96,70 @@ namespace KryticalNova.UI
         {
             get => GetBool(ScreenShakeKey, true);
             set => SetBool(ScreenShakeKey, value);
+        }
+
+        /// <summary>The numbers that float off a hit.</summary>
+        public static bool DamageNumbers
+        {
+            get => GetBool(DamageNumbersKey, true);
+            set => SetBool(DamageNumbersKey, value);
+        }
+
+        /// <summary>A request to trade is declined for the player, without being shown.</summary>
+        public static bool RefuseTrades
+        {
+            get => GetBool(RefuseTradesKey, false);
+            set => SetBool(RefuseTradesKey, value);
+        }
+
+        /// <summary>A request to become a contact is declined for the player, without being shown.</summary>
+        public static bool RefuseContacts
+        {
+            get => GetBool(RefuseContactsKey, false);
+            set => SetBool(RefuseContactsKey, value);
+        }
+
+        /// <summary>An invitation to a Crew is declined for the player, without being shown.</summary>
+        public static bool RefuseCrewInvites
+        {
+            get => GetBool(RefuseCrewKey, false);
+            set => SetBool(RefuseCrewKey, value);
+        }
+
+        /// <summary>An invitation to a Squad is declined for the player, without being shown.</summary>
+        public static bool RefuseSquadInvites
+        {
+            get => GetBool(RefuseSquadKey, false);
+            set => SetBool(RefuseSquadKey, value);
+        }
+
+        /// <summary>A Callout (a duel request) is declined for the player, without being shown.</summary>
+        public static bool RefuseCallouts
+        {
+            get => GetBool(RefuseCalloutsKey, false);
+            set => SetBool(RefuseCalloutsKey, value);
+        }
+
+        /// <summary>Every option of the Gameplay page that is kept here back to what the game ships with.</summary>
+        public static void ResetGameplayToDefaults()
+        {
+            foreach (string key in new[] { DamageNumbersKey, RefuseTradesKey, RefuseContactsKey, RefuseCrewKey, RefuseSquadKey, RefuseCalloutsKey })
+                PlayerPrefs.DeleteKey(key);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
+        }
+
+        /// <summary>Which faction's skin the menus wear: one picked at random each start of the game, or always the same.</summary>
+        public static MenuTheme MenuTheme
+        {
+            get => (MenuTheme)Mathf.Clamp(PlayerPrefs.GetInt(MenuThemeKey, (int)MenuTheme.Rotate), 0, 3);
+            set
+            {
+                if (MenuTheme == value) return;
+                PlayerPrefs.SetInt(MenuThemeKey, (int)value);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
         }
 
         /// <summary>The layout editor lines panels up with a grid and with each other while they are dragged.</summary>
@@ -99,6 +180,30 @@ namespace KryticalNova.UI
             {
                 if (GridSize == value) return;
                 PlayerPrefs.SetInt(GridSizeKey, value);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
+        }
+
+        public const float MinChatTextScale = 0.8f;
+        public const float MaxChatTextScale = 1.6f;
+
+        /// <summary>Each chat line starts with the time it arrived, by this machine's clock.</summary>
+        public static bool ChatTimestamps
+        {
+            get => GetBool(ChatTimestampsKey, false);
+            set => SetBool(ChatTimestampsKey, value);
+        }
+
+        /// <summary>Size of the chat's text: 1 is the size the skin gives it.</summary>
+        public static float ChatTextScale
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetFloat(ChatTextScaleKey, 1f), MinChatTextScale, MaxChatTextScale);
+            set
+            {
+                value = Mathf.Clamp(value, MinChatTextScale, MaxChatTextScale);
+                if (Mathf.Approximately(ChatTextScale, value)) return;
+                PlayerPrefs.SetFloat(ChatTextScaleKey, value);
                 PlayerPrefs.Save();
                 Changed?.Invoke();
             }
@@ -166,6 +271,22 @@ namespace KryticalNova.UI
             PlayerPrefs.SetFloat(ChatWidthKey, size.x);
             PlayerPrefs.SetFloat(ChatHeightKey, size.y);
             PlayerPrefs.Save();
+        }
+
+        /// <summary>
+        /// Every option of the Interface page back to what the game ships with. The HUD layout, waypoints and the
+        /// chat's size are not options: they are left as they are.
+        /// </summary>
+        public static void ResetToDefaults()
+        {
+            foreach (string key in new[]
+                     {
+                         MoveMarkerKey, TargetRingKey, ControlsHintKey, NameplatesKey, OwnNamecardKey, PetChatterKey, MinimapRotatesKey,
+                         ScreenShakeKey, MenuThemeKey, SnapToGridKey, GridSizeKey, InterfaceScaleKey, ChatTimestampsKey, ChatTextScaleKey
+                     })
+                PlayerPrefs.DeleteKey(key);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
         }
 
         private static bool GetBool(string key, bool fallback) => PlayerPrefs.GetInt(key, fallback ? 1 : 0) != 0;

@@ -152,7 +152,7 @@ namespace KryticalNova.Networking
                 return false;
             }
 
-            ushort listenPort = port > 0 ? port : defaultPort;
+            ushort listenPort = ResolvePort(port);
             ConfigureTransport(defaultListenAddress, listenPort);
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
             bool success = NetworkManager.Singleton.StartHost();
@@ -176,7 +176,7 @@ namespace KryticalNova.Networking
                 return false;
             }
 
-            ushort listenPort = port > 0 ? port : defaultPort;
+            ushort listenPort = ResolvePort(port);
             ConfigureTransport(defaultListenAddress, listenPort);
             // The offline avatar is a scene NetworkObject: it must be hidden before the server sweeps the scene.
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
@@ -202,7 +202,7 @@ namespace KryticalNova.Networking
             }
 
             string address = string.IsNullOrWhiteSpace(ip) ? defaultListenAddress : ip;
-            ushort targetPort = port > 0 ? port : defaultPort;
+            ushort targetPort = ResolvePort(port);
 
             ConfigureTransport(address, targetPort);
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
@@ -421,6 +421,16 @@ namespace KryticalNova.Networking
                 if (char.IsLetterOrDigit(c) || c == '-' || c == '_') profile.Append(c);
             }
             return profile.Length > 0 ? profile.ToString() : null;
+        }
+
+        /// <summary>
+        /// The port a local session really uses: the one asked for, else the default. An Editor test session
+        /// (<see cref="EditorTestSession"/>) overrides both, so nothing started while it is on can reach the default port.
+        /// </summary>
+        private ushort ResolvePort(ushort requested)
+        {
+            if (EditorTestSession.TryGetPort(out ushort testPort)) return testPort;
+            return requested > 0 ? requested : defaultPort;
         }
 
         private void ConfigureTransport(string address, ushort port)

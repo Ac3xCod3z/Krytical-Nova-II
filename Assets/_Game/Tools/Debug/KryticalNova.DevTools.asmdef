@@ -4,6 +4,7 @@
     "references": [
         "KryticalNova.Runtime",
         "KryticalNova.Vegetation.Grass",
+        "KryticalNova.GameFeel",
         "QFSW.QC",
         "Unity.Netcode.Runtime",
         "Unity.InputSystem"

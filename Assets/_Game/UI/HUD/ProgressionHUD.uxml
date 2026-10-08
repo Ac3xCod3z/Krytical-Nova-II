@@ -5,7 +5,8 @@
     <Style src="../Inventory/Forge.uss" />
     <Style src="Herald/Herald.uss" />
     <Style src="GameMenu/GameMenu.uss" />
-    <!-- Faction skins: generated overrides that only apply under a .kn-faction-* class (see FactionSkin). -->
+    <!-- Faction skins: generated from the UiSkin assets; each only applies under its .kn-faction-* class (see FactionSkin). -->
+    <Style src="../Common/KryticalSkin_Hegemony.uss" />
     <Style src="../Common/KryticalSkin_Null.uss" />
     <Style src="../Common/KryticalSkin_Covenant.uss" />
     <ui:Template name="ItemWindows" src="../Inventory/ItemWindows.uxml" />
@@ -23,6 +24,7 @@
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
         <!-- Namecards over players' heads (PlayerNamecardController). First, so every panel draws over them. -->
         <ui:VisualElement name="player-namecards" class="player-namecards" picking-mode="Ignore" />
+        <ui:VisualElement name="pet-bubbles" class="pet-bubbles" picking-mode="Ignore" />
         <!-- Player status frame -->
         <ui:VisualElement name="summary" class="panel blocks-world hud-movable">
             <ui:VisualElement class="row summary-top">

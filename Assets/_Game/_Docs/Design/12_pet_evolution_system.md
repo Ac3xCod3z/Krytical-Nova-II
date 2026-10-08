@@ -53,13 +53,37 @@ Code in `Assets/_Game/Gameplay/Pets/`; the numbers above are fields of `Pets/Dat
 
 - **Growth and hunger travel with the item** (`PetItemState` packed into `ItemStack.data`): a pet keeps them in the Pack, the Vault, a trade, a Kiosk and on the ground. Only the pet that is out gets hungry and earns XP.
 - **The stat** is `max × growth % ÷ 100`, added to the owner's stats while the pet is out and fed (`PlayerPet`). Growth is replicated to everyone, so every machine derives the same stat and stage.
-- **Stages:** until the real models exist each stage is the stand-in a size step larger with a stronger glow in the doc's palette. The glow (changed 6 Oct 2026; the orbiting ribbons are gone) is a rim of light round the pet's own outline, never a tint on its body, plus soft sparkles drifting off it; there is no ring on the ground, since pets fly. Both grow with the stage: rim brightness 0.9 to 2.4 and 3 to 16 sparkles a second (`PetSettings.rimIntensity`, `sparkleRate`; effect `PFX_Pet_Glow`, shader `TemperGlow`, the same rim a tempered weapon wears). A starving pet loses its glow with its bonus. Crossing 25, 50, 75 or 100 % plays the evolution moment: a FEEL burst on the pet, a banner for the owner ("EMBERWING EVOLVED · STAGE 2 OF 5") and a chat line with the new bonus.
+- **Stages:** until the real models exist each stage is the stand-in a size step larger with a stronger glow in the doc's palette. The glow (changed 6 Oct 2026; the orbiting ribbons are gone) is a rim of light round the pet's own outline, never a tint on its body, plus soft sparkles drifting off it; there is no ring on the ground, since pets fly. Both grow with the stage: the halo from 0.7 to 1.7 bright and from 5 to 11 cm wide, breathing deeper and faster as it grows, and 3 to 16 sparkles a second (`PetSettings.rimIntensity`, `rimWidth`, `rimPulse`, `rimPulseSpeed`, `rimPulseWidth`, `sparkleRate`; effect `PFX_Pet_Glow`). The halo is the one a tempered weapon wears, drawn on the screen by the Glow Halo renderer feature (rebuilt 7 Oct 2026, Rendering Bible section 6e), so it hugs the pet's outline whatever its model. A starving pet loses its glow with its bonus. Crossing 25, 50, 75 or 100 % plays the evolution moment: a FEEL burst on the pet, a banner for the owner ("EMBERWING EVOLVED · STAGE 2 OF 5") and a chat line with the new bonus.
+- **Where it hovers** (changed 7 Oct 2026): beside its owner's head, on the side and at the height the pet item's `petOffset` gives. How far out is no longer that offset's length. The pet's nearest edge is kept `PetSettings.ownerHalfWidth` + `followGap` from the owner's centre line (0.18 m + 0.07 m = 0.25 m) at base size, and its underside stays at the height it has at base size, so a pet that grows moves out and up, never in or down. A grown pet stands further off still: the reach of its own glow is added, and `PetSettings.followGapGrowth` (0.25 m) for every whole size it has grown past base. At stage 5 that puts its nearest edge about 0.50 m from the owner's centre line, so neither the pet nor its light sits on the owner's shoulder. One pet can sit closer or further with `PetDefinition.followGapAdjust` (0 for all four today). The spacing is worked out from each model's own bounds (`PetPlacement`), so real stage models need no numbers of their own, and a pet's size no longer depends on which way its owner faced when it came out. On a turn the pet swings round its owner, by their back on a turn-about, instead of passing through them. A pet within `PetSettings.cameraClearance` (0.6 m) of the camera shrinks out of view until the camera has room again; at the normal closest zoom (3 m) that never happens. The follow lag is unchanged: at a run the pet trails by about the owner's speed × 0.35 s.
 - **Pet XP:** 0.04 per Hostile kill (only the combat dummy counts as one today). `PlayerPet.ServerAwardEventXp(won)` gives the 50 / 25 for a PvP event; nothing calls it yet.
 - **Hunger:** 0.05 % a minute while online. At 0 % the bonus and XP stop. **Pet Ration** (item 9010) refills it; it has no shop yet, so it is GM-only (`item.give Pet_Ration`).
 - **Where the player reads it:** the pet's tooltip, anywhere the item is shown (stage pips, growth, hunger, current bonus). Nothing is added to the Equipment window.
 - **Kiosk price cap** for a pet rises with its growth: from the Common cap at 0 % to 20,000,000 at 100 % (`EconomySettings`).
-- **GM:** `gm.pet`, `gm.pet.growth <0-100>`, `gm.pet.hunger <0-100>`, `gm.pet.feed`, `gm.pet.xp <n>`, `gm.pet.event <win|loss>`; the Pets tab of the GM Tools window.
-- **Not built:** the real stage models, pet XP from wars, a Pet Ration shop, Legendary pets.
+- **Reactions** (8 Oct 2026). A pet reacts to what its owner does, in a comic speech bubble beside it.
+  - *Who says what.* The Drone Core speaks in words; Emberwing, Kitsune Spirit and Tidecaller in emoji (drawings of
+    the Cartoon Emotion Pack, redrawn in ink with Colour Bible fills by **Krytical Nova ▸ Items ▸ 9. Bake Pet Emoji**).
+    What each pet says is its `PetChatterSet` (`Pets/Data/Assets/Chatter/PetChatter_*.asset`, on `PetDefinition.chatter`):
+    ten lines, or eight emoji, for each of seven moments. It never says the same one twice running.
+  - *The moments*, most important first: you die, a rare drop, you level up, you kill a Bruiser, you land a critical
+    hit, your HP is low, you stand idle for a long time. When two come together the more important one is reacted to.
+  - *How often* (`Pets/Data/Assets/PetChatterSettings.asset`): 8 s of quiet after any bubble (a death is never held
+    back); the same moment again only after 20 s (rare drop), 10 s (Bruiser), 25 s (critical hit), 45 s (low HP),
+    120 s (idle); a bubble stays 2.6 s plus 0.045 s a character, 4.5 s at most. Low HP is under 25 % and warns again
+    once the HP has been back over 50 %; idle is 75 s without moving or fighting; a rare drop is an item of Rare or
+    better picked up off the ground.
+  - *Who sees it:* only the pet's owner. Nothing is sent for a bubble, and **Settings ▸ Pet chatter** switches it off.
+  - *Where the bubble goes* (`PetBubbleController`, `PetBubblePlacement`): to the left of the pet, following it. It
+    never lies over the player, a namecard, a HUD panel (the HP bar among them) or the target and its marker: it is
+    shifted up or down, then put on the pet's other side, then above it. "Beside the pet" is measured from the
+    pet's own box turned as the pet is (`PetFollower.TryGetBodyBox`), not from its glow or its sparkles.
+  - *How it looks* (`ComicBubble`, `.comic-bubble` in `ProgressionHUD.uss`): paper, an ink outline, a hard shadow,
+    Ben-Day dots in its shaded corner, a tail toward the pet.
+  - *How it is noticed* (`PetChatterDirector` on the game feel prefab, local only): deaths and critical hits come from
+    the game feel moments; levels, HP, idling and pick-ups are watched on the local player. Another system reports a
+    moment with `PetChatterMoments.Raise`. **Nothing reports a Bruiser kill yet** (there are no Bruisers), and items
+    do not drop from kills yet, so today a rare drop is a rare item picked up; `gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>` plays any of them.
+- **GM:** `gm.pet`, `gm.pet.growth <0-100>`, `gm.pet.hunger <0-100>`, `gm.pet.feed`, `gm.pet.xp <n>`, `gm.pet.event <win|loss>`, `gm.pet.say <moment>`; the Pets tab of the GM Tools window.
+- **Not built:** the real stage models, pet XP from wars, a Pet Ration shop, Legendary pets, other players seeing a pet's bubbles (`PetChatterSettings.audience` has only *owner only*).
 
 ## Open questions
 

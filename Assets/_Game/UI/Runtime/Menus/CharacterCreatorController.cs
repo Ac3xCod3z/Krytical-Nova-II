@@ -209,7 +209,9 @@ namespace KryticalNova.UI.Menus
         private void StepTab(int direction)
         {
             int next = Mathf.Clamp((int)tab + direction, 0, (int)Tab.Finalise);
-            if (next != (int)tab) ShowTab((Tab)next);
+            if (next == (int)tab) return;
+            ShowTab((Tab)next);
+            MenuMoments.Raise(MenuMoment.Tab);
         }
 
         // ---------------- Origin ----------------
@@ -635,14 +637,21 @@ namespace KryticalNova.UI.Menus
         {
             if (leaving) return;
             RefreshName();
-            if (!nameValid) return;
+            if (!nameValid)
+            {
+                // The line under the name says why; it is what shakes.
+                MenuMoments.Raise(MenuMoment.Error, nameMessage != null ? nameMessage.transform : null);
+                return;
+            }
             if (!CharacterRecipeValidator.Validate(recipe, database, out string problem))
             {
                 Debug.LogError($"[Menus] The creator built a look the rules reject: {problem}", this);
                 if (nameMessage != null) nameMessage.text = problem;
+                MenuMoments.Raise(MenuMoment.Error, nameMessage != null ? nameMessage.transform : null);
                 return;
             }
 
+            MenuMoments.Raise(MenuMoment.Confirm);
             roster.Set(slot, CharacterProfile.Create(pendingName, recipe));
             CharacterSession.Store.Save(roster);
             leaving = true;
@@ -707,6 +716,7 @@ namespace KryticalNova.UI.Menus
                 return;
             }
             leaving = true;
+            MenuMoments.Raise(MenuMoment.Back);
             FrontEnd.Go(FrontEnd.FactionSelectScene); // the slot being filled stays pending
         }
 

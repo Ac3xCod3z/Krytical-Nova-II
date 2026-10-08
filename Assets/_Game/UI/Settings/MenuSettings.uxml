@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Settings as the menus open it (MenuSettings, from character select): the game's own Settings window
+         (SettingsWindow.uxml) over a shade, in the skin the menus wear. -->
+    <Style src="../Common/KryticalTheme.uss" />
+    <Style src="../HUD/ProgressionHUD.uss" />
+    <Style src="Settings.uss" />
+    <!-- Faction skins: generated from the UiSkin assets; each only applies under its .kn-faction-* class. -->
+    <Style src="../Common/KryticalSkin_Hegemony.uss" />
+    <Style src="../Common/KryticalSkin_Null.uss" />
+    <Style src="../Common/KryticalSkin_Covenant.uss" />
+    <ui:Template name="SettingsWindow" src="SettingsWindow.uxml" />
+    <ui:VisualElement name="menu-settings" class="kn-root" picking-mode="Ignore">
+        <ui:VisualElement name="menu-settings-shade" class="menu-settings-shade" />
+        <ui:Instance template="SettingsWindow" name="settings-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

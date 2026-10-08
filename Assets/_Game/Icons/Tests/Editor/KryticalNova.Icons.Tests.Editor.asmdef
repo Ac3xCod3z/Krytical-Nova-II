@@ -1,0 +1,25 @@
+{
+    "name": "KryticalNova.Icons.Tests.Editor",
+    "rootNamespace": "KryticalNova.Tests",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

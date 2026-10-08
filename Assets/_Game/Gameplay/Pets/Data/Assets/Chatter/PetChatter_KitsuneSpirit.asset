@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 160c0dedae91cbe41ae19ee969945b08, type: 3}
+  m_Name: PetChatter_KitsuneSpirit
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Pets.PetChatterSet
+  voice: 1
+  moments:
+  - trigger: 0
+    lines: []
+    emoji:
+    - {fileID: 21300000, guid: bd93589c11494f4438d05dab81a4b862, type: 3}
+    - {fileID: 21300000, guid: d8360793d74bddf4ab52e5d191a55cbc, type: 3}
+    - {fileID: 21300000, guid: 54d54b9747b9bc84083628980765c385, type: 3}
+    - {fileID: 21300000, guid: 602bf0f6496f6084d84eae7da9d1ad57, type: 3}
+    - {fileID: 21300000, guid: 087d4a89226cfca4699abe1249e4f110, type: 3}
+    - {fileID: 21300000, guid: 42f184074f3683444ae98a89ac46bcb1, type: 3}
+    - {fileID: 21300000, guid: a129e44c10123bf47a10aa8f83f954b4, type: 3}
+    - {fileID: 21300000, guid: 45516a387fe43d44ea36a0492a644ad1, type: 3}
+  - trigger: 1
+    lines: []
+    emoji:
+    - {fileID: 21300000, guid: b6855bc8e7f79e14aaa23ca07a5aee1d, type: 3}
+    - {fileID: 21300000, guid: bc67d3631d5f6a7499f9e8fbbe924887, type: 3}
+    - {fileID: 21300000, guid: f84f16884d3ed744da1de4658f03a57a, type: 3}
+    - {fileID: 21300000, guid: 7205ef4ec468d1940ad2b72c1c228198, type: 3}
+    - {fileID: 21300000, guid: 487a48236e8232f4c8ceff5d66dddf49, type: 3}
+    - {fileID: 21300000, guid: 4de94fe26a690e64eab89c19220fac1e, type: 3}
+    - {fileID: 21300000, guid: d0a97f8d51cb9be4bbb990346aaed879, type: 3}
+    - {fileID: 21300000, guid: 89acbd55ef6170e4fb5b60c243d5691b, type: 3}
+  - trigger: 2
+    lines: []
+    emoji:
+    - {fileID: 21300000, guid: 487a48236e8232f4c8ceff5d66dddf49, type: 3}
+    - {fileID: 21300000, guid: 89acbd55ef6170e4fb5b60c243d5691b, type: 3}
+    - {fileID: 21300000, guid: d0a97f8d51cb9be4bbb990346aaed879, type: 3}
+    - {fileID: 21300000, guid: 21f59f2785b9d4541ba318571ab2bea0, type: 3}
+    - {fileID: 21300000, guid: 602bf0f6496f6084d84eae7da9d1ad57, type: 3}
+    - {fileID: 21300000, guid: 4de94fe26a690e64eab89c19220fac1e, type: 3}
+    - {fileID: 21300000, guid: 37c402743eda3ea4bb23ac6574c0370b, type: 3}
+    - {fileID: 21300000, guid: cb264bd77d615dc469dbf1d523ca74df, type: 3}
+  - trigger: 3
+    lines: []
+    emoji:
+    - {fileID: 21300000, guid: bd93589c11494f4438d05dab81a4b862, type: 3}
+    - {fileID: 21300000, guid: 54d54b9747b9bc84083628980765c385, type: 3}
+    - {fileID: 21300000, guid: 58d2294f25ea58a4db54fefe8e22e566, type: 3}
+    - {fileID: 21300000, guid: b2066b54efe68984fbc32e0d6390e4e1, type: 3}
+    - {fileID: 21300000, guid: be6a2077f0da94b4d814f62e4b868595, type: 3}
+    - {fileID: 21300000, guid: 55e48dabdf4e4f548a582ef3a13820ec, type: 3}
+    - {fileID: 21300000, guid: 90a907dc6e19a7646add8e44aa7a7da1, type: 3}
+    - {fileID: 21300000, guid: 602bf0f6496f6084d84eae7da9d1ad57, type: 3}
+  - trigger: 4
+    lines: []
+    emoji:
+    - {fileID: 21300000, guid: be6a2077f0da94b4d814f62e4b868595, type: 3}
+    - {fileID: 21300000, guid: 087d4a89226cfca4699abe1249e4f110, type: 3}
+    - {fileID: 21300000, guid: 21f59f2785b9d4541ba318571ab2bea0, type: 3}
+    - {fileID: 21300000, guid: 602bf0f6496f6084d84eae7da9d1ad57, type: 3}
+    - {fileID: 21300000, guid: d8360793d74bddf4ab52e5d191a55cbc, type: 3}
+    - {fileID: 21300000, guid: 73c34bb0def910e4d960af8cde8babe6, type: 3}
+    - {fileID: 21300000, guid: cb264bd77d615dc469dbf1d523ca74df, type: 3}
+    - {fileID: 21300000, guid: 487a48236e8232f4c8ceff5d66dddf49, type: 3}
+  - trigger: 5
+    lines: []
+    emoji:
+    - {fileID: 21300000, guid: 8b5a87477c563184fa0209027fef449c, type: 3}
+    - {fileID: 21300000, guid: 71a4d79ae93ed1240b9a6dd2fa2fca28, type: 3}
+    - {fileID: 21300000, guid: 6fe36fc734fa1e54297b120fe11ac9cd, type: 3}
+    - {fileID: 21300000, guid: 90a907dc6e19a7646add8e44aa7a7da1, type: 3}
+    - {fileID: 21300000, guid: 42f184074f3683444ae98a89ac46bcb1, type: 3}
+    - {fileID: 21300000, guid: 4de94fe26a690e64eab89c19220fac1e, type: 3}
+    - {fileID: 21300000, guid: f84f16884d3ed744da1de4658f03a57a, type: 3}
+    - {fileID: 21300000, guid: dc101bf31b65697448a62db5b786aa0b, type: 3}
+  - trigger: 6
+    lines: []
+    emoji:
+    - {fileID: 21300000, guid: bc67d3631d5f6a7499f9e8fbbe924887, type: 3}
+    - {fileID: 21300000, guid: 7205ef4ec468d1940ad2b72c1c228198, type: 3}
+    - {fileID: 21300000, guid: 45516a387fe43d44ea36a0492a644ad1, type: 3}
+    - {fileID: 21300000, guid: eb947581f0ae8094c9e4dddcf733453f, type: 3}
+    - {fileID: 21300000, guid: 4fb89c2eb23d69a468dea47559c882b1, type: 3}
+    - {fileID: 21300000, guid: 852910980a17d3e4bba8f850a37e3c13, type: 3}
+    - {fileID: 21300000, guid: f501019224559de44bfc63f75aa8d2d8, type: 3}
+    - {fileID: 21300000, guid: 6b2063a208ff80a4193d55a874811379, type: 3}

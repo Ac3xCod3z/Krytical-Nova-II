@@ -1,0 +1,371 @@
+fileFormatVersion: 2
+guid: a3a60a1806a17d84daf3c3688b2cc6a8
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3457106348799524816
+    second: Monster_Hand_Icon_NoBG_06_0
+  - first:
+      213: -5371558567293297598
+    second: Monster_Hand_Icon_NoBG_06_1
+  - first:
+      213: 7424894787444406159
+    second: Monster_Hand_Icon_NoBG_06_2
+  - first:
+      213: 306431576429926648
+    second: Monster_Hand_Icon_NoBG_06_3
+  - first:
+      213: -1458272104251743012
+    second: Monster_Hand_Icon_NoBG_06_4
+  - first:
+      213: 8822579160834986722
+    second: Monster_Hand_Icon_NoBG_06_5
+  - first:
+      213: 1774889666314312496
+    second: Monster_Hand_Icon_NoBG_06_6
+  - first:
+      213: -7859814680027604318
+    second: Monster_Hand_Icon_NoBG_06_7
+  - first:
+      213: -295223934668963937
+    second: Monster_Hand_Icon_NoBG_06_8
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 512
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Monster_Hand_Icon_NoBG_06_0
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 265
+        width: 113
+        height: 148
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0df71fe58eb1aff20800000000000000
+      internalID: 3457106348799524816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Hand_Icon_NoBG_06_1
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 407
+        width: 44
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24cd64a51f36475b0800000000000000
+      internalID: -5371558567293297598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Hand_Icon_NoBG_06_2
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 265
+        width: 113
+        height: 148
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f87f54c68768a0760800000000000000
+      internalID: 7424894787444406159
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Hand_Icon_NoBG_06_3
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 407
+        width: 45
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f8911d25e9a04400800000000000000
+      internalID: 306431576429926648
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Hand_Icon_NoBG_06_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 161
+        width: 102
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd4a6385f3d23cbe0800000000000000
+      internalID: -1458272104251743012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Hand_Icon_NoBG_06_5
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 317
+        width: 41
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e25554b009107a70800000000000000
+      internalID: 8822579160834986722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Hand_Icon_NoBG_06_6
+      rect:
+        serializedVersion: 2
+        x: 345
+        y: 161
+        width: 102
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03b1d2c6fbca1a810800000000000000
+      internalID: 1774889666314312496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Hand_Icon_NoBG_06_7
+      rect:
+        serializedVersion: 2
+        x: 381
+        y: 317
+        width: 41
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2aadd8c01345ce290800000000000000
+      internalID: -7859814680027604318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Monster_Hand_Icon_NoBG_06_8
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 0
+        width: 354
+        height: 258
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9ffcd4456727ebf0800000000000000
+      internalID: -295223934668963937
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Monster_Hand_Icon_NoBG_06_0: 3457106348799524816
+      Monster_Hand_Icon_NoBG_06_1: -5371558567293297598
+      Monster_Hand_Icon_NoBG_06_2: 7424894787444406159
+      Monster_Hand_Icon_NoBG_06_3: 306431576429926648
+      Monster_Hand_Icon_NoBG_06_4: -1458272104251743012
+      Monster_Hand_Icon_NoBG_06_5: 8822579160834986722
+      Monster_Hand_Icon_NoBG_06_6: 1774889666314312496
+      Monster_Hand_Icon_NoBG_06_7: -7859814680027604318
+      Monster_Hand_Icon_NoBG_06_8: -295223934668963937
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 229460
+  packageName: 6200 Fantasy RPG Icons Pack
+  packageVersion: 1.6
+  assetPath: Assets/Fantasy RPG Icons Pack/Asset/Monster Hand Icons/No Background/Monster_Hand_Icon_NoBG_06.png
+  uploadId: 916020

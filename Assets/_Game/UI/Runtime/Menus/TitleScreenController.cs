@@ -78,6 +78,7 @@ namespace KryticalNova.UI.Menus
         private void Continue()
         {
             leaving = true;
+            MenuMoments.Raise(MenuMoment.Confirm);
             var roster = CharacterSession.Store.Load();
             if (roster.Count > 0)
             {
@@ -124,13 +125,19 @@ namespace KryticalNova.UI.Menus
         private void AskExit()
         {
             // A title scene built before the popup existed still has a way out.
-            if (exitPopup == null) Exit();
-            else exitPopup.SetActive(true);
+            if (exitPopup == null)
+            {
+                Exit();
+                return;
+            }
+            exitPopup.SetActive(true);
+            MenuMoments.Raise(MenuMoment.Open, exitPopup.transform);
         }
 
         private void CloseExit()
         {
             if (exitPopup != null) exitPopup.SetActive(false);
+            MenuMoments.Raise(MenuMoment.Back);
             // The key or click that closed it must not also count as "continue".
             readyAt = Time.unscaledTime + 0.15f;
         }
@@ -138,6 +145,7 @@ namespace KryticalNova.UI.Menus
         private void Exit()
         {
             leaving = true;
+            MenuMoments.Raise(MenuMoment.Confirm);
             FrontEnd.Quit();
         }
     }

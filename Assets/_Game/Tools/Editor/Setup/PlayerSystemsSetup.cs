@@ -28,8 +28,6 @@ namespace KryticalNova.EditorTools
         private const string Runtime = ", KryticalNova.Runtime";
         public const string EconomySettingsPath = "Assets/_Game/Gameplay/Economy/Data/Assets/EconomySettings.asset";
         public const string GearProgressionPath = "Assets/_Game/Gameplay/Items/Data/Assets/GearProgressionSettings.asset";
-        public const string TemperGlowMaterialPath = "Assets/_Game/Gameplay/Items/Shaders/M_TemperGlow.mat";
-        private const string TemperGlowShader = "KryticalNova/TemperGlow";
         public const string NovaSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/NovaSettings.asset";
         private const string NovaShaderFolder = "Assets/_Game/Gameplay/Progression/Shaders/";
         public const string EmoteWheelSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/EmoteWheelSettings.asset";
@@ -57,7 +55,6 @@ namespace KryticalNova.EditorTools
             // Gear progression: worn gear reads its Temper / Fusion / Tuning, and the forge changes them.
             new Row("KryticalNova.Items.PlayerEquipment", ("progression", GearProgressionPath)),
             new Row("KryticalNova.Forge.PlayerGearWork", ("settings", GearProgressionPath)),
-            new Row("KryticalNova.Items.Visuals.EquipmentVisualBinder", ("temperGlow", TemperGlowMaterialPath)),
             // The Renown ladders at the Herald: Ascension (the Nova) and Nova Standings.
             new Row("KryticalNova.Progression.PlayerNova", ("settings", NovaSettingsPath)),
             // Emotes picked on the emote wheel.
@@ -68,7 +65,6 @@ namespace KryticalNova.EditorTools
         {
             if (Rows.Length == 0) return;
             GameplayPrefabsSetup.Run(); // the prefabs the player's systems put into the world
-            EnsureTemperGlowMaterial();
             GameObject root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
             try
             {
@@ -103,15 +99,6 @@ namespace KryticalNova.EditorTools
             {
                 PrefabUtility.UnloadPrefabContents(root);
             }
-        }
-
-        /// <summary>The material every tempered weapon's glow is copied from. Its numbers are set per weapon at runtime.</summary>
-        private static void EnsureTemperGlowMaterial()
-        {
-            if (AssetDatabase.LoadAssetAtPath<Material>(TemperGlowMaterialPath) != null) return;
-            Shader shader = Shader.Find(TemperGlowShader);
-            if (shader == null) { Debug.LogWarning($"[Setup] Shader {TemperGlowShader} not found: tempered weapons will not glow."); return; }
-            AssetDatabase.CreateAsset(new Material(shader) { name = "M_TemperGlow" }, TemperGlowMaterialPath);
         }
 
         /// <summary>The emote wheel performs the motions of the library the character creator shows.</summary>
