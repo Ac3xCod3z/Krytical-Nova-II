@@ -43,3 +43,4 @@ MonoBehaviour:
     scale: 1.35
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 1
+  followGapAdjust: 0

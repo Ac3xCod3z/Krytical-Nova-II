@@ -37,6 +37,14 @@ namespace KryticalNova.Pets
         [Tooltip("Sparkles per second at the first evolved stage (x) and at the last (y).")]
         public Vector2 sparkleRate = new Vector2(3f, 16f);
 
+        [Header("Follow: where a pet hovers beside its owner (which side and how high is the pet item's own offset)")]
+        [Tooltip("Half the width of the owner's head and hair at the height pets hover, in metres from the owner's centre line. The clear air below starts here.")]
+        [Min(0f)] public float ownerHalfWidth = 0.18f;
+        [Tooltip("Clear air between the owner and the nearest edge of the pet, in metres. The same at every growth stage: a pet that grows moves out and up, never in or down. Each pet can add its own adjustment.")]
+        public float followGap = 0.07f;
+        [Tooltip("A pet nearer to the camera than this (metres, from its near side) shrinks out of view until the camera moves away, so it never fills the screen or cuts through the lens. 0 = never.")]
+        [Min(0f)] public float cameraClearance = 0.6f;
+
         public PetTuning Tuning => new PetTuning(xpToFullGrowth, xpPerHostileKill, xpPerEventWin, xpPerEventLoss, hungerDrainPercentPerMinute);
     }
 }

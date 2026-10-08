@@ -41,6 +41,10 @@ namespace KryticalNova.Pets
         [Header("Looks (base, 25 %, 50 %, 75 %, 100 %)")]
         public PetStageLook[] stages = new PetStageLook[PetRules.StageCount];
 
+        [Header("Follow")]
+        [Tooltip("Added to the pet settings' follow gap for this pet only, in metres. More hovers further from its owner.")]
+        public float followGapAdjust;
+
         public PetStageLook Stage(int stage)
         {
             if (stages == null || stages.Length == 0) return new PetStageLook { scale = 1f };
