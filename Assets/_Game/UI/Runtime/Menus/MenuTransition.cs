@@ -12,9 +12,10 @@ namespace KryticalNova.UI.Menus
     /// leaving a screen takes its picture, the next scene loads under that picture, and the picture's page turns
     /// away to show it. Forward through the menus the page turns one way, back it turns the other.
     ///
-    /// Where there is no picture to turn (the game has just started, or the book is missing) the older comic
-    /// transition is used: Ben-Day dots sweep across and merge into solid ink, and shrink away on the next screen.
-    /// One per front-end scene, on its own top-most canvas.
+    /// Where there is no picture to turn (the game has just started, or the menus are come back to from the world)
+    /// the screen starts under solid ink, and that ink is the book's cover: it turns away like any page. Without the
+    /// book the older comic transition does it all: Ben-Day dots sweep across, merge into solid ink, and shrink away
+    /// on the next screen. One per front-end scene, on its own top-most canvas.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class MenuTransition : MonoBehaviour
@@ -87,15 +88,17 @@ namespace KryticalNova.UI.Menus
             }
             else if (cover != null)
             {
+                // Opened with no page to turn: the screen starts under ink (the book's cover, when there is a book).
                 DropPending();
                 SetProgress(1f);
                 SetCovering(true);
+                opening = true;
             }
         }
 
         private void Start()
         {
-            if (pendingPicture != null && HasBook) running = StartCoroutine(TurnPage());
+            if (HasBook && (pendingPicture != null || cover != null)) running = StartCoroutine(TurnPage());
             else if (cover != null) running = StartCoroutine(Open());
         }
 
@@ -166,11 +169,16 @@ namespace KryticalNova.UI.Menus
             Destroy(gameObject);
         }
 
-        /// <summary>Lifts the picture of the last screen off this one as a page of the book, and turns it away.</summary>
+        /// <summary>
+        /// Lifts the picture of the last screen off this one as a page of the book, and turns it away. With no
+        /// picture (the menus have just been opened) it is the ink this screen starts under that turns away, as
+        /// the book's cover.
+        /// </summary>
         private IEnumerator TurnPage()
         {
+            opening = true;
             turningPicture = pendingPicture;
-            bool forward = pendingForward;
+            bool forward = turningPicture == null || pendingForward;
             pendingPicture = null;
             turningBook = Instantiate(bookPrefab);
             turningBook.gameObject.SetActive(true);
@@ -186,7 +194,9 @@ namespace KryticalNova.UI.Menus
             if (!turningBook.Ready)
             {
                 Debug.LogWarning("[Menus] The menu book did not make its page: the screen was shown without a page turn.", this);
+                bool underInk = turningPicture == null && cover != null;
                 EndTurn();
+                if (underInk) yield return Open(); // the dots take the ink away instead
                 opening = false;
                 running = null;
                 yield break;
@@ -198,6 +208,7 @@ namespace KryticalNova.UI.Menus
             page.uvRect = forward ? new Rect(0f, 0f, 1f, 1f) : new Rect(1f, 0f, -1f, 1f);
             page.enabled = true;
             still.enabled = false;
+            if (cover != null) SetCovering(false); // the ink the screen started under is the cover page now
             // From here the screen underneath is the player's: the page takes no clicks and holds no keys back.
             opening = false;
             // The page lifts: the moment has its own feel, and the screen it uncovers is what answers it.

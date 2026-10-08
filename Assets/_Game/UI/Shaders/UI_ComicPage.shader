@@ -11,6 +11,7 @@ Shader "KryticalNova/UI/Comic Page"
         _Ink ("Ink", Color) = (0.078, 0.071, 0.169, 1)
         _Tint ("Dot Colour On Bare Paper", Color) = (0.298, 0.322, 0.749, 1)
         _Shade ("Shade Where The Page Turns Away", Range(0, 1)) = 0.7
+        _Flat ("Lean That Still Counts As Flat", Range(0, 0.2)) = 0.06
         _Rest ("Dots On Bare Paper At Rest", Range(0, 1)) = 0.12
         _DotScale ("Dot Size Multiplier", Range(0.5, 8)) = 2
         _Border ("Ink Line Round The Page (share of its height)", Range(0, 0.05)) = 0.008
@@ -45,6 +46,7 @@ Shader "KryticalNova/UI/Comic Page"
                 half4 _Tint;
                 half _Picture;
                 half _Shade;
+                half _Flat;
                 half _Rest;
                 float _DotScale;
                 float _Border;
@@ -85,7 +87,8 @@ Shader "KryticalNova/UI/Comic Page"
                 float3 normal = normalize(cross(ddy(input.fromEye), ddx(input.fromEye)));
                 float3 toEye = IsPerspectiveProjection() ? normalize(-input.fromEye) : -GetViewForwardDir();
                 half facing = abs(dot(normal, toEye));
-                half away = saturate((1.0 - facing) * 1.35);
+                // The book's camera sees the corners of a flat page at a slant: that much lean is not a curl.
+                half away = saturate((1.0 - facing - _Flat) * 1.45);
 
                 float2 pixel = input.screenPos.xy / input.screenPos.w * _ScreenParams.xy / max(_DotScale, 0.01);
 

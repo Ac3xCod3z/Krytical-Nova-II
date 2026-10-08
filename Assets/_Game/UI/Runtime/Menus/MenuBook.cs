@@ -19,6 +19,11 @@ namespace KryticalNova.UI.Menus
         private static readonly int PictureScaleId = Shader.PropertyToID("_MainTex_ST");
         private static readonly int TintId = Shader.PropertyToID("_Tint");
         private static readonly int AspectId = Shader.PropertyToID("_Aspect");
+        private static readonly int ShowsPictureId = Shader.PropertyToID("_Picture");
+        private static readonly int PaperId = Shader.PropertyToID("_Paper");
+        private static readonly int InkId = Shader.PropertyToID("_Ink");
+        private static readonly int RestId = Shader.PropertyToID("_Rest");
+        private static readonly int BorderId = Shader.PropertyToID("_Border");
 
         [Tooltip("The MegaBook Builder of the book (a vendor script).")]
         [SerializeField] private MonoBehaviour book;
@@ -67,7 +72,8 @@ namespace KryticalNova.UI.Menus
         /// Puts <paramref name="picture"/> on the leaf, flat, and starts drawing it. False until MegaBook has made
         /// the leaf (its first frame): ask again on the next one. Turning back is the same turn seen in a mirror,
         /// which <see cref="MenuTransition"/> does when it shows <see cref="Target"/>; the picture is mirrored here
-        /// so that it reads the right way round there.
+        /// so that it reads the right way round there. With no picture the leaf is the book's cover: solid ink,
+        /// which shows the skin's dots as it curls.
         /// </summary>
         public bool Prepare(Texture picture, bool forward)
         {
@@ -81,8 +87,19 @@ namespace KryticalNova.UI.Menus
             Material face = paper[0], back = paper[1];
             Bounds page = leaf.bounds;
             float width = Mathf.Max(0.01f, page.size.x), height = Mathf.Max(0.01f, page.size.z);
-            face.mainTexture = picture;
-            face.SetVector(PictureScaleId, forward ? new Vector4(1f, 1f, 0f, 0f) : new Vector4(-1f, 1f, 1f, 0f));
+            if (picture != null)
+            {
+                face.mainTexture = picture;
+                face.SetVector(PictureScaleId, forward ? new Vector4(1f, 1f, 0f, 0f) : new Vector4(-1f, 1f, 1f, 0f));
+            }
+            else
+            {
+                face.SetFloat(ShowsPictureId, 0f);
+                face.SetColor(PaperId, face.GetColor(InkId));
+                face.SetColor(TintId, Tint());
+                face.SetFloat(RestId, 0f);   // flat, it is the ink the screen was covered with
+                face.SetFloat(BorderId, 0f);
+            }
             back.SetColor(TintId, Tint());
             back.SetFloat(AspectId, width / height);
 
