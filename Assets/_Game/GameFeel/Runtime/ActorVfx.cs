@@ -45,6 +45,15 @@ namespace KryticalNova.GameFeel
         private bool running, airborne;
         private TrailRenderer trail;
         private float trailUntil;
+        private Color trailColour = Color.clear;
+        private Gradient trailGradient;
+
+        // When this character last showed a word, a critical hit on another player, a level gained: the presenter
+        // spaces those out per character.
+        [System.NonSerialized] public float LastWordTime = float.NegativeInfinity;
+        [System.NonSerialized] public HitWord LastWord;
+        [System.NonSerialized] public float LastPvpCritTime = float.NegativeInfinity;
+        [System.NonSerialized] public float LastLevelUpTime = float.NegativeInfinity;
 
         /// <summary>The character's effects, created on first use. Moments reported from a child (the visuals) land on the root.</summary>
         public static ActorVfx For(Transform actor)
@@ -183,20 +192,50 @@ namespace KryticalNova.GameFeel
 
         // ------------------------------------------------------------------ weapon trail
 
-        /// <summary>Draws the blade's trail for <paramref name="seconds"/> (the cutting part of a swing).</summary>
-        public void Trail(TrailRenderer prefab, float seconds)
+        /// <summary>
+        /// Makes the blade's trail now if the character has a weapon mount and no trail yet, so that its first swing
+        /// creates nothing. Returns true when there is a trail.
+        /// </summary>
+        public bool PrepareTrail(TrailRenderer prefab)
+        {
+            if (prefab == null) return false;
+            var mount = GetComponentInChildren<WeaponVisualMount>();
+            if (mount == null) return false;
+            EnsureTrail(prefab, mount);
+            return true;
+        }
+
+        private void EnsureTrail(TrailRenderer prefab, WeaponVisualMount mount)
+        {
+            if (trail != null && trail.transform.parent == mount.transform) return;
+            if (trail != null) Destroy(trail.gameObject);
+            trail = Instantiate(prefab, mount.transform, false);
+            trail.name = prefab.name;
+            trail.gameObject.layer = mount.gameObject.layer;
+            trail.emitting = false;
+            trailColour = Color.clear; // the new ribbon wears the prefab's colours until it is told otherwise
+        }
+
+        /// <summary>
+        /// Draws the blade's trail for <paramref name="seconds"/> (the cutting part of a swing), in the colour of
+        /// the weapon class that swings it when one is given (alpha 0 = the trail's own colours).
+        /// </summary>
+        public void Trail(TrailRenderer prefab, float seconds, Color colour = default)
         {
             if (prefab == null) return;
             var mount = GetComponentInChildren<WeaponVisualMount>();
             if (mount == null) return;
+            EnsureTrail(prefab, mount);
 
-            if (trail == null || trail.transform.parent != mount.transform)
+            if (colour.a > 0f && colour != trailColour)
             {
-                if (trail != null) Destroy(trail.gameObject);
-                trail = Instantiate(prefab, mount.transform, false);
-                trail.name = prefab.name;
-                trail.gameObject.layer = mount.gameObject.layer;
-                trail.emitting = false;
+                // White at the blade, the class's colour along the ribbon, fading out: the prefab's own shape of fade.
+                trailColour = colour;
+                trailGradient ??= new Gradient();
+                trailGradient.SetKeys(
+                    new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(colour, 0.35f), new GradientColorKey(colour, 1f) },
+                    new[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0.55f, 0.4f), new GradientAlphaKey(0f, 1f) });
+                trail.colorGradient = trailGradient;
             }
 
             // The blade runs along the mount's +Z; ride the outer half so the ribbon follows the tip's arc.

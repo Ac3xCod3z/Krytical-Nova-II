@@ -67,6 +67,10 @@ namespace KryticalNova.Progression
         [Tooltip("Maximum hit chance percentage cap.")]
         [Range(50f, 100f)] public float maximumHitChance = 95f;
 
+        [Header("How a hit is shown")]
+        [Tooltip("A hit is shown as Elemental (its own colours on every screen) when at least this share of its damage is the Elemental part. Looks only: no damage depends on it.")]
+        [Range(0f, 1f)] public float elementalHitShare = 0.35f;
+
         private void OnValidate()
         {
             strengthToAttackPower = Mathf.Max(0f, strengthToAttackPower);

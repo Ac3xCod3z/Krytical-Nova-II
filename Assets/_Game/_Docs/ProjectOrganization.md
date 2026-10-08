@@ -114,20 +114,23 @@ _Game/
 │   ├── Ruins/             Meshes/  Prefabs/  Profiles/ (Quick Destruction profile)  Editor/ (RuinBaker)
 │   ├── Water/             Shaders/
 │   └── (future) Rocks/ Props/ Architecture/
-├── GameFeel/              Runtime/ (KryticalNova.GameFeel, client-only)  Data/ (SmearSettings; Data/Assets/ = its asset)
-│                          Editor/ (GameFeelBuilder)  Prefabs/ (PFX_GameFeel)  Tests/Editor/
+├── GameFeel/              Runtime/ (KryticalNova.GameFeel, client-only)  Data/ (SmearSettings, HitLookSettings; Data/Assets/ = their assets)
+│                          Editor/ (GameFeelBuilder; GameFeelBuilder.Comic = the marks and words made from the Cartoon FX pack)
+│                          Prefabs/ (PFX_GameFeel)  Tests/Editor/
 ├── Icons/                 Editor/ (the icon library, editor-only: IconLibrary, IconTreatmentSettings, ComicIconTreatment, IconBaker,
 │                          IconPacks, IconLibraryWindow)  Data/Assets/ (IconLibrary.asset, IconTreatmentSettings.asset)  Tests/Editor/
 │                          The icons it bakes go to the owning systems: Gameplay/Progression/Data/Assets/Icons, Gameplay/Items/Data/Assets/Icons
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
-├── Rendering/             Runtime/ (renderer features)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
+├── Rendering/             Runtime/ (renderer features; ComicLetteringFeature draws the `ComicLettering` layer, which every
+│                          comic mark and word is on, over the finished frame)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets)  Editor/ (Menus/ = front-end
 │                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/ Duel/ Party/ Pet/ Herald/ GameMenu/)  Inventory/
 │                          (also the forge bench)  Economy/ (Vault, Trade and Kiosk windows)  Social/ (prompt, player menu,
 │                          Contacts, Crew, the emote wheel)  Settings/ (the Settings window; its code is Runtime/Settings/)  NPC/  Shaders/
 │                          Menus/ (Materials/, KeyGlyphs.asset: assets the front-end scenes use)
 │                          (future: Skills/ Character/ World/)
-├── VFX/                   Gameplay/  GameFeel/  Environment/{City,Portals,Vehicles,Weather}/  Materials/ (shared FX mats)
+├── VFX/                   Gameplay/  GameFeel/ (Comic/ = the comic marks and words, generated)  Environment/{City,Portals,Vehicles,Weather}/
+│                          Materials/ (shared FX mats; Comic/<word>/ = our copies of a word's letter materials, generated)
 ├── Input/Actions/         InputSystem_Actions.inputactions (project-wide actions)
 ├── Scenes/                MainMenu/ (Title, FactionSelect, CharacterCreator, CharacterSelect, Loading: generated, rebuild
 │                          with Krytical Nova ▸ Front End ▸ 1. Build Front-End Scenes; never edit by hand)
@@ -191,7 +194,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Pets.Tests.Editor`  | `Gameplay/Pets/Tests/Editor/`                  | EditMode tests (pet growth, stages, hunger; when a pet speaks, and what the four pets say) |
 | `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides; where a pet's bubble goes) |
 | `KryticalNova.Icons.Tests.Editor` | `Icons/Tests/Editor/`                          | EditMode tests (the comic icon treatment, the icon library's rules, and that every skill and item shows an icon of its own). Depends on Runtime and Editor |
-| `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab). `!UNITY_SERVER` |
+| `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab; how hits look: the rules, a look of its own for every weapon class, no comic effect shared between two moments, the lettering layer and its pass, the pool's timing). `!UNITY_SERVER` |
 
 **Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
 **New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`

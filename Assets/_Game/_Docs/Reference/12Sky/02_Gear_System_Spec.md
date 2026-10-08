@@ -267,10 +267,12 @@ The Creds cost doubles from 120%.
 
 | Outcome | On the character | For the player who did it |
 | --- | --- | --- |
-| Success | rising gold burst, rays, sparkles, a comic "POW" | chromatic shimmer, a small upward camera nudge |
+| Success | rising gold burst, rays, sparkles, a comic "FORGED!" over the head | chromatic shimmer, a small upward camera nudge |
 | Fail | a dull spark and smoke puff | a small camera drop |
-| Failsafe held | the fail puff and a cyan shield flash | none |
-| Break | red shatter burst, sparks, a comic "WHAM" | camera jolt, chromatic punch, red vignette |
+| Failsafe held | the fail puff, a cyan shield flash, a comic "SAVED!" | a smaller camera drop |
+| Break | red shatter burst, sparks, a comic "CRACK!" | camera jolt, chromatic punch, red vignette |
+
+The three words are the forge's own (8 Oct 2026, `Design/13_comic_effects.md`): nothing else in the game shows them.
 
 Sound slots are on the prefab and empty.
 

@@ -54,6 +54,12 @@ Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights d
 6b. **Glow Halo** (BeforeRenderingPostProcessing + 2): the light round tempered weapons and evolved pets (section 6e).
    Laid over the inked, toned frame, so the comic ink and dots stay under it, it is never outlined or dotted itself,
    and it does not lean on bloom to read. Adds no pass at all when nothing on screen glows.
+6c. **Comic lettering** (BeforeRenderingPostProcessing + 3): the marks and words of a hit and every other comic effect
+   (section 6h), which are on the `ComicLettering` layer. They are laid over the finished frame the way lettering is
+   laid over a drawn page: not inked, dotted or lit over, still hidden by what really stands in front of them (they
+   test the scene's depth), and under URP's own post like everything else. The renderer's transparent pass leaves the
+   layer out (`PostProcessSetup.EnsureComicLettering`), so nothing is drawn twice. They are drawn after Beautify, so
+   their colours are the Colour Bible's own and do not bloom.
 7. **Beautify 3** (AfterRenderingTransparents — i.e. *before* URP post, on the HDR frame) owns **tonemapping
    (PBR Neutral)**, **bloom** (threshold 1, intensity 0.4, spread 0.58, warm `#FFF1E0` tint) and the **ink vignette**
    (rings 0.1 → 0.5, ink `#14122B` at 60 %, **fade 0** — Beautify's "fade" fades the whole frame to the
@@ -499,6 +505,21 @@ keywords, and records which icon every skill and item has. No icon is ever given
 without a model gets its icon there: choose it on the left, pick from the best free matches, press Give. **Check
 Icons** lists anything left without one.
 
+## 6h. Comic marks and words
+
+The comic layer of a fight: `Design/13_comic_effects.md` has every effect, word and number. The rules of the look:
+
+- **Shape, word and lettering say who hit; colour says what kind of hit it was.** A weapon class owns one shape of
+  impact mark, one font and three words. A kind of hit (Normal, Elemental, Critical, Shattered, Reflected) owns one
+  ramp of four colours (core, fill, back, ink), the same for every class. `HitLookSettings.asset` holds both.
+- Every comic effect is flat art that carries its own ink outline and its own dots, in the Colour Bible's ink
+  `#14122B`. It is lettering: it is drawn over the inked frame (section 2, 6c), never through the ComicStyle pass.
+- A word is read or it is noise: a word of a hit is at most 1.7 m wide with capitals a third of a metre tall, sits
+  above the hit and stays at least 0.55 s; a mark is at least 0.18 s. Of fights the local player is no part of, five
+  words at most are on screen.
+- The look of a critical hit by one player on another is the largest lettering in a fight and is used for nothing else.
+- Effects come from the Cartoon FX pack through `GameFeelBuilder.Comic.cs`; the pack's files are only read.
+
 **Comic speech bubbles** (pets today, `ComicBubble` in the HUD): paper `#F4EEDF`, a 3 px ink outline, a hard ink
 shadow 4 px down and to the right, shadow-indigo Ben-Day dots on a 7 px 45° grid growing toward the lower right
 corner, and a tail on the side the speaker is. Every number is a `--bubble-*` value of `.comic-bubble` in
@@ -517,10 +538,11 @@ corner, and a tail on the side the speaker is. Every number is a `--bubble-*` va
 | Volumetric mist + Beautify | < 2 ms together | mist at half res, 0.6 m min step, 300 m max distance; mist volumes off when unused |
 | Lamp cones | < 0.5 ms at night in fog | Faster raymarch preset, no shadows, off beyond 65 m, off by day |
 | Live minimap | ~8 renders/s, 512² | opaque-only Forward+ renderer, no shadows/post/features |
+| Comic marks and words | nothing created in a fight, 0 B GC a hit, < 1 ms a frame in a crowd | measured in the Editor at 30 hits a second by other players: +0.6 ms mean frame, 0 effects created, 0 B allocated by the layer's own calls; the pool is filled when a scene starts (about 86 MB of sleeping comic effects by the Editor's count) |
 | Glow Halo | < 0.5 ms GPU, < 0.3 ms CPU with 40 glowing weapons | measured 0.22 ms GPU / 0.18 ms CPU with 42 halos (flame, lightning, sparks) at 925×1067 in the Editor, 0.07 / 0.06 ms with 2; the flood runs at half res inside the glowing things' screen rectangle only; nothing glowing = no pass |
 
 Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Editor. Look for each feature's
-`ProfilingSampler` name ("Comic Style", "Sun Shafts", "Glow Halo").
+`ProfilingSampler` name ("Comic Style", "Sun Shafts", "Glow Halo", "Comic Lettering").
 
 ## 8. Roadmap
 
@@ -554,6 +576,14 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black.
 
 ## Changelog
+
+- **2026-10-08 (polish pass: comic effects)**:
+  - Hits look like the weapon that dealt them: a mark, a font and three words for each of the nine weapon classes,
+    one colour ramp for each kind of hit, words of their own for a death, the forge, a level gained, a find and a
+    pet's evolution, and a look kept for a critical hit on another player (section 6h, `Design/13_comic_effects.md`).
+  - Comic lettering has a layer and a pass of its own, after the glow (section 2, 6c).
+  - The effect pool is filled before a fight and takes an effect back when its particles are done; effects of
+    fights the local player is no part of are never created during one.
 
 - **2026-10-08 (polish pass: pets)**:
   - Pets react to what their owner does in a comic speech bubble (end of section 6g): words for the Drone Core,

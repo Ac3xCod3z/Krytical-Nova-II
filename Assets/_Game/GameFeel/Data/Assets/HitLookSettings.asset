@@ -1,0 +1,186 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a644717f74266f14d93679939bb7199d, type: 3}
+  m_Name: HitLookSettings
+  m_EditorClassIdentifier: KryticalNova.GameFeel::KryticalNova.GameFeel.HitLookSettings
+  normal:
+    core: {r: 1, g: 1, b: 1, a: 1}
+    fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    back: {r: 1, g: 0.61960787, b: 0.4, a: 1}
+    ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  elemental:
+    core: {r: 0.9372549, g: 1, b: 1, a: 1}
+    fill: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    back: {r: 0.29803923, g: 0.32156864, b: 0.7490196, a: 1}
+    ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  critical:
+    core: {r: 1, g: 0.9529412, b: 0.76862746, a: 1}
+    fill: {r: 0.9411765, g: 0.22745098, b: 0.18039216, a: 1}
+    back: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+    ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  shattered:
+    core: {r: 1, g: 1, b: 1, a: 1}
+    fill: {r: 0.6784314, g: 0.8784314, b: 0.9490196, a: 1}
+    back: {r: 0.12156863, g: 0.43137255, b: 0.8, a: 1}
+    ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  reflected:
+    core: {r: 1, g: 1, b: 1, a: 1}
+    fill: {r: 0.8784314, g: 0.30980393, b: 0.72156864, a: 1}
+    back: {r: 0.47843137, g: 0.30980393, b: 0.8784314, a: 1}
+    ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  classes:
+  - weaponClass: 1
+    lightImpact: {fileID: 1959655985160118447, guid: d62554f43abd6634c81f034a60232e84, type: 3}
+    heavyImpact: {fileID: 2298375563450325311, guid: a1ce9b7621027734da548a127687bc36, type: 3}
+    heavyWord: {fileID: 2910760645492915023, guid: 6b99ae38786dd1946ac70f2892a7b5ae, type: 3}
+    criticalWord: {fileID: 3632837176172151956, guid: d69bbf1974591444f952fc9766eb1af2, type: 3}
+    skillWord: {fileID: 189910935730560982, guid: 0ee756bea7fc7dc47b8b41c35ef5d396, type: 3}
+    swing: {r: 0.30980393, g: 0.60784316, b: 0.9411765, a: 1}
+  - weaponClass: 2
+    lightImpact: {fileID: 3633940707469986728, guid: 147aa86d35cecca4291a7a919271d2c5, type: 3}
+    heavyImpact: {fileID: 8579710270815885845, guid: d2e58dd5a06b9624f80f974456c3b067, type: 3}
+    heavyWord: {fileID: 2414674002458950777, guid: bb978bf98dab03d41ac2b5ced9a16cc5, type: 3}
+    criticalWord: {fileID: 2118297724133900250, guid: 14260a45b6fbaab4193ada722f68603d, type: 3}
+    skillWord: {fileID: 2646812595243934266, guid: a989127cffb6fda45aecb81d643e465e, type: 3}
+    swing: {r: 0.8784314, g: 0.30980393, b: 0.72156864, a: 1}
+  - weaponClass: 3
+    lightImpact: {fileID: 4297719771262389992, guid: b4558381a7d823e418180ac4e6609881, type: 3}
+    heavyImpact: {fileID: 350808562808469234, guid: ad4bd43dbe93c294e8d7400cfa9be817, type: 3}
+    heavyWord: {fileID: 2093864042323847660, guid: f8236c755d7870646ad8ae5de2164d6c, type: 3}
+    criticalWord: {fileID: 7400989153665972, guid: f88951ace2c929842b06c5acb6e0a07a, type: 3}
+    skillWord: {fileID: 5708009212676811095, guid: 8bd8a1b575f23a146bc67ace75e015ca, type: 3}
+    swing: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+  - weaponClass: 4
+    lightImpact: {fileID: 4400497312470145296, guid: fd45af432df35cc47afac112ef805aa1, type: 3}
+    heavyImpact: {fileID: 7026131702642668406, guid: b28f76f84b9e19a46b479babc723f340, type: 3}
+    heavyWord: {fileID: 7604623943115209731, guid: f5a510175a4cf72499c9eb1530116d60, type: 3}
+    criticalWord: {fileID: 5083436356669856855, guid: 32cbd7b7870c2be438dc6444138416e7, type: 3}
+    skillWord: {fileID: 9012849483469997858, guid: 8333b04dd8810684680b1cb3d4ae5291, type: 3}
+    swing: {r: 0.9411765, g: 0.22745098, b: 0.18039216, a: 1}
+  - weaponClass: 5
+    lightImpact: {fileID: 7403280754215202459, guid: 748f42413aae3754099ff3bec4a2c520, type: 3}
+    heavyImpact: {fileID: 1593906253403100851, guid: fb86077253306e14bbcbf8b2d0580c40, type: 3}
+    heavyWord: {fileID: 5555284457367265154, guid: 9aca16b34cc42164a91f182fff58c7f3, type: 3}
+    criticalWord: {fileID: 5929205305592045483, guid: 1e1b9b0e3a79c404eb080183219c5f32, type: 3}
+    skillWord: {fileID: 3855827269754880460, guid: cf072c5b8aa78f24b8fe323aeee6fb92, type: 3}
+    swing: {r: 0.22352941, g: 0.81960785, b: 0.7058824, a: 1}
+  - weaponClass: 6
+    lightImpact: {fileID: 6449219524173012429, guid: aeaf8e4769c6125478990fe159df6583, type: 3}
+    heavyImpact: {fileID: 9134609913709056622, guid: b6f564f03edc2e047b636a63af157d7c, type: 3}
+    heavyWord: {fileID: 7754318805636070904, guid: c30173ea254b653479a2c31d808cf359, type: 3}
+    criticalWord: {fileID: 1851120519417817965, guid: a2d302fec4b43294a89e3e5d5e6541c6, type: 3}
+    skillWord: {fileID: 7879894090799109968, guid: 66f1427aece631d428ec2547badd8f54, type: 3}
+    swing: {r: 0.60784316, g: 0.41960785, b: 1, a: 1}
+  - weaponClass: 7
+    lightImpact: {fileID: 4186973574743777562, guid: 0c3aeb3266eabf94a815b62082721ce7, type: 3}
+    heavyImpact: {fileID: 4149619578430368285, guid: d3d742af8ac03234ba70e58d0b63454c, type: 3}
+    heavyWord: {fileID: 7155817990966772189, guid: 371c5ca1ada14a647b471c5a6a0b9232, type: 3}
+    criticalWord: {fileID: 8291640517233831885, guid: 799ffa86ae0b7c242b0e26c4149245b9, type: 3}
+    skillWord: {fileID: 2958614287525751578, guid: dc71da9372e3cb145bb0a7328b881166, type: 3}
+    swing: {r: 1, g: 0.47843137, b: 0.23529412, a: 1}
+  - weaponClass: 8
+    lightImpact: {fileID: 7038513525229662083, guid: 8db90fbb72e609c4cbaafccf122c4a0b, type: 3}
+    heavyImpact: {fileID: 8970696603114661567, guid: 2d71815bf17f63b4da5fa8ffbc789e64, type: 3}
+    heavyWord: {fileID: 7368616759218968868, guid: 1d96636a799e04b45bff8e98a4d0bc77, type: 3}
+    criticalWord: {fileID: 5638940238846709075, guid: 2b2053f6b58e89049ab757b7dc0a871f, type: 3}
+    skillWord: {fileID: 8741122259681765425, guid: 5eb8feaf6c484f94b8b00de751aaa029, type: 3}
+    swing: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+  - weaponClass: 9
+    lightImpact: {fileID: 8256294774825025805, guid: b1bda24aba0144c47a3dce89f9e6e2df, type: 3}
+    heavyImpact: {fileID: 4060938905017254881, guid: 8ef0a2dad0c9341428e209e3b1508408, type: 3}
+    heavyWord: {fileID: 6679371721863435235, guid: 32ef3e7fda5460943b2720054e7d5426, type: 3}
+    criticalWord: {fileID: 6787354710659971218, guid: a69a2107a1fd94f49a25826dae364ae3, type: 3}
+    skillWord: {fileID: 5029852079449234274, guid: e186c84f9c2110e44b0091d01ddde855, type: 3}
+    swing: {r: 0.43529412, g: 0.8156863, b: 0.41568628, a: 1}
+  unarmed:
+    weaponClass: 0
+    lightImpact: {fileID: 2334226982610524070, guid: ab280fcf3a1b75340aaaa3c95cb2ebfe, type: 3}
+    heavyImpact: {fileID: 2211264269987808931, guid: 8cb88cdb794310843831a7ac5c6da4ce, type: 3}
+    heavyWord: {fileID: 0}
+    criticalWord: {fileID: 0}
+    skillWord: {fileID: 0}
+    swing: {r: 1, g: 1, b: 1, a: 0}
+  markScale: 1
+  wordScale: 1
+  towardCamera: 0.35
+  wordHeight: 0.8
+  wordScatter: 0.35
+  wordGapSeconds: 0.45
+  othersWords: 5
+  othersWordDistance: 26
+  wordSeconds: 0.6
+  impactDistance: 48
+  reflectedWord: {fileID: 5380898241560275540, guid: e075038eac09f2b43ba73e75f81b5898, type: 3}
+  shatteredWord: {fileID: 6474608757031672667, guid: c0a9413a4652f2a4ebe41cfdc200e2d5, type: 3}
+  pvpCritStyle: 1
+  pvpCrit:
+  - style: 0
+    panels:
+    - {fileID: 7615442704310802989, guid: 1868aa2026e32c543bc36947eb961e82, type: 3}
+    lines: {fileID: 0}
+    linesColour: {r: 1, g: 1, b: 1, a: 1}
+    factionColours: 0
+    ramp:
+      core: {r: 1, g: 1, b: 1, a: 1}
+      fill: {r: 1, g: 0.7882353, b: 0.23529412, a: 1}
+      back: {r: 0.9411765, g: 0.22745098, b: 0.18039216, a: 1}
+      ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+    scale: 1
+  - style: 1
+    panels:
+    - {fileID: 9062608970919457221, guid: 2e084503f4b61804abde885be56481b6, type: 3}
+    lines: {fileID: 405594746007797714, guid: 83373326ed63df240a571a018e812ae3, type: 3}
+    linesColour: {r: 0.8784314, g: 0.30980393, b: 0.72156864, a: 1}
+    factionColours: 0
+    ramp:
+      core: {r: 1, g: 1, b: 1, a: 1}
+      fill: {r: 1, g: 1, b: 1, a: 1}
+      back: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+      ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+    scale: 1
+  - style: 2
+    panels:
+    - {fileID: 963077837533012165, guid: 9e31f58e710d21f44b5ec7350bdc174c, type: 3}
+    - {fileID: 363282496554783453, guid: 54846667563eef549bc0b7ecbe26f1fb, type: 3}
+    - {fileID: 3998073600134630654, guid: 9cf0e3d48f48a96499866aea8b17b6ee, type: 3}
+    lines: {fileID: 0}
+    linesColour: {r: 1, g: 1, b: 1, a: 1}
+    factionColours: 1
+    ramp:
+      core: {r: 0, g: 0, b: 0, a: 0}
+      fill: {r: 0, g: 0, b: 0, a: 0}
+      back: {r: 0, g: 0, b: 0, a: 0}
+      ink: {r: 0, g: 0, b: 0, a: 0}
+    scale: 1
+  pvpCritStopSeconds: 0.14
+  pvpCritVictimStrength: 0.6
+  pvpCritGapSeconds: 0.3
+  hegemony:
+    core: {r: 1, g: 1, b: 1, a: 1}
+    fill: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
+    back: {r: 0.12156863, g: 0.43137255, b: 0.8, a: 1}
+    ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  nullFaction:
+    core: {r: 1, g: 1, b: 1, a: 1}
+    fill: {r: 0.84705883, g: 0.20392157, b: 0.23529412, a: 1}
+    back: {r: 0.47843137, g: 0.30980393, b: 0.8784314, a: 1}
+    ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  covenant:
+    core: {r: 1, g: 1, b: 1, a: 1}
+    fill: {r: 0.9098039, g: 0.6901961, b: 0.2901961, a: 1}
+    back: {r: 0.24705882, g: 0.56078434, b: 0.3529412, a: 1}
+    ink: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  warmImpacts: 4
+  warmWords: 2
+  warmSparks: 12
+  warmOthers: 2
+  warmPerFrame: 6

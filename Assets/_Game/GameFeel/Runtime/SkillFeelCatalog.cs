@@ -40,6 +40,9 @@ namespace KryticalNova.GameFeel
 
         private Dictionary<string, SkillFeel> byId;
 
+        /// <summary>Every skill's look, for whoever needs them all (the pool is filled from it).</summary>
+        public IReadOnlyList<SkillFeel> All => skills;
+
         public SkillFeel Find(string skillId)
         {
             if (string.IsNullOrEmpty(skillId)) return null;

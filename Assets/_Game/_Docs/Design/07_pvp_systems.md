@@ -71,6 +71,12 @@ A player can therefore be valuable without simply having the highest damage.
   slow motion for a blink first (a picture only: see `Rendering-Bible.md` 6f). The body lies where it lands, then the server respawns the
   player on one of the map's spawn points after 8 s (Zone01: the Central Plaza). The countdown is in the chat's
   Combat tab. Code: `PlayerDeathMotor`, `CombatEntity.Killed`, `PlayerSpawnService.Respawn`.
+- **A critical hit on another player** (8 Oct 2026) has a look nothing else in the game uses: a panel half as large
+  again as any other word of a hit, a camera jolt, a chromatic slam and a short hold of both fighters' poses, on the
+  screens of the two of them (the one who was hit gets less of it; the Screen shake setting switches the screen's part
+  off). Three looks are built: Impact frame ("CRIT!", in use), Splash panel ("KABLAM!") and Faction strike ("DENIED!",
+  "ERASED!", "JUDGED!" by the attacker's faction). `HitLookSettings.pvpCritStyle` picks one; `gm.fx.pvpcrit` shows
+  them. A critical hit on a creature shows the weapon class's critical word instead. See `13_comic_effects.md`.
 - Not built: group, guild and faction warfare, contribution and class points, hero rank.
 
 ### Sources

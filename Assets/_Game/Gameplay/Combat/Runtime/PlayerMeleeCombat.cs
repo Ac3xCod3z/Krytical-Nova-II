@@ -115,6 +115,9 @@ namespace KryticalNova.Combat
         public bool IsAttacking => isAttacking;
         public IDamageable CurrentTarget => currentTarget;
         public float MeleeStrikingRange => meleeStrikingRange;
+        /// <summary>The pooled effects of a swing and of a hit, for whoever fills the pool before a fight.</summary>
+        public GameObject SlashVfxPrefab => slashVfxPrefab;
+        public GameObject HitVfxPrefab => hitVfxPrefab;
 
         public event Action<string> OnCombatMessage;
         /// <summary>Raised where a hit is resolved (server or offline), after the damage was applied. Feeds the combat log.</summary>
@@ -550,7 +553,9 @@ namespace KryticalNova.Combat
             Quaternion facing = transform.rotation * Quaternion.AngleAxis(-modelForwardOffset, Vector3.up);
             Vector3 position = transform.position + facing * slashVfxOffset;
 
-            var instance = pool.Spawn(slashVfxPrefab, position, facing * stepRotation);
+            // This machine's own player is always shown; anyone else's only when a copy lies ready in the pool.
+            var instance = IsLocalPlayerPresentation ? pool.Spawn(slashVfxPrefab, position, facing * stepRotation)
+                : pool.TrySpawn(slashVfxPrefab, position, facing * stepRotation);
             if (instance != null) instance.transform.localScale = Vector3.one * slashVfxScale;
             ClientPresentationRegistry.Feel?.Swing(transform, step, IsLocalPlayerPresentation);
         }
@@ -714,8 +719,9 @@ namespace KryticalNova.Combat
                 Vector3 impactPos = target.Transform.position + Vector3.up * impactVfxHeight + toAttacker * impactVfxTowardAttacker;
                 var targetNetObj = target.Transform.GetComponent<NetworkObject>();
                 ulong targetId = targetNetObj != null && targetNetObj.IsSpawned ? targetNetObj.NetworkObjectId : ulong.MaxValue;
-                if (IsSpawned) SpawnImpactVfxClientRpc(impactPos, toAttacker, comboStep, result.IsCritical, targetId);
-                else SpawnImpactVfxLocal(impactPos, toAttacker, comboStep, result.IsCritical, target.Transform);
+                byte kind = ImpactKind(result, attackerStats.TuningData);
+                if (IsSpawned) SpawnImpactVfxClientRpc(impactPos, toAttacker, comboStep, kind, targetId);
+                else SpawnImpactVfxLocal(impactPos, toAttacker, comboStep, kind, target.Transform);
             }
 
             if (result.IsEvaded)
@@ -738,6 +744,20 @@ namespace KryticalNova.Combat
         private const byte EvadedBit = 2;
         private const byte ReflectedBit = 4;
         private const byte ShatteredBit = 8;
+        private const byte ElementalBit = 16;
+
+        /// <summary>
+        /// What kind of hit every client is shown: critical, thrown back, a barrier broken, and Elemental when the
+        /// Elemental part is a telling share of the damage (<see cref="CombatStatTuningData.elementalHitShare"/>).
+        /// Looks only: the damage is already decided.
+        /// </summary>
+        private static byte ImpactKind(in DamageResult result, CombatStatTuningData tuning)
+        {
+            float share = tuning != null ? tuning.elementalHitShare : 0.35f;
+            bool elemental = result.DamageDealt > 0f && result.NetElementalDamage >= result.DamageDealt * share;
+            return (byte)((result.IsCritical ? CriticalBit : 0) | (result.IsReflected ? ReflectedBit : 0)
+                | (result.ShieldShattered ? ShatteredBit : 0) | (elemental ? ElementalBit : 0));
+        }
 
         private bool AttackerIsHere => !IsSpawned || IsOwner;
 
@@ -795,7 +815,8 @@ namespace KryticalNova.Combat
         /// Plays this character's impact presentation on <paramref name="target"/> without resolving any damage (GM
         /// preview). It goes through the same call a real hit does, so the two cannot drift apart.
         /// </summary>
-        public void PreviewImpact(Transform target, int comboStep, bool critical)
+        public void PreviewImpact(Transform target, int comboStep, bool critical, bool reflected = false, bool shattered = false,
+            bool elemental = false)
         {
             if (target == null) return;
             Vector3 toAttacker = transform.position - target.position;
@@ -805,29 +826,38 @@ namespace KryticalNova.Combat
             // An agent's root floats its base offset above the soles; the impact height is measured from the ground.
             float rootHeight = target.TryGetComponent(out NavMeshAgent targetAgent) ? targetAgent.baseOffset : 0f;
             Vector3 impactPos = target.position + Vector3.up * (impactVfxHeight - rootHeight) + toAttacker * impactVfxTowardAttacker;
-            SpawnImpactVfxLocal(impactPos, toAttacker, comboStep, critical, target);
+            byte kind = (byte)((critical ? CriticalBit : 0) | (reflected ? ReflectedBit : 0) | (shattered ? ShatteredBit : 0)
+                | (elemental ? ElementalBit : 0));
+            SpawnImpactVfxLocal(impactPos, toAttacker, comboStep, kind, target);
         }
 
         [ClientRpc]
-        private void SpawnImpactVfxClientRpc(Vector3 position, Vector3 towardAttacker, int comboStep, bool isCritical, ulong targetNetworkObjectId)
+        private void SpawnImpactVfxClientRpc(Vector3 position, Vector3 towardAttacker, int comboStep, byte kind, ulong targetNetworkObjectId)
         {
             Transform target = null;
             if (targetNetworkObjectId != ulong.MaxValue && NetworkManager != null &&
                 NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(targetNetworkObjectId, out var targetNetObj))
                 target = targetNetObj.transform;
-            SpawnImpactVfxLocal(position, towardAttacker, comboStep, isCritical, target);
+            SpawnImpactVfxLocal(position, towardAttacker, comboStep, kind, target);
         }
 
-        private void SpawnImpactVfxLocal(Vector3 position, Vector3 towardAttacker, int comboStep, bool isCritical, Transform target)
+        private void SpawnImpactVfxLocal(Vector3 position, Vector3 towardAttacker, int comboStep, byte kind, Transform target)
         {
+            bool isCritical = (kind & CriticalBit) != 0;
             var pool = NetworkCombatVFXPool.Instance;
-            // Burst faces back toward the attacker, i.e. sparks fly off the struck surface.
+            var targetNet = target != null ? target.GetComponent<NetworkObject>() : null;
+            bool targetIsLocalPlayer = targetNet != null && targetNet.IsSpawned && targetNet.IsLocalPlayer;
+            // Burst faces back toward the attacker, i.e. sparks fly off the struck surface. A fight this machine's
+            // player is part of is always shown; anyone else's only when a copy lies ready in the pool.
             if (pool != null && hitVfxPrefab != null)
-                pool.Spawn(hitVfxPrefab, position, Quaternion.LookRotation(towardAttacker, Vector3.up));
+            {
+                Quaternion facing = Quaternion.LookRotation(towardAttacker, Vector3.up);
+                if (IsLocalPlayerPresentation || targetIsLocalPlayer) pool.Spawn(hitVfxPrefab, position, facing);
+                else pool.TrySpawn(hitVfxPrefab, position, facing);
+            }
 
             var feel = ClientPresentationRegistry.Feel;
             if (feel == null) return;
-            var targetNet = target != null ? target.GetComponent<NetworkObject>() : null;
             feel.Hit(new HitFeel
             {
                 Point = position,
@@ -836,8 +866,11 @@ namespace KryticalNova.Combat
                 Target = target,
                 ComboStep = comboStep,
                 IsCritical = isCritical,
+                IsReflected = (kind & ReflectedBit) != 0,
+                ShieldShattered = (kind & ShatteredBit) != 0,
+                IsElemental = (kind & ElementalBit) != 0,
                 AttackerIsLocalPlayer = IsLocalPlayerPresentation,
-                TargetIsLocalPlayer = targetNet != null && targetNet.IsSpawned && targetNet.IsLocalPlayer,
+                TargetIsLocalPlayer = targetIsLocalPlayer,
             });
         }
 

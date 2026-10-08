@@ -26,7 +26,7 @@ namespace KryticalNova.EditorTools
     /// Re-runnable: assets are rebuilt from the tables below, scene components are added only when missing. Vendor
     /// folders are never modified. Sound slots (MMF_Sound) are left empty for audio to be assigned on the prefab.
     /// </summary>
-    public static class GameFeelBuilder
+    public static partial class GameFeelBuilder
     {
         public const string PrefabFolder = "Assets/_Game/GameFeel/Prefabs";
         public const string PrefabPath = PrefabFolder + "/PFX_GameFeel.prefab";
@@ -81,6 +81,9 @@ namespace KryticalNova.EditorTools
             WeatherVfxBuilder.EnsureFolder(PrefabFolder);
             WeatherVfxBuilder.EnsureFolder(VfxFolder);
             BuildVfx();
+            BuildMarks();
+            foreach (string word in ComicWordNames()) BuildComicWord(word);
+            BuildHitLookSettings();
             BuildPrefab();
             WireScene();
             UseUrpVfxOnPlayer();
@@ -99,13 +102,7 @@ namespace KryticalNova.EditorTools
             Make("FX_Cartoony_Rings_01", "PFX_Click_Ring", 0.35f, new Color(0.55f, 0.95f, 1f));
             Make("FX_Cartoony_Rings_01", "PFX_Select_Hostile", 0.55f, new Color(1f, 0.35f, 0.3f));
             Make("FX_Sparkles_Small_01", "PFX_Select_Friendly", 0.6f, new Color(1f, 0.85f, 0.45f));
-            CartoonImpact("Impact 024", "PFX_Comic_Hit", 1.6f);
-            CartoonImpact("Impact 028", "PFX_Comic_HitHeavy", 1.8f);
-            CartoonImpact("Impact 023", "PFX_Comic_Slash", 2.2f);
-            CartoonText("Text 020", "PFX_Comic_Pow", 2.6f);
-            CartoonText("Text 022", "PFX_Comic_Wham", 2.4f);
-            CartoonText("Text 021", "PFX_Comic_Zap", 2.8f);
-            CartoonText("Text 012", "PFX_Comic_SlashText", 2.8f);
+            BuildComicVfx();
 
             // Locomotion: POLYGON's cartoon puffs (its "dust" effects are ambient motes, far too faint for a burst).
             Make("FX_Cartoony_Jump_01", "PFX_Dust_Run", 0.6f);        // kick-off ring of puffs
@@ -140,6 +137,19 @@ namespace KryticalNova.EditorTools
             BuildAreaRing();
             BuildBladeTrail();
             UseUrpMaterials($"{GameplayVfxFolder}/FX_ComicSlash.prefab");
+        }
+
+        /// <summary>
+        /// What the comic layer needs that is not a mark or a word, and the end of the seven comic effects every
+        /// context used to share (a hit, a skill, a death and the forge all showed the same POW and WHAM): each
+        /// moment has its own now, in <see cref="ComicFolder"/>.
+        /// </summary>
+        private static void BuildComicVfx()
+        {
+            Make("FX_ExperienceGain_01", "PFX_LevelUp", 0.7f); // a level gained: light rising through the character
+            foreach (string old in new[] { "PFX_Comic_Hit", "PFX_Comic_HitHeavy", "PFX_Comic_Slash", "PFX_Comic_Pow", "PFX_Comic_Wham",
+                         "PFX_Comic_Zap", "PFX_Comic_SlashText" })
+                if (AssetDatabase.LoadAssetAtPath<GameObject>(Vfx(old)) != null) AssetDatabase.DeleteAsset(Vfx(old));
         }
 
         // ---------------------------------------------------------------- death & respawn
@@ -271,15 +281,16 @@ namespace KryticalNova.EditorTools
 
             // ---- world particles: every client
             var overBody = new Vector3(0f, 0.7f, 0f);
+            // The words are a death's own: K.O. for a death, WHAM! for a critical one, THUD! as a thrown body comes down.
             so.FindProperty("deathWorldFeel").objectReferenceValue = Smeared(World(world, DeathPlayer,
-                new Fx("PFX_Death_Burst"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy")), SmearKind.DeathThrow);
+                new Fx("PFX_Death_Burst"), ComicAt("PFX_Mark_Death"), ComicAt("PFX_Word_KO", 0.9f)), SmearKind.DeathThrow);
             so.FindProperty("critDeathWorldFeel").objectReferenceValue = Smeared(World(world, CritDeathPlayer,
-                new Fx("PFX_CritDeath_Blast"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"), Comic("PFX_Comic_Wham", 0.9f),
+                new Fx("PFX_CritDeath_Blast"), ComicAt("PFX_Mark_Death"), ComicAt("PFX_Word_Wham", 0.9f),
                 OnGround("PFX_CritKill_Shockwave")), SmearKind.DeathThrow);
             so.FindProperty("bodyLandWorldFeel").objectReferenceValue = World(world, "Body Land",
                 Dust("PFX_Dust_Land"), new Fx("PFX_Death_Stars", overBody, follow: true));
             so.FindProperty("critBodyLandWorldFeel").objectReferenceValue = World(world, "Critical Body Land",
-                OnGround("PFX_CritDeath_Crater"), Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"), Comic("PFX_Comic_Pow", 0.9f),
+                OnGround("PFX_CritDeath_Crater"), Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"), ComicAt("PFX_Word_Thud", 0.9f),
                 new Fx("PFX_Death_Stars", overBody, follow: true));
             so.FindProperty("respawnWorldFeel").objectReferenceValue = World(world, "Respawn",
                 AtFeet("PFX_Respawn"), AtFeet("PFX_Cast_PowerUp"));
@@ -441,7 +452,8 @@ namespace KryticalNova.EditorTools
             so.FindProperty("petEvolveWorldFeel").objectReferenceValue = World(world, "Pet Evolved",
                 new Fx("PFX_Pet_Evolve", Vector3.zero, follow: true),
                 new Fx("PFX_Pet_EvolveRays", Vector3.zero, follow: true),
-                new Fx("PFX_Pet_EvolveSparkles", Vector3.zero, follow: true));
+                new Fx("PFX_Pet_EvolveSparkles", Vector3.zero, follow: true),
+                ComicAt("PFX_Word_Evolved", 0.75f, ramped: true)); // in the colour of the stage it grew into
         }
 
         // ---------------------------------------------------------------- the forge
@@ -521,14 +533,15 @@ namespace KryticalNova.EditorTools
             });
 
             // ---- world particles: every client, riding on the character
+            // The words are the forge's own: FORGED!, SAVED! when a Failsafe held, CRACK! when the piece broke.
             so.FindProperty("forgeSuccessWorldFeel").objectReferenceValue = World(world, "Forge Success",
-                AtFeet("PFX_Forge_Success"), AtFeet("PFX_Forge_Rays"), OnCaster("PFX_Forge_Sparkles"), Comic("PFX_Comic_Pow", 1.9f));
+                AtFeet("PFX_Forge_Success"), AtFeet("PFX_Forge_Rays"), OnCaster("PFX_Forge_Sparkles"), ComicAt("PFX_Word_Forged", 2.3f));
             so.FindProperty("forgeFailWorldFeel").objectReferenceValue = World(world, "Forge Fail",
                 OnCaster("PFX_Forge_Fail"), Dust("PFX_Dust_Run"));
             so.FindProperty("forgeSavedWorldFeel").objectReferenceValue = World(world, "Forge Saved",
-                OnCaster("PFX_Forge_Fail"), OnCaster("PFX_Forge_Saved"));
+                OnCaster("PFX_Forge_Fail"), OnCaster("PFX_Forge_Saved"), ComicAt("PFX_Word_Saved", 2.3f));
             so.FindProperty("forgeBreakWorldFeel").objectReferenceValue = World(world, "Forge Break",
-                OnCaster("PFX_Forge_Break"), OnCaster("PFX_Hit_Heavy"), Comic("PFX_Comic_Wham", 1.9f));
+                OnCaster("PFX_Forge_Break"), ComicAt("PFX_Word_Crack", 2.3f));
         }
 
         // ---------------------------------------------------------------- the Herald: Ascension and Nova Standings
@@ -1020,23 +1033,11 @@ namespace KryticalNova.EditorTools
             return mat;
         }
 
-        private static void CartoonImpact(string source, string name, float scale) => Cartoon("Impacts/" + source, name, scale);
-        private static void CartoonText(string source, string name, float scale) => Cartoon("Texts/" + source, name, scale);
-
         /// <summary>
-        /// Copy of a Cartoon FX effect with the pack's authoring components removed: they rebuild the effect in the
-        /// editor and turn it to the camera once in Start, neither of which suits a pooled instance. The particle
-        /// systems and their materials are all the effect needs; MMF_PooledVfx faces it to the camera on every play.
+        /// Takes the Cartoon FX pack's authoring components off a copy of one of its effects: they rebuild the effect
+        /// in the editor and turn it to the camera once in Start, neither of which suits a pooled instance. The
+        /// particle systems and their materials are all the effect needs; it is turned to the camera on every play.
         /// </summary>
-        private static void Cartoon(string source, string name, float scale)
-        {
-            WeatherVfxBuilder.Build(CartoonFx + source + ".prefab", Vfx(name), root =>
-            {
-                StripAuthoring(root);
-                OneShot(root, scale, null);
-            });
-        }
-
         private static void StripAuthoring(GameObject root)
         {
             // Components can require each other, so keep removing until a pass removes nothing.
@@ -1141,12 +1142,21 @@ namespace KryticalNova.EditorTools
             public readonly string Prefab;
             public readonly Vector3 Offset;
             public readonly bool Ground, Follow, FaceCamera, Dust, Tint;
+            /// <summary>A comic mark or word (it lives in <see cref="ComicFolder"/>), and whether it wears the ramp of the moment.</summary>
+            public readonly bool FromComic, Ramp;
+            /// <summary>Copies kept ready in the pool.</summary>
+            public readonly int Warm;
             public Fx(string prefab, Vector3 offset = default, bool ground = false, bool follow = false, bool faceCamera = false, bool dust = false,
-                bool tint = false)
+                bool tint = false, bool fromComic = false, bool ramp = false, int warm = 2)
             {
                 Prefab = prefab; Offset = offset; Ground = ground; Follow = follow; FaceCamera = faceCamera; Dust = dust; Tint = tint;
+                FromComic = fromComic; Ramp = ramp; Warm = warm;
             }
         }
+
+        /// <summary>The same effect with another number of copies kept ready (the ones that play many at a time).</summary>
+        private static Fx Warm(Fx fx, int warm) =>
+            new Fx(fx.Prefab, fx.Offset, fx.Ground, fx.Follow, fx.FaceCamera, fx.Dust, fx.Tint, fx.FromComic, fx.Ramp, warm);
 
         private readonly struct SkillLook
         {
@@ -1161,7 +1171,9 @@ namespace KryticalNova.EditorTools
         }
 
         private static Fx Slash(string prefab = "PFX_Cast_Slash") => new Fx(prefab, SlashOrigin);
-        private static Fx Comic(string prefab, float up = 0f) => new Fx(prefab, new Vector3(0f, up, 0f), faceCamera: true);
+        /// <summary>A comic mark or word, turned to the camera, <paramref name="up"/> metres above where the moment plays.</summary>
+        private static Fx ComicAt(string prefab, float up = 0f, bool ramped = false) =>
+            new Fx(prefab, new Vector3(0f, up, 0f), faceCamera: true, fromComic: true, ramp: ramped);
         private static Fx OnCaster(string prefab) => new Fx(prefab, Chest, follow: true);
         /// <summary>Rising effects (pillars, columns) start at the feet so they wrap the body instead of the head.</summary>
         private static Fx AtFeet(string prefab) => new Fx(prefab, Feet, follow: true);
@@ -1180,13 +1192,15 @@ namespace KryticalNova.EditorTools
             // empty cast keeps the presenter from falling back to the default slash.
             new SkillLook("FuryStrike", cast: new Fx[0]),
             new SkillLook("HaeseoStroke", cast: new[] { Slash() }),
-            new SkillLook("GentlemansPen", cast: new[] { Slash() }, hit: new[] { Comic("PFX_Comic_Slash"), new Fx("PFX_Hit_Sparks") }),
-            new SkillLook("DevilsStrike", cast: new[] { Slash() }, hit: new[] { Comic("PFX_Comic_HitHeavy"), new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_Wham", 0.9f) }),
-            new SkillLook("FlashOfRage", cast: new[] { Slash(), OnCaster("PFX_Cast_Fire") }, hit: new[] { Comic("PFX_Comic_Slash"), new Fx("PFX_Hit_Sparks") }),
-            new SkillLook("SunraysStroke", cast: new[] { Slash(), AtFeet("PFX_Cast_PowerUp") }, hit: new[] { Comic("PFX_Comic_HitHeavy"), new Fx("PFX_Hit_Heavy") }),
-            new SkillLook("PhantomThunder", cast: new[] { Slash() }, hit: new[] { Comic("PFX_Comic_Slash"), OnGround("PFX_Cast_Thunder"), Comic("PFX_Comic_Zap", 0.9f) }),
+            // A skill's hit burst is what is its own (thunder on the ground): the mark and the word of the hit come
+            // from the weapon class that cast it (HitLookSettings), and every hit already has its sparks.
+            new SkillLook("GentlemansPen", cast: new[] { Slash() }, hit: new Fx[0]),
+            new SkillLook("DevilsStrike", cast: new[] { Slash() }, hit: new Fx[0]),
+            new SkillLook("FlashOfRage", cast: new[] { Slash(), OnCaster("PFX_Cast_Fire") }, hit: new Fx[0]),
+            new SkillLook("SunraysStroke", cast: new[] { Slash(), AtFeet("PFX_Cast_PowerUp") }, hit: new Fx[0]),
+            new SkillLook("PhantomThunder", cast: new[] { Slash() }, hit: new[] { OnGround("PFX_Cast_Thunder") }),
             new SkillLook("ThunderousDragon", cast: new[] { OnGround("PFX_Cast_GroundCrack"), OnGround("PFX_Cast_Thunder") },
-                hit: new[] { Comic("PFX_Comic_HitHeavy"), OnGround("PFX_Cast_Thunder"), Comic("PFX_Comic_Zap", 0.9f) }),
+                hit: new[] { OnGround("PFX_Cast_Thunder") }),
 
             new SkillLook("AzureWall", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_AzureWall"),
             new SkillLook("LightningFlash", cast: new[] { AtFeet("PFX_Cast_Buff") }, aura: "PFX_Aura_LightningFlash", anchor: AuraAnchor.Chest),
@@ -1285,15 +1299,13 @@ namespace KryticalNova.EditorTools
 
                 // ---- world particles: every client
                 var world = Group(root, "World");
-                so.FindProperty("hitWorldFeel").objectReferenceValue = World(world, "Hit", new Fx("PFX_Hit_Sparks"), Comic("PFX_Comic_Hit"));
-                so.FindProperty("heavyHitWorldFeel").objectReferenceValue = World(world, "Heavy Hit", new Fx("PFX_Hit_Heavy"), Comic("PFX_Comic_HitHeavy"));
-                so.FindProperty("critWorldFeel").objectReferenceValue = World(world, "Critical", Comic("PFX_Comic_Pow", 0.9f));
+                AddHitFeel(root, world, so);
+                so.FindProperty("looks").objectReferenceValue = AssetDatabase.LoadAssetAtPath<HitLookSettings>(HitLookSettingsPath);
                 so.FindProperty("runWorldFeel").objectReferenceValue = Smeared(World(world, RunStartPlayer, Dust("PFX_Dust_Run")), SmearKind.TakeOff);
                 so.FindProperty("jumpWorldFeel").objectReferenceValue = World(world, "Jump", Dust("PFX_Dust_Jump"), Dust("PFX_Jump_Burst"));
                 so.FindProperty("landWorldFeel").objectReferenceValue = World(world, "Land", Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"));
                 so.FindProperty("attackCastWorldFeel").objectReferenceValue = World(world, "Attack Skill", Slash());
                 so.FindProperty("buffCastWorldFeel").objectReferenceValue = World(world, "Buff Skill", AtFeet("PFX_Cast_Buff"));
-                so.FindProperty("skillHitWorldFeel").objectReferenceValue = World(world, "Skill Hit", Comic("PFX_Comic_Slash"), new Fx("PFX_Hit_Sparks"));
                 so.FindProperty("buffEndWorldFeel").objectReferenceValue = World(world, "Buff End", OnCaster("PFX_Buff_End"));
                 so.FindProperty("healWorldFeel").objectReferenceValue = World(world, "Heal", AtFeet("PFX_Heal"));
                 so.FindProperty("chiWorldFeel").objectReferenceValue = World(world, "Chi", AtFeet("PFX_Chi"));
@@ -1373,7 +1385,7 @@ namespace KryticalNova.EditorTools
             {
                 foreach (Fx fx in effects)
                 {
-                    GameObject prefab = Load(Vfx(fx.Prefab));
+                    GameObject prefab = Load(fx.FromComic ? ComicPath(fx.Prefab) : Vfx(fx.Prefab));
                     if (prefab == null)
                     {
                         Debug.LogWarning($"[GameFeel] Missing VFX '{fx.Prefab}' for '{name}'.");
@@ -1389,6 +1401,8 @@ namespace KryticalNova.EditorTools
                     vfx.Upright = fx.Ground || fx.Follow;
                     vfx.TintWithGroundDust = fx.Dust;
                     vfx.TintWithMoment = fx.Tint;
+                    vfx.RampWithMoment = fx.Ramp;
+                    vfx.Warm = fx.Warm;
                 }
             });
         }

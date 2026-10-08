@@ -26,6 +26,20 @@ MonoBehaviour:
     offscreenFade: 0.5
     debugShaftsOnly: 0
   shader: {fileID: 4800000, guid: f4b1ddc77d3f9c542b212936a41c85b4, type: 3}
+--- !u!114 &-4323589378594971989
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90406e9d7e997244f87517b4882590d5, type: 3}
+  m_Name: ComicLettering
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Rendering.ComicLetteringFeature
+  m_Active: 1
+  renderPassEvent: 553
 --- !u!114 &-3444538586689478259
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -113,7 +127,8 @@ MonoBehaviour:
   - {fileID: 1305805778946134753}
   - {fileID: -3444538586689478259}
   - {fileID: 4601918301690530619}
-  m_RendererFeatureMap: ad6b866f10d7b46ca50226fd55143914271a73ed58c31e86691a2da7b3952e59e192bcff6f271f128d613fc5678a32d03b0ba239504cdd3fl
+  - {fileID: -4323589378594971989}
+  m_RendererFeatureMap: ad6b866f10d7b46ca50226fd55143914271a73ed58c31e86691a2da7b3952e59e192bcff6f271f128d613fc5678a32d03b0ba239504cdd3fabde31165e86ffc3l
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3
@@ -125,7 +140,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   m_TransparentLayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967167
   m_DefaultStencilState:
     overrideStencilState: 0
     stencilReference: 1

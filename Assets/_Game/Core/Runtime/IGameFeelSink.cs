@@ -13,6 +13,12 @@ namespace KryticalNova.Core
         public Transform Target;
         public int ComboStep;
         public bool IsCritical;
+        /// <summary>The blow was thrown back at the attacker (Backlash): the target took no damage.</summary>
+        public bool IsReflected;
+        /// <summary>The blow broke the target's barrier (Shatterpoint).</summary>
+        public bool ShieldShattered;
+        /// <summary>A telling share of the damage was Elemental: the part an Aegis does not stop.</summary>
+        public bool IsElemental;
         public bool AttackerIsLocalPlayer;
         public bool TargetIsLocalPlayer;
     }
@@ -80,7 +86,8 @@ namespace KryticalNova.Core
         /// <summary>The hold ended: released into the cast (<paramref name="completed"/>) or let go early.</summary>
         void ChargeEnded(Transform actor, string skillId, bool completed);
         /// <summary>A skill's hit landed at <paramref name="point"/>, on every peer.</summary>
-        void SkillHit(Transform caster, string skillId, Vector3 point);
+        /// <param name="classSlot">Which of the class's ten skills it is (1 to 8 for the attacks), 0 for a skill of no class.</param>
+        void SkillHit(Transform caster, string skillId, Vector3 point, int classSlot = 0);
         /// <summary>A timed buff took hold. It lasts until <see cref="BuffEnded"/>; <paramref name="duration"/> is its full length.</summary>
         void BuffStarted(Transform actor, string skillId, float duration);
         void BuffEnded(Transform actor, string skillId);
@@ -105,5 +112,13 @@ namespace KryticalNova.Core
 
         /// <summary>A request at the Herald ended for a character, on every peer.</summary>
         void NovaWorked(in NovaFeel moment);
+
+        /// <summary>A character gained a level (or several at once), on every peer.</summary>
+        void LevelUp(Transform actor, bool isLocalPlayer);
+
+        /// <summary>A drop was taken off the ground, on every peer.</summary>
+        /// <param name="point">Where the drop lay.</param>
+        /// <param name="rarity">The item's rarity as a number: 0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary.</param>
+        void PickedUp(Transform taker, Vector3 point, int rarity, bool isLocalPlayer);
     }
 }
