@@ -458,6 +458,47 @@ place stay together. The game's clock, the body's real place and the network are
 host, nobody else sees it and the victim's own screen is never slowed. It rides with the kill's hit stop, chromatic
 punch and comic text. Not played for a normal kill, for a kill by a GM command, or when the victim is not a player.
 
+## 6g. Icons
+
+Two families, made to sit side by side in the HUD:
+
+- **Pictures of the real thing.** Gear and pets are rendered from their own models through the comic pass
+  (`ItemIconCapture`): the icon is what you will wear. A tier of the gear ladder wears its look's icon.
+- **Pack icons in the comic treatment.** Skills, and every item that has no model (forge materials, Stims, Kiosk
+  Permits, the Pet Ration, jewellery), take a painted icon from the two CraftPix packs: `_ThirdParty/Fantasy RPG Icons
+  Pack` for skills, `_ThirdParty/Cyberpunk RPG Icons Pack` for items. `ComicIconTreatment` (`Assets/_Game/Icons/Editor`)
+  redraws each one. The packs' files are only read, never changed: the game shows treated copies, written to
+  `Gameplay/Progression/Data/Assets/Icons` and `Gameplay/Items/Data/Assets/Icons`.
+
+**The treatment.** Every number is in `Icons/Data/Assets/IconTreatmentSettings.asset`; change one, then **Krytical
+Nova ▸ Icons ▸ Bake Every Assigned Icon**. Sizes are in pixels of the finished 256 px icon (drawn at twice the size
+and reduced).
+
+| Step | What it does | Settings |
+|---|---|---|
+| Fit | a skill painting becomes a rounded tile; an item keeps its own outline, scaled into the same box | `margin` 18, `cornerRadius` 30 |
+| Flat colour | an edge-keeping blur gathers soft paint into even patches and leaves the edges between shapes sharp | `flattenRadius` 4, `flattenPasses` 2, `flattenTolerance` 0.14 |
+| Tones | each pixel is drawn in one of five flat tones by how bright its colour is (its strongest channel, so a pure red stays red) | `tones` 5, `toneAdapt` 0.35, `toneLow` 0.24, `toneHigh` 0.95, `toneContrast` 0.55, `toneSettle` 1 |
+| Ben-Day dots | the second darkest tone is drawn as dots, on the same 45° grid as the world's dots | `dotCell` 9, `dotRadius` 0.36, `dotContrast` 0.5 |
+| Ink | a line where two patches meet with a clear step in colour; never over the lightest tone, so a bolt of lightning or a blade's edge keeps its light | `inkEdge` 0.24, `inkWidth` 5, `inkSpeck` 30, `inkSpareTones` 1 |
+| Colour | stronger, and pulled toward the nearest colour of the Colour Bible or of a faction; the darkest tone leans to shadow indigo | `saturation` 1.4, `palettePull` 0.35, `palette`, `shadeTint` 0.45, `shadeColor` `#4C52BF` |
+| Sticker | the ink outline, paper keyline and hard shadow every icon of this family wears | `outlineWidth` 7, `keylineWidth` 3.5, `shadowOffset` 5, `shadowAlpha` 0.55, `ink` `#14122B`, `paper` `#F4EEDF` |
+
+An item icon has a clear ground, so the bag's rarity frame and glow show round it.
+
+**One colour per class.** A class's ten skills come from one set of the pack, so its Hotbar has one colour:
+Monoblade blue, Glaive magenta, Carbine cyan; Harvester red, Servo Claws teal, Arc Caster violet; Longaxe
+red-orange, Claymore orange-gold, Warbow green. The eight shared skills, Run and Jump come from the many-coloured
+Buff set. A set can have its own colour moved round the colour wheel when a class wears a set painted in another
+faction's colour (`IconLibrary.Set.moveHue`): the Arc Caster's set is painted electric blue and is moved to Null's
+violet, while skin and metal in the picture are left alone.
+
+**The library** (`Icons/Data/Assets/IconLibrary.asset`, edited in **Krytical Nova ▸ Icons ▸ Icon Library**) lists the
+packs' sets, tags icons by use (attack, buff, debuff, passive, movement, item), faction, class, lineage and
+keywords, and records which icon every skill and item has. No icon is ever given twice. A new skill or a new item
+without a model gets its icon there: choose it on the left, pick from the best free matches, press Give. **Check
+Icons** lists anything left without one.
+
 ## 7. Performance budgets (PC, 1080p)
 
 | Item | Budget | Notes |
@@ -508,6 +549,12 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black.
 
 ## Changelog
+
+- **2026-10-08 (polish pass: icons)**:
+  - Skill icons, and the icons of items that have no model, now come from the CraftPix icon packs, redrawn in the
+    comic style by `ComicIconTreatment` and handed out by the icon library (section 6g). Every skill has an icon of
+    its own (before, the nine classes shared ten). The Synty-glyph icons and their bakers (`SkillIconBuilder`,
+    `ComicIconBaker`) are gone, and so is the procedural jewellery `ItemIconCapture` used to render.
 
 - **2026-10-08 (polish pass: the smear)**:
   - Motion smear on a run's take-off and on the throw of a death (section 6f): the smear package's shader as a second

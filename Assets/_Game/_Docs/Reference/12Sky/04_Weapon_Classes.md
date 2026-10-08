@@ -197,6 +197,28 @@ Viking + Elven.
 **Clip sets.** Monoblade: Grruzam katana (measured hit timings). Glaive, Harvester, Longaxe, Claymore: Grruzam great-sword, same clip per slot letter, default hit timings. Warbow: Synty Bow Combat (`Stand_Shoot_Reload`, `Stand_Shoot_Leaping` for S8), default hit timings. Carbine, Arc Caster, Servo Claws: the Monoblade's clips as stand-ins.
 
 **Stand-ins still to replace:** gun and unarmed animation sets (so a Sidearm or Servo Claws draw still reaches over the shoulder before the weapons appear in the hands); measured hit moments for the great-sword and bow clips; projectiles, and the cone / volley (S1) and called-in strike (S8) shapes for ranged classes (today ranged skills hit at reach 8–12 with no projectile, and their area skills are centred on the caster); one basic attack combo for every class (the katana combo); weapon grip poses per mesh (tuned on the look template).
+## Skill icons (as built, 8 Oct 2026)
+
+Every one of the hundred skills has an icon of its own, from the fantasy icon pack and redrawn in the comic
+treatment (`Design/Rendering-Bible.md` 6g). A class draws its ten from one set, so each class has one colour:
+
+| Class | Set of the pack | Colour |
+| --- | --- | --- |
+| Monoblade | Swordman | blue |
+| Glaive | Spearman | magenta |
+| Carbine | Crossbowman | cyan |
+| Harvester | Blood Mage | red |
+| Servo Claws | Undead | teal |
+| Arc Caster | Lightning Mage, its colour moved to Null's violet | violet |
+| Longaxe | Berserker | red-orange |
+| Claymore | Warrior | orange-gold |
+| Warbow | Archer | green |
+| the eight shared skills, Run, Jump | Buff (Shatterpoint: Debuff) | many |
+
+Which icon each skill has is recorded in the icon library (`Icons/Data/Assets/IconLibrary.asset`); change one in
+**Krytical Nova ▸ Icons ▸ Icon Library**. **Build Class Skills** no longer hands a new class skill another skill's
+icon: it stays without one until the library gives it its own, and **Check Icons** says so.
+
 ## Sources
 
 - 12SKY M Global class guide (LDCloud): https://www.ldcloud.net/blog/12sky-m-global-class-guide

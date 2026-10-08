@@ -73,7 +73,7 @@ MonoBehaviour:
   canCrit: 1
   chargeTime: 0
   holdToRepeat: 0
-  icon: {fileID: 21300000, guid: 568e8cc7fbd26f741b8a081fe413801c, type: 3}
+  icon: {fileID: 21300000, guid: f6b931199b08e4844b9bcf8955209b57, type: 3}
   castClip: {fileID: 7400000, guid: fbb0deca098b8c04090df31f66c37d68, type: 3}
   castClipSpeed: 1
   hitTimesNormalized:

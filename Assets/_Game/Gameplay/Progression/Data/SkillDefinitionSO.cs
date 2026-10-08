@@ -215,7 +215,7 @@ namespace KryticalNova.Progression
         public bool holdToRepeat;
 
         [Header("Presentation (all optional)")]
-        [Tooltip("Hotbar, skill window and buff bar icon. Baked by Krytical Nova ▸ Progression ▸ Build Skill Icons.")]
+        [Tooltip("Hotbar, skill window and buff bar icon. Given by the icon library (Krytical Nova ▸ Icons ▸ Icon Library): every skill has one of its own, so do not set it by hand.")]
         public Sprite icon;
         public AnimationClip castClip;
         [Min(0.1f)] public float castClipSpeed = 1f;
