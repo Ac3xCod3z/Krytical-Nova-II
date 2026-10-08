@@ -15,7 +15,7 @@ namespace KryticalNova.UI
     /// </summary>
     public sealed class SettingsPages
     {
-        public static readonly string[] Pages = { "graphics", "audio", "interface", "controls" };
+        public static readonly string[] Pages = { "graphics", "audio", "interface", "gameplay", "controls" };
         /// <summary>Elements of the window that need a character in the world.</summary>
         public const string InGameOnlyClass = "in-game-only";
         private static readonly string[] MenuThemeNames = { "ROTATE", "HEGEMONY", "NULL", "COVENANT" };
@@ -58,6 +58,7 @@ namespace KryticalNova.UI
                 graphicsTab.Build(root.Q("settings-page-graphics"));
                 audioTab.Build(root.Q("settings-page-audio"));
                 BuildInterface();
+                BuildGameplay(root.Q("settings-page-gameplay"));
             }
             finally
             {
@@ -137,6 +138,10 @@ namespace KryticalNova.UI
                 case "graphics": GraphicsPreferences.ResetToDefaults(); break;
                 case "audio": AudioPreferences.ResetToDefaults(); break;
                 case "interface": HudPreferences.ResetToDefaults(); break;
+                case "gameplay":
+                    CameraPreferences.ResetToDefaults();
+                    HudPreferences.ResetGameplayToDefaults();
+                    break;
                 case "controls":
                     KeyBindings.ResetAll(playerActions());
                     RebuildControls();
@@ -188,6 +193,34 @@ namespace KryticalNova.UI
                 SettingsRows.Choice(interfaceOptions, "Menu theme", MenuThemeNames,
                     () => (int)HudPreferences.MenuTheme, index => HudPreferences.MenuTheme = (MenuTheme)index);
             }
+        }
+
+        // ------------------------------------------------------------------ the Gameplay page
+
+        /// <summary>Options of play that are this machine's own business: the camera, what is shown, what is declined.</summary>
+        private static void BuildGameplay(VisualElement page)
+        {
+            if (page == null) return;
+            page.Clear();
+            SettingsRows.Header(page, "CAMERA");
+            SettingsRows.Slider(page, "How fast the camera turns", CameraPreferences.MinSensitivity, CameraPreferences.MaxSensitivity,
+                () => CameraPreferences.Sensitivity, value => CameraPreferences.Sensitivity = (float)Math.Round(value * 20f) / 20f);
+            SettingsRows.Toggle(page, "Invert the camera's up and down", () => CameraPreferences.InvertVertical, value => CameraPreferences.InvertVertical = value);
+            SettingsRows.Slider(page, "How fast the wheel zooms", CameraPreferences.MinZoomSpeed, CameraPreferences.MaxZoomSpeed,
+                () => CameraPreferences.ZoomSpeed, value => CameraPreferences.ZoomSpeed = (float)Math.Round(value * 20f) / 20f);
+            SettingsRows.Slider(page, "How far the camera pulls back", CameraPreferences.MinFurthest, 1f,
+                () => CameraPreferences.Furthest, value => CameraPreferences.Furthest = (float)Math.Round(value * 20f) / 20f);
+
+            SettingsRows.Header(page, "COMBAT");
+            SettingsRows.Toggle(page, "Damage numbers", () => HudPreferences.DamageNumbers, value => HudPreferences.DamageNumbers = value);
+
+            SettingsRows.Header(page, "REQUESTS FROM OTHER PLAYERS");
+            SettingsRows.Help(page, "A kind of request that is switched on here is declined for you, without being shown.");
+            SettingsRows.Toggle(page, "Decline Squad invitations", () => HudPreferences.RefuseSquadInvites, value => HudPreferences.RefuseSquadInvites = value);
+            SettingsRows.Toggle(page, "Decline Callouts", () => HudPreferences.RefuseCallouts, value => HudPreferences.RefuseCallouts = value);
+            SettingsRows.Toggle(page, "Decline trade requests", () => HudPreferences.RefuseTrades, value => HudPreferences.RefuseTrades = value);
+            SettingsRows.Toggle(page, "Decline contact requests", () => HudPreferences.RefuseContacts, value => HudPreferences.RefuseContacts = value);
+            SettingsRows.Toggle(page, "Decline Crew invitations", () => HudPreferences.RefuseCrewInvites, value => HudPreferences.RefuseCrewInvites = value);
         }
 
         private void Toggle(string elementName, Func<bool> get, Action<bool> set)

@@ -111,6 +111,12 @@ namespace KryticalNova.UI
         public void ShowRequest(string challengerName, float seconds)
         {
             if (request == null) return;
+            // The player refuses Callouts (Settings, Gameplay): answered no for them, as the Decline button would.
+            if (HudPreferences.RefuseCallouts)
+            {
+                Answer(false);
+                return;
+            }
             requestText.text = $"{challengerName} calls you out";
             requestStarted = Time.unscaledTime;
             requestEnds = requestStarted + Mathf.Max(1f, seconds);

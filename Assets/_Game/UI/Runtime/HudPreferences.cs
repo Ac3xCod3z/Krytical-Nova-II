@@ -21,6 +21,12 @@ namespace KryticalNova.UI
         private static readonly string MinimapRotatesKey = Prefix + "minimapRotates";
         private static readonly string ScreenShakeKey = Prefix + "screenShake";
         private static readonly string MenuThemeKey = Prefix + "menuTheme";
+        private static readonly string DamageNumbersKey = Prefix + "damageNumbers";
+        private static readonly string RefuseTradesKey = Prefix + "refuse.trade";
+        private static readonly string RefuseContactsKey = Prefix + "refuse.contact";
+        private static readonly string RefuseCrewKey = Prefix + "refuse.crew";
+        private static readonly string RefuseSquadKey = Prefix + "refuse.squad";
+        private static readonly string RefuseCalloutsKey = Prefix + "refuse.callout";
         private static readonly string LayoutKey = Prefix + "layout.v1";
         private static readonly string SnapToGridKey = Prefix + "layout.snap";
         private static readonly string GridSizeKey = Prefix + "layout.grid";
@@ -88,6 +94,57 @@ namespace KryticalNova.UI
         {
             get => GetBool(ScreenShakeKey, true);
             set => SetBool(ScreenShakeKey, value);
+        }
+
+        /// <summary>The numbers that float off a hit.</summary>
+        public static bool DamageNumbers
+        {
+            get => GetBool(DamageNumbersKey, true);
+            set => SetBool(DamageNumbersKey, value);
+        }
+
+        /// <summary>A request to trade is declined for the player, without being shown.</summary>
+        public static bool RefuseTrades
+        {
+            get => GetBool(RefuseTradesKey, false);
+            set => SetBool(RefuseTradesKey, value);
+        }
+
+        /// <summary>A request to become a contact is declined for the player, without being shown.</summary>
+        public static bool RefuseContacts
+        {
+            get => GetBool(RefuseContactsKey, false);
+            set => SetBool(RefuseContactsKey, value);
+        }
+
+        /// <summary>An invitation to a Crew is declined for the player, without being shown.</summary>
+        public static bool RefuseCrewInvites
+        {
+            get => GetBool(RefuseCrewKey, false);
+            set => SetBool(RefuseCrewKey, value);
+        }
+
+        /// <summary>An invitation to a Squad is declined for the player, without being shown.</summary>
+        public static bool RefuseSquadInvites
+        {
+            get => GetBool(RefuseSquadKey, false);
+            set => SetBool(RefuseSquadKey, value);
+        }
+
+        /// <summary>A Callout (a duel request) is declined for the player, without being shown.</summary>
+        public static bool RefuseCallouts
+        {
+            get => GetBool(RefuseCalloutsKey, false);
+            set => SetBool(RefuseCalloutsKey, value);
+        }
+
+        /// <summary>Every option of the Gameplay page that is kept here back to what the game ships with.</summary>
+        public static void ResetGameplayToDefaults()
+        {
+            foreach (string key in new[] { DamageNumbersKey, RefuseTradesKey, RefuseContactsKey, RefuseCrewKey, RefuseSquadKey, RefuseCalloutsKey })
+                PlayerPrefs.DeleteKey(key);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
         }
 
         /// <summary>Which faction's skin the menus wear: one picked at random each start of the game, or always the same.</summary>

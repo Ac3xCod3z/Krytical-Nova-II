@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <!-- Settings (SettingsPages; shown in the game by HudSettingsController and from character select by MenuSettings).
-         Four pages, one shown at a time. The Graphics, Audio and Controls pages are filled in code from the preference
+         Five pages, one shown at a time. The Graphics, Audio, Gameplay and Controls pages are filled in code from the preference
          classes (UI/Runtime/Settings); the Interface page is laid out here. Elements with the class in-game-only need
          a character in the world and are hidden in the menus. -->
     <ui:VisualElement name="settings-window" class="panel window blocks-world hud-movable">
@@ -13,6 +13,7 @@
             <ui:Button name="settings-tab-graphics" text="GRAPHICS" class="settings-tab" />
             <ui:Button name="settings-tab-audio" text="AUDIO" class="settings-tab" />
             <ui:Button name="settings-tab-interface" text="INTERFACE" class="settings-tab" />
+            <ui:Button name="settings-tab-gameplay" text="GAMEPLAY" class="settings-tab" />
             <ui:Button name="settings-tab-controls" text="CONTROLS" class="settings-tab" />
         </ui:VisualElement>
         <ui:ScrollView name="settings-body" class="window-body" horizontal-scroller-visibility="Hidden">
@@ -37,6 +38,7 @@
                 <ui:Toggle name="setting-minimap-rotate" label="Rotate minimap with camera" value="true" class="kn-toggle kn-card" />
                 <ui:VisualElement name="settings-interface-options" />
             </ui:VisualElement>
+            <ui:VisualElement name="settings-page-gameplay" class="settings-page" />
             <ui:VisualElement name="settings-page-controls" class="settings-page" />
         </ui:ScrollView>
         <!-- A setting takes effect as it is changed. APPLY keeps the changes, REVERT puts back what was there when the

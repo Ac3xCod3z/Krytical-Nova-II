@@ -113,6 +113,12 @@ namespace KryticalNova.UI
         public void ShowInvite(string inviterName, float seconds)
         {
             if (invite == null) return;
+            // The player refuses Squad invitations (Settings, Gameplay): answered no for them, as the Decline button would.
+            if (HudPreferences.RefuseSquadInvites)
+            {
+                Answer(false);
+                return;
+            }
             inviteText.text = $"{inviterName} invites you to a squad";
             inviteStarted = Time.unscaledTime;
             inviteEnds = inviteStarted + Mathf.Max(1f, seconds);
