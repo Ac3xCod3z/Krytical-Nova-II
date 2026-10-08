@@ -34,6 +34,8 @@ namespace KryticalNova.UI
         private static readonly string WaypointKey = Prefix + "waypoint.";
         private static readonly string ChatWidthKey = Prefix + "chat.width";
         private static readonly string ChatHeightKey = Prefix + "chat.height";
+        private static readonly string ChatTimestampsKey = Prefix + "chat.timestamps";
+        private static readonly string ChatTextScaleKey = Prefix + "chat.textScale";
 
         private static string BuildPrefix()
         {
@@ -183,6 +185,30 @@ namespace KryticalNova.UI
             }
         }
 
+        public const float MinChatTextScale = 0.8f;
+        public const float MaxChatTextScale = 1.6f;
+
+        /// <summary>Each chat line starts with the time it arrived, by this machine's clock.</summary>
+        public static bool ChatTimestamps
+        {
+            get => GetBool(ChatTimestampsKey, false);
+            set => SetBool(ChatTimestampsKey, value);
+        }
+
+        /// <summary>Size of the chat's text: 1 is the size the skin gives it.</summary>
+        public static float ChatTextScale
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetFloat(ChatTextScaleKey, 1f), MinChatTextScale, MaxChatTextScale);
+            set
+            {
+                value = Mathf.Clamp(value, MinChatTextScale, MaxChatTextScale);
+                if (Mathf.Approximately(ChatTextScale, value)) return;
+                PlayerPrefs.SetFloat(ChatTextScaleKey, value);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
+        }
+
         public const float MinInterfaceScale = 0.8f;
         public const float MaxInterfaceScale = 1.3f;
 
@@ -256,7 +282,7 @@ namespace KryticalNova.UI
             foreach (string key in new[]
                      {
                          MoveMarkerKey, TargetRingKey, ControlsHintKey, NameplatesKey, OwnNamecardKey, PetChatterKey, MinimapRotatesKey,
-                         ScreenShakeKey, MenuThemeKey, SnapToGridKey, GridSizeKey, InterfaceScaleKey
+                         ScreenShakeKey, MenuThemeKey, SnapToGridKey, GridSizeKey, InterfaceScaleKey, ChatTimestampsKey, ChatTextScaleKey
                      })
                 PlayerPrefs.DeleteKey(key);
             PlayerPrefs.Save();

@@ -210,6 +210,11 @@ namespace KryticalNova.UI
                 // The skin of the title screens only: the game itself always wears the character's faction.
                 SettingsRows.Choice(interfaceOptions, "Menu theme", MenuThemeNames,
                     () => (int)HudPreferences.MenuTheme, index => HudPreferences.MenuTheme = (MenuTheme)index);
+
+                SettingsRows.Header(interfaceOptions, "CHAT");
+                SettingsRows.Slider(interfaceOptions, "Chat text size", HudPreferences.MinChatTextScale, HudPreferences.MaxChatTextScale,
+                    () => HudPreferences.ChatTextScale, value => HudPreferences.ChatTextScale = (float)Math.Round(value * 20f) / 20f);
+                SettingsRows.Toggle(interfaceOptions, "Time on chat lines", () => HudPreferences.ChatTimestamps, value => HudPreferences.ChatTimestamps = value);
             }
         }
 
