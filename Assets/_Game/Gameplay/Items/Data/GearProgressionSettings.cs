@@ -65,16 +65,22 @@ namespace KryticalNova.Items
     [Serializable]
     public struct TemperGlowLook
     {
-        [Tooltip("Brightness of the rim. Above 1 it blooms.")]
+        [Tooltip("Brightness of the light right at the weapon's outline. Above 1 the inner edge burns towards white.")]
         [Min(0f)] public float intensity;
-        [Tooltip("How tight the glow hugs the silhouette (higher = thinner rim).")]
-        [Range(0.5f, 8f)] public float rimPower;
-        [Tooltip("How much the brightness breathes, as a share of the intensity.")]
+        [Tooltip("How far the light reaches from the outline, in metres.")]
+        [Range(0.005f, 0.4f)] public float width;
+        [Tooltip("How deep it breathes: the share of its brightness it loses at the low point of each breath.")]
         [Range(0f, 1f)] public float pulse;
         [Tooltip("Breaths per second.")]
         [Min(0f)] public float pulseSpeed;
-        [Tooltip("Sparkles ride on the weapon.")]
-        public bool sparkles;
+        [Tooltip("How much wider the light is at the top of a breath than at the bottom, as a share of its width.")]
+        [Range(0f, 1f)] public float pulseWidth;
+        [Tooltip("How bright its sparks are: small dots with a thin glint that swell and fade, in the light and on the part of the weapon that glows. 0 = none. (How many there are is set on the renderer's Glow Halo feature.)")]
+        [Range(0f, 3f)] public float twinkle;
+        [Tooltip("Lightning in the light, in the Temper band's own colour: thin jagged arcs that crawl round the outline. 1 = as tuned on the renderer's Glow Halo feature, 0 = none.")]
+        [Range(0f, 2f)] public float lightning;
+        [Tooltip("Flame, in the Temper band's own colour: tongues that rise from the outline and stream towards the tip. 1 = all of the light is flame, 0 = the steady halo.")]
+        [Range(0f, 1f)] public float flame;
     }
 
     [Serializable]
@@ -157,11 +163,11 @@ namespace KryticalNova.Items
         [Tooltip("By rarity: Common, Uncommon, Rare, Epic, Legendary. Same colours; an Epic shows them brighter.")]
         public TemperGlowLook[] glowLooks =
         {
-            new TemperGlowLook { intensity = 0.55f, rimPower = 3.2f, pulse = 0.10f, pulseSpeed = 0.5f },
-            new TemperGlowLook { intensity = 0.65f, rimPower = 3.0f, pulse = 0.12f, pulseSpeed = 0.5f },
-            new TemperGlowLook { intensity = 0.80f, rimPower = 2.8f, pulse = 0.15f, pulseSpeed = 0.6f },
-            new TemperGlowLook { intensity = 2.60f, rimPower = 1.9f, pulse = 0.35f, pulseSpeed = 1.1f, sparkles = true },
-            new TemperGlowLook { intensity = 3.00f, rimPower = 1.8f, pulse = 0.40f, pulseSpeed = 1.2f, sparkles = true },
+            new TemperGlowLook { intensity = 0.50f, width = 0.045f, pulse = 0.35f, pulseSpeed = 0.45f, pulseWidth = 0.20f },
+            new TemperGlowLook { intensity = 0.60f, width = 0.050f, pulse = 0.35f, pulseSpeed = 0.45f, pulseWidth = 0.20f },
+            new TemperGlowLook { intensity = 0.70f, width = 0.060f, pulse = 0.40f, pulseSpeed = 0.55f, pulseWidth = 0.25f },
+            new TemperGlowLook { intensity = 1.60f, width = 0.100f, pulse = 0.50f, pulseSpeed = 0.70f, pulseWidth = 0.35f, twinkle = 1.3f, lightning = 1f, flame = 1f },
+            new TemperGlowLook { intensity = 1.90f, width = 0.120f, pulse = 0.55f, pulseSpeed = 0.80f, pulseWidth = 0.40f, twinkle = 1.5f, lightning = 1.2f, flame = 1f },
         };
     }
 

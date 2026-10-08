@@ -9,6 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1144188030605724362}
+  - component: {fileID: 8111484502977647759}
+  - component: {fileID: 3745246040877909692}
   m_Layer: 0
   m_Name: W_Longaxe_04
   m_TagString: Untagged
@@ -32,6 +34,54 @@ Transform:
   - {fileID: 4550558912402840652}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8111484502977647759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2255873994029692640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 1
+    box:
+      m_Center: {x: 0.0001597032, y: 0.00097566843, z: 0.9450315}
+      m_Extent: {x: 0.06626437, y: 0.38410243, z: 0.2650315}
+    dark:
+      m_Center: {x: 0.0001597032, y: -0.00011987239, z: 0.24686974}
+      m_Extent: {x: 0.06626437, y: 0.038820162, z: 0.6331302}
+  exclude: []
+  keepAsSet: 0
+--- !u!114 &3745246040877909692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2255873994029692640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: -4.9589256e-15, y: 0.3650781, z: 0.91557056}
+  - {x: -0.00000071525574, y: -0.0027579828, z: -0.36626044}
+  - {x: -5.9444315e-15, y: 0.26554206, z: 1.1444587}
+  - {x: -6.0657897e-15, y: 0.18941745, z: 1.190063}
+  - {x: 0.046103954, y: 0.0016916008, z: -0.17391564}
+  - {x: -0.04610467, y: 0.0016916008, z: -0.17391564}
+  - {x: 0.044513226, y: 0.00029980936, z: 1.1179333}
+  - {x: -5.56108e-15, y: -0.18941773, z: 1.190063}
+  - {x: -0.044520378, y: -0.0026051062, z: 1.1179333}
+  - {x: 0.007381892, y: -0.33092457, z: 0.93569577}
+  - {x: -0.031829596, y: -0.0058307364, z: -0.24341457}
+  - {x: -4.918412e-15, y: -0.29448608, z: 1.087158}
+  - {x: -4.0870746e-15, y: -0.36312675, z: 0.93569577}
 --- !u!1 &5542649390831342666
 GameObject:
   m_ObjectHideFlags: 0

@@ -178,7 +178,7 @@ namespace KryticalNova.Items
         public static TemperGlowLook GlowLookOf(TemperSettings settings, ItemRarity rarity)
         {
             int index = (int)rarity;
-            if (settings?.glowLooks == null || settings.glowLooks.Length == 0) return new TemperGlowLook { intensity = 1f, rimPower = 3f };
+            if (settings?.glowLooks == null || settings.glowLooks.Length == 0) return new TemperGlowLook { intensity = 1f, width = 0.06f };
             return settings.glowLooks[Mathf.Clamp(index, 0, settings.glowLooks.Length - 1)];
         }
 

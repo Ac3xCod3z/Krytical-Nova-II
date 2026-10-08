@@ -80,8 +80,8 @@ _Game/
 │   │                      Economy, Progression and NPC, which is why it is its own system)
 │   ├── Items/             Runtime/ (+Visuals/; world drops, pickup; gear state and progression rules)  Data/ (GearProgressionSettings,
 │   │                      GearThemeLibrary)  Data/Assets/ (items, part catalog, gear dictionary, GearThemes = one colour theme per
-│   │                      gear set, GearMaterials/ = forge materials)  Shaders/ (TemperGlow + its material: the rim of light on
-│   │                      tempered weapons and evolved pets)  Editor/ (also GearThemeBuilder)  Prefabs/ (WorldDrop)  Tests/Editor/
+│   │                      gear set, GearMaterials/ = forge materials, Prefabs/Weapons/ = weapon models, each with its glow zone and reach)
+│   │                      Editor/ (also GearThemeBuilder, WeaponGlowZoneBaker)  Prefabs/ (WorldDrop)  Tests/Editor/
 │   ├── NPC/               Runtime/  Data/Assets/
 │   ├── Persistence/       Runtime/ (ServerSave, account and character documents, PlayerSaveAgent)  Tests/Editor/
 │   ├── Pets/              Runtime/ (growth, hunger, PlayerPet)  Data/ + Data/Assets/ (settings, catalog, definitions)
@@ -306,7 +306,7 @@ Menu **Krytical Nova ▸ Build ▸ Windows Test Build** (`TestBuildBuilder`): th
 
 A vendor package whose runtime scripts cannot compile into a player build is kept out of builds with an Editor-only assembly definition in its own folder rather than by editing its files (owner, 6 Oct 2026): `_ThirdParty/GI/Scripts/GI.EditorOnly.asmdef`. The game must not use such a package at run time.
 
-Menu **Krytical Nova ▸ Items** also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration, forge materials: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`).
+Menu **Krytical Nova ▸ Items** also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration, forge materials: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`). **8. Bake Weapon Models (glow zones, reach)** (`WeaponGlowZoneBaker`) reads every weapon model's mesh and writes onto its prefab which part glows when tempered (`WeaponGlowZone`) and its outermost points (`WeaponReach`, which keeps long weapons out of the ground); run it after adding or changing a weapon model. A zone ticked "keep as set" on a prefab is left alone.
 
 Menu **Krytical Nova ▸ Characters** (run in order, or use *Bake Everything*):
 

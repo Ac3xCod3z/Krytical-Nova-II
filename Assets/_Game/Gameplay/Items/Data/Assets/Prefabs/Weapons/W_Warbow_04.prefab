@@ -867,6 +867,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6621130054254924402}
+  - component: {fileID: 429665824254203942}
+  - component: {fileID: 1019370322257054166}
   m_Layer: 0
   m_Name: W_Warbow_04
   m_TagString: Untagged
@@ -890,6 +892,50 @@ Transform:
   - {fileID: 366426358957889671}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &429665824254203942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5079289301963112571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 0
+    box:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+    dark:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+  exclude:
+  - String
+  keepAsSet: 0
+--- !u!114 &1019370322257054166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5079289301963112571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.041696247, y: 0.3597004, z: -0.9935556}
+  - {x: -0.041696172, y: 0.35970017, z: 1.0862623}
+  - {x: 0.041696247, y: 0.35970017, z: 1.0862623}
+  - {x: -0.041696172, y: 0.3597004, z: -0.9935556}
+  - {x: -0.041696172, y: -0.11129501, z: 1.0862623}
+  - {x: -0.041696172, y: -0.11129476, z: -0.99355567}
+  - {x: 0.041696247, y: -0.11129501, z: 1.0862623}
+  - {x: 0.041696247, y: -0.11129476, z: -0.99355567}
 --- !u!1 &5373403951784555031
 GameObject:
   m_ObjectHideFlags: 0

@@ -808,6 +808,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7331756966390381519}
+  - component: {fileID: 8250203082395343203}
+  - component: {fileID: 1214630840421970366}
   m_Layer: 0
   m_Name: W_Warbow_05
   m_TagString: Untagged
@@ -831,6 +833,50 @@ Transform:
   - {fileID: 7404725868082884133}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8250203082395343203
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7524077799373983510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 0
+    box:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+    dark:
+      m_Center: {x: 0, y: 0.2425, z: 0.04249999}
+      m_Extent: {x: 0.5, y: 0.07749999, z: 0.4075}
+  exclude:
+  - String
+  keepAsSet: 1
+--- !u!114 &1214630840421970366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7524077799373983510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.10508451, y: 0.36622155, z: -0.5944043}
+  - {x: -0.04772553, y: 0.3662214, z: 0.7379305}
+  - {x: 0.10508451, y: 0.3662214, z: 0.7379305}
+  - {x: -0.04772553, y: 0.36622155, z: -0.5944043}
+  - {x: -0.04772553, y: -0.16244102, z: 0.7379304}
+  - {x: -0.04772553, y: -0.16244087, z: -0.5944044}
+  - {x: 0.10508451, y: -0.16244102, z: 0.7379304}
+  - {x: 0.10508451, y: -0.16244087, z: -0.5944044}
 --- !u!1 &7679942528249344763
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,8 +10,6 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private CharacterAppearance appearance;
         [SerializeField] private WeaponVisualMount weaponMount;
         [SerializeField] private PetFollower petFollower;
-        [Tooltip("The glow a tempered weapon wears (M_TemperGlow). Without it tempered weapons look like any other.")]
-        [SerializeField] private Material temperGlow;
 
         private PlayerEquipment equipment;
 
@@ -55,8 +53,8 @@ namespace KryticalNova.Items.Visuals
             int temper = equipment.GetTemper(EquipSlot.Weapon);
             TemperGlowBand band = default;
             bool glows = weapon != null && settings != null && GearProgressionRules.TryGetGlow(settings.temper, temper, out band);
-            if (!glows) { weaponMount.SetGlow(null, false, default, default); return; }
-            weaponMount.SetGlow(temperGlow, true, band.color, GearProgressionRules.GlowLookOf(settings.temper, weapon.rarity));
+            if (!glows) { weaponMount.SetGlow(false, default, default); return; }
+            weaponMount.SetGlow(true, band.color, GearProgressionRules.GlowLookOf(settings.temper, weapon.rarity));
         }
 
         private void Apply(EquipSlot slot, ItemDefinition def)

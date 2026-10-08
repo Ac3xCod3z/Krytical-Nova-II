@@ -191,6 +191,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5714997217433731488}
+  - component: {fileID: 806826174456094445}
+  - component: {fileID: 9115558590036922228}
   m_Layer: 0
   m_Name: W_ArcCaster_01
   m_TagString: Untagged
@@ -214,6 +216,62 @@ Transform:
   - {fileID: 9139823052696228895}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &806826174456094445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2519111035267519302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 0
+    box:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+    dark:
+      m_Center: {x: 0, y: -0.0725, z: 0}
+      m_Extent: {x: 0.5, y: 0.1175, z: 0.11}
+  exclude: []
+  keepAsSet: 1
+--- !u!114 &9115558590036922228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2519111035267519302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.0106755765, y: 0.21317214, z: -0.038502045}
+  - {x: 5.501272e-16, y: 0.16843094, z: 0.729846}
+  - {x: 0, y: 0.18680862, z: -0.3263333}
+  - {x: -0.0106755765, y: 0.21317214, z: -0.06864059}
+  - {x: 0.018914344, y: 0.16059616, z: 0.7303116}
+  - {x: -0.018914344, y: 0.16059616, z: 0.7303116}
+  - {x: 0.014662208, y: 0.17432433, z: -0.3263333}
+  - {x: -0.0324181, y: 0.1694336, z: 0.5811755}
+  - {x: -0.014662208, y: 0.17432433, z: -0.3263333}
+  - {x: 0.03241809, y: 0.19653167, z: -0.100678556}
+  - {x: -0.0324181, y: 0.19653167, z: -0.100678556}
+  - {x: -0.014662208, y: 0.025357818, z: -0.32450852}
+  - {x: -0.026748924, y: 0.14168213, z: 0.7026236}
+  - {x: 0.014662208, y: 0.025357818, z: -0.32450852}
+  - {x: 0.02262643, y: -0.0052424623, z: 0.47233793}
+  - {x: 0.026748922, y: 0.14168213, z: 0.7026236}
+  - {x: 0.008856535, y: -0.09560226, z: -0.01247406}
+  - {x: -0.0032019631, y: -0.12222931, z: 0.08153488}
+  - {x: 0.017395632, y: -0.012770691, z: 0.5215651}
+  - {x: 0, y: -0.018031005, z: 0.54531246}
+  - {x: 0, y: -0.02810562, z: 0.52625597}
 --- !u!1 &2687439193931041464
 GameObject:
   m_ObjectHideFlags: 0

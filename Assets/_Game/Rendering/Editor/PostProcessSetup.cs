@@ -57,6 +57,7 @@ namespace KryticalNova.EditorTools
             motion.active = false;
 
             ApplyBeautify(profile);
+            EnsureGlowHalo();
 
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();
@@ -73,6 +74,25 @@ namespace KryticalNova.EditorTools
                 EditorSceneManager.MarkSceneDirty(cam.gameObject.scene);
             }
             Debug.Log("[PostProcess] Post look applied to " + ProfilePath + (cam != null ? " and SMAA set on the main camera." : "."));
+        }
+
+        /// <summary>
+        /// The halo of light round tempered weapons and evolved pets (see Rendering-Bible.md, "Glow halo"): makes sure
+        /// the PC renderer carries the feature. Its numbers are left as they are, so tuning on the renderer asset survives.
+        /// </summary>
+        public static void EnsureGlowHalo()
+        {
+            var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(PcRendererPath);
+            if (renderer == null) { Debug.LogError($"[PostProcess] Missing {PcRendererPath}"); return; }
+            RendererFeatureUtil.Ensure<KryticalNova.Rendering.GlowHaloFeature>(renderer, "GlowHalo", f =>
+            {
+                // Referenced, not found by name: a hidden shader nothing points at is left out of a build.
+                var feature = new SerializedObject(f);
+                SerializedProperty shader = feature.FindProperty("shader");
+                if (shader.objectReferenceValue != null) return;
+                shader.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(GlowHaloShaderPath);
+                feature.ApplyModifiedPropertiesWithoutUndo();
+            });
         }
 
         /// <summary>
@@ -133,6 +153,7 @@ namespace KryticalNova.EditorTools
         }
 
         private const string PcRendererPath = "Assets/_Game/Rendering/Settings/PC_Renderer.asset";
+        private const string GlowHaloShaderPath = "Assets/_Game/Rendering/Shaders/Comic/GlowHalo.shader";
 
         private static T Get<T>(VolumeProfile profile) where T : VolumeComponent
         {

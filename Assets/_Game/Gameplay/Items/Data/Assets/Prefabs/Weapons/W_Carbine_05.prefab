@@ -191,6 +191,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5943170462556763669}
+  - component: {fileID: 270762115303226179}
+  - component: {fileID: 5905365368210920775}
   m_Layer: 0
   m_Name: W_Carbine_05
   m_TagString: Untagged
@@ -214,6 +216,71 @@ Transform:
   - {fileID: 4504983731232807310}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &270762115303226179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3477451846458736069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 0
+    box:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+    dark:
+      m_Center: {x: 0, y: -0.087500006, z: -0.020000003}
+      m_Extent: {x: 0.5, y: 0.1325, z: 0.08}
+  exclude: []
+  keepAsSet: 1
+--- !u!114 &5905365368210920775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3477451846458736069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.016447552, y: 0.24030136, z: 0.44151932}
+  - {x: -0.016447552, y: 0.24030136, z: 0.49766126}
+  - {x: 0.0218418, y: 0.16789505, z: -0.20456693}
+  - {x: 0.016447552, y: 0.24030136, z: 0.49766126}
+  - {x: -0.008617407, y: 0.22314923, z: 0.15658553}
+  - {x: -0.01370532, y: 0.13156141, z: 0.72414696}
+  - {x: -0.031089256, y: 0.15824832, z: -0.2191897}
+  - {x: 0.03108925, y: 0.15824832, z: -0.2191897}
+  - {x: 0.013705311, y: 0.13156141, z: 0.72414696}
+  - {x: -0.031089246, y: 0.14532503, z: -0.23498505}
+  - {x: 0.03108925, y: 0.14532503, z: -0.23498505}
+  - {x: -0.04367928, y: 0.14601642, z: -0.20456693}
+  - {x: 0.027410554, y: 0.107823096, z: 0.72414696}
+  - {x: -0.027410554, y: 0.107823096, z: 0.72414696}
+  - {x: 0.04367928, y: 0.14601642, z: -0.20456693}
+  - {x: -0.006107863, y: 0.11840219, z: 0.72997445}
+  - {x: -0.031089246, y: 0.010587964, z: -0.24096772}
+  - {x: -0.05267862, y: 0.08884398, z: 0.51750624}
+  - {x: 0.03108925, y: 0.010587964, z: -0.24096772}
+  - {x: 0.006107861, y: 0.09724407, z: 0.72997445}
+  - {x: 0.05267862, y: 0.08884398, z: 0.51750624}
+  - {x: -0.013705315, y: 0.08408486, z: 0.72414696}
+  - {x: 0.027410554, y: 0.025600946, z: 0.67302686}
+  - {x: -0.027410554, y: 0.025600946, z: 0.67302686}
+  - {x: 0.01370532, y: 0.08408486, z: 0.72414696}
+  - {x: 0.013350641, y: -0.20754662, z: 0.15484828}
+  - {x: -0.013705315, y: 0.0018627166, z: 0.67302686}
+  - {x: 0.01370532, y: 0.0018627166, z: 0.67302686}
+  - {x: -0.013350491, y: -0.20754662, z: 0.15484828}
+  - {x: 0.03108925, y: -0.006882324, z: -0.21775372}
 --- !u!1 &3970281501016451185
 GameObject:
   m_ObjectHideFlags: 0

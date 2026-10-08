@@ -1,3 +1,4 @@
+using KryticalNova.Rendering;
 using UnityEngine;
 
 namespace KryticalNova.Items.Visuals
@@ -91,7 +92,8 @@ namespace KryticalNova.Items.Visuals
         {
             if (pet != null) Destroy(pet);
             pet = null;
-            sparkles = null; // children of the old pet, like its rim shell
+            sparkles = null; // children of the old pet
+            rim?.Detach();   // its halo was the old pet's outline
             rimOn = false;
             hasBounds = false;
             GameObject model = stageModel != null ? stageModel : current != null ? current.petPrefab : null;
@@ -147,26 +149,31 @@ namespace KryticalNova.Items.Visuals
                 clearDistance = 0f;
                 return;
             }
-            hoverLocal = PetPlacement.HoverPoint(authored, unitBounds, baseScale, fullScale, follow.ClearDistance);
+            hoverLocal = PetPlacement.HoverPoint(authored, unitBounds, baseScale, fullScale, follow.ClearDistanceAt(stageScale));
             clearDistance = PetPlacement.NearestDistance(hoverLocal, unitBounds, fullScale);
         }
 
         /// <summary>
-        /// A rim of light around the pet's outline, breathing: wider, brighter and livelier the further it has grown.
+        /// A halo of light round the pet's outline, breathing: wider, brighter and livelier the further it has grown.
         /// The pet's own colours are left alone.
         /// </summary>
         private void ApplyRim()
         {
-            if (glow.rim == null || glow.strength <= 0f)
+            if (glow.strength <= 0f)
             {
-                if (rimOn) GlowRim.Detach(pet);
+                if (rimOn) rim.Detach();
                 rimOn = false;
                 return;
             }
-            if (rim == null) rim = new GlowRim(glow.rim, "pet");
+            if (rim == null) rim = new GlowRim(); // no twinkle: the pet's sparkles are an effect of their own
             float s = glow.strength;
-            rim.Set(glow.color, Mathf.Lerp(glow.rimIntensity.x, glow.rimIntensity.y, s), Mathf.Lerp(3.4f, 2f, s),
-                Mathf.Lerp(0.15f, 0.4f, s), Mathf.Lerp(0.6f, 1.1f, s), 0f); // no surface sparkles: the pet's are an effect of their own
+            rim.Set(new GlowHaloLook
+            {
+                color = glow.color,
+                intensity = Mathf.Lerp(glow.rimIntensity.x, glow.rimIntensity.y, s), width = Mathf.Lerp(glow.rimWidth.x, glow.rimWidth.y, s),
+                pulse = Mathf.Lerp(glow.rimPulse.x, glow.rimPulse.y, s), pulseSpeed = Mathf.Lerp(glow.rimPulseSpeed.x, glow.rimPulseSpeed.y, s),
+                pulseWidth = Mathf.Lerp(glow.rimPulseWidth.x, glow.rimPulseWidth.y, s),
+            });
             if (!rimOn) rim.Attach(pet);
             rimOn = true;
         }
@@ -294,7 +301,7 @@ namespace KryticalNova.Items.Visuals
         private void OnDestroy()
         {
             if (pet != null) Destroy(pet);
-            rim?.Destroy();
+            rim?.Detach();
         }
 
 #if UNITY_EDITOR
@@ -310,7 +317,7 @@ namespace KryticalNova.Items.Visuals
             Gizmos.color = new Color(0.31f, 0.89f, 0.94f);
             Gizmos.matrix = Matrix4x4.TRS(new Vector3(transform.position.x, centre.y, transform.position.z), Quaternion.identity, new Vector3(1f, 0f, 1f));
             Gizmos.DrawWireSphere(Vector3.zero, follow.ownerHalfWidth);
-            Gizmos.DrawWireSphere(Vector3.zero, follow.ClearDistance);
+            Gizmos.DrawWireSphere(Vector3.zero, follow.ClearDistanceAt(stageScale));
         }
 #endif
     }

@@ -111,31 +111,46 @@ MonoBehaviour:
       name: Orange
       color: {r: 1, g: 0.52, b: 0.12, a: 1}
     glowLooks:
-    - intensity: 0.55
-      rimPower: 3.2
-      pulse: 0.1
-      pulseSpeed: 0.5
-      sparkles: 0
-    - intensity: 0.65
-      rimPower: 3
-      pulse: 0.12
-      pulseSpeed: 0.5
-      sparkles: 0
-    - intensity: 0.8
-      rimPower: 2.8
-      pulse: 0.15
-      pulseSpeed: 0.6
-      sparkles: 0
-    - intensity: 2.6
-      rimPower: 1.9
+    - intensity: 0.5
+      width: 0.045
       pulse: 0.35
-      pulseSpeed: 1.1
-      sparkles: 1
-    - intensity: 3
-      rimPower: 1.8
+      pulseSpeed: 0.45
+      pulseWidth: 0.2
+      twinkle: 0
+      lightning: 0
+      flame: 0
+    - intensity: 0.6
+      width: 0.05
+      pulse: 0.35
+      pulseSpeed: 0.45
+      pulseWidth: 0.2
+      twinkle: 0
+      lightning: 0
+      flame: 0
+    - intensity: 0.7
+      width: 0.06
       pulse: 0.4
-      pulseSpeed: 1.2
-      sparkles: 1
+      pulseSpeed: 0.55
+      pulseWidth: 0.25
+      twinkle: 0
+      lightning: 0
+      flame: 0
+    - intensity: 1.6
+      width: 0.1
+      pulse: 0.5
+      pulseSpeed: 0.7
+      pulseWidth: 0.35
+      twinkle: 1.3
+      lightning: 1
+      flame: 1
+    - intensity: 1.9
+      width: 0.12
+      pulse: 0.55
+      pulseSpeed: 0.8
+      pulseWidth: 0.4
+      twinkle: 1.5
+      lightning: 1.2
+      flame: 1
   fusion:
     maxStage: 12
     catalystItemId: 9120

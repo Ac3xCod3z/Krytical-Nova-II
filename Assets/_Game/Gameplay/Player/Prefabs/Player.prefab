@@ -762,7 +762,6 @@ MonoBehaviour:
   appearance: {fileID: 0}
   weaponMount: {fileID: 0}
   petFollower: {fileID: 0}
-  temperGlow: {fileID: 2100000, guid: 5dbcffb4f259c134fb487f74986ae9f0, type: 2}
 --- !u!114 &1740344965673177520
 MonoBehaviour:
   m_ObjectHideFlags: 0

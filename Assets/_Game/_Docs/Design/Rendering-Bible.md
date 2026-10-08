@@ -51,6 +51,9 @@ Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights d
 6. **SunShafts** (BeforeRenderingPostProcessing + 1): sky / cloud god rays from the key light (sun by day, faint
    moon rays at night), added before post so Bloom catches them.
    Kept alongside the mist: the shafts own the sky, the mist owns the streets.
+6b. **Glow Halo** (BeforeRenderingPostProcessing + 2): the light round tempered weapons and evolved pets (section 6e).
+   Laid over the inked, toned frame, so the comic ink and dots stay under it, it is never outlined or dotted itself,
+   and it does not lean on bloom to read. Adds no pass at all when nothing on screen glows.
 7. **Beautify 3** (AfterRenderingTransparents — i.e. *before* URP post, on the HDR frame) owns **tonemapping
    (PBR Neutral)**, **bloom** (threshold 1, intensity 0.4, spread 0.58, warm `#FFF1E0` tint) and the **ink vignette**
    (rings 0.1 → 0.5, ink `#14122B` at 60 %, **fade 0** — Beautify's "fade" fades the whole frame to the
@@ -352,6 +355,53 @@ farther away than the original 0.065 / 0.1.
   - Rebuild with **Krytical Nova > Zone > Rebuild Water**.
   - The water needs the depth and opaque textures, which are now on for the PC and Mobile URP assets.
 
+## 6e. Glow halo (tempered weapons, evolved pets)
+
+The glow is light **round** a thing, never a tint on it. It is drawn on the screen, not on the model
+(`GlowHaloFeature`, shader `Hidden/KryticalNova/GlowHalo`, both in `Assets/_Game/Rendering`), so it follows any
+outline exactly (thin blades, hollow shapes, hard-edged low-poly meshes) and falls away evenly. Before 7 Oct 2026 it
+was a hull pushed out along the mesh normals in four stacked bands, which is why it had hard steps, gaps at hard
+edges and a pulse that only changed brightness.
+
+**How a frame is made.** Every glowing renderer still on screen is drawn into a mask (colour × brightness, halo width
+in pixels, depth; only the parts the camera can see). The mask is jump-flooded at half resolution, so every pixel
+near it learns which glowing pixel is nearest and how far away it is. One pass then lays the light over the frame
+from that distance: `pow(1 - distance / width, softness)`, starting one pixel outside the model so its ink outline
+stays black, and hidden by anything standing in front of the glowing thing. All passes are scissored to the glowing
+things' screen rectangle. Render Graph only; nothing is added to the models (no shells, no extra materials).
+
+**Who glows.** Anything that registers a `GlowHalo` (`Rendering/Runtime/GlowHalo.cs`): today tempered weapons
+(`WeaponVisualMount` through `GlowRim`) and evolved pets (`PetFollower`). The look comes from data: a Temper band's
+colour and its rarity's `TemperGlowLook` (`GearProgressionSettings.temper.glowLooks`), a pet's stage
+(`PetSettings.rim…`).
+
+**The breath.** Each halo breathes on its own beat (so a crowd does not pulse in step): a smooth swell that is
+brightest and widest together. `pulse` is the share of brightness lost at the low point, `pulseSpeed` is breaths a
+second, `pulseWidth` is how much wider it is at the top of a breath.
+
+**Only part of a model can glow** (`GlowZone`: a box the glow is kept to, and a box kept dark). The dark parts go
+into the mask too and are flooded alongside: air whose nearest piece of the model is a dark one gets no light, so the
+glow of a blade stops at its hilt instead of spilling round it, and ends softly where the two meet (`zoneSoftness`).
+Weapons carry their zone on their model prefab (`WeaponGlowZone`): blades glow past the guard, axes and scythes on the
+head (the shaft beside a beard or between horns stays dark), guns everywhere but the grip, bows everywhere but the
+string. Baked from the meshes by **Krytical Nova ▸ Items ▸ 8**; the ten guns, the compound bow, the cleaver and one
+knuckle blade are set by hand and ticked "keep as set".
+
+**What the strongest looks add**, in the same pass and always in the glow's own colour, never where there is no light:
+
+| | What it is | Per look | Tuned on the feature |
+|---|---|---|---|
+| Sparks | a few small dots with a thin four-point glint that swell and fade, in the light and on the glowing part | `twinkle` (brightness) | `twinkleSize` (room per spark: larger = fewer), `twinkleShare`, `twinkleRate`, `twinkleDot`, `twinkleRay`, `twinkleWhite` |
+| Lightning | thin jagged arcs that stand off the outline for an instant and flicker out | `lightning` | `boltLength`, `boltRate`, `boltChance`, `boltWidthPixels`, `boltBrightness`, `boltWander`, `boltWhite` |
+| Flame | tongues that rise from the outline, lean towards the tip and stream to it | `flame` (share of the light) | `flameSize`, `flameSpeed`, `flameDepth`, `flameLean`, `flameHeat` |
+
+They are pinned to the glowing thing (its origin and the way its tip points), so they travel with it. Epic and
+above wear all three; lower rarities glow plainly. At most 32 things in one view carry them (the rest only glow).
+
+**Feature settings** (`PC_Renderer` ▸ Glow Halo): `softness` 1.8, `inkGap` 1 px, `solidity` 0.45 (how much of the
+background the light covers, so it does not burn out on a bright sky), halo width clamped to 3–56 px, `depthFade`
+0.05 m, fade-out from 55 to 80 m, `halfResolution` on. PC renderer only (it needs the depth texture).
+
 ## 7. Performance budgets (PC, 1080p)
 
 | Item | Budget | Notes |
@@ -365,9 +415,10 @@ farther away than the original 0.065 / 0.1.
 | Volumetric mist + Beautify | < 2 ms together | mist at half res, 0.6 m min step, 300 m max distance; mist volumes off when unused |
 | Lamp cones | < 0.5 ms at night in fog | Faster raymarch preset, no shadows, off beyond 65 m, off by day |
 | Live minimap | ~8 renders/s, 512² | opaque-only Forward+ renderer, no shadows/post/features |
+| Glow Halo | < 0.5 ms GPU, < 0.3 ms CPU with 40 glowing weapons | measured 0.22 ms GPU / 0.18 ms CPU with 42 halos (flame, lightning, sparks) at 925×1067 in the Editor, 0.07 / 0.06 ms with 2; the flood runs at half res inside the glowing things' screen rectangle only; nothing glowing = no pass |
 
 Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Editor. Look for each feature's
-`ProfilingSampler` name ("Comic Style", "Sun Shafts").
+`ProfilingSampler` name ("Comic Style", "Sun Shafts", "Glow Halo").
 
 ## 8. Roadmap
 
@@ -401,6 +452,14 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black.
 
 ## Changelog
+
+- **2026-10-07 (polish pass: the glow)**:
+  - The Temper and pet glow is rebuilt as a screen-space halo (section 6e, frame order 6b): the stacked hull
+    (`TemperGlow.shader`, its material and the sparkle shell) is gone.
+  - Only part of a weapon glows now (`GlowZone`, `WeaponGlowZone`), and the dark parts keep the light off the air
+    beside them.
+  - Epic and above add sparks, lightning and flame in the Temper band's own colour, drawn in the halo pass.
+  - Budget row added: Glow Halo.
 
 - **2026-10-04 (front end and factions)**:
   - Showroom lighting rules added (section 3): one shadowed key, faction-coloured rim and fill, dotted burst backdrop.
