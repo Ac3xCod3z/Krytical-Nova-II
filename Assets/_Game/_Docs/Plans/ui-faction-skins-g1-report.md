@@ -1,5 +1,10 @@
 # Workstream G-1: UI inventory and report
 
+> **Status, 8 Oct 2026:** G-2 to G-4 are built and G-5 is partly checked. What was built, where it differs from this
+> plan (the staging of the comic book in section 8, and which of the settings of section 9 were added), the parity
+> checklist and what is still open are in `Design/14_interface_skins_menus_settings.md`. This report is kept as the
+> plan it was.
+
 Polish pass, workstream G (faction-skinned title flow, shared Settings screen, HUD). Written 8 Oct 2026. **Nothing was
 changed for this report.** Two of the brief's six inventory steps are still open and are marked so: Synty's demo
 scenes were not opened and syntystore.com was not consulted, because the Unity Editor could not be driven while this

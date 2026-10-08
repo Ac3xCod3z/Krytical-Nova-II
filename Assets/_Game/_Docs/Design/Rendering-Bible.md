@@ -525,6 +525,23 @@ shadow 4 px down and to the right, shadow-indigo Ben-Day dots on a 7 px 45° gri
 corner, and a tail on the side the speaker is. Every number is a `--bubble-*` value of `.comic-bubble` in
 `ProgressionHUD.uss`. The animal pets' emoji are drawn in the same ink, with one fill and one accent of the Colour Bible.
 
+## 6i. The interface: faction skins and the menus' comic book
+
+`Design/14_interface_skins_menus_settings.md` has all of it. The rules of the look:
+
+- **One skin per faction, in an asset** (`UI/Skins/UiSkin_<Faction>.asset`). No screen names a faction's art or colour
+  itself: the game's style sheets are generated from the assets, and the title flow is built from the menu pack the
+  asset names. The comic layer (ink `#14122B`, paper `#F4EEDF`, Ben-Day dots on the shared screen grid) is ours and is
+  the same in every skin.
+- **Colours that mean something are never skinned:** rarity colours, the pets' comic bubbles, a namecard's faction
+  colour and the red of a Callout opponent.
+- **A menu screen is a page of a comic book.** The page that turns is the screen that was left, unlit: where it curls
+  away from the reader it is shaded with Ben-Day dots on the same grid as the rest of the frame, never with a
+  gradient; its back is paper with dots in the menus' accent and an ink line round it; the cover is solid ink. The
+  flat page shows the screen in exactly its own colours (shader `KryticalNova/UI/Comic Page`).
+- **Feedback moves the thing that was touched and nothing else:** a swell, a squash, a nudge or a shake of a few
+  percent or pixels, over in a quarter of a second, added to the pack's own animation, never in place of it.
+
 ## 7. Performance budgets (PC, 1080p)
 
 | Item | Budget | Notes |
@@ -538,6 +555,7 @@ corner, and a tail on the side the speaker is. Every number is a `--bubble-*` va
 | Volumetric mist + Beautify | < 2 ms together | mist at half res, 0.6 m min step, 300 m max distance; mist volumes off when unused |
 | Lamp cones | < 0.5 ms at night in fog | Faster raymarch preset, no shadows, off beyond 65 m, off by day |
 | Live minimap | ~8 renders/s, 512² | opaque-only Forward+ renderer, no shadows/post/features |
+| Menus' page turn | nothing while a screen is at rest; during a turn one picture of the screen and one mesh drawn by one camera for 0.7 s | not measured against a budget yet |
 | Comic marks and words | nothing created in a fight, 0 B GC a hit, < 1 ms a frame in a crowd | measured in the Editor at 30 hits a second by other players: +0.6 ms mean frame, 0 effects created, 0 B allocated by the layer's own calls; the pool is filled when a scene starts (about 86 MB of sleeping comic effects by the Editor's count) |
 | Glow Halo | < 0.5 ms GPU, < 0.3 ms CPU with 40 glowing weapons | measured 0.22 ms GPU / 0.18 ms CPU with 42 halos (flame, lightning, sparks) at 925×1067 in the Editor, 0.07 / 0.06 ms with 2; the flood runs at half res inside the glowing things' screen rectangle only; nothing glowing = no pass |
 
@@ -576,6 +594,14 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black.
 
 ## Changelog
+
+- **2026-10-08 (polish pass: interface)**:
+  - One interface skin per faction, in an asset; the game's style sheets are generated from it (section 6i,
+    `Design/14_interface_skins_menus_settings.md`).
+  - The title flow is built once per skin from each faction's own Synty menu pack and wears one skin a run.
+  - The menus are the pages of a comic book: a MegaBook leaf carries the screen that is left and turns away, shaded
+    with Ben-Day dots (shader `KryticalNova/UI/Comic Page`); the book's cover opens the menus.
+  - Menus and Settings answer what is done in them with Feel (`PFX_MenuFeel`, the Menu Punch feedback).
 
 - **2026-10-08 (polish pass: comic effects)**:
   - Hits look like the weapon that dealt them: a mark, a font and three words for each of the nine weapon classes,

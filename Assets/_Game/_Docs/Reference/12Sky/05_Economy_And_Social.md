@@ -142,6 +142,8 @@ Hold **B** (rebindable): a ring of eight categories; a click turns it into that 
 | Crew | yes | **never** |
 | Picking up a dropped item (after its 20 s) | yes | yes |
 
+**Declined for the player.** In **Settings ▸ Gameplay** a player can have trade requests, contact requests, Crew invitations, Squad invitations and Callouts declined without being shown them (`HudPreferences.RefuseTrades`, `RefuseContacts`, `RefuseCrewInvites`, `RefuseSquadInvites`, `RefuseCallouts`; all off as shipped). The request still reaches the player's game, which answers no on arrival exactly as the Decline button would (`RequestPromptController.Refused`, `PartyHudController`, `DuelHudController`): the server is asked nothing new and the asker sees an ordinary refusal. It is kept per machine, like the other options, not per character.
+
 **Neutral ground** is a `TradeZone` with `crossFaction` ticked. The dedicated non-combat zone will be one. Until it exists the whole starter town is marked neutral (scene object "Neutral Ground - Starter Town (for testing)") so cross-faction play can be tested; combat there is unchanged. Untick or delete that object when the real zone is built.
 
 ## Leaving: Log Out and Exit Game (row 46)

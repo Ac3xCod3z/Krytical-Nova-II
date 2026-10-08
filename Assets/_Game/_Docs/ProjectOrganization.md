@@ -114,20 +114,28 @@ _Game/
 │   ├── Ruins/             Meshes/  Prefabs/  Profiles/ (Quick Destruction profile)  Editor/ (RuinBaker)
 │   ├── Water/             Shaders/
 │   └── (future) Rocks/ Props/ Architecture/
-├── GameFeel/              Runtime/ (KryticalNova.GameFeel, client-only)  Data/ (SmearSettings, HitLookSettings; Data/Assets/ = their assets)
-│                          Editor/ (GameFeelBuilder; GameFeelBuilder.Comic = the marks and words made from the Cartoon FX pack)
-│                          Prefabs/ (PFX_GameFeel)  Tests/Editor/
+├── GameFeel/              Runtime/ (KryticalNova.GameFeel, client-only; MenuFeelPresenter, MMF_MenuPunch and MenuPunchDriver are
+│                          the feel of the menus and of Settings)  Data/ (SmearSettings, HitLookSettings; Data/Assets/ = their assets)
+│                          Editor/ (GameFeelBuilder; GameFeelBuilder.Comic = the marks and words made from the Cartoon FX pack;
+│                          GameFeelBuilder.Menus = the menu feel)  Prefabs/ (PFX_GameFeel; PFX_MenuFeel, which every menu scene
+│                          holds and PFX_GameFeel carries into the world)  Tests/Editor/
 ├── Icons/                 Editor/ (the icon library, editor-only: IconLibrary, IconTreatmentSettings, ComicIconTreatment, IconBaker,
 │                          IconPacks, IconLibraryWindow)  Data/Assets/ (IconLibrary.asset, IconTreatmentSettings.asset)  Tests/Editor/
 │                          The icons it bakes go to the owning systems: Gameplay/Progression/Data/Assets/Icons, Gameplay/Items/Data/Assets/Icons
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
 ├── Rendering/             Runtime/ (renderer features; ComicLetteringFeature draws the `ComicLettering` layer, which every
 │                          comic mark and word is on, over the finished frame)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
-├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets)  Editor/ (Menus/ = front-end
-│                          scene builder, own assembly)  Common/  HUD/ (Minimap/ Map/ Chat/ Duel/ Party/ Pet/ Herald/ GameMenu/)  Inventory/
-│                          (also the forge bench)  Economy/ (Vault, Trade and Kiosk windows)  Social/ (prompt, player menu,
-│                          Contacts, Crew, the emote wheel)  Settings/ (the Settings window; its code is Runtime/Settings/)  NPC/  Shaders/
-│                          Menus/ (Materials/, KeyGlyphs.asset: assets the front-end scenes use)
+├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets, the menus' comic book and what the
+│                          menus say happened (MenuMoments); Skins/ = UiSkin and MenuSkin; Settings/ = the Settings pages)
+│                          Editor/ (FactionSkinBuilder, UiSkinWatcher, VendorFontGuard; Menus/ = front-end scene builder, own
+│                          assembly)  Common/ (KryticalTheme.uss; KryticalSkin_<Faction>.uss are generated, never edited)
+│                          Skins/ (UiSkin_Hegemony / _Null / _Covenant.asset: one interface skin per faction)
+│                          HUD/ (Minimap/ Map/ Chat/ Duel/ Party/ Pet/ Herald/ GameMenu/)  Inventory/ (also the forge bench)
+│                          Economy/ (Vault, Trade and Kiosk windows)  Social/ (prompt, player menu, Contacts, Crew, the emote
+│                          wheel)  Settings/ (SettingsWindow.uxml, shared by the game and the menus; MenuSettings.uxml shows it over
+│                          character select)  NPC/  Shaders/ (UI_ComicPage = a page of the menus' book)
+│                          Menus/ (assets the front-end scenes use: Materials/, Prefabs/MenuBook.prefab, MenuBookSettings.asset,
+│                          KeyGlyphs.asset)  Tests/Editor/
 │                          (future: Skills/ Character/ World/)
 ├── VFX/                   Gameplay/  GameFeel/ (Comic/ = the comic marks and words, generated)  Environment/{City,Portals,Vehicles,Weather}/
 │                          Materials/ (shared FX mats; Comic/<word>/ = our copies of a word's letter materials, generated)
@@ -182,7 +190,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime and Vegetation.Grass (the graphics settings set grass density). Excluded from dedicated server (`!UNITY_SERVER`) |
 | `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | GameFeel/Data. FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
 | `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
-| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, Economy, Pets, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel, Icons) |
+| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, Economy, Pets, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel, Icons). References UI (the skin assets) and GameFeel |
 | `KryticalNova.Editor.GM`          | `Tools/Editor/GM/`                             | GM tools window                                                           |
 | `KryticalNova.Editor.Menus`       | `UI/Editor/Menus/`                             | Front-end scene builder. Depends on Editor, UI, Runtime, uGUI, TextMesh Pro. `!UNITY_SERVER` |
 | `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
@@ -192,9 +200,9 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Economy.Tests.Editor` | `Gameplay/Economy/Tests/Editor/`             | EditMode tests (wallet, storage, trade and Kiosk rules)                                |
 | `KryticalNova.Persistence.Tests.Editor` | `Gameplay/Persistence/Tests/Editor/`     | EditMode tests (save stores, account documents)                                        |
 | `KryticalNova.Pets.Tests.Editor`  | `Gameplay/Pets/Tests/Editor/`                  | EditMode tests (pet growth, stages, hunger; when a pet speaks, and what the four pets say) |
-| `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides; where a pet's bubble goes) |
+| `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides; where a pet's bubble goes; the faction skins and the menus' pick of one; Settings: APPLY and REVERT, the pages, the camera maths; the menus' comic book). Depends on Runtime, UI, Editor and Editor.Menus |
 | `KryticalNova.Icons.Tests.Editor` | `Icons/Tests/Editor/`                          | EditMode tests (the comic icon treatment, the icon library's rules, and that every skill and item shows an icon of its own). Depends on Runtime and Editor |
-| `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab; how hits look: the rules, a look of its own for every weapon class, no comic effect shared between two moments, the lettering layer and its pass, the pool's timing). `!UNITY_SERVER` |
+| `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab; how hits look: the rules, a look of its own for every weapon class, no comic effect shared between two moments, the lettering layer and its pass, the pool's timing; the feel of the menus: a player for every menu moment, held by every menu scene and by the world, and a movement that leaves a thing where its animator put it). Depends on Runtime, GameFeel, UI. `!UNITY_SERVER` |
 
 **Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
 **New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`
@@ -335,7 +343,7 @@ Menu **Krytical Nova ▸ Front End**:
 
 | Item                                         | What it does                                                                           |
 |----------------------------------------------|----------------------------------------------------------------------------------------|
-| 1. Build Front-End Scenes                    | Regenerates the five `Scenes/MainMenu/` scenes from the Synty Fantasy Menus / Fantasy Screens prefabs and puts them first in the build order |
+| 1. Build Front-End Scenes                    | Regenerates the five `Scenes/MainMenu/` scenes and puts them first in the build order. Each scene's screen is built three times, once per faction skin, from that skin's own Synty menu pack (`UiSkin`); the creator is Fantasy Screens' layout in every skin. It also makes, if they are missing, the menus' comic book (`UI/Menus/Prefabs/MenuBook.prefab`, a MegaBook of one leaf, with `MenuBookSettings.asset` and its three materials) and the menu feel (`GameFeel/Prefabs/PFX_MenuFeel.prefab`). An existing book or menu feel is left as it was tuned: delete it to have it made again |
 | Play From Title Screen (toggle)              | On: Play starts at the Title like a build. Off (default): Play runs the open scene, so the zone still starts directly |
 
 **Editor test session** (`Networking/Runtime/EditorTestSession`, 7 Oct 2026): while the file `Library/KryticalNova.TestSession`
@@ -348,7 +356,13 @@ Menu **Krytical Nova ▸ UI**:
 
 | Item                                         | What it does                                                                           |
 |----------------------------------------------|----------------------------------------------------------------------------------------|
-| Build Faction Skins                          | Regenerates `UI/Common/KryticalSkin_Null.uss` and `KryticalSkin_Covenant.uss` from the Hegemony sheets (the base layout). Run after editing a base sheet. Never edit the base sheets for one faction |
+| Build Faction Skins                          | Regenerates `UI/Common/KryticalSkin_Hegemony.uss`, `_Null.uss` and `_Covenant.uss` from the three skin assets in `UI/Skins/` and the base sheets (the Hegemony layout). Run after editing a base sheet; a change to a skin asset rebuilds them by itself (`UiSkinWatcher`). Never edit the generated sheets, and never edit a base sheet for one faction. A new in-game style sheet must be added to the builder's list |
+
+Menu **Krytical Nova ▸ GameFeel** also has **Rebuild Menu Feel**: builds `PFX_MenuFeel.prefab` again from the numbers in
+`GameFeelBuilder.Menus` (tuning done on the prefab is lost) and makes sure `PFX_GameFeel` carries it.
+
+`VendorFontGuard` (`UI/Editor/`) keeps Synty's TextMesh Pro font assets, which Unity writes to whenever a new glyph is
+drawn, out of every save: building or playing never changes a vendor font file.
 
 ### Scene hierarchy
 
