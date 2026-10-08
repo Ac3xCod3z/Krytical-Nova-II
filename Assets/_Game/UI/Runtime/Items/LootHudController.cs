@@ -121,6 +121,7 @@ namespace KryticalNova.UI
                 Vector2 point = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(screen.x, Screen.height - screen.y));
                 label.style.left = point.x - label.resolvedStyle.width * 0.5f;
                 label.style.top = point.y - label.resolvedStyle.height;
+                Hud.HudChrome.HideOver(label, point);
             }
 
             ShowNotice(soonest, mineCount, local);

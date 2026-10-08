@@ -100,6 +100,7 @@ namespace KryticalNova.UI
 
                 entry.Label.style.left = panelPoint.x - (entry.Label.resolvedStyle.width * 0.5f);
                 entry.Label.style.top = panelPoint.y - (entry.Label.resolvedStyle.height * 0.5f);
+                Hud.HudChrome.HideOver(entry.Label, panelPoint, true);
                 entry.Label.style.opacity = Mathf.Clamp01(1f - (progress * progress));
             }
         }

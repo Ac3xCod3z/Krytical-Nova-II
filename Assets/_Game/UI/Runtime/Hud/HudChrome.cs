@@ -193,5 +193,25 @@ namespace KryticalNova.UI.Hud
                 if (piece != null && piece.Covers(panelRect)) return true;
             return false;
         }
+
+        /// <summary>
+        /// The same for a label of this size that stands on a point of the panel (its bottom middle), or is centred
+        /// on it. A label that is not laid out yet (no size) is not covered.
+        /// </summary>
+        public static bool Covers(Vector2 panelPoint, float width, float height, bool centred = false)
+        {
+            if (Showing.Count == 0 || float.IsNaN(width) || float.IsNaN(height)) return false;
+            return Covers(new Rect(panelPoint.x - width * 0.5f, panelPoint.y - (centred ? height * 0.5f : height), width, height));
+        }
+
+        /// <summary>
+        /// Hides a label that follows something in the world while it is over a uGUI piece, and shows it again
+        /// after. By visibility, not display, so the label keeps its size and the answer does not flicker.
+        /// </summary>
+        public static void HideOver(VisualElement label, Vector2 panelPoint, bool centred = false)
+        {
+            bool covered = Covers(panelPoint, label.resolvedStyle.width, label.resolvedStyle.height, centred);
+            label.style.visibility = covered ? Visibility.Hidden : StyleKeyword.Null;
+        }
     }
 }

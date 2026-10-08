@@ -214,6 +214,7 @@ namespace KryticalNova.UI
                 Vector2 panelPoint = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(screen.x, Screen.height - screen.y));
                 plate.style.left = panelPoint.x - plate.resolvedStyle.width * 0.5f;
                 plate.style.top = panelPoint.y - plate.resolvedStyle.height;
+                Hud.HudChrome.HideOver(plate, panelPoint);
             }
 
             for (int i = 0; i < staleNpcs.Count; i++)

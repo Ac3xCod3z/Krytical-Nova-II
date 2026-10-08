@@ -119,6 +119,7 @@ namespace KryticalNova.UI
                 Fill(card, faction, viewer);
                 card.Root.style.left = point.x - card.Root.resolvedStyle.width * 0.5f;
                 card.Root.style.top = point.y - card.Root.resolvedStyle.height;
+                Hud.HudChrome.HideOver(card.Root, point);
             }
 
             stale.Clear();
