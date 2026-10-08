@@ -326,6 +326,12 @@ Menu **Krytical Nova ▸ Front End**:
 | 1. Build Front-End Scenes                    | Regenerates the five `Scenes/MainMenu/` scenes from the Synty Fantasy Menus / Fantasy Screens prefabs and puts them first in the build order |
 | Play From Title Screen (toggle)              | On: Play starts at the Title like a build. Off (default): Play runs the open scene, so the zone still starts directly |
 
+**Editor test session** (`Networking/Runtime/EditorTestSession`, 7 Oct 2026): while the file `Library/KryticalNova.TestSession`
+exists (two lines, `port=7788` and `save=<folder>`), every Editor of the project, the main one and its Multiplayer Play
+Mode clones, hosts and joins on that port and keeps the server save in that folder, and says so in the console on entering
+Play. It keeps an Editor test off a build running on the same PC, which hosts on 7777 and writes the default save. Delete
+the file to go back to the defaults. A build never reads it, and nothing committed changes.
+
 Menu **Krytical Nova ▸ UI**:
 
 | Item                                         | What it does                                                                           |

@@ -56,9 +56,14 @@ namespace KryticalNova.Persistence
             }
         }
 
-        /// <summary>Each local copy of the game (a Multiplayer Play Mode clone, a build started with -profile) keeps its own saves.</summary>
+        /// <summary>
+        /// Each local copy of the game (a Multiplayer Play Mode clone, a build started with -profile) keeps its own saves.
+        /// An Editor test session keeps them in the folder it names instead, away from a running build's.
+        /// </summary>
         public static string DefaultRoot()
         {
+            string testRoot = KryticalNova.Networking.EditorTestSession.SaveRoot;
+            if (!string.IsNullOrEmpty(testRoot)) return testRoot;
             string profile = KryticalNova.Networking.NetworkConnectionManager.LocalProfile();
             return Path.Combine(Application.persistentDataPath, FolderName, string.IsNullOrEmpty(profile) ? DefaultProfile : profile.ToLowerInvariant());
         }
