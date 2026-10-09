@@ -6,7 +6,8 @@ namespace KryticalNova.Factions
     /// Who is an enemy of whom. Players of different factions are hostile while cross-faction PvP is on (the faction
     /// catalog's default, which a GM can switch at runtime); players of the same faction are friendly. The one
     /// exception is a duel both players agreed to: the two duelists are hostile to each other, and to nobody else,
-    /// for as long as it lasts.
+    /// for as long as it lasts. On neutral ground no faction is hostile to another, whatever the switch says: there
+    /// only a duel is a fight.
     /// </summary>
     public static class FactionRules
     {
@@ -47,6 +48,17 @@ namespace KryticalNova.Factions
             if (a == null || b == null || ReferenceEquals(a, b)) return false;
             if (a.IsDuelling(b) || b.IsDuelling(a)) return true;
             return AreHostile(a.Faction, b.Faction);
+        }
+
+        /// <summary>
+        /// The full rule where the two stand. On neutral ground the factions are at peace: only a duel both agreed to
+        /// makes two players hostile there. Anywhere else this is the rule above.
+        /// </summary>
+        public static bool AreHostile(IFactionMember a, IFactionMember b, bool neutralGround)
+        {
+            if (!neutralGround) return AreHostile(a, b);
+            if (a == null || b == null || ReferenceEquals(a, b)) return false;
+            return a.IsDuelling(b) || b.IsDuelling(a);
         }
 
         public static FactionMask MaskOf(FactionId id) => id == FactionId.None ? FactionMask.None : (FactionMask)(1 << ((int)id - 1));

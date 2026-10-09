@@ -139,12 +139,15 @@ Hold **B** (rebindable): a ring of eight categories; a click turns it into that 
 | Seeing a namecard | anywhere | only while that player is on neutral ground |
 | Trade, buying from a Kiosk | anywhere | on neutral ground only |
 | Contacts | anywhere, online or not | face to face on neutral ground only |
+| Whisper, Callout | anywhere | anywhere (a Callout cannot be asked of someone who is already an enemy) |
+| Attacking | only in a Callout | off neutral ground while `gm.pvp` is on; **on neutral ground only in a Callout** |
+| Squad | yes | **never** |
 | Crew | yes | **never** |
 | Picking up a dropped item (after its 20 s) | yes | yes |
 
 **Declined for the player.** In **Settings ▸ Gameplay** a player can have trade requests, contact requests, Crew invitations, Squad invitations and Callouts declined without being shown them (`HudPreferences.RefuseTrades`, `RefuseContacts`, `RefuseCrewInvites`, `RefuseSquadInvites`, `RefuseCallouts`; all off as shipped). The request still reaches the player's game, which answers no on arrival exactly as the Decline button would (`RequestPromptController.Refused`, `PartyHudController`, `DuelHudController`): the server is asked nothing new and the asker sees an ordinary refusal. It is kept per machine, like the other options, not per character.
 
-**Neutral ground** is a `TradeZone` with `crossFaction` ticked. The dedicated non-combat zone will be one. Until it exists the whole starter town is marked neutral (scene object "Neutral Ground - Starter Town (for testing)") so cross-faction play can be tested; combat there is unchanged. Untick or delete that object when the real zone is built.
+**Neutral ground** is a `TradeZone` with **Neutral Ground** ticked (the field is `crossFaction`). The whole starter town is marked so (scene object "Neutral Ground - Starter Town (for testing)"). Since 9 Oct 2026 it is also the non-combat zone: between two players, hostility is decided where they stand (`CombatHostility.IsHostile` → `FactionRules.AreHostile(a, b, neutralGround)`), and when either of the two is on neutral ground the factions are at peace, so a player of another faction is selected, targeted and offered the same things as a faction mate (the target strip and the player menu, without the Squad and Crew invitations) and can be hurt only in a Callout. The server refuses the strike; the zone is a scene object, the same on every machine, so every peer draws the same conclusion. `gm.pvp` therefore changes nothing inside the town: to test faction fights there, untick Neutral Ground on that object, or fight outside the walls.
 
 ## Leaving: Log Out and Exit Game (row 46)
 

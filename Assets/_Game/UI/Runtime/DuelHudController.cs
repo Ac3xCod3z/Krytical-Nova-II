@@ -164,7 +164,12 @@ namespace KryticalNova.UI
 
             shownTarget = other;
             SetVisible(targetStrip, other != null);
-            if (other != null) targetName.text = other.DuelistName.ToUpperInvariant();
+            if (other == null) return;
+            targetName.text = other.DuelistName.ToUpperInvariant();
+            // A Squad is one faction: no INVITE for a player of another one met on neutral ground.
+            VisualElement invite = targetStrip.Q("duel-target-invite");
+            if (invite != null)
+                invite.style.display = PlayerMenuController.MayJoinMine(other.GetComponent<PlayerIdentity>()) ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         private void AskSelected()

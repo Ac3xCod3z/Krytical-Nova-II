@@ -171,7 +171,8 @@ namespace KryticalNova.UI
         private bool CanExpelTarget(PlayerMenuTarget target) => MemberOf(target, out CrewMemberView member) && CrewRules.CanExpel(MyRank, member.rank);
 
         private bool CanInviteTarget(PlayerMenuTarget target) =>
-            crew != null && crew.InCrew && CrewRules.CanInvite(MyRank) && !crew.TryFindMember(target.Name, out _);
+            crew != null && crew.InCrew && CrewRules.CanInvite(MyRank) && !crew.TryFindMember(target.Name, out _)
+            && PlayerMenuController.MayJoinMine(target);
 
         private void WithMember(PlayerMenuTarget target, Action<CrewMemberView> act)
         {

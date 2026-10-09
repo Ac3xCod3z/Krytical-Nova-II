@@ -92,6 +92,39 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void OnNeutralGroundOtherFactionsAreNotHostile()
+        {
+            FactionRules.CrossFactionPvp = true;
+            Member a = Of(FactionId.Hegemony), b = Of(FactionId.Null);
+            Assert.IsFalse(FactionRules.AreHostile(a, b, neutralGround: true));
+            Assert.IsFalse(FactionRules.AreHostile(b, a, neutralGround: true));
+        }
+
+        [Test]
+        public void OnNeutralGroundADuelIsStillAFight_BetweenTheTwoOnly()
+        {
+            FactionRules.CrossFactionPvp = true;
+            Member a = Of(FactionId.Hegemony), b = Of(FactionId.Null), bystander = Of(FactionId.Covenant);
+            Member.Duel(a, b);
+            Assert.IsTrue(FactionRules.AreHostile(a, b, neutralGround: true));
+            Assert.IsTrue(FactionRules.AreHostile(b, a, neutralGround: true));
+            Assert.IsFalse(FactionRules.AreHostile(a, bystander, neutralGround: true));
+        }
+
+        [Test]
+        public void OffNeutralGroundNothingChanges()
+        {
+            Member a = Of(FactionId.Hegemony), b = Of(FactionId.Null), mate = Of(FactionId.Hegemony);
+            foreach (bool pvp in new[] { true, false })
+            {
+                FactionRules.CrossFactionPvp = pvp;
+                Assert.AreEqual(FactionRules.AreHostile(a, b), FactionRules.AreHostile(a, b, neutralGround: false));
+                Assert.AreEqual(FactionRules.AreHostile(a, mate), FactionRules.AreHostile(a, mate, neutralGround: false));
+                Assert.IsFalse(FactionRules.AreHostile(a, null, neutralGround: false));
+            }
+        }
+
+        [Test]
         public void AMemberIsNeverItsOwnEnemy()
         {
             FactionRules.CrossFactionPvp = true;

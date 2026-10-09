@@ -90,7 +90,7 @@ namespace KryticalNova.UI
             Instance = this;
 
             Register("Whisper", 10, _ => true, target => GetComponent<ChatWindowController>()?.BeginWhisper(target.Name));
-            Register("Invite to Squad", 20, _ => PlayerParty.Local != null && PlayerParty.Local.IsSpawned, target =>
+            Register("Invite to Squad", 20, target => PlayerParty.Local != null && PlayerParty.Local.IsSpawned && MayJoinMine(target), target =>
             {
                 PlayerParty mine = PlayerParty.Local;
                 if (mine == null) return;
@@ -150,6 +150,20 @@ namespace KryticalNova.UI
         {
             var identity = player != null ? player.GetComponentInParent<PlayerIdentity>() : null;
             return identity != null ? new PlayerMenuTarget(identity.CharacterName, identity.NetworkObject) : default;
+        }
+
+        /// <summary>
+        /// False for a player in sight who is of another faction: a Squad and a Crew are one faction, so their
+        /// invitations are not offered. A player known only by name is not ruled out here; the server decides.
+        /// </summary>
+        public static bool MayJoinMine(PlayerMenuTarget target) =>
+            !target.InSight || MayJoinMine(target.Player.GetComponent<PlayerIdentity>());
+
+        public static bool MayJoinMine(PlayerIdentity other)
+        {
+            PlayerInventory local = PlayerInventory.Local;
+            if (other == null || local == null || !local.TryGetComponent(out PlayerIdentity mine)) return true;
+            return other.Faction == mine.Faction;
         }
 
         /// <summary>Opens the menu for a player at a point of the panel. Nothing happens for the local player or an empty name.</summary>

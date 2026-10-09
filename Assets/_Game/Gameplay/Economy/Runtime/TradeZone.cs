@@ -7,7 +7,8 @@ namespace KryticalNova.Economy
     /// A marked-out part of a zone where dealings between players have their own rules. Two things can be switched
     /// on, each on its own: Kiosks may be set up here (<see cref="allowKiosks"/>), and this is neutral ground
     /// (<see cref="crossFaction"/>): players of different factions may trade, buy from each other's Kiosks and add
-    /// each other as contacts while they stand on it. Zones may overlap (a neutral town with a Kiosk plaza inside):
+    /// each other as contacts while they stand on it, and fight each other only in a Callout
+    /// (<c>CombatHostility</c>). Zones may overlap (a neutral town with a Kiosk plaza inside):
     /// a point has a property when any zone around it has it. A plain scene object, the same on every machine; the
     /// server reads it when it decides. Outside every zone, players deal only with their own faction and no Kiosk
     /// can open. A Crew is one faction everywhere: no zone changes that.
@@ -24,7 +25,8 @@ namespace KryticalNova.Economy
         [Tooltip("Kiosks may be set up here.")]
         [SerializeField] private bool allowKiosks = true;
         [Tooltip("Neutral ground: players of different factions may trade, buy from each other's Kiosks and add each other as " +
-                 "contacts here. The dedicated non-combat zone will be this; until it exists the starter town is marked so testing can go on.")]
+                 "contacts here, and cannot attack each other outside a Callout. The starter town is marked so.")]
+        [InspectorName("Neutral Ground")]
         [SerializeField] private bool crossFaction;
 
         /// <summary>Every enabled trade zone on this machine. Do not modify.</summary>
