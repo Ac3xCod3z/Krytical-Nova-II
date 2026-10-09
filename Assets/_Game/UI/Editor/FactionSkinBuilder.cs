@@ -828,10 +828,10 @@ namespace KryticalNova.EditorTools
                     Color32 c = Color.Lerp(colour, Color.white, lift);
                     return $"rgba({c.r}, {c.g}, {c.b}, {((Color)c).a.ToString("0.##", CultureInfo.InvariantCulture)})";
                 }
-                // The empty cell's own colour: a cell with an item in it takes its rarity's ground from the base sheets.
-                Rule(".inventory-grid .item-cell", $"background-image: {UrlOf(asset.gridCell)};", $"-unity-slice-scale: {Scale(asset.gridCell, asset.gridCellBorder)};");
-                Rule(".inventory-grid .item-cell.item-empty", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0f)};");
-                Rule(".inventory-grid .item-cell.item-empty:hover", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0.18f)};");
+                // Every grid of items, in whatever window (Pack, Vault, Trade, Kiosk, shop, the forge's bench). The cell's
+                // own colour is the empty cell's: one with an item in it takes its rarity's ground from the base sheets,
+                // whose rules name the cell and the rarity and so come before this one.
+                Rule(".item-cell", $"background-image: {UrlOf(asset.gridCell)};", $"-unity-slice-scale: {Scale(asset.gridCell, asset.gridCellBorder)};", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0f)};");
             }
             string Rgba(Color colour)
             {
@@ -861,13 +861,23 @@ namespace KryticalNova.EditorTools
             {
                 // In the grid the rarity of an item is the colour of the cell it lies on, as the packs' grids have no
                 // outlines: the outline is kept for what is happening to a cell (a pointer over it, a drop).
-                const string cell = ".inventory-grid .item-cell";
+                const string cell = ".item-cell";
                 // (The grounds themselves are the base sheets' rarity rules, the same in every skin: nothing here names a rarity.)
                 Rule($"{cell} > .item-frame", "-unity-background-image-tint-color: rgba(0, 0, 0, 0);");
                 Rule($"{cell}:hover > .item-frame", "-unity-background-image-tint-color: rgba(220, 236, 246, 0.6);");
                 Rule($"{cell}.drop-valid > .item-frame", "-unity-background-image-tint-color: rgb(140, 255, 220);");
                 Rule($"{cell}.drop-hover > .item-frame", "-unity-background-image-tint-color: rgb(255, 214, 92);");
                 Rule($"{cell}.reject-flash > .item-frame", "-unity-background-image-tint-color: rgb(230, 70, 80);");
+            }
+            // The parts every page shares: the ornate frame of a card and of a skill's tile.
+            if (asset.cardPictureFrame != null)
+                Rule($".kn-card > .{SyntySkin.CardFrameClass}", $"background-image: {UrlOf(asset.cardPictureFrame)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",
+                    $"-unity-slice-scale: {Scale(asset.cardPictureFrame, asset.cardPictureBorder * 0.8f)};", "left: -3px;", "top: -3px;", "right: -3px;", "bottom: -3px;");
+            if (asset.slotFrame != null)
+            {
+                string reach = (-asset.slotFrameOutset * 0.5f).ToString("0.##", CultureInfo.InvariantCulture) + "px";
+                Rule($".skill-token > .{SyntySkin.TokenFrameClass}", $"background-image: {UrlOf(asset.slotFrame)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",
+                    $"-unity-slice-scale: {Scale(asset.slotFrame, asset.slotFrameBorder)};", $"left: {reach};", $"top: {reach};", $"right: {reach};", $"bottom: {reach};");
             }
             // The paper doll: what each empty slot is for, and the bars over and under the model.
             for (int i = 0; i < SlotOrder.Length && i < asset.slotGlyphs.Length; i++)
@@ -943,6 +953,10 @@ namespace KryticalNova.EditorTools
             count += FrameRule(output, cssClass, ".window", asset.windowFrame, asset.windowFrameBorder, asset.windowFrameOutset);
             // The item card wears a frame of its own, not the small panels'.
             count += FrameRule(output, cssClass, ".item-card", asset.cardFrame, asset.cardFrameBorder, asset.cardFrameOutset);
+            // So do the small dialogs that come up over a page: an item's menu, a confirmation, an amount, a player's menu.
+            foreach (string dialog in new[] { ".item-menu", ".item-confirm", ".amount-dialog", ".player-menu" })
+                count += FrameRule(output, cssClass, dialog, asset.cardFrame, asset.cardFrameBorder * 0.7f, asset.cardFrameOutset * 0.6f);
+            count += FrameRule(output, cssClass, ".game-menu", asset.cardFrame, asset.cardFrameBorder, asset.cardFrameOutset);
             count += CrownRule(output, cssClass, SyntySkin.CrownBackClass, asset.crownBack, asset.crownBackSize, asset.crownBackRise);
             count += CrownRule(output, cssClass, SyntySkin.CrownClass, asset.crown, asset.crownSize, asset.crownRise);
             return count;

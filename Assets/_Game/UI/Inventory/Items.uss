@@ -128,6 +128,8 @@
 .doll-bar--top { top: 6px; }
 .doll-bar--foot { bottom: 24px; }
 .doll-bar-half { flex-grow: 1; flex-basis: 0; -unity-background-image-tint-color: rgb(150, 160, 166); }
+/* The same bar under the heading of a section of any page: in the page's flow, not laid over a picture. */
+.doll-bar.kn-section-bar { position: relative; left: 0; right: 0; top: 0; margin: 3px 0 6px 0; flex-shrink: 0; }
 
 .item-cell:hover, .equip-slot:hover { -unity-background-image-tint-color: rgba(70, 100, 124, 0.95); scale: 1.05 1.05; }
 .item-cell:hover > .item-frame, .equip-slot:hover > .item-frame { -unity-background-image-tint-color: rgba(220, 236, 246, 0.85); }
@@ -142,11 +144,11 @@
 .rarity-3 > .item-frame { -unity-background-image-tint-color: rgb(186, 104, 255); }
 .rarity-4 > .item-frame { -unity-background-image-tint-color: rgb(255, 128, 48); }
 /* The ground an item lies on, by rarity. In the Pack's grid this is how a rarity is told (the cells have no outlines). */
-.rarity-0 { -unity-background-image-tint-color: rgba(34, 37, 42, 0.92); }
-.rarity-1 { -unity-background-image-tint-color: rgba(22, 44, 92, 0.95); }
-.rarity-2 { -unity-background-image-tint-color: rgba(90, 70, 16, 0.95); }
-.rarity-3 { -unity-background-image-tint-color: rgba(54, 28, 88, 0.95); }
-.rarity-4 { -unity-background-image-tint-color: rgba(96, 46, 16, 0.95); }
+.item-cell.rarity-0, .equip-slot.rarity-0 { -unity-background-image-tint-color: rgba(34, 37, 42, 0.92); }
+.item-cell.rarity-1, .equip-slot.rarity-1 { -unity-background-image-tint-color: rgba(22, 44, 92, 0.95); }
+.item-cell.rarity-2, .equip-slot.rarity-2 { -unity-background-image-tint-color: rgba(90, 70, 16, 0.95); }
+.item-cell.rarity-3, .equip-slot.rarity-3 { -unity-background-image-tint-color: rgba(54, 28, 88, 0.95); }
+.item-cell.rarity-4, .equip-slot.rarity-4 { -unity-background-image-tint-color: rgba(96, 46, 16, 0.95); }
 
 /* Gear the character cannot wear (level, faction or body): still shown, clearly out of reach. */
 .item-unusable > .item-icon { opacity: 0.38; }

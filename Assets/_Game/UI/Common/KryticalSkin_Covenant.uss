@@ -1419,6 +1419,66 @@
 .kn-faction-covenant .item-card > .kn-pip {
     display: none;
 }
+.kn-faction-covenant .item-menu > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_22_Variant_01.png#SPR_FantasyWarrior_Frame_Box_22_Variant_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.196px;
+    left: -5.4px;
+    top: -5.4px;
+    right: -5.4px;
+    bottom: -5.4px;
+}
+.kn-faction-covenant .item-menu > .kn-pip {
+    display: none;
+}
+.kn-faction-covenant .item-confirm > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_22_Variant_01.png#SPR_FantasyWarrior_Frame_Box_22_Variant_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.196px;
+    left: -5.4px;
+    top: -5.4px;
+    right: -5.4px;
+    bottom: -5.4px;
+}
+.kn-faction-covenant .item-confirm > .kn-pip {
+    display: none;
+}
+.kn-faction-covenant .amount-dialog > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_22_Variant_01.png#SPR_FantasyWarrior_Frame_Box_22_Variant_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.196px;
+    left: -5.4px;
+    top: -5.4px;
+    right: -5.4px;
+    bottom: -5.4px;
+}
+.kn-faction-covenant .amount-dialog > .kn-pip {
+    display: none;
+}
+.kn-faction-covenant .player-menu > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_22_Variant_01.png#SPR_FantasyWarrior_Frame_Box_22_Variant_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.196px;
+    left: -5.4px;
+    top: -5.4px;
+    right: -5.4px;
+    bottom: -5.4px;
+}
+.kn-faction-covenant .player-menu > .kn-pip {
+    display: none;
+}
+.kn-faction-covenant .game-menu > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_22_Variant_01.png#SPR_FantasyWarrior_Frame_Box_22_Variant_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.28px;
+    left: -9px;
+    top: -9px;
+    right: -9px;
+    bottom: -9px;
+}
+.kn-faction-covenant .game-menu > .kn-pip {
+    display: none;
+}
 .kn-faction-covenant .window > .kn-crown {
     display: flex;
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Greeble_Curlicue_24.png#SPR_FantasyWarrior_Greeble_Curlicue_24");
@@ -1518,15 +1578,10 @@
 .kn-faction-covenant .inventory-grid .item-cell.drop-valid, .kn-faction-covenant .equip-column .equip-slot.drop-valid {
     -unity-background-image-tint-color: rgb(170, 255, 220);
 }
-.kn-faction-covenant .inventory-grid .item-cell {
+.kn-faction-covenant .item-cell {
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_Box_Medium_Parchment_01.png#SPR_HUD_FantasyWarrior_Box_Medium_Parchment_01");
     -unity-slice-scale: 0.0667px;
-}
-.kn-faction-covenant .inventory-grid .item-cell.item-empty {
     -unity-background-image-tint-color: rgba(3, 21, 34, 0.9);
-}
-.kn-faction-covenant .inventory-grid .item-cell.item-empty:hover {
-    -unity-background-image-tint-color: rgba(48, 63, 74, 0.92);
 }
 .kn-faction-covenant .equip-column .equip-slot {
     background-image: none;
@@ -1559,20 +1614,38 @@
     background-color: rgba(17, 47, 55, 0.96);
     -unity-background-image-tint-color: rgba(17, 47, 55, 0.96);
 }
-.kn-faction-covenant .inventory-grid .item-cell > .item-frame {
+.kn-faction-covenant .item-cell > .item-frame {
     -unity-background-image-tint-color: rgba(0, 0, 0, 0);
 }
-.kn-faction-covenant .inventory-grid .item-cell:hover > .item-frame {
+.kn-faction-covenant .item-cell:hover > .item-frame {
     -unity-background-image-tint-color: rgba(220, 236, 246, 0.6);
 }
-.kn-faction-covenant .inventory-grid .item-cell.drop-valid > .item-frame {
+.kn-faction-covenant .item-cell.drop-valid > .item-frame {
     -unity-background-image-tint-color: rgb(140, 255, 220);
 }
-.kn-faction-covenant .inventory-grid .item-cell.drop-hover > .item-frame {
+.kn-faction-covenant .item-cell.drop-hover > .item-frame {
     -unity-background-image-tint-color: rgb(255, 214, 92);
 }
-.kn-faction-covenant .inventory-grid .item-cell.reject-flash > .item-frame {
+.kn-faction-covenant .item-cell.reject-flash > .item-frame {
     -unity-background-image-tint-color: rgb(230, 70, 80);
+}
+.kn-faction-covenant .kn-card > .kn-card-frame {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_18_Variant_01.png#SPR_FantasyWarrior_Frame_Box_18_Variant_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.1091px;
+    left: -3px;
+    top: -3px;
+    right: -3px;
+    bottom: -3px;
+}
+.kn-faction-covenant .skill-token > .kn-token-frame {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_04.png#SPR_FantasyWarrior_Frame_Box_04");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.12px;
+    left: -3px;
+    top: -3px;
+    right: -3px;
+    bottom: -3px;
 }
 .kn-faction-covenant #equip-Weapon > .slot-glyph {
     background-image: url("/Assets/Synty/InterfaceFantasyScreens/Sprites/Icons_Inventory/ICON_FantasyScreens_Inventory_Swords_01_Underlay.png#ICON_FantasyScreens_Inventory_Swords_01_Underlay");

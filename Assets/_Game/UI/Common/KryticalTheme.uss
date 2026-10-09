@@ -81,6 +81,12 @@
     border-radius: 0;
 }
 
+/* The pack's frames over a card and over a skill's tile (SyntySkin adds the layers; a skin's sheet draws them). */
+.kn-card-frame, .kn-token-frame {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+}
+
 /* Header strip: a thin Synty line under window titles. */
 .kn-header {
     padding-bottom: 8px;

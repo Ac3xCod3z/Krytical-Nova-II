@@ -109,6 +109,19 @@ the same arrangement in every faction, each in its own pack's parts (`FactionSki
   the name in the title face, what it gives as one strip a line, an EQUIPPED flag on worn pieces, and the hint as
   mouse prompts. The texts are the ones the tooltip had.
 
+**Every other window** takes the same parts through what the windows share, so nothing is laid out per window:
+
+- A card (`.kn-card`: a section of Character, a skill's card, a panel of Trade or the Kiosk) wears the pack's ornate
+  frame (`cardPictureFrame`) as a layer `SyntySkin.Decorate` adds (`kn-card-frame`); a skill's tile wears the slot
+  frame (`kn-token-frame`).
+- The heading of a section (`.eyebrow`) has the pack's bar under it (`kn-section-bar`, the bars of the paper doll),
+  where the heading has a line to itself.
+- Every grid of items (`.item-cell` in the Vault, Trade, the Kiosk, the shop, the forge's bench) is the pack's plain
+  cell, with the rarity as the cell's colour.
+- The game menu and the small dialogs over a page (an item's menu, a confirmation, an amount, a player's menu) wear
+  the item card's frame.
+- A number of the character (`.combat-stat-row`) is a strip a line.
+
 A UI Toolkit background draws one image, so a part that is a frame over a fill is flattened into one picture
 (`SpriteRecolourer.Flatten`, into `UI/HUD/Faction/<Faction>/Art/`) the first time the skins are built; **Krytical Nova ▸
 UI ▸ Rebuild Faction Skin Art** makes them again. The builder writes the rules after the converted sheets (the "window
@@ -418,6 +431,12 @@ added to their renderer, the HUD portrait and the Equipment page's preview were 
 Null character, no weapon tempered): both draw as before and the console stayed clean. Not checked: a tempered
 weapon's glow in the Equipment preview; Enter, Esc and the arrow keys by a real keyboard; other screen shapes than
 16:9.
+
+**The window pages (9 Oct 2026).** Pictured in the world in three skins after the shared parts went in: Pack,
+Equipment, the item card (on a worn piece), Character, Skills, the world map, Settings, the game menu, Trade, the
+Kiosk, Contacts and Crew (the last four opened empty, by showing the window, not through play). Not pictured: the
+Vault, the shop, the forge, the Herald, the NPC dialogue, the emote wheel and the small dialogs, which need an NPC or
+an action to open. Nothing was clicked, dragged, sorted or equipped in any of them after the change.
 
 **The book (9 Oct 2026).** Seen in captures with the turn slowed to 5 s: the leaf of a turn back in the air, showing
 the screen it lands on, and the leaf of a turn forward lifting; the Settings window on the page; the creator on the
