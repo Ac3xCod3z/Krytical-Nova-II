@@ -11,7 +11,8 @@ namespace KryticalNova.UI
     /// <summary>
     /// The party panels of the HUD. While the local player is in a party, a frame under the status frame lists the
     /// other members (leader in gold) with their level and, while they are in sight, their health. The frame is a
-    /// movable HUD panel: in the layout editor it shows all four rows so it can be placed at its full size. An invitation
+    /// movable HUD panel: in the layout editor it shows all four rows so it can be placed at its full size. A click on
+    /// a member opens the player menu for them (Follow among its entries). An invitation
     /// from another player shows with JOIN / REFUSE (keys Y / N) until it is answered or lapses. The panels use the
     /// shared panel skin, so each player sees them in the look of their own faction. The server decides everything
     /// (<see cref="PlayerParty"/>); this only shows it and passes the player's choice on.
@@ -33,6 +34,9 @@ namespace KryticalNova.UI
             public Label Name;
             public Label Level;
             public VisualElement Fill;
+            // The member the row shows now; 0 while it is a stand-in in the layout editor.
+            public ulong ObjectId;
+            public string MemberName;
         }
 
         private readonly List<Row> rows = new List<Row>(PartyRules.MaxSize);
@@ -157,6 +161,8 @@ namespace KryticalNova.UI
                 shown++;
 
                 bool inSight = mine.TryGetVitals(member, out float health, out int level);
+                row.ObjectId = member.ObjectId;
+                row.MemberName = member.Name;
                 row.Name.text = member.Name.ToUpperInvariant();
                 row.Level.text = $"LV {level}";
                 row.Fill.style.width = Length.Percent(inSight ? 100f * health : 100f);
@@ -169,6 +175,8 @@ namespace KryticalNova.UI
             for (; editing && shown < PartyRules.MaxSize - 1; shown++)
             {
                 Row row = shown < rows.Count ? rows[shown] : AddRow();
+                row.ObjectId = 0;
+                row.MemberName = null;
                 row.Name.text = $"SQUAD MEMBER {shown + 1}";
                 row.Level.text = "LV --";
                 row.Fill.style.width = Length.Percent(100f);
@@ -185,7 +193,7 @@ namespace KryticalNova.UI
         {
             var row = new Row
             {
-                Root = new VisualElement { pickingMode = PickingMode.Ignore },
+                Root = new VisualElement(),
                 Name = new Label { enableRichText = false, pickingMode = PickingMode.Ignore },
                 Level = new Label { pickingMode = PickingMode.Ignore },
                 Fill = new VisualElement { pickingMode = PickingMode.Ignore },
@@ -204,10 +212,21 @@ namespace KryticalNova.UI
             bar.Add(row.Fill);
             row.Root.Add(top);
             row.Root.Add(bar);
+            // A click on a member opens the player menu for them (Follow, Whisper, Trade ...).
+            row.Root.RegisterCallback<ClickEvent>(click => OpenMenu(row, click.position));
 
             members.Add(row.Root);
             rows.Add(row);
             return row;
+        }
+
+        private void OpenMenu(Row row, Vector2 panelPosition)
+        {
+            if (string.IsNullOrEmpty(row.MemberName) || frames.ClassListContains(EditingClass) || PlayerMenuController.Instance == null) return;
+            PlayerParty mine = PlayerParty.Local;
+            Unity.Netcode.NetworkObject member = null;
+            if (mine != null && mine.IsSpawned) mine.NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(row.ObjectId, out member);
+            PlayerMenuController.Instance.Open(new PlayerMenuTarget(row.MemberName, member), panelPosition);
         }
 
         private static void Leave()

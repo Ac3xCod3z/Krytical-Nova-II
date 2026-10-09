@@ -97,6 +97,13 @@ namespace KryticalNova.UI
                 if (target.InSight && target.Player.TryGetComponent(out PlayerParty theirs)) mine.Invite(theirs);
                 else mine.Invite(target.Name);
             });
+            Register("Follow", 25, InMySquad, target =>
+            {
+                PlayerFollow mine = PlayerFollow.Local;
+                if (mine == null) return;
+                if (target.InSight && target.Player.TryGetComponent(out PlayerParty theirs)) mine.Follow(theirs);
+                else mine.Follow(target.Name);
+            });
             Register("Callout", 30, target => target.InSight && PlayerDuel.Local != null && PlayerDuel.Local.IsSpawned, target =>
             {
                 if (target.Player.TryGetComponent(out PlayerDuel theirs)) PlayerDuel.Local.Request(theirs);
@@ -164,6 +171,20 @@ namespace KryticalNova.UI
             PlayerInventory local = PlayerInventory.Local;
             if (other == null || local == null || !local.TryGetComponent(out PlayerIdentity mine)) return true;
             return other.Faction == mine.Faction;
+        }
+
+        /// <summary>The target is a member of the local player's Squad (in sight or not).</summary>
+        private static bool InMySquad(PlayerMenuTarget target)
+        {
+            PlayerParty mine = PlayerParty.Local;
+            if (mine == null || !mine.IsSpawned || PlayerFollow.Local == null) return false;
+            foreach (PartyMember member in mine.Roster)
+            {
+                if (member.ObjectId == mine.NetworkObjectId) continue;
+                if (target.InSight ? member.ObjectId == target.Player.NetworkObjectId
+                                   : string.Equals(member.Name, target.Name, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
         }
 
         /// <summary>Opens the menu for a player at a point of the panel. Nothing happens for the local player or an empty name.</summary>

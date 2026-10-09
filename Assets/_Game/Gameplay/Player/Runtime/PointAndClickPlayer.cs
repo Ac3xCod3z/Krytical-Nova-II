@@ -109,6 +109,11 @@ namespace KryticalNova.Player
         public event Action<string> CommandMessage;
         /// <summary>The local player Shift+clicked another player: (that player, the pointer's screen position).</summary>
         public event Action<Transform, Vector2> PlayerMenuRequested;
+        /// <summary>
+        /// Raised where movement is decided (the server, or the offline game) when the player orders a move or a
+        /// stop themselves. A move made for them (<see cref="ServerMoveTo"/> called by another system) does not raise it.
+        /// </summary>
+        public event Action MoveOrdered;
         private NavMeshPath requestedPath;
         private InputActionMap gameplayActions;
         private InputAction pointerAction;
@@ -715,7 +720,11 @@ namespace KryticalNova.Player
         }
 
         [ServerRpc]
-        private void RequestStopMoveServerRpc() => StopMoving();
+        private void RequestStopMoveServerRpc()
+        {
+            MoveOrdered?.Invoke();
+            StopMoving();
+        }
 
         private void StopMoving()
         {
@@ -871,6 +880,7 @@ namespace KryticalNova.Player
         /// <summary>Returns true when the agent accepted a new path; <paramref name="acceptedDestination"/> is the NavMesh point.</summary>
         private bool ExecuteLocalMove(Vector3 destinationPoint, out Vector3 acceptedDestination)
         {
+            MoveOrdered?.Invoke();
             acceptedDestination = destinationPoint;
             if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
 
@@ -900,38 +910,59 @@ namespace KryticalNova.Player
         [ServerRpc]
         private void RequestMoveDestinationServerRpc(Vector3 destinationPoint)
         {
-            if (resources != null && !resources.IsAlive) return;
-            if (jumpMotor != null && jumpMotor.IsBusy) return;
-            if (vaultMotor != null && vaultMotor.IsBusy) return;
-            if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+            MoveOrdered?.Invoke();
+            ServerMoveTo(destinationPoint);
+        }
+
+        /// <summary>
+        /// Where movement is decided (the server, or the offline game): sets this player walking to
+        /// <paramref name="destinationPoint"/>, over a low obstacle when that is the shorter way. A player's own order
+        /// arrives here through its request; a system that moves the player for them (following a Squad member) calls
+        /// it directly and says whether this move is a new order to be paid for (<paramref name="payRun"/>) or the
+        /// same one being steered. False when no move was started.
+        /// </summary>
+        public bool ServerMoveTo(Vector3 destinationPoint, bool payRun = true)
+        {
+            if (IsSpawned && !IsServer) return false;
+            if (resources != null && !resources.IsAlive) return false;
+            if (jumpMotor != null && jumpMotor.IsBusy) return false;
+            if (vaultMotor != null && vaultMotor.IsBusy) return false;
+            if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
             // The owner ended its own copy of a channel when it clicked; the authoritative one ends here.
             if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
 
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
             if (!NavMesh.SamplePosition(destinationPoint, out NavMeshHit destination, destinationSampleRadius, filter))
-                return;
+                return false;
 
             if (!TryPlanRoute(destination.position))
-                return;
+                return false;
 
             if (Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance)
-                return;
+                return false;
 
             // The server knows which movement skill is selected; the request only names the place.
             float paidCost = 0f;
-            if (movementSkills != null && movementSkills.IsRunning
+            if (payRun && movementSkills != null && movementSkills.IsRunning
                 && !movementSkills.TryPayForCommand(MovementSkillId.Run, out paidCost, out _))
             {
-                return;
+                return false;
             }
 
             agent.isStopped = false;
             if (!agent.SetPath(requestedPath))
             {
                 resources?.RestoreChi(paidCost);
-                return;
+                return false;
             }
             SnapVelocityToPath();
+            return true;
+        }
+
+        /// <summary>Where movement is decided: stops this player where it stands.</summary>
+        public void ServerStopMoving()
+        {
+            if (!IsSpawned || IsServer) StopMoving();
         }
 
         /// <summary>

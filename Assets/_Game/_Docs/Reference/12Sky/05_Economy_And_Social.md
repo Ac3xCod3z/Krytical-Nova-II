@@ -132,6 +132,13 @@ Hold **B** (rebindable): a ring of eight categories; a click turns it into that 
 - `PlayerEmotes` asks the server, which checks that the character is alive, standing still and not striking, casting or jumping, then tells everyone. The weapon is put away first. An emote plays once; a **stance** (the names shown in colour on the wheel) is held until the character moves, strikes, casts, jumps, draws, is hit or dies, and a player who arrives meanwhile sees it held.
 - A motion is named on the wire by its kind, group and name (`EmoteCatalog.Key`, for example `E/Greet/Bow`), never by its place in the library: a re-bake reorders the library.
 
+## Squad: following a member (row 16)
+
+- **Follow** is in the player menu of a Squad member (Shift+click them, MORE on the target strip, or a click on their Squad frame, which now opens that menu) and on `/follow [name]` (no name: the selected player). The character walks after the member by itself and stops a short way off.
+- The server does it (`PlayerFollow`, rules in `FollowRules`): it moves every player and knows where each one is however far apart they are, so following works beyond what the follower's own game can see. It walks through the player's own move order (`PointAndClickPlayer.ServerMoveTo`): the way taken, vaults and the Flux a run costs are those of a click, paid once each time the follower sets off, not at every look.
+- It **ends** when the follower gives a move order of their own (a click, a jump, map travel, Escape on a journey), fights (strikes, casts a skill, is struck, or is in a Callout), or is defeated; when the two are no longer in one Squad; when the member leaves the map (their player is gone: there is one map today); or when the member is more than the maximum distance ahead. The follower is told why in the System channel.
+- **Numbers** (`SquadSettings.asset`): stop 2.5 m short, set off again once the member is 4 m away, lost beyond 60 m, a look every 0.4 s.
+
 ## Who may deal with whom
 
 | | Same faction | Another faction |

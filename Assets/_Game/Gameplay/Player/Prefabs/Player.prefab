@@ -89,6 +89,7 @@ GameObject:
   - component: {fileID: 7874937971853909128}
   - component: {fileID: 5503153716177432082}
   - component: {fileID: 5568544966508764071}
+  - component: {fileID: 882192887494391224}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -3744,6 +3745,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.PlayerEmotes
   ShowTopMostFoldoutHeaderGroup: 1
   settings: {fileID: 11400000, guid: 97e071c4bacbfa746a3a8bb47b86a162, type: 2}
+--- !u!114 &882192887494391224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2497e9d97271f554f9afaa1180b5e1ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.PlayerFollow
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: e1dab5ff32b794a4a94671778fedb8c5, type: 2}
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0
