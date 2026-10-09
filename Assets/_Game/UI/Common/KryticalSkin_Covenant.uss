@@ -682,8 +682,11 @@
 .kn-faction-covenant .forge-gauge {
     color: rgb(222, 167, 65);
 }
+.kn-faction-covenant .item-cell.forge-piece.temper-rim > .item-frame {
+    -unity-background-image-tint-color: rgba(196, 178, 157, 0.35);
+}
 .kn-faction-covenant .forge-value {
-    font-size: 24.64px;
+    font-size: 29.12px;
     color: rgb(130, 255, 172);
 }
 .kn-faction-covenant .forge-hint {
@@ -1150,6 +1153,14 @@
 }
 .kn-faction-covenant .pet-evolved-detail {
     font-size: 16.8px;
+}
+
+/* ---- ToastPanels.uss ---- */
+.kn-faction-covenant .toast-eyebrow {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .toast-text {
+    font-size: 19.04px;
 }
 
 /* ---- SocialPanels.uss ---- */

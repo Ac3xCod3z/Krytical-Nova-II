@@ -6,7 +6,7 @@
 
 #forge-window { right: 420px; top: 84px; width: 336px; display: none; }
 .forge-header-space { flex-grow: 1; }
-.forge-purse { margin-top: 5px; font-size: 10px; -unity-text-align: middle-center; white-space: normal; }
+.forge-purse { margin: 4px 0 0 0; padding: 0 4px; font-size: 10px; -unity-text-align: middle-center; white-space: normal; }
 
 .forge-tabs { flex-direction: row; margin-top: 2px; }
 .forge-tab {
@@ -23,18 +23,22 @@
 
 /* ------------------------------------------------------------------ the anvil */
 
-.forge-anvil { height: 176px; margin-top: 8px; align-items: center; justify-content: center; }
+/* The piece and its gauge are what the bench is about: they take the most room on it. */
+.forge-anvil { height: 224px; margin-top: 4px; align-items: center; justify-content: center; }
 /* The gauge is drawn by the controller. Its colour here is what Fusion and Tuning fill it with. */
 .forge-gauge { position: absolute; left: 0; top: 0; right: 0; bottom: 0; color: rgb(114, 222, 196); }
 /* Two classes each: the Pack's own size for a cell (Items.uss) is read after this sheet and would win. */
-.item-cell.forge-piece { width: 72px; height: 72px; margin: 0; }
+.item-cell.forge-piece { width: 104px; height: 104px; margin: 0; }
 .item-cell.forge-piece.empty { opacity: 0.55; }
+/* On the Temper tab the rim says how far the piece is tempered, not how rare it is: the controller tints it with the
+   glow band's colour. An untempered piece is in no band and gets the plain rim (the colour of an empty cell's). */
+.item-cell.forge-piece.temper-rim > .item-frame { -unity-background-image-tint-color: rgba(150, 176, 196, 0.35); }
 .forge-value {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 4px;
-    font-size: 22px;
+    bottom: 2px;
+    font-size: 26px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: rgb(255, 222, 130);
@@ -53,8 +57,8 @@
     -unity-text-align: middle-center;
     color: rgb(146, 162, 178);
 }
-.forge-item-name { font-size: 14px; white-space: normal; -unity-text-align: middle-center; min-height: 18px; }
-.forge-item-state { font-size: 11px; -unity-text-align: middle-center; min-height: 14px; -unity-font-style: bold; color: rgb(146, 162, 178); }
+.forge-item-name { margin: 2px 0 0 0; padding: 0 4px; font-size: 14px; white-space: normal; -unity-text-align: middle-center; min-height: 18px; }
+.forge-item-state { margin: 0; padding: 0 4px; font-size: 11px; -unity-text-align: middle-center; min-height: 14px; -unity-font-style: bold; color: rgb(146, 162, 178); }
 
 /* The flash of a result on the anvil. */
 .forge-anvil.hit-success .forge-piece > .item-frame { -unity-background-image-tint-color: rgb(114, 255, 206); }
@@ -63,11 +67,12 @@
 
 /* ------------------------------------------------------------------ materials */
 
-.forge-materials { margin-top: 6px; }
-.forge-material-row { margin-top: 4px; }
-.forge-material-label { font-size: 10px; letter-spacing: 1px; color: rgb(156, 172, 188); }
-.forge-picks { flex-direction: row; flex-wrap: wrap; align-items: center; }
-.item-cell.forge-pick { margin: 1px 2px; }
+/* A row is its name and, beside it, what can be picked: the materials stay small so the anvil keeps the room. */
+.forge-materials { margin-top: 4px; }
+.forge-material-row { margin-top: 3px; flex-direction: row; align-items: center; }
+.forge-material-label { width: 68px; flex-shrink: 0; margin: 0; padding: 0; font-size: 10px; letter-spacing: 1px; white-space: normal; color: rgb(156, 172, 188); }
+.forge-picks { flex-direction: row; flex-wrap: wrap; align-items: center; flex-grow: 1; flex-shrink: 1; }
+.item-cell.forge-pick { width: 40px; height: 40px; margin: 1px 2px; }
 .forge-pick.chosen { -unity-background-image-tint-color: rgba(30, 112, 98, 0.95); }
 .forge-pick.chosen > .item-frame { -unity-background-image-tint-color: rgb(140, 255, 220); }
 .forge-pick.out > .item-icon { opacity: 0.25; }
@@ -87,10 +92,10 @@
 
 /* ------------------------------------------------------------------ readout */
 
-.forge-readout { margin-top: 8px; padding: 6px 10px 8px 10px; }
+.forge-readout { margin-top: 6px; padding: 4px 10px 6px 10px; }
 .forge-readout-top { flex-direction: row; align-items: center; }
-.forge-step { flex-grow: 1; font-size: 13px; color: rgb(226, 234, 242); }
-.forge-chance { font-size: 18px; -unity-font-style: bold; color: rgb(114, 222, 196); }
+.forge-step { flex-grow: 1; margin: 0; padding: 0; font-size: 13px; color: rgb(226, 234, 242); }
+.forge-chance { margin: 0; padding: 0; font-size: 18px; -unity-font-style: bold; color: rgb(114, 222, 196); }
 .forge-chance.risky { color: rgb(255, 214, 110); }
 .forge-chance.poor { color: rgb(240, 110, 96); }
 .forge-chips { flex-direction: row; flex-wrap: wrap; margin-top: 4px; }
@@ -104,16 +109,17 @@
 }
 .forge-chip.danger { background-color: rgba(110, 30, 34, 0.95); color: rgb(255, 196, 190); }
 .forge-chip.safe { background-color: rgba(22, 84, 72, 0.95); color: rgb(190, 250, 232); }
-.forge-gain { margin-top: 4px; min-height: 13px; font-size: 11px; white-space: normal; color: rgb(170, 230, 214); }
+.forge-gain { margin: 3px 0 0 0; padding: 0; min-height: 13px; font-size: 11px; white-space: normal; color: rgb(170, 230, 214); }
 /* With nothing on the anvil the readout says what this bench does. */
 .forge-readout.idle .forge-gain { margin-top: 0; color: rgb(156, 172, 188); }
 .forge-readout.idle .forge-readout-top, .forge-readout.idle .forge-chips { display: none; }
 
-.forge-reason { margin-top: 6px; min-height: 14px; white-space: normal; font-size: 11px; color: rgb(236, 150, 110); }
+/* Only there while something stops the strike (the controller hides it when it has nothing to say). */
+.forge-reason { margin: 4px 0 0 0; padding: 0 2px; white-space: normal; font-size: 11px; color: rgb(236, 150, 110); }
 #forge-act { margin-top: 4px; min-height: 36px; }
 #forge-act.striking { opacity: 0.6; }
 #forge-reset { margin-top: 4px; min-height: 24px; font-size: 10px; }
-.forge-result { margin-top: 6px; min-height: 16px; white-space: normal; font-size: 12px; -unity-font-style: bold; -unity-text-align: middle-center; }
+.forge-result { margin: 4px 0 0 0; padding: 0 2px; min-height: 16px; white-space: normal; font-size: 12px; -unity-font-style: bold; -unity-text-align: middle-center; }
 .forge-result.success { color: rgb(114, 222, 196); }
 .forge-result.fail { color: rgb(236, 206, 140); }
 .forge-result.broken { color: rgb(240, 96, 88); }

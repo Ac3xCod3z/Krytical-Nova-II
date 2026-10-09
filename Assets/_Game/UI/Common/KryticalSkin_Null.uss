@@ -682,8 +682,11 @@
 .kn-faction-null .forge-gauge {
     color: rgb(222, 65, 73);
 }
+.kn-faction-null .item-cell.forge-piece.temper-rim > .item-frame {
+    -unity-background-image-tint-color: rgba(186, 157, 196, 0.35);
+}
 .kn-faction-null .forge-value {
-    font-size: 28.16px;
+    font-size: 33.28px;
     color: rgb(176, 130, 255);
 }
 .kn-faction-null .forge-hint {
@@ -1150,6 +1153,14 @@
 }
 .kn-faction-null .pet-evolved-detail {
     font-size: 19.2px;
+}
+
+/* ---- ToastPanels.uss ---- */
+.kn-faction-null .toast-eyebrow {
+    font-size: 14.08px;
+}
+.kn-faction-null .toast-text {
+    font-size: 21.76px;
 }
 
 /* ---- SocialPanels.uss ---- */
