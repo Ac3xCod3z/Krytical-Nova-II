@@ -594,9 +594,11 @@ namespace KryticalNova.UI
         }
 
         /// <summary>
-        /// The Serums the character has taken, under the attributes: one line per kind, how many of how many and
-        /// what they add in all ("Strength Serum (37/100)   +111 Attack Power"). Nothing shows until one is taken.
-        /// The stats below already include it: it reaches them as modifiers, like gear. Redrawn with the stats.
+        /// The Serums section, at the end of the sheet under the stats: one entry for every kind, how many the character has taken of
+        /// how many and, on a line under it, what they add in all ("Strength Serum   37 / 100" over "+111 Attack
+        /// Power"; "0 / 100" and "+0 ..." for a kind not taken yet, so the section is always there to be read). It is
+        /// the last section of the sheet. The stats below already include it: it
+        /// reaches them as modifiers, like gear. Redrawn with the stats.
         /// </summary>
         private void RefreshSerums()
         {
@@ -605,9 +607,8 @@ namespace KryticalNova.UI
             if (block == null || list == null) return;
             SerumSettings rules = boundSerums != null ? boundSerums.Settings : null;
             SerumState taken = boundSerums != null ? boundSerums.State : default;
-            bool any = rules != null && taken.Any;
-            block.style.display = any ? DisplayStyle.Flex : DisplayStyle.None;
-            if (!any) return;
+            block.style.display = rules != null ? DisplayStyle.Flex : DisplayStyle.None;
+            if (rules == null) return;
             if (serumRowsOwner != list)
             {
                 serumRowsOwner = list; // the HUD was rebuilt: the old lines went with it
@@ -618,26 +619,33 @@ namespace KryticalNova.UI
             for (int kind = 0; kind < kinds; kind++)
             {
                 int count = taken.Taken(kind);
-                if (count <= 0) continue;
                 if (row == serumRows.Count) serumRows.Add(AddSerumRow(list));
                 VisualElement line = serumRows[row];
                 row++;
                 line.style.display = DisplayStyle.Flex;
-                ((Label)line[0]).text = $"{rules.serums[kind].displayName} ({count}/{rules.Cap})";
-                ((Label)line[1]).text = SerumRules.Gains(rules.serums[kind], count);
+                ((Label)line[0]).text = rules.serums[kind].displayName;
+                ((Label)line[1]).text = $"{count} / {rules.Cap}";
+                ((Label)line[2]).text = SerumRules.Gains(rules.serums[kind], count);
             }
             for (int i = row; i < serumRows.Count; i++) serumRows[i].style.display = DisplayStyle.None;
         }
 
         private static VisualElement AddSerumRow(VisualElement list)
         {
+            // Two lines a kind: its name with how many were taken of how many, and under it what they add in all
+            // (a total such as "+2 Hit Rate, +2 Evasion" does not fit beside the name).
             var line = new VisualElement();
             line.AddToClassList("combat-stat-row");
+            line.AddToClassList("serum-row");
             var name = new Label();
             name.AddToClassList("combat-stat-label");
+            var taken = new Label();
+            taken.AddToClassList("combat-stat-label");
             var total = new Label();
             total.AddToClassList("combat-stat-value");
+            total.AddToClassList("serum-gain");
             line.Add(name);
+            line.Add(taken);
             line.Add(total);
             list.Add(line);
             return line;

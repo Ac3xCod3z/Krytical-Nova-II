@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e8564a11f9fe6b4280371953d156f42, type: 3}
+  m_Name: ItemGlowIcons
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemGlowIcons
+  entries:
+  - icon: {fileID: 21300000, guid: b929bbe5e087ede46be7a140e64c5270, type: 3}
+    rim: {fileID: 21300000, guid: 170f1ec9d6b22ae43a2da247be781927, type: 3}
+  - icon: {fileID: 21300000, guid: 6b5d8ea04e85bc14cb057e94dc25e768, type: 3}
+    rim: {fileID: 21300000, guid: 872ee4fb2e5c22648bc4b912d79657f6, type: 3}
+  - icon: {fileID: 21300000, guid: 2612f0443a7779941875223c4678f07d, type: 3}
+    rim: {fileID: 21300000, guid: c9ae782f683c41749a6ca19a97d99deb, type: 3}
+  - icon: {fileID: 21300000, guid: 721d1ecb24b33ed498ea30862d95983c, type: 3}
+    rim: {fileID: 21300000, guid: bcb97ba9e18adcc4c88222fd01758313, type: 3}
+  - icon: {fileID: 21300000, guid: f557ee8db2a45c5418a1d40ca5da6ca6, type: 3}
+    rim: {fileID: 21300000, guid: feef8764718dd3147a7ddd5109271b13, type: 3}
+  - icon: {fileID: 21300000, guid: 62cf9980a6d4dbd449ef160d5ec6af8e, type: 3}
+    rim: {fileID: 21300000, guid: 89e03bf96e6382344b19db58eb24d360, type: 3}
+  - icon: {fileID: 21300000, guid: d56ab82c81cefaf438282179188adc41, type: 3}
+    rim: {fileID: 21300000, guid: 853dfaf88515e644e8ac28a3578b2f49, type: 3}
+  - icon: {fileID: 21300000, guid: a25b61f74bba8344986cc8ec3956555c, type: 3}
+    rim: {fileID: 21300000, guid: 0eb24276b88b53b459a3ba1aa267518d, type: 3}
+  - icon: {fileID: 21300000, guid: 1ad4b95c0507e81449201f5c5d32b444, type: 3}
+    rim: {fileID: 21300000, guid: cc9a9b89d3ffed14d895e636e418d9f2, type: 3}
+  - icon: {fileID: 21300000, guid: 4dd2c89bedd998941a596eaf9294a6cd, type: 3}
+    rim: {fileID: 21300000, guid: 1c09d2d28bfd2dc4e947d09a357ff804, type: 3}
+  - icon: {fileID: 21300000, guid: aafefd560c7b0384c8296c4c7a02fcbb, type: 3}
+    rim: {fileID: 21300000, guid: 36bd6f224048cc24ca5e0d4bbe532b9a, type: 3}
+  - icon: {fileID: 21300000, guid: 9c9d890f2353707439f82259a405caec, type: 3}
+    rim: {fileID: 21300000, guid: 70ce7ed7d82eccf4b916f6e391fbb117, type: 3}
+  - icon: {fileID: 21300000, guid: 0d6fd60af37ec9247bb2ccd9029262d5, type: 3}
+    rim: {fileID: 21300000, guid: 29d61f86d369a8f4795d9c85d347afad, type: 3}
+  - icon: {fileID: 21300000, guid: 3166927011c236349b2a9966bf764e8e, type: 3}
+    rim: {fileID: 21300000, guid: 5425214ec17e9b84e80efeddb00de60a, type: 3}
+  - icon: {fileID: 21300000, guid: dd04fc5ae7c92cc4bb91229f0a4ce17a, type: 3}
+    rim: {fileID: 21300000, guid: 051ea454f0fc25449899def3a442d6fa, type: 3}
+  - icon: {fileID: 21300000, guid: a27770cf5d2e21a469bb730d022b5cef, type: 3}
+    rim: {fileID: 21300000, guid: 37a87c5bc32657949923b6697970bdb6, type: 3}
+  - icon: {fileID: 21300000, guid: dd8de30c8dc5f984f9aa830123749491, type: 3}
+    rim: {fileID: 21300000, guid: 43c8bc0c3557d5e48b1aca0cddbfdc60, type: 3}
+  - icon: {fileID: 21300000, guid: 683d1c10886a26e48ab25035cae61e0a, type: 3}
+    rim: {fileID: 21300000, guid: 3b8f3a490cdfbc94e8b1f5571f086c1c, type: 3}
+  - icon: {fileID: 21300000, guid: 43bc9f6648d668545a90b74fea430303, type: 3}
+    rim: {fileID: 21300000, guid: 4fc74d127d3e91b43a3ebe9889c48723, type: 3}
+  - icon: {fileID: 21300000, guid: 5029d33de03c8884c89f36491051c264, type: 3}
+    rim: {fileID: 21300000, guid: 1a13c8ac3bb4d0b49bfc16970145d0f7, type: 3}
+  - icon: {fileID: 21300000, guid: f171da97cae34334aa3e2590ad683d1f, type: 3}
+    rim: {fileID: 21300000, guid: 78e258b468ae07d49bb2c79cbff90bac, type: 3}
+  - icon: {fileID: 21300000, guid: 8e2e376dd52274e4b81877d9254533d2, type: 3}
+    rim: {fileID: 21300000, guid: df978fc9a74c206419739081cce0be01, type: 3}
+  - icon: {fileID: 21300000, guid: 9ab9eae07452a954e88303aebed51a00, type: 3}
+    rim: {fileID: 21300000, guid: 6b7c06f9fb61ce947979abc9c6aefaa7, type: 3}
+  - icon: {fileID: 21300000, guid: 02c7baa0e6c44cb4291c21d6b43f3bca, type: 3}
+    rim: {fileID: 21300000, guid: e1437d697fe662545abb6e90254d19c0, type: 3}
+  - icon: {fileID: 21300000, guid: f98b3c9d973ae104487545f2ad0a51c4, type: 3}
+    rim: {fileID: 21300000, guid: 03db7cd80d4a92b48bb6b1c96e6a1cc0, type: 3}
+  - icon: {fileID: 21300000, guid: 2a843e09351a960498c771e855ac4fde, type: 3}
+    rim: {fileID: 21300000, guid: 95b3c6044f815d84da7fc7d81fe93a97, type: 3}
+  - icon: {fileID: 21300000, guid: 69168d9f5e0e5d14abe686ed72f8e33d, type: 3}
+    rim: {fileID: 21300000, guid: 0f456c3b0a6390f428d540c2388d93c6, type: 3}
+  - icon: {fileID: 21300000, guid: be5867b47cc0694439c00dc4652bdfe5, type: 3}
+    rim: {fileID: 21300000, guid: 5ef0afda49eb05249a80b3a55671a3de, type: 3}
+  - icon: {fileID: 21300000, guid: ead1e177e03e98e44b11c17a4b2b980a, type: 3}
+    rim: {fileID: 21300000, guid: f7b1d4a7bb9d1294283ebeb183c00ea6, type: 3}
+  - icon: {fileID: 21300000, guid: 53361649f1985f34eb70d130607aa17e, type: 3}
+    rim: {fileID: 21300000, guid: a5a641f00c36f1d4e9f7062cd94d1049, type: 3}
+  - icon: {fileID: 21300000, guid: bf52bcc0e5ed32e4ab9b23626a4d0111, type: 3}
+    rim: {fileID: 21300000, guid: ed8e1237b7ab95a4baf3b7529f454eaf, type: 3}
+  - icon: {fileID: 21300000, guid: caab95d4830aef748bafc21987a44793, type: 3}
+    rim: {fileID: 21300000, guid: 6924451434d8e874e82300f22ca4483c, type: 3}
+  - icon: {fileID: 21300000, guid: e2614633e02a47e498a19e6b74658c8b, type: 3}
+    rim: {fileID: 21300000, guid: 8a58b988a85a4d140bc47a32866768e3, type: 3}
+  - icon: {fileID: 21300000, guid: 13ff2574e34b964478d3133558786cd6, type: 3}
+    rim: {fileID: 21300000, guid: bc41d9b89e749c94086e25d488d43570, type: 3}
+  - icon: {fileID: 21300000, guid: c5585238db63e754db2f5541d7a3d853, type: 3}
+    rim: {fileID: 21300000, guid: 33da17110e2c7a042a5dfe6a928896d4, type: 3}
+  - icon: {fileID: 21300000, guid: a0160dd1543673a4996e92574895fc27, type: 3}
+    rim: {fileID: 21300000, guid: 9fcc87fed9bc25048b3e7f0f34c1c869, type: 3}
+  - icon: {fileID: 21300000, guid: bf46f1e6b4156254fb4f21c39bbdd45a, type: 3}
+    rim: {fileID: 21300000, guid: d5b6da159ef2da64985904c603c6ffb8, type: 3}
+  - icon: {fileID: 21300000, guid: ffc7944dd563b8a4ca4235a83ad15ae5, type: 3}
+    rim: {fileID: 21300000, guid: 3d080f41b918b6642a579b02b2efb211, type: 3}
+  - icon: {fileID: 21300000, guid: d9c4eded51ab5b64ea3329849b9016e5, type: 3}
+    rim: {fileID: 21300000, guid: 2662bf6e7ef5d754fb07b819f3c79a7a, type: 3}
+  - icon: {fileID: 21300000, guid: c13b6cdeea98d8b49bbaa43170ac51f6, type: 3}
+    rim: {fileID: 21300000, guid: f207613db0d5f334485c6d14c2ea0cbb, type: 3}
+  - icon: {fileID: 21300000, guid: 744b20206d0f51c4184c60a1898df787, type: 3}
+    rim: {fileID: 21300000, guid: d70a53ac2ae6bd54f9d5b91492a71560, type: 3}
+  - icon: {fileID: 21300000, guid: d3bf6f607926afa499d4819eb39c7171, type: 3}
+    rim: {fileID: 21300000, guid: 3579a003c3a985847a25a6dbd91fbad3, type: 3}
+  - icon: {fileID: 21300000, guid: 9a389907ca5cbb1499b82c1186eb50d2, type: 3}
+    rim: {fileID: 21300000, guid: f5486dbad2e87704fb57827554674bf1, type: 3}
+  - icon: {fileID: 21300000, guid: 275f8561e814c9a4fbe595dc010f459c, type: 3}
+    rim: {fileID: 21300000, guid: 1dcd5261f3f3a9d448ae78f852a93c08, type: 3}
+  - icon: {fileID: 21300000, guid: 5f62f997259b3b94ba1120d0d7090443, type: 3}
+    rim: {fileID: 21300000, guid: 5dfc19d4b5c407b4a8fe4343bed82e29, type: 3}

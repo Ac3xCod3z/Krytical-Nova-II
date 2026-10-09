@@ -68,6 +68,17 @@
     -unity-background-scale-mode: scale-to-fit;
 }
 
+/* The glow rim of a tempered weapon's icon: the outline of its glowing part, laid exactly behind the icon and tinted
+   by the controller with the Temper band's colour. */
+.item-glow {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    right: 4px;
+    bottom: 4px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 /* Placeholder text icon for items without a sprite (pills) */
 .item-glyph {
     position: absolute;
