@@ -134,7 +134,7 @@ namespace KryticalNova.UI.Menus
             var profile = roster.Get(slot);
             if (showroom != null)
             {
-                if (profile != null) showroom.Show(profile.recipe);
+                if (profile != null) showroom.Show(profile.recipe, profile.worn); // as it was last played: look and gear
                 else showroom.Hide();
             }
             if (enterPrompt != null) MenuUi.SetText(enterPrompt, "Label_Action", profile != null ? "Enter World" : "Create Character");

@@ -290,6 +290,7 @@ namespace KryticalNova.EditorTools
             var build = Begin(FrontEnd.CharacterSelectScene);
             var camera = AddCamera(Ink);
             var showroom = AddShowroom(camera, database, 0.42f);
+            WireShowroomGear(showroom);
             var canvas = AddCanvas();
             AddDragSurface(canvas, showroom);
             var groups = new List<MenuSkinSwitch.Group>();
@@ -767,6 +768,16 @@ namespace KryticalNova.EditorTools
         }
 
         // ---------------------------------------------------------------- showroom
+
+        /// <summary>
+        /// Character select only: the stage is told where gear is looked up, so its doll wears what the character
+        /// was last played in. The creator's stage is left without: a character being made wears no gear.
+        /// </summary>
+        public static void WireShowroomGear(CharacterShowroom showroom)
+        {
+            SetRef(showroom, "items", AssetDatabase.LoadAssetAtPath<KryticalNova.Items.ItemCatalog>(SidekickGearGenerator.CatalogPath));
+            SetRef(showroom, "progression", AssetDatabase.LoadAssetAtPath<KryticalNova.Items.GearProgressionSettings>(PlayerSystemsSetup.GearProgressionPath));
+        }
 
         /// <summary>The lit stage the live character stands on, shared by the creator and character select.</summary>
         private static CharacterShowroom AddShowroom(Camera camera, CharacterCreationDatabase database, float screenShiftX)

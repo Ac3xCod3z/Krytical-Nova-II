@@ -5178,6 +5178,8 @@ MonoBehaviour:
   modelPrefab: {fileID: 3933595338312819546, guid: bee0831911ce5ef4482cb4eee2fa4143, type: 3}
   idleClip: {fileID: 7400000, guid: 738b43c856812d44485cce817b79ea06, type: 3}
   expressions: {fileID: 11400000, guid: 208796a40243f7d4ebda58783c89a3e9, type: 2}
+  items: {fileID: 11400000, guid: e1c1b71ec31a0334586d7dae8888309c, type: 2}
+  progression: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
   viewCamera: {fileID: 286534923}
   stage: {fileID: 1904611641}
   screenShiftX: 0.42

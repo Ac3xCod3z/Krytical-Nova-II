@@ -74,6 +74,27 @@ namespace KryticalNova.CharacterCreation
         }
 
         /// <summary>
+        /// Keeps the gear the select screen's doll wears in step with the character being played. Called on the
+        /// player's own machine, which is told what its character wears whoever hosts the game.
+        /// </summary>
+        public static void RememberWorn(System.Collections.Generic.IReadOnlyList<WornPiece> worn)
+        {
+            if (!TryGetActive(out var profile) || worn == null || DollOutfit.Same(profile.worn, worn)) return;
+            var pieces = new WornPiece[worn.Count];
+            for (int i = 0; i < pieces.Length; i++) pieces[i] = worn[i];
+            var roster = Store.Load();
+            for (int slot = 0; slot < CharacterRoster.SlotCount; slot++)
+            {
+                var saved = roster.Get(slot);
+                if (saved == null || saved.id != profile.id) continue;
+                saved.worn = pieces;
+                Store.Save(roster);
+                break;
+            }
+            profile.worn = pieces;
+        }
+
+        /// <summary>
         /// The store used by menus and players. Each Multiplayer Play Mode clone, and each build started with its
         /// own "-profile", gets its own save.
         /// </summary>

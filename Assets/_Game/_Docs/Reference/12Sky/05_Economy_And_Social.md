@@ -20,6 +20,7 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 | Character | Progression, combat and movement skills, the Pack, worn items with their state, Creds, the Vault. |
 | World documents | `world/crews`, `world/kiosks`, `world/contacts`: they go on while their players are offline. |
 | How a system saves | It implements `ISaveParticipant` (a key, a scope, capture, restore) on its player component. `PlayerSaveAgent` does the rest: load on entry, autosave every 60 s, save on leave, save at once after a trade, a sale or a founding. |
+| What the menus know | The roster (PlayerPrefs, per machine) is not the save: it holds who each character is, its look, its level and a record of the gear it was last played in, so character select can draw it. The player's own game keeps the level and the gear record current (`CharacterSession.RememberLevel`, `RememberWorn`). Nothing is ever read back from it into the game. |
 | Identity | The client sends an account id (generated locally, `kn.account.v1`) and its character id. Trusted until real sign-in exists. One character of an account in the world at a time. |
 | GM | `gm.save`, `gm.save.where`, `gm.save.wipe confirm` |
 | GM in a build | The host (or an offline player) opens the GM console with **F2** (`Windows/GmConsole`, rebindable; `GmConsoleGate`, prefab `Tools/Debug/Prefabs/GmConsole`). A joined client has no console and no GM commands; the host aims commands at a client with `gm.players` and `gm.target <clientId>`. In the Editor the GM Tools window does the same job. |
