@@ -23,6 +23,9 @@
 .kn-faction-hegemony Button:disabled {
     -unity-background-image-tint-color: rgba(120, 120, 120, 0.85);
 }
+.kn-faction-hegemony .chat-tabs .chat-tab {
+    background-image: none;
+}
 .kn-faction-hegemony .window > .kn-frame {
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/SciFi/SPR_SciFiSoldier_Frame_TechyDark_01.png#SPR_SciFiSoldier_Frame_TechyDark_01");
     -unity-background-image-tint-color: rgb(255, 255, 255);
@@ -121,7 +124,7 @@
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/FX/SPR_FX_SciFiSoldier_Glow_01.png#SPR_FX_SciFiSoldier_Glow_01");
 }
 .kn-faction-hegemony .preview-beams {
-    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/FX/SPR_FX_SciFiSoldier_Background_Glows_01.png#SPR_FX_SciFiSoldier_Background_Glows_01");
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/FX/SPR_FX_DarkFantasy_Beams_01.png#SPR_FX_DarkFantasy_Beams_01");
 }
 .kn-faction-hegemony .inventory-grid .item-cell, .kn-faction-hegemony .equip-column .equip-slot {
     background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/Cell_Hegemony.png#Cell_Hegemony");

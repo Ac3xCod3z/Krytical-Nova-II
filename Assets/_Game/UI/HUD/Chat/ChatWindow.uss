@@ -58,9 +58,13 @@
     color: rgb(170, 186, 200);
 }
 
+/* The tab being read: lit, with a line of the accent under it. (In a faction's art the tabs are bare words: eight
+   framed buttons in a row crowd a small log.) */
 .chat-tab--active {
     color: rgb(255, 255, 255);
     -unity-background-image-tint-color: rgb(34, 128, 112);
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(114, 222, 196);
 }
 
 /* A line arrived on a tab the player is not looking at. */

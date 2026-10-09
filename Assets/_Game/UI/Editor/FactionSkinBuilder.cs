@@ -430,7 +430,9 @@ namespace KryticalNova.EditorTools
                 {
                     case FactionId.Hegemony:
                         skin.previewGlow = Load<Sprite>(SciFiHud + "Sprites/FX/SPR_FX_SciFiSoldier_Glow_01.png");
-                        skin.previewBeams = Load<Sprite>(SciFiHud + "Sprites/FX/SPR_FX_SciFiSoldier_Background_Glows_01.png");
+                        // The Sci-Fi pack has no beams (its diagonal streaks end in a hard edge when stretched): the Dark
+                        // Fantasy pack's, which are a white mask, in the Hegemony's accent.
+                        skin.previewBeams = Load<Sprite>(DarkFantasy + "Sprites/FX/SPR_FX_DarkFantasy_Beams_01.png");
                         break;
                     case FactionId.Null:
                         skin.previewGlow = Load<Sprite>(DarkFantasy + "Sprites/FX/SPR_FX_DarkFantasy_Glow_01.png");
@@ -604,7 +606,11 @@ namespace KryticalNova.EditorTools
                 output.AppendLine($".{cssClass} Button:disabled {{");
                 output.AppendLine("    -unity-background-image-tint-color: rgba(120, 120, 120, 0.85);");
                 output.AppendLine("}");
-                count += 4;
+                // The chat's eight tabs are bare words (the one being read has a line under it): framed, they crowd the log.
+                output.AppendLine($".{cssClass} .chat-tabs .chat-tab {{");
+                output.AppendLine("    background-image: none;");
+                output.AppendLine("}");
+                count += 5;
             }
             count += FrameRule(output, cssClass, ".panel", asset.panelFrame, asset.panelFrameBorder, asset.panelFrameOutset);
             count += FrameRule(output, cssClass, ".window", asset.windowFrame, asset.windowFrameBorder, asset.windowFrameOutset);

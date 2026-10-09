@@ -532,10 +532,6 @@
     -unity-background-image-tint-color: rgba(32, 24, 15, 0.95);
     -unity-slice-scale: 0.13px;
 }
-.kn-faction-covenant .preview-backdrop {
-    background-image: none;
-    -unity-background-image-tint-color: rgba(222, 167, 65, 0.06);
-}
 .kn-faction-covenant .preview-glow {
     -unity-background-image-tint-color: rgba(222, 167, 65, 0.3);
 }
@@ -965,6 +961,7 @@
 }
 .kn-faction-covenant .chat-tab--active {
     -unity-background-image-tint-color: rgb(128, 83, 0);
+    border-bottom-color: rgb(222, 167, 65);
 }
 .kn-faction-covenant .chat-line {
     font-size: 13.44px;
@@ -1339,6 +1336,9 @@
 }
 .kn-faction-covenant Button:disabled {
     -unity-background-image-tint-color: rgba(120, 120, 120, 0.85);
+}
+.kn-faction-covenant .chat-tabs .chat-tab {
+    background-image: none;
 }
 .kn-faction-covenant .panel > .kn-frame {
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_12.png#SPR_FantasyWarrior_Frame_Box_12");

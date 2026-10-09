@@ -532,10 +532,6 @@
     -unity-background-image-tint-color: rgba(28, 15, 32, 0.95);
     -unity-slice-scale: 0.13px;
 }
-.kn-faction-null .preview-backdrop {
-    background-image: none;
-    -unity-background-image-tint-color: rgba(222, 65, 73, 0.06);
-}
 .kn-faction-null .preview-glow {
     -unity-background-image-tint-color: rgba(222, 65, 73, 0.3);
 }
@@ -965,6 +961,7 @@
 }
 .kn-faction-null .chat-tab--active {
     -unity-background-image-tint-color: rgb(128, 0, 6);
+    border-bottom-color: rgb(222, 65, 73);
 }
 .kn-faction-null .chat-line {
     font-size: 15.36px;
@@ -1339,6 +1336,9 @@
 }
 .kn-faction-null Button:disabled {
     -unity-background-image-tint-color: rgba(120, 120, 120, 0.85);
+}
+.kn-faction-null .chat-tabs .chat-tab {
+    background-image: none;
 }
 .kn-faction-null .panel > .kn-frame {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Large_07.png#SPR_DarkFantasy_Frame_Box_Large_07");
