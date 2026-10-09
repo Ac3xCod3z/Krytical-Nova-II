@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: AP_Unarmed
   m_EditorClassIdentifier: EmeraldAI::EmeraldAI.Utility.AnimationProfile
   EmeraldAnimationComponent: {fileID: 0}
-  AIAnimator: {fileID: 9100000, guid: 3cfca65f03ab57247b1846dc9be03fb1, type: 2}
+  AIAnimator: {fileID: 9100000, guid: 892fa3293cf873f4e82f4d2991ba6acb, type: 2}
   AnimatorControllerGenerated: 1
   AnimationsUpdated: 0
   AnimationListsChanged: 0
@@ -135,27 +135,27 @@ MonoBehaviour:
       Mirror: 0
     BlockIdle:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     BlockHit:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     DodgeLeft:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     DodgeBack:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     DodgeRight:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     Recoil:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     Stunned:
       AnimationSpeed: 1
@@ -163,19 +163,19 @@ MonoBehaviour:
       Mirror: 0
     CoverIdle:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     CoverHit:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     PutAwayWeapon:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     PullOutWeapon:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     AttackList: []
   Type1Animations:
@@ -251,27 +251,27 @@ MonoBehaviour:
       Mirror: 0
     BlockIdle:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     BlockHit:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     DodgeLeft:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     DodgeBack:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     DodgeRight:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     Recoil:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     Stunned:
       AnimationSpeed: 1
@@ -279,19 +279,19 @@ MonoBehaviour:
       Mirror: 0
     CoverIdle:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     CoverHit:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     PutAwayWeapon:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     PullOutWeapon:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     AttackList:
     - AnimationSpeed: 1
@@ -376,27 +376,27 @@ MonoBehaviour:
       Mirror: 0
     BlockIdle:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     BlockHit:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     DodgeLeft:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     DodgeBack:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     DodgeRight:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     Recoil:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     Stunned:
       AnimationSpeed: 1
@@ -404,19 +404,19 @@ MonoBehaviour:
       Mirror: 0
     CoverIdle:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     CoverHit:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     PutAwayWeapon:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     PullOutWeapon:
       AnimationSpeed: 1
-      AnimationClip: {fileID: 0}
+      AnimationClip: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
       Mirror: 0
     AttackList: []
   NavMeshLinkAnimations:

@@ -42,6 +42,10 @@ namespace KryticalNova.Hostiles
             new Band { name = "Red", fromGap = 10, toGap = 200, nameColor = Hex(0xFF, 0x5C, 0x52), experiencePercent = new[] { 175f }, dropPercent = 100f, gearDrops = true, hitChanceModifier = -15f },
         };
 
+        [Header("Squads")]
+        [Tooltip("A Squad member this many levels or more below the Squad's highest member is paid by the highest member's gap, not their own.")]
+        [Min(1)] public int squadCarryLevels = 6;
+
         [Header("Death while hunting")]
         [Tooltip("Share of the current level's XP lost on a death to a Hostile. Never takes a level.")]
         [Range(0f, 100f)] public float deathExperienceLossPercent = 5f;

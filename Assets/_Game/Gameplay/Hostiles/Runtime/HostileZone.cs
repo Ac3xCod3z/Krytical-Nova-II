@@ -191,6 +191,7 @@ namespace KryticalNova.Hostiles
                 if (Flat(hostile.transform.position - Centre).sqrMagnitude <= limit * limit) continue;
                 hostile.Brain.Calm();
                 hostile.Entity.ResetHealth();
+                hostile.ReleaseTag();
             }
         }
 

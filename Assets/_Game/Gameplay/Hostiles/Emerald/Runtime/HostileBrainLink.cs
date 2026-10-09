@@ -27,6 +27,7 @@ namespace KryticalNova.Hostiles.Emerald
         private bool awake;
         private bool frozen;
         private bool listening;
+        private int wokeFrame = -1;
 
         private void Awake()
         {
@@ -62,6 +63,7 @@ namespace KryticalNova.Hostiles.Emerald
         public void SetAwake(bool value)
         {
             if (system == null) return;
+            if (value && !awake) wokeFrame = Time.frameCount;
             awake = value;
             // The agent first: Emerald's parts look for it on the NavMesh as they start.
             if (agent != null) agent.enabled = value;
@@ -174,10 +176,16 @@ namespace KryticalNova.Hostiles.Emerald
             }
         }
 
+        /// <summary>
+        /// Emerald's parts find each other in their Start, the frame after they are switched on. Until then they
+        /// cannot be told of anything; the CombatEntity holds the truth meanwhile.
+        /// </summary>
+        private bool Started => Time.frameCount > wokeFrame;
+
         private void OnDamaged(DamageResult result, CharacterCombatStats attacker)
         {
             // An evaded swing did nothing; a killing blow is OnKilled's (Killed is raised first).
-            if (!awake || result.IsEvaded || result.IsReflected || !entity.IsAlive) return;
+            if (!awake || !Started || result.IsEvaded || result.IsReflected || !entity.IsAlive) return;
             int amount = Mathf.RoundToInt(result.DamageDealt);
             if (amount <= 0) return;
 
@@ -198,7 +206,15 @@ namespace KryticalNova.Hostiles.Emerald
 
         private void OnKilled(KillingBlow blow)
         {
-            if (awake) EmeraldAPI.Combat.KillAI(system);
+            if (!awake) return;
+            if (Started) EmeraldAPI.Combat.KillAI(system);
+            else StartCoroutine(DieOnceStarted()); // killed in the frame it appeared
+        }
+
+        private System.Collections.IEnumerator DieOnceStarted()
+        {
+            yield return null;
+            if (awake && !entity.IsAlive) EmeraldAPI.Combat.KillAI(system);
         }
 
         // ------------------------------------------------------------------ Emerald tells the game
@@ -234,6 +250,7 @@ namespace KryticalNova.Hostiles.Emerald
 
             DamageResult result = CombatCalculator.CalculateAttack(mine, target.CombatStats, multiplier, reflects, reflectChance);
             target.TakeDamage(result, mine);
+            if (net != null) net.ReportStrike(target, result, index);
         }
     }
 }

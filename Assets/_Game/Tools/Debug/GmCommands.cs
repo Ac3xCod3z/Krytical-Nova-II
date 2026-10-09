@@ -135,6 +135,7 @@ namespace KryticalNova.DevTools
                 "EFFECTS      gm.fx.hit [normal|elemental|crit|shatter|backlash] [light|heavy] · gm.fx.pvpcrit [splash|frame|faction|default]   (shown on this screen; nothing is hit)",
                 "SAVING       gm.save · gm.save.where · gm.save.wipe confirm",
                 "HOSTILES     gm.hostile.list · gm.hostile.spawn <id|name> [count] [level] · gm.hostile.clear [radius] · gm.hostile.kill [radius] · gm.hostile.info · gm.hostile.hp <n|n%> · gm.hostile.freeze [on|off] · gm.hostile.ignore [on|off] · gm.hostile.ttk <id|name> [level] · gm.hostile.stats",
+                "LEVEL GAP    gm.gap <hostile level> · gm.gap.table · gm.xprate <x> · gm.droprate <x> · gm.deathpenalty [on|off]",
                 "ZONES        gm.zone.list · gm.zone.fill <id> · gm.zone.clear <id> [seconds] · gm.zone.respawn <seconds|default> · gm.zone.sleep <id> [on|off|auto] · gm.zone.bruiser <id>   (Hostile Zones; gm.tp <id> goes to one)",
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",

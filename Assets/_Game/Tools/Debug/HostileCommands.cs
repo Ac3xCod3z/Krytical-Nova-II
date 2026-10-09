@@ -241,6 +241,72 @@ namespace KryticalNova.DevTools
             });
         }
 
+        // ------------------------------------------------------------------ level gap and rates
+
+        private static LevelGapSettings GapSettings()
+        {
+            foreach (HostileNet species in HostileSpawner.Species())
+                if (species.LevelGap != null) return species.LevelGap;
+            return null;
+        }
+
+        private static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
+
+        private static string GapLine(LevelGapSettings gaps, int gap)
+        {
+            LevelGapSettings.Band band = LevelGapRules.BandOf(gaps, gap);
+            float hit = band.hitChanceModifier;
+            return $"gap {gap,4}: {band.name,-7} {Hex(band.nameColor)} · XP {LevelGapRules.ExperiencePercent(gaps, gap),3:0}% · drops {band.dropPercent,3:0}%{(band.gearDrops ? "" : ", no gear")} · your hit chance {(hit == 0f ? "unchanged" : $"{hit:+0;-0} points")}";
+        }
+
+        [Command("gm.gap", "What a Hostile of that level is to the targeted player: name colour, XP, drops, hit chance. gm.gap <hostile level>.")]
+        private static string Gap(int hostileLevel)
+        {
+            if (!TryGetPlayer(out var player, out var error)) return error;
+            LevelGapSettings gaps = GapSettings();
+            if (gaps == null) return "No level-gap settings. Build the Hostiles first.";
+            var progression = player.GetComponent<PlayerCharacterProgression>();
+            int level = progression != null ? progression.CurrentLevel : 1;
+            return $"Level {level} against a level {hostileLevel} Hostile -> " + GapLine(gaps, LevelGapRules.Gap(hostileLevel, level));
+        }
+
+        [Command("gm.gap.table", "The whole level-gap table as the game has it loaded, gaps -12 to +12.")]
+        private static string GapTable()
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            LevelGapSettings gaps = GapSettings();
+            if (gaps == null) return "No level-gap settings. Build the Hostiles first.";
+            var sb = new StringBuilder();
+            for (int gap = 12; gap >= -12; gap--) sb.AppendLine(GapLine(gaps, gap));
+            sb.Append($"Death to a Hostile: {gaps.deathExperienceLossPercent:0.#}% of the level's XP ({(HostileRates.DeathPenalty ? "on" : "off")}) · kill held for {gaps.tagTimeoutSeconds:0} s · XP rate x{HostileRates.Experience:0.##} · drop rate x{HostileRates.Drops:0.##}");
+            return sb.ToString();
+        }
+
+        [Command("gm.xprate", "Multiply the XP of every Hostile kill: gm.xprate <x> (1 = normal).")]
+        private static string ExperienceRate(float multiplier)
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            HostileRates.SetExperience(multiplier);
+            return $"Hostile kills pay x{HostileRates.Experience:0.##} XP.";
+        }
+
+        [Command("gm.droprate", "Multiply the drop chances of every Hostile kill: gm.droprate <x> (1 = normal).")]
+        private static string DropRate(float multiplier)
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            HostileRates.SetDrops(multiplier);
+            return $"Hostile kills drop at x{HostileRates.Drops:0.##}.";
+        }
+
+        [Command("gm.deathpenalty", "Turn the XP loss for dying to a Hostile on or off: gm.deathpenalty [on|off].")]
+        private static string DeathPenalty(string state = "")
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            if (!TryParseSwitch(state, HostileRates.DeathPenalty, out bool value)) return "Use gm.deathpenalty on or off.";
+            HostileRates.DeathPenalty = value;
+            return value ? "Dying to a Hostile costs XP." : "Dying to a Hostile costs nothing.";
+        }
+
         // ------------------------------------------------------------------ Hostile Zones
 
         private static HostileZone FindZone(string id)

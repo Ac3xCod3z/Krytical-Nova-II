@@ -379,6 +379,17 @@ namespace KryticalNova.Social
             return PartyRules.ExperienceBoost(group.Members.Count, together);
         }
 
+        /// <summary>
+        /// Server (or offline) only: this player's Squad, this player included, into <paramref name="into"/>. A
+        /// player in no Squad is a Squad of one.
+        /// </summary>
+        public void ServerGetMembers(List<PlayerParty> into)
+        {
+            into.Clear();
+            if (IsSpawned && IsServer && group != null) into.AddRange(group.Members);
+            else into.Add(this);
+        }
+
         // ------------------------------------------------------------------ presentation helpers
 
         /// <summary>

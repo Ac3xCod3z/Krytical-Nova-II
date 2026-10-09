@@ -286,7 +286,7 @@ Animator:
   m_GameObject: {fileID: 275738158942811641}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: c8c20564eb982f84a96a0d4d8e357cc5, type: 3}
-  m_Controller: {fileID: 9100000, guid: 3cfca65f03ab57247b1846dc9be03fb1, type: 2}
+  m_Controller: {fileID: 9100000, guid: 892fa3293cf873f4e82f4d2991ba6acb, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -887,7 +887,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 396375873
+  GlobalObjectIdHash: 988512768
   InScenePlacedSourceGlobalObjectIdHash: 0
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -964,6 +964,7 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: a91023c68f2e9614a8f80c9c45059efc, type: 2}
   curve: {fileID: 11400000, guid: 35f448d097176e846a044d5ef0d5a529, type: 2}
   settings: {fileID: 11400000, guid: 5fc5ceac32329ca4ab5a9db2c541b0fd, type: 2}
+  levelGap: {fileID: 11400000, guid: 433f06c7dbd7db546848f73e62ce1050, type: 2}
   animator: {fileID: 6502936166062081790}
 --- !u!114 &7268049376897383280
 MonoBehaviour:

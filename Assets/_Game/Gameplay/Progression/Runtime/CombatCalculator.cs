@@ -29,7 +29,8 @@ namespace KryticalNova.Progression
             float reflectionChance = 10f,
             bool attackerHasShieldShatter = false,
             float shatterChance = 10f,
-            bool canCrit = true)
+            bool canCrit = true,
+            float hitChanceModifier = 0f)
         {
             float hitRoll = Random.Range(0f, 100f);
             float reflectRoll = Random.Range(0f, 100f);
@@ -48,7 +49,8 @@ namespace KryticalNova.Progression
                 defenderHasReflection,
                 reflectionChance,
                 attackerHasShieldShatter,
-                shatterChance);
+                shatterChance,
+                hitChanceModifier);
         }
 
         /// <summary>Calculates a combat strike with explicitly provided dice rolls for deterministic tests.</summary>
@@ -63,7 +65,8 @@ namespace KryticalNova.Progression
             bool defenderHasReflection,
             float reflectionChance,
             bool attackerHasShieldShatter,
-            float shatterChance)
+            float shatterChance,
+            float hitChanceModifier = 0f)
         {
             DamageResult result = new DamageResult();
             if (attacker == null || defender == null) return result;
@@ -77,7 +80,9 @@ namespace KryticalNova.Progression
             float attackerHit = attacker.GetStatValue(StatType.HitRate);
             float defenderEvade = defender.GetStatValue(StatType.EvasionRate);
             float rawHitChance = (attackerHit / Mathf.Max(1f, attackerHit + defenderEvade)) * 100f;
-            float hitChance = Mathf.Clamp(rawHitChance, minHit, maxHit);
+            // The modifier is in percent points (a Hostile far above the attacker is harder to hit) and never
+            // takes the chance outside the limits.
+            float hitChance = Mathf.Clamp(rawHitChance + hitChanceModifier, minHit, maxHit);
             result.HitChance = hitChance;
 
             if (hitRoll > hitChance)

@@ -142,7 +142,7 @@ namespace KryticalNova.EditorTools.Hostiles
         public static void BuildAll()
         {
             HostileStatCurve curve = EnsureCurve();
-            EnsureAsset<LevelGapSettings>(LevelGapPath);
+            LevelGapSettings levelGap = EnsureAsset<LevelGapSettings>(LevelGapPath);
             HostileSettings settings = EnsureSettings();
             MeleeAbility melee = EnsureMeleeAbility();
             RemoveRetired();
@@ -153,7 +153,7 @@ namespace KryticalNova.EditorTools.Hostiles
             {
                 try
                 {
-                    Build(species, curve, settings, melee);
+                    Build(species, curve, settings, levelGap, melee);
                     built++;
                 }
                 catch (Exception e)
@@ -252,7 +252,7 @@ namespace KryticalNova.EditorTools.Hostiles
 
         // ------------------------------------------------------------------ one species
 
-        private static void Build(Species species, HostileStatCurve curve, HostileSettings settings, MeleeAbility melee)
+        private static void Build(Species species, HostileStatCurve curve, HostileSettings settings, LevelGapSettings levelGap, MeleeAbility melee)
         {
             string folder = CharacterFolder + "/" + species.AnimSet;
             WeatherVfxBuilder.EnsureFolder(folder);
@@ -300,7 +300,7 @@ namespace KryticalNova.EditorTools.Hostiles
 
             AnimationProfile profile = BuildProfile(species, definition, folder);
             string prefabPath = $"{GameplayPrefabsSetup.HostilePrefabFolder}/Hostile_{species.Asset}.prefab";
-            definition.prefab = BuildPrefab(species, definition, curve, settings, melee, profile, prefabPath);
+            definition.prefab = BuildPrefab(species, definition, curve, settings, levelGap, melee, profile, prefabPath);
             EditorUtility.SetDirty(definition);
         }
 
@@ -395,9 +395,27 @@ namespace KryticalNova.EditorTools.Hostiles
             profile.AIAnimator = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(controllerPath);
             profile.FilePath = controllerPath;
             EmeraldAnimatorGenerator.GenerateAnimatorController(profile);
+            WarnOfForeignClips(profile.AIAnimator, folder);
             EditorUtility.SetDirty(profile);
             EditorUtility.SetDirty(profile.AIAnimator);
             return profile;
+        }
+
+        /// <summary>
+        /// Every clip of a built controller should be one of ours. One that is not still carries its vendor's
+        /// animation events, and an event with nothing to hear it is an error every time the clip plays.
+        /// </summary>
+        private static void WarnOfForeignClips(RuntimeAnimatorController controller, string folder)
+        {
+            var foreign = new HashSet<string>();
+            foreach (AnimationClip clip in controller.animationClips)
+            {
+                if (clip == null) continue;
+                string path = AssetDatabase.GetAssetPath(clip);
+                if (!path.StartsWith(folder) && AnimationUtility.GetAnimationEvents(clip).Length > 0) foreign.Add(clip.name);
+            }
+            if (foreign.Count > 0)
+                Debug.LogWarning($"[Hostiles] {controller.name} still plays {foreign.Count} vendor clip(s) with events: {string.Join(", ", foreign)}.");
         }
 
         private static AnimationParentClass Animations(HostileDefinition d, AnimationClip idle, bool withAttacks)
@@ -411,10 +429,12 @@ namespace KryticalNova.EditorTools.Hostiles
                 RunLeft = One(d.run), RunForward = One(d.run), RunRight = One(d.run),
                 TurnLeft = One(turnLeft), TurnRight = One(turnRight),
                 StrafeLeft = One(d.walk), StrafeRight = One(d.walk),
-                BlockIdle = One(null), BlockHit = One(null),
-                DodgeLeft = One(null), DodgeBack = One(null), DodgeRight = One(null),
-                Recoil = One(null), Stunned = One(d.stunned),
-                CoverIdle = One(null), CoverHit = One(null), PutAwayWeapon = One(null), PullOutWeapon = One(null),
+                // Moves no Hostile makes. They still get a clip of ours: a state left empty keeps the clip of
+                // Emerald's master controller, and those call Emerald's sound functions through their events.
+                BlockIdle = One(idle), BlockHit = One(idle),
+                DodgeLeft = One(idle), DodgeBack = One(idle), DodgeRight = One(idle),
+                Recoil = One(idle), Stunned = One(d.stunned != null ? d.stunned : idle),
+                CoverIdle = One(idle), CoverHit = One(idle), PutAwayWeapon = One(idle), PullOutWeapon = One(idle),
             };
             set.IdleList.Add(One(idle));
             foreach (AnimationClip clip in d.hitReactions) set.HitList.Add(One(clip));
@@ -427,7 +447,7 @@ namespace KryticalNova.EditorTools.Hostiles
         // ------------------------------------------------------------------ the prefab
 
         private static GameObject BuildPrefab(Species species, HostileDefinition definition, HostileStatCurve curve,
-            HostileSettings settings, MeleeAbility melee, AnimationProfile profile, string prefabPath)
+            HostileSettings settings, LevelGapSettings levelGap, MeleeAbility melee, AnimationProfile profile, string prefabPath)
         {
             GameObject root = UnityEngine.Object.Instantiate(definition.model);
             try
@@ -483,6 +503,7 @@ namespace KryticalNova.EditorTools.Hostiles
                 SetField(net, "curve", curve);
                 SetField(net, "animator", animator);
                 SetField(net, "settings", settings);
+                SetField(net, "levelGap", levelGap);
                 root.AddComponent<HostileBrainLink>();
                 SetField(root.AddComponent<HostileCorpse>(), "settings", settings);
 
