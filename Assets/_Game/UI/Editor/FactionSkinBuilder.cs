@@ -296,6 +296,33 @@ namespace KryticalNova.EditorTools
                 EditorUtility.SetDirty(skin);
                 AssetDatabase.SaveAssetIfDirty(skin);
             }
+            if (skin.button == null)
+            {
+                // The pack's small box frame over its fill, in the faction's dark tone.
+                Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
+                Color fillTint = Color.HSVToRGB(hue, Mathf.Clamp01(saturation), 0.2f);
+                string art = $"{FactionHudBuilder.Folder}/{skin.faction}/Art";
+                string name = $"Button_{skin.faction}";
+                switch (skin.faction)
+                {
+                    case FactionId.Hegemony:
+                        skin.button = SpriteRecolourer.Flatten(name, art, Load<Sprite>(SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_07.png"),
+                            Load<Sprite>(SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_07_Background.png"), fillTint);
+                        skin.buttonBorder = 7f;
+                        break;
+                    case FactionId.Null:
+                        skin.button = SpriteRecolourer.Flatten(name, art, Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_01_Variant_01.png"),
+                            Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_01_Background.png"), fillTint);
+                        skin.buttonBorder = 8f;
+                        break;
+                    case FactionId.Covenant:
+                        skin.button = SpriteRecolourer.Flatten(name, art, Load<Sprite>(FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_22_Variant_01.png"), null, fillTint);
+                        skin.buttonBorder = 7f;
+                        break;
+                }
+                EditorUtility.SetDirty(skin);
+                AssetDatabase.SaveAssetIfDirty(skin);
+            }
             if (skin.windowFrame != null) return;
             switch (skin.faction)
             {
@@ -359,6 +386,28 @@ namespace KryticalNova.EditorTools
                 output.AppendLine($"    background-color: rgba({backing.r}, {backing.g}, {backing.b}, {alpha});");
                 output.AppendLine("}");
                 count++;
+            }
+            if (asset.button != null)
+            {
+                Sprite art = asset.button;
+                float widest = Mathf.Max(art.border.x, art.border.y, art.border.z, art.border.w);
+                string scale = widest > 0f ? (asset.buttonBorder / widest).ToString("0.####", CultureInfo.InvariantCulture) : "1";
+                // The art keeps its colours: a state only lightens or darkens it.
+                output.AppendLine($".{cssClass} Button {{");
+                output.AppendLine($"    background-image: {UrlOf(art)};");
+                output.AppendLine("    -unity-background-image-tint-color: rgb(212, 212, 212);");
+                output.AppendLine($"    -unity-slice-scale: {scale}px;");
+                output.AppendLine("}");
+                output.AppendLine($".{cssClass} Button:hover {{");
+                output.AppendLine("    -unity-background-image-tint-color: rgb(255, 255, 255);");
+                output.AppendLine("}");
+                output.AppendLine($".{cssClass} Button:active {{");
+                output.AppendLine("    -unity-background-image-tint-color: rgb(165, 165, 165);");
+                output.AppendLine("}");
+                output.AppendLine($".{cssClass} Button:disabled {{");
+                output.AppendLine("    -unity-background-image-tint-color: rgba(120, 120, 120, 0.85);");
+                output.AppendLine("}");
+                count += 4;
             }
             count += FrameRule(output, cssClass, ".panel", asset.panelFrame, asset.panelFrameBorder, asset.panelFrameOutset);
             count += FrameRule(output, cssClass, ".window", asset.windowFrame, asset.windowFrameBorder, asset.windowFrameOutset);

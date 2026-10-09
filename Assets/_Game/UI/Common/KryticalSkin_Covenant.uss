@@ -1293,6 +1293,20 @@
 .kn-faction-covenant .window, .kn-faction-covenant .item-tooltip, .kn-faction-covenant .item-menu, .kn-faction-covenant .item-confirm, .kn-faction-covenant .amount-dialog, .kn-faction-covenant .game-menu, .kn-faction-covenant .player-menu {
     background-color: rgba(22, 18, 13, 0.97);
 }
+.kn-faction-covenant Button {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/Button_Covenant.png#Button_Covenant");
+    -unity-background-image-tint-color: rgb(212, 212, 212);
+    -unity-slice-scale: 0.07px;
+}
+.kn-faction-covenant Button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-covenant Button:active {
+    -unity-background-image-tint-color: rgb(165, 165, 165);
+}
+.kn-faction-covenant Button:disabled {
+    -unity-background-image-tint-color: rgba(120, 120, 120, 0.85);
+}
 .kn-faction-covenant .panel > .kn-frame {
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_12.png#SPR_FantasyWarrior_Frame_Box_12");
     -unity-background-image-tint-color: rgb(255, 255, 255);

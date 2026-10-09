@@ -81,6 +81,10 @@ namespace KryticalNova.UI
         public Sprite panelFrame;
         [Min(0f)] public float panelFrameBorder = 10f;
         public float panelFrameOutset = 2f;
+        [Tooltip("A button: the pack's frame over its fill, flattened into one picture by the skin builder (UI/HUD/Faction/<Faction>/Art). In its own colours; a button's state only lightens or darkens it.")]
+        public Sprite button;
+        [Tooltip("How thick the button art's widest side is drawn, in panel pixels.")]
+        [Min(0f)] public float buttonBorder = 8f;
         [Tooltip("The ornament on the middle of a window's top edge, and one drawn behind it (horns behind a skull). Either may be none.")]
         public Sprite crown, crownBack;
         [Tooltip("The ornaments' sizes in panel pixels, and how far their tops stand above the window's top edge.")]

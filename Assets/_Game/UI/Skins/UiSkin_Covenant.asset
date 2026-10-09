@@ -44,6 +44,8 @@ MonoBehaviour:
   panelFrame: {fileID: 21300000, guid: cf616f64504d28b49a328e3fc7ca7539, type: 3}
   panelFrameBorder: 12
   panelFrameOutset: 1
+  button: {fileID: 21300000, guid: e0e30c7f8a0ee7c49bcbc72ffaf4f57f, type: 3}
+  buttonBorder: 7
   crown: {fileID: 21300000, guid: 8896a397cf1162847b48c0b64f5ec72b, type: 3}
   crownBack: {fileID: 0}
   crownSize: {x: 96, y: 48}

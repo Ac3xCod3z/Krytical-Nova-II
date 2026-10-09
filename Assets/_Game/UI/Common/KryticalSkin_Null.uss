@@ -1293,6 +1293,20 @@
 .kn-faction-null .window, .kn-faction-null .item-tooltip, .kn-faction-null .item-menu, .kn-faction-null .item-confirm, .kn-faction-null .amount-dialog, .kn-faction-null .game-menu, .kn-faction-null .player-menu {
     background-color: rgba(20, 13, 22, 0.97);
 }
+.kn-faction-null Button {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/Button_Null.png#Button_Null");
+    -unity-background-image-tint-color: rgb(212, 212, 212);
+    -unity-slice-scale: 0.0571px;
+}
+.kn-faction-null Button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null Button:active {
+    -unity-background-image-tint-color: rgb(165, 165, 165);
+}
+.kn-faction-null Button:disabled {
+    -unity-background-image-tint-color: rgba(120, 120, 120, 0.85);
+}
 .kn-faction-null .panel > .kn-frame {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Large_07.png#SPR_DarkFantasy_Frame_Box_Large_07");
     -unity-background-image-tint-color: rgb(255, 255, 255);

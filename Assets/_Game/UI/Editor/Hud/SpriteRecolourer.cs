@@ -44,22 +44,77 @@ namespace KryticalNova.EditorTools
             WeatherVfxBuilder.EnsureFolder(folder);
             string path = $"{folder}/{source.name}_{faction}.png";
 
+            Texture2D picture = Read(source);
+            Color[] pixels = picture.GetPixels();
+            for (int i = 0; i < pixels.Length; i++)
+                if (pixels[i].a > 0f) pixels[i] = Remap(pixels[i], tone, accent);
+            picture.SetPixels(pixels);
+            return Save(picture, path, source);
+        }
+
+        /// <summary>
+        /// One picture out of a frame and what fills it, for where the interface can draw only one image (a UI
+        /// Toolkit background): the pack's fill sprite in <paramref name="fillTint"/> under the pack's frame, or a
+        /// plain fill inside the frame when the pack has no fill sprite for it. The frame's own colours are kept.
+        /// Saved as <paramref name="name"/> in <paramref name="folder"/> with the frame's borders.
+        /// </summary>
+        public static Sprite Flatten(string name, string folder, Sprite frame, Sprite fill, Color fillTint)
+        {
+            if (frame == null) return null;
+            WeatherVfxBuilder.EnsureFolder(folder);
+            string path = $"{folder}/{name}.png";
+
+            Texture2D picture = Read(frame);
+            int width = picture.width, height = picture.height;
+            Color[] over = picture.GetPixels();
+            Texture2D under = fill != null ? Read(fill) : null;
+            // Without a fill sprite: a plain fill that stops half a border short of the edge, under the frame's inner lip.
+            float insetX = Mathf.Max(frame.border.x, frame.border.z) * 0.45f, insetY = Mathf.Max(frame.border.y, frame.border.w) * 0.45f;
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                {
+                    Color below;
+                    if (under != null)
+                    {
+                        below = under.GetPixelBilinear((x + 0.5f) / width, (y + 0.5f) / height);
+                        below = new Color(below.r * fillTint.r, below.g * fillTint.g, below.b * fillTint.b, below.a * fillTint.a);
+                    }
+                    else
+                    {
+                        bool inside = x >= insetX && x < width - insetX && y >= insetY && y < height - insetY;
+                        below = inside ? fillTint : Color.clear;
+                    }
+                    Color top = over[y * width + x];
+                    float alpha = top.a + below.a * (1f - top.a);
+                    Color mixed = alpha > 0f ? (top * top.a + below * below.a * (1f - top.a)) / alpha : Color.clear;
+                    mixed.a = alpha;
+                    over[y * width + x] = mixed;
+                }
+            picture.SetPixels(over);
+            if (under != null) Object.DestroyImmediate(under);
+            return Save(picture, path, frame);
+        }
+
+        /// <summary>A sprite's pixels. The source need not be readable: it is drawn into a texture that is.</summary>
+        private static Texture2D Read(Sprite source)
+        {
             Rect area = source.textureRect;
             int width = Mathf.RoundToInt(area.width), height = Mathf.RoundToInt(area.height);
-            // The source need not be readable: it is drawn into a texture that is.
             RenderTexture target = RenderTexture.GetTemporary(source.texture.width, source.texture.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
             RenderTexture before = RenderTexture.active;
             Graphics.Blit(source.texture, target);
             RenderTexture.active = target;
             var picture = new Texture2D(width, height, TextureFormat.RGBA32, false);
             picture.ReadPixels(new Rect(area.x, source.texture.height - area.yMax, width, height), 0, 0);
+            picture.Apply();
             RenderTexture.active = before;
             RenderTexture.ReleaseTemporary(target);
+            return picture;
+        }
 
-            Color[] pixels = picture.GetPixels();
-            for (int i = 0; i < pixels.Length; i++)
-                if (pixels[i].a > 0f) pixels[i] = Remap(pixels[i], tone, accent);
-            picture.SetPixels(pixels);
+        /// <summary>Writes a picture as a sprite with another sprite's borders, pivot and size, and destroys the picture.</summary>
+        private static Sprite Save(Texture2D picture, string path, Sprite source)
+        {
             File.WriteAllBytes(path, picture.EncodeToPNG());
             Object.DestroyImmediate(picture);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
