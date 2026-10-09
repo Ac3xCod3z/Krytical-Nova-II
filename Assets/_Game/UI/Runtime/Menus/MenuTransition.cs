@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.SceneManagement;
@@ -44,6 +45,8 @@ namespace KryticalNova.UI.Menus
         // The picture of the screen that was left, on its way to the scene that turns its page.
         private static Texture2D pendingPicture;
         private static bool pendingForward;
+        // The last picture taken of each menu screen: turning back, the page that comes over from the left shows it.
+        private static readonly Dictionary<string, Texture2D> PagesSeen = new Dictionary<string, Texture2D>();
 
         private Material material;
         private Coroutine running;
@@ -51,6 +54,7 @@ namespace KryticalNova.UI.Menus
         private bool opening, closing;
         private MenuBook turningBook;
         private Texture2D turningPicture;
+        private MenuPage atRest; // this screen as a page of the open book, while it is one
 
         /// <summary>The transition of the scene that is currently open.</summary>
         public static MenuTransition Current { get; private set; }
@@ -67,6 +71,9 @@ namespace KryticalNova.UI.Menus
         {
             Current = null;
             pendingPicture = null;
+            foreach (Texture2D picture in PagesSeen.Values)
+                if (picture != null) Destroy(picture);
+            PagesSeen.Clear();
         }
 
         private void Awake()
@@ -74,6 +81,18 @@ namespace KryticalNova.UI.Menus
             Current = this;
             if (still != null) still.enabled = false;
             if (page != null) page.enabled = false;
+            MenuBookSettings bookSettings = HasBook ? bookPrefab.Settings : null;
+            if (bookSettings != null && bookSettings.pageScale < 0.999f)
+            {
+                // At rest the screen is the right-hand page of the open book; the pictures of a turn lie on that
+                // page, and the turning leaf is seen across both pages.
+                atRest = gameObject.AddComponent<MenuPage>();
+                atRest.Open(bookSettings, GetComponentInParent<Canvas>());
+                Rect area = MenuPage.Area;
+                MenuPage.Place(still.rectTransform, area);
+                MenuPage.Place(page.rectTransform, new Rect(area.x - area.width, area.y, area.width * 2f, area.height));
+                if (cover != null) MenuPage.Place(cover.rectTransform, area);
+            }
             if (cover != null)
             {
                 material = new Material(cover.material); // never animate the shared asset
@@ -149,6 +168,7 @@ namespace KryticalNova.UI.Menus
             DropPending();
             pendingPicture = picture;
             pendingForward = forward;
+            Remember(SceneManager.GetActiveScene().name, picture);
             ShowStill(picture);
             if (cover != null) SetCovering(false);
 
@@ -158,6 +178,15 @@ namespace KryticalNova.UI.Menus
                 yield break;
             }
 
+            // The page turns into the world: the book is left behind, and the picture takes the whole view.
+            if (atRest != null)
+            {
+                atRest.Close();
+                atRest = null;
+                var whole = new Rect(0f, 0f, 1f, 1f);
+                MenuPage.Place(still.rectTransform, whole);
+                MenuPage.Place(page.rectTransform, whole);
+            }
             var from = SceneManager.GetActiveScene();
             transform.SetParent(null, false);
             DontDestroyOnLoad(gameObject);
@@ -184,9 +213,17 @@ namespace KryticalNova.UI.Menus
             turningBook.gameObject.SetActive(true);
             MenuBookSettings settings = turningBook.Settings;
 
+            // On the open book a turn back is a leaf that comes over from the left and lands on this page, showing
+            // this screen as it was last seen; the screen that was left stays on the page until the leaf covers it.
+            // (Not seen before in this run, the leaf of the screen that was left turns away instead, as going forward.)
+            bool spread = atRest != null;
+            Texture2D landing = null;
+            bool comingBack = spread && !forward && PagesSeen.TryGetValue(SceneManager.GetActiveScene().name, out landing) && landing != null;
+            Texture2D onLeaf = comingBack ? landing : turningPicture;
+
             // This scene draws for the first time under the flat picture, and the book makes its page.
             int frames = 0;
-            while (frames < (settings != null ? settings.holdFrames : 2) || !turningBook.Prepare(turningPicture, forward))
+            while (frames < (settings != null ? settings.holdFrames : 2) || !turningBook.Prepare(onLeaf, spread || forward, spread))
             {
                 if (++frames > FramesToWaitForTheBook) break;
                 yield return null;
@@ -201,13 +238,15 @@ namespace KryticalNova.UI.Menus
                 running = null;
                 yield break;
             }
-            yield return null; // the book's camera draws the flat page once
+            if (comingBack) turningBook.SetTurn(1f); // it starts lying on the left-hand page
+            yield return null; // the book's camera draws the page once where it starts
 
             page.texture = turningBook.Target;
-            // Turning back is the same turn in a mirror: the page leaves by the other edge.
-            page.uvRect = forward ? new Rect(0f, 0f, 1f, 1f) : new Rect(1f, 0f, -1f, 1f);
+            // Full-screen, turning back is the same turn in a mirror: the page leaves by the other edge. On the open
+            // book nothing is mirrored: the leaf goes over to the left, or comes back from it.
+            page.uvRect = spread || forward ? new Rect(0f, 0f, 1f, 1f) : new Rect(1f, 0f, -1f, 1f);
             page.enabled = true;
-            still.enabled = false;
+            if (!comingBack) still.enabled = false;
             if (cover != null) SetCovering(false); // the ink the screen started under is the cover page now
             // From here the screen underneath is the player's: the page takes no clicks and holds no keys back.
             opening = false;
@@ -221,18 +260,38 @@ namespace KryticalNova.UI.Menus
             while (elapsed < seconds)
             {
                 elapsed += Mathf.Min(Time.unscaledDeltaTime, MaxStep);
-                turningBook.SetTurn(settings.turn.Evaluate(Mathf.Clamp01(elapsed / seconds)));
+                float turned = settings.turn.Evaluate(Mathf.Clamp01(elapsed / seconds));
+                turningBook.SetTurn(comingBack ? 1f - turned : turned);
                 yield return null;
             }
             EndTurn();
             running = null;
         }
 
+        /// <summary>Keeps the picture of a menu screen for the turn back to it. The one kept before for that screen goes.</summary>
+        private static void Remember(string scene, Texture2D picture)
+        {
+            if (PagesSeen.TryGetValue(scene, out Texture2D before) && before != null && before != picture) Destroy(before);
+            PagesSeen[scene] = picture;
+        }
+
+        private static bool IsKept(Texture2D picture) => picture != null && PagesSeen.ContainsValue(picture);
+
         /// <summary>The screen as it is shown, as a picture that shows the same colours again.</summary>
         private static Texture2D TakePicture()
         {
             Texture2D taken = ScreenCapture.CaptureScreenshotAsTexture();
             if (taken == null) return null;
+            // On the open book the screen is the page only: the book round it is not part of the picture.
+            RectInt area = MenuPage.Pixels;
+            if (area.width > 16 && area.height > 16 && (area.width < taken.width || area.height < taken.height))
+            {
+                var cut = new Texture2D(area.width, area.height, taken.format, false, !GraphicsFormatUtility.IsSRGBFormat(taken.graphicsFormat));
+                cut.SetPixels(taken.GetPixels(Mathf.Clamp(area.x, 0, taken.width - area.width), Mathf.Clamp(area.y, 0, taken.height - area.height), area.width, area.height));
+                cut.Apply(false);
+                Destroy(taken);
+                taken = cut;
+            }
             // What comes back holds the screen's own (sRGB) values. Where the project works in linear colour it can
             // be marked as holding linear ones, and would then be shown too bright: the same values, marked right.
             if (QualitySettings.activeColorSpace == ColorSpace.Linear && !GraphicsFormatUtility.IsSRGBFormat(taken.graphicsFormat))
@@ -269,14 +328,14 @@ namespace KryticalNova.UI.Menus
                 still.texture = null;
             }
             if (turningBook != null) Destroy(turningBook.gameObject);
-            if (turningPicture != null) Destroy(turningPicture);
+            if (turningPicture != null && !IsKept(turningPicture)) Destroy(turningPicture);
             turningBook = null;
             turningPicture = null;
         }
 
         private static void DropPending()
         {
-            if (pendingPicture != null) Destroy(pendingPicture);
+            if (pendingPicture != null && !IsKept(pendingPicture)) Destroy(pendingPicture);
             pendingPicture = null;
         }
 

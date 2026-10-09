@@ -127,6 +127,18 @@ every vendor font asset out of every save, so building or playing never changes 
 
 ## 5. The menus are a comic book
 
+**At rest the screen is a page of the open book** (`MenuPage`, made by `MenuTransition` for its scene). The whole
+screen, its canvases and what its cameras draw, is shown at `MenuBookSettings.pageScale` (0.88) of the view on the
+book's right-hand page; round it the book is seen: the table, the edge of the page before with the fold's shadow, the
+edges of the pages under this one, and an ink line round the page. Nothing of a screen is rearranged: every overlay
+canvas's children go under one "Book Page" that is the canvas made smaller, each screen camera draws into the page's
+rectangle, and clicks, keys and drags work as before. `pageScale` 1 gives the full-screen menus back. On the open
+book a turn forward takes the leaf over onto the left-hand page; a turn back brings a leaf from the left that shows
+the screen as it was last seen in this run (`MenuTransition` keeps one picture per menu screen), landing on the
+screen that was left. The page from Loading turns into the world full-screen: the book is left behind there.
+Not done: the book round the page is drawn flat (it is not the MegaBook's own covers and spine), and the menus'
+Settings window (UI Toolkit) is laid over the book, not on the page.
+
 **What is built.** Every menu screen is a page. Leaving a screen takes its picture (the whole frame, interface
 included); the next scene loads under that picture; then the picture lifts off as a leaf of a MegaBook and turns away,
 and what it uncovers is the next screen, already live. Forward through the menus (Title, Character select, Faction

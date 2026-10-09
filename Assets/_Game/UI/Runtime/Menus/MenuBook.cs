@@ -75,7 +75,8 @@ namespace KryticalNova.UI.Menus
         /// so that it reads the right way round there. With no picture the leaf is the book's cover: solid ink,
         /// which shows the skin's dots as it curls.
         /// </summary>
-        public bool Prepare(Texture picture, bool forward)
+        /// <param name="spread">The view takes in both pages of the open book, the leaf's on the right: the leaf is seen all the way over onto the left one. Otherwise the view is the leaf's page alone.</param>
+        public bool Prepare(Texture picture, bool forward, bool spread = false)
         {
             if (Ready) return true;
             if (book == null || bookCamera == null || settings == null || askedPage == null || shownPage == null) return false;
@@ -106,12 +107,15 @@ namespace KryticalNova.UI.Menus
             // Straight above the page, at the height where it fills the view exactly: flat, it is the screen it shows.
             float distance = height * 0.5f / Mathf.Tan(settings.fieldOfView * 0.5f * Mathf.Deg2Rad);
             bookCamera.fieldOfView = settings.fieldOfView;
-            bookCamera.aspect = width / height;
+            bookCamera.aspect = (spread ? 2f : 1f) * width / height;
             bookCamera.nearClipPlane = Mathf.Min(0.02f, distance * 0.01f);
             bookCamera.farClipPlane = distance + width * 2f;
-            bookCamera.transform.SetPositionAndRotation(new Vector3(page.center.x, page.max.y + distance, page.center.z), Quaternion.Euler(90f, 0f, 0f));
+            // Over the middle of the page, or over the fold (the leaf's left edge) when both pages are in view.
+            float over = spread ? page.min.x : page.center.x;
+            bookCamera.transform.SetPositionAndRotation(new Vector3(over, page.max.y + distance, page.center.z), Quaternion.Euler(90f, 0f, 0f));
 
-            target = new RenderTexture(Mathf.Max(16, Screen.width), Mathf.Max(16, Screen.height), 24, RenderTextureFormat.ARGB32)
+            RectInt pixels = MenuPage.Pixels;
+            target = new RenderTexture(Mathf.Max(16, pixels.width * (spread ? 2 : 1)), Mathf.Max(16, pixels.height), 24, RenderTextureFormat.ARGB32)
             {
                 name = "Menu Book Page",
                 antiAliasing = 4,
