@@ -957,7 +957,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
   poiId: mob-sw
-  displayName: Hostile Zone SW
+  displayName: "Hostile Zone SW \xB7 Lv 7"
 --- !u!1001 &1700607
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5078,7 +5078,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
   poiId: mob-ne
-  displayName: Hostile Zone NE
+  displayName: "Hostile Zone NE \xB7 Lv 13"
 --- !u!1 &15744274
 GameObject:
   m_ObjectHideFlags: 0
@@ -62044,6 +62044,7 @@ GameObject:
   m_Component:
   - component: {fileID: 228518460}
   - component: {fileID: 228518461}
+  - component: {fileID: 228518462}
   m_Layer: 0
   m_Name: island-west
   m_TagString: Untagged
@@ -62082,6 +62083,20 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: 5fc5ceac32329ca4ab5a9db2c541b0fd, type: 2}
   hostilePrefab: {fileID: 1843217644261276650, guid: 3553b3909a0b8ae4d9846ef9e6eaf777, type: 3}
   bruiserPrefab: {fileID: 0}
+--- !u!114 &228518462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 228518459}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41c7177d2b110b04d9a0c81ffbe703b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
+  poiId: island-west
+  displayName: "Hostile Zone Island West \xB7 Lv 16"
 --- !u!1001 &228737633
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -140959,7 +140974,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
   poiId: mob-se
-  displayName: Hostile Zone SE
+  displayName: "Hostile Zone SE \xB7 Lv 10"
 --- !u!1 &498425857 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1042918869242066, guid: 075662da41c3dea46a40c0917389e28c, type: 3}
@@ -280789,6 +280804,7 @@ GameObject:
   m_Component:
   - component: {fileID: 990513357}
   - component: {fileID: 990513358}
+  - component: {fileID: 990513359}
   m_Layer: 0
   m_Name: north-gate
   m_TagString: Untagged
@@ -280827,6 +280843,20 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: 5fc5ceac32329ca4ab5a9db2c541b0fd, type: 2}
   hostilePrefab: {fileID: 5219855029039017329, guid: 6dac6a83ed66c92419228a928b316638, type: 3}
   bruiserPrefab: {fileID: 0}
+--- !u!114 &990513359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 990513356}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41c7177d2b110b04d9a0c81ffbe703b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
+  poiId: north-gate
+  displayName: "Hostile Zone North Gate \xB7 Lv 1"
 --- !u!1 &990804303 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1761206186323928, guid: 0ec46fb236c42504698f8f412026aac1, type: 3}
@@ -342415,7 +342445,7 @@ Transform:
   m_GameObject: {fileID: 1197532474}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.9622498, y: 18.133127, z: -2.7930908}
+  m_LocalPosition: {x: -6.9622498, y: 18.133127, z: -2.7931213}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -342436,7 +342466,7 @@ MonoBehaviour:
   version: 2
   globalVolume: 0
   mode: 0
-  size: {x: 902.12354, y: 53.769157, z: 909.90704}
+  size: {x: 902.12354, y: 53.769157, z: 909.907}
   overrideRendererFilters: 0
   minRendererVolumeSize: 0.1
   objectLayerMask:
@@ -477296,7 +477326,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
   poiId: mob-nw
-  displayName: Hostile Zone NW
+  displayName: "Hostile Zone NW \xB7 Lv 4"
 --- !u!1001 &1647137256
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -479273,6 +479303,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1653577866}
   - component: {fileID: 1653577867}
+  - component: {fileID: 1653577868}
   m_Layer: 0
   m_Name: portal-approach
   m_TagString: Untagged
@@ -479311,6 +479342,20 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: 5fc5ceac32329ca4ab5a9db2c541b0fd, type: 2}
   hostilePrefab: {fileID: 6196047574861375693, guid: 31693ff2d039ea14b8701fb976c47857, type: 3}
   bruiserPrefab: {fileID: 0}
+--- !u!114 &1653577868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1653577865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41c7177d2b110b04d9a0c81ffbe703b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
+  poiId: portal-approach
+  displayName: "Hostile Zone Portal Approach \xB7 Lv 22"
 --- !u!1001 &1653604642
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -565378,6 +565423,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1931863198}
   - component: {fileID: 1931863199}
+  - component: {fileID: 1931863200}
   m_Layer: 0
   m_Name: island-north
   m_TagString: Untagged
@@ -565416,6 +565462,20 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: 5fc5ceac32329ca4ab5a9db2c541b0fd, type: 2}
   hostilePrefab: {fileID: 8603685105435458532, guid: e7014724f8730084ab4782dd9c6a6c52, type: 3}
   bruiserPrefab: {fileID: 6595211121603245871, guid: 3b4d1d05fb141e443ac7afa50cb0296b, type: 3}
+--- !u!114 &1931863200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931863197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41c7177d2b110b04d9a0c81ffbe703b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.PointOfInterest
+  poiId: island-north
+  displayName: "Hostile Zone Island North \xB7 Lv 19"
 --- !u!1001 &1932230193
 PrefabInstance:
   m_ObjectHideFlags: 0

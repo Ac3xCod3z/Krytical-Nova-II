@@ -70,6 +70,9 @@ _Game/
 │                          SaveSystem/ (ISaveStore, ISaveParticipant, file and memory stores)
 │                          (future: Architecture/ Events/ Services/ Pooling/ Utilities/ Extensions/)
 ├── Gameplay/
+│   ├── Autopilot/         Runtime/ (PlayerAutopilot = the server's flag, zone and time; AutopilotController and MagnetController
+│   │                      run on the player's own game; AutopilotPreferences, MagnetRules)  Data/ + Data/Assets/ (AutopilotSettings)
+│   │                      Tests/Editor/
 │   ├── Combat/            Runtime/
 │   ├── Factions/          Runtime/ (ids, rules)  Data/ + Data/Assets/ (the three factions, catalog)  Editor/
 │   ├── CharacterCreation/ Runtime/ (recipe, look, roster, save, names)  Data/ + Data/Assets/ (lineages, palettes,
@@ -79,7 +82,7 @@ _Game/
 │   ├── Forge/             Runtime/ (PlayerGearWork: Tempering, Fusion, Tuning and Reforge at the Armorer. Sits above Items,
 │   │                      Economy, Progression and NPC, which is why it is its own system)
 │   ├── Hostiles/          Runtime/ (HostileNet = a Hostile on the network, HostileSpawner, HostilePool, HostileZone = one hunting
-│   │                      ground, HostileCorpse = the body burning away, IHostileBrain)  Data/ + Data/Assets/ (HostileStatCurve,
+│   │                      ground, HostileCorpse = the body burning away, HostileKillRewards and HostileLoot = what a kill pays, LevelGapRules, IHostileBrain)  Data/ + Data/Assets/ (HostileStatCurve,
 │   │                      HostileSettings, LevelGapSettings, Species/ = one HostileDefinition per species, Emerald/ = the melee
 │   │                      ability)  Emerald/Runtime/ (own assembly, the only game code that knows Emerald AI: HostileBrainLink,
 │   │                      KNEmeraldPlayerBridge)  Editor/ (HostileAssetBuilder, HostileZoneBuilder)  Shaders/ (HostileDissolve:
@@ -221,7 +224,8 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Persistence.Tests.Editor` | `Gameplay/Persistence/Tests/Editor/`     | EditMode tests (save stores, account documents)                                        |
 | `KryticalNova.Pets.Tests.Editor`  | `Gameplay/Pets/Tests/Editor/`                  | EditMode tests (pet growth, stages, hunger; when a pet speaks, and what the four pets say) |
 | `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides; where a pet's bubble goes; the faction skins and the menus' pick of one; Settings: APPLY and REVERT, the pages, the camera maths; the menus' comic book; the character creator in every skin; faction select's champions). Depends on Runtime, UI, Editor and Editor.Menus |
-| `KryticalNova.Hostiles.Tests.Editor` | `Gameplay/Hostiles/Tests/Editor/`           | EditMode tests (the Hostile stat curve against the game's damage formula at every level; the respawn queue of a Hostile Zone) |
+| `KryticalNova.Hostiles.Tests.Editor` | `Gameplay/Hostiles/Tests/Editor/`           | EditMode tests (the Hostile stat curve against the game's damage formula at every level; the respawn queue of a Hostile Zone; the level-gap table gap by gap; what a kill drops) |
+| `KryticalNova.Autopilot.Tests.Editor` | `Gameplay/Autopilot/Tests/Editor/`         | EditMode tests (what Magnet takes; saved Autopilot choices come back inside their limits) |
 | `KryticalNova.Icons.Tests.Editor` | `Icons/Tests/Editor/`                          | EditMode tests (the comic icon treatment, the icon library's rules, and that every skill and item shows an icon of its own). Depends on Runtime and Editor |
 | `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab; how hits look: the rules, a look of its own for every weapon class, no comic effect shared between two moments, the lettering layer and its pass, the pool's timing; the feel of the menus: a player for every menu moment, held by every menu scene and by the world, and a movement that leaves a thing where its animator put it). Depends on Runtime, GameFeel, UI. `!UNITY_SERVER` |
 

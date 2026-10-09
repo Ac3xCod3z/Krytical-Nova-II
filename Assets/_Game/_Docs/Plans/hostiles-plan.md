@@ -15,10 +15,17 @@ what a review of it against the code found on 9 October 2026, and what is built.
 | 5 GM base set | Done: `gm.hostile.list / spawn / clear / kill / info / hp / freeze / ignore / ttk / stats`, `gm.zone.list / fill / clear / respawn / sleep / bruiser`. |
 | 6 Networking | Done and checked on a host with a second client: same position, health, level, combat state and death; brain and NavMeshAgent off on the client; a client that walks away stops receiving the Hostile. |
 
-| 7 Hostile Zone runtime | Done: `HostileZone`, `HostilePool` (pooled on every peer through a Netcode prefab handler), `RespawnQueue`, sleep and wake, the map-wide cap. Checked: a zone fills from the pool, a kill and a respawn create nothing. The 300-Hostile soak has not been run. |
-| 8 Zone01 zones | Done: eight zones at the plan's positions (none had to move), `HostileZoneBuilder` and its rules. Not done: levels on the map labels, the zone toast. |
-| 9 Leash and aggro | Partly: attack on sight and fight back only both checked; a Hostile 15 m past its zone's edge gives up and is healed. Not done: dropping the target at the town gate, the 6 s out-of-reach rule (Emerald's own chase limit stands in). |
-| 13 Bruisers | Partly: Hellion (12) in the SE zone and Colossus (21) on Island North, at the zone's edge, with their own timer. No Bruiser rewards yet. |
+| 7 Hostile Zone runtime | Done: `HostileZone`, `HostilePool` (pooled on every peer through a Netcode prefab handler), `RespawnQueue`, sleep and wake, the map-wide cap. A kill and a respawn create nothing. The 300-Hostile soak has not been run. |
+| 8 Zone01 zones | Done: eight zones at the plan's positions (none had to move), `HostileZoneBuilder` and its rules, the level on the map labels, a notice on walking in. |
+| 9 Leash and aggro | Done: attack on sight and fight back only; a Hostile 15 m past its zone's edge gives up and is healed; one whose target steps onto neutral ground gives up too; a zone that falls asleep ends every fight in it. The plan's "out of reach for 6 s" rule is left to Emerald's own chase limit. |
+| 10 Level-gap XP, Squad XP, death penalty | Done: `LevelGapSettings`, `LevelGapRules`, `HostileKillRewards`; the Squad boost is hooked up; a Hostile above a player is harder to hit (`IHitChanceModifier`). |
+| 11 Nameplates | Done: `HostileNameplateController`. Checked: two clients at different levels see different colours on the same Hostile. |
+| 12 Comic combat effects | Done through the existing game feel: a Hostile's blow is a comic hit with its number for the player struck; a heavy attack shows a "!" and a swing ribbon for its windup. No new effects were made. |
+| 13 Bruisers | Done: Hellion (12) in the SE zone and Colossus (21) on Island North, at the zone's edge, with their own timer, six times the XP, five times the Creds and a 25 % gear drop of the best rarity their level has. Lucky Drops do not exist as an item yet. |
+| 14 Drops and kill credit | Done: `HostileLoot`. Creds are paid into the wallet, not dropped (they are not an item). `gm.hostile.loot` simulates kills. |
+| 15 Magnet | Done: `MagnetController`, `MagnetRules`, in the Autopilot window. |
+| 16 Autopilot | Done: `PlayerAutopilot`, `AutopilotController`, `AutopilotWindowController`, the Autopilot Chip (item 9030), the AUTO tag. Checked for 45 s in a zone, not for the plan's 30 minutes. The hunt radius is not drawn on the ground. |
+| 17 GM Tools window | Done: a Hostiles tab with every command. |
 | 18 Roster | Done from the owner's picks of 9 October 2026: eight species and two Bruisers. Names are proposals. Every species shares the unarmed animation set. |
 
 **Corpses (owner, 9 October 2026):** a dead Hostile lies for 3 s, burns away with the Fade Burn of the All In 1 Shader
@@ -26,7 +33,10 @@ Nodes pack (`HostileDissolve.shader`, `HostileCorpse`), and goes back to the poo
 
 **Bosses** are out of this plan altogether: the owner builds them as a separate system.
 
-Not built: tasks 10 to 12 and 14 to 17. Nothing rewards a kill yet, and a player hit by a Hostile sees only the health bar move.
+**Where what was built differs from the plan below:** Creds go into the wallet instead of lying on the ground; a
+Squad's drop is held for the one player who holds the kill (a drop can be held for one player only); Autopilot's
+attack skills and buffs are chosen as Hotbar slots; the Autopilot Chip's icon comes from the icon library, not from a
+Synty drone picture; the numbers of section 10 are replaced by `HostileStatCurve` (correction 1).
 
 ## Corrections to the plan below
 
@@ -36,7 +46,7 @@ Not built: tasks 10 to 12 and 14 to 17. Nothing rewards a kill yet, and a player
    (stat points, gear of the expected rarity) and how the fight should go (5 hits to kill, 25 to die, the player lands
    90 %, the Hostile 75 %); the Hostile's stats follow. The XP, Creds, aggro, speed and respawn formulas are the plan's.
    A tier multiplies the damage that gets through, not the raw Attack.
-2. **Level-gap hit modifier.** `CombatCalculator` has no input for it. Task 10 has to add one.
+2. **Level-gap hit modifier.** `CombatCalculator` had no input for it: it takes one now, and `HostileNet` supplies it.
 3. **Emerald behaviours** are Passive, Coward and Aggressive. Passive never fights. A species that only fights back is
    Aggressive and holds players as Neutral; one that attacks on sight holds them as Enemy.
 4. **Aggro from damage** waits 0.6 s inside Emerald. The link sets the target itself, at once.
@@ -47,8 +57,8 @@ Not built: tasks 10 to 12 and 14 to 17. Nothing rewards a kill yet, and a player
    A client's Animator does not fire events (the attack clips carry the event that makes Emerald strike).
 7. **Emerald on a client** still creates its pool object and its combat text canvas in `Awake`. Both are inert.
 8. **Pooling on clients** needs an `INetworkPrefabInstanceHandler`: `HostilePool` registers one per Hostile prefab.
-9. **Pet XP** already listens to `CombatEntity.AnyKilled` and pays whoever struck the last blow. Task 14 has to move it to
-   the holder of the first hit.
+9. **Pet XP** listened to `CombatEntity.AnyKilled` and paid whoever struck the last blow. A Hostile kill now pays the pet
+   of the holder of the first hit (`PlayerPet.ServerCreditHostileKill`).
 10. **Assemblies.** The game is one assembly joined by `.asmref` files; only the Emerald side is an assembly of its own.
 11. **Autopilot Chip icon.** There is no `ComicIconBaker`; icons are given through the Icon Library (`CLAUDE.md`).
 12. **Models.** No pack ships attack, hit or death clips. The stand-in uses Synty Base Locomotion, Emerald's demo unarmed

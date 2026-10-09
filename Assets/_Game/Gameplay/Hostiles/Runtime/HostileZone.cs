@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using KryticalNova.Core;
+using KryticalNova.Economy;
 using KryticalNova.Items;
 using KryticalNova.Progression;
 using Unity.Netcode;
@@ -34,6 +36,8 @@ namespace KryticalNova.Hostiles
         private bool wasListening;
         private bool? forcedAwake;
         private float respawnOverride = -1f;
+        private bool localInside;
+        private float nextNotice;
         private System.Action<HostileNet> onKilled; // one delegate for every Hostile, so a respawn allocates nothing
 
         /// <summary>Every Hostile Zone of the loaded map.</summary>
@@ -96,6 +100,7 @@ namespace KryticalNova.Hostiles
         private void Update()
         {
             if (definition == null || hostilePrefab == null || settings == null) return;
+            NoticeLocalPlayer();
             if (!HostileSpawner.HasAuthority) { if (started) Forget(); return; }
 
             // A session that starts or ends changes what a Hostile is (on the network or not): begin again.
@@ -141,6 +146,20 @@ namespace KryticalNova.Hostiles
                 budget--;
             }
             CallBackStrays();
+        }
+
+        /// <summary>On every peer: the player of this machine is told what hunts here as they walk in.</summary>
+        private void NoticeLocalPlayer()
+        {
+            if (Time.time < nextNotice) return;
+            nextNotice = Time.time + settings.zoneTickSeconds;
+            PlayerInventory local = PlayerInventory.Local;
+            bool inside = local != null && At(local.transform.position) == this;
+            if (inside == localInside) return;
+            localInside = inside;
+            if (!inside || definition.hostile == null) return;
+            string behaviour = definition.hostile.behaviour == HostileBehaviour.AttacksOnSight ? "attacks on sight" : "fights back only";
+            ClientPresentationRegistry.Messages?.ShowMessage($"{definition.displayName}  ·  Lv {definition.hostile.level} {definition.hostile.displayName}  ·  {behaviour}");
         }
 
         private bool IsBruiserSlot(int slot) => bruiserPrefab != null && slot == slots.Length - 1;
@@ -195,14 +214,19 @@ namespace KryticalNova.Hostiles
             return false;
         }
 
-        /// <summary>A Hostile pulled past the leash gives up: it drops its target, is healed and walks home.</summary>
+        /// <summary>
+        /// A Hostile pulled past the leash gives up: it drops its target, is healed and walks home. So does one
+        /// whose target has stepped onto neutral ground: no Hostile follows a player into town.
+        /// </summary>
         private void CallBackStrays()
         {
             float limit = Radius + settings.leashMetres;
             foreach (HostileNet hostile in slots)
             {
-                if (hostile == null || !hostile.Entity.IsAlive || hostile.Brain == null || hostile.Brain.Target == null) continue;
-                if (Flat(hostile.transform.position - Centre).sqrMagnitude <= limit * limit) continue;
+                if (hostile == null || !hostile.Entity.IsAlive || hostile.Brain == null) continue;
+                Transform chased = hostile.Brain.Target;
+                if (chased == null) continue;
+                if (Flat(hostile.transform.position - Centre).sqrMagnitude <= limit * limit && !TradeZone.CrossFactionAt(chased.position)) continue;
                 hostile.Brain.Calm();
                 hostile.Entity.ResetHealth();
                 hostile.ReleaseTag();

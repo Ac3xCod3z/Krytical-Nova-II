@@ -111,6 +111,7 @@ namespace KryticalNova.EditorTools.Hostiles
                 so.FindProperty("hostilePrefab").objectReferenceValue = species;
                 so.FindProperty("bruiserPrefab").objectReferenceValue = bruiser;
                 so.ApplyModifiedPropertiesWithoutUndo();
+                LabelOnMap(go, row, species.Definition);
             }
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
@@ -118,6 +119,22 @@ namespace KryticalNova.EditorTools.Hostiles
             List<string> problems = Validate();
             if (problems.Count == 0) Debug.Log($"[Hostile Zones] {placed.Count} zones placed; every rule holds. Save the scene to keep them.");
             else Debug.LogError($"[Hostile Zones] {placed.Count} zones placed, {problems.Count} problem(s):\n" + string.Join("\n", problems));
+        }
+
+        /// <summary>
+        /// The zone's name on the map and its teleport point (gm.tp), with its level. The four corner zones have a
+        /// point of the town builder's already, which is renamed; the others get one on the zone itself.
+        /// </summary>
+        private static void LabelOnMap(GameObject zone, Row row, HostileDefinition species)
+        {
+            PointOfInterest point = null;
+            foreach (PointOfInterest existing in Object.FindObjectsByType<PointOfInterest>(FindObjectsInactive.Include))
+                if (string.Equals(existing.Id, row.Id, System.StringComparison.OrdinalIgnoreCase)) { point = existing; break; }
+            if (point == null) point = zone.AddComponent<PointOfInterest>();
+            var so = new SerializedObject(point);
+            so.FindProperty("poiId").stringValue = row.Id;
+            so.FindProperty("displayName").stringValue = $"{row.Name} · Lv {species.level}";
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         [MenuItem("Krytical Nova/World/Validate Hostile Zones")]

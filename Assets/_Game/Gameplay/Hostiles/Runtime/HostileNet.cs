@@ -236,6 +236,13 @@ namespace KryticalNova.Hostiles
             if (!HasAuthority || asleep == value) return;
             asleep = value;
             if (!setUp || !entity.IsAlive) return;
+            if (value)
+            {
+                // Nobody is near: whatever fight it was in is over, and it wakes fresh.
+                if (brain != null) brain.Calm();
+                entity.ResetHealth();
+                ReleaseTag();
+            }
             if (brain != null) brain.SetAwake(!value);
             if (animator != null) animator.enabled = !value;
         }

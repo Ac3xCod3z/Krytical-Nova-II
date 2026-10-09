@@ -42,7 +42,7 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 | The Herald (a Creds sink; numbers in `NovaSettings`, see the gear spec section 9) | Ascension: 500,000 an attempt, with 100 Renown. On average +0 to +24 takes about 51 attempts (25.7M Creds, 5,100 Renown) and +0 to +96 about 275 (138M Creds, 27,500 Renown). Nova Standings cost Renown only: 65,800 a track |
 | Income target, Creds per hour at level 1 / 20 / 40 / 60 / 80 / 100 / 112 | 3k / 25k / 90k / 250k / 600k / 1.2M / 2M |
 
-- **Nothing pays Creds yet.** They enter only through `gm.creds`. The income target is the design number Hostile drops, Contracts and vendors must be tuned against when they are built.
+- **Hostile kills pay Creds** (since 9 Oct 2026): straight into the wallet of the player who holds the kill (`HostileLoot`, `CredsSource.HostileKill`), 70 % of kills, the amount from `HostileStatCurve` (3 + 1.1 per level times the expected gear rarity, 20 % either way), scaled by the level gap. At level 1 that is about half the income target at 600 kills an hour: to tune. Otherwise Creds enter only through `gm.creds`; Contracts and vendors are not built.
 - **The ledger** (`CredsLedger`, `gm.creds.report`) counts Creds by source and sink since the server started, so real earn rates can be set beside the target.
 - **The forge is the first Creds sink a player chooses to pay** (`CredsSink.GearWork`, counted by the ledger). Tuning also costs Renown (10 / 25 / 50 an attempt), which nothing pays yet.
 - **The Herald is the second** (`CredsSink.Herald`): every Ascension attempt takes its Creds whether it rises, holds or slips. It is the long sink of the end game, and the one that makes Renown worth earning; both of its ladders wait on a Renown source.
@@ -55,7 +55,7 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 - Click a drop to walk over and take it; **~** takes the nearest within 3.5 m. The server checks reach, who it is held for, and Pack space. What does not fit stays.
 - The character crouches (the Synty Base Locomotion Stand-to-Crouch and Crouch-to-Stand clips: no pack has a pick-up clip) and turns to the item; the parcel goes to the hand. Everyone sees it.
 - **Dropping from the Pack:** the item is held for its dropper for **20 seconds**, then it is free for all, whatever their faction (`PlayerLoot.dropsOpenToEveryone`; off limits it to the dropper's faction). The dropper sees a small countdown notice above the hotbar; labels over held drops show the seconds left.
-- Hostile drops come with Hostiles: `PlayerLoot.ServerPlace` is the call to make.
+- Hostile drops (since 9 Oct 2026): a Stim (6 %) or a piece of ladder gear of the Hostile's level (2.5 %; a Bruiser 25 %, of the best rarity its level has) falls where it died, through `PlayerLoot.ServerPlaceAt`, held for the player who holds the kill for the usual 20 s. Chances are `HostileSettings`. Magnet (`MagnetController`) picks up what a player's filter wants.
 
 ## Vault and Deep Vault (row 14)
 
