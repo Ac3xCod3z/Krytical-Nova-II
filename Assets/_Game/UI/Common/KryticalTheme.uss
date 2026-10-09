@@ -89,6 +89,24 @@
     border-bottom-color: rgba(114, 222, 196, 0.28);
 }
 
+/* A rule across a window with a pip at its middle: it parts one section of a page from the next. */
+.kn-rule {
+    align-self: stretch;
+    height: 1px;
+    margin: 6px 24px;
+    background-color: rgba(114, 222, 196, 0.35);
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+.kn-rule-pip {
+    position: absolute;
+    width: 10px; height: 10px;
+    top: -5px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active.png#SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active");
+    -unity-background-image-tint-color: rgb(114, 222, 196);
+}
+
 /* ------------------------------------------------------------------ text roles */
 
 .kn-eyebrow, .eyebrow {

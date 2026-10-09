@@ -24,6 +24,12 @@
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
             <ui:Button name="close-equipment" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
         </ui:VisualElement>
+        <!-- Whose equipment this is: the name between two rules, as the packs head a paper doll -->
+        <ui:VisualElement class="doll-band" picking-mode="Ignore">
+            <ui:VisualElement class="kn-rule" picking-mode="Ignore"><ui:VisualElement class="kn-rule-pip" picking-mode="Ignore" /></ui:VisualElement>
+            <ui:Label name="equipment-name" text="" class="doll-name" picking-mode="Ignore" />
+            <ui:Label name="equipment-rank" text="" class="muted doll-rank" picking-mode="Ignore" />
+        </ui:VisualElement>
         <ui:VisualElement class="equipment-body">
             <ui:VisualElement class="equip-column">
                 <ui:VisualElement name="equip-Weapon" class="equip-slot"><ui:Label text="WEAPON" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
@@ -54,7 +60,8 @@
                 <ui:VisualElement name="equip-Pet" class="equip-slot"><ui:Label text="PET" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement class="prompt-row" picking-mode="Ignore">
+        <ui:VisualElement class="kn-rule doll-foot-rule" picking-mode="Ignore"><ui:VisualElement class="kn-rule-pip" picking-mode="Ignore" /></ui:VisualElement>
+        <ui:VisualElement class="prompt-row doll-prompts" picking-mode="Ignore">
             <ui:VisualElement class="key-mouse mouse-right" picking-mode="Ignore" /><ui:Label text="Unequip" class="prompt-text" picking-mode="Ignore" />
             <ui:VisualElement class="key-mouse mouse-left" picking-mode="Ignore" /><ui:Label text="Options" class="prompt-text" picking-mode="Ignore" />
         </ui:VisualElement>
@@ -66,20 +73,28 @@
             <ui:Label text="PACK" class="heading" />
             <ui:Label name="key-pack" text="[I]" class="muted header-key" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
-            <ui:Label name="inventory-count" text="0 / 144" class="accent inventory-count" />
-            <ui:Button name="inventory-sort" text="SORT" class="inventory-sort" />
             <ui:Button name="close-inventory" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
         </ui:VisualElement>
-        <!-- Page tabs: hover one while dragging an item to switch pages -->
+        <!-- Page tabs, joined to the well the grid lies in: hover one while dragging an item to switch pages -->
         <ui:VisualElement class="row inventory-pages">
             <ui:Button name="inventory-page-0" text="I" class="inventory-page" />
             <ui:Button name="inventory-page-1" text="II" class="inventory-page" />
             <ui:Button name="inventory-page-2" text="III" class="inventory-page" />
         </ui:VisualElement>
-        <ui:VisualElement name="inventory-grid" class="inventory-grid" />
+        <ui:VisualElement class="inventory-well">
+            <ui:VisualElement name="inventory-grid" class="inventory-grid" />
+        </ui:VisualElement>
+        <!-- The foot bar: how full the Pack is, SORT, and the Creds carried -->
         <ui:VisualElement class="row inventory-footer">
-            <ui:Label text="CREDS" class="muted inventory-creds-label" />
-            <ui:Label name="inventory-creds" text="0" class="accent inventory-creds" />
+            <ui:Label text="SLOTS" class="muted inventory-foot-label" />
+            <ui:Label name="inventory-count" text="0 / 144" class="accent inventory-count" />
+            <ui:Button name="inventory-sort" text="SORT" class="inventory-sort" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:VisualElement class="creds-chip" picking-mode="Ignore">
+                <ui:VisualElement class="creds-pip" picking-mode="Ignore" />
+                <ui:Label text="CREDS" class="muted inventory-foot-label" picking-mode="Ignore" />
+                <ui:Label name="inventory-creds" text="0" class="accent inventory-creds" picking-mode="Ignore" />
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement class="prompt-row" picking-mode="Ignore">
             <ui:VisualElement class="key-mouse mouse-right" picking-mode="Ignore" /><ui:Label text="Equip · Use" class="prompt-text" picking-mode="Ignore" />

@@ -185,7 +185,11 @@ namespace KryticalNova.UI
             {
                 inventory.Changed -= RefreshBag;
                 inventory.RequestFailed -= OnRequestFailed;
-                if (progression != null) progression.Changed -= RefreshBag;
+                if (progression != null)
+                {
+                    progression.Changed -= RefreshBag;
+                    progression.Changed -= RefreshOwner;
+                }
                 if (equipment != null) equipment.SlotChanged -= OnSlotChanged;
                 if (wallet != null) wallet.Changed -= RefreshCreds;
             }
@@ -198,6 +202,10 @@ namespace KryticalNova.UI
             if (progression != null) progression.Changed += RefreshBag;
             wallet = next != null ? next.GetComponent<PlayerWallet>() : null;
             if (wallet != null) wallet.Changed += RefreshCreds;
+            if (identity != null) identity.Changed -= RefreshOwner;
+            if (progression != null) progression.Changed += RefreshOwner;
+            identity = next != null ? next.GetComponent<KryticalNova.Player.PlayerIdentity>() : null;
+            if (identity != null) identity.Changed += RefreshOwner;
             if (inventory != null)
             {
                 inventory.Changed += RefreshBag;
@@ -209,6 +217,20 @@ namespace KryticalNova.UI
             RefreshBag();
             RefreshEquipment();
             RefreshCreds();
+            RefreshOwner();
+        }
+
+        // Whose equipment the page shows: the name, and under it the level and the lineage.
+        private KryticalNova.Player.PlayerIdentity identity;
+
+        private void RefreshOwner()
+        {
+            if (root == null) return;
+            Label name = root.Q<Label>("equipment-name"), rank = root.Q<Label>("equipment-rank");
+            if (name != null) name.text = identity != null ? identity.CharacterName : string.Empty;
+            if (rank == null) return;
+            string lineage = identity != null && identity.Lineage != null ? identity.Lineage.displayName.ToUpperInvariant() : string.Empty;
+            rank.text = progression != null ? $"LEVEL {progression.CurrentLevel}  {lineage}".TrimEnd() : lineage;
         }
 
         private void RefreshCreds()

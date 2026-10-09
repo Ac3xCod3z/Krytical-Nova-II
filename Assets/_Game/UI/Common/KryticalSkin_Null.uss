@@ -38,6 +38,13 @@
 .kn-faction-null .kn-header {
     border-bottom-color: rgba(222, 65, 73, 0.28);
 }
+.kn-faction-null .kn-rule {
+    background-color: rgba(222, 65, 73, 0.35);
+}
+.kn-faction-null .kn-rule-pip {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Circle_01_Med_Clean.png#SPR_HUD_DarkFantasy_Circle_01_Med_Clean");
+    -unity-background-image-tint-color: rgb(222, 65, 73);
+}
 .kn-faction-null .kn-eyebrow, .kn-faction-null .eyebrow {
     font-size: 14.08px;
     color: rgb(144, 104, 214);
@@ -475,6 +482,12 @@
 .kn-faction-null .header-key {
     font-size: 14.08px;
 }
+.kn-faction-null .doll-name {
+    font-size: 23.04px;
+}
+.kn-faction-null .doll-rank {
+    font-size: 14.08px;
+}
 .kn-faction-null .item-cell, .kn-faction-null .equip-slot {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_03.png#SPR_HUD_DarkFantasy_Box_Small_Parchment_03");
     -unity-background-image-tint-color: rgba(72, 49, 80, 0.85);
@@ -500,8 +513,8 @@
     -unity-font-definition: url("/Assets/Synty/InterfaceDarkFantasyHUD/Fonts/Markazi/MarkaziText-SemiBold.ttf");
 }
 .kn-faction-null .equip-label {
-    font-size: 11.52px;
-    color: rgb(171, 151, 178);
+    font-size: 10.24px;
+    color: rgba(171, 151, 178, 0.75);
 }
 .kn-faction-null .item-cell:hover, .kn-faction-null .equip-slot:hover {
     -unity-background-image-tint-color: rgba(113, 78, 124, 0.95);
@@ -515,17 +528,36 @@
 .kn-faction-null .drop-valid {
     -unity-background-image-tint-color: rgba(112, 0, 6, 0.95);
 }
+.kn-faction-null .inventory-well {
+    background-color: rgba(13, 6, 16, 0.55);
+    border-color: rgba(222, 65, 73, 0.28);
+}
 .kn-faction-null .inventory-page {
     font-size: 14.08px;
 }
 .kn-faction-null .inventory-page.selected {
     color: rgb(222, 65, 73);
+    border-bottom-color: rgb(222, 65, 73);
+}
+.kn-faction-null .inventory-foot-label {
+    font-size: 12.8px;
 }
 .kn-faction-null .inventory-count {
     font-size: 15.36px;
 }
 .kn-faction-null .inventory-sort {
     font-size: 14.08px;
+}
+.kn-faction-null .creds-chip {
+    background-color: rgba(13, 6, 16, 0.55);
+    border-color: rgba(144, 104, 214, 0.45);
+}
+.kn-faction-null .creds-pip {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Circle_01_Med_Clean.png#SPR_HUD_DarkFantasy_Circle_01_Med_Clean");
+    -unity-background-image-tint-color: rgb(144, 104, 214);
+}
+.kn-faction-null .inventory-creds {
+    font-size: 16.64px;
 }
 .kn-faction-null .preview-frame {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_01.png#SPR_HUD_DarkFantasy_Box_Small_Parchment_01");
