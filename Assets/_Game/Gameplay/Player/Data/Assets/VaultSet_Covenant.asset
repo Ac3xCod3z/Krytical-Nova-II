@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c11fcaa4b13972441a949beb4fac35c1, type: 3}
+  m_Name: VaultSet_Covenant
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.VaultAnimationSet
+  low:
+    clip: {fileID: 7400000, guid: 8cbbf2f30ccf39444b06f815286e35e0, type: 2}
+    window: {x: 0.64, y: 1.14}
+    poseClearance: 0.27
+    airTime: {x: 0.45, y: 0.8}
+    takeoffDistance: 1
+    landingDistance: 1
+  middle:
+    clip: {fileID: 7400000, guid: 3fec5a2ae95da6846bb7fe50e26a8327, type: 2}
+    window: {x: 0.73, y: 1.53}
+    poseClearance: 1.33
+    airTime: {x: 0.5, y: 0.9}
+    takeoffDistance: 1.1
+    landingDistance: 1.1
+  tall:
+    clip: {fileID: 7400000, guid: 0ad87501ecd865042a97c938611c4d59, type: 2}
+    window: {x: 0.65, y: 1.47}
+    poseClearance: 1.59
+    airTime: {x: 0.6, y: 1}
+    takeoffDistance: 1.5
+    landingDistance: 1.5

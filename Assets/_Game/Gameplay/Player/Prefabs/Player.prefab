@@ -819,29 +819,8 @@ MonoBehaviour:
   minimumDistanceSaved: 0
   maximumLandingStep: 0.5
   clearance: 0.12
-  low:
-    clip: {fileID: 7400000, guid: 434b1704a6ba9c1458b8d0f2c9448e6b, type: 3}
-    window: {x: 0.2, y: 0.85}
-    poseClearance: 0.35
-    airTime: {x: 0.3, y: 0.55}
-    takeoffDistance: 0.9
-    landingDistance: 0.85
-  middleFromHeight: 0.75
-  middle:
-    clip: {fileID: 7400000, guid: ef59d56b21918e54eb69f48821ece4a9, type: 2}
-    window: {x: 0.3, y: 0.95}
-    poseClearance: 1.2
-    airTime: {x: 0.36, y: 0.62}
-    takeoffDistance: 0.9
-    landingDistance: 0.85
-  tallFromHeight: 1.35
-  tall:
-    clip: {fileID: 1827226128182048838, guid: 08940ae74eb4cf445bc0c086f238af20, type: 3}
-    window: {x: 0, y: 0.5}
-    poseClearance: 0.25
-    airTime: {x: 0.55, y: 0.8}
-    takeoffDistance: 1.5
-    landingDistance: 1.5
+  animations: {fileID: 11400000, guid: de423237c55b82a4e8e6b1f78cce3b25, type: 2}
+  traversal: {fileID: 11400000, guid: 94dee963f0d190a429f1323c9a7c82ce, type: 2}
   fadeIn: 0.08
   fadeOut: 0.15
   warpTemplate: {fileID: 11400000, guid: 58f1fce925d87974e9b69ec4c90ddb6c, type: 2}

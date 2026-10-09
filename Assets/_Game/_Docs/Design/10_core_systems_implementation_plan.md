@@ -143,7 +143,31 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
     height: a hurdle below 0.75 m, a hands-on leapfrog from 0.75 m, a front flip from 1.35 m (dumpsters, hedges). Like
     the jump, Animancer plays the pose and KINEMATION Motion Warping moves the root on one clock
     (`Warp_Player_Vault.asset`, built by Krytical Nova ▸ Player ▸ Build Vault Warp Asset); the time in the air follows
-    the current speed, so a run is not slowed down. All limits and the three styles are fields on the Player prefab.
+    the current speed, so a run is not slowed down. The limits are fields on the Player prefab.
+    **Since 9 Oct 2026 the animations are data** (`Gameplay/Player/Data/Assets/`): a `VaultAnimationSet` holds one style
+    per height class (clip, the part of it played, how high it carries the legs by itself, time in the air, run either
+    side); `VaultAnimationMap` says which set a faction and body type uses, with a default set for everyone else; and
+    `TraversalSettings` holds the two heights that sort an obstacle into low, middle or tall (0.75 m, 1.35 m). The
+    obstacle's height picks the style inside the character's set. A set with no clip for a height falls back to the
+    faction's set for both bodies, then to the default set, always for that same height. Every machine resolves it
+    from the player's replicated faction and body type and the height the vault message already carries, so all of
+    them play the same clip. The default set is the three styles above. Each faction has a set of its own from the
+    **Vault Animation Pack** (Voxel Vision; ten vaults, each led left and right, **no body-type and no height
+    variants**), sorted by how high each clip carries the legs on the player's model (measured, not judged by eye):
+
+    | | Low (under 0.75 m) | Middle (0.75 to 1.35 m) | Tall (from 1.35 m) |
+    | --- | --- | --- | --- |
+    | Hegemony | vault 08 (legs 0.48 m up) | 01 (0.93 m) | 06 (1.50 m) |
+    | Null | 10 (0.81 m) | 03 (1.21 m) | 04 (1.99 m, a flip) |
+    | Covenant | 09 (0.27 m, a hand on the obstacle) | 05 (1.33 m) | 02 (1.59 m, a flip) |
+
+    Both body types of a faction share its set (an entry for one body type can be added to the map in the Inspector);
+    vault 07 is unused (it drifts half a metre sideways), and so are the right-led clips. The pack bakes its whole run
+    into the pose, so each clip used has a first-party copy (`Characters/Player/Animations/Vaults/`) that leaves the
+    run and the turn to the root, where the motor ignores them, and keeps the rise in the pose. The builder
+    (Krytical Nova ▸ Player ▸ Build Vault Warp Asset) writes the sets from a table and keeps any style already in a
+    set, so numbers tuned in the Inspector survive a re-run. The split between the factions is a first proposal,
+    made from the measurements: it has not been judged by eye from the side.
 - **Asset Directory Structure (`Assets/_Game/Gameplay/Progression/Data/Assets/`):**
   - `Skills/SelfBuffSkills/`: The 8 Phase 3 self-buff and master skills.
   - `Skills/MovementSkills/`: `Jump.asset`, `Run.asset`, `Movement.asset`, `JumpMotion.asset`.

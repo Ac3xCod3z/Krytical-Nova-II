@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using Kinemation.MotionWarping.Runtime.Core;
 using Kinemation.MotionWarping.Runtime.Utility;
+using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
+using KryticalNova.Factions;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
@@ -11,29 +13,12 @@ using WarpComponent = Kinemation.MotionWarping.Runtime.Core.MotionWarping;
 
 namespace KryticalNova.Player
 {
-    /// <summary>How one height class of obstacle is vaulted.</summary>
-    [Serializable]
-    public struct VaultStyle
-    {
-        public AnimationClip clip;
-        [Tooltip("Seconds of the clip that are the vault itself (x = feet leave the ground, y = feet touch down).")]
-        public Vector2 window;
-        [Tooltip("How far above the ground the body's lowest point is while it crosses, with the root left on the ground. " +
-                 "The root is only raised by what the obstacle needs beyond this.")]
-        [Min(0f)] public float poseClearance;
-        [Tooltip("Seconds in the air (x = shortest, y = longest). The vault takes distance / current speed, kept inside " +
-                 "this range, so a run is not slowed down more than the move needs.")]
-        public Vector2 airTime;
-        [Tooltip("Feet to the obstacle's near face when the vault starts.")]
-        [Min(0.3f)] public float takeoffDistance;
-        [Tooltip("The obstacle's far face to the feet on landing.")]
-        [Min(0.3f)] public float landingDistance;
-    }
-
     /// <summary>
     /// Vaults low obstacles that stand in the way of a move command, so the character goes over a bench, a barrier, a
-    /// dumpster or a hedge instead of walking round it. Three height classes, each with its own animation: a hurdle
-    /// for low obstacles, a hands-on leapfrog for middling ones and a front flip for the tallest. Built like the
+    /// dumpster or a hedge instead of walking round it. Three height classes (<see cref="TraversalSettings"/>), each
+    /// with its own animation, and the animations are the character's faction's and body type's own where the map
+    /// has a set for them (<see cref="VaultAnimationMap"/>; the default set otherwise: a hurdle for low obstacles, a
+    /// hands-on leapfrog for middling ones and a front flip for the tallest). Built like the
     /// jump: Animancer plays the pose and KINEMATION Motion Warping carries the root, both on one clock, from wherever
     /// the character is when it reaches the obstacle to a landing point on the NavMesh behind it.
     ///
@@ -43,7 +28,8 @@ namespace KryticalNova.Player
     /// is one the agent is sent to its take-off point, the vault starts as the agent gets there (without stopping),
     /// and <see cref="Landed"/> hands the rest of the journey back to the caller. A move that starts without one (a
     /// building is in the way first) is watched with <see cref="Watch"/> and gets its vault once the line has
-    /// cleared. Planned and run where movement is authoritative; other peers replay it.
+    /// cleared. Planned and run where movement is authoritative; other peers replay it, and pick the same
+    /// animation from the obstacle's height and the player's replicated faction and body type.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerMovementSkills), typeof(PlayerResources))]
@@ -87,19 +73,13 @@ namespace KryticalNova.Player
         [Tooltip("The landing may be this much higher or lower than the take-off.")]
         [SerializeField, Min(0f)] private float maximumLandingStep = 0.5f;
 
-        [Header("Styles by obstacle height")]
+        [Header("Animations (built by Krytical Nova/Player/Build Vault Warp Asset)")]
         [Tooltip("Gap kept between the body and the top of the obstacle.")]
         [SerializeField, Min(0f)] private float clearance = 0.12f;
-        [Tooltip("Low obstacles (crates, benches): a hurdle.")]
-        [SerializeField] private VaultStyle low;
-        [Tooltip("Obstacles this tall and taller use the middle style.")]
-        [SerializeField, Min(0f)] private float middleFromHeight = 0.75f;
-        [Tooltip("Middling obstacles (barriers, bins, railings): a leapfrog with the hands on the obstacle.")]
-        [SerializeField] private VaultStyle middle;
-        [Tooltip("Obstacles this tall and taller use the tall style. 1.35 m puts the dumpsters (1.38 to 1.41 m) in it with the hedges.")]
-        [SerializeField, Min(0f)] private float tallFromHeight = 1.35f;
-        [Tooltip("The tallest obstacles (dumpsters, hedges): a front flip over the top.")]
-        [SerializeField] private VaultStyle tall;
+        [Tooltip("Which set of vault animations a faction and body type uses, and the default set.")]
+        [SerializeField] private VaultAnimationMap animations;
+        [Tooltip("The heights that sort an obstacle into the low, middle or tall style.")]
+        [SerializeField] private TraversalSettings traversal;
         [SerializeField, Min(0.01f)] private float fadeIn = 0.08f;
         [SerializeField, Min(0.01f)] private float fadeOut = 0.15f;
 
@@ -120,6 +100,7 @@ namespace KryticalNova.Player
         private PlayerResources resources;
         private PlayerAnimancerMotor animancerMotor;
         private PlayerJumpMotor jumpMotor;
+        private PlayerIdentity identity;
         private NavMeshPath scratchPath;
         private MotionWarpingAsset warpAsset;
 
@@ -147,9 +128,19 @@ namespace KryticalNova.Player
         public string LastDecision { get; private set; } = string.Empty;
 
         private bool Ready => warpTemplate != null && motionWarping != null && animancerMotor != null
-            && low.clip != null && middle.clip != null && tall.clip != null && warpTemplate.animation != null;
+            && animations != null && animations.IsUsable && traversal != null && warpTemplate.animation != null;
 
-        private VaultStyle StyleFor(float top) => top >= tallFromHeight ? tall : top >= middleFromHeight ? middle : low;
+        /// <summary>
+        /// The style for an obstacle this tall: the character's faction's and body's own for that height, or the
+        /// default set's. Faction and body type are the same on every machine, so each resolves the same clip.
+        /// </summary>
+        private VaultStyle StyleFor(float top)
+        {
+            FactionId faction = identity != null ? identity.Faction : FactionId.None;
+            BodyType body = identity != null ? identity.State.bodyType : BodyType.Masculine;
+            animations.TryResolve(faction, body, traversal.HeightOf(top), out VaultStyle style);
+            return style;
+        }
         private bool HasAuthority => !IsSpawned || IsServer;
 
         private void Awake()
@@ -159,6 +150,7 @@ namespace KryticalNova.Player
             resources = GetComponent<PlayerResources>();
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
             jumpMotor = GetComponent<PlayerJumpMotor>();
+            identity = GetComponent<PlayerIdentity>();
             scratchPath = new NavMeshPath();
             if (warpTemplate != null)
             {
