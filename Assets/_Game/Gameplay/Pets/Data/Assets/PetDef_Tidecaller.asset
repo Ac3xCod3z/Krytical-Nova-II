@@ -44,4 +44,7 @@ MonoBehaviour:
     glow: {r: 0.24705882, g: 0.654902, b: 0.8392157, a: 1}
     glowStrength: 1
   chatter: {fileID: 11400000, guid: 4c61681394ba4d84ba1d7ba615e88809, type: 2}
+  bobs: 1
+  footEffect: {fileID: 0}
+  footBones: []
   followGapAdjust: 0

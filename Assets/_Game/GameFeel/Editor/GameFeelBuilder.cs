@@ -302,6 +302,8 @@ namespace KryticalNova.EditorTools
 
         /// <summary>The sparkles that come off an evolved pet. White: PetFollower tints them with the stage's colour.</summary>
         public const string PetGlowPath = VfxFolder + "/PFX_Pet_Glow.prefab";
+        /// <summary>The cloud under one foot of a pet that stands: small cartoon puffs that hold it up and drift away behind it.</summary>
+        public const string PetCloudPath = VfxFolder + "/PFX_Pet_Cloud.prefab";
         private const string OldPetAuraPath = VfxFolder + "/PFX_Pet_Aura.prefab"; // orbiting ribbons, replaced 6 Oct 2026
         private static readonly string[] PetCameraPlayers = { "Pet Evolved" };
         private static readonly string[] PetWorldPlayers = { "Pet Evolved" };
@@ -313,6 +315,7 @@ namespace KryticalNova.EditorTools
             Make("FX_LightRayRound_01", "PFX_Pet_EvolveRays", 0.45f, Yellow);
             Make("FX_Sparkles_Large_01", "PFX_Pet_EvolveSparkles", 0.5f);
             Make("FX_Sparkles_Small_01", "PFX_Pet_Glow", 1f, Color.white, loop: true, then: ShapePetGlow);
+            BuildPetCloud();
             if (AssetDatabase.LoadAssetAtPath<GameObject>(OldPetAuraPath) != null) AssetDatabase.DeleteAsset(OldPetAuraPath);
         }
 
@@ -375,6 +378,96 @@ namespace KryticalNova.EditorTools
 
             var renderer = keep.GetComponent<ParticleSystemRenderer>();
             if (renderer != null) renderer.trailMaterial = null;
+        }
+
+        /// <summary>Builds only the cloud a standing pet has under each foot; nothing else of the game feel is touched.</summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Pet Cloud")]
+        public static void BuildPetCloud()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            Make("FX_Steam_01", "PFX_Pet_Cloud", 1f, loop: true, then: ShapePetCloud);
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// The cloud under one foot: a few small solid white cartoon puffs that swell up under the paw and drift
+        /// slowly straight back from the pet, never down, sideways or forwards, with only a slight waver from noise,
+        /// shrinking away as they go, as if they were what holds the pet in the air.
+        /// PetFollower wears one under each foot, facing the way the pet faces (so -Z is behind it), and keeps the
+        /// puffs in the pet's space, so speeds here are in the pet's own units. Sizes are for a footprint 1 m long,
+        /// which PetFollower sizes to the pet; the puff mesh is 13 cm across, hence the numbers: under the fox
+        /// (0.55 m long) a puff is 3.5 to 6 cm and drifts some 8 cm in its two seconds.
+        /// </summary>
+        private static void ShapePetCloud(GameObject root)
+        {
+            var systems = root.GetComponentsInChildren<ParticleSystem>(true);
+            ParticleSystem keep = systems.Length > 0 ? systems[0] : null;
+            foreach (var extra in systems)
+                if (extra != keep && extra != null && extra.gameObject != root) UnityEngine.Object.DestroyImmediate(extra.gameObject);
+            if (keep == null) return;
+            var renderer = keep.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null) ComicPuff(keep, renderer);
+
+            var main = keep.main;
+            main.loop = true;
+            main.duration = 2f;
+            main.playOnAwake = true;
+            main.prewarm = true; // the cloud is there when the pet comes out
+            main.startLifetime = new ParticleSystem.MinMaxCurve(1.7f, 2.4f);
+            main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.5f, 0.85f);
+            main.startColor = Color.white;
+            main.startRotation3D = true;
+            main.startRotationX = main.startRotationY = main.startRotationZ = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            main.maxParticles = 16;
+
+            var emission = keep.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 5f;
+            emission.rateOverDistance = 0f;
+            emission.SetBursts(Array.Empty<ParticleSystem.Burst>());
+
+            // Born right under the paw.
+            var shape = keep.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.position = new Vector3(0f, -0.015f, 0f);
+            shape.rotation = Vector3.zero;
+            shape.scale = Vector3.one;
+            shape.radius = 0.035f;
+            shape.radiusThickness = 1f;
+
+            // Straight back, slowly.
+            var velocity = keep.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.Local;
+            velocity.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+            velocity.y = new ParticleSystem.MinMaxCurve(0f, 0f);
+            velocity.z = new ParticleSystem.MinMaxCurve(-0.06f, -0.04f);
+            var force = keep.forceOverLifetime;
+            force.enabled = false;
+            var rotation = keep.rotationOverLifetime;
+            rotation.enabled = false;
+            var trails = keep.trails;
+            trails.enabled = false;
+            var sub = keep.subEmitters;
+            sub.enabled = false;
+            var limit = keep.limitVelocityOverLifetime;
+            limit.enabled = false;
+            var noise = keep.noise;
+            noise.enabled = true;
+            // A waver across and up and down only, far weaker than the drift: along the pet it would send puffs forwards.
+            noise.separateAxes = true;
+            noise.strengthX = 0.012f;
+            noise.strengthY = 0.012f;
+            noise.strengthZ = 0f;
+            noise.frequency = 5f;
+            noise.scrollSpeed = 1.2f;
+            noise.octaveCount = 2;
+            noise.quality = ParticleSystemNoiseQuality.Medium;
         }
 
         /// <summary>

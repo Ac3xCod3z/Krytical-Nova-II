@@ -44,12 +44,18 @@ Code in `Assets/_Game/Gameplay/Pets/`; the numbers above are fields of `Pets/Dat
 
 - **The four pets replace the five cosmetic drones.** All Common, usable from level 1, no Legendary. Item ids are kept:
 
-| Id | Pet | Was | Stand-in model | Stat | At 100 % |
+| Id | Pet | Was | Model | Stat | At 100 % |
 | --- | --- | --- | --- | --- | --- |
 | 8001 | Emberwing | Scout Drone | Quadcopter | Flux (`MaxChi`) | 2,000 |
 | 8002 | Drone Core | Guardian Drone | Guardian Drone | Health (`MaxHP`) | 2,200 |
 | 8003 | Tidecaller | Orb Companion | Orb | Defense (`DefensePower`) | 2,200 |
-| 8004 | Kitsune Spirit | Mantis Drone | Mantis Drone | Attack (`AttackPower`) | 1,100 |
+| 8004 | Kitsune Spirit | Mantis Drone | **its own fox** (9 Oct 2026) | Attack (`AttackPower`) | 1,100 |
+
+The other three are still shown with the Synty drone that stands in for them.
+
+- **The Kitsune Spirit's own model** (9 Oct 2026): `Characters/Pets/KitsuneSpirit/Pet_KitsuneSpirit_S1.prefab` (the fox of the Blender pipeline: 2,079 triangles, 47 bones, coloured from the shared swatch in `Characters/Shared/Swatch/`). It is the pet item's model, so all five stages show it until a stage has art of its own. A pet's own model is the `Model` of its row in `PetAssetBuilder`; its icon is retaken with **Krytical Nova ▸ Items ▸ Capture Icons (Selected Items)**.
+- **It stands on clouds** (9 Oct 2026, owner): the fox does not bob up and down as the drones do; it keeps its height beside its owner, and a small cloud under each paw is what holds it up: a few white cartoon puffs (3.5 to 6 cm) that swell under the paw and drift slowly straight back from the fox, some 8 cm in two seconds, with only a slight waver, as they shrink away. `PetDefinition.bobs` (off for the fox), `footEffect` (`VFX/GameFeel/PFX_Pet_Cloud.prefab`, built by **Krytical Nova ▸ GameFeel ▸ Rebuild Pet Cloud**; its numbers are in `GameFeelBuilder.ShapePetCloud`) and `footBones` (the four toe bones). `PetFollower` wears one cloud per named bone and moves it with the paw, so a lifted paw takes its cloud with it; with no bone named there is one under the middle of the body. In `PetAssetBuilder` a row with `Feet` is a pet that stands.
+- **Animations** (9 Oct 2026): a pet model with an Animator rests in the controller's looping state and has one animation per trigger of that controller, named after the trigger (`PetAnimations`; nothing is written per pet). The fox has six clips: **Idle** (6 s, loops) and five that play once and blend back to it: **Blink** 0.46 s, **LookAround** 2.46 s, **PawLift** 1.46 s, **SpinChase** 2.13 s, **TailCurl** 1.29 s. A pet plays them in turn, one every `PetSettings.animationCycleSeconds` (10 s; 0 = it only rests). Each machine keeps its own turn, so two players may see a different one at the same moment; an animation forced by a GM is sent to everyone (`PlayerPet.ServerPlayAnimation`) and the turn-taking waits a full interval after it.
 
 - **Growth and hunger travel with the item** (`PetItemState` packed into `ItemStack.data`): a pet keeps them in the Pack, the Vault, a trade, a Kiosk and on the ground. Only the pet that is out gets hungry and earns XP.
 - **The stat** is `max × growth % ÷ 100`, added to the owner's stats while the pet is out and fed (`PlayerPet`). Growth is replicated to everyone, so every machine derives the same stat and stage.
@@ -82,7 +88,7 @@ Code in `Assets/_Game/Gameplay/Pets/`; the numbers above are fields of `Pets/Dat
     the game feel moments; levels, HP, idling and pick-ups are watched on the local player. Another system reports a
     moment with `PetChatterMoments.Raise`. **Nothing reports a Bruiser kill yet** (there are no Bruisers), and items
     do not drop from kills yet, so today a rare drop is a rare item picked up; `gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>` plays any of them.
-- **GM:** `gm.pet`, `gm.pet.growth <0-100>`, `gm.pet.hunger <0-100>`, `gm.pet.feed`, `gm.pet.xp <n>`, `gm.pet.event <win|loss>`, `gm.pet.say <moment>`; the Pets tab of the GM Tools window.
+- **GM:** `gm.pet`, `gm.pet.growth <0-100>`, `gm.pet.hunger <0-100>`, `gm.pet.feed`, `gm.pet.xp <n>`, `gm.pet.event <win|loss>`, `gm.pet.say <moment>`, `gm.pet.anims` (lists the animations of the pet that is out), `gm.pet.anim <name>` (plays one now, for everyone); the Pets tab of the GM Tools window.
 - **Not built:** the real stage models, pet XP from wars, a Pet Ration shop, Legendary pets, other players seeing a pet's bubbles (`PetChatterSettings.audience` has only *owner only*).
 
 ## Open questions

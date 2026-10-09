@@ -45,6 +45,14 @@ namespace KryticalNova.Pets
         [Tooltip("What this pet says when its owner dies, lands a critical hit, levels up and so on: words for a pet that talks, emoji for an animal.")]
         public PetChatterSet chatter;
 
+        [Header("Stance")]
+        [Tooltip("On: it bobs up and down beside its owner, like a drone. Off: it keeps its height (a creature that stands).")]
+        public bool bobs = true;
+        [Tooltip("An effect worn under its feet, sized to the pet (the Kitsune Spirit's clouds, which hold it up). Empty = none.")]
+        public GameObject footEffect;
+        [Tooltip("The bones of the model that are its feet: each gets the effect above. Empty = one under the middle of the body.")]
+        public string[] footBones = new string[0];
+
         [Header("Follow")]
         [Tooltip("Added to the pet settings' follow gap for this pet only, in metres. More hovers further from its owner.")]
         public float followGapAdjust;

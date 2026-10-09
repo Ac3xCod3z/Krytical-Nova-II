@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using KryticalNova.Rendering;
 using UnityEngine;
 
@@ -56,6 +57,16 @@ namespace KryticalNova.Items.Visuals
         private float shown = 1f;          // 1 = full size, 0 = shrunk away from the camera
         private bool hiddenByCamera;
 
+        // The model's own animations, when it has an Animator; null for one that has none.
+        private PetAnimations animations;
+        private float animationCycleSeconds;
+
+        // A pet that stands on something rather than flying: it does not bob, and wears an effect under each foot.
+        private bool steady;
+        private GameObject footEffectPrefab;
+        private IReadOnlyList<string> footBones;
+        private readonly List<(Transform effect, Transform foot)> footEffects = new List<(Transform, Transform)>();
+
         private static Camera viewCamera;
         private static int viewCameraFrame = -1;
 
@@ -95,6 +106,30 @@ namespace KryticalNova.Items.Visuals
             else ApplyStage();
         }
 
+        /// <summary>The names of the animations the pet that is out can play; empty for a pet with none.</summary>
+        public IReadOnlyList<string> AnimationNames => pet != null && animations != null ? animations.Names : System.Array.Empty<string>();
+
+        /// <summary>The pet plays its animations in turn, one every this many seconds. 0 = it only rests.</summary>
+        public void SetAnimationCycle(float seconds) => animationCycleSeconds = Mathf.Max(0f, seconds);
+
+        /// <summary>Plays one of the pet's animations now, by the hash of its name. False when this pet has no such animation.</summary>
+        public bool PlayAnimation(int nameHash) => pet != null && animations != null && animations.Play(nameHash);
+
+        /// <summary>
+        /// How the pet carries itself: <paramref name="standsSteady"/> = it keeps its height instead of bobbing like a
+        /// drone; <paramref name="underFeet"/> = an effect worn under its feet (null = none), one for each bone of the
+        /// model named in <paramref name="feet"/>, or a single one under the middle of the body when none is named.
+        /// </summary>
+        public void SetStance(bool standsSteady, GameObject underFeet, IReadOnlyList<string> feet = null)
+        {
+            steady = standsSteady;
+            if (footEffectPrefab == underFeet && footBones == feet) return;
+            footEffectPrefab = underFeet;
+            footBones = feet;
+            ClearFootEffects();
+            ApplyFootEffects();
+        }
+
         /// <summary>Back to the plain item look (no pet system on this object, or the pet was put away).</summary>
         public void ClearStageLook() => SetStageLook(null, 1f, default, default);
 
@@ -102,7 +137,9 @@ namespace KryticalNova.Items.Visuals
         {
             if (pet != null) Destroy(pet);
             pet = null;
+            animations = null;
             sparkles = null; // children of the old pet
+            footEffects.Clear();
             rim?.Detach();   // its halo was the old pet's outline
             rimOn = false;
             hasBounds = false;
@@ -112,6 +149,7 @@ namespace KryticalNova.Items.Visuals
             pet = Instantiate(model, transform.position, transform.rotation);
             pet.name = $"Pet ({current.displayName})";
             VisualUtility.PrepareCosmetic(pet, gameObject.layer);
+            animations = PetAnimations.For(pet);
             // Prop art comes at any scale (Synty drones are metres across); normalise to a companion size.
             pet.transform.localScale = Vector3.one;
             hasBounds = PetPlacement.TryMeasure(pet, out unitBounds);
@@ -134,6 +172,57 @@ namespace KryticalNova.Items.Visuals
             PlaceHover();
             ApplyRim();
             ApplySparkles();
+            ApplyFootEffects();
+        }
+
+        private void ClearFootEffects()
+        {
+            foreach ((Transform effect, _) in footEffects)
+                if (effect != null) Destroy(effect.gameObject);
+            footEffects.Clear();
+        }
+
+        /// <summary>
+        /// What carries a pet that stands (the fox's clouds): one effect under each named foot, sized to the pet's
+        /// footprint. Each is a child of the pet, facing the way the pet faces, so it grows and hides with it and
+        /// "backwards" for the effect is behind the pet; its particles live in the pet's space, so a puff stays
+        /// where it was let go when the foot above it lifts.
+        /// </summary>
+        private void ApplyFootEffects()
+        {
+            if (pet == null || footEffectPrefab == null || !hasBounds || footEffects.Count > 0) return;
+            if (footBones != null && footBones.Count > 0)
+            {
+                foreach (Transform bone in pet.GetComponentsInChildren<Transform>(true))
+                    for (int i = 0; i < footBones.Count; i++)
+                        if (bone.name == footBones[i]) AddFootEffect(bone);
+            }
+            if (footEffects.Count == 0) AddFootEffect(null);
+            PlaceFootEffects();
+        }
+
+        private void AddFootEffect(Transform foot)
+        {
+            GameObject effect = Instantiate(footEffectPrefab, pet.transform);
+            effect.name = footEffectPrefab.name;
+            effect.transform.localPosition = new Vector3(unitBounds.center.x, unitBounds.min.y, unitBounds.center.z);
+            effect.transform.localRotation = Quaternion.identity;
+            effect.transform.localScale = Vector3.one * Mathf.Max(unitBounds.size.x, unitBounds.size.z);
+            VisualUtility.PrepareCosmetic(effect, gameObject.layer);
+            foreach (var particles in effect.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = particles.main;
+                main.simulationSpace = ParticleSystemSimulationSpace.Custom;
+                main.customSimulationSpace = pet.transform;
+            }
+            footEffects.Add((effect.transform, foot));
+        }
+
+        /// <summary>Each foot's effect goes where the animation has put that foot this frame.</summary>
+        private void PlaceFootEffects()
+        {
+            foreach ((Transform effect, Transform foot) in footEffects)
+                if (effect != null && foot != null) effect.position = foot.position;
         }
 
         /// <summary>The pet at its stage's size, less whatever the camera has shrunk away; gone altogether at nothing.</summary>
@@ -230,6 +319,7 @@ namespace KryticalNova.Items.Visuals
         {
             if (pet == null) return;
             var t = pet.transform;
+            animations?.Tick(animationCycleSeconds);
 
             Vector3 forward = transform.forward;
             forward.y = 0f;
@@ -237,7 +327,7 @@ namespace KryticalNova.Items.Visuals
                 t.rotation = Quaternion.Slerp(t.rotation, Quaternion.LookRotation(forward), 1f - Mathf.Exp(-turnSpeed * Time.deltaTime));
 
             Vector3 targetOffset = TargetOffset();
-            targetOffset.y += Mathf.Sin((Time.time + bobPhase) * bobFrequency * Mathf.PI * 2f) * bobAmplitude;
+            if (!steady) targetOffset.y += Mathf.Sin((Time.time + bobPhase) * bobFrequency * Mathf.PI * 2f) * bobAmplitude;
 
             // The pet hangs in the world and is drawn to its place beside the owner: it trails a running owner by
             // about their speed x the smooth time, and catches up when they stop.
@@ -256,6 +346,7 @@ namespace KryticalNova.Items.Visuals
                         clearDistance - ClearSlack, -forward);
             }
             t.position = transform.position + offset;
+            PlaceFootEffects();
 
             StayClearOfCamera(t);
         }

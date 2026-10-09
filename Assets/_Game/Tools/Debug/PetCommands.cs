@@ -74,6 +74,25 @@ namespace KryticalNova.DevTools
             return Describe(pet);
         }
 
+        [Command("gm.pet.anims", "List the animations of the pet the targeted player has out. Only a pet whose model has animations of its own has any (today the Kitsune Spirit).")]
+        private static string Animations()
+        {
+            if (!TryGetPet(out var pet, out var error)) return error;
+            var names = pet.AnimationNames;
+            return names.Count == 0
+                ? $"{pet.Pet.displayName} has no animations."
+                : $"{pet.Pet.displayName} has {names.Count}: {string.Join(", ", names)}. Play one with gm.pet.anim <name>. It rests (Idle) in between.";
+        }
+
+        [Command("gm.pet.anim", "Make the pet the targeted player has out play one of its animations now, for everyone who can see it: gm.pet.anim SpinChase. " +
+                                "gm.pet.anims lists them.")]
+        private static string Animation(string name = "")
+        {
+            if (!TryGetPet(out var pet, out var error)) return error;
+            if (string.IsNullOrWhiteSpace(name)) return Animations();
+            return pet.ServerPlayAnimation(name) ? $"{pet.Pet.displayName} plays {name}." : $"No animation called '{name}'. {Animations()}";
+        }
+
         [Command("gm.pet.say", "Make your own pet react as if a moment had just happened to you: gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>. " +
                                "It still waits out its quiet (Pet Chatter Settings) and stays silent with Pet chatter off in Settings.")]
         private static string Say(string moment = "crit")
