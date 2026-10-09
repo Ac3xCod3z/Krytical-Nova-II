@@ -426,6 +426,30 @@
     font-size: 13.44px;
     color: rgb(140, 236, 172);
 }
+.kn-faction-covenant .controls-row .settings-row-label {
+    font-size: 15.68px;
+}
+.kn-faction-covenant .key-cap {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_Box_Small_Parchment_02.png#SPR_HUD_FantasyWarrior_Box_Small_Parchment_02");
+    -unity-background-image-tint-color: rgb(96, 64, 28);
+    -unity-slice-scale: 0.19px;
+}
+.kn-faction-covenant .key-cap-text {
+    font-size: 15.68px;
+    -unity-font-definition: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Fonts/Grenze/Grenze-SemiBold.ttf");
+}
+.kn-faction-covenant .settings-key:hover .key-cap {
+    -unity-background-image-tint-color: rgb(128, 83, 0);
+}
+.kn-faction-covenant .settings-key.listening .key-cap {
+    -unity-background-image-tint-color: rgb(190, 124, 1);
+}
+.kn-faction-covenant .controls-row.fixed .key-cap {
+    -unity-background-image-tint-color: rgb(56, 46, 34);
+}
+.kn-faction-covenant .controls-row.fixed .key-cap-text {
+    color: rgb(198, 187, 174);
+}
 .kn-faction-covenant .settings-key-reset {
     font-size: 11.2px;
     color: rgb(188, 175, 161);

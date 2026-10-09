@@ -15,14 +15,15 @@ namespace KryticalNova.UI
     /// </summary>
     public sealed class ControlsSettingsTab
     {
-        private static readonly (string Label, string Key)[] FixedKeys =
+        // A fixed key is shown by its binding path where it has a picture, or by the word on its cap.
+        private static readonly (string Label, string[] Keys)[] FixedKeys =
         {
-            ("Close window / cancel", "ESC"),
-            ("Chat", "ENTER"),
-            ("Accept / decline a request", "Y / N"),
-            ("Move, attack, interact", "LEFT MOUSE"),
-            ("Turn the camera", "RIGHT MOUSE"),
-            ("Zoom", "MOUSE WHEEL"),
+            ("Close window / cancel", new[] { "ESC" }),
+            ("Chat", new[] { "<Keyboard>/enter" }),
+            ("Accept / decline a request", new[] { "Y", "N" }),
+            ("Move, attack, interact", new[] { "<Mouse>/leftButton" }),
+            ("Turn the camera", new[] { "<Mouse>/rightButton" }),
+            ("Zoom", new[] { "<Mouse>/scroll" }),
         };
 
         // What a key may be: any keyboard key, or one of the spare mouse buttons. Never the two the game is played with.
@@ -80,10 +81,12 @@ namespace KryticalNova.UI
             foreach (var key in FixedKeys)
             {
                 VisualElement row = SettingsRows.Row(page, key.Label);
+                row.AddToClassList("controls-row");
                 row.AddToClassList("fixed");
-                var value = new Label(key.Key);
-                value.AddToClassList("settings-row-value");
-                row.Add(value);
+                var caps = new VisualElement { pickingMode = PickingMode.Ignore };
+                caps.AddToClassList("key-caps");
+                KeyCaps.Fill(caps, key.Keys);
+                row.Insert(0, caps);
             }
         }
 
@@ -95,11 +98,15 @@ namespace KryticalNova.UI
 
         private void AddRow(InputAction action, string label)
         {
+            // The key first, as a cap, then what it does: the way the packs lay a controls page out.
             VisualElement row = SettingsRows.Row(page, label);
-            var key = new Button { text = KeyBindings.Label(action) };
+            row.AddToClassList("controls-row");
+            var key = new Button();
             key.AddToClassList("settings-key");
+            key.AddToClassList("key-caps");
+            KeyCaps.Fill(key, action, KeyBindings.Label(action));
             key.clicked += () => Listen(action);
-            row.Add(key);
+            row.Insert(0, key);
             keyButtons[action] = key;
 
             var reset = new Button(() => ResetOne(action)) { text = "RESET", tooltip = "Back to the default key" };
@@ -123,7 +130,8 @@ namespace KryticalNova.UI
             KeyBindings.Listening = true;
             listeningChanged?.Invoke(true);
             Button button = keyButtons[action];
-            button.text = "PRESS A KEY";
+            button.Clear();
+            button.Add(KeyCaps.Saying("PRESS A KEY"));
             button.AddToClassList("listening");
 
             var rebind = action.PerformInteractiveRebinding(0)
@@ -197,7 +205,7 @@ namespace KryticalNova.UI
 
         private void RefreshLabels()
         {
-            foreach (var pair in keyButtons) pair.Value.text = KeyBindings.Label(pair.Key);
+            foreach (var pair in keyButtons) KeyCaps.Fill(pair.Value, pair.Key, KeyBindings.Label(pair.Key));
         }
     }
 }

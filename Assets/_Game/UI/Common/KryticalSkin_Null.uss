@@ -426,6 +426,30 @@
     font-size: 15.36px;
     color: rgb(175, 140, 236);
 }
+.kn-faction-null .controls-row .settings-row-label {
+    font-size: 17.92px;
+}
+.kn-faction-null .key-cap {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_02.png#SPR_HUD_DarkFantasy_Box_Small_Parchment_02");
+    -unity-background-image-tint-color: rgb(79, 28, 96);
+    -unity-slice-scale: 0.22px;
+}
+.kn-faction-null .key-cap-text {
+    font-size: 17.92px;
+    -unity-font-definition: url("/Assets/Synty/InterfaceDarkFantasyHUD/Fonts/Markazi/MarkaziText-SemiBold.ttf");
+}
+.kn-faction-null .settings-key:hover .key-cap {
+    -unity-background-image-tint-color: rgb(128, 0, 6);
+}
+.kn-faction-null .settings-key.listening .key-cap {
+    -unity-background-image-tint-color: rgb(190, 1, 11);
+}
+.kn-faction-null .controls-row.fixed .key-cap {
+    -unity-background-image-tint-color: rgb(50, 34, 56);
+}
+.kn-faction-null .controls-row.fixed .key-cap-text {
+    color: rgb(192, 174, 198);
+}
 .kn-faction-null .settings-key-reset {
     font-size: 12.8px;
     color: rgb(181, 161, 188);
