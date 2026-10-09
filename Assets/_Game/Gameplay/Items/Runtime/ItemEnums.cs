@@ -24,7 +24,9 @@ namespace KryticalNova.Items
         /// <summary>Feeds the pet that is out (a Pet Ration).</summary>
         FeedPet = 1,
         /// <summary>Raises a stat for good, up to a number of times per character (a Serum).</summary>
-        Serum = 2
+        Serum = 2,
+        /// <summary>Adds Autopilot time to the character (an Autopilot Chip).</summary>
+        AutopilotTime = 3
     }
 
     /// <summary>Where a weapon rides while it is not in the hand. Append only.</summary>

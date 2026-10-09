@@ -30,6 +30,8 @@ namespace KryticalNova.EditorTools.Hostiles
         public const string SettingsPath = DataFolder + "/HostileSettings.asset";
         public const string SpeciesFolder = DataFolder + "/Species";
         private const string DissolveShaderName = "KryticalNova/Hostiles/Corpse Dissolve";
+        private const string ItemCatalogPath = "Assets/_Game/Gameplay/Items/Data/Assets/ItemCatalog.asset";
+        private static readonly ushort[] StimIds = { 9001, 9002 }; // HP Stim, Flux Stim (UtilityItemGenerator)
         private const string DissolveNoisePath = "Assets/Plugins/AllIn1ShaderNodes/DefaultTextures/NoiseTextureDefault.png";
         private const string MeleeAbilityPath = DataFolder + "/Emerald/HostileMelee.asset";
         private const string CharacterFolder = "Assets/_Game/Characters/Hostiles";
@@ -186,6 +188,17 @@ namespace KryticalNova.EditorTools.Hostiles
             if (settings.dissolveShader == null) settings.dissolveShader = Shader.Find(DissolveShaderName);
             if (settings.dissolveNoise == null) settings.dissolveNoise = AssetDatabase.LoadAssetAtPath<Texture2D>(DissolveNoisePath);
             if (settings.dissolveShader == null) Debug.LogWarning($"[Hostiles] Shader {DissolveShaderName} not found: corpses will not burn away.");
+            if (settings.catalog == null) settings.catalog = AssetDatabase.LoadAssetAtPath<KryticalNova.Items.ItemCatalog>(ItemCatalogPath);
+            if (settings.catalog != null && (settings.stims == null || settings.stims.Length == 0))
+            {
+                var stims = new List<KryticalNova.Items.ItemDefinition>();
+                foreach (ushort id in StimIds)
+                {
+                    KryticalNova.Items.ItemDefinition stim = settings.catalog.Get(id);
+                    if (stim != null) stims.Add(stim);
+                }
+                settings.stims = stims.ToArray();
+            }
             EditorUtility.SetDirty(settings);
             return settings;
         }

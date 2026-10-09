@@ -64,6 +64,12 @@ namespace KryticalNova.EditorTools
             new Row { Id = KioskPermit30Id, Asset = "Permit_Kiosk30", Name = "Kiosk Permit (30 Days)", Glyph = "30D", Rarity = ItemRarity.Rare,
                 Description = "Opens your Kiosk for 30 days instead of 3. Used up when the Kiosk opens.", Stack = 99 },
 
+            // Autopilot (_Docs/Plans/hostiles-plan.md, section 8): each chip adds Autopilot time. Only GM tools
+            // give it out for now.
+            new Row { Id = AutopilotChipId, Asset = "Chip_Autopilot", Name = "Autopilot Chip", Glyph = "AUTO", Rarity = ItemRarity.Uncommon,
+                Description = "Adds 5 hours of Autopilot: your character hunts by itself inside a Hostile Zone. The time only runs while Autopilot is on.",
+                Stack = 99, Effect = ItemUseEffect.AutopilotTime },
+
             // The forge (_Docs/Reference/12Sky/02_Gear_System_Spec.md). Ids are named in GearMaterialIds, which the
             // settings asset reads; what each one does is decided there, not here.
             Material(GearMaterialIds.Alumite, "Alloy_Alumite", "Alumite", "+3%", ItemRarity.Common,
@@ -123,6 +129,7 @@ namespace KryticalNova.EditorTools
         public const ushort PetRationId = 9010;
         public const ushort KioskPermit14Id = 9020;
         public const ushort KioskPermit30Id = 9021;
+        public const ushort AutopilotChipId = 9030;
 
         [MenuItem("Krytical Nova/Items/5. Generate Utility Items (Stims, Permits, Rations, Forge Materials, Serums)")]
         public static void Generate()

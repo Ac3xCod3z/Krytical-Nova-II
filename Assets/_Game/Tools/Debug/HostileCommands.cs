@@ -307,6 +307,49 @@ namespace KryticalNova.DevTools
             return value ? "Dying to a Hostile costs XP." : "Dying to a Hostile costs nothing.";
         }
 
+        private const int AssumedKillsPerHour = 600; // one kill every six seconds, for the income comparison
+
+        [Command("gm.hostile.loot", "Simulate kills of a species at the targeted player's level and print XP, Creds and drops per kill and per hour: gm.hostile.loot <id|name> [kills].")]
+        private static string Loot(string idOrName, int kills = 1000)
+        {
+            if (!TryGetPlayer(out var player, out var error)) return error;
+            HostileNet species = HostileSpawner.Find(idOrName);
+            if (species == null) return $"No Hostile species '{idOrName}'. gm.hostile.list shows them.";
+            if (species.Curve == null || species.Settings == null || species.LevelGap == null) return "That species is missing its settings. Build the Hostiles again.";
+            kills = Mathf.Clamp(kills, 1, 1_000_000);
+
+            var progression = player.GetComponent<PlayerCharacterProgression>();
+            int level = progression != null ? progression.CurrentLevel : 1;
+            HostileStats stats = species.Definition.StatsFrom(species.Curve);
+            int gap = LevelGapRules.Gap(stats.Level, level);
+            float dropPercent = LevelGapRules.DropPercent(species.LevelGap, gap);
+            bool gearAllowed = LevelGapRules.GearDrops(species.LevelGap, gap);
+            int experience = HostileKillRewards.ExperienceFor(stats, species.LevelGap, gap, 0f);
+
+            var random = new System.Random(12345);
+            long creds = 0;
+            int stims = 0, gear = 0;
+            for (int i = 0; i < kills; i++)
+            {
+                HostileLootRoll roll = HostileLoot.Roll(stats, species.Curve, species.Settings, dropPercent, gearAllowed, HostileRates.Drops,
+                    (float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble());
+                creds += roll.Creds;
+                if (roll.Stim != null) stims++;
+                if (roll.Gear != null) gear++;
+            }
+            double credsPerKill = creds / (double)kills;
+            double expected = stats.Creds * species.Curve.credsDropChance * dropPercent / 100f * HostileRates.Drops;
+            var wallet = player.GetComponent<KryticalNova.Economy.PlayerWallet>();
+            long target = wallet != null && wallet.Settings != null ? wallet.Settings.CredsPerHour(level) : 0;
+            return string.Join("\n", new[]
+            {
+                $"{species.Definition.displayName} Lv {stats.Level} for a level {level} player (gap {gap}), {kills} kills:",
+                $"XP {experience} a kill · Creds {credsPerKill:0.##} a kill (expected {expected:0.##}) · Stims {stims * 100.0 / kills:0.##}% · gear {gear * 100.0 / kills:0.##}%",
+                $"At {AssumedKillsPerHour} kills an hour: {experience * (long)AssumedKillsPerHour} XP, {credsPerKill * AssumedKillsPerHour:0} Creds" +
+                (target > 0 ? $" (the income target at level {level} is {target} an hour)" : ""),
+            });
+        }
+
         // ------------------------------------------------------------------ Hostile Zones
 
         private static HostileZone FindZone(string id)

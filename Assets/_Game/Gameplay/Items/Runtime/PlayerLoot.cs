@@ -147,6 +147,15 @@ namespace KryticalNova.Items
             return WorldDrop.ServerSpawn(dropPrefab, stack, feet, heldFor != null && heldFor.IsSpawned ? heldFor : null, reserveSeconds, dropFaction);
         }
 
+        /// <summary>
+        /// Server (or offline): puts a stack on the ground at a point in the world, held for a player for the same
+        /// time as a drop of their own. For loot that falls somewhere else than at this player's feet (a Hostile's).
+        /// </summary>
+        public WorldDrop ServerPlaceAt(ItemStack stack, Vector3 position, NetworkObject heldFor = null)
+        {
+            return WorldDrop.ServerSpawn(dropPrefab, stack, position, heldFor != null && heldFor.IsSpawned ? heldFor : null, dropReserveSeconds);
+        }
+
         private float FlatSqrDistance(Vector3 point)
         {
             Vector3 offset = point - transform.position;

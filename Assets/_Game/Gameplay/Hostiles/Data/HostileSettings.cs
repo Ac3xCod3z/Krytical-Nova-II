@@ -1,3 +1,4 @@
+using KryticalNova.Items;
 using UnityEngine;
 
 namespace KryticalNova.Hostiles
@@ -24,6 +25,20 @@ namespace KryticalNova.Hostiles
         [Range(0f, 0.3f)] public float burnWidth = 0.07f;
         [Tooltip("Repeats of the noise per metre: higher burns away in smaller flecks.")]
         [Min(0.05f)] public float noiseTiling = 0.8f;
+
+        [Header("Drops (Creds are on the stat curve)")]
+        [Tooltip("Where gear drops are picked from.")]
+        public ItemCatalog catalog;
+        [Tooltip("The Stims a Hostile may drop. One is picked at random.")]
+        public ItemDefinition[] stims = System.Array.Empty<ItemDefinition>();
+        [Tooltip("Chance that a kill drops a Stim, percent.")]
+        [Range(0f, 100f)] public float stimChancePercent = 6f;
+        [Tooltip("Chance that a Normal Hostile drops a piece of gear, percent.")]
+        [Range(0f, 100f)] public float gearChancePercent = 2.5f;
+        [Tooltip("Chance that a Bruiser drops a piece of gear, percent. It is of the best rarity its level has.")]
+        [Range(0f, 100f)] public float bruiserGearChancePercent = 25f;
+        [Tooltip("Gear drops are of an item level from this many levels under the Hostile up to its own.")]
+        [Min(0)] public int gearLevelsBelow = 3;
 
         [Header("Hostile Zones")]
         [Tooltip("Hostiles a map may hold at once, in zones and out of them.")]

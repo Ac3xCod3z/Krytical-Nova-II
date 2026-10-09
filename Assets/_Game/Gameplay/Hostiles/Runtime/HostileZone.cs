@@ -44,6 +44,20 @@ namespace KryticalNova.Hostiles
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => all.Clear();
 
+        /// <summary>The Hostile Zone a point of the map lies in, or null. On every peer.</summary>
+        public static HostileZone At(Vector3 point)
+        {
+            for (int i = 0; i < all.Count; i++)
+            {
+                HostileZone zone = all[i];
+                if (zone.definition == null) continue;
+                Vector3 offset = point - zone.transform.position;
+                offset.y = 0f;
+                if (offset.sqrMagnitude <= zone.definition.radius * zone.definition.radius) return zone;
+            }
+            return null;
+        }
+
         public HostileZoneDefinition Definition => definition;
         public bool IsAwake => awake;
         public Vector3 Centre => transform.position;

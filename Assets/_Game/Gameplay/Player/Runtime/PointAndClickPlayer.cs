@@ -107,6 +107,8 @@ namespace KryticalNova.Player
         private KryticalNova.Combat.PlayerMeleeCombat meleeCombat;
         private MovementSkillId previousMovementMode;
         public event Action<string> CommandMessage;
+        /// <summary>Raised on the owner when the player clicks on the world to move, attack or interact.</summary>
+        public event Action ManualCommand;
         /// <summary>The local player Shift+clicked another player: (that player, the pointer's screen position).</summary>
         public event Action<Transform, Vector2> PlayerMenuRequested;
         /// <summary>
@@ -494,6 +496,7 @@ namespace KryticalNova.Player
 
         private void TryMoveToPointer(Vector2 screenPosition)
         {
+            ManualCommand?.Invoke();
             if (resources != null && !resources.IsAlive) { CommandMessage?.Invoke("No HP remaining. Restore HP before moving."); return; }
             if (jumpMotor != null && jumpMotor.IsBusy) { CommandMessage?.Invoke("Finish this jump before choosing another destination."); return; }
             if (vaultMotor != null && vaultMotor.IsBusy) return; // back on the ground in a moment
@@ -768,6 +771,29 @@ namespace KryticalNova.Player
         }
 
         private bool IsSelected(Transform unit) => unit != null && selectedTarget == unit;
+
+        /// <summary>
+        /// Owner side: selects a hostile and attacks it, as a second click on it does. For whatever commands the
+        /// player without a pointer (Autopilot); the server checks the request like any other.
+        /// </summary>
+        public bool CommandAttack(IDamageable targetEntity)
+        {
+            if (IsSpawned && !IsOwner) return false;
+            if (targetEntity == null || !targetEntity.IsAlive || !KryticalNova.Combat.CombatHostility.IsHostile(transform, targetEntity)) return false;
+            if (resources != null && !resources.IsAlive) return false;
+
+            Select(targetEntity.Transform, WorldTargetKind.Hostile);
+            EndTravel(false);
+            if (meleeCombat != null) meleeCombat.StartAttackTarget(targetEntity);
+            if (IsSpawned && !IsServer)
+            {
+                var targetNetObj = targetEntity.Transform.GetComponent<NetworkObject>();
+                if (targetNetObj == null) return false;
+                RequestAttackEntityServerRpc(targetNetObj.NetworkObjectId);
+            }
+            else if (meleeCombat == null) ExecuteAttackOnTarget(targetEntity);
+            return true;
+        }
 
         private void Select(Transform unit, WorldTargetKind kind)
         {

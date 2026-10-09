@@ -9,6 +9,7 @@ namespace KryticalNova.Hostiles
     /// <summary>What one Hostile kill was, for whatever counts or rewards kills (Contracts later).</summary>
     public struct HostileKill
     {
+        public HostileNet Hostile;
         public ushort SpeciesId;
         public int Level;
         public HostileTier Tier;
@@ -84,6 +85,7 @@ namespace KryticalNova.Hostiles
 
             Rewarded?.Invoke(new HostileKill
             {
+                Hostile = hostile,
                 SpeciesId = hostile.Definition != null ? hostile.Definition.id : (ushort)0,
                 Level = hostile.Level,
                 Tier = stats.Tier,

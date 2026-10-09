@@ -42,6 +42,13 @@ namespace KryticalNova.Hostiles
         public static bool GearDrops(LevelGapSettings settings, int gap) => BandOf(settings, gap).gearDrops;
         public static float HitChanceModifier(LevelGapSettings settings, int gap) => BandOf(settings, gap).hitChanceModifier;
 
+        /// <summary>True for a gap in the highest band: the Hostiles the settings call dangerous (red).</summary>
+        public static bool IsTopBand(LevelGapSettings settings, int gap)
+        {
+            LevelGapSettings.Band[] bands = settings.bands;
+            return bands != null && bands.Length > 1 && gap >= bands[bands.Length - 1].fromGap;
+        }
+
         /// <summary>
         /// The gap a Squad member is paid by. A member far below the Squad's highest member is carried: when the
         /// highest member's gap is worse than the member's own by the settings' number of levels or more, the

@@ -32,6 +32,7 @@ namespace KryticalNova.EditorTools
         private const string NovaShaderFolder = "Assets/_Game/Gameplay/Progression/Shaders/";
         public const string EmoteWheelSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/EmoteWheelSettings.asset";
         public const string SerumSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/SerumSettings.asset";
+        public const string AutopilotSettingsPath = "Assets/_Game/Gameplay/Autopilot/Data/Assets/AutopilotSettings.asset";
         public const string SquadSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SquadSettings.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
@@ -65,6 +66,10 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Social.PlayerFollow", ("settings", SquadSettingsPath)),
             // Serums: what a character has taken, and the stats that stay.
             new Row("KryticalNova.Progression.PlayerSerums", ("settings", SerumSettingsPath)),
+            // Autopilot and Magnet: the server's flag and time, and the two helpers that run on the player's own game.
+            new Row("KryticalNova.Autopilot.PlayerAutopilot", ("settings", AutopilotSettingsPath)),
+            new Row("KryticalNova.Autopilot.MagnetController"),
+            new Row("KryticalNova.Autopilot.AutopilotController"),
             // What lets a Hostile see, chase and strike a player (its own assembly: the only one that knows Emerald AI).
             new Row("KryticalNova.Hostiles.Emerald.KNEmeraldPlayerBridge, KryticalNova.Hostiles.Emerald"),
         };

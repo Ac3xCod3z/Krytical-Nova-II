@@ -19,6 +19,14 @@ MonoBehaviour:
   burnColor: {r: 0.2, g: 3, b: 3.4, a: 1}
   burnWidth: 0.07
   noiseTiling: 0.8
+  catalog: {fileID: 11400000, guid: e1c1b71ec31a0334586d7dae8888309c, type: 2}
+  stims:
+  - {fileID: 11400000, guid: 3229e03cb43202e428110eae3d2da85b, type: 2}
+  - {fileID: 11400000, guid: 9ac330e53489baf46bcc3e133a42086a, type: 2}
+  stimChancePercent: 6
+  gearChancePercent: 2.5
+  bruiserGearChancePercent: 25
+  gearLevelsBelow: 3
   maxActiveHostiles: 300
   zoneTickSeconds: 0.5
   leashMetres: 15

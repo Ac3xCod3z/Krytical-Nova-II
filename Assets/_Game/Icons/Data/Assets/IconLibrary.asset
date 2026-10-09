@@ -4373,3 +4373,8 @@ MonoBehaviour:
     set: Cyberpunk/Medicine
     number: 48
     chosen: 1
+  - kind: 2
+    target: Chip_Autopilot
+    set: Cyberpunk/Resource 2
+    number: 1
+    chosen: 0

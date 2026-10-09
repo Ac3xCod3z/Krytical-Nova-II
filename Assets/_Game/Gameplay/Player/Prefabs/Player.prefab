@@ -94,6 +94,9 @@ GameObject:
   - component: {fileID: 4400877377449159858}
   - component: {fileID: 6416136621599516994}
   - component: {fileID: 4977407495585113298}
+  - component: {fileID: 8564388659051304428}
+  - component: {fileID: 280678128926397855}
+  - component: {fileID: 5335455843311859722}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -652,6 +655,7 @@ MonoBehaviour:
   pickUpFadeOut: 0.2
   pickUpSettleSeconds: 0.6
   agent: {fileID: 376469485258568685}
+  runRetakeSeconds: 0.4
 --- !u!114 &6427914725768415556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3808,6 +3812,44 @@ MonoBehaviour:
   OnDeath:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8564388659051304428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f38af5a06a559d24497d384883a66cfa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Autopilot.PlayerAutopilot
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: 103a4e791aa9fae4095473743729c5df, type: 2}
+--- !u!114 &280678128926397855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea1a70201ee7e464a862a3341c11dd3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Autopilot.MagnetController
+--- !u!114 &5335455843311859722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b237c8452a214a6488afdbf371b8c505, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Autopilot.AutopilotController
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0
