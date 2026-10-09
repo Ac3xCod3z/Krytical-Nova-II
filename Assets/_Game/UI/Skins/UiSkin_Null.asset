@@ -67,6 +67,25 @@ MonoBehaviour:
   crownBackSize: {x: 92, y: 46}
   crownRise: 30
   crownBackRise: 30
+  slotGlyphs:
+  - {fileID: 21300000, guid: 15729e74329e16a4089d0fda24a7a56a, type: 3}
+  - {fileID: 21300000, guid: 06fc4d82945ac6442a3a3382a20cdc0f, type: 3}
+  - {fileID: 21300000, guid: 12fed04392634964a8ae02ea360f4308, type: 3}
+  - {fileID: 21300000, guid: c7099aa49a59c74498a607cf5c714af1, type: 3}
+  - {fileID: 21300000, guid: c443345009f7f6640bbdee6d77013187, type: 3}
+  - {fileID: 21300000, guid: c78e3475e7b0b8c4c9e41e876ec193fa, type: 3}
+  - {fileID: 21300000, guid: 7facc94904b9b634bbbacbb7de5b7f71, type: 3}
+  - {fileID: 21300000, guid: 3dd160d601876574ea18a47fd82f938d, type: 3}
+  slotGlyphTint: {r: 0.2509804, g: 0.42352942, b: 0.43529412, a: 0.54901963}
+  dollBarTopLeft: {fileID: 21300000, guid: 9b016acd84140b742a67589cb6b7b7fc, type: 3}
+  dollBarTopRight: {fileID: 21300000, guid: 831a303b404245b49aab85631dca5cfc, type: 3}
+  dollBarFootLeft: {fileID: 21300000, guid: 4d3c3d8ee2ea34946a4789790ad8eff9, type: 3}
+  dollBarFootRight: {fileID: 21300000, guid: 744acb20e26c2d74c826164526c4c8e5, type: 3}
+  dollBarHeight: 20
+  dollBarTint: {r: 0.5647059, g: 0.5647059, b: 0.5647059, a: 1}
+  gridCell: {fileID: 21300000, guid: 1b03e3aed8723c246ba1c548a51c5300, type: 3}
+  gridCellTint: {r: 0.07450981, g: 0.07450981, b: 0.07450981, a: 0.9019608}
+  gridCellBorder: 8
   titleScreen: {fileID: 7972974810867652038, guid: d5e20384d9b4c014cae9ef0a76a64915, type: 3}
   choiceScreen: {fileID: 7972974810867652038, guid: b32f9479afca89748aa854123915f6a9, type: 3}
   listScreen: {fileID: 7972974810867652038, guid: 797077d7bf96b2f4faee6deff84776ff, type: 3}

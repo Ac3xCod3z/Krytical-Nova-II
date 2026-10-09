@@ -137,3 +137,60 @@
 .kn-faction-hegemony .inventory-grid .item-cell.drop-valid, .kn-faction-hegemony .equip-column .equip-slot.drop-valid {
     -unity-background-image-tint-color: rgb(170, 255, 220);
 }
+.kn-faction-hegemony .card-picture-frame {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/Cell_Hegemony.png#Cell_Hegemony");
+    -unity-background-image-tint-color: rgb(190, 190, 190);
+    -unity-slice-scale: 0.1575px;
+}
+.kn-faction-hegemony #equip-Weapon > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Weapon_01.png#ICON_SciFiSoldier_Inventory_Weapon_01");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Armor > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Armor_01.png#ICON_SciFiSoldier_Inventory_Armor_01");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Gloves > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Gauntlets_01_Underlay.png#ICON_DarkFantasy_Inventory_Gauntlets_01_Underlay");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Boots > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Boots_01_Underlay.png#ICON_DarkFantasy_Inventory_Boots_01_Underlay");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Ring > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Rings_02_Underlay.png#ICON_DarkFantasy_Inventory_Rings_02_Underlay");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Amulet > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Necklaces_02_Underlay.png#ICON_DarkFantasy_Inventory_Necklaces_02_Underlay");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Cape > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Backpack_01.png#ICON_SciFiSoldier_Inventory_Backpack_01");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Pet > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Science_01.png#ICON_SciFiSoldier_Inventory_Science_01");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony .doll-bar {
+    height: 10px;
+}
+.kn-faction-hegemony .doll-bar-half {
+    -unity-background-image-tint-color: rgb(114, 222, 196);
+}
+.kn-faction-hegemony .doll-bar--top > .doll-bar-left {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png#SPR_HUD_SciFiSoldier_Line_Horizontal_01");
+}
+.kn-faction-hegemony .doll-bar--top > .doll-bar-right {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png#SPR_HUD_SciFiSoldier_Line_Horizontal_01");
+    scale: -1 1;
+}
+.kn-faction-hegemony .doll-bar--foot > .doll-bar-left {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png#SPR_HUD_SciFiSoldier_Line_Horizontal_01");
+}
+.kn-faction-hegemony .doll-bar--foot > .doll-bar-right {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png#SPR_HUD_SciFiSoldier_Line_Horizontal_01");
+    scale: -1 1;
+}

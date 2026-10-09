@@ -87,6 +87,23 @@ is always under the panel). What a page is made of is the skin's, in the pack's 
 | Button | `button` | Sci-Fi Menus `Frame_Box_Small_07` | `Frame_Box_Medium_01` | `Frame_Box_22` |
 | Menu row button | `menuButton` | Sci-Fi Menus `Frame_Box_Small_06` | Dark Fantasy Menus `Frame_Bar_Medium_07` | Fantasy Menus `Menu_Button_05` |
 
+**Equipment, Pack and the item card (9 Oct 2026)** are laid out after the packs' own inventory (the Dark Fantasy HUD's
+`HUD_DarkFantasy_Inventory_Character_01` and `ItemPickupInfo_04`, Fantasy Screens' `Panel_FantasyScreens_Character_Inventory_01`),
+the same arrangement in every faction, each in its own pack's parts (`FactionSkinBuilder.EnsureInventoryParts`):
+
+| Part | Skin field | Hegemony | Null | Covenant |
+| --- | --- | --- | --- | --- |
+| What an empty equipment slot is for (a picture, not a word) | `slotGlyphs`, `slotGlyphTint` | Sci-Fi HUD `Icons_Inventory` (Weapon, Armor, Backpack, Science); gloves, boots, ring and amulet borrowed from Dark Fantasy, which the Sci-Fi pack lacks | Dark Fantasy `Icons_Inventory` `_Underlay` | Fantasy Screens `Icons_Inventory` `_Underlay` |
+| Bars over and under the model | `dollBarTopLeft` / `TopRight` / `FootLeft` / `FootRight` | `Line_Horizontal_01` (one sprite, mirrored) | `Bar_03` Top / Bottom halves | Fantasy Menus `Frame_Bar_01` halves |
+| A cell of the Pack's grid | `gridCell`, `gridCellTint` | the framed slot (the pack has no plain cell) | `Box_Small_Parchment_01`, dark, no frame | `Box_Medium_Parchment_01`, dark, no frame |
+
+- **Equipment:** the owner's name, level and lineage over the model; slots down either side, larger, with no captions.
+- **Pack:** the page tabs stand on a well that holds the grid; count, SORT and Creds on one foot bar. An empty cell
+  or slot has no outline (class `item-empty`): an outline says what is in it.
+- **Item card** (the tooltip, everywhere an item is hovered): the item's picture on the pack's slot lit in its rarity,
+  the name in the title face, what it gives as one strip a line, an EQUIPPED flag on worn pieces, and the hint as
+  mouse prompts. The texts are the ones the tooltip had.
+
 A UI Toolkit background draws one image, so a part that is a frame over a fill is flattened into one picture
 (`SpriteRecolourer.Flatten`, into `UI/HUD/Faction/<Faction>/Art/`) the first time the skins are built; **Krytical Nova ▸
 UI ▸ Rebuild Faction Skin Art** makes them again. The builder writes the rules after the converted sheets (the "window

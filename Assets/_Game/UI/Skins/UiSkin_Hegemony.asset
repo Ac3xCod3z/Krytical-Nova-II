@@ -67,6 +67,25 @@ MonoBehaviour:
   crownBackSize: {x: 96, y: 48}
   crownRise: 33
   crownBackRise: 30
+  slotGlyphs:
+  - {fileID: 21300000, guid: 0f29a99d278aaa649a4a9712799550fb, type: 3}
+  - {fileID: 21300000, guid: 977995b1071c6c044b8725d231a428a8, type: 3}
+  - {fileID: 21300000, guid: 12fed04392634964a8ae02ea360f4308, type: 3}
+  - {fileID: 21300000, guid: c7099aa49a59c74498a607cf5c714af1, type: 3}
+  - {fileID: 21300000, guid: c443345009f7f6640bbdee6d77013187, type: 3}
+  - {fileID: 21300000, guid: c78e3475e7b0b8c4c9e41e876ec193fa, type: 3}
+  - {fileID: 21300000, guid: 9ae8d0d4883b3ed48986a2bef0fa3a7a, type: 3}
+  - {fileID: 21300000, guid: 0bca278d9f0f0c44ea3392232ade7061, type: 3}
+  slotGlyphTint: {r: 0.3529412, g: 0.78431374, b: 0.9019608, a: 0.34901962}
+  dollBarTopLeft: {fileID: 21300000, guid: 3f08954c8c835fb45ae0779ca4b4c39a, type: 3}
+  dollBarTopRight: {fileID: 0}
+  dollBarFootLeft: {fileID: 21300000, guid: 3f08954c8c835fb45ae0779ca4b4c39a, type: 3}
+  dollBarFootRight: {fileID: 0}
+  dollBarHeight: 10
+  dollBarTint: {r: 0.44705883, g: 0.87058824, b: 0.76862746, a: 1}
+  gridCell: {fileID: 0}
+  gridCellTint: {r: 1, g: 1, b: 1, a: 1}
+  gridCellBorder: 8
   titleScreen: {fileID: 7972974810867652038, guid: 266d19ecf15f9814f842719bacca662f, type: 3}
   choiceScreen: {fileID: 7972974810867652038, guid: 2942942c7943a28469379803d5ba8b0a, type: 3}
   listScreen: {fileID: 7972974810867652038, guid: b8a08de2e2ce99943a5274946a397dd9, type: 3}
@@ -81,6 +100,7 @@ MonoBehaviour:
   iconButton: {fileID: 5171185237115873002, guid: 58101d58d22604440b12f799d957071b, type: 3}
   sliderRow: {fileID: 7476782851927854031, guid: 00b492fd900797f4fb1de05f261f60aa, type: 3}
   textField: {fileID: 409436092993132241, guid: b14a8d271c1065d469dccf3210f6731b, type: 3}
+  textFieldFill: {r: 0, g: 0, b: 0, a: 0}
   sectionHeader: {fileID: 7476782851927854031, guid: ea2e0233d2836764999879e4baa3633e, type: 3}
   headerLabel: {fileID: 378538600947842191, guid: 708ec0ee567b1f446853d9b160051b44, type: 3}
   startButton: {fileID: 1508758403866968506, guid: eb152765a656ddf4e8a61f305657ceb5, type: 3}

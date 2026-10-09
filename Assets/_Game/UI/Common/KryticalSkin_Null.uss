@@ -38,13 +38,6 @@
 .kn-faction-null .kn-header {
     border-bottom-color: rgba(222, 65, 73, 0.28);
 }
-.kn-faction-null .kn-rule {
-    background-color: rgba(222, 65, 73, 0.35);
-}
-.kn-faction-null .kn-rule-pip {
-    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Circle_01_Med_Clean.png#SPR_HUD_DarkFantasy_Circle_01_Med_Clean");
-    -unity-background-image-tint-color: rgb(222, 65, 73);
-}
 .kn-faction-null .kn-eyebrow, .kn-faction-null .eyebrow {
     font-size: 14.08px;
     color: rgb(144, 104, 214);
@@ -512,9 +505,11 @@
     font-size: 12.8px;
     -unity-font-definition: url("/Assets/Synty/InterfaceDarkFantasyHUD/Fonts/Markazi/MarkaziText-SemiBold.ttf");
 }
-.kn-faction-null .equip-label {
-    font-size: 10.24px;
-    color: rgba(171, 151, 178, 0.75);
+.kn-faction-null .slot-glyph {
+    -unity-background-image-tint-color: rgba(190, 88, 94, 0.4);
+}
+.kn-faction-null .doll-bar-half {
+    -unity-background-image-tint-color: rgb(163, 152, 166);
 }
 .kn-faction-null .item-cell:hover, .kn-faction-null .equip-slot:hover {
     -unity-background-image-tint-color: rgba(113, 78, 124, 0.95);
@@ -589,6 +584,26 @@
 .kn-faction-null .try-on-clear {
     font-size: 14.08px;
 }
+.kn-faction-null .card-picture-frame {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Frame_Box_03.png#SPR_HUD_DarkFantasy_Frame_Box_03");
+    -unity-background-image-tint-color: rgba(186, 157, 196, 0.6);
+}
+.kn-faction-null .card-flag-text {
+    font-size: 14.08px;
+}
+.kn-faction-null .card-stat-pip {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Circle_01_Med_Clean.png#SPR_HUD_DarkFantasy_Circle_01_Med_Clean");
+    -unity-background-image-tint-color: rgb(144, 104, 214);
+}
+.kn-faction-null .card-stat-text {
+    font-size: 15.36px;
+}
+.kn-faction-null .card-hints .prompt-text {
+    font-size: 14.08px;
+}
+.kn-faction-null .tooltip-name.heading {
+    font-size: 24.32px;
+}
 .kn-faction-null .tooltip-name {
     font-size: 19.2px;
     -unity-font-definition: url("/Assets/Synty/InterfaceDarkFantasyHUD/Fonts/Markazi/MarkaziText-SemiBold.ttf");
@@ -608,10 +623,6 @@
 .kn-faction-null .tooltip-stats {
     font-size: 14.08px;
     color: rgb(171, 151, 178);
-}
-.kn-faction-null .tooltip-hint {
-    font-size: 12.8px;
-    color: rgb(222, 65, 73);
 }
 .kn-faction-null .item-menu-title {
     font-size: 15.36px;
@@ -1491,7 +1502,7 @@
 .kn-faction-null .preview-beams {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/FX/SPR_FX_DarkFantasy_Beams_01.png#SPR_FX_DarkFantasy_Beams_01");
 }
-.kn-faction-null .inventory-grid .item-cell, .kn-faction-null .equip-column .equip-slot {
+.kn-faction-null .equip-column .equip-slot {
     background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/Cell_Null.png#Cell_Null");
     -unity-background-image-tint-color: rgb(214, 214, 214);
     -unity-slice-scale: 0.1px;
@@ -1501,4 +1512,67 @@
 }
 .kn-faction-null .inventory-grid .item-cell.drop-valid, .kn-faction-null .equip-column .equip-slot.drop-valid {
     -unity-background-image-tint-color: rgb(170, 255, 220);
+}
+.kn-faction-null .card-picture-frame {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/Cell_Null.png#Cell_Null");
+    -unity-background-image-tint-color: rgb(190, 190, 190);
+    -unity-slice-scale: 0.14px;
+}
+.kn-faction-null .inventory-grid .item-cell {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_01.png#SPR_HUD_DarkFantasy_Box_Small_Parchment_01");
+    -unity-background-image-tint-color: rgba(19, 19, 19, 0.9);
+    -unity-slice-scale: 0.16px;
+}
+.kn-faction-null .inventory-grid .item-cell:hover {
+    -unity-background-image-tint-color: rgba(61, 61, 61, 0.92);
+}
+.kn-faction-null #equip-Weapon > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Swords_01_Underlay.png#ICON_DarkFantasy_Inventory_Swords_01_Underlay");
+    -unity-background-image-tint-color: rgba(64, 108, 111, 0.55);
+}
+.kn-faction-null #equip-Armor > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Armor_02_Underlay.png#ICON_DarkFantasy_Inventory_Armor_02_Underlay");
+    -unity-background-image-tint-color: rgba(64, 108, 111, 0.55);
+}
+.kn-faction-null #equip-Gloves > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Gauntlets_01_Underlay.png#ICON_DarkFantasy_Inventory_Gauntlets_01_Underlay");
+    -unity-background-image-tint-color: rgba(64, 108, 111, 0.55);
+}
+.kn-faction-null #equip-Boots > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Boots_01_Underlay.png#ICON_DarkFantasy_Inventory_Boots_01_Underlay");
+    -unity-background-image-tint-color: rgba(64, 108, 111, 0.55);
+}
+.kn-faction-null #equip-Ring > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Rings_02_Underlay.png#ICON_DarkFantasy_Inventory_Rings_02_Underlay");
+    -unity-background-image-tint-color: rgba(64, 108, 111, 0.55);
+}
+.kn-faction-null #equip-Amulet > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Necklaces_02_Underlay.png#ICON_DarkFantasy_Inventory_Necklaces_02_Underlay");
+    -unity-background-image-tint-color: rgba(64, 108, 111, 0.55);
+}
+.kn-faction-null #equip-Cape > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_ShoulderPads_01_Underlay.png#ICON_DarkFantasy_Inventory_ShoulderPads_01_Underlay");
+    -unity-background-image-tint-color: rgba(64, 108, 111, 0.55);
+}
+.kn-faction-null #equip-Pet > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Items_01_Underlay.png#ICON_DarkFantasy_Inventory_Items_01_Underlay");
+    -unity-background-image-tint-color: rgba(64, 108, 111, 0.55);
+}
+.kn-faction-null .doll-bar {
+    height: 20px;
+}
+.kn-faction-null .doll-bar-half {
+    -unity-background-image-tint-color: rgb(144, 144, 144);
+}
+.kn-faction-null .doll-bar--top > .doll-bar-left {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_TopLeft.png#SPR_DarkFantasy_Bar_03_TopLeft");
+}
+.kn-faction-null .doll-bar--top > .doll-bar-right {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_TopRight.png#SPR_DarkFantasy_Bar_03_TopRight");
+}
+.kn-faction-null .doll-bar--foot > .doll-bar-left {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_BottomLeft.png#SPR_DarkFantasy_Bar_03_BottomLeft");
+}
+.kn-faction-null .doll-bar--foot > .doll-bar-right {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_BottomRight.png#SPR_DarkFantasy_Bar_03_BottomRight");
 }

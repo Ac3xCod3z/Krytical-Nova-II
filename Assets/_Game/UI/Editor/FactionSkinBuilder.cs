@@ -128,6 +128,7 @@ namespace KryticalNova.EditorTools
                 UiSkin asset = LoadSkin(faction);
                 if (asset == null) continue;
                 EnsureChrome(asset);
+                EnsureInventoryParts(asset);
                 string text = Generate(asset, out int rules);
                 string target = SheetPath(faction);
                 // An unchanged sheet is left alone: writing it would re-import it and rebuild every open UI.
@@ -288,6 +289,78 @@ namespace KryticalNova.EditorTools
                 if (skin != null) EnsureCreatorParts(skin);
             }
             AssetDatabase.SaveAssets();
+        }
+
+        // ---------------------------------------------------------------- the inventory pages' parts
+
+        // The equipment slots in the order of UiSkin.slotGlyphs (the names of the slots' elements, "equip-<name>").
+        private static readonly string[] SlotOrder = { "Weapon", "Armor", "Gloves", "Boots", "Ring", "Amulet", "Cape", "Pet" };
+
+        /// <summary>
+        /// Gives a skin asset the parts of its packs' own inventory (the Dark Fantasy HUD's paper doll window, Fantasy
+        /// Screens' inventory panel; the Sci-Fi packs have no inventory, so the Hegemony's is made of their slot
+        /// pictures and lines, with the pictures they lack borrowed from the Dark Fantasy pack). A part that is set is
+        /// left as it is.
+        /// </summary>
+        private static void EnsureInventoryParts(UiSkin skin)
+        {
+            if (skin.slotGlyphs != null && skin.slotGlyphs.Length == SlotOrder.Length && skin.dollBarTopLeft != null) return;
+            string df = DarkFantasy + "Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_";
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                {
+                    string sf = SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_";
+                    skin.slotGlyphs = new[]
+                    {
+                        Load<Sprite>(sf + "Weapon_01.png"), Load<Sprite>(sf + "Armor_01.png"), Load<Sprite>(df + "Gauntlets_01_Underlay.png"), Load<Sprite>(df + "Boots_01_Underlay.png"),
+                        Load<Sprite>(df + "Rings_02_Underlay.png"), Load<Sprite>(df + "Necklaces_02_Underlay.png"), Load<Sprite>(sf + "Backpack_01.png"), Load<Sprite>(sf + "Science_01.png"),
+                    };
+                    skin.slotGlyphTint = new Color32(0x5A, 0xC8, 0xE6, 0x59);
+                    skin.dollBarTopLeft = skin.dollBarFootLeft = Load<Sprite>(SciFiHud + "Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png");
+                    skin.dollBarHeight = 10f;
+                    skin.dollBarTint = new Color32(0x72, 0xDE, 0xC4, 0xFF);
+                    break;
+                }
+                case FactionId.Null:
+                    skin.slotGlyphs = new[]
+                    {
+                        Load<Sprite>(df + "Swords_01_Underlay.png"), Load<Sprite>(df + "Armor_02_Underlay.png"), Load<Sprite>(df + "Gauntlets_01_Underlay.png"), Load<Sprite>(df + "Boots_01_Underlay.png"),
+                        Load<Sprite>(df + "Rings_02_Underlay.png"), Load<Sprite>(df + "Necklaces_02_Underlay.png"), Load<Sprite>(df + "ShoulderPads_01_Underlay.png"), Load<Sprite>(df + "Items_01_Underlay.png"),
+                    };
+                    skin.slotGlyphTint = new Color32(0x40, 0x6C, 0x6F, 0x8C); // the pack's own tone, a little stronger than it draws it
+                    skin.dollBarTopLeft = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_TopLeft.png");
+                    skin.dollBarTopRight = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_TopRight.png");
+                    skin.dollBarFootLeft = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_BottomLeft.png");
+                    skin.dollBarFootRight = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_BottomRight.png");
+                    skin.dollBarHeight = 20f;
+                    skin.dollBarTint = new Color32(0x90, 0x90, 0x90, 0xFF);
+                    skin.gridCell = Load<Sprite>(DarkFantasy + "Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_01.png");
+                    skin.gridCellTint = new Color32(0x13, 0x13, 0x13, 0xE6);
+                    break;
+                case FactionId.Covenant:
+                {
+                    string fs = FantasyScreens + "Sprites/Icons_Inventory/ICON_FantasyScreens_Inventory_";
+                    skin.slotGlyphs = new[]
+                    {
+                        Load<Sprite>(fs + "Swords_01_Underlay.png"), Load<Sprite>(fs + "Armor_02_Underlay.png"), Load<Sprite>(fs + "Gauntlets_01_Underlay.png"), Load<Sprite>(fs + "Boots_01_Underlay.png"),
+                        Load<Sprite>(fs + "Rings_02_Underlay.png"), Load<Sprite>(fs + "Necklaces_02_Underlay.png"), Load<Sprite>(fs + "ShoulderPads_01_Underlay.png"), Load<Sprite>(fs + "Items_01_Underlay.png"),
+                    };
+                    skin.slotGlyphTint = new Color32(0x90, 0x86, 0x5E, 0x80);
+                    string bar = FantasyMenus + "Sprites/FantasyMenus/SPR_FantasyMenus_Frame_Bar_01_";
+                    skin.dollBarTopLeft = Load<Sprite>(bar + "Top_Left.png");
+                    skin.dollBarTopRight = Load<Sprite>(bar + "Top_Right.png");
+                    skin.dollBarFootLeft = Load<Sprite>(bar + "Bottom_Left.png");
+                    skin.dollBarFootRight = Load<Sprite>(bar + "Bottom_Right.png");
+                    skin.dollBarHeight = 20f;
+                    skin.dollBarTint = Color.white;
+                    skin.gridCell = Load<Sprite>(FantasyWarrior + "Sprites/HUD/SPR_HUD_FantasyWarrior_Box_Medium_Parchment_01.png");
+                    skin.gridCellTint = new Color32(0x03, 0x15, 0x22, 0xE6);
+                    break;
+                }
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
         }
 
         // ---------------------------------------------------------------- the character creator's parts
@@ -683,10 +756,46 @@ namespace KryticalNova.EditorTools
             if (asset.previewBeams != null) Rule(".preview-beams", $"background-image: {UrlOf(asset.previewBeams)};");
             if (asset.cell != null)
             {
-                const string cells = ".inventory-grid .item-cell, .equip-column .equip-slot";
+                // An equipment slot is the pack's framed slot. A cell of the grid is its plain cell where the skin
+                // names one (the packs' grids have no frames), and the framed slot otherwise.
+                string cells = asset.gridCell != null ? ".equip-column .equip-slot" : ".inventory-grid .item-cell, .equip-column .equip-slot";
                 Rule(cells, $"background-image: {UrlOf(asset.cell)};", "-unity-background-image-tint-color: rgb(214, 214, 214);", $"-unity-slice-scale: {Scale(asset.cell, asset.cellBorder)};");
                 Rule(".inventory-grid .item-cell:hover, .equip-column .equip-slot:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);");
                 Rule(".inventory-grid .item-cell.drop-valid, .equip-column .equip-slot.drop-valid", "-unity-background-image-tint-color: rgb(170, 255, 220);");
+                Rule(".card-picture-frame", $"background-image: {UrlOf(asset.cell)};", "-unity-background-image-tint-color: rgb(190, 190, 190);", $"-unity-slice-scale: {Scale(asset.cell, asset.cellBorder * 1.4f)};");
+            }
+            if (asset.gridCell != null)
+            {
+                string Tone(Color colour, float lift)
+                {
+                    Color32 c = Color.Lerp(colour, Color.white, lift);
+                    return $"rgba({c.r}, {c.g}, {c.b}, {((Color)c).a.ToString("0.##", CultureInfo.InvariantCulture)})";
+                }
+                Rule(".inventory-grid .item-cell", $"background-image: {UrlOf(asset.gridCell)};", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0f)};", $"-unity-slice-scale: {Scale(asset.gridCell, asset.gridCellBorder)};");
+                Rule(".inventory-grid .item-cell:hover", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0.18f)};");
+            }
+            // The paper doll: what each empty slot is for, and the bars over and under the model.
+            for (int i = 0; i < SlotOrder.Length && i < asset.slotGlyphs.Length; i++)
+            {
+                if (asset.slotGlyphs[i] == null) continue;
+                Color32 tint = asset.slotGlyphTint;
+                Rule($"#equip-{SlotOrder[i]} > .slot-glyph", $"background-image: {UrlOf(asset.slotGlyphs[i])};",
+                    $"-unity-background-image-tint-color: rgba({tint.r}, {tint.g}, {tint.b}, {asset.slotGlyphTint.a.ToString("0.##", CultureInfo.InvariantCulture)});");
+            }
+            if (asset.dollBarTopLeft != null)
+            {
+                Color32 bar = asset.dollBarTint;
+                string height = asset.dollBarHeight.ToString("0.#", CultureInfo.InvariantCulture) + "px";
+                Rule(".doll-bar", $"height: {height};");
+                Rule(".doll-bar-half", $"-unity-background-image-tint-color: rgb({bar.r}, {bar.g}, {bar.b});");
+                foreach ((string where, Sprite left, Sprite right) in new[] { ("top", asset.dollBarTopLeft, asset.dollBarTopRight), ("foot", asset.dollBarFootLeft, asset.dollBarFootRight) })
+                {
+                    if (left == null) continue;
+                    Rule($".doll-bar--{where} > .doll-bar-left", $"background-image: {UrlOf(left)};");
+                    // A pack with one bar for both sides: the right half is the left one seen in a mirror.
+                    if (right != null) Rule($".doll-bar--{where} > .doll-bar-right", $"background-image: {UrlOf(right)};");
+                    else Rule($".doll-bar--{where} > .doll-bar-right", $"background-image: {UrlOf(left)};", "scale: -1 1;");
+                }
             }
             return count;
         }

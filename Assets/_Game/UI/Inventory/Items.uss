@@ -20,7 +20,6 @@
 .doll-band { align-items: center; margin: 2px 0 4px 0; }
 .doll-name { font-size: 18px; margin-top: 4px; -unity-text-align: middle-center; color: rgb(244, 238, 223); }
 .doll-rank { font-size: 11px; letter-spacing: 1px; -unity-text-align: middle-center; }
-.doll-foot-rule { margin-top: 8px; }
 .doll-prompts { justify-content: center; margin-top: 6px; }
 .equipment-body { flex-direction: row; align-items: stretch; margin-top: 4px; }
 .equip-column { width: 96px; justify-content: space-between; align-items: center; padding: 6px 0; }
@@ -56,6 +55,9 @@
     -unity-background-image-tint-color: rgba(150, 176, 196, 0.35);
     -unity-slice-scale: 0.12px;
 }
+
+/* An empty cell or slot has no outline of its own: the outline says what is in it (its rarity, a drop that fits). */
+.item-empty > .item-frame { -unity-background-image-tint-color: rgba(0, 0, 0, 0); }
 
 .item-icon {
     position: absolute;
@@ -108,24 +110,31 @@
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
 }
 
-/* What a slot is for, written small along its foot, inside it: an item's picture lies over it. */
-.equip-label {
+/* What a slot is for is a picture (.slot-glyph), as on the packs' paper dolls: the word is not shown. */
+.equip-label { display: none; }
+
+/* An empty equipment slot shows the pack's picture of what goes in it. */
+.slot-glyph {
     position: absolute;
-    bottom: 5px;
-    left: 0;
-    right: 0;
-    -unity-text-align: middle-center;
-    font-size: 8px;
-    letter-spacing: 1px;
-    color: rgba(146, 162, 178, 0.75);
+    left: 12px; top: 12px; right: 12px; bottom: 12px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgba(120, 170, 190, 0.4);
+    display: none;
 }
+.item-empty > .slot-glyph { display: flex; }
+
+/* The pack's bars over the top and the foot of the model's picture. */
+.doll-bar { position: absolute; left: 10px; right: 10px; height: 14px; flex-direction: row; }
+.doll-bar--top { top: 6px; }
+.doll-bar--foot { bottom: 24px; }
+.doll-bar-half { flex-grow: 1; flex-basis: 0; -unity-background-image-tint-color: rgb(150, 160, 166); }
 
 .item-cell:hover, .equip-slot:hover { -unity-background-image-tint-color: rgba(70, 100, 124, 0.95); scale: 1.05 1.05; }
 .item-cell:hover > .item-frame, .equip-slot:hover > .item-frame { -unity-background-image-tint-color: rgba(220, 236, 246, 0.85); }
 
 /* Rarity: tinted frame + a soft glow inside the slot. Common white, Uncommon blue, Rare yellow, Epic purple
    (Legendary, reserved, orange). These are game signals: the faction skin builder leaves .rarity- rules alone. */
-.rarity-0 > .item-frame { -unity-background-image-tint-color: rgba(242, 245, 248, 0.92); }
+.rarity-0 > .item-frame { -unity-background-image-tint-color: rgba(242, 245, 248, 0.5); }
 .rarity-1 > .item-frame { -unity-background-image-tint-color: rgb(84, 150, 255); }
 .rarity-2 > .item-frame { -unity-background-image-tint-color: rgb(255, 212, 64); }
 .rarity-3 > .item-frame { -unity-background-image-tint-color: rgb(186, 104, 255); }
@@ -277,17 +286,85 @@
 
 .item-tooltip {
     position: absolute;
-    width: 250px;
-    padding: 10px 12px;
+    width: 270px;
+    padding: 12px 14px;
     display: none;
 }
+
+/* The item card. */
+.card-picture {
+    height: 96px;
+    margin-bottom: 8px;
+}
+/* The picture stands on the pack's slot, lit in the item's rarity: a game signal, the same in every skin. */
+.card-picture.rarity-card-0 > .card-picture-frame { -unity-background-image-tint-color: rgb(206, 210, 214); }
+.card-picture.rarity-card-1 > .card-picture-frame { -unity-background-image-tint-color: rgb(110, 164, 255); }
+.card-picture.rarity-card-2 > .card-picture-frame { -unity-background-image-tint-color: rgb(255, 216, 96); }
+.card-picture.rarity-card-3 > .card-picture-frame { -unity-background-image-tint-color: rgb(196, 128, 255); }
+.card-picture.rarity-card-4 > .card-picture-frame { -unity-background-image-tint-color: rgb(255, 150, 72); }
+.card-picture.rarity-card-0 > .card-picture-glow { -unity-background-image-tint-color: rgba(230, 236, 240, 0.14); }
+.card-picture.rarity-card-1 > .card-picture-glow { -unity-background-image-tint-color: rgba(84, 150, 255, 0.4); }
+.card-picture.rarity-card-2 > .card-picture-glow { -unity-background-image-tint-color: rgba(255, 212, 64, 0.36); }
+.card-picture.rarity-card-3 > .card-picture-glow { -unity-background-image-tint-color: rgba(186, 104, 255, 0.42); }
+.card-picture.rarity-card-4 > .card-picture-glow { -unity-background-image-tint-color: rgba(255, 128, 48, 0.4); }
+.card-picture-glow {
+    position: absolute;
+    left: -10%; right: -10%; top: -40%; bottom: -40%;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/FX/SPR_FX_SciFiSoldier_Glow_01.png");
+    -unity-background-image-tint-color: rgba(255, 255, 255, 0.16);
+    -unity-background-scale-mode: scale-to-fit;
+}
+.card-picture-icon {
+    position: absolute;
+    left: 8px; top: 6px; right: 8px; bottom: 6px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+.card-picture-frame {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Frame_04.png#SPR_HUD_SciFiSoldier_Frame_04");
+    -unity-background-image-tint-color: rgba(150, 176, 196, 0.6);
+    -unity-slice-scale: 0.14px;
+}
+.card-flag {
+    position: absolute;
+    right: 10px; top: -13px;
+    padding: 2px 10px;
+    background-color: rgb(118, 33, 33);
+    border-width: 1px;
+    border-color: rgb(180, 180, 180);
+    display: none;
+}
+.card-flag-text { font-size: 11px; letter-spacing: 1px; color: rgb(244, 238, 223); }
+.card-stats { margin-top: 6px; }
+.card-stat {
+    flex-direction: row;
+    align-items: center;
+    padding: 3px 8px;
+    margin-bottom: 3px;
+    background-color: rgba(0, 0, 0, 0.42);
+}
+.card-stat-pip {
+    width: 9px; height: 9px;
+    margin-right: 8px;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active.png#SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active");
+    -unity-background-image-tint-color: rgb(214, 178, 104);
+}
+.card-stat-text { font-size: 12px; white-space: normal; flex-shrink: 1; color: rgb(214, 222, 230); }
+.card-hints { margin-top: 8px; }
+.card-hints > .prompt-row { margin-top: 2px; }
+.card-hints .prompt-text { font-size: 11px; }
+.card-hints .key-mouse { width: 13px; height: 18px; }
+.tooltip-name.heading { font-size: 19px; }
+
 .tooltip-name { font-size: 15px; -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf"); white-space: normal; }
 .tooltip-type { font-size: 11px; color: rgb(214, 178, 104); letter-spacing: 1px; margin-bottom: 6px; }
 .tooltip-requires { font-size: 11px; margin-bottom: 4px; color: rgb(170, 184, 196); white-space: normal; }
 .tooltip-requires--unmet { color: rgb(255, 110, 96); }
 .tooltip-desc { font-size: 12px; white-space: normal; color: rgb(200, 212, 222); }
 .tooltip-stats { font-size: 11px; margin-top: 6px; color: rgb(146, 162, 178); white-space: normal; }
-.tooltip-hint { font-size: 10px; margin-top: 8px; color: rgb(114, 222, 196); white-space: normal; }
+/* The hint is shown as prompts (.card-hints); the line itself is kept for what reads it. */
+.tooltip-hint { display: none; }
 
 .rarity-text-0 { color: rgb(240, 243, 246); }
 .rarity-text-1 { color: rgb(110, 170, 255); }

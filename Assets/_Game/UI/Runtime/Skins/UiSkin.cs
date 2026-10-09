@@ -111,6 +111,21 @@ namespace KryticalNova.UI
         public Vector2 crownSize = new Vector2(64f, 32f), crownBackSize = new Vector2(96f, 48f);
         public float crownRise = 24f, crownBackRise = 30f;
 
+        [Header("Inventory pages: the pack's own paper doll, grid and item card")]
+        [Tooltip("The pictures an empty equipment slot shows, in the order Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape, Pet.")]
+        public Sprite[] slotGlyphs = new Sprite[0];
+        [Tooltip("The colour the slot pictures are drawn in (the packs draw them faint, in their own tone).")]
+        public Color slotGlyphTint = new Color(0.47f, 0.67f, 0.75f, 0.4f);
+        [Tooltip("The bars over the top and under the foot of the Equipment page's model, each in a left and a right half.")]
+        public Sprite dollBarTopLeft, dollBarTopRight, dollBarFootLeft, dollBarFootRight;
+        [Tooltip("How tall the bars are drawn, in panel pixels, and their colour.")]
+        [Min(1f)] public float dollBarHeight = 14f;
+        public Color dollBarTint = Color.white;
+        [Tooltip("A cell of the Pack's grid: the pack's plain cell, without a frame. None: the equipment slot's art is used.")]
+        public Sprite gridCell;
+        public Color gridCellTint = Color.white;
+        [Min(0f)] public float gridCellBorder = 8f;
+
         [Header("Menus (the title flow): the pack's own screens")]
         [Tooltip("The pack's title screen.")]
         public GameObject titleScreen;
