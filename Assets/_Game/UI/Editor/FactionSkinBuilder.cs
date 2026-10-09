@@ -282,7 +282,125 @@ namespace KryticalNova.EditorTools
                 });
                 Menus(skin, FantasyMenus, "FantasyMenus", new Color32(0xE8, 0xB0, 0x4A, 0xFF));
             });
+            foreach (FactionId faction in Factions)
+            {
+                UiSkin skin = LoadSkin(faction);
+                if (skin != null) EnsureCreatorParts(skin);
+            }
             AssetDatabase.SaveAssets();
+        }
+
+        // ---------------------------------------------------------------- the character creator's parts
+
+        private const string FantasyScreens = "Assets/Synty/InterfaceFantasyScreens/";
+        public const int CreatorTabCount = 7, TraitCount = 3;
+
+        /// <summary>
+        /// Gives a skin asset made before the creator was built per skin the parts of its menu pack that the creator
+        /// is made from (the three menu packs are made to one template), and the pictures of its tabs and traits. A
+        /// part that is set is left as it is.
+        /// </summary>
+        public static void EnsureCreatorParts(UiSkin skin)
+        {
+            string pack, token;
+            string[] tabs, traits;
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                    pack = SciFiMenus;
+                    token = "SciFiMenus";
+                    tabs = new[]
+                    {
+                        SciFiMenus + "Sprites/Icons_Menu/ICON_SciFiMenus_Menu_Flag_01_Clean.png",
+                        SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Weapon_01.png",
+                        SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Armor_01.png",
+                        SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Helmet_01.png",
+                        SciFiMenus + "Sprites/Icons_Menu/ICON_SciFiMenus_Menu_Message_01_Clean.png",
+                        SciFiMenus + "Sprites/Icons_Settings/ICON_SciFiMenus_Settings_Color_01_Clean.png",
+                        SciFiMenus + "Sprites/Icons_Menu/ICON_SciFiMenus_Menu_Tick_01_Clean.png",
+                    };
+                    traits = new[]
+                    {
+                        SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Science_01.png",
+                        SciFiHud + "Sprites/Icons_Status/ICON_SciFiSoldier_Status_Health_01.png",
+                        SciFiHud + "Sprites/Icons_Status/ICON_SciFiSoldier_Status_Armor_01.png",
+                    };
+                    break;
+                case FactionId.Null:
+                    pack = DarkFantasyMenus;
+                    token = "DarkFantasyMenus";
+                    tabs = new[]
+                    {
+                        DarkFantasyMenus + "Sprites/Icons_DarkFantasyMenus/SPR_DarkFantasyMenus_Icon_Flag_01.png",
+                        DarkFantasyMenus + "Sprites/Icons_DarkFantasyMenus/SPR_DarkFantasyMenus_Icon_Swords_01.png",
+                        DarkFantasy + "Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Armor_01_Clean.png",
+                        DarkFantasyMenus + "Sprites/Icons_DarkFantasyMenus/SPR_DarkFantasyMenus_Icon_Helmet_01.png",
+                        DarkFantasyMenus + "Sprites/Icons_Menu/ICON_DarkFantasyMenus_Menu_Message_01_Clean.png",
+                        DarkFantasyMenus + "Sprites/Icons_Settings/ICON_DarkFantasyMenus_Settings_Color_01_Clean.png",
+                        DarkFantasyMenus + "Sprites/Icons_DarkFantasyMenus/SPR_DarkFantasyMenus_Icon_Scroll_01.png",
+                    };
+                    traits = new[]
+                    {
+                        DarkFantasy + "Sprites/Icons_Stats/ICON_DarkFantasy_Stat_Mind_01_Clean.png",
+                        DarkFantasy + "Sprites/Icons_Stats/ICON_DarkFantasy_Stat_Speed_02_Clean.png",
+                        DarkFantasy + "Sprites/Icons_Stats/ICON_DarkFantasy_Stat_Strength_01_Clean.png",
+                    };
+                    break;
+                case FactionId.Covenant:
+                    pack = FantasyMenus;
+                    token = "FantasyMenus";
+                    string character = FantasyScreens + "Sprites/Icons_Character/ICON_FantasyScreens_Character_";
+                    tabs = new[]
+                    {
+                        FantasyMenus + "Sprites/Icons_FantasyMenus/SPR_FantasyMenus_Icon_Flag_01.png",
+                        FantasyScreens + "Sprites/Icons_Inventory/ICON_FantasyScreens_Inventory_Swords_01_Underlay.png",
+                        character + "Body_01_Underlay.png",
+                        character + "Head_01_Underlay.png",
+                        FantasyScreens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Message_01_Underlay.png",
+                        character + "Markings_01_Underlay.png",
+                        FantasyScreens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Done_01_Underlay.png",
+                    };
+                    traits = new string[0]; // its own creator screen has them
+                    break;
+                default:
+                    return;
+            }
+
+            string prefabs = pack + "Prefabs/";
+            bool changed = false;
+            GameObject Part(GameObject now, string path)
+            {
+                if (now != null) return now;
+                // The Dark Fantasy pack numbers its labels.
+                string file = File.Exists($"{prefabs}{path}.prefab") ? $"{prefabs}{path}.prefab" : $"{prefabs}{path}_01.prefab";
+                var part = Load<GameObject>(file);
+                changed |= part != null;
+                return part;
+            }
+            Sprite[] Pictures(Sprite[] now, string[] paths)
+            {
+                if (now != null && now.Length == paths.Length && Array.TrueForAll(now, each => each != null)) return now;
+                changed = true;
+                return Array.ConvertAll(paths, path => Load<Sprite>(path));
+            }
+
+            if (skin.faction == FactionId.Covenant && skin.creatorScreen == null)
+            {
+                skin.creatorScreen = Load<GameObject>(FantasyScreens + "Prefabs/Screens/Screen_FantasyScreens_CharacterCreator_01.prefab");
+                changed = true;
+            }
+            skin.tabStrip = Part(skin.tabStrip, $"Buttons/Menu_{token}_Navigation_Icons_01");
+            skin.framedPanel = Part(skin.framedPanel, $"Panels/Panel_{token}_Popup_02");
+            skin.iconButton = Part(skin.iconButton, $"Buttons/Menu_{token}_Button_Icon_01");
+            skin.sliderRow = Part(skin.sliderRow, $"Settings/Settings_{token}_Item_Slider_01");
+            skin.textField = Part(skin.textField, $"Panels/Panel_{token}_Input_01");
+            skin.sectionHeader = Part(skin.sectionHeader, $"Settings/Settings_{token}_Section_Header_01");
+            skin.headerLabel = Part(skin.headerLabel, $"_CommonComponents/Label_{token}_Header");
+            skin.startButton = Part(skin.startButton, $"Buttons/Button_{token}_Start_01");
+            skin.footer = Part(skin.footer, $"Buttons/Input_{token}_Footer_01");
+            skin.creatorTabIcons = Pictures(skin.creatorTabIcons, tabs);
+            skin.traitIcons = Pictures(skin.traitIcons, traits);
+            if (changed) EditorUtility.SetDirty(skin);
         }
 
         // ---------------------------------------------------------------- window chrome

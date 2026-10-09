@@ -14,11 +14,6 @@ namespace KryticalNova.EditorTools
     public static partial class FrontEndBuilder
     {
         private const string Screens = "Assets/Synty/InterfaceFantasyScreens/";
-        private const string CharacterIcons = Screens + "Sprites/Icons_Character/ICON_FantasyScreens_Character_";
-        private const string OriginTabIcon = "Assets/Synty/InterfaceFantasyMenus/Sprites/Icons_FantasyMenus/SPR_FantasyMenus_Icon_Flag_01.png";
-        private const string FinaliseTabIcon = Screens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Done_01_Underlay.png";
-        private const string DisciplineTabIcon = Screens + "Sprites/Icons_Inventory/ICON_FantasyScreens_Inventory_Swords_01_Underlay.png";
-        private const string PreviewTabIcon = Screens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Message_01_Underlay.png";
         private const string OptionRowPrefab = Menus + "Settings/Settings_FantasyMenus_Item_Array_01.prefab";
         private const string SliderRowPrefab = Screens + "Prefabs/Components/Settings_FantasyScreens_Item_Slider_01.prefab";
         private const string SwatchPrefab = Screens + "Prefabs/Buttons/Button_FantasyScreens_Swatch_01.prefab";
@@ -165,13 +160,15 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>
-        /// One faction's creator. None of the menu packs has a character creator: the layout is Fantasy Screens' in
-        /// every skin, with the skin's own option rows and body text, and lettered in the skin's fonts.
+        /// One faction's creator. A skin whose packs have a creator screen (the Covenant: Fantasy Screens) wears it;
+        /// the others' is assembled from their own menu pack's parts, to the same sections
+        /// (<see cref="AssembleCreator"/>). Either way the controller finds the same things.
         /// </summary>
         private static void BuildCharacterCreatorScreen(Transform canvas, CharacterCreationDatabase database, CharacterShowroom showroom, PortraitStudio studio)
         {
-            var screen = AddScreen(canvas, Screens + "Prefabs/Screens/Screen_FantasyScreens_CharacterCreator_01.prefab", "Screen_CharacterCreator");
-            ShowroomBackground(screen);
+            bool own = skin.creatorScreen != null;
+            Transform screen = own ? AddScreen(canvas, skin.creatorScreen, "Screen_CharacterCreator") : Box("Screen_CharacterCreator", skinGroup);
+            if (own) ShowroomBackground(screen);
 
             var controller = SkinObject("Character Creator Controller");
             var hotkeys = AddHotkeys(controller);
@@ -184,6 +181,11 @@ namespace KryticalNova.EditorTools
             SetRef(creator, "showroom", showroom);
             SetRef(creator, "portraits", studio);
             SetRef(creator, "hotkeys", hotkeys);
+            if (!own)
+            {
+                AssembleCreator(screen, creator);
+                return;
+            }
 
             var panels = MenuUi.Find(screen, "Panels");
             if (panels == null)
@@ -202,29 +204,6 @@ namespace KryticalNova.EditorTools
             PrepareColours(MenuUi.Find(panels, "Section_Colour"), creator);
             PrepareFinalise(MenuUi.Find(panels, "Section_Finalise"), creator);
             PrepareCreatorFooter(screen);
-            LetterInSkin(screen);
-        }
-
-        /// <summary>
-        /// Sets a screen that is not of the skin's own pack in the skin's lettering: the pack's display face where the
-        /// screen used one, its reading face everywhere else (<see cref="MenuLettering"/> does it as the screen wakes).
-        /// The faces are read off the skin's own screens.
-        /// </summary>
-        private static void LetterInSkin(Transform screen)
-        {
-            if (skin == null) return;
-            TMP_FontAsset display = FontOf(skin.listScreen, "Screen_Header"), reading = FontOf(skin.titleScreen, "Label_Press");
-            // One of the sci-fi pack's faces ships without its material and draws nothing where it is set: the display face reads well too.
-            if (reading == null) reading = display;
-            if (display == null && reading == null) return;
-            screen.gameObject.AddComponent<MenuLettering>().Set(display, reading);
-        }
-
-        private static TMP_FontAsset FontOf(GameObject prefab, string labelName)
-        {
-            if (prefab == null) return null;
-            var label = MenuUi.Find<TMP_Text>(prefab.transform, labelName);
-            return label != null && label.font != null && label.font.material != null ? label.font : null;
         }
 
         /// <summary>The pack's seven tabs become ours: Origin, Discipline, Body, Head, Preview, Colour, Finalise.</summary>
@@ -232,16 +211,12 @@ namespace KryticalNova.EditorTools
         {
             var nav = MenuUi.Find(screen, "Navigation_Tabs");
             if (nav == null) return;
-            var tabs = new List<MenuRow>
-            {
-                PrepareTab(nav, "Button_Randomize", OriginTabIcon),
-                PrepareTab(nav, "Button_Facial_Hair", DisciplineTabIcon), // the pack's spare tab: the weapon class
-                PrepareTab(nav, "Button_Body", CharacterIcons + "Body_01_Underlay.png"),
-                PrepareTab(nav, "Button_Race", CharacterIcons + "Head_01_Underlay.png"), // the screen renames the pack's Head tab
-                PrepareTab(nav, "Button_Hair", PreviewTabIcon), // the pack's Hair tab: hair is a row on the Head tab
-                PrepareTab(nav, "Button_Colour", CharacterIcons + "Markings_01_Underlay.png"),
-                PrepareTab(nav, "Button_Finalise", FinaliseTabIcon)
-            };
+            // In tab order. The pack's spare tab is the weapon class; its Race tab is renamed Head by the screen; its
+            // Hair tab is the Preview (hair is a row on the Head tab).
+            string[] buttons = { "Button_Randomize", "Button_Facial_Hair", "Button_Body", "Button_Race", "Button_Hair", "Button_Colour", "Button_Finalise" };
+            var tabs = new List<MenuRow>();
+            for (int i = 0; i < buttons.Length; i++)
+                tabs.Add(PrepareTab(nav, buttons[i], i < skin.creatorTabIcons.Length ? skin.creatorTabIcons[i] : null));
             // The pack hides nothing here any more: its spare tab is ours. The controller moves it next to Origin
             // when the screen opens (children of the screen prefab cannot be reordered in the saved scene).
             if (tabs[1] != null)
@@ -252,7 +227,7 @@ namespace KryticalNova.EditorTools
             SetRefs(creator, "tabButtons", tabs);
         }
 
-        private static MenuRow PrepareTab(Transform nav, string tabName, string iconPath)
+        private static MenuRow PrepareTab(Transform nav, string tabName, Sprite sprite)
         {
             var tab = MenuUi.Find(nav, tabName);
             if (tab == null)
@@ -261,7 +236,6 @@ namespace KryticalNova.EditorTools
                 return null;
             }
             var icon = MenuUi.Find<Image>(tab, "ICON");
-            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(iconPath);
             if (icon != null && sprite != null)
             {
                 icon.sprite = sprite;
@@ -429,7 +403,7 @@ namespace KryticalNova.EditorTools
             }
             if (field.placeholder == null)
             {
-                var hint = AddVendorPrefab(BodyLabelPrefab, area, "Label_Placeholder").GetComponentInChildren<TMP_Text>(true);
+                var hint = AddVendorPrefab(skin != null && skin.bodyLabel != null ? skin.bodyLabel : Load(BodyLabelPrefab), area, "Label_Placeholder").GetComponentInChildren<TMP_Text>(true);
                 if (hint != null)
                 {
                     Stretch((RectTransform)hint.transform);
@@ -458,10 +432,11 @@ namespace KryticalNova.EditorTools
             var prompts = new List<Transform>();
             for (int i = 0; i < group.childCount; i++)
                 if (group.GetChild(i).name.StartsWith("Hotkey_Prompt")) prompts.Add(group.GetChild(i));
-            // The pack ships four prompts; the fifth is another instance of the same prefab.
+            // The packs ship two to four prompts; the rest are more of the same: another instance of its prefab, or a
+            // copy of the prompt where the footer is not a prefab instance (an assembled screen's parts are unpacked).
             var source = prompts.Count > 0 ? PrefabUtility.GetCorrespondingObjectFromOriginalSource(prompts[0].gameObject) : null;
-            while (prompts.Count < names.Length && source != null)
-                prompts.Add(((GameObject)PrefabUtility.InstantiatePrefab(source, group)).transform);
+            while (prompts.Count > 0 && prompts.Count < names.Length)
+                prompts.Add(source != null ? ((GameObject)PrefabUtility.InstantiatePrefab(source, group)).transform : Object.Instantiate(prompts[0].gameObject, group).transform);
             for (int i = 0; i < prompts.Count; i++)
             {
                 if (i >= names.Length)

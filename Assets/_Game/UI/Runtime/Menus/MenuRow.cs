@@ -19,6 +19,9 @@ namespace KryticalNova.UI.Menus
         private static readonly int SelectedId = Animator.StringToHash("Selected");
         private static readonly int ToggleIsOnId = Animator.StringToHash("ToggleIsOn");
 
+        [Tooltip("Shown while this is the selected one. For a row whose picture covers what the pack's animation lights up (an origin tile's portrait, a swatch's colour). May be none.")]
+        [SerializeField] private GameObject selectedMark;
+
         private Animator animator;
         private bool selected;
         private bool hovered;
@@ -74,6 +77,7 @@ namespace KryticalNova.UI.Menus
 
         private void Refresh()
         {
+            if (selectedMark != null && selectedMark.activeSelf != selected) selectedMark.SetActive(selected);
             if (animator == null || !animator.isActiveAndEnabled) return;
             if (!parametersRead && animator.isInitialized)
             {

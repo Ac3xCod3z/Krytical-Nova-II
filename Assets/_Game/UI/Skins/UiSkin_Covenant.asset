@@ -75,3 +75,22 @@ MonoBehaviour:
   optionRow: {fileID: 7476782851927854031, guid: 3fd886c35a2add14ab83dbb716222bfb, type: 3}
   bodyLabel: {fileID: 378538600947842191, guid: b69886e01265efe4b94fec2d3d7949a3, type: 3}
   menuAccent: {r: 0.9098039, g: 0.6901961, b: 0.2901961, a: 1}
+  creatorScreen: {fileID: 4332127775584103397, guid: 67b9fc4d6d5f63d4598b4aff77bcd396, type: 3}
+  tabStrip: {fileID: 2837186173911059739, guid: d8b2fd8c9012bec449c8fd649b70c8ac, type: 3}
+  framedPanel: {fileID: 3500758331952116744, guid: 4ed3251a9ae30c648bd9442ecf578266, type: 3}
+  iconButton: {fileID: 5171185237115873002, guid: 703f5a6be12604a40abe38c1188eda53, type: 3}
+  sliderRow: {fileID: 7476782851927854031, guid: e66217378094cd34fbf033a59b2a2fd3, type: 3}
+  textField: {fileID: 409436092993132241, guid: c6ebd68f9f75a3241971bb16ad0fe089, type: 3}
+  sectionHeader: {fileID: 7476782851927854031, guid: ad3a1f826fa702a4a9b12a0a1b6d0424, type: 3}
+  headerLabel: {fileID: 378538600947842191, guid: a42ea268e7c71b648ab01b25f901c71c, type: 3}
+  startButton: {fileID: 1508758403866968506, guid: 98f8fe1fb28ce00488ff382e4dbdbae6, type: 3}
+  footer: {fileID: 7216490102118840713, guid: 09b9da90d533a80408b36382040fe9ee, type: 3}
+  creatorTabIcons:
+  - {fileID: 21300000, guid: b5e47b5537b82c14e923e6a94d713907, type: 3}
+  - {fileID: 21300000, guid: c0ef3b8fe7639624b897fb32d063a349, type: 3}
+  - {fileID: 21300000, guid: 10f9f55380875084bac1bc0793720a33, type: 3}
+  - {fileID: 21300000, guid: 256d37056d120c44da58fdd82cfb7247, type: 3}
+  - {fileID: 21300000, guid: 87c95445b093deb4a8dff3a66d18b758, type: 3}
+  - {fileID: 21300000, guid: 70567f229d2df304da66af90e0302595, type: 3}
+  - {fileID: 21300000, guid: 3016ae46f03ac0b479b16728897349ea, type: 3}
+  traitIcons: []

@@ -129,6 +129,30 @@ namespace KryticalNova.UI
         [Tooltip("The colour of the comic dots and bands laid over the menus, and the second colour of the showroom's light.")]
         public Color menuAccent = Color.white;
 
+        [Header("Menus: the character creator")]
+        [Tooltip("The pack's own character creator screen. None: the creator is assembled from the parts below, to the same sections.")]
+        public GameObject creatorScreen;
+        [Tooltip("The pack's strip of icon tabs, with a key at either end.")]
+        public GameObject tabStrip;
+        [Tooltip("The pack's framed panel: the page the creator's sections stand on.")]
+        public GameObject framedPanel;
+        [Tooltip("The pack's square icon button: an origin tile, a colour swatch.")]
+        public GameObject iconButton;
+        [Tooltip("The pack's row with a slider.")]
+        public GameObject sliderRow;
+        [Tooltip("The pack's text field.")]
+        public GameObject textField;
+        [Tooltip("The pack's heading over a section of a list, and its headline label.")]
+        public GameObject sectionHeader, headerLabel;
+        [Tooltip("The pack's large button (create the character).")]
+        public GameObject startButton;
+        [Tooltip("The pack's row of key prompts along the foot of a screen.")]
+        public GameObject footer;
+        [Tooltip("The pictures on the creator's seven tabs, in tab order: Origin, Discipline, Body, Head, Preview, Colour, Finalise.")]
+        public Sprite[] creatorTabIcons = new Sprite[0];
+        [Tooltip("The pictures beside an origin's three traits.")]
+        public Sprite[] traitIcons = new Sprite[0];
+
 #if UNITY_EDITOR
         /// <summary>Editor: a value of a skin was changed in the Inspector (the skin sheets are rebuilt from it).</summary>
         public static event System.Action Edited;

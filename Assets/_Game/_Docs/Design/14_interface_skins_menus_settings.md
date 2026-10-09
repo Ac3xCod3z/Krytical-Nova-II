@@ -116,14 +116,50 @@ glow in the skin's menu accent) over its background. Layout, text and behaviour 
 controller class per screen, which finds the parts it needs by name.
 
 - **Title, Faction select, Character select, Loading:** each pack's own screens.
-- **Character creator:** Fantasy Screens' layout in every skin (the other two menu packs have no equivalent), with the
-  skin's option rows and its lettering (`MenuLettering`).
+- **Character creator:** each skin's own. The Covenant wears Fantasy Screens' creator screen. Sci-Fi Menus and Dark
+  Fantasy Menus have no creator screen, so the Hegemony's and the Null's are assembled from their own pack's parts
+  (see "The creator in every skin" below).
 - **Loading:** the header is found under either name the packs give it. The sci-fi screen has no tip line, so the
   builder adds one over its bar; the other two have theirs under the bar.
 - **Settings from character select:** the O key and a prompt at the foot of the screen (section 7).
 
 Synty's TextMesh Pro font assets are dynamic and get written to when a new glyph is drawn. `VendorFontGuard` keeps
 every vendor font asset out of every save, so building or playing never changes a vendor file.
+
+### The creator in every skin
+
+One controller (`CharacterCreatorController`) and one set of sections in all three: seven tabs with Q and E at their
+ends, the Origin page (four tiles, the chosen one's name, description and three traits; the Discipline tab uses the same
+tiles), a list of option rows and sliders shared by Body, Head and Preview, three swatch groups, the name page, and five
+prompts along the foot. What differs is what each part is made of.
+
+A skin either names its pack's creator screen (`UiSkin.creatorScreen`: the Covenant's, from Fantasy Screens) or has
+none, and then `FrontEndBuilder.AssembleCreator` builds the screen from the parts the skin names. The three menu packs
+are made to one template, so every skin has every part (`FactionSkinBuilder.EnsureCreatorParts` fills them in):
+
+| Part | Skin field | Pack prefab (`<Pack>` = SciFiMenus, DarkFantasyMenus) | Used for |
+| --- | --- | --- | --- |
+| Tab strip | `tabStrip` | `Menu_<Pack>_Navigation_Icons_01` | the seven tabs (the strip ships five buttons: two more are copies) and the Q / E caps |
+| Framed panel | `framedPanel` | `Panel_<Pack>_Popup_02` | the page the sections stand on; the sections go where the pack writes on its panel |
+| Icon button | `iconButton` | `Menu_<Pack>_Button_Icon_01` | an origin tile (portrait, or the class weapon), a colour swatch |
+| Option row | `optionRow` | `Settings_<Pack>_Item_Array_01` | the stepped rows, and "Suggest a Name" |
+| Slider row | `sliderRow` | `Settings_<Pack>_Item_Slider_01` | Body Size, Musculature |
+| Text field | `textField` | `Panel_<Pack>_Input_01` | the name |
+| Section heading, headline, body text | `sectionHeader`, `headerLabel`, `bodyLabel` | `Settings_<Pack>_Section_Header_01`, `Label_<Pack>_Header`, `Label_<Pack>_Body` | every heading and line of text |
+| Start button | `startButton` | `Button_<Pack>_Start_01` | Create Character |
+| Footer | `footer` | `Input_<Pack>_Footer_01` | the five prompts |
+| Tab pictures, trait pictures | `creatorTabIcons`, `traitIcons` | the pack's own icon sets (menus and HUD) | one picture a tab, in tab order; one beside each trait |
+
+- The parts are unpacked in the scene (the vendor prefabs are only read): a tile's portrait and a swatch's colour go
+  between the button's own layers, which a prefab instance does not allow.
+- The sections are laid out at the packs' own sizes and shown 1.25 times larger (`CreatorPageScale`): a pack's rows are
+  made for a list as wide as the screen. Reading text is also scaled by the skin's `fontScale`.
+- **Changed on purpose from the pack's parts:** a slider row says what each end means (Slim / Heavy, Lean / Muscular)
+  either side of the slider, as Fantasy Screens' does, and not a number on its handle. The chosen tile or swatch wears
+  its frame a second time in the skin's accent (`MenuRow.selectedMark`): the packs light the button behind its icon,
+  which a portrait or a colour covers.
+- A label whose face cannot be drawn is set in the pack's reading face (`ReadableFaces`); `MenuLettering` is no longer
+  used by anything.
 
 ## 5. The menus are a comic book
 
@@ -260,6 +296,9 @@ EditMode, all passing at the last run (427 in the project):
 - `UI/Tests/Editor/SettingsTests` (7): the ledger behind APPLY and REVERT; every page has its tab; the camera maths.
 - `UI/Tests/Editor/MenuBookTests` (4): the page order; the book prefab is whole and is MegaBook's; every menu scene
   turns its pages with it; the turn starts flat and ends over.
+- `UI/Tests/Editor/CreatorScreenTests` (3): every skin has a creator of its own pack (its screen, or every part one is
+  assembled from, with a picture for every tab); no two factions share one; the creator scene hands each skin's
+  controller every part it works with, in the right numbers.
 - `GameFeel/Tests/Editor/MenuFeelTests` (8): every moment has a player that moves something and can sound; the world
   and every menu scene hold the menu feel; a movement leaves the thing where an animator put it.
 
@@ -277,7 +316,7 @@ in the menus and in the world; every Gameplay option; both chat options in two s
 | --- | --- | --- | --- | --- |
 | Title | same, pictured | same, pictured | same, pictured | name in the pack's own title lettering; "press to continue"; Esc opens the exit popup |
 | Faction select | same, pictured | same, pictured | same, pictured | three crests, arrow keys, Enter, Esc |
-| Character creator | same, pictured | same, pictured | same, pictured | Fantasy Screens' layout in every skin; the skin's rows and lettering |
+| Character creator | same sections, own pack's parts, pictured (7 tabs) | same sections, own pack's parts, pictured (7 tabs) | same, pictured (7 tabs) | Hegemony and Null assembled from their menu pack; Covenant is Fantasy Screens' screen. Checked by script in all three (section 10 says what that covers) |
 | Character select | same, pictured | same, pictured | same, pictured | roster, showroom, Enter, Delete (type the name), Esc; **new:** Settings (O) |
 | Loading | same, pictured | same, pictured | same, pictured | header and tip the same in all three (the sci-fi tip line is added by us) |
 | Settings, from the menus | pictured | pictured | pictured | the game's window; game-only parts hidden |
@@ -317,5 +356,10 @@ in the menus and in the world; every Gameplay option; both chat options in two s
 
 **Sounds.** Every menu moment has a sound slot and none has a clip: the project has no interface sounds.
 
-**The book at rest.** The comic book is the way between screens and the way in; it is not drawn while a screen is at
-rest (section 5 says why).
+**The creator in the three skins (9 Oct 2026).** Pictured on every tab in Play, and run through by script in each
+skin, 21 checks a skin, all passing: a tile chooses an origin and a weapon class, the portraits are drawn, the tabs,
+the Q / E caps and the Next and Back prompts change tab, a slider and its arrow shape the body, an arrow steps a row,
+a swatch changes the look and is marked, Randomise and Undo, the five prompts, a suggested name, a good name accepted
+and a bad one refused. The script clicks through the event system and sets values: no real pointer or key was used
+(the R, Z, Q, E, Enter and Esc keys were not pressed), nothing was dragged, and no character was finished from the new
+screens.
