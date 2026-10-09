@@ -130,6 +130,7 @@ namespace KryticalNova.EditorTools
                 EnsureChrome(asset);
                 EnsureInventoryParts(asset);
                 EnsureInventoryFrames(asset);
+                EnsureSettingsParts(asset);
                 string text = Generate(asset, out int rules);
                 string target = SheetPath(faction);
                 // An unchanged sheet is left alone: writing it would re-import it and rebuild every open UI.
@@ -421,6 +422,83 @@ namespace KryticalNova.EditorTools
             AssetDatabase.SaveAssetIfDirty(skin);
         }
 
+        /// <summary>
+        /// The parts of a settings row from each menu pack's own settings rows (Settings_&lt;Pack&gt;_Item_Array /
+        /// _Slider / _Toggle): arrows, the value box, the slider's track and the two halves of the ON / OFF switch, each
+        /// a frame flattened over its fill in the colour the pack gives it. A skin that has its arrows is left as it is.
+        /// </summary>
+        private static void EnsureSettingsParts(UiSkin skin)
+        {
+            if (skin.stepBox != null) return;
+            string f = skin.faction.ToString(), art = $"{FactionHudBuilder.Folder}/{skin.faction}/Art";
+            Sprite S(string path) => Load<Sprite>(path);
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                {
+                    string m = SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_";
+                    skin.stepArrowLeft = S(m + "Button_Arrow_07_Left.png");
+                    skin.stepArrowRight = S(m + "Button_Arrow_07_Right.png");
+                    skin.stepBox = SpriteRecolourer.Flatten($"StepBox_{f}", art, S(m + "Frame_Box_Small_07.png"), S(m + "Frame_Box_Small_07_Background.png"), new Color32(0x04, 0x32, 0x46, 0xFA));
+                    skin.stepBoxBorder = 9f;
+                    skin.sliderTrack = SpriteRecolourer.Flatten($"SliderTrack_{f}", art, S(m + "Button_Frame_07.png"), S(m + "Button_Frame_07_Background.png"), new Color32(0x00, 0x72, 0x96, 0xE0));
+                    skin.sliderTrackBorder = 7f;
+                    Sprite fill = S(m + "Bar_Frame_07_Background.png");
+                    Color dim = new Color32(0x1B, 0x6D, 0x78, 0xE6), lit = new Color32(0xFF, 0x9C, 0x00, 0xFF);
+                    skin.toggleLeft = SpriteRecolourer.Flatten($"ToggleLeft_{f}", art, S(m + "Bar_Frame_07_Left.png"), fill, dim);
+                    skin.toggleLeftLit = SpriteRecolourer.Flatten($"ToggleLeftLit_{f}", art, S(m + "Bar_Frame_07_Left.png"), fill, lit);
+                    skin.toggleRight = SpriteRecolourer.Flatten($"ToggleRight_{f}", art, S(m + "Bar_Frame_07_Right.png"), fill, dim);
+                    skin.toggleRightLit = SpriteRecolourer.Flatten($"ToggleRightLit_{f}", art, S(m + "Bar_Frame_07_Right.png"), fill, lit);
+                    skin.toggleBorder = 11f;
+                    skin.rowHighlight = S(SciFiMenus + "Sprites/General/SPR_SciFiMenus_Menu_Item_Background_08.png");
+                    skin.rowHighlightTint = new Color32(0x00, 0x8D, 0xA7, 0x70);
+                    break;
+                }
+                case FactionId.Null:
+                {
+                    string m = DarkFantasyMenus + "Sprites/DarkFantasyMenus/SPR_DarkFantasyMenus_";
+                    skin.stepArrowLeft = S(m + "Button_Arrow_05_Left.png");
+                    skin.stepArrowRight = S(m + "Button_Arrow_05_Right.png");
+                    skin.stepBox = SpriteRecolourer.Flatten($"StepBox_{f}", art, S(m + "Frame_Bar_Large_02.png"), S(m + "Frame_Bar_Large_02_Background.png"), new Color32(0x52, 0x21, 0x1B, 0xFF));
+                    skin.stepBoxBorder = 12f;
+                    skin.sliderTrack = SpriteRecolourer.Flatten($"SliderTrack_{f}", art, S(m + "Frame_Bar_Medium_10.png"), S(m + "Frame_Bar_Medium_10_Background.png"), new Color32(0x33, 0x10, 0x0F, 0xFF));
+                    skin.sliderTrackBorder = 8f;
+                    Sprite fill = S(m + "Button_Toggle_03_Background.png");
+                    Color dim = new Color32(0x37, 0x0F, 0x0B, 0xE6), lit = new Color32(0xB2, 0x15, 0x0B, 0xFF);
+                    skin.toggleLeft = SpriteRecolourer.Flatten($"ToggleLeft_{f}", art, S(m + "Button_Toggle_03_Left.png"), fill, dim);
+                    skin.toggleLeftLit = SpriteRecolourer.Flatten($"ToggleLeftLit_{f}", art, S(m + "Button_Toggle_03_Left.png"), fill, lit);
+                    skin.toggleRight = SpriteRecolourer.Flatten($"ToggleRight_{f}", art, S(m + "Button_Toggle_03_Right.png"), fill, dim);
+                    skin.toggleRightLit = SpriteRecolourer.Flatten($"ToggleRightLit_{f}", art, S(m + "Button_Toggle_03_Right.png"), fill, lit);
+                    skin.toggleBorder = 12f;
+                    skin.rowHighlight = S(DarkFantasyMenus + "Sprites/General/SPR_DarkFantasyMenus_Gradient_Horizontal_01.png");
+                    skin.rowHighlightTint = new Color32(0xB0, 0x14, 0x0B, 0x60);
+                    break;
+                }
+                case FactionId.Covenant:
+                {
+                    string m = FantasyMenus + "Sprites/FantasyMenus/SPR_FantasyMenus_";
+                    skin.stepArrowRight = S(FantasyMenus + "Sprites/Icons_FantasyMenus/SPR_FantasyMenus_Icon_Arrow_01.png");
+                    skin.stepArrowLeft = null; // the pack has one arrow, pointing right: the other is its mirror
+                    skin.stepBox = SpriteRecolourer.Flatten($"StepBox_{f}", art, S(m + "Menu_Button_05_Frame.png"), S(m + "Menu_Button_05_Background.png"), new Color32(0x04, 0x32, 0x46, 0xFA));
+                    skin.stepBoxBorder = 12f;
+                    skin.sliderTrack = SpriteRecolourer.Flatten($"SliderTrack_{f}", art, S(m + "Scrollbar_Horizontal_01_Frame.png"), null, new Color32(0x0A, 0x1C, 0x2A, 0xE0));
+                    skin.sliderTrackBorder = 6f;
+                    Sprite fill = S(m + "Menu_Button_17_Frame_Background.png"), fillLit = S(m + "Menu_Button_13_Frame_Background.png");
+                    Color dim = new Color32(0x0B, 0x22, 0x37, 0xE6), lit = new Color32(0x0B, 0x81, 0xB2, 0xFF);
+                    skin.toggleLeft = SpriteRecolourer.Flatten($"ToggleLeft_{f}", art, S(m + "Menu_Button_17_Frame_Left.png"), fill, dim);
+                    skin.toggleLeftLit = SpriteRecolourer.Flatten($"ToggleLeftLit_{f}", art, S(m + "Menu_Button_17_Frame_Left.png"), fillLit != null ? fillLit : fill, lit);
+                    skin.toggleRight = SpriteRecolourer.Flatten($"ToggleRight_{f}", art, S(m + "Menu_Button_17_Frame_Right.png"), fill, dim);
+                    skin.toggleRightLit = SpriteRecolourer.Flatten($"ToggleRightLit_{f}", art, S(m + "Menu_Button_17_Frame_Right.png"), fillLit != null ? fillLit : fill, lit);
+                    skin.toggleBorder = 12f;
+                    skin.rowHighlight = S(FantasyMenus + "Sprites/General/SPR_FantasyMenus_Gradient_Horizontal_01.png");
+                    skin.rowHighlightTint = new Color32(0x0B, 0x6E, 0xB0, 0x60);
+                    break;
+                }
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
         // ---------------------------------------------------------------- the character creator's parts
 
         private const string FantasyScreens = "Assets/Synty/InterfaceFantasyScreens/";
@@ -559,7 +637,7 @@ namespace KryticalNova.EditorTools
                 // The faction's dark tone, darker still.
                 Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
                 Color backing = Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.1f), 0.085f);
-                backing.a = 0.97f;
+                backing.a = 0.7f; // the world reads faintly through a window, as through the packs' own
                 skin.windowBacking = backing;
                 EditorUtility.SetDirty(skin);
                 AssetDatabase.SaveAssetIfDirty(skin);
@@ -869,6 +947,42 @@ namespace KryticalNova.EditorTools
                 Rule($"{cell}.drop-hover > .item-frame", "-unity-background-image-tint-color: rgb(255, 214, 92);");
                 Rule($"{cell}.reject-flash > .item-frame", "-unity-background-image-tint-color: rgb(230, 70, 80);");
             }
+            // The settings rows: the pack's arrows, value box, slider, handle and ON / OFF switch.
+            if (asset.stepArrowLeft != null || asset.stepArrowRight != null)
+            {
+                // A pack with one arrow only: the other is the same picture seen in a mirror.
+                foreach ((string way, Sprite own, Sprite other) in new[] { ("back", asset.stepArrowLeft, asset.stepArrowRight), ("forward", asset.stepArrowRight, asset.stepArrowLeft) })
+                {
+                    const string white = "-unity-background-image-tint-color: rgb(255, 255, 255);";
+                    if (own != null) Rule($".settings-step--{way}", $"background-image: {UrlOf(own)};", white);
+                    else
+                    {
+                        Rule($".settings-step--{way}", $"background-image: {UrlOf(other)};", white, "scale: -1 1;");
+                        Rule($".settings-step--{way}:hover", "scale: -1.15 1.15;");
+                    }
+                }
+            }
+            if (asset.stepBox != null)
+            {
+                string box = $"background-image: {UrlOf(asset.stepBox)};", slice = $"-unity-slice-scale: {Scale(asset.stepBox, asset.stepBoxBorder)};";
+                Rule(".settings-row-value", box, slice, "background-color: rgba(0, 0, 0, 0);", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+                Rule(".settings-slider .unity-base-slider__dragger", box, slice, "background-color: rgba(0, 0, 0, 0);", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+            }
+            if (asset.sliderTrack != null)
+                Rule(".settings-slider .unity-base-slider__tracker", $"background-image: {UrlOf(asset.sliderTrack)};", $"-unity-slice-scale: {Scale(asset.sliderTrack, asset.sliderTrackBorder)};",
+                    "background-color: rgba(0, 0, 0, 0);", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+            if (asset.toggleLeft != null && asset.toggleLeftLit != null && asset.toggleRight != null && asset.toggleRightLit != null)
+            {
+                string Half(Sprite art) => $"background-image: {UrlOf(art)};";
+                string cut = $"-unity-slice-scale: {Scale(asset.toggleLeft, asset.toggleBorder)};";
+                const string clear = "background-color: rgba(0, 0, 0, 0);", white = "-unity-background-image-tint-color: rgb(255, 255, 255);";
+                Rule(".toggle-on", Half(asset.toggleLeft), cut, clear, white);
+                Rule(".toggle-off", Half(asset.toggleRightLit), cut, clear, white);
+                Rule(".kn-toggle:checked .toggle-on", Half(asset.toggleLeftLit), clear);
+                Rule(".kn-toggle:checked .toggle-off", Half(asset.toggleRight), clear);
+            }
+            if (asset.rowHighlight != null)
+                Rule(".settings-row:hover, .kn-toggle:hover", $"background-image: {UrlOf(asset.rowHighlight)};", $"-unity-background-image-tint-color: {Rgba(asset.rowHighlightTint)};", "background-color: rgba(0, 0, 0, 0);");
             // The parts every page shares: the ornate frame of a card and of a skill's tile.
             if (asset.cardPictureFrame != null)
                 Rule($".kn-card > .{SyntySkin.CardFrameClass}", $"background-image: {UrlOf(asset.cardPictureFrame)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",

@@ -414,26 +414,37 @@
 .kn-faction-null .settings-tab.active {
     -unity-background-image-tint-color: rgb(112, 0, 6);
 }
+.kn-faction-null .settings-row:hover, .kn-faction-null .kn-toggle:hover {
+    background-color: rgba(222, 65, 73, 0.1);
+}
 .kn-faction-null .settings-row-label {
-    font-size: 16.64px;
-    color: rgb(225, 211, 230);
+    font-size: 17.92px;
+    color: rgb(231, 217, 236);
 }
 .kn-faction-null .settings-row-value {
     font-size: 15.36px;
-    color: rgb(175, 140, 236);
-}
-.kn-faction-null .settings-step {
-    font-size: 15.36px;
+    background-color: rgba(70, 0, 3, 0.9);
 }
 .kn-faction-null .settings-slider-value {
-    font-size: 15.36px;
-    color: rgb(175, 140, 236);
+    font-size: 14.08px;
 }
 .kn-faction-null .settings-slider .unity-base-slider__tracker {
-    background-color: rgb(65, 45, 72);
+    background-color: rgb(78, 0, 4);
 }
 .kn-faction-null .settings-slider .unity-base-slider__dragger {
-    background-color: rgb(222, 65, 73);
+    background-color: rgb(77, 0, 4);
+}
+.kn-faction-null .toggle-half {
+    font-size: 14.08px;
+    color: rgb(209, 194, 214);
+    background-color: rgba(78, 0, 4, 0.9);
+}
+.kn-faction-null .toggle-off, .kn-faction-null .kn-toggle:checked .toggle-on {
+    background-color: rgb(112, 0, 6);
+}
+.kn-faction-null .kn-toggle:checked .toggle-off {
+    color: rgb(209, 194, 214);
+    background-color: rgba(78, 0, 4, 0.9);
 }
 .kn-faction-null .settings-row.unavailable .settings-row-label {
     color: rgb(126, 108, 132);
@@ -1364,7 +1375,7 @@
 
 /* ---- window chrome: the pack's own frames and ornaments ---- */
 .kn-faction-null .window, .kn-faction-null .item-tooltip, .kn-faction-null .item-menu, .kn-faction-null .item-confirm, .kn-faction-null .amount-dialog, .kn-faction-null .game-menu, .kn-faction-null .player-menu {
-    background-color: rgba(20, 13, 22, 0.97);
+    background-color: rgba(20, 13, 22, 0.7);
 }
 .kn-faction-null Button {
     background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/Button_Null.png#Button_Null");
@@ -1635,6 +1646,57 @@
 }
 .kn-faction-null .item-cell.reject-flash > .item-frame {
     -unity-background-image-tint-color: rgb(230, 70, 80);
+}
+.kn-faction-null .settings-step--back {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyMenus/Sprites/DarkFantasyMenus/SPR_DarkFantasyMenus_Button_Arrow_05_Left.png#SPR_DarkFantasyMenus_Button_Arrow_05_Left");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null .settings-step--forward {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyMenus/Sprites/DarkFantasyMenus/SPR_DarkFantasyMenus_Button_Arrow_05_Right.png#SPR_DarkFantasyMenus_Button_Arrow_05_Right");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null .settings-row-value {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/StepBox_Null.png#StepBox_Null");
+    -unity-slice-scale: 0.024px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null .settings-slider .unity-base-slider__dragger {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/StepBox_Null.png#StepBox_Null");
+    -unity-slice-scale: 0.024px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null .settings-slider .unity-base-slider__tracker {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/SliderTrack_Null.png#SliderTrack_Null");
+    -unity-slice-scale: 1px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null .toggle-on {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/ToggleLeft_Null.png#ToggleLeft_Null");
+    -unity-slice-scale: 0.0857px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null .toggle-off {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/ToggleRightLit_Null.png#ToggleRightLit_Null");
+    -unity-slice-scale: 0.0857px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null .kn-toggle:checked .toggle-on {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/ToggleLeftLit_Null.png#ToggleLeftLit_Null");
+    background-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-null .kn-toggle:checked .toggle-off {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/ToggleRight_Null.png#ToggleRight_Null");
+    background-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-null .settings-row:hover, .kn-faction-null .kn-toggle:hover {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyMenus/Sprites/General/SPR_DarkFantasyMenus_Gradient_Horizontal_01.png#SPR_DarkFantasyMenus_Gradient_Horizontal_01");
+    -unity-background-image-tint-color: rgba(176, 20, 11, 0.38);
+    background-color: rgba(0, 0, 0, 0);
 }
 .kn-faction-null .kn-card > .kn-card-frame {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_17.png#SPR_DarkFantasy_Frame_Box_Medium_17");

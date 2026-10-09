@@ -37,7 +37,7 @@ MonoBehaviour:
   arrowIcon: {fileID: 21300000, guid: 0b13248ba64c1ac40b06b80e48adb4b3, type: 3}
   softBacking: {fileID: 21300000, guid: 1154e777d995c7242aa6a50337490569, type: 3}
   techPatterns: 1
-  windowBacking: {r: 0.052275002, g: 0.06045625, b: 0.085, a: 0.97}
+  windowBacking: {r: 0.052275002, g: 0.06045625, b: 0.085, a: 0.7}
   windowFrame: {fileID: 21300000, guid: b0ff2dbcbb0ec0e40b99b5cf9c1e99ab, type: 3}
   windowFrameBorder: 30
   windowFrameOutset: 5
@@ -97,6 +97,19 @@ MonoBehaviour:
   gridCell: {fileID: 21300000, guid: c0d97d6c2b0829c4c86755e9349ed967, type: 3}
   gridCellTint: {r: 0.078431375, g: 0.16470589, b: 0.23529412, a: 0.92156863}
   gridCellBorder: 6
+  stepArrowLeft: {fileID: 21300000, guid: d91c8059d46af3e44817618e6aa5dc23, type: 3}
+  stepArrowRight: {fileID: 21300000, guid: 20c346643f3846a4694d9290dc9289a0, type: 3}
+  stepBox: {fileID: 21300000, guid: a205db0d889ad6d44abc0797b18a83de, type: 3}
+  stepBoxBorder: 9
+  sliderTrack: {fileID: 21300000, guid: 35108d93f3eb0664c9009bda150a1aa8, type: 3}
+  sliderTrackBorder: 7
+  toggleLeft: {fileID: 21300000, guid: fac03d8b428b77e42bc684e91e3f3172, type: 3}
+  toggleLeftLit: {fileID: 21300000, guid: 431ef28bc0ed2dd43824b91919019c8d, type: 3}
+  toggleRight: {fileID: 21300000, guid: c0b93f6fef593f64e96a299f1f9ac4f3, type: 3}
+  toggleRightLit: {fileID: 21300000, guid: 3adf71660fa73b4459d272853fe701bc, type: 3}
+  toggleBorder: 11
+  rowHighlight: {fileID: 21300000, guid: ce5ee8ca938c0054694de7d488659284, type: 3}
+  rowHighlightTint: {r: 0, g: 0.5529412, b: 0.654902, a: 0.4392157}
   titleScreen: {fileID: 7972974810867652038, guid: 266d19ecf15f9814f842719bacca662f, type: 3}
   choiceScreen: {fileID: 7972974810867652038, guid: 2942942c7943a28469379803d5ba8b0a, type: 3}
   listScreen: {fileID: 7972974810867652038, guid: b8a08de2e2ce99943a5274946a397dd9, type: 3}

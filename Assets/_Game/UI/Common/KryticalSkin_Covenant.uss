@@ -414,26 +414,37 @@
 .kn-faction-covenant .settings-tab.active {
     -unity-background-image-tint-color: rgb(112, 73, 0);
 }
+.kn-faction-covenant .settings-row:hover, .kn-faction-covenant .kn-toggle:hover {
+    background-color: rgba(222, 167, 65, 0.1);
+}
 .kn-faction-covenant .settings-row-label {
-    font-size: 14.56px;
-    color: rgb(230, 221, 211);
+    font-size: 15.68px;
+    color: rgb(236, 227, 217);
 }
 .kn-faction-covenant .settings-row-value {
     font-size: 13.44px;
-    color: rgb(140, 236, 172);
-}
-.kn-faction-covenant .settings-step {
-    font-size: 13.44px;
+    background-color: rgba(70, 45, 0, 0.9);
 }
 .kn-faction-covenant .settings-slider-value {
-    font-size: 13.44px;
-    color: rgb(140, 236, 172);
+    font-size: 12.32px;
 }
 .kn-faction-covenant .settings-slider .unity-base-slider__tracker {
-    background-color: rgb(72, 59, 45);
+    background-color: rgb(78, 51, 0);
 }
 .kn-faction-covenant .settings-slider .unity-base-slider__dragger {
-    background-color: rgb(222, 167, 65);
+    background-color: rgb(77, 50, 0);
+}
+.kn-faction-covenant .toggle-half {
+    font-size: 12.32px;
+    color: rgb(214, 204, 194);
+    background-color: rgba(78, 51, 0, 0.9);
+}
+.kn-faction-covenant .toggle-off, .kn-faction-covenant .kn-toggle:checked .toggle-on {
+    background-color: rgb(112, 73, 0);
+}
+.kn-faction-covenant .kn-toggle:checked .toggle-off {
+    color: rgb(214, 204, 194);
+    background-color: rgba(78, 51, 0, 0.9);
 }
 .kn-faction-covenant .settings-row.unavailable .settings-row-label {
     color: rgb(132, 121, 108);
@@ -1364,7 +1375,7 @@
 
 /* ---- window chrome: the pack's own frames and ornaments ---- */
 .kn-faction-covenant .window, .kn-faction-covenant .item-tooltip, .kn-faction-covenant .item-menu, .kn-faction-covenant .item-confirm, .kn-faction-covenant .amount-dialog, .kn-faction-covenant .game-menu, .kn-faction-covenant .player-menu {
-    background-color: rgba(22, 18, 13, 0.97);
+    background-color: rgba(22, 18, 13, 0.7);
 }
 .kn-faction-covenant Button {
     background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/Button_Covenant.png#Button_Covenant");
@@ -1628,6 +1639,61 @@
 }
 .kn-faction-covenant .item-cell.reject-flash > .item-frame {
     -unity-background-image-tint-color: rgb(230, 70, 80);
+}
+.kn-faction-covenant .settings-step--back {
+    background-image: url("/Assets/Synty/InterfaceFantasyMenus/Sprites/Icons_FantasyMenus/SPR_FantasyMenus_Icon_Arrow_01.png#SPR_FantasyMenus_Icon_Arrow_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    scale: -1 1;
+}
+.kn-faction-covenant .settings-step--back:hover {
+    scale: -1.15 1.15;
+}
+.kn-faction-covenant .settings-step--forward {
+    background-image: url("/Assets/Synty/InterfaceFantasyMenus/Sprites/Icons_FantasyMenus/SPR_FantasyMenus_Icon_Arrow_01.png#SPR_FantasyMenus_Icon_Arrow_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-covenant .settings-row-value {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/StepBox_Covenant.png#StepBox_Covenant");
+    -unity-slice-scale: 0.0343px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-covenant .settings-slider .unity-base-slider__dragger {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/StepBox_Covenant.png#StepBox_Covenant");
+    -unity-slice-scale: 0.0343px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-covenant .settings-slider .unity-base-slider__tracker {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/SliderTrack_Covenant.png#SliderTrack_Covenant");
+    -unity-slice-scale: 0.024px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-covenant .toggle-on {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/ToggleLeft_Covenant.png#ToggleLeft_Covenant");
+    -unity-slice-scale: 0.0857px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-covenant .toggle-off {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/ToggleRightLit_Covenant.png#ToggleRightLit_Covenant");
+    -unity-slice-scale: 0.0857px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-covenant .kn-toggle:checked .toggle-on {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/ToggleLeftLit_Covenant.png#ToggleLeftLit_Covenant");
+    background-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-covenant .kn-toggle:checked .toggle-off {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/ToggleRight_Covenant.png#ToggleRight_Covenant");
+    background-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-covenant .settings-row:hover, .kn-faction-covenant .kn-toggle:hover {
+    background-image: url("/Assets/Synty/InterfaceFantasyMenus/Sprites/General/SPR_FantasyMenus_Gradient_Horizontal_01.png#SPR_FantasyMenus_Gradient_Horizontal_01");
+    -unity-background-image-tint-color: rgba(11, 110, 176, 0.38);
+    background-color: rgba(0, 0, 0, 0);
 }
 .kn-faction-covenant .kn-card > .kn-card-frame {
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_18_Variant_01.png#SPR_FantasyWarrior_Frame_Box_18_Variant_01");

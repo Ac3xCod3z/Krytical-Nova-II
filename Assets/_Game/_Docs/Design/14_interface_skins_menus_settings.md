@@ -344,6 +344,25 @@ it does. APPLY keeps the changes; REVERT puts back everything as it was when the
   sees an ordinary refusal.
 - **Chat text size** is a share of what the faction's skin gives a chat line, so it holds in every skin.
 
+### The rows, as the packs' settings rows
+
+A row is a bare line with the pack's highlight across it under the pointer, and its control is made of the pack's own
+parts, read off each menu pack's `Settings_<Pack>_Item_Array / _Slider / _Toggle` (`FactionSkinBuilder.EnsureSettingsParts`,
+flattened into `UI/HUD/Faction/<Faction>/Art/`):
+
+| Part | Skin field | What it is |
+| --- | --- | --- |
+| Arrows either side of a value or a slider | `stepArrowLeft`, `stepArrowRight` | the pack's arrow buttons (a pack with one arrow: the other is its mirror) |
+| The box a value is written in, and the slider's handle | `stepBox` | the pack's frame over its fill |
+| The slider's track | `sliderTrack` | the pack's bar |
+| ON / OFF | `toggleLeft` / `Lit`, `toggleRight` / `Lit` | the two halves of the pack's switch, dim and lit |
+| The highlight under the pointer | `rowHighlight`, `rowHighlightTint` | the pack's row gradient |
+
+A slider's value is written on its handle and an arrow at either end moves it a twentieth of its range; a switch
+shows ON and OFF side by side with the one that holds lit (a click anywhere on its line still flips it). The game
+menu wears the item card's frame. **A window's backing is 70 % solid** (`windowBacking`), so the world reads faintly
+through every window as through the packs' own; the item card stays solid.
+
 ### Controls: keys as key caps
 
 `ControlsSettingsTab` lays the page out as the packs' own controls pages do: the keyboard picture on top

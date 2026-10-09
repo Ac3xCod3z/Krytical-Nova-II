@@ -138,6 +138,22 @@ namespace KryticalNova.UI
         public Color gridCellTint = Color.white;
         [Min(0f)] public float gridCellBorder = 8f;
 
+        [Header("Settings rows: the pack's own arrows, value box, slider and switch")]
+        [Tooltip("The arrows either side of a value or a slider. No right arrow: the left one is shown in a mirror.")]
+        public Sprite stepArrowLeft, stepArrowRight;
+        [Tooltip("The box a stepped value is written in, and the slider's handle: the pack's frame over its fill, flattened.")]
+        public Sprite stepBox;
+        [Min(0f)] public float stepBoxBorder = 10f;
+        [Tooltip("The slider's track: the pack's frame over its fill, flattened.")]
+        public Sprite sliderTrack;
+        [Min(0f)] public float sliderTrackBorder = 8f;
+        [Tooltip("The two halves of the ON / OFF switch, dim and lit: the pack's frames over its fill, flattened.")]
+        public Sprite toggleLeft, toggleLeftLit, toggleRight, toggleRightLit;
+        [Min(0f)] public float toggleBorder = 12f;
+        [Tooltip("What lies across a row while the pointer is on it, and its colour.")]
+        public Sprite rowHighlight;
+        public Color rowHighlightTint = new Color(0f, 0.6f, 0.7f, 0.3f);
+
         [Header("Menus (the title flow): the pack's own screens")]
         [Tooltip("The pack's title screen.")]
         public GameObject titleScreen;
