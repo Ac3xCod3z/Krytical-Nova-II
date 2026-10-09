@@ -214,6 +214,8 @@ namespace KryticalNova.Pets
                     }
                     follower.SetStageLook(look.model, look.scale, glow, spacing);
                 }
+                follower.SetAnimationCycle(pet != null && Settings != null ? Settings.animationCycleSeconds : 0f);
+                follower.SetStance(pet != null && !pet.bobs, pet != null ? pet.footEffect : null, pet != null ? pet.footBones : null);
             }
             Changed?.Invoke();
         }
@@ -322,6 +324,36 @@ namespace KryticalNova.Pets
             Transform body = follower != null && follower.PetTransform != null ? follower.PetTransform : transform;
             ClientPresentationRegistry.Feel?.PetEvolved(body, pet.Stage(stage).glow, mine);
             Evolved?.Invoke(pet, stage);
+        }
+
+        // ------------------------------------------------------------------ animations
+
+        /// <summary>The animations the pet that is out can play, by name. Empty for a pet whose model has none.</summary>
+        public IReadOnlyList<string> AnimationNames => pet != null && follower != null ? follower.AnimationNames : Array.Empty<string>();
+
+        /// <summary>
+        /// Server only (GM): the pet plays one of its animations now, on every machine. False when it has no
+        /// animation of that name.
+        /// </summary>
+        public bool ServerPlayAnimation(string animationName)
+        {
+            if (pet == null || !HasAuthority || follower == null) return false;
+            IReadOnlyList<string> names = follower.AnimationNames;
+            for (int i = 0; i < names.Count; i++)
+            {
+                if (!string.Equals(names[i], animationName, StringComparison.OrdinalIgnoreCase)) continue;
+                int hash = Animator.StringToHash(names[i]);
+                if (IsSpawned) PlayAnimationRpc(hash);
+                else follower.PlayAnimation(hash);
+                return true;
+            }
+            return false;
+        }
+
+        [Rpc(SendTo.Everyone)]
+        private void PlayAnimationRpc(int nameHash)
+        {
+            if (follower != null) follower.PlayAnimation(nameHash);
         }
 
         // ------------------------------------------------------------------ feeding (IItemUseHandler)

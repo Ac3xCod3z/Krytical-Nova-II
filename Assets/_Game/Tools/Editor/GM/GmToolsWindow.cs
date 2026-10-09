@@ -1106,6 +1106,27 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + PetsTab + "/Event"), EnableIf(nameof(IsReady)), LabelText("PvP Event Loss (25 XP)"), PropertyOrder(821)]
         private void PetEventLoss() => Run("gm.pet.event loss");
 
+        [TabGroup(Tabs, PetsTab), Title("Animations"), ValueDropdown(nameof(PetAnimationChoices)), EnableIf(nameof(IsReady)), LabelText("Animation"), PropertyOrder(830)]
+        [InfoBox("The animations of the pet that is out. A pet plays them in turn by itself (Pet Settings, Animation Cycle Seconds) " +
+                 "and rests in between; playing one here shows it to everyone at once.")]
+        [SerializeField] private string petAnimation = "";
+
+        private static IEnumerable<string> PetAnimationChoices()
+        {
+            var pet = LocalPlayer != null ? LocalPlayer.GetComponent<KryticalNova.Pets.PlayerPet>() : null;
+            return pet != null ? pet.AnimationNames : System.Array.Empty<string>();
+        }
+
+        [ButtonGroup(Tabs + "/" + PetsTab + "/Animation"), EnableIf(nameof(IsReady)), LabelText("Play"), PropertyOrder(831)]
+        private void PlayPetAnimation()
+        {
+            if (string.IsNullOrWhiteSpace(petAnimation)) { Log("Pick an animation first."); return; }
+            Run($"gm.pet.anim {petAnimation}");
+        }
+
+        [ButtonGroup(Tabs + "/" + PetsTab + "/Animation"), EnableIf(nameof(IsReady)), LabelText("List"), PropertyOrder(832)]
+        private void ListPetAnimations() => Run("gm.pet.anims");
+
         // ================================================================ RENOWN (Renown, Ascension, Nova Standings)
 
         private static PlayerNova TargetNova => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerNova>() : null;

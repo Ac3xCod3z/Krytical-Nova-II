@@ -43,6 +43,10 @@ namespace KryticalNova.Pets
         [Tooltip("Sparkles per second at the first evolved stage (x) and at the last (y).")]
         public Vector2 sparkleRate = new Vector2(3f, 16f);
 
+        [Header("Animation: a pet whose model has animations of its own (today the Kitsune Spirit)")]
+        [Tooltip("Such a pet plays its animations in turn, one every this many seconds, and rests in between. Keep it longer than the longest animation (2.5 s today). 0 = it only rests.")]
+        [Min(0f)] public float animationCycleSeconds = 10f;
+
         [Header("Follow: where a pet hovers beside its owner (which side and how high is the pet item's own offset)")]
         [Tooltip("Half the width of the owner's head and hair at the height pets hover, in metres from the owner's centre line. The clear air below starts here.")]
         [Min(0f)] public float ownerHalfWidth = 0.18f;
