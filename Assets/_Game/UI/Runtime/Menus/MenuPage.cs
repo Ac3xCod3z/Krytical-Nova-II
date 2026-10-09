@@ -160,9 +160,14 @@ namespace KryticalNova.UI.Menus
                 var board = new Rect(0f, page.yMin - stack * aspect - outY, page.xMax + stack + out_, page.height + stack * aspect + outY * 2f);
                 Shade(under, "Cover Shadow Side", new Rect(board.xMax, board.yMin - outY, out_ * 1.6f, board.height), new Color(0f, 0f, 0f, 0.6f), false);
                 Block(under, "Cover Shadow Foot", new Rect(0f, board.yMin - outY * 0.8f, board.width + out_ * 0.6f, outY * 0.8f), new Color(0f, 0f, 0f, 0.45f));
-                Block(under, "Cover Edge", board, settings.coverEdge);
-                float rim = 0.0012f;
-                Block(under, "Cover", new Rect(board.xMin, board.yMin + rim * aspect, board.width - rim, board.height - rim * aspect * 2f), settings.cover);
+                // Round the page only: an overlay canvas is drawn over what the cameras draw, so the page stays open.
+                Block(under, "Cover Top", new Rect(0f, page.yMax, board.width, board.yMax - page.yMax), settings.cover);
+                Block(under, "Cover Foot", new Rect(0f, board.yMin, board.width, page.yMin - board.yMin), settings.cover);
+                Block(under, "Cover Side", new Rect(page.xMax, page.yMin, board.xMax - page.xMax, page.height), settings.cover);
+                float rim = 0.0012f, rimY = rim * aspect;
+                Block(under, "Cover Edge Top", new Rect(0f, board.yMax - rimY, board.width, rimY), settings.coverEdge);
+                Block(under, "Cover Edge Foot", new Rect(0f, board.yMin, board.width, rimY), settings.coverEdge);
+                Block(under, "Cover Edge Side", new Rect(board.xMax - rim, board.yMin, rim, board.height), settings.coverEdge);
             }
 
             // The pages under this one: each a sliver further right and further down.

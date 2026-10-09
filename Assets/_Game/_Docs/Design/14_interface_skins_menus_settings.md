@@ -115,7 +115,10 @@ switches on the one the menus wear. Every screen is the pack's own prefab, with 
 glow in the skin's menu accent) over its background. Layout, text and behaviour are the same in the three: one
 controller class per screen, which finds the parts it needs by name.
 
-- **Title, Faction select, Character select, Loading:** each pack's own screens.
+- **Title, Faction select, Character select, Loading:** each pack's own screens. On the Title the game's name is
+  centred as a whole (`CentreTitle`): the packs place each part of their own title in a room made for their words.
+- **Faction select** is the pack's screen of three cards, and each card is the frame its faction's **champion** stands
+  in (see "Faction select's champions" below).
 - **Character creator:** each skin's own. The Covenant wears Fantasy Screens' creator screen. Sci-Fi Menus and Dark
   Fantasy Menus have no creator screen, so the Hegemony's and the Null's are assembled from their own pack's parts
   (see "The creator in every skin" below).
@@ -125,6 +128,25 @@ controller class per screen, which finds the parts it needs by name.
 
 Synty's TextMesh Pro font assets are dynamic and get written to when a new glyph is drawn. `VendorFontGuard` keeps
 every vendor font asset out of every save, so building or playing never changes a vendor file.
+
+### Faction select's champions
+
+`FactionShowcase` (one in the scene, behind the canvas, shared by the three skins) stands a doll for each faction:
+the Hegemony's Soldier, the Null's Skeleton and the Covenant's Viking, each in the best Epic piece of every slot at or
+under level 112 (`gearLevel`) with the weapon of its faction's offense class, glowing at Temper 120 (`temper`). What
+they wear is looked up in the gear dictionary as the game does (`BestPiece`), so it follows the gear ladder.
+
+- A doll stands in its card: every frame the showcase reads where the card's window (`Doll_Window`) is on the screen
+  and puts the doll's feet on its foot at the stage's depth, as tall as its share of the window. So it holds at any
+  screen shape, on the book's page, and in any skin's card.
+- The chosen one draws its weapon (the player's own draw and drawn stance), stands larger and is lit by its own lamp
+  and a rim lamp in its faction's colour; the others carry their weapons and stand back in the dark. The wall's glow
+  takes the chosen faction's colour.
+- The cards keep the faction's crest (small, in the top corner) and name; a card's own text is not used. The words of
+  the chosen faction (tagline, lore, lineages) are on one panel to the right of the cards, the pack's framed panel.
+- Keys and flow are as before: Left / Right, Enter or a double click to choose, Esc back, a click to select.
+- `CharacterDoll.Create(..., keepWeapon: true)` keeps the model's weapon mount on a doll; the weapon glow
+  (`GlowHaloFeature`) was added to `UIPreview_Renderer`, which the menus' cameras and the Equipment preview draw with.
 
 ### The creator in every skin
 
@@ -301,6 +323,8 @@ EditMode, all passing at the last run (427 in the project):
 - `UI/Tests/Editor/SettingsTests` (7): the ledger behind APPLY and REVERT; every page has its tab; the camera maths.
 - `UI/Tests/Editor/MenuBookTests` (4): the page order; the book prefab is whole and is MegaBook's; every menu scene
   turns its pages with it; the turn starts flat and ends over.
+- `UI/Tests/Editor/FactionShowcaseTests` (3): every champion has its lineage and a whole Epic set with a weapon model;
+  the level asked for is honoured; the scene has one showcase and hands it and the panel of words to every skin.
 - `UI/Tests/Editor/CreatorScreenTests` (3): every skin has a creator of its own pack (its screen, or every part one is
   assembled from, with a picture for every tab); no two factions share one; the creator scene hands each skin's
   controller every part it works with, in the right numbers.
@@ -320,7 +344,7 @@ in the menus and in the world; every Gameplay option; both chat options in two s
 | Screen | Hegemony | Null | Covenant | Notes |
 | --- | --- | --- | --- | --- |
 | Title | same, pictured | same, pictured | same, pictured | name in the pack's own title lettering; "press to continue"; Esc opens the exit popup |
-| Faction select | same, pictured | same, pictured | same, pictured | three crests, arrow keys, Enter, Esc |
+| Faction select | pictured | pictured | pictured | **changed on purpose:** a champion in each card, the words on one panel; arrow keys, Enter, Esc, click as before |
 | Character creator | same sections, own pack's parts, pictured (7 tabs) | same sections, own pack's parts, pictured (7 tabs) | same, pictured (7 tabs) | Hegemony and Null assembled from their menu pack; Covenant is Fantasy Screens' screen. Checked by script in all three (section 10 says what that covers) |
 | Character select | same, pictured | same, pictured | same, pictured | roster, showroom, Enter, Delete (type the name), Esc; **new:** Settings (O) |
 | Loading | same, pictured | same, pictured | same, pictured | header and tip the same in all three (the sci-fi tip line is added by us) |
@@ -360,6 +384,12 @@ in the menus and in the world; every Gameplay option; both chat options in two s
 | The skill keys, from the menus | no character there to list them for |
 
 **Sounds.** Every menu moment has a sound slot and none has a clip: the project has no interface sounds.
+
+**Faction select's champions (9 Oct 2026).** Pictured in three skins with each faction chosen. After the weapon glow was
+added to their renderer, the HUD portrait and the Equipment page's preview were looked at in the world as host (one
+Null character, no weapon tempered): both draw as before and the console stayed clean. Not checked: a tempered
+weapon's glow in the Equipment preview; Enter, Esc and the arrow keys by a real keyboard; other screen shapes than
+16:9.
 
 **The book (9 Oct 2026).** Seen in captures with the turn slowed to 5 s: the leaf of a turn back in the air, showing
 the screen it lands on, and the leaf of a turn forward lifting; the Settings window on the page; the creator on the

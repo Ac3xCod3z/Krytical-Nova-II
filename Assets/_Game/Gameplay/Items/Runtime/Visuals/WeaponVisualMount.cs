@@ -70,6 +70,8 @@ namespace KryticalNova.Items.Visuals
 
         /// <summary>True while the weapon is in the hand rather than carried.</summary>
         public bool IsDrawn => drawn;
+        /// <summary>The hand the weapon is held in. Whoever moves the mount there has drawn the weapon.</summary>
+        public Transform HandSocket => handSocket;
 
         private void Awake()
         {

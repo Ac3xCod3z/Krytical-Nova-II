@@ -42,11 +42,15 @@ namespace KryticalNova.CharacterCreation
         private float propGrown = 1f;
 
         public CharacterLook Look => look;
+        public CharacterAppearance Appearance => appearance;
+        /// <summary>Where this doll carries a weapon. Only a doll made to keep it has one.</summary>
+        public WeaponVisualMount Weapon { get; private set; }
         /// <summary>A stance's way in or an emote is playing; the doll is not yet back in its loop.</summary>
         public bool IsBusy => onceState != null;
 
         /// <summary>Clone <paramref name="modelPrefab"/> (the player's Sidekick model) under <paramref name="parent"/>.</summary>
-        public static CharacterDoll Create(GameObject modelPrefab, Transform parent, AnimationClip idleClip)
+        /// <param name="keepWeapon">The doll keeps the model's weapon mount, empty: it can be given a weapon to show (the faction showcase).</param>
+        public static CharacterDoll Create(GameObject modelPrefab, Transform parent, AnimationClip idleClip, bool keepWeapon = false)
         {
             if (modelPrefab == null) return null;
             // Clone under an inactive holder so no Awake runs before the gameplay components are stripped.
@@ -58,6 +62,7 @@ namespace KryticalNova.CharacterCreation
             {
                 if (behaviour is CharacterAppearance || behaviour is CharacterLook || behaviour is AnimancerComponent
                     || behaviour is FaceBlinker) continue;
+                if (keepWeapon && behaviour is WeaponVisualMount) continue;
                 DestroyImmediate(behaviour);
             }
             foreach (var c in clone.GetComponentsInChildren<Collider>(true)) DestroyImmediate(c);
@@ -65,8 +70,11 @@ namespace KryticalNova.CharacterCreation
             // Weapons and other rigid props are not part of the look being edited.
             foreach (var mr in clone.GetComponentsInChildren<MeshRenderer>(true)) mr.enabled = false;
 
+            WeaponVisualMount mount = keepWeapon ? clone.GetComponentInChildren<WeaponVisualMount>(true) : null;
+            if (mount != null) mount.ClearInherited(); // the model's own weapon: the mount shows what it is given
             var doll = clone.AddComponent<CharacterDoll>();
             doll.idle = idleClip;
+            doll.Weapon = mount;
             clone.transform.SetParent(parent, false);
             clone.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             Destroy(holder);

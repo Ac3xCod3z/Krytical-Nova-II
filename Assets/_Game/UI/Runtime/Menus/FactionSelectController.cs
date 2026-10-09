@@ -26,8 +26,16 @@ namespace KryticalNova.UI.Menus
         [Tooltip("Background glow, tinted with the highlighted faction's colour.")]
         [SerializeField] private Graphic glow;
         [SerializeField, Range(0f, 1f)] private float glowAlpha = 0.6f;
+        [Tooltip("The factions' champions, one standing in each card. None: the cards are crests and words only.")]
+        [SerializeField] private FactionShowcase showcase;
+        [Tooltip("The one panel of words: the chosen faction's tagline, lore and lineages. None: each card carries its own.")]
+        [SerializeField] private TMP_Text info;
+
+        /// <summary>The part of a card its champion stands in. A card without one is the frame itself.</summary>
+        public const string DollWindowName = "Doll_Window";
 
         private readonly List<FactionDefinition> factions = new List<FactionDefinition>();
+        private readonly List<string> words = new List<string>();
         private readonly List<MenuRow> rows = new List<MenuRow>();
         private readonly List<LineageDefinition> lineageBuffer = new List<LineageDefinition>();
         private int selected = -1;
@@ -56,6 +64,17 @@ namespace KryticalNova.UI.Menus
                 rows.Add(row);
             }
 
+            if (showcase != null)
+            {
+                var frames = new List<RectTransform>(rows.Count);
+                foreach (MenuRow row in rows)
+                {
+                    Transform window = MenuUi.Find(row.transform, DollWindowName);
+                    frames.Add((RectTransform)(window != null ? window : row.transform));
+                }
+                showcase.Show(factions, frames);
+            }
+
             BindPrompts();
             int initial = factions.FindIndex(f => f.id == FrontEnd.PendingFaction);
             Select(Mathf.Max(initial, 0));
@@ -69,11 +88,13 @@ namespace KryticalNova.UI.Menus
             var names = new List<string>(lineageBuffer.Count);
             foreach (var lineage in lineageBuffer) names.Add(lineage.displayName);
             string accent = ColorUtility.ToHtmlStringRGB(faction.accentColor);
+            string text = $"<color=#{accent}><i>{faction.tagline}</i></color>\n\n{faction.lore}"
+                          + (names.Count > 0 ? $"\n\n<color=#{accent}>{string.Join(" & ", names)}</color>" : string.Empty);
+            words.Add(text);
             var description = MenuUi.Find<TMP_Text>(card, "Label_Description");
-            if (description != null)
+            if (description != null && info == null)
             {
-                description.text = $"<color=#{accent}><i>{faction.tagline}</i></color>\n\n{faction.lore}"
-                                   + (names.Count > 0 ? $"\n\n<color=#{accent}>{string.Join(" & ", names)}</color>" : string.Empty);
+                description.text = text;
                 // A paragraph of lore, where the pack's card holds a sentence: start at the top and shrink to fit.
                 description.alignment = TextAlignmentOptions.Top;
                 description.enableAutoSizing = true;
@@ -127,6 +148,8 @@ namespace KryticalNova.UI.Menus
             selected = index;
             for (int i = 0; i < rows.Count; i++) rows[i].SetSelected(i == index);
             if (glow != null) glow.color = WithAlpha(factions[index].accentColor, glowAlpha);
+            if (info != null && index < words.Count) info.text = words[index];
+            if (showcase != null) showcase.Select(index);
         }
 
         private void Confirm()

@@ -67,6 +67,7 @@ namespace KryticalNova.EditorTools
             EnsureMaterials();
             EnsureGlyphs();
             EnsureBook();
+            EnsureMenuGlow();
 
             BuildTitle();
             BuildFactionSelect(database);
@@ -128,6 +129,37 @@ namespace KryticalNova.EditorTools
             foreach (var label in title.GetChild(1).GetComponentsInChildren<TMP_Text>(true)) SetTitle(label, "N", three ? "OVA" : "OVA ", three ? null : "II");
             if (three)
                 foreach (var label in title.GetChild(2).GetComponentsInChildren<TMP_Text>(true)) SetTitle(label, "II", string.Empty, null);
+            CentreTitle((RectTransform)title);
+        }
+
+        /// <summary>
+        /// The packs set each part of their title in a room of its own, placed for their own words. Ours are other
+        /// lengths, which leaves the name to one side of the screen's middle: the whole title is moved so that what
+        /// is lettered, first letter to last, is centred where the pack centred its title.
+        /// </summary>
+        private static void CentreTitle(RectTransform title)
+        {
+            var parent = title.parent as RectTransform;
+            if (parent == null) return;
+            Canvas.ForceUpdateCanvases();
+            float left = float.MaxValue, right = float.MinValue;
+            foreach (TMP_Text label in title.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (!label.name.EndsWith("_Main")) continue; // the face itself, not its shadow and underlay
+                label.ForceMeshUpdate();
+                Bounds lettered = label.textBounds;
+                if (lettered.size.x <= 0f) continue;
+                foreach (float x in new[] { lettered.min.x, lettered.max.x })
+                {
+                    float inParent = parent.InverseTransformPoint(label.transform.TransformPoint(new Vector3(x, 0f, 0f))).x;
+                    left = Mathf.Min(left, inParent);
+                    right = Mathf.Max(right, inParent);
+                }
+            }
+            if (left > right) return;
+            float middle = parent.InverseTransformPoint(title.TransformPoint(title.rect.center)).x;
+            title.anchoredPosition += new Vector2(middle - (left + right) * 0.5f, 0f);
+            Record(title);
         }
 
         /// <summary>One part of the title, on one line, made smaller until it fits the room the pack gave that part.</summary>

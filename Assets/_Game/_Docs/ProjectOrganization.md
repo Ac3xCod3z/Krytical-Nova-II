@@ -126,7 +126,7 @@ _Game/
 ├── Rendering/             Runtime/ (renderer features; ComicLetteringFeature draws the `ComicLettering` layer, which every
 │                          comic mark and word is on, over the finished frame)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets, the menus' comic book and what the
-│                          menus say happened (MenuMoments); Skins/ = UiSkin and MenuSkin; Settings/ = the Settings pages;
+│                          menus say happened (MenuMoments), FactionShowcase = faction select's champions; Skins/ = UiSkin and MenuSkin; Settings/ = the Settings pages;
 │                          Hud/ = the faction HUD's uGUI pieces: HudChrome and the views that stand on the HUD's elements)
 │                          Editor/ (FactionSkinBuilder, UiSkinWatcher, VendorFontGuard; Menus/ = front-end scene builder, own
 │                          assembly)  Common/ (KryticalTheme.uss; KryticalSkin_<Faction>.uss are generated, never edited)
@@ -205,7 +205,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Economy.Tests.Editor` | `Gameplay/Economy/Tests/Editor/`             | EditMode tests (wallet, storage, trade and Kiosk rules)                                |
 | `KryticalNova.Persistence.Tests.Editor` | `Gameplay/Persistence/Tests/Editor/`     | EditMode tests (save stores, account documents)                                        |
 | `KryticalNova.Pets.Tests.Editor`  | `Gameplay/Pets/Tests/Editor/`                  | EditMode tests (pet growth, stages, hunger; when a pet speaks, and what the four pets say) |
-| `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides; where a pet's bubble goes; the faction skins and the menus' pick of one; Settings: APPLY and REVERT, the pages, the camera maths; the menus' comic book; the character creator in every skin). Depends on Runtime, UI, Editor and Editor.Menus |
+| `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides; where a pet's bubble goes; the faction skins and the menus' pick of one; Settings: APPLY and REVERT, the pages, the camera maths; the menus' comic book; the character creator in every skin; faction select's champions). Depends on Runtime, UI, Editor and Editor.Menus |
 | `KryticalNova.Icons.Tests.Editor` | `Icons/Tests/Editor/`                          | EditMode tests (the comic icon treatment, the icon library's rules, and that every skill and item shows an icon of its own). Depends on Runtime and Editor |
 | `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab; how hits look: the rules, a look of its own for every weapon class, no comic effect shared between two moments, the lettering layer and its pass, the pool's timing; the feel of the menus: a player for every menu moment, held by every menu scene and by the world, and a movement that leaves a thing where its animator put it). Depends on Runtime, GameFeel, UI. `!UNITY_SERVER` |
 

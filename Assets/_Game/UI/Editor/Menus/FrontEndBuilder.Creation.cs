@@ -29,13 +29,14 @@ namespace KryticalNova.EditorTools
         private static void BuildFactionSelect(CharacterCreationDatabase database)
         {
             var build = Begin(FrontEnd.FactionSelectScene);
-            AddCamera(Ink);
+            Camera camera = AddCamera(Ink);
+            FactionShowcase showcase = AddFactionShowcase(camera, database);
             var canvas = AddCanvas();
             var groups = new List<MenuSkinSwitch.Group>();
             foreach (UiSkin each in Skins())
             {
                 BeginSkin(canvas, each);
-                BuildFactionSelectScreen(canvas, database);
+                BuildFactionSelectScreen(canvas, database, showcase);
                 EndSkin(groups);
             }
             AddSkinSwitch(canvas, groups);
@@ -43,10 +44,15 @@ namespace KryticalNova.EditorTools
             End(build);
         }
 
-        private static void BuildFactionSelectScreen(Transform canvas, CharacterCreationDatabase database)
+        /// <summary>
+        /// One skin's faction select: the pack's screen of three cards. A card is the frame its faction's champion
+        /// stands in (the showcase's dolls, in the scene behind the canvas), with the faction's crest and name; the
+        /// words of the chosen faction are on one panel under the cards.
+        /// </summary>
+        private static void BuildFactionSelectScreen(Transform canvas, CharacterCreationDatabase database, FactionShowcase showcase)
         {
             var screen = AddScreen(canvas, skin.choiceScreen, "Screen_FactionSelect");
-            ComicBackground(screen);
+            ShowroomBackground(screen); // the champions are behind the canvas
 
             // One difficulty card per faction. The controller fills them from the faction catalog when the scene opens.
             var cards = new List<Transform>();
@@ -67,6 +73,8 @@ namespace KryticalNova.EditorTools
                 row.anchorMin = new Vector2(0f, row.anchorMin.y);
                 row.anchorMax = new Vector2(1f, row.anchorMax.y);
                 row.sizeDelta = new Vector2(-40f, row.sizeDelta.y);
+                // Narrower than the pack's: the panel of words stands to the right of the cards.
+                row.offsetMax = new Vector2(-(FactionInfoWidth + FactionInfoGap), row.offsetMax.y);
                 Record(row);
             }
             // The pack hangs a bigger crest beside its middle and right cards (under one name or the other).
@@ -80,14 +88,55 @@ namespace KryticalNova.EditorTools
             SetRef(select, "database", database);
             SetRef(select, "hotkeys", hotkeys);
             SetRefs(select, "cards", cards);
-            var background = MenuUi.Find(screen, "Background");
-            if (background != null) SetRef(select, "glow", MenuUi.Find<Image>(background, "SPR_Glow"));
+            SetRef(select, "showcase", showcase);
+            SetRef(select, "info", AddFactionInfo(screen));
         }
 
+        /// <summary>The panel of words under the cards: the pack's framed panel, and one label the controller writes on.</summary>
+        private static TMP_Text AddFactionInfo(Transform screen)
+        {
+            Transform content = screen.Find("Content"); // the screen's own, not one of the many deeper in it
+            if (content == null) content = screen;
+            RectTransform panel = Box("Faction_Info", content);
+            panel.anchorMin = new Vector2(1f, 0f);
+            panel.anchorMax = new Vector2(1f, 1f);
+            panel.pivot = new Vector2(1f, 0.5f);
+            panel.offsetMin = new Vector2(-FactionInfoWidth, FactionInfoFoot);
+            panel.offsetMax = new Vector2(0f, -FactionInfoTop);
+            RectTransform frame = Part(skin.framedPanel, panel, "Panel_Frame");
+            Stretch(frame);
+            var written = MenuUi.Find(frame, "Info") as RectTransform;
+            Hide(written);
+            Hide(MenuUi.Find(frame, "Input_Menu"));
+            var backing = MenuUi.Find<Image>(frame, "SPR_Background");
+            if (backing != null && backing.color.a < 0.92f) Tint(backing, backing.color, 0.92f);
+
+            TMP_Text words = Label(skin.bodyLabel, panel, "Label_Faction_Info", 44f, TextAlignmentOptions.Top);
+            Stretch(words.rectTransform);
+            if (written != null)
+            {
+                words.rectTransform.offsetMin = written.offsetMin;
+                words.rectTransform.offsetMax = written.offsetMax;
+            }
+            words.richText = true;
+            words.textWrappingMode = TextWrappingModes.Normal;
+            // A paragraph of lore in a panel of one size: it is set smaller until it fits.
+            words.enableAutoSizing = true;
+            words.fontSizeMin = 34f;
+            words.fontSizeMax = 50f * skin.fontScale;
+            ReadableFaces(panel);
+            return words;
+        }
+
+        // On the menus' 3840 x 2160 canvas, inside the screen's content.
+        private const float FactionInfoWidth = 1250f, FactionInfoGap = 20f, FactionInfoFoot = 420f, FactionInfoTop = 380f;
+
         /// <summary>
-        /// Re-plans a difficulty card for a faction: a smaller crest at the top (an icon over a glow, filled in by the
-        /// controller) and a tall text area under it, because a faction has a paragraph of lore where a difficulty
-        /// has one sentence.
+        /// Re-plans a difficulty card for a faction: the card is the frame its champion stands in. The pack's crest
+        /// goes, a small one of the faction's (an icon over a glow, filled in by the controller) is in the card's top
+        /// corner, the name stays at its foot, and the card's own text is not used (the words are on one panel under
+        /// the cards). The chosen card keeps the glow at its foot, not the washes over its whole height, which would
+        /// lie over the champion.
         /// </summary>
         private static void PrepareFactionCard(Transform card)
         {
@@ -102,25 +151,46 @@ namespace KryticalNova.EditorTools
                 Hide(stock);
             }
 
-            var glow = AddImage("Faction_Glow", area, FactionCrestPosition, new Vector2(1000f, 1000f));
+            var glow = AddImage("Faction_Glow", area, Vector2.zero, new Vector2(FactionCrestSize * 2.4f, FactionCrestSize * 2.4f));
             glow.sprite = glowSprite;
             glow.enabled = glowSprite != null;
-            var crest = AddImage("Faction_Crest", area, FactionCrestPosition, new Vector2(FactionCrestSize, FactionCrestSize));
+            var crest = AddImage("Faction_Crest", area, Vector2.zero, new Vector2(FactionCrestSize, FactionCrestSize));
             crest.preserveAspect = true;
-
-            // The name and the text stack up from the bottom of the card (the pack's layout); only the text grows.
-            var description = MenuUi.Find(card, "Label_Description") as RectTransform;
-            if (description != null)
+            foreach (Image each in new[] { glow, crest })
             {
-                description.sizeDelta = new Vector2(description.sizeDelta.x, FactionTextHeight);
-                Record(description);
+                each.rectTransform.anchorMin = each.rectTransform.anchorMax = new Vector2(0f, 1f);
+                each.rectTransform.anchoredPosition = FactionCrestCorner;
             }
+
+            Transform active = MenuUi.Find(card, "Background_Active");
+            if (active != null)
+            {
+                // The pack's animation switches these layers on as a card is chosen: their pictures are taken off.
+                foreach (string wash in new[] { "SPR_Gradient_Additive", "SPR_Gradient", "Ring_Active" })
+                {
+                    Transform layer = active.Find(wash);
+                    if (layer == null) continue;
+                    foreach (Image picture in layer.GetComponentsInChildren<Image>(true))
+                    {
+                        picture.enabled = false;
+                        Record(picture);
+                    }
+                }
+                var foot = active.Find("SPR_Gradient_Base") != null ? active.Find("SPR_Gradient_Base").GetComponent<Image>() : null;
+                if (foot != null) Tint(foot, foot.color, 0.55f); // a glow at the champion's feet, not a block over them
+            }
+            Hide(MenuUi.Find(card, "Label_Description"));
+
+            // Where the champion stands: the card, less its edge and the room of the name at its foot.
+            RectTransform window = Box(FactionSelectController.DollWindowName, area);
+            window.offsetMin = new Vector2(40f, FactionNameRoom);
+            window.offsetMax = new Vector2(-40f, -40f);
         }
 
-        // Card content is 1440 units tall, centred on the card: crest in the top third, text in the lower two.
-        private static readonly Vector2 FactionCrestPosition = new Vector2(0f, 470f);
-        private const float FactionCrestSize = 400f;
-        private const float FactionTextHeight = 800f;
+        // From the top left corner of a card's content.
+        private static readonly Vector2 FactionCrestCorner = new Vector2(150f, -150f);
+        private const float FactionCrestSize = 190f;
+        private const float FactionNameRoom = 150f;
 
         /// <summary>A new image centred at <paramref name="position"/> from the middle of <paramref name="parent"/>.</summary>
         private static Image AddImage(string name, Transform parent, Vector2 position, Vector2 size)
