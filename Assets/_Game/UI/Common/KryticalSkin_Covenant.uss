@@ -1338,3 +1338,69 @@
     height: 48px;
     top: -30px;
 }
+.kn-faction-covenant #menu Button {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/MenuButton_Covenant.png#MenuButton_Covenant");
+    -unity-background-image-tint-color: rgb(222, 222, 222);
+    -unity-slice-scale: 0.1314px;
+    min-width: 112px;
+    min-height: 34px;
+    height: 34px;
+    margin: 0 3px;
+    padding: 0 35.9px;
+}
+.kn-faction-covenant #menu Button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-covenant #menu Button:active {
+    -unity-background-image-tint-color: rgb(170, 170, 170);
+}
+.kn-faction-covenant .window > .kn-header {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/HeaderBand_Covenant.png#HeaderBand_Covenant");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.172px;
+    min-height: 44px;
+    align-items: center;
+    margin: -4px -8px 10px -8px;
+    padding: 6px 30px 6px 61.9px;
+    border-bottom-width: 0;
+}
+.kn-faction-covenant .window > .kn-header .heading {
+    font-size: 19px;
+}
+.kn-faction-covenant .window .close {
+    position: absolute;
+    right: -18px;
+    top: -16px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/Close_Covenant.png#Close_Covenant");
+    -unity-background-image-tint-color: rgb(225, 225, 225);
+    -unity-slice-scale: 1px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+.kn-faction-covenant .window .close:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    scale: 1.1 1.1;
+}
+.kn-faction-covenant .window .close > .kn-close-glyph {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    width: 13px;
+    height: 13px;
+}
+.kn-faction-covenant .inventory-grid .item-cell, .kn-faction-covenant .equip-column .equip-slot {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/Cell_Covenant.png#Cell_Covenant");
+    -unity-background-image-tint-color: rgb(214, 214, 214);
+    -unity-slice-scale: 0.1667px;
+}
+.kn-faction-covenant .inventory-grid .item-cell:hover, .kn-faction-covenant .equip-column .equip-slot:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-covenant .inventory-grid .item-cell.drop-valid, .kn-faction-covenant .equip-column .equip-slot.drop-valid {
+    -unity-background-image-tint-color: rgb(170, 255, 220);
+}

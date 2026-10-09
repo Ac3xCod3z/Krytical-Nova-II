@@ -85,6 +85,17 @@ namespace KryticalNova.UI
         public Sprite button;
         [Tooltip("How thick the button art's widest side is drawn, in panel pixels.")]
         [Min(0f)] public float buttonBorder = 8f;
+        [Tooltip("A button of the menu row along the top of the screen: the pack's long bar button, flattened like the button.")]
+        public Sprite menuButton;
+        [Min(0f)] public float menuButtonBorder = 30f;
+        [Tooltip("The band a window's title stands on: the pack's bar, flattened over its fill.")]
+        public Sprite headerBand;
+        [Min(0f)] public float headerBandBorder = 60f;
+        [Tooltip("An item cell or an equipment slot: the pack's cell frame over its fill. The rarity outline is drawn over it and keeps its colours.")]
+        public Sprite cell;
+        [Min(0f)] public float cellBorder = 8f;
+        [Tooltip("The round close button on a window's corner. The X is drawn over it.")]
+        public Sprite closeButton;
         [Tooltip("The ornament on the middle of a window's top edge, and one drawn behind it (horns behind a skull). Either may be none.")]
         public Sprite crown, crownBack;
         [Tooltip("The ornaments' sizes in panel pixels, and how far their tops stand above the window's top edge.")]

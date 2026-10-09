@@ -104,6 +104,20 @@ namespace KryticalNova.EditorTools
 
         public static UiSkin LoadSkin(FactionId faction) => AssetDatabase.LoadAssetAtPath<UiSkin>(SkinPath(faction));
 
+        /// <summary>Makes the flattened art of every skin again (after a change to what it is made from), then the sheets.</summary>
+        [MenuItem("Krytical Nova/UI/Rebuild Faction Skin Art")]
+        public static void RebuildArt()
+        {
+            foreach (FactionId faction in Factions)
+            {
+                UiSkin asset = LoadSkin(faction);
+                if (asset == null) continue;
+                asset.button = asset.menuButton = asset.headerBand = asset.cell = asset.closeButton = null;
+                EditorUtility.SetDirty(asset);
+            }
+            Build();
+        }
+
         [MenuItem("Krytical Nova/UI/Build Faction Skins")]
         public static void Build()
         {
@@ -153,7 +167,7 @@ namespace KryticalNova.EditorTools
                 rules += count;
             }
             var chrome = new StringBuilder();
-            int chromeRules = Chrome(asset, skin.cssClass, chrome);
+            int chromeRules = Chrome(asset, skin.cssClass, chrome) + Design(asset, skin.cssClass, chrome);
             if (chromeRules > 0)
             {
                 output.AppendLine();
@@ -323,6 +337,7 @@ namespace KryticalNova.EditorTools
                 EditorUtility.SetDirty(skin);
                 AssetDatabase.SaveAssetIfDirty(skin);
             }
+            EnsureDesign(skin);
             if (skin.windowFrame != null) return;
             switch (skin.faction)
             {
@@ -367,6 +382,119 @@ namespace KryticalNova.EditorTools
             }
             EditorUtility.SetDirty(skin);
             AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        /// <summary>
+        /// The parts of a window's page that are the pack's own art: the menu row's buttons, the band under a title,
+        /// the item cells and the round close button. Each is the pack's frame flattened over its fill in the
+        /// faction's dark tone. A part that is there is left exactly as it is.
+        /// </summary>
+        private static void EnsureDesign(UiSkin skin)
+        {
+            if (skin.menuButton != null && skin.headerBand != null && skin.cell != null && skin.closeButton != null) return;
+            Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
+            Color Tone(float value) => Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.2f), value);
+            var closeRed = new Color(0.62f, 0.1f, 0.1f);
+            string art = $"{FactionHudBuilder.Folder}/{skin.faction}/Art";
+            string f = skin.faction.ToString();
+            Sprite S(string path) => Load<Sprite>(path);
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                {
+                    string menus = SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_", general = SciFiMenus + "Sprites/General/SPR_SciFiMenus_";
+                    skin.menuButton = SpriteRecolourer.Flatten($"MenuButton_{f}", art, S(menus + "Frame_Box_Small_06.png"), S(menus + "Frame_Box_Small_06_Background.png"), Tone(0.2f));
+                    skin.menuButtonBorder = 11f;
+                    skin.headerBand = SpriteRecolourer.Flatten($"HeaderBand_{f}", art, S(menus + "Button_Frame_04.png"), S(menus + "Button_Frame_04_Background.png"), Tone(0.19f));
+                    skin.headerBandBorder = 72f;
+                    skin.cell = SpriteRecolourer.Flatten($"Cell_{f}", art, S(menus + "Frame_Box_Small_04.png"), S(menus + "Frame_Box_Small_04_Background.png"), Tone(0.13f));
+                    skin.cellBorder = 9f;
+                    skin.closeButton = SpriteRecolourer.Flatten($"Close_{f}", art, S(general + "Menu_Box_Small_02.png"), S(general + "Menu_Box_Small_01.png"), closeRed);
+                    break;
+                }
+                case FactionId.Null:
+                {
+                    string menus = DarkFantasyMenus + "Sprites/DarkFantasyMenus/SPR_DarkFantasyMenus_", hud = DarkFantasy + "Sprites/";
+                    skin.menuButton = SpriteRecolourer.Flatten($"MenuButton_{f}", art, S(menus + "Frame_Bar_Medium_07.png"), S(menus + "Frame_Bar_Medium_07_Background.png"), Tone(0.2f));
+                    skin.menuButtonBorder = 36f;
+                    skin.headerBand = SpriteRecolourer.Flatten($"HeaderBand_{f}", art, S(menus + "Frame_Bar_Medium_06.png"), S(menus + "Frame_Bar_Medium_06_Background.png"), Tone(0.19f));
+                    skin.headerBandBorder = 66f;
+                    skin.cell = SpriteRecolourer.Flatten($"Cell_{f}", art, S(hud + "DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_17.png"), S(hud + "HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_01.png"), Tone(0.13f));
+                    skin.cellBorder = 9f;
+                    skin.closeButton = SpriteRecolourer.Flatten($"Close_{f}", art, S(hud + "DarkFantasy/SPR_DarkFantasy_Ring_Small_09.png"), S(hud + "DarkFantasy/SPR_DarkFantasy_Ring_Medium_02_Background.png"), closeRed, 0.86f);
+                    break;
+                }
+                case FactionId.Covenant:
+                {
+                    string menus = FantasyMenus + "Sprites/FantasyMenus/SPR_FantasyMenus_", hud = FantasyWarrior + "Sprites/";
+                    skin.menuButton = SpriteRecolourer.Flatten($"MenuButton_{f}", art, S(menus + "Menu_Button_05_Frame.png"), S(menus + "Menu_Button_05_Background.png"), Tone(0.2f));
+                    skin.menuButtonBorder = 46f;
+                    skin.headerBand = SpriteRecolourer.Flatten($"HeaderBand_{f}", art, S(menus + "Menu_Button_11_Frame.png"), S(menus + "Menu_Button_11_Background.png"), Tone(0.19f));
+                    skin.headerBandBorder = 86f;
+                    skin.cell = SpriteRecolourer.Flatten($"Cell_{f}", art, S(hud + "FantasyWarrior/SPR_FantasyWarrior_Frame_Box_Small_03.png"), S(hud + "HUD/SPR_HUD_FantasyWarrior_Box_Small_Parchment_02.png"), Tone(0.13f));
+                    skin.cellBorder = 5f;
+                    skin.closeButton = SpriteRecolourer.Flatten($"Close_{f}", art, S(hud + "FantasyWarrior/SPR_FantasyWarrior_Ring_Small_02_Variant_01.png"), S(hud + "HUD/SPR_HUD_FantasyWarrior_Circle_Medium_01_Clean.png"), closeRed, 0.74f);
+                    break;
+                }
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        /// <summary>The rules that give a window's page the pack's own parts. They name things through their parents, so they win over the tinted look the converted sheets give them.</summary>
+        private static int Design(UiSkin asset, string cssClass, StringBuilder output)
+        {
+            int count = 0;
+            string d = "." + cssClass;
+            string Scale(Sprite sprite, float border)
+            {
+                float widest = Mathf.Max(sprite.border.x, sprite.border.y, sprite.border.z, sprite.border.w);
+                return (widest > 0f ? border / widest : 1f).ToString("0.####", CultureInfo.InvariantCulture) + "px";
+            }
+            void Rule(string selectors, params string[] declarations)
+            {
+                var parts = selectors.Split(',');
+                for (int i = 0; i < parts.Length; i++) parts[i] = $"{d} {parts[i].Trim()}";
+                output.AppendLine(string.Join(", ", parts) + " {");
+                foreach (string declaration in declarations) output.AppendLine("    " + declaration);
+                output.AppendLine("}");
+                count++;
+            }
+
+            if (asset.menuButton != null)
+            {
+                // The words stand clear of the bar's end pieces.
+                string ends = Mathf.Max(14f, asset.menuButtonBorder * 0.78f).ToString("0.#", CultureInfo.InvariantCulture) + "px";
+                Rule("#menu Button", $"background-image: {UrlOf(asset.menuButton)};", "-unity-background-image-tint-color: rgb(222, 222, 222);",
+                    $"-unity-slice-scale: {Scale(asset.menuButton, asset.menuButtonBorder)};", "min-width: 112px;", "min-height: 34px;", "height: 34px;", "margin: 0 3px;", $"padding: 0 {ends};");
+                Rule("#menu Button:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+                Rule("#menu Button:active", "-unity-background-image-tint-color: rgb(170, 170, 170);");
+            }
+            if (asset.headerBand != null)
+            {
+                // The title stands on the pack's band, which reaches a little past the page on both sides.
+                Rule(".window > .kn-header", $"background-image: {UrlOf(asset.headerBand)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",
+                    $"-unity-slice-scale: {Scale(asset.headerBand, asset.headerBandBorder)};", "min-height: 44px;", "align-items: center;",
+                    "margin: -4px -8px 10px -8px;", $"padding: 6px 30px 6px {Mathf.Max(30f, asset.headerBandBorder * 0.72f).ToString("0.#", CultureInfo.InvariantCulture)}px;", "border-bottom-width: 0;");
+                Rule(".window > .kn-header .heading", "font-size: 19px;");
+            }
+            if (asset.closeButton != null)
+            {
+                // A round button on the page's corner, over the frame.
+                Rule(".window .close", "position: absolute;", "right: -18px;", "top: -16px;", "width: 34px;", "height: 34px;", "min-width: 34px;", "min-height: 34px;",
+                    "margin: 0;", "padding: 0;", "align-items: center;", "justify-content: center;", $"background-image: {UrlOf(asset.closeButton)};",
+                    "-unity-background-image-tint-color: rgb(225, 225, 225);", "-unity-slice-scale: 1px;", "-unity-background-scale-mode: scale-to-fit;");
+                Rule(".window .close:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);", "scale: 1.1 1.1;");
+                Rule(".window .close > .kn-close-glyph", "-unity-background-image-tint-color: rgb(255, 255, 255);", "width: 13px;", "height: 13px;");
+            }
+            if (asset.cell != null)
+            {
+                const string cells = ".inventory-grid .item-cell, .equip-column .equip-slot";
+                Rule(cells, $"background-image: {UrlOf(asset.cell)};", "-unity-background-image-tint-color: rgb(214, 214, 214);", $"-unity-slice-scale: {Scale(asset.cell, asset.cellBorder)};");
+                Rule(".inventory-grid .item-cell:hover, .equip-column .equip-slot:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+                Rule(".inventory-grid .item-cell.drop-valid, .equip-column .equip-slot.drop-valid", "-unity-background-image-tint-color: rgb(170, 255, 220);");
+            }
+            return count;
         }
 
         /// <summary>

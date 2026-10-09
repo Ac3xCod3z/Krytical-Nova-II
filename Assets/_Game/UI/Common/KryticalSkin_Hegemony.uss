@@ -42,3 +42,69 @@
     height: 38px;
     top: -33px;
 }
+.kn-faction-hegemony #menu Button {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/MenuButton_Hegemony.png#MenuButton_Hegemony");
+    -unity-background-image-tint-color: rgb(222, 222, 222);
+    -unity-slice-scale: 0.0733px;
+    min-width: 112px;
+    min-height: 34px;
+    height: 34px;
+    margin: 0 3px;
+    padding: 0 14px;
+}
+.kn-faction-hegemony #menu Button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony #menu Button:active {
+    -unity-background-image-tint-color: rgb(170, 170, 170);
+}
+.kn-faction-hegemony .window > .kn-header {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/HeaderBand_Hegemony.png#HeaderBand_Hegemony");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.16px;
+    min-height: 44px;
+    align-items: center;
+    margin: -4px -8px 10px -8px;
+    padding: 6px 30px 6px 51.8px;
+    border-bottom-width: 0;
+}
+.kn-faction-hegemony .window > .kn-header .heading {
+    font-size: 19px;
+}
+.kn-faction-hegemony .window .close {
+    position: absolute;
+    right: -18px;
+    top: -16px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/Close_Hegemony.png#Close_Hegemony");
+    -unity-background-image-tint-color: rgb(225, 225, 225);
+    -unity-slice-scale: 1px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+.kn-faction-hegemony .window .close:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    scale: 1.1 1.1;
+}
+.kn-faction-hegemony .window .close > .kn-close-glyph {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    width: 13px;
+    height: 13px;
+}
+.kn-faction-hegemony .inventory-grid .item-cell, .kn-faction-hegemony .equip-column .equip-slot {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/Cell_Hegemony.png#Cell_Hegemony");
+    -unity-background-image-tint-color: rgb(214, 214, 214);
+    -unity-slice-scale: 0.1125px;
+}
+.kn-faction-hegemony .inventory-grid .item-cell:hover, .kn-faction-hegemony .equip-column .equip-slot:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony .inventory-grid .item-cell.drop-valid, .kn-faction-hegemony .equip-column .equip-slot.drop-valid {
+    -unity-background-image-tint-color: rgb(170, 255, 220);
+}

@@ -46,6 +46,13 @@ MonoBehaviour:
   panelFrameOutset: 1
   button: {fileID: 21300000, guid: f2a1edfa2b8ee2b4ba5087f51953f4ce, type: 3}
   buttonBorder: 8
+  menuButton: {fileID: 21300000, guid: deeeabaaddf46824e9d741a33b0d0684, type: 3}
+  menuButtonBorder: 36
+  headerBand: {fileID: 21300000, guid: 06b8ececd93a256448f1732a1583d318, type: 3}
+  headerBandBorder: 66
+  cell: {fileID: 21300000, guid: c8addf7335dbdb6489ff9665d851fd43, type: 3}
+  cellBorder: 9
+  closeButton: {fileID: 21300000, guid: 4a7e4bf3171fa3440a0d3b2205994ae2, type: 3}
   crown: {fileID: 21300000, guid: b03edf209fda84a49aef3cb5217d93b5, type: 3}
   crownBack: {fileID: 21300000, guid: f48b836aaa5fa2c4da26bf6fb97e39df, type: 3}
   crownSize: {x: 46, y: 46}

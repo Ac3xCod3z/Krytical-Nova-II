@@ -58,7 +58,8 @@ namespace KryticalNova.EditorTools
         /// plain fill inside the frame when the pack has no fill sprite for it. The frame's own colours are kept.
         /// Saved as <paramref name="name"/> in <paramref name="folder"/> with the frame's borders.
         /// </summary>
-        public static Sprite Flatten(string name, string folder, Sprite frame, Sprite fill, Color fillTint)
+        /// <param name="roundFill">Above zero: the fill is drawn round the picture's middle, in a square this share of its shorter side (a disc under a ring that is not square).</param>
+        public static Sprite Flatten(string name, string folder, Sprite frame, Sprite fill, Color fillTint, float roundFill = 0f)
         {
             if (frame == null) return null;
             WeatherVfxBuilder.EnsureFolder(folder);
@@ -76,7 +77,14 @@ namespace KryticalNova.EditorTools
                     Color below;
                     if (under != null)
                     {
-                        below = under.GetPixelBilinear((x + 0.5f) / width, (y + 0.5f) / height);
+                        float u = (x + 0.5f) / width, v = (y + 0.5f) / height;
+                        if (roundFill > 0f)
+                        {
+                            float side = Mathf.Min(width, height) * roundFill;
+                            u = 0.5f + (x + 0.5f - width * 0.5f) / side;
+                            v = 0.5f + (y + 0.5f - height * 0.5f) / side;
+                        }
+                        below = u < 0f || u > 1f || v < 0f || v > 1f ? Color.clear : under.GetPixelBilinear(u, v);
                         below = new Color(below.r * fillTint.r, below.g * fillTint.g, below.b * fillTint.b, below.a * fillTint.a);
                     }
                     else

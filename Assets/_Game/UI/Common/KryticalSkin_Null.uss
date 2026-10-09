@@ -1345,3 +1345,69 @@
     height: 46px;
     top: -30px;
 }
+.kn-faction-null #menu Button {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/MenuButton_Null.png#MenuButton_Null");
+    -unity-background-image-tint-color: rgb(222, 222, 222);
+    -unity-slice-scale: 0.0706px;
+    min-width: 112px;
+    min-height: 34px;
+    height: 34px;
+    margin: 0 3px;
+    padding: 0 28.1px;
+}
+.kn-faction-null #menu Button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null #menu Button:active {
+    -unity-background-image-tint-color: rgb(170, 170, 170);
+}
+.kn-faction-null .window > .kn-header {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/HeaderBand_Null.png#HeaderBand_Null");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.15px;
+    min-height: 44px;
+    align-items: center;
+    margin: -4px -8px 10px -8px;
+    padding: 6px 30px 6px 47.5px;
+    border-bottom-width: 0;
+}
+.kn-faction-null .window > .kn-header .heading {
+    font-size: 19px;
+}
+.kn-faction-null .window .close {
+    position: absolute;
+    right: -18px;
+    top: -16px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/Close_Null.png#Close_Null");
+    -unity-background-image-tint-color: rgb(225, 225, 225);
+    -unity-slice-scale: 1px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+.kn-faction-null .window .close:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    scale: 1.1 1.1;
+}
+.kn-faction-null .window .close > .kn-close-glyph {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    width: 13px;
+    height: 13px;
+}
+.kn-faction-null .inventory-grid .item-cell, .kn-faction-null .equip-column .equip-slot {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/Cell_Null.png#Cell_Null");
+    -unity-background-image-tint-color: rgb(214, 214, 214);
+    -unity-slice-scale: 0.1px;
+}
+.kn-faction-null .inventory-grid .item-cell:hover, .kn-faction-null .equip-column .equip-slot:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-null .inventory-grid .item-cell.drop-valid, .kn-faction-null .equip-column .equip-slot.drop-valid {
+    -unity-background-image-tint-color: rgb(170, 255, 220);
+}
