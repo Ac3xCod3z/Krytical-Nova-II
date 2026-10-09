@@ -117,9 +117,12 @@
     <ui:VisualElement name="item-tooltip" class="panel item-tooltip item-card" picking-mode="Ignore">
         <ui:VisualElement name="tooltip-equipped" class="card-flag" picking-mode="Ignore"><ui:Label text="EQUIPPED" class="card-flag-text" picking-mode="Ignore" /></ui:VisualElement>
         <ui:VisualElement name="tooltip-picture" class="card-picture" picking-mode="Ignore">
+            <ui:VisualElement class="card-picture-clip" picking-mode="Ignore">
+                <ui:VisualElement class="card-picture-glow" picking-mode="Ignore" />
+                <ui:VisualElement name="tooltip-icon" class="card-picture-icon" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <!-- The pack's ornate frame, over the picture and reaching out past it -->
             <ui:VisualElement class="card-picture-frame" picking-mode="Ignore" />
-            <ui:VisualElement class="card-picture-glow" picking-mode="Ignore" />
-            <ui:VisualElement name="tooltip-icon" class="card-picture-icon" picking-mode="Ignore" />
         </ui:VisualElement>
         <ui:Label name="tooltip-name" text="Item" class="tooltip-name heading" />
         <ui:Label name="tooltip-type" text="Armor · Common" class="tooltip-type" />

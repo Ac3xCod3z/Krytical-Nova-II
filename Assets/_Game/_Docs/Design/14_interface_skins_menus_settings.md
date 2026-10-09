@@ -95,11 +95,16 @@ the same arrangement in every faction, each in its own pack's parts (`FactionSki
 | --- | --- | --- | --- | --- |
 | What an empty equipment slot is for (a picture, not a word) | `slotGlyphs`, `slotGlyphTint` | Sci-Fi HUD `Icons_Inventory` (Weapon, Armor, Backpack, Science); gloves, boots, ring and amulet borrowed from Dark Fantasy, which the Sci-Fi pack lacks | Dark Fantasy `Icons_Inventory` `_Underlay` | Fantasy Screens `Icons_Inventory` `_Underlay` |
 | Bars over and under the model | `dollBarTopLeft` / `TopRight` / `FootLeft` / `FootRight` | `Line_Horizontal_01` (one sprite, mirrored) | `Bar_03` Top / Bottom halves | Fantasy Menus `Frame_Bar_01` halves |
-| A cell of the Pack's grid | `gridCell`, `gridCellTint` | the framed slot (the pack has no plain cell) | `Box_Small_Parchment_01`, dark, no frame | `Box_Medium_Parchment_01`, dark, no frame |
+| A cell of the Pack's grid | `gridCell`, `gridCellTint` | the Sci-Fi HUD's glass slot `Box_Glass_04` (the packs have no inventory) | `Box_Small_Parchment_01`, dark, no frame | `Box_Medium_Parchment_01`, dark, no frame |
+| The ornate frame of an equipment slot, reaching out past it | `slotFrame`, `slotFill` | Sci-Fi Menus `Frame_Box_Small_10` (the bolted, cut-corner housing) | `Frame_Box_Medium_17` on the pack's teal | Fantasy Warrior `Frame_Box_04` (steel, gold corners with gems) on blue |
+| The item card's own frame | `cardFrame`, `cardBacking` | Sci-Fi Menus `Frame_Box_Large_09` | `Frame_Box_Large_02` | `Frame_Box_22_Variant_01` |
+| The frame round the card's picture | `cardPictureFrame` | Sci-Fi Menus `Frame_Box_Small_05` | `Frame_Box_Medium_17` | `Frame_Box_18_Variant_01` |
 
 - **Equipment:** the owner's name, level and lineage over the model; slots down either side, larger, with no captions.
 - **Pack:** the page tabs stand on a well that holds the grid; count, SORT and Creds on one foot bar. An empty cell
-  or slot has no outline (class `item-empty`): an outline says what is in it.
+  has no outline (class `item-empty`). **In the grid an item's rarity is the colour of the cell it lies on**, not a
+  square outline (the packs' grids have none); the outline is kept for a pointer over a cell and for drops. On an
+  equipment slot the rarity tints the slot's ornate frame, which is grey while the slot is empty.
 - **Item card** (the tooltip, everywhere an item is hovered): the item's picture on the pack's slot lit in its rarity,
   the name in the title face, what it gives as one strip a line, an EQUIPPED flag on worn pieces, and the hint as
   mouse prompts. The texts are the ones the tooltip had.

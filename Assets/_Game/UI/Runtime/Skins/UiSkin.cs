@@ -121,6 +121,18 @@ namespace KryticalNova.UI
         [Tooltip("How tall the bars are drawn, in panel pixels, and their colour.")]
         [Min(1f)] public float dollBarHeight = 14f;
         public Color dollBarTint = Color.white;
+        [Tooltip("The ornate frame of an equipment slot: drawn over the slot and reaching out past it, in the rarity of what is worn (grey while empty).")]
+        public Sprite slotFrame;
+        [Min(0f)] public float slotFrameBorder = 12f, slotFrameOutset = 4f;
+        [Tooltip("What an equipment slot is filled with, under its picture.")]
+        public Color slotFill = new Color(0.1f, 0.14f, 0.18f, 0.9f);
+        [Tooltip("The frame of the item card (the tooltip), reaching out past it, and what the card is filled with.")]
+        public Sprite cardFrame;
+        [Min(0f)] public float cardFrameBorder = 30f, cardFrameOutset = 12f;
+        public Color cardBacking = new Color(0.08f, 0.1f, 0.1f, 0.96f);
+        [Tooltip("The frame round the item's picture on the card.")]
+        public Sprite cardPictureFrame;
+        [Min(0f)] public float cardPictureBorder = 16f, cardPictureOutset = 6f;
         [Tooltip("A cell of the Pack's grid: the pack's plain cell, without a frame. None: the equipment slot's art is used.")]
         public Sprite gridCell;
         public Color gridCellTint = Color.white;

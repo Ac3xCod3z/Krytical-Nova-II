@@ -129,6 +129,7 @@ namespace KryticalNova.EditorTools
                 if (asset == null) continue;
                 EnsureChrome(asset);
                 EnsureInventoryParts(asset);
+                EnsureInventoryFrames(asset);
                 string text = Generate(asset, out int rules);
                 string target = SheetPath(faction);
                 // An unchanged sheet is left alone: writing it would re-import it and rebuild every open UI.
@@ -356,6 +357,63 @@ namespace KryticalNova.EditorTools
                     skin.dollBarTint = Color.white;
                     skin.gridCell = Load<Sprite>(FantasyWarrior + "Sprites/HUD/SPR_HUD_FantasyWarrior_Box_Medium_Parchment_01.png");
                     skin.gridCellTint = new Color32(0x03, 0x15, 0x22, 0xE6);
+                    break;
+                }
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        /// <summary>
+        /// The ornate frames of the inventory pages, from each pack: the equipment slot's, the item card's and the
+        /// one round the card's picture; and the Hegemony's grid cell. A skin that has a slot frame is left as it is.
+        /// </summary>
+        private static void EnsureInventoryFrames(UiSkin skin)
+        {
+            if (skin.slotFrame != null) return;
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                {
+                    string menus = SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_";
+                    skin.slotFrame = Load<Sprite>(menus + "Frame_Box_Small_10.png"); // the bolted, cut-corner housing
+                    skin.slotFrameBorder = 22f; skin.slotFrameOutset = 7f;
+                    skin.slotFill = new Color32(10, 34, 48, 230);
+                    skin.cardFrame = Load<Sprite>(menus + "Frame_Box_Large_09.png");
+                    skin.cardFrameBorder = 46f; skin.cardFrameOutset = 10f;
+                    skin.cardBacking = new Color32(6, 30, 40, 245);
+                    skin.cardPictureFrame = Load<Sprite>(menus + "Frame_Box_Small_05.png");
+                    skin.cardPictureBorder = 16f; skin.cardPictureOutset = 6f;
+                    // The Sci-Fi packs have no inventory: their glass slot is the grid's cell.
+                    skin.gridCell = skin.itemSlot;
+                    skin.gridCellTint = new Color32(20, 42, 60, 235);
+                    skin.gridCellBorder = 6f;
+                    break;
+                }
+                case FactionId.Null:
+                {
+                    string df = DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_";
+                    skin.slotFrame = Load<Sprite>(df + "Frame_Box_Medium_17.png");
+                    skin.slotFrameBorder = 15f; skin.slotFrameOutset = 6f;
+                    skin.slotFill = new Color32(0x21, 0x39, 0x41, 0xCC); // the pack's own
+                    skin.cardFrame = Load<Sprite>(df + "Frame_Box_Large_02.png");
+                    skin.cardFrameBorder = 62f; skin.cardFrameOutset = 8f;
+                    skin.cardBacking = new Color32(0x16, 0x1A, 0x1A, 0xF4);
+                    skin.cardPictureFrame = Load<Sprite>(df + "Frame_Box_Medium_17.png");
+                    skin.cardPictureBorder = 18f; skin.cardPictureOutset = 8f;
+                    break;
+                }
+                case FactionId.Covenant:
+                {
+                    string fw = FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_";
+                    skin.slotFrame = Load<Sprite>(fw + "Frame_Box_04.png"); // steel, with gold corners and a gem in each
+                    skin.slotFrameBorder = 18f; skin.slotFrameOutset = 6f;
+                    skin.slotFill = new Color32(0x06, 0x2C, 0x48, 0xE6);
+                    skin.cardFrame = Load<Sprite>(fw + "Frame_Box_22_Variant_01.png");
+                    skin.cardFrameBorder = 28f; skin.cardFrameOutset = 9f;
+                    skin.cardBacking = new Color32(0x11, 0x2F, 0x37, 0xF6);
+                    skin.cardPictureFrame = Load<Sprite>(fw + "Frame_Box_18_Variant_01.png");
+                    skin.cardPictureBorder = 30f; skin.cardPictureOutset = 8f;
                     break;
                 }
             }
@@ -762,7 +820,6 @@ namespace KryticalNova.EditorTools
                 Rule(cells, $"background-image: {UrlOf(asset.cell)};", "-unity-background-image-tint-color: rgb(214, 214, 214);", $"-unity-slice-scale: {Scale(asset.cell, asset.cellBorder)};");
                 Rule(".inventory-grid .item-cell:hover, .equip-column .equip-slot:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);");
                 Rule(".inventory-grid .item-cell.drop-valid, .equip-column .equip-slot.drop-valid", "-unity-background-image-tint-color: rgb(170, 255, 220);");
-                Rule(".card-picture-frame", $"background-image: {UrlOf(asset.cell)};", "-unity-background-image-tint-color: rgb(190, 190, 190);", $"-unity-slice-scale: {Scale(asset.cell, asset.cellBorder * 1.4f)};");
             }
             if (asset.gridCell != null)
             {
@@ -771,8 +828,46 @@ namespace KryticalNova.EditorTools
                     Color32 c = Color.Lerp(colour, Color.white, lift);
                     return $"rgba({c.r}, {c.g}, {c.b}, {((Color)c).a.ToString("0.##", CultureInfo.InvariantCulture)})";
                 }
-                Rule(".inventory-grid .item-cell", $"background-image: {UrlOf(asset.gridCell)};", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0f)};", $"-unity-slice-scale: {Scale(asset.gridCell, asset.gridCellBorder)};");
-                Rule(".inventory-grid .item-cell:hover", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0.18f)};");
+                // The empty cell's own colour: a cell with an item in it takes its rarity's ground from the base sheets.
+                Rule(".inventory-grid .item-cell", $"background-image: {UrlOf(asset.gridCell)};", $"-unity-slice-scale: {Scale(asset.gridCell, asset.gridCellBorder)};");
+                Rule(".inventory-grid .item-cell.item-empty", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0f)};");
+                Rule(".inventory-grid .item-cell.item-empty:hover", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0.18f)};");
+            }
+            string Rgba(Color colour)
+            {
+                Color32 c = colour;
+                return $"rgba({c.r}, {c.g}, {c.b}, {colour.a.ToString("0.##", CultureInfo.InvariantCulture)})";
+            }
+            if (asset.slotFrame != null)
+            {
+                // An equipment slot: its fill, and over it the pack's ornate frame reaching out past the slot. The
+                // frame takes the rarity of what is worn (the rarity rules tint it) and is grey while the slot is empty.
+                const string slot = ".equip-column .equip-slot";
+                string reach = (-asset.slotFrameOutset).ToString("0.##", CultureInfo.InvariantCulture) + "px";
+                Rule(slot, "background-image: none;", $"background-color: {Rgba(asset.slotFill)};");
+                Rule(slot + ":hover", $"background-color: {Rgba(Color.Lerp(asset.slotFill, Color.white, 0.12f))};");
+                Rule(slot + " > .item-frame", $"background-image: {UrlOf(asset.slotFrame)};", $"-unity-slice-scale: {Scale(asset.slotFrame, asset.slotFrameBorder)};",
+                    $"left: {reach};", $"top: {reach};", $"right: {reach};", $"bottom: {reach};");
+                Rule(slot + ".item-empty > .item-frame", "-unity-background-image-tint-color: rgb(132, 132, 132);");
+            }
+            if (asset.cardPictureFrame != null)
+            {
+                string reach = (-asset.cardPictureOutset).ToString("0.##", CultureInfo.InvariantCulture) + "px";
+                Rule(".card-picture-frame", $"background-image: {UrlOf(asset.cardPictureFrame)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",
+                    $"-unity-slice-scale: {Scale(asset.cardPictureFrame, asset.cardPictureBorder)};", $"left: {reach};", $"top: {reach};", $"right: {reach};", $"bottom: {reach};");
+            }
+            if (asset.cardFrame != null) Rule(".item-tooltip.item-card", $"background-color: {Rgba(asset.cardBacking)};", $"-unity-background-image-tint-color: {Rgba(asset.cardBacking)};");
+            if (asset.gridCell != null)
+            {
+                // In the grid the rarity of an item is the colour of the cell it lies on, as the packs' grids have no
+                // outlines: the outline is kept for what is happening to a cell (a pointer over it, a drop).
+                const string cell = ".inventory-grid .item-cell";
+                // (The grounds themselves are the base sheets' rarity rules, the same in every skin: nothing here names a rarity.)
+                Rule($"{cell} > .item-frame", "-unity-background-image-tint-color: rgba(0, 0, 0, 0);");
+                Rule($"{cell}:hover > .item-frame", "-unity-background-image-tint-color: rgba(220, 236, 246, 0.6);");
+                Rule($"{cell}.drop-valid > .item-frame", "-unity-background-image-tint-color: rgb(140, 255, 220);");
+                Rule($"{cell}.drop-hover > .item-frame", "-unity-background-image-tint-color: rgb(255, 214, 92);");
+                Rule($"{cell}.reject-flash > .item-frame", "-unity-background-image-tint-color: rgb(230, 70, 80);");
             }
             // The paper doll: what each empty slot is for, and the bars over and under the model.
             for (int i = 0; i < SlotOrder.Length && i < asset.slotGlyphs.Length; i++)
@@ -846,6 +941,8 @@ namespace KryticalNova.EditorTools
             }
             count += FrameRule(output, cssClass, ".panel", asset.panelFrame, asset.panelFrameBorder, asset.panelFrameOutset);
             count += FrameRule(output, cssClass, ".window", asset.windowFrame, asset.windowFrameBorder, asset.windowFrameOutset);
+            // The item card wears a frame of its own, not the small panels'.
+            count += FrameRule(output, cssClass, ".item-card", asset.cardFrame, asset.cardFrameBorder, asset.cardFrameOutset);
             count += CrownRule(output, cssClass, SyntySkin.CrownBackClass, asset.crownBack, asset.crownBackSize, asset.crownBackRise);
             count += CrownRule(output, cssClass, SyntySkin.CrownClass, asset.crown, asset.crownSize, asset.crownRise);
             return count;

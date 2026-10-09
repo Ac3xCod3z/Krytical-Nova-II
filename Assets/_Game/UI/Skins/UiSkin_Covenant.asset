@@ -83,6 +83,17 @@ MonoBehaviour:
   dollBarFootRight: {fileID: 21300000, guid: b574f15c0e92348429719a85cc0eb101, type: 3}
   dollBarHeight: 20
   dollBarTint: {r: 1, g: 1, b: 1, a: 1}
+  slotFrame: {fileID: 21300000, guid: dfd0f3583f632cc4db7280b272fb9ce9, type: 3}
+  slotFrameBorder: 18
+  slotFrameOutset: 6
+  slotFill: {r: 0.023529412, g: 0.17254902, b: 0.28235295, a: 0.9019608}
+  cardFrame: {fileID: 21300000, guid: c45ec5e932de84c40bf16d11a7081667, type: 3}
+  cardFrameBorder: 28
+  cardFrameOutset: 9
+  cardBacking: {r: 0.06666667, g: 0.18431373, b: 0.21568628, a: 0.9647059}
+  cardPictureFrame: {fileID: 21300000, guid: 5753074f14737664bac4586bdaf09fbd, type: 3}
+  cardPictureBorder: 30
+  cardPictureOutset: 8
   gridCell: {fileID: 21300000, guid: d15fffb6b1fbb99479735c8eaddeca50, type: 3}
   gridCellTint: {r: 0.011764706, g: 0.08235294, b: 0.13333334, a: 0.9019608}
   gridCellBorder: 8

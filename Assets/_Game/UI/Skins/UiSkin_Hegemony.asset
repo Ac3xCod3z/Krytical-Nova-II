@@ -83,9 +83,20 @@ MonoBehaviour:
   dollBarFootRight: {fileID: 0}
   dollBarHeight: 10
   dollBarTint: {r: 0.44705883, g: 0.87058824, b: 0.76862746, a: 1}
-  gridCell: {fileID: 0}
-  gridCellTint: {r: 1, g: 1, b: 1, a: 1}
-  gridCellBorder: 8
+  slotFrame: {fileID: 21300000, guid: 8bd56394846c68849b60af8b9a43d612, type: 3}
+  slotFrameBorder: 22
+  slotFrameOutset: 7
+  slotFill: {r: 0.039215688, g: 0.13333334, b: 0.1882353, a: 0.9019608}
+  cardFrame: {fileID: 21300000, guid: f5f52e4a4422e854e8fb0912a3cc83df, type: 3}
+  cardFrameBorder: 46
+  cardFrameOutset: 10
+  cardBacking: {r: 0.023529412, g: 0.11764706, b: 0.15686275, a: 0.9607843}
+  cardPictureFrame: {fileID: 21300000, guid: 8569e1d53adb9a14b876f7691713a58e, type: 3}
+  cardPictureBorder: 16
+  cardPictureOutset: 6
+  gridCell: {fileID: 21300000, guid: c0d97d6c2b0829c4c86755e9349ed967, type: 3}
+  gridCellTint: {r: 0.078431375, g: 0.16470589, b: 0.23529412, a: 0.92156863}
+  gridCellBorder: 6
   titleScreen: {fileID: 7972974810867652038, guid: 266d19ecf15f9814f842719bacca662f, type: 3}
   choiceScreen: {fileID: 7972974810867652038, guid: 2942942c7943a28469379803d5ba8b0a, type: 3}
   listScreen: {fileID: 7972974810867652038, guid: b8a08de2e2ce99943a5274946a397dd9, type: 3}

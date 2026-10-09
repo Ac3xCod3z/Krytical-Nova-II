@@ -135,14 +135,18 @@
 /* Rarity: tinted frame + a soft glow inside the slot. Common white, Uncommon blue, Rare yellow, Epic purple
    (Legendary, reserved, orange). These are game signals: the faction skin builder leaves .rarity- rules alone. */
 .rarity-0 > .item-frame { -unity-background-image-tint-color: rgba(242, 245, 248, 0.5); }
+/* On an equipment slot the frame is the pack's ornate one: a common piece leaves it in its own colours. */
+.equip-slot.rarity-0 > .item-frame { -unity-background-image-tint-color: rgb(255, 255, 255); }
 .rarity-1 > .item-frame { -unity-background-image-tint-color: rgb(84, 150, 255); }
 .rarity-2 > .item-frame { -unity-background-image-tint-color: rgb(255, 212, 64); }
 .rarity-3 > .item-frame { -unity-background-image-tint-color: rgb(186, 104, 255); }
 .rarity-4 > .item-frame { -unity-background-image-tint-color: rgb(255, 128, 48); }
-.rarity-1 { -unity-background-image-tint-color: rgba(30, 50, 86, 0.9); }
-.rarity-2 { -unity-background-image-tint-color: rgba(86, 70, 20, 0.9); }
-.rarity-3 { -unity-background-image-tint-color: rgba(58, 34, 86, 0.9); }
-.rarity-4 { -unity-background-image-tint-color: rgba(86, 46, 20, 0.9); }
+/* The ground an item lies on, by rarity. In the Pack's grid this is how a rarity is told (the cells have no outlines). */
+.rarity-0 { -unity-background-image-tint-color: rgba(34, 37, 42, 0.92); }
+.rarity-1 { -unity-background-image-tint-color: rgba(22, 44, 92, 0.95); }
+.rarity-2 { -unity-background-image-tint-color: rgba(90, 70, 16, 0.95); }
+.rarity-3 { -unity-background-image-tint-color: rgba(54, 28, 88, 0.95); }
+.rarity-4 { -unity-background-image-tint-color: rgba(96, 46, 16, 0.95); }
 
 /* Gear the character cannot wear (level, faction or body): still shown, clearly out of reach. */
 .item-unusable > .item-icon { opacity: 0.38; }
@@ -293,20 +297,21 @@
 
 /* The item card. */
 .card-picture {
-    height: 96px;
-    margin-bottom: 8px;
+    height: 100px;
+    margin: 4px 4px 12px 4px;
 }
-/* The picture stands on the pack's slot, lit in the item's rarity: a game signal, the same in every skin. */
-.card-picture.rarity-card-0 > .card-picture-frame { -unity-background-image-tint-color: rgb(206, 210, 214); }
-.card-picture.rarity-card-1 > .card-picture-frame { -unity-background-image-tint-color: rgb(110, 164, 255); }
-.card-picture.rarity-card-2 > .card-picture-frame { -unity-background-image-tint-color: rgb(255, 216, 96); }
-.card-picture.rarity-card-3 > .card-picture-frame { -unity-background-image-tint-color: rgb(196, 128, 255); }
-.card-picture.rarity-card-4 > .card-picture-frame { -unity-background-image-tint-color: rgb(255, 150, 72); }
-.card-picture.rarity-card-0 > .card-picture-glow { -unity-background-image-tint-color: rgba(230, 236, 240, 0.14); }
-.card-picture.rarity-card-1 > .card-picture-glow { -unity-background-image-tint-color: rgba(84, 150, 255, 0.4); }
-.card-picture.rarity-card-2 > .card-picture-glow { -unity-background-image-tint-color: rgba(255, 212, 64, 0.36); }
-.card-picture.rarity-card-3 > .card-picture-glow { -unity-background-image-tint-color: rgba(186, 104, 255, 0.42); }
-.card-picture.rarity-card-4 > .card-picture-glow { -unity-background-image-tint-color: rgba(255, 128, 48, 0.4); }
+.card-picture-clip { position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: hidden; }
+/* The picture's ground is the item's rarity, glowing: a game signal, the same in every skin. */
+.card-picture.rarity-card-0 > .card-picture-clip { background-color: rgb(46, 52, 60); }
+.card-picture.rarity-card-1 > .card-picture-clip { background-color: rgb(16, 44, 104); }
+.card-picture.rarity-card-2 > .card-picture-clip { background-color: rgb(104, 76, 10); }
+.card-picture.rarity-card-3 > .card-picture-clip { background-color: rgb(70, 24, 112); }
+.card-picture.rarity-card-4 > .card-picture-clip { background-color: rgb(116, 48, 10); }
+.card-picture.rarity-card-0 .card-picture-glow { -unity-background-image-tint-color: rgba(230, 236, 240, 0.14); }
+.card-picture.rarity-card-1 .card-picture-glow { -unity-background-image-tint-color: rgba(84, 150, 255, 0.4); }
+.card-picture.rarity-card-2 .card-picture-glow { -unity-background-image-tint-color: rgba(255, 212, 64, 0.36); }
+.card-picture.rarity-card-3 .card-picture-glow { -unity-background-image-tint-color: rgba(186, 104, 255, 0.42); }
+.card-picture.rarity-card-4 .card-picture-glow { -unity-background-image-tint-color: rgba(255, 128, 48, 0.4); }
 .card-picture-glow {
     position: absolute;
     left: -10%; right: -10%; top: -40%; bottom: -40%;
