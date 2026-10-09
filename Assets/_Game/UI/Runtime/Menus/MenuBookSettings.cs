@@ -24,6 +24,24 @@ namespace KryticalNova.UI.Menus
         [Tooltip("Where in the world the book is stood while a page turns: far from anything a game camera looks at.")]
         public Vector3 stage = new Vector3(0f, -500f, 0f);
 
+        [Header("The book at rest")]
+        [Tooltip("A menu screen is shown on the book's right-hand page: this much of the view, the whole screen made that much smaller. 1: the screen fills the view and there is no book round it.")]
+        [Range(0.7f, 1f)] public float pageScale = 0.88f;
+        [Tooltip("The share of the view's width left of the page: the gutter and the edge of the page before.")]
+        [Range(0f, 0.2f)] public float leftStrip = 0.085f;
+        [Tooltip("What the book lies on.")]
+        public Color table = new Color32(0x0C, 0x0B, 0x17, 0xFF);
+        [Tooltip("The paper of the pages seen round the screen, and its shaded side.")]
+        public Color paperColour = new Color32(0xEE, 0xE6, 0xD2, 0xFF), paperShade = new Color32(0xB9, 0xAE, 0x98, 0xFF);
+        [Tooltip("The ink line round the page.")]
+        public Color inkColour = new Color32(0x14, 0x12, 0x2B, 0xFF);
+        [Tooltip("How many page edges show under the right and bottom sides of the page.")]
+        [Range(0, 8)] public int edgeLeaves = 5;
+        [Tooltip("The book's cover board, seen past the pages along the top, the outer side and the foot, and the lighter line of its edge.")]
+        public Color cover = new Color32(0x2B, 0x2C, 0x6E, 0xFF), coverEdge = new Color32(0x4C, 0x52, 0xBF, 0xFF);
+        [Tooltip("How far the cover stands out past the pages, as a share of the view's width. 0: no cover is drawn.")]
+        [Range(0f, 0.02f)] public float coverMargin = 0.007f;
+
         [Header("The paper")]
         [Tooltip("The dots on the back of a page take the accent colour of the skin the menus wear. Off: the colour below.")]
         public bool tintWithTheSkin = true;

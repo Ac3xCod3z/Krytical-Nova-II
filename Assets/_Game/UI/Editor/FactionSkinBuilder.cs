@@ -104,6 +104,20 @@ namespace KryticalNova.EditorTools
 
         public static UiSkin LoadSkin(FactionId faction) => AssetDatabase.LoadAssetAtPath<UiSkin>(SkinPath(faction));
 
+        /// <summary>Makes the flattened art of every skin again (after a change to what it is made from), then the sheets.</summary>
+        [MenuItem("Krytical Nova/UI/Rebuild Faction Skin Art")]
+        public static void RebuildArt()
+        {
+            foreach (FactionId faction in Factions)
+            {
+                UiSkin asset = LoadSkin(faction);
+                if (asset == null) continue;
+                asset.button = asset.menuButton = asset.headerBand = asset.cell = asset.closeButton = null;
+                EditorUtility.SetDirty(asset);
+            }
+            Build();
+        }
+
         [MenuItem("Krytical Nova/UI/Build Faction Skins")]
         public static void Build()
         {
@@ -113,6 +127,10 @@ namespace KryticalNova.EditorTools
             {
                 UiSkin asset = LoadSkin(faction);
                 if (asset == null) continue;
+                EnsureChrome(asset);
+                EnsureInventoryParts(asset);
+                EnsureInventoryFrames(asset);
+                EnsureSettingsParts(asset);
                 string text = Generate(asset, out int rules);
                 string target = SheetPath(faction);
                 // An unchanged sheet is left alone: writing it would re-import it and rebuild every open UI.
@@ -150,6 +168,15 @@ namespace KryticalNova.EditorTools
                 output.AppendLine($"/* ---- {Path.GetFileName(path)} ---- */");
                 output.Append(sheet);
                 rules += count;
+            }
+            var chrome = new StringBuilder();
+            int chromeRules = Chrome(asset, skin.cssClass, chrome) + Design(asset, skin.cssClass, chrome);
+            if (chromeRules > 0)
+            {
+                output.AppendLine();
+                output.AppendLine("/* ---- window chrome: the pack's own frames and ornaments ---- */");
+                output.Append(chrome);
+                rules += chromeRules;
             }
             return output.ToString().Replace("\r\n", "\n").Replace("\n", "\r\n");
         }
@@ -258,8 +285,841 @@ namespace KryticalNova.EditorTools
                 });
                 Menus(skin, FantasyMenus, "FantasyMenus", new Color32(0xE8, 0xB0, 0x4A, 0xFF));
             });
+            foreach (FactionId faction in Factions)
+            {
+                UiSkin skin = LoadSkin(faction);
+                if (skin != null) EnsureCreatorParts(skin);
+            }
             AssetDatabase.SaveAssets();
         }
+
+        // ---------------------------------------------------------------- the inventory pages' parts
+
+        // The equipment slots in the order of UiSkin.slotGlyphs (the names of the slots' elements, "equip-<name>").
+        private static readonly string[] SlotOrder = { "Weapon", "Armor", "Gloves", "Boots", "Ring", "Amulet", "Cape", "Pet" };
+
+        /// <summary>
+        /// Gives a skin asset the parts of its packs' own inventory (the Dark Fantasy HUD's paper doll window, Fantasy
+        /// Screens' inventory panel; the Sci-Fi packs have no inventory, so the Hegemony's is made of their slot
+        /// pictures and lines, with the pictures they lack borrowed from the Dark Fantasy pack). A part that is set is
+        /// left as it is.
+        /// </summary>
+        private static void EnsureInventoryParts(UiSkin skin)
+        {
+            if (skin.slotGlyphs != null && skin.slotGlyphs.Length == SlotOrder.Length && skin.dollBarTopLeft != null) return;
+            string df = DarkFantasy + "Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_";
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                {
+                    string sf = SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_";
+                    skin.slotGlyphs = new[]
+                    {
+                        Load<Sprite>(sf + "Weapon_01.png"), Load<Sprite>(sf + "Armor_01.png"), Load<Sprite>(df + "Gauntlets_01_Underlay.png"), Load<Sprite>(df + "Boots_01_Underlay.png"),
+                        Load<Sprite>(df + "Rings_02_Underlay.png"), Load<Sprite>(df + "Necklaces_02_Underlay.png"), Load<Sprite>(sf + "Backpack_01.png"), Load<Sprite>(sf + "Science_01.png"),
+                    };
+                    skin.slotGlyphTint = new Color32(0x5A, 0xC8, 0xE6, 0x59);
+                    skin.dollBarTopLeft = skin.dollBarFootLeft = Load<Sprite>(SciFiHud + "Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png");
+                    skin.dollBarHeight = 10f;
+                    skin.dollBarTint = new Color32(0x72, 0xDE, 0xC4, 0xFF);
+                    break;
+                }
+                case FactionId.Null:
+                    skin.slotGlyphs = new[]
+                    {
+                        Load<Sprite>(df + "Swords_01_Underlay.png"), Load<Sprite>(df + "Armor_02_Underlay.png"), Load<Sprite>(df + "Gauntlets_01_Underlay.png"), Load<Sprite>(df + "Boots_01_Underlay.png"),
+                        Load<Sprite>(df + "Rings_02_Underlay.png"), Load<Sprite>(df + "Necklaces_02_Underlay.png"), Load<Sprite>(df + "ShoulderPads_01_Underlay.png"), Load<Sprite>(df + "Items_01_Underlay.png"),
+                    };
+                    skin.slotGlyphTint = new Color32(0x40, 0x6C, 0x6F, 0x8C); // the pack's own tone, a little stronger than it draws it
+                    skin.dollBarTopLeft = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_TopLeft.png");
+                    skin.dollBarTopRight = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_TopRight.png");
+                    skin.dollBarFootLeft = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_BottomLeft.png");
+                    skin.dollBarFootRight = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_BottomRight.png");
+                    skin.dollBarHeight = 20f;
+                    skin.dollBarTint = new Color32(0x90, 0x90, 0x90, 0xFF);
+                    skin.gridCell = Load<Sprite>(DarkFantasy + "Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_01.png");
+                    skin.gridCellTint = new Color32(0x13, 0x13, 0x13, 0xE6);
+                    break;
+                case FactionId.Covenant:
+                {
+                    string fs = FantasyScreens + "Sprites/Icons_Inventory/ICON_FantasyScreens_Inventory_";
+                    skin.slotGlyphs = new[]
+                    {
+                        Load<Sprite>(fs + "Swords_01_Underlay.png"), Load<Sprite>(fs + "Armor_02_Underlay.png"), Load<Sprite>(fs + "Gauntlets_01_Underlay.png"), Load<Sprite>(fs + "Boots_01_Underlay.png"),
+                        Load<Sprite>(fs + "Rings_02_Underlay.png"), Load<Sprite>(fs + "Necklaces_02_Underlay.png"), Load<Sprite>(fs + "ShoulderPads_01_Underlay.png"), Load<Sprite>(fs + "Items_01_Underlay.png"),
+                    };
+                    skin.slotGlyphTint = new Color32(0x90, 0x86, 0x5E, 0x80);
+                    string bar = FantasyMenus + "Sprites/FantasyMenus/SPR_FantasyMenus_Frame_Bar_01_";
+                    skin.dollBarTopLeft = Load<Sprite>(bar + "Top_Left.png");
+                    skin.dollBarTopRight = Load<Sprite>(bar + "Top_Right.png");
+                    skin.dollBarFootLeft = Load<Sprite>(bar + "Bottom_Left.png");
+                    skin.dollBarFootRight = Load<Sprite>(bar + "Bottom_Right.png");
+                    skin.dollBarHeight = 20f;
+                    skin.dollBarTint = Color.white;
+                    skin.gridCell = Load<Sprite>(FantasyWarrior + "Sprites/HUD/SPR_HUD_FantasyWarrior_Box_Medium_Parchment_01.png");
+                    skin.gridCellTint = new Color32(0x03, 0x15, 0x22, 0xE6);
+                    break;
+                }
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        /// <summary>
+        /// The ornate frames of the inventory pages, from each pack: the equipment slot's, the item card's and the
+        /// one round the card's picture; and the Hegemony's grid cell. A skin that has a slot frame is left as it is.
+        /// </summary>
+        private static void EnsureInventoryFrames(UiSkin skin)
+        {
+            if (skin.slotFrame != null) return;
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                {
+                    string menus = SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_";
+                    skin.slotFrame = Load<Sprite>(menus + "Frame_Box_Small_10.png"); // the bolted, cut-corner housing
+                    skin.slotFrameBorder = 22f; skin.slotFrameOutset = 7f;
+                    skin.slotFill = new Color32(10, 34, 48, 230);
+                    skin.cardFrame = Load<Sprite>(menus + "Frame_Box_Large_09.png");
+                    skin.cardFrameBorder = 46f; skin.cardFrameOutset = 10f;
+                    skin.cardBacking = new Color32(6, 30, 40, 245);
+                    skin.cardPictureFrame = Load<Sprite>(menus + "Frame_Box_Small_05.png");
+                    skin.cardPictureBorder = 16f; skin.cardPictureOutset = 6f;
+                    // The Sci-Fi packs have no inventory: their glass slot is the grid's cell.
+                    skin.gridCell = skin.itemSlot;
+                    skin.gridCellTint = new Color32(20, 42, 60, 235);
+                    skin.gridCellBorder = 6f;
+                    break;
+                }
+                case FactionId.Null:
+                {
+                    string df = DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_";
+                    skin.slotFrame = Load<Sprite>(df + "Frame_Box_Medium_17.png");
+                    skin.slotFrameBorder = 15f; skin.slotFrameOutset = 6f;
+                    skin.slotFill = new Color32(0x21, 0x39, 0x41, 0xCC); // the pack's own
+                    skin.cardFrame = Load<Sprite>(df + "Frame_Box_Large_02.png");
+                    skin.cardFrameBorder = 62f; skin.cardFrameOutset = 8f;
+                    skin.cardBacking = new Color32(0x16, 0x1A, 0x1A, 0xF4);
+                    skin.cardPictureFrame = Load<Sprite>(df + "Frame_Box_Medium_17.png");
+                    skin.cardPictureBorder = 18f; skin.cardPictureOutset = 8f;
+                    break;
+                }
+                case FactionId.Covenant:
+                {
+                    string fw = FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_";
+                    skin.slotFrame = Load<Sprite>(fw + "Frame_Box_04.png"); // steel, with gold corners and a gem in each
+                    skin.slotFrameBorder = 18f; skin.slotFrameOutset = 6f;
+                    skin.slotFill = new Color32(0x06, 0x2C, 0x48, 0xE6);
+                    skin.cardFrame = Load<Sprite>(fw + "Frame_Box_22_Variant_01.png");
+                    skin.cardFrameBorder = 28f; skin.cardFrameOutset = 9f;
+                    skin.cardBacking = new Color32(0x11, 0x2F, 0x37, 0xF6);
+                    skin.cardPictureFrame = Load<Sprite>(fw + "Frame_Box_18_Variant_01.png");
+                    skin.cardPictureBorder = 30f; skin.cardPictureOutset = 8f;
+                    break;
+                }
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        /// <summary>
+        /// The parts of a settings row from each menu pack's own settings rows (Settings_&lt;Pack&gt;_Item_Array /
+        /// _Slider / _Toggle): arrows, the value box, the slider's track and the two halves of the ON / OFF switch, each
+        /// a frame flattened over its fill in the colour the pack gives it. A skin that has its arrows is left as it is.
+        /// </summary>
+        private static void EnsureSettingsParts(UiSkin skin)
+        {
+            if (skin.stepBox != null) return;
+            string f = skin.faction.ToString(), art = $"{FactionHudBuilder.Folder}/{skin.faction}/Art";
+            Sprite S(string path) => Load<Sprite>(path);
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                {
+                    string m = SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_";
+                    skin.stepArrowLeft = S(m + "Button_Arrow_07_Left.png");
+                    skin.stepArrowRight = S(m + "Button_Arrow_07_Right.png");
+                    skin.stepBox = SpriteRecolourer.Flatten($"StepBox_{f}", art, S(m + "Frame_Box_Small_07.png"), S(m + "Frame_Box_Small_07_Background.png"), new Color32(0x04, 0x32, 0x46, 0xFA));
+                    skin.stepBoxBorder = 9f;
+                    skin.sliderTrack = SpriteRecolourer.Flatten($"SliderTrack_{f}", art, S(m + "Button_Frame_07.png"), S(m + "Button_Frame_07_Background.png"), new Color32(0x00, 0x72, 0x96, 0xE0));
+                    skin.sliderTrackBorder = 7f;
+                    Sprite fill = S(m + "Bar_Frame_07_Background.png");
+                    Color dim = new Color32(0x1B, 0x6D, 0x78, 0xE6), lit = new Color32(0xFF, 0x9C, 0x00, 0xFF);
+                    skin.toggleLeft = SpriteRecolourer.Flatten($"ToggleLeft_{f}", art, S(m + "Bar_Frame_07_Left.png"), fill, dim);
+                    skin.toggleLeftLit = SpriteRecolourer.Flatten($"ToggleLeftLit_{f}", art, S(m + "Bar_Frame_07_Left.png"), fill, lit);
+                    skin.toggleRight = SpriteRecolourer.Flatten($"ToggleRight_{f}", art, S(m + "Bar_Frame_07_Right.png"), fill, dim);
+                    skin.toggleRightLit = SpriteRecolourer.Flatten($"ToggleRightLit_{f}", art, S(m + "Bar_Frame_07_Right.png"), fill, lit);
+                    skin.toggleBorder = 11f;
+                    skin.rowHighlight = S(SciFiMenus + "Sprites/General/SPR_SciFiMenus_Menu_Item_Background_08.png");
+                    skin.rowHighlightTint = new Color32(0x00, 0x8D, 0xA7, 0x70);
+                    break;
+                }
+                case FactionId.Null:
+                {
+                    string m = DarkFantasyMenus + "Sprites/DarkFantasyMenus/SPR_DarkFantasyMenus_";
+                    skin.stepArrowLeft = S(m + "Button_Arrow_05_Left.png");
+                    skin.stepArrowRight = S(m + "Button_Arrow_05_Right.png");
+                    skin.stepBox = SpriteRecolourer.Flatten($"StepBox_{f}", art, S(m + "Frame_Bar_Large_02.png"), S(m + "Frame_Bar_Large_02_Background.png"), new Color32(0x52, 0x21, 0x1B, 0xFF));
+                    skin.stepBoxBorder = 12f;
+                    skin.sliderTrack = SpriteRecolourer.Flatten($"SliderTrack_{f}", art, S(m + "Frame_Bar_Medium_10.png"), S(m + "Frame_Bar_Medium_10_Background.png"), new Color32(0x33, 0x10, 0x0F, 0xFF));
+                    skin.sliderTrackBorder = 8f;
+                    Sprite fill = S(m + "Button_Toggle_03_Background.png");
+                    Color dim = new Color32(0x37, 0x0F, 0x0B, 0xE6), lit = new Color32(0xB2, 0x15, 0x0B, 0xFF);
+                    skin.toggleLeft = SpriteRecolourer.Flatten($"ToggleLeft_{f}", art, S(m + "Button_Toggle_03_Left.png"), fill, dim);
+                    skin.toggleLeftLit = SpriteRecolourer.Flatten($"ToggleLeftLit_{f}", art, S(m + "Button_Toggle_03_Left.png"), fill, lit);
+                    skin.toggleRight = SpriteRecolourer.Flatten($"ToggleRight_{f}", art, S(m + "Button_Toggle_03_Right.png"), fill, dim);
+                    skin.toggleRightLit = SpriteRecolourer.Flatten($"ToggleRightLit_{f}", art, S(m + "Button_Toggle_03_Right.png"), fill, lit);
+                    skin.toggleBorder = 12f;
+                    skin.rowHighlight = S(DarkFantasyMenus + "Sprites/General/SPR_DarkFantasyMenus_Gradient_Horizontal_01.png");
+                    skin.rowHighlightTint = new Color32(0xB0, 0x14, 0x0B, 0x60);
+                    break;
+                }
+                case FactionId.Covenant:
+                {
+                    string m = FantasyMenus + "Sprites/FantasyMenus/SPR_FantasyMenus_";
+                    skin.stepArrowRight = S(FantasyMenus + "Sprites/Icons_FantasyMenus/SPR_FantasyMenus_Icon_Arrow_01.png");
+                    skin.stepArrowLeft = null; // the pack has one arrow, pointing right: the other is its mirror
+                    skin.stepBox = SpriteRecolourer.Flatten($"StepBox_{f}", art, S(m + "Menu_Button_05_Frame.png"), S(m + "Menu_Button_05_Background.png"), new Color32(0x04, 0x32, 0x46, 0xFA));
+                    skin.stepBoxBorder = 12f;
+                    skin.sliderTrack = SpriteRecolourer.Flatten($"SliderTrack_{f}", art, S(m + "Scrollbar_Horizontal_01_Frame.png"), null, new Color32(0x0A, 0x1C, 0x2A, 0xE0));
+                    skin.sliderTrackBorder = 6f;
+                    Sprite fill = S(m + "Menu_Button_17_Frame_Background.png"), fillLit = S(m + "Menu_Button_13_Frame_Background.png");
+                    Color dim = new Color32(0x0B, 0x22, 0x37, 0xE6), lit = new Color32(0x0B, 0x81, 0xB2, 0xFF);
+                    skin.toggleLeft = SpriteRecolourer.Flatten($"ToggleLeft_{f}", art, S(m + "Menu_Button_17_Frame_Left.png"), fill, dim);
+                    skin.toggleLeftLit = SpriteRecolourer.Flatten($"ToggleLeftLit_{f}", art, S(m + "Menu_Button_17_Frame_Left.png"), fillLit != null ? fillLit : fill, lit);
+                    skin.toggleRight = SpriteRecolourer.Flatten($"ToggleRight_{f}", art, S(m + "Menu_Button_17_Frame_Right.png"), fill, dim);
+                    skin.toggleRightLit = SpriteRecolourer.Flatten($"ToggleRightLit_{f}", art, S(m + "Menu_Button_17_Frame_Right.png"), fillLit != null ? fillLit : fill, lit);
+                    skin.toggleBorder = 12f;
+                    skin.rowHighlight = S(FantasyMenus + "Sprites/General/SPR_FantasyMenus_Gradient_Horizontal_01.png");
+                    skin.rowHighlightTint = new Color32(0x0B, 0x6E, 0xB0, 0x60);
+                    break;
+                }
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        // ---------------------------------------------------------------- the character creator's parts
+
+        private const string FantasyScreens = "Assets/Synty/InterfaceFantasyScreens/";
+        public const int CreatorTabCount = 7, TraitCount = 3;
+
+        /// <summary>
+        /// Gives a skin asset made before the creator was built per skin the parts of its menu pack that the creator
+        /// is made from (the three menu packs are made to one template), and the pictures of its tabs and traits. A
+        /// part that is set is left as it is.
+        /// </summary>
+        public static void EnsureCreatorParts(UiSkin skin)
+        {
+            string pack, token;
+            string[] tabs, traits;
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                    pack = SciFiMenus;
+                    token = "SciFiMenus";
+                    tabs = new[]
+                    {
+                        SciFiMenus + "Sprites/Icons_Menu/ICON_SciFiMenus_Menu_Flag_01_Clean.png",
+                        SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Weapon_01.png",
+                        SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Armor_01.png",
+                        SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Helmet_01.png",
+                        SciFiMenus + "Sprites/Icons_Menu/ICON_SciFiMenus_Menu_Message_01_Clean.png",
+                        SciFiMenus + "Sprites/Icons_Settings/ICON_SciFiMenus_Settings_Color_01_Clean.png",
+                        SciFiMenus + "Sprites/Icons_Menu/ICON_SciFiMenus_Menu_Tick_01_Clean.png",
+                    };
+                    traits = new[]
+                    {
+                        SciFiHud + "Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Science_01.png",
+                        SciFiHud + "Sprites/Icons_Status/ICON_SciFiSoldier_Status_Health_01.png",
+                        SciFiHud + "Sprites/Icons_Status/ICON_SciFiSoldier_Status_Armor_01.png",
+                    };
+                    break;
+                case FactionId.Null:
+                    pack = DarkFantasyMenus;
+                    token = "DarkFantasyMenus";
+                    tabs = new[]
+                    {
+                        DarkFantasyMenus + "Sprites/Icons_DarkFantasyMenus/SPR_DarkFantasyMenus_Icon_Flag_01.png",
+                        DarkFantasyMenus + "Sprites/Icons_DarkFantasyMenus/SPR_DarkFantasyMenus_Icon_Swords_01.png",
+                        DarkFantasy + "Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Armor_01_Clean.png",
+                        DarkFantasyMenus + "Sprites/Icons_DarkFantasyMenus/SPR_DarkFantasyMenus_Icon_Helmet_01.png",
+                        DarkFantasyMenus + "Sprites/Icons_Menu/ICON_DarkFantasyMenus_Menu_Message_01_Clean.png",
+                        DarkFantasyMenus + "Sprites/Icons_Settings/ICON_DarkFantasyMenus_Settings_Color_01_Clean.png",
+                        DarkFantasyMenus + "Sprites/Icons_DarkFantasyMenus/SPR_DarkFantasyMenus_Icon_Scroll_01.png",
+                    };
+                    traits = new[]
+                    {
+                        DarkFantasy + "Sprites/Icons_Stats/ICON_DarkFantasy_Stat_Mind_01_Clean.png",
+                        DarkFantasy + "Sprites/Icons_Stats/ICON_DarkFantasy_Stat_Speed_02_Clean.png",
+                        DarkFantasy + "Sprites/Icons_Stats/ICON_DarkFantasy_Stat_Strength_01_Clean.png",
+                    };
+                    break;
+                case FactionId.Covenant:
+                    pack = FantasyMenus;
+                    token = "FantasyMenus";
+                    string character = FantasyScreens + "Sprites/Icons_Character/ICON_FantasyScreens_Character_";
+                    tabs = new[]
+                    {
+                        FantasyMenus + "Sprites/Icons_FantasyMenus/SPR_FantasyMenus_Icon_Flag_01.png",
+                        FantasyScreens + "Sprites/Icons_Inventory/ICON_FantasyScreens_Inventory_Swords_01_Underlay.png",
+                        character + "Body_01_Underlay.png",
+                        character + "Head_01_Underlay.png",
+                        FantasyScreens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Message_01_Underlay.png",
+                        character + "Markings_01_Underlay.png",
+                        FantasyScreens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Done_01_Underlay.png",
+                    };
+                    traits = new string[0]; // its own creator screen has them
+                    break;
+                default:
+                    return;
+            }
+
+            string prefabs = pack + "Prefabs/";
+            bool changed = false;
+            GameObject Part(GameObject now, string path)
+            {
+                if (now != null) return now;
+                // The Dark Fantasy pack numbers its labels.
+                string file = File.Exists($"{prefabs}{path}.prefab") ? $"{prefabs}{path}.prefab" : $"{prefabs}{path}_01.prefab";
+                var part = Load<GameObject>(file);
+                changed |= part != null;
+                return part;
+            }
+            Sprite[] Pictures(Sprite[] now, string[] paths)
+            {
+                if (now != null && now.Length == paths.Length && Array.TrueForAll(now, each => each != null)) return now;
+                changed = true;
+                return Array.ConvertAll(paths, path => Load<Sprite>(path));
+            }
+
+            if (skin.faction == FactionId.Covenant && skin.creatorScreen == null)
+            {
+                skin.creatorScreen = Load<GameObject>(FantasyScreens + "Prefabs/Screens/Screen_FantasyScreens_CharacterCreator_01.prefab");
+                changed = true;
+            }
+            skin.tabStrip = Part(skin.tabStrip, $"Buttons/Menu_{token}_Navigation_Icons_01");
+            skin.framedPanel = Part(skin.framedPanel, $"Panels/Panel_{token}_Popup_02");
+            skin.iconButton = Part(skin.iconButton, $"Buttons/Menu_{token}_Button_Icon_01");
+            skin.sliderRow = Part(skin.sliderRow, $"Settings/Settings_{token}_Item_Slider_01");
+            skin.textField = Part(skin.textField, $"Panels/Panel_{token}_Input_01");
+            skin.sectionHeader = Part(skin.sectionHeader, $"Settings/Settings_{token}_Section_Header_01");
+            skin.headerLabel = Part(skin.headerLabel, $"_CommonComponents/Label_{token}_Header");
+            skin.startButton = Part(skin.startButton, $"Buttons/Button_{token}_Start_01");
+            skin.footer = Part(skin.footer, $"Buttons/Input_{token}_Footer_01");
+            if (skin.faction == FactionId.Null && skin.textFieldFill.a <= 0f)
+            {
+                skin.textFieldFill = new Color32(0x3A, 0x0E, 0x0C, 0xF8); // owner, 9 Oct 2026: red, not the pack's teal
+                changed = true;
+            }
+            skin.creatorTabIcons = Pictures(skin.creatorTabIcons, tabs);
+            skin.traitIcons = Pictures(skin.traitIcons, traits);
+            if (changed) EditorUtility.SetDirty(skin);
+        }
+
+        // ---------------------------------------------------------------- window chrome
+
+        // What is read rather than glanced at: these get the skin's nearly solid backing. The always-on panels (chat,
+        // the Squad frames, prompts) keep the layout's see-through fill.
+        private static readonly string[] SolidPanels =
+        {
+            ".window", ".item-tooltip", ".item-menu", ".item-confirm", ".amount-dialog", ".game-menu", ".player-menu",
+        };
+
+        /// <summary>
+        /// Gives a skin asset made before window chrome existed the frames and ornaments of its pack. An asset that
+        /// has a window frame is left exactly as it is.
+        /// </summary>
+        private static void EnsureChrome(UiSkin skin)
+        {
+            if (skin.windowBacking.a <= 0f)
+            {
+                // The faction's dark tone, darker still.
+                Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
+                Color backing = Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.1f), 0.085f);
+                backing.a = 0.4f; // the world reads faintly through a window, as through the packs' own
+                skin.windowBacking = backing;
+                EditorUtility.SetDirty(skin);
+                AssetDatabase.SaveAssetIfDirty(skin);
+            }
+            if (skin.button == null)
+            {
+                // The pack's small box frame over its fill, in the faction's dark tone.
+                Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
+                Color fillTint = Color.HSVToRGB(hue, Mathf.Clamp01(saturation), 0.2f);
+                string art = $"{FactionHudBuilder.Folder}/{skin.faction}/Art";
+                string name = $"Button_{skin.faction}";
+                switch (skin.faction)
+                {
+                    case FactionId.Hegemony:
+                        skin.button = SpriteRecolourer.Flatten(name, art, Load<Sprite>(SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_07.png"),
+                            Load<Sprite>(SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_07_Background.png"), fillTint);
+                        skin.buttonBorder = 7f;
+                        break;
+                    case FactionId.Null:
+                        skin.button = SpriteRecolourer.Flatten(name, art, Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_01_Variant_01.png"),
+                            Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_01_Background.png"), fillTint);
+                        skin.buttonBorder = 8f;
+                        break;
+                    case FactionId.Covenant:
+                        skin.button = SpriteRecolourer.Flatten(name, art, Load<Sprite>(FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_22_Variant_01.png"), null, fillTint);
+                        skin.buttonBorder = 7f;
+                        break;
+                }
+                EditorUtility.SetDirty(skin);
+                AssetDatabase.SaveAssetIfDirty(skin);
+            }
+            EnsureDesign(skin);
+            if (skin.windowFrame != null) return;
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                    skin.windowFrame = Load<Sprite>(SciFiHud + "Sprites/SciFi/SPR_SciFiSoldier_Frame_TechyDark_01.png");
+                    skin.windowFrameBorder = 30f;
+                    skin.windowFrameOutset = 5f;
+                    skin.panelFrame = null; // the pack's small panels are its tinted line frames: the layout's own
+                    skin.crown = Load<Sprite>(SciFiHud + "Sprites/SciFi/SPR_SciFiSoldier_Greeble_BoxTop_02.png");
+                    skin.crownSize = new Vector2(52f, 38f);
+                    skin.crownRise = 33f;
+                    skin.crownBack = null;
+                    break;
+                case FactionId.Null:
+                    skin.windowFrame = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Large_08.png");
+                    skin.windowFrameBorder = 26f;
+                    skin.windowFrameOutset = 8f;
+                    skin.panelFrame = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Large_07.png");
+                    skin.panelFrameBorder = 8f;
+                    skin.panelFrameOutset = 1f;
+                    skin.crown = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Greeble_Skull_01.png");
+                    skin.crownSize = new Vector2(46f, 46f);
+                    skin.crownRise = 30f;
+                    skin.crownBack = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Greeble_Horns_05.png");
+                    skin.crownBackSize = new Vector2(92f, 46f);
+                    skin.crownBackRise = 30f;
+                    break;
+                case FactionId.Covenant:
+                    skin.windowFrame = Load<Sprite>(FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_06.png");
+                    skin.windowFrameBorder = 20f;
+                    skin.windowFrameOutset = 6f;
+                    skin.panelFrame = Load<Sprite>(FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_12.png");
+                    skin.panelFrameBorder = 12f;
+                    skin.panelFrameOutset = 1f;
+                    skin.crown = Load<Sprite>(FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_Greeble_Curlicue_24.png");
+                    skin.crownSize = new Vector2(96f, 48f);
+                    skin.crownRise = 30f;
+                    skin.crownBack = null;
+                    break;
+                default:
+                    return;
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        /// <summary>
+        /// The parts of a window's page that are the pack's own art: the menu row's buttons, the band under a title,
+        /// the item cells and the round close button. Each is the pack's frame flattened over its fill in the
+        /// faction's dark tone. A part that is there is left exactly as it is.
+        /// </summary>
+        private static void EnsureDesign(UiSkin skin)
+        {
+            if (skin.keycap == null)
+            {
+                // The caps of each pack's own controls page: its cap shape, in the three colours the pack gives it.
+                switch (skin.faction)
+                {
+                    case FactionId.Hegemony:
+                        skin.keycap = skin.token;
+                        skin.keycapBorder = 9f;
+                        skin.keycapTint = new Color32(13, 63, 115, 255);
+                        skin.keycapLetter = new Color32(244, 250, 255, 255);
+                        skin.keycapHot = new Color32(38, 168, 250, 255);
+                        skin.controlsLabel = new Color32(236, 244, 250, 255);
+                        break;
+                    case FactionId.Null:
+                        skin.keycap = Load<Sprite>(DarkFantasy + "Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_01.png");
+                        skin.keycapBorder = 9f;
+                        skin.keycapTint = new Color32(44, 44, 48, 255);
+                        skin.keycapLetter = new Color32(248, 246, 240, 255);
+                        skin.keycapHot = new Color32(204, 42, 46, 255);
+                        skin.controlsLabel = new Color32(228, 188, 108, 255);
+                        break;
+                    case FactionId.Covenant:
+                        skin.keycap = Load<Sprite>(FantasyWarrior + "Sprites/HUD/SPR_HUD_FantasyWarrior_Box_Small_Parchment_02.png");
+                        skin.keycapBorder = 9f;
+                        skin.keycapTint = new Color32(42, 58, 76, 255);
+                        skin.keycapLetter = new Color32(246, 204, 116, 255);
+                        skin.keycapHot = new Color32(120, 150, 186, 255);
+                        skin.controlsLabel = new Color32(238, 240, 242, 255);
+                        break;
+                }
+                EditorUtility.SetDirty(skin);
+                AssetDatabase.SaveAssetIfDirty(skin);
+            }
+            if (skin.previewGlow == null)
+            {
+                switch (skin.faction)
+                {
+                    case FactionId.Hegemony:
+                        skin.previewGlow = Load<Sprite>(SciFiHud + "Sprites/FX/SPR_FX_SciFiSoldier_Glow_01.png");
+                        // The Sci-Fi pack has no beams (its diagonal streaks end in a hard edge when stretched): the Dark
+                        // Fantasy pack's, which are a white mask, in the Hegemony's accent.
+                        skin.previewBeams = Load<Sprite>(DarkFantasy + "Sprites/FX/SPR_FX_DarkFantasy_Beams_01.png");
+                        break;
+                    case FactionId.Null:
+                        skin.previewGlow = Load<Sprite>(DarkFantasy + "Sprites/FX/SPR_FX_DarkFantasy_Glow_01.png");
+                        skin.previewBeams = Load<Sprite>(DarkFantasy + "Sprites/FX/SPR_FX_DarkFantasy_Beams_01.png");
+                        break;
+                    case FactionId.Covenant:
+                        skin.previewGlow = Load<Sprite>(FantasyWarrior + "Sprites/FX/SPR_FX_FantasyWarrior_Glow_01.png");
+                        skin.previewBeams = Load<Sprite>(FantasyWarrior + "Sprites/FX/SPR_FX_FantasyWarrior_Beams_01.png");
+                        break;
+                }
+                EditorUtility.SetDirty(skin);
+                AssetDatabase.SaveAssetIfDirty(skin);
+            }
+            if (skin.menuButton != null && skin.headerBand != null && skin.cell != null && skin.closeButton != null) return;
+            Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
+            Color Tone(float value) => Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.2f), value);
+            var closeRed = new Color(0.62f, 0.1f, 0.1f);
+            string art = $"{FactionHudBuilder.Folder}/{skin.faction}/Art";
+            string f = skin.faction.ToString();
+            Sprite S(string path) => Load<Sprite>(path);
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                {
+                    string menus = SciFiMenus + "Sprites/SciFiMenus/SPR_SciFiMenus_", general = SciFiMenus + "Sprites/General/SPR_SciFiMenus_";
+                    skin.menuButton = SpriteRecolourer.Flatten($"MenuButton_{f}", art, S(menus + "Frame_Box_Small_06.png"), S(menus + "Frame_Box_Small_06_Background.png"), Tone(0.2f));
+                    skin.menuButtonBorder = 11f;
+                    skin.headerBand = SpriteRecolourer.Flatten($"HeaderBand_{f}", art, S(menus + "Button_Frame_04.png"), S(menus + "Button_Frame_04_Background.png"), Tone(0.19f));
+                    skin.headerBandBorder = 72f;
+                    skin.cell = SpriteRecolourer.Flatten($"Cell_{f}", art, S(menus + "Frame_Box_Small_04.png"), S(menus + "Frame_Box_Small_04_Background.png"), Tone(0.13f));
+                    skin.cellBorder = 9f;
+                    skin.closeButton = SpriteRecolourer.Flatten($"Close_{f}", art, S(general + "Menu_Box_Small_02.png"), S(general + "Menu_Box_Small_01.png"), closeRed);
+                    break;
+                }
+                case FactionId.Null:
+                {
+                    string menus = DarkFantasyMenus + "Sprites/DarkFantasyMenus/SPR_DarkFantasyMenus_", hud = DarkFantasy + "Sprites/";
+                    skin.menuButton = SpriteRecolourer.Flatten($"MenuButton_{f}", art, S(menus + "Frame_Bar_Medium_07.png"), S(menus + "Frame_Bar_Medium_07_Background.png"), Tone(0.2f));
+                    skin.menuButtonBorder = 36f;
+                    skin.headerBand = SpriteRecolourer.Flatten($"HeaderBand_{f}", art, S(menus + "Frame_Bar_Medium_06.png"), S(menus + "Frame_Bar_Medium_06_Background.png"), Tone(0.19f));
+                    skin.headerBandBorder = 66f;
+                    skin.cell = SpriteRecolourer.Flatten($"Cell_{f}", art, S(hud + "DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_17.png"), S(hud + "HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_01.png"), Tone(0.13f));
+                    skin.cellBorder = 9f;
+                    skin.closeButton = SpriteRecolourer.Flatten($"Close_{f}", art, S(hud + "DarkFantasy/SPR_DarkFantasy_Ring_Small_09.png"), S(hud + "DarkFantasy/SPR_DarkFantasy_Ring_Medium_02_Background.png"), closeRed, 0.86f);
+                    break;
+                }
+                case FactionId.Covenant:
+                {
+                    string menus = FantasyMenus + "Sprites/FantasyMenus/SPR_FantasyMenus_", hud = FantasyWarrior + "Sprites/";
+                    skin.menuButton = SpriteRecolourer.Flatten($"MenuButton_{f}", art, S(menus + "Menu_Button_05_Frame.png"), S(menus + "Menu_Button_05_Background.png"), Tone(0.2f));
+                    skin.menuButtonBorder = 46f;
+                    skin.headerBand = SpriteRecolourer.Flatten($"HeaderBand_{f}", art, S(menus + "Menu_Button_11_Frame.png"), S(menus + "Menu_Button_11_Background.png"), Tone(0.19f));
+                    skin.headerBandBorder = 86f;
+                    skin.cell = SpriteRecolourer.Flatten($"Cell_{f}", art, S(hud + "FantasyWarrior/SPR_FantasyWarrior_Frame_Box_Small_03.png"), S(hud + "HUD/SPR_HUD_FantasyWarrior_Box_Small_Parchment_02.png"), Tone(0.13f));
+                    skin.cellBorder = 5f;
+                    skin.closeButton = SpriteRecolourer.Flatten($"Close_{f}", art, S(hud + "FantasyWarrior/SPR_FantasyWarrior_Ring_Small_02_Variant_01.png"), S(hud + "HUD/SPR_HUD_FantasyWarrior_Circle_Medium_01_Clean.png"), closeRed, 0.74f);
+                    break;
+                }
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        /// <summary>The rules that give a window's page the pack's own parts. They name things through their parents, so they win over the tinted look the converted sheets give them.</summary>
+        private static int Design(UiSkin asset, string cssClass, StringBuilder output)
+        {
+            int count = 0;
+            string d = "." + cssClass;
+            string Scale(Sprite sprite, float border)
+            {
+                float widest = Mathf.Max(sprite.border.x, sprite.border.y, sprite.border.z, sprite.border.w);
+                return (widest > 0f ? border / widest : 1f).ToString("0.####", CultureInfo.InvariantCulture) + "px";
+            }
+            void Rule(string selectors, params string[] declarations)
+            {
+                var parts = selectors.Split(',');
+                for (int i = 0; i < parts.Length; i++) parts[i] = $"{d} {parts[i].Trim()}";
+                output.AppendLine(string.Join(", ", parts) + " {");
+                foreach (string declaration in declarations) output.AppendLine("    " + declaration);
+                output.AppendLine("}");
+                count++;
+            }
+
+            if (asset.menuButton != null)
+            {
+                // The words stand clear of the bar's end pieces.
+                string ends = Mathf.Max(14f, asset.menuButtonBorder * 0.78f).ToString("0.#", CultureInfo.InvariantCulture) + "px";
+                Rule("#menu Button", $"background-image: {UrlOf(asset.menuButton)};", "-unity-background-image-tint-color: rgb(222, 222, 222);",
+                    $"-unity-slice-scale: {Scale(asset.menuButton, asset.menuButtonBorder)};", "min-width: 112px;", "min-height: 34px;", "height: 34px;", "margin: 0 3px;", $"padding: 0 {ends};");
+                Rule("#menu Button:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+                Rule("#menu Button:active", "-unity-background-image-tint-color: rgb(170, 170, 170);");
+            }
+            if (asset.headerBand != null)
+            {
+                // The title stands on the pack's band, which reaches a little past the page on both sides.
+                Rule(".window > .kn-header", $"background-image: {UrlOf(asset.headerBand)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",
+                    $"-unity-slice-scale: {Scale(asset.headerBand, asset.headerBandBorder)};", "min-height: 44px;", "align-items: center;",
+                    "margin: -4px -8px 10px -8px;", $"padding: 6px 30px 6px {Mathf.Max(30f, asset.headerBandBorder * 0.72f).ToString("0.#", CultureInfo.InvariantCulture)}px;", "border-bottom-width: 0;");
+                Rule(".window > .kn-header .heading", "font-size: 19px;");
+            }
+            if (asset.closeButton != null)
+            {
+                // A round button on the page's corner, over the frame.
+                Rule(".window .close", "position: absolute;", "right: -18px;", "top: -16px;", "width: 34px;", "height: 34px;", "min-width: 34px;", "min-height: 34px;",
+                    "margin: 0;", "padding: 0;", "align-items: center;", "justify-content: center;", $"background-image: {UrlOf(asset.closeButton)};",
+                    "-unity-background-image-tint-color: rgb(225, 225, 225);", "-unity-slice-scale: 1px;", "-unity-background-scale-mode: scale-to-fit;");
+                Rule(".window .close:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);", "scale: 1.1 1.1;");
+                Rule(".window .close > .kn-close-glyph", "-unity-background-image-tint-color: rgb(255, 255, 255);", "width: 13px;", "height: 13px;");
+            }
+            if (asset.keycap != null && asset.keycapTint.a > 0f)
+            {
+                string Css(Color colour)
+                {
+                    Color32 c = colour;
+                    return $"rgb({c.r}, {c.g}, {c.b})";
+                }
+                Rule(".key-cap", $"background-image: {UrlOf(asset.keycap)};", $"-unity-background-image-tint-color: {Css(asset.keycapTint)};", $"-unity-slice-scale: {Scale(asset.keycap, asset.keycapBorder)};");
+                Rule(".key-cap-text", $"color: {Css(asset.keycapLetter)};");
+                Rule(".key-cap-picture", $"-unity-background-image-tint-color: {Css(asset.keycapLetter)};");
+                Rule(".settings-key:hover .key-cap, .settings-key.listening .key-cap", $"-unity-background-image-tint-color: {Css(asset.keycapHot)};");
+                Rule(".controls-row .settings-row-label", $"color: {Css(asset.controlsLabel)};");
+                Rule(".controls-device", $"-unity-background-image-tint-color: {Css(asset.controlsLabel)};");
+            }
+            if (asset.previewGlow != null) Rule(".preview-glow", $"background-image: {UrlOf(asset.previewGlow)};");
+            if (asset.previewBeams != null) Rule(".preview-beams", $"background-image: {UrlOf(asset.previewBeams)};");
+            if (asset.cell != null)
+            {
+                // An equipment slot is the pack's framed slot. A cell of the grid is its plain cell where the skin
+                // names one (the packs' grids have no frames), and the framed slot otherwise.
+                string cells = asset.gridCell != null ? ".equip-column .equip-slot" : ".inventory-grid .item-cell, .equip-column .equip-slot";
+                Rule(cells, $"background-image: {UrlOf(asset.cell)};", "-unity-background-image-tint-color: rgb(214, 214, 214);", $"-unity-slice-scale: {Scale(asset.cell, asset.cellBorder)};");
+                Rule(".inventory-grid .item-cell:hover, .equip-column .equip-slot:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+                Rule(".inventory-grid .item-cell.drop-valid, .equip-column .equip-slot.drop-valid", "-unity-background-image-tint-color: rgb(170, 255, 220);");
+            }
+            if (asset.gridCell != null)
+            {
+                string Tone(Color colour, float lift)
+                {
+                    Color32 c = Color.Lerp(colour, Color.white, lift);
+                    return $"rgba({c.r}, {c.g}, {c.b}, {((Color)c).a.ToString("0.##", CultureInfo.InvariantCulture)})";
+                }
+                // Every grid of items, in whatever window (Pack, Vault, Trade, Kiosk, shop, the forge's bench). The cell's
+                // own colour is the empty cell's: one with an item in it takes its rarity's ground from the base sheets,
+                // whose rules name the cell and the rarity and so come before this one.
+                Rule(".item-cell", $"background-image: {UrlOf(asset.gridCell)};", $"-unity-slice-scale: {Scale(asset.gridCell, asset.gridCellBorder)};", $"-unity-background-image-tint-color: {Tone(asset.gridCellTint, 0f)};");
+            }
+            string Rgba(Color colour)
+            {
+                Color32 c = colour;
+                return $"rgba({c.r}, {c.g}, {c.b}, {colour.a.ToString("0.##", CultureInfo.InvariantCulture)})";
+            }
+            if (asset.slotFrame != null)
+            {
+                // An equipment slot: its fill, and over it the pack's ornate frame reaching out past the slot. The
+                // frame takes the rarity of what is worn (the rarity rules tint it) and is grey while the slot is empty.
+                const string slot = ".equip-column .equip-slot";
+                string reach = (-asset.slotFrameOutset).ToString("0.##", CultureInfo.InvariantCulture) + "px";
+                Rule(slot, "background-image: none;", $"background-color: {Rgba(asset.slotFill)};");
+                Rule(slot + ":hover", $"background-color: {Rgba(Color.Lerp(asset.slotFill, Color.white, 0.12f))};");
+                Rule(slot + " > .item-frame", $"background-image: {UrlOf(asset.slotFrame)};", $"-unity-slice-scale: {Scale(asset.slotFrame, asset.slotFrameBorder)};",
+                    $"left: {reach};", $"top: {reach};", $"right: {reach};", $"bottom: {reach};");
+                Rule(slot + ".item-empty > .item-frame", "-unity-background-image-tint-color: rgb(132, 132, 132);");
+            }
+            if (asset.cardPictureFrame != null)
+            {
+                string reach = (-asset.cardPictureOutset).ToString("0.##", CultureInfo.InvariantCulture) + "px";
+                Rule(".card-picture-frame", $"background-image: {UrlOf(asset.cardPictureFrame)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",
+                    $"-unity-slice-scale: {Scale(asset.cardPictureFrame, asset.cardPictureBorder)};", $"left: {reach};", $"top: {reach};", $"right: {reach};", $"bottom: {reach};");
+            }
+            if (asset.cardFrame != null) Rule(".item-tooltip.item-card", $"background-color: {Rgba(asset.cardBacking)};", $"-unity-background-image-tint-color: {Rgba(asset.cardBacking)};");
+            if (asset.gridCell != null)
+            {
+                // In the grid the rarity of an item is the colour of the cell it lies on, as the packs' grids have no
+                // outlines: the outline is kept for what is happening to a cell (a pointer over it, a drop).
+                const string cell = ".item-cell";
+                // (The grounds themselves are the base sheets' rarity rules, the same in every skin: nothing here names a rarity.)
+                Rule($"{cell} > .item-frame", "-unity-background-image-tint-color: rgba(0, 0, 0, 0);");
+                Rule($"{cell}:hover > .item-frame", "-unity-background-image-tint-color: rgba(220, 236, 246, 0.6);");
+                Rule($"{cell}.drop-valid > .item-frame", "-unity-background-image-tint-color: rgb(140, 255, 220);");
+                Rule($"{cell}.drop-hover > .item-frame", "-unity-background-image-tint-color: rgb(255, 214, 92);");
+                Rule($"{cell}.reject-flash > .item-frame", "-unity-background-image-tint-color: rgb(230, 70, 80);");
+            }
+            // The settings rows: the pack's arrows, value box, slider, handle and ON / OFF switch.
+            if (asset.stepArrowLeft != null || asset.stepArrowRight != null)
+            {
+                // A pack with one arrow only: the other is the same picture seen in a mirror.
+                foreach ((string way, Sprite own, Sprite other) in new[] { ("back", asset.stepArrowLeft, asset.stepArrowRight), ("forward", asset.stepArrowRight, asset.stepArrowLeft) })
+                {
+                    const string white = "-unity-background-image-tint-color: rgb(255, 255, 255);";
+                    if (own != null) Rule($".settings-step--{way}", $"background-image: {UrlOf(own)};", white);
+                    else
+                    {
+                        Rule($".settings-step--{way}", $"background-image: {UrlOf(other)};", white, "scale: -1 1;");
+                        Rule($".settings-step--{way}:hover", "scale: -1.15 1.15;");
+                    }
+                }
+            }
+            if (asset.stepBox != null)
+            {
+                string box = $"background-image: {UrlOf(asset.stepBox)};", slice = $"-unity-slice-scale: {Scale(asset.stepBox, asset.stepBoxBorder)};";
+                Rule(".settings-row-value", box, slice, "background-color: rgba(0, 0, 0, 0);", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+                Rule(".settings-slider .unity-base-slider__dragger", box, slice, "background-color: rgba(0, 0, 0, 0);", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+            }
+            if (asset.sliderTrack != null)
+                Rule(".settings-slider .unity-base-slider__tracker", $"background-image: {UrlOf(asset.sliderTrack)};", $"-unity-slice-scale: {Scale(asset.sliderTrack, asset.sliderTrackBorder)};",
+                    "background-color: rgba(0, 0, 0, 0);", "-unity-background-image-tint-color: rgb(255, 255, 255);");
+            if (asset.toggleLeft != null && asset.toggleLeftLit != null && asset.toggleRight != null && asset.toggleRightLit != null)
+            {
+                string Half(Sprite art) => $"background-image: {UrlOf(art)};";
+                string cut = $"-unity-slice-scale: {Scale(asset.toggleLeft, asset.toggleBorder)};";
+                const string clear = "background-color: rgba(0, 0, 0, 0);", white = "-unity-background-image-tint-color: rgb(255, 255, 255);";
+                Rule(".toggle-on", Half(asset.toggleLeft), cut, clear, white);
+                Rule(".toggle-off", Half(asset.toggleRightLit), cut, clear, white);
+                Rule(".kn-toggle:checked .toggle-on", Half(asset.toggleLeftLit), clear);
+                Rule(".kn-toggle:checked .toggle-off", Half(asset.toggleRight), clear);
+            }
+            if (asset.rowHighlight != null)
+                Rule(".settings-row:hover, .kn-toggle:hover", $"background-image: {UrlOf(asset.rowHighlight)};", $"-unity-background-image-tint-color: {Rgba(asset.rowHighlightTint)};", "background-color: rgba(0, 0, 0, 0);");
+            // The parts every page shares: the ornate frame of a card and of a skill's tile.
+            if (asset.cardPictureFrame != null)
+                Rule($".kn-card > .{SyntySkin.CardFrameClass}", $"background-image: {UrlOf(asset.cardPictureFrame)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",
+                    $"-unity-slice-scale: {Scale(asset.cardPictureFrame, asset.cardPictureBorder * 0.8f)};", "left: -3px;", "top: -3px;", "right: -3px;", "bottom: -3px;");
+            if (asset.slotFrame != null)
+            {
+                string reach = (-asset.slotFrameOutset * 0.5f).ToString("0.##", CultureInfo.InvariantCulture) + "px";
+                Rule($".skill-token > .{SyntySkin.TokenFrameClass}", $"background-image: {UrlOf(asset.slotFrame)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",
+                    $"-unity-slice-scale: {Scale(asset.slotFrame, asset.slotFrameBorder)};", $"left: {reach};", $"top: {reach};", $"right: {reach};", $"bottom: {reach};");
+            }
+            // The paper doll: what each empty slot is for, and the bars over and under the model.
+            for (int i = 0; i < SlotOrder.Length && i < asset.slotGlyphs.Length; i++)
+            {
+                if (asset.slotGlyphs[i] == null) continue;
+                Color32 tint = asset.slotGlyphTint;
+                Rule($"#equip-{SlotOrder[i]} > .slot-glyph", $"background-image: {UrlOf(asset.slotGlyphs[i])};",
+                    $"-unity-background-image-tint-color: rgba({tint.r}, {tint.g}, {tint.b}, {asset.slotGlyphTint.a.ToString("0.##", CultureInfo.InvariantCulture)});");
+            }
+            if (asset.dollBarTopLeft != null)
+            {
+                Color32 bar = asset.dollBarTint;
+                string height = asset.dollBarHeight.ToString("0.#", CultureInfo.InvariantCulture) + "px";
+                Rule(".doll-bar", $"height: {height};");
+                Rule(".doll-bar-half", $"-unity-background-image-tint-color: rgb({bar.r}, {bar.g}, {bar.b});");
+                foreach ((string where, Sprite left, Sprite right) in new[] { ("top", asset.dollBarTopLeft, asset.dollBarTopRight), ("foot", asset.dollBarFootLeft, asset.dollBarFootRight) })
+                {
+                    if (left == null) continue;
+                    Rule($".doll-bar--{where} > .doll-bar-left", $"background-image: {UrlOf(left)};");
+                    // A pack with one bar for both sides: the right half is the left one seen in a mirror.
+                    if (right != null) Rule($".doll-bar--{where} > .doll-bar-right", $"background-image: {UrlOf(right)};");
+                    else Rule($".doll-bar--{where} > .doll-bar-right", $"background-image: {UrlOf(left)};", "scale: -1 1;");
+                }
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// The rules that put a skin's own frames and ornaments on windows and panels. They come after the converted
+        /// sheets and name the frame through its parent, so they win over the tinted outline those sheets give it.
+        /// </summary>
+        private static int Chrome(UiSkin asset, string cssClass, StringBuilder output)
+        {
+            int count = 0;
+            if (asset.windowBacking.a > 0f)
+            {
+                Color32 backing = asset.windowBacking;
+                string alpha = asset.windowBacking.a.ToString("0.##", CultureInfo.InvariantCulture);
+                // A window and the game menu are as solid as the skin says, and no more: the panel's own picture
+                // under the colour would add to it, so it is left out. What is read at a glance over a page (the
+                // tooltip, an item's menu, a dialog) stays nearly solid.
+                var windows = new List<string>();
+                var notes = new List<string>();
+                foreach (string solid in SolidPanels) (solid == ".window" || solid == ".game-menu" ? windows : notes).Add($".{cssClass} {solid}");
+                output.AppendLine(string.Join(", ", windows) + " {");
+                output.AppendLine($"    background-color: rgba({backing.r}, {backing.g}, {backing.b}, {alpha});");
+                output.AppendLine("    -unity-background-image-tint-color: rgba(0, 0, 0, 0);");
+                output.AppendLine("}");
+                output.AppendLine(string.Join(", ", notes) + " {");
+                output.AppendLine($"    background-color: rgba({backing.r}, {backing.g}, {backing.b}, {Mathf.Max(asset.windowBacking.a, 0.92f).ToString("0.##", CultureInfo.InvariantCulture)});");
+                output.AppendLine("}");
+                count += 2;
+            }
+            if (asset.button != null)
+            {
+                Sprite art = asset.button;
+                float widest = Mathf.Max(art.border.x, art.border.y, art.border.z, art.border.w);
+                string scale = widest > 0f ? (asset.buttonBorder / widest).ToString("0.####", CultureInfo.InvariantCulture) : "1";
+                // The art keeps its colours: a state only lightens or darkens it.
+                output.AppendLine($".{cssClass} Button {{");
+                output.AppendLine($"    background-image: {UrlOf(art)};");
+                output.AppendLine("    -unity-background-image-tint-color: rgb(212, 212, 212);");
+                output.AppendLine($"    -unity-slice-scale: {scale}px;");
+                output.AppendLine("}");
+                output.AppendLine($".{cssClass} Button:hover {{");
+                output.AppendLine("    -unity-background-image-tint-color: rgb(255, 255, 255);");
+                output.AppendLine("}");
+                output.AppendLine($".{cssClass} Button:active {{");
+                output.AppendLine("    -unity-background-image-tint-color: rgb(165, 165, 165);");
+                output.AppendLine("}");
+                output.AppendLine($".{cssClass} Button:disabled {{");
+                output.AppendLine("    -unity-background-image-tint-color: rgba(120, 120, 120, 0.85);");
+                output.AppendLine("}");
+                // The chat's eight tabs are bare words (the one being read has a line under it): framed, they crowd the log.
+                output.AppendLine($".{cssClass} .chat-tabs .chat-tab {{");
+                output.AppendLine("    background-image: none;");
+                output.AppendLine("}");
+                count += 5;
+            }
+            count += FrameRule(output, cssClass, ".panel", asset.panelFrame, asset.panelFrameBorder, asset.panelFrameOutset);
+            count += FrameRule(output, cssClass, ".window", asset.windowFrame, asset.windowFrameBorder, asset.windowFrameOutset);
+            // The item card wears a frame of its own, not the small panels'.
+            count += FrameRule(output, cssClass, ".item-card", asset.cardFrame, asset.cardFrameBorder, asset.cardFrameOutset);
+            // So do the small dialogs that come up over a page: an item's menu, a confirmation, an amount, a player's menu.
+            foreach (string dialog in new[] { ".item-menu", ".item-confirm", ".amount-dialog", ".player-menu" })
+                count += FrameRule(output, cssClass, dialog, asset.cardFrame, asset.cardFrameBorder * 0.7f, asset.cardFrameOutset * 0.6f);
+            count += FrameRule(output, cssClass, ".game-menu", asset.cardFrame, asset.cardFrameBorder, asset.cardFrameOutset);
+            count += CrownRule(output, cssClass, SyntySkin.CrownBackClass, asset.crownBack, asset.crownBackSize, asset.crownBackRise);
+            count += CrownRule(output, cssClass, SyntySkin.CrownClass, asset.crown, asset.crownSize, asset.crownRise);
+            return count;
+        }
+
+        private static int FrameRule(StringBuilder output, string cssClass, string parent, Sprite frame, float border, float outset)
+        {
+            if (frame == null) return 0;
+            float widest = Mathf.Max(frame.border.x, frame.border.y, frame.border.z, frame.border.w);
+            string scale = widest > 0f ? (border / widest).ToString("0.####", CultureInfo.InvariantCulture) : "1";
+            string reach = (-outset).ToString("0.##", CultureInfo.InvariantCulture) + "px";
+            output.AppendLine($".{cssClass} {parent} > .{SyntySkin.FrameClass} {{");
+            output.AppendLine($"    background-image: {UrlOf(frame)};");
+            output.AppendLine("    -unity-background-image-tint-color: rgb(255, 255, 255);");
+            output.AppendLine($"    -unity-slice-scale: {scale}px;");
+            output.AppendLine($"    left: {reach};");
+            output.AppendLine($"    top: {reach};");
+            output.AppendLine($"    right: {reach};");
+            output.AppendLine($"    bottom: {reach};");
+            output.AppendLine("}");
+            // The corner pip belongs to the tinted outline, not to a frame with corners of its own.
+            output.AppendLine($".{cssClass} {parent} > .{SyntySkin.PipClass} {{");
+            output.AppendLine("    display: none;");
+            output.AppendLine("}");
+            return 2;
+        }
+
+        private static int CrownRule(StringBuilder output, string cssClass, string layer, Sprite ornament, Vector2 size, float rise)
+        {
+            if (ornament == null) return 0;
+            output.AppendLine($".{cssClass} .window > .{layer} {{");
+            output.AppendLine("    display: flex;");
+            output.AppendLine($"    background-image: {UrlOf(ornament)};");
+            output.AppendLine($"    width: {size.x.ToString("0.##", CultureInfo.InvariantCulture)}px;");
+            output.AppendLine($"    height: {size.y.ToString("0.##", CultureInfo.InvariantCulture)}px;");
+            output.AppendLine($"    top: {(-rise).ToString("0.##", CultureInfo.InvariantCulture)}px;");
+            output.AppendLine("}");
+            return 1;
+        }
+
+        private static string UrlOf(Sprite sprite) => $"url(\"/{AssetDatabase.GetAssetPath(sprite)}#{sprite.name}\")";
 
         private static void Ensure(FactionId faction, Action<UiSkin> defaults)
         {

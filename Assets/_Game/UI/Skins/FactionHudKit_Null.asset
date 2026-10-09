@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d97a0a3d0128e4fb4b71dff411f371, type: 3}
+  m_Name: FactionHudKit_Null
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.Hud.FactionHudKit
+  faction: 2
+  hotbar: {fileID: 2306100270989488137, guid: 445416206979ae143ae7f078be87a429, type: 3}
+  vitals: {fileID: 6527531548349491430, guid: 0c56c1635fd770246a148eaa69de5793, type: 3}
+  minimap: {fileID: 3488881640133038755, guid: df82e5576f96b964fabfd8190c47aeae, type: 3}

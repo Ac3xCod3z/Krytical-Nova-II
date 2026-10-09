@@ -14,11 +14,6 @@ namespace KryticalNova.EditorTools
     public static partial class FrontEndBuilder
     {
         private const string Screens = "Assets/Synty/InterfaceFantasyScreens/";
-        private const string CharacterIcons = Screens + "Sprites/Icons_Character/ICON_FantasyScreens_Character_";
-        private const string OriginTabIcon = "Assets/Synty/InterfaceFantasyMenus/Sprites/Icons_FantasyMenus/SPR_FantasyMenus_Icon_Flag_01.png";
-        private const string FinaliseTabIcon = Screens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Done_01_Underlay.png";
-        private const string DisciplineTabIcon = Screens + "Sprites/Icons_Inventory/ICON_FantasyScreens_Inventory_Swords_01_Underlay.png";
-        private const string PreviewTabIcon = Screens + "Sprites/Icons_Menu/ICON_FantasyScreens_Menu_Message_01_Underlay.png";
         private const string OptionRowPrefab = Menus + "Settings/Settings_FantasyMenus_Item_Array_01.prefab";
         private const string SliderRowPrefab = Screens + "Prefabs/Components/Settings_FantasyScreens_Item_Slider_01.prefab";
         private const string SwatchPrefab = Screens + "Prefabs/Buttons/Button_FantasyScreens_Swatch_01.prefab";
@@ -34,13 +29,14 @@ namespace KryticalNova.EditorTools
         private static void BuildFactionSelect(CharacterCreationDatabase database)
         {
             var build = Begin(FrontEnd.FactionSelectScene);
-            AddCamera(Ink);
+            Camera camera = AddCamera(Ink);
+            FactionShowcase showcase = AddFactionShowcase(camera, database);
             var canvas = AddCanvas();
             var groups = new List<MenuSkinSwitch.Group>();
             foreach (UiSkin each in Skins())
             {
                 BeginSkin(canvas, each);
-                BuildFactionSelectScreen(canvas, database);
+                BuildFactionSelectScreen(canvas, database, showcase);
                 EndSkin(groups);
             }
             AddSkinSwitch(canvas, groups);
@@ -48,10 +44,16 @@ namespace KryticalNova.EditorTools
             End(build);
         }
 
-        private static void BuildFactionSelectScreen(Transform canvas, CharacterCreationDatabase database)
+        /// <summary>
+        /// One skin's faction select: the pack's screen of three cards. A card is the frame its faction's champion
+        /// stands in (the showcase's dolls, in the scene behind the canvas), with the faction's crest and name; the
+        /// words of the chosen faction are on one panel under the cards.
+        /// </summary>
+        private static void BuildFactionSelectScreen(Transform canvas, CharacterCreationDatabase database, FactionShowcase showcase)
         {
             var screen = AddScreen(canvas, skin.choiceScreen, "Screen_FactionSelect");
-            ComicBackground(screen);
+            ShowroomBackground(screen); // the champions are behind the canvas
+            SoftenWashes(screen);
 
             // One difficulty card per faction. The controller fills them from the faction catalog when the scene opens.
             var cards = new List<Transform>();
@@ -72,6 +74,8 @@ namespace KryticalNova.EditorTools
                 row.anchorMin = new Vector2(0f, row.anchorMin.y);
                 row.anchorMax = new Vector2(1f, row.anchorMax.y);
                 row.sizeDelta = new Vector2(-40f, row.sizeDelta.y);
+                // Narrower than the pack's: the panel of words stands to the right of the cards.
+                row.offsetMax = new Vector2(-(FactionInfoWidth + FactionInfoGap), row.offsetMax.y);
                 Record(row);
             }
             // The pack hangs a bigger crest beside its middle and right cards (under one name or the other).
@@ -85,14 +89,55 @@ namespace KryticalNova.EditorTools
             SetRef(select, "database", database);
             SetRef(select, "hotkeys", hotkeys);
             SetRefs(select, "cards", cards);
-            var background = MenuUi.Find(screen, "Background");
-            if (background != null) SetRef(select, "glow", MenuUi.Find<Image>(background, "SPR_Glow"));
+            SetRef(select, "showcase", showcase);
+            SetRef(select, "info", AddFactionInfo(screen));
         }
 
+        /// <summary>The panel of words under the cards: the pack's framed panel, and one label the controller writes on.</summary>
+        private static TMP_Text AddFactionInfo(Transform screen)
+        {
+            Transform content = screen.Find("Content"); // the screen's own, not one of the many deeper in it
+            if (content == null) content = screen;
+            RectTransform panel = Box("Faction_Info", content);
+            panel.anchorMin = new Vector2(1f, 0f);
+            panel.anchorMax = new Vector2(1f, 1f);
+            panel.pivot = new Vector2(1f, 0.5f);
+            panel.offsetMin = new Vector2(-FactionInfoWidth, FactionInfoFoot);
+            panel.offsetMax = new Vector2(0f, -FactionInfoTop);
+            RectTransform frame = Part(skin.framedPanel, panel, "Panel_Frame");
+            Stretch(frame);
+            var written = MenuUi.Find(frame, "Info") as RectTransform;
+            Hide(written);
+            Hide(MenuUi.Find(frame, "Input_Menu"));
+            var backing = MenuUi.Find<Image>(frame, "SPR_Background");
+            if (backing != null && backing.color.a < 0.92f) Tint(backing, backing.color, 0.92f);
+
+            TMP_Text words = Label(skin.bodyLabel, panel, "Label_Faction_Info", 44f, TextAlignmentOptions.Top);
+            Stretch(words.rectTransform);
+            if (written != null)
+            {
+                words.rectTransform.offsetMin = written.offsetMin;
+                words.rectTransform.offsetMax = written.offsetMax;
+            }
+            words.richText = true;
+            words.textWrappingMode = TextWrappingModes.Normal;
+            // A paragraph of lore in a panel of one size: it is set smaller until it fits.
+            words.enableAutoSizing = true;
+            words.fontSizeMin = 34f;
+            words.fontSizeMax = 50f * skin.fontScale;
+            ReadableFaces(panel);
+            return words;
+        }
+
+        // On the menus' 3840 x 2160 canvas, inside the screen's content.
+        private const float FactionInfoWidth = 1250f, FactionInfoGap = 20f, FactionInfoFoot = 420f, FactionInfoTop = 380f;
+
         /// <summary>
-        /// Re-plans a difficulty card for a faction: a smaller crest at the top (an icon over a glow, filled in by the
-        /// controller) and a tall text area under it, because a faction has a paragraph of lore where a difficulty
-        /// has one sentence.
+        /// Re-plans a difficulty card for a faction: the card is the frame its champion stands in. The pack's crest
+        /// goes, a small one of the faction's (an icon over a glow, filled in by the controller) is in the card's top
+        /// corner, the name stays at its foot, and the card's own text is not used (the words are on one panel under
+        /// the cards). The chosen card keeps the glow at its foot, not the washes over its whole height, which would
+        /// lie over the champion.
         /// </summary>
         private static void PrepareFactionCard(Transform card)
         {
@@ -107,25 +152,46 @@ namespace KryticalNova.EditorTools
                 Hide(stock);
             }
 
-            var glow = AddImage("Faction_Glow", area, FactionCrestPosition, new Vector2(1000f, 1000f));
+            var glow = AddImage("Faction_Glow", area, Vector2.zero, new Vector2(FactionCrestSize * 2.4f, FactionCrestSize * 2.4f));
             glow.sprite = glowSprite;
             glow.enabled = glowSprite != null;
-            var crest = AddImage("Faction_Crest", area, FactionCrestPosition, new Vector2(FactionCrestSize, FactionCrestSize));
+            var crest = AddImage("Faction_Crest", area, Vector2.zero, new Vector2(FactionCrestSize, FactionCrestSize));
             crest.preserveAspect = true;
-
-            // The name and the text stack up from the bottom of the card (the pack's layout); only the text grows.
-            var description = MenuUi.Find(card, "Label_Description") as RectTransform;
-            if (description != null)
+            foreach (Image each in new[] { glow, crest })
             {
-                description.sizeDelta = new Vector2(description.sizeDelta.x, FactionTextHeight);
-                Record(description);
+                each.rectTransform.anchorMin = each.rectTransform.anchorMax = new Vector2(0f, 1f);
+                each.rectTransform.anchoredPosition = FactionCrestCorner;
             }
+
+            Transform active = MenuUi.Find(card, "Background_Active");
+            if (active != null)
+            {
+                // The pack's animation switches these layers on as a card is chosen: their pictures are taken off.
+                foreach (string wash in new[] { "SPR_Gradient_Additive", "SPR_Gradient", "Ring_Active" })
+                {
+                    Transform layer = active.Find(wash);
+                    if (layer == null) continue;
+                    foreach (Image picture in layer.GetComponentsInChildren<Image>(true))
+                    {
+                        picture.enabled = false;
+                        Record(picture);
+                    }
+                }
+                var foot = active.Find("SPR_Gradient_Base") != null ? active.Find("SPR_Gradient_Base").GetComponent<Image>() : null;
+                if (foot != null) Tint(foot, foot.color, 0.55f); // a glow at the champion's feet, not a block over them
+            }
+            Hide(MenuUi.Find(card, "Label_Description"));
+
+            // Where the champion stands: the card, less its edge and the room of the name at its foot.
+            RectTransform window = Box(FactionSelectController.DollWindowName, area);
+            window.offsetMin = new Vector2(40f, FactionNameRoom);
+            window.offsetMax = new Vector2(-40f, -40f);
         }
 
-        // Card content is 1440 units tall, centred on the card: crest in the top third, text in the lower two.
-        private static readonly Vector2 FactionCrestPosition = new Vector2(0f, 470f);
-        private const float FactionCrestSize = 400f;
-        private const float FactionTextHeight = 800f;
+        // From the top left corner of a card's content.
+        private static readonly Vector2 FactionCrestCorner = new Vector2(150f, -150f);
+        private const float FactionCrestSize = 190f;
+        private const float FactionNameRoom = 150f;
 
         /// <summary>A new image centred at <paramref name="position"/> from the middle of <paramref name="parent"/>.</summary>
         private static Image AddImage(string name, Transform parent, Vector2 position, Vector2 size)
@@ -165,13 +231,15 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>
-        /// One faction's creator. None of the menu packs has a character creator: the layout is Fantasy Screens' in
-        /// every skin, with the skin's own option rows and body text, and lettered in the skin's fonts.
+        /// One faction's creator. A skin whose packs have a creator screen (the Covenant: Fantasy Screens) wears it;
+        /// the others' is assembled from their own menu pack's parts, to the same sections
+        /// (<see cref="AssembleCreator"/>). Either way the controller finds the same things.
         /// </summary>
         private static void BuildCharacterCreatorScreen(Transform canvas, CharacterCreationDatabase database, CharacterShowroom showroom, PortraitStudio studio)
         {
-            var screen = AddScreen(canvas, Screens + "Prefabs/Screens/Screen_FantasyScreens_CharacterCreator_01.prefab", "Screen_CharacterCreator");
-            ShowroomBackground(screen);
+            bool own = skin.creatorScreen != null;
+            Transform screen = own ? AddScreen(canvas, skin.creatorScreen, "Screen_CharacterCreator") : Box("Screen_CharacterCreator", skinGroup);
+            if (own) ShowroomBackground(screen);
 
             var controller = SkinObject("Character Creator Controller");
             var hotkeys = AddHotkeys(controller);
@@ -184,6 +252,11 @@ namespace KryticalNova.EditorTools
             SetRef(creator, "showroom", showroom);
             SetRef(creator, "portraits", studio);
             SetRef(creator, "hotkeys", hotkeys);
+            if (!own)
+            {
+                AssembleCreator(screen, creator);
+                return;
+            }
 
             var panels = MenuUi.Find(screen, "Panels");
             if (panels == null)
@@ -202,29 +275,6 @@ namespace KryticalNova.EditorTools
             PrepareColours(MenuUi.Find(panels, "Section_Colour"), creator);
             PrepareFinalise(MenuUi.Find(panels, "Section_Finalise"), creator);
             PrepareCreatorFooter(screen);
-            LetterInSkin(screen);
-        }
-
-        /// <summary>
-        /// Sets a screen that is not of the skin's own pack in the skin's lettering: the pack's display face where the
-        /// screen used one, its reading face everywhere else (<see cref="MenuLettering"/> does it as the screen wakes).
-        /// The faces are read off the skin's own screens.
-        /// </summary>
-        private static void LetterInSkin(Transform screen)
-        {
-            if (skin == null) return;
-            TMP_FontAsset display = FontOf(skin.listScreen, "Screen_Header"), reading = FontOf(skin.titleScreen, "Label_Press");
-            // One of the sci-fi pack's faces ships without its material and draws nothing where it is set: the display face reads well too.
-            if (reading == null) reading = display;
-            if (display == null && reading == null) return;
-            screen.gameObject.AddComponent<MenuLettering>().Set(display, reading);
-        }
-
-        private static TMP_FontAsset FontOf(GameObject prefab, string labelName)
-        {
-            if (prefab == null) return null;
-            var label = MenuUi.Find<TMP_Text>(prefab.transform, labelName);
-            return label != null && label.font != null && label.font.material != null ? label.font : null;
         }
 
         /// <summary>The pack's seven tabs become ours: Origin, Discipline, Body, Head, Preview, Colour, Finalise.</summary>
@@ -232,16 +282,12 @@ namespace KryticalNova.EditorTools
         {
             var nav = MenuUi.Find(screen, "Navigation_Tabs");
             if (nav == null) return;
-            var tabs = new List<MenuRow>
-            {
-                PrepareTab(nav, "Button_Randomize", OriginTabIcon),
-                PrepareTab(nav, "Button_Facial_Hair", DisciplineTabIcon), // the pack's spare tab: the weapon class
-                PrepareTab(nav, "Button_Body", CharacterIcons + "Body_01_Underlay.png"),
-                PrepareTab(nav, "Button_Race", CharacterIcons + "Head_01_Underlay.png"), // the screen renames the pack's Head tab
-                PrepareTab(nav, "Button_Hair", PreviewTabIcon), // the pack's Hair tab: hair is a row on the Head tab
-                PrepareTab(nav, "Button_Colour", CharacterIcons + "Markings_01_Underlay.png"),
-                PrepareTab(nav, "Button_Finalise", FinaliseTabIcon)
-            };
+            // In tab order. The pack's spare tab is the weapon class; its Race tab is renamed Head by the screen; its
+            // Hair tab is the Preview (hair is a row on the Head tab).
+            string[] buttons = { "Button_Randomize", "Button_Facial_Hair", "Button_Body", "Button_Race", "Button_Hair", "Button_Colour", "Button_Finalise" };
+            var tabs = new List<MenuRow>();
+            for (int i = 0; i < buttons.Length; i++)
+                tabs.Add(PrepareTab(nav, buttons[i], i < skin.creatorTabIcons.Length ? skin.creatorTabIcons[i] : null));
             // The pack hides nothing here any more: its spare tab is ours. The controller moves it next to Origin
             // when the screen opens (children of the screen prefab cannot be reordered in the saved scene).
             if (tabs[1] != null)
@@ -252,7 +298,7 @@ namespace KryticalNova.EditorTools
             SetRefs(creator, "tabButtons", tabs);
         }
 
-        private static MenuRow PrepareTab(Transform nav, string tabName, string iconPath)
+        private static MenuRow PrepareTab(Transform nav, string tabName, Sprite sprite)
         {
             var tab = MenuUi.Find(nav, tabName);
             if (tab == null)
@@ -261,7 +307,6 @@ namespace KryticalNova.EditorTools
                 return null;
             }
             var icon = MenuUi.Find<Image>(tab, "ICON");
-            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(iconPath);
             if (icon != null && sprite != null)
             {
                 icon.sprite = sprite;
@@ -429,7 +474,7 @@ namespace KryticalNova.EditorTools
             }
             if (field.placeholder == null)
             {
-                var hint = AddVendorPrefab(BodyLabelPrefab, area, "Label_Placeholder").GetComponentInChildren<TMP_Text>(true);
+                var hint = AddVendorPrefab(skin != null && skin.bodyLabel != null ? skin.bodyLabel : Load(BodyLabelPrefab), area, "Label_Placeholder").GetComponentInChildren<TMP_Text>(true);
                 if (hint != null)
                 {
                     Stretch((RectTransform)hint.transform);
@@ -458,10 +503,11 @@ namespace KryticalNova.EditorTools
             var prompts = new List<Transform>();
             for (int i = 0; i < group.childCount; i++)
                 if (group.GetChild(i).name.StartsWith("Hotkey_Prompt")) prompts.Add(group.GetChild(i));
-            // The pack ships four prompts; the fifth is another instance of the same prefab.
+            // The packs ship two to four prompts; the rest are more of the same: another instance of its prefab, or a
+            // copy of the prompt where the footer is not a prefab instance (an assembled screen's parts are unpacked).
             var source = prompts.Count > 0 ? PrefabUtility.GetCorrespondingObjectFromOriginalSource(prompts[0].gameObject) : null;
-            while (prompts.Count < names.Length && source != null)
-                prompts.Add(((GameObject)PrefabUtility.InstantiatePrefab(source, group)).transform);
+            while (prompts.Count > 0 && prompts.Count < names.Length)
+                prompts.Add(source != null ? ((GameObject)PrefabUtility.InstantiatePrefab(source, group)).transform : Object.Instantiate(prompts[0].gameObject, group).transform);
             for (int i = 0; i < prompts.Count; i++)
             {
                 if (i >= names.Length)

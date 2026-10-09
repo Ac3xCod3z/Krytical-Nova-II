@@ -24,12 +24,16 @@ namespace KryticalNova.UI
         /// <summary>The faction whose skin is showing.</summary>
         public static FactionId Current { get; private set; }
 
+        /// <summary>Raised when the skin shown may have changed (another faction, or a scene's interface arrived).</summary>
+        public static event System.Action Changed;
+
         // Enter Play Mode runs without a domain reload, so statics and static event hooks are reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Initialise()
         {
             Unbind();
             Current = FactionId.None;
+            Changed = null;
             PlayerInventory.LocalChanged -= OnLocalPlayerChanged;
             PlayerInventory.LocalChanged += OnLocalPlayerChanged;
             SceneManager.sceneLoaded -= OnSceneLoaded;
@@ -68,6 +72,7 @@ namespace KryticalNova.UI
                 top.EnableInClassList(NullClass, faction == FactionId.Null);
                 top.EnableInClassList(CovenantClass, faction == FactionId.Covenant);
             }
+            Changed?.Invoke();
         }
 
         private static void Refresh() => Show(identity != null ? identity.Faction : FactionId.None);

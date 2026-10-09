@@ -65,7 +65,8 @@
 .stat-row Button { min-width: 42px; min-height: 26px; margin: 0; padding: 0 6px; font-size: 12px; }
 
 .combat-stats-container { margin-top: 6px; padding: 8px 12px; }
-.combat-stat-row { flex-direction: row; justify-content: space-between; align-items: center; margin: 2px 0; }
+/* A number of the character is a strip a line, as on the packs' item cards. */
+.combat-stat-row { flex-direction: row; justify-content: space-between; align-items: center; margin: 2px 0; padding: 2px 8px; background-color: rgba(0, 0, 0, 0.3); }
 .combat-stat-label { font-size: 12px; color: rgb(172, 188, 202); }
 .combat-stat-value { font-size: 12px; -unity-font-style: bold; color: rgb(114, 222, 196); }
 .vital-breakdown { font-size: 10px; margin-top: 0; margin-bottom: 4px; }
@@ -180,6 +181,24 @@
 .hotbar-slot.charging > .kn-frame { -unity-background-image-tint-color: rgb(255, 146, 156); }
 .hotbar-slot-letter .slot-key { color: rgb(140, 238, 212); }
 .hotbar-divider { width: 1px; margin: 6px 7px; background-color: rgba(114, 222, 196, 0.35); }
+
+/* ---- Faction HUD pieces (HudChrome): the faction's Synty prefab is what is seen; these stay what is clicked.
+        They keep their rectangles (the piece sets each slot's place) and lose their look. Never hide the slots or
+        the dock themselves: the layout editor, the pet bubbles and click blocking all need to find them. ---- */
+.hud-chrome #game-ui #hotbar { padding: 0; background-image: none; background-color: rgba(0, 0, 0, 0); border-width: 0; }
+.hud-chrome #game-ui #hotbar > .kn-frame, .hud-chrome #game-ui #hotbar > .kn-pip, .hud-chrome #game-ui .hotbar-divider { display: none; }
+.hud-chrome #game-ui .hotbar-slot { margin: 0; padding: 0; background-image: none; background-color: rgba(0, 0, 0, 0); opacity: 1; scale: 1 1; }
+.hud-chrome #game-ui .hotbar-slot:hover, .hud-chrome #game-ui .hotbar-slot.charging { scale: 1 1; }
+.hud-chrome #game-ui .hotbar-slot > * { visibility: hidden; }
+.hud-chrome #game-ui #summary { padding: 0; background-image: none; background-color: rgba(0, 0, 0, 0); border-width: 0; }
+.hud-chrome #game-ui #summary > .kn-frame, .hud-chrome #game-ui #summary > .kn-pip { display: none; }
+.hud-chrome #game-ui #summary > * { visibility: hidden; position: absolute; }
+/* The minimap keeps its map, markers, north mark and buttons; the dial round them is the faction's, and reaches out past the element. */
+.hud-chrome .minimap { right: 40px; top: 92px; }
+.hud-chrome .minimap > .minimap-frame, .hud-chrome .minimap > .minimap-ring { display: none; }
+.hud-chrome .minimap > .minimap-mask, .hud-chrome .minimap > .minimap-backdrop { left: 0; top: 0; right: 0; bottom: 0; }
+/* The faction's Hotbar reaches a little further left than the old strip did at this size: the chat stops short of it. */
+.hud-chrome .chat-window { width: 390px; }
 .blade-token { -unity-background-image-tint-color: rgb(58, 40, 92); }
 .blade-token:hover { -unity-background-image-tint-color: rgb(78, 54, 124); }
 .blade-token .skill-icon { color: rgb(206, 170, 255); }

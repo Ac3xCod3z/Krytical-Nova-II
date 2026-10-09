@@ -1,5 +1,51 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-4104976707383824031
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4c2d4f36b9a3234b914a99114946dff, type: 3}
+  m_Name: GlowHalo
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Rendering.GlowHaloFeature
+  m_Active: 1
+  settings:
+    renderPassEvent: 552
+    softness: 1.8
+    inkGap: 1
+    solidity: 0.45
+    minWidthPixels: 3
+    maxWidthPixels: 56
+    depthFade: 0.05
+    zoneSoftness: 0.3
+    fadeStart: 55
+    fadeEnd: 80
+    halfResolution: 1
+    twinkleSize: 0.05
+    twinkleMinPixels: 6
+    twinkleRate: 2.2
+    twinkleShare: 0.04
+    twinkleWhite: 0.55
+    twinkleDot: 0.24
+    twinkleRay: 0.72
+    twinkleRayWidth: 0.06
+    boltLength: 0.34
+    boltRate: 2.4
+    boltChance: 0.42
+    boltWidthPixels: 1.3
+    boltBrightness: 1.9
+    boltWander: 0.55
+    boltWhite: 0.65
+    flameSize: 0.13
+    flameSpeed: 0.5
+    flameDepth: 0.9
+    flameLean: 1.1
+    flameHeat: 0.55
+  shader: {fileID: 4800000, guid: 77d6a2ad6858a43478f60b452a511ab1, type: 3}
 --- !u!114 &-821681003704271646
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -82,7 +128,8 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176, type: 3}
   m_RendererFeatures:
   - {fileID: -821681003704271646}
-  m_RendererFeatureMap: e23c85077bcd98f4l
+  - {fileID: -4104976707383824031}
+  m_RendererFeatureMap: e23c85077bcd98f4617122096f3108c7l
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3

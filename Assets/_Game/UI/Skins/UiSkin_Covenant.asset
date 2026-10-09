@@ -37,6 +37,79 @@ MonoBehaviour:
   arrowIcon: {fileID: 21300000, guid: b48ef4feb994c544e97515d427184ac5, type: 3}
   softBacking: {fileID: 21300000, guid: f9105e4a9e0bec64eb45ff11305570c5, type: 3}
   techPatterns: 0
+  windowBacking: {r: 0.085, g: 0.06972834, b: 0.052275002, a: 0.4}
+  windowFrame: {fileID: 21300000, guid: a8e3d345e9283604799176ff643765e0, type: 3}
+  windowFrameBorder: 20
+  windowFrameOutset: 6
+  panelFrame: {fileID: 21300000, guid: cf616f64504d28b49a328e3fc7ca7539, type: 3}
+  panelFrameBorder: 12
+  panelFrameOutset: 1
+  button: {fileID: 21300000, guid: e0e30c7f8a0ee7c49bcbc72ffaf4f57f, type: 3}
+  buttonBorder: 7
+  menuButton: {fileID: 21300000, guid: 137b7d8bef188ae44a8a31e8f4399b60, type: 3}
+  menuButtonBorder: 46
+  headerBand: {fileID: 21300000, guid: 9d2b720d02b5f6346859ff35d737d3c9, type: 3}
+  headerBandBorder: 86
+  cell: {fileID: 21300000, guid: 2f2b8e165f33ffd4f8580bc665f58e0e, type: 3}
+  cellBorder: 5
+  closeButton: {fileID: 21300000, guid: e91f2e29d5a79ff45a546f810567be66, type: 3}
+  keycap: {fileID: 21300000, guid: fc4bbb1265a4ce6459d98288dc673fdd, type: 3}
+  keycapBorder: 9
+  keycapTint: {r: 0.16470589, g: 0.22745098, b: 0.29803923, a: 1}
+  keycapLetter: {r: 0.9647059, g: 0.8, b: 0.45490196, a: 1}
+  keycapHot: {r: 0.47058824, g: 0.5882353, b: 0.7294118, a: 1}
+  controlsLabel: {r: 0.93333334, g: 0.9411765, b: 0.9490196, a: 1}
+  previewGlow: {fileID: 21300000, guid: ecf845d070e496e4ba7f4f31401338aa, type: 3}
+  previewBeams: {fileID: 21300000, guid: 3e0717d81e8c79e418baa3b470c60495, type: 3}
+  crown: {fileID: 21300000, guid: 8896a397cf1162847b48c0b64f5ec72b, type: 3}
+  crownBack: {fileID: 0}
+  crownSize: {x: 96, y: 48}
+  crownBackSize: {x: 96, y: 48}
+  crownRise: 30
+  crownBackRise: 30
+  slotGlyphs:
+  - {fileID: 21300000, guid: c0ef3b8fe7639624b897fb32d063a349, type: 3}
+  - {fileID: 21300000, guid: 04a6d6b89085ab74fa26d3820240fcee, type: 3}
+  - {fileID: 21300000, guid: 3b805c85c31c0db4e97e4b85e82a3add, type: 3}
+  - {fileID: 21300000, guid: 94a679d1f1f179e49b973d341c14b0bf, type: 3}
+  - {fileID: 21300000, guid: 9a2a06795fd791845bd2f18086eb883b, type: 3}
+  - {fileID: 21300000, guid: 0c5c4536bd37f2743b558cb39fef9cc9, type: 3}
+  - {fileID: 21300000, guid: 5de6779d2ba0dca40abf68b26a6ca121, type: 3}
+  - {fileID: 21300000, guid: 6baba2e42219d1f4ebc60f3014048722, type: 3}
+  slotGlyphTint: {r: 0.5647059, g: 0.5254902, b: 0.36862746, a: 0.5019608}
+  dollBarTopLeft: {fileID: 21300000, guid: 016bb52fa63f3684f970ab8ceedb8a00, type: 3}
+  dollBarTopRight: {fileID: 21300000, guid: e7ab08ffb80b47b41a09a012b5658c22, type: 3}
+  dollBarFootLeft: {fileID: 21300000, guid: f1b4a3dd8412f084b98ff33149ec0fd7, type: 3}
+  dollBarFootRight: {fileID: 21300000, guid: b574f15c0e92348429719a85cc0eb101, type: 3}
+  dollBarHeight: 20
+  dollBarTint: {r: 1, g: 1, b: 1, a: 1}
+  slotFrame: {fileID: 21300000, guid: dfd0f3583f632cc4db7280b272fb9ce9, type: 3}
+  slotFrameBorder: 18
+  slotFrameOutset: 6
+  slotFill: {r: 0.023529412, g: 0.17254902, b: 0.28235295, a: 0.9019608}
+  cardFrame: {fileID: 21300000, guid: c45ec5e932de84c40bf16d11a7081667, type: 3}
+  cardFrameBorder: 28
+  cardFrameOutset: 9
+  cardBacking: {r: 0.06666667, g: 0.18431373, b: 0.21568628, a: 0.9647059}
+  cardPictureFrame: {fileID: 21300000, guid: 5753074f14737664bac4586bdaf09fbd, type: 3}
+  cardPictureBorder: 30
+  cardPictureOutset: 8
+  gridCell: {fileID: 21300000, guid: d15fffb6b1fbb99479735c8eaddeca50, type: 3}
+  gridCellTint: {r: 0.011764706, g: 0.08235294, b: 0.13333334, a: 0.9019608}
+  gridCellBorder: 8
+  stepArrowLeft: {fileID: 0}
+  stepArrowRight: {fileID: 21300000, guid: 9e026b9346d42a243b82eab7f85069c2, type: 3}
+  stepBox: {fileID: 21300000, guid: d6ade383fd1744c4eba4e0c414673425, type: 3}
+  stepBoxBorder: 12
+  sliderTrack: {fileID: 21300000, guid: 3cac478fbf2792243b566ba55b490116, type: 3}
+  sliderTrackBorder: 6
+  toggleLeft: {fileID: 21300000, guid: 76698ec5a7079bf4bb98a8a3f317729a, type: 3}
+  toggleLeftLit: {fileID: 21300000, guid: 4054544427495ff4fb986286d3ee1987, type: 3}
+  toggleRight: {fileID: 21300000, guid: f4f273abcd3146144a3563faa5ea202c, type: 3}
+  toggleRightLit: {fileID: 21300000, guid: 9d3df04b664f64043921e001b5b03a7a, type: 3}
+  toggleBorder: 12
+  rowHighlight: {fileID: 21300000, guid: 9edad2581bd89dd4582a5166c20a2d9a, type: 3}
+  rowHighlightTint: {r: 0.043137256, g: 0.43137255, b: 0.6901961, a: 0.3764706}
   titleScreen: {fileID: 7972974810867652038, guid: 1b8689c25872280428f5befc8535b17d, type: 3}
   choiceScreen: {fileID: 7972974810867652038, guid: 7c05e0723a1d90f4aaa6685c3a29c96a, type: 3}
   listScreen: {fileID: 7972974810867652038, guid: 510d1e65ca700a94881c377a0936135e, type: 3}
@@ -45,3 +118,23 @@ MonoBehaviour:
   optionRow: {fileID: 7476782851927854031, guid: 3fd886c35a2add14ab83dbb716222bfb, type: 3}
   bodyLabel: {fileID: 378538600947842191, guid: b69886e01265efe4b94fec2d3d7949a3, type: 3}
   menuAccent: {r: 0.9098039, g: 0.6901961, b: 0.2901961, a: 1}
+  creatorScreen: {fileID: 4332127775584103397, guid: 67b9fc4d6d5f63d4598b4aff77bcd396, type: 3}
+  tabStrip: {fileID: 2837186173911059739, guid: d8b2fd8c9012bec449c8fd649b70c8ac, type: 3}
+  framedPanel: {fileID: 3500758331952116744, guid: 4ed3251a9ae30c648bd9442ecf578266, type: 3}
+  iconButton: {fileID: 5171185237115873002, guid: 703f5a6be12604a40abe38c1188eda53, type: 3}
+  sliderRow: {fileID: 7476782851927854031, guid: e66217378094cd34fbf033a59b2a2fd3, type: 3}
+  textField: {fileID: 409436092993132241, guid: c6ebd68f9f75a3241971bb16ad0fe089, type: 3}
+  textFieldFill: {r: 0, g: 0, b: 0, a: 0}
+  sectionHeader: {fileID: 7476782851927854031, guid: ad3a1f826fa702a4a9b12a0a1b6d0424, type: 3}
+  headerLabel: {fileID: 378538600947842191, guid: a42ea268e7c71b648ab01b25f901c71c, type: 3}
+  startButton: {fileID: 1508758403866968506, guid: 98f8fe1fb28ce00488ff382e4dbdbae6, type: 3}
+  footer: {fileID: 7216490102118840713, guid: 09b9da90d533a80408b36382040fe9ee, type: 3}
+  creatorTabIcons:
+  - {fileID: 21300000, guid: b5e47b5537b82c14e923e6a94d713907, type: 3}
+  - {fileID: 21300000, guid: c0ef3b8fe7639624b897fb32d063a349, type: 3}
+  - {fileID: 21300000, guid: 10f9f55380875084bac1bc0793720a33, type: 3}
+  - {fileID: 21300000, guid: 256d37056d120c44da58fdd82cfb7247, type: 3}
+  - {fileID: 21300000, guid: 87c95445b093deb4a8dff3a66d18b758, type: 3}
+  - {fileID: 21300000, guid: 70567f229d2df304da66af90e0302595, type: 3}
+  - {fileID: 21300000, guid: 3016ae46f03ac0b479b16728897349ea, type: 3}
+  traitIcons: []

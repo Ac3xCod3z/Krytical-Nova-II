@@ -24,32 +24,52 @@
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
             <ui:Button name="close-equipment" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
         </ui:VisualElement>
+        <!-- Whose equipment this is: the name between two rules, as the packs head a paper doll -->
+        <ui:VisualElement class="doll-band" picking-mode="Ignore">
+            <ui:Label name="equipment-name" text="" class="doll-name" picking-mode="Ignore" />
+            <ui:Label name="equipment-rank" text="" class="muted doll-rank" picking-mode="Ignore" />
+        </ui:VisualElement>
         <ui:VisualElement class="equipment-body">
             <ui:VisualElement class="equip-column">
-                <ui:VisualElement name="equip-Weapon" class="equip-slot"><ui:Label text="WEAPON" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
-                <ui:VisualElement name="equip-Armor" class="equip-slot"><ui:Label text="ARMOR" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
-                <ui:VisualElement name="equip-Gloves" class="equip-slot"><ui:Label text="GLOVES" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
-                <ui:VisualElement name="equip-Boots" class="equip-slot"><ui:Label text="BOOTS" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement name="equip-Weapon" class="equip-slot"><ui:VisualElement class="slot-glyph" picking-mode="Ignore" /><ui:Label text="WEAPON" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement name="equip-Armor" class="equip-slot"><ui:VisualElement class="slot-glyph" picking-mode="Ignore" /><ui:Label text="ARMOR" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement name="equip-Gloves" class="equip-slot"><ui:VisualElement class="slot-glyph" picking-mode="Ignore" /><ui:Label text="GLOVES" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement name="equip-Boots" class="equip-slot"><ui:VisualElement class="slot-glyph" picking-mode="Ignore" /><ui:Label text="BOOTS" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="preview-frame" class="preview-frame">
                 <ui:VisualElement class="preview-backdrop" picking-mode="Ignore" />
+                <ui:VisualElement class="preview-beams" picking-mode="Ignore" />
+                <ui:VisualElement class="preview-glow" picking-mode="Ignore" />
                 <ui:VisualElement class="preview-floor" picking-mode="Ignore" />
                 <ui:VisualElement name="preview-viewport" class="preview-viewport" />
+                <!-- The pack's bars over the head and under the feet of the model, each in two halves that meet in the middle -->
+                <ui:VisualElement class="doll-bar doll-bar--top" picking-mode="Ignore">
+                    <ui:VisualElement class="doll-bar-half doll-bar-left" picking-mode="Ignore" /><ui:VisualElement class="doll-bar-half doll-bar-right" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:VisualElement class="doll-bar doll-bar--foot" picking-mode="Ignore">
+                    <ui:VisualElement class="doll-bar-half doll-bar-left" picking-mode="Ignore" /><ui:VisualElement class="doll-bar-half doll-bar-right" picking-mode="Ignore" />
+                </ui:VisualElement>
                 <ui:VisualElement name="try-on-chip" class="try-on-chip">
                     <ui:Label name="try-on-label" text="Trying on" picking-mode="Ignore" />
                     <ui:Button name="try-on-clear" text="✕" class="try-on-clear" />
                 </ui:VisualElement>
                 <ui:Button name="preview-reset" text="RESET VIEW" class="preview-reset" />
-                <ui:Label text="Drag rotate  ·  Middle-drag pan  ·  Scroll zoom  ·  Double-click reset" class="preview-hint" picking-mode="Ignore" />
+                <ui:VisualElement class="prompt-row preview-hint" picking-mode="Ignore">
+                    <ui:VisualElement class="key-mouse mouse-left" picking-mode="Ignore" /><ui:Label text="Rotate" class="prompt-text" picking-mode="Ignore" />
+                    <ui:VisualElement class="key-mouse mouse-middle" picking-mode="Ignore" /><ui:Label text="Pan · Zoom" class="prompt-text" picking-mode="Ignore" />
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="equip-column">
-                <ui:VisualElement name="equip-Amulet" class="equip-slot"><ui:Label text="AMULET" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
-                <ui:VisualElement name="equip-Ring" class="equip-slot"><ui:Label text="RING" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
-                <ui:VisualElement name="equip-Cape" class="equip-slot"><ui:Label text="CAPE" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
-                <ui:VisualElement name="equip-Pet" class="equip-slot"><ui:Label text="PET" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement name="equip-Amulet" class="equip-slot"><ui:VisualElement class="slot-glyph" picking-mode="Ignore" /><ui:Label text="AMULET" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement name="equip-Ring" class="equip-slot"><ui:VisualElement class="slot-glyph" picking-mode="Ignore" /><ui:Label text="RING" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement name="equip-Cape" class="equip-slot"><ui:VisualElement class="slot-glyph" picking-mode="Ignore" /><ui:Label text="CAPE" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:VisualElement name="equip-Pet" class="equip-slot"><ui:VisualElement class="slot-glyph" picking-mode="Ignore" /><ui:Label text="PET" class="equip-label" picking-mode="Ignore" /></ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Label text="Right-click a slot to unequip  ·  Left-click for options" class="help" />
+        <ui:VisualElement class="prompt-row doll-prompts" picking-mode="Ignore">
+            <ui:VisualElement class="key-mouse mouse-right" picking-mode="Ignore" /><ui:Label text="Unequip" class="prompt-text" picking-mode="Ignore" />
+            <ui:VisualElement class="key-mouse mouse-left" picking-mode="Ignore" /><ui:Label text="Options" class="prompt-text" picking-mode="Ignore" />
+        </ui:VisualElement>
     </ui:VisualElement>
 
     <!-- Inventory grid (cells are generated by GearUIController) -->
@@ -58,22 +78,32 @@
             <ui:Label text="PACK" class="heading" />
             <ui:Label name="key-pack" text="[I]" class="muted header-key" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
-            <ui:Label name="inventory-count" text="0 / 144" class="accent inventory-count" />
-            <ui:Button name="inventory-sort" text="SORT" class="inventory-sort" />
             <ui:Button name="close-inventory" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
         </ui:VisualElement>
-        <!-- Page tabs: hover one while dragging an item to switch pages -->
+        <!-- Page tabs, joined to the well the grid lies in: hover one while dragging an item to switch pages -->
         <ui:VisualElement class="row inventory-pages">
             <ui:Button name="inventory-page-0" text="I" class="inventory-page" />
             <ui:Button name="inventory-page-1" text="II" class="inventory-page" />
             <ui:Button name="inventory-page-2" text="III" class="inventory-page" />
         </ui:VisualElement>
-        <ui:VisualElement name="inventory-grid" class="inventory-grid" />
-        <ui:VisualElement class="row inventory-footer">
-            <ui:Label text="CREDS" class="muted inventory-creds-label" />
-            <ui:Label name="inventory-creds" text="0" class="accent inventory-creds" />
+        <ui:VisualElement class="inventory-well">
+            <ui:VisualElement name="inventory-grid" class="inventory-grid" />
         </ui:VisualElement>
-        <ui:Label text="Right-click to equip or use  ·  Left-click for options  ·  Drag to move" class="help" />
+        <!-- The foot bar: how full the Pack is, SORT, and the Creds carried -->
+        <ui:VisualElement class="row inventory-footer">
+            <ui:Label name="inventory-count" text="0 / 144" class="accent inventory-count" />
+            <ui:Button name="inventory-sort" text="SORT" class="inventory-sort" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:VisualElement class="creds-chip" picking-mode="Ignore">
+                <ui:VisualElement class="creds-pip" picking-mode="Ignore" />
+                <ui:Label text="CREDS" class="muted inventory-foot-label" picking-mode="Ignore" />
+                <ui:Label name="inventory-creds" text="0" class="accent inventory-creds" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="prompt-row" picking-mode="Ignore">
+            <ui:VisualElement class="key-mouse mouse-right" picking-mode="Ignore" /><ui:Label text="Equip · Use" class="prompt-text" picking-mode="Ignore" />
+            <ui:VisualElement class="key-mouse mouse-left" picking-mode="Ignore" /><ui:Label text="Options · Drag to move" class="prompt-text" picking-mode="Ignore" />
+        </ui:VisualElement>
     </ui:VisualElement>
 
     <!-- Vault, Deep Vault (later Trade and Kiosk): here so the floating layers below draw over them too -->
@@ -83,8 +113,18 @@
     <ui:Instance template="ForgeWindow" name="forge-layer" class="item-layer" picking-mode="Ignore" />
 
     <!-- Floating layers -->
-    <ui:VisualElement name="item-tooltip" class="panel item-tooltip" picking-mode="Ignore">
-        <ui:Label name="tooltip-name" text="Item" class="tooltip-name" />
+    <!-- The item card, as the packs lay one out: the item's picture on its rarity, its name, what it is, its numbers as strips -->
+    <ui:VisualElement name="item-tooltip" class="panel item-tooltip item-card" picking-mode="Ignore">
+        <ui:VisualElement name="tooltip-equipped" class="card-flag" picking-mode="Ignore"><ui:Label text="EQUIPPED" class="card-flag-text" picking-mode="Ignore" /></ui:VisualElement>
+        <ui:VisualElement name="tooltip-picture" class="card-picture" picking-mode="Ignore">
+            <ui:VisualElement class="card-picture-clip" picking-mode="Ignore">
+                <ui:VisualElement class="card-picture-glow" picking-mode="Ignore" />
+                <ui:VisualElement name="tooltip-icon" class="card-picture-icon" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <!-- The pack's ornate frame, over the picture and reaching out past it -->
+            <ui:VisualElement class="card-picture-frame" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:Label name="tooltip-name" text="Item" class="tooltip-name heading" />
         <ui:Label name="tooltip-type" text="Armor · Common" class="tooltip-type" />
         <ui:Label name="tooltip-requires" text="" class="tooltip-requires" />
         <ui:Label name="tooltip-desc" text="" class="tooltip-desc" />
@@ -106,7 +146,9 @@
                 <ui:Label name="tooltip-pet-hunger-value" text="100%" class="pet-meter-value" picking-mode="Ignore" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Label name="tooltip-stats" text="No stats yet" class="tooltip-stats" />
+        <ui:VisualElement name="tooltip-stat-rows" class="card-stats" picking-mode="Ignore" />
+        <ui:Label name="tooltip-stats" text="" class="tooltip-stats" />
+        <ui:VisualElement name="tooltip-hints" class="card-hints" picking-mode="Ignore" />
         <ui:Label name="tooltip-hint" text="" class="tooltip-hint" />
     </ui:VisualElement>
 

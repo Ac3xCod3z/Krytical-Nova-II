@@ -42,6 +42,8 @@ namespace KryticalNova.UI
         private const string LockedClass = "item-locked";
         private static readonly string[] GlyphToneClasses = { "glyph-health", "glyph-chi", "glyph-dual" };
         private static readonly string[] RarityClasses = { "rarity-0", "rarity-1", "rarity-2", "rarity-3", "rarity-4" };
+        private static readonly string[] RarityCardClasses = { "rarity-card-0", "rarity-card-1", "rarity-card-2", "rarity-card-3", "rarity-card-4" };
+        private const string EmptyClass = "item-empty";
         private static readonly string[] RarityTextClasses = { "rarity-text-0", "rarity-text-1", "rarity-text-2", "rarity-text-3", "rarity-text-4" };
 
         private VisualElement root;
@@ -185,7 +187,11 @@ namespace KryticalNova.UI
             {
                 inventory.Changed -= RefreshBag;
                 inventory.RequestFailed -= OnRequestFailed;
-                if (progression != null) progression.Changed -= RefreshBag;
+                if (progression != null)
+                {
+                    progression.Changed -= RefreshBag;
+                    progression.Changed -= RefreshOwner;
+                }
                 if (equipment != null) equipment.SlotChanged -= OnSlotChanged;
                 if (wallet != null) wallet.Changed -= RefreshCreds;
             }
@@ -198,6 +204,10 @@ namespace KryticalNova.UI
             if (progression != null) progression.Changed += RefreshBag;
             wallet = next != null ? next.GetComponent<PlayerWallet>() : null;
             if (wallet != null) wallet.Changed += RefreshCreds;
+            if (identity != null) identity.Changed -= RefreshOwner;
+            if (progression != null) progression.Changed += RefreshOwner;
+            identity = next != null ? next.GetComponent<KryticalNova.Player.PlayerIdentity>() : null;
+            if (identity != null) identity.Changed += RefreshOwner;
             if (inventory != null)
             {
                 inventory.Changed += RefreshBag;
@@ -209,6 +219,20 @@ namespace KryticalNova.UI
             RefreshBag();
             RefreshEquipment();
             RefreshCreds();
+            RefreshOwner();
+        }
+
+        // Whose equipment the page shows: the name, and under it the level and the lineage.
+        private KryticalNova.Player.PlayerIdentity identity;
+
+        private void RefreshOwner()
+        {
+            if (root == null) return;
+            Label name = root.Q<Label>("equipment-name"), rank = root.Q<Label>("equipment-rank");
+            if (name != null) name.text = identity != null ? identity.CharacterName : string.Empty;
+            if (rank == null) return;
+            string lineage = identity != null && identity.Lineage != null ? identity.Lineage.displayName.ToUpperInvariant() : string.Empty;
+            rank.text = progression != null ? $"LEVEL {progression.CurrentLevel}  {lineage}".TrimEnd() : lineage;
         }
 
         private void RefreshCreds()
@@ -455,8 +479,8 @@ namespace KryticalNova.UI
             foreach (var kv in slots)
             {
                 var def = equipment != null ? equipment.GetDefinition(kv.Key) : null;
-                silhouettes.TryGetValue(kv.Key, out var silhouette);
-                SetItemVisual(kv.Value, def, 1, silhouette);
+                // An empty slot shows the skin's picture of what it is for (.slot-glyph), not a faint item.
+                SetItemVisual(kv.Value, def, 1);
                 SetTemperVisual(kv.Value, def, inventory != null ? inventory.GetEquipped(kv.Key) : ItemStack.Empty);
             }
         }
@@ -466,6 +490,7 @@ namespace KryticalNova.UI
         public static void SetItemVisual(VisualElement host, ItemDefinition def, int count, Sprite silhouette = null, bool unusable = false)
         {
             host.EnableInClassList(UnusableClass, def != null && unusable);
+            host.EnableInClassList(EmptyClass, def == null);
             var levelLabel = host.Q<Label>(className: LevelClass);
             if (levelLabel != null) levelLabel.text = def != null && def.IsEquippable && def.itemLevel > 0 ? def.itemLevel.ToString() : string.Empty;
             var icon = host.Q(className: "item-icon");
@@ -834,16 +859,18 @@ namespace KryticalNova.UI
                 : IsUsable(def) ? (def.IsHotbarUsable ? "Right-click: use   ·   Drag to the hotbar to bind a key" : "Right-click: use   ·   Left-click: options")
                 : def.IsEquippable ? "Right-click: equip   ·   Left-click: options"
                 : "Left-click: options";
-            ShowItemTooltip(element, def, inventory != null ? inventory.GetStack(loc) : ItemStack.Empty, hint);
+            ShowItemTooltip(element, def, inventory != null ? inventory.GetStack(loc) : ItemStack.Empty, hint, !loc.IsBag);
         }
 
         /// <summary>
         /// The item tooltip beside any element: for the Pack's own cells and for other windows that show items
         /// (Vault, Trade, Kiosk). The stack carries the item's own state, so a pet reads the same everywhere.
         /// </summary>
-        public void ShowItemTooltip(VisualElement element, ItemDefinition def, in ItemStack itemStack, string hint)
+        /// <param name="equipped">The item is being worn: the card says so.</param>
+        public void ShowItemTooltip(VisualElement element, ItemDefinition def, in ItemStack itemStack, string hint, bool equipped = false)
         {
             if (!initialized || element == null || def == null) { HideItemTooltip(); return; }
+            ShowCardPicture(def, equipped);
 
             GearItemState gearState = def.IsLadderGear ? GearItemState.Of(itemStack) : default;
             tipName.text = gearState.IsClean ? def.displayName : $"{def.displayName}  {gearState}";
@@ -859,8 +886,12 @@ namespace KryticalNova.UI
             tipDesc.text = def.description;
             // A pet's stage, growth, hunger and bonus are a block of their own; the line under it says what it grows.
             string petLine = tipPet.Show(def, itemStack.IsEmpty ? new ItemStack(def.itemId, 1) : itemStack);
-            tipStats.text = petLine != null ? $"<color={SkillColor}>{petLine}</color>" : FormatStats(def) + FormatProgression(def, itemStack, gearState);
+            // What the piece gives is a strip a line; how far it has been worked on stays a paragraph under them.
+            ShowCardStats(petLine != null ? null : FormatStats(def));
+            tipStats.text = petLine != null ? $"<color={SkillColor}>{petLine}</color>" : FormatProgression(def, itemStack, gearState).TrimStart('\n');
+            SetDisplay(tipStats, tipStats.text.Length > 0);
             tipHint.text = hint ?? string.Empty;
+            ShowCardHints(hint);
 
             SetDisplay(tooltip, true);
             tooltip.BringToFront();
@@ -876,6 +907,73 @@ namespace KryticalNova.UI
         }
 
         private void HideTooltip() => SetDisplay(tooltip, false);
+
+        // ------------------------------------------------------------------ the item card's parts
+
+        private void ShowCardPicture(ItemDefinition def, bool equipped)
+        {
+            VisualElement picture = tooltip.Q("tooltip-picture"), icon = tooltip.Q("tooltip-icon"), flag = tooltip.Q("tooltip-equipped");
+            if (flag != null) SetDisplay(flag, equipped);
+            if (picture == null || icon == null) return;
+            SetDisplay(picture, def.icon != null);
+            icon.style.backgroundImage = def.icon != null ? new StyleBackground(def.icon) : StyleKeyword.None;
+            foreach (string each in RarityCardClasses) picture.RemoveFromClassList(each);
+            picture.AddToClassList(RarityCardClasses[Mathf.Clamp((int)def.rarity, 0, RarityCardClasses.Length - 1)]);
+        }
+
+        private void ShowCardStats(string stats)
+        {
+            VisualElement rows = tooltip.Q("tooltip-stat-rows");
+            if (rows == null) return;
+            rows.Clear();
+            if (string.IsNullOrEmpty(stats)) return;
+            foreach (string line in stats.Split('\n'))
+            {
+                if (line.Trim().Length == 0) continue;
+                var row = new VisualElement { pickingMode = PickingMode.Ignore };
+                row.AddToClassList("card-stat");
+                var pip = new VisualElement { pickingMode = PickingMode.Ignore };
+                pip.AddToClassList("card-stat-pip");
+                var text = new Label(line.Trim()) { pickingMode = PickingMode.Ignore };
+                text.AddToClassList("card-stat-text");
+                row.Add(pip);
+                row.Add(text);
+                rows.Add(row);
+            }
+        }
+
+        /// <summary>
+        /// The hint as prompts, one a line: "Right-click: use" becomes the mouse with its right button lit and "use".
+        /// </summary>
+        private void ShowCardHints(string hint)
+        {
+            VisualElement rows = tooltip.Q("tooltip-hints");
+            if (rows == null) return;
+            rows.Clear();
+            if (string.IsNullOrEmpty(hint)) return;
+            foreach (string part in hint.Split(new[] { "·" }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string text = part.Trim();
+                if (text.Length == 0) continue;
+                string mouse = null;
+                if (text.StartsWith("Right-click:", StringComparison.OrdinalIgnoreCase)) { mouse = "mouse-right"; text = text.Substring("Right-click:".Length).Trim(); }
+                else if (text.StartsWith("Left-click:", StringComparison.OrdinalIgnoreCase)) { mouse = "mouse-left"; text = text.Substring("Left-click:".Length).Trim(); }
+                var row = new VisualElement { pickingMode = PickingMode.Ignore };
+                row.AddToClassList("prompt-row");
+                if (mouse != null)
+                {
+                    var glyph = new VisualElement { pickingMode = PickingMode.Ignore };
+                    glyph.AddToClassList("key-mouse");
+                    glyph.AddToClassList(mouse);
+                    row.Add(glyph);
+                }
+                if (text.Length > 0) text = char.ToUpperInvariant(text[0]) + text.Substring(1);
+                var label = new Label(text) { pickingMode = PickingMode.Ignore };
+                label.AddToClassList("prompt-text");
+                row.Add(label);
+                rows.Add(row);
+            }
+        }
 
         public void HideItemTooltip()
         {

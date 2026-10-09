@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d97a0a3d0128e4fb4b71dff411f371, type: 3}
+  m_Name: FactionHudKit_Covenant
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.Hud.FactionHudKit
+  faction: 3
+  hotbar: {fileID: 7462867381261144391, guid: 7696e435eb9e21c4597c2f87b9083267, type: 3}
+  vitals: {fileID: 6058370038142819623, guid: 7982c9b2a25a3ec4c99ded867b9dcf4a, type: 3}
+  minimap: {fileID: 7217947564200076539, guid: 28fd01b5e34601047bffebd3a2fcccc1, type: 3}

@@ -17,7 +17,18 @@ namespace KryticalNova.Items.Visuals
     public sealed class CharacterPreviewStage : MonoBehaviour
     {
         public const string PreviewLayerName = "UIPreview";
-        private const int PreviewRenderingLayer = 7;
+        internal const int PreviewRenderingLayer = 7;
+        internal const string DefaultRendererName = "UIPreview_Renderer";
+
+        /// <summary>
+        /// How many of these stages are lit right now. Their lights are directional, so they reach every doll on the
+        /// preview layer: a stage of another kind (the HUD portrait) puts its own out while this is above zero.
+        /// </summary>
+        public static int OpenCount { get; private set; }
+
+        // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => OpenCount = 0;
         private const int MaxTextureHeight = 1024;
 
         [SerializeField] private Vector3 stageOrigin = new Vector3(0f, -500f, 0f);
@@ -101,14 +112,17 @@ namespace KryticalNova.Items.Visuals
         /// Fixed two-tone ambient fed straight to the doll's renderers (CustomProvided light probes), so the
         /// day/night ambient the environment writes every frame never reaches the preview.
         /// </summary>
-        private void BuildStudioAmbient()
+        private void BuildStudioAmbient() => studioAmbient = StudioAmbient(ambientSky, ambientGround);
+
+        internal static MaterialPropertyBlock StudioAmbient(Color sky, Color ground)
         {
             var sh = new SphericalHarmonicsL2();
-            Color mid = Color.Lerp(ambientSky, ambientGround, 0.5f);
+            Color mid = Color.Lerp(sky, ground, 0.5f);
             sh.AddAmbientLight(mid);
-            sh.AddDirectionalLight(Vector3.up, (ambientSky - mid) * 2f, 1f);
-            studioAmbient = new MaterialPropertyBlock();
-            studioAmbient.CopySHCoefficientArraysFrom(new List<SphericalHarmonicsL2> { sh });
+            sh.AddDirectionalLight(Vector3.up, (sky - mid) * 2f, 1f);
+            var block = new MaterialPropertyBlock();
+            block.CopySHCoefficientArraysFrom(new List<SphericalHarmonicsL2> { sh });
+            return block;
         }
 
         /// <summary>Point the stage at a (new) local player. Rebuilds the doll only when the source changed.</summary>
@@ -293,10 +307,10 @@ namespace KryticalNova.Items.Visuals
             data.antialiasing = AntialiasingMode.None;
             data.requiresColorOption = CameraOverrideOption.Off;
             data.requiresDepthOption = CameraOverrideOption.Off;
-            data.SetRenderer(ResolveRendererIndex());
+            data.SetRenderer(RendererIndex(previewRendererName));
         }
 
-        private int ResolveRendererIndex()
+        internal static int RendererIndex(string previewRendererName)
         {
             if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset urp)
             {
@@ -307,17 +321,21 @@ namespace KryticalNova.Items.Visuals
             return -1;
         }
 
-        private void BuildLights()
+        private void BuildLights() => lightRig = StudioLights(transform, previewLayer);
+
+        /// <summary>The three studio lights every preview doll is lit by. They light the preview layer only.</summary>
+        internal static GameObject StudioLights(Transform parent, int previewLayer)
         {
-            lightRig = new GameObject("Preview Lights");
-            lightRig.transform.SetParent(transform, false);
+            var rig = new GameObject("Preview Lights");
+            rig.transform.SetParent(parent, false);
             // The doll faces -Z (towards the camera), so key/fill travel +Z and the rim travels -Z from behind.
-            AddLight("Key", new Vector3(35f, -30f, 0f), 2.2f, new Color(1f, 0.96f, 0.9f));
-            AddLight("Fill", new Vector3(15f, 40f, 0f), 0.85f, new Color(0.7f, 0.82f, 1f));
-            AddLight("Rim", new Vector3(20f, 165f, 0f), 1.0f, new Color(0.6f, 1f, 0.9f));
+            AddLight(rig, previewLayer, "Key", new Vector3(35f, -30f, 0f), 2.2f, new Color(1f, 0.96f, 0.9f));
+            AddLight(rig, previewLayer, "Fill", new Vector3(15f, 40f, 0f), 0.85f, new Color(0.7f, 0.82f, 1f));
+            AddLight(rig, previewLayer, "Rim", new Vector3(20f, 165f, 0f), 1.0f, new Color(0.6f, 1f, 0.9f));
+            return rig;
         }
 
-        private void AddLight(string name, Vector3 euler, float intensity, Color color)
+        private static void AddLight(GameObject lightRig, int previewLayer, string name, Vector3 euler, float intensity, Color color)
         {
             var go = new GameObject(name);
             go.transform.SetParent(lightRig.transform, false);
@@ -334,6 +352,18 @@ namespace KryticalNova.Items.Visuals
         private void BuildDoll()
         {
             if (sourceAppearance == null) return;
+            doll = CloneDoll(sourceAppearance, transform, out dollAppearance, out dollWeapon);
+            dollAppearance.Rebuilt += () => ApplyPreviewLayers(doll);
+            ApplyPreviewLayers(doll);
+            doll.SetActive(IsOpen || previewCamera.enabled);
+        }
+
+        /// <summary>
+        /// A stripped clone of a player's model under <paramref name="parent"/>: its look and animation only, no
+        /// physics, IK, hitbox or networking.
+        /// </summary>
+        internal static GameObject CloneDoll(CharacterAppearance sourceAppearance, Transform parent, out CharacterAppearance dollAppearance, out WeaponVisualMount dollWeapon)
+        {
             // Clone under an inactive holder so no Awake runs before the gameplay components are stripped.
             var holder = new GameObject("Doll Holder");
             holder.SetActive(false);
@@ -350,7 +380,7 @@ namespace KryticalNova.Items.Visuals
             dollWeapon = clone.GetComponentInChildren<WeaponVisualMount>(true);
             if (dollWeapon != null) dollWeapon.ClearInherited(); // the original's weapon models, wherever they were riding
 
-            clone.transform.SetParent(transform, false);
+            clone.transform.SetParent(parent, false);
             clone.transform.localPosition = Vector3.zero;
             Destroy(holder);
             if (clone.TryGetComponent<Animator>(out var animator))
@@ -358,15 +388,14 @@ namespace KryticalNova.Items.Visuals
                 animator.applyRootMotion = false;
                 animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             }
-            doll = clone;
             dollAppearance = clone.GetComponent<CharacterAppearance>();
             foreach (var part in clone.GetComponentsInChildren<IPreviewDollPart>(true)) part.BindToOriginal(sourceAppearance.gameObject);
-            dollAppearance.Rebuilt += () => ApplyPreviewLayers(doll);
-            ApplyPreviewLayers(doll);
-            doll.SetActive(IsOpen || previewCamera.enabled);
+            return clone;
         }
 
-        private void ApplyPreviewLayers(GameObject root)
+        private void ApplyPreviewLayers(GameObject root) => ApplyPreviewLayers(root, previewLayer, studioAmbient);
+
+        internal static void ApplyPreviewLayers(GameObject root, int previewLayer, MaterialPropertyBlock studioAmbient)
         {
             if (root == null) return;
             foreach (var t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = previewLayer;
@@ -389,6 +418,7 @@ namespace KryticalNova.Items.Visuals
 
         private void SetActiveParts(bool active)
         {
+            if (previewCamera.enabled != active) OpenCount = Mathf.Max(0, OpenCount + (active ? 1 : -1));
             previewCamera.enabled = active;
             lightRig.SetActive(active);
             if (doll != null) doll.SetActive(active);
@@ -396,6 +426,7 @@ namespace KryticalNova.Items.Visuals
 
         private void OnDestroy()
         {
+            if (previewCamera != null && previewCamera.enabled) OpenCount = Mathf.Max(0, OpenCount - 1);
             if (sourceEquipment != null) sourceEquipment.SlotChanged -= OnSourceSlotChanged;
             if (texture != null) { texture.Release(); Destroy(texture); }
         }

@@ -28,6 +28,7 @@ namespace KryticalNova.EditorTools
         private const string ChatType = "KryticalNova.UI.ChatWindowController, KryticalNova.UI";
         private const string DuelType = "KryticalNova.UI.DuelHudController, KryticalNova.UI";
         private const string PartyType = "KryticalNova.UI.PartyHudController, KryticalNova.UI";
+        private const string ChromeType = "KryticalNova.UI.Hud.HudChrome, KryticalNova.UI";
         // Controllers added by later systems: each is ensured on the HUD object when its type exists.
         private static readonly string[] MoreControllers =
         {
@@ -91,6 +92,8 @@ namespace KryticalNova.EditorTools
                 else Debug.LogWarning($"[HudSetup] HUD controller {typeName} not found; skipped.");
             }
 
+            AssignFactionHud(hudObject);
+
             var markers = Object.FindAnyObjectByType(markersType, FindObjectsInactive.Include) as Component;
             if (markers == null)
             {
@@ -103,6 +106,31 @@ namespace KryticalNova.EditorTools
 
             EditorSceneManager.MarkSceneDirty(hudObject.scene);
             Debug.Log($"[HudSetup] HUD wired in '{hudObject.scene.name}'. Save the scene to keep it.");
+        }
+
+        /// <summary>
+        /// Puts the faction HUD on the HUD object and hands it one kit per faction: the uGUI pieces composed from
+        /// each faction's Synty HUD pack (Krytical Nova ▸ UI ▸ Build Faction HUD makes them).
+        /// </summary>
+        private static void AssignFactionHud(GameObject hudObject)
+        {
+            var chromeType = System.Type.GetType(ChromeType);
+            if (chromeType == null)
+            {
+                Debug.LogWarning("[HudSetup] HudChrome not found; the faction HUD pieces were not wired.");
+                return;
+            }
+            EnsureComponent(hudObject, chromeType);
+            Component chrome = hudObject.GetComponent(chromeType);
+            var kits = new System.Collections.Generic.List<Object>();
+            foreach (string guid in AssetDatabase.FindAssets("t:FactionHudKit", new[] { FactionHudBuilder.KitFolder }))
+                kits.Add(AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid)));
+            var so = new SerializedObject(chrome);
+            SerializedProperty list = so.FindProperty("kits");
+            list.arraySize = kits.Count;
+            for (int i = 0; i < kits.Count; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = kits[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+            if (kits.Count == 0) Debug.LogWarning("[HudSetup] No faction HUD kits yet: run Krytical Nova ▸ UI ▸ Build Faction HUD, then this again.");
         }
 
         /// <summary>Hands the Settings controller the game's mixer, so its Audio page has something to drive.</summary>

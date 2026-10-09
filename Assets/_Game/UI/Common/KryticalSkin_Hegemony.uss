@@ -4,3 +4,384 @@
  * same layout, the skin's sprites, fonts and colours. It applies under the .kn-faction-hegemony class, which FactionSkin
  * puts on the UI when the local player belongs to this faction. Do not edit: change the skin asset.
  */
+
+/* ---- window chrome: the pack's own frames and ornaments ---- */
+.kn-faction-hegemony .window, .kn-faction-hegemony .game-menu {
+    background-color: rgba(13, 15, 22, 0.4);
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-hegemony .item-tooltip, .kn-faction-hegemony .item-menu, .kn-faction-hegemony .item-confirm, .kn-faction-hegemony .amount-dialog, .kn-faction-hegemony .player-menu {
+    background-color: rgba(13, 15, 22, 0.92);
+}
+.kn-faction-hegemony Button {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/Button_Hegemony.png#Button_Hegemony");
+    -unity-background-image-tint-color: rgb(212, 212, 212);
+    -unity-slice-scale: 0.07px;
+}
+.kn-faction-hegemony Button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony Button:active {
+    -unity-background-image-tint-color: rgb(165, 165, 165);
+}
+.kn-faction-hegemony Button:disabled {
+    -unity-background-image-tint-color: rgba(120, 120, 120, 0.85);
+}
+.kn-faction-hegemony .chat-tabs .chat-tab {
+    background-image: none;
+}
+.kn-faction-hegemony .window > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/SciFi/SPR_SciFiSoldier_Frame_TechyDark_01.png#SPR_SciFiSoldier_Frame_TechyDark_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.0968px;
+    left: -5px;
+    top: -5px;
+    right: -5px;
+    bottom: -5px;
+}
+.kn-faction-hegemony .window > .kn-pip {
+    display: none;
+}
+.kn-faction-hegemony .item-card > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Large_09.png#SPR_SciFiMenus_Frame_Box_Large_09");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.1095px;
+    left: -10px;
+    top: -10px;
+    right: -10px;
+    bottom: -10px;
+}
+.kn-faction-hegemony .item-card > .kn-pip {
+    display: none;
+}
+.kn-faction-hegemony .item-menu > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Large_09.png#SPR_SciFiMenus_Frame_Box_Large_09");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.0767px;
+    left: -6px;
+    top: -6px;
+    right: -6px;
+    bottom: -6px;
+}
+.kn-faction-hegemony .item-menu > .kn-pip {
+    display: none;
+}
+.kn-faction-hegemony .item-confirm > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Large_09.png#SPR_SciFiMenus_Frame_Box_Large_09");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.0767px;
+    left: -6px;
+    top: -6px;
+    right: -6px;
+    bottom: -6px;
+}
+.kn-faction-hegemony .item-confirm > .kn-pip {
+    display: none;
+}
+.kn-faction-hegemony .amount-dialog > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Large_09.png#SPR_SciFiMenus_Frame_Box_Large_09");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.0767px;
+    left: -6px;
+    top: -6px;
+    right: -6px;
+    bottom: -6px;
+}
+.kn-faction-hegemony .amount-dialog > .kn-pip {
+    display: none;
+}
+.kn-faction-hegemony .player-menu > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Large_09.png#SPR_SciFiMenus_Frame_Box_Large_09");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.0767px;
+    left: -6px;
+    top: -6px;
+    right: -6px;
+    bottom: -6px;
+}
+.kn-faction-hegemony .player-menu > .kn-pip {
+    display: none;
+}
+.kn-faction-hegemony .game-menu > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Large_09.png#SPR_SciFiMenus_Frame_Box_Large_09");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.1095px;
+    left: -10px;
+    top: -10px;
+    right: -10px;
+    bottom: -10px;
+}
+.kn-faction-hegemony .game-menu > .kn-pip {
+    display: none;
+}
+.kn-faction-hegemony .window > .kn-crown {
+    display: flex;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/SciFi/SPR_SciFiSoldier_Greeble_BoxTop_02.png#SPR_SciFiSoldier_Greeble_BoxTop_02");
+    width: 52px;
+    height: 38px;
+    top: -33px;
+}
+.kn-faction-hegemony #menu Button {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/MenuButton_Hegemony.png#MenuButton_Hegemony");
+    -unity-background-image-tint-color: rgb(222, 222, 222);
+    -unity-slice-scale: 0.0733px;
+    min-width: 112px;
+    min-height: 34px;
+    height: 34px;
+    margin: 0 3px;
+    padding: 0 14px;
+}
+.kn-faction-hegemony #menu Button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony #menu Button:active {
+    -unity-background-image-tint-color: rgb(170, 170, 170);
+}
+.kn-faction-hegemony .window > .kn-header {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/HeaderBand_Hegemony.png#HeaderBand_Hegemony");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.16px;
+    min-height: 44px;
+    align-items: center;
+    margin: -4px -8px 10px -8px;
+    padding: 6px 30px 6px 51.8px;
+    border-bottom-width: 0;
+}
+.kn-faction-hegemony .window > .kn-header .heading {
+    font-size: 19px;
+}
+.kn-faction-hegemony .window .close {
+    position: absolute;
+    right: -18px;
+    top: -16px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/Close_Hegemony.png#Close_Hegemony");
+    -unity-background-image-tint-color: rgb(225, 225, 225);
+    -unity-slice-scale: 1px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+.kn-faction-hegemony .window .close:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    scale: 1.1 1.1;
+}
+.kn-faction-hegemony .window .close > .kn-close-glyph {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    width: 13px;
+    height: 13px;
+}
+.kn-faction-hegemony .key-cap {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_03.png#SPR_HUD_SciFiSoldier_Box_03");
+    -unity-background-image-tint-color: rgb(13, 63, 115);
+    -unity-slice-scale: 0.15px;
+}
+.kn-faction-hegemony .key-cap-text {
+    color: rgb(244, 250, 255);
+}
+.kn-faction-hegemony .key-cap-picture {
+    -unity-background-image-tint-color: rgb(244, 250, 255);
+}
+.kn-faction-hegemony .settings-key:hover .key-cap, .kn-faction-hegemony .settings-key.listening .key-cap {
+    -unity-background-image-tint-color: rgb(38, 168, 250);
+}
+.kn-faction-hegemony .controls-row .settings-row-label {
+    color: rgb(236, 244, 250);
+}
+.kn-faction-hegemony .controls-device {
+    -unity-background-image-tint-color: rgb(236, 244, 250);
+}
+.kn-faction-hegemony .preview-glow {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/FX/SPR_FX_SciFiSoldier_Glow_01.png#SPR_FX_SciFiSoldier_Glow_01");
+}
+.kn-faction-hegemony .preview-beams {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/FX/SPR_FX_DarkFantasy_Beams_01.png#SPR_FX_DarkFantasy_Beams_01");
+}
+.kn-faction-hegemony .equip-column .equip-slot {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/Cell_Hegemony.png#Cell_Hegemony");
+    -unity-background-image-tint-color: rgb(214, 214, 214);
+    -unity-slice-scale: 0.1125px;
+}
+.kn-faction-hegemony .inventory-grid .item-cell:hover, .kn-faction-hegemony .equip-column .equip-slot:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony .inventory-grid .item-cell.drop-valid, .kn-faction-hegemony .equip-column .equip-slot.drop-valid {
+    -unity-background-image-tint-color: rgb(170, 255, 220);
+}
+.kn-faction-hegemony .item-cell {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_Glass_04.png#SPR_HUD_SciFiSoldier_Box_Glass_04");
+    -unity-slice-scale: 0.075px;
+    -unity-background-image-tint-color: rgba(20, 42, 60, 0.92);
+}
+.kn-faction-hegemony .equip-column .equip-slot {
+    background-image: none;
+    background-color: rgba(10, 34, 48, 0.9);
+}
+.kn-faction-hegemony .equip-column .equip-slot:hover {
+    background-color: rgba(39, 61, 73, 0.91);
+}
+.kn-faction-hegemony .equip-column .equip-slot > .item-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_10.png#SPR_SciFiMenus_Frame_Box_Small_10");
+    -unity-slice-scale: 0.22px;
+    left: -7px;
+    top: -7px;
+    right: -7px;
+    bottom: -7px;
+}
+.kn-faction-hegemony .equip-column .equip-slot.item-empty > .item-frame {
+    -unity-background-image-tint-color: rgb(132, 132, 132);
+}
+.kn-faction-hegemony .card-picture-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_05.png#SPR_SciFiMenus_Frame_Box_Small_05");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.1333px;
+    left: -6px;
+    top: -6px;
+    right: -6px;
+    bottom: -6px;
+}
+.kn-faction-hegemony .item-tooltip.item-card {
+    background-color: rgba(6, 30, 40, 0.96);
+    -unity-background-image-tint-color: rgba(6, 30, 40, 0.96);
+}
+.kn-faction-hegemony .item-cell > .item-frame {
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-hegemony .item-cell:hover > .item-frame {
+    -unity-background-image-tint-color: rgba(220, 236, 246, 0.6);
+}
+.kn-faction-hegemony .item-cell.drop-valid > .item-frame {
+    -unity-background-image-tint-color: rgb(140, 255, 220);
+}
+.kn-faction-hegemony .item-cell.drop-hover > .item-frame {
+    -unity-background-image-tint-color: rgb(255, 214, 92);
+}
+.kn-faction-hegemony .item-cell.reject-flash > .item-frame {
+    -unity-background-image-tint-color: rgb(230, 70, 80);
+}
+.kn-faction-hegemony .settings-step--back {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Button_Arrow_07_Left.png#SPR_SciFiMenus_Button_Arrow_07_Left");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony .settings-step--forward {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Button_Arrow_07_Right.png#SPR_SciFiMenus_Button_Arrow_07_Right");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony .settings-row-value {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/StepBox_Hegemony.png#StepBox_Hegemony");
+    -unity-slice-scale: 0.09px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony .settings-slider .unity-base-slider__dragger {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/StepBox_Hegemony.png#StepBox_Hegemony");
+    -unity-slice-scale: 0.09px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony .settings-slider .unity-base-slider__tracker {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/SliderTrack_Hegemony.png#SliderTrack_Hegemony");
+    -unity-slice-scale: 0.1px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony .toggle-on {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/ToggleLeft_Hegemony.png#ToggleLeft_Hegemony");
+    -unity-slice-scale: 0.0733px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony .toggle-off {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/ToggleRightLit_Hegemony.png#ToggleRightLit_Hegemony");
+    -unity-slice-scale: 0.0733px;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.kn-faction-hegemony .kn-toggle:checked .toggle-on {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/ToggleLeftLit_Hegemony.png#ToggleLeftLit_Hegemony");
+    background-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-hegemony .kn-toggle:checked .toggle-off {
+    background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/ToggleRight_Hegemony.png#ToggleRight_Hegemony");
+    background-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-hegemony .settings-row:hover, .kn-faction-hegemony .kn-toggle:hover {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/General/SPR_SciFiMenus_Menu_Item_Background_08.png#SPR_SciFiMenus_Menu_Item_Background_08");
+    -unity-background-image-tint-color: rgba(0, 141, 167, 0.44);
+    background-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-hegemony .kn-card > .kn-card-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_05.png#SPR_SciFiMenus_Frame_Box_Small_05");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.1067px;
+    left: -3px;
+    top: -3px;
+    right: -3px;
+    bottom: -3px;
+}
+.kn-faction-hegemony .skill-token > .kn-token-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_10.png#SPR_SciFiMenus_Frame_Box_Small_10");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.22px;
+    left: -3.5px;
+    top: -3.5px;
+    right: -3.5px;
+    bottom: -3.5px;
+}
+.kn-faction-hegemony #equip-Weapon > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Weapon_01.png#ICON_SciFiSoldier_Inventory_Weapon_01");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Armor > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Armor_01.png#ICON_SciFiSoldier_Inventory_Armor_01");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Gloves > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Gauntlets_01_Underlay.png#ICON_DarkFantasy_Inventory_Gauntlets_01_Underlay");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Boots > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Boots_01_Underlay.png#ICON_DarkFantasy_Inventory_Boots_01_Underlay");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Ring > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Rings_02_Underlay.png#ICON_DarkFantasy_Inventory_Rings_02_Underlay");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Amulet > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/Icons_Inventory/ICON_DarkFantasy_Inventory_Necklaces_02_Underlay.png#ICON_DarkFantasy_Inventory_Necklaces_02_Underlay");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Cape > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Backpack_01.png#ICON_SciFiSoldier_Inventory_Backpack_01");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony #equip-Pet > .slot-glyph {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Inventory/ICON_SciFiSoldier_Inventory_Science_01.png#ICON_SciFiSoldier_Inventory_Science_01");
+    -unity-background-image-tint-color: rgba(90, 200, 230, 0.35);
+}
+.kn-faction-hegemony .doll-bar {
+    height: 10px;
+}
+.kn-faction-hegemony .doll-bar-half {
+    -unity-background-image-tint-color: rgb(114, 222, 196);
+}
+.kn-faction-hegemony .doll-bar--top > .doll-bar-left {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png#SPR_HUD_SciFiSoldier_Line_Horizontal_01");
+}
+.kn-faction-hegemony .doll-bar--top > .doll-bar-right {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png#SPR_HUD_SciFiSoldier_Line_Horizontal_01");
+    scale: -1 1;
+}
+.kn-faction-hegemony .doll-bar--foot > .doll-bar-left {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png#SPR_HUD_SciFiSoldier_Line_Horizontal_01");
+}
+.kn-faction-hegemony .doll-bar--foot > .doll-bar-right {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png#SPR_HUD_SciFiSoldier_Line_Horizontal_01");
+    scale: -1 1;
+}

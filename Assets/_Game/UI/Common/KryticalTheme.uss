@@ -51,6 +51,15 @@
     -unity-slice-scale: 0.22px;
 }
 
+/* The ornaments on a window's top edge: shown, sized and placed by the faction's skin sheet. */
+.kn-crown, .kn-crown-back {
+    display: none;
+    position: absolute;
+    left: 50%;
+    translate: -50% 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 /* Small hexagon pip in the top-left of framed panels. */
 .kn-pip {
     position: absolute;
@@ -72,6 +81,12 @@
     border-radius: 0;
 }
 
+/* The pack's frames over a card and over a skill's tile (SyntySkin adds the layers; a skin's sheet draws them). */
+.kn-card-frame, .kn-token-frame {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+}
+
 /* Header strip: a thin Synty line under window titles. */
 .kn-header {
     padding-bottom: 8px;
@@ -90,6 +105,47 @@
 
 .kn-accent, .accent { color: rgb(114, 222, 196); }
 .kn-muted, .muted { color: rgb(146, 162, 178); }
+
+/* ------------------------------------------------------------------ keys and prompts */
+
+/* A key drawn as a key cap (KeyCaps): on the Controls page, and wherever a window says what a key or a mouse button does. */
+.key-cap {
+    flex-shrink: 0;
+    min-width: 30px;
+    height: 30px;
+    margin: 0 0 0 5px;
+    padding: 0 8px;
+    align-items: center;
+    justify-content: center;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_03.png#SPR_HUD_SciFiSoldier_Box_03");
+    -unity-background-image-tint-color: rgb(16, 58, 96);
+    -unity-slice-scale: 0.18px;
+    transition-property: -unity-background-image-tint-color, scale;
+    transition-duration: 0.1s;
+}
+.key-cap.wide { padding: 0 12px; }
+.key-cap-text { margin: 0; padding: 0; font-size: 14px; color: rgb(240, 246, 250); -unity-text-align: middle-center; -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf"); }
+.key-cap-picture { width: 18px; height: 18px; -unity-background-scale-mode: scale-to-fit; -unity-background-image-tint-color: rgb(240, 246, 250); }
+.key-cap-picture.glyph-enter { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Enter_Clean.png"); }
+.key-cap-picture.glyph-space { width: 34px; background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Space_Clean.png"); }
+.key-cap-picture.glyph-tab { width: 26px; background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Tab_Clean.png"); }
+.key-cap-picture.glyph-backspace { width: 26px; background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Backspace_Clean.png"); }
+.key-cap-picture.glyph-up { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Arrow_Up_Clean.png"); }
+.key-cap-picture.glyph-down { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Arrow_Down_Clean.png"); }
+.key-cap-picture.glyph-left { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Arrow_Left_Clean.png"); }
+.key-cap-picture.glyph-right { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Arrow_Right_Clean.png"); }
+/* The mouse, with the button that is meant coloured. */
+.key-mouse { flex-shrink: 0; width: 24px; height: 32px; margin: 0 0 0 5px; -unity-background-scale-mode: scale-to-fit; }
+.key-mouse.mouse-left { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_MouseColor_Left_Underlay.png"); }
+.key-mouse.mouse-right { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_MouseColor_Right_Underlay.png"); }
+.key-mouse.mouse-middle { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_MouseColor_Middle_Underlay.png"); }
+
+/* What the mouse does here: the mouse picture, then the word. */
+.prompt-row { flex-direction: row; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.prompt-row > .key-mouse { width: 17px; height: 23px; margin: 0 5px 0 0; }
+.prompt-row > .key-cap { min-width: 22px; height: 22px; margin: 0 5px 0 0; padding: 0 5px; }
+.prompt-row > .key-cap > .key-cap-text { font-size: 11px; }
+.prompt-text { margin: 0 14px 0 0; padding: 0; font-size: 12px; color: rgb(176, 190, 204); }
 
 /* ------------------------------------------------------------------ buttons */
 
