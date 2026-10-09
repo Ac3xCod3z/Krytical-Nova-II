@@ -7,7 +7,7 @@
 
 /* ---- window chrome: the pack's own frames and ornaments ---- */
 .kn-faction-hegemony .window, .kn-faction-hegemony .game-menu {
-    background-color: rgba(13, 15, 22, 0.4);
+    background-color: rgba(13, 15, 22, 0.65);
     -unity-background-image-tint-color: rgba(0, 0, 0, 0);
 }
 .kn-faction-hegemony .item-tooltip, .kn-faction-hegemony .item-menu, .kn-faction-hegemony .item-confirm, .kn-faction-hegemony .amount-dialog, .kn-faction-hegemony .player-menu {

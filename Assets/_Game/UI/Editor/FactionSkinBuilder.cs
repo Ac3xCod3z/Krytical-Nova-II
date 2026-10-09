@@ -638,7 +638,7 @@ namespace KryticalNova.EditorTools
                 // The faction's dark tone, darker still.
                 Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
                 Color backing = Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.1f), 0.085f);
-                backing.a = 0.4f; // the world reads faintly through a window, as through the packs' own
+                backing.a = 0.65f; // the world reads faintly through a window (owner, 9 Oct 2026: 0.4 was too see-through); set per skin on its asset
                 skin.windowBacking = backing;
                 EditorUtility.SetDirty(skin);
                 AssetDatabase.SaveAssetIfDirty(skin);
