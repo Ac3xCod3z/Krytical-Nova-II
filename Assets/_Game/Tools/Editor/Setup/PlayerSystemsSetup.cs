@@ -65,6 +65,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Social.PlayerFollow", ("settings", SquadSettingsPath)),
             // Serums: what a character has taken, and the stats that stay.
             new Row("KryticalNova.Progression.PlayerSerums", ("settings", SerumSettingsPath)),
+            // What lets a Hostile see, chase and strike a player (its own assembly: the only one that knows Emerald AI).
+            new Row("KryticalNova.Hostiles.Emerald.KNEmeraldPlayerBridge, KryticalNova.Hostiles.Emerald"),
         };
 
         public static void Run()
@@ -77,7 +79,7 @@ namespace KryticalNova.EditorTools
                 int added = 0;
                 foreach (Row row in Rows)
                 {
-                    Type type = Type.GetType(row.Type + Runtime);
+                    Type type = Type.GetType(row.Type.Contains(",") ? row.Type : row.Type + Runtime);
                     if (type == null) { Debug.LogWarning($"[Setup] Player component {row.Type} not found; skipped."); continue; }
                     Component component = root.GetComponent(type);
                     if (component == null) { component = root.AddComponent(type); added++; }
@@ -95,6 +97,7 @@ namespace KryticalNova.EditorTools
                     }
                     so.ApplyModifiedPropertiesWithoutUndo();
                 }
+                LinkHostileBridge(root);
                 PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
                 LinkGearProgression();
                 LinkNovaMaterials();
@@ -105,6 +108,18 @@ namespace KryticalNova.EditorTools
             {
                 PrefabUtility.UnloadPrefabContents(root);
             }
+        }
+
+        /// <summary>
+        /// Emerald AI finds a player by its faction and aims at the point this names. Both parts come with the
+        /// bridge; here they are told who the player is: the "Player" faction, aimed at the body (the root).
+        /// </summary>
+        private static void LinkHostileBridge(GameObject root)
+        {
+            if (root.TryGetComponent(out EmeraldAI.FactionExtension faction))
+                faction.CurrentFaction = KryticalNova.Hostiles.Emerald.KNEmeraldPlayerBridge.PlayerFaction;
+            if (root.TryGetComponent(out EmeraldAI.Utility.TargetPositionModifier aim) && aim.TransformSource == null)
+                aim.TransformSource = root.transform;
         }
 
         /// <summary>The emote wheel performs the motions of the library the character creator shows.</summary>

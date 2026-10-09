@@ -28,6 +28,8 @@ namespace KryticalNova.EditorTools
         private const string PrefabListsProperty = "NetworkConfig.Prefabs.NetworkPrefabsLists";
         /// <summary>Every prefab this project spawns over the network, the player aside. A new one adds its path here.</summary>
         private static readonly string[] SpawnedPrefabs = { WorldDropPath, KioskStandPath };
+        /// <summary>Every prefab in this folder is spawned over the network too: one per Hostile species, made by the Hostile builder.</summary>
+        public const string HostilePrefabFolder = "Assets/_Game/Gameplay/Hostiles/Prefabs";
         private const string DropModel = "Assets/Synty/PolygonSciFiCity/Prefabs/Props/SM_Prop_Box_Supplies_01.prefab";
         private const float DropSize = 0.42f;   // metres across: reads as a parcel, not as furniture
         private const float DropHover = 0.28f;
@@ -49,7 +51,11 @@ namespace KryticalNova.EditorTools
                 Debug.LogError($"[Setup] No network prefab list at {NetworkPrefabsListPath}: clients will not see spawned objects.");
                 return;
             }
-            foreach (string path in SpawnedPrefabs)
+            var paths = new System.Collections.Generic.List<string>(SpawnedPrefabs);
+            if (AssetDatabase.IsValidFolder(HostilePrefabFolder))
+                foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { HostilePrefabFolder }))
+                    paths.Add(AssetDatabase.GUIDToAssetPath(guid));
+            foreach (string path in paths)
             {
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                 if (prefab == null || list.Contains(prefab)) continue;

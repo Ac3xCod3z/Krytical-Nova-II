@@ -134,6 +134,7 @@ namespace KryticalNova.DevTools
                 "PETS         gm.pet · gm.pet.growth <0-100> · gm.pet.hunger <0-100> · gm.pet.feed · gm.pet.xp <n> · gm.pet.event <win|loss> · gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>",
                 "EFFECTS      gm.fx.hit [normal|elemental|crit|shatter|backlash] [light|heavy] · gm.fx.pvpcrit [splash|frame|faction|default]   (shown on this screen; nothing is hit)",
                 "SAVING       gm.save · gm.save.where · gm.save.wipe confirm",
+                "HOSTILES     gm.hostile.list · gm.hostile.spawn <id|name> [count] [level] · gm.hostile.clear [radius] · gm.hostile.kill [radius] · gm.hostile.info · gm.hostile.hp <n|n%> · gm.hostile.freeze [on|off] · gm.hostile.ignore [on|off] · gm.hostile.ttk <id|name> [level]",
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",
                 "WEATHER      weather.set <name> [secs] · weather.clear · weather.lock <bool> · weather.list",
