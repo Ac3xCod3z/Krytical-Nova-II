@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using KryticalNova.Economy;
 using KryticalNova.Items;
 using KryticalNova.Pets;
-using KryticalNova.Social;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -18,9 +16,9 @@ namespace KryticalNova.Hostiles
     }
 
     /// <summary>
-    /// What a Hostile kill drops, where the game is decided. Creds go straight into the wallet of the player who
-    /// holds the kill (Creds are not an item, so nothing lies on the ground for them); Stims and gear fall where
-    /// the Hostile died and are held for that player for the usual time. Chances are
+    /// What a Hostile kill drops, where the game is decided: Creds (a pile of notes that pays the wallet of whoever
+    /// picks it up), Stims and gear. All of it falls where the Hostile died and is held for the player who holds
+    /// the kill for the usual time. Chances are
     /// <see cref="HostileSettings"/>, scaled by the level gap and the server drop rate. The pet of the player who
     /// holds the kill gets its kill XP here too.
     /// </summary>
@@ -49,15 +47,11 @@ namespace KryticalNova.Hostiles
             HostileLootRoll roll = Roll(kill.Hostile.Stats, curve, settings, kill.DropPercent, kill.GearDrops, HostileRates.Drops, UnityEngine.Random.value,
                 UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
 
-            var chat = player.GetComponent<PlayerChat>();
-            if (roll.Creds > 0 && player.TryGetComponent(out PlayerWallet wallet))
-            {
-                long earned = wallet.ServerEarn(roll.Creds, CredsSource.HostileKill);
-                if (earned > 0 && chat != null) chat.ServerCombatNotice($"+{earned} Creds");
-            }
-
             if (!player.TryGetComponent(out PlayerLoot loot)) return;
             var owner = player.GetComponent<NetworkObject>();
+            // Creds fall like everything else, as a pile of notes; picking them up pays the wallet.
+            if (roll.Creds > 0)
+                loot.ServerPlaceAt(new ItemStack(LootRules.CredsItemId, (ushort)Math.Min(roll.Creds, LootRules.MaxCredsPerDrop)), kill.Position, owner);
             if (roll.Stim != null) loot.ServerPlaceAt(new ItemStack(roll.Stim.itemId, 1), kill.Position, owner);
             if (roll.Gear != null) loot.ServerPlaceAt(new ItemStack(roll.Gear.itemId, 1), kill.Position, owner);
         }

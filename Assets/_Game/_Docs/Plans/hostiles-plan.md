@@ -22,7 +22,7 @@ what a review of it against the code found on 9 October 2026, and what is built.
 | 11 Nameplates | Done: `HostileNameplateController`. Checked: two clients at different levels see different colours on the same Hostile. |
 | 12 Comic combat effects | Done through the existing game feel: a Hostile's blow is a comic hit with its number for the player struck; a heavy attack shows a "!" and a swing ribbon for its windup. No new effects were made. |
 | 13 Bruisers | Done: Hellion (12) in the SE zone and Colossus (21) on Island North, at the zone's edge, with their own timer, six times the XP, five times the Creds and a 25 % gear drop of the best rarity their level has. Lucky Drops do not exist as an item yet. |
-| 14 Drops and kill credit | Done: `HostileLoot`. Creds are paid into the wallet, not dropped (they are not an item). `gm.hostile.loot` simulates kills. |
+| 14 Drops and kill credit | Done: `HostileLoot`. Creds drop as a stack of cash (item 9040, `LootRules.CredsItemId`); picking it up pays the wallet and never uses a Pack slot. Drops are pooled (`WorldDropPool`). `gm.hostile.loot` simulates kills. |
 | 15 Magnet | Done: `MagnetController`, `MagnetRules`, in the Autopilot window. |
 | 16 Autopilot | Done: `PlayerAutopilot`, `AutopilotController`, `AutopilotWindowController`, the Autopilot Chip (item 9030), the AUTO tag. Checked for 45 s in a zone, not for the plan's 30 minutes. The hunt radius is not drawn on the ground. |
 | 17 GM Tools window | Done: a Hostiles tab with every command. |
@@ -33,7 +33,7 @@ Nodes pack (`HostileDissolve.shader`, `HostileCorpse`), and goes back to the poo
 
 **Bosses** are out of this plan altogether: the owner builds them as a separate system.
 
-**Where what was built differs from the plan below:** Creds go into the wallet instead of lying on the ground; a
+**Where what was built differs from the plan below:** Magnet's filter is tick boxes only (one per gear rarity, Stims, materials and other items), with no typed name lists (owner, 9 Oct 2026); a
 Squad's drop is held for the one player who holds the kill (a drop can be held for one player only); Autopilot's
 attack skills and buffs are chosen as Hotbar slots; the Autopilot Chip's icon comes from the icon library, not from a
 Synty drone picture; the numbers of section 10 are replaced by `HostileStatCurve` (correction 1).
@@ -364,9 +364,9 @@ Not found for Twelve Sky 2: its hunt radius, what happens on death or a full bag
 | Buffs | Two slots | Recast when they expire |
 | Auto Stim | HP 60%, Flux 60% | Uses Stims on the Hotbar first, then the Pack |
 | Magnet: Creds | Always | |
-| Magnet: gear | Uncommon and better | Choose the lowest rarity to take |
+| Magnet: gear | Uncommon, Rare and Epic ticked; Common not | One tick box per rarity (as built) |
 | Magnet: Stims and Lucky Drops | On | |
-| Magnet: name lists | Empty | "Always take" and "Never take" by item name, as in Twelve Sky |
+| Magnet: materials and other items | On | One tick box. The typed name lists were taken out (owner, 9 Oct 2026) |
 | When the Pack is full | Keep hunting, take Creds only | Or stop |
 | When Stims run out | Stop | Or keep hunting |
 | If a player attacks you | Switch off and sound an alert | Or fight back |

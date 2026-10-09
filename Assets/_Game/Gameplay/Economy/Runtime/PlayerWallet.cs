@@ -13,7 +13,7 @@ namespace KryticalNova.Economy
     /// local copy decides.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerWallet : NetworkBehaviour, ISaveParticipant
+    public sealed class PlayerWallet : NetworkBehaviour, ISaveParticipant, KryticalNova.Items.ICurrencyReceiver
     {
         [SerializeField] private EconomySettings settings;
 
@@ -83,6 +83,9 @@ namespace KryticalNova.Economy
             Commit();
             return added;
         }
+
+        /// <summary>Server only. Creds picked up off the ground: what a Hostile dropped.</summary>
+        public long ServerReceiveCreds(long amount) => ServerEarn(amount, CredsSource.HostileKill);
 
         /// <summary>Server only. Takes the whole amount, or nothing.</summary>
         public bool ServerSpend(long amount, CredsSink sink)

@@ -17,10 +17,11 @@ namespace KryticalNova.Autopilot.Tests
             made.Clear();
         }
 
-        private ItemDefinition Item(string name, ItemRarity rarity, EquipSlot slot = EquipSlot.None, float health = 0f)
+        private ItemDefinition Item(string name, ItemRarity rarity, EquipSlot slot = EquipSlot.None, float health = 0f, ushort id = 0)
         {
             ItemDefinition item = ScriptableObject.CreateInstance<ItemDefinition>();
             made.Add(item);
+            item.itemId = id;
             item.displayName = name;
             item.rarity = rarity;
             item.equipSlot = slot;
@@ -29,44 +30,62 @@ namespace KryticalNova.Autopilot.Tests
         }
 
         [Test]
-        public void GearIsTakenFromTheChosenRarityUp()
+        public void EachRarityOfGearHasItsOwnTick()
         {
-            var preferences = new AutopilotPreferences(); // Uncommon and better
-            Assert.IsFalse(MagnetRules.Wants(preferences, Item("Rusty Blade", ItemRarity.Common, EquipSlot.Weapon)));
-            Assert.IsTrue(MagnetRules.Wants(preferences, Item("Fine Blade", ItemRarity.Uncommon, EquipSlot.Weapon)));
-            Assert.IsTrue(MagnetRules.Wants(preferences, Item("Rare Blade", ItemRarity.Rare, EquipSlot.Weapon)));
-            preferences.minGearRarity = ItemRarity.Common;
-            Assert.IsTrue(MagnetRules.Wants(preferences, Item("Rusty Blade", ItemRarity.Common, EquipSlot.Weapon)));
+            var preferences = new AutopilotPreferences(); // Common off, the rest on
+            ItemDefinition common = Item("Rusty Blade", ItemRarity.Common, EquipSlot.Weapon);
+            ItemDefinition uncommon = Item("Fine Blade", ItemRarity.Uncommon, EquipSlot.Weapon);
+            ItemDefinition rare = Item("Rare Blade", ItemRarity.Rare, EquipSlot.Weapon);
+            ItemDefinition epic = Item("Epic Blade", ItemRarity.Epic, EquipSlot.Weapon);
+            Assert.IsFalse(MagnetRules.Wants(preferences, common));
+            Assert.IsTrue(MagnetRules.Wants(preferences, uncommon));
+            Assert.IsTrue(MagnetRules.Wants(preferences, rare));
+            Assert.IsTrue(MagnetRules.Wants(preferences, epic));
+
+            // Not a floor: any one can be left out on its own.
+            preferences.takeCommon = true;
+            preferences.takeRare = false;
+            Assert.IsTrue(MagnetRules.Wants(preferences, common));
+            Assert.IsTrue(MagnetRules.Wants(preferences, uncommon));
+            Assert.IsFalse(MagnetRules.Wants(preferences, rare));
+            Assert.IsTrue(MagnetRules.Wants(preferences, epic));
+            preferences.takeEpic = false;
+            Assert.IsFalse(MagnetRules.Wants(preferences, epic));
+            Assert.IsFalse(MagnetRules.Wants(preferences, Item("Relic Blade", ItemRarity.Legendary, EquipSlot.Weapon)), "above Epic goes with Epic");
         }
 
         [Test]
-        public void StimsFollowTheirSwitchAndOtherThingsAreAlwaysTaken()
+        public void StimsAndOtherThingsEachFollowTheirTick()
         {
             var preferences = new AutopilotPreferences();
             ItemDefinition stim = Item("HP Stim", ItemRarity.Common, health: 100f);
+            ItemDefinition material = Item("Alumite", ItemRarity.Common);
             Assert.IsTrue(MagnetRules.Wants(preferences, stim));
+            Assert.IsTrue(MagnetRules.Wants(preferences, material), "a material is not gear: the Common tick does not touch it");
             preferences.magnetStims = false;
             Assert.IsFalse(MagnetRules.Wants(preferences, stim));
-            Assert.IsTrue(MagnetRules.Wants(preferences, Item("Alumite", ItemRarity.Common)), "a material");
+            Assert.IsTrue(MagnetRules.Wants(preferences, material));
+            preferences.magnetMaterials = false;
+            Assert.IsFalse(MagnetRules.Wants(preferences, material));
         }
 
         [Test]
-        public void TheNameListsWinAndNeverBeatsAlways()
+        public void CredsAreTakenWhateverIsTicked()
         {
             var preferences = new AutopilotPreferences
             {
-                alwaysTake = new[] { "rusty blade", "Alumite" },
-                neverTake = new[] { "Alumite", "Fine Blade" },
+                takeCommon = false, takeUncommon = false, takeRare = false, takeEpic = false, magnetStims = false, magnetMaterials = false,
             };
-            Assert.IsTrue(MagnetRules.Wants(preferences, Item("Rusty Blade", ItemRarity.Common, EquipSlot.Weapon)), "always, whatever its rarity");
-            Assert.IsFalse(MagnetRules.Wants(preferences, Item("Fine Blade", ItemRarity.Uncommon, EquipSlot.Weapon)), "never, whatever its rarity");
-            Assert.IsFalse(MagnetRules.Wants(preferences, Item("Alumite", ItemRarity.Common)), "on both lists: never wins");
+            ItemDefinition creds = Item("Creds", ItemRarity.Common, id: LootRules.CredsItemId);
+            Assert.IsTrue(MagnetRules.Wants(preferences, creds));
+            preferences.magnetOn = false;
+            Assert.IsFalse(MagnetRules.Wants(preferences, creds), "Magnet off takes nothing at all");
         }
 
         [Test]
         public void MagnetOffTakesNothing()
         {
-            var preferences = new AutopilotPreferences { magnetOn = false, alwaysTake = new[] { "HP Stim" } };
+            var preferences = new AutopilotPreferences { magnetOn = false };
             Assert.IsFalse(MagnetRules.Wants(preferences, Item("HP Stim", ItemRarity.Common, health: 100f)));
             Assert.IsFalse(MagnetRules.Wants(null, Item("HP Stim", ItemRarity.Common, health: 100f)));
         }
@@ -79,7 +98,7 @@ namespace KryticalNova.Autopilot.Tests
             var wild = new AutopilotPreferences
             {
                 huntRadius = 900f, gatherCount = 50, stimHealthPercent = 400f, attackSlot = 99, areaSlot = -7,
-                alwaysTake = new[] { "  HP Stim  ", "", null, new string('x', 200) },
+                takeCommon = true, takeEpic = false,
             };
             AutopilotPreferences back = AutopilotPreferences.FromJson(wild.ToJson(), settings);
             Assert.AreEqual(settings.huntRadius.y, back.huntRadius);
@@ -87,9 +106,9 @@ namespace KryticalNova.Autopilot.Tests
             Assert.AreEqual(95f, back.stimHealthPercent);
             Assert.AreEqual(AutopilotPreferences.NoSlot, back.attackSlot);
             Assert.AreEqual(AutopilotPreferences.NoSlot, back.areaSlot);
-            Assert.AreEqual(2, back.alwaysTake.Length);
-            Assert.AreEqual("HP Stim", back.alwaysTake[0]);
-            Assert.AreEqual(40, back.alwaysTake[1].Length);
+            Assert.IsTrue(back.takeCommon);
+            Assert.IsFalse(back.takeEpic);
+            Assert.IsTrue(back.takeRare);
         }
 
         [Test]
@@ -100,7 +119,12 @@ namespace KryticalNova.Autopilot.Tests
             Assert.IsTrue(fresh.skipTagged);
             Assert.AreEqual(1, fresh.gatherCount);
             Assert.AreEqual(60f, AutopilotPreferences.FromJson(null, null).stimHealthPercent);
-            Assert.AreEqual(ItemRarity.Uncommon, AutopilotPreferences.FromJson(string.Empty, null).minGearRarity);
+            AutopilotPreferences empty = AutopilotPreferences.FromJson(string.Empty, null);
+            Assert.IsFalse(empty.takeCommon);
+            Assert.IsTrue(empty.takeUncommon && empty.takeRare && empty.takeEpic && empty.magnetStims && empty.magnetMaterials);
+            // A save from before the tick boxes (a rarity floor and typed lists) still loads, on the defaults.
+            AutopilotPreferences old = AutopilotPreferences.FromJson("{\"magnetOn\":true,\"minGearRarity\":2,\"alwaysTake\":[\"HP Stim\"]}", null);
+            Assert.IsTrue(old.magnetOn && old.takeUncommon);
         }
 
         [Test]

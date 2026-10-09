@@ -437,7 +437,7 @@ namespace KryticalNova.DevTools
             return zone.SpawnBruiserNow() ? "Its Bruiser is here." : "The Bruiser could not be placed (zone not started, or no free ground).";
         }
 
-        [Command("gm.hostile.stats", "Live counts: Hostiles in the world, asleep, waiting in the pools, and made since Play started.")]
+        [Command("gm.hostile.stats", "Live counts: Hostiles in the world, asleep, waiting in the pools and made since Play started; the same for drops.")]
         private static string Stats()
         {
             if (!TryGetPlayer(out _, out var error)) return error;
@@ -447,7 +447,8 @@ namespace KryticalNova.DevTools
                 if (hostile.Entity.IsAlive) alive++;
                 if (hostile.Asleep) asleep++;
             }
-            return $"In the world {HostileNet.Active.Count} ({alive} alive, {asleep} asleep) · waiting in pools {HostilePool.Waiting} · made since Play started {HostilePool.Created}";
+            return $"In the world {HostileNet.Active.Count} ({alive} alive, {asleep} asleep) · waiting in pools {HostilePool.Waiting} · made since Play started {HostilePool.Created}\n" +
+                   $"Drops on the ground {KryticalNova.Items.WorldDrop.Active.Count} · waiting in the pool {KryticalNova.Items.WorldDropPool.Waiting} · made since Play started {KryticalNova.Items.WorldDropPool.Created}";
         }
 
         private static float Chance(float hitRate, float evasion, float min, float max) =>

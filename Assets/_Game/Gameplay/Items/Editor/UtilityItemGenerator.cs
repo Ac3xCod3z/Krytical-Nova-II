@@ -64,6 +64,10 @@ namespace KryticalNova.EditorTools
             new Row { Id = KioskPermit30Id, Asset = "Permit_Kiosk30", Name = "Kiosk Permit (30 Days)", Glyph = "30D", Rarity = ItemRarity.Rare,
                 Description = "Opens your Kiosk for 30 days instead of 3. Used up when the Kiosk opens.", Stack = 99 },
 
+            // Creds as they lie on the ground (a Hostile's drop). Never in a Pack: picking it up pays the wallet.
+            new Row { Id = LootRules.CredsItemId, Asset = "Creds_Drop", Name = "Creds", Glyph = "CREDS", Rarity = ItemRarity.Common,
+                Description = "Creds. Picked up, they go straight into your wallet.", Stack = LootRules.MaxCredsPerDrop },
+
             // Autopilot (_Docs/Plans/hostiles-plan.md, section 8): each chip adds Autopilot time. Only GM tools
             // give it out for now.
             new Row { Id = AutopilotChipId, Asset = "Chip_Autopilot", Name = "Autopilot Chip", Glyph = "AUTO", Rarity = ItemRarity.Uncommon,

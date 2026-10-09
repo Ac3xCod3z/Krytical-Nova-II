@@ -13,42 +13,46 @@ namespace KryticalNova.UI
     /// The Autopilot and Magnet window: every choice of <see cref="AutopilotPreferences"/>, the time left, and
     /// the switch. It also puts the "AUTOPILOT" notice on the screen while Autopilot runs, and owns the two keys
     /// (on / off, and this window) so that neither fires while the player is typing. A change is kept a moment
-    /// after it is made; the choices are saved with the character. The window is built in code from the shared
-    /// classes, so it wears the faction skin like any other.
+    /// after it is made; the choices are saved with the character. Nothing in the window is typed: every choice
+    /// is a switch, a step or a slider, so there is no name to get wrong.
+    /// The window is built in code, but out of the same parts as the Settings window: its frame and header, and
+    /// the rows of <see cref="SettingsRows"/> (the pack's arrows, value boxes, sliders and ON / OFF switches).
+    /// So it wears each faction's skin exactly as Settings does, with no style of its own.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
     public sealed class AutopilotWindowController : MonoBehaviour
     {
         private const float SaveDelay = 0.6f;
-        private const string None = "None";
-        private static readonly List<string> RarityNames = new List<string> { "Common", "Uncommon", "Rare", "Epic", "Legendary" };
-        private static readonly List<string> PackFullNames = new List<string> { "Keep hunting", "Stop" };
-        private static readonly List<string> StimsOutNames = new List<string> { "Stop", "Keep hunting" };
-        private static readonly List<string> AttackedNames = new List<string> { "Switch off and alert", "Fight back" };
+        private const float RadiusStep = 5f;
+        private static readonly string[] PackFullNames = { "Keep hunting", "Stop" };
+        private static readonly string[] StimsOutNames = { "Stop", "Keep hunting" };
+        private static readonly string[] AttackedNames = { "Switch off", "Fight back" };
+        private static readonly string[] AreaNames = { "Whole zone", "Radius" };
 
         private VisualElement root, window, notice;
-        private Label status, noticeText;
+        private Label status, noticeText, keyLabel;
         private Button switchButton;
-        private Toggle wholeZone, skipTagged, skipGrey, skipRed, bruisers, magnetOn, magnetStims;
-        private Slider radius, stimHealth, stimFlux;
-        private SliderInt gather;
-        private DropdownField attack, area, buffA, buffB, rarity, packFull, stimsOut, attacked;
-        private TextField always, never;
+        private readonly List<Action> refresh = new List<Action>();
+        private string[] slotNames = { "None" };
+        private string[] radiusNames = { "25 m" };
+        private string[] gatherNames = { "1" };
 
         private PlayerAutopilot autopilot;
-        private AutopilotPreferences working;
-        private readonly List<string> slotChoices = new List<string>();
-        private bool filling;
+        private AutopilotPreferences working = new AutopilotPreferences();
+        private bool filled;
         private float saveAt = -1f;
         private float nextRefresh;
+
+        /// <summary>True while the window is on screen.</summary>
+        public bool IsOpen => window != null && window.style.display != DisplayStyle.None;
 
         private void OnEnable()
         {
             if (!Application.isPlaying) return;
             root = GetComponent<UIDocument>().rootVisualElement;
             if (root == null) return;
-            Build();
+            BuildNotice();
             PlayerInventory.LocalChanged += OnLocalChanged;
         }
 
@@ -68,62 +72,71 @@ namespace KryticalNova.UI
             if (autopilot != null) autopilot.Changed -= OnChanged;
             autopilot = next;
             if (autopilot != null) autopilot.Changed += OnChanged;
-            working = null;
+            filled = false;
         }
 
         private void OnChanged()
         {
             // The server's copy arrived or changed: what the window shows follows, unless the player is mid-edit.
-            if (saveAt < 0f) working = null;
+            if (saveAt < 0f) filled = false;
         }
 
         private void Update()
         {
-            if (window == null) return;
+            if (notice == null) return;
             if (autopilot == null)
             {
                 PlayerAutopilot local = PlayerAutopilot.Local;
                 if (local != null) Bind(local);
             }
-            bool typing = HudTyping.IsTyping(root);
-            if (autopilot != null && !typing)
+            if (autopilot != null && !HudTyping.IsTyping(root))
             {
                 if (KeyBindings.Pressed(KeyBindings.Autopilot)) autopilot.RequestSetOn(!autopilot.IsOn);
-                if (KeyBindings.Pressed(KeyBindings.AutopilotSettings)) SetOpen(window.style.display == DisplayStyle.None);
+                if (KeyBindings.Pressed(KeyBindings.AutopilotSettings)) SetOpen(!IsOpen);
             }
 
             bool on = autopilot != null && autopilot.IsOn;
             notice.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
-            if (autopilot == null) { window.style.display = DisplayStyle.None; return; }
+            if (autopilot == null) { if (window != null) window.style.display = DisplayStyle.None; return; }
 
             if (saveAt >= 0f && Time.unscaledTime >= saveAt)
             {
                 saveAt = -1f;
-                autopilot.SavePreferences(working);
+                autopilot.SavePreferences(AutopilotPreferences.FromJson(working.ToJson(), autopilot.Settings));
             }
             if (Time.unscaledTime < nextRefresh) return;
             nextRefresh = Time.unscaledTime + 0.25f;
 
             string time = PlayerAutopilot.FormatTime(autopilot.SecondsLeft);
-            if (on) noticeText.text = $"AUTOPILOT  ·  {time}  ·  {KeyBindings.Label(KeyBindings.Autopilot)} to stop";
-            if (window.style.display == DisplayStyle.None) return;
-            status.text = on ? $"Running. Time left: {time}." : autopilot.SecondsLeft > 0f ? $"Off. Time left: {time}." : "Off. No Autopilot time: use an Autopilot Chip.";
-            switchButton.text = (on ? "STOP" : "START") + "  [" + KeyBindings.Label(KeyBindings.Autopilot) + "]";
-            if (working == null) Fill();
+            string key = KeyBindings.Label(KeyBindings.Autopilot);
+            if (on) noticeText.text = $"AUTOPILOT  ·  {time}  ·  {key} to stop";
+            if (!IsOpen) return;
+            status.text = on ? $"Running. Time left: {time}."
+                : autopilot.SecondsLeft > 0f ? $"Off. Time left: {time}."
+                : "Off. No Autopilot time left: use an Autopilot Chip.";
+            switchButton.text = on ? $"STOP  [{key}]" : $"START  [{key}]";
+            if (!filled) Fill();
         }
 
-        private void SetOpen(bool open)
+        /// <summary>Shows or hides the window. It is built the first time it is shown.</summary>
+        public void SetOpen(bool open)
         {
+            if (open && autopilot == null) return;
+            if (open && window == null) BuildWindow();
+            if (window == null) return;
             window.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
-            if (open) { working = null; nextRefresh = 0f; }
+            if (!open) return;
+            window.BringToFront();
+            filled = false;
+            nextRefresh = 0f;
         }
 
         // ------------------------------------------------------------------ building
 
-        private void Build()
+        private void BuildNotice()
         {
-            notice = new VisualElement { pickingMode = PickingMode.Ignore };
-            notice.AddToClassList("kn-panel");
+            notice = new VisualElement { name = "autopilot-notice", pickingMode = PickingMode.Ignore };
+            notice.AddToClassList("panel");
             notice.style.position = Position.Absolute;
             notice.style.top = 86f;
             notice.style.left = Length.Percent(50f);
@@ -132,197 +145,153 @@ namespace KryticalNova.UI
             notice.style.paddingTop = notice.style.paddingBottom = 4f;
             notice.style.display = DisplayStyle.None;
             noticeText = new Label { pickingMode = PickingMode.Ignore };
-            noticeText.AddToClassList("kn-accent");
-            noticeText.AddToClassList("kn-bold");
+            noticeText.AddToClassList("accent");
             notice.Add(noticeText);
             root.Add(notice);
+        }
 
+        private void BuildWindow()
+        {
+            AutopilotSettings settings = autopilot.Settings;
+            RefreshSlotNames();
+            var radii = new List<string>();
+            float low = settings != null ? settings.huntRadius.x : 10f, high = settings != null ? settings.huntRadius.y : 40f;
+            for (float r = low; r <= high + 0.01f; r += RadiusStep) radii.Add($"{r:0} m");
+            radiusNames = radii.ToArray();
+            int most = settings != null ? settings.maxGatherCount : 8;
+            gatherNames = new string[most];
+            for (int i = 0; i < most; i++) gatherNames[i] = (i + 1).ToString();
+
+            // The frame of the Settings window: the same classes, so the same skin.
             window = new VisualElement { name = "autopilot-window" };
-            foreach (string c in new[] { "panel", "window", "blocks-world", "kn-panel" }) window.AddToClassList(c);
+            foreach (string c in new[] { "panel", "window", "blocks-world" }) window.AddToClassList(c);
             window.style.right = 24f;
-            window.style.top = 120f;
-            window.style.width = 360f;
+            window.style.top = 64f;
+            window.style.width = 540f;
             window.style.display = DisplayStyle.None;
 
             var header = new VisualElement();
+            header.AddToClassList("row");
             header.AddToClassList("kn-header");
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.justifyContent = Justify.SpaceBetween;
             var title = new Label("AUTOPILOT & MAGNET");
-            title.AddToClassList("kn-title");
+            title.AddToClassList("heading");
             header.Add(title);
-            var close = new Button(() => SetOpen(false)) { text = "X" };
-            close.AddToClassList("kn-close");
+            keyLabel = new Label($"[{KeyBindings.Label(KeyBindings.AutopilotSettings)}]");
+            keyLabel.AddToClassList("muted");
+            keyLabel.AddToClassList("header-key");
+            header.Add(keyLabel);
+            var close = new Button(() => SetOpen(false)) { name = "close-autopilot" };
+            close.AddToClassList("close");
+            var glyph = new VisualElement { pickingMode = PickingMode.Ignore };
+            glyph.AddToClassList("kn-close-glyph");
+            close.Add(glyph);
             header.Add(close);
             window.Add(header);
 
-            status = new Label();
-            status.AddToClassList("kn-muted");
-            status.style.whiteSpace = WhiteSpace.Normal;
-            window.Add(status);
-            switchButton = new Button(() => { if (autopilot != null) autopilot.RequestSetOn(!autopilot.IsOn); });
-            switchButton.AddToClassList("kn-button-primary");
-            window.Add(switchButton);
-
-            var scroll = new ScrollView(ScrollViewMode.Vertical);
-            scroll.style.maxHeight = 430f;
+            var scroll = new ScrollView(ScrollViewMode.Vertical) { name = "autopilot-body", horizontalScrollerVisibility = ScrollerVisibility.Hidden };
+            scroll.AddToClassList("window-body");
+            scroll.style.maxHeight = 470f;
             window.Add(scroll);
-            VisualElement body = scroll.contentContainer;
+            var page = new VisualElement();
+            page.AddToClassList("settings-page");
+            page.style.display = DisplayStyle.Flex;
+            scroll.Add(page);
 
-            Heading(body, "WHERE");
-            wholeZone = AddToggle(body, "Hunt the whole Hostile Zone", v => working.wholeZone = v);
-            radius = AddSlider(body, "Or this many metres round the start", 10f, 40f, v => working.huntRadius = v);
+            refresh.Clear();
+            status = SettingsRows.Help(page, string.Empty);
 
-            Heading(body, "WHICH HOSTILES");
-            skipTagged = AddToggle(body, "Skip Hostiles another player holds", v => working.skipTagged = v);
-            skipGrey = AddToggle(body, "Skip grey names (no XP)", v => working.skipGrey = v);
-            skipRed = AddToggle(body, "Skip red names (dangerous)", v => working.skipRed = v);
-            bruisers = AddToggle(body, "Include Bruisers", v => working.includeBruisers = v);
+            SettingsRows.Header(page, "WHERE");
+            Keep(SettingsRows.Choice(page, "Hunting ground", AreaNames, () => working.wholeZone ? 0 : 1, i => Change(() => working.wholeZone = i == 0)));
+            Keep(SettingsRows.Choice(page, "Radius round the start", radiusNames,
+                () => Mathf.RoundToInt((working.huntRadius - low) / RadiusStep), i => Change(() => working.huntRadius = low + i * RadiusStep)));
 
-            Heading(body, "SKILLS (Hotbar slots)");
-            attack = AddDropdown(body, "Attack skill", slotChoices, i => working.attackSlot = i - 1);
-            area = AddDropdown(body, "Area skill", slotChoices, i => working.areaSlot = i - 1);
-            gather = new SliderInt("Gather before the area skill", 1, 8) { showInputField = true };
-            gather.RegisterValueChangedCallback(e => Change(() => working.gatherCount = e.newValue));
-            body.Add(gather);
-            buffA = AddDropdown(body, "Buff to keep up", slotChoices, i => working.buffSlotA = i - 1);
-            buffB = AddDropdown(body, "Second buff", slotChoices, i => working.buffSlotB = i - 1);
+            SettingsRows.Header(page, "WHICH HOSTILES");
+            Keep(SettingsRows.Toggle(page, "Skip Hostiles another player holds", () => working.skipTagged, v => Change(() => working.skipTagged = v)));
+            Keep(SettingsRows.Toggle(page, "Skip grey names (no XP)", () => working.skipGrey, v => Change(() => working.skipGrey = v)));
+            Keep(SettingsRows.Toggle(page, "Skip red names (dangerous)", () => working.skipRed, v => Change(() => working.skipRed = v)));
+            Keep(SettingsRows.Toggle(page, "Include Bruisers", () => working.includeBruisers, v => Change(() => working.includeBruisers = v)));
 
-            Heading(body, "STIMS");
-            stimHealth = AddSlider(body, "Use an HP Stim under (%)", 0f, 95f, v => working.stimHealthPercent = v);
-            stimFlux = AddSlider(body, "Use a Flux Stim under (%)", 0f, 95f, v => working.stimFluxPercent = v);
+            SettingsRows.Header(page, "SKILLS (HOTBAR SLOTS)");
+            Keep(SettingsRows.Choice(page, "Attack skill", slotNames, () => working.attackSlot + 1, i => Change(() => working.attackSlot = i - 1)));
+            Keep(SettingsRows.Choice(page, "Area skill", slotNames, () => working.areaSlot + 1, i => Change(() => working.areaSlot = i - 1)));
+            Keep(SettingsRows.Choice(page, "Gather before the area skill", gatherNames, () => working.gatherCount - 1, i => Change(() => working.gatherCount = i + 1)));
+            Keep(SettingsRows.Choice(page, "Buff to keep up", slotNames, () => working.buffSlotA + 1, i => Change(() => working.buffSlotA = i - 1)));
+            Keep(SettingsRows.Choice(page, "Second buff", slotNames, () => working.buffSlotB + 1, i => Change(() => working.buffSlotB = i - 1)));
 
-            Heading(body, "MAGNET (works with Autopilot off too)");
-            magnetOn = AddToggle(body, "Magnet on", v => working.magnetOn = v);
-            magnetStims = AddToggle(body, "Take Stims", v => working.magnetStims = v);
-            rarity = AddDropdown(body, "Take gear from", RarityNames, i => working.minGearRarity = (ItemRarity)i);
-            always = AddNames(body, "Always take (names, comma between)", names => working.alwaysTake = names);
-            never = AddNames(body, "Never take (names, comma between)", names => working.neverTake = names);
+            SettingsRows.Header(page, "STIMS");
+            Keep(SettingsRows.Slider(page, "Use an HP Stim under", 0f, 0.95f, () => working.stimHealthPercent / 100f,
+                v => Change(() => working.stimHealthPercent = Mathf.Round(v * 100f))));
+            Keep(SettingsRows.Slider(page, "Use a Flux Stim under", 0f, 0.95f, () => working.stimFluxPercent / 100f,
+                v => Change(() => working.stimFluxPercent = Mathf.Round(v * 100f))));
 
-            Heading(body, "WHEN THINGS GO WRONG");
-            packFull = AddDropdown(body, "Pack full", PackFullNames, i => working.whenPackFull = (WhenPackFull)i);
-            stimsOut = AddDropdown(body, "Out of HP Stims", StimsOutNames, i => working.whenStimsOut = (WhenStimsOut)i);
-            attacked = AddDropdown(body, "A player attacks", AttackedNames, i => working.whenAttacked = (WhenAttacked)i);
+            SettingsRows.Header(page, "MAGNET");
+            SettingsRows.Help(page, "Picks up what you walk over. Works with Autopilot off and needs no Autopilot time. Creds are always taken.");
+            Keep(SettingsRows.Toggle(page, "Magnet", () => working.magnetOn, v => Change(() => working.magnetOn = v)));
+            Keep(SettingsRows.Toggle(page, "Take Common gear", () => working.takeCommon, v => Change(() => working.takeCommon = v)));
+            Keep(SettingsRows.Toggle(page, "Take Uncommon gear", () => working.takeUncommon, v => Change(() => working.takeUncommon = v)));
+            Keep(SettingsRows.Toggle(page, "Take Rare gear", () => working.takeRare, v => Change(() => working.takeRare = v)));
+            Keep(SettingsRows.Toggle(page, "Take Epic gear", () => working.takeEpic, v => Change(() => working.takeEpic = v)));
+            Keep(SettingsRows.Toggle(page, "Take Stims", () => working.magnetStims, v => Change(() => working.magnetStims = v)));
+            Keep(SettingsRows.Toggle(page, "Take materials and other items", () => working.magnetMaterials, v => Change(() => working.magnetMaterials = v)));
+
+            SettingsRows.Header(page, "WHEN THINGS GO WRONG");
+            Keep(SettingsRows.Choice(page, "The Pack is full", PackFullNames, () => (int)working.whenPackFull, i => Change(() => working.whenPackFull = (WhenPackFull)i)));
+            Keep(SettingsRows.Choice(page, "Out of HP Stims", StimsOutNames, () => (int)working.whenStimsOut, i => Change(() => working.whenStimsOut = (WhenStimsOut)i)));
+            Keep(SettingsRows.Choice(page, "A player attacks you", AttackedNames, () => (int)working.whenAttacked, i => Change(() => working.whenAttacked = (WhenAttacked)i)));
+
+            var footer = new VisualElement();
+            footer.AddToClassList("settings-footer");
+            var gap = new VisualElement();
+            gap.AddToClassList("settings-footer-gap");
+            footer.Add(gap);
+            switchButton = new Button(() => { if (autopilot != null) autopilot.RequestSetOn(!autopilot.IsOn); }) { name = "autopilot-switch" };
+            switchButton.AddToClassList("settings-footer-button");
+            switchButton.AddToClassList("kn-button-primary");
+            footer.Add(switchButton);
+            window.Add(footer);
 
             root.Add(window);
+            // The layers a skin draws on (the window's frame and crown, the bar under each heading, the cards):
+            // the HUD's own windows were given theirs when the HUD was built; this one was not there yet.
+            SyntySkin.Decorate(window.parent);
         }
 
-        private static void Heading(VisualElement parent, string text)
-        {
-            var label = new Label(text);
-            label.AddToClassList("kn-eyebrow");
-            label.style.marginTop = 8f;
-            parent.Add(label);
-        }
+        private void Keep(Action show) => refresh.Add(show);
 
         /// <summary>A change made by hand: applied to the working copy and saved a moment later.</summary>
         private void Change(Action apply)
         {
-            if (filling || working == null) return;
             apply();
             saveAt = Time.unscaledTime + SaveDelay;
-        }
-
-        private Toggle AddToggle(VisualElement parent, string label, Action<bool> set)
-        {
-            var toggle = new Toggle(label);
-            toggle.AddToClassList("kn-toggle");
-            toggle.RegisterValueChangedCallback(e => Change(() => set(e.newValue)));
-            parent.Add(toggle);
-            return toggle;
-        }
-
-        private Slider AddSlider(VisualElement parent, string label, float low, float high, Action<float> set)
-        {
-            var slider = new Slider(label, low, high) { showInputField = true };
-            slider.RegisterValueChangedCallback(e => Change(() => set(Mathf.Round(e.newValue))));
-            parent.Add(slider);
-            return slider;
-        }
-
-        private DropdownField AddDropdown(VisualElement parent, string label, List<string> choices, Action<int> set)
-        {
-            var dropdown = new DropdownField(label, choices, 0);
-            dropdown.RegisterValueChangedCallback(e => Change(() => set(Mathf.Max(0, dropdown.index))));
-            parent.Add(dropdown);
-            return dropdown;
-        }
-
-        private TextField AddNames(VisualElement parent, string label, Action<string[]> set)
-        {
-            var heading = new Label(label);
-            heading.AddToClassList("kn-muted");
-            parent.Add(heading);
-            var field = new TextField { multiline = false };
-            field.AddToClassList("kn-textfield");
-            HudTyping.Guard(field);
-            field.RegisterValueChangedCallback(e => Change(() => set(e.newValue.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))));
-            parent.Add(field);
-            return field;
         }
 
         // ------------------------------------------------------------------ showing
 
         private void Fill()
         {
+            filled = true;
             working = AutopilotPreferences.FromJson(autopilot.Preferences.ToJson(), autopilot.Settings);
-            filling = true;
-            try
-            {
-                AutopilotSettings settings = autopilot.Settings;
-                if (settings != null)
-                {
-                    radius.lowValue = settings.huntRadius.x;
-                    radius.highValue = settings.huntRadius.y;
-                    gather.highValue = settings.maxGatherCount;
-                }
-                RefreshSlots();
-                wholeZone.SetValueWithoutNotify(working.wholeZone);
-                radius.SetValueWithoutNotify(working.huntRadius);
-                skipTagged.SetValueWithoutNotify(working.skipTagged);
-                skipGrey.SetValueWithoutNotify(working.skipGrey);
-                skipRed.SetValueWithoutNotify(working.skipRed);
-                bruisers.SetValueWithoutNotify(working.includeBruisers);
-                attack.index = working.attackSlot + 1;
-                area.index = working.areaSlot + 1;
-                gather.SetValueWithoutNotify(working.gatherCount);
-                buffA.index = working.buffSlotA + 1;
-                buffB.index = working.buffSlotB + 1;
-                stimHealth.SetValueWithoutNotify(working.stimHealthPercent);
-                stimFlux.SetValueWithoutNotify(working.stimFluxPercent);
-                magnetOn.SetValueWithoutNotify(working.magnetOn);
-                magnetStims.SetValueWithoutNotify(working.magnetStims);
-                rarity.index = Mathf.Clamp((int)working.minGearRarity, 0, RarityNames.Count - 1);
-                always.SetValueWithoutNotify(string.Join(", ", working.alwaysTake));
-                never.SetValueWithoutNotify(string.Join(", ", working.neverTake));
-                packFull.index = (int)working.whenPackFull;
-                stimsOut.index = (int)working.whenStimsOut;
-                attacked.index = (int)working.whenAttacked;
-            }
-            finally
-            {
-                filling = false;
-            }
+            RefreshSlotNames();
+            foreach (Action show in refresh) show();
         }
 
-        /// <summary>The Hotbar as the four skill dropdowns list it: "None", then every slot with what is on it.</summary>
-        private void RefreshSlots()
+        /// <summary>The Hotbar as the skill rows step through it: "None", then every slot with what is on it.</summary>
+        private void RefreshSlotNames()
         {
-            slotChoices.Clear();
-            slotChoices.Add(None);
-            var hotbar = autopilot.GetComponent<PlayerSkillHotbar>();
+            var hotbar = autopilot != null ? autopilot.GetComponent<PlayerSkillHotbar>() : null;
+            if (slotNames.Length != PlayerSkillHotbar.SlotCount + 1) slotNames = new string[PlayerSkillHotbar.SlotCount + 1];
+            slotNames[0] = "None";
             for (int i = 0; i < PlayerSkillHotbar.SlotCount; i++)
             {
-                string on = "empty";
+                string holds = "empty";
                 if (hotbar != null)
                 {
                     HotbarSlotEntry entry = hotbar.GetSlotEntry(i);
-                    if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null) on = entry.combatSkill.displayName;
-                    else if (!entry.IsEmpty) on = entry.itemType.ToString();
+                    if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null) holds = entry.combatSkill.displayName;
+                    else if (!entry.IsEmpty) holds = entry.itemType.ToString();
                 }
-                slotChoices.Add($"{PlayerSkillHotbar.GetKeyLabel(i)}: {on}");
+                slotNames[i + 1] = $"{PlayerSkillHotbar.GetKeyLabel(i)}: {holds}";
             }
-            foreach (DropdownField dropdown in new[] { attack, area, buffA, buffB }) dropdown.choices = slotChoices;
         }
     }
 }

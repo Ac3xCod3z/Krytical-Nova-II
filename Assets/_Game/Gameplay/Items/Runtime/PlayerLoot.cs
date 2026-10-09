@@ -116,6 +116,18 @@ namespace KryticalNova.Items
 
             ItemStack stack = drop.Stack;
             ItemDefinition item = drop.Definition;
+            if (LootRules.IsCreds(stack.itemId))
+            {
+                // Creds never enter the Pack: they are paid into the wallet, as much as it has room for.
+                var purse = GetComponent<ICurrencyReceiver>();
+                int paid = purse != null ? (int)purse.ServerReceiveCreds(stack.count) : 0;
+                if (paid <= 0) { Tell("Your wallet is full."); return; }
+                Vector3 where = drop.Position;
+                drop.ServerTake(paid, transform);
+                gestures?.ShowPickUp(where);
+                Tell(paid < stack.count ? $"+{paid} Creds. Your wallet is full: the rest stays." : $"+{paid} Creds.");
+                return;
+            }
             int taken = inventory.ServerGive(stack); // tells the player when the Pack is full
             if (taken <= 0) return;
             Vector3 lay = drop.Position;

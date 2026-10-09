@@ -79,6 +79,7 @@ namespace KryticalNova.Autopilot
             ItemDefinition item = drop.Definition;
             if (item == null || !MagnetRules.Wants(autopilot.Preferences, item)) return false;
             if (networkObject != null && drop.IsReservedForAnother(networkObject)) return false;
+            if (LootRules.IsCreds(item.itemId)) return true; // Creds go to the wallet, not the Pack
             // A full Pack still takes what stacks onto something it holds.
             return !PackFull || (item.maxStack > 1 && inventory.CountItem(item.itemId) > 0);
         }

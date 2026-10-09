@@ -15,13 +15,13 @@ namespace KryticalNova.Autopilot
 
     /// <summary>
     /// One character's Autopilot and Magnet choices. Saved with the character as JSON; the fields are the save
-    /// format, so add to them and never rename one. A Hotbar slot of -1 is "none".
+    /// format, so add to them and never rename one. A Hotbar slot of -1 is "none". What Magnet takes is a set of
+    /// tick boxes and nothing a player types (owner, 9 Oct 2026: a typed item name can be got wrong).
     /// </summary>
     [Serializable]
     public sealed class AutopilotPreferences
     {
         public const int NoSlot = -1;
-        private const int MaxNames = 24, MaxNameLength = 40;
 
         [Header("Where")]
         public bool wholeZone = true;
@@ -47,9 +47,11 @@ namespace KryticalNova.Autopilot
         [Header("Magnet")]
         public bool magnetOn = true;
         public bool magnetStims = true;
-        public ItemRarity minGearRarity = ItemRarity.Uncommon;
-        public string[] alwaysTake = Array.Empty<string>();
-        public string[] neverTake = Array.Empty<string>();
+        public bool magnetMaterials = true;
+        public bool takeCommon;
+        public bool takeUncommon = true;
+        public bool takeRare = true;
+        public bool takeEpic = true;
 
         [Header("When things go wrong")]
         public WhenPackFull whenPackFull = WhenPackFull.KeepHunting;
@@ -83,24 +85,20 @@ namespace KryticalNova.Autopilot
             areaSlot = Slot(areaSlot);
             buffSlotA = Slot(buffSlotA);
             buffSlotB = Slot(buffSlotB);
-            if (!Enum.IsDefined(typeof(ItemRarity), minGearRarity)) minGearRarity = ItemRarity.Uncommon;
-            alwaysTake = Names(alwaysTake);
-            neverTake = Names(neverTake);
+        }
+
+        /// <summary>Whether gear of this rarity is ticked. Anything above Epic goes with Epic.</summary>
+        public bool TakesGear(ItemRarity rarity)
+        {
+            switch (rarity)
+            {
+                case ItemRarity.Common: return takeCommon;
+                case ItemRarity.Uncommon: return takeUncommon;
+                case ItemRarity.Rare: return takeRare;
+                default: return takeEpic;
+            }
         }
 
         private static int Slot(int slot) => slot >= 0 && slot < 14 ? slot : NoSlot;
-
-        private static string[] Names(string[] names)
-        {
-            if (names == null) return Array.Empty<string>();
-            var kept = new System.Collections.Generic.List<string>(names.Length);
-            foreach (string name in names)
-            {
-                string trimmed = (name ?? string.Empty).Trim();
-                if (trimmed.Length == 0 || kept.Count >= MaxNames) continue;
-                kept.Add(trimmed.Length > MaxNameLength ? trimmed.Substring(0, MaxNameLength) : trimmed);
-            }
-            return kept.ToArray();
-        }
     }
 }

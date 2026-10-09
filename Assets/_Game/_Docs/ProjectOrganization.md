@@ -91,7 +91,7 @@ _Game/
 │   ├── Items/             Runtime/ (+Visuals/; world drops, pickup; gear state and progression rules)  Data/ (GearProgressionSettings,
 │   │                      GearThemeLibrary)  Data/Assets/ (items, part catalog, gear dictionary, GearThemes = one colour theme per
 │   │                      gear set, GearMaterials/ = forge materials, Prefabs/Weapons/ = weapon models, each with its glow zone and reach)
-│   │                      Editor/ (also GearThemeBuilder, WeaponGlowZoneBaker)  Prefabs/ (WorldDrop)  Tests/Editor/
+│   │                      Editor/ (also GearThemeBuilder, WeaponGlowZoneBaker)  Prefabs/ (WorldDrop, CredsStack = the cash a drop of Creds shows)  Tests/Editor/
 │   ├── NPC/               Runtime/  Data/Assets/
 │   ├── Persistence/       Runtime/ (ServerSave, account and character documents, PlayerSaveAgent)  Tests/Editor/
 │   ├── Pets/              Runtime/ (growth, hunger, PlayerPet; PetChatterRules, PetChatterMoments)  Data/ + Data/Assets/ (settings, catalog, definitions;

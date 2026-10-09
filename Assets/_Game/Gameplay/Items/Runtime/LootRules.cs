@@ -50,10 +50,20 @@ namespace KryticalNova.Items
             z = (float)(radius * Math.Sin(angle));
         }
 
-        /// <summary>"HP Stim x5", or just the name for a single item.</summary>
+        /// <summary>
+        /// The item that stands for Creds on the ground. It is never in a Pack: picking it up pays its count into
+        /// the wallet (<see cref="ICurrencyReceiver"/>). One drop holds at most a stack of it.
+        /// </summary>
+        public const ushort CredsItemId = 9040;
+        public const ushort MaxCredsPerDrop = 60000;
+
+        public static bool IsCreds(ushort itemId) => itemId == CredsItemId;
+
+        /// <summary>"HP Stim x5", or just the name for a single item. Creds read as an amount: "12 Creds".</summary>
         public static string Label(ItemDefinition item, int count)
         {
             if (item == null) return string.Empty;
+            if (IsCreds(item.itemId)) return $"{count} {item.displayName}";
             return count > 1 ? $"{item.displayName} x{count}" : item.displayName;
         }
     }

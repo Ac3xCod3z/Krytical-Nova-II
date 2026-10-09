@@ -37,6 +37,7 @@ namespace KryticalNova.EditorTools
         public static void Run()
         {
             EnsureWorldDrop();
+            EnsureCredsLook();
             EnsureKioskStand();
             EnsureRegistered();
             AssetDatabase.SaveAssets();
@@ -161,6 +162,84 @@ namespace KryticalNova.EditorTools
             finally
             {
                 Object.DestroyImmediate(root);
+            }
+        }
+
+        public const string CredsStackPath = "Assets/_Game/Gameplay/Items/Prefabs/CredsStack.prefab";
+        private const string OldCredsPicturePath = "Assets/_Game/Gameplay/Items/Prefabs/CredsPicture.prefab";
+        private const string CredsIcon = "Assets/_Game/Gameplay/Items/Data/Assets/Icons/Creds_Drop.png";
+        private const string CredsVisualName = "CredsVisual";
+        private const float CredsStackSize = 0.22f;     // metres across (owner, 9 Oct 2026: 0.7, then 0.44, were too big)
+        private const float CredsHover = 0.14f;         // lower than a parcel (owner): it clears the ground at the bottom of its bob
+        private const float CredsLayerHeight = 0.008f;  // one layer above the next: the stack's thickness
+        // Each layer of the stack: how far it is turned, and how far it is pushed off the middle (metres).
+        private static readonly (float Yaw, float X, float Z)[] CredsLayers =
+        {
+            (0f, 0f, 0f), (17f, 0.015f, -0.01f), (-11f, -0.012f, 0.012f), (24f, 0.006f, 0.015f), (6f, -0.006f, -0.003f),
+        };
+
+        /// <summary>
+        /// What a drop of Creds looks like: a stack of cash. It is the Creds item's own picture (the bundle of notes
+        /// the icon library baked for it) laid flat, several times over, each layer a little higher and turned a
+        /// little, so it has the thickness of a stack and never faces the camera. Like a parcel it hovers, bobs and spins.
+        /// The stack is a prefab of its own (<see cref="CredsStackPath"/>); the drop prefab holds one, shown only
+        /// while the drop is Creds. Both are made again on every run, so a new icon for Creds shows on the ground too.
+        /// </summary>
+        public static void EnsureCredsLook()
+        {
+            var icon = AssetDatabase.LoadAssetAtPath<Sprite>(CredsIcon);
+            if (icon == null) { Debug.LogWarning($"[Setup] No Creds icon at {CredsIcon}; Creds will look like any other drop. Give the Creds item an icon in the Icon Library first."); return; }
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(OldCredsPicturePath) != null) AssetDatabase.DeleteAsset(OldCredsPicturePath);
+
+            var stack = new GameObject("CredsStack");
+            try
+            {
+                float scale = CredsStackSize / Mathf.Max(0.01f, icon.bounds.size.x);
+                for (int i = 0; i < CredsLayers.Length; i++)
+                {
+                    var layer = new GameObject("Layer " + (i + 1));
+                    layer.transform.SetParent(stack.transform, false);
+                    layer.transform.localPosition = new Vector3(CredsLayers[i].X, i * CredsLayerHeight, CredsLayers[i].Z);
+                    // A sprite stands upright: tipped onto its back it lies on the ground, then it is turned where it lies.
+                    layer.transform.localRotation = Quaternion.Euler(90f, CredsLayers[i].Yaw, 0f);
+                    layer.transform.localScale = Vector3.one * scale;
+                    var renderer = layer.AddComponent<SpriteRenderer>();
+                    renderer.sprite = icon;
+                    renderer.sortingOrder = i; // the higher layer is drawn over the lower one
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                }
+                PrefabUtility.SaveAsPrefabAsset(stack, CredsStackPath);
+            }
+            finally
+            {
+                Object.DestroyImmediate(stack);
+            }
+            var stackPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CredsStackPath);
+
+            GameObject root = PrefabUtility.LoadPrefabContents(WorldDropPath);
+            if (root == null) return;
+            try
+            {
+                var drop = root.GetComponent<WorldDrop>();
+                if (drop == null) return;
+                Transform old = root.transform.Find(CredsVisualName);
+                if (old != null) Object.DestroyImmediate(old.gameObject);
+
+                var visual = new GameObject(CredsVisualName);
+                visual.transform.SetParent(root.transform, false);
+                visual.transform.localPosition = new Vector3(0f, CredsHover, 0f); // it hovers, a little lower than a parcel
+                PrefabUtility.InstantiatePrefab(stackPrefab, visual.transform);
+                foreach (var t in visual.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = root.layer;
+                visual.SetActive(false);
+
+                var so = new SerializedObject(drop);
+                so.FindProperty("credsVisual").objectReferenceValue = visual.transform;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(root, WorldDropPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
             }
         }
 
