@@ -132,10 +132,13 @@ every vendor font asset out of every save, so building or playing never changes 
 ### Faction select's champions
 
 `FactionShowcase` (one in the scene, behind the canvas, shared by the three skins) stands a doll for each faction:
-the Hegemony's Soldier, the Null's Skeleton and the Covenant's Viking, each in the best Epic piece of every slot at or
+the Hegemony's Civilian, the Null's Skeleton and the Covenant's Elf (owner's choice), each in the best Epic piece of every slot at or
 under level 112 (`gearLevel`) with the weapon of its faction's offense class, glowing at Temper 120 (`temper`). What
 they wear is looked up in the gear dictionary as the game does (`BestPiece`), so it follows the gear ladder.
 
+- While it is not the chosen one, a champion stands in a stance of Synty's idle pack that suits it (the expression
+  library the creator's Preview tab uses): the Civilian with arms folded, the Skeleton in the aggressive posture, the
+  Elf in the dramatic one (`Champions` in `FrontEndBuilder.Showcase`).
 - A doll stands in its card: every frame the showcase reads where the card's window (`Doll_Window`) is on the screen
   and puts the doll's feet on its foot at the stage's depth, as tall as its share of the window. So it holds at any
   screen shape, on the book's page, and in any skin's card.
@@ -145,6 +148,9 @@ they wear is looked up in the gear dictionary as the game does (`BestPiece`), so
 - The cards keep the faction's crest (small, in the top corner) and name; a card's own text is not used. The words of
   the chosen faction (tagline, lore, lineages) are on one panel to the right of the cards, the pack's framed panel.
 - Keys and flow are as before: Left / Right, Enter or a double click to choose, Esc back, a click to select.
+- The packs' colour washes over the screen (blue gradients and hexagons, red gradients) are kept at about a third of
+  their strength here (`ChampionWash`), and the wall's glow is soft (`backdropSaturation`, `backdropValue`): stronger,
+  they tinted all three champions in one colour.
 - `CharacterDoll.Create(..., keepWeapon: true)` keeps the model's weapon mount on a doll; the weapon glow
   (`GlowHaloFeature`) was added to `UIPreview_Renderer`, which the menus' cameras and the Equipment preview draw with.
 

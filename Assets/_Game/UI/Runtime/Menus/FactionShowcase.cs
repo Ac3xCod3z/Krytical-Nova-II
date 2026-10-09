@@ -23,9 +23,11 @@ namespace KryticalNova.UI.Menus
         public struct Champion
         {
             public FactionId faction;
-            [Tooltip("The lineage's name (Soldier, Skeleton, Viking).")]
+            [Tooltip("The lineage's name (Civilian, Skeleton, Elf).")]
             public string lineage;
             public BodyType body;
+            [Tooltip("How it stands while it is not the chosen one: a stance of the expression library (Synty's idle pack), by its group and name. Empty: the player's own idle.")]
+            public string stanceGroup, stance;
         }
 
         [SerializeField] private CharacterCreationDatabase database;
@@ -33,6 +35,8 @@ namespace KryticalNova.UI.Menus
         [SerializeField] private GearDictionary gear;
         [SerializeField] private ItemCatalog items;
         [SerializeField] private GearProgressionSettings progression;
+        [Tooltip("The stances the champions stand in (the creator's Preview tab uses the same).")]
+        [SerializeField] private CharacterExpressionLibrary expressions;
         [SerializeField] private Camera viewCamera;
         [Tooltip("The dolls stand on this object's plane, facing the camera.")]
         [SerializeField] private Transform stage;
@@ -67,6 +71,8 @@ namespace KryticalNova.UI.Menus
         [Tooltip("Each doll's own lamp from the front and its rim lamp from behind (in its faction's colour): chosen, and not.")]
         [SerializeField, Min(0f)] private float chosenLamp = 46f, otherLamp = 5f, chosenRim = 70f, otherRim = 10f;
         [SerializeField] private Color lampColour = new Color(1f, 0.95f, 0.88f);
+        [Tooltip("The wall's glow in the chosen faction's colour: how strong the colour is, and how bright.")]
+        [SerializeField, Range(0f, 1f)] private float backdropSaturation = 0.5f, backdropValue = 0.24f;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int GlowColorId = Shader.PropertyToID("_GlowColor");
@@ -76,6 +82,8 @@ namespace KryticalNova.UI.Menus
             public FactionDefinition faction;
             public CharacterDoll doll;
             public Transform root, sheath;
+            public AnimationClip idle, idleEnter; // its own stance, and the way into it
+            public GameObject idleProp;
             public Light lamp, rim;
             public RectTransform frame;
             public float chosen;      // 0 stands back, 1 is the chosen one (eased)
@@ -125,7 +133,7 @@ namespace KryticalNova.UI.Menus
             Stand stand = stands[index];
             Color accent = stand.faction != null ? stand.faction.accentColor : Color.white;
             Color.RGBToHSV(accent, out float hue, out float saturation, out _);
-            backdropGlowTarget = Color.HSVToRGB(hue, Mathf.Min(saturation, 0.8f), 0.36f);
+            backdropGlowTarget = Color.HSVToRGB(hue, Mathf.Min(saturation, backdropSaturation), backdropValue);
             if (stand.doll == null) return;
             // It draws its weapon (the weapon comes into the hand part of the way through) and stands ready.
             AnimationClip ready = drawnIdleClip != null ? drawnIdleClip : idleClip;
@@ -146,7 +154,14 @@ namespace KryticalNova.UI.Menus
             LineageDefinition lineage = FindLineage(database, faction.id, champion.lineage);
             if (lineage == null) return stand;
 
-            stand.doll = CharacterDoll.Create(modelPrefab, stand.root, idleClip, keepWeapon: true);
+            stand.idle = idleClip;
+            if (TryGetStance(expressions, champion.stanceGroup, champion.stance, out CharacterExpressionLibrary.Motion motion) && motion.Has(champion.body))
+            {
+                stand.idle = motion.For(champion.body);
+                stand.idleEnter = motion.EnterFor(champion.body);
+                stand.idleProp = motion.prop;
+            }
+            stand.doll = CharacterDoll.Create(modelPrefab, stand.root, stand.idle, keepWeapon: true);
             if (stand.doll == null) return stand;
             stand.doll.Apply(RecipeEdit.Default(lineage, champion.body), database);
 
@@ -205,6 +220,20 @@ namespace KryticalNova.UI.Menus
         /// <summary>The slots a champion's gear shows in (rings and amulets have no look; the weapon is chosen by class).</summary>
         public static readonly EquipSlot[] WornSlots = { EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape };
 
+        /// <summary>A stance of the library by its group and name.</summary>
+        public static bool TryGetStance(CharacterExpressionLibrary library, string group, string name, out CharacterExpressionLibrary.Motion stance)
+        {
+            stance = default;
+            if (library == null || string.IsNullOrEmpty(name)) return false;
+            foreach (CharacterExpressionLibrary.Motion each in library.Idles)
+            {
+                if (!string.Equals(each.name, name, StringComparison.OrdinalIgnoreCase) || !string.Equals(each.group, group, StringComparison.OrdinalIgnoreCase)) continue;
+                stance = each;
+                return true;
+            }
+            return false;
+        }
+
         public bool TryGetChampion(FactionId faction, out Champion champion)
         {
             foreach (Champion each in champions)
@@ -258,7 +287,7 @@ namespace KryticalNova.UI.Menus
         {
             stand.drawAt = -1f;
             Hold(stand, stand.sheath);
-            if (stand.doll != null && idleClip != null) stand.doll.PlayIdle(idleClip);
+            if (stand.doll != null && stand.idle != null) stand.doll.PlayIdle(stand.idle, stand.idleEnter, stand.idleProp);
         }
 
         private static void Hold(Stand stand, Transform socket)

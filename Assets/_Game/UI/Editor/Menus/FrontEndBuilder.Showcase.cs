@@ -12,11 +12,32 @@ namespace KryticalNova.EditorTools
     // Faction select's champions: the stage they stand on behind the canvas, and the weapon glow on the menus' renderer.
     public static partial class FrontEndBuilder
     {
-        // Who stands for each faction: the lineage the faction is known by, in its top Epic set.
-        private static readonly (FactionId faction, string lineage)[] Champions =
+        // Who stands for each faction, in its top Epic set (owner, 9 Oct 2026: the Civilian and the Elf).
+        // Each stands, while it is not the chosen one, in a stance of Synty's idle pack that suits it.
+        private static readonly (FactionId faction, string lineage, string stanceGroup, string stance)[] Champions =
         {
-            (FactionId.Hegemony, "Soldier"), (FactionId.Null, "Skeleton"), (FactionId.Covenant, "Viking"),
+            (FactionId.Hegemony, "Civilian", "Arms Folded", "Casual"),
+            (FactionId.Null, "Skeleton", "Posture", "Aggressive"),
+            (FactionId.Covenant, "Elf", "Posture", "Dramatic"),
         };
+
+        // How much of their strength the pack's colour washes keep over the champions.
+        private const float ChampionWash = 0.35f;
+
+        /// <summary>
+        /// The packs wash their screens in their own colour (blue gradients and a hexagon field, red gradients): over
+        /// the champions that tints all three alike, so on this screen the washes are kept faint.
+        /// </summary>
+        private static void SoftenWashes(Transform screen)
+        {
+            Transform background = MenuUi.Find(screen, "Background");
+            if (background == null) return;
+            foreach (UnityEngine.UI.Graphic layer in background.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+            {
+                if (!layer.name.StartsWith("SPR_Gradient") && !layer.name.StartsWith("RawImage_") && !layer.name.StartsWith("SPR_ScanLines")) continue;
+                Tint(layer, layer.color, layer.color.a * ChampionWash);
+            }
+        }
 
         /// <summary>
         /// The stage of faction select, in the scene behind the canvas: where the champions stand, the wall behind
@@ -67,6 +88,8 @@ namespace KryticalNova.EditorTools
             SetRef(showcase, "pedestal", pedestal);
             SetRef(showcase, "backdrop", backdropRenderer);
             SetRef(showcase, "idleClip", PlayerIdleClip());
+            var stances = AssetDatabase.LoadAssetAtPath<CharacterExpressionLibrary>(CharacterExpressionBaker.LibraryPath);
+            SetRef(showcase, "expressions", stances != null ? stances : CharacterExpressionBaker.Bake());
             SetRef(showcase, "drawnIdleClip", PlayerMotorClip("drawnIdleClip"));
             SetRef(showcase, "drawClip", PlayerMotorClip("equipClip"));
 
@@ -79,6 +102,8 @@ namespace KryticalNova.EditorTools
                 each.FindPropertyRelative("faction").intValue = (int)Champions[i].faction;
                 each.FindPropertyRelative("lineage").stringValue = Champions[i].lineage;
                 each.FindPropertyRelative("body").intValue = (int)BodyType.Masculine;
+                each.FindPropertyRelative("stanceGroup").stringValue = Champions[i].stanceGroup;
+                each.FindPropertyRelative("stance").stringValue = Champions[i].stance;
             }
             so.ApplyModifiedPropertiesWithoutUndo();
             return showcase;

@@ -53,6 +53,7 @@ namespace KryticalNova.EditorTools
         {
             var screen = AddScreen(canvas, skin.choiceScreen, "Screen_FactionSelect");
             ShowroomBackground(screen); // the champions are behind the canvas
+            SoftenWashes(screen);
 
             // One difficulty card per faction. The controller fills them from the faction catalog when the scene opens.
             var cards = new List<Transform>();

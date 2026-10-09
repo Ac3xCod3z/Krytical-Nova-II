@@ -21,8 +21,24 @@ namespace KryticalNova.Tests
 
         private static readonly (FactionId faction, string lineage)[] Champions =
         {
-            (FactionId.Hegemony, "Soldier"), (FactionId.Null, "Skeleton"), (FactionId.Covenant, "Viking"),
+            (FactionId.Hegemony, "Civilian"), (FactionId.Null, "Skeleton"), (FactionId.Covenant, "Elf"),
         };
+
+        // The stances the scene builder gives them: each must be in the library, for the body they have.
+        private static readonly (string group, string name)[] Stances = { ("Arms Folded", "Casual"), ("Posture", "Aggressive"), ("Posture", "Dramatic") };
+
+        [Test]
+        public void EveryChampionsStance_IsInTheLibrary()
+        {
+            var library = AssetDatabase.LoadAssetAtPath<CharacterExpressionLibrary>(CharacterExpressionBaker.LibraryPath);
+            Assert.NotNull(library);
+            foreach ((string group, string name) in Stances)
+            {
+                Assert.IsTrue(FactionShowcase.TryGetStance(library, group, name, out CharacterExpressionLibrary.Motion stance), $"no stance '{group} / {name}'");
+                Assert.IsTrue(stance.Has(BodyType.Masculine), $"'{group} / {name}' has no masculine clip");
+            }
+            Assert.IsFalse(FactionShowcase.TryGetStance(library, "Posture", "No Such Stance", out _));
+        }
 
         [Test]
         public void EveryChampion_HasALineageAndAWholeEpicSet()
@@ -59,7 +75,7 @@ namespace KryticalNova.Tests
         {
             var database = AssetDatabase.LoadAssetAtPath<CharacterCreationDatabase>(CharacterDataBaker.DatabasePath);
             var gear = AssetDatabase.LoadAssetAtPath<GearDictionary>(SidekickGearGenerator.DictionaryPath);
-            LineageDefinition lineage = FactionShowcase.FindLineage(database, FactionId.Hegemony, "Soldier");
+            LineageDefinition lineage = FactionShowcase.FindLineage(database, FactionId.Hegemony, "Civilian");
             ushort top = FactionShowcase.BestPiece(gear, EquipSlot.Armor, FactionId.Hegemony, lineage, default, TopLevel);
             ushort none = FactionShowcase.BestPiece(gear, EquipSlot.Armor, FactionId.Hegemony, lineage, default, 0);
             Assert.AreNotEqual(0, top);
