@@ -89,6 +89,8 @@ GameObject:
   - component: {fileID: 7874937971853909128}
   - component: {fileID: 5503153716177432082}
   - component: {fileID: 5568544966508764071}
+  - component: {fileID: 882192887494391224}
+  - component: {fileID: 6817253351260245438}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -817,29 +819,8 @@ MonoBehaviour:
   minimumDistanceSaved: 0
   maximumLandingStep: 0.5
   clearance: 0.12
-  low:
-    clip: {fileID: 7400000, guid: 434b1704a6ba9c1458b8d0f2c9448e6b, type: 3}
-    window: {x: 0.2, y: 0.85}
-    poseClearance: 0.35
-    airTime: {x: 0.3, y: 0.55}
-    takeoffDistance: 0.9
-    landingDistance: 0.85
-  middleFromHeight: 0.75
-  middle:
-    clip: {fileID: 7400000, guid: ef59d56b21918e54eb69f48821ece4a9, type: 2}
-    window: {x: 0.3, y: 0.95}
-    poseClearance: 1.2
-    airTime: {x: 0.36, y: 0.62}
-    takeoffDistance: 0.9
-    landingDistance: 0.85
-  tallFromHeight: 1.35
-  tall:
-    clip: {fileID: 1827226128182048838, guid: 08940ae74eb4cf445bc0c086f238af20, type: 3}
-    window: {x: 0, y: 0.5}
-    poseClearance: 0.25
-    airTime: {x: 0.55, y: 0.8}
-    takeoffDistance: 1.5
-    landingDistance: 1.5
+  animations: {fileID: 11400000, guid: de423237c55b82a4e8e6b1f78cce3b25, type: 2}
+  traversal: {fileID: 11400000, guid: 94dee963f0d190a429f1323c9a7c82ce, type: 2}
   fadeIn: 0.08
   fadeOut: 0.15
   warpTemplate: {fileID: 11400000, guid: 58f1fce925d87974e9b69ec4c90ddb6c, type: 2}
@@ -3744,6 +3725,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.PlayerEmotes
   ShowTopMostFoldoutHeaderGroup: 1
   settings: {fileID: 11400000, guid: 97e071c4bacbfa746a3a8bb47b86a162, type: 2}
+--- !u!114 &882192887494391224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2497e9d97271f554f9afaa1180b5e1ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.PlayerFollow
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: e1dab5ff32b794a4a94671778fedb8c5, type: 2}
+--- !u!114 &6817253351260245438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91d86af2bdc7bdc47b7ba18666687cf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.PlayerSerums
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: adf5ee1dda4b4a747a2d1c49074c361b, type: 2}
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

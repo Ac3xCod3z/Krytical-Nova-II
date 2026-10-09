@@ -277,9 +277,8 @@ namespace KryticalNova.EditorTools
 
         /// <summary>
         /// The starter town's two zones for dealings between players. The Central Plaza is where Kiosks may be set
-        /// up. The whole walled town is neutral ground for now (factions may trade, buy and befriend each other
-        /// there) so cross-faction play can be tested before the dedicated non-combat zone exists: untick Cross
-        /// Faction on it, or delete it, when that zone is built. Each is created once and then left alone, so its
+        /// up. The whole walled town is neutral ground (factions may trade, buy and befriend each other there, and
+        /// fight only in a Callout): untick Neutral Ground on it to test faction fights in town. Each is created once and then left alone, so its
         /// size and rules can be tuned in the Inspector. Does nothing in any other scene. Returns true when it added one.
         /// </summary>
         public static bool EnsureTradeZone()

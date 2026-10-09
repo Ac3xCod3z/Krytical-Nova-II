@@ -21,6 +21,7 @@
     <ui:Template name="HeraldWindow" src="Herald/HeraldWindow.uxml" />
     <ui:Template name="EmoteWheel" src="../Social/EmoteWheel.uxml" />
     <ui:Template name="GameMenu" src="GameMenu/GameMenu.uxml" />
+    <ui:Template name="ToastPanels" src="Toast/ToastPanels.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
         <!-- Namecards over players' heads (PlayerNamecardController). First, so every panel draws over them. -->
         <ui:VisualElement name="player-namecards" class="player-namecards" picking-mode="Ignore" />
@@ -100,6 +101,11 @@
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Vitality" /><ui:Label name="stat-1" text="10" class="stat-value" /><ui:Button name="allocate-1" text="+1" /></ui:VisualElement>
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Agility" /><ui:Label name="stat-2" text="10" class="stat-value" /><ui:Button name="allocate-2" text="+1" /></ui:VisualElement>
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Spirit" /><ui:Label name="stat-3" text="10" class="stat-value" /><ui:Button name="allocate-3" text="+1" /></ui:VisualElement>
+            <!-- Serums taken (PlayerSerums): one line per kind, shown once the character has taken one -->
+            <ui:VisualElement name="serum-block" class="serum-block">
+                <ui:Label text="SERUMS" class="eyebrow section" />
+                <ui:VisualElement name="serum-list" class="combat-stats-container kn-card" />
+            </ui:VisualElement>
             <ui:Label name="resource-values" text="HP 200 / 200    Flux 100 / 100" class="accent section" />
             <ui:Label name="resource-formula" text="STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evasion | AGI: +2 Evasion, +1 DP | SPI: +20 Flux, +1 AP" class="help" />
             <ui:Label name="stat-note" text="Spend 1 point per increase. Allocating stat points or equipping gear scales both Primary and Secondary sub-stats dynamically." class="help section" />
@@ -309,6 +315,9 @@
 
         <!-- The emote wheel (EmoteWheelController): UI/Social/EmoteWheel.uxml -->
         <ui:Instance template="EmoteWheel" name="emote-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+
+        <!-- Server-wide news as a toast (ToastHudController): UI/HUD/Toast/ToastPanels.uxml -->
+        <ui:Instance template="ToastPanels" name="toast-layer" class="hud-overlay-layer" picking-mode="Ignore" />
 
         <!-- Network panel (NetworkSessionPanel) -->
         <ui:VisualElement name="network-panel" class="panel blocks-world hud-movable">

@@ -48,7 +48,12 @@ namespace KryticalNova.EditorTools
             "KryticalNova.UI.PetBubbleController, KryticalNova.UI",
             "KryticalNova.UI.EmoteWheelController, KryticalNova.UI",
             "KryticalNova.UI.GameMenuController, KryticalNova.UI",
+            ToastType,
         };
+
+        private const string ToastType = "KryticalNova.UI.ToastHudController, KryticalNova.UI";
+        private const string ToastSettingsType = "KryticalNova.UI.ToastSettings, KryticalNova.UI";
+        public const string ToastSettingsPath = "Assets/_Game/UI/HUD/Toast/ToastSettings.asset";
 
         public static void SetUpOpenScene()
         {
@@ -93,6 +98,7 @@ namespace KryticalNova.EditorTools
             }
 
             AssignFactionHud(hudObject);
+            AssignToastSettings(hudObject);
 
             var markers = Object.FindAnyObjectByType(markersType, FindObjectsInactive.Include) as Component;
             if (markers == null)
@@ -131,6 +137,27 @@ namespace KryticalNova.EditorTools
             for (int i = 0; i < kits.Count; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = kits[i];
             so.ApplyModifiedPropertiesWithoutUndo();
             if (kits.Count == 0) Debug.LogWarning("[HudSetup] No faction HUD kits yet: run Krytical Nova ▸ UI ▸ Build Faction HUD, then this again.");
+        }
+
+        /// <summary>Hands the toast its timings, creating the settings asset with its defaults the first time.</summary>
+        private static void AssignToastSettings(GameObject hudObject)
+        {
+            var toastType = System.Type.GetType(ToastType);
+            var settingsType = System.Type.GetType(ToastSettingsType);
+            Component toast = toastType != null ? hudObject.GetComponent(toastType) : null;
+            if (toast == null || settingsType == null) return;
+
+            Object settings = AssetDatabase.LoadAssetAtPath(ToastSettingsPath, settingsType);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance(settingsType);
+                AssetDatabase.CreateAsset(settings, ToastSettingsPath);
+            }
+            var so = new SerializedObject(toast);
+            SerializedProperty property = so.FindProperty("settings");
+            if (property == null || property.objectReferenceValue == settings) return;
+            property.objectReferenceValue = settings;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>Hands the Settings controller the game's mixer, so its Audio page has something to drive.</summary>

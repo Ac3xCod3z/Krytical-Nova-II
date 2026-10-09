@@ -147,6 +147,11 @@ namespace KryticalNova.Social
                         EveryoneChat[Picked[0]].Deliver(ChatChannel.Whisper, me.Name, text, false);
                         Deliver(ChatChannel.Whisper, Everyone[Picked[0]].Name, text, true);
                     }
+                    else if (channel == ChatChannel.Gm)
+                    {
+                        // The GM's own "/gm": the same announcement as gm.say, toast included.
+                        for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].DeliverAnnounced(AnnouncementKind.Gm, channel, me.Name, text);
+                    }
                     else
                     {
                         for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].Deliver(channel, me.Name, text, false);
@@ -183,7 +188,15 @@ namespace KryticalNova.Social
         /// Server (or offline) only: a GM announcement to every player of every faction, wherever they are. For the
         /// GM tools; a player's own "/gm" goes through <see cref="Send"/> and is refused unless they are the host.
         /// </summary>
-        public static int ServerBroadcastGm(string text, string senderName)
+        public static int ServerBroadcastGm(string text, string senderName) =>
+            ServerAnnounce(AnnouncementKind.Gm, ChatChannel.Gm, senderName, text);
+
+        /// <summary>
+        /// Server (or offline) only: news for every player on the server, wherever they are. Each player gets it as
+        /// a line on <paramref name="channel"/> and as a toast, sent together in one message so the two always say
+        /// the same. Returns how many players were told.
+        /// </summary>
+        public static int ServerAnnounce(AnnouncementKind kind, ChatChannel channel, string senderName, string text)
         {
             text = ChatRouting.Clean(text);
             if (text.Length == 0) return 0;
@@ -196,7 +209,7 @@ namespace KryticalNova.Social
                 foreach (var client in network.ConnectedClientsList)
                 {
                     if (client.PlayerObject == null || !client.PlayerObject.TryGetComponent(out PlayerChat chat)) continue;
-                    chat.Deliver(ChatChannel.Gm, senderName, text, false);
+                    chat.DeliverAnnounced(kind, channel, senderName, text);
                     reached++;
                 }
                 return reached;
@@ -204,7 +217,7 @@ namespace KryticalNova.Social
 
             var local = Local;
             if (local == null) return 0;
-            local.Deliver(ChatChannel.Gm, senderName, text, false);
+            local.DeliverAnnounced(kind, channel, senderName, text);
             return 1;
         }
 
@@ -292,6 +305,22 @@ namespace KryticalNova.Social
         // Only the server may put a line in a player's window: nobody can forge a GM or system message.
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
         private void ReceiveRpc(ChatChannel channel, string sender, string text, bool outgoing) => Show(channel, sender, text, outgoing);
+
+        private void DeliverAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text)
+        {
+            if (!IsSpawned) ShowAnnounced(kind, channel, sender ?? string.Empty, text);
+            else AnnounceRpc(kind, channel, sender ?? string.Empty, text);
+        }
+
+        // The chat line and the toast of an announcement travel as one message.
+        [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
+        private void AnnounceRpc(AnnouncementKind kind, ChatChannel channel, string sender, string text) => ShowAnnounced(kind, channel, sender, text);
+
+        private static void ShowAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text)
+        {
+            Show(channel, sender, text, false);
+            ClientPresentationRegistry.Announcements?.Announce(kind, sender, text);
+        }
 
         /// <summary>Raised on this machine for every line its player is shown (the Contacts window notes who whispered).</summary>
         public static event System.Action<ChatLine> LineShown;

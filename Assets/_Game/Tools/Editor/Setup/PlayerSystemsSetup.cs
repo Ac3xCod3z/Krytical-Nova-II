@@ -31,6 +31,8 @@ namespace KryticalNova.EditorTools
         public const string NovaSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/NovaSettings.asset";
         private const string NovaShaderFolder = "Assets/_Game/Gameplay/Progression/Shaders/";
         public const string EmoteWheelSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/EmoteWheelSettings.asset";
+        public const string SerumSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/SerumSettings.asset";
+        public const string SquadSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SquadSettings.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
         // the hand comes down to 0.48 m, the top of a drop.
@@ -59,6 +61,10 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Progression.PlayerNova", ("settings", NovaSettingsPath)),
             // Emotes picked on the emote wheel.
             new Row("KryticalNova.Social.PlayerEmotes", ("settings", EmoteWheelSettingsPath)),
+            // Following a Squad member.
+            new Row("KryticalNova.Social.PlayerFollow", ("settings", SquadSettingsPath)),
+            // Serums: what a character has taken, and the stats that stay.
+            new Row("KryticalNova.Progression.PlayerSerums", ("settings", SerumSettingsPath)),
         };
 
         public static void Run()

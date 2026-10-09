@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb3c6c17acacf7f4eaca2eb362e6f215, type: 3}
+  m_Name: SerumSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SerumSettings
+  baseCap: 100
+  expansionEnabled: 0
+  expansionCap: 200
+  serums:
+  - itemId: 9200
+    displayName: Strength Serum
+    gains:
+    - stat: 4
+      perUse: 3
+  - itemId: 9201
+    displayName: Vitality Serum
+    gains:
+    - stat: 8
+      perUse: 20
+  - itemId: 9202
+    displayName: Agility Serum
+    gains:
+    - stat: 6
+      perUse: 2
+    - stat: 7
+      perUse: 2
+  - itemId: 9203
+    displayName: Spirit Serum
+    gains:
+    - stat: 9
+      perUse: 25
+  - itemId: 9204
+    displayName: Elemental Strike Serum
+    gains:
+    - stat: 12
+      perUse: 10
+  - itemId: 9205
+    displayName: Elemental Ward Serum
+    gains:
+    - stat: 13
+      perUse: 10

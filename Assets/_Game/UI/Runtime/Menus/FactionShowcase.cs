@@ -169,20 +169,13 @@ namespace KryticalNova.UI.Menus
             if (mount != null) stand.sheath = mount.transform.parent;
             if (gear != null && items != null)
             {
+                // Its top Epic set and its class weapon at the showcase's Temper, dressed as any doll is.
+                var worn = new List<WornPiece>(WornSlots.Length + 1);
                 foreach (EquipSlot slot in WornSlots)
-                {
-                    ItemDefinition piece = items.Get(BestPiece(gear, slot, faction.id, lineage, WeaponClassId.None, gearLevel));
-                    if (piece == null) continue;
-                    if (stand.doll.Appearance != null) stand.doll.Appearance.SetSlot(slot, piece);
-                    if (slot == EquipSlot.Cape && mount != null) mount.SetCapeWorn(true);
-                }
-                ItemDefinition weapon = items.Get(BestPiece(gear, EquipSlot.Weapon, faction.id, lineage, WeaponClassRules.DefaultFor(faction.id), gearLevel));
-                if (mount != null && weapon != null)
-                {
-                    mount.SetWeapon(weapon);
-                    if (progression != null && GearProgressionRules.TryGetGlow(progression.temper, temper, out TemperGlowBand band))
-                        mount.SetGlow(true, band.color, GearProgressionRules.GlowLookOf(progression.temper, weapon.rarity));
-                }
+                    worn.Add(new WornPiece(slot, BestPiece(gear, slot, faction.id, lineage, WeaponClassId.None, gearLevel), 0));
+                worn.Add(new WornPiece(EquipSlot.Weapon,
+                    BestPiece(gear, EquipSlot.Weapon, faction.id, lineage, WeaponClassRules.DefaultFor(faction.id), gearLevel), temper));
+                DollOutfit.Wear(stand.doll, worn, items, progression);
             }
 
             if (pedestal != null)

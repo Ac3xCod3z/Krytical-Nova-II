@@ -124,6 +124,8 @@ namespace KryticalNova.Items
         [Min(1)] public int hardCap = 120;
         [Tooltip("At or above this an attempt needs an Advanced Failsafe.")]
         [Min(1)] public int advancedFailsafeFrom = 133;
+        [Tooltip("A piece that reaches this Temper % is announced to every player on the server, in chat and as a toast. 0 = never.")]
+        [Min(0)] public int announceFrom = 120;
 
         [Header("Break chance on a fail")]
         public TemperBreakBand[] breakBands =

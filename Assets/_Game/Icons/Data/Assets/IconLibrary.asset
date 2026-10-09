@@ -3643,6 +3643,60 @@ MonoBehaviour:
     races: []
     keywords: []
     shows: a collar of blue crystal
+  - set: Cyberpunk/Medicine
+    number: 18
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: two ampoules of red serum
+  - set: Cyberpunk/Medicine
+    number: 37
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a syringe of green serum
+  - set: Cyberpunk/Medicine
+    number: 26
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a steel injector of cyan serum
+  - set: Cyberpunk/Medicine
+    number: 15
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: an ampoule of violet serum
+  - set: Cyberpunk/Genetic
+    number: 50
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a canister with a helix of fire
+  - set: Cyberpunk/Medicine
+    number: 48
+    ownUse: 0
+    use: 0
+    factions: 0
+    weaponClasses: 
+    races: []
+    keywords: []
+    shows: a canister with a teal helix
   assignments:
   - kind: 0
     target: FuryStrike
@@ -4288,4 +4342,34 @@ MonoBehaviour:
     target: Amulet_05
     set: Cyberpunk/Jewelry 2
     number: 33
+    chosen: 1
+  - kind: 2
+    target: Serum_Strength
+    set: Cyberpunk/Medicine
+    number: 18
+    chosen: 1
+  - kind: 2
+    target: Serum_Vitality
+    set: Cyberpunk/Medicine
+    number: 37
+    chosen: 1
+  - kind: 2
+    target: Serum_Agility
+    set: Cyberpunk/Medicine
+    number: 26
+    chosen: 1
+  - kind: 2
+    target: Serum_Spirit
+    set: Cyberpunk/Medicine
+    number: 15
+    chosen: 1
+  - kind: 2
+    target: Serum_ElementalStrike
+    set: Cyberpunk/Genetic
+    number: 50
+    chosen: 1
+  - kind: 2
+    target: Serum_ElementalWard
+    set: Cyberpunk/Medicine
+    number: 48
     chosen: 1

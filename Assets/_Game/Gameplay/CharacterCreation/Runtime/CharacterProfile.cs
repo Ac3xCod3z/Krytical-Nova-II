@@ -3,7 +3,7 @@ using System;
 namespace KryticalNova.CharacterCreation
 {
     /// <summary>
-    /// One saved character: who it is and how it looks. The hidden <see cref="id"/> is what identifies it, so two
+    /// One saved character: who it is, how it looks and what it was last seen wearing. The hidden <see cref="id"/> is what identifies it, so two
     /// characters may share a name; a server save can show it as Name#1234 where a unique handle is needed.
     /// </summary>
     [Serializable]
@@ -17,6 +17,11 @@ namespace KryticalNova.CharacterCreation
         /// <summary>UTC ticks.</summary>
         public long created;
         public long lastPlayed;
+        /// <summary>
+        /// The gear the character wore when it was last played, for the select screen's doll. A copy for show only:
+        /// the server's save is what the character really has. Empty for a character not played since this was kept.
+        /// </summary>
+        public WornPiece[] worn = Array.Empty<WornPiece>();
 
         public bool IsUsed => !string.IsNullOrEmpty(id);
 

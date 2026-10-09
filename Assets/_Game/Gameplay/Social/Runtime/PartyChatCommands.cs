@@ -4,7 +4,7 @@ using UnityEngine;
 namespace KryticalNova.Social
 {
     /// <summary>
-    /// The chat box's party commands: /invite [name], /join, /refuse, /leave, /kick name, /promote name.
+    /// The chat box's party commands: /invite [name], /join, /refuse, /leave, /kick name, /promote name, /follow [name].
     /// They act for the local player; "/p message" (party chat) is a channel and lives in <see cref="ChatCommands"/>.
     /// </summary>
     public static class PartyChatCommands
@@ -21,6 +21,24 @@ namespace KryticalNova.Social
             ChatCommands.Register("leave", _ => Leave());
             ChatCommands.Register("kick", Kick);
             ChatCommands.Register("promote", Promote);
+            ChatCommands.Register("follow", Follow);
+        }
+
+        private static string Follow(string name)
+        {
+            PlayerFollow mine = PlayerFollow.Local;
+            if (mine == null || !mine.IsSpawned) return Offline;
+            if (name.Length > 0)
+            {
+                mine.Follow(name);
+                return null; // the server answers
+            }
+
+            Transform selected = mine.TryGetComponent(out PointAndClickPlayer controls) ? controls.SelectedTarget : null;
+            PlayerParty target = selected != null ? selected.GetComponentInParent<PlayerParty>() : null;
+            if (target == null || target.gameObject == mine.gameObject) return "Select a squad member first, or use /follow <name>.";
+            mine.Follow(target);
+            return null;
         }
 
         private static string Invite(string name)

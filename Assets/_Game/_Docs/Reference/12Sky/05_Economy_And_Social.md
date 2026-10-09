@@ -20,6 +20,7 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 | Character | Progression, combat and movement skills, the Pack, worn items with their state, Creds, the Vault. |
 | World documents | `world/crews`, `world/kiosks`, `world/contacts`: they go on while their players are offline. |
 | How a system saves | It implements `ISaveParticipant` (a key, a scope, capture, restore) on its player component. `PlayerSaveAgent` does the rest: load on entry, autosave every 60 s, save on leave, save at once after a trade, a sale or a founding. |
+| What the menus know | The roster (PlayerPrefs, per machine) is not the save: it holds who each character is, its look, its level and a record of the gear it was last played in, so character select can draw it. The player's own game keeps the level and the gear record current (`CharacterSession.RememberLevel`, `RememberWorn`). Nothing is ever read back from it into the game. |
 | Identity | The client sends an account id (generated locally, `kn.account.v1`) and its character id. Trusted until real sign-in exists. One character of an account in the world at a time. |
 | GM | `gm.save`, `gm.save.where`, `gm.save.wipe confirm` |
 | GM in a build | The host (or an offline player) opens the GM console with **F2** (`Windows/GmConsole`, rebindable; `GmConsoleGate`, prefab `Tools/Debug/Prefabs/GmConsole`). A joined client has no console and no GM commands; the host aims commands at a client with `gm.players` and `gm.target <clientId>`. In the Editor the GM Tools window does the same job. |
@@ -132,6 +133,40 @@ Hold **B** (rebindable): a ring of eight categories; a click turns it into that 
 - `PlayerEmotes` asks the server, which checks that the character is alive, standing still and not striking, casting or jumping, then tells everyone. The weapon is put away first. An emote plays once; a **stance** (the names shown in colour on the wheel) is held until the character moves, strikes, casts, jumps, draws, is hit or dies, and a player who arrives meanwhile sees it held.
 - A motion is named on the wire by its kind, group and name (`EmoteCatalog.Key`, for example `E/Greet/Bow`), never by its place in the library: a re-bake reorders the library.
 
+## Squad: following a member (row 16)
+
+- **Follow** is in the player menu of a Squad member (Shift+click them, MORE on the target strip, or a click on their Squad frame, which now opens that menu) and on `/follow [name]` (no name: the selected player). The character walks after the member by itself and stops a short way off.
+- The server does it (`PlayerFollow`, rules in `FollowRules`): it moves every player and knows where each one is however far apart they are, so following works beyond what the follower's own game can see. It walks through the player's own move order (`PointAndClickPlayer.ServerMoveTo`): the way taken, vaults and the Flux a run costs are those of a click, paid once each time the follower sets off, not at every look.
+- It **ends** when the follower gives a move order of their own (a click, a jump, map travel, Escape on a journey), fights (strikes, casts a skill, is struck, or is in a Callout), or is defeated; when the two are no longer in one Squad; when the member leaves the map (their player is gone: there is one map today); or when the member is more than the maximum distance ahead. The follower is told why in the System channel.
+- **Numbers** (`SquadSettings.asset`): stop 2.5 m short, set off again once the member is 4 m away, lost beyond 60 m, a look every 0.4 s.
+
+## Serums (row 49)
+
+Twelve Sky 2's Elixirs: a consumable that raises a stat for good, each kind a limited number of times per character.
+
+| Serum (item) | Each one gives, for good | TS2 |
+| --- | --- | --- |
+| Strength Serum (9200) | +3 Attack Power | STR Elixir, +3 ATK |
+| Vitality Serum (9201) | +20 Max HP | VIT Elixir, +20 Health |
+| Agility Serum (9202) | +2 Hit Rate, +2 Evasion | AGI Elixir, +2 Hit, +2 Dodge |
+| Spirit Serum (9203) | +25 Max Flux | Sprite Elixir, +25 Force |
+| Elemental Strike Serum (9204) | +10 Elemental Attack | A.ATK Elixir |
+| Elemental Ward Serum (9205) | +10 Elemental Defense | A.DEF Elixir |
+
+- **Numbers** (`Gameplay/Progression/Data/Assets/SerumSettings.asset`): the kinds and what each gives; `baseCap` 100 of each kind per character; `expansionCap` 200 with `expansionEnabled` off (the later system; TS2 allows 200 and then 200 more Expansion elixirs). All Rare, stack 99, 0.25 s between two uses.
+- **Using one** is an ordinary item use from the Pack (right-click). `PlayerSerums` is the `IItemUseHandler` for `ItemUseEffect.Serum`: at the cap it refuses, and the inventory then takes nothing from the Pack. The owner is told the new count.
+- **What is kept** is a count per kind (`SerumState`), saved with the character under `serums` by item id, and replicated to everyone; each machine turns it into flat stat modifiers (`SerumRules.AddModifiers`), so it is in every total a stat shows and survives a stat reset. A Serum raises the stat it names, not an attribute.
+- **Shown**: the item tooltip ("+3 Attack Power each, for good", "Taken 37 / 100  ·  +111 Attack Power so far"), and the Character Sheet, which lists each kind taken under the attributes: "Strength Serum (37/100)   +111 Attack Power". Nothing is listed until one is taken.
+- **GM**: `gm.serums [count]` gives some of each; `gm.serum <kind> <taken>` sets a count; `gm.serum` lists them.
+- **Not built**: any source (GM only); the Expansion tier's own items; TS2's take-ten and take-all items. In a Kiosk a Serum is capped like any stackable item (`kioskStackablePriceCap`).
+
+## Toasts: news for the whole server
+
+- A **toast** is a short panel near the top of the screen, in the player's faction skin, for news every player on the server is told. Two things use it: a **GM message** (`gm.say "text"`, or the host's own `/gm text`) and a piece of gear **tempered to 120 %** (the player's and the item's name).
+- The toast is added to the chat line, which stays as it was: the server sends both in one message (`PlayerChat.ServerAnnounce` → `AnnounceRpc`, to each player on their own player object, so distance does not matter), and the player's game puts the line in chat and hands the same text to `ClientPresentationRegistry.Announcements` (`ToastHudController`).
+- One at a time: a toast waits until the one on screen has had its time and faded (`ToastQueue`). **Numbers** (`UI/HUD/Toast/ToastSettings.asset`): 5 s on screen, 0.35 s fade, 8 may wait (one more and the oldest waiting is dropped). The Temper that is announced is `temper.announceFrom` in `GearProgressionSettings.asset`.
+- The older one-line notice in the middle of the screen (`IGameMessageSink`, the zone toast) is a different thing: the player's own notices, no queue. It is unchanged.
+
 ## Who may deal with whom
 
 | | Same faction | Another faction |
@@ -139,12 +174,15 @@ Hold **B** (rebindable): a ring of eight categories; a click turns it into that 
 | Seeing a namecard | anywhere | only while that player is on neutral ground |
 | Trade, buying from a Kiosk | anywhere | on neutral ground only |
 | Contacts | anywhere, online or not | face to face on neutral ground only |
+| Whisper, Callout | anywhere | anywhere (a Callout cannot be asked of someone who is already an enemy) |
+| Attacking | only in a Callout | off neutral ground while `gm.pvp` is on; **on neutral ground only in a Callout** |
+| Squad | yes | **never** |
 | Crew | yes | **never** |
 | Picking up a dropped item (after its 20 s) | yes | yes |
 
 **Declined for the player.** In **Settings ▸ Gameplay** a player can have trade requests, contact requests, Crew invitations, Squad invitations and Callouts declined without being shown them (`HudPreferences.RefuseTrades`, `RefuseContacts`, `RefuseCrewInvites`, `RefuseSquadInvites`, `RefuseCallouts`; all off as shipped). The request still reaches the player's game, which answers no on arrival exactly as the Decline button would (`RequestPromptController.Refused`, `PartyHudController`, `DuelHudController`): the server is asked nothing new and the asker sees an ordinary refusal. It is kept per machine, like the other options, not per character.
 
-**Neutral ground** is a `TradeZone` with `crossFaction` ticked. The dedicated non-combat zone will be one. Until it exists the whole starter town is marked neutral (scene object "Neutral Ground - Starter Town (for testing)") so cross-faction play can be tested; combat there is unchanged. Untick or delete that object when the real zone is built.
+**Neutral ground** is a `TradeZone` with **Neutral Ground** ticked (the field is `crossFaction`). The whole starter town is marked so (scene object "Neutral Ground - Starter Town (for testing)"). Since 9 Oct 2026 it is also the non-combat zone: between two players, hostility is decided where they stand (`CombatHostility.IsHostile` → `FactionRules.AreHostile(a, b, neutralGround)`), and when either of the two is on neutral ground the factions are at peace, so a player of another faction is selected, targeted and offered the same things as a faction mate (the target strip and the player menu, without the Squad and Crew invitations) and can be hurt only in a Callout. The server refuses the strike; the zone is a scene object, the same on every machine, so every peer draws the same conclusion. `gm.pvp` therefore changes nothing inside the town: to test faction fights there, untick Neutral Ground on that object, or fight outside the walls.
 
 ## Leaving: Log Out and Exit Game (row 46)
 

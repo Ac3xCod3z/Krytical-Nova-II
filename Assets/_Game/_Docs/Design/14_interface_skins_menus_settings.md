@@ -160,6 +160,15 @@ controller class per screen, which finds the parts it needs by name.
 - **Loading:** the header is found under either name the packs give it. The sci-fi screen has no tip line, so the
   builder adds one over its bar; the other two have theirs under the bar.
 - **Settings from character select:** the O key and a prompt at the foot of the screen (section 7).
+- **The doll on character select wears what the character was last played in** (9 Oct 2026): outfit, weapon in its
+  carry place and the weapon's Temper glow, beside the look. The roster entry keeps a small record of it
+  (`CharacterProfile.worn`: slot, item, Temper), which the player's own game brings up to date as gear changes and once
+  more on leaving the world (`PlayerSaveAgent.RememberWorn` → `CharacterSession.RememberWorn`, the way the level is
+  kept). It is the player's machine that writes it, because that machine is told its loadout whoever hosts, while the
+  server's save cannot be read from a menu by a joined client. A copy for show only: the server's save decides what
+  the character has. `CharacterShowroom.Show(recipe, worn)` dresses the doll with `DollOutfit.Wear`, the same call
+  faction select's champions use; the creator's stage is not given the item catalog and its doll wears no gear. A
+  character not played since this was added shows without gear until its next session.
 
 Synty's TextMesh Pro font assets are dynamic and get written to when a new glyph is drawn. `VendorFontGuard` keeps
 every vendor font asset out of every save, so building or playing never changes a vendor file.

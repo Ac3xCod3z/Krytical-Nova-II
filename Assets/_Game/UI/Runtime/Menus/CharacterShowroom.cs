@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Factions;
+using KryticalNova.Items;
 using KryticalNova.Items.Visuals;
 using UnityEngine;
 
@@ -9,7 +10,8 @@ namespace KryticalNova.UI.Menus
     /// <summary>
     /// The live character shown in the creator and on character select: a display doll on a small lit stage, viewed
     /// with the same damped orbit as the equipment page (<see cref="PreviewOrbit"/>). The lighting takes its rim and
-    /// fill colours from the character's faction.
+    /// fill colours from the character's faction. Where it is given the item catalog (character select), the doll
+    /// also wears the gear it is shown with: outfit, weapon and the weapon's Temper glow (<see cref="DollOutfit"/>).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class CharacterShowroom : MonoBehaviour
@@ -20,6 +22,10 @@ namespace KryticalNova.UI.Menus
         [SerializeField] private AnimationClip idleClip;
         [Tooltip("Faces, idles and emotes the character can show (the creator's Preview tab). Optional.")]
         [SerializeField] private CharacterExpressionLibrary expressions;
+        [Tooltip("Where the gear a character wears is looked up. Set on character select; left empty in the creator, whose doll wears no gear.")]
+        [SerializeField] private ItemCatalog items;
+        [Tooltip("The Temper glow bands of a worn weapon. Optional: without it the weapon does not glow.")]
+        [SerializeField] private GearProgressionSettings progression;
         [SerializeField] private Camera viewCamera;
         [Tooltip("Where the character stands. It faces the stage's -Z.")]
         [SerializeField] private Transform stage;
@@ -101,6 +107,17 @@ namespace KryticalNova.UI.Menus
             ApplyFaction(FactionId.None);
         }
 
+        /// <summary>
+        /// Show (or restyle) the character, wearing <paramref name="worn"/> where this stage knows the item catalog.
+        /// Returns false when the recipe cannot be built.
+        /// </summary>
+        public bool Show(in CharacterRecipe recipe, IReadOnlyList<WornPiece> worn)
+        {
+            if (!Show(recipe)) return false;
+            if (items != null) DollOutfit.Wear(doll, worn, items, progression);
+            return true;
+        }
+
         /// <summary>Show (or restyle) the character. Returns false when the recipe cannot be built.</summary>
         public bool Show(in CharacterRecipe recipe)
         {
@@ -109,7 +126,8 @@ namespace KryticalNova.UI.Menus
             {
                 // The library's relaxed stance when there is one; the player's own (sword-ready) idle otherwise.
                 AnimationClip standing = HasStances ? expressions.Idles[0].For(recipe.bodyType) : idleClip;
-                doll = CharacterDoll.Create(modelPrefab, stage != null ? stage : transform, standing);
+                // With a catalog the doll keeps its weapon mount, so it can carry the weapon the character wears.
+                doll = CharacterDoll.Create(modelPrefab, stage != null ? stage : transform, standing, keepWeapon: items != null);
                 if (doll == null) return false;
                 if (expressions != null) doll.EnableExpressions(expressions);
                 stance = 0;

@@ -153951,6 +153951,7 @@ GameObject:
   - component: {fileID: 546974369}
   - component: {fileID: 546974370}
   - component: {fileID: 546974371}
+  - component: {fileID: 546974372}
   m_Layer: 0
   m_Name: Progression UI
   m_TagString: Untagged
@@ -154345,6 +154346,19 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9f8b5af14ec0c0748a2ec31fa6143969, type: 2}
   - {fileID: 11400000, guid: 0c3539274fd2ebf4d806fe07c951cd9b, type: 2}
   - {fileID: 11400000, guid: c912da027960fa8469b19653b297c855, type: 2}
+--- !u!114 &546974372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a4185a114dc9a0419a11b39b567bfcf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.ToastHudController
+  settings: {fileID: 11400000, guid: d509c6bb43b55a845a8299dba3975d52, type: 2}
 --- !u!1001 &547846542
 PrefabInstance:
   m_ObjectHideFlags: 0

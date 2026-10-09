@@ -1071,8 +1071,9 @@ namespace KryticalNova.EditorTools.GM
         private void ListCrews() => Run("gm.guild.list");
 
         [TabGroup(Tabs, SocialTab), Title("Neutral Ground"), ShowInInspector, DisplayAsString, LabelText("Player Stands On"), PropertyOrder(710)]
-        [InfoBox("On neutral ground (a Trade Zone with Cross Faction ticked) players of different factions may trade, buy from each " +
-                 "other's Kiosks and add each other as contacts. A Crew is one faction everywhere.")]
+        [InfoBox("On neutral ground (a Trade Zone with Neutral Ground ticked) players of different factions may trade, buy from each " +
+                 "other's Kiosks and add each other as contacts, and fight each other only in a Callout, whatever Cross-Faction PvP " +
+                 "says. A Squad and a Crew are one faction everywhere.")]
         private string NeutralGround => LocalPlayer == null ? "(enter Play Mode)"
             : KryticalNova.Economy.TradeZone.CrossFactionAt(LocalPlayer.transform.position) ? "neutral ground" : "faction ground";
 

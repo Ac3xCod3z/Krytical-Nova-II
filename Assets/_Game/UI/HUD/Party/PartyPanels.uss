@@ -36,6 +36,8 @@
 }
 
 .party-member { margin-top: 5px; }
+/* A member can be clicked: the player menu for them (Follow, Whisper ...). */
+.party-member:hover .party-member-name { color: rgb(255, 255, 255); }
 
 .party-member-top {
     flex-direction: row;

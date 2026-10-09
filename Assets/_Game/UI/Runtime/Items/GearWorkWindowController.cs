@@ -55,11 +55,13 @@ namespace KryticalNova.UI
 
         // Gauge geometry: a dial open at the bottom, where the number sits.
         private const float GaugeFrom = 135f, GaugeSpan = 270f;
-        private const float GaugeInset = 12f, GaugeWidth = 9f;
+        private const float GaugeInset = 10f, GaugeWidth = 12f;
+        // On the Temper tab the socket's rim takes the piece's glow band colour (Forge.uss has the plain rim of 0 %).
+        private const string TemperRimClass = "temper-rim";
         private static readonly Color GaugeTrack = new Color(1f, 1f, 1f, 0.09f);
         private static readonly Color GaugeBreak = new Color(0.94f, 0.3f, 0.26f, 0.9f);
 
-        private VisualElement root, window, anvil, gauge, piece, materials, chips, readout;
+        private VisualElement root, window, anvil, gauge, piece, pieceFrame, materials, chips, readout;
         private Label purse, value, hint, itemName, itemState, step, chance, gain, reason, result;
         private Button act, reset;
         private readonly Button[] tabButtons = new Button[TabNames.Length];
@@ -122,6 +124,7 @@ namespace KryticalNova.UI
             reset = window.Q<Button>("forge-reset");
 
             GearUIController.CreateItemVisual(piece, false);
+            pieceFrame = piece.Q(className: "item-frame");
             piece.RegisterCallback<ClickEvent>(_ => { if (!striking && pieceCell >= 0) SetPiece(-1); });
             piece.RegisterCallback<PointerEnterEvent>(_ => ShowTip(piece, pieceCell, "Click: take it off the forge"));
             piece.RegisterCallback<PointerLeaveEvent>(_ => HideTip());
@@ -361,6 +364,7 @@ namespace KryticalNova.UI
 
             GearUIController.SetItemVisual(piece, item, 1);
             piece.EnableInClassList("empty", item == null);
+            ShowRim(item, state);
             hint.style.display = item == null ? DisplayStyle.Flex : DisplayStyle.None;
             materials.Clear();
             chips.Clear();
@@ -377,6 +381,7 @@ namespace KryticalNova.UI
                 chance.text = string.Empty;
                 gain.text = Intros[(int)tab];
                 reason.text = string.Empty;
+                reason.style.display = DisplayStyle.None;
                 act.SetEnabled(false);
                 SetGauge(0f, 0f, tab == Tab.Fusion ? Settings.fusion.maxStage : tab == Tab.Tuning ? Settings.tuning.maxStage : 0,
                     tab == Tab.Temper ? BreakStart() : -1f, GaugeTrack);
@@ -396,7 +401,26 @@ namespace KryticalNova.UI
                 default: blocked = TemperBench(item, stack, state); break;
             }
             reason.text = blocked ?? string.Empty;
+            reason.style.display = blocked == null ? DisplayStyle.None : DisplayStyle.Flex;
             act.SetEnabled(blocked == null && !striking);
+        }
+
+        /// <summary>
+        /// The socket's rim. On the Temper tab it is the colour of the band the piece's Temper % is in, the same as
+        /// the ring and the number, and it changes with them when a strike lands; below the first band it is the
+        /// plain rim. On the other tabs, and with nothing on the anvil, it is the rarity's as everywhere else. The
+        /// flash of a result is drawn on the rim too: while it lasts the rim is left to it.
+        /// </summary>
+        private void ShowRim(ItemDefinition item, GearItemState state)
+        {
+            bool tempering = tab == Tab.Temper && item != null;
+            piece.EnableInClassList(TemperRimClass, tempering);
+            if (pieceFrame == null) return;
+            bool flashing = flashEnds > 0f;
+            if (tempering && !flashing && GearProgressionRules.TryGetGlow(Settings.temper, state.Temper, out TemperGlowBand band))
+                pieceFrame.style.unityBackgroundImageTintColor = band.color;
+            else
+                pieceFrame.style.unityBackgroundImageTintColor = StyleKeyword.Null;
         }
 
         private static string KindOf(ItemDefinition item) => item.weaponClass != WeaponClassId.None
@@ -788,6 +812,9 @@ namespace KryticalNova.UI
             {
                 flashEnds = 0f;
                 foreach (string name in FlashClasses) anvil.RemoveFromClassList(name);
+                // The rim goes from the flash to the colour of the Temper the piece has now.
+                ItemStack shown = pieceCell >= 0 && inventory != null ? inventory.Get(pieceCell) : ItemStack.Empty;
+                ShowRim(shown.IsEmpty ? null : Definition(pieceCell), GearItemState.Of(shown));
             }
             if (shakeEnds > 0f)
             {

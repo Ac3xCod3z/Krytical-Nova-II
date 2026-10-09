@@ -189,6 +189,14 @@ namespace KryticalNova.Forge
             });
             if (!done || !wallet.ServerSpend(cost, CredsSink.GearWork)) return;
             Finish(GearWorkKind.Temper, outcome, stack, after);
+
+            // A piece that reaches the top Temper is news for the whole server: a chat line and a toast, sent as one.
+            if (outcome == GearWorkOutcome.Success && GearProgressionRules.TemperIsAnnounced(temper, state.Temper, next.Temper))
+            {
+                string owner = TryGetComponent(out KryticalNova.Social.PlayerChat chat) ? chat.SpeakerName : name;
+                KryticalNova.Social.PlayerChat.ServerAnnounce(AnnouncementKind.Temper, ChatChannel.System, string.Empty,
+                    GearProgressionRules.TemperAnnouncement(owner, item.displayName, next.Temper));
+            }
         }
 
         private void ServerFuse(int targetCell, int materialCell)

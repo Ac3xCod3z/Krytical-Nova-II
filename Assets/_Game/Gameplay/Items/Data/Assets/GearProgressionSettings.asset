@@ -46,6 +46,7 @@ MonoBehaviour:
     softCap: 120
     hardCap: 120
     advancedFailsafeFrom: 133
+    announceFrom: 120
     breakBands:
     - from: 60
       to: 89

@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="ToastPanels.uss" />
+    <!-- Instanced into ProgressionHUD.uxml; driven by ToastHudController. Shared .panel skin, so each faction sees
+         it in its own HUD style. One toast at a time: news every player on the server is told. -->
+    <ui:VisualElement name="toast" class="toast panel" picking-mode="Ignore">
+        <ui:Label name="toast-eyebrow" text="GM" class="eyebrow toast-eyebrow" picking-mode="Ignore" />
+        <ui:Label name="toast-text" text="" class="toast-text" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,6 +1,7 @@
 using System;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
+using KryticalNova.Items;
 using KryticalNova.Player;
 using KryticalNova.Progression;
 using Unity.Netcode;
@@ -12,7 +13,8 @@ namespace KryticalNova.Persistence
     /// Loads a player's saved character when it enters the world and writes it back: every so often, when the player
     /// leaves, and when the server stops. It knows nothing about what is saved: every component on the player that
     /// implements <see cref="ISaveParticipant"/> saves and restores itself. Works where the game is decided (the
-    /// server, or offline); on the owner's machine it only keeps the select screen's level current.
+    /// server, or offline); on the owner's machine it only keeps what the select screen shows of the character
+    /// current: its level and the gear its doll wears.
     /// A player without a saved character behind it (a test avatar) is simply never saved.
     /// </summary>
     [DisallowMultipleComponent]
@@ -24,7 +26,12 @@ namespace KryticalNova.Persistence
         private PlayerIdentity identity;
         private PlayerResources resources;
         private PlayerCharacterProgression progression;
+        private PlayerEquipment equipment;
         private ISaveParticipant[] participants = Array.Empty<ISaveParticipant>();
+        // Owner only: what is worn changed and the select screen's copy is to be brought up to date.
+        private const float WornDelay = 1f;
+        private readonly System.Collections.Generic.List<WornPiece> wornScratch = new System.Collections.Generic.List<WornPiece>(EquipSlots.Count);
+        private float wornDue = -1f;
 
         private AccountSave account;
         private CharacterSave character;
@@ -49,6 +56,7 @@ namespace KryticalNova.Persistence
             identity = GetComponent<PlayerIdentity>();
             resources = GetComponent<PlayerResources>();
             progression = GetComponent<PlayerCharacterProgression>();
+            equipment = GetComponent<PlayerEquipment>();
             participants = GetComponents<ISaveParticipant>();
         }
 
@@ -56,6 +64,11 @@ namespace KryticalNova.Persistence
         {
             if (identity != null) identity.Changed += OnIdentityChanged;
             if (progression != null) progression.Changed += OnProgressionChanged;
+            if (equipment != null)
+            {
+                equipment.SlotChanged += OnWornChanged;
+                equipment.TemperChanged += OnWornTemperChanged;
+            }
             // The offline avatar comes back after a session: pick up what the networked player saved.
             if (!IsSpawned) TryLoad();
         }
@@ -64,6 +77,11 @@ namespace KryticalNova.Persistence
         {
             if (identity != null) identity.Changed -= OnIdentityChanged;
             if (progression != null) progression.Changed -= OnProgressionChanged;
+            if (equipment != null)
+            {
+                equipment.SlotChanged -= OnWornChanged;
+                equipment.TemperChanged -= OnWornTemperChanged;
+            }
             // The offline avatar is switched off while a session runs: its character belongs to the networked player now.
             if (!IsSpawned) SaveAndRelease();
         }
@@ -76,6 +94,8 @@ namespace KryticalNova.Persistence
 
         public override void OnNetworkDespawn()
         {
+            // Leaving the world: the select screen is next, and shows what was worn at this moment.
+            if (wornDue >= 0f) RememberWorn();
             if (IsServer) SaveAndRelease();
             base.OnNetworkDespawn();
         }
@@ -83,6 +103,7 @@ namespace KryticalNova.Persistence
         private void Update()
         {
             if (character != null && Time.unscaledTime >= nextSave) Save();
+            if (wornDue >= 0f && Time.unscaledTime >= wornDue) RememberWorn();
         }
 
         private void OnIdentityChanged() => TryLoad();
@@ -90,6 +111,34 @@ namespace KryticalNova.Persistence
         private void OnProgressionChanged()
         {
             if (IsLocalPlayer && progression != null) CharacterSession.RememberLevel(progression.CurrentLevel);
+        }
+
+        private void OnWornChanged(EquipSlot slot, ushort previous, ushort next) => OnWornTemperChanged(slot);
+
+        // Several slots change at once when a character is loaded: one write a moment later covers them all.
+        private void OnWornTemperChanged(EquipSlot slot)
+        {
+            if (wornDue < 0f) wornDue = Time.unscaledTime + WornDelay;
+        }
+
+        /// <summary>
+        /// The owner's machine: hands the select screen what this character wears now, so its doll there matches.
+        /// A player's own game is told its loadout and each piece's Temper whoever hosts, so this needs no save file.
+        /// </summary>
+        private void RememberWorn()
+        {
+            wornDue = -1f;
+            if (!IsLocalPlayer || equipment == null || identity == null || !identity.HasIdentity) return;
+            // Only for the character the roster says is being played (a test avatar has none behind it).
+            if (!CharacterSession.TryGetActive(out CharacterProfile active) || active.id != identity.CharacterId) return;
+            wornScratch.Clear();
+            for (int i = 1; i < EquipSlots.Count; i++)
+            {
+                var slot = (EquipSlot)i;
+                ushort itemId = equipment.Get(slot);
+                if (itemId != 0) wornScratch.Add(new WornPiece(slot, itemId, equipment.GetTemper(slot)));
+            }
+            CharacterSession.RememberWorn(wornScratch);
         }
 
         // ------------------------------------------------------------------ load

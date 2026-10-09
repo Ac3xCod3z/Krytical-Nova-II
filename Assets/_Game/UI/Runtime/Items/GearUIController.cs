@@ -1081,6 +1081,22 @@ namespace KryticalNova.UI
         private const string PrimaryColor = "#F0ECDC";
         private const string SkillColor = "#72DEC4";
 
+        /// <summary>A Serum's lines: what one gives for good, and how many of it this character has taken of how many.</summary>
+        private static void AppendSerum(System.Text.StringBuilder sb, ItemDefinition def)
+        {
+            PlayerSerums mine = PlayerSerums.Local;
+            SerumSettings settings = mine != null ? mine.Settings : null;
+            int kind = SerumRules.KindOf(settings, def.itemId);
+            if (kind < 0) return;
+            SerumKind serum = settings.serums[kind];
+            int taken = mine.State.Taken(kind), cap = settings.Cap;
+            sb.Append("<color=").Append(PrimaryColor).Append('>').Append(SerumRules.Gains(serum, 1)).AppendLine(" each, for good</color>");
+            sb.Append("Taken ").Append(taken).Append(" / ").Append(cap);
+            if (taken > 0) sb.Append("  ·  ").Append(SerumRules.Gains(serum, taken)).Append(" so far");
+            sb.AppendLine();
+            if (taken >= cap) sb.AppendLine("You can take no more of these.");
+        }
+
         private static string FormatStats(ItemDefinition def)
         {
             var sb = new System.Text.StringBuilder();
@@ -1088,6 +1104,7 @@ namespace KryticalNova.UI
             {
                 if (def.restoreHealth > 0f) sb.AppendLine($"Restores {def.restoreHealth:0} HP");
                 if (def.restoreChi > 0f) sb.AppendLine($"Restores {def.restoreChi:0} Flux");
+                if (def.useEffect == ItemUseEffect.Serum) AppendSerum(sb, def);
                 return sb.ToString().TrimEnd();
             }
             if (!def.IsEquippable) return string.Empty;
