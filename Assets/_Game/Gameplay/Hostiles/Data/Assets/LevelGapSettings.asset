@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73748ef5dcbd9ac43a6e47a26436e72e, type: 3}
+  m_Name: LevelGapSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Hostiles.LevelGapSettings
+  bands:
+  - name: Grey
+    fromGap: -200
+    toGap: -10
+    nameColor: {r: 0.57254905, g: 0.63529414, b: 0.69803923, a: 1}
+    experiencePercent:
+    - 0
+    dropPercent: 0
+    gearDrops: 0
+    hitChanceModifier: 0
+  - name: Blue
+    fromGap: -9
+    toGap: -6
+    nameColor: {r: 0.43137255, g: 0.6666667, b: 1, a: 1}
+    experiencePercent:
+    - 8
+    - 13
+    - 22
+    - 37
+    dropPercent: 25
+    gearDrops: 0
+    hitChanceModifier: 0
+  - name: Teal
+    fromGap: -5
+    toGap: -3
+    nameColor: {r: 0.44705883, g: 0.87058824, b: 0.76862746, a: 1}
+    experiencePercent:
+    - 61
+    - 80
+    - 97
+    dropPercent: 75
+    gearDrops: 1
+    hitChanceModifier: 0
+  - name: White
+    fromGap: -2
+    toGap: 4
+    nameColor: {r: 0.9019608, g: 0.92941177, b: 0.9607843, a: 1}
+    experiencePercent:
+    - 100
+    dropPercent: 100
+    gearDrops: 1
+    hitChanceModifier: 0
+  - name: Purple
+    fromGap: 5
+    toGap: 9
+    nameColor: {r: 0.78431374, g: 0.5019608, b: 1, a: 1}
+    experiencePercent:
+    - 125
+    - 135
+    - 145
+    - 155
+    - 165
+    dropPercent: 100
+    gearDrops: 1
+    hitChanceModifier: -5
+  - name: Red
+    fromGap: 10
+    toGap: 200
+    nameColor: {r: 1, g: 0.36078432, b: 0.32156864, a: 1}
+    experiencePercent:
+    - 175
+    dropPercent: 100
+    gearDrops: 1
+    hitChanceModifier: -15
+  deathExperienceLossPercent: 5
+  noDeathLossFromPrimeLevel: 33
+  tagTimeoutSeconds: 10

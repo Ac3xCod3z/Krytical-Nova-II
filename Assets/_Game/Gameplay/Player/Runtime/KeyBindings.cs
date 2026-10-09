@@ -28,6 +28,8 @@ namespace KryticalNova.Player
         public const string NetworkPanel = "NetworkPanel";
         public const string GmConsole = "GmConsole";
         public const string EmoteWheel = "EmoteWheel";
+        public const string Autopilot = "Autopilot";
+        public const string AutopilotSettings = "AutopilotSettings";
 
         /// <summary>A window key: its action in the asset's Windows map, and what the Controls list calls it.</summary>
         public readonly struct WindowKey
@@ -50,6 +52,8 @@ namespace KryticalNova.Player
             new WindowKey(NetworkPanel, "Network panel"),
             new WindowKey(GmConsole, "GM console (host)"),
             new WindowKey(EmoteWheel, "Emote wheel (hold)"),
+            new WindowKey(Autopilot, "Autopilot on / off"),
+            new WindowKey(AutopilotSettings, "Autopilot and Magnet"),
         };
 
         /// <summary>The player-asset actions the Controls list offers, by map, with the name it shows for each.</summary>

@@ -51,6 +51,8 @@ namespace KryticalNova.Items
         [SerializeField, Min(1)] private int maxDropsPerZone = 200;
         [Tooltip("The part that spins and bobs, and is tinted by rarity.")]
         [SerializeField] private Transform visual;
+        [Tooltip("What is shown instead while the drop is Creds: a flat stack of cash. It hovers, bobs and spins like the parcel, but is not tinted.")]
+        [SerializeField] private Transform credsVisual;
 
         private readonly NetworkVariable<ItemStack> netStack = new NetworkVariable<ItemStack>(default,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -76,8 +78,10 @@ namespace KryticalNova.Items
         private float holdSeconds;        // how long the hold was to begin with
         private float removeAt;
         private Vector3 visualBase;
+        private Vector3 credsBase;
         private float phase;
         private MaterialPropertyBlock block;
+        private TakenDropVisual flying;   // the parcel on its way to whoever took it; it comes back when it lands
 
         /// <summary>Every drop on this machine. Do not modify.</summary>
         public static IReadOnlyList<WorldDrop> Active => ActiveDrops;
@@ -98,9 +102,13 @@ namespace KryticalNova.Items
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => ActiveDrops.Clear();
 
+        /// <summary>The part on show: the stack of cash for Creds, the parcel for everything else.</summary>
+        private Transform Shown => credsVisual != null && LootRules.IsCreds(stack.itemId) ? credsVisual : visual;
+
         private void Awake()
         {
             if (visual != null) visualBase = visual.localPosition;
+            if (credsVisual != null) credsBase = credsVisual.localPosition;
             phase = Random.value * 10f;
         }
 
@@ -170,8 +178,10 @@ namespace KryticalNova.Items
             // A player's pivot floats above the ground (the agent's base offset): find the ground before looking
             // for room on it.
             Vector3 ground = GroundSnap.Snap(FreeSpot(GroundSnap.Snap(position)));
-            WorldDrop drop = Instantiate(prefab, ground, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+            // From the pool: a drop that was taken or cleared away is used again.
+            WorldDrop drop = WorldDropPool.Take(prefab, ground, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
             drop.stack = stack;
+            drop.heldUntil = 0;
             drop.faction = dropFaction;
             drop.reservedFor = reservedFor != null && reserveSeconds > 0f ? reservedFor.NetworkObjectId : Nobody;
             drop.reservedUntil = Time.time + Mathf.Max(0f, reserveSeconds);
@@ -273,8 +283,9 @@ namespace KryticalNova.Items
         {
             if (!HasAuthority) return;
             ActiveDrops.Remove(this);
+            // Despawning hands it to the pool through the prefab handler, here and on every client.
             if (IsSpawned) NetworkObject.Despawn(true);
-            else Destroy(gameObject);
+            else WorldDropPool.Return(this);
         }
 
         private void Update()
@@ -292,10 +303,12 @@ namespace KryticalNova.Items
                     return;
                 }
             }
-            if (visual == null) return;
+            // Whatever is on show hovers, bobs and spins: the parcel, or the stack of cash.
+            Transform shown = Shown;
+            if (shown == null) return;
             float t = Time.time + phase;
-            visual.localPosition = visualBase + Vector3.up * (0.08f * Mathf.Sin(t * 2.2f));
-            visual.Rotate(0f, 55f * Time.deltaTime, 0f, Space.Self);
+            shown.localPosition = (shown == visual ? visualBase : credsBase) + Vector3.up * (0.08f * Mathf.Sin(t * 2.2f));
+            shown.Rotate(0f, 55f * Time.deltaTime, 0f, Space.Self);
         }
 
         // ------------------------------------------------------------------ presentation
@@ -314,18 +327,23 @@ namespace KryticalNova.Items
                 bool mine = taker.TryGetComponent(out NetworkObject takerObject) ? !takerObject.IsSpawned || takerObject.IsOwner : false;
                 ClientPresentationRegistry.Feel?.PickedUp(taker, transform.position, (int)shownRarity, mine);
             }
-            if (visual == null || taker == null) return;
-            Transform parcel = visual;
-            visual = null;
-            parcel.SetParent(null, true);
-            parcel.gameObject.AddComponent<TakenDropVisual>().Begin(taker, TakenWaitSeconds, TakenFlightSeconds);
+            Transform parcel = Shown;
+            if (parcel == null || taker == null) return;
+            if (flying != null) flying.ComeHome();
+            flying = parcel.gameObject.AddComponent<TakenDropVisual>();
+            flying.Begin(taker, TakenWaitSeconds, TakenFlightSeconds, transform);
         }
 
         private void ApplyLook()
         {
+            // Used again before the parcel of its last life has landed: the parcel is wanted here now.
+            if (flying != null && !stack.IsEmpty) { flying.ComeHome(); flying = null; }
             name = stack.IsEmpty ? "Drop" : $"Drop ({DisplayName})";
             if (!stack.IsEmpty) shownRarity = Rarity;
-            if (visual == null) return;
+            bool creds = credsVisual != null && LootRules.IsCreds(stack.itemId);
+            if (credsVisual != null) credsVisual.gameObject.SetActive(creds);
+            if (visual != null) visual.gameObject.SetActive(!creds);
+            if (visual == null || creds) return;
             block ??= new MaterialPropertyBlock();
             Color tint = RarityTint[Mathf.Clamp((int)Rarity, 0, RarityTint.Length - 1)];
             foreach (Renderer target in visual.GetComponentsInChildren<Renderer>(true))

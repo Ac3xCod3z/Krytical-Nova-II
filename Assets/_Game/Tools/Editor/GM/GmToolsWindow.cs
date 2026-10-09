@@ -40,6 +40,7 @@ namespace KryticalNova.EditorTools.GM
         private const string SocialTab = "Social";
         private const string PetsTab = "Pets";
         private const string RenownTab = "Renown";
+        private const string HostilesTab = "Hostiles";
         private const int MaxLogLines = 200;
         private const int MaxSearchResults = 40;
 
@@ -1308,6 +1309,144 @@ namespace KryticalNova.EditorTools.GM
             }
             logScroll = Vector2.zero;
         }
+
+        // ================================================================ HOSTILES
+
+        [TabGroup(Tabs, HostilesTab), Title("Species"), ShowInInspector, ValueDropdown(nameof(HostileChoices)), EnableIf(nameof(IsReady)), LabelText("Species"), PropertyOrder(1000)]
+        private string hostileSpecies = string.Empty;
+
+        private IEnumerable<ValueDropdownItem<string>> HostileChoices()
+        {
+            if (!Application.isPlaying) yield break;
+            foreach (KryticalNova.Hostiles.HostileNet species in KryticalNova.Hostiles.HostileSpawner.Species())
+                yield return new ValueDropdownItem<string>($"{species.Definition.displayName}  (Lv {species.Definition.level}, {species.Definition.tier})", species.Definition.id.ToString());
+        }
+
+        private string ChosenHostile => string.IsNullOrEmpty(hostileSpecies) ? "0" : hostileSpecies;
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1001)]
+        private void SpawnHostiles([MinValue(1)] int count = 1, [MinValue(0), LabelText("Level (0 = its own)")] int level = 0) => Run($"gm.hostile.spawn {ChosenHostile} {count} {level}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Species"), EnableIf(nameof(IsReady)), LabelText("List"), PropertyOrder(1002)]
+        private void ListHostiles() => Run("gm.hostile.list");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Species"), EnableIf(nameof(IsReady)), LabelText("Hits To Kill"), PropertyOrder(1003)]
+        private void HostileTimeToKill() => Run($"gm.hostile.ttk {ChosenHostile}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Species"), EnableIf(nameof(IsReady)), LabelText("Simulate 1000 Kills"), PropertyOrder(1004)]
+        private void HostileLoot() => Run($"gm.hostile.loot {ChosenHostile} 1000");
+
+        [TabGroup(Tabs, HostilesTab), Title("The target (under the ring, or the nearest)"), Button("Info"), EnableIf(nameof(IsReady)), PropertyOrder(1010)]
+        private void HostileInfo() => Run("gm.hostile.info");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Target"), EnableIf(nameof(IsReady)), LabelText("Kill Target"), PropertyOrder(1011)]
+        private void KillHostile() => Run("gm.hostile.kill");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Target"), EnableIf(nameof(IsReady)), LabelText("HP 25%"), PropertyOrder(1012)]
+        private void HostileQuarterHealth() => Run("gm.hostile.hp 25%");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Target"), EnableIf(nameof(IsReady)), LabelText("HP 100%"), PropertyOrder(1013)]
+        private void HostileFullHealth() => Run("gm.hostile.hp 100%");
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1014)]
+        private void KillHostilesWithin([MinValue(1)] float metres = 15f) => Run($"gm.hostile.kill {metres}");
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1015)]
+        private void ClearGmSpawned([MinValue(0), LabelText("Metres (0 = everywhere)")] float metres = 0f) => Run($"gm.hostile.clear {metres}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/All"), EnableIf(nameof(IsReady)), LabelText("Freeze All"), PropertyOrder(1020)]
+        private void FreezeHostiles() => Run("gm.hostile.freeze on");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/All"), EnableIf(nameof(IsReady)), LabelText("Release All"), PropertyOrder(1021)]
+        private void ReleaseHostiles() => Run("gm.hostile.freeze off");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/All"), EnableIf(nameof(IsReady)), LabelText("Ignore Me"), PropertyOrder(1022)]
+        private void HostilesIgnore() => Run("gm.hostile.ignore on");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/All"), EnableIf(nameof(IsReady)), LabelText("Notice Me"), PropertyOrder(1023)]
+        private void HostilesNotice() => Run("gm.hostile.ignore off");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/All"), EnableIf(nameof(IsReady)), LabelText("Counts"), PropertyOrder(1024)]
+        private void HostileStats() => Run("gm.hostile.stats");
+
+        [TabGroup(Tabs, HostilesTab), Title("Hostile Zones"), ShowInInspector, ValueDropdown(nameof(ZoneChoices)), EnableIf(nameof(IsReady)), LabelText("Zone"), PropertyOrder(1030)]
+        private string hostileZone = string.Empty;
+
+        private IEnumerable<ValueDropdownItem<string>> ZoneChoices()
+        {
+            if (!Application.isPlaying) yield break;
+            foreach (KryticalNova.Hostiles.HostileZone zone in KryticalNova.Hostiles.HostileZone.All)
+                if (zone.Definition != null) yield return new ValueDropdownItem<string>(zone.Definition.displayName, zone.Definition.id);
+        }
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Zone"), EnableIf(nameof(IsReady)), LabelText("List Zones"), PropertyOrder(1031)]
+        private void ListZones() => Run("gm.zone.list");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Zone"), EnableIf(nameof(IsReady)), LabelText("Go There"), PropertyOrder(1032)]
+        private void GoToZone() => Run($"gm.tp {hostileZone}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Zone"), EnableIf(nameof(IsReady)), LabelText("Fill"), PropertyOrder(1033)]
+        private void FillZone() => Run($"gm.zone.fill {hostileZone}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Zone"), EnableIf(nameof(IsReady)), LabelText("Empty"), PropertyOrder(1034)]
+        private void EmptyZone() => Run($"gm.zone.clear {hostileZone}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Zone"), EnableIf(nameof(IsReady)), LabelText("Bruiser Now"), PropertyOrder(1035)]
+        private void ZoneBruiser() => Run($"gm.zone.bruiser {hostileZone}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Sleep"), EnableIf(nameof(IsReady)), LabelText("Hold Asleep"), PropertyOrder(1036)]
+        private void ZoneAsleep() => Run($"gm.zone.sleep {hostileZone} on");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Sleep"), EnableIf(nameof(IsReady)), LabelText("Hold Awake"), PropertyOrder(1037)]
+        private void ZoneAwake() => Run($"gm.zone.sleep {hostileZone} off");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Sleep"), EnableIf(nameof(IsReady)), LabelText("By Itself"), PropertyOrder(1038)]
+        private void ZoneAuto() => Run($"gm.zone.sleep {hostileZone} auto");
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1039)]
+        private void SetRespawnSeconds([MinValue(0)] float seconds = 2f) => Run($"gm.zone.respawn {seconds}");
+
+        [TabGroup(Tabs, HostilesTab), Button("Respawn Times Back To Normal"), EnableIf(nameof(IsReady)), PropertyOrder(1040)]
+        private void DefaultRespawn() => Run("gm.zone.respawn default");
+
+        [TabGroup(Tabs, HostilesTab), Title("Level gap and rates"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1050)]
+        private void GapAgainstLevel([MinValue(1)] int hostileLevel = 10) => Run($"gm.gap {hostileLevel}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Gap"), EnableIf(nameof(IsReady)), LabelText("Gap Table"), PropertyOrder(1051)]
+        private void GapTable() => Run("gm.gap.table");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Gap"), EnableIf(nameof(IsReady)), LabelText("Death Penalty On"), PropertyOrder(1052)]
+        private void DeathPenaltyOn() => Run("gm.deathpenalty on");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Gap"), EnableIf(nameof(IsReady)), LabelText("Death Penalty Off"), PropertyOrder(1053)]
+        private void DeathPenaltyOff() => Run("gm.deathpenalty off");
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1054)]
+        private void SetXpRate([MinValue(0)] float multiplier = 1f) => Run($"gm.xprate {multiplier}");
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1055)]
+        private void SetDropRate([MinValue(0)] float multiplier = 1f) => Run($"gm.droprate {multiplier}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Autopilot"), Title("Autopilot and Magnet"), EnableIf(nameof(IsReady)), LabelText("State"), PropertyOrder(1060)]
+        private void AutopilotState() => Run("gm.autopilot");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Autopilot"), EnableIf(nameof(IsReady)), LabelText("On (free)"), PropertyOrder(1061)]
+        private void AutopilotOn() => Run("gm.autopilot on");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Autopilot"), EnableIf(nameof(IsReady)), LabelText("Off"), PropertyOrder(1062)]
+        private void AutopilotOff() => Run("gm.autopilot off");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Autopilot"), EnableIf(nameof(IsReady)), LabelText("Log Turns"), PropertyOrder(1063)]
+        private void AutopilotLog() => Run("gm.autopilot.log");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Autopilot"), EnableIf(nameof(IsReady)), LabelText("Magnet Test"), PropertyOrder(1064)]
+        private void MagnetTest() => Run("gm.magnet.test");
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1065)]
+        private void SetAutopilotMinutes([MinValue(0)] float minutes = 300f) => Run($"gm.autopilot.time {minutes}");
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1066)]
+        private void GiveAutopilotChips([MinValue(1)] int count = 1) => Run($"item.give \"Autopilot Chip\" {count}");
 
         // Live readouts (HP, clock, stats) refresh ~10×/s while playing.
         private void OnInspectorUpdate()

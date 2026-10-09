@@ -45,6 +45,8 @@ namespace KryticalNova.EditorTools
             "KryticalNova.UI.GearWorkWindowController, KryticalNova.UI",
             "KryticalNova.UI.HeraldWindowController, KryticalNova.UI",
             "KryticalNova.UI.PlayerNamecardController, KryticalNova.UI",
+            "KryticalNova.UI.HostileNameplateController, KryticalNova.UI",
+            "KryticalNova.UI.AutopilotWindowController, KryticalNova.UI",
             "KryticalNova.UI.PetBubbleController, KryticalNova.UI",
             "KryticalNova.UI.EmoteWheelController, KryticalNova.UI",
             "KryticalNova.UI.GameMenuController, KryticalNova.UI",

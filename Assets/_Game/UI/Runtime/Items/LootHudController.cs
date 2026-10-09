@@ -21,6 +21,7 @@ namespace KryticalNova.UI
         private const string LabelClass = "loot-label";
         private const string HeldClass = "loot-label--held";
         private const string MineClass = "loot-label--mine";
+        private const string WindowClass = "blocks-world";
         private const float EndingSeconds = 5f; // the notice turns urgent for the last seconds
         private static readonly string[] RarityTextClasses = { "rarity-text-0", "rarity-text-1", "rarity-text-2", "rarity-text-3", "rarity-text-4" };
         private const float LabelHeight = 0.75f;
@@ -106,6 +107,13 @@ namespace KryticalNova.UI
                 Vector3 world = drop.Position + Vector3.up * LabelHeight;
                 Vector3 screen = targetCamera.WorldToScreenPoint(world);
                 bool visible = screen.z > 0f && (world - cameraPosition).sqrMagnitude <= maxSqr;
+                Vector2 point = default;
+                if (visible)
+                {
+                    // Windows are a little see-through: a name behind one would read through it.
+                    point = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(screen.x, Screen.height - screen.y));
+                    visible = !UnderWindow(point, label.resolvedStyle.width, label.resolvedStyle.height);
+                }
                 label.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
                 if (!visible) continue;
 
@@ -118,7 +126,6 @@ namespace KryticalNova.UI
                 }
                 label.EnableInClassList(HeldClass, held && !mine);
                 label.EnableInClassList(MineClass, mine);
-                Vector2 point = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(screen.x, Screen.height - screen.y));
                 label.style.left = point.x - label.resolvedStyle.width * 0.5f;
                 label.style.top = point.y - label.resolvedStyle.height;
                 Hud.HudChrome.HideOver(label, point);
@@ -134,6 +141,25 @@ namespace KryticalNova.UI
                 if (labels.TryGetValue(gone, out Label label)) label.RemoveFromHierarchy();
                 labels.Remove(gone);
             }
+        }
+
+        /// <summary>
+        /// True when a label that stands on this point of the panel (its bottom middle) would lie behind a window
+        /// (anything that blocks clicks on the world). Its middle and both ends are asked, so a label is not left
+        /// half behind a window's edge. A label not laid out yet has no size and is asked by its point alone.
+        /// </summary>
+        private bool UnderWindow(Vector2 panelPoint, float width, float height)
+        {
+            if (float.IsNaN(width) || float.IsNaN(height) || width < 1f) return WindowAt(panelPoint);
+            float y = panelPoint.y - height * 0.5f, half = width * 0.5f;
+            return WindowAt(new Vector2(panelPoint.x, y)) || WindowAt(new Vector2(panelPoint.x - half, y)) || WindowAt(new Vector2(panelPoint.x + half, y));
+        }
+
+        private bool WindowAt(Vector2 panelPoint)
+        {
+            for (VisualElement at = root.panel.Pick(panelPoint); at != null; at = at.parent)
+                if (at.ClassListContains(WindowClass)) return true;
+            return false;
         }
 
         /// <summary>The countdown for what the local player dropped: the drop that opens to others first, and how many more wait.</summary>

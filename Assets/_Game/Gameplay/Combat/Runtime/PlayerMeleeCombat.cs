@@ -687,6 +687,9 @@ namespace KryticalNova.Combat
             bool defenderReflect = defenderBuffs != null && defenderBuffs.HasReflection(out refChance, out _);
             bool attackerShatter = buffManager != null && buffManager.HasShieldShatter(out shatChance, out dispelChance);
 
+            float hitChanceModifier = target.Transform.TryGetComponent(out IHitChanceModifier harder)
+                ? harder.HitChanceModifierFor(attackerStats) : 0f;
+
             result = CombatCalculator.CalculateAttack(
                 attackerStats,
                 target.CombatStats,
@@ -695,7 +698,8 @@ namespace KryticalNova.Combat
                 refChance,
                 attackerShatter,
                 shatChance,
-                canCrit);
+                canCrit,
+                hitChanceModifier);
 
             target.TakeDamage(result, attackerStats);
 

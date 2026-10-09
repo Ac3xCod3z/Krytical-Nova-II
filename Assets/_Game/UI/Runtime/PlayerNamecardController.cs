@@ -39,6 +39,7 @@ namespace KryticalNova.UI
             public PlayerCharacterProgression Progression;
             public PlayerCrew PlayerCrew;
             public PlayerNova Nova;
+            public KryticalNova.Autopilot.PlayerAutopilot Autopilot;
             public float Height = float.NaN;
             public string NameText, StandingText, CrewText;
             public FactionId Faction = (FactionId)255;
@@ -148,6 +149,7 @@ namespace KryticalNova.UI
                 Progression = player.GetComponent<PlayerCharacterProgression>(),
                 PlayerCrew = player.GetComponent<PlayerCrew>(),
                 Nova = player.GetComponent<PlayerNova>(),
+                Autopilot = player.GetComponent<KryticalNova.Autopilot.PlayerAutopilot>(),
                 Root = new VisualElement { pickingMode = PickingMode.Ignore },
             };
             card.Root.AddToClassList("namecard");
@@ -182,6 +184,8 @@ namespace KryticalNova.UI
             string name = card.Identity != null ? card.Identity.CharacterName : card.Root.name;
             int level = card.Progression != null ? card.Progression.CurrentLevel : 1;
             string nameText = name + "   Lv " + level;
+            // A character hunting on Autopilot says so, to everyone who can read its name.
+            if (card.Autopilot != null && card.Autopilot.IsOn) nameText += "   AUTO";
             if (nameText != card.NameText) card.Name.text = card.NameText = nameText;
 
             string standing = card.Nova != null ? card.Nova.WornStanding ?? string.Empty : string.Empty;

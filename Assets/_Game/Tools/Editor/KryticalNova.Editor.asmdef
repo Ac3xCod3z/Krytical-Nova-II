@@ -21,7 +21,10 @@
         "MoreMountains.Tools",
         "Unity.Cinemachine",
         "MotionWarping.Runtime",
-        "Gilzoide.SqliteNet"
+        "Gilzoide.SqliteNet",
+        "EmeraldAI",
+        "EmeraldAI.Editor",
+        "KryticalNova.Hostiles.Emerald"
     ],
     "includePlatforms": [
         "Editor"

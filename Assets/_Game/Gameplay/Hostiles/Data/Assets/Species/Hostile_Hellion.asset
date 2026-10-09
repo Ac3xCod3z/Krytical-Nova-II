@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1096b497fae57d644809da573f11eab1, type: 3}
+  m_Name: Hostile_Hellion
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Hostiles.HostileDefinition
+  id: 10
+  displayName: Hellion
+  tier: 1
+  level: 12
+  behaviour: 1
+  isBossCandidate: 0
+  healthMultiplier: 1
+  attackRange: 2.4
+  lootTableId: 
+  model: {fileID: 4022236762757211066, guid: b6de10cf9adbb5f4bb72a98a89b1c12e, type: 3}
+  scale: 1.3
+  bodySize: {x: 0.45, y: 1.8}
+  idle: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
+  combatIdle: {fileID: 7400000, guid: 1c617e9f8c7011345b9972cc4103ddbd, type: 2}
+  walk: {fileID: 7400000, guid: b8a3fc74d449fe542a259f3bde575806, type: 2}
+  run: {fileID: 7400000, guid: b62f89414610fc14ea178fea2b0d4606, type: 2}
+  turnLeft: {fileID: 0}
+  turnRight: {fileID: 0}
+  attacks:
+  - clip: {fileID: 7400000, guid: 7d372a132a754c345898b19f2fa0bcc0, type: 2}
+    windupSeconds: 0.25
+    damageMultiplier: 1
+    heavy: 0
+    weight: 45
+  - clip: {fileID: 7400000, guid: e432543d60c1a1247a524fb8b7c07fd2, type: 2}
+    windupSeconds: 0.25
+    damageMultiplier: 1
+    heavy: 0
+    weight: 40
+  - clip: {fileID: 7400000, guid: 761316355f745a34da45c360042d32ab, type: 2}
+    windupSeconds: 0.55
+    damageMultiplier: 1.5
+    heavy: 1
+    weight: 15
+  hitReactions:
+  - {fileID: 7400000, guid: 2048b68ba8de9cd46b3ef4097168a7cc, type: 2}
+  - {fileID: 7400000, guid: 4d7d52e7b633e0545add09cdda6ced1f, type: 2}
+  deaths:
+  - {fileID: 7400000, guid: d8943fad90ec6674a8d4b5f4b3de68f2, type: 2}
+  - {fileID: 7400000, guid: b7f6f5e34d972d94bba314bc9d33ee86, type: 2}
+  stunned: {fileID: 7400000, guid: b37b651c0079e8641b6e992dc639b6e0, type: 2}
+  prefab: {fileID: 5061604462641481597, guid: 282e23c8b5ed7e34db029137838f5c8b, type: 3}
