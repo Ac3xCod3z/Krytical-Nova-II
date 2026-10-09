@@ -151,8 +151,21 @@ namespace KryticalNova.UI.Menus
             Block(under, "Table Top", new Rect(page.xMin, page.yMax, page.width, 1f - page.yMax), settings.table);
             Block(under, "Table Bottom", new Rect(page.xMin, 0f, page.width, page.yMin), settings.table);
 
-            // The pages under this one: each a sliver further right and further down.
+            // The cover the pages lie on: it stands out past them along the top, the outer side and the foot, with
+            // its shadow on the table and a lighter line along its edge. Left of the view it runs on to the spine.
             float step = 0.0022f;
+            if (settings.coverMargin > 0f)
+            {
+                float stack = settings.edgeLeaves * step, out_ = settings.coverMargin, outY = out_ * aspect;
+                var board = new Rect(0f, page.yMin - stack * aspect - outY, page.xMax + stack + out_, page.height + stack * aspect + outY * 2f);
+                Shade(under, "Cover Shadow Side", new Rect(board.xMax, board.yMin - outY, out_ * 1.6f, board.height), new Color(0f, 0f, 0f, 0.6f), false);
+                Block(under, "Cover Shadow Foot", new Rect(0f, board.yMin - outY * 0.8f, board.width + out_ * 0.6f, outY * 0.8f), new Color(0f, 0f, 0f, 0.45f));
+                Block(under, "Cover Edge", board, settings.coverEdge);
+                float rim = 0.0012f;
+                Block(under, "Cover", new Rect(board.xMin, board.yMin + rim * aspect, board.width - rim, board.height - rim * aspect * 2f), settings.cover);
+            }
+
+            // The pages under this one: each a sliver further right and further down.
             for (int i = settings.edgeLeaves; i >= 1; i--)
             {
                 float dx = i * step, dy = i * step * aspect;

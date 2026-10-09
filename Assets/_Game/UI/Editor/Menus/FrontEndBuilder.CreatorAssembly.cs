@@ -297,6 +297,14 @@ namespace KryticalNova.EditorTools
             nameLine.sizeDelta = new Vector2(0f, 220f);
             RectTransform field = Part(skin.textField, nameLine, "Input");
             Place(field, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(-80f, 130f));
+            if (skin.textFieldFill.a > 0f)
+            {
+                // The skin's own fill, and the field's picture in the skin's accent to go with it.
+                Transform fill = field.Find("Background");
+                if (fill != null) Tint(MenuUi.Find<Image>(fill, "SPR_Background"), skin.textFieldFill, skin.textFieldFill.a);
+                var picture = field.Find("ICON") != null ? field.Find("ICON").GetComponent<Image>() : null;
+                if (picture != null) Tint(picture, skin.menuAccent, picture.color.a);
+            }
             SetRef(creator, "nameInput", WireNameField(field.GetComponentInChildren<TMP_InputField>(true)));
 
             SetRef(creator, "nameSuggestion", Part(skin.optionRow, section, "Array_Suggestion").gameObject.AddComponent<MenuOptionRow>());

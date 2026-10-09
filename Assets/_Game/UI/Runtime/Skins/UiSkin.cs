@@ -142,6 +142,8 @@ namespace KryticalNova.UI
         public GameObject sliderRow;
         [Tooltip("The pack's text field.")]
         public GameObject textField;
+        [Tooltip("The colour of the text field's fill. Clear: the pack's own (the Dark Fantasy pack's is teal, which the Null's is not).")]
+        public Color textFieldFill = Color.clear;
         [Tooltip("The pack's heading over a section of a list, and its headline label.")]
         public GameObject sectionHeader, headerLabel;
         [Tooltip("The pack's large button (create the character).")]

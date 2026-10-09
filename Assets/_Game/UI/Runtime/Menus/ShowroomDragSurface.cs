@@ -25,7 +25,8 @@ namespace KryticalNova.UI.Menus
         public void OnDrag(PointerEventData eventData)
         {
             if (showroom == null) return;
-            float scale = ReferenceHeight / Mathf.Max(Screen.height, 1);
+            // The screen is as tall as the book's page, which is less than the view while the menus are a book.
+            float scale = ReferenceHeight / Mathf.Max(Screen.height * MenuPage.Area.height, 1f);
             // Screen deltas have y up; the orbit expects UI pixels with y down.
             var delta = new Vector2(eventData.delta.x, -eventData.delta.y) * scale;
             if (eventData.button == PointerEventData.InputButton.Left)

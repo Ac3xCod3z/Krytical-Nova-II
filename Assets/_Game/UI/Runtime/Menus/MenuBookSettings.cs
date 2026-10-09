@@ -37,6 +37,10 @@ namespace KryticalNova.UI.Menus
         public Color inkColour = new Color32(0x14, 0x12, 0x2B, 0xFF);
         [Tooltip("How many page edges show under the right and bottom sides of the page.")]
         [Range(0, 8)] public int edgeLeaves = 5;
+        [Tooltip("The book's cover board, seen past the pages along the top, the outer side and the foot, and the lighter line of its edge.")]
+        public Color cover = new Color32(0x2B, 0x2C, 0x6E, 0xFF), coverEdge = new Color32(0x4C, 0x52, 0xBF, 0xFF);
+        [Tooltip("How far the cover stands out past the pages, as a share of the view's width. 0: no cover is drawn.")]
+        [Range(0f, 0.02f)] public float coverMargin = 0.007f;
 
         [Header("The paper")]
         [Tooltip("The dots on the back of a page take the accent colour of the skin the menus wear. Off: the colour below.")]

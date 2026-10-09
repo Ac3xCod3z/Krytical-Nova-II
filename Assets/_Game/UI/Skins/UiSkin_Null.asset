@@ -81,6 +81,7 @@ MonoBehaviour:
   iconButton: {fileID: 5171185237115873002, guid: f6668c7d83f9a9844ae13841f60d4ed9, type: 3}
   sliderRow: {fileID: 7476782851927854031, guid: 00af644ee24c42a4284e7ef120b1f19d, type: 3}
   textField: {fileID: 409436092993132241, guid: 3d5dd5abaa468e448bf8ccf6231cf3e4, type: 3}
+  textFieldFill: {r: 0.22745098, g: 0.05490196, b: 0.047058824, a: 0.972549}
   sectionHeader: {fileID: 7476782851927854031, guid: bd6ad72b23b693841a83230eb3a50cbf, type: 3}
   headerLabel: {fileID: 378538600947842191, guid: 5995c7f69c0ed2a44b661539d373f7c9, type: 3}
   startButton: {fileID: 1508758403866968506, guid: a7e80f2aff6185845a5f8fe93840081a, type: 3}

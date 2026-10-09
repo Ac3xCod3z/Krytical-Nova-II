@@ -172,8 +172,13 @@ rectangle, and clicks, keys and drags work as before. `pageScale` 1 gives the fu
 book a turn forward takes the leaf over onto the left-hand page; a turn back brings a leaf from the left that shows
 the screen as it was last seen in this run (`MenuTransition` keeps one picture per menu screen), landing on the
 screen that was left. The page from Loading turns into the world full-screen: the book is left behind there.
-Not done: the book round the page is drawn flat (it is not the MegaBook's own covers and spine), and the menus'
-Settings window (UI Toolkit) is laid over the book, not on the page.
+The book round the page is drawn, not modelled: MegaBook has no cover or spine of its own (a cover is an object the
+user supplies), and seen straight on a model would show the same edges. Under the pages lies the cover board
+(`MenuBookSettings.cover`, `coverEdge`, `coverMargin`), standing out past them along the top, the outer side and the
+foot, with its shadow on the table. The menus' Settings window (UI Toolkit) is on the page too: `MenuSettings` makes
+its whole document the page's size when it opens, so its shade darkens the page and not the book. Turning the model
+with the mouse is measured against the page's height (`ShowroomDragSurface`); the press and hover movements are
+shares of the thing they move, so they shrink with the page by themselves.
 
 **What is built.** Every menu screen is a page. Leaving a screen takes its picture (the whole frame, interface
 included); the next scene loads under that picture; then the picture lifts off as a leaf of a MegaBook and turns away,
@@ -355,6 +360,10 @@ in the menus and in the world; every Gameplay option; both chat options in two s
 | The skill keys, from the menus | no character there to list them for |
 
 **Sounds.** Every menu moment has a sound slot and none has a clip: the project has no interface sounds.
+
+**The book (9 Oct 2026).** Seen in captures with the turn slowed to 5 s: the leaf of a turn back in the air, showing
+the screen it lands on, and the leaf of a turn forward lifting; the Settings window on the page; the creator on the
+page in three skins. Not checked: dragging the model with a real mouse after the change to its measure.
 
 **The creator in the three skins (9 Oct 2026).** Pictured on every tab in Play, and run through by script in each
 skin, 21 checks a skin, all passing: a tile chooses an origin and a weapon class, the portraits are drawn, the tabs,

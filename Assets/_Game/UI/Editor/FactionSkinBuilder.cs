@@ -398,6 +398,11 @@ namespace KryticalNova.EditorTools
             skin.headerLabel = Part(skin.headerLabel, $"_CommonComponents/Label_{token}_Header");
             skin.startButton = Part(skin.startButton, $"Buttons/Button_{token}_Start_01");
             skin.footer = Part(skin.footer, $"Buttons/Input_{token}_Footer_01");
+            if (skin.faction == FactionId.Null && skin.textFieldFill.a <= 0f)
+            {
+                skin.textFieldFill = new Color32(0x3A, 0x0E, 0x0C, 0xF8); // owner, 9 Oct 2026: red, not the pack's teal
+                changed = true;
+            }
             skin.creatorTabIcons = Pictures(skin.creatorTabIcons, tabs);
             skin.traitIcons = Pictures(skin.traitIcons, traits);
             if (changed) EditorUtility.SetDirty(skin);

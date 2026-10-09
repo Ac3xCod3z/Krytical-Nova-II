@@ -81,6 +81,7 @@ namespace KryticalNova.UI.Menus
             if (window == null || IsOpen) return;
             closed = onClosed;
             WearSkin();
+            FitToPage();
             Show(true);
             pages.Opened();
             MenuMoments.Raise(MenuMoment.Open, window);
@@ -95,6 +96,19 @@ namespace KryticalNova.UI.Menus
             Action done = closed;
             closed = null;
             done?.Invoke();
+        }
+
+        /// <summary>
+        /// The window is on the book's page like the screen it opens over: the whole document is made the page's
+        /// size and moved onto it, so its shade darkens the page and not the book round it.
+        /// </summary>
+        private void FitToPage()
+        {
+            if (root == null) return;
+            Rect page = MenuPage.Area;
+            root.style.transformOrigin = new TransformOrigin(Length.Percent(0f), Length.Percent(100f));
+            root.style.scale = new Scale(new Vector3(page.width, page.height, 1f));
+            root.style.translate = new Translate(Length.Percent(page.x * 100f), Length.Percent(-page.y * 100f));
         }
 
         private void Show(bool visible)
