@@ -1288,3 +1288,39 @@
     font-size: 13.44px;
     color: rgb(188, 175, 161);
 }
+
+/* ---- window chrome: the pack's own frames and ornaments ---- */
+.kn-faction-covenant .window, .kn-faction-covenant .item-tooltip, .kn-faction-covenant .item-menu, .kn-faction-covenant .item-confirm, .kn-faction-covenant .amount-dialog, .kn-faction-covenant .game-menu, .kn-faction-covenant .player-menu {
+    background-color: rgba(22, 18, 13, 0.97);
+}
+.kn-faction-covenant .panel > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_12.png#SPR_FantasyWarrior_Frame_Box_12");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.06px;
+    left: -1px;
+    top: -1px;
+    right: -1px;
+    bottom: -1px;
+}
+.kn-faction-covenant .panel > .kn-pip {
+    display: none;
+}
+.kn-faction-covenant .window > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_06.png#SPR_FantasyWarrior_Frame_Box_06");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.1667px;
+    left: -6px;
+    top: -6px;
+    right: -6px;
+    bottom: -6px;
+}
+.kn-faction-covenant .window > .kn-pip {
+    display: none;
+}
+.kn-faction-covenant .window > .kn-crown {
+    display: flex;
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Greeble_Curlicue_24.png#SPR_FantasyWarrior_Greeble_Curlicue_24");
+    width: 96px;
+    height: 48px;
+    top: -30px;
+}

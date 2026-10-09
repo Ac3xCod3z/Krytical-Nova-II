@@ -37,6 +37,19 @@ MonoBehaviour:
   arrowIcon: {fileID: 21300000, guid: 0b13248ba64c1ac40b06b80e48adb4b3, type: 3}
   softBacking: {fileID: 21300000, guid: 1154e777d995c7242aa6a50337490569, type: 3}
   techPatterns: 1
+  windowBacking: {r: 0.052275002, g: 0.06045625, b: 0.085, a: 0.97}
+  windowFrame: {fileID: 21300000, guid: b0ff2dbcbb0ec0e40b99b5cf9c1e99ab, type: 3}
+  windowFrameBorder: 30
+  windowFrameOutset: 5
+  panelFrame: {fileID: 0}
+  panelFrameBorder: 10
+  panelFrameOutset: 2
+  crown: {fileID: 21300000, guid: a9838fb2d9dea804c817dd864b293dd1, type: 3}
+  crownBack: {fileID: 0}
+  crownSize: {x: 52, y: 38}
+  crownBackSize: {x: 96, y: 48}
+  crownRise: 33
+  crownBackRise: 30
   titleScreen: {fileID: 7972974810867652038, guid: 266d19ecf15f9814f842719bacca662f, type: 3}
   choiceScreen: {fileID: 7972974810867652038, guid: 2942942c7943a28469379803d5ba8b0a, type: 3}
   listScreen: {fileID: 7972974810867652038, guid: b8a08de2e2ce99943a5274946a397dd9, type: 3}

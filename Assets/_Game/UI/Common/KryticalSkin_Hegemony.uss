@@ -4,3 +4,27 @@
  * same layout, the skin's sprites, fonts and colours. It applies under the .kn-faction-hegemony class, which FactionSkin
  * puts on the UI when the local player belongs to this faction. Do not edit: change the skin asset.
  */
+
+/* ---- window chrome: the pack's own frames and ornaments ---- */
+.kn-faction-hegemony .window, .kn-faction-hegemony .item-tooltip, .kn-faction-hegemony .item-menu, .kn-faction-hegemony .item-confirm, .kn-faction-hegemony .amount-dialog, .kn-faction-hegemony .game-menu, .kn-faction-hegemony .player-menu {
+    background-color: rgba(13, 15, 22, 0.97);
+}
+.kn-faction-hegemony .window > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/SciFi/SPR_SciFiSoldier_Frame_TechyDark_01.png#SPR_SciFiSoldier_Frame_TechyDark_01");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.0968px;
+    left: -5px;
+    top: -5px;
+    right: -5px;
+    bottom: -5px;
+}
+.kn-faction-hegemony .window > .kn-pip {
+    display: none;
+}
+.kn-faction-hegemony .window > .kn-crown {
+    display: flex;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/SciFi/SPR_SciFiSoldier_Greeble_BoxTop_02.png#SPR_SciFiSoldier_Greeble_BoxTop_02");
+    width: 52px;
+    height: 38px;
+    top: -33px;
+}

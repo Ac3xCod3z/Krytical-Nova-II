@@ -51,6 +51,15 @@
     -unity-slice-scale: 0.22px;
 }
 
+/* The ornaments on a window's top edge: shown, sized and placed by the faction's skin sheet. */
+.kn-crown, .kn-crown-back {
+    display: none;
+    position: absolute;
+    left: 50%;
+    translate: -50% 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 /* Small hexagon pip in the top-left of framed panels. */
 .kn-pip {
     position: absolute;

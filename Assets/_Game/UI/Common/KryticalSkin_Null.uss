@@ -1288,3 +1288,46 @@
     font-size: 15.36px;
     color: rgb(181, 161, 188);
 }
+
+/* ---- window chrome: the pack's own frames and ornaments ---- */
+.kn-faction-null .window, .kn-faction-null .item-tooltip, .kn-faction-null .item-menu, .kn-faction-null .item-confirm, .kn-faction-null .amount-dialog, .kn-faction-null .game-menu, .kn-faction-null .player-menu {
+    background-color: rgba(20, 13, 22, 0.97);
+}
+.kn-faction-null .panel > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Large_07.png#SPR_DarkFantasy_Frame_Box_Large_07");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.1px;
+    left: -1px;
+    top: -1px;
+    right: -1px;
+    bottom: -1px;
+}
+.kn-faction-null .panel > .kn-pip {
+    display: none;
+}
+.kn-faction-null .window > .kn-frame {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Large_08.png#SPR_DarkFantasy_Frame_Box_Large_08");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    -unity-slice-scale: 0.104px;
+    left: -8px;
+    top: -8px;
+    right: -8px;
+    bottom: -8px;
+}
+.kn-faction-null .window > .kn-pip {
+    display: none;
+}
+.kn-faction-null .window > .kn-crown-back {
+    display: flex;
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Greeble_Horns_05.png#SPR_DarkFantasy_Greeble_Horns_05");
+    width: 92px;
+    height: 46px;
+    top: -30px;
+}
+.kn-faction-null .window > .kn-crown {
+    display: flex;
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Greeble_Skull_01.png#SPR_DarkFantasy_Greeble_Skull_01");
+    width: 46px;
+    height: 46px;
+    top: -30px;
+}

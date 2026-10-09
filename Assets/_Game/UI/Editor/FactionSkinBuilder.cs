@@ -113,6 +113,7 @@ namespace KryticalNova.EditorTools
             {
                 UiSkin asset = LoadSkin(faction);
                 if (asset == null) continue;
+                EnsureChrome(asset);
                 string text = Generate(asset, out int rules);
                 string target = SheetPath(faction);
                 // An unchanged sheet is left alone: writing it would re-import it and rebuild every open UI.
@@ -150,6 +151,15 @@ namespace KryticalNova.EditorTools
                 output.AppendLine($"/* ---- {Path.GetFileName(path)} ---- */");
                 output.Append(sheet);
                 rules += count;
+            }
+            var chrome = new StringBuilder();
+            int chromeRules = Chrome(asset, skin.cssClass, chrome);
+            if (chromeRules > 0)
+            {
+                output.AppendLine();
+                output.AppendLine("/* ---- window chrome: the pack's own frames and ornaments ---- */");
+                output.Append(chrome);
+                rules += chromeRules;
             }
             return output.ToString().Replace("\r\n", "\n").Replace("\n", "\r\n");
         }
@@ -260,6 +270,139 @@ namespace KryticalNova.EditorTools
             });
             AssetDatabase.SaveAssets();
         }
+
+        // ---------------------------------------------------------------- window chrome
+
+        // What is read rather than glanced at: these get the skin's nearly solid backing. The always-on panels (chat,
+        // the Squad frames, prompts) keep the layout's see-through fill.
+        private static readonly string[] SolidPanels =
+        {
+            ".window", ".item-tooltip", ".item-menu", ".item-confirm", ".amount-dialog", ".game-menu", ".player-menu",
+        };
+
+        /// <summary>
+        /// Gives a skin asset made before window chrome existed the frames and ornaments of its pack. An asset that
+        /// has a window frame is left exactly as it is.
+        /// </summary>
+        private static void EnsureChrome(UiSkin skin)
+        {
+            if (skin.windowBacking.a <= 0f)
+            {
+                // The faction's dark tone, darker still.
+                Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
+                Color backing = Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.1f), 0.085f);
+                backing.a = 0.97f;
+                skin.windowBacking = backing;
+                EditorUtility.SetDirty(skin);
+                AssetDatabase.SaveAssetIfDirty(skin);
+            }
+            if (skin.windowFrame != null) return;
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                    skin.windowFrame = Load<Sprite>(SciFiHud + "Sprites/SciFi/SPR_SciFiSoldier_Frame_TechyDark_01.png");
+                    skin.windowFrameBorder = 30f;
+                    skin.windowFrameOutset = 5f;
+                    skin.panelFrame = null; // the pack's small panels are its tinted line frames: the layout's own
+                    skin.crown = Load<Sprite>(SciFiHud + "Sprites/SciFi/SPR_SciFiSoldier_Greeble_BoxTop_02.png");
+                    skin.crownSize = new Vector2(52f, 38f);
+                    skin.crownRise = 33f;
+                    skin.crownBack = null;
+                    break;
+                case FactionId.Null:
+                    skin.windowFrame = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Large_08.png");
+                    skin.windowFrameBorder = 26f;
+                    skin.windowFrameOutset = 8f;
+                    skin.panelFrame = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Large_07.png");
+                    skin.panelFrameBorder = 8f;
+                    skin.panelFrameOutset = 1f;
+                    skin.crown = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Greeble_Skull_01.png");
+                    skin.crownSize = new Vector2(46f, 46f);
+                    skin.crownRise = 30f;
+                    skin.crownBack = Load<Sprite>(DarkFantasy + "Sprites/DarkFantasy/SPR_DarkFantasy_Greeble_Horns_05.png");
+                    skin.crownBackSize = new Vector2(92f, 46f);
+                    skin.crownBackRise = 30f;
+                    break;
+                case FactionId.Covenant:
+                    skin.windowFrame = Load<Sprite>(FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_06.png");
+                    skin.windowFrameBorder = 20f;
+                    skin.windowFrameOutset = 6f;
+                    skin.panelFrame = Load<Sprite>(FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_12.png");
+                    skin.panelFrameBorder = 12f;
+                    skin.panelFrameOutset = 1f;
+                    skin.crown = Load<Sprite>(FantasyWarrior + "Sprites/FantasyWarrior/SPR_FantasyWarrior_Greeble_Curlicue_24.png");
+                    skin.crownSize = new Vector2(96f, 48f);
+                    skin.crownRise = 30f;
+                    skin.crownBack = null;
+                    break;
+                default:
+                    return;
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        /// <summary>
+        /// The rules that put a skin's own frames and ornaments on windows and panels. They come after the converted
+        /// sheets and name the frame through its parent, so they win over the tinted outline those sheets give it.
+        /// </summary>
+        private static int Chrome(UiSkin asset, string cssClass, StringBuilder output)
+        {
+            int count = 0;
+            if (asset.windowBacking.a > 0f)
+            {
+                Color32 backing = asset.windowBacking;
+                string alpha = asset.windowBacking.a.ToString("0.##", CultureInfo.InvariantCulture);
+                var selectors = new List<string>();
+                foreach (string solid in SolidPanels) selectors.Add($".{cssClass} {solid}");
+                output.AppendLine(string.Join(", ", selectors) + " {");
+                output.AppendLine($"    background-color: rgba({backing.r}, {backing.g}, {backing.b}, {alpha});");
+                output.AppendLine("}");
+                count++;
+            }
+            count += FrameRule(output, cssClass, ".panel", asset.panelFrame, asset.panelFrameBorder, asset.panelFrameOutset);
+            count += FrameRule(output, cssClass, ".window", asset.windowFrame, asset.windowFrameBorder, asset.windowFrameOutset);
+            count += CrownRule(output, cssClass, SyntySkin.CrownBackClass, asset.crownBack, asset.crownBackSize, asset.crownBackRise);
+            count += CrownRule(output, cssClass, SyntySkin.CrownClass, asset.crown, asset.crownSize, asset.crownRise);
+            return count;
+        }
+
+        private static int FrameRule(StringBuilder output, string cssClass, string parent, Sprite frame, float border, float outset)
+        {
+            if (frame == null) return 0;
+            float widest = Mathf.Max(frame.border.x, frame.border.y, frame.border.z, frame.border.w);
+            string scale = widest > 0f ? (border / widest).ToString("0.####", CultureInfo.InvariantCulture) : "1";
+            string reach = (-outset).ToString("0.##", CultureInfo.InvariantCulture) + "px";
+            output.AppendLine($".{cssClass} {parent} > .{SyntySkin.FrameClass} {{");
+            output.AppendLine($"    background-image: {UrlOf(frame)};");
+            output.AppendLine("    -unity-background-image-tint-color: rgb(255, 255, 255);");
+            output.AppendLine($"    -unity-slice-scale: {scale}px;");
+            output.AppendLine($"    left: {reach};");
+            output.AppendLine($"    top: {reach};");
+            output.AppendLine($"    right: {reach};");
+            output.AppendLine($"    bottom: {reach};");
+            output.AppendLine("}");
+            // The corner pip belongs to the tinted outline, not to a frame with corners of its own.
+            output.AppendLine($".{cssClass} {parent} > .{SyntySkin.PipClass} {{");
+            output.AppendLine("    display: none;");
+            output.AppendLine("}");
+            return 2;
+        }
+
+        private static int CrownRule(StringBuilder output, string cssClass, string layer, Sprite ornament, Vector2 size, float rise)
+        {
+            if (ornament == null) return 0;
+            output.AppendLine($".{cssClass} .window > .{layer} {{");
+            output.AppendLine("    display: flex;");
+            output.AppendLine($"    background-image: {UrlOf(ornament)};");
+            output.AppendLine($"    width: {size.x.ToString("0.##", CultureInfo.InvariantCulture)}px;");
+            output.AppendLine($"    height: {size.y.ToString("0.##", CultureInfo.InvariantCulture)}px;");
+            output.AppendLine($"    top: {(-rise).ToString("0.##", CultureInfo.InvariantCulture)}px;");
+            output.AppendLine("}");
+            return 1;
+        }
+
+        private static string UrlOf(Sprite sprite) => $"url(\"/{AssetDatabase.GetAssetPath(sprite)}#{sprite.name}\")";
 
         private static void Ensure(FactionId faction, Action<UiSkin> defaults)
         {

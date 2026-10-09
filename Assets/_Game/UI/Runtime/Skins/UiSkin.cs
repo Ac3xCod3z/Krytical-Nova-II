@@ -68,6 +68,25 @@ namespace KryticalNova.UI
         [Tooltip("The hexagon, cross and scan-line patterns behind the world map and the larger panels. A look of the sci-fi packs only.")]
         public bool techPatterns;
 
+        [Header("Window chrome: the pack's own frames and ornaments, in their own colours (never tinted)")]
+        [Tooltip("The colour behind a window's fill, and behind the tooltip, the menus and the dialogs: nearly solid, so the HUD and the world do not read through what is being read. Clear: the layout's own see-through fill stays.")]
+        public Color windowBacking = Color.clear;
+        [Tooltip("The frame of a window (Pack, Equipment, Skills, Settings and the like): drawn over its edge.")]
+        public Sprite windowFrame;
+        [Tooltip("How thick the window frame's widest side is drawn, in panel pixels.")]
+        [Min(0f)] public float windowFrameBorder = 20f;
+        [Tooltip("How far the window frame reaches out past the window's edge, in panel pixels: spikes and corner pieces stand outside.")]
+        public float windowFrameOutset = 6f;
+        [Tooltip("The frame of a small panel (chat, a prompt, a tooltip, a dialog). None: the tinted outline of the layout stays.")]
+        public Sprite panelFrame;
+        [Min(0f)] public float panelFrameBorder = 10f;
+        public float panelFrameOutset = 2f;
+        [Tooltip("The ornament on the middle of a window's top edge, and one drawn behind it (horns behind a skull). Either may be none.")]
+        public Sprite crown, crownBack;
+        [Tooltip("The ornaments' sizes in panel pixels, and how far their tops stand above the window's top edge.")]
+        public Vector2 crownSize = new Vector2(64f, 32f), crownBackSize = new Vector2(96f, 48f);
+        public float crownRise = 24f, crownBackRise = 30f;
+
         [Header("Menus (the title flow): the pack's own screens")]
         [Tooltip("The pack's title screen.")]
         public GameObject titleScreen;
