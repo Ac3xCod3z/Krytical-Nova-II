@@ -22,6 +22,14 @@ namespace KryticalNova.Core
         public static IPartySink Party { get; private set; }
         public static IRequestPromptSink Prompts { get; private set; }
         public static IServiceWindowSink Services { get; private set; }
+        public static IAnnouncementSink Announcements { get; private set; }
+
+        public static void RegisterAnnouncements(IAnnouncementSink sink) => Announcements = sink;
+
+        public static void UnregisterAnnouncements(IAnnouncementSink sink)
+        {
+            if (ReferenceEquals(Announcements, sink)) Announcements = null;
+        }
 
         public static void RegisterServices(IServiceWindowSink sink) => Services = sink;
 

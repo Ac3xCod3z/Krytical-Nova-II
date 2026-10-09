@@ -1,0 +1,39 @@
+/* The HUD's toast (ToastHudController): server-wide news, one at a time, above the zone notice and the banners. */
+
+.toast {
+    position: absolute;
+    top: 9%;
+    left: 50%;
+    translate: -50% -12px;
+    min-width: 380px;
+    max-width: 720px;
+    align-items: center;
+    padding: 10px 40px 12px 40px;
+    opacity: 0;
+    transition-property: opacity, translate;
+    transition-duration: 0.35s;
+    transition-timing-function: ease-out;
+}
+
+.toast--shown {
+    opacity: 1;
+    translate: -50% 0;
+}
+
+.toast-eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    -unity-text-align: middle-center;
+}
+
+.toast-text {
+    font-size: 17px;
+    margin-top: 2px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    color: rgb(236, 244, 248);
+}
+
+/* A GM message keeps the GM channel's gold; a Temper takes the top band's orange. */
+.toast--gm .toast-eyebrow { color: rgb(255, 184, 60); }
+.toast--temper .toast-eyebrow { color: rgb(255, 133, 31); }

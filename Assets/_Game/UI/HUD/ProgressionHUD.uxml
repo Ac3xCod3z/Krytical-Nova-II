@@ -21,6 +21,7 @@
     <ui:Template name="HeraldWindow" src="Herald/HeraldWindow.uxml" />
     <ui:Template name="EmoteWheel" src="../Social/EmoteWheel.uxml" />
     <ui:Template name="GameMenu" src="GameMenu/GameMenu.uxml" />
+    <ui:Template name="ToastPanels" src="Toast/ToastPanels.uxml" />
     <ui:VisualElement name="game-ui" class="kn-root" picking-mode="Ignore">
         <!-- Namecards over players' heads (PlayerNamecardController). First, so every panel draws over them. -->
         <ui:VisualElement name="player-namecards" class="player-namecards" picking-mode="Ignore" />
@@ -309,6 +310,9 @@
 
         <!-- The emote wheel (EmoteWheelController): UI/Social/EmoteWheel.uxml -->
         <ui:Instance template="EmoteWheel" name="emote-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+
+        <!-- Server-wide news as a toast (ToastHudController): UI/HUD/Toast/ToastPanels.uxml -->
+        <ui:Instance template="ToastPanels" name="toast-layer" class="hud-overlay-layer" picking-mode="Ignore" />
 
         <!-- Network panel (NetworkSessionPanel) -->
         <ui:VisualElement name="network-panel" class="panel blocks-world hud-movable">

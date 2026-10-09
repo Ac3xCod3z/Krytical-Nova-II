@@ -210,6 +210,40 @@ namespace KryticalNova.Tests
                 GearProgressionRules.GlowLookOf(temper, ItemRarity.Rare).intensity * 2f, "an Epic shows the same colour far brighter");
         }
 
+        [Test]
+        public void EveryGlowBandStartsExactlyWhereTheSettingsSay()
+        {
+            // The forge's rim and ring take the band's colour: one percent short of a band is still the band below.
+            TemperSettings temper = settings.temper;
+            TemperGlowBand last = default;
+            for (int i = 0; i < temper.glowBands.Length; i++)
+            {
+                TemperGlowBand band = temper.glowBands[i];
+                Assert.IsTrue(GearProgressionRules.TryGetGlow(temper, band.from, out TemperGlowBand at));
+                Assert.AreEqual(band.color, at.color, $"{band.name} starts at {band.from}%");
+                bool below = GearProgressionRules.TryGetGlow(temper, band.from - 1, out TemperGlowBand under);
+                if (i == 0) Assert.IsFalse(below, "nothing glows below the first band");
+                else Assert.AreEqual(last.color, under.color, $"{band.from - 1}% is still {last.name}");
+                last = band;
+            }
+        }
+
+        [Test]
+        public void ReachingTheAnnouncedTemperIsNewsOnce()
+        {
+            TemperSettings temper = settings.temper;
+            Assert.AreEqual(120, temper.announceFrom);
+            Assert.IsTrue(GearProgressionRules.TemperIsAnnounced(temper, 119, 120));
+            Assert.IsTrue(GearProgressionRules.TemperIsAnnounced(temper, 108, 123), "a big Alloy that jumps past it");
+            Assert.IsFalse(GearProgressionRules.TemperIsAnnounced(temper, 105, 117), "not there yet");
+            Assert.IsFalse(GearProgressionRules.TemperIsAnnounced(temper, 120, 120), "already there");
+            Assert.IsFalse(GearProgressionRules.TemperIsAnnounced(temper, 120, 135), "announced when it got there, not again above");
+            temper.announceFrom = 0;
+            Assert.IsFalse(GearProgressionRules.TemperIsAnnounced(temper, 119, 120), "0 switches it off");
+            StringAssert.Contains("Tolan", GearProgressionRules.TemperAnnouncement("Tolan", "Sunlord Monoblade", 120));
+            StringAssert.Contains("Sunlord Monoblade", GearProgressionRules.TemperAnnouncement("Tolan", "Sunlord Monoblade", 120));
+        }
+
         // ---------------------------------------------------------------- what the state is worth
 
         private float Total(ItemDefinition item, GearItemState state, StatType stat) =>

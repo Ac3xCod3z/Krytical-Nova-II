@@ -276,6 +276,8 @@ The three words are the forge's own (8 Oct 2026, `Design/13_comic_effects.md`): 
 
 Sound slots are on the prefab and empty.
 
+**Announced to the server** (9 Oct 2026). The success that takes a piece to `temper.announceFrom` (120; 0 switches it off) is told to every player on the server, wherever they are: a System chat line "<player> tempered <item> to 120%." and the same text as a toast (`PlayerGearWork.ServerTemper` → `PlayerChat.ServerAnnounce`, one message carrying both). It is said once, on the step that reaches it (`GearProgressionRules.TemperIsAnnounced`), not for attempts above it.
+
 **Glow.** The bands in the table (green and yellow are the owner's memory of Twelve Sky 2 for the range below 60%: at launch Rares glowed green up to 57%, the Classic guide lists yellow for 1–59%). The colour is the same for every rarity; what differs is how it is shown (`temper.glowLooks`): Common, Uncommon and Rare a soft halo that breathes, Epic the same colour several times brighter and wider, with flame, lightning and a few sparks in that colour. Shown on the weapon (`WeaponVisualMount.SetGlow`, drawn by the Glow Halo renderer feature) and as the "+36" on item icons; outfits do not glow yet. Other players see it: the Temper % of each worn slot is replicated to everyone (`PlayerEquipment.GetTemper`).
 
 **The state** of a piece (Temper, Fusion stage, Tuning stage) is `GearItemState`, packed into `ItemStack.data`, so it travels with the item through Pack, slot, Vault, Trade, Kiosk and the ground and is saved with it.

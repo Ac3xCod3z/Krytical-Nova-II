@@ -160,6 +160,17 @@ namespace KryticalNova.Items
             return state;
         }
 
+        /// <summary>
+        /// True when a Temper that went from <paramref name="before"/> to <paramref name="after"/> reached the
+        /// Temper every player is told about: the step that crosses it, once, not every attempt above it.
+        /// </summary>
+        public static bool TemperIsAnnounced(TemperSettings settings, int before, int after) =>
+            settings != null && settings.announceFrom > 0 && before < settings.announceFrom && after >= settings.announceFrom;
+
+        /// <summary>The line every player reads when a piece reaches the announced Temper.</summary>
+        public static string TemperAnnouncement(string playerName, string itemName, int temper) =>
+            $"{playerName} tempered {itemName} to {temper}%.";
+
         /// <summary>The glow band a Temper % falls in, or false below the first band.</summary>
         public static bool TryGetGlow(TemperSettings settings, int temper, out TemperGlowBand band)
         {

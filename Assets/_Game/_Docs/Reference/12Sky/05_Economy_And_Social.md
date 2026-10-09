@@ -139,6 +139,13 @@ Hold **B** (rebindable): a ring of eight categories; a click turns it into that 
 - It **ends** when the follower gives a move order of their own (a click, a jump, map travel, Escape on a journey), fights (strikes, casts a skill, is struck, or is in a Callout), or is defeated; when the two are no longer in one Squad; when the member leaves the map (their player is gone: there is one map today); or when the member is more than the maximum distance ahead. The follower is told why in the System channel.
 - **Numbers** (`SquadSettings.asset`): stop 2.5 m short, set off again once the member is 4 m away, lost beyond 60 m, a look every 0.4 s.
 
+## Toasts: news for the whole server
+
+- A **toast** is a short panel near the top of the screen, in the player's faction skin, for news every player on the server is told. Two things use it: a **GM message** (`gm.say "text"`, or the host's own `/gm text`) and a piece of gear **tempered to 120 %** (the player's and the item's name).
+- The toast is added to the chat line, which stays as it was: the server sends both in one message (`PlayerChat.ServerAnnounce` → `AnnounceRpc`, to each player on their own player object, so distance does not matter), and the player's game puts the line in chat and hands the same text to `ClientPresentationRegistry.Announcements` (`ToastHudController`).
+- One at a time: a toast waits until the one on screen has had its time and faded (`ToastQueue`). **Numbers** (`UI/HUD/Toast/ToastSettings.asset`): 5 s on screen, 0.35 s fade, 8 may wait (one more and the oldest waiting is dropped). The Temper that is announced is `temper.announceFrom` in `GearProgressionSettings.asset`.
+- The older one-line notice in the middle of the screen (`IGameMessageSink`, the zone toast) is a different thing: the player's own notices, no queue. It is unchanged.
+
 ## Who may deal with whom
 
 | | Same faction | Another faction |
