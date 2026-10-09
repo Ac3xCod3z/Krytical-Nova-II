@@ -34,6 +34,11 @@ namespace KryticalNova.UI
         private VisualElement root;
         private VisualElement characterWindow;
         private PlayerNova boundNova;
+        private PlayerSerums boundSerums;
+        // The Serum lines made so far. Kept here: a skinned card has children of its own (its frame), so the list's
+        // children are not just these.
+        private readonly List<VisualElement> serumRows = new List<VisualElement>(SerumSettings.MaxKinds);
+        private VisualElement serumRowsOwner;
         private bool renownTipAttached;
 
         /// <summary>The local hotbar, shared with the settings/network panels so they can suppress its keys while typing.</summary>
@@ -375,6 +380,7 @@ namespace KryticalNova.UI
             combatSkills = player.GetComponent<PlayerCombatSkills>();
             buffManager = player.GetComponent<CharacterBuffManager>();
             boundNova = player.GetComponent<PlayerNova>();
+            boundSerums = player.GetComponent<PlayerSerums>();
             if (progression == null || skills == null || hotbar == null || movement == null || resources == null || jumpMotor == null)
             {
                 Debug.LogError($"ProgressionHUD: '{player.name}' is missing progression, skills, hotbar, movement, resources or jump components.", this);
@@ -437,6 +443,7 @@ namespace KryticalNova.UI
             progression.LevelGained -= OnLevelGained;
             if (boundNova != null) boundNova.Changed -= Refresh;
             boundNova = null;
+            boundSerums = null;
             skills.Changed -= Refresh;
             hotbar.Changed -= Refresh;
             hotbar.CharacterWindowRequested -= ToggleCharacter;
@@ -586,6 +593,56 @@ namespace KryticalNova.UI
             root.Q<Label>("renown-standing").text = (boundNova != null ? boundNova.WornStanding : null) ?? "None";
         }
 
+        /// <summary>
+        /// The Serums the character has taken, under the attributes: one line per kind, how many of how many and
+        /// what they add in all ("Strength Serum (37/100)   +111 Attack Power"). Nothing shows until one is taken.
+        /// The stats below already include it: it reaches them as modifiers, like gear. Redrawn with the stats.
+        /// </summary>
+        private void RefreshSerums()
+        {
+            VisualElement block = root.Q("serum-block");
+            VisualElement list = root.Q("serum-list");
+            if (block == null || list == null) return;
+            SerumSettings rules = boundSerums != null ? boundSerums.Settings : null;
+            SerumState taken = boundSerums != null ? boundSerums.State : default;
+            bool any = rules != null && taken.Any;
+            block.style.display = any ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!any) return;
+            if (serumRowsOwner != list)
+            {
+                serumRowsOwner = list; // the HUD was rebuilt: the old lines went with it
+                serumRows.Clear();
+            }
+
+            int row = 0, kinds = SerumRules.KindCount(rules);
+            for (int kind = 0; kind < kinds; kind++)
+            {
+                int count = taken.Taken(kind);
+                if (count <= 0) continue;
+                if (row == serumRows.Count) serumRows.Add(AddSerumRow(list));
+                VisualElement line = serumRows[row];
+                row++;
+                line.style.display = DisplayStyle.Flex;
+                ((Label)line[0]).text = $"{rules.serums[kind].displayName} ({count}/{rules.Cap})";
+                ((Label)line[1]).text = SerumRules.Gains(rules.serums[kind], count);
+            }
+            for (int i = row; i < serumRows.Count; i++) serumRows[i].style.display = DisplayStyle.None;
+        }
+
+        private static VisualElement AddSerumRow(VisualElement list)
+        {
+            var line = new VisualElement();
+            line.AddToClassList("combat-stat-row");
+            var name = new Label();
+            name.AddToClassList("combat-stat-label");
+            var total = new Label();
+            total.AddToClassList("combat-stat-value");
+            line.Add(name);
+            line.Add(total);
+            list.Add(line);
+            return line;
+        }
+
         /// <summary>What the hover on the Renown block says: where Renown goes, and what both ladders give right now.</summary>
         private string RenownBreakdown()
         {
@@ -628,6 +685,7 @@ namespace KryticalNova.UI
             xp.value = progression.IsAtLevelCap ? ProgressBarScale : ProgressBarScale * progression.Experience / Mathf.Max(1f, progression.ExperienceRequired);
             xp.title = progression.IsAtLevelCap ? "MAXIMUM LEVEL" : $"{progression.Experience:N0} / {progression.ExperienceRequired:N0} XP";
             RefreshRenown();
+            RefreshSerums();
             root.Q<Label>("stat-points").text = $"{progression.StatPoints} points available";
             root.Q<Label>("stat-note").text = $"Spend {progression.AllocationCost} point(s) per increase. Vitality raises HP; Spirit raises Chi. "
                 + (resources.Data != null && resources.Data.fillGainedCapacity ? "New capacity also raises current resources. " : "Only maximum capacity increases. ")

@@ -22,7 +22,9 @@ namespace KryticalNova.Items
     {
         None = 0,
         /// <summary>Feeds the pet that is out (a Pet Ration).</summary>
-        FeedPet = 1
+        FeedPet = 1,
+        /// <summary>Raises a stat for good, up to a number of times per character (a Serum).</summary>
+        Serum = 2
     }
 
     /// <summary>Where a weapon rides while it is not in the hand. Append only.</summary>

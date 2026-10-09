@@ -7,8 +7,8 @@ using UnityEngine;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Creates every item that is not gear from one table: the Stims today, and whatever a later system needs
-    /// (permits, rations, Recall Tags, Alloys, Skill Chips) as a new row. Registers them in the item catalog.
+    /// Creates every item that is not gear from one table: the Stims, permits, rations, forge materials and Serums
+    /// today, and whatever a later system needs (Recall Tags, Skill Chips) as a new row. Registers them in the item catalog.
     /// An asset that already exists keeps its numbers and text, so hand tuning survives a re-run; only what the
     /// table owns outright (what kind of item it is) is refreshed. IDs are never renumbered: append.
     /// </summary>
@@ -36,6 +36,8 @@ namespace KryticalNova.EditorTools
             public float Health, Flux;
             public bool Hotbar;
             public ItemUseEffect Effect;
+            /// <summary>Seconds before the next consumable can be used. 0 = the item's usual one.</summary>
+            public float Cooldown;
             /// <summary>Null = the consumables folder.</summary>
             public string Folder;
         }
@@ -90,7 +92,29 @@ namespace KryticalNova.EditorTools
                 "Used up by a Tuning attempt, stages 13 to 25."),
             Material(GearMaterialIds.ResetChip, "Tuning_ResetChip", "Reset Chip", "RESET", ItemRarity.Rare,
                 "Returns a piece of gear to Tune 0. Nothing is refunded."),
+
+            Serum(KryticalNova.Progression.SerumIds.Strength, "Serum_Strength", "Strength Serum", "STR",
+                "A one-way dose for the muscle: what it adds to your strikes stays for good."),
+            Serum(KryticalNova.Progression.SerumIds.Vitality, "Serum_Vitality", "Vitality Serum", "VIT",
+                "A one-way dose for the body: the health it adds stays for good."),
+            Serum(KryticalNova.Progression.SerumIds.Agility, "Serum_Agility", "Agility Serum", "AGI",
+                "A one-way dose for the nerves: surer strikes and quicker feet, for good."),
+            Serum(KryticalNova.Progression.SerumIds.Spirit, "Serum_Spirit", "Spirit Serum", "SPI",
+                "A one-way dose for the mind: the Flux it adds stays for good."),
+            Serum(KryticalNova.Progression.SerumIds.ElementalStrike, "Serum_ElementalStrike", "Elemental Strike Serum", "E.ATK",
+                "A one-way dose that charges your strikes with the elements, for good."),
+            Serum(KryticalNova.Progression.SerumIds.ElementalWard, "Serum_ElementalWard", "Elemental Ward Serum", "E.DEF",
+                "A one-way dose that hardens you against the elements, for good."),
         };
+
+        // Serums (Twelve Sky 2: Elixirs). What each one gives and how many a character can take is SerumSettings;
+        // the tooltip reads it from there, so the description carries no number. They are taken many at a time
+        // (a hundred of a kind), so one does not hold the next up for a whole second.
+        private const float SerumCooldown = 0.25f;
+
+        private static Row Serum(ushort id, string asset, string name, string glyph, string description) =>
+            new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = ItemRarity.Rare, Description = description,
+                Stack = 99, Effect = ItemUseEffect.Serum, Cooldown = SerumCooldown };
 
         private static Row Material(ushort id, string asset, string name, string glyph, ItemRarity rarity, string description) =>
             new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = rarity, Description = description, Stack = 999, Folder = MaterialFolder };
@@ -100,7 +124,7 @@ namespace KryticalNova.EditorTools
         public const ushort KioskPermit14Id = 9020;
         public const ushort KioskPermit30Id = 9021;
 
-        [MenuItem("Krytical Nova/Items/5. Generate Utility Items (Stims, Permits, Rations, Forge Materials)")]
+        [MenuItem("Krytical Nova/Items/5. Generate Utility Items (Stims, Permits, Rations, Forge Materials, Serums)")]
         public static void Generate()
         {
             var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(CatalogPath);
@@ -143,6 +167,7 @@ namespace KryticalNova.EditorTools
                 def.maxStack = row.Stack;
                 def.restoreHealth = row.Health;
                 def.restoreChi = row.Flux;
+                if (row.Cooldown > 0f) def.useCooldown = row.Cooldown;
             }
 
             // What the table owns on every run: the kind of item this is, and the text it shows until it has an icon.
