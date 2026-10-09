@@ -1374,8 +1374,12 @@
 }
 
 /* ---- window chrome: the pack's own frames and ornaments ---- */
-.kn-faction-covenant .window, .kn-faction-covenant .item-tooltip, .kn-faction-covenant .item-menu, .kn-faction-covenant .item-confirm, .kn-faction-covenant .amount-dialog, .kn-faction-covenant .game-menu, .kn-faction-covenant .player-menu {
-    background-color: rgba(22, 18, 13, 0.7);
+.kn-faction-covenant .window, .kn-faction-covenant .game-menu {
+    background-color: rgba(22, 18, 13, 0.4);
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-covenant .item-tooltip, .kn-faction-covenant .item-menu, .kn-faction-covenant .item-confirm, .kn-faction-covenant .amount-dialog, .kn-faction-covenant .player-menu {
+    background-color: rgba(22, 18, 13, 0.92);
 }
 .kn-faction-covenant Button {
     background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/Button_Covenant.png#Button_Covenant");

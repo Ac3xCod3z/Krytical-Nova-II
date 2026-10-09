@@ -1374,8 +1374,12 @@
 }
 
 /* ---- window chrome: the pack's own frames and ornaments ---- */
-.kn-faction-null .window, .kn-faction-null .item-tooltip, .kn-faction-null .item-menu, .kn-faction-null .item-confirm, .kn-faction-null .amount-dialog, .kn-faction-null .game-menu, .kn-faction-null .player-menu {
-    background-color: rgba(20, 13, 22, 0.7);
+.kn-faction-null .window, .kn-faction-null .game-menu {
+    background-color: rgba(20, 13, 22, 0.4);
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0);
+}
+.kn-faction-null .item-tooltip, .kn-faction-null .item-menu, .kn-faction-null .item-confirm, .kn-faction-null .amount-dialog, .kn-faction-null .player-menu {
+    background-color: rgba(20, 13, 22, 0.92);
 }
 .kn-faction-null Button {
     background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/Button_Null.png#Button_Null");

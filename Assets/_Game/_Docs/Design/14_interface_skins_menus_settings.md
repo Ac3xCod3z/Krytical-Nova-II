@@ -360,7 +360,7 @@ flattened into `UI/HUD/Faction/<Faction>/Art/`):
 
 A slider's value is written on its handle and an arrow at either end moves it a twentieth of its range; a switch
 shows ON and OFF side by side with the one that holds lit (a click anywhere on its line still flips it). The game
-menu wears the item card's frame. **A window's backing is 70 % solid** (`windowBacking`), so the world reads faintly
+menu wears the item card's frame. **A window's backing is 40 % solid** (owner, 9 Oct 2026) (`windowBacking`), so the world reads faintly
 through every window as through the packs' own; the item card stays solid.
 
 ### Controls: keys as key caps

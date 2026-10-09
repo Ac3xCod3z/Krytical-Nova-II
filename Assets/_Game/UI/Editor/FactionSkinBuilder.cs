@@ -637,7 +637,7 @@ namespace KryticalNova.EditorTools
                 // The faction's dark tone, darker still.
                 Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
                 Color backing = Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.1f), 0.085f);
-                backing.a = 0.7f; // the world reads faintly through a window, as through the packs' own
+                backing.a = 0.4f; // the world reads faintly through a window, as through the packs' own
                 skin.windowBacking = backing;
                 EditorUtility.SetDirty(skin);
                 AssetDatabase.SaveAssetIfDirty(skin);
@@ -1030,12 +1030,20 @@ namespace KryticalNova.EditorTools
             {
                 Color32 backing = asset.windowBacking;
                 string alpha = asset.windowBacking.a.ToString("0.##", CultureInfo.InvariantCulture);
-                var selectors = new List<string>();
-                foreach (string solid in SolidPanels) selectors.Add($".{cssClass} {solid}");
-                output.AppendLine(string.Join(", ", selectors) + " {");
+                // A window and the game menu are as solid as the skin says, and no more: the panel's own picture
+                // under the colour would add to it, so it is left out. What is read at a glance over a page (the
+                // tooltip, an item's menu, a dialog) stays nearly solid.
+                var windows = new List<string>();
+                var notes = new List<string>();
+                foreach (string solid in SolidPanels) (solid == ".window" || solid == ".game-menu" ? windows : notes).Add($".{cssClass} {solid}");
+                output.AppendLine(string.Join(", ", windows) + " {");
                 output.AppendLine($"    background-color: rgba({backing.r}, {backing.g}, {backing.b}, {alpha});");
+                output.AppendLine("    -unity-background-image-tint-color: rgba(0, 0, 0, 0);");
                 output.AppendLine("}");
-                count++;
+                output.AppendLine(string.Join(", ", notes) + " {");
+                output.AppendLine($"    background-color: rgba({backing.r}, {backing.g}, {backing.b}, {Mathf.Max(asset.windowBacking.a, 0.92f).ToString("0.##", CultureInfo.InvariantCulture)});");
+                output.AppendLine("}");
+                count += 2;
             }
             if (asset.button != null)
             {
