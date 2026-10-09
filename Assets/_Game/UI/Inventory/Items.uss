@@ -188,13 +188,15 @@
     left: 0; top: 0; right: 0; bottom: 0;
     -unity-background-scale-mode: stretch-to-fill;
 }
+/* What the mouse does on the model, along the foot of the picture. */
 .preview-hint {
     position: absolute;
-    left: 0; right: 0; bottom: 6px;
-    -unity-text-align: middle-center;
-    font-size: 10px;
-    color: rgba(146, 162, 178, 0.8);
+    left: 0; right: 0; bottom: 4px;
+    margin: 0;
+    justify-content: center;
 }
+.preview-hint > .prompt-text { font-size: 10px; margin-right: 10px; }
+.preview-hint > .key-mouse { width: 13px; height: 18px; }
 .preview-reset {
     position: absolute;
     right: 6px; top: 6px;

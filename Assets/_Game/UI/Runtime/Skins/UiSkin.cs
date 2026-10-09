@@ -96,6 +96,13 @@ namespace KryticalNova.UI
         [Min(0f)] public float cellBorder = 8f;
         [Tooltip("The round close button on a window's corner. The X is drawn over it.")]
         public Sprite closeButton;
+        [Tooltip("A key cap: the pack's own cap shape. Tinted, unlike the rest of the chrome: the packs colour one cap art three ways.")]
+        public Sprite keycap;
+        [Min(0f)] public float keycapBorder = 8f;
+        [Tooltip("A cap at rest, its lettering, and a cap under the pointer or waiting for a key (the packs' filled cap).")]
+        public Color keycapTint = Color.clear, keycapLetter = Color.white, keycapHot = Color.white;
+        [Tooltip("What a key does, and the device on top of the Controls page.")]
+        public Color controlsLabel = Color.white;
         [Tooltip("The ornament on the middle of a window's top edge, and one drawn behind it (horns behind a skull). Either may be none.")]
         public Sprite crown, crownBack;
         [Tooltip("The ornaments' sizes in panel pixels, and how far their tops stand above the window's top edge.")]

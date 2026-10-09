@@ -230,13 +230,14 @@ it does. APPLY keeps the changes; REVERT puts back everything as it was when the
 
 ### Controls: keys as key caps
 
-`ControlsSettingsTab` lays a row out as the packs' input screens do: the key first, as a cap (`KeyCaps`), then what it
-does, then RESET. A one-letter key gets a square cap, a word a wider one; Enter, Space, Tab, Backspace and the arrows
-get Synty's pictures (`InterfaceCore/Sprites/Icons_Input/MouseKeyboard`), and the fixed mouse keys the mouse with the
-meant button coloured. The cap is the skin's `token` part with the base sheet's colours, so each faction's caps come
-out of the conversion in its own art and palette. Under the pointer a cap fills with the accent; while the page waits
-it says PRESS A KEY. The packs installed here have no keyboard picture (the one on top of Synty's demo screen): none
-is shown.
+`ControlsSettingsTab` lays the page out as the packs' own controls pages do: the keyboard picture on top
+(`ICON_Input_PC_Medium`), then bare lines, the key first as a cap (`KeyCaps`) ending at the page's middle and what it
+does after it. A one-letter key gets a square cap, a word a wider one; Enter, Space, Tab, Backspace and the arrows get
+Synty's pictures (`InterfaceCore/Sprites/Icons_Input/MouseKeyboard`), and the fixed mouse keys the mouse with the
+meant button coloured. A cap is the skin's `keycap` in the pack's own three colours (`keycapTint`, `keycapLetter`,
+`keycapHot`): the Hegemony's blue cut-corner cap with white letters, the Null's rough dark cap that fills red, the
+Covenant's rough slate cap with gold letters. Under the pointer a cap fills; while the page waits it says PRESS A KEY.
+RESET shows on the line the pointer is on.
 
 ## 8. Tests
 

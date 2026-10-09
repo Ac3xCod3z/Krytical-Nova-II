@@ -64,44 +64,32 @@
 
 /* A key is a cap, first on its row; what it does is said after it. */
 .settings-key { min-height: 26px; margin: 0 4px 0 0; padding: 2px 8px; font-size: 12px; color: rgb(236, 206, 140); }
-.controls-row .key-caps { flex-direction: row; justify-content: flex-end; align-items: center; flex-shrink: 0; width: 150px; min-width: 150px; margin: 0 16px 0 0; padding: 0; }
-.controls-row .settings-key { background-image: none; background-color: rgba(0, 0, 0, 0); min-height: 30px; }
-.controls-row .settings-row-label { font-size: 14px; }
-.key-cap {
-    flex-shrink: 0;
-    min-width: 30px;
-    height: 30px;
-    margin: 0 0 0 5px;
-    padding: 0 8px;
-    align-items: center;
-    justify-content: center;
-    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_03.png#SPR_HUD_SciFiSoldier_Box_03");
-    -unity-background-image-tint-color: rgb(16, 58, 96);
-    -unity-slice-scale: 0.18px;
-    transition-property: -unity-background-image-tint-color, scale;
-    transition-duration: 0.1s;
+/* The Controls page is laid out as the packs' own: the device on top, then bare lines, the caps ending at the page's
+   middle and what they do starting after it. */
+.controls-device {
+    align-self: center;
+    width: 84px;
+    height: 56px;
+    margin: 6px 0 10px 0;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(236, 244, 250);
+    background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Medium_Clean.png");
 }
-.key-cap.wide { padding: 0 12px; }
-.key-cap-text { margin: 0; padding: 0; font-size: 14px; color: rgb(240, 246, 250); -unity-text-align: middle-center; -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf"); }
-.key-cap-picture { width: 18px; height: 18px; -unity-background-scale-mode: scale-to-fit; -unity-background-image-tint-color: rgb(240, 246, 250); }
-.key-cap-picture.glyph-enter { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Enter_Clean.png"); }
-.key-cap-picture.glyph-space { width: 34px; background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Space_Clean.png"); }
-.key-cap-picture.glyph-tab { width: 26px; background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Tab_Clean.png"); }
-.key-cap-picture.glyph-backspace { width: 26px; background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Backspace_Clean.png"); }
-.key-cap-picture.glyph-up { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Arrow_Up_Clean.png"); }
-.key-cap-picture.glyph-down { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Arrow_Down_Clean.png"); }
-.key-cap-picture.glyph-left { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Arrow_Left_Clean.png"); }
-.key-cap-picture.glyph-right { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_Arrow_Right_Clean.png"); }
-/* The mouse, with the button that is meant coloured. */
-.key-mouse { flex-shrink: 0; width: 24px; height: 32px; margin: 0 0 0 5px; -unity-background-scale-mode: scale-to-fit; }
-.key-mouse.mouse-left { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_MouseColor_Left_Underlay.png"); }
-.key-mouse.mouse-right { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_MouseColor_Right_Underlay.png"); }
-.key-mouse.mouse-middle { background-image: url("/Assets/Synty/InterfaceCore/Sprites/Icons_Input/MouseKeyboard/ICON_Input_PC_MouseColor_Middle_Underlay.png"); }
+.controls-help { -unity-text-align: middle-center; margin-bottom: 6px; }
+.controls-row { margin: 1px 0; padding: 3px 0; min-height: 42px; }
+.controls-row .key-caps { flex-direction: row; justify-content: flex-end; align-items: center; flex-shrink: 0; width: 44%; min-width: 44%; margin: 0 18px 0 0; padding: 0; }
+.controls-row .settings-key { background-image: none; background-color: rgba(0, 0, 0, 0); min-height: 36px; }
+.controls-row .settings-row-label { font-size: 16px; color: rgb(236, 244, 250); }
+.controls-row .key-cap { min-width: 36px; height: 36px; margin-left: 6px; }
+.controls-row .key-cap-text { font-size: 16px; }
+.controls-row .key-cap-picture { width: 20px; height: 20px; }
+.controls-row .key-mouse { width: 27px; height: 36px; margin-left: 8px; }
+/* Putting a key back is offered on the line the pointer is on. */
+.controls-row .settings-key-reset { opacity: 0; transition-property: opacity; transition-duration: 0.12s; }
+.controls-row:hover .settings-key-reset { opacity: 1; }
 /* Under the pointer a cap is filled with the accent; while it waits for a key it is brighter still. */
 .settings-key:hover .key-cap { -unity-background-image-tint-color: rgb(34, 128, 112); scale: 1.06 1.06; }
 .settings-key.listening .key-cap { -unity-background-image-tint-color: rgb(60, 190, 166); }
-.controls-row.fixed .key-cap { -unity-background-image-tint-color: rgb(30, 42, 56); }
-.controls-row.fixed .key-cap-text { color: rgb(170, 184, 198); }
 .settings-key-reset { min-width: 50px; min-height: 26px; margin: 0; padding: 0 6px; font-size: 10px; color: rgb(156, 172, 188); }
 .settings-row.fixed .settings-row-label, .settings-row.fixed .settings-row-value { color: rgb(124, 138, 152); }
 

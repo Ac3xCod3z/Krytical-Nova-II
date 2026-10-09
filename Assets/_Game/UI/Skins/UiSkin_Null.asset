@@ -53,6 +53,12 @@ MonoBehaviour:
   cell: {fileID: 21300000, guid: c8addf7335dbdb6489ff9665d851fd43, type: 3}
   cellBorder: 9
   closeButton: {fileID: 21300000, guid: 4a7e4bf3171fa3440a0d3b2205994ae2, type: 3}
+  keycap: {fileID: 21300000, guid: 1b03e3aed8723c246ba1c548a51c5300, type: 3}
+  keycapBorder: 9
+  keycapTint: {r: 0.17254902, g: 0.17254902, b: 0.1882353, a: 1}
+  keycapLetter: {r: 0.972549, g: 0.9647059, b: 0.9411765, a: 1}
+  keycapHot: {r: 0.8, g: 0.16470589, b: 0.18039216, a: 1}
+  controlsLabel: {r: 0.89411765, g: 0.7372549, b: 0.42352942, a: 1}
   crown: {fileID: 21300000, guid: b03edf209fda84a49aef3cb5217d93b5, type: 3}
   crownBack: {fileID: 21300000, guid: f48b836aaa5fa2c4da26bf6fb97e39df, type: 3}
   crownSize: {x: 46, y: 46}

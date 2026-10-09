@@ -391,6 +391,39 @@ namespace KryticalNova.EditorTools
         /// </summary>
         private static void EnsureDesign(UiSkin skin)
         {
+            if (skin.keycap == null)
+            {
+                // The caps of each pack's own controls page: its cap shape, in the three colours the pack gives it.
+                switch (skin.faction)
+                {
+                    case FactionId.Hegemony:
+                        skin.keycap = skin.token;
+                        skin.keycapBorder = 9f;
+                        skin.keycapTint = new Color32(13, 63, 115, 255);
+                        skin.keycapLetter = new Color32(244, 250, 255, 255);
+                        skin.keycapHot = new Color32(38, 168, 250, 255);
+                        skin.controlsLabel = new Color32(236, 244, 250, 255);
+                        break;
+                    case FactionId.Null:
+                        skin.keycap = Load<Sprite>(DarkFantasy + "Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_01.png");
+                        skin.keycapBorder = 9f;
+                        skin.keycapTint = new Color32(44, 44, 48, 255);
+                        skin.keycapLetter = new Color32(248, 246, 240, 255);
+                        skin.keycapHot = new Color32(204, 42, 46, 255);
+                        skin.controlsLabel = new Color32(228, 188, 108, 255);
+                        break;
+                    case FactionId.Covenant:
+                        skin.keycap = Load<Sprite>(FantasyWarrior + "Sprites/HUD/SPR_HUD_FantasyWarrior_Box_Small_Parchment_02.png");
+                        skin.keycapBorder = 9f;
+                        skin.keycapTint = new Color32(42, 58, 76, 255);
+                        skin.keycapLetter = new Color32(246, 204, 116, 255);
+                        skin.keycapHot = new Color32(120, 150, 186, 255);
+                        skin.controlsLabel = new Color32(238, 240, 242, 255);
+                        break;
+                }
+                EditorUtility.SetDirty(skin);
+                AssetDatabase.SaveAssetIfDirty(skin);
+            }
             if (skin.menuButton != null && skin.headerBand != null && skin.cell != null && skin.closeButton != null) return;
             Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
             Color Tone(float value) => Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.2f), value);
@@ -486,6 +519,20 @@ namespace KryticalNova.EditorTools
                     "-unity-background-image-tint-color: rgb(225, 225, 225);", "-unity-slice-scale: 1px;", "-unity-background-scale-mode: scale-to-fit;");
                 Rule(".window .close:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);", "scale: 1.1 1.1;");
                 Rule(".window .close > .kn-close-glyph", "-unity-background-image-tint-color: rgb(255, 255, 255);", "width: 13px;", "height: 13px;");
+            }
+            if (asset.keycap != null && asset.keycapTint.a > 0f)
+            {
+                string Css(Color colour)
+                {
+                    Color32 c = colour;
+                    return $"rgb({c.r}, {c.g}, {c.b})";
+                }
+                Rule(".key-cap", $"background-image: {UrlOf(asset.keycap)};", $"-unity-background-image-tint-color: {Css(asset.keycapTint)};", $"-unity-slice-scale: {Scale(asset.keycap, asset.keycapBorder)};");
+                Rule(".key-cap-text", $"color: {Css(asset.keycapLetter)};");
+                Rule(".key-cap-picture", $"-unity-background-image-tint-color: {Css(asset.keycapLetter)};");
+                Rule(".settings-key:hover .key-cap, .settings-key.listening .key-cap", $"-unity-background-image-tint-color: {Css(asset.keycapHot)};");
+                Rule(".controls-row .settings-row-label", $"color: {Css(asset.controlsLabel)};");
+                Rule(".controls-device", $"-unity-background-image-tint-color: {Css(asset.controlsLabel)};");
             }
             if (asset.cell != null)
             {

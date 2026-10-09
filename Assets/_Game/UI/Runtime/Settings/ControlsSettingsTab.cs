@@ -58,7 +58,11 @@ namespace KryticalNova.UI
             keyButtons.Clear();
             KeyBindings.Collect(playerActions(), entries);
 
-            SettingsRows.Help(page, "Click a key, then press the one you want. A key already in use swaps with it. Esc cancels.");
+            // The page opens with the device its keys are on, as the packs' own controls pages do.
+            var device = new VisualElement { pickingMode = PickingMode.Ignore };
+            device.AddToClassList("controls-device");
+            page.Add(device);
+            SettingsRows.Help(page, "Click a key, then press the one you want. A key already in use swaps with it. Esc cancels.").AddToClassList("controls-help");
             string group = null;
             foreach (var entry in entries)
             {
@@ -81,6 +85,7 @@ namespace KryticalNova.UI
             foreach (var key in FixedKeys)
             {
                 VisualElement row = SettingsRows.Row(page, key.Label);
+                row.RemoveFromClassList("kn-card"); // a bare line, as on the packs' pages: the caps carry it
                 row.AddToClassList("controls-row");
                 row.AddToClassList("fixed");
                 var caps = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -100,6 +105,7 @@ namespace KryticalNova.UI
         {
             // The key first, as a cap, then what it does: the way the packs lay a controls page out.
             VisualElement row = SettingsRows.Row(page, label);
+            row.RemoveFromClassList("kn-card"); // a bare line, as on the packs' pages: the caps carry it
             row.AddToClassList("controls-row");
             var key = new Button();
             key.AddToClassList("settings-key");
