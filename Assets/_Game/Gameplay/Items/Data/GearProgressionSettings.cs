@@ -310,6 +310,8 @@ namespace KryticalNova.Items
         public TemperSettings temper = new TemperSettings();
         public FusionSettings fusion = new FusionSettings();
         public TuningSettings tuning = new TuningSettings();
+        [Tooltip("The glow rims of weapon icons: laid over the icon of a tempered weapon in its Temper band's colour. Baked by Krytical Nova/Items/6. Bake Weapon Glow Rims.")]
+        public ItemGlowIcons iconGlows;
         public ReforgeSettings reforge = new ReforgeSettings();
 
         public float MultiplierOf(ItemRarity rarity) => statTable != null ? statTable.MultiplierOf(rarity) : 1f;

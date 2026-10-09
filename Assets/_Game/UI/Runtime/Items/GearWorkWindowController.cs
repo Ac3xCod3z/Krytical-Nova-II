@@ -365,6 +365,7 @@ namespace KryticalNova.UI
             GearUIController.SetItemVisual(piece, item, 1);
             piece.EnableInClassList("empty", item == null);
             ShowRim(item, state);
+            GearUIController.SetTemperGlow(piece, item, state.Temper, Settings); // the weapon icon's own glow rim, on every tab
             hint.style.display = item == null ? DisplayStyle.Flex : DisplayStyle.None;
             materials.Clear();
             chips.Clear();

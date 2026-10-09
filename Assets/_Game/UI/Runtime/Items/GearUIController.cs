@@ -37,6 +37,7 @@ namespace KryticalNova.UI
         private const string GlyphClass = "item-glyph";
         private const string LevelClass = "item-level";
         private const string TemperClass = "item-temper";
+        private const string GlowClass = "item-glow";
         private const string UnusableClass = "item-unusable";
         private const string UnmetClass = "tooltip-requires--unmet";
         private const string LockedClass = "item-locked";
@@ -422,12 +423,17 @@ namespace KryticalNova.UI
         /// <summary>Adds icon / stack count / frame children. Frame goes last so it draws over the icon.</summary>
         public static VisualElement CreateItemVisual(VisualElement host, bool withCount)
         {
+            // Behind the icon: the glow rim of a tempered weapon (SetTemperGlow). Empty for everything else.
+            var glow = new VisualElement { pickingMode = PickingMode.Ignore };
+            glow.AddToClassList(GlowClass);
+            glow.style.display = DisplayStyle.None;
+            host.Insert(0, glow);
             var icon = new VisualElement { pickingMode = PickingMode.Ignore };
             icon.AddToClassList("item-icon");
-            host.Insert(0, icon);
+            host.Insert(1, icon);
             var glyph = new Label { pickingMode = PickingMode.Ignore };
             glyph.AddToClassList(GlyphClass);
-            host.Insert(1, glyph);
+            host.Insert(2, glyph);
             var level = new Label { pickingMode = PickingMode.Ignore };
             level.AddToClassList(LevelClass);
             host.Add(level);
@@ -521,6 +527,30 @@ namespace KryticalNova.UI
             GearProgressionSettings settings = equipment != null ? equipment.Progression : null;
             if (temper > 0 && settings != null && GearProgressionRules.TryGetGlow(settings.temper, temper, out TemperGlowBand band))
                 label.style.color = band.color;
+            SetTemperGlow(host, def, temper, settings);
+        }
+
+        /// <summary>
+        /// The glow rim on a weapon's icon: the outline of the part of the weapon that glows in the world
+        /// (<see cref="ItemGlowIcons"/>: the blade, not the hilt), behind the icon, in the colour of the glow band
+        /// its Temper % is in. Nothing for an untempered
+        /// weapon, for other gear and for an empty cell. The Pack, the Equipment page and the forge all show it, and
+        /// it follows the Temper as it changes.
+        /// </summary>
+        public static void SetTemperGlow(VisualElement host, ItemDefinition def, int temper, GearProgressionSettings settings)
+        {
+            VisualElement glow = host != null ? host.Q(className: GlowClass) : null;
+            if (glow == null) return;
+            Sprite rim = def != null && def.equipSlot == EquipSlot.Weapon && temper > 0 && settings != null && settings.iconGlows != null
+                ? settings.iconGlows.RimOf(def.icon) : null;
+            if (rim == null || !GearProgressionRules.TryGetGlow(settings.temper, temper, out TemperGlowBand band))
+            {
+                glow.style.display = DisplayStyle.None;
+                return;
+            }
+            glow.style.backgroundImage = new StyleBackground(rim);
+            glow.style.unityBackgroundImageTintColor = band.color;
+            glow.style.display = DisplayStyle.Flex;
         }
 
         /// <summary>Items without a sprite show their placeholder text, tinted by what they restore.</summary>

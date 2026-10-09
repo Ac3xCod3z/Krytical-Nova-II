@@ -315,6 +315,7 @@ MonoBehaviour:
       stat: 0
       kind: 1
       value: 5
+  iconGlows: {fileID: 11400000, guid: 6346899148916c749bd161620169474f, type: 2}
   reforge:
     baseCreds: 1000000
     firstLevel: 45

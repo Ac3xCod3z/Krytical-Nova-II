@@ -904,6 +904,9 @@ namespace KryticalNova.Player
             }
             SnapVelocityToPath();
             acceptedDestination = destination.position;
+            // The host's own order, or the offline game's: shown as a client's is.
+            if (IsSpawned) MoveOrderShownClientRpc();
+            else if (animancerMotor != null) animancerMotor.RunOrderedAgain();
             return true;
         }
 
@@ -911,7 +914,17 @@ namespace KryticalNova.Player
         private void RequestMoveDestinationServerRpc(Vector3 destinationPoint)
         {
             MoveOrdered?.Invoke();
-            ServerMoveTo(destinationPoint);
+            if (ServerMoveTo(destinationPoint)) MoveOrderShownClientRpc();
+        }
+
+        /// <summary>
+        /// Every machine: the player gave a move order that was taken. A run already under way takes off again
+        /// (its smear), which the animation alone would not show: the run clip never stopped.
+        /// </summary>
+        [ClientRpc]
+        private void MoveOrderShownClientRpc()
+        {
+            if (animancerMotor != null) animancerMotor.RunOrderedAgain();
         }
 
         /// <summary>

@@ -101,11 +101,6 @@
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Vitality" /><ui:Label name="stat-1" text="10" class="stat-value" /><ui:Button name="allocate-1" text="+1" /></ui:VisualElement>
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Agility" /><ui:Label name="stat-2" text="10" class="stat-value" /><ui:Button name="allocate-2" text="+1" /></ui:VisualElement>
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Spirit" /><ui:Label name="stat-3" text="10" class="stat-value" /><ui:Button name="allocate-3" text="+1" /></ui:VisualElement>
-            <!-- Serums taken (PlayerSerums): one line per kind, shown once the character has taken one -->
-            <ui:VisualElement name="serum-block" class="serum-block">
-                <ui:Label text="SERUMS" class="eyebrow section" />
-                <ui:VisualElement name="serum-list" class="combat-stats-container kn-card" />
-            </ui:VisualElement>
             <ui:Label name="resource-values" text="HP 200 / 200    Flux 100 / 100" class="accent section" />
             <ui:Label name="resource-formula" text="STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evasion | AGI: +2 Evasion, +1 DP | SPI: +20 Flux, +1 AP" class="help" />
             <ui:Label name="stat-note" text="Spend 1 point per increase. Allocating stat points or equipping gear scales both Primary and Secondary sub-stats dynamically." class="help section" />
@@ -183,6 +178,11 @@
                     <ui:Label text="Kill-XP Amount" class="combat-stat-label" />
                     <ui:Label name="combat-stat-xp-amount" text="+0%" class="combat-stat-value" />
                 </ui:VisualElement>
+            </ui:VisualElement>
+            <!-- Serums taken (PlayerSerums): one line per kind, always shown (0/100 until one is taken); the last section of the sheet, under the stats they add to -->
+            <ui:VisualElement name="serum-block" class="serum-block">
+                <ui:Label text="SERUMS" class="eyebrow section" />
+                <ui:VisualElement name="serum-list" class="combat-stats-container kn-card" />
             </ui:VisualElement>
             </ui:ScrollView>
         </ui:VisualElement>
