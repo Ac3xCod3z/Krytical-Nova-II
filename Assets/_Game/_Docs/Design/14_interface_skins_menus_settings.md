@@ -66,9 +66,34 @@ drawn as an element over the map (`MinimapChromeView.overMap`: the Covenant dial
   background. While an Equipment preview is lit it puts its own lights out (both are on the preview layer).
 - Labels that follow things in the world (namecards, nameplates, loot labels, Kiosk plates, combat numbers) are UI
   Toolkit and would draw over the pieces: each hides while it is over one (`HudChrome.HideOver`).
-- Not yet in the packs' art: the menu row, chat, buffs, Squad frames, the Callout strip, prompts and every window.
-  `FactionVariantBuilder` and `SpriteRecolourer` are a spike for the pieces a faction's own pack lacks (a recoloured
-  prefab variant of the pack that has it); only one variant exists, and nothing in the game uses it.
+- Not yet in the packs' art: chat, buffs, Squad frames, the Callout strip and prompts (they have the pack's small
+  panel frame and buttons only).
+- `FactionVariantBuilder` was a spike for the pieces a faction's own pack lacks (a recoloured prefab variant of the
+  pack that has it). It was judged on 2026-10-08 and not taken: a recolour keeps the other race's outline. The rule
+  is the same layout with the faction's own pack's frames and parts. Its one variant is not used by the game.
+
+**The windows' pages (UI Toolkit, the pack's own art).** The windows stay UI Toolkit (they overlap, and a uGUI piece
+is always under the panel). What a page is made of is the skin's, in the pack's own colours, never tinted:
+
+| Part | Skin field | Hegemony | Null | Covenant |
+| --- | --- | --- | --- | --- |
+| Window frame, reaching out past the edge | `windowFrame` | Sci-Fi `Frame_TechyDark_01` | `Frame_Box_Large_08` | `Frame_Box_06` |
+| Small panel frame (chat, prompts, tooltip) | `panelFrame` | the layout's tinted outline | `Frame_Box_Large_07` | `Frame_Box_12` |
+| Ornament on the top edge (and one behind it) | `crown`, `crownBack` | `Greeble_BoxTop_02` | `Greeble_Skull_01` over `Greeble_Horns_05` | `Greeble_Curlicue_24` |
+| Nearly solid backing of what is read | `windowBacking` | the dark tone, darker | the same | the same |
+| Title band | `headerBand` | Sci-Fi Menus `Button_Frame_04` | Dark Fantasy Menus `Frame_Bar_Medium_06` | Fantasy Menus `Menu_Button_11` |
+| Round close button on the corner | `closeButton` | `Menu_Box_Small_02` | `Ring_Small_09` | `Ring_Small_02` |
+| Item cell and equipment slot | `cell` | Sci-Fi Menus `Frame_Box_Small_04` | `Frame_Box_Medium_17` | `Frame_Box_Small_03` |
+| Button | `button` | Sci-Fi Menus `Frame_Box_Small_07` | `Frame_Box_Medium_01` | `Frame_Box_22` |
+| Menu row button | `menuButton` | Sci-Fi Menus `Frame_Box_Small_06` | Dark Fantasy Menus `Frame_Bar_Medium_07` | Fantasy Menus `Menu_Button_05` |
+
+A UI Toolkit background draws one image, so a part that is a frame over a fill is flattened into one picture
+(`SpriteRecolourer.Flatten`, into `UI/HUD/Faction/<Faction>/Art/`) the first time the skins are built; **Krytical Nova ▸
+UI ▸ Rebuild Faction Skin Art** makes them again. The builder writes the rules after the converted sheets (the "window
+chrome" section of each `KryticalSkin_<Faction>.uss`); they name a part through its parent, so they win over the tinted
+look. `SyntySkin.Decorate` adds the two ornament layers to windows. A cell's rarity outline is drawn over the pack's cell
+and keeps its colours; a button's state only lightens or darkens its art. Nothing a window does, and no element name,
+changed.
 
 **Colours that mean something are not skinned.** Selectors with `.rarity-` (rarity colours) and `-bubble` (the pets'
 comic bubbles) are left out of the recolour; `UiSkinTests` holds this. A namecard's name is coloured in code from the
@@ -202,6 +227,16 @@ it does. APPLY keeps the changes; REVERT puts back everything as it was when the
   exactly as the Decline button would, and never shown. The server is not asked to do anything new, so the asker
   sees an ordinary refusal.
 - **Chat text size** is a share of what the faction's skin gives a chat line, so it holds in every skin.
+
+### Controls: keys as key caps
+
+`ControlsSettingsTab` lays a row out as the packs' input screens do: the key first, as a cap (`KeyCaps`), then what it
+does, then RESET. A one-letter key gets a square cap, a word a wider one; Enter, Space, Tab, Backspace and the arrows
+get Synty's pictures (`InterfaceCore/Sprites/Icons_Input/MouseKeyboard`), and the fixed mouse keys the mouse with the
+meant button coloured. The cap is the skin's `token` part with the base sheet's colours, so each faction's caps come
+out of the conversion in its own art and palette. Under the pointer a cap fills with the accent; while the page waits
+it says PRESS A KEY. The packs installed here have no keyboard picture (the one on top of Synty's demo screen): none
+is shown.
 
 ## 8. Tests
 
