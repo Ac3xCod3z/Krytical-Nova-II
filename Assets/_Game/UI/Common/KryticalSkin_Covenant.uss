@@ -536,6 +536,12 @@
     background-image: none;
     -unity-background-image-tint-color: rgba(222, 167, 65, 0.06);
 }
+.kn-faction-covenant .preview-glow {
+    -unity-background-image-tint-color: rgba(222, 167, 65, 0.3);
+}
+.kn-faction-covenant .preview-beams {
+    -unity-background-image-tint-color: rgba(222, 167, 65, 0.16);
+}
 .kn-faction-covenant .preview-floor {
     -unity-background-image-tint-color: rgba(222, 167, 65, 0.45);
 }
@@ -1439,6 +1445,12 @@
 }
 .kn-faction-covenant .controls-device {
     -unity-background-image-tint-color: rgb(238, 240, 242);
+}
+.kn-faction-covenant .preview-glow {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FX/SPR_FX_FantasyWarrior_Glow_01.png#SPR_FX_FantasyWarrior_Glow_01");
+}
+.kn-faction-covenant .preview-beams {
+    background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FX/SPR_FX_FantasyWarrior_Beams_01.png#SPR_FX_FantasyWarrior_Beams_01");
 }
 .kn-faction-covenant .inventory-grid .item-cell, .kn-faction-covenant .equip-column .equip-slot {
     background-image: url("/Assets/_Game/UI/HUD/Faction/Covenant/Art/Cell_Covenant.png#Cell_Covenant");

@@ -33,6 +33,8 @@
             </ui:VisualElement>
             <ui:VisualElement name="preview-frame" class="preview-frame">
                 <ui:VisualElement class="preview-backdrop" picking-mode="Ignore" />
+                <ui:VisualElement class="preview-beams" picking-mode="Ignore" />
+                <ui:VisualElement class="preview-glow" picking-mode="Ignore" />
                 <ui:VisualElement class="preview-floor" picking-mode="Ignore" />
                 <ui:VisualElement name="preview-viewport" class="preview-viewport" />
                 <ui:VisualElement name="try-on-chip" class="try-on-chip">

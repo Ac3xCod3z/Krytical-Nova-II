@@ -59,6 +59,8 @@ MonoBehaviour:
   keycapLetter: {r: 0.9647059, g: 0.8, b: 0.45490196, a: 1}
   keycapHot: {r: 0.47058824, g: 0.5882353, b: 0.7294118, a: 1}
   controlsLabel: {r: 0.93333334, g: 0.9411765, b: 0.9490196, a: 1}
+  previewGlow: {fileID: 21300000, guid: ecf845d070e496e4ba7f4f31401338aa, type: 3}
+  previewBeams: {fileID: 21300000, guid: 3e0717d81e8c79e418baa3b470c60495, type: 3}
   crown: {fileID: 21300000, guid: 8896a397cf1162847b48c0b64f5ec72b, type: 3}
   crownBack: {fileID: 0}
   crownSize: {x: 96, y: 48}

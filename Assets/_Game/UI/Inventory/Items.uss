@@ -175,6 +175,22 @@
     -unity-background-image-tint-color: rgba(114, 222, 196, 0.06);
     -unity-background-scale-mode: scale-and-crop;
 }
+/* The light on the model: the pack's stepped glow behind it, round whatever the picture's shape, and its beams
+   falling from the top of the picture. Both in the accent, thin enough that the model stays the brightest thing. */
+.preview-glow {
+    position: absolute;
+    left: -20%; right: -20%; top: 5%; height: 72%;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/FX/SPR_FX_SciFiSoldier_Glow_01.png");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.3);
+    -unity-background-scale-mode: scale-to-fit;
+}
+.preview-beams {
+    position: absolute;
+    left: 0; right: 0; top: 0; height: 78%;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/FX/SPR_FX_SciFiSoldier_Background_Glows_01.png");
+    -unity-background-image-tint-color: rgba(114, 222, 196, 0.16);
+    -unity-background-scale-mode: stretch-to-fill;
+}
 /* Platform ring under the model's feet (squashed circle reads as a floor disc in perspective). */
 .preview-floor {
     position: absolute;

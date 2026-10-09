@@ -117,6 +117,12 @@
 .kn-faction-hegemony .controls-device {
     -unity-background-image-tint-color: rgb(236, 244, 250);
 }
+.kn-faction-hegemony .preview-glow {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/FX/SPR_FX_SciFiSoldier_Glow_01.png#SPR_FX_SciFiSoldier_Glow_01");
+}
+.kn-faction-hegemony .preview-beams {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/FX/SPR_FX_SciFiSoldier_Background_Glows_01.png#SPR_FX_SciFiSoldier_Background_Glows_01");
+}
 .kn-faction-hegemony .inventory-grid .item-cell, .kn-faction-hegemony .equip-column .equip-slot {
     background-image: url("/Assets/_Game/UI/HUD/Faction/Hegemony/Art/Cell_Hegemony.png#Cell_Hegemony");
     -unity-background-image-tint-color: rgb(214, 214, 214);

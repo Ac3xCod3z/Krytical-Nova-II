@@ -103,6 +103,8 @@ namespace KryticalNova.UI
         public Color keycapTint = Color.clear, keycapLetter = Color.white, keycapHot = Color.white;
         [Tooltip("What a key does, and the device on top of the Controls page.")]
         public Color controlsLabel = Color.white;
+        [Tooltip("The light on the Equipment page's model: the pack's stepped glow behind it, and its beams from above. Tinted with the accent by the sheets.")]
+        public Sprite previewGlow, previewBeams;
         [Tooltip("The ornament on the middle of a window's top edge, and one drawn behind it (horns behind a skull). Either may be none.")]
         public Sprite crown, crownBack;
         [Tooltip("The ornaments' sizes in panel pixels, and how far their tops stand above the window's top edge.")]

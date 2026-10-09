@@ -536,6 +536,12 @@
     background-image: none;
     -unity-background-image-tint-color: rgba(222, 65, 73, 0.06);
 }
+.kn-faction-null .preview-glow {
+    -unity-background-image-tint-color: rgba(222, 65, 73, 0.3);
+}
+.kn-faction-null .preview-beams {
+    -unity-background-image-tint-color: rgba(222, 65, 73, 0.16);
+}
 .kn-faction-null .preview-floor {
     -unity-background-image-tint-color: rgba(222, 65, 73, 0.45);
 }
@@ -1446,6 +1452,12 @@
 }
 .kn-faction-null .controls-device {
     -unity-background-image-tint-color: rgb(228, 188, 108);
+}
+.kn-faction-null .preview-glow {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/FX/SPR_FX_DarkFantasy_Glow_01.png#SPR_FX_DarkFantasy_Glow_01");
+}
+.kn-faction-null .preview-beams {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/FX/SPR_FX_DarkFantasy_Beams_01.png#SPR_FX_DarkFantasy_Beams_01");
 }
 .kn-faction-null .inventory-grid .item-cell, .kn-faction-null .equip-column .equip-slot {
     background-image: url("/Assets/_Game/UI/HUD/Faction/Null/Art/Cell_Null.png#Cell_Null");

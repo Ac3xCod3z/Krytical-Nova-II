@@ -424,6 +424,26 @@ namespace KryticalNova.EditorTools
                 EditorUtility.SetDirty(skin);
                 AssetDatabase.SaveAssetIfDirty(skin);
             }
+            if (skin.previewGlow == null)
+            {
+                switch (skin.faction)
+                {
+                    case FactionId.Hegemony:
+                        skin.previewGlow = Load<Sprite>(SciFiHud + "Sprites/FX/SPR_FX_SciFiSoldier_Glow_01.png");
+                        skin.previewBeams = Load<Sprite>(SciFiHud + "Sprites/FX/SPR_FX_SciFiSoldier_Background_Glows_01.png");
+                        break;
+                    case FactionId.Null:
+                        skin.previewGlow = Load<Sprite>(DarkFantasy + "Sprites/FX/SPR_FX_DarkFantasy_Glow_01.png");
+                        skin.previewBeams = Load<Sprite>(DarkFantasy + "Sprites/FX/SPR_FX_DarkFantasy_Beams_01.png");
+                        break;
+                    case FactionId.Covenant:
+                        skin.previewGlow = Load<Sprite>(FantasyWarrior + "Sprites/FX/SPR_FX_FantasyWarrior_Glow_01.png");
+                        skin.previewBeams = Load<Sprite>(FantasyWarrior + "Sprites/FX/SPR_FX_FantasyWarrior_Beams_01.png");
+                        break;
+                }
+                EditorUtility.SetDirty(skin);
+                AssetDatabase.SaveAssetIfDirty(skin);
+            }
             if (skin.menuButton != null && skin.headerBand != null && skin.cell != null && skin.closeButton != null) return;
             Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
             Color Tone(float value) => Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.2f), value);
@@ -534,6 +554,8 @@ namespace KryticalNova.EditorTools
                 Rule(".controls-row .settings-row-label", $"color: {Css(asset.controlsLabel)};");
                 Rule(".controls-device", $"-unity-background-image-tint-color: {Css(asset.controlsLabel)};");
             }
+            if (asset.previewGlow != null) Rule(".preview-glow", $"background-image: {UrlOf(asset.previewGlow)};");
+            if (asset.previewBeams != null) Rule(".preview-beams", $"background-image: {UrlOf(asset.previewBeams)};");
             if (asset.cell != null)
             {
                 const string cells = ".inventory-grid .item-cell, .equip-column .equip-slot";
