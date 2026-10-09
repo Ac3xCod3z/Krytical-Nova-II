@@ -67,7 +67,21 @@ namespace KryticalNova.Hostiles.Emerald
             if (agent != null) agent.enabled = value;
             foreach (Behaviour part in parts)
                 if (part != null) part.enabled = value && !(frozen && part == system);
+            // Emerald switches the collider off when its AI dies and leaves the Animator off after the death clip.
+            if (value)
+            {
+                if (animator != null) animator.enabled = true;
+                if (TryGetComponent(out BoxCollider body)) body.enabled = true;
+            }
             Listen(value);
+        }
+
+        public void SetHome(Vector3 home, int wanderRadius)
+        {
+            if (system == null) return;
+            EmeraldMovement movement = GetComponent<EmeraldMovement>();
+            movement.StartingDestination = home; // Emerald only reads its own position once, when it first starts
+            movement.WanderRadius = Mathf.Max(1, wanderRadius);
         }
 
         public void Configure(HostileDefinition species, in HostileStats stats)

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78b8be387051ee94ba891596e8912f26, type: 3}
+  m_Name: HostileSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Hostiles.HostileSettings
+  corpseSeconds: 3
+  dissolveSeconds: 1.4
+  dissolveShader: {fileID: 4800000, guid: c63598b5390971e49a3b239602715f8b, type: 3}
+  dissolveNoise: {fileID: 2800000, guid: 8ca608058cb816f4c93c143569844c56, type: 3}
+  burnColor: {r: 0.2, g: 3, b: 3.4, a: 1}
+  burnWidth: 0.07
+  noiseTiling: 0.8
+  maxActiveHostiles: 300
+  zoneTickSeconds: 0.5
+  leashMetres: 15
+  spawnClearance: 3
+  wanderRadius: 8
+  spawnsPerTick: 4

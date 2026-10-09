@@ -3,7 +3,7 @@
 The owner's plan for regular monsters (version 4.1, 8 October 2026) follows unchanged below. This first part records
 what a review of it against the code found on 9 October 2026, and what is built. Where the two disagree, this part wins.
 
-## As built (9 October 2026): tasks 0 to 6
+## As built (9 October 2026)
 
 | Task | State |
 |---|---|
@@ -11,11 +11,22 @@ what a review of it against the code found on 9 October 2026, and what is built.
 | 1 Make Emerald callable | Done. `EmeraldAI` and `EmeraldAI.Editor` assemblies (our files in the vendor folder, see `_ThirdParty/README.md`), `KryticalNova.Hostiles.Emerald`. Compiles for the Windows client and the dedicated server. |
 | 2 Data | Done. `HostileDefinition`, `HostileZoneDefinition`, `LevelGapSettings` (data only), `HostileStatCurve` with edit-mode tests. |
 | 3 Combat link | Done. `HostileBrainLink`, `KNEmeraldPlayerBridge` on the player prefab. |
-| 4 Prefab builder | Done for one stand-in species (Scavenger, level 1): **Krytical Nova ▸ Hostiles ▸ Build Hostiles**. Reuse from a pool is not built (task 7). |
-| 5 GM base set | Done: `gm.hostile.list / spawn / clear / kill / info / hp / freeze / ignore / ttk`. |
+| 4 Prefab builder | Done: **Krytical Nova ▸ Hostiles ▸ Build Hostiles**. |
+| 5 GM base set | Done: `gm.hostile.list / spawn / clear / kill / info / hp / freeze / ignore / ttk / stats`, `gm.zone.list / fill / clear / respawn / sleep / bruiser`. |
 | 6 Networking | Done and checked on a host with a second client: same position, health, level, combat state and death; brain and NavMeshAgent off on the client; a client that walks away stops receiving the Hostile. |
 
-Not built: everything from task 7 on. Nothing rewards a kill yet, and a player hit by a Hostile sees only the health bar move.
+| 7 Hostile Zone runtime | Done: `HostileZone`, `HostilePool` (pooled on every peer through a Netcode prefab handler), `RespawnQueue`, sleep and wake, the map-wide cap. Checked: a zone fills from the pool, a kill and a respawn create nothing. The 300-Hostile soak has not been run. |
+| 8 Zone01 zones | Done: eight zones at the plan's positions (none had to move), `HostileZoneBuilder` and its rules. Not done: levels on the map labels, the zone toast. |
+| 9 Leash and aggro | Partly: attack on sight and fight back only both checked; a Hostile 15 m past its zone's edge gives up and is healed. Not done: dropping the target at the town gate, the 6 s out-of-reach rule (Emerald's own chase limit stands in). |
+| 13 Bruisers | Partly: Hellion (12) in the SE zone and Colossus (21) on Island North, at the zone's edge, with their own timer. No Bruiser rewards yet. |
+| 18 Roster | Done from the owner's picks of 9 October 2026: eight species and two Bruisers. Names are proposals. Every species shares the unarmed animation set. |
+
+**Corpses (owner, 9 October 2026):** a dead Hostile lies for 3 s, burns away with the Fade Burn of the All In 1 Shader
+Nodes pack (`HostileDissolve.shader`, `HostileCorpse`), and goes back to the pool. Numbers in `HostileSettings.asset`.
+
+**Bosses** are out of this plan altogether: the owner builds them as a separate system.
+
+Not built: tasks 10 to 12 and 14 to 17. Nothing rewards a kill yet, and a player hit by a Hostile sees only the health bar move.
 
 ## Corrections to the plan below
 
@@ -35,7 +46,7 @@ Not built: everything from task 7 on. Nothing rewards a kill yet, and a player h
 6. **Clients.** The Emerald parts are switched off in the prefab and switched on by the link where the game is decided.
    A client's Animator does not fire events (the attack clips carry the event that makes Emerald strike).
 7. **Emerald on a client** still creates its pool object and its combat text canvas in `Awake`. Both are inert.
-8. **Pooling on clients** needs an `INetworkPrefabInstanceHandler`; none exists. Task 7.
+8. **Pooling on clients** needs an `INetworkPrefabInstanceHandler`: `HostilePool` registers one per Hostile prefab.
 9. **Pet XP** already listens to `CombatEntity.AnyKilled` and pays whoever struck the last blow. Task 14 has to move it to
    the holder of the first hit.
 10. **Assemblies.** The game is one assembly joined by `.asmref` files; only the Emerald side is an assembly of its own.

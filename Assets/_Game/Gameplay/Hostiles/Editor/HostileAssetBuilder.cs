@@ -27,7 +27,10 @@ namespace KryticalNova.EditorTools.Hostiles
         private const string DataFolder = "Assets/_Game/Gameplay/Hostiles/Data/Assets";
         public const string CurvePath = DataFolder + "/HostileStatCurve.asset";
         public const string LevelGapPath = DataFolder + "/LevelGapSettings.asset";
-        private const string SpeciesFolder = DataFolder + "/Species";
+        public const string SettingsPath = DataFolder + "/HostileSettings.asset";
+        public const string SpeciesFolder = DataFolder + "/Species";
+        private const string DissolveShaderName = "KryticalNova/Hostiles/Corpse Dissolve";
+        private const string DissolveNoisePath = "Assets/Plugins/AllIn1ShaderNodes/DefaultTextures/NoiseTextureDefault.png";
         private const string MeleeAbilityPath = DataFolder + "/Emerald/HostileMelee.asset";
         private const string CharacterFolder = "Assets/_Game/Characters/Hostiles";
         private const string TuningPath = "Assets/_Game/Gameplay/Progression/Data/Assets/CombatTuning/CombatStatTuning.asset";
@@ -57,10 +60,14 @@ namespace KryticalNova.EditorTools.Hostiles
         {
             public ushort Id;
             public string Asset, DisplayName, Model;
+            /// <summary>The name of its animation set. Species with the same set share one copy of the clips, one profile and one controller.</summary>
+            public string AnimSet;
             public int Level;
             public HostileTier Tier;
             public HostileBehaviour Behaviour;
             public float Scale, AttackRange;
+            /// <summary>Radius and height of the body, metres, before scale. Zero = an ordinary person.</summary>
+            public Vector2 Body;
             public string Idle, Walk, Run, TurnLeft, TurnRight, Stunned;
             public AttackRow[] Attacks;
             public string[] Hits, Deaths;
@@ -76,37 +83,77 @@ namespace KryticalNova.EditorTools.Hostiles
         private static readonly string[] UnarmedHits = { Unarmed + "GetHit-F1.FBX", Unarmed + "GetHit-F2.FBX" };
         private static readonly string[] HumanoidDeaths = { PlayerDeaths + "Death_Front.anim", PlayerDeaths + "Death_Back.anim" };
 
+        private const string DarkFortress = "Assets/Synty/PolygonDarkFortress/Prefabs/Characters/";
+        private const string DarkFantasy = "Assets/Synty/PolygonDarkFantasy/Prefabs/Characters/";
+        private const string SciFiSpace = "Assets/Synty/PolygonSciFiSpace/Prefabs/Characters/";
+        private const string SciFiWorlds = "Assets/Synty/PolygonSciFiWorlds/Prefabs/Characters/";
+
         /// <summary>
-        /// The species that exist. Only a stand-in until the owner picks the roster from the model inventory.
-        /// Ids are stable: never reuse one.
+        /// The species that exist: the owner's picks of 9 Oct 2026 for Zone01, eight Hostiles from level 1 to 22
+        /// and two Bruisers. Levels 1 to 7 only fight back; from 10 up they attack on sight. Every one moves with
+        /// the unarmed set until it has clips of its own. Ids are stable: never reuse one (1 was the stand-in).
         /// </summary>
         private static readonly Species[] Roster =
         {
-            new Species
-            {
-                Id = 1, Asset = "Scavenger", DisplayName = "Scavenger", Level = 1, Tier = HostileTier.Normal,
-                Behaviour = HostileBehaviour.FightsBack, Scale = 1f, AttackRange = 1.8f,
-                Model = "Assets/Synty/PolygonSciFiWorlds/Prefabs/Characters/SM_Chr_ScifiWorlds_Scavenger_01.prefab",
-                Idle = Locomotion + "Idle/A_Idle_Standing_Masc.fbx",
-                Walk = Locomotion + "Locomotion/Walk/A_Walk_F_Masc.fbx",
-                Run = Locomotion + "Locomotion/Run/A_Run_F_Masc.fbx",
-                Stunned = Unarmed + "Stunned.FBX",
-                Attacks = UnarmedAttacks, Hits = UnarmedHits, Deaths = HumanoidDeaths,
-            },
+            Humanoid(2, "Bonewalker", "Bonewalker", 1, DarkFantasy + "SM_Chr_Skeleton_01.prefab"),
+            Humanoid(3, "Blightborn", "Blightborn", 4, DarkFortress + "SM_Chr_Undead_01.prefab"),
+            Humanoid(4, "BlightReaver", "Blight Reaver", 7, DarkFortress + "SM_Chr_Undead_02.prefab"),
+            Humanoid(5, "Gargoyle", "Gargoyle", 10, DarkFantasy + "SM_Chr_Gargoyle_01.prefab"),
+            Humanoid(6, "Wraith", "Wraith", 13, DarkFortress + "SM_Chr_Wraith_01.prefab"),
+            Humanoid(7, "SeraphUnit", "Seraph Unit", 16, SciFiSpace + "SM_Chr_RobotFemale_01.prefab"),
+            Humanoid(8, "CarapaceRaider", "Carapace Raider", 19, SciFiWorlds + "SM_Chr_ScifiWorlds_AlienArmor_01.prefab"),
+            Humanoid(9, "WarFrame", "War Frame", 22, SciFiSpace + "SM_Chr_BR_War_Robot_01.prefab", body: new Vector2(0.6f, 2.1f), range: 2.2f),
+            Humanoid(10, "Hellion", "Hellion", 12, DarkFantasy + "SM_Chr_Demon_Male_01.prefab", HostileTier.Bruiser, 1.3f, range: 2.4f),
+            Humanoid(11, "Colossus", "Colossus", 21, DarkFortress + "SM_Chr_Colossus_01.prefab", HostileTier.Bruiser, 1.3f, new Vector2(0.6f, 2.1f), 2.6f),
         };
+
+        /// <summary>Species that were built once and are gone: their generated assets are removed.</summary>
+        private static readonly string[] Retired = { "Scavenger" };
+
+        // What this run has already written, so ten species with one animation set copy its clips once.
+        private static readonly Dictionary<string, AnimationClip> clipsDone = new Dictionary<string, AnimationClip>();
+        private static readonly Dictionary<string, AnimationProfile> profilesDone = new Dictionary<string, AnimationProfile>();
+
+        private static Species Humanoid(ushort id, string asset, string displayName, int level, string model,
+            HostileTier tier = HostileTier.Normal, float scale = 1f, Vector2 body = default, float range = 1.8f) => new Species
+        {
+            Id = id, Asset = asset, DisplayName = displayName, Level = level, Tier = tier, Model = model, Scale = scale, Body = body,
+            AnimSet = "Unarmed",
+            AttackRange = range,
+            Behaviour = level >= 10 || tier == HostileTier.Bruiser ? HostileBehaviour.AttacksOnSight : HostileBehaviour.FightsBack,
+            Idle = Locomotion + "Idle/A_Idle_Standing_Masc.fbx",
+            Walk = Locomotion + "Locomotion/Walk/A_Walk_F_Masc.fbx",
+            Run = Locomotion + "Locomotion/Run/A_Run_F_Masc.fbx",
+            Stunned = Unarmed + "Stunned.FBX",
+            Attacks = UnarmedAttacks, Hits = UnarmedHits, Deaths = HumanoidDeaths,
+        };
+
+        /// <summary>The prefab of a species by its asset name, or null before it is built.</summary>
+        public static HostileNet PrefabOf(string asset)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GameplayPrefabsSetup.HostilePrefabFolder}/Hostile_{asset}.prefab");
+            return prefab != null ? prefab.GetComponent<HostileNet>() : null;
+        }
+
+        public static HostileDefinition DefinitionOf(string asset) =>
+            AssetDatabase.LoadAssetAtPath<HostileDefinition>($"{SpeciesFolder}/Hostile_{asset}.asset");
 
         [MenuItem("Krytical Nova/Hostiles/Build Hostiles")]
         public static void BuildAll()
         {
             HostileStatCurve curve = EnsureCurve();
             EnsureAsset<LevelGapSettings>(LevelGapPath);
+            HostileSettings settings = EnsureSettings();
             MeleeAbility melee = EnsureMeleeAbility();
+            RemoveRetired();
+            clipsDone.Clear();
+            profilesDone.Clear();
             int built = 0;
             foreach (Species species in Roster)
             {
                 try
                 {
-                    Build(species, curve, melee);
+                    Build(species, curve, settings, melee);
                     built++;
                 }
                 catch (Exception e)
@@ -115,6 +162,7 @@ namespace KryticalNova.EditorTools.Hostiles
                 }
             }
             AssetDatabase.SaveAssets();
+            ForgetMissingNetworkPrefabs();
             GameplayPrefabsSetup.EnsureRegistered(); // a prefab the clients do not know never appears on them
             AssetDatabase.SaveAssets();
             Debug.Log($"[Hostiles] Built {built} of {Roster.Length} species.");
@@ -129,6 +177,42 @@ namespace KryticalNova.EditorTools.Hostiles
             if (curve.progression == null) curve.progression = AssetDatabase.LoadAssetAtPath<CharacterProgressionData>(ProgressionPath);
             EditorUtility.SetDirty(curve);
             return curve;
+        }
+
+        /// <summary>The shader and the noise are assigned here so that the asset, and with it a build, holds them.</summary>
+        public static HostileSettings EnsureSettings()
+        {
+            var settings = EnsureAsset<HostileSettings>(SettingsPath);
+            if (settings.dissolveShader == null) settings.dissolveShader = Shader.Find(DissolveShaderName);
+            if (settings.dissolveNoise == null) settings.dissolveNoise = AssetDatabase.LoadAssetAtPath<Texture2D>(DissolveNoisePath);
+            if (settings.dissolveShader == null) Debug.LogWarning($"[Hostiles] Shader {DissolveShaderName} not found: corpses will not burn away.");
+            EditorUtility.SetDirty(settings);
+            return settings;
+        }
+
+        private static void RemoveRetired()
+        {
+            foreach (string asset in Retired)
+            {
+                AssetDatabase.DeleteAsset($"{GameplayPrefabsSetup.HostilePrefabFolder}/Hostile_{asset}.prefab");
+                AssetDatabase.DeleteAsset($"{SpeciesFolder}/Hostile_{asset}.asset");
+                AssetDatabase.DeleteAsset($"{CharacterFolder}/{asset}");
+            }
+            // Clips used to be copied once per species; they belong to the animation set now.
+            foreach (Species species in Roster)
+                if (species.Asset != species.AnimSet) AssetDatabase.DeleteAsset($"{CharacterFolder}/{species.Asset}");
+        }
+
+        /// <summary>A deleted prefab leaves an empty entry in the network prefab list, which Netcode complains about.</summary>
+        private static void ForgetMissingNetworkPrefabs()
+        {
+            var list = AssetDatabase.LoadAssetAtPath<NetworkPrefabsList>(GameplayPrefabsSetup.NetworkPrefabsListPath);
+            if (list == null) return;
+            var missing = new List<NetworkPrefab>();
+            foreach (NetworkPrefab entry in list.PrefabList)
+                if (entry.Prefab == null) missing.Add(entry);
+            foreach (NetworkPrefab entry in missing) list.Remove(entry);
+            if (missing.Count > 0) EditorUtility.SetDirty(list);
         }
 
         private static T EnsureAsset<T>(string path) where T : ScriptableObject
@@ -168,9 +252,9 @@ namespace KryticalNova.EditorTools.Hostiles
 
         // ------------------------------------------------------------------ one species
 
-        private static void Build(Species species, HostileStatCurve curve, MeleeAbility melee)
+        private static void Build(Species species, HostileStatCurve curve, HostileSettings settings, MeleeAbility melee)
         {
-            string folder = CharacterFolder + "/" + species.Asset;
+            string folder = CharacterFolder + "/" + species.AnimSet;
             WeatherVfxBuilder.EnsureFolder(folder);
             WeatherVfxBuilder.EnsureFolder(SpeciesFolder);
             WeatherVfxBuilder.EnsureFolder(GameplayPrefabsSetup.HostilePrefabFolder);
@@ -188,17 +272,18 @@ namespace KryticalNova.EditorTools.Hostiles
             definition.attackRange = species.AttackRange;
             definition.model = model;
             definition.scale = species.Scale;
-            definition.idle = definition.combatIdle = CopyClip(species.Idle, folder, species.Asset + "_Idle", true, -1f);
-            definition.walk = CopyClip(species.Walk, folder, species.Asset + "_Walk", true, -1f);
-            definition.run = CopyClip(species.Run, folder, species.Asset + "_Run", true, -1f);
-            definition.turnLeft = CopyClip(species.TurnLeft, folder, species.Asset + "_TurnLeft", false, -1f);
-            definition.turnRight = CopyClip(species.TurnRight, folder, species.Asset + "_TurnRight", false, -1f);
-            definition.stunned = CopyClip(species.Stunned, folder, species.Asset + "_Stunned", true, -1f);
+            if (species.Body != default) definition.bodySize = species.Body;
+            definition.idle = definition.combatIdle = CopyClip(species.Idle, folder, species.AnimSet + "_Idle", true, -1f);
+            definition.walk = CopyClip(species.Walk, folder, species.AnimSet + "_Walk", true, -1f);
+            definition.run = CopyClip(species.Run, folder, species.AnimSet + "_Run", true, -1f);
+            definition.turnLeft = CopyClip(species.TurnLeft, folder, species.AnimSet + "_TurnLeft", false, -1f);
+            definition.turnRight = CopyClip(species.TurnRight, folder, species.AnimSet + "_TurnRight", false, -1f);
+            definition.stunned = CopyClip(species.Stunned, folder, species.AnimSet + "_Stunned", true, -1f);
             definition.attacks = new HostileDefinition.Attack[species.Attacks.Length];
             for (int i = 0; i < species.Attacks.Length; i++)
             {
                 AttackRow row = species.Attacks[i];
-                AnimationClip clip = CopyClip(row.Clip, folder, $"{species.Asset}_Attack_{i + 1}", false, row.Windup);
+                AnimationClip clip = CopyClip(row.Clip, folder, $"{species.AnimSet}_Attack_{i + 1}", false, row.Windup);
                 if (clip == null) throw new InvalidOperationException($"No attack clip at {row.Clip}.");
                 definition.attacks[i] = new HostileDefinition.Attack
                 {
@@ -206,8 +291,8 @@ namespace KryticalNova.EditorTools.Hostiles
                     heavy = row.Heavy, weight = Mathf.Max(1, row.Weight)
                 };
             }
-            definition.hitReactions = CopyClips(species.Hits, folder, species.Asset + "_Hit");
-            definition.deaths = CopyClips(species.Deaths, folder, species.Asset + "_Death");
+            definition.hitReactions = CopyClips(species.Hits, folder, species.AnimSet + "_Hit");
+            definition.deaths = CopyClips(species.Deaths, folder, species.AnimSet + "_Death");
             if (definition.idle == null || definition.walk == null || definition.run == null)
                 throw new InvalidOperationException("Idle, walk and run clips are all needed.");
             if (definition.deaths.Length == 0)
@@ -215,7 +300,7 @@ namespace KryticalNova.EditorTools.Hostiles
 
             AnimationProfile profile = BuildProfile(species, definition, folder);
             string prefabPath = $"{GameplayPrefabsSetup.HostilePrefabFolder}/Hostile_{species.Asset}.prefab";
-            definition.prefab = BuildPrefab(species, definition, curve, melee, profile, prefabPath);
+            definition.prefab = BuildPrefab(species, definition, curve, settings, melee, profile, prefabPath);
             EditorUtility.SetDirty(definition);
         }
 
@@ -240,6 +325,15 @@ namespace KryticalNova.EditorTools.Hostiles
         private static AnimationClip CopyClip(string sourcePath, string folder, string name, bool loop, float attackEventTime)
         {
             if (string.IsNullOrEmpty(sourcePath)) return null;
+            string path = $"{folder}/{name}.anim";
+            if (clipsDone.TryGetValue(path, out AnimationClip done)) return done;
+            AnimationClip written = WriteClip(sourcePath, path, name, loop, attackEventTime);
+            if (written != null) clipsDone[path] = written;
+            return written;
+        }
+
+        private static AnimationClip WriteClip(string sourcePath, string path, string name, bool loop, float attackEventTime)
+        {
             AnimationClip source = LoadClip(sourcePath);
             if (source == null)
             {
@@ -256,7 +350,6 @@ namespace KryticalNova.EditorTools.Hostiles
                 ? new[] { new AnimationEvent { functionName = AttackEvent, time = Mathf.Min(attackEventTime, copy.length * 0.9f), stringParameter = string.Empty } }
                 : Array.Empty<AnimationEvent>());
 
-            string path = $"{folder}/{name}.anim";
             var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
             if (existing == null)
             {
@@ -282,9 +375,11 @@ namespace KryticalNova.EditorTools.Hostiles
 
         private static AnimationProfile BuildProfile(Species species, HostileDefinition definition, string folder)
         {
-            string profilePath = $"{folder}/AP_{species.Asset}.asset";
-            string controllerPath = $"{folder}/AC_{species.Asset}.controller";
+            if (profilesDone.TryGetValue(species.AnimSet, out AnimationProfile done)) return done;
+            string profilePath = $"{folder}/AP_{species.AnimSet}.asset";
+            string controllerPath = $"{folder}/AC_{species.AnimSet}.controller";
             AnimationProfile profile = EnsureAsset<AnimationProfile>(profilePath);
+            profilesDone[species.AnimSet] = profile;
 
             profile.NonCombatAnimations = Animations(definition, definition.idle, false);
             profile.Type1Animations = Animations(definition, definition.combatIdle != null ? definition.combatIdle : definition.idle, true);
@@ -332,7 +427,7 @@ namespace KryticalNova.EditorTools.Hostiles
         // ------------------------------------------------------------------ the prefab
 
         private static GameObject BuildPrefab(Species species, HostileDefinition definition, HostileStatCurve curve,
-            MeleeAbility melee, AnimationProfile profile, string prefabPath)
+            HostileSettings settings, MeleeAbility melee, AnimationProfile profile, string prefabPath)
         {
             GameObject root = UnityEngine.Object.Instantiate(definition.model);
             try
@@ -387,7 +482,9 @@ namespace KryticalNova.EditorTools.Hostiles
                 SetField(net, "definition", definition);
                 SetField(net, "curve", curve);
                 SetField(net, "animator", animator);
+                SetField(net, "settings", settings);
                 root.AddComponent<HostileBrainLink>();
+                SetField(root.AddComponent<HostileCorpse>(), "settings", settings);
 
                 // Off in the prefab: a client never runs a brain, and nothing has to be switched off after spawn.
                 foreach (Type part in new[] { typeof(EmeraldSystem), typeof(EmeraldAnimation), typeof(EmeraldBehaviors), typeof(EmeraldCombat),

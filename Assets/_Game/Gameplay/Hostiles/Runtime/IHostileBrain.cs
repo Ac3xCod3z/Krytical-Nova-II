@@ -15,6 +15,9 @@ namespace KryticalNova.Hostiles
         /// <summary>Gives the brain a species' behaviour and the numbers it needs (speeds, aggro radius, reach).</summary>
         void Configure(HostileDefinition definition, in HostileStats stats);
 
+        /// <summary>Where it wanders from and goes back to after a chase, and how far it wanders.</summary>
+        void SetHome(Vector3 home, int wanderRadius);
+
         /// <summary>While frozen a Hostile stands still and takes hits (GM tool).</summary>
         bool Frozen { get; set; }
 

@@ -34,6 +34,7 @@ namespace KryticalNova.Hostiles
 
         [SerializeField] private HostileDefinition definition;
         [SerializeField] private HostileStatCurve curve;
+        [SerializeField] private HostileSettings settings;
         [SerializeField] private Animator animator;
 
         private readonly NetworkVariable<int> netLevel = new NetworkVariable<int>(writePerm: NetworkVariableWritePermission.Server);
@@ -45,7 +46,9 @@ namespace KryticalNova.Hostiles
         private HostileStats stats;
         private int level;
         private bool setUp;
+        private bool asleep;
         private float nextAnimSend;
+        private Coroutine leaving;
 
         /// <summary>Every Hostile that is in the world on this peer.</summary>
         public static IReadOnlyList<HostileNet> Active => active;
@@ -57,6 +60,8 @@ namespace KryticalNova.Hostiles
 
         /// <summary>Raised on every peer when an attack starts: (attack index from 0, seconds until it lands, heavy).</summary>
         public event Action<int, float, bool> AttackStarted;
+        /// <summary>Raised where the game is decided when this Hostile is killed.</summary>
+        public event Action<HostileNet> Killed;
         /// <summary>Raised on every peer when the level is known or changes (a GM spawn at another level).</summary>
         public event Action LevelChanged;
 
@@ -66,8 +71,15 @@ namespace KryticalNova.Hostiles
         public IHostileBrain Brain => brain;
         public HostileStats Stats => stats;
         public int Level => level > 0 ? level : definition != null ? definition.level : 1;
+        public HostileSettings Settings => settings;
         /// <summary>True for a Hostile a GM command put in the world, so the same tools can clear it again.</summary>
         public bool GmSpawned { get; set; }
+        /// <summary>The Hostile Zone it lives in, or null for one spawned outside any zone.</summary>
+        public HostileZone Zone { get; set; }
+        /// <summary>Where it appeared this life: where it goes back to when it gives up a chase.</summary>
+        public Vector3 Home { get; private set; }
+        /// <summary>True while its zone sleeps: no brain, no animation, until a player comes near again.</summary>
+        public bool Asleep => asleep;
 
         private bool HasAuthority => !IsSpawned || IsServer;
 
@@ -78,14 +90,35 @@ namespace KryticalNova.Hostiles
             if (animator == null) animator = GetComponent<Animator>();
         }
 
-        private void OnEnable() => active.Add(this);
-        private void OnDisable() => active.Remove(this);
+        private void OnEnable()
+        {
+            active.Add(this);
+            entity.Killed += OnKilled;
+            // Taken from the pool with no session running: a new life starts here. On the network it starts
+            // in OnNetworkSpawn, which follows.
+            if (setUp && Offline) Revive();
+        }
+
+        private void OnDisable()
+        {
+            active.Remove(this);
+            entity.Killed -= OnKilled;
+            if (leaving != null) { StopCoroutine(leaving); leaving = null; }
+        }
+
+        private static bool Offline
+        {
+            get
+            {
+                NetworkManager manager = NetworkManager.Singleton;
+                return manager == null || !manager.IsListening;
+            }
+        }
 
         private void Start()
         {
             // A Hostile that is not on the network (offline play, an edit-mode test scene) decides for itself.
-            NetworkManager manager = NetworkManager.Singleton;
-            if (!IsSpawned && (manager == null || !manager.IsListening)) WakeWithAuthority();
+            if (!IsSpawned && Offline) WakeWithAuthority();
         }
 
         public override void OnNetworkSpawn()
@@ -95,14 +128,20 @@ namespace KryticalNova.Hostiles
             netAnim.OnValueChanged += OnNetAnimChanged;
             if (IsServer)
             {
-                WakeWithAuthority();
+                netAnim.Value = default; // a body from the pool was last seen dead
+                if (setUp) Revive();
+                else WakeWithAuthority();
                 netLevel.Value = Level;
                 if (SpatialInterestManager.Instance != null) SpatialInterestManager.Instance.RegisterEntity(NetworkObject);
             }
             else
             {
                 // The clips carry the events that make the brain strike. A client has no brain to hear them.
-                if (animator != null) animator.fireEvents = false;
+                if (animator != null)
+                {
+                    animator.fireEvents = false;
+                    Stand();
+                }
                 level = netLevel.Value;
                 ApplyIdentity();
                 Play(netAnim.Value, default, true);
@@ -135,8 +174,66 @@ namespace KryticalNova.Hostiles
         {
             if (setUp) return;
             setUp = true;
+            Home = transform.position;
             ApplyNumbers();
-            if (brain != null) brain.SetAwake(true);
+            if (brain != null)
+            {
+                brain.SetAwake(!asleep);
+                brain.SetHome(Home, settings != null ? settings.wanderRadius : 8);
+            }
+        }
+
+        /// <summary>A new life for a body taken from the pool: full health, fresh numbers, brain on, standing.</summary>
+        private void Revive()
+        {
+            Home = transform.position;
+            asleep = false;
+            Stand();
+            ApplyNumbers();
+            if (brain != null)
+            {
+                brain.SetAwake(true);
+                brain.SetHome(Home, settings != null ? settings.wanderRadius : 8);
+            }
+        }
+
+        private void Stand()
+        {
+            if (animator == null) return;
+            animator.enabled = true;
+            animator.Rebind();
+            animator.Update(0f);
+        }
+
+        /// <summary>
+        /// Server or offline: puts a living Hostile to sleep or wakes it. Asleep it has no brain and does not
+        /// animate; it stays where it is and can still be hit, which wakes nothing by itself.
+        /// </summary>
+        public void SetAsleep(bool value)
+        {
+            if (!HasAuthority || asleep == value) return;
+            asleep = value;
+            if (!setUp || !entity.IsAlive) return;
+            if (brain != null) brain.SetAwake(!value);
+            if (animator != null) animator.enabled = !value;
+        }
+
+        // ------------------------------------------------------------------ death
+
+        private void OnKilled(KillingBlow blow)
+        {
+            // Raised where the game is decided only. The body lies, burns away (HostileCorpse, on every screen)
+            // and then leaves the world for the pool.
+            if (leaving != null) StopCoroutine(leaving);
+            leaving = StartCoroutine(LeaveAfterCorpse());
+            Killed?.Invoke(this);
+        }
+
+        private System.Collections.IEnumerator LeaveAfterCorpse()
+        {
+            yield return new WaitForSeconds(settings != null ? settings.CorpseLifetime : 4f);
+            leaving = null;
+            if (!entity.IsAlive) HostileSpawner.Remove(this);
         }
 
         private void ApplyNumbers()
@@ -170,7 +267,7 @@ namespace KryticalNova.Hostiles
 
         private void Update()
         {
-            if (!setUp || !IsSpawned || !IsServer || animator == null || Time.time < nextAnimSend) return;
+            if (!setUp || asleep || !IsSpawned || !IsServer || animator == null || Time.time < nextAnimSend) return;
             nextAnimSend = Time.time + AnimSendInterval;
 
             HostileAnimState state = netAnim.Value;

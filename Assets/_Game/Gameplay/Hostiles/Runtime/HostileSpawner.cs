@@ -62,9 +62,9 @@ namespace KryticalNova.Hostiles
             if (prefab == null || !HasAuthority) return null;
             if (!NavMesh.SamplePosition(position, out NavMeshHit ground, NavMeshReach, NavMesh.AllAreas)) return null;
 
-            HostileNet hostile = Object.Instantiate(prefab, ground.position, Quaternion.Euler(0f, facingDegrees, 0f));
-            hostile.name = prefab.name;
+            HostileNet hostile = HostilePool.Take(prefab, ground.position, Quaternion.Euler(0f, facingDegrees, 0f));
             hostile.GmSpawned = gmSpawned;
+            hostile.Zone = null;
             hostile.SetLevel(level);
             NetworkManager manager = NetworkManager.Singleton;
             if (manager != null && manager.IsListening) hostile.NetworkObject.Spawn(true);
@@ -75,8 +75,9 @@ namespace KryticalNova.Hostiles
         public static void Remove(HostileNet hostile)
         {
             if (hostile == null || !HasAuthority) return;
+            // Despawning hands the body to the pool through the prefab handler, here and on every client.
             if (hostile.IsSpawned) hostile.NetworkObject.Despawn(true);
-            else Object.Destroy(hostile.gameObject);
+            else HostilePool.Return(hostile);
         }
     }
 }

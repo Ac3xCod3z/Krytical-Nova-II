@@ -241,6 +241,106 @@ namespace KryticalNova.DevTools
             });
         }
 
+        // ------------------------------------------------------------------ Hostile Zones
+
+        private static HostileZone FindZone(string id)
+        {
+            id = (id ?? string.Empty).Trim().ToLowerInvariant();
+            foreach (HostileZone zone in HostileZone.All)
+                if (zone.Definition != null && zone.Definition.id.ToLowerInvariant() == id) return zone;
+            foreach (HostileZone zone in HostileZone.All)
+                if (zone.Definition != null && zone.Definition.id.ToLowerInvariant().Contains(id) && id.Length > 0) return zone;
+            return null;
+        }
+
+        private const string NoZone = "No Hostile Zone with that id. gm.zone.list shows them.";
+
+        [Command("gm.zone.list", "Every Hostile Zone: id, level, species, alive / max, awake or asleep, seconds to the next respawn.")]
+        private static string ZoneList()
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            if (HostileZone.All.Count == 0) return "This map has no Hostile Zones.";
+            var sb = new StringBuilder();
+            foreach (HostileZone zone in HostileZone.All)
+            {
+                HostileZoneDefinition d = zone.Definition;
+                if (d == null) continue;
+                string species = d.hostile != null ? $"Lv {d.hostile.level,3} {d.hostile.displayName,-16}" : "no species";
+                float next = zone.SecondsToNextRespawn;
+                string bruiser = !zone.HasBruiser ? "" : zone.BruiserAlive ? " · Bruiser alive" : zone.SecondsToBruiser >= 0f ? $" · Bruiser in {zone.SecondsToBruiser:0} s" : "";
+                sb.AppendLine($"{d.id,-16} {species} {zone.Alive,2}/{zone.Capacity,-2} {(zone.IsAwake ? "awake " : "asleep")} {(next >= 0f ? $"next in {next:0.#} s" : "full")}{bruiser}");
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+        [Command("gm.zone.fill", "Bring back every dead Hostile of a zone now: gm.zone.fill <id>.")]
+        private static string ZoneFill(string id)
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            HostileZone zone = FindZone(id);
+            if (zone == null) return NoZone;
+            return $"{zone.Definition.displayName}: {zone.FillNow()} brought back, {zone.Alive}/{zone.Capacity} alive.";
+        }
+
+        [Command("gm.zone.clear", "Empty a zone; its Hostiles come back after [seconds] (default 30): gm.zone.clear <id> [seconds].")]
+        private static string ZoneClear(string id, float seconds = 30f)
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            HostileZone zone = FindZone(id);
+            if (zone == null) return NoZone;
+            zone.Empty(Mathf.Max(0f, seconds));
+            return $"{zone.Definition.displayName} emptied for {Mathf.Max(0f, seconds):0} s.";
+        }
+
+        [Command("gm.zone.respawn", "Set the respawn time of every zone, for fast testing: gm.zone.respawn <seconds|default>.")]
+        private static string ZoneRespawn(string seconds)
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            float value = -1f;
+            bool isDefault = string.Equals((seconds ?? string.Empty).Trim(), "default", StringComparison.OrdinalIgnoreCase);
+            if (!isDefault && (!float.TryParse(seconds, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value) || value < 0f))
+                return "Use gm.zone.respawn <seconds> or gm.zone.respawn default.";
+            foreach (HostileZone zone in HostileZone.All) zone.OverrideRespawn(isDefault ? -1f : value);
+            return isDefault ? "Every zone uses its species respawn time again." : $"Every zone now respawns after {value:0.#} s (kills from now on).";
+        }
+
+        [Command("gm.zone.sleep", "Force a zone asleep or awake, or let players decide again: gm.zone.sleep <id> [on|off|auto].")]
+        private static string ZoneSleep(string id, string state = "on")
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            HostileZone zone = FindZone(id);
+            if (zone == null) return NoZone;
+            state = (state ?? string.Empty).Trim().ToLowerInvariant();
+            if (state == "auto") { zone.ForceAwake(null); return $"{zone.Definition.displayName} wakes and sleeps by itself again."; }
+            if (!TryParseSwitch(state, false, out bool asleep)) return "Use gm.zone.sleep <id> on, off or auto.";
+            zone.ForceAwake(!asleep);
+            return $"{zone.Definition.displayName} is held {(asleep ? "asleep" : "awake")}.";
+        }
+
+        [Command("gm.zone.bruiser", "Bring a zone's Bruiser now, or print its timer: gm.zone.bruiser <id>.")]
+        private static string ZoneBruiser(string id)
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            HostileZone zone = FindZone(id);
+            if (zone == null) return NoZone;
+            if (!zone.HasBruiser) return $"{zone.Definition.displayName} has no Bruiser.";
+            if (zone.BruiserAlive) return "Its Bruiser is alive.";
+            return zone.SpawnBruiserNow() ? "Its Bruiser is here." : "The Bruiser could not be placed (zone not started, or no free ground).";
+        }
+
+        [Command("gm.hostile.stats", "Live counts: Hostiles in the world, asleep, waiting in the pools, and made since Play started.")]
+        private static string Stats()
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            int alive = 0, asleep = 0;
+            foreach (HostileNet hostile in HostileNet.Active)
+            {
+                if (hostile.Entity.IsAlive) alive++;
+                if (hostile.Asleep) asleep++;
+            }
+            return $"In the world {HostileNet.Active.Count} ({alive} alive, {asleep} asleep) · waiting in pools {HostilePool.Waiting} · made since Play started {HostilePool.Created}";
+        }
+
         private static float Chance(float hitRate, float evasion, float min, float max) =>
             Mathf.Clamp(hitRate / Mathf.Max(1f, hitRate + evasion) * 100f, min, max);
     }
