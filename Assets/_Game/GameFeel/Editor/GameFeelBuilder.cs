@@ -319,10 +319,19 @@ namespace KryticalNova.EditorTools
             Make("FX_LevelUp_01", "PFX_Pet_Evolve", 0.42f);
             Make("FX_LightRayRound_01", "PFX_Pet_EvolveRays", 0.45f, Yellow);
             Make("FX_Sparkles_Large_01", "PFX_Pet_EvolveSparkles", 0.5f);
-            Make("FX_Sparkles_Small_01", "PFX_Pet_Glow", 1f, Color.white, loop: true, then: ShapePetGlow);
+            BuildPetGlow();
             BuildPetCloud();
             BuildPetEffects();
             if (AssetDatabase.LoadAssetAtPath<GameObject>(OldPetAuraPath) != null) AssetDatabase.DeleteAsset(OldPetAuraPath);
+        }
+
+        /// <summary>Builds only the sparkles an evolved pet wears; nothing else of the game feel is touched.</summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Pet Glow")]
+        public static void BuildPetGlow()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            Make("FX_Sparkles_Small_01", "PFX_Pet_Glow", 1f, Color.white, loop: true, then: ShapePetGlow);
+            AssetDatabase.SaveAssets();
         }
 
         /// <summary>Builds only the effects that are a pet's own mark; nothing else of the game feel is touched.</summary>
@@ -499,8 +508,10 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>
-        /// Soft sparkles born on the pet's body that drift out and up and fade: no orbit, no ribbons. One system, in
-        /// world space so they stay behind when the pet moves. How many there are is set per stage at run time.
+        /// Small sparkles born on the pet's body that drift a little way out and up and fade: no orbit, no ribbons.
+        /// One system, in world space so they stay behind when the pet moves. How many there are is set per stage
+        /// at run time. Sizes are in pet lengths: PetFollower sizes the effect to the pet that wears it, so the
+        /// sparkles are small, few and close to it (owner, 10 Oct 2026: they were large and stood well off it).
         /// </summary>
         private static void ShapePetGlow(GameObject root)
         {
@@ -514,24 +525,24 @@ namespace KryticalNova.EditorTools
             main.loop = true;
             main.duration = 2f;
             main.playOnAwake = true;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.9f, 1.6f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.12f, 0.4f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.07f, 0.18f);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.2f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.05f, 0.18f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.06f);
             main.startColor = Color.white;
             main.gravityModifier = -0.04f; // they rise a little
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.scalingMode = ParticleSystemScalingMode.Hierarchy;
-            main.maxParticles = 60;
+            main.maxParticles = 24;
 
             var emission = keep.emission;
             emission.enabled = true;
-            emission.rateOverTime = 8f;
+            emission.rateOverTime = 3f;
             emission.SetBursts(Array.Empty<ParticleSystem.Burst>());
 
             var shape = keep.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = 0.7f;
+            shape.radius = 0.5f; // PetFollower makes 1 the pet's length: this is its surface
             shape.radiusThickness = 0.2f; // from the surface, not the middle
 
             var velocity = keep.velocityOverLifetime;
@@ -542,7 +553,7 @@ namespace KryticalNova.EditorTools
             sub.enabled = false;
             var noise = keep.noise;
             noise.enabled = true;
-            noise.strength = 0.08f;
+            noise.strength = 0.05f;
             noise.frequency = 0.6f;
 
             var fade = new Gradient();

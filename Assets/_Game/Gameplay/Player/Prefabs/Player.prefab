@@ -755,7 +755,7 @@ MonoBehaviour:
   turnSpeed: 6
   snapDistance: 8
   normalizedSize: 0.55
-  glowSize: 0.42
+  sparkleReach: 1
 --- !u!114 &5668717879715690075
 MonoBehaviour:
   m_ObjectHideFlags: 0

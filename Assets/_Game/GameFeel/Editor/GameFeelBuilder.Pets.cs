@@ -18,6 +18,14 @@ namespace KryticalNova.EditorTools
         public const string PetRollDustPath = VfxFolder + "/PFX_Pet_RollDust.prefab";
         public const string PetZzzPath = VfxFolder + "/PFX_Pet_Zzz.prefab";
         public const string PetTideWavePath = VfxFolder + "/PFX_Pet_TideWave.prefab";
+        /// <summary>The grown Tidecallers' own: water streaming past as they swim, water dragged round a somersault, the bump of a ram.</summary>
+        public const string PetTideFlowPath = VfxFolder + "/PFX_Pet_TideFlow.prefab";
+        public const string PetTideSwirlPath = VfxFolder + "/PFX_Pet_TideSwirl.prefab";
+        public const string PetRamBumpPath = VfxFolder + "/PFX_Pet_RamBump.prefab";
+        private const string WaterFlowShaderPath = VfxFolder + "/Shaders/FX_PetWaterFlow.shader";
+        private const string WaterFlowMaterialPath = MaterialFolder + "/M_FX_PetWaterFlow.mat";
+        private const string BumpMeshPath = PetMeshFolder + "/SM_FX_Bump.asset";
+        private const string BumpStarMeshPath = PetMeshFolder + "/SM_FX_BumpStar.asset";
         private const string PetMeshFolder = VfxFolder + "/Meshes";
         private const string WaveMeshPath = PetMeshFolder + "/SM_FX_Wave.asset";
         private const string ShardMeshPath = PetMeshFolder + "/SM_FX_WaterShard.asset";
@@ -40,7 +48,297 @@ namespace KryticalNova.EditorTools
             Make("FX_Steam_01", "PFX_Pet_RollDust", 1f, loop: true, then: ShapePetRollDust);
             BuildPetZzz();
             BuildPetTideWave();
+            BuildSwimmerEffects();
             AssetDatabase.SaveAssets();
+        }
+
+        // ------------------------------------------------------------------ the swimmers (the Tidecaller from 25 %)
+
+        /// <summary>Builds only what the grown Tidecallers have of their own: the water they swim through and the bump of their ram.</summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Tidecaller Swimmer Effects")]
+        public static void BuildSwimmerEffects()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            WeatherVfxBuilder.EnsureFolder(PetMeshFolder);
+            Material water = WaterFlowMaterial();
+            if (water == null) return;
+            BuildPetTideFlow(water);
+            BuildPetTideSwirl(water);
+            BuildPetRamBump();
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>The material of the faux water: the Pet Water Flow shader in the wave's own colours. Kept if it is there, so tuning survives.</summary>
+        private static Material WaterFlowMaterial()
+        {
+            var shader = AssetDatabase.LoadAssetAtPath<Shader>(WaterFlowShaderPath);
+            if (shader == null)
+            {
+                Debug.LogError($"[GameFeel] No water shader at {WaterFlowShaderPath}.");
+                return null;
+            }
+            var material = AssetDatabase.LoadAssetAtPath<Material>(WaterFlowMaterialPath);
+            if (material != null)
+            {
+                if (material.shader != shader) material.shader = shader;
+                return material;
+            }
+            material = new Material(shader) { name = "M_FX_PetWaterFlow" };
+            material.SetColor("_WaterColor", WaterColour);
+            material.SetColor("_DeepColor", WaterDeep);
+            material.SetColor("_FoamColor", FoamColour);
+            AssetDatabase.CreateAsset(material, WaterFlowMaterialPath);
+            return material;
+        }
+
+        /// <summary>
+        /// A particle system that draws nothing but its trails, as ribbons of the faux water in the effect's own
+        /// space (which is the pet's: z ahead of it). The particles are only the heads of the ribbons: where they go
+        /// is where the water goes. A ribbon swells in as its head sets off and thins away as the head tires.
+        /// </summary>
+        private static ParticleSystem RibbonSystem(GameObject root, string name, Material water, float width, float trailShare)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(root.transform, false);
+            var system = go.AddComponent<ParticleSystem>();
+            var main = system.main;
+            main.playOnAwake = true;
+            main.loop = true;
+            main.duration = 2f;
+            main.startSpeed = 0f;
+            main.startSize = 1f;
+            main.startColor = Color.white;
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            var emission = system.emission;
+            emission.enabled = true;
+            var size = system.sizeOverLifetime;
+            size.enabled = true;
+            size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
+                new Keyframe(0f, 0f), new Keyframe(0.2f, 1f), new Keyframe(0.65f, 1f), new Keyframe(1f, 0f)));
+            var trails = system.trails;
+            trails.enabled = true;
+            trails.mode = ParticleSystemTrailMode.PerParticle;
+            trails.ratio = 1f;
+            trails.lifetime = trailShare;
+            trails.minVertexDistance = 0.02f;
+            trails.worldSpace = false;
+            trails.dieWithParticles = true;
+            trails.textureMode = ParticleSystemTrailTextureMode.Stretch;
+            trails.sizeAffectsWidth = true;
+            trails.sizeAffectsLifetime = false;
+            trails.inheritParticleColor = true;
+            trails.widthOverTrail = width;
+            trails.generateLightingData = false;
+            var renderer = go.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = ParticleSystemRenderMode.None;
+            renderer.trailMaterial = water;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            return system;
+        }
+
+        /// <summary>
+        /// The water a swimmer moves through, played while its movement animation does. Ribbons of water start on a
+        /// ring ahead of its nose, wider than its body, and run straight back past its sides and well off behind
+        /// it, weaving a little: the water parts for it and closes behind. They are thin and few, so the pet is
+        /// seen through them. It is in the pet's own space, so it
+        /// streams past whichever way the pet is carried. Sizes in footprints (1 = as far as the pet is wide).
+        /// </summary>
+        private static void BuildPetTideFlow(Material water)
+        {
+            var root = new GameObject("PFX_Pet_TideFlow");
+            try
+            {
+                ParticleSystem streams = RibbonSystem(root, "Streams", water, 0.11f, 0.5f);
+                var main = streams.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.8f, 1.05f);
+                main.maxParticles = 30;
+                var emission = streams.emission;
+                emission.rateOverTime = 8f;
+                // The ring: across the pet's path, ahead of its middle, flattened a little because it is wider than tall.
+                var shape = streams.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Circle;
+                shape.radius = 0.6f;
+                shape.radiusThickness = 0.12f;
+                shape.arc = 360f;
+                shape.position = new Vector3(0f, 0f, 0.65f);
+                shape.rotation = Vector3.zero;
+                shape.scale = new Vector3(1f, 0.8f, 1f);
+                var velocity = streams.velocityOverLifetime;
+                velocity.enabled = true;
+                velocity.space = ParticleSystemSimulationSpace.Local;
+                velocity.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+                velocity.y = new ParticleSystem.MinMaxCurve(0f, 0f);
+                velocity.z = new ParticleSystem.MinMaxCurve(-2.6f, -2f);
+                var noise = streams.noise;
+                noise.enabled = true;
+                noise.separateAxes = true;
+                noise.strengthX = 0.12f;
+                noise.strengthY = 0.12f;
+                noise.strengthZ = 0f;
+                noise.frequency = 1.6f;
+                noise.scrollSpeed = 0.6f;
+                noise.octaveCount = 1;
+                SavePrefab(root, PetTideFlowPath);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        /// <summary>
+        /// The water a swimmer drags round with it in its backward somersault: ribbons that start on a hoop round
+        /// its middle, standing in the plane it turns over in, and run round that hoop the way its nose goes (up
+        /// and back over), faster than it turns, so they lead it round. Played for the stretch of the animation in
+        /// which it is turning over.
+        /// </summary>
+        private static void BuildPetTideSwirl(Material water)
+        {
+            var root = new GameObject("PFX_Pet_TideSwirl");
+            try
+            {
+                ParticleSystem hoop = RibbonSystem(root, "Hoop", water, 0.14f, 0.55f);
+                var main = hoop.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 0.85f);
+                main.maxParticles = 24;
+                var emission = hoop.emission;
+                emission.rateOverTime = 9f;
+                // A hoop standing in the pet's up-and-ahead plane (the circle shape lies across z: turned to lie across x).
+                var shape = hoop.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Circle;
+                shape.radius = 0.62f;
+                shape.radiusThickness = 0.2f;
+                shape.arc = 360f;
+                shape.position = Vector3.zero;
+                shape.rotation = new Vector3(0f, 90f, 0f);
+                shape.scale = Vector3.one;
+                // Round the pet's right-hand axis. Nose up and back over is a turn against that axis.
+                var velocity = hoop.velocityOverLifetime;
+                velocity.enabled = true;
+                velocity.space = ParticleSystemSimulationSpace.Local;
+                velocity.x = new ParticleSystem.MinMaxCurve(0f);
+                velocity.y = new ParticleSystem.MinMaxCurve(0f);
+                velocity.z = new ParticleSystem.MinMaxCurve(0f);
+                velocity.orbitalX = new ParticleSystem.MinMaxCurve(-6f);
+                velocity.orbitalY = new ParticleSystem.MinMaxCurve(0f);
+                velocity.orbitalZ = new ParticleSystem.MinMaxCurve(0f);
+                velocity.radial = new ParticleSystem.MinMaxCurve(0.15f);
+                var noise = hoop.noise;
+                noise.enabled = true;
+                noise.separateAxes = true;
+                noise.strengthX = 0.2f; // side to side only: the hoop keeps its shape
+                noise.strengthY = 0f;
+                noise.strengthZ = 0f;
+                noise.frequency = 1.2f;
+                noise.scrollSpeed = 0.5f;
+                noise.octaveCount = 1;
+                SavePrefab(root, PetTideSwirlPath);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        // ------------------------------------------------------------------ the ram
+
+        private static readonly Color BumpYellow = new Color(1f, 0.79f, 0.24f);
+
+        /// <summary>
+        /// The bump of a ram: a spiky comic burst that pops out where the pet's nose meets its owner, ink behind
+        /// yellow behind white, and a handful of little stars knocked out of it. One each time it is played, facing
+        /// the camera. Sizes in footprints.
+        /// </summary>
+        private static void BuildPetRamBump()
+        {
+            Mesh burst = SaveMesh(BumpMeshPath, BumpMesh());
+            Mesh star = SaveMesh(BumpStarMeshPath, StarMesh("SM_FX_BumpStar", 4, 0.5f, 0.2f, Color.white, 0f));
+            Material flat = WeatherVfxBuilder.OpaqueParticleMaterial("M_ComicPuff", Color.white);
+            var root = new GameObject("PFX_Pet_RamBump");
+            try
+            {
+                ParticleSystem pop = FlatSystem(root, "Burst", burst, flat, root.transform);
+                var main = pop.main;
+                main.loop = false;
+                main.duration = 0.45f;
+                main.startLifetime = 0.42f;
+                main.startSize = 0.85f;
+                main.startColor = Color.white; // the mesh carries the ink, the yellow and the white
+                main.startRotation = new ParticleSystem.MinMaxCurve(-0.35f, 0.35f);
+                main.maxParticles = 2;
+                var emission = pop.emission;
+                emission.rateOverTime = 0f;
+                emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 1) });
+                var size = pop.sizeOverLifetime;
+                size.enabled = true;
+                size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
+                    new Keyframe(0f, 0.2f), new Keyframe(0.16f, 1.25f), new Keyframe(0.32f, 1f), new Keyframe(0.7f, 0.95f), new Keyframe(1f, 0f)));
+
+                // The little stars: thrown out all round, they slow at once and shrink away.
+                ParticleSystem stars = FlatSystem(root, "Stars", star, flat, root.transform);
+                var m = stars.main;
+                m.loop = false;
+                m.duration = 0.45f;
+                m.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.6f);
+                m.startSpeed = new ParticleSystem.MinMaxCurve(1.6f, 2.6f);
+                m.startSize = new ParticleSystem.MinMaxCurve(0.16f, 0.26f);
+                m.startColor = BumpYellow;
+                m.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+                m.maxParticles = 12;
+                var e = stars.emission;
+                e.rateOverTime = 0f;
+                e.SetBursts(new[] { new ParticleSystem.Burst(0.03f, 6) });
+                var shape = stars.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Sphere;
+                shape.radius = 0.12f;
+                shape.radiusThickness = 0f;
+                Slowed(stars, 0.12f, 0.2f);
+                var s = stars.sizeOverLifetime;
+                s.enabled = true;
+                s.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.4f), new Keyframe(0.2f, 1f), new Keyframe(1f, 0f)));
+                SavePrefab(root, PetRamBumpPath);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        /// <summary>The comic burst, one unit across, facing -z: a ten-pointed ink star, a yellow one inside it and a white one inside that, each a little nearer the camera than the last.</summary>
+        private static Mesh BumpMesh()
+        {
+            var faces = new Faces();
+            AddStar(faces, 10, 0.5f, 0.3f, InkColour, 0f);
+            AddStar(faces, 10, 0.43f, 0.25f, BumpYellow, -0.03f);
+            AddStar(faces, 10, 0.27f, 0.15f, Color.white, -0.06f);
+            return faces.ToMesh("SM_FX_Bump");
+        }
+
+        private static Mesh StarMesh(string name, int points, float outer, float inner, Color colour, float z)
+        {
+            var faces = new Faces();
+            AddStar(faces, points, outer, inner, colour, z);
+            return faces.ToMesh(name);
+        }
+
+        /// <summary>A flat star about the origin in the xy plane at depth <paramref name="z"/>: its points reach <paramref name="outer"/>, the hollows between them <paramref name="inner"/>.</summary>
+        private static void AddStar(Faces faces, int points, float outer, float inner, Color colour, float z)
+        {
+            var centre = new Vector3(0f, 0f, z);
+            int corners = points * 2;
+            Vector3 Corner(int i)
+            {
+                float angle = i * Mathf.PI * 2f / corners + Mathf.PI * 0.5f;
+                float reach = i % 2 == 0 ? outer : inner;
+                return new Vector3(Mathf.Cos(angle) * reach, Mathf.Sin(angle) * reach, z);
+            }
+            for (int i = 0; i < corners; i++) faces.Triangle(centre, Corner(i), Corner(i + 1), colour, true);
         }
 
         // ------------------------------------------------------------------ dust

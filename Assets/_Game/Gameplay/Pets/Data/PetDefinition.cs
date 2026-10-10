@@ -22,6 +22,10 @@ namespace KryticalNova.Pets
         public Vector3 offset;
         [Tooltip("On: its particles are tinted with the glow colour of the pet's growth stage, so the effect changes as the pet grows.")]
         public bool stageColour = true;
+        [Tooltip("Its size against the size it was made for, which is the pet's footprint. An effect made for a small pet is brought down for a wide one.")]
+        [Min(0.05f)] public float size = 1f;
+        [Tooltip("The growth stages it is worn at, first (x) to last (y): 0 is the base form, 4 fully grown. A pet whose stages are different creatures (the Tidecaller's egg, then its swimmers) has effects that belong to some of them only.")]
+        public Vector2Int stages = new Vector2Int(0, PetRules.LastStage);
 
         [Header("Only with an animation")]
         [Tooltip("The animation it belongs to: the name of a state of the pet's Animator (HopSpin, Move). Empty = it is worn all the time.")]
@@ -105,6 +109,12 @@ namespace KryticalNova.Pets
 
         [Tooltip("The true/false parameter that holds the loop the model waits in instead of its default state (Emberwing's Fly: it hovers on its wings rather than sitting perched in mid-air). It lets go for the movement loop and for the animations that play once. Empty = it waits in its default state.")]
         public string restLoop = "";
+
+        [Header("Charge (an animation in which it turns on its owner and drives at them)")]
+        [Tooltip("The animation: the name of a state of the model's Animator (the Tidecaller's Ram). While it plays the pet faces its owner, and its lunge is stretched or shortened so that its nose just reaches them. Empty = none.")]
+        public string chargeAnimation = "";
+        [Tooltip("The bone of the model that the animation carries forward in its lunge: how far it has gone tells how far through the lunge the pet is.")]
+        public string chargeBone = "";
 
         [Header("Follow")]
         [Tooltip("Added to the pet settings' follow gap for this pet only, in metres. More hovers further from its owner.")]

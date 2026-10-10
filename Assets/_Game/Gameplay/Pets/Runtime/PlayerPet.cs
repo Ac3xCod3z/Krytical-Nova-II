@@ -198,8 +198,9 @@ namespace KryticalNova.Pets
                         glow.rimPulseSpeed = Settings.rimPulseSpeed;
                         glow.rimPulseWidth = Settings.rimPulseWidth;
                         glow.sparkleRate = Settings.sparkleRate;
+                        glow.noRim = Stage < Settings.rimFromStage;
                         // The halo at the top of its breath is the widest the pet is ever seen.
-                        float reach = glow.strength > 0f
+                        float reach = glow.strength > 0f && !glow.noRim
                             ? Mathf.Lerp(glow.rimWidth.x, glow.rimWidth.y, glow.strength) * (1f + Mathf.Lerp(glow.rimPulseWidth.x, glow.rimPulseWidth.y, glow.strength))
                             : 0f;
                         spacing = new PetFollowLook
@@ -222,25 +223,36 @@ namespace KryticalNova.Pets
                 else follower.SetMoveLoop(null, 1f, 1f);
                 follower.SetRestLoop(pet != null ? pet.restLoop : null);
                 follower.SetStance(pet != null && !pet.bobs, pet != null ? pet.footEffect : null, pet != null ? pet.footBones : null);
-                follower.SetEffects(EffectsOf(pet), pet != null ? pet.effects : null);
+                PetFollower.WornEffect[] effects = EffectsOf(pet, Stage);
+                follower.SetEffects(effects, effects);
+                follower.SetCharge(pet != null ? pet.chargeAnimation : null, pet != null ? pet.chargeBone : null);
+                if (Settings != null) follower.SetEmissionBreath(Settings.emissionBreath, Settings.emissionBreathsPerSecond);
             }
             Changed?.Invoke();
         }
 
-        /// <summary>A pet's own effects as the follower takes them, or null.</summary>
-        private static PetFollower.WornEffect[] EffectsOf(PetDefinition pet)
+        // The effects of each pet at each growth stage, made once: the follower rebuilds what a pet wears only when
+        // it is handed a different list, and the same pet at the same stage is always handed the same one.
+        private static readonly Dictionary<(PetDefinition, int), PetFollower.WornEffect[]> effectLists = new Dictionary<(PetDefinition, int), PetFollower.WornEffect[]>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ForgetEffectLists() => effectLists.Clear(); // definitions may have been edited between two Plays
+
+        /// <summary>A pet's own effects at a growth stage as the follower takes them, or null.</summary>
+        private static PetFollower.WornEffect[] EffectsOf(PetDefinition pet, int stage)
         {
             if (pet == null || pet.effects == null || pet.effects.Length == 0) return null;
-            var effects = new PetFollower.WornEffect[pet.effects.Length];
-            for (int i = 0; i < effects.Length; i++)
+            if (effectLists.TryGetValue((pet, stage), out PetFollower.WornEffect[] known)) return known;
+            var effects = new List<PetFollower.WornEffect>(pet.effects.Length);
+            foreach (PetEffect effect in pet.effects)
             {
-                PetEffect effect = pet.effects[i];
-                effects[i] = effect != null
-                    ? new PetFollower.WornEffect(effect.prefab, effect.bones, effect.stageColour, (PetFollower.EffectPlace)(int)effect.anchor,
-                        effect.offset, effect.animation, effect.at, effect.during)
-                    : default;
+                if (effect == null || stage < effect.stages.x || stage > effect.stages.y) continue;
+                effects.Add(new PetFollower.WornEffect(effect.prefab, effect.bones, effect.stageColour, (PetFollower.EffectPlace)(int)effect.anchor,
+                    effect.offset, effect.animation, effect.at, effect.during, effect.size));
             }
-            return effects;
+            PetFollower.WornEffect[] list = effects.Count > 0 ? effects.ToArray() : null;
+            effectLists[(pet, stage)] = list;
+            return list;
         }
 
         /// <summary>Puts the working state back into the worn pet item, so it travels with it and is saved with it.</summary>

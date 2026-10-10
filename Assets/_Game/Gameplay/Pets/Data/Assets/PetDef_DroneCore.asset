@@ -51,9 +51,18 @@ MonoBehaviour:
   - prefab: {fileID: 769357725117457455, guid: 2daa2ea8b6ec02f40a968b7dbfb36267, type: 3}
     bones:
     - body
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
     stageColour: 1
+    size: 1
+    stages: {x: 0, y: 4}
+    animation: 
+    at: []
+    during: {x: 0, y: 0}
   moveLoop: FrontRoll
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
   restLoop: 
+  chargeAnimation: 
+  chargeBone: 
   followGapAdjust: 0

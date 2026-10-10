@@ -31,9 +31,11 @@ namespace KryticalNova.Pets
         [Tooltip("Soft sparkles that come off an evolved pet's body, tinted with the stage's glow colour. Built by the game feel builder.")]
         public GameObject auraPrefab;
         [Tooltip("Brightness of the halo of light round an evolved pet's outline, at the first evolved stage (x) and at the last (y). Above 1 the inner edge burns towards white.")]
-        public Vector2 rimIntensity = new Vector2(0.7f, 1.7f);
+        public Vector2 rimIntensity = new Vector2(0.18f, 0.4f);
+        [Tooltip("The growth stage from which a pet wears the rim at all: 0 the base form, 2 = 50 % growth. Below it a pet has its sparkles but no rim.")]
+        [Range(0, 4)] public int rimFromStage = 2;
         [Tooltip("How far the halo reaches from the pet's outline, in metres: first evolved stage (x), last (y).")]
-        public Vector2 rimWidth = new Vector2(0.05f, 0.11f);
+        public Vector2 rimWidth = new Vector2(0.012f, 0.03f);
         [Tooltip("How deep the halo breathes, as the share of its brightness lost at the low point of a breath: first evolved stage (x), last (y).")]
         public Vector2 rimPulse = new Vector2(0.35f, 0.55f);
         [Tooltip("Breaths per second: first evolved stage (x), last (y).")]
@@ -41,11 +43,16 @@ namespace KryticalNova.Pets
         [Tooltip("How much wider the halo is at the top of a breath, as a share of its width: first evolved stage (x), last (y).")]
         public Vector2 rimPulseWidth = new Vector2(0.2f, 0.4f);
         [Tooltip("Sparkles per second at the first evolved stage (x) and at the last (y).")]
-        public Vector2 sparkleRate = new Vector2(3f, 16f);
+        public Vector2 sparkleRate = new Vector2(1.5f, 5f);
 
         [Header("Animation: a pet whose model has animations of its own (today the Kitsune Spirit)")]
         [Tooltip("Such a pet plays its animations in turn, one every this many seconds, and rests in between. Keep it longer than the longest animation (2.5 s today). 0 = it only rests.")]
         [Min(0f)] public float animationCycleSeconds = 10f;
+
+        [Tooltip("A pet model whose material has an emission map (the glowing lines of the grown Tidecallers) breathes: its glow goes between this share of the material's own emission colour (x) and this one (y). Above 1 it blooms. 1 and 1 = it holds still.")]
+        public Vector2 emissionBreath = new Vector2(0.55f, 2.4f);
+        [Tooltip("Breaths a second of that glow.")]
+        [Min(0f)] public float emissionBreathsPerSecond = 0.3f;
 
         [Tooltip("Such a pet walks on the spot while its owner covers ground at this speed or more, in metres a second, so it seems to walk along. 0 = it never walks or runs.")]
         [Min(0f)] public float walkFromOwnerSpeed = 0.3f;
