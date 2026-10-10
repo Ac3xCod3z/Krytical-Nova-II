@@ -284,6 +284,12 @@ MonoBehaviour:
     flameDepth: 0.9
     flameLean: 1.1
     flameHeat: 0.55
+    emberSize: 0.07
+    emberSpeed: 0.3
+    emberEdge: 0.5
+    emberPatch: 0.45
+    emberHeat: 0.5
+    emberDeep: 0.7
   shader: {fileID: 4800000, guid: 77d6a2ad6858a43478f60b452a511ab1, type: 3}
 --- !u!114 &6426238317140712041
 MonoBehaviour:

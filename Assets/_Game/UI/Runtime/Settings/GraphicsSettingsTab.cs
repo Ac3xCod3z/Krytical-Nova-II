@@ -54,6 +54,11 @@ namespace KryticalNova.UI
                 value => Detail(() => GraphicsPreferences.SunShafts = value)));
             Add(SettingsRows.Toggle(page, "Comic ink outlines", () => GraphicsPreferences.ComicOutlines,
                 value => Detail(() => GraphicsPreferences.ComicOutlines = value)));
+
+            SettingsRows.Header(page, "PERFORMANCE");
+            Add(SettingsRows.Toggle(page, "Performance readout", () => GraphicsPreferences.PerformanceReadout,
+                value => GraphicsPreferences.PerformanceReadout = value));
+            SettingsRows.Help(page, "Shows how the game is running, on the left edge of the screen: frames a second and the slowest of them, where each frame's time goes, how much is being drawn, memory, and your connection.");
         }
 
         /// <summary>Shows every stored value again.</summary>

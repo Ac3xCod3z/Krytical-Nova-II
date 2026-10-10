@@ -191,6 +191,8 @@ namespace KryticalNova.Progression
         public Material coronaMaterial;
         [Tooltip("Shader KryticalNova/NovaMotes: the sparks in orbit.")]
         public Material motesMaterial;
+        [Tooltip("Shader KryticalNova/NovaMask: the disc behind a Nova that hides the characters, pets and effects behind it (and leaves the world behind them). None = everything shows through.")]
+        public Shader maskShader;
         [Tooltip("Gap between the top of the head and the lowest the Nova reaches (metres).")]
         public float gapAboveHead = 0.08f;
         [Tooltip("How dark the patch of night behind the Nova is. It is what lets the rings read against a bright sky.")]

@@ -211,6 +211,41 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void AnEpicAtTheCapGlowsRedWhereARareGlowsOrange()
+        {
+            TemperSettings temper = settings.temper;
+            Assert.IsTrue(GearProgressionRules.TryGetGlow(temper, 120, ItemRarity.Rare, out Color rare, out TemperGlowLook rareLook));
+            Assert.IsTrue(GearProgressionRules.TryGetGlow(temper, 120, ItemRarity.Epic, out Color epic, out TemperGlowLook epicLook));
+            Assert.IsTrue(GearProgressionRules.TryGetGlow(temper, 120, out TemperGlowBand orange));
+            Assert.AreEqual(orange.color, rare, "a Rare keeps the band's own orange");
+            Assert.AreNotEqual(rare, epic);
+            Assert.Greater(epic.r, 0.9f);
+            Assert.Less(epic.g, 0.25f, "red, not orange");
+            Assert.Less(epic.b, 0.25f);
+            Assert.AreEqual(epic, orange.ColorFor(ItemRarity.Legendary), "and so does everything above an Epic");
+
+            // Below the cap a rarity changes the look, never the colour.
+            foreach (int percent in new[] { 1, 30, 60, 90, 119 })
+            {
+                Assert.IsTrue(GearProgressionRules.TryGetGlow(temper, percent, ItemRarity.Rare, out Color low, out TemperGlowLook lowLook));
+                Assert.IsTrue(GearProgressionRules.TryGetGlow(temper, percent, ItemRarity.Epic, out Color lowEpic, out TemperGlowLook lowEpicLook));
+                Assert.AreEqual(low, lowEpic, $"{percent}%");
+                Assert.AreEqual(0f, lowLook.ember, $"{percent}%: embers are the cap's own");
+                Assert.AreEqual(0f, lowEpicLook.ember, $"{percent}%");
+            }
+
+            // At the cap both burn, and they are still two looks: only the Epic has tongues, lightning and sparks.
+            Assert.Greater(rareLook.ember, 0f);
+            Assert.Greater(epicLook.ember, 0f);
+            Assert.AreEqual(0f, rareLook.flame);
+            Assert.AreEqual(0f, rareLook.lightning);
+            Assert.AreEqual(0f, rareLook.twinkle);
+            Assert.Greater(epicLook.flame, 0f);
+            Assert.Greater(epicLook.lightning, 0f);
+            Assert.IsFalse(GearProgressionRules.TryGetGlow(temper, 0, ItemRarity.Epic, out _, out _), "an untouched piece does not glow");
+        }
+
+        [Test]
         public void EveryGlowBandStartsExactlyWhereTheSettingsSay()
         {
             // The forge's rim and ring take the band's colour: one percent short of a band is still the band below.

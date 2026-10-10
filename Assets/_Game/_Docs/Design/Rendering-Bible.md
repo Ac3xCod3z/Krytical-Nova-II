@@ -400,6 +400,7 @@ knuckle blade are set by hand and ticked "keep as set".
 | Sparks | a few small dots with a thin four-point glint that swell and fade, in the light and on the glowing part | `twinkle` (brightness) | `twinkleSize` (room per spark: larger = fewer), `twinkleShare`, `twinkleRate`, `twinkleDot`, `twinkleRay`, `twinkleWhite` |
 | Lightning | thin jagged arcs that stand off the outline for an instant and flicker out | `lightning` | `boltLength`, `boltRate`, `boltChance`, `boltWidthPixels`, `boltBrightness`, `boltWander`, `boltWhite` |
 | Flame | tongues that rise from the outline, lean towards the tip and stream to it | `flame` (share of the light) | `flameSize`, `flameSpeed`, `flameDepth`, `flameLean`, `flameHeat` |
+| Embers (10 Oct 2026) | the light broken up like a flame seen close: a ragged edge, a patchy body, and shades from a deeper to a hotter, paler tone of the glow's own colour. Two layers of gradient (Perlin) noise pinned to the weapon, one streaming to the tip, one boiling across. Lies over the flame when there is one. Only the 120 % Temper band asks for it (`TemperGlowBand.ember`) | `ember` | `emberSize`, `emberSpeed`, `emberEdge`, `emberPatch`, `emberHeat`, `emberDeep` |
 
 They are pinned to the glowing thing (its origin and the way its tip points), so they travel with it. Epic and
 above wear all three; lower rarities glow plainly. At most 32 things in one view carry them (the rest only glow).
@@ -407,6 +408,16 @@ above wear all three; lower rarities glow plainly. At most 32 things in one view
 **Feature settings** (`PC_Renderer` ▸ Glow Halo): `softness` 1.8, `inkGap` 1 px, `solidity` 0.45 (how much of the
 background the light covers, so it does not burn out on a bright sky), halo width clamped to 3–56 px, `depthFade`
 0.05 m, fade-out from 55 to 80 m, `halfResolution` on. PC renderer only (it needs the depth texture).
+
+### A Nova hides what is behind it (10 Oct 2026)
+
+Characters, pets, Hostiles and their effects are not seen through an Ascension Nova; buildings, ground and sky still are. The reverse of `OccluderFader`, and done with draw order instead of material swaps:
+
+- `ActorDrawOrder` (on players, pets, Hostiles and NPCs) gives their solid renderers sorting order 2, so they are drawn after the scenery (order 0). It looks its models over once a second, because gear and growth stages swap them.
+- `NovaHalo` draws a camera-facing disc behind its rings with `KryticalNova/NovaMask` (depth and stencil only), in stages: at order 1 it marks the disc's sky pixels and writes its depth, so the actors drawn next fail the depth test behind it; at order 3 it gives the marked sky pixels the far plane back, so the skybox fills them; first thing in the blended pass it writes its depth again, so sparkles and other blended light behind it stay hidden. Stencil bits 0x40 and 0x20 are its own.
+- The disc has no depth-only pass, so it is not in the depth texture: fog, ambient shading and the ink do not see a disc. What reads the depth texture is told where the Novas are instead (`NovaCull` → `_KN_NovaDiscs`, `_KN_NovaDiscCount`, at most 8): `GlowHalo.shader` drops the light of what is behind one, `ComicPost.shader` drops its ink and comic shadow.
+- A character seen through its own Nova (the camera looking down on it) is drawn with the scenery for as long as that lasts, so it is never cut by its own Nova.
+- Not hidden: anything that is neither marked an actor nor blended (a new kind of creature needs `ActorDrawOrder.On(root)` where it is built), and the part of a model that sticks out past the disc.
 
 ## 6f. Motion smear, and the slow motion of a critical kill
 
@@ -596,6 +607,11 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   uGUI draw with a loop of at most eight panels a pixel, for about 1.25 s; not measured against a budget yet).
 
 ## Changelog
+
+- **2026-10-10**:
+  - Glow halo: embers (Perlin noise) for the 120 % Temper band; an Epic at 120 % is red (6e).
+  - A Nova hides the characters, pets and effects behind it: `ActorDrawOrder`, `NovaMask.shader`, `NovaCull` (6e).
+  - Performance readout (Settings ▸ Graphics): frame times, what is drawn, memory, connection. Frame Timing Stats switched on in Player Settings for it.
 
 - **2026-10-08 (polish pass: interface)**:
   - One interface skin per faction, in an asset; the game's style sheets are generated from it (section 6i,

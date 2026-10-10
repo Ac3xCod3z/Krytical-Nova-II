@@ -12,11 +12,10 @@ namespace KryticalNova.World
     {
         private const float MinimumDayLength = 10f;
 
-        // TODO(GM): 24 real minutes is a testing value. Lengthen before release and expose
-        // SetDayLength / SetTimeOfDay / pause through the GM mod (WorldEnvironmentNetwork API).
+        // TODO(GM): expose SetDayLength / SetTimeOfDay / pause through the GM mod (WorldEnvironmentNetwork API).
         [Header("Clock")]
-        [Tooltip("Real seconds per in-game day. 1440 = 24 min (TESTING VALUE — lengthen later; GM mod will control this).")]
-        [Min(MinimumDayLength)] public float dayLengthSeconds = 1440f;
+        [Tooltip("Real seconds per in-game day. 3600 = 1 hour (set after testing; the moon's cycle is counted in these days).")]
+        [Min(MinimumDayLength)] public float dayLengthSeconds = 3600f;
         [Tooltip("Time of day (0-1) when the world first starts. 0.3 ≈ 07:12.")]
         [Range(0f, 1f)] public float startTimeOfDay01 = 0.3f;
 

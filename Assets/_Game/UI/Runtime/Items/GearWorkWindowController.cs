@@ -419,7 +419,7 @@ namespace KryticalNova.UI
             if (pieceFrame == null) return;
             bool flashing = flashEnds > 0f;
             if (tempering && !flashing && GearProgressionRules.TryGetGlow(Settings.temper, state.Temper, out TemperGlowBand band))
-                pieceFrame.style.unityBackgroundImageTintColor = band.color;
+                pieceFrame.style.unityBackgroundImageTintColor = band.ColorFor(item.rarity);
             else
                 pieceFrame.style.unityBackgroundImageTintColor = StyleKeyword.Null;
         }
@@ -428,8 +428,8 @@ namespace KryticalNova.UI
             ? WeaponClasses.DisplayName(item.weaponClass).ToUpperInvariant()
             : item.equipSlot.ToString().ToUpperInvariant();
 
-        private Color GlowColor(int temper) =>
-            GearProgressionRules.TryGetGlow(Settings.temper, temper, out TemperGlowBand band) ? band.color : gauge.resolvedStyle.color;
+        private Color GlowColor(ItemDefinition item, int temper) =>
+            GearProgressionRules.TryGetGlow(Settings.temper, temper, out TemperGlowBand band) ? band.ColorFor(item.rarity) : gauge.resolvedStyle.color;
 
         private void RefreshPurse()
         {
@@ -485,7 +485,7 @@ namespace KryticalNova.UI
             string blocked = GearProgressionRules.TemperBlockedReason(Settings, item, state, alloy, protection);
             long cost = GearProgressionRules.TemperCost(Settings, item, state.Temper);
             value.text = $"+{state.Temper}%";
-            value.style.color = GlowColor(state.Temper);
+            value.style.color = GlowColor(item, state.Temper);
             act.text = $"TEMPER   ·   {cost:N0} Creds";
 
             int reach = state.Temper;
@@ -517,7 +517,7 @@ namespace KryticalNova.UI
                 chance.text = string.Empty;
                 gain.text = string.Empty;
             }
-            SetGauge(state.Temper / (float)temper.hardCap, reach / (float)temper.hardCap, 0, BreakStart(), GlowColor(Mathf.Max(1, state.Temper)));
+            SetGauge(state.Temper / (float)temper.hardCap, reach / (float)temper.hardCap, 0, BreakStart(), GlowColor(item, Mathf.Max(1, state.Temper)));
             if (blocked == null && work.Creds < cost) blocked = "You don't have enough Creds.";
             return blocked;
         }

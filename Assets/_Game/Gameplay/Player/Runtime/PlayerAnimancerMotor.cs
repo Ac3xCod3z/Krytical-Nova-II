@@ -75,6 +75,9 @@ namespace KryticalNova.Player
         [SerializeField] private bool stopFootIK = true;
         [Tooltip("Start the stop clip this far (m) before a NavMesh destination, so the stopping steps line up with arrival.")]
         [SerializeField, Min(0f)] private float stopLeadDistance = 0.35f;
+        [Tooltip("The stop clip starts at least this many seconds of travel before the destination. At the fast Run ranks the " +
+                 "distance above is one or two frames: too late for the stop to show before the body halts.")]
+        [SerializeField, Min(0f)] private float stopLeadSeconds = 0.08f;
 
         [Header("Jump Clips")]
         [SerializeField] private AnimationClip jumpStartClip;
@@ -517,15 +520,24 @@ namespace KryticalNova.Player
         /// </summary>
         private bool IsMoving()
         {
-            if (currentSpeed <= moveSpeedThreshold) return false;
+            bool movedHere = agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh;
+            // A body that arrives through NetworkTransform keeps easing into place after it stops, so its measured
+            // speed hovers just above nothing: once it has stopped, only real travel sets it moving again. Without
+            // this the run and its stop restart over and over at the end of every move.
+            bool inMoveClip = currentLocomotionClip == walkClip || currentLocomotionClip == drawnWalkClip
+                || currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip;
+            float threshold = movedHere || inMoveClip ? moveSpeedThreshold : Mathf.Max(moveSpeedThreshold, RemoteMoveOffSpeed);
+            if (currentSpeed <= threshold) return false;
 
-            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh && !agent.pathPending && agent.hasPath)
+            if (movedHere && !agent.pathPending && agent.hasPath)
             {
                 // remainingDistance reads 0 for the first frame after SetPath; don't mistake that for arrival.
                 Vector3 toDestination = agent.destination - agent.nextPosition;
                 toDestination.y = 0f;
                 float remaining = Mathf.Max(agent.remainingDistance, toDestination.magnitude);
-                if (remaining <= agent.stoppingDistance + stopLeadDistance)
+                // A fast run is given the same time to stop in as a slow one, not the same distance.
+                float lead = Mathf.Max(stopLeadDistance, currentSpeed * stopLeadSeconds);
+                if (remaining <= agent.stoppingDistance + lead)
                     return false;
             }
 

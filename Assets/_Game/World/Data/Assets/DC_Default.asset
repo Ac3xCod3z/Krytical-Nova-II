@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c4259749d27016419d3e6292b1f463d, type: 3}
   m_Name: DC_Default
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.DayCycleProfile
-  dayLengthSeconds: 1440
+  dayLengthSeconds: 3600
   startTimeOfDay01: 0.3
   sunAzimuth: -30
   sunTilt: 35

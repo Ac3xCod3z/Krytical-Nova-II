@@ -96,6 +96,7 @@ MonoBehaviour:
     ringMaterial: {fileID: 2100000, guid: c02a72c6c38104b4d85ab7d68fa742c7, type: 2}
     coronaMaterial: {fileID: 2100000, guid: 78e96efad16b9474e841a452f240f716, type: 2}
     motesMaterial: {fileID: 2100000, guid: ce20c3914b87cbf469ba73c40bd96dd1, type: 2}
+    maskShader: {fileID: 4800000, guid: 5c1e7a94d3b24f0e9a6b8d21f47c3e50, type: 3}
     gapAboveHead: 0.08
     backdrop: 0.4
     spinScale: 1

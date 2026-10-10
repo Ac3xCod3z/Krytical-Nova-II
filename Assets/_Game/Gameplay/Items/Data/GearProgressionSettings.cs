@@ -59,6 +59,15 @@ namespace KryticalNova.Items
         public int from;
         public string name;
         [ColorUsage(false, false)] public Color color;
+        [Tooltip("From this rarity up the band shows the colour below instead of its own (Epic at 120 % is red where a Rare is orange). Common = every rarity shows the band's own colour.")]
+        public ItemRarity recolorFrom;
+        [ColorUsage(false, false)] public Color recolor;
+        [Tooltip("How much of this band's light is broken up into drifting embers: a ragged, patchy body that shifts between hotter and deeper shades of the colour. Multiplied by the rarity's own Ember below. 0 = the smooth light.")]
+        [Range(0f, 1f)] public float ember;
+
+        /// <summary>The colour a piece of this rarity shows in this band.</summary>
+        public readonly Color ColorFor(ItemRarity rarity) =>
+            recolorFrom > ItemRarity.Common && rarity >= recolorFrom ? recolor : color;
     }
 
     /// <summary>How strongly a rarity shows its glow. The colour is the band's; only the strength differs.</summary>
@@ -81,6 +90,8 @@ namespace KryticalNova.Items
         [Range(0f, 2f)] public float lightning;
         [Tooltip("Flame, in the Temper band's own colour: tongues that rise from the outline and stream towards the tip. 1 = all of the light is flame, 0 = the steady halo.")]
         [Range(0f, 1f)] public float flame;
+        [Tooltip("How strongly this rarity shows a band's embers (the band says whether it has any: today only 120 %). 0 = never.")]
+        [Range(0f, 2f)] public float ember;
     }
 
     [Serializable]
@@ -160,16 +171,17 @@ namespace KryticalNova.Items
             new TemperGlowBand { from = 30, name = "Yellow", color = new Color(1.00f, 0.86f, 0.24f) },
             new TemperGlowBand { from = 60, name = "Blue", color = new Color(0.28f, 0.62f, 1.00f) },
             new TemperGlowBand { from = 90, name = "Purple", color = new Color(0.72f, 0.36f, 1.00f) },
-            new TemperGlowBand { from = 120, name = "Orange", color = new Color(1.00f, 0.52f, 0.12f) },
+            new TemperGlowBand { from = 120, name = "Orange", color = new Color(1.00f, 0.52f, 0.12f),
+                recolorFrom = ItemRarity.Epic, recolor = new Color(1.00f, 0.14f, 0.10f), ember = 1f },
         };
-        [Tooltip("By rarity: Common, Uncommon, Rare, Epic, Legendary. Same colours; an Epic shows them brighter.")]
+        [Tooltip("By rarity: Common, Uncommon, Rare, Epic, Legendary. Same colours (but for a band's own recolour); an Epic shows them brighter.")]
         public TemperGlowLook[] glowLooks =
         {
-            new TemperGlowLook { intensity = 0.50f, width = 0.045f, pulse = 0.35f, pulseSpeed = 0.45f, pulseWidth = 0.20f },
-            new TemperGlowLook { intensity = 0.60f, width = 0.050f, pulse = 0.35f, pulseSpeed = 0.45f, pulseWidth = 0.20f },
-            new TemperGlowLook { intensity = 0.70f, width = 0.060f, pulse = 0.40f, pulseSpeed = 0.55f, pulseWidth = 0.25f },
-            new TemperGlowLook { intensity = 1.60f, width = 0.100f, pulse = 0.50f, pulseSpeed = 0.70f, pulseWidth = 0.35f, twinkle = 1.3f, lightning = 1f, flame = 1f },
-            new TemperGlowLook { intensity = 1.90f, width = 0.120f, pulse = 0.55f, pulseSpeed = 0.80f, pulseWidth = 0.40f, twinkle = 1.5f, lightning = 1.2f, flame = 1f },
+            new TemperGlowLook { intensity = 0.50f, width = 0.045f, pulse = 0.35f, pulseSpeed = 0.45f, pulseWidth = 0.20f, ember = 0.6f },
+            new TemperGlowLook { intensity = 0.60f, width = 0.050f, pulse = 0.35f, pulseSpeed = 0.45f, pulseWidth = 0.20f, ember = 0.7f },
+            new TemperGlowLook { intensity = 0.70f, width = 0.060f, pulse = 0.40f, pulseSpeed = 0.55f, pulseWidth = 0.25f, ember = 1f },
+            new TemperGlowLook { intensity = 1.60f, width = 0.100f, pulse = 0.50f, pulseSpeed = 0.70f, pulseWidth = 0.35f, twinkle = 1.3f, lightning = 1f, flame = 1f, ember = 1f },
+            new TemperGlowLook { intensity = 1.90f, width = 0.120f, pulse = 0.55f, pulseSpeed = 0.80f, pulseWidth = 0.40f, twinkle = 1.5f, lightning = 1.2f, flame = 1f, ember = 1f },
         };
     }
 

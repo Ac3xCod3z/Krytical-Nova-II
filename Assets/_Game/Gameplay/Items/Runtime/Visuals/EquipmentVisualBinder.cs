@@ -51,10 +51,11 @@ namespace KryticalNova.Items.Visuals
             ItemDefinition weapon = equipment.GetDefinition(EquipSlot.Weapon);
             GearProgressionSettings settings = equipment.Progression;
             int temper = equipment.GetTemper(EquipSlot.Weapon);
-            TemperGlowBand band = default;
-            bool glows = weapon != null && settings != null && GearProgressionRules.TryGetGlow(settings.temper, temper, out band);
-            if (!glows) { weaponMount.SetGlow(false, default, default); return; }
-            weaponMount.SetGlow(true, band.color, GearProgressionRules.GlowLookOf(settings.temper, weapon.rarity));
+            Color color = default;
+            TemperGlowLook look = default;
+            bool glows = weapon != null && settings != null
+                && GearProgressionRules.TryGetGlow(settings.temper, temper, weapon.rarity, out color, out look);
+            weaponMount.SetGlow(glows, color, look);
         }
 
         private void Apply(EquipSlot slot, ItemDefinition def)

@@ -90,6 +90,20 @@ namespace KryticalNova.Rendering
             [Range(0f, 3f)] public float flameLean = 1.1f;
             [Tooltip("How much brighter the heart of a tongue is than the steady light.")]
             [Range(0f, 2f)] public float flameHeat = 0.55f;
+
+            [Header("Embers (looks that ask for it: the light broken up like a flame seen close, in shades of the glow's own colour)")]
+            [Tooltip("The size of one ember, in metres on the glowing thing.")]
+            [Range(0.01f, 0.4f)] public float emberSize = 0.07f;
+            [Tooltip("How fast the embers stream towards the tip, in metres a second.")]
+            [Range(0f, 2f)] public float emberSpeed = 0.3f;
+            [Tooltip("How ragged they make the light's edge: 0 = an even reach, 1 = in a trough the light does not leave the outline.")]
+            [Range(0f, 1f)] public float emberEdge = 0.5f;
+            [Tooltip("How patchy they make the light's body: the share of its brightness lost in a trough.")]
+            [Range(0f, 1f)] public float emberPatch = 0.45f;
+            [Tooltip("How much hotter a hot patch is: brighter, and paler towards white.")]
+            [Range(0f, 1.5f)] public float emberHeat = 0.5f;
+            [Tooltip("How much deeper a trough's colour is: 0 = the glow's own, 1 = far more saturated.")]
+            [Range(0f, 1f)] public float emberDeep = 0.7f;
         }
 
         public Settings settings = new Settings();
@@ -199,7 +213,7 @@ namespace KryticalNova.Rendering
                             int at = _pins.count++;
                             _pins.origins[at] = new Vector4(origin.x, origin.y, origin.z, halo.Twinkle);
                             _pins.tips[at] = new Vector4(towardsTip.x, towardsTip.y, towardsTip.z, 0f);
-                            _pins.auras[at] = new Vector4(halo.Lightning, halo.Flame, halo.Beat, 0f);
+                            _pins.auras[at] = new Vector4(halo.Lightning, halo.Flame, halo.Beat, halo.Ember);
                             pin = at + 1;
                         }
                     }
@@ -268,6 +282,7 @@ namespace KryticalNova.Rendering
             public static readonly int GlowBoltLook = Shader.PropertyToID("_GlowBoltLook");
             public static readonly int GlowFlame = Shader.PropertyToID("_GlowFlame");
             public static readonly int GlowFlameLook = Shader.PropertyToID("_GlowFlameLook");
+            public static readonly int GlowEmber = Shader.PropertyToID("_GlowEmber");
             public static readonly int GlowAttrTexelSize = Shader.PropertyToID("_GlowAttr_TexelSize");
             public static readonly int GlowColor = Shader.PropertyToID("_GlowColor");
             public static readonly int GlowWidth = Shader.PropertyToID("_GlowWidth");
@@ -490,7 +505,8 @@ namespace KryticalNova.Rendering
                             d.block.SetVector(ShaderIds.GlowBolt, new Vector4(s.boltLength, s.boltRate, s.boltChance, s.boltWidthPixels));
                             d.block.SetVector(ShaderIds.GlowBoltLook, new Vector4(s.boltBrightness, s.boltWander, s.boltWhite, 0f));
                             d.block.SetVector(ShaderIds.GlowFlame, new Vector4(s.flameSize, s.flameSpeed, s.flameDepth, s.flameLean));
-                            d.block.SetVector(ShaderIds.GlowFlameLook, new Vector4(s.flameHeat, 0f, 0f, 0f));
+                            d.block.SetVector(ShaderIds.GlowFlameLook, new Vector4(s.flameHeat, s.emberHeat, s.emberDeep, 0f));
+                            d.block.SetVector(ShaderIds.GlowEmber, new Vector4(s.emberSize, s.emberSpeed, s.emberEdge, s.emberPatch));
                         }
                         ctx.cmd.EnableScissorRect(d.scissor);
                         ctx.cmd.DrawProcedural(Matrix4x4.identity, d.material, d.pass, MeshTopology.Triangles, 3, 1, d.block);

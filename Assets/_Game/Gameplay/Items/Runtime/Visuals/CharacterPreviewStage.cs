@@ -278,8 +278,9 @@ namespace KryticalNova.Items.Visuals
             ItemDefinition weapon = sourceEquipment != null ? sourceEquipment.GetDefinition(EquipSlot.Weapon) : null;
             GearProgressionSettings settings = sourceEquipment != null ? sourceEquipment.Progression : null;
             if (weapon != null && settings != null
-                && GearProgressionRules.TryGetGlow(settings.temper, sourceEquipment.GetTemper(EquipSlot.Weapon), out TemperGlowBand band))
-                dollWeapon.SetGlow(true, band.color, GearProgressionRules.GlowLookOf(settings.temper, weapon.rarity));
+                && GearProgressionRules.TryGetGlow(settings.temper, sourceEquipment.GetTemper(EquipSlot.Weapon), weapon.rarity,
+                    out Color color, out TemperGlowLook look))
+                dollWeapon.SetGlow(true, color, look);
             else
                 dollWeapon.SetGlow(false, default, default);
         }

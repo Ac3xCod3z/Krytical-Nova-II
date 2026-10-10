@@ -526,7 +526,7 @@ namespace KryticalNova.UI
             label.text = temper > 0 ? $"+{temper}" : string.Empty;
             GearProgressionSettings settings = equipment != null ? equipment.Progression : null;
             if (temper > 0 && settings != null && GearProgressionRules.TryGetGlow(settings.temper, temper, out TemperGlowBand band))
-                label.style.color = band.color;
+                label.style.color = band.ColorFor(def.rarity);
             SetTemperGlow(host, def, temper, settings);
         }
 
@@ -549,7 +549,7 @@ namespace KryticalNova.UI
                 return;
             }
             glow.style.backgroundImage = new StyleBackground(rim);
-            glow.style.unityBackgroundImageTintColor = band.color;
+            glow.style.unityBackgroundImageTintColor = band.ColorFor(def.rarity);
             glow.style.display = DisplayStyle.Flex;
         }
 
@@ -1172,7 +1172,7 @@ namespace KryticalNova.UI
             if (progressionScratch.Count == 0) return string.Empty;
 
             string colour = GearProgressionRules.TryGetGlow(settings.temper, state.Temper, out TemperGlowBand band)
-                ? "#" + ColorUtility.ToHtmlStringRGB(band.color) : SkillColor;
+                ? "#" + ColorUtility.ToHtmlStringRGB(band.ColorFor(def.rarity)) : SkillColor;
             var sb = new System.Text.StringBuilder();
             sb.Append("\n<color=").Append(colour).Append('>');
             if (state.Temper > 0) sb.Append("Temper +").Append(state.Temper).Append("%  ");

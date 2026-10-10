@@ -100,6 +100,19 @@ namespace KryticalNova.Items.Visuals
             return Mathf.Sqrt(x * x + z * z);
         }
 
+        /// <summary>
+        /// The pet no further from its place than its longest trail: <paramref name="offset"/> and
+        /// <paramref name="target"/> are relative to the owner, <paramref name="maxTrail"/> in metres (0 = no limit).
+        /// A fast owner then has the pet keeping pace that far behind instead of dropping out of sight.
+        /// </summary>
+        public static Vector3 LimitTrail(Vector3 offset, Vector3 target, float maxTrail)
+        {
+            if (maxTrail <= 0f) return offset;
+            Vector3 behind = offset - target;
+            float distance = behind.magnitude;
+            return distance <= maxTrail ? offset : target + behind * (maxTrail / distance);
+        }
+
         /// <summary>The height of the pet's underside, with its pivot at <paramref name="pivot"/>.</summary>
         public static float Underside(Vector3 pivot, Bounds unit, float scale) => pivot.y + (unit.center.y - unit.extents.y) * scale;
 

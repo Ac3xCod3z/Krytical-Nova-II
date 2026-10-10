@@ -66,9 +66,13 @@ namespace KryticalNova.Items.Visuals
         private float walkFromSpeed;
         private float runFromSpeed;
         private float runToWalkSpeed;
+        private const float RestHysteresis = 0.5f;
         private Vector3 lastOwnerPosition;
+        private Vector3 lastPetPosition;
         private float ownerSpeed;
+        private float petSpeed;
         private bool running;
+        private bool moving;
         // For a model with one movement loop instead of a walk and a run.
         private string moveLoop;
         private float moveLoopWalkSpeed = 1f;
@@ -188,6 +192,7 @@ namespace KryticalNova.Items.Visuals
             pet = Instantiate(model, transform.position, transform.rotation);
             pet.name = $"Pet ({current.displayName})";
             VisualUtility.PrepareCosmetic(pet, gameObject.layer);
+            ActorDrawOrder.On(pet); // a Nova hides the pets behind it
             animations = PetAnimations.For(pet);
             animations?.SetMoveLoop(moveLoop, moveLoopWalkSpeed, moveLoopRunSpeed);
             // Prop art comes at any scale (Synty drones are metres across); normalise to a companion size.
@@ -205,6 +210,9 @@ namespace KryticalNova.Items.Visuals
             hiddenByCamera = false;
             ApplyStage();
             pet.transform.position = TargetPosition();
+            lastPetPosition = pet.transform.position;
+            petSpeed = 0f;
+            moving = false;
         }
 
         private void ApplyStage()
@@ -356,25 +364,37 @@ namespace KryticalNova.Items.Visuals
 
         /// <summary>
         /// The gait that goes with how fast the owner is covering ground right now, measured from where the owner
-        /// is, so it is the same on every machine. A jump in place (a portal) is not speed.
+        /// is, so it is the same on every machine. A jump in place (a portal) is not speed. A pet still catching
+        /// up after its owner has stopped goes by its own speed, so it runs in rather than sliding in at rest.
         /// </summary>
-        private PetGait OwnerGait()
+        private PetGait OwnerGait(Transform t)
         {
             Vector3 step = transform.position - lastOwnerPosition;
             lastOwnerPosition = transform.position;
             step.y = 0f;
+            Vector3 petStep = t.position - lastPetPosition;
+            lastPetPosition = t.position;
+            petStep.y = 0f;
             float dt = Time.deltaTime;
             if (dt > 0f)
             {
+                float blend = 1f - Mathf.Exp(-dt / OwnerSpeedSmoothTime);
                 float now = step.sqrMagnitude > snapDistance * snapDistance ? 0f : step.magnitude / dt;
-                ownerSpeed = Mathf.Lerp(ownerSpeed, now, 1f - Mathf.Exp(-dt / OwnerSpeedSmoothTime));
+                ownerSpeed = Mathf.Lerp(ownerSpeed, now, blend);
+                float petNow = petStep.sqrMagnitude > snapDistance * snapDistance ? 0f : petStep.magnitude / dt;
+                petSpeed = Mathf.Lerp(petSpeed, petNow, blend);
             }
-            if (walkFromSpeed <= 0f || ownerSpeed < walkFromSpeed)
+            float speed = Mathf.Max(ownerSpeed, petSpeed);
+            // Once moving it rests only well below the speed that set it off, so it does not flicker at the edge.
+            float restBelow = moving ? walkFromSpeed * RestHysteresis : walkFromSpeed;
+            if (walkFromSpeed <= 0f || speed < restBelow)
             {
                 running = false;
+                moving = false;
                 return PetGait.Rest;
             }
-            running = running ? ownerSpeed >= runToWalkSpeed : ownerSpeed >= runFromSpeed;
+            moving = true;
+            running = running ? speed >= runToWalkSpeed : speed >= runFromSpeed;
             return running ? PetGait.Run : PetGait.Walk;
         }
 
@@ -388,7 +408,7 @@ namespace KryticalNova.Items.Visuals
             var t = pet.transform;
             if (animations != null)
             {
-                animations.SetGait(OwnerGait());
+                animations.SetGait(OwnerGait(t));
                 animations.Tick(animationCycleSeconds);
             }
 
@@ -401,16 +421,18 @@ namespace KryticalNova.Items.Visuals
             if (!steady) targetOffset.y += Mathf.Sin((Time.time + bobPhase) * bobFrequency * Mathf.PI * 2f) * bobAmplitude;
 
             // The pet hangs in the world and is drawn to its place beside the owner: it trails a running owner by
-            // about their speed x the smooth time, and catches up when they stop.
+            // about their speed x the smooth time, never by more than its longest trail, and catches up when they stop.
             Vector3 offset = t.position - transform.position;
             if ((offset - targetOffset).sqrMagnitude > snapDistance * snapDistance)
             {
                 offset = targetOffset;
                 velocity = Vector3.zero;
+                lastPetPosition = transform.position + offset; // put there, not travelled there
             }
             else
             {
                 offset = Vector3.SmoothDamp(offset, targetOffset, ref velocity, followSmoothTime);
+                offset = PetPlacement.LimitTrail(offset, targetOffset, follow.maxTrail);
                 // On its way round a turning owner it goes round them, never through.
                 if (clearDistance > ClearSlack)
                     offset = PetPlacement.KeepClear(offset, ref velocity, targetOffset, t.rotation, unitBounds, fullScale,
@@ -464,7 +486,9 @@ namespace KryticalNova.Items.Visuals
             ApplyScale();
             pet.transform.position = TargetPosition();
             lastOwnerPosition = transform.position;
+            lastPetPosition = pet.transform.position;
             ownerSpeed = 0f;
+            petSpeed = 0f;
         }
 
         private void OnDisable()
