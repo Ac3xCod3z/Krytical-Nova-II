@@ -32,6 +32,16 @@ namespace KryticalNova.UI.Hud
         [SerializeField] private FactionHudKit[] kits;
 
         private static readonly List<HudChromePiece> Showing = new List<HudChromePiece>();
+
+        /// <summary>The kit whose pieces are showing, or null while the HUD wears no faction's art.</summary>
+        public static FactionHudKit ShownKit { get; private set; }
+        /// <summary>
+        /// Where uGUI things that follow the world are put (Hostile plates): on the pieces' canvas and under the
+        /// pieces, so the Hotbar and the player's plate draw over them. A unit is a screen pixel. Null until a kit shows.
+        /// </summary>
+        public static RectTransform WorldLayer { get; private set; }
+        /// <summary>Raised when another kit shows, or none: what was made from the old one is to be made again.</summary>
+        public static event System.Action KitChanged;
         private static CharacterPortraitStage portraitStage;
         private const float PortraitRetry = 0.5f;
 
@@ -49,6 +59,9 @@ namespace KryticalNova.UI.Hud
         {
             Showing.Clear();
             portraitStage = null;
+            ShownKit = null;
+            WorldLayer = null;
+            KitChanged = null;
         }
 
         private void OnEnable()
@@ -123,6 +136,8 @@ namespace KryticalNova.UI.Hud
             }
             Top(root).EnableInClassList(ActiveClass, pieces.Count > 0);
             if (portraitStage != null) portraitStage.Show(pieces.Count > 0);
+            ShownKit = pieces.Count > 0 ? kit : null;
+            KitChanged?.Invoke();
         }
 
         private void Clear()
@@ -136,6 +151,11 @@ namespace KryticalNova.UI.Hud
             }
             pieces.Clear();
             shown = null;
+            if (ShownKit != null)
+            {
+                ShownKit = null;
+                KitChanged?.Invoke();
+            }
             VisualElement root = document != null ? document.rootVisualElement : null;
             if (root != null) Top(root).EnableInClassList(ActiveClass, false);
         }
@@ -160,6 +180,13 @@ namespace KryticalNova.UI.Hud
             made.sortingOrder = CanvasOrder;
             // No scaler: a canvas unit is a screen pixel, and each piece scales itself onto its element.
             // No raycaster either: the pieces are looked at, the UI Toolkit elements over them are what is clicked.
+            var layer = new GameObject("World Layer", typeof(RectTransform)) { layer = go.layer };
+            var layerRect = (RectTransform)layer.transform;
+            layerRect.SetParent(go.transform, false);
+            layerRect.anchorMin = Vector2.zero;
+            layerRect.anchorMax = Vector2.one;
+            layerRect.offsetMin = layerRect.offsetMax = Vector2.zero;
+            WorldLayer = layerRect; // the first child: every piece made after it draws over it
             return made;
         }
 

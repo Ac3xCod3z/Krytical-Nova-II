@@ -66,6 +66,15 @@ drawn as an element over the map (`MinimapChromeView.overMap`: the Covenant dial
   background. While an Equipment preview is lit it puts its own lights out (both are on the preview layer).
 - Labels that follow things in the world (namecards, nameplates, loot labels, Kiosk plates, combat numbers) are UI
   Toolkit and would draw over the pieces: each hides while it is over one (`HudChrome.HideOver`).
+- The plate over a Hostile is the exception since 9 Oct 2026: while the HUD wears a faction's art it is that
+  faction's own (`HostilePlateView`, prefab `UI/HUD/Faction/<Faction>/HUD_<Faction>_HostilePlate.prefab`, listed in the
+  kit as `hostilePlate`). **Krytical Nova ▸ UI ▸ Build Hostile Plates** (`HostilePlateBuilder`) composes it from the
+  pack's `WorldSpace_EnemyInfo_01`: the pack's level badge and health bar, with three lines of ours in the pack's
+  lettering (the name, 12 panel pixels tall and in the level-gap colour; BRUISER over it; TAKEN under the bar). The
+  badge and bar are 118 panel pixels wide in every faction. `HostileNameplateController` decides what a plate says and
+  when it shows, as before; it makes one per Hostile on `HudChrome.WorldLayer`, the first child of the pieces'
+  canvas, so the pieces draw over the plates and nothing has to hide. With no faction art the plain UI Toolkit plate
+  is drawn instead. Player namecards are still the plain ones.
 - Not yet in the packs' art: chat, buffs, Squad frames, the Callout strip and prompts (they have the pack's small
   panel frame and buttons only).
 - `FactionVariantBuilder` was a spike for the pieces a faction's own pack lacks (a recoloured prefab variant of the

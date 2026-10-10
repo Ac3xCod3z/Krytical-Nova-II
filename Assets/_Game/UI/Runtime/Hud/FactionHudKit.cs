@@ -22,6 +22,9 @@ namespace KryticalNova.UI.Hud
         [Tooltip("The minimap's dial: the frame round the map.")]
         public MinimapChromeView minimap;
 
+        [Tooltip("The plate over a Hostile: level badge, health bar and name (HostilePlateBuilder). Not a piece of the HUD: one is made per Hostile on screen.")]
+        public HostilePlateView hostilePlate;
+
         public IEnumerable<HudChromePiece> Pieces()
         {
             yield return hotbar;

@@ -3,6 +3,7 @@ using KryticalNova.Hostiles;
 using KryticalNova.Items;
 using KryticalNova.Player;
 using KryticalNova.Progression;
+using KryticalNova.UI.Hud;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -15,6 +16,8 @@ namespace KryticalNova.UI
     /// are <see cref="LevelGapSettings"/>, never written here. A plate shows while the Hostile is the player's
     /// target, was hurt in the last few seconds, or is close by. A Bruiser says so; a Hostile another player
     /// holds the kill of says that too. Looks only: nothing here is replicated or decided.
+    /// While the HUD wears a faction's art the plate is that faction's own (<see cref="HostilePlateView"/>, on the
+    /// HUD pieces' canvas); with no faction art it is the plain plate drawn here.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -35,6 +38,7 @@ namespace KryticalNova.UI
 
         private sealed class Plate
         {
+            public HostilePlateView View; // the faction's plate; the elements below are the plain one's
             public VisualElement Root, Fill;
             public Label Tier, Name, Taken;
             public HostileNet Hostile;
@@ -55,12 +59,32 @@ namespace KryticalNova.UI
             root = GetComponent<UIDocument>().rootVisualElement;
             layer = root?.Q(LayerName);
             if (layer == null) Debug.LogError("[Hostile nameplates] ProgressionHUD.uxml has no '" + LayerName + "' element.", this);
+            HudChrome.KitChanged += DropPlates;
         }
 
         private void OnDisable()
         {
-            foreach (Plate plate in plates.Values) plate.Root.RemoveFromHierarchy();
+            HudChrome.KitChanged -= DropPlates;
+            DropPlates();
+        }
+
+        /// <summary>Every plate goes: the next frame makes them again, in whatever art the HUD wears now.</summary>
+        private void DropPlates()
+        {
+            foreach (Plate plate in plates.Values) Remove(plate);
             plates.Clear();
+        }
+
+        private static void Remove(Plate plate)
+        {
+            if (plate.View != null) Destroy(plate.View.gameObject);
+            plate.Root?.RemoveFromHierarchy();
+        }
+
+        private static void SetShown(Plate plate, bool shown)
+        {
+            if (plate.View != null) plate.View.Show(shown);
+            else plate.Root.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         private void LateUpdate()
@@ -79,6 +103,10 @@ namespace KryticalNova.UI
             bool show = HudPreferences.ShowNameplates;
             Vector3 cameraPosition = targetCamera.transform.position;
             float now = Time.time;
+            // Screen pixels in a panel pixel: a faction's plate is sized like the rest of the HUD.
+            Vector2 panelOrigin = RuntimePanelUtils.ScreenToPanel(root.panel, Vector2.zero);
+            float panelAcross = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(Screen.width, 0f)).x - panelOrigin.x;
+            float panelScale = panelAcross > 1f ? Screen.width / panelAcross : 1f;
 
             IReadOnlyList<HostileNet> hostiles = HostileNet.Active;
             for (int i = 0; i < hostiles.Count; i++)
@@ -110,19 +138,24 @@ namespace KryticalNova.UI
                     plates.Add(hostile, plate);
                 }
 
-                Vector2 point = default;
+                Vector3 screen = default;
                 if (wanted)
                 {
                     HostileDefinition definition = hostile.Definition;
                     float height = definition != null ? definition.bodySize.y * definition.scale : 1.8f;
-                    Vector3 screen = targetCamera.WorldToScreenPoint(body + Vector3.up * (height + GapAboveHead));
+                    screen = targetCamera.WorldToScreenPoint(body + Vector3.up * (height + GapAboveHead));
                     wanted = screen.z > 0f;
-                    if (wanted) point = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(screen.x, Screen.height - screen.y));
                 }
-                plate.Root.style.display = wanted ? DisplayStyle.Flex : DisplayStyle.None;
+                SetShown(plate, wanted);
                 if (!wanted) continue;
 
                 Fill(plate, viewerLevel, viewerObject, health, entity.MaxHealth);
+                if (plate.View != null)
+                {
+                    plate.View.Place(new Vector2(screen.x, screen.y), panelScale);
+                    continue;
+                }
+                Vector2 point = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(screen.x, Screen.height - screen.y));
                 plate.Root.style.left = point.x - plate.Root.resolvedStyle.width * 0.5f;
                 plate.Root.style.top = point.y - plate.Root.resolvedStyle.height;
             }
@@ -133,18 +166,28 @@ namespace KryticalNova.UI
                 if (pair.Key == null || !pair.Key.isActiveAndEnabled) stale.Add(pair.Key);
             foreach (HostileNet gone in stale)
             {
-                if (plates.TryGetValue(gone, out Plate plate)) plate.Root.RemoveFromHierarchy();
+                if (plates.TryGetValue(gone, out Plate plate)) Remove(plate);
                 plates.Remove(gone);
             }
         }
 
         private void HideAll()
         {
-            foreach (Plate plate in plates.Values) plate.Root.style.display = DisplayStyle.None;
+            foreach (Plate plate in plates.Values) SetShown(plate, false);
         }
 
         private Plate Create(HostileNet hostile)
         {
+            // The faction's own plate while the HUD wears a faction's art.
+            HostilePlateView art = HudChrome.ShownKit != null ? HudChrome.ShownKit.hostilePlate : null;
+            if (art != null && HudChrome.WorldLayer != null)
+            {
+                HostilePlateView view = Instantiate(art, HudChrome.WorldLayer, false);
+                view.name = art.name;
+                view.Show(false);
+                return new Plate { Hostile = hostile, View = view };
+            }
+
             var plate = new Plate { Hostile = hostile, Root = new VisualElement { pickingMode = PickingMode.Ignore } };
             plate.Root.AddToClassList("namecard");
 
@@ -190,38 +233,46 @@ namespace KryticalNova.UI
             HostileNet hostile = plate.Hostile;
             int level = hostile.Level;
             int gap = LevelGapRules.Gap(level, viewerLevel);
+            HostilePlateView view = plate.View;
             if (level != plate.Level)
             {
                 plate.Level = level;
                 string name = hostile.Definition != null ? hostile.Definition.displayName : hostile.Entity.EntityName;
-                plate.Name.text = name + "   Lv " + level;
+                // The faction's plate has a badge for the level; the plain one writes it after the name.
+                if (view != null) view.Say(name, level);
+                else plate.Name.text = name + "   Lv " + level;
             }
             if (gap != plate.Gap)
             {
                 plate.Gap = gap;
                 LevelGapSettings gaps = hostile.LevelGap;
-                plate.Name.style.color = gaps != null ? LevelGapRules.NameColor(gaps, gap) : Color.white;
+                Color colour = gaps != null ? LevelGapRules.NameColor(gaps, gap) : Color.white;
+                if (view != null) view.Colour(colour);
+                else plate.Name.style.color = colour;
             }
 
             bool bruiser = hostile.Definition != null && hostile.Definition.tier == HostileTier.Bruiser;
             if (bruiser != plate.TierShown)
             {
                 plate.TierShown = bruiser;
-                plate.Tier.style.display = bruiser ? DisplayStyle.Flex : DisplayStyle.None;
+                if (view != null) view.Tier(bruiser);
+                else plate.Tier.style.display = bruiser ? DisplayStyle.Flex : DisplayStyle.None;
             }
 
             float share = maxHealth > 0f ? Mathf.Clamp01(health / maxHealth) : 0f;
             if (!Mathf.Approximately(share, plate.Share))
             {
                 plate.Share = share;
-                plate.Fill.style.width = Length.Percent(share * 100f);
+                if (view != null) view.Health(share);
+                else plate.Fill.style.width = Length.Percent(share * 100f);
             }
 
             bool taken = hostile.IsTaggedByAnother(viewer);
             if (taken != plate.TakenShown)
             {
                 plate.TakenShown = taken;
-                plate.Taken.style.display = taken ? DisplayStyle.Flex : DisplayStyle.None;
+                if (view != null) view.Taken(taken);
+                else plate.Taken.style.display = taken ? DisplayStyle.Flex : DisplayStyle.None;
             }
         }
     }
