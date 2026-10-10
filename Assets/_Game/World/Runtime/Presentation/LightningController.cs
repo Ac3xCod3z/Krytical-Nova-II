@@ -35,6 +35,8 @@ namespace KryticalNova.World
         [SerializeField] private AudioSource thunderSource;
         [SerializeField] private AudioClip[] thunderClips;
         [SerializeField] private float maxThunderDelay = 4f;
+        [Tooltip("How loud the thunder of the farthest strikes is (nearest = 1).")]
+        [Range(0f, 1f)] [SerializeField] private float farThunder = 0.45f;
 
         private ParticleSystem[] pool;
         private int poolIndex;
@@ -47,6 +49,7 @@ namespace KryticalNova.World
         private float flashAmplitude;
         private double thunderTime = -1;
         private int thunderClip;
+        private float thunderLoudness = 1f;
         private Transform cam;
 
         /// <summary>Current flash intensity (0-1+), read by the presenter each frame.</summary>
@@ -100,7 +103,7 @@ namespace KryticalNova.World
             {
                 thunderTime = -1;
                 if (thunderSource != null && thunderClips != null && thunderClips.Length > 0)
-                    thunderSource.PlayOneShot(thunderClips[thunderClip % thunderClips.Length]);
+                    thunderSource.PlayOneShot(thunderClips[thunderClip % thunderClips.Length], thunderLoudness);
             }
 
             Flash = Envelope((float)(now - flashStart)) * flashAmplitude;
@@ -156,7 +159,11 @@ namespace KryticalNova.World
             }
 
             if (cam != null)
-                thunderTime = flashStart + Mathf.Min(Vector3.Distance(cam.position, pendingPosition) / 343f, maxThunderDelay);
+            {
+                float distance = Vector3.Distance(cam.position, pendingPosition);
+                thunderTime = flashStart + Mathf.Min(distance / 343f, maxThunderDelay);
+                thunderLoudness = Mathf.Lerp(1f, farThunder, Mathf.InverseLerp(minDistance, maxDistance, distance));
+            }
         }
 
         /// <summary>Bright stroke, brief dip, then a decaying return stroke.</summary>

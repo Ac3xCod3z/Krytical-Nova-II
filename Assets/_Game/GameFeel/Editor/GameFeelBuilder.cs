@@ -24,7 +24,8 @@ namespace KryticalNova.EditorTools
     /// chromatic-aberration shaker on the global volume.
     /// Also swaps the player's hit VFX for the URP copy (the Synty original uses a legacy particle shader).
     /// Re-runnable: assets are rebuilt from the tables below, scene components are added only when missing. Vendor
-    /// folders are never modified. Sound slots (MMF_Sound) are left empty for audio to be assigned on the prefab.
+    /// folders are never modified. Sound slots take their clips, volume and pitch range from the table in
+    /// GameFeelBuilder.Sounds.
     /// </summary>
     public static partial class GameFeelBuilder
     {
@@ -1575,12 +1576,6 @@ namespace KryticalNova.EditorTools
                 AssetDatabase.SaveAssetIfDirty(settings);
             }
             return settings;
-        }
-
-        private static void Sound(MMF_Player player, string label)
-        {
-            var sound = player.AddFeedback(typeof(MMF_Sound)) as MMF_Sound;
-            sound.Label = label + " (assign clip)";
         }
 
         private static void Impulse(MMF_Player player, Vector3 velocity, float duration)

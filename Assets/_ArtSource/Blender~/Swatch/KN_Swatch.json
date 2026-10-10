@@ -1,0 +1,2031 @@
+{
+ "_about": "The Krytical Nova swatch. Made by the synty-blender skill's make_swatch.py; change it there. v counts from the bottom.",
+ "grid": 16,
+ "cell_px": 4,
+ "cells": [
+  {
+   "name": "Ink",
+   "u": 0,
+   "v": 15,
+   "colour": "#14122B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Shadow Indigo",
+   "u": 1,
+   "v": 15,
+   "colour": "#4C52BF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Sky Blue",
+   "u": 2,
+   "v": 15,
+   "colour": "#1F6ECC",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Horizon",
+   "u": 3,
+   "v": 15,
+   "colour": "#ADE0F2",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Neon Cyan",
+   "u": 4,
+   "v": 15,
+   "colour": "#4FE3F0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Neon Magenta",
+   "u": 5,
+   "v": 15,
+   "colour": "#E04FB8",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Signal Yellow",
+   "u": 6,
+   "v": 15,
+   "colour": "#FFC93C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Sunset Coral",
+   "u": 7,
+   "v": 15,
+   "colour": "#FF9E66",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Concrete",
+   "u": 8,
+   "v": 15,
+   "colour": "#8C8A94",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Ruin Concrete",
+   "u": 9,
+   "v": 15,
+   "colour": "#4A4752",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Paper",
+   "u": 10,
+   "v": 15,
+   "colour": "#F4EEDF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Black",
+   "u": 11,
+   "v": 15,
+   "colour": "#000000",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "White",
+   "u": 12,
+   "v": 15,
+   "colour": "#FFFFFF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 01",
+   "u": 0,
+   "v": 14,
+   "colour": "#0A0A0A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 02",
+   "u": 1,
+   "v": 14,
+   "colour": "#1B1B1B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 03",
+   "u": 2,
+   "v": 14,
+   "colour": "#2B2B2B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 04",
+   "u": 3,
+   "v": 14,
+   "colour": "#3B3B3B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 05",
+   "u": 4,
+   "v": 14,
+   "colour": "#4B4B4B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 06",
+   "u": 5,
+   "v": 14,
+   "colour": "#5C5C5C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 07",
+   "u": 6,
+   "v": 14,
+   "colour": "#6C6C6C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 08",
+   "u": 7,
+   "v": 14,
+   "colour": "#7C7C7C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 09",
+   "u": 8,
+   "v": 14,
+   "colour": "#8D8D8D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 10",
+   "u": 9,
+   "v": 14,
+   "colour": "#9D9D9D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 11",
+   "u": 10,
+   "v": 14,
+   "colour": "#ADADAD",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 12",
+   "u": 11,
+   "v": 14,
+   "colour": "#BEBEBE",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 13",
+   "u": 12,
+   "v": 14,
+   "colour": "#CECECE",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 14",
+   "u": 13,
+   "v": 14,
+   "colour": "#DEDEDE",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 15",
+   "u": 14,
+   "v": 14,
+   "colour": "#EFEFEF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Grey 16",
+   "u": 15,
+   "v": 14,
+   "colour": "#FFFFFF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 16",
+   "u": 15,
+   "v": 13,
+   "colour": "#3A2416",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 15",
+   "u": 14,
+   "v": 13,
+   "colour": "#4A2D1A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 14",
+   "u": 13,
+   "v": 13,
+   "colour": "#5B361E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 13",
+   "u": 12,
+   "v": 13,
+   "colour": "#6B3F22",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 12",
+   "u": 11,
+   "v": 13,
+   "colour": "#7B4B29",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 11",
+   "u": 10,
+   "v": 13,
+   "colour": "#8A5631",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 10",
+   "u": 9,
+   "v": 13,
+   "colour": "#9A6238",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 09",
+   "u": 8,
+   "v": 13,
+   "colour": "#AA7447",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 08",
+   "u": 7,
+   "v": 13,
+   "colour": "#B98557",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 07",
+   "u": 6,
+   "v": 13,
+   "colour": "#C99766",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 06",
+   "u": 5,
+   "v": 13,
+   "colour": "#D3AA7C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 05",
+   "u": 4,
+   "v": 13,
+   "colour": "#DEBC92",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 04",
+   "u": 3,
+   "v": 13,
+   "colour": "#E8CFA8",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 03",
+   "u": 2,
+   "v": 13,
+   "colour": "#F0DCBD",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 02",
+   "u": 1,
+   "v": 13,
+   "colour": "#F7E9D3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Fur 01",
+   "u": 0,
+   "v": 13,
+   "colour": "#FFF6E8",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Gold 1",
+   "u": 0,
+   "v": 12,
+   "colour": "#5A3E0C",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Gold 2",
+   "u": 1,
+   "v": 12,
+   "colour": "#91712A",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Gold 3",
+   "u": 2,
+   "v": 12,
+   "colour": "#C8A548",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Gold 4",
+   "u": 3,
+   "v": 12,
+   "colour": "#FFD866",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Silver 1",
+   "u": 4,
+   "v": 12,
+   "colour": "#4A4E57",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Silver 2",
+   "u": 5,
+   "v": 12,
+   "colour": "#7F838B",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Silver 3",
+   "u": 6,
+   "v": 12,
+   "colour": "#B3B7BE",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Silver 4",
+   "u": 7,
+   "v": 12,
+   "colour": "#E8ECF2",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Bronze 1",
+   "u": 8,
+   "v": 12,
+   "colour": "#3D2412",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Bronze 2",
+   "u": 9,
+   "v": 12,
+   "colour": "#714B2A",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Bronze 3",
+   "u": 10,
+   "v": 12,
+   "colour": "#A57343",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Bronze 4",
+   "u": 11,
+   "v": 12,
+   "colour": "#D99A5B",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Iron 1",
+   "u": 12,
+   "v": 12,
+   "colour": "#16181C",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Iron 2",
+   "u": 13,
+   "v": 12,
+   "colour": "#383B41",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Iron 3",
+   "u": 14,
+   "v": 12,
+   "colour": "#595D65",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Iron 4",
+   "u": 15,
+   "v": 12,
+   "colour": "#7B808A",
+   "glow": false,
+   "metal": true
+  },
+  {
+   "name": "Red Bold 1",
+   "u": 0,
+   "v": 11,
+   "colour": "#420505",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Soft 1",
+   "u": 6,
+   "v": 11,
+   "colour": "#4C2626",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Bold 2",
+   "u": 1,
+   "v": 11,
+   "colour": "#680C0C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Soft 2",
+   "u": 7,
+   "v": 11,
+   "colour": "#6E3B3B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Bold 3",
+   "u": 2,
+   "v": 11,
+   "colour": "#8E1717",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Soft 3",
+   "u": 8,
+   "v": 11,
+   "colour": "#905252",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Bold 4",
+   "u": 3,
+   "v": 11,
+   "colour": "#B42424",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Soft 4",
+   "u": 9,
+   "v": 11,
+   "colour": "#B16C6C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Bold 5",
+   "u": 4,
+   "v": 11,
+   "colour": "#D93434",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Soft 5",
+   "u": 10,
+   "v": 11,
+   "colour": "#D38888",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Bold 6",
+   "u": 5,
+   "v": 11,
+   "colour": "#FF4747",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Soft 6",
+   "u": 11,
+   "v": 11,
+   "colour": "#F5A6A6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Pastel 1",
+   "u": 12,
+   "v": 11,
+   "colour": "#FFC2C2",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Pastel 2",
+   "u": 13,
+   "v": 11,
+   "colour": "#FFE3E3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Red Glow 1",
+   "u": 14,
+   "v": 11,
+   "colour": "#FF2626",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Red Glow 2",
+   "u": 15,
+   "v": 11,
+   "colour": "#FF8080",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Orange Bold 1",
+   "u": 0,
+   "v": 10,
+   "colour": "#421E05",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Soft 1",
+   "u": 6,
+   "v": 10,
+   "colour": "#4C3626",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Bold 2",
+   "u": 1,
+   "v": 10,
+   "colour": "#68310C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Soft 2",
+   "u": 7,
+   "v": 10,
+   "colour": "#6E4F3B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Bold 3",
+   "u": 2,
+   "v": 10,
+   "colour": "#8E4617",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Soft 3",
+   "u": 8,
+   "v": 10,
+   "colour": "#906B52",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Bold 4",
+   "u": 3,
+   "v": 10,
+   "colour": "#B45D24",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Soft 4",
+   "u": 9,
+   "v": 10,
+   "colour": "#B1886C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Bold 5",
+   "u": 4,
+   "v": 10,
+   "colour": "#D97634",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Soft 5",
+   "u": 10,
+   "v": 10,
+   "colour": "#D3A688",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Bold 6",
+   "u": 5,
+   "v": 10,
+   "colour": "#FF9147",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Soft 6",
+   "u": 11,
+   "v": 10,
+   "colour": "#F5C6A6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Pastel 1",
+   "u": 12,
+   "v": 10,
+   "colour": "#FFDAC2",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Pastel 2",
+   "u": 13,
+   "v": 10,
+   "colour": "#FFEEE3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Orange Glow 1",
+   "u": 14,
+   "v": 10,
+   "colour": "#FF7D26",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Orange Glow 2",
+   "u": 15,
+   "v": 10,
+   "colour": "#FFB280",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Amber Bold 1",
+   "u": 0,
+   "v": 9,
+   "colour": "#422E05",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Soft 1",
+   "u": 6,
+   "v": 9,
+   "colour": "#4C4026",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Bold 2",
+   "u": 1,
+   "v": 9,
+   "colour": "#684A0C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Soft 2",
+   "u": 7,
+   "v": 9,
+   "colour": "#6E5D3B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Bold 3",
+   "u": 2,
+   "v": 9,
+   "colour": "#8E6617",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Soft 3",
+   "u": 8,
+   "v": 9,
+   "colour": "#907B52",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Bold 4",
+   "u": 3,
+   "v": 9,
+   "colour": "#B48424",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Soft 4",
+   "u": 9,
+   "v": 9,
+   "colour": "#B19A6C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Bold 5",
+   "u": 4,
+   "v": 9,
+   "colour": "#D9A234",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Soft 5",
+   "u": 10,
+   "v": 9,
+   "colour": "#D3BA88",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Bold 6",
+   "u": 5,
+   "v": 9,
+   "colour": "#FFC247",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Soft 6",
+   "u": 11,
+   "v": 9,
+   "colour": "#F5DBA6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Pastel 1",
+   "u": 12,
+   "v": 9,
+   "colour": "#FFEBC2",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Pastel 2",
+   "u": 13,
+   "v": 9,
+   "colour": "#FFF6E3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Amber Glow 1",
+   "u": 14,
+   "v": 9,
+   "colour": "#FFB726",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Amber Glow 2",
+   "u": 15,
+   "v": 9,
+   "colour": "#FFD480",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Yellow Bold 1",
+   "u": 0,
+   "v": 8,
+   "colour": "#423C05",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Soft 1",
+   "u": 6,
+   "v": 8,
+   "colour": "#4C4926",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Bold 2",
+   "u": 1,
+   "v": 8,
+   "colour": "#685F0C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Soft 2",
+   "u": 7,
+   "v": 8,
+   "colour": "#6E693B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Bold 3",
+   "u": 2,
+   "v": 8,
+   "colour": "#8E8217",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Soft 3",
+   "u": 8,
+   "v": 8,
+   "colour": "#908A52",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Bold 4",
+   "u": 3,
+   "v": 8,
+   "colour": "#B4A524",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Soft 4",
+   "u": 9,
+   "v": 8,
+   "colour": "#B1AB6C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Bold 5",
+   "u": 4,
+   "v": 8,
+   "colour": "#D9C934",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Soft 5",
+   "u": 10,
+   "v": 8,
+   "colour": "#D3CC88",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Bold 6",
+   "u": 5,
+   "v": 8,
+   "colour": "#FFED47",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Soft 6",
+   "u": 11,
+   "v": 8,
+   "colour": "#F5EDA6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Pastel 1",
+   "u": 12,
+   "v": 8,
+   "colour": "#FFF9C2",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Pastel 2",
+   "u": 13,
+   "v": 8,
+   "colour": "#FFFCE3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Yellow Glow 1",
+   "u": 14,
+   "v": 8,
+   "colour": "#FFE926",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Yellow Glow 2",
+   "u": 15,
+   "v": 8,
+   "colour": "#FFF280",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Lime Bold 1",
+   "u": 0,
+   "v": 7,
+   "colour": "#2A4205",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Soft 1",
+   "u": 6,
+   "v": 7,
+   "colour": "#3D4C26",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Bold 2",
+   "u": 1,
+   "v": 7,
+   "colour": "#43680C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Soft 2",
+   "u": 7,
+   "v": 7,
+   "colour": "#5A6E3B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Bold 3",
+   "u": 2,
+   "v": 7,
+   "colour": "#5E8E17",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Soft 3",
+   "u": 8,
+   "v": 7,
+   "colour": "#779052",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Bold 4",
+   "u": 3,
+   "v": 7,
+   "colour": "#7AB424",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Soft 4",
+   "u": 9,
+   "v": 7,
+   "colour": "#96B16C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Bold 5",
+   "u": 4,
+   "v": 7,
+   "colour": "#97D934",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Soft 5",
+   "u": 10,
+   "v": 7,
+   "colour": "#B5D388",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Bold 6",
+   "u": 5,
+   "v": 7,
+   "colour": "#B6FF47",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Soft 6",
+   "u": 11,
+   "v": 7,
+   "colour": "#D5F5A6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Pastel 1",
+   "u": 12,
+   "v": 7,
+   "colour": "#E7FFC2",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Pastel 2",
+   "u": 13,
+   "v": 7,
+   "colour": "#F4FFE3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Lime Glow 1",
+   "u": 14,
+   "v": 7,
+   "colour": "#A8FF26",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Lime Glow 2",
+   "u": 15,
+   "v": 7,
+   "colour": "#CCFF80",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Green Bold 1",
+   "u": 0,
+   "v": 6,
+   "colour": "#05420A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Soft 1",
+   "u": 6,
+   "v": 6,
+   "colour": "#264C29",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Bold 2",
+   "u": 1,
+   "v": 6,
+   "colour": "#0C6814",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Soft 2",
+   "u": 7,
+   "v": 6,
+   "colour": "#3B6E3F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Bold 3",
+   "u": 2,
+   "v": 6,
+   "colour": "#178E21",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Soft 3",
+   "u": 8,
+   "v": 6,
+   "colour": "#529057",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Bold 4",
+   "u": 3,
+   "v": 6,
+   "colour": "#24B430",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Soft 4",
+   "u": 9,
+   "v": 6,
+   "colour": "#6CB172",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Bold 5",
+   "u": 4,
+   "v": 6,
+   "colour": "#34D942",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Soft 5",
+   "u": 10,
+   "v": 6,
+   "colour": "#88D38E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Bold 6",
+   "u": 5,
+   "v": 6,
+   "colour": "#47FF57",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Soft 6",
+   "u": 11,
+   "v": 6,
+   "colour": "#A6F5AD",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Pastel 1",
+   "u": 12,
+   "v": 6,
+   "colour": "#C2FFC7",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Pastel 2",
+   "u": 13,
+   "v": 6,
+   "colour": "#E3FFE5",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Green Glow 1",
+   "u": 14,
+   "v": 6,
+   "colour": "#26FF38",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Green Glow 2",
+   "u": 15,
+   "v": 6,
+   "colour": "#80FF8A",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Teal Bold 1",
+   "u": 0,
+   "v": 5,
+   "colour": "#054233",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Soft 1",
+   "u": 6,
+   "v": 5,
+   "colour": "#264C43",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Bold 2",
+   "u": 1,
+   "v": 5,
+   "colour": "#0C6851",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Soft 2",
+   "u": 7,
+   "v": 5,
+   "colour": "#3B6E61",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Bold 3",
+   "u": 2,
+   "v": 5,
+   "colour": "#178E70",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Soft 3",
+   "u": 8,
+   "v": 5,
+   "colour": "#529080",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Bold 4",
+   "u": 3,
+   "v": 5,
+   "colour": "#24B490",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Soft 4",
+   "u": 9,
+   "v": 5,
+   "colour": "#6CB1A0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Bold 5",
+   "u": 4,
+   "v": 5,
+   "colour": "#34D9B0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Soft 5",
+   "u": 10,
+   "v": 5,
+   "colour": "#88D3C0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Bold 6",
+   "u": 5,
+   "v": 5,
+   "colour": "#47FFD1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Soft 6",
+   "u": 11,
+   "v": 5,
+   "colour": "#A6F5E1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Pastel 1",
+   "u": 12,
+   "v": 5,
+   "colour": "#C2FFF0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Pastel 2",
+   "u": 13,
+   "v": 5,
+   "colour": "#E3FFF8",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Teal Glow 1",
+   "u": 14,
+   "v": 5,
+   "colour": "#26FFC9",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Teal Glow 2",
+   "u": 15,
+   "v": 5,
+   "colour": "#80FFDF",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Cyan Bold 1",
+   "u": 0,
+   "v": 4,
+   "colour": "#053A42",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Soft 1",
+   "u": 6,
+   "v": 4,
+   "colour": "#26474C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Bold 2",
+   "u": 1,
+   "v": 4,
+   "colour": "#0C5C68",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Soft 2",
+   "u": 7,
+   "v": 4,
+   "colour": "#3B676E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Bold 3",
+   "u": 2,
+   "v": 4,
+   "colour": "#177E8E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Soft 3",
+   "u": 8,
+   "v": 4,
+   "colour": "#528890",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Bold 4",
+   "u": 3,
+   "v": 4,
+   "colour": "#24A0B4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Soft 4",
+   "u": 9,
+   "v": 4,
+   "colour": "#6CA8B1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Bold 5",
+   "u": 4,
+   "v": 4,
+   "colour": "#34C3D9",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Soft 5",
+   "u": 10,
+   "v": 4,
+   "colour": "#88C9D3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Bold 6",
+   "u": 5,
+   "v": 4,
+   "colour": "#47E7FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Soft 6",
+   "u": 11,
+   "v": 4,
+   "colour": "#A6EAF5",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Pastel 1",
+   "u": 12,
+   "v": 4,
+   "colour": "#C2F7FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Pastel 2",
+   "u": 13,
+   "v": 4,
+   "colour": "#E3FBFF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Cyan Glow 1",
+   "u": 14,
+   "v": 4,
+   "colour": "#26E2FF",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Cyan Glow 2",
+   "u": 15,
+   "v": 4,
+   "colour": "#80EEFF",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Blue Bold 1",
+   "u": 0,
+   "v": 3,
+   "colour": "#052042",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Soft 1",
+   "u": 6,
+   "v": 3,
+   "colour": "#26374C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Bold 2",
+   "u": 1,
+   "v": 3,
+   "colour": "#0C3468",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Soft 2",
+   "u": 7,
+   "v": 3,
+   "colour": "#3B516E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Bold 3",
+   "u": 2,
+   "v": 3,
+   "colour": "#174A8E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Soft 3",
+   "u": 8,
+   "v": 3,
+   "colour": "#526D90",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Bold 4",
+   "u": 3,
+   "v": 3,
+   "colour": "#2462B4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Soft 4",
+   "u": 9,
+   "v": 3,
+   "colour": "#6C8AB1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Bold 5",
+   "u": 4,
+   "v": 3,
+   "colour": "#347CD9",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Soft 5",
+   "u": 10,
+   "v": 3,
+   "colour": "#88A9D3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Bold 6",
+   "u": 5,
+   "v": 3,
+   "colour": "#4797FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Soft 6",
+   "u": 11,
+   "v": 3,
+   "colour": "#A6C8F5",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Pastel 1",
+   "u": 12,
+   "v": 3,
+   "colour": "#C2DCFF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Pastel 2",
+   "u": 13,
+   "v": 3,
+   "colour": "#E3EFFF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Blue Glow 1",
+   "u": 14,
+   "v": 3,
+   "colour": "#2684FF",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Blue Glow 2",
+   "u": 15,
+   "v": 3,
+   "colour": "#80B7FF",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Indigo Bold 1",
+   "u": 0,
+   "v": 2,
+   "colour": "#090542",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Soft 1",
+   "u": 6,
+   "v": 2,
+   "colour": "#29264C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Bold 2",
+   "u": 1,
+   "v": 2,
+   "colour": "#130C68",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Soft 2",
+   "u": 7,
+   "v": 2,
+   "colour": "#3E3B6E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Bold 3",
+   "u": 2,
+   "v": 2,
+   "colour": "#1F178E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Soft 3",
+   "u": 8,
+   "v": 2,
+   "colour": "#565290",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Bold 4",
+   "u": 3,
+   "v": 2,
+   "colour": "#2D24B4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Soft 4",
+   "u": 9,
+   "v": 2,
+   "colour": "#716CB1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Bold 5",
+   "u": 4,
+   "v": 2,
+   "colour": "#3F34D9",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Soft 5",
+   "u": 10,
+   "v": 2,
+   "colour": "#8D88D3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Bold 6",
+   "u": 5,
+   "v": 2,
+   "colour": "#5447FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Soft 6",
+   "u": 11,
+   "v": 2,
+   "colour": "#ACA6F5",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Pastel 1",
+   "u": 12,
+   "v": 2,
+   "colour": "#C6C2FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Pastel 2",
+   "u": 13,
+   "v": 2,
+   "colour": "#E5E3FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Indigo Glow 1",
+   "u": 14,
+   "v": 2,
+   "colour": "#3526FF",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Indigo Glow 2",
+   "u": 15,
+   "v": 2,
+   "colour": "#8880FF",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Violet Bold 1",
+   "u": 0,
+   "v": 1,
+   "colour": "#280542",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Soft 1",
+   "u": 6,
+   "v": 1,
+   "colour": "#3C264C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Bold 2",
+   "u": 1,
+   "v": 1,
+   "colour": "#400C68",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Soft 2",
+   "u": 7,
+   "v": 1,
+   "colour": "#583B6E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Bold 3",
+   "u": 2,
+   "v": 1,
+   "colour": "#5A178E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Soft 3",
+   "u": 8,
+   "v": 1,
+   "colour": "#755290",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Bold 4",
+   "u": 3,
+   "v": 1,
+   "colour": "#7524B4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Soft 4",
+   "u": 9,
+   "v": 1,
+   "colour": "#936CB1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Bold 5",
+   "u": 4,
+   "v": 1,
+   "colour": "#9234D9",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Soft 5",
+   "u": 10,
+   "v": 1,
+   "colour": "#B388D3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Bold 6",
+   "u": 5,
+   "v": 1,
+   "colour": "#AF47FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Soft 6",
+   "u": 11,
+   "v": 1,
+   "colour": "#D3A6F5",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Pastel 1",
+   "u": 12,
+   "v": 1,
+   "colour": "#E4C2FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Pastel 2",
+   "u": 13,
+   "v": 1,
+   "colour": "#F3E3FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Violet Glow 1",
+   "u": 14,
+   "v": 1,
+   "colour": "#A126FF",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Violet Glow 2",
+   "u": 15,
+   "v": 1,
+   "colour": "#C880FF",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Magenta Bold 1",
+   "u": 0,
+   "v": 0,
+   "colour": "#420530",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Soft 1",
+   "u": 6,
+   "v": 0,
+   "colour": "#4C2641",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Bold 2",
+   "u": 1,
+   "v": 0,
+   "colour": "#680C4D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Soft 2",
+   "u": 7,
+   "v": 0,
+   "colour": "#6E3B5F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Bold 3",
+   "u": 2,
+   "v": 0,
+   "colour": "#8E176A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Soft 3",
+   "u": 8,
+   "v": 0,
+   "colour": "#90527D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Bold 4",
+   "u": 3,
+   "v": 0,
+   "colour": "#B42488",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Soft 4",
+   "u": 9,
+   "v": 0,
+   "colour": "#B16C9D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Bold 5",
+   "u": 4,
+   "v": 0,
+   "colour": "#D934A8",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Soft 5",
+   "u": 10,
+   "v": 0,
+   "colour": "#D388BD",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Bold 6",
+   "u": 5,
+   "v": 0,
+   "colour": "#FF47C8",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Soft 6",
+   "u": 11,
+   "v": 0,
+   "colour": "#F5A6DD",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Pastel 1",
+   "u": 12,
+   "v": 0,
+   "colour": "#FFC2ED",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Pastel 2",
+   "u": 13,
+   "v": 0,
+   "colour": "#FFE3F7",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Magenta Glow 1",
+   "u": 14,
+   "v": 0,
+   "colour": "#FF26BE",
+   "glow": true,
+   "metal": false
+  },
+  {
+   "name": "Magenta Glow 2",
+   "u": 15,
+   "v": 0,
+   "colour": "#FF80D9",
+   "glow": true,
+   "metal": false
+  }
+ ]
+}
