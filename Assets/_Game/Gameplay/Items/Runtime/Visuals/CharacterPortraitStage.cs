@@ -20,9 +20,9 @@ namespace KryticalNova.Items.Visuals
         [SerializeField, Min(64)] private int size = 256;
         [SerializeField] private float fieldOfView = 20f;
         [Tooltip("From the camera to the head, in metres: with the field of view, how much of the shoulders is in the picture.")]
-        [SerializeField, Min(0.5f)] private float distance = 1.75f;
+        [SerializeField, Min(0.5f)] private float distance = 2.9f; // about a metre of the sitter: head, shoulders and chest, clear of the plate's diamond frame
         [Tooltip("The camera aims this far below the head bone, so the shoulders are in and the head is not cut.")]
-        [SerializeField] private float aimBelowHead = 0.02f;
+        [SerializeField] private float aimBelowHead = 0.16f;
         [Tooltip("The sitter is turned this far from facing the camera.")]
         [SerializeField] private float turn = 16f;
         [Header("Studio ambient (as the equipment page's)")]

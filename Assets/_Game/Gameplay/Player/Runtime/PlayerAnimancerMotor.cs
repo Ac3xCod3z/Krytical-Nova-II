@@ -303,6 +303,10 @@ namespace KryticalNova.Player
             ReportRunning();
         }
 
+        [Tooltip("Seconds before a new move order given while running may take the run off again (its smear and dust). Shorter and a burst of clicks smears over and over.")]
+        [SerializeField, Min(0f)] private float runRetakeSeconds = 0.4f;
+        private float lastRunTakeOff = -100f;
+
         /// <summary>
         /// Tells game feel when the run starts and stops. Judged from the clip actually playing rather than at the
         /// places that change it: the stop clip, jumps, attacks and stance changes all leave the run by another route.
@@ -316,8 +320,26 @@ namespace KryticalNova.Player
             var feel = ClientPresentationRegistry.Feel;
             if (feel == null) return; // not listening yet: report once it is
             reportedRunning = running;
-            if (running) feel.RunStarted(transform, !IsSpawned || IsOwner);
+            if (running)
+            {
+                lastRunTakeOff = Time.time;
+                feel.RunStarted(transform, !IsSpawned || IsOwner);
+            }
             else feel.RunStopped(transform);
+        }
+
+        /// <summary>
+        /// The player ordered another move while already running: the run takes off again (the smear and the dust
+        /// of a run's start), as it does from a standstill. Not more often than <see cref="runRetakeSeconds"/>, so
+        /// a burst of clicks is one take-off. Called on every machine by the move order.
+        /// </summary>
+        public void RunOrderedAgain()
+        {
+            if (!reportedRunning || Time.time - lastRunTakeOff < runRetakeSeconds) return;
+            var feel = ClientPresentationRegistry.Feel;
+            if (feel == null) return;
+            lastRunTakeOff = Time.time;
+            feel.RunStarted(transform, !IsSpawned || IsOwner);
         }
 
         // The character's effects are dropped when it is disabled; a run still going on re-enable is reported again.

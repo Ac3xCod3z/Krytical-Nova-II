@@ -69,6 +69,9 @@
 .combat-stat-row { flex-direction: row; justify-content: space-between; align-items: center; margin: 2px 0; padding: 2px 8px; background-color: rgba(0, 0, 0, 0.3); }
 .combat-stat-label { font-size: 12px; color: rgb(172, 188, 202); }
 .combat-stat-value { font-size: 12px; -unity-font-style: bold; color: rgb(114, 222, 196); }
+/* A Serum's entry on the Character Sheet: name and count on one line, the total it adds on the next. */
+.serum-row { flex-wrap: wrap; }
+.serum-gain { width: 100%; white-space: normal; -unity-text-align: middle-left; }
 .vital-breakdown { font-size: 10px; margin-top: 0; margin-bottom: 4px; }
 
 

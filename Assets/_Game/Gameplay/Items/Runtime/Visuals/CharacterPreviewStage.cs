@@ -129,14 +129,22 @@ namespace KryticalNova.Items.Visuals
         public void Bind(CharacterAppearance appearance, PlayerEquipment equipment, AnimationClip idle)
         {
             if (appearance == sourceAppearance && doll != null) return;
-            if (sourceEquipment != null) sourceEquipment.SlotChanged -= OnSourceSlotChanged;
+            if (sourceEquipment != null)
+            {
+                sourceEquipment.SlotChanged -= OnSourceSlotChanged;
+                sourceEquipment.TemperChanged -= OnSourceTemperChanged;
+            }
             sourceAppearance = appearance;
             sourceEquipment = equipment;
             idleClip = idle;
             if (doll != null) Destroy(doll);
             doll = null;
             tryOnItem = null;
-            if (sourceEquipment != null) sourceEquipment.SlotChanged += OnSourceSlotChanged;
+            if (sourceEquipment != null)
+            {
+                sourceEquipment.SlotChanged += OnSourceSlotChanged;
+                sourceEquipment.TemperChanged += OnSourceTemperChanged;
+            }
             if (IsOpen)
             {
                 BuildDoll();
@@ -222,6 +230,7 @@ namespace KryticalNova.Items.Visuals
                 case EquipSlot.Weapon:
                     if (dollWeapon == null) return false;
                     dollWeapon.SetWeapon(item);
+                    dollWeapon.SetGlow(false, default, default); // a weapon being tried on is not the tempered one worn
                     ApplyPreviewLayers(doll); // a paired or hip-carried weapon is not under the mount
                     break;
                 case EquipSlot.Armor:
@@ -254,8 +263,33 @@ namespace KryticalNova.Items.Visuals
             if (dollWeapon != null && (tryOnItem == null || tryOnItem.equipSlot != EquipSlot.Weapon))
             {
                 dollWeapon.SetWeapon(sourceEquipment != null ? sourceEquipment.GetDefinition(EquipSlot.Weapon) : null);
+                SyncGlow();
                 ApplyPreviewLayers(doll);
             }
+        }
+
+        /// <summary>
+        /// The doll's weapon glows as the worn one does in the world: the colour of the glow band its Temper % is
+        /// in, and the look of its rarity (the same call the player's own weapon gets from EquipmentVisualBinder).
+        /// </summary>
+        private void SyncGlow()
+        {
+            if (dollWeapon == null) return;
+            ItemDefinition weapon = sourceEquipment != null ? sourceEquipment.GetDefinition(EquipSlot.Weapon) : null;
+            GearProgressionSettings settings = sourceEquipment != null ? sourceEquipment.Progression : null;
+            if (weapon != null && settings != null
+                && GearProgressionRules.TryGetGlow(settings.temper, sourceEquipment.GetTemper(EquipSlot.Weapon), out TemperGlowBand band))
+                dollWeapon.SetGlow(true, band.color, GearProgressionRules.GlowLookOf(settings.temper, weapon.rarity));
+            else
+                dollWeapon.SetGlow(false, default, default);
+        }
+
+        private void OnSourceTemperChanged(EquipSlot slot)
+        {
+            if (!IsOpen || slot != EquipSlot.Weapon || doll == null) return;
+            if (tryOnItem != null && tryOnItem.equipSlot == EquipSlot.Weapon) return;
+            SyncGlow();
+            ApplyPreviewLayers(doll); // the glow's own renderers are new
         }
 
         private void OnSourceSlotChanged(EquipSlot slot, ushort previous, ushort next)
@@ -427,7 +461,11 @@ namespace KryticalNova.Items.Visuals
         private void OnDestroy()
         {
             if (previewCamera != null && previewCamera.enabled) OpenCount = Mathf.Max(0, OpenCount - 1);
-            if (sourceEquipment != null) sourceEquipment.SlotChanged -= OnSourceSlotChanged;
+            if (sourceEquipment != null)
+            {
+                sourceEquipment.SlotChanged -= OnSourceSlotChanged;
+                sourceEquipment.TemperChanged -= OnSourceTemperChanged;
+            }
             if (texture != null) { texture.Release(); Destroy(texture); }
         }
     }
