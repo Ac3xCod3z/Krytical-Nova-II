@@ -82,7 +82,8 @@ drawn as an element over the map (`MinimapChromeView.overMap`: the Covenant dial
   over it and the Crew under it. The health bar shows only on a player whose health is the viewer's business: the
   target, a Squad member, and anyone the viewer could strike (`PlayerNamecardController.WatchesHealth`); never on the
   viewer's own card. With the bar the name stands over badge and bar; without it badge, crest and name make one
-  centred row. Who sees whose card is unchanged (`NamecardRules`), and a card still hides behind a window.
+  centred row. Behind it all is the pack's own small panel (the box and frame of its interaction prompt, copied by the
+  builder and a little see-through), which the view sizes to what the card says. Who sees whose card is unchanged (`NamecardRules`), and a card still hides behind a window.
 - Not yet in the packs' art: chat, buffs, Squad frames, the Callout strip and prompts (they have the pack's small
   panel frame and buttons only).
 - `FactionVariantBuilder` was a spike for the pieces a faction's own pack lacks (a recoloured prefab variant of the

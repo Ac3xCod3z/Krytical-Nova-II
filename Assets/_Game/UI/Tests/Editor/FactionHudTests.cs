@@ -110,7 +110,7 @@ namespace KryticalNova.Tests
                 PlayerCardView card = kit.playerCard;
                 Assert.IsNotNull(card, $"{faction} has no player namecard. Run Krytical Nova ▸ UI ▸ Build Player Namecards.");
                 var so = new SerializedObject(card);
-                foreach (string part in new[] { "nameLabel", "levelLabel", "standingLabel", "crewLabel", "crest", "health", "bar", "badge" })
+                foreach (string part in new[] { "nameLabel", "levelLabel", "standingLabel", "crewLabel", "crest", "health", "bar", "badge", "back" })
                     Assert.IsNotNull(so.FindProperty(part).objectReferenceValue, $"{faction}: the namecard has no {part}");
                 var badge = (RectTransform)so.FindProperty("badge").objectReferenceValue;
                 var bar = (GameObject)so.FindProperty("bar").objectReferenceValue;

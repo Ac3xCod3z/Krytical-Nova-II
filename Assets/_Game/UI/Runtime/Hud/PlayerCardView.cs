@@ -6,7 +6,8 @@ namespace KryticalNova.UI.Hud
 {
     /// <summary>
     /// The namecard over a player in the faction's own Synty art: the pack's level badge, the name in the pack's
-    /// lettering with the faction's crest before it, the Standing over it and the Crew under it. The pack's health
+    /// lettering with the faction's crest before it, the Standing over it and the Crew under it, all on a panel of
+    /// the pack's own (its small box and frame) that is as large as what the card says. The pack's health
     /// bar shows only where a player's health is the viewer's business (an enemy, a Squad member, the target):
     /// with it the name stands over the badge and bar, without it the badge, crest and name make one row.
     /// Composed by PlayerCardBuilder, one per faction, the same parts in each. A view only: what it says and where
@@ -21,6 +22,8 @@ namespace KryticalNova.UI.Hud
         [Tooltip("The pack's bar without its badge: switched off where health is not shown.")]
         [SerializeField] private GameObject bar;
         [SerializeField] private RectTransform badge;
+        [Tooltip("The pack's panel behind the card: it takes the size of what the card says.")]
+        [SerializeField] private RectTransform back;
         [Tooltip("Panel pixels (of the 1280 x 720 interface) one unit of this prefab is drawn as.")]
         [SerializeField] private float unitsToPanel = 0.25f;
         [SerializeField, HideInInspector] private float barUnits = 1f;
@@ -32,6 +35,7 @@ namespace KryticalNova.UI.Hud
         [SerializeField, HideInInspector] private float rowY;          // the middle of the badge, and of the row without a bar
         [SerializeField, HideInInspector] private float barTop;        // the top of the badge and bar
         [SerializeField, HideInInspector] private float gap;
+        [SerializeField, HideInInspector] private Vector2 backPadding; // the panel's margin round what the card says
 
         private RectTransform rect;
         private bool barShown = true, stale = true;
@@ -53,9 +57,17 @@ namespace KryticalNova.UI.Hud
             if (nameLabel != null) nameLabel.color = nameColour;
         }
 
-        public void Standing(string standing) => Line(standingLabel, standing);
+        public void Standing(string standing)
+        {
+            Line(standingLabel, standing);
+            stale = true;
+        }
 
-        public void Crew(string crew) => Line(crewLabel, crew);
+        public void Crew(string crew)
+        {
+            Line(crewLabel, crew);
+            stale = true;
+        }
 
         private static void Line(TMP_Text label, string text)
         {
@@ -114,14 +126,16 @@ namespace KryticalNova.UI.Hud
             float crestWidth = crested ? crest.rectTransform.sizeDelta.x : 0f;
             float crestGap = crested ? gap : 0f;
 
-            float left, y, standingAt;
+            float left, y, standingAt, halfWidth;
             if (barShown)
             {
                 // The name, with its crest, is centred over the badge and bar.
                 badge.anchoredPosition = badgeRest;
-                left = -(crestWidth + crestGap + nameWidth) * 0.5f;
+                float pair = crestWidth + crestGap + nameWidth;
+                left = -pair * 0.5f;
                 y = barTop + nameHeight * 0.5f + gap * 0.3f;
                 standingAt = y + nameHeight * 0.5f;
+                halfWidth = Mathf.Max(barUnits, pair) * 0.5f;
             }
             else
             {
@@ -132,10 +146,22 @@ namespace KryticalNova.UI.Hud
                 left = rowLeft + badgeWidth + gap;
                 y = rowY;
                 standingAt = rowY + Mathf.Max(badgeHeight, nameHeight) * 0.5f;
+                halfWidth = total * 0.5f;
             }
             if (crested) crest.rectTransform.anchoredPosition = new Vector2(left + crestWidth * 0.5f, y - half);
             nameRect.anchoredPosition = new Vector2(left + crestWidth + crestGap + nameWidth * 0.5f, y - half);
             if (standingLabel != null) standingLabel.rectTransform.anchoredPosition = new Vector2(0f, standingAt - half);
+
+            if (back == null) return;
+            // The panel goes round everything that shows: the row or the bar, and the lines over and under it.
+            bool standing = standingLabel != null && standingLabel.gameObject.activeSelf;
+            bool crew = crewLabel != null && crewLabel.gameObject.activeSelf;
+            float top = standing ? standingAt + standingLabel.rectTransform.sizeDelta.y : standingAt;
+            float bottom = crew ? 0f : rowY - badgeHeight * 0.5f;
+            if (standing) halfWidth = Mathf.Max(halfWidth, standingLabel.preferredWidth * 0.5f);
+            if (crew) halfWidth = Mathf.Max(halfWidth, crewLabel.preferredWidth * 0.5f);
+            back.sizeDelta = new Vector2(halfWidth * 2f + backPadding.x * 2f, top - bottom + backPadding.y * 2f);
+            back.anchoredPosition = new Vector2(0f, (top + bottom) * 0.5f - half);
         }
     }
 }
