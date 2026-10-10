@@ -305,6 +305,10 @@ namespace KryticalNova.EditorTools
         public const string PetGlowPath = VfxFolder + "/PFX_Pet_Glow.prefab";
         /// <summary>The cloud under one foot of a pet that stands: small cartoon puffs that hold it up and drift away behind it.</summary>
         public const string PetCloudPath = VfxFolder + "/PFX_Pet_Cloud.prefab";
+        /// <summary>The Emberwing's own effect: cinders shed from its wing tips and tail, left behind in the air.</summary>
+        public const string PetCindersPath = VfxFolder + "/PFX_Pet_Cinders.prefab";
+        /// <summary>The Drone Core's own effect: chips of data dropped behind it, which blink and go out.</summary>
+        public const string PetCrumbsPath = VfxFolder + "/PFX_Pet_Crumbs.prefab";
         private const string OldPetAuraPath = VfxFolder + "/PFX_Pet_Aura.prefab"; // orbiting ribbons, replaced 6 Oct 2026
         private static readonly string[] PetCameraPlayers = { "Pet Evolved" };
         private static readonly string[] PetWorldPlayers = { "Pet Evolved" };
@@ -317,7 +321,181 @@ namespace KryticalNova.EditorTools
             Make("FX_Sparkles_Large_01", "PFX_Pet_EvolveSparkles", 0.5f);
             Make("FX_Sparkles_Small_01", "PFX_Pet_Glow", 1f, Color.white, loop: true, then: ShapePetGlow);
             BuildPetCloud();
+            BuildPetEffects();
             if (AssetDatabase.LoadAssetAtPath<GameObject>(OldPetAuraPath) != null) AssetDatabase.DeleteAsset(OldPetAuraPath);
+        }
+
+        /// <summary>Builds only the effects that are a pet's own mark; nothing else of the game feel is touched.</summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Pet Effects")]
+        public static void BuildPetEffects()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            Make("FX_Steam_01", "PFX_Pet_Cinders", 1f, loop: true, then: ShapePetCinders);
+            Make("FX_Steam_01", "PFX_Pet_Crumbs", 1f, loop: true, then: ShapePetCrumbs);
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>One system of solid comic particles, everything else of the source effect removed.</summary>
+        private static ParticleSystem OneSolidSystem(GameObject root)
+        {
+            var systems = root.GetComponentsInChildren<ParticleSystem>(true);
+            ParticleSystem keep = systems.Length > 0 ? systems[0] : null;
+            foreach (var extra in systems)
+                if (extra != keep && extra != null && extra.gameObject != root) UnityEngine.Object.DestroyImmediate(extra.gameObject);
+            if (keep == null) return null;
+            var renderer = keep.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null) ComicPuff(keep, renderer);
+            foreach (bool _ in new[] { true })
+            {
+                var force = keep.forceOverLifetime;
+                force.enabled = false;
+                var trails = keep.trails;
+                trails.enabled = false;
+                var sub = keep.subEmitters;
+                sub.enabled = false;
+                var limit = keep.limitVelocityOverLifetime;
+                limit.enabled = false;
+            }
+            return keep;
+        }
+
+        /// <summary>
+        /// The Emberwing's cinders: small flat flakes, solid and inked like the fox's puffs, shed where the effect is
+        /// (PetFollower wears one on each wing tip and one on the tail) and left behind in the world. They tumble,
+        /// rise a little as hot ash does, and shrink away within a second. A trickle while the bird hangs in the
+        /// air, a stream when it flies: they are let go by the distance covered as well as by the clock.
+        /// Sizes are for a footprint 1 m across, which PetFollower sizes to the pet (the bird is about 0.55 m): a
+        /// flake comes out some 4 cm long. White: PetFollower tints them with the growth stage's colour.
+        /// </summary>
+        private static void ShapePetCinders(GameObject root)
+        {
+            ParticleSystem keep = OneSolidSystem(root);
+            if (keep == null) return;
+
+            var main = keep.main;
+            main.loop = true;
+            main.duration = 2f;
+            main.playOnAwake = true;
+            main.prewarm = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.1f);
+            main.startSpeed = 0f;
+            main.startSize3D = true;
+            main.startSizeX = new ParticleSystem.MinMaxCurve(0.42f, 0.64f);
+            main.startSizeY = new ParticleSystem.MinMaxCurve(0.1f, 0.15f);
+            main.startSizeZ = new ParticleSystem.MinMaxCurve(0.26f, 0.38f);
+            main.startColor = new Color(1f, 0.62f, 0.2f);
+            main.startRotation3D = true;
+            main.startRotationX = main.startRotationY = main.startRotationZ = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World; // left where they were shed
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            main.emitterVelocityMode = ParticleSystemEmitterVelocityMode.Transform;
+            main.maxParticles = 48;
+
+            var emission = keep.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 4f;
+            emission.rateOverDistance = 3.5f;
+            emission.SetBursts(Array.Empty<ParticleSystem.Burst>());
+
+            var shape = keep.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.position = Vector3.zero;
+            shape.rotation = Vector3.zero;
+            shape.scale = Vector3.one;
+            shape.radius = 0.04f;
+            shape.radiusThickness = 1f;
+
+            // Up, slowly: hot ash.
+            var velocity = keep.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.World;
+            velocity.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+            velocity.y = new ParticleSystem.MinMaxCurve(0.25f, 0.55f);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+            var rotation = keep.rotationOverLifetime;
+            rotation.enabled = true;
+            rotation.separateAxes = true;
+            rotation.x = new ParticleSystem.MinMaxCurve(-3.5f, 3.5f);
+            rotation.y = new ParticleSystem.MinMaxCurve(-2.5f, 2.5f);
+            rotation.z = new ParticleSystem.MinMaxCurve(-3.5f, 3.5f);
+            var noise = keep.noise;
+            noise.enabled = true;
+            noise.separateAxes = false;
+            noise.strength = 0.12f;
+            noise.frequency = 2f;
+            noise.scrollSpeed = 0.8f;
+            noise.octaveCount = 1;
+            noise.quality = ParticleSystemNoiseQuality.Medium;
+        }
+
+        /// <summary>
+        /// The Drone Core's data chips: little solid cubes dropped one at a time behind the body while it moves, which
+        /// hang where they were dropped, blink twice and go out. Nothing is dropped while it rests: they are let go
+        /// by the distance covered only. Sizes are for a footprint 1 m across (the drone is about 0.25 m): a chip
+        /// comes out some 2 cm. White: PetFollower tints them with the growth stage's colour.
+        /// </summary>
+        private static void ShapePetCrumbs(GameObject root)
+        {
+            ParticleSystem keep = OneSolidSystem(root);
+            if (keep == null) return;
+            var renderer = keep.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null)
+            {
+                renderer.renderMode = ParticleSystemRenderMode.Mesh;
+                renderer.mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+                renderer.alignment = ParticleSystemRenderSpace.World;
+            }
+
+            var main = keep.main;
+            main.loop = true;
+            main.duration = 2f;
+            main.playOnAwake = true;
+            main.prewarm = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.9f, 1.3f);
+            main.startSpeed = 0f;
+            main.startSize3D = false;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.09f, 0.13f); // the cube is a metre across, the puff 13 cm
+            main.startColor = new Color(0.31f, 0.82f, 1f);
+            main.startRotation3D = true;
+            main.startRotationX = main.startRotationZ = new ParticleSystem.MinMaxCurve(0f, 0f);
+            main.startRotationY = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 0.5f);
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World; // they hang where they were dropped
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            main.emitterVelocityMode = ParticleSystemEmitterVelocityMode.Transform;
+            main.maxParticles = 30;
+
+            var emission = keep.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 0f;
+            emission.rateOverDistance = 2.2f;
+            emission.SetBursts(Array.Empty<ParticleSystem.Burst>());
+
+            // Not in a dead straight line: each a little off the path.
+            var shape = keep.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.position = Vector3.zero;
+            shape.rotation = Vector3.zero;
+            shape.scale = Vector3.one;
+            shape.radius = 0.22f;
+            shape.radiusThickness = 1f;
+
+            var velocity = keep.velocityOverLifetime;
+            velocity.enabled = false;
+            var rotation = keep.rotationOverLifetime;
+            rotation.enabled = false;
+            var noise = keep.noise;
+            noise.enabled = false;
+            // It pops in whole, blinks twice near the end and goes out.
+            var size = keep.sizeOverLifetime;
+            size.enabled = true;
+            size.separateAxes = false;
+            size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
+                new Keyframe(0f, 0.2f), new Keyframe(0.08f, 1f), new Keyframe(0.56f, 1f), new Keyframe(0.62f, 0.25f),
+                new Keyframe(0.7f, 1f), new Keyframe(0.8f, 0.25f), new Keyframe(0.88f, 1f), new Keyframe(1f, 0f)));
         }
 
         /// <summary>

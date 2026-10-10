@@ -9,10 +9,12 @@
   SpinChase   dips onto its front legs, pushes off them into a fast   52 frames
               spin after its tail (head leading, stepping on planted feet)
               that slows as it comes round, and settles into rest
+  Walk        a loop, on the spot: the four-beat walk of a fox            24 frames
+  Run         a loop, on the spot: a gallop, back flexing each stride      12 frames
 
-24 frames a second. Idle loops; every other action starts and ends on the rest pose. Run after pet_rig.py:
+24 frames a second. Idle, Walk and Run loop; every other action starts and ends on the rest pose. Run after pet_rig.py:
   run_blender.py --blend SM_Pet_KitsuneSpirit_S1.blend run_scene_script.py --script Assets/_ArtSource/Blender~/Pets/KitsuneSpirit/anim_kitsune.py
-Running it again replaces these six actions (hand edits to them are lost; rename an action to keep it).
+Running it again replaces these eight actions (hand edits to them are lost; rename an action to keep it).
 """
 import math
 
@@ -338,6 +340,146 @@ def main():
           "| turn senses", {k: int(v) for k, v in left.items() if k in ("root", "head", "chest")})
     finish(a, FIRST, LAST)
     made.append(("SpinChase", 52))
+
+    # ---- Walk and Run, both on the spot: the body stays over the origin and each paw slides back along the
+    # ground at one steady speed while it carries weight, so the clip matches a pet moving at that speed
+    # (printed below). A paw's step: set down ahead, carry back, the heel peels up over the toes at the end
+    # of the push, the paw folds under as it lifts, swings forward and opens again to land.
+    nose_down = {n: sense(n, "x") for n in ("torso", "chest", "hips", "head", "neck")}
+    turn_left = {n: sense(n, "z") for n in ("chest", "hips", "head", "neck") + TAIL[:3]}
+
+    def cyc(beats, u):
+        """A value that runs smoothly round a loop through (phase, value) beats."""
+        u %= 1.0
+        pts = sorted(beats)
+        pts = [(pts[-1][0] - 1.0, pts[-1][1])] + pts + [(pts[0][0] + 1.0, pts[0][1])]
+        for (p0, v0), (p1, v1) in zip(pts[:-1], pts[1:]):
+            if p0 <= u <= p1:
+                t = (u - p0) / max(p1 - p0, 1e-9)
+                return v0 + (v1 - v0) * (0.5 - 0.5 * math.cos(math.pi * t))
+        return pts[0][1]
+
+    def flow(beats, u):
+        """Like cyc, but it passes through the beats without pausing on them (a spline round the loop)."""
+        u %= 1.0
+        pts = sorted(beats)
+        n = len(pts)
+        ring = [(pts[(i - 1) % n][0] + (i - 1) // n, pts[(i - 1) % n][1]) for i in range(n + 3)]
+        for i in range(1, n + 1):
+            (pa, va), (p0, v0), (p1, v1), (pb_, vb) = ring[i - 1], ring[i], ring[i + 1], ring[i + 2]
+            if p0 <= u <= p1:
+                span = max(p1 - p0, 1e-9)
+                t = (u - p0) / span
+                m0 = (v1 - va) / max(p1 - pa, 1e-9) * span
+                m1 = (vb - v0) / max(pb_ - p0, 1e-9) * span
+                return ((2 * t ** 3 - 3 * t ** 2 + 1) * v0 + (t ** 3 - 2 * t ** 2 + t) * m0
+                        + (-2 * t ** 3 + 3 * t ** 2) * v1 + (t ** 3 - t ** 2) * m1)
+        return pts[0][1]
+
+    def gait(name, frames, paws, body):
+        """paws: control -> (phase it lands at, share of the loop on the ground, reach ahead, reach behind,
+        lift, fold in degrees, heel peel in degrees). body(u) keys everything else for loop position u."""
+        action = start(name)
+        for frame in range(1, frames + 2):
+            u = ((frame - 1) / frames) % 1.0
+            for control, (lands, duty, ahead, behind, lift, fold, heel) in paws.items():
+                p = (u - lands) % 1.0
+                air = 1.0 - duty
+                # the paw's tilt is one curve round the whole step, so it never changes speed with a jerk:
+                # flat while it carries, heel peeling up, folded under early in the swing, opening to land
+                pitch = flow([(0.0, 0.0), (0.12 * duty, 0.0), (0.62 * duty, 0.0), (duty, heel),
+                              (duty + 0.36 * air, fold), (duty + 0.78 * air, -6.0)], p)
+                if p < duty:                                    # carrying weight: straight back along the ground
+                    s = p / duty
+                    along = -ahead + (ahead + behind) * s
+                    height = 0.0
+                    pitch = max(0.0, pitch)
+                else:                                           # in the air
+                    t = (p - duty) / air
+                    # leaves and meets the ground already moving back at the ground's speed, and rises and
+                    # comes down with no vertical speed at either end: no stop-and-go, no slap
+                    drift = min((ahead + behind) / duty * air, 0.25 * (ahead + behind))   # more would throw the paw past its marks
+                    along = ((2 * t ** 3 - 3 * t ** 2 + 1) * behind + (t ** 3 - 2 * t ** 2 + t) * drift
+                             + (-2 * t ** 3 + 3 * t ** 2) * -ahead + (t ** 3 - t ** 2) * drift)
+                    height = lift * math.sin(math.pi * t) ** 2
+                # forward is -Y: a paw set down ahead of home is at a smaller y
+                shift(control, frame, (0.0, along, height))
+                turn(control, frame, x=pitch)
+            body(u, frame)
+        finish(action, 1, frames + 1)
+        made.append((name, frames))
+        return action
+
+    def paw_report(name, frames, paws):
+        stride = max((ahead + behind) / duty for (_l, duty, ahead, behind, *_r) in paws.values())
+        print("KITSUNE %s: one loop is %d frames (%.2f s), covers %.3f m: matches a pet moving at %.2f m/s"
+              % (name, frames, frames / 24.0, stride, stride / (frames / 24.0)))
+
+    # ---- Walk: the four-beat walk of a fox. Left hind, left front, right hind, right front, a quarter of
+    # the loop apart; each paw is on the ground about two thirds of the time, so two or three always are.
+    # The back bends from side to side with the steps, the shoulder over a carrying front leg rides high,
+    # the head is held low and level with a small nod on each front step, the tail trails and sways.
+    WALK = 24
+    walk_paws = {"foot_ik.L":       (0.00, 0.62, 0.046, 0.046, 0.022, 26.0, 18.0),
+                 "front_foot_ik.L": (0.25, 0.62, 0.046, 0.046, 0.028, 38.0, 20.0),
+                 "foot_ik.R":       (0.50, 0.62, 0.046, 0.046, 0.022, 26.0, 18.0),
+                 "front_foot_ik.R": (0.75, 0.62, 0.046, 0.046, 0.028, 38.0, 20.0)}
+
+    def walk_body(u, frame):
+        swing = math.cos(2 * math.pi * u)                     # +1 as the left hind lands: left side bunched up
+        shift("torso", frame, (0.0, 0.0, -0.011 + 0.0018 * math.cos(4 * math.pi * (u - 0.10))))
+        turn("hips", frame, z=-4.0 * swing * turn_left["hips"], y=-1.8 * math.cos(2 * math.pi * (u - 0.32)))
+        turn("chest", frame, z=3.0 * swing * turn_left["chest"], y=2.0 * math.cos(2 * math.pi * (u - 0.57)))
+        turn("neck", frame, z=-1.2 * swing * turn_left["neck"], x=5.0 * nose_down["neck"])
+        turn("head", frame, z=-1.8 * swing * turn_left["head"],
+             x=(-2.0 + 1.5 * math.cos(4 * math.pi * (u - 0.05))) * nose_down["head"])
+        for i, bone in enumerate(TAIL[:3]):
+            turn(bone, frame, z=(4.0 + 1.5 * i) * math.cos(2 * math.pi * (u - 0.12 * (i + 1))) * turn_left[bone],
+                 x=-3.0 + 1.5 * math.cos(4 * math.pi * (u - 0.1 * i)))
+        for side in ("L", "R"):
+            turn("ear." + side, frame, x=2.0 * math.cos(4 * math.pi * (u - 0.2)))
+
+    gait("Walk", WALK, walk_paws, walk_body)
+    paw_report("Walk", WALK, walk_paws)
+
+    # ---- Run: a gallop. The hind paws land one just after the other, well forward under the belly, and
+    # drive back; the body flies stretched out; the front paws land one after the other and pull through;
+    # the body flies again, gathered, with all four paws under it, as the back arches to throw the hind
+    # paws forward for the next stride. The back flexes and stretches once a stride, the head stays level,
+    # the ears lie back and the tail streams out behind, lagging the hips.
+    RUN = 12
+    run_paws = {"foot_ik.L":       (0.00, 0.30, 0.066, 0.056, 0.032, 40.0, 30.0),
+                "foot_ik.R":       (0.08, 0.30, 0.066, 0.056, 0.032, 40.0, 30.0),
+                "front_foot_ik.R": (0.46, 0.30, 0.060, 0.062, 0.042, 60.0, 30.0),
+                "front_foot_ik.L": (0.55, 0.30, 0.060, 0.062, 0.042, 60.0, 30.0)}
+    # The body is lowest while legs carry it and comes down onto a landing, so a reaching leg is never
+    # asked to be longer than it is.
+    #             phase  height mm  nose down  back arched (+) or stretched (-)
+    run_beats = [(0.00,  -11.0,     -4.0,      1.0),      # hind paws land under the belly, back arched
+                 (0.20,  -14.0,     -2.0,      0.1),      # hind legs driving
+                 (0.39,  -5.0,      1.0,       -1.0),     # off the ground, stretched out
+                 (0.50,  -12.0,     6.0,       -0.6),     # front paws land
+                 (0.66,  -15.0,     4.5,       0.2),      # front legs pulling through
+                 (0.86,  -1.0,      -2.5,      1.0)]      # off the ground, gathered
+
+    def run_body(u, frame):
+        height = flow([(p, h) for p, h, _n, _a in run_beats], u)
+        pitch = flow([(p, n) for p, _h, n, _a in run_beats], u)
+        arch = flow([(p, a) for p, _h, _n, a in run_beats], u)
+        shift("torso", frame, (0.0, 0.0, height / 1000.0))
+        turn("torso", frame, x=pitch * nose_down["torso"])
+        turn("hips", frame, x=-11.0 * arch * nose_down["hips"])        # arched: the rump curls under
+        turn("chest", frame, x=7.0 * arch * nose_down["chest"])
+        turn("neck", frame, x=(9.0 - 4.0 * arch) * nose_down["neck"])
+        turn("head", frame, x=(-6.0 - 3.0 * arch - pitch) * nose_down["head"])
+        for i, bone in enumerate(TAIL[:3]):
+            late = flow([(p, a) for p, _h, _n, a in run_beats], u - 0.14 * (i + 1))
+            turn(bone, frame, x=5.0 - 3.0 * i + 3.5 * late)
+        for side in ("L", "R"):
+            turn("ear." + side, frame, x=-16.0 + 3.0 * arch)
+
+    gait("Run", RUN, run_paws, run_body)
+    paw_report("Run", RUN, run_paws)
 
     scene.frame_set(1)
     print("KITSUNE animations:", ", ".join(f"{n} ({f} frames)" for n, f in made))

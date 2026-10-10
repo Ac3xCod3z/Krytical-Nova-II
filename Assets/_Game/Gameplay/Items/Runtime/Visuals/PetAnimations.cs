@@ -19,7 +19,8 @@ namespace KryticalNova.Items.Visuals
     /// seconds, and any of them can be played on demand. A controller with a true/false parameter called Walk or Run
     /// also has that gait: a loop on the spot, held for as long as the parameter is true. A model with a single
     /// movement loop instead (<see cref="SetMoveLoop"/>) holds that one whenever it moves, played slower at a walk
-    /// than at a run.
+    /// than at a run. A model that should not sit in its default state while it waits (a bird that would be perched
+    /// in mid-air) can name a loop to rest in (<see cref="SetRestLoop"/>).
     /// </summary>
     public sealed class PetAnimations
     {
@@ -36,6 +37,13 @@ namespace KryticalNova.Items.Visuals
         private int moveLoop;
         private float moveLoopWalkSpeed = 1f;
         private float moveLoopRunSpeed = 1f;
+        // The loop held at rest, and the animation played once that it is making way for.
+        private const float OneShotStartSeconds = 1f;
+        private int restLoop;
+        private int defaultState;
+        private bool oneShot;
+        private bool oneShotLeftDefault;
+        private float oneShotSince;
         private PetGait gait;
         private int next;
         private float nextAt = -1f;
@@ -66,6 +74,7 @@ namespace KryticalNova.Items.Visuals
         {
             if (read || animator == null || !animator.isInitialized) return;
             read = true;
+            defaultState = animator.GetCurrentAnimatorStateInfo(0).shortNameHash; // nothing has been asked of it yet
             foreach (AnimatorControllerParameter parameter in animator.parameters)
             {
                 if (parameter.type == AnimatorControllerParameterType.Bool)
@@ -96,6 +105,14 @@ namespace KryticalNova.Items.Visuals
             int index = hashes.IndexOf(hash);
             if (index < 0 || !animator.isActiveAndEnabled) return false;
             foreach (int other in hashes) animator.ResetTrigger(other);
+            if (HasRestLoop)
+            {
+                // The rest loop would take the Animator straight back: it stands down until this one has played.
+                animator.SetBool(restLoop, false);
+                oneShot = true;
+                oneShotLeftDefault = false;
+                oneShotSince = Time.time;
+            }
             animator.SetTrigger(hash);
             nextAt = -1f;
             return true;
@@ -114,6 +131,28 @@ namespace KryticalNova.Items.Visuals
         }
 
         /// <summary>
+        /// The loop this model waits in instead of its default state: the true/false parameter that holds it
+        /// (empty = none, it waits in its default state). It lets go for the movement loop and for an animation
+        /// played once, and takes over again when that one is back in the default state.
+        /// </summary>
+        public void SetRestLoop(string parameter) => restLoop = string.IsNullOrEmpty(parameter) ? 0 : Animator.StringToHash(parameter);
+
+        private bool HasRestLoop => restLoop != 0 && bools.Contains(restLoop);
+
+        /// <summary>Holds the rest loop while the pet is at rest and no animation played once is still on its way through.</summary>
+        private void HoldRestLoop()
+        {
+            if (!HasRestLoop) return;
+            if (oneShot)
+            {
+                bool inDefault = !animator.IsInTransition(0) && animator.GetCurrentAnimatorStateInfo(0).shortNameHash == defaultState;
+                if (!inDefault) oneShotLeftDefault = true;
+                else if (oneShotLeftDefault || Time.time - oneShotSince > OneShotStartSeconds) oneShot = false;
+            }
+            animator.SetBool(restLoop, gait == PetGait.Rest && !oneShot);
+        }
+
+        /// <summary>
         /// Once a frame: the gait the pet should be in. A model without a run walks instead, and one without a walk
         /// rests. Told every frame, because an Animator forgets its parameters whenever the pet is hidden.
         /// </summary>
@@ -128,6 +167,7 @@ namespace KryticalNova.Items.Visuals
                 animator.SetBool(moveLoop, gait != PetGait.Rest);
                 // The speed is the whole Animator's: at rest it goes back to 1, so the other animations play as made.
                 animator.speed = gait == PetGait.Walk ? moveLoopWalkSpeed : gait == PetGait.Run ? moveLoopRunSpeed : 1f;
+                HoldRestLoop();
                 return;
             }
             if (wanted == PetGait.Run && !hasRun) wanted = PetGait.Walk;
@@ -135,6 +175,7 @@ namespace KryticalNova.Items.Visuals
             gait = wanted;
             if (hasWalk) animator.SetBool(WalkParameter, gait == PetGait.Walk);
             if (hasRun) animator.SetBool(RunParameter, gait == PetGait.Run);
+            HoldRestLoop();
         }
 
         /// <summary>

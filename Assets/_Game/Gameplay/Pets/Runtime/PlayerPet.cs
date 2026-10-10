@@ -220,9 +220,24 @@ namespace KryticalNova.Pets
                 else follower.SetGaitSpeeds(0f, 0f, 0f);
                 if (pet != null) follower.SetMoveLoop(pet.moveLoop, pet.moveLoopWalkSpeed, pet.moveLoopRunSpeed);
                 else follower.SetMoveLoop(null, 1f, 1f);
+                follower.SetRestLoop(pet != null ? pet.restLoop : null);
                 follower.SetStance(pet != null && !pet.bobs, pet != null ? pet.footEffect : null, pet != null ? pet.footBones : null);
+                follower.SetEffects(EffectsOf(pet), pet != null ? pet.effects : null);
             }
             Changed?.Invoke();
+        }
+
+        /// <summary>A pet's own effects as the follower takes them, or null.</summary>
+        private static PetFollower.WornEffect[] EffectsOf(PetDefinition pet)
+        {
+            if (pet == null || pet.effects == null || pet.effects.Length == 0) return null;
+            var effects = new PetFollower.WornEffect[pet.effects.Length];
+            for (int i = 0; i < effects.Length; i++)
+            {
+                PetEffect effect = pet.effects[i];
+                effects[i] = effect != null ? new PetFollower.WornEffect(effect.prefab, effect.bones, effect.stageColour) : default;
+            }
+            return effects;
         }
 
         /// <summary>Puts the working state back into the worn pet item, so it travels with it and is saved with it.</summary>

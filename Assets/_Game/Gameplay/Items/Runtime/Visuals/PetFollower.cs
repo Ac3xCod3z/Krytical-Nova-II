@@ -77,12 +77,33 @@ namespace KryticalNova.Items.Visuals
         private string moveLoop;
         private float moveLoopWalkSpeed = 1f;
         private float moveLoopRunSpeed = 1f;
+        private string restLoop;
 
         // A pet that stands on something rather than flying: it does not bob, and wears an effect under each foot.
         private bool steady;
         private GameObject footEffectPrefab;
         private IReadOnlyList<string> footBones;
         private readonly List<(Transform effect, Transform foot)> footEffects = new List<(Transform, Transform)>();
+
+        /// <summary>An effect a pet wears as its own mark: the prefab, the bones it goes on, and whether it takes the stage's colour.</summary>
+        public readonly struct WornEffect
+        {
+            public readonly GameObject Prefab;
+            public readonly IReadOnlyList<string> Bones;
+            public readonly bool StageColour;
+
+            public WornEffect(GameObject prefab, IReadOnlyList<string> bones, bool stageColour)
+            {
+                Prefab = prefab;
+                Bones = bones;
+                StageColour = stageColour;
+            }
+        }
+
+        // The pet's own effects, as asked for and as worn: each copy, the bone it follows, and whether it is tinted.
+        private object wornSource;
+        private IReadOnlyList<WornEffect> wornLooks;
+        private readonly List<(Transform effect, Transform bone, bool tinted)> worn = new List<(Transform, Transform, bool)>();
 
         private static Camera viewCamera;
         private static int viewCameraFrame = -1;
@@ -155,6 +176,16 @@ namespace KryticalNova.Items.Visuals
             animations?.SetMoveLoop(moveLoop, moveLoopWalkSpeed, moveLoopRunSpeed);
         }
 
+        /// <summary>
+        /// For a pet whose model should not wait in its default state (a bird that would be perched in mid-air): the
+        /// true/false parameter of its Animator that holds the loop it waits in instead. Empty = none.
+        /// </summary>
+        public void SetRestLoop(string parameter)
+        {
+            restLoop = parameter;
+            animations?.SetRestLoop(restLoop);
+        }
+
         /// <summary>Plays one of the pet's animations now, by the hash of its name. False when this pet has no such animation.</summary>
         public bool PlayAnimation(int nameHash) => pet != null && animations != null && animations.Play(nameHash);
 
@@ -173,6 +204,19 @@ namespace KryticalNova.Items.Visuals
             ApplyFootEffects();
         }
 
+        /// <summary>
+        /// The effects that mark this pet out (its definition's), besides what it stands on.
+        /// <paramref name="source"/> is whatever the list was made from: asked again with the same one, nothing is rebuilt.
+        /// </summary>
+        public void SetEffects(IReadOnlyList<WornEffect> effects, object source)
+        {
+            if (ReferenceEquals(wornSource, source) && (source != null || wornLooks == null)) return;
+            wornSource = source;
+            wornLooks = effects;
+            ClearWornEffects();
+            ApplyWornEffects();
+        }
+
         /// <summary>Back to the plain item look (no pet system on this object, or the pet was put away).</summary>
         public void ClearStageLook() => SetStageLook(null, 1f, default, default);
 
@@ -183,6 +227,7 @@ namespace KryticalNova.Items.Visuals
             animations = null;
             sparkles = null; // children of the old pet
             footEffects.Clear();
+            worn.Clear();
             rim?.Detach();   // its halo was the old pet's outline
             rimOn = false;
             hasBounds = false;
@@ -195,6 +240,7 @@ namespace KryticalNova.Items.Visuals
             ActorDrawOrder.On(pet); // a Nova hides the pets behind it
             animations = PetAnimations.For(pet);
             animations?.SetMoveLoop(moveLoop, moveLoopWalkSpeed, moveLoopRunSpeed);
+            animations?.SetRestLoop(restLoop);
             // Prop art comes at any scale (Synty drones are metres across); normalise to a companion size.
             pet.transform.localScale = Vector3.one;
             hasBounds = PetPlacement.TryMeasure(pet, out unitBounds);
@@ -224,6 +270,65 @@ namespace KryticalNova.Items.Visuals
             ApplyRim();
             ApplySparkles();
             ApplyFootEffects();
+            ApplyWornEffects();
+        }
+
+        private void ClearWornEffects()
+        {
+            foreach ((Transform effect, _, _) in worn)
+                if (effect != null) Destroy(effect.gameObject);
+            worn.Clear();
+        }
+
+        /// <summary>
+        /// The pet's own effects: one copy on each named bone (or one on the middle of the body), a child of the pet
+        /// so it grows and hides with it, sized to the pet's footprint like the clouds. Unlike the clouds its
+        /// particles are left as the effect made them, so one that trails keeps its particles in the world.
+        /// Asked again (a new growth stage), only the colour is set again.
+        /// </summary>
+        private void ApplyWornEffects()
+        {
+            if (pet == null || wornLooks == null || !hasBounds) return;
+            if (worn.Count == 0)
+            {
+                Transform[] bones = null;
+                foreach (WornEffect look in wornLooks)
+                {
+                    if (look.Prefab == null) continue;
+                    int before = worn.Count;
+                    if (look.Bones != null && look.Bones.Count > 0)
+                    {
+                        if (bones == null) bones = pet.GetComponentsInChildren<Transform>(true);
+                        foreach (Transform bone in bones)
+                            for (int i = 0; i < look.Bones.Count; i++)
+                                if (bone.name == look.Bones[i]) AddWornEffect(look, bone);
+                    }
+                    if (worn.Count == before) AddWornEffect(look, null);
+                }
+                PlaceFootEffects();
+            }
+            Color tint = glow.strength > 0f ? glow.color : Color.white;
+            tint.a = 1f;
+            foreach ((Transform effect, _, bool tinted) in worn)
+            {
+                if (effect == null || !tinted || glow.strength <= 0f) continue;
+                foreach (var particles in effect.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    var main = particles.main;
+                    main.startColor = tint;
+                }
+            }
+        }
+
+        private void AddWornEffect(in WornEffect look, Transform bone)
+        {
+            GameObject effect = Instantiate(look.Prefab, pet.transform);
+            effect.name = look.Prefab.name;
+            effect.transform.localPosition = unitBounds.center;
+            effect.transform.localRotation = Quaternion.identity;
+            effect.transform.localScale = Vector3.one * Mathf.Max(unitBounds.size.x, unitBounds.size.z);
+            VisualUtility.PrepareCosmetic(effect, gameObject.layer);
+            worn.Add((effect.transform, bone, look.StageColour));
         }
 
         private void ClearFootEffects()
@@ -274,6 +379,8 @@ namespace KryticalNova.Items.Visuals
         {
             foreach ((Transform effect, Transform foot) in footEffects)
                 if (effect != null && foot != null) effect.position = foot.position;
+            foreach ((Transform effect, Transform bone, _) in worn)
+                if (effect != null && bone != null) effect.position = bone.position;
         }
 
         /// <summary>The pet at its stage's size, less whatever the camera has shrunk away; gone altogether at nothing.</summary>

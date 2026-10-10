@@ -122,9 +122,38 @@ and a tail curl with no tearing.
 Animations are keyed on the controls by a script beside the pet (`anim_kitsune.py`: Idle, Blink, LookAround,
 PawLift, TailCurl, SpinChase), one action each with a fake user. An action named `Idle` is the pet's resting
 loop (tail sway, breathing, blinks, ear flicks at uneven moments): its last frame must equal its first, and
-it need not sit on the rest pose. Every other action starts and ends on the rest pose. `test_actions.py`
+it need not sit on the rest pose. `Walk` and `Run` are loops too, played on the spot: each paw slides back
+along the ground at one steady speed while it carries weight, and the script prints the speed the loop
+matches (fox: walk 0.15 m/s, run 0.81 m/s; a paw must leave and meet the ground without a jump in speed, or the legs snap; Rigify's paw legs have almost no slack, so drop the body a few
+millimetres before lengthening a step, and check leg stretch). Every other action starts and ends on the
+rest pose. `test_actions.py`
 checks both rules (`--loops` names the looping ones). Check one by rendering a strip of its frames from a
 scratch copy.
+
+Bones under "extra" (ears, horns) keep only the vertices along their own length (`kn.keep_to_own_length`,
+done by `pet_rig.py`; `pet_tighten.py` applies it to a pet that is already rigged, live or headless, without
+touching rig or animations). Without it an ear bone takes the cheek below it: nearest-bone weights on a wide
+head. With `--live`, give file arguments as full paths.
+
+Getting a model out of the artist's open, unsaved Blender session without writing from it: Blender autosaves
+on its own every two minutes to `%TEMP%/<file>_<pid>_autosave.blend`. Copy that file, open the copy headless,
+remove everything but the one object, and save it as the pet's own .blend. Creatures that are not pets (the
+18 m Storm Sovereign) go under `Blender~/Creatures/<Name>/` as `SM_Creature_<Name>`, with a higher triangle
+budget (`pet_finish.py --max-tris 6000`). A scan's own eyes rarely survive flattening. Show the artist the result before rebuilding a face: a rebuilt
+Tidecaller face was rejected outright.
+
+A pet that keeps the look it came with (the Drone Core: the artist had the low-poly conversion undone) skips
+`pet_from_scan` / `pet_finish`. Size it and rig it with a script of its own (`Pets/DroneCore/rig_dronecore.py`:
+plain bones, one per rigid piece), export with `pet_export.py --own-materials`, save its texture, and package with
+`make_unitypackage.py --own-texture <png> --material "<name in FBX>=texture" --material "<name>=#RRGGBB:glow"
+--package-name "<Name>"`. A colour change that must play in Unity is done with bones (a second, coloured copy
+of the piece that slides out over the first), not with a material animation.
+
+A scan with limbs fused to the body (folded wings) has to be cut before it can be rigged:
+`Pets/Emberwing/build_emberwing.py` is the worked example (upright cut along the flank, both sides capped, the
+wing turned out about its shoulder and flipped front to back so the feathers trail; the perch removed and new
+feet built). New faces have no swatch UVs until `pet_finish.py --pivot keep` is run again, so the order is
+build, finish, rig. A folded wing is not a spread wing rotated: turned as one piece its feathers point forward.
 
 `append_asset.py --from <pet>.blend` (live) copies a finished pet, its rig and its actions into the scene
 the user has open. It only adds to the scene. It was tested headless; the first live run is a test.

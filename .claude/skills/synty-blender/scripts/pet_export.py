@@ -2,6 +2,7 @@
 
   run_blender.py --blend FILE.blend pet_export.py --out-dir DIR [--root SM_Pet_...]
         [--actions all|none|Idle,Flap]     rigged pets only: which animations to bake in (default all)
+        [--own-materials]                  keep the model's own materials instead of the one swatch material
 
 Static pet: DIR/<root name>.fbx, the body and its child pieces, one material, metres, no rotation or scale
 left on any node.
@@ -152,6 +153,8 @@ def main():
     ap.add_argument("--root")
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--actions", default="all")
+    ap.add_argument("--own-materials", action="store_true",
+                    help="keep the model's own materials and texture (a pet that was not put on the swatch)")
     a = ap.parse_args(kn.tool_args())
 
     name = a.root or bpy.context.scene.get("kn_pet_root")
@@ -173,7 +176,7 @@ def main():
     if palette and Path(palette).is_file():
         mat = kn.preview_material(palette, name=mat_name, uv_layer="map1")
     swapped = []
-    for o in meshes:
+    for o in ([] if a.own_materials else meshes):
         swapped.append((o, [s.material for s in o.material_slots], [p.material_index for p in o.data.polygons]))
         o.data.materials.clear()
         o.data.materials.append(mat)
@@ -217,11 +220,23 @@ def main():
                 baked.append(result)
                 strip = exp.animation_data.nla_tracks.new().strips.new(act.name, start, result)
                 strip.name = act.name
+                strip.extrapolation = "NOTHING"      # so no strip poses the rig outside its own frames
                 takes_wanted.append(act.name)
                 exp.animation_data.action = None
+            # the file's own pose must be the rest pose, not the last frame of whichever action was baked last
+            src.animation_data.action = None
+            kn.zero_controls(src)
             for pb in exp.pose.bones:
                 for c in list(pb.constraints):
                     pb.constraints.remove(c)
+                pb.location = (0, 0, 0)
+                pb.rotation_quaternion = (1, 0, 0, 0)
+                pb.rotation_euler = (0, 0, 0)
+                pb.scale = (1, 1, 1)
+            # ... and the strips stack, so at any frame inside them the top one would pose the rig: step outside
+            if actions:
+                bpy.context.scene.frame_set(int(min(act.frame_range[0] for act in actions)) - 10)
+            bpy.context.view_layer.update()
             for o in bpy.context.view_layer.objects:
                 o.select_set(o in meshes or o is exp)
             bpy.context.view_layer.objects.active = exp

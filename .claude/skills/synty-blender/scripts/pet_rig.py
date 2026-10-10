@@ -251,6 +251,14 @@ def main():
                     groups[name] = ob.vertex_groups.new(name=name)
                 groups[name].add([index], x, "REPLACE")
 
+    # an ear or a horn keeps only what lies along its own length, or it drags the cheek under it about
+    for name, extra in spec.get("extra", {}).items():
+        if "parent" in extra:
+            for n in [name] + ([mirror_name(name)] if mirror_name(name) else []):
+                kn.keep_to_own_length(ob, rig, n, extra["parent"], float(spec.get("extra_start", -0.05)),
+                                      float(spec.get("extra_full", 0.2)))
+    groups = {g.name: g for g in ob.vertex_groups}
+
     def members(group_name):
         g = groups.get(group_name)
         if g is None:

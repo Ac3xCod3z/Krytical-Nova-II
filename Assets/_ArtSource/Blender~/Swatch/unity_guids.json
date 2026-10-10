@@ -5,5 +5,14 @@
  "M_KN_Swatch.mat": "a0992fcd481e4cc2856e40a98e08f174",
  "SM_Pet_KitsuneSpirit_S1.fbx": "f451f4b74f814d9e9f17631415116dcb",
  "AC_Pet_KitsuneSpirit.controller": "1fcb0f3fd22540c3a5762d467058b7f5",
- "Pet_KitsuneSpirit_S1.prefab": "9f337500f6fa4c65b588d35f30bcb5d9"
+ "Pet_KitsuneSpirit_S1.prefab": "9f337500f6fa4c65b588d35f30bcb5d9",
+ "T_Pet_DroneCore.png": "ac6f31271f2648538805e3cf46ef274c",
+ "M_Pet_DroneCore.mat": "b25ea2e500a246a0ac0b265f999abc30",
+ "M_Pet_DroneCore_MarkRed.mat": "f620912eb355447485c651e4437e27e5",
+ "SM_Pet_DroneCore_S1.fbx": "40e7b5a1a5d145d0b0841ea91cf74d5b",
+ "AC_Pet_DroneCore.controller": "9aaa8f9da9874cc0b0f3ccb66da536c3",
+ "Pet_DroneCore_S1.prefab": "33cc8271cb4844148a9ba49ddb052e50",
+ "SM_Pet_Emberwing_S1.fbx": "108c53dc716f418b9b0d5b77cf2ea70e",
+ "AC_Pet_Emberwing.controller": "379d095e17b846de86312dfb1c426d47",
+ "Pet_Emberwing_S1.prefab": "945ef4a848ef428797a3e8e01d4b6c44"
 }
