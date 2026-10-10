@@ -23,8 +23,10 @@ namespace KryticalNova.UI
         /// <summary>The page that explains the game. It has no settings: APPLY, REVERT and RESET do not apply to it.</summary>
         public const string GuidePageName = "guide";
         private const string GuideOpenClass = "guide-open";
+        public const string ControlsPageName = "controls";
+        private const string ControlsOpenClass = "controls-open";
         // The window's width while the Guide is read (Guide.uss), and the gap it keeps to the screen's edge.
-        private const float GuideWindowWidth = 920f, ScreenGap = 8f;
+        private const float ScreenGap = 20f; // a skin's frame and close button stand outside the window's own box
         /// <summary>Elements of the window that need a character in the world.</summary>
         public const string InGameOnlyClass = "in-game-only";
         private static readonly string[] MenuThemeNames = { "ROTATE", "HEGEMONY", "NULL", "COVENANT" };
@@ -122,8 +124,11 @@ namespace KryticalNova.UI
             ShowFooter();
             open = true;
             if (activePage == GuidePageName) guidePage.Shown();
-            KeepOnScreen(activePage == GuidePageName);
+            KeepOnScreen(IsWide(activePage));
         }
+
+        /// <summary>The pages that make the window wider than the others.</summary>
+        private static bool IsWide(string page) => page == GuidePageName || page == ControlsPageName;
 
         /// <summary>The window was closed: nothing of it keeps running (the Guide's clip).</summary>
         public void Closed()
@@ -147,43 +152,80 @@ namespace KryticalNova.UI
 
         public void Show(string page)
         {
-            if (page != "controls") controlsTab?.Cancel();
+            if (page != ControlsPageName) controlsTab?.Cancel();
             activePage = page;
             foreach (string name in Pages)
             {
                 root.Q("settings-page-" + name)?.EnableInClassList("active", name == page);
                 root.Q<Button>("settings-tab-" + name)?.EnableInClassList("active", name == page);
             }
-            // The Guide is read, not set: a wider window, and no buttons under it.
+            // The Guide is read, not set: a wider window, and no buttons under it. The Controls page is as wide,
+            // for its keyboard, and keeps its buttons.
             bool guide = page == GuidePageName;
             window?.EnableInClassList(GuideOpenClass, guide);
-            KeepOnScreen(guide);
+            window?.EnableInClassList(ControlsOpenClass, page == ControlsPageName);
+            KeepOnScreen(IsWide(page));
             if (guide && open) guidePage.Shown();
             else guidePage.Hidden();
         }
 
         /// <summary>
-        /// The Guide makes the window wider and taller than the place the player gave it may have room for. While
-        /// the Guide is read the window is drawn far enough up and to the left to be whole; its own place is not
-        /// changed, and it is back there on any other page.
+        /// The window is drawn far enough up and to the left to be whole on screen, whatever page it shows: the
+        /// Guide and the Controls page make it wider and taller than the place the player gave it may have room
+        /// for, and a larger interface size or a skin with taller lettering makes every page taller. Its own place
+        /// is not changed (the move is a margin), and it is measured again whenever its size changes, so it is back
+        /// where it was on a page that fits there.
         /// </summary>
-        private void KeepOnScreen(bool guide)
+        private void KeepOnScreen(bool wide)
         {
             if (window == null) return;
-            window.style.marginLeft = StyleKeyword.Null;
-            window.style.marginTop = StyleKeyword.Null;
-            if (!guide) return;
-            // Measured once the wider window has been laid out.
-            window.schedule.Execute(() =>
+            if (!keepsOnScreen)
             {
-                VisualElement parent = window.hierarchy.parent;
-                if (parent == null || !window.ClassListContains(GuideOpenClass) || parent.layout.width < 1f) return;
-                Rect at = parent.WorldToLocal(window.worldBound);
-                float right = at.xMin + GuideWindowWidth - (parent.layout.width - ScreenGap);
-                float below = at.yMax - (parent.layout.height - ScreenGap);
-                if (right > 0f) window.style.marginLeft = -Mathf.Min(right, Mathf.Max(0f, at.xMin - ScreenGap));
-                if (below > 0f) window.style.marginTop = -Mathf.Min(below, Mathf.Max(0f, at.yMin - ScreenGap));
-            }).ExecuteLater(50);
+                keepsOnScreen = true;
+                // It keeps itself on screen and puts itself back, which the HUD's fit for other windows would not.
+                window.AddToClassList(HudLayoutEditor.FitsItselfClass);
+                window.RegisterCallback<GeometryChangedEvent>(evt =>
+                {
+                    if (Mathf.Abs(evt.oldRect.width - evt.newRect.width) > 0.5f || Mathf.Abs(evt.oldRect.height - evt.newRect.height) > 0.5f) Nudge();
+                });
+            }
+            // A page shorter than the last one gets its full height back before it is measured.
+            VisualElement body = window.Q("settings-body");
+            if (body != null) body.style.maxHeight = StyleKeyword.Null;
+            Nudge();
+            // Measured again once the page just shown has been laid out.
+            window.schedule.Execute(Nudge).ExecuteLater(50);
+        }
+
+        private bool keepsOnScreen;
+        private const float MinimumBodyHeight = 140f;
+
+        private void Nudge()
+        {
+            VisualElement parent = window.hierarchy.parent;
+            if (parent == null || parent.layout.width < 1f || window.resolvedStyle.display == DisplayStyle.None) return;
+            Rect at = parent.WorldToLocal(window.worldBound);
+            if (float.IsNaN(at.width) || at.width < 1f) return;
+            // Where it would stand with no nudge at all.
+            float left = window.resolvedStyle.marginLeft, top = window.resolvedStyle.marginTop;
+            if (float.IsNaN(left)) left = 0f;
+            if (float.IsNaN(top)) top = 0f;
+            Rect own = new Rect(at.x - left, at.y - top, at.width, at.height);
+            Rect area = ScreenFit.Inset(new Rect(0f, 0f, parent.layout.width, parent.layout.height), ScreenGap);
+            // Taller than the screen (a large interface size): the pages scroll in less room, so the buttons under
+            // them stay on screen.
+            float over = own.height - area.height;
+            VisualElement body = over > 0.5f ? window.Q("settings-body") : null;
+            if (body != null && body.resolvedStyle.height - over >= MinimumBodyHeight)
+            {
+                body.style.maxHeight = body.resolvedStyle.height - over;
+                return; // measured again when the window has shrunk
+            }
+            Vector2 placed = ScreenFit.Clamp(area, own.position, own.size);
+            float nudgeX = placed.x - own.x, nudgeY = placed.y - own.y;
+            if (Mathf.Abs(nudgeX - left) < 0.5f && Mathf.Abs(nudgeY - top) < 0.5f) return;
+            window.style.marginLeft = Mathf.Abs(nudgeX) < 0.5f ? new StyleLength(StyleKeyword.Null) : new StyleLength(nudgeX);
+            window.style.marginTop = Mathf.Abs(nudgeY) < 0.5f ? new StyleLength(StyleKeyword.Null) : new StyleLength(nudgeY);
         }
 
         // ------------------------------------------------------------------ apply, revert, reset

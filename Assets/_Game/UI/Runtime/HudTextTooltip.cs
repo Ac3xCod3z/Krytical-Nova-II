@@ -59,16 +59,9 @@ namespace KryticalNova.UI
 
             tip.style.display = DisplayStyle.Flex;
             tip.BringToFront();
-            UnityEngine.Rect at = host.WorldToLocal(target.worldBound);
-            tip.style.left = at.xMax + Gap;
-            tip.style.top = at.yMin;
-            tip.schedule.Execute(() =>
-            {
-                // Flip to the left of the element, and lift, when it would leave the screen.
-                float width = tip.layout.width, height = tip.layout.height;
-                if (at.xMax + Gap + width > host.layout.width) tip.style.left = UnityEngine.Mathf.Max(0f, at.xMin - Gap - width);
-                if (at.yMin + height > host.layout.height) tip.style.top = UnityEngine.Mathf.Max(0f, host.layout.height - height);
-            });
+            // Beside the element, on whichever side has room, and never off the screen. One fitter per tooltip.
+            if (!(tip.userData is FloatingFit fit)) tip.userData = fit = new FloatingFit(tip, Gap);
+            fit.Beside(target.worldBound);
         }
 
         private static void Hide(VisualElement target)

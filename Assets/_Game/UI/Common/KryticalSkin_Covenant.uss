@@ -453,6 +453,28 @@
     font-size: 13.44px;
     color: rgb(140, 236, 172);
 }
+.kn-faction-covenant .controls-help.listening {
+    color: rgb(120, 255, 165);
+}
+.kn-faction-covenant .board-key.fixed .board-caption {
+    color: rgb(196, 188, 179);
+}
+.kn-faction-covenant .group-fixed .board-band {
+    background-color: rgb(172, 163, 153);
+}
+.kn-faction-covenant .controls-legend-name {
+    font-size: 11.2px;
+    color: rgb(214, 204, 194);
+}
+.kn-faction-covenant .controls-mouse-says {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .controls-reset-all {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .controls-others .controls-row .settings-row-label {
+    font-size: 14.56px;
+}
 .kn-faction-covenant .controls-row .settings-row-label {
     font-size: 17.92px;
 }
@@ -1641,8 +1663,11 @@
 .kn-faction-covenant .controls-row .settings-row-label {
     color: rgb(238, 240, 242);
 }
-.kn-faction-covenant .controls-device {
-    -unity-background-image-tint-color: rgb(238, 240, 242);
+.kn-faction-covenant .board-caption {
+    color: rgb(246, 204, 116);
+}
+.kn-faction-covenant .controls-mouse-says {
+    color: rgb(238, 240, 242);
 }
 .kn-faction-covenant .preview-glow {
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FX/SPR_FX_FantasyWarrior_Glow_01.png#SPR_FX_FantasyWarrior_Glow_01");

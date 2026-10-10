@@ -401,7 +401,8 @@ is there from character select too.
 - **The page**: the topics by chapter on the left (the one being read lit like a tab), the topic on the right on a
   nearly solid backing (a window lets the world through; text cannot afford it). While it shows, the window is 920
   wide and has no APPLY / REVERT / RESET; where the player's own place for the window has no room for that, it is
-  drawn far enough up and left to be whole, and is back in its place on any other page (`SettingsPages.KeepOnScreen`).
+  drawn far enough up and left to be whole, and is back in its place on any other page (`SettingsPages.KeepOnScreen`;
+  the Controls page is as wide, see "Controls: the keyboard").
 - **Skins**: `UI/Guide/Guide.uss` is a base sheet in `FactionSkinBuilder`'s list; the page is made of the shared parts
   (buttons, `eyebrow` headings, the pack's picture frame round the clip, key caps), so nothing is laid out per faction.
 - **Clips** (`GuideClipPlayer`): one `VideoPlayer`, made when a clip is shown, drawing into one texture that is the
@@ -447,16 +448,57 @@ shows ON and OFF side by side with the one that holds lit (a click anywhere on i
 menu wears the item card's frame. **A window's backing is 65 % solid** (owner, 9 Oct 2026: first 40 %, which was too see-through; one value per skin asset) (`windowBacking`), so the world reads faintly
 through every window as through the packs' own; the item card stays solid.
 
-### Controls: keys as key caps
+### Controls: the keyboard (10 Oct 2026)
 
-`ControlsSettingsTab` lays the page out as the packs' own controls pages do: the keyboard picture on top
-(`ICON_Input_PC_Medium`), then bare lines, the key first as a cap (`KeyCaps`) ending at the page's middle and what it
-does after it. A one-letter key gets a square cap, a word a wider one; Enter, Space, Tab, Backspace and the arrows get
-Synty's pictures (`InterfaceCore/Sprites/Icons_Input/MouseKeyboard`), and the fixed mouse keys the mouse with the
-meant button coloured. A cap is the skin's `keycap` in the pack's own three colours (`keycapTint`, `keycapLetter`,
+The page used to be one centred list of 38 lines, about 1,700 units of scroll in a 470-unit window. It is now the
+keyboard itself, and the window is as wide for it as for the Guide (920 units, class `controls-open`; APPLY, REVERT and
+RESET TO DEFAULTS stay under it). All of it shows without scrolling.
+
+`ControlsSettingsTab` draws six rows of caps, fifteen key widths each (56 by 46 units a key), from the skin's own cap
+art. Synty ships no picture of a keyboard, only the caps, so the board is laid out in code (`Board`). What a key does
+is written on its cap in a short form ("Pack", "Slot 3", "Sheet"; `ShortNames`):
+
+- A key that can be changed is whole; a key nothing is on is faint. A band along the cap's foot says which group the
+  key belongs to (Windows, Hotbar, Character, Fixed); the legend is under the board.
+- Click a lit key, then press the new one: the same rebinding as before, and a key already in use still changes
+  hands. Right-click a lit key to put its default back. The line over the board says what the pointer is on, and
+  "Press the key for ..." while the page waits.
+- The fixed keys (Esc, Enter, Y, N) are on the board, marked and not clickable. A fixed key the player gives to an
+  action shows the action.
+- The mouse (move, turn the camera, zoom) and RESET ALL KEYS are in the row under the board.
+- An action whose key is not on the board (a spare mouse button, the number pad) is listed under "NOT ON THE BOARD"
+  as a cap and a name, with its RESET, so it can still be changed.
+
+A cap's size and lettering are set in code, not in the sheets: a skin scales the sheets' lettering (the Null by 1.28)
+and a cap does not grow. A cap is the skin's `keycap` in the pack's own three colours (`keycapTint`, `keycapLetter`,
 `keycapHot`): the Hegemony's blue cut-corner cap with white letters, the Null's rough dark cap that fills red, the
-Covenant's rough slate cap with gold letters. Under the pointer a cap fills; while the page waits it says PRESS A KEY.
-RESET shows on the line the pointer is on.
+Covenant's rough slate cap with gold letters. Under the pointer a lit cap fills. `KeyCaps` still draws the caps of
+keys named elsewhere (prompts, the Guide).
+
+Not built: choosing an action for a key by clicking a faint key. The way in is always the action's own key.
+
+### Nothing leaves the screen (10 Oct 2026)
+
+One rule, `ScreenFit` (plain rectangle maths, tested): a box is put beside what it belongs to on the side with room,
+moved as little as it takes to be wholly on screen, and shrunk if it is larger than the screen.
+
+- **The item card, the right-click menus, text tooltips** (`FloatingFit`). The card used to be clamped the frame it
+  was shown, before the layout pass had sized what it now said, so it measured its old size or none and hung off the
+  bottom of the screen; and only the right and bottom edges were checked. It is now placed again whenever its size
+  changes while it is shown. Margin 12 units, for the card's frame. The Pack's item menu and the player menu use the
+  same thing: an item menu off screen also blocked every click on the world while it was open.
+- **Windows the player never placed** (`HudLayoutEditor.FitWindow`). They stand where their sheet or the window they
+  dock beside puts them, in fixed units, which leaves the screen on a smaller one, at a larger interface size, in a
+  skin with taller lettering, or when a forge page is taller than the one it opened on. Whenever such a window is
+  shown or changes size it is moved, and if need be shrunk, to be whole on screen with 20 units to spare for its
+  frame and close button. Nothing is saved; when it closes its sheet places it afresh.
+- **Windows the player placed** keep their place and size, but one made larger than the screen has room for (the
+  forge at 150 % on a screen 790 units high stood 800 tall) is drawn as large as fits. The chosen size is kept.
+- **Settings** keeps itself on screen (`SettingsPages.KeepOnScreen`, class `fits-itself`): moved by a margin, so it is
+  back in its place on a page that fits there; too tall for the screen, its pages scroll in less room so the buttons
+  under them stay on screen.
+- **The Autopilot window** is built in code and fitted with `FloatingFit`. **The map's hover name** is held in from
+  the sides and goes under the pointer when there is no room above it.
 
 ## 8. Tests
 

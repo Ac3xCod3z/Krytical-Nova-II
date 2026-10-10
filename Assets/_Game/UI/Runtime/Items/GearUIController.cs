@@ -50,6 +50,7 @@ namespace KryticalNova.UI
         private VisualElement root;
         private VisualElement equipmentWindow, inventoryWindow, grid, viewport, tryOnChip;
         private VisualElement tooltip, menu, menuActions, confirm, ghost;
+        private FloatingFit tooltipFit, menuFit;
         private Label countLabel, credsLabel, tryOnLabel, menuTitle, confirmText, confirmHelp;
         private Button confirmYes;
         private bool confirmDestroys;
@@ -116,6 +117,7 @@ namespace KryticalNova.UI
             countLabel = root.Q<Label>("inventory-count");
             credsLabel = root.Q<Label>("inventory-creds");
             tooltip = root.Q("item-tooltip");
+            tooltipFit = new FloatingFit(tooltip);
             tipName = root.Q<Label>("tooltip-name");
             tipType = root.Q<Label>("tooltip-type");
             tipRequires = root.Q<Label>("tooltip-requires");
@@ -124,6 +126,7 @@ namespace KryticalNova.UI
             tipHint = root.Q<Label>("tooltip-hint");
             tipPet = new PetTooltip(tooltip);
             menu = root.Q("item-menu");
+            menuFit = new FloatingFit(menu, 0f);
             menuActions = root.Q("item-menu-actions");
             menuTitle = root.Q<Label>("item-menu-title");
             confirm = root.Q("item-confirm");
@@ -833,9 +836,7 @@ namespace KryticalNova.UI
             }
             SetDisplay(menu, true);
             menu.BringToFront();
-            menu.style.left = panelPosition.x + 6f;
-            menu.style.top = panelPosition.y + 6f;
-            menu.schedule.Execute(() => ClampIntoView(menu));
+            menuFit.At(new Vector2(panelPosition.x + 6f, panelPosition.y + 6f));
         }
 
         private void HideMenu() => SetDisplay(menu, false);
@@ -925,15 +926,8 @@ namespace KryticalNova.UI
 
             SetDisplay(tooltip, true);
             tooltip.BringToFront();
-            Rect r = element.worldBound;
-            tooltip.style.left = r.xMax + 8f;
-            tooltip.style.top = r.yMin;
-            tooltip.schedule.Execute(() =>
-            {
-                // Flip to the left side when it would leave the screen.
-                if (tooltip.worldBound.xMax > root.layout.width) tooltip.style.left = r.xMin - 8f - tooltip.layout.width;
-                ClampIntoView(tooltip);
-            });
+            // Beside the cell, on whichever side has room, and never off the screen (see FloatingFit).
+            tooltipFit.Beside(element.worldBound);
         }
 
         private void HideTooltip() => SetDisplay(tooltip, false);
@@ -1199,15 +1193,6 @@ namespace KryticalNova.UI
         {
             foreach (var c in RarityTextClasses) label.RemoveFromClassList(c);
             label.AddToClassList(RarityTextClasses[Mathf.Clamp((int)rarity, 0, RarityTextClasses.Length - 1)]);
-        }
-
-        private void ClampIntoView(VisualElement e)
-        {
-            Rect r = e.worldBound;
-            float maxX = root.layout.width - r.width - 4f;
-            float maxY = root.layout.height - r.height - 4f;
-            if (r.xMin > maxX) e.style.left = e.layout.x - (r.xMin - maxX);
-            if (r.yMin > maxY) e.style.top = e.layout.y - (r.yMin - maxY);
         }
 
         // ------------------------------------------------------------------ 3D preview

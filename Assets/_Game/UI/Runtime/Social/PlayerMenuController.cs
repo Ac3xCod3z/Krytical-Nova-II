@@ -208,10 +208,9 @@ namespace KryticalNova.UI
 
             menu.style.display = DisplayStyle.Flex;
             menu.BringToFront();
-            menu.style.left = panelPosition.x + 6f;
-            menu.style.top = panelPosition.y + 6f;
+            menuFit ??= new FloatingFit(menu, 0f);
+            menuFit.At(new Vector2(panelPosition.x + 6f, panelPosition.y + 6f));
             openedFrame = Time.frameCount;
-            menu.schedule.Execute(ClampIntoView);
             if (GearUIController.Instance != null) GearUIController.Instance.SuppressWorldInput();
         }
 
@@ -222,13 +221,6 @@ namespace KryticalNova.UI
             if (GearUIController.Instance != null) GearUIController.Instance.SuppressWorldInput();
         }
 
-        private void ClampIntoView()
-        {
-            Rect bounds = menu.worldBound;
-            float maxX = root.layout.width - bounds.width - 4f;
-            float maxY = root.layout.height - bounds.height - 4f;
-            if (bounds.xMin > maxX) menu.style.left = menu.layout.x - (bounds.xMin - maxX);
-            if (bounds.yMin > maxY) menu.style.top = menu.layout.y - (bounds.yMin - maxY);
-        }
+        private FloatingFit menuFit;
     }
 }

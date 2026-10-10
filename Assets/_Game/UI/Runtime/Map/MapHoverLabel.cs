@@ -13,6 +13,8 @@ namespace KryticalNova.UI
         private static readonly Color Border = new Color32(114, 222, 196, 255);
         private static readonly Color Text = new Color32(244, 238, 214, 255);
         private const float PointerGap = 14f;
+        private const float ScreenEdge = 4f;     // kept to the screen's edge
+        private const float PointerBelow = 18f;  // room for the pointer itself when the name goes under it
 
         public MapHoverLabel()
         {
@@ -41,8 +43,20 @@ namespace KryticalNova.UI
             if (parent == null) return;
             if (text != name) text = name;
             Vector2 local = parent.WorldToLocal(panelPosition);
-            style.left = local.x;
-            style.top = local.y - PointerGap;
+            // Never off the screen: held in from the sides, and under the pointer when there is no room above it.
+            // Its size is the last one laid out; the pointer moves again before a wrong one could be noticed.
+            float width = float.IsNaN(resolvedStyle.width) ? 0f : resolvedStyle.width;
+            float height = float.IsNaN(resolvedStyle.height) ? 0f : resolvedStyle.height;
+            float x = local.x, y = local.y - PointerGap;
+            if (panel != null)
+            {
+                Rect screen = parent.WorldToLocal(panel.visualTree.worldBound);
+                float half = width * 0.5f + ScreenEdge;
+                x = Mathf.Clamp(x, screen.xMin + half, Mathf.Max(screen.xMin + half, screen.xMax - half));
+                if (y - height < screen.yMin + ScreenEdge) y = local.y + PointerGap + height + PointerBelow;
+            }
+            style.left = x;
+            style.top = y;
             if (style.display != DisplayStyle.Flex)
             {
                 style.display = DisplayStyle.Flex;
