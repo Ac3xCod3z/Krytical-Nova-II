@@ -22,10 +22,11 @@ namespace KryticalNova.EditorTools
         {
             ("WP_Clear", null, 0f),
             ("WP_FewClouds", null, 0f),
-            ("WP_PartlyCloudy", "Wind", 0.12f),
-            ("WP_MostlyCloudy", "Wind", 0.20f),
-            ("WP_Overcast", "Wind", 0.30f),
-            ("WP_Fog", "FogWind", 0.30f),
+            // Wind and fog are meant to be very faint (owner, 10 Oct 2026).
+            ("WP_PartlyCloudy", "Wind", 0.05f),
+            ("WP_MostlyCloudy", "Wind", 0.08f),
+            ("WP_Overcast", "Wind", 0.12f),
+            ("WP_Fog", "FogWind", 0.10f),
             ("WP_LightRain", "LightRain", 0.90f), // a quiet recording: drops over near silence
             ("WP_Rain", "Rain", 0.55f),
             ("WP_Thunderstorm", "Storm", 0.70f),

@@ -14,5 +14,16 @@
  "Pet_DroneCore_S1.prefab": "33cc8271cb4844148a9ba49ddb052e50",
  "SM_Pet_Emberwing_S1.fbx": "108c53dc716f418b9b0d5b77cf2ea70e",
  "AC_Pet_Emberwing.controller": "379d095e17b846de86312dfb1c426d47",
- "Pet_Emberwing_S1.prefab": "945ef4a848ef428797a3e8e01d4b6c44"
+ "Pet_Emberwing_S1.prefab": "945ef4a848ef428797a3e8e01d4b6c44",
+ "T_Pet_Tidecaller.png": "f816b1ecbf054684ba5bd805b3b3027d",
+ "M_Pet_Tidecaller_Shell.mat": "3523bd1167184b4eaac9e4edb9b4defd",
+ "M_Pet_Tidecaller.mat": "c6b04ea72d4e45d1ac814daa520fbe8d",
+ "M_Pet_Tidecaller_Tear.mat": "0a5c4e89cf1a41838eb71a25f3214570",
+ "M_Pet_Tidecaller_Smile.mat": "c0454c1ca3a34c8ab8bbfc3b8ab63cb1",
+ "M_Pet_Tidecaller_Anger.mat": "41228b65840440b08cfb018e210a5781",
+ "M_Pet_Tidecaller_CrackEdge.mat": "b9991895622346a7ba8da39659fb47c9",
+ "M_Pet_Tidecaller_Crack.mat": "1663e33923734ea1a1c2e3ce8f656803",
+ "SM_Pet_Tidecaller_S1.fbx": "746c3fa279824c999cfbb9219d0975f5",
+ "AC_Pet_Tidecaller.controller": "88dfe5b6eecc4248a82862519b08c552",
+ "Pet_Tidecaller_S1.prefab": "65c799ba34d84e08b0077d52e8c16f09"
 }

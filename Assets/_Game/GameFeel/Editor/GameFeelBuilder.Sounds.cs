@@ -63,13 +63,16 @@ namespace KryticalNova.EditorTools
         {
             // ---- fighting: heard many times a minute, so several clips each and a wide pitch range
             ["Swing Whoosh"] = Combat(0.40f, -2f, 2f, 4),
+            ["Swing Miss"] = Combat(0.40f, -2f, 2f, 3),
+            ["Skill Miss"] = Combat(0.45f, -1.5f, 1.5f, 2),
             ["Hit"] = Combat(0.45f, -2f, 2f, 5),
             ["Heavy Hit"] = Combat(0.60f, -2f, 1f, 3),
             ["Hurt"] = Combat(0.50f, -3f, 0f, 3),
             ["PvP Critical"] = Combat(0.70f, -3f, 0f, 2),
             ["Skill Slash"] = Combat(0.50f, -1.5f, 1.5f, 3),
             ["Buff Cast"] = Combat(0.45f, -1f, 1f, 2),
-            ["Charge Build-up"] = Combat(0.40f, -1f, 1f, 1, stopsWithPlayer: true),
+            // Its pitch is set by how long the charge is (MMF_VariedSound.LastFor), so no range of its own.
+            ["Charge Build-up"] = Combat(0.40f, 0f, 0f, 1, stopsWithPlayer: true),
             ["Kill Confirm"] = Combat(0.50f, -2f, 2f, 2),
 
             // ---- moving
@@ -95,13 +98,13 @@ namespace KryticalNova.EditorTools
             ["Nova Held"] = Moment(0.50f),
             ["Standing Rank"] = Moment(0.50f),
 
-            // ---- the interface: quiet, and the ones under the pointer all the time the quietest
+            // ---- the interface: quiet, and the ones under the pointer all the time barely there (owner, 10 Oct 2026)
             ["Click Tick"] = Interface(0.25f, -3f, 3f, 3),
             ["Select"] = Interface(0.35f, -1f, 1f),
-            ["Hover"] = Interface(0.20f, -2f, 2f, 3),
-            ["Press"] = Interface(0.40f, -1.5f, 1.5f),
-            ["Confirm"] = Interface(0.45f, -1f, 1f),
-            ["Back"] = Interface(0.40f, -2f, 0f),
+            ["Hover"] = Interface(0.08f, -2f, 2f, 3),
+            ["Press"] = Interface(0.15f, -1.5f, 1.5f),
+            ["Confirm"] = Interface(0.18f, -1f, 1f),
+            ["Back"] = Interface(0.20f, -2f, 0f),
             ["Error"] = Interface(0.45f, -0.5f, 0.5f),
             ["Toggle"] = Interface(0.40f, -2f, 2f),
             ["Slide"] = Interface(0.20f, -4f, 4f, 3),
@@ -114,13 +117,19 @@ namespace KryticalNova.EditorTools
         /// <summary>Every slot the table knows, for the checks.</summary>
         public static IEnumerable<string> SoundSlotNames => SoundSpecs.Keys;
 
-        /// <summary>The clips of a slot: every <c>SFX_&lt;Slot&gt;_&lt;number&gt;</c> in its folder, in order.</summary>
-        public static AudioClip[] SoundClips(string slot)
+        /// <summary>The factions a slot may have clips of its own for (<c>SFX_&lt;Slot&gt;_&lt;Faction&gt;_&lt;number&gt;</c>).</summary>
+        public static readonly string[] SoundFactions = { "Hegemony", "Null", "Covenant" };
+
+        /// <summary>
+        /// The clips of a slot: every <c>SFX_&lt;Slot&gt;_&lt;number&gt;</c> in its folder, in order. With a faction, only
+        /// that faction's; without, a slot that has faction clips gives them all.
+        /// </summary>
+        public static AudioClip[] SoundClips(string slot, string faction = null)
         {
             if (!SoundSpecs.TryGetValue(slot, out SoundSpec spec)) return System.Array.Empty<AudioClip>();
             string folder = SfxFolder + "/" + spec.Folder;
             if (!AssetDatabase.IsValidFolder(folder)) return System.Array.Empty<AudioClip>();
-            var name = new Regex("^SFX_" + Regex.Escape(SoundFileKey(slot)) + @"_\d+$");
+            var name = new Regex("^SFX_" + Regex.Escape(SoundFileKey(slot)) + (faction != null ? "_" + faction : "(_[A-Za-z]+)?") + @"_\d+$");
             return AssetDatabase.FindAssets("t:AudioClip", new[] { folder })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Where(path => name.IsMatch(System.IO.Path.GetFileNameWithoutExtension(path)))
@@ -145,6 +154,7 @@ namespace KryticalNova.EditorTools
                 if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) continue;
                 using (var scope = new PrefabUtility.EditPrefabContentsScope(path))
                 {
+                    if (path == PrefabPath) EnsureMissPlayers(scope.prefabContentsRoot);
                     foreach (var player in scope.prefabContentsRoot.GetComponentsInChildren<MMF_Player>(true))
                     {
                         // The menu feel inside the game feel prefab is set on its own prefab, not overridden here.
@@ -170,6 +180,26 @@ namespace KryticalNova.EditorTools
             return sounding;
         }
 
+        /// <summary>
+        /// The two players of an evaded blow, on a game feel prefab built before they existed: beside the swing's own
+        /// player, with a sound slot each. A full build makes them itself.
+        /// </summary>
+        private static void EnsureMissPlayers(GameObject root)
+        {
+            var presenter = root.GetComponent<GameFeelPresenter>();
+            if (presenter == null) return;
+            var so = new SerializedObject(presenter);
+            var swing = so.FindProperty("swingFeel").objectReferenceValue as MMF_Player;
+            GameObject parent = swing != null && swing.transform.parent != null ? swing.transform.parent.gameObject : root;
+            foreach ((string field, string name) in new[] { ("swingMissFeel", "Swing Miss"), ("skillMissFeel", "Skill Miss") })
+            {
+                SerializedProperty property = so.FindProperty(field);
+                if (property == null || property.objectReferenceValue != null) continue;
+                property.objectReferenceValue = Player(parent, name, p => Sound(p, name));
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         private static string SlotOf(string label) =>
             label != null && label.EndsWith(UnassignedSuffix) ? label.Substring(0, label.Length - UnassignedSuffix.Length) : label ?? string.Empty;
 
@@ -181,6 +211,9 @@ namespace KryticalNova.EditorTools
             sound.Label = clips.Length > 0 ? slot : slot + UnassignedSuffix;
             sound.Sfx = null;
             sound.RandomSfx = clips;
+            sound.HegemonySfx = SoundClips(slot, SoundFactions[0]);
+            sound.NullSfx = SoundClips(slot, SoundFactions[1]);
+            sound.CovenantSfx = SoundClips(slot, SoundFactions[2]);
             // Its own audio sources, on the feel prefab: nothing else in the scene is needed for it to be heard.
             sound.PlayMethod = MMF_Sound.PlayMethods.Pool;
             sound.PoolSize = spec.Voices;

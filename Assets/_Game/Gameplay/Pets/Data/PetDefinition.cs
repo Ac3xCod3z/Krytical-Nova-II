@@ -14,10 +14,33 @@ namespace KryticalNova.Pets
     public sealed class PetEffect
     {
         public GameObject prefab;
-        [Tooltip("Bones of the pet's own model it is worn on. None = one, on the middle of the body.")]
+        [Tooltip("Bones of the pet's own model it is worn on. None = one, at the place below.")]
         public string[] bones = new string[0];
+        [Tooltip("With no bone named: where on the pet it goes. These places do not move with the animation, so dust stays on the floor the pet stands on while the pet hops.")]
+        public PetEffectAnchor anchor = PetEffectAnchor.Body;
+        [Tooltip("Moved this far from that place, in the pet's own space (x to its right, y up, z ahead), in footprints: 1 = as far as the pet is wide.")]
+        public Vector3 offset;
         [Tooltip("On: its particles are tinted with the glow colour of the pet's growth stage, so the effect changes as the pet grows.")]
         public bool stageColour = true;
+
+        [Header("Only with an animation")]
+        [Tooltip("The animation it belongs to: the name of a state of the pet's Animator (HopSpin, Move). Empty = it is worn all the time.")]
+        public string animation = "";
+        [Tooltip("The moments of that animation at which it plays, once each, as shares of the animation (0 = its start, 1 = its end). None = it plays for the stretch below.")]
+        public float[] at = new float[0];
+        [Tooltip("With no moments above: the stretch of the animation during which it plays, as shares of it. 0 to 0 = the whole animation.")]
+        public Vector2 during;
+    }
+
+    /// <summary>Where on a pet an effect goes when it names no bone.</summary>
+    public enum PetEffectAnchor
+    {
+        /// <summary>The middle of the body.</summary>
+        Body,
+        /// <summary>Under it: the middle of the floor it stands or hovers on.</summary>
+        Feet,
+        /// <summary>The top of it.</summary>
+        Top,
     }
 
     [Serializable]

@@ -42,8 +42,8 @@ MonoBehaviour:
   lightningPerMinute: 0
   saturation: -10
   contrast: 0
-  ambienceLoop: {fileID: 0}
-  ambienceVolume: 0.6
+  ambienceLoop: {fileID: 8300000, guid: e5c79075cf01b2a4a8e2e237f54e1572, type: 3}
+  ambienceVolume: 0.9
   transitionSeconds: 90
   durationMin: 200
   durationMax: 420

@@ -1504,6 +1504,8 @@ namespace KryticalNova.EditorTools
                     Sound(p, "Swing Whoosh");
                     Impulse(p, new Vector3(0.04f, 0.03f, 0f), 0.15f);
                 });
+                so.FindProperty("swingMissFeel").objectReferenceValue = Player(root, "Swing Miss", p => Sound(p, "Swing Miss"));
+                so.FindProperty("skillMissFeel").objectReferenceValue = Player(root, "Skill Miss", p => Sound(p, "Skill Miss"));
                 so.FindProperty("hitFeel").objectReferenceValue = Player(root, "Hit", p =>
                 {
                     Sound(p, "Hit");

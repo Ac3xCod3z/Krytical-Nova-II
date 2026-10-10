@@ -66,6 +66,8 @@ namespace KryticalNova.Core
         /// <param name="seconds">How long the blade keeps cutting (drives the weapon trail); 0 uses a default.</param>
         void Swing(Transform attacker, int comboStep, bool isLocalPlayer, float seconds = 0f);
         void Hit(in HitFeel hit);
+        /// <summary>A blow that was evaded: no impact, only the air it cut. <paramref name="skill"/>: it was an attack skill.</summary>
+        void Missed(Transform attacker, Vector3 point, bool skill, bool isLocalPlayer);
         /// <summary>The local player lost health; <paramref name="fraction01"/> is the loss relative to max health.</summary>
         void LocalPlayerDamaged(float fraction01);
         void MoveCommand(Vector3 point, Vector3 normal);

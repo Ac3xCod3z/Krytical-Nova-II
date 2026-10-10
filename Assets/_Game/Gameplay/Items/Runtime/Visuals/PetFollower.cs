@@ -85,25 +85,62 @@ namespace KryticalNova.Items.Visuals
         private IReadOnlyList<string> footBones;
         private readonly List<(Transform effect, Transform foot)> footEffects = new List<(Transform, Transform)>();
 
-        /// <summary>An effect a pet wears as its own mark: the prefab, the bones it goes on, and whether it takes the stage's colour.</summary>
+        /// <summary>Where an effect goes on a pet when it names no bone: the middle of the body, under it, or on top of it.</summary>
+        public enum EffectPlace { Body, Feet, Top }
+
+        /// <summary>
+        /// An effect a pet wears as its own mark: the prefab, the bones it goes on (or a place on the body), whether
+        /// it takes the stage's colour, and the animation it belongs to if it is not worn all the time: the state's
+        /// name, and either the moments of it at which it plays once (shares of the animation, 0 to 1) or the stretch
+        /// of it during which it plays (0 to 0 = all of it).
+        /// </summary>
         public readonly struct WornEffect
         {
             public readonly GameObject Prefab;
             public readonly IReadOnlyList<string> Bones;
             public readonly bool StageColour;
+            public readonly EffectPlace Place;
+            public readonly Vector3 Offset;
+            public readonly string Animation;
+            public readonly IReadOnlyList<float> At;
+            public readonly Vector2 During;
 
-            public WornEffect(GameObject prefab, IReadOnlyList<string> bones, bool stageColour)
+            public WornEffect(GameObject prefab, IReadOnlyList<string> bones, bool stageColour, EffectPlace place = EffectPlace.Body,
+                Vector3 offset = default, string animation = null, IReadOnlyList<float> at = null, Vector2 during = default)
             {
                 Prefab = prefab;
                 Bones = bones;
                 StageColour = stageColour;
+                Place = place;
+                Offset = offset;
+                Animation = animation;
+                At = at;
+                During = during;
             }
         }
 
-        // The pet's own effects, as asked for and as worn: each copy, the bone it follows, and whether it is tinted.
+        // One copy of an effect as the pet wears it.
+        private sealed class Worn
+        {
+            public Transform Effect;
+            public Transform Bone;          // followed each frame, or null: it stays at Home
+            public Vector3 Home;            // its place in the pet's own space when it follows no bone
+            public Vector3 Offset;          // in footprints, in the pet's own space
+            public bool Tinted;
+            public int State;               // the animation it belongs to (0 = worn all the time)
+            public IReadOnlyList<float> At;
+            public Vector2 During;
+            public ParticleSystem[] Systems;
+            public bool Playing;
+        }
+
+        // The pet's own effects, as asked for and as worn.
         private object wornSource;
         private IReadOnlyList<WornEffect> wornLooks;
-        private readonly List<(Transform effect, Transform bone, bool tinted)> worn = new List<(Transform, Transform, bool)>();
+        private readonly List<Worn> worn = new List<Worn>();
+        // What the pet's Animator was in last frame, for the effects that belong to an animation.
+        private int lastState;
+        private float lastShare = -1f;
 
         private static Camera viewCamera;
         private static int viewCameraFrame = -1;
@@ -275,8 +312,8 @@ namespace KryticalNova.Items.Visuals
 
         private void ClearWornEffects()
         {
-            foreach ((Transform effect, _, _) in worn)
-                if (effect != null) Destroy(effect.gameObject);
+            foreach (Worn copy in worn)
+                if (copy.Effect != null) Destroy(copy.Effect.gameObject);
             worn.Clear();
         }
 
@@ -309,10 +346,10 @@ namespace KryticalNova.Items.Visuals
             }
             Color tint = glow.strength > 0f ? glow.color : Color.white;
             tint.a = 1f;
-            foreach ((Transform effect, _, bool tinted) in worn)
+            foreach (Worn copy in worn)
             {
-                if (effect == null || !tinted || glow.strength <= 0f) continue;
-                foreach (var particles in effect.GetComponentsInChildren<ParticleSystem>(true))
+                if (copy.Effect == null || !copy.Tinted || glow.strength <= 0f) continue;
+                foreach (ParticleSystem particles in copy.Systems)
                 {
                     var main = particles.main;
                     main.startColor = tint;
@@ -324,11 +361,76 @@ namespace KryticalNova.Items.Visuals
         {
             GameObject effect = Instantiate(look.Prefab, pet.transform);
             effect.name = look.Prefab.name;
-            effect.transform.localPosition = unitBounds.center;
+            Vector3 home = unitBounds.center;
+            if (look.Place == EffectPlace.Feet) home.y = unitBounds.min.y;
+            else if (look.Place == EffectPlace.Top) home.y = unitBounds.max.y;
+            float footprint = Mathf.Max(unitBounds.size.x, unitBounds.size.z);
+            effect.transform.localPosition = home + look.Offset * footprint;
             effect.transform.localRotation = Quaternion.identity;
-            effect.transform.localScale = Vector3.one * Mathf.Max(unitBounds.size.x, unitBounds.size.z);
+            effect.transform.localScale = Vector3.one * footprint;
             VisualUtility.PrepareCosmetic(effect, gameObject.layer);
-            worn.Add((effect.transform, bone, look.StageColour));
+            var copy = new Worn
+            {
+                Effect = effect.transform,
+                Bone = bone,
+                Home = home,
+                Offset = look.Offset * footprint,
+                Tinted = look.StageColour,
+                State = string.IsNullOrEmpty(look.Animation) ? 0 : Animator.StringToHash(look.Animation),
+                At = look.At,
+                During = look.During,
+                Systems = effect.GetComponentsInChildren<ParticleSystem>(true),
+            };
+            // One that belongs to an animation waits for it: nothing of it shows until then.
+            if (copy.State != 0)
+                foreach (ParticleSystem particles in copy.Systems) particles.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            worn.Add(copy);
+        }
+
+        /// <summary>
+        /// The effects that belong to an animation: one with moments plays once as the animation passes each of
+        /// them; one with a stretch plays while the animation is inside it and stops letting particles go when it
+        /// leaves (those already out live their time).
+        /// </summary>
+        private void PlayAnimationEffects()
+        {
+            if (worn.Count == 0) return;
+            int state = 0;
+            float share = 0f;
+            bool running = animations != null && animations.TryGetPlaying(out state, out share);
+            // A new state, or a loop come round again, starts from before its beginning.
+            float before = running && state == lastState && share >= lastShare ? lastShare : -1f;
+            foreach (Worn copy in worn)
+            {
+                if (copy.State == 0 || copy.Effect == null) continue;
+                bool mine = running && copy.State == state;
+                if (copy.At != null && copy.At.Count > 0)
+                {
+                    if (!mine) continue;
+                    for (int i = 0; i < copy.At.Count; i++)
+                    {
+                        if (copy.At[i] <= before || copy.At[i] > share) continue;
+                        foreach (ParticleSystem particles in copy.Systems)
+                        {
+                            particles.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+                            particles.Play(false);
+                        }
+                        break;
+                    }
+                    continue;
+                }
+                bool whole = copy.During.x <= 0f && copy.During.y <= 0f;
+                bool inside = mine && (whole || (share >= copy.During.x && share <= copy.During.y));
+                if (inside == copy.Playing) continue;
+                copy.Playing = inside;
+                foreach (ParticleSystem particles in copy.Systems)
+                {
+                    if (inside) particles.Play(false);
+                    else particles.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+                }
+            }
+            lastState = running ? state : 0;
+            lastShare = running ? share : -1f;
         }
 
         private void ClearFootEffects()
@@ -379,8 +481,9 @@ namespace KryticalNova.Items.Visuals
         {
             foreach ((Transform effect, Transform foot) in footEffects)
                 if (effect != null && foot != null) effect.position = foot.position;
-            foreach ((Transform effect, Transform bone, _) in worn)
-                if (effect != null && bone != null) effect.position = bone.position;
+            foreach (Worn copy in worn)
+                if (copy.Effect != null && copy.Bone != null) copy.Effect.position = copy.Bone.position + pet.transform.TransformVector(copy.Offset);
+            PlayAnimationEffects();
         }
 
         /// <summary>The pet at its stage's size, less whatever the camera has shrunk away; gone altogether at nothing.</summary>

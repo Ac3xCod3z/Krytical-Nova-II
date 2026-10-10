@@ -235,7 +235,10 @@ namespace KryticalNova.Pets
             for (int i = 0; i < effects.Length; i++)
             {
                 PetEffect effect = pet.effects[i];
-                effects[i] = effect != null ? new PetFollower.WornEffect(effect.prefab, effect.bones, effect.stageColour) : default;
+                effects[i] = effect != null
+                    ? new PetFollower.WornEffect(effect.prefab, effect.bones, effect.stageColour, (PetFollower.EffectPlace)(int)effect.anchor,
+                        effect.offset, effect.animation, effect.at, effect.during)
+                    : default;
             }
             return effects;
         }

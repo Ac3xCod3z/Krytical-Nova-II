@@ -24,8 +24,11 @@ face (carries the eyes and brows with the shell as it squashes); eyeball.L/R; li
 
 Actions, 24 frames a second. Idle and Move loop; MoveStart starts on Idle's first frame and ends on Move's first
 frame, MoveStop the other way round; everything else starts and ends on the rest pose, which is Idle's first frame.
-  Idle 120 (loop)   Blink 12   LookAround 84   Happy 52   Shock 48   Mad 64   Sad 84   HopSpin 36
+  Idle 192 (loop; the blinks and the looking about are in it)   HopSpin 36
   MoveStart 18   Move 32 (loop)   MoveStop 24
+  WobbleNap 150   Tantrum 88   TideCall 96   VictoryBounce 76   CrackCry 140
+There are no plain face clips: the faces (shut, wide, glare with the red mark, smiling arches, crying) are acted inside
+the clips above.
 
 Every run starts again from the untouched model, kept in the file.
 """
@@ -43,7 +46,7 @@ RAW = "angry egg creature 3d model"
 # middle line, the slant of that line, how far the frame stands clear of the eyeball, how high its crest is above
 # the eye and below it, how much deeper the frame is above the eye (the brow), and the size of the piece of shell cut out.
 RIM = {"long": 0.040, "up": 0.011, "down": 0.022, "slant": 22.0, "gap": 0.0026, "high": (0.009, 0.0006), "brow": 0.022, "low_grow": 0.4, "soften": 3,
-       "cut": 1.55, "sunk": 0.012}
+       "cut": 1.95, "skirt": 1.62, "sunk": 0.012}
 LUMP = {"from": 0.004, "most": 0.008,       # the shell may stand this far off the egg untouched, and at the very most this far
         "above": -0.06, "reach": 0.095, "smooth": 3}    # the ridge over each eye that is smoothed, and how many times
 SOCKET = {"reach": 0.066, "warm": 0.05, "dark": 0.8, "smooth": 6}     # how far round each eye the shell's lip is cleaned, and how little amber counts
@@ -60,10 +63,16 @@ LID = {"gap": 0.0008, "thick": 0.0008,
 BROW = {"up": 0.024, "slant": 22.0, "long": 0.058, "wide": 0.020, "deep": 0.030}
 # The smiling arch: how wide, how high its middle stands above its ends, how thick the stroke is, how far below the
 # middle of the eye its ends sit, and how small it is kept while hidden.
-SMILE = {"wide": 0.044, "high": 0.013, "thick": 0.0060, "drop": -0.012, "flat": 0.03}
+SMILE = {"wide": 0.062, "high": 0.017, "thick": 0.0105, "drop": -0.015, "flat": 0.03}
 TEAR = {"under": 0.034, "size": 0.0065, "flat": 0.03}      # how far under the eye's middle a tear starts, and its size
+# The crack: its lines as seen from the front (x across, z up, metres), the black line's width, the colour of its
+# chipped edge, and how it is hidden.
+CRACK = {"lines": (((-0.030, 0.386), (-0.052, 0.368), (-0.040, 0.352), (-0.066, 0.334), (-0.054, 0.318), (-0.080, 0.298)),
+                   ((-0.040, 0.352), (-0.022, 0.340), (-0.028, 0.322))),
+         "wide": 0.0095, "pale": (0.50, 0.62, 0.68), "flat": 0.02, "sunk": 0.004}
 MARK = {"x": 0.082, "z": 0.325, "size": 0.030, "flat": 0.02, "sunk": 0.004}
 ROLL_RADIUS = 0.163         # how high the egg's middle is when it lies on its side
+ROCK_RADIUS = 0.14          # how round the end it stands on is: the radius it rocks on
 
 
 def components(faces):
@@ -151,7 +160,7 @@ def main():
         me.materials.append(mat)
         return len(me.materials) - 1
 
-    group_names = ["root", "top", "anger"] + [f"{b}.{s}" for s in "LR" for b in ("eyeball", "lid_up", "lid_low", "brow", "tear", "smile")]
+    group_names = ["root", "top", "anger", "crack"] + [f"{b}.{s}" for s in "LR" for b in ("eyeball", "lid_up", "lid_low", "brow", "tear", "smile")]
     for g in list(ob.vertex_groups):
         ob.vertex_groups.remove(g)
     gi = {n: ob.vertex_groups.new(name=n).index for n in group_names}
@@ -450,7 +459,18 @@ def main():
             x, y, _z = coords(v.co)
             return math.atan2(y, x) % (2 * math.pi)
 
-        ring_a, ring_b = sorted(foot, key=angle), sorted(cut_verts, key=angle)
+        # a skirt: one more ring, a little further out and lying on the shell like the foot, so that the uneven join
+        # to the cut edge of the shell is flat on the egg and away from the rim, where it left a crease
+        skirt = []
+        for k in range(count):
+            x, y = outline(2 * math.pi * k / count, RIM["skirt"], RIM["brow"] * 1.12 + 0.005)
+            where_ = c + e1 * x + e2 * y + n * on_shell(x, y)
+            snug = egg.find_nearest(where_)[0]
+            skirt.append(bm.verts.new(snug if snug is not None else where_))
+        for k in range(count):
+            j2 = (k + 1) % count
+            made.append(bm.faces.new((foot[k], foot[j2], skirt[j2], skirt[k])))
+        ring_a, ring_b = sorted(skirt, key=angle), sorted(cut_verts, key=angle)
         ang_a = [angle(v) for v in ring_a] + [angle(ring_a[0]) + 2 * math.pi]
         ang_b = [angle(v) for v in ring_b] + [angle(ring_b[0]) + 2 * math.pi]
         i = j = 0
@@ -493,6 +513,23 @@ def main():
             for l in f.loops:
                 l[uv].uv = rim_uv
         frames += 1
+    # anything the joins left open is closed
+    for _ in range(3):
+        tangled = {f for e in bm.edges if len(e.link_faces) > 2 for f in e.link_faces}
+        if tangled:
+            bmesh.ops.delete(bm, geom=list(tangled), context="FACES")
+        gaps = [e for e in bm.edges if len(e.link_faces) == 1]
+        if not gaps:
+            break
+        had = set(bm.faces)
+        bmesh.ops.holes_fill(bm, edges=gaps, sides=0)
+        gaps = [e for e in bm.edges if len(e.link_faces) == 1]
+        if gaps:
+            bmesh.ops.triangle_fill(bm, use_beauty=True, use_dissolve=False, edges=gaps)
+        for f in [f for f in bm.faces if f not in had]:
+            f.smooth = True
+            for l in f.loops:
+                l[uv].uv = rim_uv
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     height = max(v.co.z for v in bm.verts)
     for v in bm.verts:
@@ -688,7 +725,7 @@ def main():
         # the smiling eye: a dark arch, high in the middle, that lies on the closed lid. Tiny and inside the eyeball
         # until its bone brings it out. With the lids shut it is the closed, happy eye of a cartoon face.
         if smile_slot is None:
-            smile_slot = material("Smile", (0.015, 0.015, 0.02))
+            smile_slot = material("Smile", (0.004, 0.004, 0.006))      # black, as asked: the drawn arch of a cartoon smile
         s_anchor = centre + n * (radius - 0.008)
         shell_r = radius + LID["gap"] + LID["thick"] + 0.0022
 
@@ -761,6 +798,45 @@ def main():
         v.co = anchor + (v.co - anchor) * MARK["flat"]
         v[dl][gi["anger"]] = 1.0
 
+    # ---- the crack: a jagged black line with a pale chipped edge, down the forehead on the side away from the anger
+    # mark; like the mark it is tiny and under the shell until its bone brings it out
+    crack_slots = (material("Crack Edge", CRACK["pale"]), material("Crack", (0.004, 0.004, 0.006)))
+    crack_verts = []
+    crack_hit, crack_n = None, None
+    for line in CRACK["lines"]:
+        on_shell_, normals_ = [], []
+        for x, z in line:
+            at, at_n, _i, _d = shell_tree.ray_cast(Vector((x, -1.0, z)), Vector((0, 1, 0)))
+            if at_n.y > 0:
+                at_n = -at_n
+            on_shell_.append(at)
+            normals_.append(at_n)
+        if crack_hit is None:
+            crack_hit, crack_n = on_shell_[len(on_shell_) // 2].copy(), normals_[len(on_shell_) // 2].copy()
+        last_ = len(on_shell_) - 1
+        for layer, (wide_, high_) in enumerate(((CRACK["wide"] * 2.1, 0.0010), (CRACK["wide"], 0.0019))):
+            rows = []
+            for i, (at, at_n) in enumerate(zip(on_shell_, normals_)):
+                along_ = (on_shell_[min(i + 1, last_)] - on_shell_[max(i - 1, 0)]).normalized()
+                across_ = at_n.cross(along_).normalized()
+                half = wide_ / 2 * (1.0 - 0.8 * i / last_)      # broad where it starts, a point at its end
+                rows.append([bm.verts.new(at + across_ * (half * side_) + at_n * up_)
+                             for side_, up_ in ((-1, high_), (1, high_), (1, -0.0012), (-1, -0.0012))])
+            made = [bm.faces.new(rows[0]), bm.faces.new(rows[-1][::-1])]
+            for a_, b_ in zip(rows[:-1], rows[1:]):
+                for k in range(4):
+                    k2 = (k + 1) % 4
+                    made.append(bm.faces.new((a_[k], b_[k], b_[k2], a_[k2])))
+            bmesh.ops.recalc_face_normals(bm, faces=made)
+            for f in made:
+                f.material_index = crack_slots[layer]
+                f.smooth = False
+            crack_verts += [v for row in rows for v in row]
+    crack_anchor = crack_hit - crack_n * CRACK["sunk"]
+    for v in crack_verts:
+        v.co = crack_anchor + (v.co - crack_anchor) * CRACK["flat"]
+        v[dl][gi["crack"]] = 1.0
+
     bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
     for e in bm.edges:
         if len(e.link_faces) != 2:
@@ -793,6 +869,7 @@ def main():
     bone("top", (0, 0, height * 0.6), (0, 0, height), parent="root")
     bone("face", (0, -0.10, eye_z), (0, -0.10, eye_z + 0.04), parent="root")
     bone("anger", anchor, anchor + hit_n * 0.02, parent="top")
+    bone("crack", crack_anchor, crack_anchor + crack_n * 0.02, parent="top")
     for s in "LR":
         e = eyes[s]
         bone(f"eyeball.{s}", e["centre"], e["centre"] + e["n"] * EYE["radius"], parent="face")
@@ -901,8 +978,13 @@ def main():
         for s in "LR":
             key(f"smile.{s}", frame, scale=(k, k, k))
 
+    def crack(frame, amount=0.0):
+        k = 1.0 + (1.0 / CRACK["flat"] - 1.0) * amount
+        key("crack", frame, scale=(k, k, k))
+
     def face_rest(*frames):
         for frame in frames:
+            crack(frame)
             lids(frame)
             look(frame)
             brows(frame)
@@ -915,108 +997,34 @@ def main():
             key("root", frame, Quaternion(), move=(0, 0, 0))
             squash(frame, 0.0)
 
-    # ---- Idle
+    # the plain face clips are no longer kept: their faces are acted inside the other clips
+    for gone in ("Blink", "LookAround", "Happy", "Shock", "Mad", "Sad"):
+        old = bpy.data.actions.get(gone)
+        if old:
+            bpy.data.actions.remove(old)
+
+    # ---- Idle: it breathes and sways, glances right and left, looks up, down and once right round, and blinks
     a = start("Idle")
-    LOOP = 120
+    LOOP = 192
     for frame in range(1, LOOP + 2, 4):
-        squash(frame, 0.004 * math.sin(2 * math.pi * (frame - 1) / 60))
-        key("root", frame, about(Y, 1.5 * math.sin(2 * math.pi * (frame - 1) / 120)), move=(0, 0, 0))
+        squash(frame, 0.004 * math.sin(2 * math.pi * (frame - 1) / 64))
+        key("root", frame, about(Y, 1.5 * math.sin(2 * math.pi * (frame - 1) / 96)), move=(0, 0, 0))
     face_rest(1, LOOP + 1)
-    for frame, right, up in ((1, 0, 0), (34, 0, 0), (40, 16, 1), (58, 16, 1), (66, -16, 0), (82, -16, 0), (90, 0, 5), (100, 0, 0), (121, 0, 0)):
-        look(frame, right, up)
-    blink(20)
-    blink(62)
-    blink(104)
-    blink(110)
-    finish(a, LOOP + 1)
-
-    # ---- Blink
-    a = start("Blink")
-    body_rest(1, 12)
-    face_rest(1, 12)
-    blink(2, hold=2)
-    finish(a, 12)
-
-    # ---- LookAround: right, left, up, down, then once right round
-    a = start("LookAround")
-    body_rest(1, 84)
-    face_rest(1, 84)
-    for frame, right, up in ((1, 0, 0), (8, 20, 0), (16, 20, 0), (26, -20, 0), (34, -20, 0), (42, 0, 10), (48, 0, 10), (56, 0, -12), (60, 0, -12)):
+    for frame, right, up in ((1, 0, 0), (30, 0, 0), (36, 18, 1), (52, 18, 1), (60, -18, 0), (76, -18, 0), (84, 0, 9), (92, 0, 9), (100, 0, -11), (106, 0, -11)):
         look(frame, right, up)
     for k in range(1, 13):
         ang = -math.pi / 2 + 2 * math.pi * k / 12
-        look(60 + k * 1.5, 18 * math.cos(ang), 10 * math.sin(ang))
-    look(84, 0, 0)
-    for frame, wide in ((1, 0.0), (40, 0.0), (44, -0.25), (48, -0.25), (54, 0.0)):       # looking up, the upper lids rise with it
+        look(106 + k * 1.5, 18 * math.cos(ang), 11 * math.sin(ang))
+    look(131, 0, 0)
+    look(LOOP + 1, 0, 0)
+    for frame, wide in ((78, 0.0), (84, -0.25), (92, -0.25), (98, 0.0)):       # looking up, the upper lids rise with it
         lids(frame, upper=wide)
-    finish(a, 84)
-
-    # ---- Happy: the eyes shut and a dark arch, high in the middle, shows on each closed lid: the smiling eyes of a
-    # cartoon face. The brows soften, and it bobs.
-    a = start("Happy")
-    body_rest(1, 52)
-    face_rest(1, 52)
-    for frame, joy in ((1, 0.0), (5, 0.0), (9, 1.0), (40, 1.0), (45, 0.0), (52, 0.0)):
-        lids(frame, upper=1.0 * joy)                          # shut ...
-        brows(frame, frown=-16 * joy, lift=0.004 * joy)
-    for frame, amount in ((1, 0.0), (7, 0.0), (10, 1.15), (13, 1.0), (40, 1.0), (43, 0.0), (52, 0.0)):
-        smile(frame, amount)                                  # ... and the arch pops out on the closed lid
-    for frame, dz in ((1, 0), (5, -0.012), (11, 0.010), (16, -0.008), (21, 0.008), (26, -0.008), (31, 0.008), (36, -0.006), (42, 0.004), (48, 0), (52, 0)):
-        squash(frame, dz)
-        key("root", frame, about(Y, 4.0 * (dz / 0.01)), move=(0, 0, max(dz, 0) * 0.6))
-    finish(a, 52)
-
-    # ---- Shock: eyes thrown wide open, brows shot up and levelled, the whole egg jolts up and trembles
-    a = start("Shock")
-    body_rest(1, 48)
-    face_rest(1, 48)
-    for frame, s in ((1, 0.0), (3, -0.2), (7, 1.15), (10, 1.0), (34, 1.0), (42, 0.0), (48, 0.0)):
-        lids(frame, upper=-0.9 * s, lower=-0.3 * s)
-        brows(frame, frown=-26 * s, lift=0.022 * s)
-        look(frame, 0, 3 * s)
-        squash(frame, 0.016 * s)
-        key("root", frame, Quaternion(), move=(0, 0, 0.012 * max(s, 0) if frame < 12 else 0))
-    for i, frame in enumerate(range(12, 33, 2)):
-        key("root", frame, about(Y, 1.6 if i % 2 else -1.6), move=(0, 0, 0))
-    key("root", 36, Quaternion(), move=(0, 0, 0))
-    finish(a, 48)
-
-    # ---- Mad: brows down, eyes narrowed to a glare with the pupils still showing, the red mark throbs, it shakes
-    a = start("Mad")
-    body_rest(1, 64)
-    face_rest(1, 64)
-    for frame, m in ((1, 0.0), (6, 0.0), (12, 1.1), (16, 1.0), (50, 1.0), (58, 0.0), (64, 0.0)):
-        brows(frame, frown=8 * m, lift=-0.004 * m)
-        lids(frame, upper=0.12 * m, lower=MAD_LID * m)
-        look(frame, 0, -3 * m)
-        squash(frame, -0.008 * m)
-    for frame, amount in ((1, 0.0), (10, 0.0), (14, 1.25), (18, 0.9), (22, 1.1), (27, 0.9), (32, 1.1), (37, 0.9), (42, 1.1), (47, 0.95), (53, 0.0), (64, 0.0)):
-        anger(frame, amount)
-    for i, frame in enumerate(range(14, 51, 2)):
-        key("root", frame, about(Z, 2.5 if i % 2 else -2.5) @ about(X, 4.0), move=(0, 0, 0))
-    key("root", 10, Quaternion(), move=(0, 0, 0))
-    key("root", 55, Quaternion(), move=(0, 0, 0))
-    finish(a, 64)
-
-    # ---- Sad: brows tipped up at their inner ends, lids heavy, eyes cast down, it sags; a tear wells up under each
-    # eye and runs down, twice
-    a = start("Sad")
-    body_rest(1, 84)
-    face_rest(1, 84)
-    for frame, sad in ((1, 0.0), (10, 1.0), (72, 1.0), (80, 0.0), (84, 0.0)):
-        brows(frame, frown=-26 * sad, lift=0.003 * sad)
-        lids(frame, upper=0.20 * sad, lower=SAD_LID * sad)
-        look(frame, 0, -9 * sad)
-        squash(frame, -0.010 * sad)
-        key("root", frame, about(X, 5.0 * sad), move=(0, 0, 0))
-    for begin in (14, 42):
-        tears(begin, 0.0, 0.0)
-        tears(begin + 6, 1.0, 0.0)
-        tears(begin + 10, 1.0, 0.004)
-        tears(begin + 22, 0.9, 0.050)
-        tears(begin + 26, 0.0, 0.058)
-        tears(begin + 27, 0.0, 0.0)
-    finish(a, 84)
+    blink(16)
+    blink(56, hold=2)
+    blink(136)
+    blink(168)
+    blink(174)
+    finish(a, LOOP + 1)
 
     # ---- HopSpin: crouch, hop, one quick turn in the air, land where it stood
     a = start("HopSpin")
@@ -1073,6 +1081,168 @@ def main():
         squash(frame, dz)
     blink(16)
     finish(a, 24)
+
+    # ---- Four acted clips. Standing, the egg rocks on its rounded end the way a tumbler toy does: the middle of
+    # that roundness stays at one height and moves sideways as the egg tips, so the shell neither sinks into the
+    # ground nor slides on it.
+    round_end = Vector((0, 0, ROCK_RADIUS))
+
+    def rock(frame, side=0.0, forward=0.0, lift=0.0, turn=0.0, across=0.0, size=None):
+        """side: degrees tipped to the egg's left (+x) or right (-). forward: degrees tipped forward (+) or back (-).
+        lift: metres off the ground. turn: degrees turned about its own height. across: metres moved sideways."""
+        q = about(Z, turn) @ about(Y, side) @ about(X, forward)
+        rolled = Vector((ROCK_RADIUS * math.radians(side) + across, -ROCK_RADIUS * math.radians(forward), lift))
+        key("root", frame, q, move=round_end + rolled - q @ round_end, scale=None if size is None else (size, size, size))
+
+    # ---- WobbleNap: it nods off, sleeps, and rocks further and further over until it nearly topples; it starts awake
+    # with a jump, wide-eyed, rocks itself still and blinks. For long idles.
+    a = start("WobbleNap")
+    END = 150
+    face_rest(1, END)
+    body_rest(1, END)
+    for frame, shut in ((1, 0.0), (8, 0.55), (13, 0.25), (22, 0.75), (26, 0.5), (34, 1.0), (104, 1.0)):      # nodding off
+        lids(frame, upper=shut)
+    for frame, soft in ((1, 0.0), (34, 1.0), (104, 1.0)):
+        brows(frame, frown=-14 * soft, lift=-0.002 * soft)
+    for frame, right, up in ((1, 0, 0), (22, 0, -8), (34, 0, -10), (104, 0, -10), (108, 0, 4)):
+        look(frame, right, up)
+    #           frame  side  forward
+    for frame, side, forward in ((1, 0, 0), (10, 0, 5), (14, 0, 1), (24, 0, 7), (34, 3, 5), (46, 9, 4), (58, -11, 4), (70, 15, 3),
+                                 (82, -19, 3), (96, 26, 2), (104, 33, 1)):
+        rock(frame, side, forward)
+    for frame in range(34, 105, 10):                                       # breathing, asleep
+        squash(frame, -0.006 + 0.006 * math.sin(2 * math.pi * (frame - 34) / 40))
+    # the start
+    for frame, wide in ((106, -0.9), (124, -0.9), (132, 0.0)):
+        lids(frame, upper=wide, lower=-0.3 * (wide / -0.9))
+        brows(frame, frown=-26 * (wide / -0.9), lift=0.022 * (wide / -0.9))
+    for frame, side, lift, dz in ((106, 30, 0.0, -0.020), (109, 14, 0.050, 0.022), (112, -4, 0.062, 0.010), (115, -9, 0.020, 0.012),
+                                  (117, -10, 0.0, -0.040), (122, 7, 0.0, 0.012), (128, -4, 0.0, -0.004), (134, 2, 0.0, 0.0), (140, 0, 0.0, 0.0)):
+        rock(frame, side, 0.0, lift)
+        squash(frame, dz)
+    look(124, 0, 4)
+    look(132, 0, 0)
+    blink(136)
+    blink(142)
+    finish(a, END)
+
+    # ---- Tantrum: the glare and the red mark, then three hard stamps on the spot, each one turned a little the other
+    # way; a huff (it swells, shuts its eyes, turns its face away) and it settles
+    a = start("Tantrum")
+    END = 88
+    face_rest(1, END)
+    body_rest(1, END)
+    for frame, m in ((1, 0.0), (6, 1.1), (9, 1.0), (56, 1.0), (60, 0.7), (72, 0.7), (80, 0.0), (END, 0.0)):
+        brows(frame, frown=10 * m, lift=-0.005 * m)
+        look(frame, 0, -3 * m)
+    for frame, m in ((1, 0.0), (6, 1.1), (9, 1.0), (56, 1.0), (61, 0.0)):
+        lids(frame, upper=0.12 * m, lower=MAD_LID * m)
+    for frame, amount in ((1, 0.0), (5, 0.0), (9, 1.3), (13, 0.95), (22, 1.3), (27, 0.95), (36, 1.3), (41, 0.95), (50, 1.35), (56, 1.0),
+                          (70, 0.9), (78, 0.0), (END, 0.0)):
+        anger(frame, amount)                                                # the mark jumps with each stamp
+    stamp, was = 10, 0.0
+    for i in range(3):
+        f0 = stamp + i * 14
+        now = 14.0 if i % 2 == 0 else -14.0
+        for frame, lift, dz, forward, turn in ((f0, 0.0, -0.034, 4, 0.0), (f0 + 3, 0.035, 0.022, 10, 0.4), (f0 + 6, 0.085, 0.010, 13, 0.8),
+                                               (f0 + 9, 0.050, 0.004, 10, 1.0), (f0 + 11, 0.0, -0.058, 5, 1.0), (f0 + 13, 0.0, 0.010, 3, 1.0)):
+            rock(frame, 0.0, forward, lift, turn=was + (now - was) * turn)
+            squash(frame, dz)
+        was = now
+    # the huff
+    for frame, dz, forward, turn in ((54, -0.010, 3, 8.0), (60, 0.026, -6, -22.0), (64, 0.030, -7, -32.0), (70, -0.012, 2, -32.0),
+                                     (76, 0.0, 0, -18.0), (82, 0.0, 0, 0.0), (END, 0.0, 0, 0.0)):
+        rock(frame, 0.0, forward, 0.0, turn=turn)
+        squash(frame, dz)
+    for frame, shut in ((61, 0.0), (64, 1.0), (72, 1.0), (77, 0.0), (END, 0.0)):
+        lids(frame, upper=shut)
+    finish(a, END)
+
+    # ---- TideCall: its namesake. It leans back with its eyes shut and swells, swaying; then it throws itself forward,
+    # eyes wide, and beats outward twice, like a wave going out. For a cast or a buff.
+    a = start("TideCall")
+    END = 96
+    face_rest(1, END)
+    body_rest(1, END)
+    for frame, shut in ((1, 0.0), (6, 1.0), (38, 1.0), (41, -0.9), (50, -0.6), (57, -0.9), (70, -0.6), (78, 0.0), (END, 0.0)):
+        lids(frame, upper=shut, lower=-0.3 if shut < 0 else 0.0)
+    for frame, frown, lift in ((1, 0, 0.0), (8, 6, -0.003), (38, 6, -0.003), (41, -20, 0.018), (70, -16, 0.014), (80, 0, 0.0), (END, 0, 0.0)):
+        brows(frame, frown=frown, lift=lift)
+    #           frame  side  forward  lift    stretch   size
+    call = [(1, 0, 0, 0.0, 0.0, 1.0), (6, 0, 3, 0.0, -0.016, 1.0), (14, 4, -6, 0.0, 0.006, 1.02), (22, -4, -10, 0.0, 0.016, 1.05),
+            (30, 4, -13, 0.0, 0.024, 1.08), (37, 0, -15, 0.0, 0.030, 1.10),
+            (40, 0, 6, 0.030, 0.034, 1.20), (44, 0, 4, 0.0, -0.030, 1.04), (50, 0, -6, 0.0, 0.018, 1.08),       # the first beat
+            (56, 0, 6, 0.036, 0.036, 1.24), (60, 0, 4, 0.0, -0.034, 1.04), (66, 0, 0, 0.0, 0.014, 1.03),        # the second
+            (72, 0, 0, 0.0, -0.006, 1.0), (80, 0, 0, 0.0, 0.0, 1.0), (END, 0, 0, 0.0, 0.0, 1.0)]
+    for frame, side, forward, lift, dz, size in call:
+        rock(frame, side, forward, lift, size=size)
+        squash(frame, dz)
+    for frame, up in ((1, 0), (38, 0), (41, 6), (70, 4), (80, 0)):
+        look(frame, 0, up)
+    blink(84)
+    finish(a, END)
+
+    # ---- VictoryBounce: the smiling eyes, a bounce to one side and a bounce to the other, then a high one with a full
+    # turn, landing where it stood. For a pickup, a level gained, a duel won.
+    a = start("VictoryBounce")
+    END = 76
+    face_rest(1, END)
+    body_rest(1, END)
+    for frame, joy in ((1, 0.0), (4, 0.0), (8, 1.0), (58, 1.0), (63, 0.0), (END, 0.0)):
+        lids(frame, upper=1.0 * joy)
+        brows(frame, frown=-16 * joy, lift=0.005 * joy)
+    for frame, amount in ((1, 0.0), (6, 0.0), (9, 1.15), (12, 1.0), (58, 1.0), (61, 0.0), (END, 0.0)):
+        smile(frame, amount)
+    #             frame  across  lift    side  turn  stretch
+    bounce = [(1, 0.0, 0.0, 0, 0, 0.0), (5, 0.0, 0.0, 0, 0, -0.034),
+              (8, 0.012, 0.045, 7, 0, 0.022), (12, 0.035, 0.105, 12, 0, 0.006), (16, 0.055, 0.045, 8, 0, 0.012), (18, 0.060, 0.0, 4, 0, -0.044),
+              (21, 0.050, 0.035, -3, 0, 0.022), (26, 0.0, 0.115, -12, 0, 0.006), (31, -0.050, 0.040, -9, 0, 0.012), (33, -0.060, 0.0, -4, 0, -0.046),
+              (36, -0.050, 0.050, 0, 30, 0.026), (40, -0.030, 0.150, 0, 140, 0.010), (43, -0.015, 0.185, 0, 215, 0.0), (46, -0.005, 0.150, 0, 290, 0.008),
+              (50, 0.0, 0.030, 0, 352, 0.022), (52, 0.0, 0.0, 0, 360, -0.052), (56, 0.0, 0.0, 0, 360, 0.016), (60, 0.0, 0.0, 0, 360, -0.005),
+              (64, 0.0, 0.0, 0, 360, 0.0), (END, 0.0, 0.0, 0, 360, 0.0)]
+    for frame, across, lift, side, turn, dz in bounce:
+        rock(frame, side, 0.0, lift, turn=turn, across=across)
+        squash(frame, dz)
+    blink(66)
+    finish(a, END)
+
+    # ---- CrackCry: it loses its balance and falls on its side; the shell cracks, and it lies there crying. Then it
+    # gathers itself, leaps back upright, and the crack closes.
+    a = start("CrackCry")
+    END = 140
+    face_rest(1, END)
+    #            frame  tipped  lift   stretch
+    for frame, tipped, lift, dz in ((1, 0.0, 0.0, 0.0), (5, -0.05, 0.0, 0.0), (10, 0.10, 0.0, 0.004), (14, 0.45, 0.0, 0.006), (18, 1.0, 0.0, -0.012),
+                                    (21, 0.94, 0.022, 0.006), (24, 1.0, 0.0, -0.006), (28, 1.0, 0.0, 0.0),
+                                    (88, 1.0, 0.0, 0.0), (92, 1.0, 0.0, -0.014), (96, 0.7, 0.090, 0.015), (100, 0.25, 0.130, 0.010),
+                                    (103, 0.03, 0.050, 0.020), (105, 0.0, 0.0, -0.045), (109, 0.0, 0.0, 0.014), (116, 0.0, 0.0, 0.020),
+                                    (126, 0.0, 0.0, -0.004), (132, 0.0, 0.0, 0.0), (END, 0.0, 0.0, 0.0)):
+        lie(frame, tipped, lift=lift)
+        squash(frame, dz)
+    for i, frame in enumerate(range(32, 85, 4)):                             # sobbing where it lies
+        lie(frame, 1.0, rolled=3.0 if i % 2 else -3.0)
+        squash(frame, -0.006 if i % 2 else 0.003)
+    # the face: alarm as it goes over, then the crying face, then itself again
+    for frame, wide in ((1, 0.0), (7, 1.0), (20, 1.0), (27, 0.0)):
+        lids(frame, upper=-0.9 * wide, lower=-0.3 * wide)
+        brows(frame, frown=-26 * wide, lift=0.020 * wide)
+    for frame, sad in ((27, 0.0), (34, 1.0), (92, 1.0), (104, 0.0), (END, 0.0)):
+        brows(frame, frown=-26 * sad, lift=0.003 * sad)
+        lids(frame, upper=0.20 * sad, lower=SAD_LID * sad)
+        look(frame, 0, -9 * sad)
+    falls = Vector((1, 0, 0))                                                # lying on its side, down is the egg's own left
+    for begin in (36, 62):
+        for s_ in "LR":
+            _anchor, out_, _down = eyes[s_]["tear"]
+            for frame, size, run in ((begin, 0.0, 0.0), (begin + 6, 1.0, 0.0), (begin + 10, 1.0, 0.004), (begin + 20, 0.9, 0.040),
+                                     (begin + 24, 0.0, 0.050), (begin + 25, 0.0, 0.0)):
+                k = 1.0 + (1.0 / TEAR["flat"] - 1.0) * size
+                key(f"tear.{s_}", frame, move=falls * run + out_ * (0.004 * min(1.0, size * 3) + run * 0.35), scale=(k, k, k))
+    # the crack: there with the bump, gone a little after it is back on its feet
+    for frame, amount in ((1, 0.0), (17, 0.0), (19, 1.15), (22, 1.0), (110, 1.0), (128, 0.0), (END, 0.0)):
+        crack(frame, amount)
+    blink(130)
+    finish(a, END)
 
     scene.frame_set(1)
     print("TIDECALLER rigged: %d bones; triangles %d; shell vertices on the brow bones %s; socket faces cleaned %d; edges that are not shared by exactly two faces: %d"
