@@ -1250,6 +1250,154 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + RenownTab + "/Herald"), EnableIf(nameof(IsReady)), LabelText("Herald Needs Its NPC Again"), PropertyOrder(941)]
         private void HeraldRuleBack() => Run("gm.herald off");
 
+        // ================================================================ buttons for the commands that had none
+        // Every console command has a button somewhere in this window. These sit at the end of the tab they belong to.
+
+        [TabGroup(Tabs, PlayerTab), Title("Respawn and Who Is Here"), Button("Respawn Now"), EnableIf(nameof(IsReady)), PropertyOrder(14)]
+        private void RespawnNow() => Run("gm.respawn");
+
+        [TabGroup(Tabs, PlayerTab), Button("List Connected Players"), EnableIf(nameof(IsReady)), PropertyOrder(15)]
+        private void ListPlayers() => Run("gm.players");
+
+        [TabGroup(Tabs, SkillsTab), Button("List Active Skills"), EnableIf(nameof(IsReady)), PropertyOrder(173)]
+        private void ListActiveSkills() => Run("gm.buffs");
+
+        private enum FxKind { Normal, Elemental, Crit, Shatter, Backlash }
+        private enum FxWeight { Light, Heavy }
+        private enum PvpCritChoice { Splash, Frame, Faction, Default }
+
+        [TabGroup(Tabs, SkillsTab), Title("Effect Previews"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(174)]
+        [InfoBox("Shows what a hit of yours looks like on the nearest target, with the weapon you hold. Nothing is hit.")]
+        private void PreviewHit(FxKind kind = FxKind.Normal, FxWeight weight = FxWeight.Heavy) =>
+            Run($"gm.fx.hit {kind.ToString().ToLowerInvariant()} {weight.ToString().ToLowerInvariant()}");
+
+        [TabGroup(Tabs, SkillsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(175)]
+        [InfoBox("The look of a critical hit on another player, on this screen until the game is closed.")]
+        private void PvpCritLook(PvpCritChoice look = PvpCritChoice.Default) => Run($"gm.fx.pvpcrit {look.ToString().ToLowerInvariant()}");
+
+        [TabGroup(Tabs, CheatsTab), Title("Callouts"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(255)]
+        [InfoBox("Starts a Callout between two connected players at once, without a request. The ids are in List Connected Players (Player tab).")]
+        private void StartCallout([MinValue(0)] int clientIdA = 0, [MinValue(0)] int clientIdB = 1) => Run($"gm.duel {clientIdA} {clientIdB}");
+
+        [TabGroup(Tabs, CheatsTab), Button("End The Player's Callout"), EnableIf(nameof(IsReady)), PropertyOrder(256)]
+        private void EndCallout() => Run("gm.duel.end");
+
+        [TabGroup(Tabs, TeleportTab), Button("List Teleport Targets"), EnableIf(nameof(IsReady)), PropertyOrder(305)]
+        private void ListPointsOfInterest() => Run("gm.poi");
+
+        [TabGroup(Tabs, TeleportTab), Button("Teleport to Mouse Cursor"), EnableIf(nameof(IsReady)), PropertyOrder(306)]
+        [InfoBox("Uses the ground under the mouse in the Game view. Pressed here the mouse is over this window, so it only finds " +
+                 "a place when this window overlaps the Game view; typed in the console it works anywhere.")]
+        private void TeleportToCursor() => Run("gm.tpcursor");
+
+        [TabGroup(Tabs, WorldTab), Title("Lists"), Button("Print Time and Weather"), EnableIf(nameof(IsReady)), PropertyOrder(433)]
+        private void PrintTime() => Run("time.get");
+
+        [TabGroup(Tabs, WorldTab), Button("List Weather Profiles"), EnableIf(nameof(IsReady)), PropertyOrder(434)]
+        private void ListWeather() => Run("weather.list");
+
+        private enum GrassDebugView { Off = 0, Placement = 1, LodBands = 2, Biomes = 3 }
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Grass"), Title("Grass"), EnableIf(nameof(IsReady)), LabelText("Grass On"), PropertyOrder(435)]
+        private void GrassOn() => Run("grass.toggle true");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Grass"), EnableIf(nameof(IsReady)), LabelText("Grass Off"), PropertyOrder(436)]
+        private void GrassOff() => Run("grass.toggle false");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Grass"), EnableIf(nameof(IsReady)), LabelText("Fill Tufts On"), PropertyOrder(437)]
+        private void GrassFillOn() => Run("grass.fill true");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Grass"), EnableIf(nameof(IsReady)), LabelText("Fill Tufts Off"), PropertyOrder(438)]
+        private void GrassFillOff() => Run("grass.fill false");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Grass"), EnableIf(nameof(IsReady)), LabelText("Grass Stats"), PropertyOrder(439)]
+        private void GrassStats() => Run("grass.stats");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(440)]
+        private void GrassDensity([MinValue(0)] float scale = 1f) => Run($"grass.density {F(scale)}");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(441)]
+        private void GrassDistance([MinValue(20), MaxValue(150)] float metres = 80f) => Run($"grass.distance {F(metres)}");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(442)]
+        private void GrassDebug(GrassDebugView view = GrassDebugView.Off) => Run($"grass.debug {(int)view}");
+
+        private enum KitRarity { Common, Uncommon, Rare, Epic }
+        private enum ForgeSlot { FirstInPack, Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape }
+        private enum SerumKind { Strength, Vitality, Agility, Spirit, Strike, Ward }
+
+        private static string SlotArgument(ForgeSlot slot) => slot == ForgeSlot.FirstInPack ? string.Empty : " " + slot.ToString().ToLowerInvariant();
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Kits"), Title("Kits"), EnableIf(nameof(IsReady)), LabelText("Everything (gear, Temper items, pets)"), PropertyOrder(534)]
+        private void KitAll() => Run("gm.kit all");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Kits"), EnableIf(nameof(IsReady)), LabelText("Every Pet"), PropertyOrder(535)]
+        private void KitPets() => Run("gm.kit pets");
+
+        [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(536)]
+        [InfoBox("Every piece the character can wear at that tier, with the weapon of every class of its faction.")]
+        private void KitGear([MinValue(1)] int level = 112, KitRarity rarity = KitRarity.Epic) => Run($"gm.kit gear {level} {rarity.ToString().ToLowerInvariant()}");
+
+        [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(537)]
+        private void KitTemper([MinValue(1)] int countOfEach = 20) => Run($"gm.kit temper {countOfEach}");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Forge"), Title("Forge"), EnableIf(nameof(IsReady)), LabelText("Open Forge Here"), PropertyOrder(538)]
+        private void OpenForge() => Run("gm.forge");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Forge"), EnableIf(nameof(IsReady)), LabelText("Forge Rule Back"), PropertyOrder(539)]
+        private void ForgeRuleBack() => Run("gm.forge off");
+
+        [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(540)]
+        [InfoBox("Alloys, Failsafes, the Fusion Catalyst and the Tuning chips.")]
+        private void ForgeKit([MinValue(1)] int countOfEach = 20) => Run($"gm.forgekit {countOfEach}");
+
+        [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(541)]
+        private void SetFusion([MinValue(0), MaxValue(12)] int stage = 1, ForgeSlot slot = ForgeSlot.FirstInPack) => Run($"gm.fuse {stage}{SlotArgument(slot)}");
+
+        [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(542)]
+        private void SetTuning([MinValue(0), MaxValue(25)] int stage = 1, ForgeSlot slot = ForgeSlot.FirstInPack) => Run($"gm.tune {stage}{SlotArgument(slot)}");
+
+        [TabGroup(Tabs, ItemsTab), Title("Serums"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(543)]
+        private void GiveSerums([MinValue(1)] int countOfEach = 10) => Run($"gm.serums {countOfEach}");
+
+        [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(544)]
+        [InfoBox("Sets how many of that kind the player has taken. It stops at the cap.")]
+        private void SetSerumsTaken(SerumKind kind = SerumKind.Strength, [MinValue(0)] int taken = 0) => Run($"gm.serum {kind.ToString().ToLowerInvariant()} {taken}");
+
+        [TabGroup(Tabs, ItemsTab), Button("List Serums Taken"), EnableIf(nameof(IsReady)), PropertyOrder(545)]
+        private void ListSerums() => Run("gm.serum");
+
+        [TabGroup(Tabs, ItemsTab), Title("Catalog"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(546)]
+        [InfoBox("Every item id. A slot narrows it: Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape, Pet. Empty lists all.")]
+        private void ListItems(string slot = "") => Run(string.IsNullOrWhiteSpace(slot) ? "item.list" : $"item.list {slot.Trim()}");
+
+        [TabGroup(Tabs, EconomyTab), Title("Danger"), Button("Wipe Every Save..."), GUIColor(1f, 0.5f, 0.5f), EnableIf(nameof(IsReady)), PropertyOrder(632)]
+        [InfoBox("Deletes all accounts and characters, Crews, Kiosks and Contacts. Asks first.", InfoMessageType.Warning)]
+        private void WipeAllSaves()
+        {
+            if (EditorUtility.DisplayDialog("Wipe Every Save",
+                    "This deletes EVERY save: all accounts and characters, Crews, Kiosks and Contacts. It cannot be undone.", "Delete Everything", "Cancel"))
+                Run("gm.save.wipe confirm");
+        }
+
+        [TabGroup(Tabs, SocialTab), Title("GM Announcement"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(711)]
+        [InfoBox("Every player of every faction reads it, wherever they are.")]
+        private void Announce(string text = "")
+        {
+            if (string.IsNullOrWhiteSpace(text)) { Log("Type the announcement first."); return; }
+            Run($"gm.say {Quote(text)}");
+        }
+
+        private enum PetMoment { Died, Drop, Level, Bruiser, Crit, LowHp, Idle }
+
+        [TabGroup(Tabs, PetsTab), Title("XP and Chatter"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(833)]
+        [InfoBox("100,000 fills the growth meter; a Hostile kill is worth 0.04.")]
+        private void GivePetXp([MinValue(0)] float amount = 1000f) => Run($"gm.pet.xp {F(amount)}");
+
+        [TabGroup(Tabs, PetsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(834)]
+        [InfoBox("Makes your own pet react as if that moment had just happened. It still waits out its quiet time and stays silent with Pet chatter off.")]
+        private void PetSay(PetMoment moment = PetMoment.Crit) => Run($"gm.pet.say {moment.ToString().ToLowerInvariant()}");
+
         // ================================================================ console + log (always visible)
 
         [BoxGroup("Console", Order = 1000), HorizontalGroup("Console/Input"), HideLabel]
