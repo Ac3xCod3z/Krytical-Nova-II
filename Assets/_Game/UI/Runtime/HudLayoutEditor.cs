@@ -114,6 +114,8 @@ namespace KryticalNova.UI
 
         // Click-to-select: what the pointer is over, the frame that marks it, and where the clicks are heard.
         private const string EditChromePrefix = "hud-edit";
+        private const string EditBarName = "hud-edit-banner";
+        private const string ResizeHandleClass = "hud-resize-handle";
         private static readonly Color HoverFrame = new Color(1f, 0.79f, 0.24f, 0.9f);
         private static readonly Color HoverFill = new Color(1f, 0.79f, 0.24f, 0.08f);
         private VisualElement pickRoot;
@@ -338,6 +340,9 @@ namespace KryticalNova.UI
             var overlay = new VisualElement { pickingMode = PickingMode.Position, tooltip = "Drag to move · right-click to reset" };
             overlay.AddToClassList(OverlayClass);
             overlay.AddToClassList(BlockingClass);
+            // Said on the element itself: a panel may hide everything inside it (the player's plate does, under the
+            // faction's HUD piece), and the frame it is dragged by must never be caught by that.
+            overlay.style.visibility = Visibility.Visible;
 
             var title = new Label(Describe(element)) { pickingMode = PickingMode.Ignore };
             title.AddToClassList("hud-edit-label");
@@ -347,7 +352,7 @@ namespace KryticalNova.UI
             overlay.Add(scaleLabel);
 
             var handle = new VisualElement { pickingMode = PickingMode.Position, tooltip = "Drag to resize" };
-            handle.AddToClassList("hud-resize-handle");
+            handle.AddToClassList(ResizeHandleClass);
             handle.AddToClassList(BlockingClass);
             overlay.Add(handle);
 
@@ -431,12 +436,37 @@ namespace KryticalNova.UI
         private void OnPickDown(PointerDownEvent evt)
         {
             if (evt.button != LeftButton || activeElement != null) return;
-            VisualElement panel = PanelUnder(evt.target as VisualElement, evt.position);
-            if (panel == null || editing.ContainsKey(panel)) return; // already in edit state: its own frame takes the press
+            var target = evt.target as VisualElement;
+            VisualElement panel = PanelUnder(target, evt.position);
+            if (panel == null) return;
+            if (editing.TryGetValue(panel, out EditState state))
+            {
+                // Already in edit state: its own frame takes the press, unless the editor's bar lies over it.
+                if (!IsEditBar(target)) return;
+                evt.StopPropagation();
+                VisualElement handle = state.Overlay.Q(className: ResizeHandleClass);
+                bool resize = handle != null && handle.worldBound.Contains(evt.position);
+                StartGesture(panel, resize ? handle : state.Overlay, evt.pointerId, evt.position, resize);
+                return;
+            }
             evt.StopPropagation();
             SetHovered(null);
             Select(panel.name);
-            if (editing.TryGetValue(panel, out EditState state)) StartGesture(panel, state.Overlay, evt.pointerId, evt.position, false);
+            if (editing.TryGetValue(panel, out state)) StartGesture(panel, state.Overlay, evt.pointerId, evt.position, false);
+        }
+
+        /// <summary>
+        /// The pointer is on the editor's bar itself, not on one of its buttons or its list. The bar is wide and a
+        /// panel can sit under it (the player's plate does, on a narrow screen): a press there is for that panel.
+        /// </summary>
+        private static bool IsEditBar(VisualElement target)
+        {
+            for (VisualElement at = target; at != null; at = at.hierarchy.parent)
+            {
+                if (at is Button) return false;
+                if (at.name == EditBarName) return true;
+            }
+            return false;
         }
 
         private void OnPickMove(PointerMoveEvent evt)
@@ -450,7 +480,8 @@ namespace KryticalNova.UI
         private VisualElement PanelUnder(VisualElement target, Vector2 point)
         {
             // What the pointer is actually on, walking outward: the editor's bar and list are never a panel to move.
-            for (VisualElement at = target; at != null; at = at.hierarchy.parent)
+            bool onBar = IsEditBar(target);
+            for (VisualElement at = onBar ? null : target; at != null; at = at.hierarchy.parent)
             {
                 if (at.name != null && at.name.StartsWith(EditChromePrefix, StringComparison.Ordinal)) return null;
                 if (at.ClassListContains(OverlayClass)) return null;
@@ -485,6 +516,7 @@ namespace KryticalNova.UI
             {
                 hoverFrame = new VisualElement { pickingMode = PickingMode.Ignore };
                 hoverFrame.style.position = Position.Absolute;
+                hoverFrame.style.visibility = Visibility.Visible;
                 hoverFrame.style.left = hoverFrame.style.top = hoverFrame.style.right = hoverFrame.style.bottom = 0f;
                 hoverFrame.style.borderLeftWidth = hoverFrame.style.borderRightWidth = 2f;
                 hoverFrame.style.borderTopWidth = hoverFrame.style.borderBottomWidth = 2f;
