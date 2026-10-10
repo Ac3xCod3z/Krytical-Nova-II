@@ -41,6 +41,8 @@ namespace KryticalNova.EditorTools
             public BodyFit body;
             public string ownPack;      // the pack whose variant 01 is the basic outfit
             public string basePack;     // species base body, used where the own pack has no variant 01
+            public string barePack;     // the pack of the bare body (empty gear slots); null = the species base
+            public byte bareVariant = 1; // which variant of that pack is the bare body
             public string[] headPacks;  // packs whose head parts are offered, own first
             public string[] premades;   // premade character folders used for palettes and ready-made faces
             public string wrapPart;
@@ -72,7 +74,8 @@ namespace KryticalNova.EditorTools
                 id = 3, faction = FactionId.Null, asset = "Robot", name = "Robot", species = "RO", skinSpecies = null,
                 description = "The labour machines that woke up. They compute. They do not forgive.",
                 traits = new[] { "Tireless", "Precise", "Unfeeling" }, body = BodyFit.Robot,
-                ownPack = "SCFI_ROBO", basePack = null, headPacks = new[] { "ROBO_BASE" },
+                // The robot's species pack is heads only: its bare chassis is one of its own pack's plainer bodies.
+                ownPack = "SCFI_ROBO", basePack = null, barePack = "SCFI_ROBO", bareVariant = 4, headPacks = new[] { "ROBO_BASE" },
                 premades = new[] { "ScifiRobots" }, wrapPart = null,
                 channels = new[] { ChannelMetal, ChannelGlow }
             },
@@ -289,12 +292,46 @@ namespace KryticalNova.EditorTools
                 else Debug.LogWarning($"[Characters] {spec.name}: no variant 01 part for {region}.");
             }
             lineage.basicOutfit = outfit.ToArray();
+            lineage.bareBody = BareBodyOf(spec, parts);
 
             var skinTones = BuildSkinTones(spec, skinPresets, presetColors, propertyById);
             lineage.masculine = BuildSetup(spec, BodyType.Masculine, lineage, parts, premades, builds, skinTones, propertyByName);
             lineage.feminine = BuildSetup(spec, BodyType.Feminine, lineage, parts, premades, builds, skinTones, propertyByName);
             EditorUtility.SetDirty(lineage);
             return lineage;
+        }
+
+        /// <summary>The body under the gear: the species' base body, or the variant the spec names where there is none.</summary>
+        private static ushort[] BareBodyOf(LineageSpec spec, SidekickPartCatalog parts)
+        {
+            string pack = spec.barePack ?? spec.basePack;
+            var body = new List<ushort>();
+            if (pack == null) return body.ToArray();
+            for (var region = BodyRegion.Torso; region <= BodyRegion.FootRight; region++)
+            {
+                if (parts.TryFind(pack, region, spec.bareVariant, out var part)) body.Add(part.id);
+                else Debug.LogWarning($"[Characters] {spec.name}: no bare body part for {region} ({pack} variant {spec.bareVariant}).");
+            }
+            return body.ToArray();
+        }
+
+        /// <summary>
+        /// Writes only the bare body of each lineage, leaving everything hand-tuned on the assets alone.
+        /// </summary>
+        [MenuItem("Krytical Nova/Characters/Bake Bare Bodies Only")]
+        public static void BakeBareBodies()
+        {
+            var parts = AssetDatabase.LoadAssetAtPath<SidekickPartCatalog>(SidekickPartCatalogBaker.CatalogPath);
+            if (parts == null) { Debug.LogError("[Characters] No part catalog: bake it first."); return; }
+            foreach (var spec in Specs)
+            {
+                var lineage = AssetDatabase.LoadAssetAtPath<LineageDefinition>($"{LineageFolder}/Lineage_{spec.asset}.asset");
+                if (lineage == null) continue;
+                lineage.bareBody = BareBodyOf(spec, parts);
+                EditorUtility.SetDirty(lineage);
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Characters] Baked the bare body of every lineage.");
         }
 
         private static LineageDefinition.Setup BuildSetup(LineageSpec spec, BodyType bodyType, LineageDefinition lineage,

@@ -24,6 +24,7 @@ MonoBehaviour:
   body: 4
   ownPack: FANT_SKTN
   basicOutfit: 6a006b006c006d006e006f00700071007200730074007500t
+  bareBody: 53045404550456045704580459045a045b045c045d045e04t
   defaultPalette: 25
   wrapPartId: 0
   masculine:
@@ -83,6 +84,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Skeleton 02
       recipe:
         version: 1
@@ -106,6 +108,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Skeleton 03
       recipe:
         version: 1
@@ -129,6 +132,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Skeleton 04
       recipe:
         version: 1
@@ -152,6 +156,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Skeleton 05
       recipe:
         version: 1
@@ -175,6 +180,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     skinTones: []
     channels: 0403y
   feminine:
@@ -234,6 +240,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Skeleton 02
       recipe:
         version: 1
@@ -257,6 +264,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Skeleton 03
       recipe:
         version: 1
@@ -280,6 +288,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Skeleton 04
       recipe:
         version: 1
@@ -303,6 +312,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Skeleton 05
       recipe:
         version: 1
@@ -326,5 +336,6 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     skinTones: []
     channels: 0403y

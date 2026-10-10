@@ -63,7 +63,7 @@ This table is the gear slice of the Glossary in `01_Systems_Build_List.md`. Refe
 
 | Band | Item levels | Tiers | Looks |
 | --- | --- | --- | --- |
-| Common | 1, 4, 7 … 28 | 10 | one per group; outfits use the group's variant 01, the basic outfit a new character already wears |
+| Common | 1, 4, 7 … 28 | 10 | one per group; outfits use the group's variant 01, the basic outfit a new character starts in (its level-1 starter kit) |
 | Uncommon | 20, 25, 30, 35, 40 | 5 | one per group, a little more detailed |
 | Rare I | 45, 55, 65, 75 | 4 (40 levels) | first Rare look |
 | Rare II | 85, 95, 105, 110 | 4 | second Rare look. The level-110 tier was added on 6 Oct 2026 (owner: "rares last lvl is 110") so the top Rare sits just under the level-112 Epic; it is what an Epic 112 is fused with |
@@ -84,6 +84,7 @@ This table is the gear slice of the Glossary in `01_Systems_Build_List.md`. Refe
 | VIKG | Thrall | Huscarl | Berserker | Jarl | Warlord |
 | ELVN | Scout | Wildrunner | Bladesinger | Highguard | Sunlord |
 
+- **Bare body (as built, 9 Oct 2026).** The basic outfit is gear: the level-1 Common starter kit. Under it every lineage has a bare body (`LineageDefinition.bareBody`, twelve parts, torso to feet), and an empty Armor, Gloves or Boots slot shows that body's parts for the slot: small clothes for humans (HUMN_BASE 01) and elves (ELVN_BASE 01), bones for skeletons (SKTN_BASE 01), a bare chassis for robots (SCFI_ROBO 04, since the robot species pack has heads only). It is per lineage, not per faction (the Null has both robots and skeletons), needs no save or network field (it follows the lineage id), and is baked by `CharacterDataBaker` (**Krytical Nova ▸ Characters ▸ Bake Bare Bodies Only** rewrites nothing else). A feminine body keeps its chest wrap. Menu dolls that are shown without gear (the creator, a kiosk's keeper, a character at select that has nothing on record) stand in the basic outfit instead (`CharacterDoll.Apply(..., dressed: true)`).
 - **Colour themes (as built, 6 Oct 2026).** Common gear shows the colours the player picked in the creator (it is the basic set). Every set above Common has its own theme (`GearThemeLibrary`, `Items/Data/Assets/GearThemes.asset`: 24 themes named `<GROUP>_<Set>`, each a handful of role colours: primary, secondary, under-layer, accent, four metals, trim, leather, glow). A worn piece paints its own part of the character's colour map with its theme (`CharacterColorMap.OverlayGear`), so a full set is coherent by construction and a mixed outfit shows each piece in its own set's colours. Only item ids travel the network; every machine works the colours out. Icons and the try-on doll use the same overlay. A theme never recolours skin or bone (`GearLadderTests`).
 - **Rank up / down** (12Sky page 26, future): the next tier of a piece is the next item of the same line (`GearDictionary.TryGetNextTier`); crossing from Rare I to Rare II or into another rarity is a design decision for that feature.
 **Which systems apply per rarity:**

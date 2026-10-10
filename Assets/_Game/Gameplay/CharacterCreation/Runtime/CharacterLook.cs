@@ -33,6 +33,11 @@ namespace KryticalNova.CharacterCreation
         private bool gearColorsStale;
 
         public CharacterRecipe Current { get; private set; }
+        /// <summary>
+        /// Stand in the lineage's basic outfit where no gear is worn, instead of the bare body. For a menu doll that is
+        /// shown without its gear (the creator, a new character at select); set before <see cref="Apply"/>.
+        /// </summary>
+        public bool Dressed { get; set; }
         /// <summary>False until a recipe has been applied: the prefab's authored look is showing.</summary>
         public bool HasLook { get; private set; }
         /// <summary>Raised after a recipe is applied (the merged mesh follows in the same frame's LateUpdate).</summary>
@@ -51,7 +56,7 @@ namespace KryticalNova.CharacterCreation
         public bool Apply(in CharacterRecipe recipe, CharacterCreationDatabase database)
         {
             if (database == null || Appearance == null) return false;
-            if (!RecipeResolver.Resolve(recipe, database, resolved)) return false;
+            if (!RecipeResolver.Resolve(recipe, database, resolved, Dressed)) return false;
 
             appearance.ApplyBase(resolved.fixedParts, resolved.defaultParts, resolved.shape, resolved.wrap);
             this.database = database;

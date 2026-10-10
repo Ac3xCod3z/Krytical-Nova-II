@@ -134,8 +134,16 @@ namespace KryticalNova.CharacterCreation
             propGrown = 0f;
         }
 
-        public bool Apply(in CharacterRecipe recipe, CharacterCreationDatabase database) =>
-            look != null && look.Apply(recipe, database);
+        /// <param name="dressed">
+        /// Stand in the lineage's basic outfit where the doll is given no gear (the creator, a kiosk's keeper). False
+        /// for a doll that shows what a character really wears: its empty slots are the bare body.
+        /// </param>
+        public bool Apply(in CharacterRecipe recipe, CharacterCreationDatabase database, bool dressed = true)
+        {
+            if (look == null) return false;
+            look.Dressed = dressed;
+            return look.Apply(recipe, database);
+        }
 
         // ---------------- Expressions (faces, idles, emotes) ----------------
 

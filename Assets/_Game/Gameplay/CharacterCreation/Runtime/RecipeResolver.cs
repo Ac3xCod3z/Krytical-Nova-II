@@ -6,13 +6,15 @@ namespace KryticalNova.CharacterCreation
     /// <summary>
     /// Turns a <see cref="CharacterRecipe"/> into the part lists <see cref="CharacterAppearance"/> merges. The rules
     /// live here so every peer applies them the same way:
-    ///  - a recipe only chooses the head. The body is the lineage's basic outfit; anything else is equipped gear.
+    ///  - a recipe only chooses the head. The body is the lineage's bare body; anything else is equipped gear.
+    ///    A menu doll that knows no gear is resolved dressed: it stands in the basic outfit, the look of level-one gear.
     ///  - helmets and masks are never taken from a recipe (a skeleton's helm arrives with its armor piece).
     ///  - a feminine body gets its species' chest wrap (the appearance adds it only under a bare torso).
     /// </summary>
     public static class RecipeResolver
     {
-        public static bool Resolve(in CharacterRecipe recipe, CharacterCreationDatabase database, ResolvedAppearance result)
+        public static bool Resolve(in CharacterRecipe recipe, CharacterCreationDatabase database, ResolvedAppearance result,
+            bool dressed = false)
         {
             result.Clear();
             if (database == null || database.Parts == null) return false;
@@ -30,7 +32,7 @@ namespace KryticalNova.CharacterCreation
                 else result.missing++;
             }
 
-            foreach (ushort id in lineage.basicOutfit)
+            foreach (ushort id in lineage.BodyParts(dressed))
             {
                 if (PartLibrary.TryLoad(catalog, id, out var part)) result.defaultParts.Add(part);
                 else result.missing++;
@@ -45,7 +47,7 @@ namespace KryticalNova.CharacterCreation
 
         /// <summary>
         /// A recipe may only name head parts. Regions owned by an equip slot (the body, attachments, helmets and
-        /// masks) come from the basic outfit or from gear, and the wrap follows the body type.
+        /// masks) come from the bare body or from gear, and the wrap follows the body type.
         /// </summary>
         public static bool IsChoosable(BodyRegion region) =>
             region != BodyRegion.None && region != BodyRegion.Wrap && !EquipSlots.IsSlotRegion(region);

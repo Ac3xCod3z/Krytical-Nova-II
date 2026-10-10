@@ -8,7 +8,7 @@ namespace KryticalNova.CharacterCreation
 {
     /// <summary>
     /// One lineage of a faction (a Sidekick pack: Civilian, Soldier, Robot, Skeleton, Viking, Elf). The body is fixed:
-    /// everyone starts in the pack's basic outfit and changes it only by equipping gear. What a player chooses is
+    /// under its gear it is the bare body (small clothes, bare metal or bones). What a player chooses is
     /// the head, so each body type (masculine, feminine) has its own setup: the head parts on offer, the body
     /// builds, ready-made faces and the colour options. Baked by the editor tool, then safe to hand-tune.
     /// </summary>
@@ -27,9 +27,12 @@ namespace KryticalNova.CharacterCreation
         public BodyFit body = BodyFit.Humanoid;
         [Tooltip("The lineage's own outfit pack code, e.g. SCFI_CIVL.")]
         public string ownPack;
-        [Tooltip("The body every new character of this lineage wears until it equips gear: variant 01 of the lineage's own pack. " +
-                 "Not chosen by the player.")]
+        [Tooltip("What this lineage's level-one gear looks like: variant 01 of the lineage's own pack. Menu dolls that " +
+                 "know no gear stand in it. Not chosen by the player.")]
         public ushort[] basicOutfit = Array.Empty<ushort>();
+        [Tooltip("The body under the gear, shown where a gear slot is empty: small clothes for humans and elves, bones " +
+                 "for skeletons, the bare chassis for robots. Empty = the basic outfit is shown instead.")]
+        public ushort[] bareBody = Array.Empty<ushort>();
         [Tooltip("Base colour palette for this lineage (skin, hair and eye picks are applied over it).")]
         public ushort defaultPalette;
         [Tooltip("The species' chest wrap, worn by feminine bodies under bare torsos (0 = species has none).")]
@@ -39,6 +42,9 @@ namespace KryticalNova.CharacterCreation
         public Setup feminine = new Setup();
 
         public Setup SetupFor(BodyType bodyType) => bodyType == BodyType.Feminine ? feminine : masculine;
+
+        /// <summary>The parts shown where no gear is worn: the bare body, or the basic outfit for a doll that is shown dressed.</summary>
+        public ushort[] BodyParts(bool dressed) => dressed || bareBody == null || bareBody.Length == 0 ? basicOutfit : bareBody;
 
         [Serializable]
         public sealed class Setup
