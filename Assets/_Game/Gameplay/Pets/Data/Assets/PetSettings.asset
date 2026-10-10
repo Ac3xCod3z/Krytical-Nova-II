@@ -30,3 +30,4 @@ MonoBehaviour:
   followGap: 0.07
   followGapGrowth: 0.25
   cameraClearance: 0.6
+  followMaxTrail: 3

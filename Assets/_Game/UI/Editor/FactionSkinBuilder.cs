@@ -43,6 +43,7 @@ namespace KryticalNova.EditorTools
             "Assets/_Game/UI/Common/KryticalTheme.uss",
             "Assets/_Game/UI/HUD/ProgressionHUD.uss",
             "Assets/_Game/UI/Settings/Settings.uss",
+            "Assets/_Game/UI/Guide/Guide.uss",
             "Assets/_Game/UI/Inventory/Items.uss",
             "Assets/_Game/UI/Inventory/Forge.uss",
             "Assets/_Game/UI/HUD/Herald/Herald.uss",

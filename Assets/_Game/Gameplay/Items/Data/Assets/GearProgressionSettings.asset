@@ -99,18 +99,33 @@ MonoBehaviour:
     - from: 1
       name: Green
       color: {r: 0.3, g: 1, b: 0.42, a: 1}
+      recolorFrom: 0
+      recolor: {r: 0, g: 0, b: 0, a: 1}
+      ember: 0
     - from: 30
       name: Yellow
       color: {r: 1, g: 0.86, b: 0.24, a: 1}
+      recolorFrom: 0
+      recolor: {r: 0, g: 0, b: 0, a: 1}
+      ember: 0
     - from: 60
       name: Blue
       color: {r: 0.28, g: 0.62, b: 1, a: 1}
+      recolorFrom: 0
+      recolor: {r: 0, g: 0, b: 0, a: 1}
+      ember: 0
     - from: 90
       name: Purple
       color: {r: 0.72, g: 0.36, b: 1, a: 1}
+      recolorFrom: 0
+      recolor: {r: 0, g: 0, b: 0, a: 1}
+      ember: 0
     - from: 120
       name: Orange
       color: {r: 1, g: 0.52, b: 0.12, a: 1}
+      recolorFrom: 3
+      recolor: {r: 1, g: 0.14, b: 0.1, a: 1}
+      ember: 1
     glowLooks:
     - intensity: 0.5
       width: 0.045
@@ -120,6 +135,7 @@ MonoBehaviour:
       twinkle: 0
       lightning: 0
       flame: 0
+      ember: 0.6
     - intensity: 0.6
       width: 0.05
       pulse: 0.35
@@ -128,6 +144,7 @@ MonoBehaviour:
       twinkle: 0
       lightning: 0
       flame: 0
+      ember: 0.7
     - intensity: 0.7
       width: 0.06
       pulse: 0.4
@@ -136,6 +153,7 @@ MonoBehaviour:
       twinkle: 0
       lightning: 0
       flame: 0
+      ember: 1
     - intensity: 1.6
       width: 0.1
       pulse: 0.5
@@ -144,6 +162,7 @@ MonoBehaviour:
       twinkle: 1.3
       lightning: 1
       flame: 1
+      ember: 1
     - intensity: 1.9
       width: 0.12
       pulse: 0.55
@@ -152,6 +171,7 @@ MonoBehaviour:
       twinkle: 1.5
       lightning: 1.2
       flame: 1
+      ember: 1
   fusion:
     maxStage: 12
     catalystItemId: 9120

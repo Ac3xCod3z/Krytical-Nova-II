@@ -325,6 +325,43 @@ namespace KryticalNova.Tests
             }
         }
 
+        [Test]
+        public void A_fast_owner_is_trailed_by_no_more_than_the_longest_trail()
+        {
+            const float maxTrail = 3f, snapDistance = 8f;
+            // The fastest Run rank (29 m/s) left the pet 10 m back, past the distance at which it is put in place.
+            foreach (float ownerSpeed in new[] { 5f, 10f, 23f, 29f })
+            {
+                Vector3 target = Authored, offset = Authored, velocity = Vector3.zero;
+                float furthest = 0f;
+                for (float time = 0f; time < 4f; time += Frame)
+                {
+                    offset += Vector3.back * (ownerSpeed * Frame); // the owner has gone on; the pet hangs in the world
+                    Assert.Less((offset - target).magnitude, snapDistance, $"{ownerSpeed} m/s: far enough behind to be snapped");
+                    offset = Vector3.SmoothDamp(offset, target, ref velocity, FollowSmoothTime, Mathf.Infinity, Frame);
+                    offset = PetPlacement.LimitTrail(offset, target, maxTrail);
+                    furthest = Mathf.Max(furthest, (offset - target).magnitude);
+                }
+                Assert.LessOrEqual(furthest, maxTrail + Millimetre, $"{ownerSpeed} m/s");
+                if (ownerSpeed <= 5f) Assert.Less(furthest, maxTrail - 0.5f, "a walk is trailed as before, inside the limit");
+
+                // The owner stops: the pet comes in to its place without overshooting past it.
+                for (float time = 0f; time < 3f; time += Frame)
+                {
+                    offset = Vector3.SmoothDamp(offset, target, ref velocity, FollowSmoothTime, Mathf.Infinity, Frame);
+                    offset = PetPlacement.LimitTrail(offset, target, maxTrail);
+                }
+                Assert.Less((offset - target).magnitude, 0.01f, $"{ownerSpeed} m/s: did not come in");
+            }
+        }
+
+        [Test]
+        public void No_longest_trail_leaves_the_pet_where_it_is()
+        {
+            Vector3 offset = new Vector3(0f, 0f, -20f);
+            Assert.AreEqual(offset, PetPlacement.LimitTrail(offset, Vector3.zero, 0f));
+        }
+
         private static void AssertStaysClearAndSettles(Bounds unit, float stage, float turn)
         {
             float scale = BaseScale(unit) * stage;

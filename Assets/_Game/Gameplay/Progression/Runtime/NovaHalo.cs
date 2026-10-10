@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using KryticalNova.Rendering;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace KryticalNova.Progression
 {
@@ -10,6 +12,8 @@ namespace KryticalNova.Progression
     /// whose tier has been reached is shown, so a higher Nova is the lower one with more turning in it. It follows
     /// the head's place but never its turning, so it floats steadily; and it answers what happens at the Herald
     /// (<see cref="React"/>): a flare on a level gained, a fold and an unfolding on a new tier, a flicker on a slip.
+    /// Characters, pets and effects behind it are not seen through it: a disc behind it hides them, and only them
+    /// (the stages of KryticalNova/NovaMask), and it reports itself to <see cref="NovaCull"/> for the glow halo.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class NovaHalo : MonoBehaviour
@@ -20,6 +24,8 @@ namespace KryticalNova.Progression
         private const int RingSegments = 96;
         private const int MoteCount = 40;
         private const float MoteSize = 0.011f;      // metres, for a spark of size 1
+        private const int DiscSegments = 40;
+        private const float HeadRadius = 0.16f;     // metres: the owner's head, for telling when it is seen through the Nova
 
         // How it moves when something happens.
         private const float FlashFade = 2.6f;        // of the flash lost each second
@@ -52,7 +58,38 @@ namespace KryticalNova.Progression
         private static readonly int SizeId = Shader.PropertyToID("_Size");
 
         private static readonly Dictionary<int, Mesh> RingMeshes = new Dictionary<int, Mesh>();
-        private static Mesh sphereMesh, quadMesh, moteMesh;
+        private static Mesh sphereMesh, quadMesh, moteMesh, discMesh;
+
+        // The stages of the disc that hides what is behind a Nova, in the order they are drawn (see the shader).
+        // Stencil bits 0x40 and 0x20 are this shader's own.
+        private const int SkyBit = 0x40, OpenBit = 0x20, BothBits = SkyBit | OpenBit;
+        private const int FirstBlendedQueue = 2501;
+        private struct MaskStage
+        {
+            public string Name;
+            public int Order, Queue;
+            public bool Far, WritesDepth;
+            public CompareFunction Depth, Stencil;
+            public StencilOp Pass;
+            public int Ref;
+        }
+        private static readonly MaskStage[] MaskStages =
+        {
+            new MaskStage { Name = "Mask Sky", Order = ActorDrawOrder.Mask, Queue = 2000, Far = true, Depth = CompareFunction.LessEqual,
+                Stencil = CompareFunction.Always, Pass = StencilOp.Replace, Ref = SkyBit },
+            new MaskStage { Name = "Mask", Order = ActorDrawOrder.Mask, Queue = 2001, WritesDepth = true, Depth = CompareFunction.LessEqual,
+                Stencil = CompareFunction.Always, Pass = StencilOp.Keep },
+            new MaskStage { Name = "Mask Open", Order = ActorDrawOrder.Unmask, Queue = 2000, Depth = CompareFunction.Equal,
+                Stencil = CompareFunction.Equal, Pass = StencilOp.Invert, Ref = SkyBit },
+            new MaskStage { Name = "Mask Clear", Order = ActorDrawOrder.Unmask, Queue = 2001, Far = true, WritesDepth = true, Depth = CompareFunction.Always,
+                Stencil = CompareFunction.Equal, Pass = StencilOp.Zero, Ref = OpenBit },
+            new MaskStage { Name = "Mask Tidy", Order = ActorDrawOrder.Unmask, Queue = 2002, Far = true, Depth = CompareFunction.Always,
+                Stencil = CompareFunction.Always, Pass = StencilOp.Zero },
+            new MaskStage { Name = "Mask Again", Order = -1, Queue = FirstBlendedQueue, WritesDepth = true, Depth = CompareFunction.LessEqual,
+                Stencil = CompareFunction.Always, Pass = StencilOp.Keep },
+        };
+        private static Material[] maskMaterials;
+        private static Shader maskMaterialsShader;
 
         private sealed class Ring
         {
@@ -72,6 +109,9 @@ namespace KryticalNova.Progression
         private Transform core, corona;
         private MeshRenderer coreBody, coronaBody, moteBody;
         private readonly List<Ring> rings = new List<Ring>(12);
+        private Transform mask;
+        private MeshRenderer[] maskBodies;
+        private ActorDrawOrder ownerOrder;
         private float quadReach = 1f;   // the corona quad's half-size, in Nova radii
         private bool shown;
 
@@ -112,6 +152,7 @@ namespace KryticalNova.Progression
             halo.resources = owner.GetComponent<PlayerResources>();
             halo.head = FindDeep(owner, HeadBone);
             halo.block = new MaterialPropertyBlock();
+            halo.ownerOrder = ActorDrawOrder.On(owner.gameObject);
             return halo;
         }
 
@@ -153,6 +194,9 @@ namespace KryticalNova.Progression
             if (coronaBody != null) coronaBody.enabled = show;
             if (moteBody != null) moteBody.enabled = show && tierLook.motes > 0;
             foreach (Ring ring in rings) ring.Body.enabled = show;
+            if (maskBodies != null)
+                foreach (MeshRenderer body in maskBodies) body.enabled = show;
+            if (!show && ownerOrder != null) ownerOrder.DrawWithScenery = false;
         }
 
         private void BuildParts()
@@ -161,6 +205,49 @@ namespace KryticalNova.Progression
             core = Part("Star", SphereMesh(), look.coreMaterial, out coreBody);
             corona = Part("Corona", QuadMesh(), look.coronaMaterial, out coronaBody);
             if (look.motesMaterial != null) Part("Motes", MoteMesh(), look.motesMaterial, out moteBody);
+            BuildMask();
+        }
+
+        /// <summary>The disc that hides what is behind the Nova: one transform, a renderer for each stage.</summary>
+        private void BuildMask()
+        {
+            Material[] materials = MaskMaterials(look.maskShader);
+            if (materials == null) return;
+            var go = new GameObject("Mask") { layer = gameObject.layer };
+            go.transform.SetParent(transform, false);
+            mask = go.transform;
+            maskBodies = new MeshRenderer[materials.Length];
+            for (int i = 0; i < materials.Length; i++)
+            {
+                Transform stage = Part(MaskStages[i].Name, DiscMesh(), materials[i], out maskBodies[i]);
+                stage.SetParent(mask, false);
+                maskBodies[i].sortingOrder = MaskStages[i].Order;
+            }
+        }
+
+        private static Material[] MaskMaterials(Shader shader)
+        {
+            if (shader == null) return null;
+            if (maskMaterials != null && maskMaterialsShader == shader && maskMaterials[0] != null) return maskMaterials;
+            maskMaterialsShader = shader;
+            maskMaterials = new Material[MaskStages.Length];
+            for (int i = 0; i < MaskStages.Length; i++)
+            {
+                MaskStage stage = MaskStages[i];
+                var material = new Material(shader) { name = "M_Nova" + stage.Name.Replace(" ", string.Empty), hideFlags = HideFlags.HideAndDontSave };
+                material.renderQueue = stage.Queue;
+                material.SetFloat("_ZTest", (float)stage.Depth);
+                material.SetFloat("_ZWrite", stage.WritesDepth ? 1f : 0f);
+                material.SetFloat("_Far", stage.Far ? 1f : 0f);
+                material.SetFloat("_StencilRef", stage.Ref);
+                bool marks = stage.Pass != StencilOp.Keep;
+                material.SetFloat("_StencilRead", stage.Stencil == CompareFunction.Always ? 0f : BothBits);
+                material.SetFloat("_StencilWrite", marks ? BothBits : 0f);
+                material.SetFloat("_StencilComp", (float)stage.Stencil);
+                material.SetFloat("_StencilPass", (float)stage.Pass);
+                maskMaterials[i] = material;
+            }
+            return maskMaterials;
         }
 
         private Transform Part(string partName, Mesh mesh, Material material, out MeshRenderer body)
@@ -258,6 +345,31 @@ namespace KryticalNova.Progression
             if (viewer == null) viewer = Camera.main;
             if (viewer != null) corona.rotation = viewer.transform.rotation;
             corona.localScale = Vector3.one * (radius * quadReach * 2f);
+            PlaceMask(centre);
+        }
+
+        /// <summary>
+        /// The hiding disc: behind every ring, square to the line of sight, and as wide as the Nova looks from the
+        /// camera. The owner seen through their own Nova (the camera looking down on it) is not cut out by it.
+        /// </summary>
+        private void PlaceMask(Vector3 centre)
+        {
+            if (mask == null || viewer == null) return;
+            float reach = Reach;
+            Vector3 eye = viewer.transform.position;
+            Vector3 away = centre - eye;
+            float distance = away.magnitude;
+            if (reach <= 0f || distance < 0.01f) return;
+            away /= distance;
+            mask.SetPositionAndRotation(centre + away * reach, Quaternion.LookRotation(away, viewer.transform.up));
+            mask.localScale = Vector3.one * (reach * (distance + reach) / distance);
+            NovaCull.Report(centre, reach);
+
+            if (ownerOrder == null) return;
+            Vector3 toCrown = Crown - eye;
+            float along = Vector3.Dot(toCrown, away);
+            bool through = along > distance && (toCrown - away * along).magnitude < (reach + HeadRadius) * along / distance;
+            ownerOrder.DrawWithScenery = through;
         }
 
         private void Turn()
@@ -361,6 +473,28 @@ namespace KryticalNova.Progression
         }
 
         // ------------------------------------------------------------------ meshes (made once, shared by every Nova)
+
+        /// <summary>A disc of radius 1 in its own xy plane.</summary>
+        private static Mesh DiscMesh()
+        {
+            if (discMesh != null) return discMesh;
+            var vertices = new Vector3[DiscSegments + 1];
+            var triangles = new int[DiscSegments * 3];
+            for (int i = 0; i < DiscSegments; i++)
+            {
+                float angle = i * Mathf.PI * 2f / DiscSegments;
+                vertices[i + 1] = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
+                triangles[i * 3] = 0;
+                triangles[i * 3 + 1] = i + 1;
+                triangles[i * 3 + 2] = (i + 1) % DiscSegments + 1;
+            }
+            discMesh = new Mesh { name = "Nova Disc", hideFlags = HideFlags.HideAndDontSave };
+            discMesh.vertices = vertices;
+            discMesh.triangles = triangles;
+            // Two of its stages are drawn at the far plane: it must never be culled by where its vertices say it is.
+            discMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 2f);
+            return discMesh;
+        }
 
         /// <summary>
         /// A ring of radius 1 whose band is <paramref name="width"/> wide: lying in its own plane, or standing on

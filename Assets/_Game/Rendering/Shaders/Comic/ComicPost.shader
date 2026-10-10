@@ -79,6 +79,32 @@ Shader "Hidden/KryticalNova/ComicPost"
                 return lerp(color, _KN_HurtDotColor.rgb, dots * _KN_HurtDots.z * smoothstep(0.0, 0.35, amount));
             }
 
+            // An Ascension Nova hides the characters and pets behind it (NovaHalo), but they are still in the depth
+            // texture this pass inks from: without this their outlines would be drawn inside the Nova, round nothing.
+            // 0 where a Nova stands in front of something this deep at this pixel, 1 everywhere else.
+            #define NOVA_DISCS 8            // NovaCull.MaxDiscs
+            float4 _KN_NovaDiscs[NOVA_DISCS];   // xyz = a Nova's middle in the world, w = its radius in metres
+            float  _KN_NovaDiscCount;
+
+            half ShownPastNovas(float2 uv, float eyeDepth)
+            {
+                half shown = 1.0;
+                int count = min((int)(_KN_NovaDiscCount + 0.5), NOVA_DISCS);
+                for (int i = 0; i < count; i++)
+                {
+                    float4 disc = _KN_NovaDiscs[i];
+                    float4 clip = TransformWorldToHClip(disc.xyz);
+                    if (clip.w < 0.05 || eyeDepth < clip.w + disc.w) continue;
+                    float2 at = clip.xy / clip.w * 0.5 + 0.5;
+                #if UNITY_UV_STARTS_AT_TOP
+                    at.y = 1.0 - at.y;
+                #endif
+                    float radius = disc.w * unity_CameraProjection._m11 * 0.5 * _ScreenParams.y / clip.w;
+                    shown *= smoothstep(radius - 1.0, radius + 1.0, length((uv - at) * _ScreenParams.xy));
+                }
+                return shown;
+            }
+
             bool IsSky(float rawDepth)
             {
             #if UNITY_REVERSED_Z
@@ -210,8 +236,11 @@ Shader "Hidden/KryticalNova/ComicPost"
                 float3 posWS = ComputeWorldSpacePosition(uv, rawDepth, UNITY_MATRIX_I_VP);
                 float centerDepth = LinearEyeDepth(rawDepth, _ZBufferParams);
 
+                // What a Nova hides is not there to be shaded or inked: its place in the depth texture is not what is seen.
+                half shown = ShownPastNovas(uv, centerDepth);
+
                 if (_ShadowEnabled > 0.5)
-                    color.rgb = ApplyComicShadow(color.rgb, uv, posWS, screenPx);
+                    color.rgb = lerp(color.rgb, ApplyComicShadow(color.rgb, uv, posWS, screenPx), shown);
 
                 if (_PostHalftoneEnabled > 0.5)
                 {
@@ -226,7 +255,7 @@ Shader "Hidden/KryticalNova/ComicPost"
                     float t = smoothstep(_OutlineDistance.x, max(_OutlineDistance.y, _OutlineDistance.x + 0.01), centerDepth);
                     float thickness = lerp(_OutlineThickness, min(_OutlineDistance.z, _OutlineThickness), t);
 
-                    half edge = ComputeOutline(uv, rawDepth, centerDepth, thickness);
+                    half edge = ComputeOutline(uv, rawDepth, centerDepth, thickness) * shown;
 
                     float fade = 1.0 - smoothstep(_OutlineFade.x, max(_OutlineFade.y, _OutlineFade.x + 0.01), centerDepth);
                     half opacity = _OutlineOpacity * lerp(1.0, _OutlineDistance.w, t) * fade;

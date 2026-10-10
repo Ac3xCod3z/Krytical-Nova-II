@@ -1059,9 +1059,36 @@ namespace KryticalNova.Player
         {
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
             if (!agent.hasPath || agent.pathPending) return;
-            if (RemainingPathDistance() > agent.stoppingDistance) return;
+
+            // The agent takes its step for this frame after this runs, so the question is whether that step gets
+            // it there. The fast Run ranks cover more than the stopping distance in a frame: without this they
+            // step over the point, turn back and circle it, and the stop never comes.
+            float remaining = RemainingPathDistance();
+            float step = agent.velocity.magnitude * Time.deltaTime;
+            MovementSettings settings = movementSkills != null ? movementSkills.MovementSettings : null;
+            bool arrives = settings != null
+                ? settings.ArrivesThisFrame(remaining, agent.velocity.magnitude, Time.deltaTime)
+                : remaining <= agent.stoppingDistance + step;
+            if (!arrives && !HasPassedDestination(remaining, step)) return;
+
+            Vector3 destination = agent.destination;
+            // Less than a frame's travel away: the body ends on the point rather than short of it or past it. Placed
+            // there, not moved there: a move would read as speed for a frame and set the run going again.
+            if (remaining > agent.stoppingDistance) agent.Warp(destination);
             agent.ResetPath();
             agent.velocity = Vector3.zero;
+        }
+
+        /// <summary>On the last leg, right at the point, and travelling away from it: it was stepped over.</summary>
+        private bool HasPassedDestination(float remaining, float step)
+        {
+            if (remaining > agent.stoppingDistance + step * 2f) return false;
+            if ((agent.steeringTarget - agent.destination).sqrMagnitude > 0.01f) return false;
+            Vector3 toDestination = agent.destination - agent.nextPosition;
+            toDestination.y = 0f;
+            Vector3 travel = agent.velocity;
+            travel.y = 0f;
+            return Vector3.Dot(travel, toDestination) < 0f;
         }
 
         /// <summary>

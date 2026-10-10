@@ -1,6 +1,8 @@
 using System;
 using KryticalNova.Player;
+using KryticalNova.UI.Guide;
 using KryticalNova.UI.Menus;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
@@ -13,10 +15,16 @@ namespace KryticalNova.UI
     /// in the other. A setting takes effect as its control is moved; APPLY keeps the changes, REVERT puts back what
     /// was there when the window opened (or was last applied), RESET TO DEFAULTS sets the page shown to its
     /// defaults. What only makes sense with a character in the world (the HUD layout editor) is hidden in the menus.
+    /// The last page is the Guide (<see cref="GuidePage"/>): it sets nothing, so the three buttons are not shown on it.
     /// </summary>
     public sealed class SettingsPages
     {
-        public static readonly string[] Pages = { "graphics", "audio", "interface", "gameplay", "controls" };
+        public static readonly string[] Pages = { "graphics", "audio", "interface", "gameplay", "controls", GuidePageName };
+        /// <summary>The page that explains the game. It has no settings: APPLY, REVERT and RESET do not apply to it.</summary>
+        public const string GuidePageName = "guide";
+        private const string GuideOpenClass = "guide-open";
+        // The window's width while the Guide is read (Guide.uss), and the gap it keeps to the screen's edge.
+        private const float GuideWindowWidth = 920f, ScreenGap = 8f;
         /// <summary>Elements of the window that need a character in the world.</summary>
         public const string InGameOnlyClass = "in-game-only";
         private static readonly string[] MenuThemeNames = { "ROTATE", "HEGEMONY", "NULL", "COVENANT" };
@@ -24,15 +32,19 @@ namespace KryticalNova.UI
         private readonly GraphicsSettingsTab graphicsTab = new GraphicsSettingsTab();
         private readonly AudioSettingsTab audioTab = new AudioSettingsTab();
         private readonly SettingsLedger ledger = new SettingsLedger();
+        private readonly GuidePage guidePage = new GuidePage();
         private ControlsSettingsTab controlsTab;
         private Func<InputActionAsset> playerActions;
         private VisualElement root;
         private Button applyButton, revertButton;
+        private VisualElement window;
+        private bool open;
         private string activePage = Pages[0];
         private bool inGame;
         private VisualElement watched;
 
         public ControlsSettingsTab Controls => controlsTab;
+        public GuidePage Guide => guidePage;
         public string ActivePage => activePage;
         /// <summary>True while a value differs from what it was when the window opened or was last applied.</summary>
         public bool HasChanges => ledger.HasChanges;
@@ -40,7 +52,7 @@ namespace KryticalNova.UI
         /// <summary>Raised after APPLY, REVERT or RESET TO DEFAULTS did its work (for feedback).</summary>
         public event Action<string> Acted;
 
-        public void Build(VisualElement windowRoot, Func<InputActionAsset> actions, Action<bool> listeningChanged, bool inTheGame)
+        public void Build(VisualElement windowRoot, Func<InputActionAsset> actions, Action<bool> listeningChanged, bool inTheGame, GuideLibrary guide = null)
         {
             root = windowRoot;
             playerActions = actions;
@@ -48,7 +60,7 @@ namespace KryticalNova.UI
             if (controlsTab == null) controlsTab = new ControlsSettingsTab(actions, listeningChanged);
 
             // Every control of the window says when it is touched, for the feel of it.
-            VisualElement window = root.Q("settings-window") ?? root;
+            window = root.Q("settings-window") ?? root;
             if (watched != window)
             {
                 WindowMoments.Watch(window);
@@ -86,6 +98,7 @@ namespace KryticalNova.UI
                 RebuildControls();
             }, null);
             RebuildControls();
+            guidePage.Build(root.Q("settings-page-" + GuidePageName), guide, actions);
 
             root.Query(className: InGameOnlyClass).ForEach(element => element.style.display = inGame ? DisplayStyle.Flex : DisplayStyle.None);
 
@@ -107,6 +120,23 @@ namespace KryticalNova.UI
             graphicsTab.Refresh();
             ledger.Mark();
             ShowFooter();
+            open = true;
+            if (activePage == GuidePageName) guidePage.Shown();
+            KeepOnScreen(activePage == GuidePageName);
+        }
+
+        /// <summary>The window was closed: nothing of it keeps running (the Guide's clip).</summary>
+        public void Closed()
+        {
+            open = false;
+            guidePage.Hidden();
+        }
+
+        /// <summary>Shows the Guide, on the topic of that id when one is named.</summary>
+        public void ShowGuide(string topicId = null)
+        {
+            Show(GuidePageName);
+            if (!string.IsNullOrEmpty(topicId)) guidePage.Open(topicId);
         }
 
         /// <summary>The player's own actions arrived or changed: the Controls page lists them.</summary>
@@ -124,6 +154,36 @@ namespace KryticalNova.UI
                 root.Q("settings-page-" + name)?.EnableInClassList("active", name == page);
                 root.Q<Button>("settings-tab-" + name)?.EnableInClassList("active", name == page);
             }
+            // The Guide is read, not set: a wider window, and no buttons under it.
+            bool guide = page == GuidePageName;
+            window?.EnableInClassList(GuideOpenClass, guide);
+            KeepOnScreen(guide);
+            if (guide && open) guidePage.Shown();
+            else guidePage.Hidden();
+        }
+
+        /// <summary>
+        /// The Guide makes the window wider and taller than the place the player gave it may have room for. While
+        /// the Guide is read the window is drawn far enough up and to the left to be whole; its own place is not
+        /// changed, and it is back there on any other page.
+        /// </summary>
+        private void KeepOnScreen(bool guide)
+        {
+            if (window == null) return;
+            window.style.marginLeft = StyleKeyword.Null;
+            window.style.marginTop = StyleKeyword.Null;
+            if (!guide) return;
+            // Measured once the wider window has been laid out.
+            window.schedule.Execute(() =>
+            {
+                VisualElement parent = window.hierarchy.parent;
+                if (parent == null || !window.ClassListContains(GuideOpenClass) || parent.layout.width < 1f) return;
+                Rect at = parent.WorldToLocal(window.worldBound);
+                float right = at.xMin + GuideWindowWidth - (parent.layout.width - ScreenGap);
+                float below = at.yMax - (parent.layout.height - ScreenGap);
+                if (right > 0f) window.style.marginLeft = -Mathf.Min(right, Mathf.Max(0f, at.xMin - ScreenGap));
+                if (below > 0f) window.style.marginTop = -Mathf.Min(below, Mathf.Max(0f, at.yMin - ScreenGap));
+            }).ExecuteLater(50);
         }
 
         // ------------------------------------------------------------------ apply, revert, reset

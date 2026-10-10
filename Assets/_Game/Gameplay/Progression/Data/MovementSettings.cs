@@ -49,6 +49,15 @@ namespace KryticalNova.Progression
             return Mathf.Lerp(arrivalMinSpeedFactor, 1f, Mathf.Sqrt(t));
         }
 
+        /// <summary>
+        /// True when a body <paramref name="remainingDistance"/> from its destination and going at
+        /// <paramref name="speed"/> is there by the end of this frame. A fast run covers more than the stopping
+        /// distance in one frame: judged on the stopping distance alone it steps over the point, turns back and
+        /// never arrives.
+        /// </summary>
+        public bool ArrivesThisFrame(float remainingDistance, float speed, float deltaTime) =>
+            remainingDistance <= stoppingDistance + Mathf.Max(0f, speed) * Mathf.Max(0f, deltaTime);
+
         private void OnValidate()
         {
             walkSpeed = Mathf.Max(MinimumPositive, walkSpeed);

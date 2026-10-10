@@ -24,7 +24,8 @@
         "Gilzoide.SqliteNet",
         "EmeraldAI",
         "EmeraldAI.Editor",
-        "KryticalNova.Hostiles.Emerald"
+        "KryticalNova.Hostiles.Emerald",
+        "Unity.Recorder.Editor"
     ],
     "includePlatforms": [
         "Editor"
@@ -35,6 +36,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.recorder",
+            "expression": "5.0.0",
+            "define": "KN_RECORDER"
+        }
+    ],
     "noEngineReferences": false
 }

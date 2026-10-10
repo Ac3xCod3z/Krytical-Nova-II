@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using KryticalNova.Items;
 using KryticalNova.Items.Visuals;
+using UnityEngine;
 
 namespace KryticalNova.CharacterCreation
 {
@@ -58,8 +59,9 @@ namespace KryticalNova.CharacterCreation
 
             ItemDefinition weapon = Find(worn, EquipSlot.Weapon, items, out int temper);
             mount.SetWeapon(weapon);
-            if (weapon != null && progression != null && GearProgressionRules.TryGetGlow(progression.temper, temper, out TemperGlowBand band))
-                mount.SetGlow(true, band.color, GearProgressionRules.GlowLookOf(progression.temper, weapon.rarity));
+            if (weapon != null && progression != null && GearProgressionRules.TryGetGlow(progression.temper, temper, weapon.rarity,
+                    out Color color, out TemperGlowLook look))
+                mount.SetGlow(true, color, look);
             else
                 mount.SetGlow(false, default, default);
         }

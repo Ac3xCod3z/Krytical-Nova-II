@@ -8,7 +8,7 @@ Krytical Nova II (Unity 6000.6.3f1, URP 17.6, NGO 2.13, PC-first, comic-book art
 - **soft stylized clouds** whose coverage varies continuously from clear, through few and partly cloudy, to overcast.
 - weather: clear → overcast, **rain + thunderstorm, fog/mist, snow/blizzard**, built from the Synty PolygonParticleFX / PolygonGeneric effects.
 - server-authoritative and synced across clients with almost no bandwidth.
-- a default day length of **24 min** for testing. It will be lengthened later and exposed to a future **GM mod** (see the GM note at the end).
+- a default day length of **24 min** for testing. It will be lengthened later and exposed to a future **GM mod** (see the GM note at the end). *Update 2026-10-10: the day is now **1 real hour** (`dayLengthSeconds = 3600`), set after testing; mentions of 24 min / 1440 below are the plan as first written.*
 
 ## Core performance decisions (the "why")
 1. **The sky is a skybox material, not a mesh dome.** URP draws the skybox once, after opaques, so hidden pixels are rejected by depth and there's no overdraw. `ComicPost.shader` skips far-plane pixels (`IsSky()`), so the sky gets no ink outlines. A depth-writing Synty dome mesh *would* get outlined.
@@ -185,4 +185,4 @@ Not yet verified:
 
 The ambience and thunder `AudioClip` fields are empty until sounds are added.
 
-**TODO(GM):** the 24-minute day is a testing value. The GM mod should wrap `WorldEnvironmentNetwork.SetTimeOfDay / SetDayLength / SetTimeScale / ForceWeather / SetWeatherLocked` with permission checks.
+**TODO(GM):** the day is 1 real hour since 2026-10-10 (it was a 24-minute testing value). The GM mod should wrap `WorldEnvironmentNetwork.SetTimeOfDay / SetDayLength / SetTimeScale / ForceWeather / SetWeatherLocked` with permission checks.

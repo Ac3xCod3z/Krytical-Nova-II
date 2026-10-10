@@ -1,0 +1,1391 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa63395507f954e4691461e6fa5df014, type: 3}
+  m_Name: GuideLibrary
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.Guide.GuideLibrary
+  chapters:
+  - title: First steps
+    topics:
+    - id: moving-and-camera
+      title: Moving and the camera
+      summary: 'You play with the mouse: click where you want to go and your character finds the way. Everything else in the game starts from here.'
+      clip: {fileID: 32900000, guid: 60d614e6c4dd873488f5d36fc22e5ede, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - Anywhere in the world. Every key on this page can be changed in Settings, on the Controls page.
+      - kind: 1
+        heading: Getting around
+        lines:
+        - '{mouse:left} Click the ground. Your character walks there and finds its own way round walls and buildings.'
+        - Click somewhere else whenever you like. Your character turns at once; you never wait for a move to finish.
+        - Low walls, crates and railings are vaulted for you when going over is shorter than going round.
+        - To cross the zone, open the map with {key:Map} and double-click a named place. You are led there. A new click on the ground, or {cap:ESC} , ends the journey.
+      - kind: 2
+        heading: The camera
+        lines:
+        - Turn the camera | Hold {mouse:right} and drag
+        - Zoom in and out | {mouse:wheel} Roll the wheel
+        - Look behind you | {key:FlipCamera}
+        - Something blocks the view | Props between you and the camera fade out by themselves
+      - kind: 0
+        heading: Walking, running and jumping
+        lines:
+        - 'Everyone starts out walking. <b>Run</b> and <b>Jump</b> are movement skills: learn them in the Skills window, opened with {key:SkillsWindow} , drag them onto the Hotbar, and press the slot to switch to one. Press it again to go back to walking.'
+        - 'Running costs a little Flux each time you click a new place, not for every second you run. Without enough Flux the click is refused: press the slot again to walk.'
+        - With Jump chosen, your next click picks where you land instead of where you walk.
+        - The line under your health bars says which of the three is on, and how fast you are moving.
+      - kind: 2
+        heading: What a click does
+        lines:
+        - On a Hostile | The first click selects it, the second attacks
+        - On an NPC | You walk over and talk
+        - On an item on the ground | You walk over and pick it up
+        - On another player | Selects them. Hold {cap:SHIFT} and click for their menu
+        - Draw or put away your weapon | {key:ToggleWeapon}
+        - Let go of your target | {cap:ESC}
+      - kind: 3
+        heading: 
+        lines:
+        - How fast the camera turns and zooms, how far it pulls back, and whether up and down are swapped are all in Settings, on the Gameplay page.
+    - id: fighting
+      title: Fighting and targets
+      summary: You fight by choosing a target and letting your character close in and strike. Skills on your Hotbar do the heavy work.
+      clip: {fileID: 32900000, guid: 0a778bc4d2ed343418f9723715a66743, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - Outside the town, in the Hostile Zones marked on your map.
+      - kind: 1
+        heading: A fight, start to finish
+        lines:
+        - '{mouse:left} Click a Hostile to select it. A ring appears under it and its name, level and health show over its head.'
+        - Click it again to attack. Your character draws its weapon, walks into reach and keeps striking.
+        - Press a Hotbar key to use a skill on your target. Hold the key to keep using it as soon as it is ready.
+        - 'Watch your Flux: skills spend it. When health or Flux run low, use a Stim from the Hotbar.'
+        - Press {cap:ESC} to let go of your target, or click the ground to walk away.
+      - kind: 2
+        heading: Reading a fight
+        lines:
+        - A number over the target | Damage you dealt
+        - A bigger, brighter number | A critical hit
+        - No number on a swing | The target evaded. Hit Rate against Evasion decides it
+        - 'TAKEN under a Hostile''s bar | Another player hit it first: the kill is theirs'
+      - kind: 3
+        heading: 
+        lines:
+        - 'Skills that hit an area need no target: they strike round you. Gather a few Hostiles and use one.'
+        - Damage numbers and screen shake can be switched off in Settings.
+    - id: hotbar
+      title: The Hotbar
+      summary: The Hotbar is the row of slots at the foot of the screen. Skills and usable items go on it, each on a key.
+      clip: {fileID: 32900000, guid: eb25b237ddb162747a6c7eec914d717c, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.25822705
+        y: 0.72824425
+        width: 0.5589209
+        height: 0.27175575
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - Always on screen. Ten slots on {key:Slot1} to {key:Slot10} and four more on {key:SlotQ} {key:SlotW} {key:SlotE} {key:SlotR} .
+      - kind: 1
+        heading: Filling it
+        lines:
+        - Open the Skills window with {key:SkillsWindow} .
+        - Drag a skill you have learned onto a slot. Stims and other usable items can be dragged there from your Pack.
+        - Drag a slot onto another to rearrange. {mouse:right} Right-click a slot to clear it.
+      - kind: 2
+        heading: Using it
+        lines:
+        - Press the key | Uses the skill or the item
+        - Hold the key | Uses it again each time it is ready; a charged skill charges while held
+        - The dial over a slot | Its cooldown
+        - The number in a slot's corner | How many of that item you carry
+      - kind: 3
+        heading: 
+        lines:
+        - Every slot's key can be changed in Settings, on the Controls page. The slots show the key in use.
+        - When you switch to another weapon class, the Hotbar swaps to that class's matching skills by itself.
+    - id: hud
+      title: Your HUD and its layout
+      summary: 'The HUD is everything drawn over the world: your plate, the Hotbar, the minimap, chat. You can move and resize every piece of it.'
+      clip: {fileID: 32900000, guid: 47507ad0e6b800048871a66817a02bfa, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 2
+        heading: What is where
+        lines:
+        - 'Top left: your plate | Portrait, level, health and Flux, how you are moving, points left to spend'
+        - 'Bottom: the Hotbar | Skills and items on keys, with the XP bar'
+        - 'Bottom left: chat | Every channel, and the combat log'
+        - 'Corner: the minimap | The town round you; double-click it for the full map'
+        - 'Top right: the menu row | Pack, Map, Equipment, Character, Skills, Settings, Menu'
+      - kind: 1
+        heading: Making it yours
+        lines:
+        - Open Settings with {key:Settings} and go to the Interface page.
+        - Press <b>CUSTOMIZE HUD LAYOUT</b> and choose one panel, or all of them.
+        - Drag a panel to move it. Drag its gold corner to resize it. {mouse:right} Right-click a panel to put it back.
+        - Panels line up with a grid and with each other; hold {cap:ALT} to place one freely. Press <b>DONE</b> when finished.
+      - kind: 3
+        heading: 
+        lines:
+        - Windows can be placed the same way, so the Pack and the forge open where you like them.
+        - Interface size on the same page scales everything at once. Your layout is kept on this computer.
+    - id: chat
+      title: Chat
+      summary: Chat is how you talk to the players round you, your faction, your Squad and your Crew, and where the game tells you what happened.
+      clip: {fileID: 32900000, guid: 6576fae5794f2c5469e2ae3765c60bc6, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0.76251704
+        width: 0.32811958
+        height: 0.237483
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - The chat window, bottom left. Press {cap:ENTER} to type and {cap:ENTER} again to send.
+      - kind: 2
+        heading: Channels
+        lines:
+        - '/s | Say: players near you'
+        - /f | Your whole faction
+        - /p | Your Squad
+        - /g | Your Crew
+        - /w name | A whisper to one player, wherever they are
+        - /r | Reply to the last whisper
+      - kind: 0
+        heading: Tabs
+        lines:
+        - 'The tabs along the top filter what you read: All, one tab a channel, and <b>Combat</b>, which lists every hit, kill, drop and XP gain. A tab lights up when something new arrives in it.'
+      - kind: 3
+        heading: 
+        lines:
+        - Drag the corner of the chat window to resize it. Its text size and the time on each line are in Settings, on the Interface page.
+        - Blocking a player in Contacts stops their whispers.
+    - id: town-and-map
+      title: The town, its NPCs and the map
+      summary: 'The starter town is neutral ground: safe from other factions, and where every service is. The map shows where each one stands.'
+      clip: {fileID: 32900000, guid: 9a2a20f4648d0a542bac74626f177b1c, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.28
+        y: 0
+        width: 0.355
+        height: 0.74444443
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - Open the map with {key:Map} , or double-click the minimap.
+      - kind: 2
+        heading: Who does what
+        lines:
+        - 'Armorer | The forge: Tempering, Fusion, Tuning and Reforge'
+        - Vaultkeeper | Your Vault, and founding a Crew
+        - Wayfinder | The Deep Vault, shared by all your characters
+        - Herald | Ascension and Nova Standings
+        - Apothecary, Instructors, Broker, Marshal, Fixer, Store Clerk | They will tell you what they are for; their services are still to come
+      - kind: 1
+        heading: Using the map
+        lines:
+        - 'Hold the pointer over a marker to read what it is: an NPC, a gate, a Hostile Zone with its level, another player.'
+        - Double-click a named place to be led there. Your route is drawn on the map.
+        - Click the ground in the world, or press {cap:ESC} , to stop.
+      - kind: 3
+        heading: 
+        lines:
+        - Click an NPC in the world to walk over and talk. A button for each service appears in the dialogue.
+        - The minimap turns with your camera. Settings can fix it north-up instead.
+  - title: Your character
+    topics:
+    - id: stats
+      title: Stats and stat points
+      summary: Four attributes decide what your character is good at. Each level gives points to put into them.
+      clip: {fileID: 32900000, guid: e6e65b99d535bdf4f95e2cd906334885, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0.18333334
+        width: 0.1821875
+        height: 0.43977776
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - 'The Character Sheet: {key:CharacterWindow} .'
+      - kind: 2
+        heading: What each attribute raises
+        lines:
+        - Strength | Attack Power, and Hit Rate
+        - Vitality | Max HP, and a little Evasion
+        - Agility | Evasion, and Defense
+        - Spirit | Max Flux, and Attack Power
+      - kind: 2
+        heading: The numbers they feed
+        lines:
+        - Attack Power | How hard you hit
+        - Defense | How much of a hit you shrug off
+        - Hit Rate against Evasion | Whether a swing lands at all
+        - Critical | The chance of a far bigger hit
+        - Luck | Better odds at the forge
+        - Elemental Attack and Defense | A second layer of damage and protection
+      - kind: 0
+        heading: Where the rest comes from
+        lines:
+        - Gear adds to all of these, and so do Tempering, Fusion and Tuning, Serums, your pet, Ascension and Nova Standings. Hold the pointer over a number on the Character Sheet to see what it is made of.
+      - kind: 4
+        heading: 
+        lines:
+        - 'Points you spend stay spent: there is no way to take them back yet. Unspent points are shown on your plate.'
+    - id: levels
+      title: Levels, XP and death
+      summary: Killing Hostiles earns XP. Each level makes you stronger, gives stat and skill points, and lets you wear better gear. The cap is level 112.
+      clip: {fileID: 32900000, guid: 769f2faf89025524cb9819f9400f03b0, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 2
+        heading: A Hostile's name colour tells you what it is worth
+        lines:
+        - 'Grey: 10 or more levels below you | No XP and no drops'
+        - 'Blue: 6 to 9 below | A little XP, few drops'
+        - 'Teal: 3 to 5 below | Most of the XP'
+        - 'White: 2 below to 4 above | Full XP and drops. Hunt here'
+        - 'Purple: 5 to 9 above | Full rewards, but you miss more often'
+        - 'Red: 10 or more above | You miss far more often. Dangerous'
+      - kind: 0
+        heading: Dying
+        lines:
+        - When your health reaches zero you fall and stand up again after a short count. A death to a Hostile costs 5% of the XP of your current level; it can never take a level from you. Losing a Callout or dying to another player costs nothing.
+      - kind: 3
+        heading: 
+        lines:
+        - In a Squad, everyone in the same map shares the kill and earns a bonus.
+        - The XP bar sits with the Hotbar; the Combat tab of chat lists every gain.
+    - id: weapon-classes
+      title: Weapon classes and Discipline
+      summary: Your class is the weapon in your hand. Each faction has three, and you can change between them whenever you like.
+      clip: {fileID: 32900000, guid: db277182f81efea47bb9a8ac8734d432, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.20875
+        y: 0.023333333
+        width: 0.33425003
+        height: 0.6575556
+      sections:
+      - kind: 2
+        heading: The nine classes
+        lines:
+        - "Hegemony | Monoblade (offense) \xB7 Glaive (defense) \xB7 Carbine (ranged)"
+        - "Null | Harvester (offense) \xB7 Servo Claws (defense) \xB7 Arc Caster (ranged)"
+        - "Covenant | Longaxe (offense) \xB7 Claymore (defense) \xB7 Warbow (ranged)"
+      - kind: 0
+        heading: Changing class
+        lines:
+        - Equip a weapon of another of your faction's classes and you are that class. Your Hotbar swaps to its skills at once. You cannot use another faction's weapons.
+        - The <b>Discipline</b> you chose when you made your character only decides the weapon you start with.
+      - kind: 2
+        heading: What a role's Stance gives
+        lines:
+        - Offense | More Attack Power
+        - Defense | More Defense
+        - Ranged | More Evasion and move speed
+      - kind: 3
+        heading: 
+        lines:
+        - Skill ranks are shared by slot across your faction's three classes. Rank a skill up once and its match in the other two classes is ranked too.
+    - id: skills
+      title: Skills and ranks
+      summary: Every class has eight attacks and two buffs. Skill points make them stronger.
+      clip: {fileID: 32900000, guid: 513aa87d01c20b842a3b572d27e03d35, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.788125
+        y: 0.026666667
+        width: 0.1775
+        height: 0.54044443
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - 'The Skills window: {key:SkillsWindow} .'
+      - kind: 2
+        heading: The ten slots
+        lines:
+        - First three attacks | A sweep round you, a single hit and a three-hit string, from level 1
+        - Fourth and fifth | A heavy hit and a flurry, from level 30
+        - Sixth and seventh | Stronger versions, from level 60
+        - Eighth | A leaping strike on an area, from level 80
+        - Stance | A lasting buff that fits your class's role
+        - Guard | A lasting buff to Elemental Defense
+      - kind: 1
+        heading: Ranking up
+        lines:
+        - Open the Skills window. Skill points left are shown on your plate.
+        - Press <b>+1</b>, <b>+5</b> or <b>+10</b> beside a skill to put ranks into it.
+        - Drag the skill onto the Hotbar if it is not there yet.
+      - kind: 4
+        heading: 
+        lines:
+        - A higher rank hits harder and costs more Flux each use. Ranks stay where you put them, so spread them with your Flux in mind.
+    - id: serums
+      title: Serums
+      summary: A Serum raises one stat for good. Each kind can be taken {fact:serum.cap} times by a character.
+      clip: {fileID: 32900000, guid: 7dc0bb30ef934f9498b2d2dae21b2d80, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0.18333334
+        width: 0.1821875
+        height: 0.43977776
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - '{mouse:right} Right-click a Serum in your Pack to take it.'
+      - kind: 2
+        heading: The six kinds, each one taken
+        lines:
+        - Strength Serum | +3 Attack Power
+        - Vitality Serum | +20 Max HP
+        - Agility Serum | +2 Hit Rate and +2 Evasion
+        - Spirit Serum | +25 Max Flux
+        - Elemental Strike Serum | +10 Elemental Attack
+        - Elemental Ward Serum | +10 Elemental Defense
+      - kind: 3
+        heading: 
+        lines:
+        - 'The Character Sheet lists every kind under <b>SERUMS</b>: how many you have taken and what they add up to.'
+        - At the limit a Serum is refused and stays in your Pack.
+  - title: Gear
+    topics:
+    - id: rarities
+      title: Rarities and slots
+      summary: Gear comes in four rarities and eight slots. Rarity sets how strong a piece is for its level, and what the forge can do with it.
+      clip: {fileID: 32900000, guid: 663777acc59cdb24dadf0ae7678e02f9, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.5375
+        y: 0.06555556
+        width: 0.21012497
+        height: 0.65227777
+      sections:
+      - kind: 2
+        heading: Rarities
+        lines:
+        - 'Common: white | Levels 1 to 28. Carries Luck'
+        - 'Uncommon: blue | Levels 20 to 40. Carries more Luck'
+        - 'Rare: yellow | Levels 45 to 110. Can be fused, tuned and reforged'
+        - 'Epic: purple | Levels 100 to 112. The strongest; its Temper glow burns brighter'
+      - kind: 2
+        heading: Slots
+        lines:
+        - Weapon | Attack Power. Also sets your class
+        - Armor, Gloves, Boots | Defense, Hit Rate, Evasion
+        - Ring, Amulet | Critical, Luck and elemental stats
+        - Cape | Defense. Rare and Epic only
+        - Pet | A companion that adds a stat as it grows
+      - kind: 0
+        heading: Sets
+        lines:
+        - 'The pieces of a set share a name and, above Common, a colour scheme that shows on your character. Every piece asks for a level: you cannot wear it before.'
+      - kind: 3
+        heading: 
+        lines:
+        - Keep a cheap Common or Uncommon set. Its Luck improves your odds at the forge, and Rare and Epic gear has none.
+    - id: pack-and-equipment
+      title: Pack, Equipment and picking up
+      summary: The Pack holds what you carry. Equipment shows what you wear. Things on the ground are yours for a click.
+      clip: {fileID: 32900000, guid: 708a352a38ea0f34087ed08e5c13eef7, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.20875
+        y: 0.023333333
+        width: 0.538875
+        height: 0.69449997
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - 'Pack: {key:Pack} . Equipment: {key:Equipment} .'
+      - kind: 2
+        heading: In the Pack
+        lines:
+        - '{mouse:right} Right-click gear | Wear it. What you wore goes into the Pack'
+        - '{mouse:right} Right-click a Stim or Serum | Use it'
+        - Drag an item | Move it, swap it, or drop it onto a slot of the Equipment window
+        - 'Hold the pointer over an item | Its card: stats, level, rarity, Temper and Fusion'
+        - SORT | Tidies the page. The tabs are the Pack's pages
+      - kind: 1
+        heading: Picking up
+        lines:
+        - '{mouse:left} Click an item on the ground: you walk over and take it.'
+        - Or press {key:PickUp} to take the nearest one within reach.
+        - With a full Pack the item stays on the ground.
+      - kind: 0
+        heading: Whose drop is it
+        lines:
+        - A Hostile's drop is held for the player who earned the kill, and an item you drop from your Pack is held for you, for 20 seconds. The label over it counts down. After that anyone may take it.
+      - kind: 3
+        heading: 
+        lines:
+        - In the Pack, the colour a cell lies on is the item's rarity. On the Equipment window the slot's frame takes it.
+    - id: tempering
+      title: Tempering
+      summary: Tempering raises a piece of gear you already own, a few percent at a time, up to {fact:temper.cap}%. It is the surest way to grow stronger between gear tiers, and from {fact:temper.breakFrom}% up a bad strike can destroy the piece.
+      clip: {fileID: 32900000, guid: 2a9661aad32ba4542a350ed8907da4fe, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.0225
+        y: 0.03
+        width: 0.3275
+        height: 0.97
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - 'The <b>Armorer</b>, at the forge in town. Talk to the Armorer and choose the forge: the bench opens beside your Pack.'
+      - kind: 2
+        heading: What each slot gains
+        lines:
+        - Weapon | Attack
+        - Armor and Cape | Defense
+        - Gloves | Hit Rate
+        - Boots | Evasion
+        - Ring | Critical
+        - Amulet | Luck
+      - kind: 1
+        heading: At the bench
+        lines:
+        - Choose the <b>TEMPER</b> tab.
+        - 'Put the piece on the anvil: {mouse:right} right-click it in your Pack, or drag it onto the socket. The ring round the socket shows its Temper against the cap, and the stretch where it can break is marked red.'
+        - Load an <b>Alloy</b> from the row under the anvil. The best one you can use is loaded for you. Add a Failsafe if you have one and want its cover.
+        - 'Read the bench before you strike: the change, your chance, what a fail costs and whether the piece can break.'
+        - Press the button, which shows the cost in Creds. The piece and the Alloy stay loaded, so the next strike is one press. Click the socket to take the piece back.
+      - kind: 2
+        heading: 'Alloys: a bigger step at worse odds'
+        lines:
+        - Alumite | +{fact:temper.alloy1}%
+        - Iridion | +{fact:temper.alloy2}%
+        - Orichalc | +{fact:temper.alloy3}%
+        - Eversteel | +{fact:temper.alloy4}%
+        - Trinity Platinum | +{fact:temper.alloy5}%
+      - kind: 0
+        heading: Your chance
+        lines:
+        - The higher the piece already is, and the bigger the Alloy, the lower your chance. A small Alloy on an untouched piece cannot fail; near the cap every strike is a long shot, and the chance never drops below {fact:temper.minChance}%.
+        - '<b>Luck</b> helps: every {fact:temper.luckPerPercent} Luck adds 1% to your chance, up to {fact:temper.maxLuckBonus}%. Common and Uncommon gear carries Luck and Rare and Epic gear carries none, so a cheap set worn only at the forge is worth keeping. A tempered Amulet adds more.'
+      - kind: 4
+        heading: When a strike fails
+        lines:
+        - A fail takes {fact:temper.failLoss}% back off the piece, and the Alloy and the Creds are spent either way.
+        - From {fact:temper.breakFrom}% a fail may also <b>break</b> the piece. A broken piece is gone for good.
+        - '{fact:temper.breakFrom}% to {fact:temper.break1To}%: a fail breaks it {fact:temper.break1Low}% to {fact:temper.break1High}% of the time, rising as the Temper rises.'
+        - '{fact:temper.break2From}% to {fact:temper.break2To}%: {fact:temper.break2Low}% to {fact:temper.break2High}% of the time.'
+      - kind: 2
+        heading: Failsafes
+        lines:
+        - Failsafe | Stops one break. Only used up when it does; the fail still costs its {fact:temper.failLoss}%
+        - Lucky Failsafe | +{fact:temper.luckyBonus}% chance on one strike and no break on it. Used up by the strike
+        - Advanced Failsafe | A fail costs nothing and cannot break. Used up by a fail
+      - kind: 3
+        heading: 
+        lines:
+        - 'A tempered weapon glows, and the colour tells everyone how far it has come: green, then yellow from 30%, blue from 60%, purple from 90% and orange at {fact:temper.cap}%. Reaching {fact:temper.cap}% is announced to the whole server.'
+        - 'Temper travels with the piece: through your Pack, the Vault, a Trade or a Kiosk, it stays what it was.'
+    - id: fusion
+      title: Fusion
+      summary: Fusion melts a spare Rare into a piece to raise its Fusion stage, up to FS{fact:fusion.stages}. Each stage adds a share of the piece's own stats, and a fail never harms the piece.
+      clip: {fileID: 32900000, guid: 40ce4043a755daf4bbc009c1f56152ca, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.0225
+        y: 0
+        width: 0.3275
+        height: 1
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - The <b>Armorer</b>'s forge, on the <b>FUSION</b> tab.
+      - kind: 2
+        heading: What you need
+        lines:
+        - The piece | Rare or Epic, with at least {fact:fusion.minTemper}% Temper
+        - The material, for a Rare | An untouched Rare of the same kind and the same level
+        - The material, for an Epic | An untouched Rare of the same kind, of the closest Rare tier at or below the Epic's level
+        - 'Also | One Fusion Catalyst, and Creds: {fact:fusion.firstCreds} for the first stage, {fact:fusion.credsPerStage} more each stage'
+      - kind: 1
+        heading: At the bench
+        lines:
+        - Put the piece on the anvil.
+        - Pick the material from the row under it. Only pieces that fit are offered.
+        - Read the chance and press the button.
+      - kind: 2
+        heading: What each stage adds
+        lines:
+        - Weapon | Attack Power and Hit Rate
+        - Armor | Defense, Evasion and Max HP
+        - Gloves | Defense and Hit Rate
+        - Boots | Defense and Evasion
+        - Cape | Defense
+        - Ring | Elemental Attack
+        - Amulet | Elemental Defense
+      - kind: 4
+        heading: 
+        lines:
+        - A success takes {fact:fusion.temperCost}% Temper off the piece. Temper it back up afterwards.
+        - A fail uses up the material, the Catalyst and the Creds. The piece itself loses nothing.
+        - The first {fact:fusion.certainStages} stages cannot fail. After that the chance drops {fact:fusion.chanceLoss}% a stage. Luck helps, as it does for Tempering.
+      - kind: 3
+        heading: 
+        lines:
+        - '"Untouched" means no Temper, no Fusion and no Tuning. "The same kind" means the same slot, and for a weapon the same class.'
+    - id: tuning-and-reforge
+      title: Tuning and Reforge
+      summary: Two more jobs at the forge. Tuning adds a second set of stats to a piece, stage by stage. Reforge swaps a Rare you cannot use for a random other one.
+      clip: {fileID: 32900000, guid: 47e135dbcb3538e43825440e89bc3936, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.0225
+        y: 0
+        width: 0.3275
+        height: 0.85944444
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - The <b>Armorer</b>'s forge, on the <b>TUNING</b> and <b>REFORGE</b> tabs.
+      - kind: 2
+        heading: 'Tuning: what a stage adds'
+        lines:
+        - Weapon | Critical and Spirit
+        - Armor | Max HP and Spirit
+        - Gloves | Agility
+        - Boots | Move speed and Agility
+        - Ring | Vitality
+        - Amulet | Strength
+      - kind: 0
+        heading: 'Tuning: how it goes'
+        lines:
+        - Rare and Epic gear, up to stage {fact:tuning.stages}; a Cape cannot be tuned. Each try costs chips, Renown and Creds, and the bench shows the price. The first ten stages cannot fail. From stage 13 a fail drops the piece one stage. A Reset Chip takes a piece back to stage 0.
+      - kind: 0
+        heading: 'Reforge: how it goes'
+        lines:
+        - 'Put an <b>untouched</b> Rare on the anvil: it becomes another Rare of the same level that your character can wear, picked at random. It costs {fact:reforge.creds} Creds at level {fact:reforge.level} and more for higher levels, and works {fact:reforge.chance}% of the time, plus your Luck.'
+      - kind: 4
+        heading: 
+        lines:
+        - 'A failed Reforge costs only the Creds: you keep your piece.'
+        - Epic gear, and anything tempered, fused or tuned, cannot be reforged.
+    - id: ascension
+      title: Ascension
+      summary: 'Ascension raises all four of your attributes at once, one level at a time up to +{fact:ascension.max}, and crowns you with a Nova: a star over your head that grows with you.'
+      clip: {fileID: 32900000, guid: 3948e0e1800bfb64fa23432feb40dc91, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.649375
+        y: 0.07
+        width: 0.35
+        height: 0.5922222
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - The <b>Herald</b>, at the plaza.
+      - kind: 2
+        heading: Each attempt
+        lines:
+        - Costs | {fact:ascension.renown} Renown and {fact:ascension.creds} Creds
+        - It can rise | +1 to Strength, Vitality, Agility and Spirit
+        - It can hold | Nothing changes
+        - It can slip | You lose one level
+      - kind: 0
+        heading: The Nova
+        lines:
+        - 'Every {fact:ascension.perTier} levels your Nova gains a tier: more rings of light, turning round the star. There are twelve tiers. A slip can never take a tier you have reached. Everyone sees your Nova, and a new tier is announced.'
+      - kind: 4
+        heading: 
+        lines:
+        - The Creds and Renown are spent whether you rise, hold or slip. The higher you go, the more often you hold or slip.
+    - id: nova-standings
+      title: Nova Standings
+      summary: Standings are ranks you buy with Renown. Each rank gives 1% of a stat for good, and one Standing is worn as a title on your namecard.
+      clip: {fileID: 32900000, guid: a72b6cdc539cf534a954ee2a5ae55bcc, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.649375
+        y: 0.07
+        width: 0.35
+        height: 0.75777775
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - The <b>Herald</b>, at the plaza.
+      - kind: 2
+        heading: The four tracks
+        lines:
+        - Vanguard | Attack Power
+        - Bulwark | Defense
+        - Ironblood | Max HP
+        - Mindwell | Max Flux
+      - kind: 0
+        heading: How it works
+        lines:
+        - Each track has twelve ranks, bought in order. A rank is never lost. Every rank you hold in every track counts, so all four are worth climbing.
+        - Choose one track to wear. Its rank becomes the title over your name, in your faction's own words.
+      - kind: 3
+        heading: 
+        lines:
+        - Standings cost Renown only, no Creds. Later ranks cost far more than early ones, so the first ranks of all four tracks are the cheapest gains.
+  - title: Hunting
+    topics:
+    - id: hostiles
+      title: Hostiles
+      summary: Hostiles are what you hunt for XP, Creds and gear. They live in Hostile Zones outside the town, one kind to a zone.
+      clip: {fileID: 32900000, guid: f645b09e3430ec84ca8b472753dcbd4c, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - The zones are named on your map with their level. A notice tells you when you walk into one.
+      - kind: 2
+        heading: What a kill pays
+        lines:
+        - 'XP | By the level gap: see Levels, XP and death'
+        - Creds | A stack of cash on the ground. Picking it up pays your wallet
+        - A Stim | Now and then
+        - Gear | Rarely, a piece of the Hostile's level
+      - kind: 0
+        heading: Whose kill is it
+        lines:
+        - The first player to hit a Hostile holds the kill, with their Squad. It shows <b>TAKEN</b> to everyone else. Leave it alone for ten seconds and it is free again.
+      - kind: 2
+        heading: Things to know
+        lines:
+        - Some attack on sight | Others only fight back
+        - A Bruiser | A much tougher Hostile with a far better chance of gear
+        - Pulled too far from its zone | It breaks off and walks back
+        - The town | No Hostile follows you onto neutral ground
+      - kind: 3
+        heading: 
+        lines:
+        - Hunt White names for full rewards. Gather a few and use an area skill to clear them together.
+    - id: stims
+      title: Stims
+      summary: Stims give back health or Flux in the middle of a fight. Keep them on your Hotbar.
+      clip: {fileID: 32900000, guid: 57803170b23dbc44aa9fc209dcbae660, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.5375
+        y: 0.06555556
+        width: 0.21012497
+        height: 0.65227777
+      sections:
+      - kind: 2
+        heading: The three kinds
+        lines:
+        - HP Stim | Restores health
+        - Flux Stim | Restores Flux
+        - Dual Stim | Restores both
+      - kind: 1
+        heading: Using one
+        lines:
+        - Drag the stack from your Pack onto a Hotbar slot. The slot shows how many you have left.
+        - Press the slot's key in a fight. A Stim has a short cooldown before the next.
+        - Or {mouse:right} right-click it in the Pack.
+      - kind: 3
+        heading: 
+        lines:
+        - A new character starts with ten. Hostiles drop more.
+        - Autopilot can use Stims for you when your health or Flux falls below a level you set.
+    - id: autopilot
+      title: Autopilot and Magnet
+      summary: Autopilot hunts for you inside one Hostile Zone. Magnet picks up drops by itself, with or without Autopilot.
+      clip: {fileID: 32900000, guid: 34bf7aae32cdb3940b399dde9008db5f, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.64125
+        y: 0.046666667
+        width: 0.35
+        height: 0.70555556
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - 'Autopilot on and off: {key:Autopilot} . Its window, with Magnet: {key:AutopilotSettings} .'
+      - kind: 1
+        heading: Setting it up
+        lines:
+        - Stand in a Hostile Zone. Autopilot will not start anywhere else.
+        - 'Open the window and choose: the whole zone or a circle round you, which Hostiles to skip, which Hotbar slots to attack with, which buffs to keep up, and when to use a Stim.'
+        - Press {key:Autopilot} . An AUTO tag shows on your namecard while it runs.
+      - kind: 2
+        heading: It stops when
+        lines:
+        - You die, or leave the zone | Always
+        - Another player attacks you | Always
+        - Your time runs out | Each Autopilot Chip adds {fact:auto.hoursPerChip} hours, which only run while it is on
+        - Your Pack is full or Stims run out | If you told it to
+      - kind: 0
+        heading: Magnet
+        lines:
+        - 'Magnet takes what you tick: Common, Uncommon, Rare and Epic gear each have a box, and so do Stims and other items. Creds are always taken. It needs no time and works while you hunt by hand.'
+      - kind: 3
+        heading: 
+        lines:
+        - 'Autopilot only does what you could do yourself, no faster: it presses your Hotbar, walks and clicks.'
+    - id: pets
+      title: Pets
+      summary: A pet follows you and adds to one of your stats. The more it grows, the more it gives.
+      clip: {fileID: 32900000, guid: 7821b577c2067224e9ec8c79a1fb8c79, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - A pet is an item. Wear it in the Pet slot of the Equipment window.
+      - kind: 2
+        heading: The four pets
+        lines:
+        - Kitsune Spirit | Attack Power
+        - Drone Core | Max HP
+        - Tidecaller | Defense
+        - Emberwing | Max Flux
+      - kind: 2
+        heading: Looking after it
+        lines:
+        - Growth | 0 to 100%. It rises as you kill Hostiles with the pet out. Its stat grows with it
+        - Stages | Five. At each one the pet grows and glows more
+        - Hunger | Falls slowly while it is out. At empty it gives no stat and earns nothing
+        - Pet Ration | Refills its hunger
+      - kind: 3
+        heading: 
+        lines:
+        - 'Growth and hunger belong to the pet itself: they stay with it in the Vault, a Trade or a Kiosk.'
+        - Your pet reacts to what you do in a small speech bubble only you see. Settings can quiet it.
+        - Hold the pointer over the pet item to read its growth, hunger and what it gives now.
+  - title: Other players
+    topics:
+    - id: namecards-and-emotes
+      title: Namecards and the emote wheel
+      summary: The card over a player's head says who they are. The emote wheel lets your character say something without words.
+      clip: {fileID: 32900000, guid: b22e472481131ec48ba5453057591915, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 2
+        heading: On a namecard
+        lines:
+        - Top line | The Standing they wear
+        - 'Crest, name and level | In their faction''s colour. Red: your opponent in a Callout'
+        - Under the name | Their Crew
+        - A health bar | Only on your target, your Squad, and players you could fight
+      - kind: 0
+        heading: Whose card you see
+        lines:
+        - Your own faction's, always. Another faction's only while that player stands on neutral ground. Your own card and all names can be switched off in Settings, on the Interface page.
+      - kind: 1
+        heading: The emote wheel
+        lines:
+        - 'Hold {key:EmoteWheel} . A ring of eight groups opens: Greet, Cheer, Moves, Taunt, Feels, Gestures, Props, Stances.'
+        - '{mouse:left} Click a group, then an emote. {mouse:wheel} The wheel turns the page; {mouse:right} right-click goes back.'
+        - Let go of the key to close it.
+      - kind: 3
+        heading: 
+        lines:
+        - You must stand still to emote. An emote plays once; a Stance, shown in colour, is held until you move or fight.
+    - id: squad
+      title: Squad
+      summary: A Squad is up to five players of one faction hunting together. Kills are shared and everyone earns more XP.
+      clip: {fileID: 32900000, guid: afb9556c7c65960468c8bb5652c3e7de, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 2
+        heading: Rules
+        lines:
+        - Size | Up to 5
+        - Who | Your own faction, within 10 levels of every member
+        - 'XP | Shared with every member in the same map, with a bonus that grows with each member: up to +20% for five'
+      - kind: 1
+        heading: Forming one
+        lines:
+        - Select a player and press <b>INVITE</b> on the target strip, or type <b>/invite</b> and their name.
+        - They accept the prompt. Their frame appears on your screen with their health and Flux.
+        - Talk with <b>/p</b> . Leave with the button under the frames, or type <b>/leave</b>.
+      - kind: 0
+        heading: Follow
+        lines:
+        - Click a member's frame and choose <b>Follow</b>, or type <b>/follow</b>. Your character walks after them and stops a little way off. Any move of your own, or a fight, ends it.
+      - kind: 3
+        heading: 
+        lines:
+        - Squad frames can be moved like any HUD panel. Settings can decline invitations for you.
+    - id: contacts
+      title: Contacts
+      summary: 'Contacts is your list of players you want to find again. It is mutual: when one accepts, each is on the other''s list.'
+      clip: {fileID: 32900000, guid: 65798e873d363f34690036af494107f1, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.023125
+        y: 0.07333333
+        width: 0.2625
+        height: 0.5322222
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - 'The Contacts window: {key:Contacts} .'
+      - kind: 1
+        heading: Adding one
+        lines:
+        - Hold {cap:SHIFT} and click the player, then <b>Add Contact</b>. Or type <b>/contact add</b> and their name.
+        - They accept. A request waits for them if they are offline.
+      - kind: 2
+        heading: The tabs
+        lines:
+        - Contacts | Favourites first, then who is online. Level, class, last seen, and a private note of your own
+        - Requests | Waiting for your answer
+        - Recent | Squad mates, trade partners, Callout opponents and whisperers of this session
+        - Blocked | Players you have blocked
+      - kind: 4
+        heading: Blocking
+        lines:
+        - A block is one-sided and never announced. It ends the contact and stops whispers, invitations, Callouts, trades and requests between you, both ways.
+      - kind: 3
+        heading: 
+        lines:
+        - Contacts are per character. With another faction you can only become contacts face to face on neutral ground.
+    - id: trade
+      title: Trade
+      summary: Trade swaps items and Creds with another player, face to face. Nothing changes hands until both of you have locked and confirmed, and then everything moves at once or nothing does.
+      clip: {fileID: 32900000, guid: e2f8d57b3c644b04a94aa291544ee072, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.0875
+        y: 0.016666668
+        width: 0.830125
+        height: 0.6722222
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - With a player of your own faction, anywhere. With a player of another faction, only on neutral ground such as the starter town. Stand within {fact:trade.range} m of each other.
+      - kind: 1
+        heading: Making a trade
+        lines:
+        - Ask. Select the player and press <b>TRADE</b> on the target strip, or hold {cap:SHIFT} , click them and choose Trade. You can also type <b>/trade</b> and their name in chat.
+        - They accept the request on their screen. It waits {fact:trade.requestSeconds} seconds for an answer.
+        - 'Lay out your offer: {mouse:right} right-click an item in your Pack to offer it, up to {fact:trade.slots} stacks. Press <b>SET</b> to add Creds. Right-click an offered item to take it back.'
+        - 'Look at their side. Hold the pointer over an item to read its card: its rarity, its Temper and everything else about it is shown.'
+        - Both of you press <b>LOCK OFFER</b>. If either side changes anything afterwards, both unlock and must lock again, so what you locked on is what you get.
+        - Both of you press <b>CONFIRM TRADE</b>. The items and Creds swap in one go and land in your Pack and wallet.
+      - kind: 2
+        heading: Limits
+        lines:
+        - Items each way | {fact:trade.slots} stacks
+        - Creds each way, per trade | {fact:trade.perTrade}
+        - Creds your account can send per day | {fact:trade.perDay} , all your characters together
+        - Room | Both Packs need space for what comes back, or the trade does not happen
+      - kind: 4
+        heading: 
+        lines:
+        - A confirmed trade cannot be undone. Read the other side again after the last change, before you lock.
+        - 'Walking too far apart, dying or leaving the game cancels the trade. Nothing is lost: what you offered is simply released.'
+      - kind: 3
+        heading: 
+        lines:
+        - The trade window shows how many Creds your account may still send today.
+        - If you would rather not be asked, Settings has a switch on the Gameplay page that declines trade requests for you.
+    - id: kiosks
+      title: Kiosks
+      summary: A Kiosk is your own shop. It stands in the plaza and sells for you while you play elsewhere, or while you are offline.
+      clip: {fileID: 32900000, guid: c4b781ef1c5e0394aad953546abe647a, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.1625
+        y: 0.06888889
+        width: 0.245
+        height: 0.60555553
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - The Central Plaza. Open the Kiosk window with {key:Kiosk} .
+      - kind: 1
+        heading: Opening a shop
+        lines:
+        - Stand in the plaza, away from other Kiosks and vendors, and press {key:Kiosk} .
+        - Give the shop a name.
+        - '{mouse:right} Right-click items in your Pack to put them in, up to {fact:kiosk.slots} stacks, and set the price of one of each.'
+        - Choose how long it runs and open it. A stand-in that looks like you takes your place, and you are free to go.
+      - kind: 2
+        heading: How long
+        lines:
+        - 3 days | Free
+        - 14 days | One Kiosk Permit (14 Days)
+        - 30 days | One Kiosk Permit (30 Days)
+      - kind: 2
+        heading: Selling and buying
+        lines:
+        - A sale | You are told in chat. {fact:kiosk.tax}% of the price is tax; the rest goes to your till
+        - The till | Collect it from the Kiosk window, wherever you are
+        - Closing, selling out, or time up | Unsold items and the till wait for you to collect
+        - To buy | Click a stand, right-click an item, choose how many and confirm
+      - kind: 4
+        heading: 
+        lines:
+        - 'Each rarity has a top price for one item. Check your prices before you open: a sold item is gone.'
+    - id: vaults
+      title: Vault and Deep Vault
+      summary: Two stores for what your Pack cannot hold. The Vault is this character's. The Deep Vault is shared by every character on your account.
+      clip: {fileID: 32900000, guid: 427eea3d32e37cb4db784fc38c8d2b38, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.1625
+        y: 0.016666668
+        width: 0.755125
+        height: 0.80222225
+      sections:
+      - kind: 2
+        heading: Where
+        lines:
+        - Vault | The <b>Vaultkeeper</b>, at the plaza
+        - Deep Vault | The <b>Wayfinder</b>, at the plaza
+      - kind: 2
+        heading: Moving things
+        lines:
+        - '{mouse:right} Right-click an item | Moves it between Pack and store'
+        - '{cap:SHIFT} and right-click a stack | Asks how many'
+        - Drag onto a cell | Places it, tops up a stack, or swaps
+        - The Creds line | Put Creds in or take them out
+      - kind: 3
+        heading: 
+        lines:
+        - Each holds 96 cells over two pages, and as many Creds as your wallet.
+        - The Deep Vault is how you pass gear and Creds to your other characters, whatever their faction.
+    - id: crews
+      title: Crews
+      summary: A Crew is a lasting band of players of one faction, with its own name, symbol, chat and ranks.
+      clip: {fileID: 32900000, guid: a427948a2cc730446b2a9f7e690fd2b6, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.28125
+        y: 0.14222223
+        width: 0.2625
+        height: 0.58111113
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - 'Founded at the <b>Vaultkeeper</b>. The Crew window: {key:Crew} .'
+      - kind: 2
+        heading: Founding one
+        lines:
+        - You need | Level {fact:crew.level} and {fact:crew.cost} Creds
+        - You choose | A name of 3 to 16 letters that no other Crew has, and a symbol
+      - kind: 2
+        heading: Who may do what
+        lines:
+        - Members | Crew chat with <b>/g</b> , and leave
+        - Officers, up to {fact:crew.officers} | Also invite, expel Members, and write the announcement
+        - The Leader | Also appoint Officers, give Crew Titles, change the symbol, hand the Crew over, and disband it
+      - kind: 0
+        heading: Joining and leaving
+        lines:
+        - 'An Officer or the Leader invites you: hold {cap:SHIFT} , click, and choose the Crew invitation, or <b>/cinvite</b> and a name. Leave from the Crew window. A Leader hands the Crew over before leaving.'
+      - kind: 3
+        heading: 
+        lines:
+        - The announcement reaches every member online when it changes, and greets them at login. Your Crew's name shows on your namecard.
+    - id: callouts
+      title: Callouts and who is hostile
+      summary: A Callout is a fight to the death between two players who both agree to it. Everywhere else, who can hurt you depends on faction and place.
+      clip: {fileID: 32900000, guid: fb6a29715ac8881428921f95689616bb, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 1
+        heading: A Callout
+        lines:
+        - Select a player and press <b>CALLOUT</b> on the target strip, or type <b>/callout</b> and their name. They must be near.
+        - They accept. A short count runs, and their name turns red.
+        - Fight. Any weapon and any skill. It ends when one of you falls.
+        - Walking far from where it began, or leaving the game, forfeits.
+      - kind: 2
+        heading: Who can attack whom
+        lines:
+        - Your own faction | Only in a Callout
+        - Another faction, on neutral ground | Only in a Callout. The town is neutral ground
+        - Another faction, anywhere else | They are your enemy, and you are theirs
+      - kind: 3
+        heading: 
+        lines:
+        - Losing a Callout costs no XP.
+        - Settings can decline Callouts for you without showing them.
+    - id: creds
+      title: Creds
+      summary: Creds are the game's money. You earn them hunting and spend them making your character stronger.
+      clip: {fileID: 32900000, guid: 7efc7662c008b8e46abef4dcb10ab25f, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.5375
+        y: 0.06555556
+        width: 0.21012497
+        height: 0.65227777
+      sections:
+      - kind: 2
+        heading: Where they come from
+        lines:
+        - Hostiles | Most kills drop a stack of cash. Pick it up and it goes straight to your wallet
+        - Kiosk sales | Your till, less the tax
+        - Trades | From other players
+      - kind: 2
+        heading: Where they go
+        lines:
+        - The forge | Every Tempering, Fusion, Tuning and Reforge attempt
+        - The Herald | Every Ascension attempt
+        - Founding a Crew | A large one-time fee
+        - Kiosks and trades | Buying from other players
+      - kind: 2
+        heading: Limits
+        lines:
+        - A trade | {fact:trade.perTrade} Creds each way
+        - A day | Your account can send {fact:trade.perDay} in trades
+        - A Kiosk price | A cap for one item, by rarity
+      - kind: 3
+        heading: 
+        lines:
+        - Your balance is at the foot of the Pack. The Vault and Deep Vault each hold Creds too, and the Deep Vault's are shared by all your characters.
+  - title: The world
+    topics:
+    - id: factions
+      title: Factions
+      summary: Three factions share the world, and you belong to one for good. It decides your look, your weapons, your interface and who stands with you.
+      clip: {fileID: 32900000, guid: 39b44937695e85c4ba955e37b7b005e5, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 2
+        heading: The three
+        lines:
+        - Hegemony | Monoblade, Glaive, Carbine
+        - Null | Harvester, Servo Claws, Arc Caster
+        - Covenant | Longaxe, Claymore, Warbow
+      - kind: 2
+        heading: What your faction decides
+        lines:
+        - Your lineage | The bodies you could choose from when you made your character
+        - Your weapons | Only your faction's three classes
+        - Your interface | Every window and the HUD wear your faction's own art
+        - Your allies | Squads and Crews are one faction only. <b>/f</b> talks to all of it
+      - kind: 0
+        heading: The other two
+        lines:
+        - Off neutral ground, players of the other factions are your enemies. On neutral ground you can trade with them, buy from their Kiosks, whisper, become contacts and call them out, but never share a Squad or a Crew.
+    - id: day-and-weather
+      title: Day, night and weather
+      summary: The world has its own clock and its own sky. Day turns to night, and the weather changes on its own.
+      clip: {fileID: 32900000, guid: 20f3b0762158fa14ea6c653266dba6b5, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 2
+        heading: What you will see
+        lines:
+        - Day and night | The sun and moon cross the sky. Street lamps come on at dusk
+        - Weather | Clear skies, cloud, rain and storms blend from one to the next
+        - Storms | Rain, wind in the grass, and lightning
+      - kind: 3
+        heading: 
+        lines:
+        - Everyone on the server sees the same time and the same weather.
+        - 'If the game runs slowly in heavy weather, Settings has a Graphics page: try a lower preset, or turn down volumetric fog and grass density.'
+    - id: settings-and-keys
+      title: Settings and keys
+      summary: Settings is where you make the game look, sound and handle the way you like. Every key can be changed.
+      clip: {fileID: 32900000, guid: ff153d760138def4fa437a44435dbff0, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0.378125
+        y: 0.14444445
+        width: 0.333125
+        height: 0.7079444
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - '{key:Settings} opens Settings. {key:Guide} opens this Guide. {cap:ESC} opens the game menu when nothing else is open.'
+      - kind: 2
+        heading: The pages
+        lines:
+        - Graphics | Resolution, window mode, a quality preset and the details under it
+        - Audio | Volume of music, effects, ambience and the interface
+        - Interface | HUD layout, names over heads, the minimap, chat, interface size
+        - Gameplay | The camera, damage numbers, and requests to decline for you
+        - Controls | Every key
+        - Guide | What you are reading
+      - kind: 1
+        heading: Changing a key
+        lines:
+        - Go to the Controls page.
+        - Click the key you want to change, then press the new one.
+        - If the new key is in use, the two swap, so nothing is left without a key. {cap:ESC} cancels.
+      - kind: 0
+        heading: Apply, Revert, Reset
+        lines:
+        - A setting takes effect as you move it, so you see what it does. <b>APPLY</b> keeps your changes. <b>REVERT</b> puts back what was there when you opened the window. <b>RESET TO DEFAULTS</b> sets the page you are on back to the game's own values.
+      - kind: 3
+        heading: 
+        lines:
+        - The game menu has Log Out, which returns to character select, and Exit Game. Both save your character first.
+  facts:
+  - name: trade.slots
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: tradeSlots
+  - name: trade.perTrade
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: tradeCredsPerTrade
+  - name: trade.perDay
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: tradeCredsPerDay
+  - name: trade.range
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: tradeRange
+  - name: trade.requestSeconds
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: tradeRequestSeconds
+  - name: temper.cap
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.hardCap
+  - name: temper.failLoss
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.failLoss
+  - name: temper.minChance
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.minChance
+  - name: temper.luckPerPercent
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.luckPerPercent
+  - name: temper.maxLuckBonus
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.maxLuckBonus
+  - name: temper.luckyBonus
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.luckyFailsafeBonus
+  - name: temper.alloy1
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.alloys[0].step
+  - name: temper.alloy2
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.alloys[1].step
+  - name: temper.alloy3
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.alloys[2].step
+  - name: temper.alloy4
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.alloys[3].step
+  - name: temper.alloy5
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.alloys[4].step
+  - name: temper.breakFrom
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.breakBands[0].from
+  - name: temper.break1To
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.breakBands[0].to
+  - name: temper.break1Low
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.breakBands[0].chanceFrom
+  - name: temper.break1High
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.breakBands[0].chanceTo
+  - name: temper.break2From
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.breakBands[1].from
+  - name: temper.break2To
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.breakBands[1].to
+  - name: temper.break2Low
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.breakBands[1].chanceFrom
+  - name: temper.break2High
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: temper.breakBands[1].chanceTo
+  - name: kiosk.slots
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: kioskSlots
+  - name: kiosk.tax
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: kioskSalesTaxPercent
+  - name: crew.level
+    source: {fileID: 11400000, guid: ffeff43fd896c2141adfa404d202f76c, type: 2}
+    field: founderLevel
+  - name: crew.cost
+    source: {fileID: 11400000, guid: ffeff43fd896c2141adfa404d202f76c, type: 2}
+    field: foundingCost
+  - name: crew.officers
+    source: {fileID: 11400000, guid: ffeff43fd896c2141adfa404d202f76c, type: 2}
+    field: maxOfficers
+  - name: serum.cap
+    source: {fileID: 11400000, guid: adf5ee1dda4b4a747a2d1c49074c361b, type: 2}
+    field: baseCap
+  - name: auto.hoursPerChip
+    source: {fileID: 11400000, guid: 103a4e791aa9fae4095473743729c5df, type: 2}
+    field: hoursPerChip
+  - name: fusion.stages
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: fusion.maxStage
+  - name: fusion.minTemper
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: fusion.minTemperRare
+  - name: fusion.temperCost
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: fusion.temperCostOnSuccess
+  - name: fusion.firstCreds
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: fusion.firstStageCreds
+  - name: fusion.credsPerStage
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: fusion.credsPerStage
+  - name: fusion.certainStages
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: fusion.certainStages
+  - name: fusion.chanceLoss
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: fusion.chanceLossPerStage
+  - name: tuning.stages
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: tuning.maxStage
+  - name: reforge.creds
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: reforge.baseCreds
+  - name: reforge.chance
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: reforge.chance
+  - name: reforge.level
+    source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
+    field: reforge.firstLevel
+  - name: ascension.max
+    source: {fileID: 11400000, guid: e9d4ab5aa71f9a343b65117d54709ee3, type: 2}
+    field: ascension.maxLevel
+  - name: ascension.perTier
+    source: {fileID: 11400000, guid: e9d4ab5aa71f9a343b65117d54709ee3, type: 2}
+    field: ascension.levelsPerTier
+  - name: ascension.renown
+    source: {fileID: 11400000, guid: e9d4ab5aa71f9a343b65117d54709ee3, type: 2}
+    field: ascension.renownCost
+  - name: ascension.creds
+    source: {fileID: 11400000, guid: e9d4ab5aa71f9a343b65117d54709ee3, type: 2}
+    field: ascension.credsCost
+  - name: hostile.stimChance
+    source: {fileID: 11400000, guid: 5fc5ceac32329ca4ab5a9db2c541b0fd, type: 2}
+    field: stimChancePercent
+  - name: hostile.leash
+    source: {fileID: 11400000, guid: 5fc5ceac32329ca4ab5a9db2c541b0fd, type: 2}
+    field: leashMetres

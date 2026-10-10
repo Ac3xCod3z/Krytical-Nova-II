@@ -674,6 +674,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Guide",
+                    "type": "Button",
+                    "id": "772bd0a0-88a1-4bfe-9388-01300000000e",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -817,6 +826,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "AutopilotSettings",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "282bd0a0-88a1-4bfe-9388-01300000000e",
+                    "path": "<Keyboard>/h",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Guide",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -54,14 +54,18 @@ Shader "Hidden/KryticalNova/GlowHalo"
         #define GLOW_PINS 32        // the most pinned things in one view (GlowHaloFeature.MaxPins)
         float4 _GlowPins[GLOW_PINS];    // Composite: xyz = a thing's own origin in the world (a weapon's grip), w = how bright its sparks are
         float4 _GlowTips[GLOW_PINS];    // Composite: xyz = the way its tip points in the world
-        float4 _GlowAuras[GLOW_PINS];   // Composite: x = how strong its lightning is, y = how much of its light is flame, z = its own number (0-1): its sparks and arcs are its own
+        float4 _GlowAuras[GLOW_PINS];   // Composite: x = how strong its lightning is, y = how much of its light is flame, z = its own number (0-1): its sparks and arcs are its own, w = how strongly its light is broken up into embers
         float _GlowClock;           // Composite: seconds, on the clock the breath runs by
         float4 _GlowTwinkle;        // Composite: x = the room one spark has in metres, y = beats a second, z = share of spots lit, w = least room in pixels
         float4 _GlowTwinkleLook;    // Composite: x = how white a spark's heart is; as shares of its room: y = its dot, z = its rays' reach, w = their thickness
         float4 _GlowBolt;           // Composite: x = the stretch one arc runs along in metres, y = strikes a second, z = how often one happens, w = its thickness in pixels
         float4 _GlowBoltLook;       // Composite: x = how bright an arc is, y = how far it wanders from the outline (share of the halo's width), z = how white it is
         float4 _GlowFlame;          // Composite: x = a tongue's length along the weapon in metres, y = metres a second towards the tip, z = how much of the light is tongues, w = their lean
-        float4 _GlowFlameLook;      // Composite: x = how much brighter the heart of a tongue is
+        float4 _GlowFlameLook;      // Composite: x = how much brighter the heart of a tongue is; embers: y = how much hotter (paler, brighter) their hot patches are, z = how much deeper their troughs
+        #define NOVA_DISCS 8        // the most Novas that hide the light behind them (NovaCull.MaxDiscs)
+        float4 _KN_NovaDiscs[NOVA_DISCS];   // Composite: xyz = a Nova's middle in the world, w = its radius in metres
+        float _KN_NovaDiscCount;
+        float4 _GlowEmber;          // Composite: x = the size of one ember in metres, y = metres a second towards the tip, z = how ragged they make the light's edge, w = how patchy its body
 
         // Parts of one weapon are never further apart than this (metres): a dark part further than that from the
         // glowing one, in depth, belongs to something else and has no say over this light.
@@ -284,6 +288,26 @@ Shader "Hidden/KryticalNova/GlowHalo"
                 return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
             }
 
+            // Gradient (Perlin) noise, about -1 to 1: softer and less blocky than the value noise above, which is
+            // what a flame's body wants.
+            float2 Gradient(float2 cell)
+            {
+                float turn = Hash(float3(cell, 0.71)) * 6.2831853;
+                return float2(cos(turn), sin(turn));
+            }
+
+            float Perlin(float2 p)
+            {
+                float2 cell = floor(p);
+                float2 f = frac(p);
+                float2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+                float a = dot(Gradient(cell), f);
+                float b = dot(Gradient(cell + float2(1.0, 0.0)), f - float2(1.0, 0.0));
+                float c = dot(Gradient(cell + float2(0.0, 1.0)), f - float2(0.0, 1.0));
+                float d = dot(Gradient(cell + float2(1.0, 1.0)), f - float2(1.0, 1.0));
+                return lerp(lerp(a, b, u.x), lerp(c, d, u.x), u.y) * 1.41;
+            }
+
             // Where a pinned thing is on screen: its origin, the way its tip points, and the size of a metre there.
             struct Pin
             {
@@ -293,6 +317,7 @@ Shader "Hidden/KryticalNova/GlowHalo"
                 float sparks;           // how bright its sparks are
                 float lightning;        // how strong its lightning is
                 float flame;            // how much of its light is flame
+                float ember;            // how strongly its light is broken up into embers
                 float seed;             // its own number: no two things spark or strike alike
                 bool seen;
             };
@@ -327,6 +352,7 @@ Shader "Hidden/KryticalNova/GlowHalo"
                 pin.sparks = _GlowPins[index].w;
                 pin.lightning = _GlowAuras[index].x;
                 pin.flame = _GlowAuras[index].y;
+                pin.ember = _GlowAuras[index].w;
                 pin.seed = _GlowAuras[index].z * 97.0;
                 return pin;
             }
@@ -428,6 +454,37 @@ Shader "Hidden/KryticalNova/GlowHalo"
                 return float2(reach, tongue);
             }
 
+            // An Ascension Nova hides the characters and pets behind it, and so their light: 0 where a Nova stands
+            // in front of something this deep (metres from the eye) at this pixel, 1 everywhere else. A Nova hides
+            // from the back of its rings, as its disc does for the models (NovaHalo).
+            half ShownPastNovas(float2 here, float eyeDepth)
+            {
+                half shown = 1.0;
+                int count = min((int)(_KN_NovaDiscCount + 0.5), NOVA_DISCS);
+                for (int i = 0; i < count; i++)
+                {
+                    float4 disc = _KN_NovaDiscs[i];
+                    float4 clip = TransformWorldToHClip(disc.xyz);
+                    if (clip.w < 0.05 || eyeDepth < clip.w + disc.w) continue;
+                    float pixelsPerMetre = unity_CameraProjection._m11 * 0.5 * _GlowAttr_TexelSize.w;
+                    if (IsPerspectiveProjection()) pixelsPerMetre /= clip.w;
+                    float radius = disc.w * pixelsPerMetre;
+                    shown *= smoothstep(radius - 1.0, radius + 1.0, length(here - PixelOf(clip)));
+                }
+                return shown;
+            }
+
+            // Embers: the light seen close, as a flame is. 0 in a trough, 1 in a hot patch; two layers of noise pinned
+            // to the thing, one streaming towards the tip and one boiling across it, so no pattern is seen to pass by.
+            // outward is metres from the outline: further out the same ember is nearer the tip.
+            float Embers(float along, float across, float outward, float own)
+            {
+                float size = max(_GlowEmber.x, 0.001);
+                float2 at = float2(along - outward * 0.8 - _GlowClock * _GlowEmber.y, across) / size + own;
+                float n = Perlin(at) * 0.6 + Perlin(at * 2.1 + float2(3.7, _GlowClock * _GlowEmber.y * 0.6 / size)) * 0.4;
+                return smoothstep(-0.45, 0.45, n);
+            }
+
             half4 CompositeFrag(FullVaryings input) : SV_Target
             {
                 int2 pixel = int2(input.positionCS.xy);
@@ -442,9 +499,10 @@ Shader "Hidden/KryticalNova/GlowHalo"
                 half4 own = LOAD_TEXTURE2D(_GlowAttr, pixel);
                 if (own.a != 0.0)
                 {
-                    float wears = LOAD_TEXTURE2D(_GlowDepth, pixel).g;
+                    float2 ownDepth = LOAD_TEXTURE2D(_GlowDepth, pixel).rg;
+                    float wears = ownDepth.g;
                     if (own.a < 0.0 || wears < 0.5) return 0.0;
-                    half3 spark = Glint(own.rgb, Twinkle(PinOf(wears), here));
+                    half3 spark = Glint(own.rgb, Twinkle(PinOf(wears), here)) * ShownPastNovas(here, ownDepth.r);
                     return half4(spark, saturate(max(spark.r, max(spark.g, spark.b))) * _GlowShape.z);
                 }
 
@@ -553,10 +611,12 @@ Shader "Hidden/KryticalNova/GlowHalo"
                 // Whatever stands in front of the glowing thing hides its light; what is level with it or behind is lit.
                 float sceneEye = EyeDepth(LoadSceneDepth(pixel));
                 lit *= saturate((sceneEye - seedEye) / max(_GlowShape.w, 0.001) + 1.0);
+                lit *= ShownPastNovas(here, seedEye);
                 // The model's own ink outline sits on its edge: the light starts just outside it and leaves it black.
                 lit *= smoothstep(inkGap * 0.5, inkGap * 1.5 + 0.001, distancePx);
 
                 half glow = pow(1.0 - out01, softness);
+                half3 colour = attr.rgb;
                 half3 extra = 0.0;
                 if (seedDepth.g > 0.5)
                 {
@@ -566,12 +626,31 @@ Shader "Hidden/KryticalNova/GlowHalo"
                         float2 offset = (here - pin.origin) / pin.pixelsPerMetre;
                         float along = dot(offset, pin.towardsTip);
                         float across = dot(offset, float2(-pin.towardsTip.y, pin.towardsTip.x));
+                        float outward = max(distancePx - inkGap, 0.0) / pin.pixelsPerMetre;
+                        // Embers: the light reaches less far in a trough than in a hot patch (a ragged edge), its
+                        // body is patchy, and its colour runs from a deeper shade of itself to a hotter, paler one.
+                        float reach = 1.0;
+                        half body = 1.0;
+                        if (pin.ember > 0.0)
+                        {
+                            float amount = saturate(pin.ember);
+                            float ember = Embers(along, across, outward, pin.seed);
+                            float hot = smoothstep(0.55, 0.95, ember);
+                            reach = 1.0 - _GlowEmber.z * amount * (1.0 - ember);   // never past the halo's own width: the light must end where the halo does
+                            body = (1.0 - _GlowEmber.w * amount * (1.0 - ember)) * (1.0 + _GlowFlameLook.y * pin.ember * hot);
+                            half brightest = max(attr.r, max(attr.g, attr.b));
+                            half3 deep = attr.rgb * lerp(1.0, attr.rgb / max(brightest, 0.001), _GlowFlameLook.z);
+                            half3 pale = lerp(attr.rgb, brightest, _GlowFlameLook.y * 0.35);
+                            colour = lerp(attr.rgb, lerp(deep, pale, ember), amount);
+                            glow = pow(saturate(1.0 - out01 / max(reach, 0.05)), softness);
+                        }
                         if (pin.flame > 0.0)
                         {
-                            float2 flame = Flame(along, across, max(distancePx - inkGap, 0.0) / pin.pixelsPerMetre);
-                            half tongues = pow(saturate(1.0 - out01 / max(flame.x, 0.05)), softness) * (1.0 + _GlowFlameLook.x * flame.y);
+                            float2 flame = Flame(along, across, outward);
+                            half tongues = pow(saturate(1.0 - out01 / max(flame.x * reach, 0.05)), softness) * (1.0 + _GlowFlameLook.x * flame.y);
                             glow = lerp(glow, tongues, saturate(pin.flame));
                         }
+                        glow *= body;
                         if (pin.lightning > 0.0)
                             extra += Spark(attr.rgb) * Bolts(along, across, distancePx, attr.a, pin.seed) * _GlowBoltLook.x * pin.lightning;
                         // Sparks in the light itself: as bright as on the blade near it, and gone well before the
@@ -580,7 +659,7 @@ Shader "Hidden/KryticalNova/GlowHalo"
                     }
                 }
 
-                half3 light = (attr.rgb * glow + extra) * lit;
+                half3 light = (colour * glow + extra) * lit;
                 half strength = saturate(max(light.r, max(light.g, light.b)));
                 return half4(light, strength * _GlowShape.z);
             }

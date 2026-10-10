@@ -150,7 +150,11 @@ namespace KryticalNova.EditorTools
             Material ring = NovaMaterial("M_NovaRing", "KryticalNova/NovaRing");
             Material corona = NovaMaterial("M_Nova", "KryticalNova/Nova");
             Material motes = NovaMaterial("M_NovaMotes", "KryticalNova/NovaMotes");
-            if (look.coreMaterial == core && look.ringMaterial == ring && look.coronaMaterial == corona && look.motesMaterial == motes) return;
+            Shader mask = Shader.Find("KryticalNova/NovaMask");
+            if (mask == null) Debug.LogWarning("[Setup] Shader KryticalNova/NovaMask not found: characters and pets will show through every Nova.");
+            if (look.coreMaterial == core && look.ringMaterial == ring && look.coronaMaterial == corona && look.motesMaterial == motes
+                && look.maskShader == mask) return;
+            look.maskShader = mask;
             look.coreMaterial = core;
             look.ringMaterial = ring;
             look.coronaMaterial = corona;

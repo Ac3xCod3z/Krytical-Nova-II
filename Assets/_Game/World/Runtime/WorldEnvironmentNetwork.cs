@@ -263,7 +263,7 @@ namespace KryticalNova.World
             state = new WorldEnvironmentState
             {
                 CycleEpoch = now,
-                DayLengthSeconds = dayCycle != null ? dayCycle.dayLengthSeconds : 1440f,
+                DayLengthSeconds = dayCycle != null ? dayCycle.dayLengthSeconds : 3600f,
                 TimeOffset01 = dayCycle != null ? dayCycle.startTimeOfDay01 : 0.3f,
                 TimeScale = 1f,
                 FromWeather = start,

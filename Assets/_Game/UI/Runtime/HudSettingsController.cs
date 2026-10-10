@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.Player;
 using KryticalNova.Progression;
+using KryticalNova.UI.Guide;
 using KryticalNova.UI.Menus;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -11,9 +12,9 @@ using UnityEngine.UIElements;
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// Settings window (O / menu button) and the HUD layout editor. The window has four pages: Graphics, Audio and
-    /// Controls are built from their preference classes (see UI/Runtime/Settings), Interface holds the layout editor
-    /// and the HUD toggles. Gathers movable elements from every UIDocument that shares this document's PanelSettings,
+    /// Settings window (O / menu button) and the HUD layout editor. Its pages are <see cref="SettingsPages"/>: Graphics,
+    /// Audio, Gameplay and Controls are built from their preference classes (see UI/Runtime/Settings), Interface holds
+    /// the layout editor and the HUD toggles, and the Guide (its own key) explains the game. Gathers movable elements from every UIDocument that shares this document's PanelSettings,
     /// so the NPC dialogue and zone toast can be placed alongside the HUD. Also keeps the key names shown on the
     /// HUD (menu buttons, window headers, hints) in step with the player's bindings.
     /// </summary>
@@ -25,6 +26,8 @@ namespace KryticalNova.UI
         [SerializeField] private PlayerSkillHotbar hotbar;
         [Tooltip("The game's mixer: the Audio page's sliders drive its exposed volumes. Assigned by the zone scene setup.")]
         [SerializeField] private AudioMixer mixer;
+        [Tooltip("What the Guide page says. Assigned by the zone scene setup.")]
+        [SerializeField] private GuideLibrary guide;
 
         // Menu buttons that show the key that opens their window: button, its caption, the window key (null = a player-asset action).
         private static readonly (string Button, string Caption, string WindowKey, string PlayerAction)[] MenuKeys =
@@ -127,6 +130,7 @@ namespace KryticalNova.UI
             if (!initialized) return;
             layout.EndEdit();
             controlsTab?.Cancel();
+            pages.Closed();
             SetHotbarSuppressed(false);
             HudPreferences.Changed -= ApplyPreferences;
             KeyBindings.Changed -= RefreshKeyLabels;
@@ -163,6 +167,7 @@ namespace KryticalNova.UI
                 return;
             }
             if (KeyBindings.Pressed(KeyBindings.Settings) && !layout.IsEditing) ToggleSettings();
+            else if (KeyBindings.Pressed(KeyBindings.Guide) && !layout.IsEditing) ToggleGuide();
         }
 
         // ------------------------------------------------------------------ settings window
@@ -173,10 +178,26 @@ namespace KryticalNova.UI
             if (initialized && !IsSettingsOpen) ToggleSettings();
         }
 
+        /// <summary>Opens the settings window on the Guide (the game menu's GUIDE), on that topic when one is named.</summary>
+        public void OpenGuide(string topicId = null)
+        {
+            if (!initialized) return;
+            pages.ShowGuide(topicId);
+            if (!IsSettingsOpen) ToggleSettings();
+        }
+
+        /// <summary>The Guide's key: opens the window on the Guide, and closes it when the Guide is what it shows.</summary>
+        private void ToggleGuide()
+        {
+            if (IsSettingsOpen && pages.ActivePage == SettingsPages.GuidePageName) CloseSettings();
+            else OpenGuide();
+        }
+
         private void ToggleSettings()
         {
             bool show = !IsSettingsOpen;
             if (!show) controlsTab?.Cancel();
+            if (!show) pages.Closed();
             SetVisible(settingsWindow, show);
             if (!show) return;
             // The window lives in a layer of its own: the layer, not the window, is what stacks against the others.
@@ -189,6 +210,7 @@ namespace KryticalNova.UI
         {
             controlsTab?.Cancel();
             if (IsSettingsOpen) MenuMoments.Raise(MenuMoment.Back);
+            pages.Closed();
             SetVisible(settingsWindow, false);
         }
 
@@ -210,7 +232,7 @@ namespace KryticalNova.UI
 
         private void BuildPages()
         {
-            pages.Build(root, PlayerActions, OnListeningChanged, true);
+            pages.Build(root, PlayerActions, OnListeningChanged, true, guide);
             RefreshKeyLabels();
         }
 

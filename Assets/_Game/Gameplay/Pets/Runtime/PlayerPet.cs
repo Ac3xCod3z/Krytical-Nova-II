@@ -210,6 +210,7 @@ namespace KryticalNova.Pets
                             glowReach = reach,
                             gapGrowth = Settings.followGapGrowth,
                             cameraClearance = Settings.cameraClearance,
+                            maxTrail = Settings.followMaxTrail,
                         };
                     }
                     follower.SetStageLook(look.model, look.scale, glow, spacing);

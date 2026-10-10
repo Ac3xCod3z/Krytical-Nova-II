@@ -168,6 +168,8 @@ namespace KryticalNova.Progression
 
             if (!Application.isBatchMode && settings != null)
             {
+                // Every player is drawn after the scenery, Nova or none: that is what lets another's Nova hide them.
+                KryticalNova.Rendering.ActorDrawOrder.On(gameObject);
                 if (halo == null && Tier > 0) halo = NovaHalo.Create(transform);
                 if (halo != null) halo.Show(settings.look, Tier);
                 if (halo != null && Time.time < pendingUntil && halo.Tier == NovaRules.Tier(settings.ascension, pendingReaction.after))

@@ -343,6 +343,7 @@ namespace KryticalNova.EditorTools
                 Debug.LogError($"[FrontEnd] Menu Settings needs {MenuPanelSettingsPath} and {MenuSettingsDocumentPath}.");
             var settings = go.AddComponent<MenuSettings>();
             SetRef(settings, "mixer", AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>(AudioSetup.MixerPath));
+            SetRef(settings, "guide", AssetDatabase.LoadMainAssetAtPath(HudSetup.GuideLibraryPath));
         }
 
         // The in-game UI's panel (its theme and scale): the window is the same one, so it is drawn the same way.

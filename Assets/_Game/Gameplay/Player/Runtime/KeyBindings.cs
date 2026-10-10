@@ -21,6 +21,7 @@ namespace KryticalNova.Player
         public const string Equipment = "Equipment";
         public const string Map = "Map";
         public const string Settings = "Settings";
+        public const string Guide = "Guide";
         public const string Kiosk = "Kiosk";
         public const string Crew = "Crew";
         public const string Contacts = "Contacts";
@@ -45,6 +46,7 @@ namespace KryticalNova.Player
             new WindowKey(Equipment, "Equipment"),
             new WindowKey(Map, "Map"),
             new WindowKey(Settings, "Settings"),
+            new WindowKey(Guide, "Guide"),
             new WindowKey(Kiosk, "Kiosk"),
             new WindowKey(Crew, "Crew"),
             new WindowKey(Contacts, "Contacts"),

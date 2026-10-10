@@ -63,6 +63,8 @@ namespace KryticalNova.Pets
         [Min(0f)] public float followGapGrowth = 0.25f;
         [Tooltip("A pet nearer to the camera than this (metres, from its near side) shrinks out of view until the camera moves away, so it never fills the screen or cuts through the lens. 0 = never.")]
         [Min(0f)] public float cameraClearance = 0.6f;
+        [Tooltip("The furthest a pet falls behind its place while its owner travels, in metres. A pet trails by about its owner's speed x its follow time, which at the fast Run ranks would leave it far out of sight: past this it keeps pace instead. 0 = no limit.")]
+        [Min(0f)] public float followMaxTrail = 3f;
 
         public PetTuning Tuning => new PetTuning(xpToFullGrowth, xpPerHostileKill, xpPerEventWin, xpPerEventLoss, hungerDrainPercentPerMinute);
     }

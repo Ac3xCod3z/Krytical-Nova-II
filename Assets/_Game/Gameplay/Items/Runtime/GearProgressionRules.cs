@@ -186,6 +186,22 @@ namespace KryticalNova.Items
             return found;
         }
 
+        /// <summary>
+        /// How a piece glows: the colour of the band its Temper % falls in, as its rarity shows it, and the rarity's
+        /// look with the band's embers in it. False below the first band.
+        /// </summary>
+        public static bool TryGetGlow(TemperSettings settings, int temper, ItemRarity rarity, out Color color, out TemperGlowLook look)
+        {
+            color = default;
+            look = default;
+            if (!TryGetGlow(settings, temper, out TemperGlowBand band)) return false;
+            color = band.ColorFor(rarity);
+            look = GlowLookOf(settings, rarity);
+            look.ember *= band.ember;
+            return true;
+        }
+
+        /// <summary>A rarity's look on its own. Its <c>ember</c> is still to be multiplied by the band's.</summary>
         public static TemperGlowLook GlowLookOf(TemperSettings settings, ItemRarity rarity)
         {
             int index = (int)rarity;

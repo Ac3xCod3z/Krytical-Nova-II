@@ -659,7 +659,7 @@ namespace KryticalNova.EditorTools.GM
         }
 
         [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(HasWorld)), PropertyOrder(407)]
-        private void SetDayLength([MinValue(10)] float realSeconds = 1440f) => Run($"time.daylength {F(realSeconds)}");
+        private void SetDayLength([MinValue(10)] float realSeconds = 3600f) => Run($"time.daylength {F(realSeconds)}");
 
         [TabGroup(Tabs, WorldTab), Title("Weather"), ShowInInspector, DisplayAsString, LabelText("Current"), PropertyOrder(408)]
         private string CurrentWeather

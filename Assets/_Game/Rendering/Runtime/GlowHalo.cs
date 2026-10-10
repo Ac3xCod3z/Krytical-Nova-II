@@ -32,6 +32,12 @@ namespace KryticalNova.Rendering
         /// of the light is flame, 0 = the steady halo. Mixes freely with lightning.
         /// </summary>
         public float flame;
+        /// <summary>
+        /// Embers: the light is broken up into a ragged, drifting body that shifts between hotter and deeper shades
+        /// of its own colour, like a flame seen close. 1 = as tuned on the renderer feature, 0 = the smooth light.
+        /// Lies over the flame when there is one.
+        /// </summary>
+        public float ember;
     }
 
     /// <summary>Which part of a model glows.</summary>
@@ -96,8 +102,10 @@ namespace KryticalNova.Rendering
         /// <summary>How strong the lightning in its light is, and how much of its light is flame (0 = none).</summary>
         public float Lightning => Mathf.Max(0f, look.lightning);
         public float Flame => Mathf.Clamp01(look.flame);
-        /// <summary>True when something is drawn in its light that has to travel with it: sparks, lightning or flame.</summary>
-        public bool Pinned => Twinkle > 0f || Lightning > 0f || Flame > 0f;
+        /// <summary>How strongly its light is broken up into embers (0 = not at all).</summary>
+        public float Ember => Mathf.Max(0f, look.ember);
+        /// <summary>True when something is drawn in its light that has to travel with it: sparks, lightning, flame or embers.</summary>
+        public bool Pinned => Twinkle > 0f || Lightning > 0f || Flame > 0f || Ember > 0f;
         /// <summary>Its own number, 0 to 1, for as long as it lives: what makes its breath, sparks and arcs its own.</summary>
         public float Beat => beat;
 

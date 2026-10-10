@@ -31,7 +31,7 @@ overrides that only apply under the class `kn-faction-<faction>`, which `Faction
 character's faction. The sheets are generated: never edit them. A value changed in a skin asset is written into the
 sheets at once (`UiSkinWatcher`), so every screen that uses it changes with it.
 
-Base sheets: `KryticalTheme`, `ProgressionHUD`, `Settings`, `Items`, `Forge`, `Herald`, `GameMenu`, `Minimap`,
+Base sheets: `KryticalTheme`, `ProgressionHUD`, `Settings`, `Guide`, `Items`, `Forge`, `Herald`, `GameMenu`, `Minimap`,
 `WorldMap`, `ChatWindow`, `DuelPanels`, `PartyPanels`, `PetPanels`, `SocialPanels`, `EmoteWheel`, `EconomyWindows`,
 `NpcInteraction`. That is every in-game document: a new sheet must be added to the builder's list.
 
@@ -369,11 +369,12 @@ it does. APPLY keeps the changes; REVERT puts back everything as it was when the
 
 | Page | Options | Stored in |
 | --- | --- | --- |
-| Graphics | resolution, window mode, vertical sync, frame cap, quality preset, render scale, shadows, anti-aliasing, grass density, volumetric fog, sun shafts, ink outlines | `GraphicsPreferences` |
+| Graphics | resolution, window mode, vertical sync, frame cap, quality preset, render scale, shadows, anti-aliasing, grass density, volumetric fog, sun shafts, ink outlines, **performance readout** (10 Oct 2026: a tick box; while on, `PerformanceReadout` lists on the left edge of the screen the frames a second and the 1 % low, frame time with its CPU main thread / render thread / GPU split, SetPass calls, triangles and vertices, resolution and preset, memory in use, and the session's role, ping, player count, tick rate and networked objects. In menus and in the world; it measures nothing while off; not part of a preset) | `GraphicsPreferences` |
 | Audio | Master, Music, Effects, Ambience, Interface volumes; mute in the background | `AudioPreferences` |
 | Interface | HUD layout editor, reset, snap, grid size (game only); rings at the move point and under the target; names over NPCs and players; my own namecard; screen shake; hotbar hint; pet chatter; minimap rotation; interface size; **Menu theme**; **Chat text size**; **Time on chat lines** | `HudPreferences` |
 | Gameplay (new) | **How fast the camera turns**, **Invert the camera's up and down**, **How fast the wheel zooms**, **How far the camera pulls back**; **Damage numbers**; **Decline** Squad invitations, Callouts, trade requests, contact requests, Crew invitations | `CameraPreferences`, `HudPreferences` |
 | Controls | every window key and Hotbar key, rebindable; a key in use swaps; reset one or all | `KeyBindings` |
+| Guide (10 Oct 2026) | no options: the game explained, topic by topic (below) | `GuideLibrary` (the text), `HudPreferences.GuideTopic` (the topic last read) |
 
 - From the menus the parts that need a character in the world are hidden (the HUD layout editor and its options, by
   the class `in-game-only`); the skill keys are not listed there, because there is no character to list them for.
@@ -383,6 +384,49 @@ it does. APPLY keeps the changes; REVERT puts back everything as it was when the
   exactly as the Decline button would, and never shown. The server is not asked to do anything new, so the asker
   sees an ordinary refusal.
 - **Chat text size** is a share of what the faction's skin gives a chat line, so it holds in every skin.
+
+### The Guide
+
+The sixth page, **GUIDE** (`GuidePage`, `UI/Runtime/Guide/`), is the game's help: Twelve Sky's "Tooltip". **H** opens
+Settings straight on it and closes it again (`KeyBindings.Guide`, rebindable); the game menu has a GUIDE row; the tab
+is there from character select too.
+
+- **What it says is one asset**, `UI/Guide/GuideLibrary.asset`: chapters of topics. A topic has an id, a title, a
+  summary, a clip, and sections of a kind (Text, Steps, Table, Tip, Warning, Where). The text is edited on the asset.
+  Only systems that are built have a topic.
+- **Tokens keep it true.** `{key:Pack}` is drawn as the key the player has on that action now (`KeyCaps`);
+  `{mouse:left}` / `right` / `wheel` the mouse; `{cap:ESC}` a fixed key; `{fact:trade.slots}` a number read from the
+  settings asset that owns it (`GuideLibrary.facts`: an asset and a field, with dots and `[n]` for nested ones).
+  `GuideTests` fails when a token names a key or a fact that does not exist, and when the text uses a Twelve Sky word.
+- **The page**: the topics by chapter on the left (the one being read lit like a tab), the topic on the right on a
+  nearly solid backing (a window lets the world through; text cannot afford it). While it shows, the window is 920
+  wide and has no APPLY / REVERT / RESET; where the player's own place for the window has no room for that, it is
+  drawn far enough up and left to be whole, and is back in its place on any other page (`SettingsPages.KeepOnScreen`).
+- **Skins**: `UI/Guide/Guide.uss` is a base sheet in `FactionSkinBuilder`'s list; the page is made of the shared parts
+  (buttons, `eyebrow` headings, the pack's picture frame round the clip, key caps), so nothing is laid out per faction.
+- **Clips** (`GuideClipPlayer`): one `VideoPlayer`, made when a clip is shown, drawing into one texture that is the
+  background of the page's screen; looping, silent, on its own clock. It exists only while the Guide is in view:
+  another tab or closing the window destroys the player and the texture (checked: one player while open, none after).
+  A topic may show a part of its clip's picture (`GuideTopic.focus`, as shares of the picture): the screen takes that
+  part's shape, so a tall window (the forge bench) is shown whole. A click on the clip shows it large, across the
+  page with the text under it; another click puts it back. That is how a window is made readable
+  at the screen's size.
+- **Recording**: **Krytical Nova ▸ Guide ▸ Record Clip** (`GuideClipRecorder`; `GuideClipRecorder.Record(topic,
+  seconds, withInterface)` from a script). 960 x 540, 30 frames a second, H.264, no sound, into
+  `UI/Guide/Clips/GC_<topic>.mp4`, handed to the topic when the time is up. Without the interface the main camera
+  alone is recorded. It needs the Unity Recorder package, which is editor only; the script compiles to nothing without
+  it (`KN_RECORDER`). The recorder switches the Game view to the clip's size; the tool puts the size back.
+- One set of clips for all factions (owner, 9 Oct 2026): the page round them is the faction's, the clips are whatever
+  skin they were recorded in (the Hegemony's).
+- **Every clip gets the same treatment** (owner, 10 Oct 2026): nothing of the HUD in the picture but what the topic is
+  about, daylight and a clear sky, and for a window the interface drawn at its smallest so the whole window is on the
+  screen, recorded at 1600 x 900 with the topic's `focus` on that window. World topics are the main camera alone, or
+  with the plates and namecards over heads where those are the point. 34 topics, 34 clips, 128 MB together as
+  recorded.
+- **A build carries Unity's copy of a clip, not the recorded file** (owner, 10 Oct 2026): each clip is transcoded on
+  import to H.264 at the Low bitrate with no sound track (`GuideClipRecorder.Slim`, applied to every new clip; the
+  setting is in the clip's `.meta`). That is 56 MB for the 34, and a window is still readable. The recorded files in
+  the repository are unchanged.
 
 ### The rows, as the packs' settings rows
 

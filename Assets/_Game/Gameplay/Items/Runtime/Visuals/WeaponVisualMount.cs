@@ -421,7 +421,7 @@ namespace KryticalNova.Items.Visuals
             {
                 color = color, intensity = look.intensity, width = look.width,
                 pulse = look.pulse, pulseSpeed = look.pulseSpeed, pulseWidth = look.pulseWidth,
-                twinkle = look.twinkle, lightning = look.lightning, flame = look.flame,
+                twinkle = look.twinkle, lightning = look.lightning, flame = look.flame, ember = look.ember,
             });
             if (!glowOn) AttachGlow();
             glowOn = true;

@@ -20,6 +20,8 @@ namespace KryticalNova.Items.Visuals
         public float gapGrowth;
         /// <summary>The pet shrinks out of view while the camera is nearer to it than this, in metres. 0 = never.</summary>
         public float cameraClearance;
+        /// <summary>The furthest the pet falls behind its place while its owner travels, in metres. 0 = no limit.</summary>
+        public float maxTrail;
 
         /// <summary>
         /// How far the pet's nearest edge keeps from the owner's centre line at a growth stage's size (1 = base). The

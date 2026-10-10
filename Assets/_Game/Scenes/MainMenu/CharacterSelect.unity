@@ -5239,6 +5239,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.Menus.MenuSettings
   mixer: {fileID: 24100000, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
+  guide: {fileID: 11400000, guid: fdbe756f7ac4dce42aefecb0efcf5df5, type: 2}
 --- !u!114 &1760412488
 MonoBehaviour:
   m_ObjectHideFlags: 0

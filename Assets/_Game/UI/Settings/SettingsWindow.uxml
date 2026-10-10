@@ -1,7 +1,8 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <!-- Settings (SettingsPages; shown in the game by HudSettingsController and from character select by MenuSettings).
-         Five pages, one shown at a time. The Graphics, Audio, Gameplay and Controls pages are filled in code from the preference
-         classes (UI/Runtime/Settings); the Interface page is laid out here. Elements with the class in-game-only need
+         Six pages, one shown at a time. The Graphics, Audio, Gameplay and Controls pages are filled in code from the preference
+         classes (UI/Runtime/Settings); the Interface page is laid out here; the Guide is built from the GuideLibrary
+         asset (UI/Runtime/Guide). Elements with the class in-game-only need
          a character in the world and are hidden in the menus. -->
     <ui:VisualElement name="settings-window" class="panel window blocks-world hud-movable">
         <ui:VisualElement class="row kn-header">
@@ -15,6 +16,7 @@
             <ui:Button name="settings-tab-interface" text="INTERFACE" class="settings-tab" />
             <ui:Button name="settings-tab-gameplay" text="GAMEPLAY" class="settings-tab" />
             <ui:Button name="settings-tab-controls" text="CONTROLS" class="settings-tab" />
+            <ui:Button name="settings-tab-guide" text="GUIDE" class="settings-tab" />
         </ui:VisualElement>
         <ui:ScrollView name="settings-body" class="window-body" horizontal-scroller-visibility="Hidden">
             <ui:VisualElement name="settings-page-graphics" class="settings-page" />
@@ -40,6 +42,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="settings-page-gameplay" class="settings-page" />
             <ui:VisualElement name="settings-page-controls" class="settings-page" />
+            <ui:VisualElement name="settings-page-guide" class="settings-page" />
         </ui:ScrollView>
         <!-- A setting takes effect as it is changed. APPLY keeps the changes, REVERT puts back what was there when the
              window opened (or was last applied), RESET TO DEFAULTS sets the page shown to its defaults. -->

@@ -87,6 +87,12 @@ namespace KryticalNova.UI
 
         public static bool VSync { get => GetInt("vsync", 1) != 0; set => Set("vsync", value ? 1 : 0); }
 
+        /// <summary>
+        /// The performance readout is on screen: frame rate, where the frame's time goes, what is drawn, memory and
+        /// the connection (<see cref="PerformanceReadout"/>). Not part of a preset.
+        /// </summary>
+        public static bool PerformanceReadout { get => GetInt("readout", 0) != 0; set => Set("readout", value ? 1 : 0); }
+
         /// <summary>Frames per second the game is held to with VSync off; 0 = no cap.</summary>
         public static int FrameCap { get => Mathf.Max(0, GetInt("frameCap", 0)); set => Set("frameCap", Mathf.Max(0, value)); }
 
@@ -128,7 +134,7 @@ namespace KryticalNova.UI
         /// <summary>Every graphics option back to what the game ships with (the High preset, the display's own size).</summary>
         public static void ResetToDefaults()
         {
-            foreach (string key in new[] { "preset", "renderScale", "shadows", "aa", "grass", "fog", "shafts", "outlines", "vsync", "frameCap", "window", "width", "height" })
+            foreach (string key in new[] { "preset", "renderScale", "shadows", "aa", "grass", "fog", "shafts", "outlines", "vsync", "frameCap", "window", "width", "height", "readout" })
                 PlayerPrefs.DeleteKey(Prefix + key);
             Commit();
         }
