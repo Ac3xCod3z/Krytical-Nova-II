@@ -87,10 +87,6 @@ namespace KryticalNova.UI
 
         private const string HelpText = "Click a lit key, then press the one you want. A key already in use swaps with it. Right-click a key for its default. Esc cancels.";
 
-        // What a key may be: any keyboard key, or one of the spare mouse buttons. Never the two the game is played with.
-        private static readonly string[] AllowedControls = { "<Keyboard>", "<Mouse>/middleButton", "<Mouse>/forwardButton", "<Mouse>/backButton" };
-        private static readonly string[] RefusedPaths = { "<Keyboard>/escape", "<Keyboard>/enter", "<Keyboard>/numpadEnter", "<Keyboard>/anyKey" };
-
         private sealed class BoardKey
         {
             public Button Button;
@@ -367,8 +363,8 @@ namespace KryticalNova.UI
             var rebind = action.PerformInteractiveRebinding(0)
                 .WithCancelingThrough("<Keyboard>/escape")
                 .OnMatchWaitForAnother(0.1f);
-            foreach (string allowed in AllowedControls) rebind.WithControlsHavingToMatchPath(allowed);
-            foreach (string refused in RefusedPaths) rebind.WithControlsExcluding(refused);
+            foreach (string allowed in KeyBindings.AllowedControls) rebind.WithControlsHavingToMatchPath(allowed);
+            foreach (string refused in KeyBindings.RefusedPaths) rebind.WithControlsExcluding(refused);
 
             void Finish(bool completed)
             {
@@ -383,6 +379,8 @@ namespace KryticalNova.UI
                 {
                     // An action with a second default key (left and right Shift) keeps only the one just chosen.
                     for (int i = 1; i < action.bindings.Count; i++) action.ApplyBindingOverride(i, string.Empty);
+                    // Whatever the listener let through, an action only ever keeps a key it may be on.
+                    if (!KeyBindings.IsAllowedPath(action.bindings[0].effectivePath)) action.RemoveBindingOverride(0);
                     GiveAwayKey(action, previousPath);
                     KeyBindings.Save(playerActions());
                 }
@@ -408,7 +406,7 @@ namespace KryticalNova.UI
                 for (int i = 0; i < other.bindings.Count; i++)
                 {
                     if (!string.Equals(other.bindings[i].effectivePath, taken, StringComparison.OrdinalIgnoreCase)) continue;
-                    other.ApplyBindingOverride(i, i == 0 ? previousPath : string.Empty);
+                    other.ApplyBindingOverride(i, i == 0 && KeyBindings.IsAllowedPath(previousPath) ? previousPath : string.Empty);
                 }
             }
         }

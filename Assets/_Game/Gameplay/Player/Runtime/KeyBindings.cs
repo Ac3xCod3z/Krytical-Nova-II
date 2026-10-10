@@ -70,6 +70,16 @@ namespace KryticalNova.Player
             ("PointAndClick", "ToggleWeapon", "Draw / sheathe weapon"), ("PointAndClick", "FlipCamera", "Flip camera"),
         };
 
+        /// <summary>What a key may be: any keyboard key, or one of the spare mouse buttons. Never the two the game is played with.</summary>
+        public static readonly string[] AllowedControls = { "<Keyboard>", "<Mouse>/middleButton", "<Mouse>/forwardButton", "<Mouse>/backButton" };
+        /// <summary>Keys that keep their fixed use, and what the game is played with: never given to an action.</summary>
+        public static readonly string[] RefusedPaths =
+        {
+            "<Keyboard>/escape", "<Keyboard>/enter", "<Keyboard>/numpadEnter", "<Keyboard>/anyKey",
+            "<Mouse>/leftButton", "<Mouse>/rightButton", "<Mouse>/press",
+        };
+
+        private const string KeyboardPrefix = "<Keyboard>/";
         private const string WindowMapName = "Windows";
         private static InputActionMap windows;
         private static bool reportedMissing;
@@ -128,7 +138,11 @@ namespace KryticalNova.Player
                     // The asset outlives a Play session in the Editor: start from what is saved, not from what was left.
                     windows.RemoveAllBindingOverrides();
                     string saved = PlayerPrefs.GetString(WindowsKey, string.Empty);
-                    if (!string.IsNullOrEmpty(saved)) TryLoad(windows, saved);
+                    if (!string.IsNullOrEmpty(saved))
+                    {
+                        TryLoad(windows, saved);
+                        if (Clean(windows.actions)) PlayerPrefs.SetString(WindowsKey, windows.SaveBindingOverridesAsJson());
+                    }
                 }
                 // A player object using the same copy of the asset may switch maps off: this one is always on.
                 if (!windows.enabled) windows.Enable();
@@ -182,7 +196,82 @@ namespace KryticalNova.Player
         {
             if (playerActions == null) return;
             string saved = PlayerPrefs.GetString(PlayerKey, string.Empty);
-            if (!string.IsNullOrEmpty(saved)) TryLoad(playerActions, saved);
+            if (string.IsNullOrEmpty(saved)) return;
+            TryLoad(playerActions, saved);
+            bool cleaned = Clean(playerActions);
+            cleaned |= SettleSharedKeys(playerActions);
+            if (!cleaned) return;
+            PlayerPrefs.SetString(PlayerKey, playerActions.SaveBindingOverridesAsJson());
+            if (Windows != null) PlayerPrefs.SetString(WindowsKey, Windows.SaveBindingOverridesAsJson());
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>True for a key an action may be on: a keyboard key or a spare mouse button, and none of the refused ones.</summary>
+        public static bool IsAllowedPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            foreach (string refused in RefusedPaths)
+                if (string.Equals(path, refused, StringComparison.OrdinalIgnoreCase)) return false;
+            if (path.StartsWith(KeyboardPrefix, StringComparison.OrdinalIgnoreCase)) return path.Length > KeyboardPrefix.Length;
+            foreach (string allowed in AllowedControls)
+                if (string.Equals(path, allowed, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Takes back every saved key that no action may be on (a mouse button the game is played with, a fixed key,
+        /// no key at all), so the action is on its own key again. A second key switched off on purpose (the other
+        /// Shift) stays off. True when anything was taken back.
+        /// </summary>
+        public static bool Clean(IEnumerable<InputAction> actions)
+        {
+            bool changed = false;
+            foreach (InputAction action in actions)
+            {
+                for (int i = 0; i < action.bindings.Count; i++)
+                {
+                    string chosen = action.bindings[i].overridePath;
+                    if (chosen == null) continue; // as shipped
+                    if (i > 0 && chosen.Length == 0) continue;
+                    if (IsAllowedPath(chosen)) continue;
+                    action.RemoveBindingOverride(i);
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        /// <summary>
+        /// Two listed actions on one key: the one that was moved there goes back to its own. True when any did.
+        /// </summary>
+        private static bool SettleSharedKeys(InputActionAsset playerActions)
+        {
+            var listed = new List<(InputAction Action, string Label, string Group)>();
+            Collect(playerActions, listed);
+            bool changed = false;
+            var holders = new Dictionary<string, InputAction>(StringComparer.OrdinalIgnoreCase);
+            // Each pass can free a key another action then falls back onto: a few passes settle any chain.
+            for (int pass = 0; pass < listed.Count; pass++)
+            {
+                holders.Clear();
+                bool moved = false;
+                foreach (var entry in listed)
+                {
+                    InputAction action = entry.Action;
+                    if (action.bindings.Count == 0) continue;
+                    string path = action.bindings[0].effectivePath;
+                    if (string.IsNullOrEmpty(path)) continue;
+                    if (!holders.TryGetValue(path, out InputAction holder)) { holders[path] = action; continue; }
+                    InputAction loser = action.bindings[0].overridePath != null ? action
+                        : holder.bindings[0].overridePath != null ? holder : null;
+                    if (loser == null) continue; // both as shipped: the asset's own matter
+                    loser.RemoveAllBindingOverrides();
+                    moved = true;
+                }
+                if (!moved) break;
+                changed = true;
+            }
+            return changed;
         }
 
         /// <summary>Every action the Controls list shows, window keys first. <paramref name="playerActions"/> may be null.</summary>
