@@ -4,18 +4,33 @@ using UnityEngine;
 
 namespace KryticalNova.Items.Visuals
 {
+    /// <summary>How a pet is getting along beside its owner.</summary>
+    public enum PetGait
+    {
+        Rest,
+        Walk,
+        Run,
+    }
+
     /// <summary>
     /// The animations of a pet model that has an Animator. The controller loops its resting state by itself; every
     /// trigger it has is one animation that plays once and blends back, named after the trigger. Nothing here is
     /// written per pet: a model with other triggers has other animations. They are played in turn, one every so many
-    /// seconds, and any of them can be played on demand.
+    /// seconds, and any of them can be played on demand. A controller with a true/false parameter called Walk or Run
+    /// also has that gait: a loop on the spot, held for as long as the parameter is true.
     /// </summary>
     public sealed class PetAnimations
     {
+        private static readonly int WalkParameter = Animator.StringToHash("Walk");
+        private static readonly int RunParameter = Animator.StringToHash("Run");
+
         private readonly Animator animator;
         private readonly List<string> names = new List<string>();
         private readonly List<int> hashes = new List<int>();
         private bool read;
+        private bool hasWalk;
+        private bool hasRun;
+        private PetGait gait;
         private int next;
         private float nextAt = -1f;
 
@@ -47,6 +62,11 @@ namespace KryticalNova.Items.Visuals
             read = true;
             foreach (AnimatorControllerParameter parameter in animator.parameters)
             {
+                if (parameter.type == AnimatorControllerParameterType.Bool)
+                {
+                    hasWalk |= parameter.nameHash == WalkParameter;
+                    hasRun |= parameter.nameHash == RunParameter;
+                }
                 if (parameter.type != AnimatorControllerParameterType.Trigger) continue;
                 names.Add(parameter.name);
                 hashes.Add(parameter.nameHash);
@@ -74,11 +94,35 @@ namespace KryticalNova.Items.Visuals
             return true;
         }
 
-        /// <summary>Once a frame: plays the next animation in turn every <paramref name="cycleSeconds"/> (0 = never).</summary>
+        /// <summary>
+        /// Once a frame: the gait the pet should be in. A model without a run walks instead, and one without a walk
+        /// rests. Told every frame, because an Animator forgets its parameters whenever the pet is hidden.
+        /// </summary>
+        public void SetGait(PetGait wanted)
+        {
+            if (animator == null || !animator.isActiveAndEnabled) return;
+            Read();
+            if (!read) return;
+            if (wanted == PetGait.Run && !hasRun) wanted = PetGait.Walk;
+            if (wanted == PetGait.Walk && !hasWalk) wanted = PetGait.Rest;
+            gait = wanted;
+            if (hasWalk) animator.SetBool(WalkParameter, gait == PetGait.Walk);
+            if (hasRun) animator.SetBool(RunParameter, gait == PetGait.Run);
+        }
+
+        /// <summary>
+        /// Once a frame: plays the next animation in turn every <paramref name="cycleSeconds"/> (0 = never). Only a
+        /// pet at rest takes its turn; one that has been walking waits a full interval after it stops.
+        /// </summary>
         public void Tick(float cycleSeconds)
         {
             if (cycleSeconds <= 0f || animator == null || !animator.isActiveAndEnabled) return;
             Read();
+            if (gait != PetGait.Rest)
+            {
+                nextAt = -1f;
+                return;
+            }
             if (hashes.Count == 0) return;
             if (nextAt < 0f)
             {

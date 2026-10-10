@@ -51,6 +51,6 @@ MonoBehaviour:
   carry: 0
   carryLocalPosition: {x: 0, y: 0, z: 0}
   carryLocalEuler: {x: 0, y: 0, z: 0}
-  petPrefab: {fileID: 6488612883834409698, guid: 9f337500f6fa4c65b588d35f30bcb5d9, type: 3}
+  petPrefab: {fileID: 8460479267209424832, guid: 9f337500f6fa4c65b588d35f30bcb5d9, type: 3}
   petScale: 1
   petOffset: {x: 0.45, y: 0.75, z: -0.15}

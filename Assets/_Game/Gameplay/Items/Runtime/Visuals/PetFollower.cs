@@ -61,6 +61,15 @@ namespace KryticalNova.Items.Visuals
         private PetAnimations animations;
         private float animationCycleSeconds;
 
+        // The pet's gait follows how fast its owner is going over the ground (0 = it has no gait).
+        private const float OwnerSpeedSmoothTime = 0.12f;
+        private float walkFromSpeed;
+        private float runFromSpeed;
+        private float runToWalkSpeed;
+        private Vector3 lastOwnerPosition;
+        private float ownerSpeed;
+        private bool running;
+
         // A pet that stands on something rather than flying: it does not bob, and wears an effect under each foot.
         private bool steady;
         private GameObject footEffectPrefab;
@@ -112,6 +121,19 @@ namespace KryticalNova.Items.Visuals
         /// <summary>The pet plays its animations in turn, one every this many seconds. 0 = it only rests.</summary>
         public void SetAnimationCycle(float seconds) => animationCycleSeconds = Mathf.Max(0f, seconds);
 
+        /// <summary>
+        /// When the pet walks and runs, by its owner's speed over the ground in metres a second: it walks from
+        /// <paramref name="walkFrom"/>, runs from <paramref name="runFrom"/> and drops back to a walk below
+        /// <paramref name="runToWalk"/>. It does this on the spot: the follower is what moves it. 0 for walkFrom = it
+        /// never does either.
+        /// </summary>
+        public void SetGaitSpeeds(float walkFrom, float runFrom, float runToWalk)
+        {
+            walkFromSpeed = Mathf.Max(0f, walkFrom);
+            runFromSpeed = Mathf.Max(walkFromSpeed, runFrom);
+            runToWalkSpeed = Mathf.Clamp(runToWalk, walkFromSpeed, runFromSpeed);
+        }
+
         /// <summary>Plays one of the pet's animations now, by the hash of its name. False when this pet has no such animation.</summary>
         public bool PlayAnimation(int nameHash) => pet != null && animations != null && animations.Play(nameHash);
 
@@ -158,6 +180,9 @@ namespace KryticalNova.Items.Visuals
             baseScale = scale * Mathf.Max(0.05f, current.petScale);
             velocity = Vector3.zero;
             bobPhase = Random.value * 10f;
+            lastOwnerPosition = transform.position;
+            ownerSpeed = 0f;
+            running = false;
             shown = 1f;
             hiddenByCamera = false;
             ApplyStage();
@@ -311,6 +336,30 @@ namespace KryticalNova.Items.Visuals
             }
         }
 
+        /// <summary>
+        /// The gait that goes with how fast the owner is covering ground right now, measured from where the owner
+        /// is, so it is the same on every machine. A jump in place (a portal) is not speed.
+        /// </summary>
+        private PetGait OwnerGait()
+        {
+            Vector3 step = transform.position - lastOwnerPosition;
+            lastOwnerPosition = transform.position;
+            step.y = 0f;
+            float dt = Time.deltaTime;
+            if (dt > 0f)
+            {
+                float now = step.sqrMagnitude > snapDistance * snapDistance ? 0f : step.magnitude / dt;
+                ownerSpeed = Mathf.Lerp(ownerSpeed, now, 1f - Mathf.Exp(-dt / OwnerSpeedSmoothTime));
+            }
+            if (walkFromSpeed <= 0f || ownerSpeed < walkFromSpeed)
+            {
+                running = false;
+                return PetGait.Rest;
+            }
+            running = running ? ownerSpeed >= runToWalkSpeed : ownerSpeed >= runFromSpeed;
+            return running ? PetGait.Run : PetGait.Walk;
+        }
+
         private Vector3 TargetOffset() => transform.rotation * hoverLocal;
 
         private Vector3 TargetPosition() => transform.position + TargetOffset();
@@ -319,7 +368,11 @@ namespace KryticalNova.Items.Visuals
         {
             if (pet == null) return;
             var t = pet.transform;
-            animations?.Tick(animationCycleSeconds);
+            if (animations != null)
+            {
+                animations.SetGait(OwnerGait());
+                animations.Tick(animationCycleSeconds);
+            }
 
             Vector3 forward = transform.forward;
             forward.y = 0f;
@@ -392,6 +445,8 @@ namespace KryticalNova.Items.Visuals
             if (pet == null) return;
             ApplyScale();
             pet.transform.position = TargetPosition();
+            lastOwnerPosition = transform.position;
+            ownerSpeed = 0f;
         }
 
         private void OnDisable()
