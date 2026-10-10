@@ -74,7 +74,15 @@ drawn as an element over the map (`MinimapChromeView.overMap`: the Covenant dial
   badge and bar are 118 panel pixels wide in every faction. `HostileNameplateController` decides what a plate says and
   when it shows, as before; it makes one per Hostile on `HudChrome.WorldLayer`, the first child of the pieces'
   canvas, so the pieces draw over the plates and nothing has to hide. With no faction art the plain UI Toolkit plate
-  is drawn instead. Player namecards are still the plain ones.
+  is drawn instead.
+- The namecard over a player is the faction's own too (`PlayerCardView`, `HUD_<Faction>_PlayerCard.prefab`, the kit's
+  `playerCard`; **Krytical Nova ▸ UI ▸ Build Player Namecards**, `PlayerCardBuilder`). It is made of the same pack
+  prefab as the Hostile plate and its badge and bar are the same size: the level is in the pack's badge, the name in
+  the pack's lettering with the faction's crest before it (faction colour, red for a Callout opponent), the Standing
+  over it and the Crew under it. The health bar shows only on a player whose health is the viewer's business: the
+  target, a Squad member, and anyone the viewer could strike (`PlayerNamecardController.WatchesHealth`); never on the
+  viewer's own card. With the bar the name stands over badge and bar; without it badge, crest and name make one
+  centred row. Who sees whose card is unchanged (`NamecardRules`), and a card still hides behind a window.
 - Not yet in the packs' art: chat, buffs, Squad frames, the Callout strip and prompts (they have the pack's small
   panel frame and buttons only).
 - `FactionVariantBuilder` was a spike for the pieces a faction's own pack lacks (a recoloured prefab variant of the

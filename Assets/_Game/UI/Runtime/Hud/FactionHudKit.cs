@@ -25,6 +25,9 @@ namespace KryticalNova.UI.Hud
         [Tooltip("The plate over a Hostile: level badge, health bar and name (HostilePlateBuilder). Not a piece of the HUD: one is made per Hostile on screen.")]
         public HostilePlateView hostilePlate;
 
+        [Tooltip("The namecard over a player: level badge, crest, name, Standing and Crew, and the health bar where it is shown (PlayerCardBuilder). One is made per player on screen.")]
+        public PlayerCardView playerCard;
+
         public IEnumerable<HudChromePiece> Pieces()
         {
             yield return hotbar;

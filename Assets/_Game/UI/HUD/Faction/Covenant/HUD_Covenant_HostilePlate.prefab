@@ -491,6 +491,18 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1792631268707761010, guid: 1f63672458639e84a88fa14d76b9b886, type: 3}
+      propertyPath: m_fontSizeMax
+      value: 40.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1792631268707761010, guid: 1f63672458639e84a88fa14d76b9b886, type: 3}
+      propertyPath: m_fontSizeMin
+      value: 20.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 1792631268707761010, guid: 1f63672458639e84a88fa14d76b9b886, type: 3}
+      propertyPath: m_TextWrappingMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1792631268707761010, guid: 1f63672458639e84a88fa14d76b9b886, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
       value: 1801810542
       objectReference: {fileID: 0}

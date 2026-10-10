@@ -18,14 +18,14 @@ namespace KryticalNova.EditorTools
     public static class HostilePlateBuilder
     {
         /// <summary>How wide every faction's badge and bar are drawn together, in panel pixels of the 1280 x 720 interface.</summary>
-        private const float PanelWidth = 118f;
+        internal const float PanelWidth = 118f;
         /// <summary>How tall every faction's name is lettered, in panel pixels: the packs' own sizes are far apart.</summary>
-        private const float NamePanelSize = 12f;
+        internal const float NamePanelSize = 12f;
         private const float TierSize = 0.72f, TakenSize = 0.66f; // of the name's own size
         private static readonly Color TakenColor = new Color(0.57f, 0.64f, 0.7f);
         private static readonly Color TierColor = new Color(1f, 0.79f, 0.24f);
 
-        private static readonly (FactionId faction, string pack, string prefix)[] Packs =
+        internal static readonly (FactionId faction, string pack, string prefix)[] Packs =
         {
             (FactionId.Hegemony, "InterfaceSciFiSoldierHUD", "SciFiSoldier"),
             (FactionId.Null, "InterfaceDarkFantasyHUD", "DarkFantasy"),
@@ -45,18 +45,49 @@ namespace KryticalNova.EditorTools
                     Debug.LogError($"[HUD] {pack.faction} has no HUD kit. Run Krytical Nova ▸ UI ▸ Build Faction HUD first.");
                     continue;
                 }
-                string source = $"Assets/Synty/{pack.pack}/Prefabs/NPC_HealthBars_EnemyData/HUD_{pack.prefix}_WorldSpace_EnemyInfo_01.prefab";
-                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(source);
-                if (prefab == null)
-                {
-                    Debug.LogError($"[HUD] {pack.faction}: no prefab at {source}. Its Hostile plate was not made.");
-                    continue;
-                }
+                GameObject prefab = LoadEnemyPlate(pack);
+                if (prefab == null) continue;
                 kit.hostilePlate = Compose(pack.faction, prefab);
                 EditorUtility.SetDirty(kit);
             }
             AssetDatabase.SaveAssets();
             Debug.Log($"[HUD] Hostile plates composed in {FactionHudBuilder.Folder}.");
+        }
+
+        /// <summary>The pack's world-space enemy plate: a level badge, a health bar and a name.</summary>
+        internal static GameObject LoadEnemyPlate((FactionId faction, string pack, string prefix) pack)
+        {
+            string source = $"Assets/Synty/{pack.pack}/Prefabs/NPC_HealthBars_EnemyData/HUD_{pack.prefix}_WorldSpace_EnemyInfo_01.prefab";
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(source);
+            if (prefab == null) Debug.LogError($"[HUD] {pack.faction}: no prefab at {source}. Nothing was made from it.");
+            return prefab;
+        }
+
+        /// <summary>The badge takes any level (three figures are made to fit), and the bar runs from nothing to full.</summary>
+        internal static void SetUp(TMP_Text level, Slider bar)
+        {
+            level.enableAutoSizing = true;
+            level.fontSizeMax = level.fontSize;
+            level.fontSizeMin = level.fontSize * 0.5f;
+            level.textWrappingMode = TextWrappingModes.NoWrap;
+            level.text = "1";
+            bar.minValue = 0f;
+            bar.maxValue = 1f;
+            bar.wholeNumbers = false;
+            bar.value = 1f;
+        }
+
+        /// <summary>A view only: nothing of the pack's own behaviour may fight what the game shows, and nothing takes a click.</summary>
+        internal static void LookedAtOnly(GameObject rootGo)
+        {
+            foreach (Animator animator in rootGo.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
+            foreach (Selectable selectable in rootGo.GetComponentsInChildren<Selectable>(true))
+            {
+                selectable.transition = Selectable.Transition.None;
+                selectable.interactable = true;
+                if (!(selectable is Slider)) selectable.enabled = false;
+            }
+            foreach (Graphic graphic in rootGo.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
         }
 
         private static HostilePlateView Compose(FactionId faction, GameObject prefab)
@@ -95,11 +126,7 @@ namespace KryticalNova.EditorTools
                 // name, the same height in every faction, and takes the colour of the level gap: a line of our own
                 // in the pack's lettering stands in its place.
                 packName.gameObject.SetActive(false);
-                level.text = "1";
-                bar.minValue = 0f;
-                bar.maxValue = 1f;
-                bar.wholeNumbers = false;
-                bar.value = 1f;
+                SetUp(level, bar);
                 Canvas.ForceUpdateCanvases();
 
                 // The badge and bar stand in the middle, over the Hostile, with the name centred over them.
@@ -161,16 +188,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("unitsToPanel").floatValue = units;
                 so.ApplyModifiedPropertiesWithoutUndo();
 
-                // A view only: nothing of the pack's own behaviour may fight what the game shows, and nothing takes a click.
-                foreach (Animator animator in rootGo.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
-                foreach (Selectable selectable in rootGo.GetComponentsInChildren<Selectable>(true))
-                {
-                    selectable.transition = Selectable.Transition.None;
-                    selectable.interactable = true;
-                    if (!(selectable is Slider)) selectable.enabled = false;
-                }
-                foreach (Graphic graphic in rootGo.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
-
+                LookedAtOnly(rootGo);
                 WeatherVfxBuilder.EnsureFolder(System.IO.Path.GetDirectoryName(path).Replace('\\', '/'));
                 root.SetParent(null, false);
                 UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(rootGo, scene);
@@ -183,7 +201,7 @@ namespace KryticalNova.EditorTools
             }
         }
 
-        private static TMP_Text TextNamed(Transform root, string name)
+        internal static TMP_Text TextNamed(Transform root, string name)
         {
             foreach (TMP_Text text in root.GetComponentsInChildren<TMP_Text>(true))
                 if (text.name == name) return text;

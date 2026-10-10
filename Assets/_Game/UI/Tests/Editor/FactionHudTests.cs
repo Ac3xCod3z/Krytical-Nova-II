@@ -102,6 +102,28 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void EveryPlayerCard_HasItsParts_IsTheSizeOfAHostilePlate_AndIsOnlyLookedAt()
+        {
+            foreach (FactionId faction in Factions)
+            {
+                FactionHudKit kit = Kit(faction);
+                PlayerCardView card = kit.playerCard;
+                Assert.IsNotNull(card, $"{faction} has no player namecard. Run Krytical Nova ▸ UI ▸ Build Player Namecards.");
+                var so = new SerializedObject(card);
+                foreach (string part in new[] { "nameLabel", "levelLabel", "standingLabel", "crewLabel", "crest", "health", "bar", "badge" })
+                    Assert.IsNotNull(so.FindProperty(part).objectReferenceValue, $"{faction}: the namecard has no {part}");
+                var badge = (RectTransform)so.FindProperty("badge").objectReferenceValue;
+                var bar = (GameObject)so.FindProperty("bar").objectReferenceValue;
+                Assert.IsFalse(badge.IsChildOf(bar.transform), $"{faction}: the badge would go when the bar does");
+                Assert.AreEqual(kit.hostilePlate.PanelWidth, card.PanelWidth, 1f, $"{faction}: a player's badge and bar are the size of a Hostile's");
+                foreach (Graphic graphic in card.GetComponentsInChildren<Graphic>(true))
+                    Assert.IsFalse(graphic.raycastTarget, $"{faction}: {graphic.name} would take clicks meant for the world");
+                foreach (Animator animator in card.GetComponentsInChildren<Animator>(true))
+                    Assert.IsFalse(animator.enabled, $"{faction}: the animator on {animator.name} would fight what the game shows");
+            }
+        }
+
+        [Test]
         public void EveryPiece_IsAsWideOnScreenAsTheOtherFactions()
         {
             float plate = -1f, bar = -1f, glass = -1f;

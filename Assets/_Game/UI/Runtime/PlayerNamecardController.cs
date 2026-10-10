@@ -5,6 +5,7 @@ using KryticalNova.Items;
 using KryticalNova.Player;
 using KryticalNova.Progression;
 using KryticalNova.Social;
+using KryticalNova.UI.Hud;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -15,6 +16,10 @@ namespace KryticalNova.UI
     /// faction's colour, and their Crew. Who sees whose is <see cref="NamecardRules"/>: your own (a setting), your
     /// faction always, another faction only while that player stands on neutral ground. It sits above the head and
     /// rises to clear a Nova. Everything on it is already replicated to every machine; nothing is sent for it.
+    /// While the HUD wears a faction's art the card is that faction's own (<see cref="PlayerCardView"/>, on the HUD
+    /// pieces' canvas), with the level in the pack's badge and the pack's health bar on the players whose health is
+    /// the viewer's business: an enemy, a Callout opponent, a Squad member, the target. With no faction art it is
+    /// the plain card drawn here.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -33,8 +38,13 @@ namespace KryticalNova.UI
 
         private sealed class Card
         {
+            public PlayerCardView View; // the faction's card; the elements below are the plain one's
             public VisualElement Root, Crest;
             public Label Standing, Name, Crew;
+            public PlayerResources Vitals;
+            public PlayerParty Party;
+            public IDamageable Body;
+            public int Level = -1;
             public PlayerIdentity Identity;
             public PlayerCharacterProgression Progression;
             public PlayerCrew PlayerCrew;
@@ -57,12 +67,26 @@ namespace KryticalNova.UI
             root = GetComponent<UIDocument>().rootVisualElement;
             layer = root?.Q(LayerName);
             if (layer == null) Debug.LogError("[Namecards] ProgressionHUD.uxml has no '" + LayerName + "' element.", this);
+            HudChrome.KitChanged += DropCards;
         }
 
         private void OnDisable()
         {
-            foreach (Card card in cards.Values) card.Root.RemoveFromHierarchy();
+            HudChrome.KitChanged -= DropCards;
+            DropCards();
+        }
+
+        /// <summary>Every card goes: the next frame makes them again, in whatever art the HUD wears now.</summary>
+        private void DropCards()
+        {
+            foreach (Card card in cards.Values) Remove(card);
             cards.Clear();
+        }
+
+        private static void Remove(Card card)
+        {
+            if (card.View != null) Destroy(card.View.gameObject);
+            card.Root?.RemoveFromHierarchy();
         }
 
         private void LateUpdate()
@@ -79,6 +103,12 @@ namespace KryticalNova.UI
             bool showOwn = HudPreferences.ShowOwnNamecard;
             Vector3 cameraPosition = targetCamera.transform.position;
             float follow = 1f - Mathf.Exp(-HeightFollow * Time.unscaledDeltaTime);
+            // Screen pixels in a panel pixel: a faction's card is sized like the rest of the HUD.
+            Vector2 panelOrigin = RuntimePanelUtils.ScreenToPanel(root.panel, Vector2.zero);
+            float panelAcross = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(Screen.width, 0f)).x - panelOrigin.x;
+            float panelScale = panelAcross > 1f ? Screen.width / panelAcross : 1f;
+            PlayerParty viewerParty = local != null ? local.GetComponent<PlayerParty>() : null;
+            Transform aimedAt = local != null && local.TryGetComponent(out PointAndClickPlayer pointer) ? pointer.SelectedTarget : null;
 
             IReadOnlyList<PointAndClickPlayer> players = PointAndClickPlayer.Active;
             for (int i = 0; i < players.Count; i++)
@@ -114,9 +144,16 @@ namespace KryticalNova.UI
                     point = RuntimePanelUtils.ScreenToPanel(root.panel, new Vector2(screen.x, Screen.height - screen.y));
                     visible = !UnderWindow(point);
                 }
-                card.Root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+                if (card.View != null) card.View.Show(visible);
+                else card.Root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
                 if (!visible) continue;
 
+                if (card.View != null)
+                {
+                    FillView(card, faction, viewer, !isSelf && WatchesHealth(card, local, viewerParty, aimedAt));
+                    card.View.Place(new Vector2(screen.x, screen.y), panelScale);
+                    continue;
+                }
                 Fill(card, faction, viewer);
                 card.Root.style.left = point.x - card.Root.resolvedStyle.width * 0.5f;
                 card.Root.style.top = point.y - card.Root.resolvedStyle.height;
@@ -128,9 +165,22 @@ namespace KryticalNova.UI
                 if (pair.Key == null || !pair.Key.isActiveAndEnabled) stale.Add(pair.Key);
             foreach (PointAndClickPlayer gone in stale)
             {
-                if (cards.TryGetValue(gone, out Card card)) card.Root.RemoveFromHierarchy();
+                if (cards.TryGetValue(gone, out Card card)) Remove(card);
                 cards.Remove(gone);
             }
+        }
+
+        /// <summary>
+        /// Whose health the viewer is shown: the player they have targeted, a member of their Squad, and anyone
+        /// they could strike (another faction off neutral ground, or a Callout opponent).
+        /// </summary>
+        private static bool WatchesHealth(Card card, GameObject local, PlayerParty viewerParty, Transform target)
+        {
+            if (local == null) return false;
+            Transform body = card.Identity != null ? card.Identity.transform : null;
+            if (target != null && body != null && target == body) return true;
+            if (viewerParty != null && viewerParty.IsInPartyWith(card.Party)) return true;
+            return card.Body != null && KryticalNova.Combat.CombatHostility.IsHostile(local.transform, card.Body);
         }
 
         /// <summary>True when a point of the screen is covered by a window (anything that blocks clicks on the world).</summary>
@@ -150,8 +200,20 @@ namespace KryticalNova.UI
                 PlayerCrew = player.GetComponent<PlayerCrew>(),
                 Nova = player.GetComponent<PlayerNova>(),
                 Autopilot = player.GetComponent<KryticalNova.Autopilot.PlayerAutopilot>(),
-                Root = new VisualElement { pickingMode = PickingMode.Ignore },
+                Vitals = player.GetComponent<PlayerResources>(),
+                Party = player.GetComponent<PlayerParty>(),
+                Body = player.GetComponent<IDamageable>(),
             };
+            // The faction's own card while the HUD wears a faction's art.
+            PlayerCardView art = HudChrome.ShownKit != null ? HudChrome.ShownKit.playerCard : null;
+            if (art != null && HudChrome.WorldLayer != null)
+            {
+                card.View = Instantiate(art, HudChrome.WorldLayer, false);
+                card.View.name = art.name;
+                card.View.Show(false);
+                return card;
+            }
+            card.Root = new VisualElement { pickingMode = PickingMode.Ignore };
             card.Root.AddToClassList("namecard");
             card.Standing = Line("namecard-standing", card.Root);
 
@@ -176,6 +238,41 @@ namespace KryticalNova.UI
             label.AddToClassList(className);
             parent.Add(label);
             return label;
+        }
+
+        /// <summary>The same for a faction's card: the level goes in the badge, and the bar shows where it may.</summary>
+        private static void FillView(Card card, FactionId faction, PlayerIdentity viewer, bool showHealth)
+        {
+            PlayerCardView view = card.View;
+            string nameText = card.Identity != null ? card.Identity.CharacterName : view.name;
+            // A character hunting on Autopilot says so, to everyone who can read its name.
+            if (card.Autopilot != null && card.Autopilot.IsOn) nameText += "   AUTO";
+            int level = card.Progression != null ? card.Progression.CurrentLevel : 1;
+            if (nameText != card.NameText || level != card.Level)
+            {
+                card.NameText = nameText;
+                card.Level = level;
+                view.Say(nameText, level);
+            }
+
+            string standing = card.Nova != null ? card.Nova.WornStanding ?? string.Empty : string.Empty;
+            if (standing != card.StandingText) view.Standing(card.StandingText = standing);
+
+            CrewTag tag = card.PlayerCrew != null ? card.PlayerCrew.Tag : default;
+            string crew = tag.InCrew ? "<" + tag.crew + ">" : string.Empty;
+            if (crew != card.CrewText) view.Crew(card.CrewText = crew);
+
+            float share = card.Vitals != null && card.Vitals.MaxHealth > 0f ? Mathf.Clamp01(card.Vitals.Health / card.Vitals.MaxHealth) : 1f;
+            view.Health(showHealth && card.Vitals != null, share);
+
+            bool duelling = viewer != null && card.Identity != null && card.Identity != viewer && card.Identity.IsDuelling(viewer);
+            if (faction == card.Faction && duelling == card.Duelling) return;
+            card.Faction = faction;
+            card.Duelling = duelling;
+            FactionDefinition definition = card.Identity != null && card.Identity.Database != null && card.Identity.Database.Factions != null
+                ? card.Identity.Database.Factions.Get(faction) : null;
+            view.Colour(duelling ? DuelColor : definition != null ? Opaque(definition.accentColor) : NoFactionColor);
+            view.Crest(definition != null ? definition.crest : null);
         }
 
         /// <summary>Writes what changed since the card was last shown. Called only for cards on screen.</summary>
