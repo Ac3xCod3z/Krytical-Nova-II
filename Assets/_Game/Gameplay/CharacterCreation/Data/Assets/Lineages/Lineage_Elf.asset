@@ -24,6 +24,7 @@ MonoBehaviour:
   body: 1
   ownPack: ELVN_WARR
   basicOutfit: 06000700080009000a000b000c000d000e000f0010001100t
+  bareBody: b703b803b903ba03bb03bc03bd03be03bf03c003c103c203t
   defaultPalette: 36
   wrapPartId: 966
   masculine:
@@ -107,6 +108,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 02
       recipe:
         version: 1
@@ -130,6 +132,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 03
       recipe:
         version: 1
@@ -153,6 +156,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 04
       recipe:
         version: 1
@@ -176,6 +180,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 05
       recipe:
         version: 1
@@ -199,6 +204,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 06
       recipe:
         version: 1
@@ -222,6 +228,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 07
       recipe:
         version: 1
@@ -245,6 +252,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 08
       recipe:
         version: 1
@@ -268,6 +276,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     skinTones:
     - name: Tone 01
       swatch:
@@ -1788,6 +1797,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 02
       recipe:
         version: 1
@@ -1811,6 +1821,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 03
       recipe:
         version: 1
@@ -1834,6 +1845,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 04
       recipe:
         version: 1
@@ -1857,6 +1869,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 05
       recipe:
         version: 1
@@ -1880,6 +1893,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 06
       recipe:
         version: 1
@@ -1903,6 +1917,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 07
       recipe:
         version: 1
@@ -1926,6 +1941,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Elf 08
       recipe:
         version: 1
@@ -1949,6 +1965,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     skinTones:
     - name: Tone 01
       swatch:

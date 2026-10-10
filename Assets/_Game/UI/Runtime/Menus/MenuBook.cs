@@ -137,7 +137,8 @@ namespace KryticalNova.UI.Menus
             shownPage.SetValue(book, value);
         }
 
-        private Color Tint()
+        /// <summary>The accent of the skin the menus wear (or the settings' own colour).</summary>
+        public Color Tint()
         {
             if (settings.tintWithTheSkin && skins != null)
             {

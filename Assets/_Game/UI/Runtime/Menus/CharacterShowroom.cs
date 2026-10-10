@@ -113,13 +113,17 @@ namespace KryticalNova.UI.Menus
         /// </summary>
         public bool Show(in CharacterRecipe recipe, IReadOnlyList<WornPiece> worn)
         {
-            if (!Show(recipe)) return false;
+            // A character that wears anything is shown as it is, bare where a slot is empty. One with nothing on
+            // record has not been played yet: it stands in the basic outfit its starter kit will look like.
+            if (!Show(recipe, worn == null || worn.Count == 0)) return false;
             if (items != null) DollOutfit.Wear(doll, worn, items, progression);
             return true;
         }
 
         /// <summary>Show (or restyle) the character. Returns false when the recipe cannot be built.</summary>
-        public bool Show(in CharacterRecipe recipe)
+        public bool Show(in CharacterRecipe recipe) => Show(recipe, true);
+
+        private bool Show(in CharacterRecipe recipe, bool dressed)
         {
             bool created = doll == null;
             if (created)
@@ -154,7 +158,7 @@ namespace KryticalNova.UI.Menus
                 }
                 ambientWait = Random.Range(AmbientFirstPause.x, AmbientFirstPause.y);
             }
-            return doll.Apply(recipe, database);
+            return doll.Apply(recipe, database, dressed);
         }
 
         private bool HasStances => expressions != null && expressions.Idles.Count > 0;

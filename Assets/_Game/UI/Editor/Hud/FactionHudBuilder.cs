@@ -496,7 +496,7 @@ namespace KryticalNova.EditorTools
             return text;
         }
 
-        private static TextMeshProUGUI NewLabel(Transform parent, string name, TMP_Text like, float size, TextAlignmentOptions alignment)
+        internal static TextMeshProUGUI NewLabel(Transform parent, string name, TMP_Text like, float size, TextAlignmentOptions alignment)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.layer = parent.gameObject.layer;
@@ -740,7 +740,7 @@ namespace KryticalNova.EditorTools
         /// pictures that are switched on, without the soft shadows and glows that fade to nothing, and without what a
         /// mask cuts away.
         /// </summary>
-        private static Bounds Drawn(RectTransform root, RectTransform under)
+        internal static Bounds Drawn(RectTransform root, RectTransform under)
         {
             bool any = false;
             var all = new Bounds();

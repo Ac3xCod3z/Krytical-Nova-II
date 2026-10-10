@@ -66,6 +66,24 @@ drawn as an element over the map (`MinimapChromeView.overMap`: the Covenant dial
   background. While an Equipment preview is lit it puts its own lights out (both are on the preview layer).
 - Labels that follow things in the world (namecards, nameplates, loot labels, Kiosk plates, combat numbers) are UI
   Toolkit and would draw over the pieces: each hides while it is over one (`HudChrome.HideOver`).
+- The plate over a Hostile is the exception since 9 Oct 2026: while the HUD wears a faction's art it is that
+  faction's own (`HostilePlateView`, prefab `UI/HUD/Faction/<Faction>/HUD_<Faction>_HostilePlate.prefab`, listed in the
+  kit as `hostilePlate`). **Krytical Nova ▸ UI ▸ Build Hostile Plates** (`HostilePlateBuilder`) composes it from the
+  pack's `WorldSpace_EnemyInfo_01`: the pack's level badge and health bar, with three lines of ours in the pack's
+  lettering (the name, 12 panel pixels tall and in the level-gap colour; BRUISER over it; TAKEN under the bar). The
+  badge and bar are 118 panel pixels wide in every faction. `HostileNameplateController` decides what a plate says and
+  when it shows, as before; it makes one per Hostile on `HudChrome.WorldLayer`, the first child of the pieces'
+  canvas, so the pieces draw over the plates and nothing has to hide. With no faction art the plain UI Toolkit plate
+  is drawn instead.
+- The namecard over a player is the faction's own too (`PlayerCardView`, `HUD_<Faction>_PlayerCard.prefab`, the kit's
+  `playerCard`; **Krytical Nova ▸ UI ▸ Build Player Namecards**, `PlayerCardBuilder`). It is made of the same pack
+  prefab as the Hostile plate and its badge and bar are the same size: the level is in the pack's badge, the name in
+  the pack's lettering with the faction's crest before it (faction colour, red for a Callout opponent), the Standing
+  over it and the Crew under it. The health bar shows only on a player whose health is the viewer's business: the
+  target, a Squad member, and anyone the viewer could strike (`PlayerNamecardController.WatchesHealth`); never on the
+  viewer's own card. With the bar the name stands over badge and bar; without it badge, crest and name make one
+  centred row. Behind it all is the pack's own small panel (the box and frame of its interaction prompt, copied by the
+  builder and a little see-through), which the view sizes to what the card says. Who sees whose card is unchanged (`NamecardRules`), and a card still hides behind a window.
 - Not yet in the packs' art: chat, buffs, Squad frames, the Callout strip and prompts (they have the pack's small
   panel frame and buttons only).
 - `FactionVariantBuilder` was a spike for the pieces a faction's own pack lacks (a recoloured prefab variant of the
@@ -243,7 +261,7 @@ canvas's children go under one "Book Page" that is the canvas made smaller, each
 rectangle, and clicks, keys and drags work as before. `pageScale` 1 gives the full-screen menus back. On the open
 book a turn forward takes the leaf over onto the left-hand page; a turn back brings a leaf from the left that shows
 the screen as it was last seen in this run (`MenuTransition` keeps one picture per menu screen), landing on the
-screen that was left. The page from Loading turns into the world full-screen: the book is left behind there.
+screen that was left. The page from Loading does not turn: it breaks into panels (see below).
 The book round the page is drawn, not modelled: MegaBook has no cover or spine of its own (a cover is an object the
 user supplies), and seen straight on a model would show the same edges. Under the pages lies the cover board
 (`MenuBookSettings.cover`, `coverEdge`, `coverMargin`), standing out past them along the top, the outer side and the
@@ -257,8 +275,21 @@ included); the next scene loads under that picture; then the picture lifts off a
 and what it uncovers is the next screen, already live. Forward through the menus (Title, Character select, Faction
 select, Creator, Loading, the world) the page leaves by the left edge; going back it leaves by the right. When there is
 no page to turn (the game has just started, or the menus are come back to from the world) the screen starts under
-solid ink and that ink is the book's cover: it turns away the same way. The page from the Loading screen turns into
-the world.
+solid ink and that ink is the book's cover: it turns away the same way.
+
+**The way into the world (as built, 9 Oct 2026).** The Loading page is the last page, and it does not turn. When the
+bar is full `MenuTransition` takes a picture of the whole view, book and all, and lays it over the view exactly where
+it was, so nothing moves or changes size when the world starts under it. The picture waits there until the world runs
+steadily (`settledFrames` frames in a row each faster than `settledFrameSeconds`, and nothing left in `LoadingGate`),
+or `revealTimeout` seconds at most. Then ink lines draw in across it, cutting it into five to seven comic panels (rows
+of different heights, one to three panels a row, a different cut every time), and the panels are thrown clear one
+after another, each turning and taking the skin's accent in dots as it goes, with the game behind them. It is one
+uGUI shader on the picture (`KryticalNova/UI/PanelShatter`, material `UI/Menus/Materials/M_UI_PanelShatter.mat`),
+drawn over the HUD; every number is on `MenuBookSettings` ("The way into the world"), and with no material there the
+page turns into the world as it used to. The Loading screen itself now waits for the page from the last screen to
+finish turning before it starts loading the zone and its own clock: before, the zone's long frames made that turn
+stutter while the screen's four seconds ran out behind it, so on a slow load the screen was hardly seen. Its clock
+and bar count a long frame as a short one for the same reason.
 
 **How it differs from the plan.** The G-1 report proposed a book lying open in the scene with the live screen drawn on
 its right-hand page. That needs every screen moved onto a camera-space canvas fitted to the page, which changes every

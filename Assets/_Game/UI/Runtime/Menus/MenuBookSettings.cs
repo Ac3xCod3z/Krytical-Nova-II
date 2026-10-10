@@ -18,6 +18,25 @@ namespace KryticalNova.UI.Menus
         [Tooltip("Frames the picture of the last screen lies flat over the next one before its page turns: the next screen draws for the first time under it.")]
         [Range(1, 10)] public int holdFrames = 2;
 
+        [Header("The way into the world")]
+        [Tooltip("The material that cuts the Loading page into panels and throws them clear (KryticalNova/UI/PanelShatter). None: the page turns into the world like any other.")]
+        public Material reveal;
+        [Tooltip("Seconds from the first ink line to the last panel gone.")]
+        [Min(0.2f)] public float revealSeconds = 1.25f;
+        [Tooltip("How many panels the page is cut into, least and most. A different cut every time.")]
+        [Range(3, 8)] public int panelsFewest = 5;
+        [Range(3, 8)] public int panelsMost = 7;
+        [Tooltip("How far a panel is thrown, in views (1 = the height or width of the screen), least and most.")]
+        public Vector2 panelThrow = new Vector2(1.15f, 1.6f);
+        [Tooltip("How far a panel turns as it goes, in degrees, least and most. Each turns one way or the other.")]
+        public Vector2 panelSpin = new Vector2(10f, 32f);
+        [Tooltip("The world is ready to be shown once this many frames in a row have each been drawn faster than the time below.")]
+        [Range(1, 30)] public int settledFrames = 6;
+        [Tooltip("Seconds: a frame slower than this is the world still starting up.")]
+        [Range(0.02f, 0.5f)] public float settledFrameSeconds = 0.15f;
+        [Tooltip("The picture never waits longer than this for the world, in seconds.")]
+        [Min(1f)] public float revealTimeout = 12f;
+
         [Header("The view of the page")]
         [Tooltip("The book camera's field of view. Narrow: the page turns flat, like a diagram. Wide: its lifted edge sweeps towards the reader.")]
         [Range(5f, 40f)] public float fieldOfView = 18f;

@@ -294,8 +294,8 @@ namespace KryticalNova.Items
         /// <summary>
         /// Server/offline: what a new character starts with, once per spawn, called when its identity is known. The
         /// level-1 Common outfit of its own pack and the level-1 Common weapon of its Discipline, worn. The outfit
-        /// looks like the basic outfit it already had, so this changes stats, not looks. Slots that already hold
-        /// something are left alone.
+        /// is the lineage's basic outfit, the look the creator showed; under it is the bare body, which is what a
+        /// slot shows once its piece is taken off. Slots that already hold something are left alone.
         /// </summary>
         public void ServerGrantStarterKit(string pack, Factions.FactionId faction, BodyFit body, WeaponClassId discipline)
         {

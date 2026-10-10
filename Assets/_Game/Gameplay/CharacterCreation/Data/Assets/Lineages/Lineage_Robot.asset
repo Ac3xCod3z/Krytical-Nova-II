@@ -24,6 +24,7 @@ MonoBehaviour:
   body: 2
   ownPack: SCFI_ROBO
   basicOutfit: 3b013c013d013e013f014001410142014301440145014601t
+  bareBody: 750176017701780179017a017b017c017d017e017f018001t
   defaultPalette: 13
   wrapPartId: 0
   masculine:
@@ -74,6 +75,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 02
       recipe:
         version: 1
@@ -97,6 +99,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 03
       recipe:
         version: 1
@@ -120,6 +123,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 04
       recipe:
         version: 1
@@ -143,6 +147,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 05
       recipe:
         version: 1
@@ -166,6 +171,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 06
       recipe:
         version: 1
@@ -189,6 +195,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 07
       recipe:
         version: 1
@@ -212,6 +219,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 08
       recipe:
         version: 1
@@ -235,6 +243,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 09
       recipe:
         version: 1
@@ -258,6 +267,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 10
       recipe:
         version: 1
@@ -281,6 +291,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 11
       recipe:
         version: 1
@@ -304,6 +315,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 12
       recipe:
         version: 1
@@ -327,6 +339,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     skinTones: []
     channels: 0503y
   feminine:
@@ -377,6 +390,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 02
       recipe:
         version: 1
@@ -400,6 +414,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 03
       recipe:
         version: 1
@@ -423,6 +438,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 04
       recipe:
         version: 1
@@ -446,6 +462,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 05
       recipe:
         version: 1
@@ -469,6 +486,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 06
       recipe:
         version: 1
@@ -492,6 +510,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 07
       recipe:
         version: 1
@@ -515,6 +534,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 08
       recipe:
         version: 1
@@ -538,6 +558,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 09
       recipe:
         version: 1
@@ -561,6 +582,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 10
       recipe:
         version: 1
@@ -584,6 +606,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 11
       recipe:
         version: 1
@@ -607,6 +630,7 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     - name: Robot 12
       recipe:
         version: 1
@@ -630,5 +654,6 @@ MonoBehaviour:
         scars: 0
         eyeliner: 0
         grime: 0
+        weaponClass: 0
     skinTones: []
     channels: 0503y

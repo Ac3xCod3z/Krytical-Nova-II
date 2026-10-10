@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Factions;
@@ -51,6 +52,25 @@ namespace KryticalNova.Tests
                     Assert.AreEqual(1, part.variant, lineage.displayName);
                     Assert.IsTrue(EquipSlots.IsBodyRegion(part.region), lineage.displayName);
                 }
+            }
+        }
+
+        [Test]
+        public void EveryLineageHasABareBodyThatIsNotItsBasicOutfit()
+        {
+            foreach (var lineage in database.Lineages)
+            {
+                Assert.AreEqual(12, lineage.bareBody.Length, lineage.displayName);
+                var regions = new HashSet<BodyRegion>();
+                foreach (ushort id in lineage.bareBody)
+                {
+                    Assert.IsTrue(database.Parts.TryGet(id, out var part), lineage.displayName);
+                    Assert.IsTrue(EquipSlots.IsBodyRegion(part.region), lineage.displayName);
+                    Assert.IsTrue(regions.Add(part.region), $"{lineage.displayName}: two bare parts for {part.region}");
+                    CollectionAssert.DoesNotContain(lineage.basicOutfit, id, $"{lineage.displayName}: taking level-one gear off must change the look");
+                }
+                Assert.AreSame(lineage.bareBody, lineage.BodyParts(false));
+                Assert.AreSame(lineage.basicOutfit, lineage.BodyParts(true));
             }
         }
 
@@ -128,8 +148,14 @@ namespace KryticalNova.Tests
             Assert.IsTrue(RecipeResolver.Resolve(recipe, database, resolved));
             Assert.AreEqual(0, resolved.missing);
             Assert.AreEqual(recipe.PartCount, resolved.fixedParts.Count);
-            Assert.AreEqual(lineage.basicOutfit.Length, resolved.defaultParts.Count);
+            Assert.AreEqual(lineage.bareBody.Length, resolved.defaultParts.Count);
             Assert.IsTrue(resolved.defaultParts.All(p => EquipSlots.IsBodyRegion(p.region)));
+            var bareTorso = resolved.defaultParts.First(p => p.region == BodyRegion.Torso).mesh;
+            // A menu doll that knows no gear is resolved dressed: the basic outfit.
+            Assert.IsTrue(RecipeResolver.Resolve(recipe, database, resolved, dressed: true));
+            Assert.AreEqual(lineage.basicOutfit.Length, resolved.defaultParts.Count);
+            Assert.AreNotSame(bareTorso, resolved.defaultParts.First(p => p.region == BodyRegion.Torso).mesh, "with no gear on, the body is bare");
+            Assert.IsTrue(RecipeResolver.Resolve(recipe, database, resolved));
             Assert.IsTrue(resolved.wrap.IsValid, "a feminine human carries the chest wrap");
             Assert.AreEqual(100f, resolved.shape.masculineFeminine);
         }
