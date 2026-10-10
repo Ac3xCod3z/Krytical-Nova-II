@@ -243,7 +243,7 @@ canvas's children go under one "Book Page" that is the canvas made smaller, each
 rectangle, and clicks, keys and drags work as before. `pageScale` 1 gives the full-screen menus back. On the open
 book a turn forward takes the leaf over onto the left-hand page; a turn back brings a leaf from the left that shows
 the screen as it was last seen in this run (`MenuTransition` keeps one picture per menu screen), landing on the
-screen that was left. The page from Loading turns into the world full-screen: the book is left behind there.
+screen that was left. The page from Loading does not turn: it breaks into panels (see below).
 The book round the page is drawn, not modelled: MegaBook has no cover or spine of its own (a cover is an object the
 user supplies), and seen straight on a model would show the same edges. Under the pages lies the cover board
 (`MenuBookSettings.cover`, `coverEdge`, `coverMargin`), standing out past them along the top, the outer side and the
@@ -257,8 +257,21 @@ included); the next scene loads under that picture; then the picture lifts off a
 and what it uncovers is the next screen, already live. Forward through the menus (Title, Character select, Faction
 select, Creator, Loading, the world) the page leaves by the left edge; going back it leaves by the right. When there is
 no page to turn (the game has just started, or the menus are come back to from the world) the screen starts under
-solid ink and that ink is the book's cover: it turns away the same way. The page from the Loading screen turns into
-the world.
+solid ink and that ink is the book's cover: it turns away the same way.
+
+**The way into the world (as built, 9 Oct 2026).** The Loading page is the last page, and it does not turn. When the
+bar is full `MenuTransition` takes a picture of the whole view, book and all, and lays it over the view exactly where
+it was, so nothing moves or changes size when the world starts under it. The picture waits there until the world runs
+steadily (`settledFrames` frames in a row each faster than `settledFrameSeconds`, and nothing left in `LoadingGate`),
+or `revealTimeout` seconds at most. Then ink lines draw in across it, cutting it into five to seven comic panels (rows
+of different heights, one to three panels a row, a different cut every time), and the panels are thrown clear one
+after another, each turning and taking the skin's accent in dots as it goes, with the game behind them. It is one
+uGUI shader on the picture (`KryticalNova/UI/PanelShatter`, material `UI/Menus/Materials/M_UI_PanelShatter.mat`),
+drawn over the HUD; every number is on `MenuBookSettings` ("The way into the world"), and with no material there the
+page turns into the world as it used to. The Loading screen itself now waits for the page from the last screen to
+finish turning before it starts loading the zone and its own clock: before, the zone's long frames made that turn
+stutter while the screen's four seconds ran out behind it, so on a slow load the screen was hardly seen. Its clock
+and bar count a long frame as a short one for the same reason.
 
 **How it differs from the plan.** The G-1 report proposed a book lying open in the scene with the live screen drawn on
 its right-hand page. That needs every screen moved onto a camera-space canvas fitted to the page, which changes every

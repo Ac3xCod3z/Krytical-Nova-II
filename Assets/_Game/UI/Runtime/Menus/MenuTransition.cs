@@ -23,6 +23,14 @@ namespace KryticalNova.UI.Menus
     {
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
         private static readonly int DirectionId = Shader.PropertyToID("_Direction");
+        private static readonly int PanelCountId = Shader.PropertyToID("_PanelCount");
+        private static readonly int PanelsId = Shader.PropertyToID("_Panels");
+        private static readonly int MovesId = Shader.PropertyToID("_Moves");
+        private static readonly int AccentId = Shader.PropertyToID("_Accent");
+        private const int MaxPanels = 8; // the shader's own limit
+        // The way into the world starts once the world runs steadily: a slow frame there is a slow machine, not a
+        // scene starting up, and the panels keep to their time through it.
+        private const float MaxRevealStep = 0.1f;
         // A scene's first frames are long. Without a cap they would swallow the whole animation.
         private const float MaxStep = 1f / 30f;
         // The book makes its page on its first frame; if it has not after this many, the turn is given up.
@@ -159,10 +167,18 @@ namespace KryticalNova.UI.Menus
         private IEnumerator TurnAway(Action then, bool carryIntoNextScene, bool forward, bool interruptedOpening)
         {
             yield return EndOfFrame; // the whole frame, interface and all, is drawn
-            Texture2D picture = TakePicture();
+            MenuBookSettings settings = bookPrefab.Settings;
+            // Into the world the picture is of the whole view, book and all: it is what breaks into panels there.
+            bool shatter = carryIntoNextScene && settings != null && settings.reveal != null;
+            Texture2D picture = TakePicture(whole: shatter);
             if (picture == null)
             {
                 yield return CloseRoutine(then, carryIntoNextScene, interruptedOpening);
+                yield break;
+            }
+            if (shatter)
+            {
+                yield return ShatterIntoTheWorld(picture, settings, then);
                 yield break;
             }
             DropPending();
@@ -196,6 +212,143 @@ namespace KryticalNova.UI.Menus
             opening = true;
             yield return TurnPage();
             Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// The way into the world. The picture of the whole view stays exactly where it was (nothing moves or changes
+        /// size when the world starts under it), waits there until the world has stopped starting up, and is then
+        /// cut into comic panels that are thrown clear one after another.
+        /// </summary>
+        private IEnumerator ShatterIntoTheWorld(Texture2D picture, MenuBookSettings settings, Action then)
+        {
+            DropPending();
+            if (atRest != null)
+            {
+                // The book is in the picture now: the picture takes the whole view, in the same place.
+                atRest.Close();
+                atRest = null;
+            }
+            MenuPage.Place(still.rectTransform, new Rect(0f, 0f, 1f, 1f));
+            ShowStill(picture);
+            if (cover != null) SetCovering(false);
+            page.enabled = false;
+
+            var from = SceneManager.GetActiveScene();
+            transform.SetParent(null, false);
+            DontDestroyOnLoad(gameObject);
+            then?.Invoke();
+            while (SceneManager.GetActiveScene() == from) yield return null;
+
+            // The world's first frames are long (it spawns, builds, binds): they pass under the picture. It is shown
+            // once frames come steadily and nothing has asked to be waited for, or when the wait has been long enough.
+            float waited = 0f;
+            int steady = 0;
+            while (waited < settings.revealTimeout)
+            {
+                yield return null;
+                waited += Time.unscaledDeltaTime;
+                steady = Time.unscaledDeltaTime <= settings.settledFrameSeconds ? steady + 1 : 0;
+                if (steady >= settings.settledFrames && LoadingGate.FirstPending() == null) break;
+            }
+            LoadingGate.Clear();
+
+            var shatter = new Material(settings.reveal) { name = settings.reveal.name + " (This Turn)" };
+            CutIntoPanels(shatter, settings, new System.Random(Guid.NewGuid().GetHashCode()));
+            shatter.SetColor(AccentId, bookPrefab.Tint());
+            shatter.SetFloat(ProgressId, 0f);
+            still.material = shatter;
+            // From here the screen underneath is the player's.
+            still.raycastTarget = false;
+            closing = false;
+            MenuMoments.Raise(MenuMoment.PageForward, (Transform)null);
+
+            float seconds = Mathf.Max(0.2f, settings.revealSeconds);
+            float elapsed = 0f;
+            while (elapsed < seconds)
+            {
+                elapsed += Mathf.Min(Time.unscaledDeltaTime, MaxRevealStep);
+                shatter.SetFloat(ProgressId, Mathf.Clamp01(elapsed / seconds));
+                yield return null;
+            }
+            still.enabled = false;
+            still.material = null;
+            still.texture = null;
+            Destroy(shatter);
+            Destroy(picture);
+            Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Cuts the view into rows of panels the way a comic page is laid out: rows of different heights, each split
+        /// into one to three panels of different widths. Each panel is thrown away from the middle of the view, in
+        /// an order of its own.
+        /// </summary>
+        public static void CutIntoPanels(Material shatter, MenuBookSettings settings, System.Random random)
+        {
+            int fewest = Mathf.Clamp(Mathf.Min(settings.panelsFewest, settings.panelsMost), 3, MaxPanels);
+            int most = Mathf.Clamp(Mathf.Max(settings.panelsFewest, settings.panelsMost), fewest, MaxPanels);
+            int count = random.Next(fewest, most + 1);
+            float Between(float least, float greatest) => least + (float)random.NextDouble() * (greatest - least);
+
+            // Three rows (two for a few panels), each with its share of the panels.
+            int rows = count <= 4 ? 2 : 3;
+            var perRow = new int[rows];
+            for (int i = 0; i < rows; i++) perRow[i] = 1;
+            for (int spare = count - rows; spare > 0;)
+            {
+                int row = random.Next(rows);
+                if (perRow[row] >= 3) continue;
+                perRow[row]++;
+                spare--;
+            }
+            var heights = new float[rows];
+            float total = 0f;
+            for (int i = 0; i < rows; i++) total += heights[i] = Between(0.75f, 1.25f);
+
+            var panels = new Vector4[MaxPanels];
+            var moves = new Vector4[MaxPanels];
+            int made = 0;
+            float top = 1f;
+            for (int row = 0; row < rows; row++)
+            {
+                float bottom = row == rows - 1 ? 0f : top - heights[row] / total;
+                var widths = new float[perRow[row]];
+                float across = 0f;
+                for (int i = 0; i < widths.Length; i++) across += widths[i] = Between(0.7f, 1.3f);
+                float left = 0f;
+                for (int i = 0; i < widths.Length; i++)
+                {
+                    float right = i == widths.Length - 1 ? 1f : left + widths[i] / across;
+                    panels[made++] = new Vector4(left, bottom, right, top);
+                    left = right;
+                }
+                top = bottom;
+            }
+
+            // The order they leave in, and where each one goes.
+            var order = new int[count];
+            for (int i = 0; i < count; i++) order[i] = i;
+            for (int i = count - 1; i > 0; i--)
+            {
+                int other = random.Next(i + 1);
+                (order[i], order[other]) = (order[other], order[i]);
+            }
+            var sortedPanels = new Vector4[MaxPanels];
+            for (int place = 0; place < count; place++)
+            {
+                Vector4 panel = panels[order[place]];
+                sortedPanels[place] = panel; // the shader draws the first to leave on top
+                var centre = new Vector2((panel.x + panel.z) * 0.5f - 0.5f, (panel.y + panel.w) * 0.5f - 0.5f);
+                // A panel in the middle of the view has no side to leave by: it is given one.
+                if (centre.sqrMagnitude < 0.01f) centre = new Vector2(Between(-1f, 1f), Between(0.2f, 1f));
+                Vector2 away = (centre.normalized + new Vector2(Between(-0.25f, 0.25f), Between(-0.25f, 0.25f))).normalized
+                               * Between(settings.panelThrow.x, settings.panelThrow.y);
+                float spin = Between(settings.panelSpin.x, settings.panelSpin.y) * Mathf.Deg2Rad * (random.Next(2) == 0 ? -1f : 1f);
+                moves[place] = new Vector4(away.x, away.y, spin, count > 1 ? place / (float)(count - 1) : 0f);
+            }
+            shatter.SetFloat(PanelCountId, count);
+            shatter.SetVectorArray(PanelsId, sortedPanels);
+            shatter.SetVectorArray(MovesId, moves);
         }
 
         /// <summary>
@@ -278,13 +431,14 @@ namespace KryticalNova.UI.Menus
         private static bool IsKept(Texture2D picture) => picture != null && PagesSeen.ContainsValue(picture);
 
         /// <summary>The screen as it is shown, as a picture that shows the same colours again.</summary>
-        private static Texture2D TakePicture()
+        /// <param name="whole">The whole view, with the book round the page (the way into the world), not the page only.</param>
+        private static Texture2D TakePicture(bool whole = false)
         {
             Texture2D taken = ScreenCapture.CaptureScreenshotAsTexture();
             if (taken == null) return null;
             // On the open book the screen is the page only: the book round it is not part of the picture.
             RectInt area = MenuPage.Pixels;
-            if (area.width > 16 && area.height > 16 && (area.width < taken.width || area.height < taken.height))
+            if (!whole && area.width > 16 && area.height > 16 && (area.width < taken.width || area.height < taken.height))
             {
                 var cut = new Texture2D(area.width, area.height, taken.format, false, !GraphicsFormatUtility.IsSRGBFormat(taken.graphicsFormat));
                 cut.SetPixels(taken.GetPixels(Mathf.Clamp(area.x, 0, taken.width - area.width), Mathf.Clamp(area.y, 0, taken.height - area.height), area.width, area.height));

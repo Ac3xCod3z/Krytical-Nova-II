@@ -591,7 +591,9 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
 - Backdrop: `KryticalNova/UI/Showroom Backdrop`, an unlit quad that prints a faction-coloured burst with the same
   screen-aligned dots as the comic pass. The pedestal is `Comic Toon Lit` and very dark, because three lights meet on it.
 - Menus without a 3D scene (Title, Faction Select, Loading) draw the same dots in uGUI (`KryticalNova/UI/BenDay`), and
-  every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black.
+  every scene change is a Ben-Day wipe in Ink (`KryticalNova/UI/BenDayWipe`), never a fade to black. The one way into
+  the world is its own: the Loading page breaks into comic panels (`KryticalNova/UI/PanelShatter`, one full-screen
+  uGUI draw with a loop of at most eight panels a pixel, for about 1.25 s; not measured against a budget yet).
 
 ## Changelog
 

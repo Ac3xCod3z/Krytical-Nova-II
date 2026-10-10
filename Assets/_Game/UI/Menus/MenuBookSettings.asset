@@ -38,7 +38,26 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   holdFrames: 2
+  reveal: {fileID: 2100000, guid: 64f62294d4eed714d849533584e14a08, type: 2}
+  revealSeconds: 1.25
+  panelsFewest: 5
+  panelsMost: 7
+  panelThrow: {x: 1.15, y: 1.6}
+  panelSpin: {x: 10, y: 32}
+  settledFrames: 6
+  settledFrameSeconds: 0.15
+  revealTimeout: 12
   fieldOfView: 18
   stage: {x: 0, y: -500, z: 0}
+  pageScale: 0.88
+  leftStrip: 0.085
+  table: {r: 0.047058824, g: 0.043137256, b: 0.09019608, a: 1}
+  paperColour: {r: 0.93333334, g: 0.9019608, b: 0.8235294, a: 1}
+  paperShade: {r: 0.7254902, g: 0.68235296, b: 0.59607846, a: 1}
+  inkColour: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
+  edgeLeaves: 5
+  cover: {r: 0.16862746, g: 0.17254902, b: 0.43137255, a: 1}
+  coverEdge: {r: 0.29803923, g: 0.32156864, b: 0.7490196, a: 1}
+  coverMargin: 0.007
   tintWithTheSkin: 1
   backTint: {r: 0.29803923, g: 0.32156864, b: 0.7490196, a: 1}

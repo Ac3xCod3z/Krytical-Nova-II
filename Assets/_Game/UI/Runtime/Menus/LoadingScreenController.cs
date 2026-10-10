@@ -30,6 +30,9 @@ namespace KryticalNova.UI.Menus
         /// <summary>The line the tip is written on. A pack whose screen has none is given one by the scene builder.</summary>
         public const string TipName = "Label_Tooltip";
 
+        // A frame of the loading clock is never longer than this.
+        private const float MaxStep = 1f / 15f;
+
         private static readonly string[] GeneralTips =
         {
             "Drag to turn your character on the equipment page. Scroll to zoom.",
@@ -50,6 +53,12 @@ namespace KryticalNova.UI.Menus
             MenuUi.SetText(screen, TipName, PickTip(profile));
             if (slider != null) slider.value = 0f;
 
+            // The page from the last screen is still turning over this one. Loading the zone makes long frames,
+            // which the turn would stutter through while this screen's own time ran out behind it: the screen is
+            // seen first, whole, and only then starts its work and its clock.
+            var arriving = MenuTransition.Current;
+            while (arriving != null && (arriving.IsBusy || arriving.IsTurning)) yield return null;
+
             var load = SceneManager.LoadSceneAsync(FrontEnd.WorldScene);
             if (load == null)
             {
@@ -64,7 +73,8 @@ namespace KryticalNova.UI.Menus
             float shown = 0f;
             while (true)
             {
-                elapsed += Time.unscaledDeltaTime;
+                // A long frame counts as a short one: the minimum is time the screen was seen moving, not time lost to a hitch.
+                elapsed += Mathf.Min(Time.unscaledDeltaTime, MaxStep);
                 // Unity reports 0.9 when the scene is loaded and only waiting to be activated.
                 float sceneProgress = Mathf.Clamp01(load.progress / 0.9f);
                 string waitingFor = LoadingGate.FirstPending();
@@ -78,7 +88,7 @@ namespace KryticalNova.UI.Menus
                 // The bar follows whichever is further behind: the clock, the scene, or the tasks (held just short of full).
                 float target = Mathf.Min(sceneProgress, minimumSeconds > 0f ? elapsed / minimumSeconds : 1f);
                 if (waitingFor != null) target = Mathf.Min(target, 0.95f);
-                shown = Mathf.MoveTowards(shown, target, Time.unscaledDeltaTime * 1.5f);
+                shown = Mathf.MoveTowards(shown, target, Mathf.Min(Time.unscaledDeltaTime, MaxStep) * 1.5f);
                 if (slider != null) slider.value = shown;
                 MenuUi.SetText(screen, "Label_LoadingPercentage", waitingFor != null && sceneProgress >= 1f
                     ? $"{waitingFor}  {Mathf.RoundToInt(shown * 100f)}%"
