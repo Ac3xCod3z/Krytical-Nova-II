@@ -47,4 +47,7 @@ MonoBehaviour:
   bobs: 1
   footEffect: {fileID: 0}
   footBones: []
+  moveLoop: 
+  moveLoopWalkSpeed: 0.6
+  moveLoopRunSpeed: 1.5
   followGapAdjust: 0

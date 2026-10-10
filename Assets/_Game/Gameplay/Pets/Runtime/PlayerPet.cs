@@ -217,6 +217,8 @@ namespace KryticalNova.Pets
                 follower.SetAnimationCycle(pet != null && Settings != null ? Settings.animationCycleSeconds : 0f);
                 if (pet != null && Settings != null) follower.SetGaitSpeeds(Settings.walkFromOwnerSpeed, Settings.runFromOwnerSpeed, Settings.runToWalkOwnerSpeed);
                 else follower.SetGaitSpeeds(0f, 0f, 0f);
+                if (pet != null) follower.SetMoveLoop(pet.moveLoop, pet.moveLoopWalkSpeed, pet.moveLoopRunSpeed);
+                else follower.SetMoveLoop(null, 1f, 1f);
                 follower.SetStance(pet != null && !pet.bobs, pet != null ? pet.footEffect : null, pet != null ? pet.footBones : null);
             }
             Changed?.Invoke();

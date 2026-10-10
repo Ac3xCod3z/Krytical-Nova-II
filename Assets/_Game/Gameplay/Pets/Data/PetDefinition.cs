@@ -53,6 +53,14 @@ namespace KryticalNova.Pets
         [Tooltip("The bones of the model that are its feet: each gets the effect above. Empty = one under the middle of the body.")]
         public string[] footBones = new string[0];
 
+        [Header("Movement loop (a model with one movement animation instead of a walk and a run)")]
+        [Tooltip("The true/false parameter of the model's Animator that holds its movement loop (the Drone Core's FrontRoll). Empty = none: a model with Walk and Run parameters uses those.")]
+        public string moveLoop = "";
+        [Tooltip("How fast the loop is played while the owner walks. 1 = as it was made.")]
+        [Min(0.01f)] public float moveLoopWalkSpeed = 0.6f;
+        [Tooltip("How fast the loop is played while the owner runs. 1 = as it was made.")]
+        [Min(0.01f)] public float moveLoopRunSpeed = 1.5f;
+
         [Header("Follow")]
         [Tooltip("Added to the pet settings' follow gap for this pet only, in metres. More hovers further from its owner.")]
         public float followGapAdjust;
