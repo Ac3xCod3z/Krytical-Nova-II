@@ -1,8 +1,8 @@
 # Krytical Nova — Systems Build List (12Sky / Twelve Sky 2 cross-reference)
 
-As of 4 Oct 2026 · first scan at repo commit 9623a17 · statuses last updated 8 Oct 2026 on branch `polish-pass` (rows 21, 42, 47 and 48: the comic hit looks, one interface skin per faction, the title flow as a comic book, Settings from character select with its Gameplay page); before that on 7 Oct on branch `gear-themes-ascension-emotes` (gear set names and colour themes, paired weapons with carry poses, Capes from Rare up, the new pet glow, click-to-select in the HUD layout editor, Ascension and Nova Standings at the Herald, player namecards and the emote wheel, then the forge rebuilt as a bench beside the Pack, the Nova as a star with turning rings, a feel of their own for Ascension and Nova Standings, and the game menu with Log Out and Exit Game); before that on 6 Oct on branch `gear-progression-and-settings` (Tempering, Fusion, Tuning, Reforge, Renown, the Settings page with key rebinding, the shared skill names, then the 120 % Temper cap, forge effects, window keys in the input asset, the HUD layout editor's panel picker, the in-game GM console and GM kits; before that saving, Creds, pickup, Vault, Trade, Kiosks, Contacts, Crew, pets and tool cleanup on 5 Oct, see `05_Economy_And_Social.md`) · companion doc: "12Sky Systems Transcription & Krytical Nova Build List" (Claude doc)
+As of 4 Oct 2026 · first scan at repo commit 9623a17 · statuses checked against the code on 9 Oct 2026 on branch `hostiles` (rows 6, 9, 16, 30 and 49 landed; the tally and the plan of what is left are under "What is left" below); before that updated on 8 Oct 2026 on branch `polish-pass` (rows 21, 42, 47 and 48: the comic hit looks, one interface skin per faction, the title flow as a comic book, Settings from character select with its Gameplay page); before that on 7 Oct on branch `gear-themes-ascension-emotes` (gear set names and colour themes, paired weapons with carry poses, Capes from Rare up, the new pet glow, click-to-select in the HUD layout editor, Ascension and Nova Standings at the Herald, player namecards and the emote wheel, then the forge rebuilt as a bench beside the Pack, the Nova as a star with turning rings, a feel of their own for Ascension and Nova Standings, and the game menu with Log Out and Exit Game); before that on 6 Oct on branch `gear-progression-and-settings` (Tempering, Fusion, Tuning, Reforge, Renown, the Settings page with key rebinding, the shared skill names, then the 120 % Temper cap, forge effects, window keys in the input asset, the HUD layout editor's panel picker, the in-game GM console and GM kits; before that saving, Creds, pickup, Vault, Trade, Kiosks, Contacts, Crew, pets and tool cleanup on 5 Oct, see `05_Economy_And_Social.md`) · companion doc: "12Sky Systems Transcription & Krytical Nova Build List" (Claude doc)
 
-The 86-second recording pages through all 31 screens of the 12Sky (Twelve Sky) in-game help; the audio is game ambience only, no narration. Statuses below come from a scan of the Krytical-Nova-II repo at commit 9623a17 (4 Oct 2026, "Hold props during prop emotes"): 11 of the 37 systems are built, 8 are partial, 18 are still to build. All 31 pages are transcribed in `03_Full_Transcription.md` with the original screenshots in `pages~/`.
+The 86-second recording pages through all 31 screens of the 12Sky (Twelve Sky) in-game help; the audio is game ambience only, no narration. Statuses below come from a scan of the Krytical-Nova-II repo at commit 9623a17 (4 Oct 2026, "Hold props during prop emotes"): 11 of the 37 systems were built then, 8 partial, 18 still to build. **On 9 Oct 2026, of 49 rows: 32 Complete, 12 Partial, 1 To build, 4 Candidate.** All 31 pages are transcribed in `03_Full_Transcription.md` with the original screenshots in `pages~/`.
 
 **Naming convention for every file in this folder:** each system is written as **Krytical Nova name (TS2: Twelve Sky 2 name)**. Claude Code builds and names code with the Krytical Nova name; the TS2 name is there so the owner can read the doc by the name he knows. Where the 12Sky (first game) help page used a third name, it follows in square brackets.
 
@@ -87,7 +87,7 @@ Every system, item, place and stat in this doc has one Krytical Nova name, chose
 | **Spire** | Tower / defensive structure | — | Faction |
 | **Turf War** | Territory warfare | — | Faction |
 | **Faction** (Hegemony, Null, Covenant) | Faction [Grand Force] | `FactionId` | Faction |
-| **Hostiles** | Monsters | `CombatHostility` | PvE |
+| **Hostiles** | Monsters | `HostileDefinition`, `HostileNet`, `HostileZone`, `HostileKillRewards`, `HostileLoot` (who may fight whom is `CombatHostility`) | PvE |
 | **Bruiser** | Field Champion | `HostileTier.Bruiser` | PvE |
 | **Run** | Dungeon | — | PvE |
 | **Sweep** | Battue hunt | — | PvE |
@@ -162,7 +162,7 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 | 34 | Dossier crafting (TS2: Archives) [12Sky: Craft Scrolls] | Partial | 29 | HR / HD / RF assets flagged craftable with Archive names; dev toggle unlocks them. | Dossier Pages as drops and the craft action at the Chancellor. |
 | 35 | Warden, War Chest, Siege Rigs (TS2: Faction Leader, Faction Vault, Catapults) | Candidate | 30 | Nothing. | Design 08 with the new names. |
 | 36 | Accord (TS2: Alliance) | Candidate | 31 | Nothing. | Design 08. |
-| 37 | Transit (TS2: Teleport / Yellow Gateway) | Partial | 1, 21, 31 | `ZonePortal` zone transfers, `gm.tp` / `gm.poi`, Wayfinder stall placeholder. | Wayfinder NPC, Recall Tag item, Transit fees. |
+| 37 | Transit (TS2: Teleport / Yellow Gateway) | Partial | 1, 21, 31 | `ZonePortal` zone transfers, `gm.tp` / `gm.poi`; the Wayfinder stands at his plaza stall but offers only the Deep Vault. | Transit as a service at the Wayfinder, the Recall Tag item, Transit fees. There is one zone, so nowhere to travel to yet. |
 | 38 | Factions and lore (TS2: Grand Forces) | Complete | not in 12Sky help | Hegemony / Null / Covenant, lineages, faction select, faction skins, cross-faction PvP rules, faction chat. On neutral ground (the starter town) the factions are at peace: another faction's player is targeted and offered the same things as a faction mate, without the Squad and Crew invitations, and can be fought only in a Callout (`05_Economy_And_Social.md`, "Who may deal with whom"). | Faction infrastructure (design 08). |
 | 39 | Character creation and roster (no TS2 equivalent) | Complete | not in 12Sky help | Lineage, body type, **Discipline** (the faction's three weapon classes), palette, expression, name rules, roster, select screen, showroom, portrait studio. The select screen's doll wears the gear the character was last played in, weapon and Temper glow included (`CharacterProfile.worn`, `DollOutfit`). | Done. |
 | 40 | Networking (no TS2 equivalent) | Complete | not in 12Sky help | Netcode for GameObjects, dedicated server boot, zone sessions, spatial interest management, spawn / respawn, offline handoff. | Scaling per architecture plan Phase 4. |
@@ -183,6 +183,45 @@ Status is from the repo scan: Complete = working in code, Partial = some of it e
 - [ ] 12 Trade + Exchange (Trade done) · [ ] 19 Outfitter / Stylist / Reshaper / Coach · [ ] 24 Hotbar (pages) · [ ] 27 Respec Chip / Memory Wipe · [x] 30 Level-gap rules and death penalty · [ ] 31 Stims shop and Recall Tag · [ ] 34 Dossier crafting · [ ] 37 Transit NPC · [ ] 43 Pets and mounts (pets done)
 - [ ] 5 Slotting / Epic Mk (Tuning and Reforge done) · [x] 6 Hostiles with AI · [ ] 8 Other 8 weapon lines · [x] 9 Autopilot / Magnet · [ ] 11 Bounty Board (Nova Standings done) · [ ] 17 Sponsor / Recruit
 - [ ] 28 Siege Nights / Beacon Wars / Outpost Raids / The Pit · [ ] 32 Nova Store · [ ] 35 Warden / War Chest / Siege Rigs · [ ] 36 Accord
+
+## What is left (checked against the code, 9 Oct 2026)
+
+Every row was checked against the repo on branch `hostiles` (commit ad2a9d548). The statuses above held; what follows is the open work, in the order it unblocks the most. Nothing here is built until the owner asks for it.
+
+**1. Sources: almost everything a player spends still comes from GM commands only.** Hostiles drop Creds, Stims and ladder gear, and nothing else. There is no shop of any kind (`NpcOffer` has Vault, DeepVault, CrewRegistry, GearWork and Herald; no buy or sell).
+
+| Has no source in the world | Where it would come from |
+| --- | --- |
+| Alloys, Failsafes, Fusion Catalysts, Tuning / Violet / Reset Chips (rows 3, 4, 5) | Hostile drop table, Armorer shop, Alloy crafting |
+| Renown (rows 5, 10, 11: Tuning, Ascension and Nova Standings all need it) | Bounty Board (design open), faction wars |
+| Serums (row 49), Pet Rations (row 43), Autopilot Chips (row 9: owner to decide free, earned or sold) | Shops, drops, Nova Store |
+| Skill Chips, Dossier Pages, Respec Chip, Memory Wipe (rows 27, 34) | Drops, Nova Store; today a dev toggle and `gm.dropskills` / `gm.resetstats` |
+| More Stims than the starting ten, Flasks, Recall Tags (row 31) | Apothecary shop |
+| Kiosk Permits (row 15) | Nova Store |
+
+So the next thing that unlocks the most is **NPC shops** (Apothecary and Armorer buy / sell, one shop window) together with **materials on the Hostile drop table**, then a **Renown source**.
+
+**2. Partly built, with the design already written.**
+
+- Row 5: Slotting and Cores, Epic Mk II, rank up / down (gear spec sections 7 and 8). No code; the item-state bits are reserved.
+- Row 8: animation sets for Carbine, Arc Caster and Servo Claws; projectiles and cone / called-in shapes (there is no projectile code at all); per-class basic attacks; grip poses.
+- Row 12: The Exchange board (list, browse, buy with a Commission Receipt). No code; the Broker only describes it.
+- Row 24: Hotbar extra pages. Z and X now belong to Autopilot, so the pages need other keys.
+- Row 37: Transit at the Wayfinder with fees; needs a second zone.
+- Row 19: Outfitter, Stylist, Reshaper and Coach NPCs reopening the creator panels for Creds; gear dye.
+- Row 33: Crew levels (the member cap table is in `CrewSettings`; nothing raises the level), Crew Title and symbol on the namecard.
+- Row 43: models for Emberwing, Drone Core and Tidecaller (the Kitsune Spirit has stage 1 only), later-stage models, pet XP from wars, mounts.
+- Row 6 follow-ups: clips per species, Lucky Drops, Creds per kill tuned to the income target, the 300-Hostile soak, Hostile Zones on other maps.
+- Row 2: the Kill-XP gear stats and skill modifiers are shown but nothing reads them.
+- Row 47: window pages laid out against the packs' own screens; chat, buffs, Squad frames and prompts in pack art.
+
+**3. To build, small and self-contained.** Row 17 Sponsor / Recruit; Contracts (`HostileKillRewards.Rewarded` is the hook); Broadcast channel and Hailer (row 25); Instructors that teach (row 22).
+
+**4. World.** One playable zone (Zone01, the starter town, standing in as neutral ground). Not built: other maps and their Hostile Zones, the three Home Cities, the dedicated neutral cross-faction zone, trade zones in the Home Cities.
+
+**5. Not designed in detail.** Row 28 faction wars (Siege Nights, Beacon Wars, Outpost Raids, The Pit), row 32 Nova Store, row 35 Warden / War Chest / Siege Rigs, row 36 Accord; also from the glossary with no row: Reboot, Prime levels, Valor and Valor Rank, Spotlight, Runs, Sweeps, Lockdown, The Gauntlet, The Maze, bosses (the owner's own system).
+
+**6. Under the hood.** Real sign-in (the account id is made on the client and trusted); a database behind `ISaveStore`; handing a session on when the host leaves.
 
 ## Variance notes
 
@@ -226,7 +265,7 @@ For each item on the owner's list, how the Krytical Nova version differs from it
 
 ## Candidates not on the original list
 
-Of the sixteen reference systems not on the owner's list, six are already built (NPCs and map, mouse and camera, chat, gear rarities, skill leveling, Transit via portals) and four are partial. The ten still open, ranked by how much they unblock:
+Of the sixteen reference systems not on the owner's list, six were already built at the first scan (NPCs and map, mouse and camera, chat, gear rarities, skill leveling, Transit via portals) and four were partial. The ten open then, ranked by how much they unblocked. **On 9 Oct 2026: 1, 2, 4, 5 and 7 are built; 3, 6, 8, 9 and 10 are still open** (see "What is left").
 
 1. **Ground loot and world drops** (TS2: monster drops): blocks item pickup, Magnet, Hostile drops and the whole gear-progression loop; `GearUIController` already has the TODO.
 2. **Level-gap rules and death penalty** (TS2: Level & Exp; p. 18): name tint, XP and drop gating, 5% XP loss; needed before Hostiles and Autopilot make sense.
@@ -251,6 +290,7 @@ The repo answered most of the earlier questions (three factions, Spirit is the s
 - [x] Save backend: decided 5 Oct 2026. Full character on the server, as files on the server host behind `ISaveStore`, so a database or Cloud Save can replace them without touching the systems that save.
 - [x] Trade limits: decided 5 Oct 2026. A wallet holds a lot (999,999,999,999); a trade moves at most 5,000,000 Creds each way and an account sends at most 20,000,000 a day. All of it is tunable in `EconomySettings`, beside the income target the prices are judged against.
 - [x] Who may deal with whom: decided 5 Oct 2026. Trade, Kiosk purchases and Contacts are within a faction, and across factions only on neutral ground (the planned non-combat zone; the starter town is marked neutral until it exists). A Crew is one faction everywhere.
-- [ ] Creds faucets: nothing pays Creds yet (GM only). Hostile drops, Contracts and vendors must be tuned against the income target in `EconomySettings` when they are built.
+- [ ] Creds faucets: Hostile kills pay Creds since 9 Oct 2026 (cash on the ground), at about half the income target at level 1: still to tune against `EconomySettings`. Contracts and vendors are not built.
+- [ ] Autopilot Chips: free, earned or sold (owner to decide).
 - [x] The nine weapon lines are fixed: see `04_Weapon_Classes.md`.
 - [ ] "Bounce" on the Amulet: treated as Knockback Resist; confirm.

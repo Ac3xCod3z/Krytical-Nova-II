@@ -4,7 +4,7 @@ Reference material for Krytical Nova's systems, exported from the Claude doc "12
 
 | File | What it is |
 | --- | --- |
-| `01_Systems_Build_List.md` | Master Glossary (Twelve Sky 2 term → Krytical Nova term → what the code calls it today), the 45-row build list with per-system Status, variance notes, ranked candidates, open questions. **This is the renaming scheme and the checklist.** |
+| `01_Systems_Build_List.md` | Master Glossary (Twelve Sky 2 term → Krytical Nova term → what the code calls it today), the 49-row build list with per-system Status, "What is left" (the open work in the order it unblocks the most), variance notes, ranked candidates, open questions. **This is the renaming scheme and the checklist.** |
 | `02_Gear_System_Spec.md` | Concrete spec for Tempering, Fusion, Tuning, Slotting + Cores, Epic Mk, Ascension and Nova Standings (section 9, as built), set names and colour themes, auxiliary slots, data model, build order. |
 | `03_Full_Transcription.md` | All 31 pages of the 12Sky in-game help, transcribed in Krytical Nova terms with the reference term in brackets, each with its screenshot. |
 | `04_Weapon_Classes.md` | The nine weapon classes (three per faction), the ten-slot skill structure, all 90 skill names, weapon meshes per class, paired weapons and where each is carried, Discipline, starter kit, GM gear commands, and what is built. |

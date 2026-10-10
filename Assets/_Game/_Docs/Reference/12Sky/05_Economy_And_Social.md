@@ -204,7 +204,7 @@ Twelve Sky 2's Elixirs: a consumable that raises a stat for good, each kind a li
 
 ## Not built
 
-The Exchange board; selling Kiosk Permits (Nova Store); any Creds faucet (Hostile drops, Contracts, vendors); Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; handing a session on when its host leaves; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
+The Exchange board; selling Kiosk Permits (Nova Store); any Creds faucet but Hostile kills (Contracts, vendors); any shop; Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; handing a session on when its host leaves; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
 
 ## Verified
 
