@@ -482,6 +482,63 @@
     background-color: rgba(43, 33, 22, 0.62);
 }
 
+/* ---- Guide.uss ---- */
+.kn-faction-covenant .guide-index-row {
+    font-size: 14.56px;
+    -unity-background-image-tint-color: rgb(46, 37, 27);
+    color: rgb(188, 175, 161);
+}
+.kn-faction-covenant .guide-index-row.active {
+    -unity-background-image-tint-color: rgb(112, 73, 0);
+}
+.kn-faction-covenant .guide-reading {
+    background-color: rgba(23, 17, 11, 0.9);
+}
+.kn-faction-covenant .guide-screen-hint {
+    font-size: 10.08px;
+    color: rgb(236, 227, 217);
+}
+.kn-faction-covenant .guide-screen {
+    background-color: rgb(18, 13, 8);
+}
+.kn-faction-covenant .guide-title {
+    font-size: 21.28px;
+}
+.kn-faction-covenant .guide-summary, .kn-faction-covenant .guide-summary .guide-word {
+    font-size: 15.68px;
+}
+.kn-faction-covenant .guide-line {
+    font-size: 14.56px;
+    color: rgb(230, 221, 211);
+}
+.kn-faction-covenant .guide-word {
+    font-size: 14.56px;
+    color: rgb(230, 221, 211);
+}
+.kn-faction-covenant .guide-line-row > .key-cap > .key-cap-text {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .guide-step-number {
+    font-size: 13.44px;
+    background-color: rgba(70, 45, 0, 0.9);
+}
+.kn-faction-covenant .guide-section--where {
+    border-left-color: rgb(104, 214, 141);
+}
+.kn-faction-covenant .guide-section--tip {
+    border-left-color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .guide-box-heading {
+    font-size: 12.32px;
+    color: rgb(104, 214, 141);
+}
+.kn-faction-covenant .guide-section--tip > .guide-box-heading {
+    color: rgb(222, 167, 65);
+}
+.kn-faction-covenant .guide-turn {
+    font-size: 12.32px;
+}
+
 /* ---- Items.uss ---- */
 .kn-faction-covenant .header-key {
     font-size: 12.32px;

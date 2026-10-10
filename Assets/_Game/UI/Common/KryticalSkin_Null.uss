@@ -482,6 +482,63 @@
     background-color: rgba(38, 22, 43, 0.62);
 }
 
+/* ---- Guide.uss ---- */
+.kn-faction-null .guide-index-row {
+    font-size: 16.64px;
+    -unity-background-image-tint-color: rgb(41, 27, 46);
+    color: rgb(181, 161, 188);
+}
+.kn-faction-null .guide-index-row.active {
+    -unity-background-image-tint-color: rgb(112, 0, 6);
+}
+.kn-faction-null .guide-reading {
+    background-color: rgba(20, 11, 23, 0.9);
+}
+.kn-faction-null .guide-screen-hint {
+    font-size: 11.52px;
+    color: rgb(231, 217, 236);
+}
+.kn-faction-null .guide-screen {
+    background-color: rgb(15, 8, 18);
+}
+.kn-faction-null .guide-title {
+    font-size: 24.32px;
+}
+.kn-faction-null .guide-summary, .kn-faction-null .guide-summary .guide-word {
+    font-size: 17.92px;
+}
+.kn-faction-null .guide-line {
+    font-size: 16.64px;
+    color: rgb(225, 211, 230);
+}
+.kn-faction-null .guide-word {
+    font-size: 16.64px;
+    color: rgb(225, 211, 230);
+}
+.kn-faction-null .guide-line-row > .key-cap > .key-cap-text {
+    font-size: 14.08px;
+}
+.kn-faction-null .guide-step-number {
+    font-size: 15.36px;
+    background-color: rgba(70, 0, 3, 0.9);
+}
+.kn-faction-null .guide-section--where {
+    border-left-color: rgb(144, 104, 214);
+}
+.kn-faction-null .guide-section--tip {
+    border-left-color: rgb(222, 65, 73);
+}
+.kn-faction-null .guide-box-heading {
+    font-size: 14.08px;
+    color: rgb(144, 104, 214);
+}
+.kn-faction-null .guide-section--tip > .guide-box-heading {
+    color: rgb(222, 65, 73);
+}
+.kn-faction-null .guide-turn {
+    font-size: 14.08px;
+}
+
 /* ---- Items.uss ---- */
 .kn-faction-null .header-key {
     font-size: 14.08px;

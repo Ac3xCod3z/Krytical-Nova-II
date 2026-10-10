@@ -56,6 +56,8 @@ namespace KryticalNova.EditorTools
         private const string ToastType = "KryticalNova.UI.ToastHudController, KryticalNova.UI";
         private const string ToastSettingsType = "KryticalNova.UI.ToastSettings, KryticalNova.UI";
         public const string ToastSettingsPath = "Assets/_Game/UI/HUD/Toast/ToastSettings.asset";
+        /// <summary>What the Guide page of Settings says: one asset, read in the game and in the menus.</summary>
+        public const string GuideLibraryPath = "Assets/_Game/UI/Guide/GuideLibrary.asset";
 
         public static void SetUpOpenScene()
         {
@@ -79,6 +81,7 @@ namespace KryticalNova.EditorTools
             GameObject hudObject = hud.gameObject;
             EnsureComponent(hudObject, settingsType);
             AssignMixer(hudObject.GetComponent(settingsType));
+            AssignGuide(hudObject.GetComponent(settingsType));
             EnsureComponent(hudObject, networkType);
             var gearType = System.Type.GetType(GearType);
             if (gearType != null) EnsureComponent(hudObject, gearType);
@@ -171,6 +174,23 @@ namespace KryticalNova.EditorTools
             SerializedProperty property = so.FindProperty("mixer");
             if (property == null || property.objectReferenceValue == mixer) return;
             property.objectReferenceValue = mixer;
+            so.ApplyModifiedProperties();
+        }
+
+        /// <summary>Hands the Settings controller the Guide's text.</summary>
+        public static void AssignGuide(Component settings)
+        {
+            Object library = AssetDatabase.LoadMainAssetAtPath(GuideLibraryPath);
+            if (settings == null) return;
+            if (library == null)
+            {
+                Debug.LogWarning($"[HudSetup] No Guide library at {GuideLibraryPath}: the Guide page will be empty.");
+                return;
+            }
+            var so = new SerializedObject(settings);
+            SerializedProperty property = so.FindProperty("guide");
+            if (property == null || property.objectReferenceValue == library) return;
+            property.objectReferenceValue = library;
             so.ApplyModifiedProperties();
         }
 

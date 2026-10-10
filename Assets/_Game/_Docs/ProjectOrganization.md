@@ -156,7 +156,8 @@ _Game/
 │                          wheel)  Settings/ (SettingsWindow.uxml, shared by the game and the menus; MenuSettings.uxml shows it over
 │                          character select)  NPC/  Shaders/ (UI_ComicPage = a page of the menus' book)
 │                          Menus/ (assets the front-end scenes use: Materials/, Prefabs/MenuBook.prefab, MenuBookSettings.asset,
-│                          KeyGlyphs.asset)  Tests/Editor/
+│                          KeyGlyphs.asset)  Guide/ (the Guide page of Settings: Guide.uss, GuideLibrary.asset = everything it says,
+│                          Clips/GC_<topic>.mp4 = its recorded clips; code in Runtime/Guide/, the recorder in Editor/Guide/)  Tests/Editor/
 │                          (future: Skills/ Character/ World/)
 ├── VFX/                   Gameplay/  GameFeel/ (Comic/ = the comic marks and words, generated)  Environment/{City,Portals,Vehicles,Weather}/
 │                          Materials/ (shared FX mats; Comic/<word>/ = our copies of a word's letter materials, generated)

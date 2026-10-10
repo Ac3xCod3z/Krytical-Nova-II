@@ -36,6 +36,7 @@ namespace KryticalNova.UI
         private static readonly string ChatHeightKey = Prefix + "chat.height";
         private static readonly string ChatTimestampsKey = Prefix + "chat.timestamps";
         private static readonly string ChatTextScaleKey = Prefix + "chat.textScale";
+        private static readonly string GuideTopicKey = Prefix + "guide.topic";
 
         private static string BuildPrefix()
         {
@@ -234,6 +235,17 @@ namespace KryticalNova.UI
                 if (string.IsNullOrEmpty(value)) PlayerPrefs.DeleteKey(LayoutKey);
                 else PlayerPrefs.SetString(LayoutKey, value);
                 PlayerPrefs.Save();
+            }
+        }
+
+        /// <summary>The Guide topic last read (its id): where the Guide opens next time. Not an option, so it raises nothing.</summary>
+        public static string GuideTopic
+        {
+            get => PlayerPrefs.GetString(GuideTopicKey, string.Empty);
+            set
+            {
+                if (GuideTopic == (value ?? string.Empty)) return;
+                PlayerPrefs.SetString(GuideTopicKey, value ?? string.Empty);
             }
         }
 

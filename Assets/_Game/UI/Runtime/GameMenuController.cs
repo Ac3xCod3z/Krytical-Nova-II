@@ -17,7 +17,7 @@ using UnityEngine.UIElements;
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// The game menu: Resume, Settings, Log Out and Exit Game. Esc opens it when nothing else has a use for the key
+    /// The game menu: Resume, Settings, Guide, Log Out and Exit Game. Esc opens it when nothing else has a use for the key
     /// (an open window, a dialogue, a target, a journey: those take the Esc first, as they always did), and so does
     /// the MENU button. Log Out goes back to character select; Exit Game closes the application. Both count down
     /// first and can be cancelled until the count ends. Then the character is saved, the session is closed (a host
@@ -101,6 +101,7 @@ namespace KryticalNova.UI
 
             veil.Q<Button>("game-menu-resume").clicked += Close;
             veil.Q<Button>("game-menu-settings").clicked += OpenSettings;
+            veil.Q<Button>("game-menu-guide").clicked += OpenGuide;
             veil.Q<Button>("game-menu-logout").clicked += () => BeginLeaving(false);
             veil.Q<Button>("game-menu-exit").clicked += () => BeginLeaving(true);
             cancel.clicked += CancelLeaving;
@@ -231,6 +232,12 @@ namespace KryticalNova.UI
         {
             Show(View.None);
             if (settings != null) settings.OpenSettings();
+        }
+
+        private void OpenGuide()
+        {
+            Show(View.None);
+            if (settings != null) settings.OpenGuide();
         }
 
         private void Show(View next)

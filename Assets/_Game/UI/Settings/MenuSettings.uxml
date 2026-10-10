@@ -4,6 +4,7 @@
     <Style src="../Common/KryticalTheme.uss" />
     <Style src="../HUD/ProgressionHUD.uss" />
     <Style src="Settings.uss" />
+    <Style src="../Guide/Guide.uss" />
     <!-- Faction skins: generated from the UiSkin assets; each only applies under its .kn-faction-* class. -->
     <Style src="../Common/KryticalSkin_Hegemony.uss" />
     <Style src="../Common/KryticalSkin_Null.uss" />

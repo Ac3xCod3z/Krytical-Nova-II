@@ -2,12 +2,13 @@
     <!-- The game menu (GameMenuController): Esc with nothing else open, or the MENU button. One veil dims the world
          and takes its clicks; one of the three panels shows on it at a time. -->
     <ui:VisualElement name="game-menu-veil" class="game-menu-veil blocks-world">
-        <!-- Resume / Settings / Log Out / Exit Game -->
+        <!-- Resume / Settings / Guide / Log Out / Exit Game -->
         <ui:VisualElement name="game-menu" class="panel game-menu">
             <ui:Label text="GAME MENU" class="heading game-menu-title" />
             <ui:Label name="game-menu-who" class="muted game-menu-who" />
             <ui:Button name="game-menu-resume" text="RESUME" class="kn-button-primary game-menu-button" />
             <ui:Button name="game-menu-settings" text="SETTINGS" class="game-menu-button" />
+            <ui:Button name="game-menu-guide" text="GUIDE" class="game-menu-button" />
             <ui:Button name="game-menu-logout" text="LOG OUT" class="game-menu-button" />
             <ui:Button name="game-menu-exit" text="EXIT GAME" class="kn-button-danger game-menu-button" />
             <ui:Label text="Log Out returns to character select. Exit Game closes the game." class="muted game-menu-note" />

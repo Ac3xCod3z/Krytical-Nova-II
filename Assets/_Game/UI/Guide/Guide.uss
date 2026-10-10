@@ -1,0 +1,101 @@
+/*
+ * The Guide page of Settings (GuidePage): the topics by chapter on the left, the topic being read on the right.
+ * Built from the shared looks (../Common/KryticalTheme.uss) and the Settings rows (../Settings/Settings.uss), so
+ * the faction skins dress it by rule. This is a base sheet: it is in FactionSkinBuilder's list.
+ */
+
+/* The window is wider while the Guide is read, and has no APPLY / REVERT / RESET under it. */
+/* The width is SettingsPages.GuideWindowWidth too. */
+#settings-window.guide-open { width: 920px; }
+#settings-window.guide-open #settings-body { max-height: 520px; }
+#settings-window.guide-open .settings-footer { display: none; }
+
+.guide { flex-direction: row; height: 512px; margin-top: 6px; }
+
+/* ------------------------------------------------------------------ the list of topics */
+
+.guide-index { width: 214px; min-width: 214px; flex-shrink: 0; margin-right: 14px; }
+.guide-chapter { margin: 10px 0 2px 2px; }
+.guide-index-row {
+    min-height: 26px;
+    margin: 1px 0;
+    padding: 3px 8px;
+    font-size: 13px;
+    letter-spacing: 0;
+    white-space: normal;
+    -unity-text-align: middle-left;
+    -unity-background-image-tint-color: rgb(24, 34, 46);
+    color: rgb(156, 172, 188);
+}
+.guide-index-row:hover { color: rgb(255, 255, 255); }
+/* The topic being read is lit like the tab of the page shown. */
+.guide-index-row.active { -unity-background-image-tint-color: rgb(30, 112, 98); color: rgb(255, 255, 255); }
+
+/* ------------------------------------------------------------------ the topic */
+
+/* What is read stands on a nearly solid backing: a window lets the world show through, which text cannot afford. */
+.guide-reading { flex-grow: 1; flex-shrink: 1; padding: 4px 6px 4px 4px; background-color: rgba(9, 15, 23, 0.9); }
+.guide-head { flex-direction: row; margin: 6px 0 4px 6px; }
+
+/* The clip, in the pack's picture frame. GuidePage gives it the shape of what the topic shows and its size; a click
+   enlarges it over the page's width, with the text under it. */
+.guide-screen-frame { width: 336px; min-width: 336px; height: 189px; flex-shrink: 0; margin: 4px 16px 4px 4px; padding: 0; }
+.guide-head--large { flex-direction: column; align-items: center; }
+.guide-head--large > .guide-screen-frame { margin: 4px 4px 12px 4px; }
+.guide-head--large > .guide-about { align-self: stretch; }
+.guide-screen-hint { position: absolute; right: 4px; bottom: 3px; margin: 0; padding: 1px 6px; font-size: 9px; letter-spacing: 1px; color: rgb(214, 226, 236); background-color: rgba(0, 0, 0, 0.6); opacity: 0; transition-property: opacity; transition-duration: 0.12s; }
+.guide-screen-frame:hover > .guide-screen-hint { opacity: 1; }
+.guide-screen { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgb(6, 12, 18); -unity-background-scale-mode: scale-and-crop; }
+
+.guide-about { flex-grow: 1; flex-shrink: 1; }
+.guide-title { font-size: 19px; white-space: normal; margin-bottom: 4px; }
+.guide-summary, .guide-summary .guide-word { font-size: 14px; color: rgb(222, 233, 240); }
+
+.guide-section { margin: 10px 4px 0 6px; }
+.guide-section > .eyebrow { margin-bottom: 2px; }
+
+/* A line of text; with keys in it, a row of words and key caps that wraps. */
+.guide-line { margin: 3px 0; padding: 0; font-size: 13px; white-space: normal; color: rgb(208, 220, 230); }
+.guide-line-row { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.guide-word { margin: 0 4px 0 0; padding: 0; font-size: 13px; color: rgb(208, 220, 230); }
+.guide-word.tight { margin-left: -3px; }
+.guide-strong { color: rgb(255, 255, 255); -unity-font-style: bold; }
+.guide-line-row > .key-cap { min-width: 22px; height: 22px; margin: 1px 5px 1px 0; padding: 0 5px; }
+.guide-line-row > .key-cap > .key-cap-text { font-size: 11px; }
+.guide-line-row > .key-mouse { width: 17px; height: 23px; margin: 0 5px 0 0; }
+
+/* Steps: the number in a box, the step after it. */
+.guide-step { flex-direction: row; align-items: flex-start; margin: 2px 0; }
+.guide-step-number {
+    width: 24px; min-width: 24px; height: 22px;
+    margin: 3px 8px 0 0; padding: 0;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+    font-size: 12px;
+    color: rgb(244, 244, 244);
+    background-color: rgba(4, 50, 70, 0.9);
+}
+.guide-step > .guide-line { flex-grow: 1; flex-shrink: 1; }
+
+/* A table: a strip a line, the name left and the value right. */
+.guide-table-row { flex-direction: row; align-items: center; margin: 2px 0; padding: 2px 8px; background-color: rgba(0, 0, 0, 0.3); }
+.guide-table-name { width: 42%; min-width: 42%; flex-shrink: 0; margin-right: 10px; color: rgb(236, 244, 250); }
+.guide-table-value { flex-grow: 1; flex-shrink: 1; }
+
+/* Set apart: where it is done, something worth knowing, what can go wrong. */
+.guide-section--where, .guide-section--tip, .guide-section--warning {
+    padding: 6px 10px 6px 10px;
+    border-left-width: 3px;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+.guide-section--where { margin: 8px 0 0 0; border-left-color: rgb(214, 178, 104); }
+.guide-section--tip { border-left-color: rgb(114, 222, 196); }
+.guide-section--warning { border-left-color: rgb(214, 72, 72); }
+.guide-box-heading { margin: 0 0 2px 0; padding: 0; font-size: 11px; letter-spacing: 2px; color: rgb(214, 178, 104); }
+.guide-section--tip > .guide-box-heading { color: rgb(114, 222, 196); }
+.guide-section--warning > .guide-box-heading { color: rgb(240, 120, 120); }
+
+/* The topic before and the topic after. */
+.guide-foot { flex-direction: row; align-items: center; margin: 16px 4px 8px 6px; }
+.guide-foot-gap { flex-grow: 1; }
+.guide-turn { min-height: 26px; margin: 0; padding: 2px 12px; font-size: 11px; }

@@ -1,5 +1,6 @@
 using System;
 using KryticalNova.Factions;
+using KryticalNova.UI.Guide;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
@@ -19,6 +20,8 @@ namespace KryticalNova.UI.Menus
     {
         [Tooltip("The game's mixer: the Audio page's sliders drive its exposed volumes.")]
         [SerializeField] private AudioMixer mixer;
+        [Tooltip("What the Guide page says.")]
+        [SerializeField] private GuideLibrary guide;
 
         private readonly SettingsPages pages = new SettingsPages();
         private VisualElement root, window, shade;
@@ -50,7 +53,7 @@ namespace KryticalNova.UI.Menus
                 built = true;
                 AudioPreferences.Bind(mixer);
                 // No character, so no skill keys to list: the window keys and the fixed keys are shown.
-                pages.Build(root, () => null, _ => { }, false);
+                pages.Build(root, () => null, _ => { }, false, guide);
                 Button close = root.Q<Button>("close-settings");
                 if (close != null) close.clicked += Close;
             }
@@ -61,6 +64,7 @@ namespace KryticalNova.UI.Menus
         private void OnDisable()
         {
             if (Current == this) Current = null;
+            pages.Closed();
             MenuSkin.Changed -= WearSkin;
         }
 
@@ -91,6 +95,7 @@ namespace KryticalNova.UI.Menus
         {
             if (!IsOpen) return;
             pages.Controls?.Cancel();
+            pages.Closed();
             Show(false);
             MenuMoments.Raise(MenuMoment.Back);
             Action done = closed;
