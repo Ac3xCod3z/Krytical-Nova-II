@@ -17,6 +17,22 @@ namespace KryticalNova.Pets.Tests
                 yield return AssetDatabase.LoadAssetAtPath<PetDefinition>(AssetDatabase.GUIDToAssetPath(guid));
         }
 
+        /// <summary>
+        /// The models a pet wears an effect on: its model at each growth stage the effect is worn at (a stage with
+        /// no model of its own shows the pet's first one).
+        /// </summary>
+        private static IEnumerable<GameObject> ModelsFor(PetDefinition pet, PetEffect effect)
+        {
+            string name = pet.displayName.Replace(" ", string.Empty);
+            var first = AssetDatabase.LoadAssetAtPath<GameObject>($"{Models}/{name}/Pet_{name}_S1.prefab");
+            var seen = new HashSet<GameObject>();
+            for (int stage = Mathf.Max(0, effect.stages.x); stage <= Mathf.Min(PetRules.LastStage, effect.stages.y); stage++)
+            {
+                GameObject model = pet.Stage(stage).model != null ? pet.Stage(stage).model : first;
+                if (model != null && seen.Add(model)) yield return model;
+            }
+        }
+
         [Test]
         public void Every_effect_of_a_pet_is_there_and_is_worn_on_bones_its_model_has()
         {
@@ -29,13 +45,16 @@ namespace KryticalNova.Pets.Tests
                     seen++;
                     Assert.IsNotNull(effect.prefab, $"{pet.displayName}: an effect with no prefab");
                     Assert.IsNotNull(effect.prefab.GetComponentInChildren<ParticleSystem>(true), $"{pet.displayName}: {effect.prefab.name} has no particles");
-                    string name = pet.displayName.Replace(" ", string.Empty);
-                    var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{Models}/{name}/Pet_{name}_S1.prefab");
-                    Assert.IsNotNull(model, $"{pet.displayName}: no model of its own to wear {effect.prefab.name} on");
-                    var bones = new HashSet<string>();
-                    foreach (Transform bone in model.GetComponentsInChildren<Transform>(true)) bones.Add(bone.name);
-                    foreach (string bone in effect.bones)
-                        Assert.IsTrue(bones.Contains(bone), $"{pet.displayName}: its model has no bone '{bone}' for {effect.prefab.name}");
+                    int models = 0;
+                    foreach (GameObject model in ModelsFor(pet, effect))
+                    {
+                        models++;
+                        var bones = new HashSet<string>();
+                        foreach (Transform bone in model.GetComponentsInChildren<Transform>(true)) bones.Add(bone.name);
+                        foreach (string bone in effect.bones)
+                            Assert.IsTrue(bones.Contains(bone), $"{pet.displayName}: {model.name} has no bone '{bone}' for {effect.prefab.name}");
+                    }
+                    Assert.Greater(models, 0, $"{pet.displayName}: no model of its own to wear {effect.prefab.name} on at stages {effect.stages.x} to {effect.stages.y}");
                 }
             }
             Assert.GreaterOrEqual(seen, 2, "the Emberwing and the Drone Core each have an effect of their own");
@@ -54,15 +73,18 @@ namespace KryticalNova.Pets.Tests
                 {
                     if (string.IsNullOrEmpty(effect.animation)) continue;
                     seen++;
-                    string name = pet.displayName.Replace(" ", string.Empty);
-                    var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{Models}/{name}/Pet_{name}_S1.prefab");
-                    Assert.IsNotNull(model, $"{pet.displayName}: no model of its own");
-                    var controller = model.GetComponentInChildren<Animator>(true).runtimeAnimatorController as UnityEditor.Animations.AnimatorController;
-                    Assert.IsNotNull(controller, $"{pet.displayName}: its model has no Animator controller");
-                    var states = new HashSet<string>();
-                    foreach (var layer in controller.layers)
-                        foreach (var state in layer.stateMachine.states) states.Add(state.state.name);
-                    Assert.IsTrue(states.Contains(effect.animation), $"{pet.displayName}: no animation '{effect.animation}' for {effect.prefab.name}");
+                    int models = 0;
+                    foreach (GameObject model in ModelsFor(pet, effect))
+                    {
+                        models++;
+                        var controller = model.GetComponentInChildren<Animator>(true).runtimeAnimatorController as UnityEditor.Animations.AnimatorController;
+                        Assert.IsNotNull(controller, $"{pet.displayName}: {model.name} has no Animator controller");
+                        var states = new HashSet<string>();
+                        foreach (var layer in controller.layers)
+                            foreach (var state in layer.stateMachine.states) states.Add(state.state.name);
+                        Assert.IsTrue(states.Contains(effect.animation), $"{pet.displayName}: {model.name} has no animation '{effect.animation}' for {effect.prefab.name}");
+                    }
+                    Assert.Greater(models, 0, $"{pet.displayName}: no model of its own at stages {effect.stages.x} to {effect.stages.y}");
                     foreach (float moment in effect.at)
                         Assert.IsTrue(moment >= 0f && moment <= 1f, $"{pet.displayName}: {effect.prefab.name} plays at {moment}, outside {effect.animation}");
                     Assert.IsTrue(effect.during.x >= 0f && effect.during.y <= 1f && effect.during.x <= effect.during.y,
@@ -89,8 +111,46 @@ namespace KryticalNova.Pets.Tests
             {
                 bool found = false;
                 foreach (PetEffect effect in tidecaller.effects)
-                    found |= effect.animation == pair.Key && effect.prefab != null && effect.prefab.name == pair.Value;
-                Assert.IsTrue(found, $"{pair.Value} on {pair.Key}");
+                    found |= effect.animation == pair.Key && effect.prefab != null && effect.prefab.name == pair.Value && effect.stages == new Vector2Int(0, 0);
+                Assert.IsTrue(found, $"{pair.Value} on {pair.Key}, for the egg only");
+            }
+        }
+
+        // From 25 % the Tidecaller is a swimmer, another creature at each stage, with effects that are not the egg's:
+        // the same wave on its tide call, water streaming past while it swims, water dragged round its somersault,
+        // and a bump where its ram lands. It also names the charge that turns it on its owner.
+        [Test]
+        public void The_grown_Tidecallers_are_four_models_with_effects_of_their_own()
+        {
+            PetDefinition tidecaller = null;
+            foreach (PetDefinition pet in All())
+                if (pet.displayName == "Tidecaller") tidecaller = pet;
+            Assert.IsNotNull(tidecaller);
+            var models = new HashSet<GameObject>();
+            for (int stage = 1; stage <= PetRules.LastStage; stage++)
+            {
+                Assert.IsNotNull(tidecaller.Stage(stage).model, $"stage {stage} has a model of its own");
+                models.Add(tidecaller.Stage(stage).model);
+                Assert.Greater(tidecaller.Stage(stage).scale, tidecaller.Stage(stage - 1).scale, $"stage {stage} is larger than the one before");
+            }
+            Assert.AreEqual(4, models.Count, "a different creature at each stage");
+            var wanted = new Dictionary<string, string>
+            {
+                { "TideCall", "PFX_Pet_TideWave" }, { "Move", "PFX_Pet_TideFlow" }, { "SwimFlip", "PFX_Pet_TideSwirl" }, { "Ram", "PFX_Pet_RamBump" },
+            };
+            foreach (var pair in wanted)
+            {
+                bool found = false;
+                foreach (PetEffect effect in tidecaller.effects)
+                    found |= effect.animation == pair.Key && effect.prefab != null && effect.prefab.name == pair.Value && effect.stages == new Vector2Int(1, PetRules.LastStage);
+                Assert.IsTrue(found, $"{pair.Value} on {pair.Key}, for the swimmers only");
+            }
+            Assert.AreEqual("Ram", tidecaller.chargeAnimation);
+            foreach (GameObject model in models)
+            {
+                bool hasBone = false;
+                foreach (Transform bone in model.GetComponentsInChildren<Transform>(true)) hasBone |= bone.name == tidecaller.chargeBone;
+                Assert.IsTrue(hasBone, $"{model.name} has the bone its charge is read from ('{tidecaller.chargeBone}')");
             }
         }
 

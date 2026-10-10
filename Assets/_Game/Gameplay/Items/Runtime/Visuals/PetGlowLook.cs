@@ -15,6 +15,8 @@ namespace KryticalNova.Items.Visuals
         public Color color;
         /// <summary>0 = none, 1 = the final stage.</summary>
         public float strength;
+        /// <summary>True: no rim of light at this stage, whatever the strength (the sparkles and the stage's colour are still worn).</summary>
+        public bool noRim;
         /// <summary>Brightness of the halo at the outline.</summary>
         public Vector2 rimIntensity;
         /// <summary>How far the halo reaches from the outline, in metres.</summary>

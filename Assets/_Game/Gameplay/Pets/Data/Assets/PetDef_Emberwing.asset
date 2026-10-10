@@ -53,9 +53,18 @@ MonoBehaviour:
     - wing.L.004
     - wing.R.004
     - tail.001
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
     stageColour: 1
+    size: 1
+    stages: {x: 0, y: 4}
+    animation: 
+    at: []
+    during: {x: 0, y: 0}
   moveLoop: Move
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
   restLoop: Fly
+  chargeAnimation: 
+  chargeBone: 
   followGapAdjust: 0

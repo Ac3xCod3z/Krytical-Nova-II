@@ -29,8 +29,8 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private float snapDistance = 8f;
         [Tooltip("Pets are normalised so their largest dimension is this many metres (x the item's petScale).")]
         [SerializeField] private float normalizedSize = 0.55f;
-        [Tooltip("Size of the sparkle effect relative to how it was authored: small enough to come off the pet, not surround the owner.")]
-        [SerializeField, Min(0.05f)] private float glowSize = 0.42f;
+        [Tooltip("Size of the sparkle effect against the pet's own size. At 1 its sparkles are born on a ball as wide as the pet is long, so they come off its surface and stay close to it, and they are small or large as the pet is.")]
+        [SerializeField, Min(0.05f)] private float sparkleReach = 1f;
 
         private GameObject pet;
         private ItemDefinition current;
@@ -79,6 +79,29 @@ namespace KryticalNova.Items.Visuals
         private float moveLoopRunSpeed = 1f;
         private string restLoop;
 
+        // A charge: an animation in which the pet turns on its owner and drives at them. The animation carries one
+        // bone forward a little way; the follower moves the whole pet so that the lunge ends at the owner.
+        private const float FallbackOwnerHalfWidth = 0.18f;
+        private const float LongestCharge = 1.5f;
+        private const float ChargeReturnSpeed = 2f;
+        private const float ChargeSampleStep = 1f / 24f;
+        private string chargeAnimation;
+        private string chargeBoneName;
+        private int chargeState;
+        private Transform chargeBone;
+        private float chargeTravel;    // how far the animation itself carries the bone at its furthest, in the pet's own units
+        private float chargeFrom;      // where the bone was when this charge began
+        private bool charging;
+        private Vector3 chargeOffset;  // what the follower has added to the pet's place this frame
+
+        // Materials of the model that glow from an emission map: they breathe.
+        private static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
+        private static readonly int EmissionMapId = Shader.PropertyToID("_EmissionMap");
+        private readonly List<(Renderer renderer, int index, Color colour)> glowing = new List<(Renderer, int, Color)>();
+        private MaterialPropertyBlock glowBlock;
+        private Vector2 emissionBreath = Vector2.one;
+        private float emissionBreathsPerSecond;
+
         // A pet that stands on something rather than flying: it does not bob, and wears an effect under each foot.
         private bool steady;
         private GameObject footEffectPrefab;
@@ -104,10 +127,13 @@ namespace KryticalNova.Items.Visuals
             public readonly string Animation;
             public readonly IReadOnlyList<float> At;
             public readonly Vector2 During;
+            /// <summary>Its size against the pet's footprint; 0 counts as 1.</summary>
+            public readonly float Size;
 
             public WornEffect(GameObject prefab, IReadOnlyList<string> bones, bool stageColour, EffectPlace place = EffectPlace.Body,
-                Vector3 offset = default, string animation = null, IReadOnlyList<float> at = null, Vector2 during = default)
+                Vector3 offset = default, string animation = null, IReadOnlyList<float> at = null, Vector2 during = default, float size = 1f)
             {
+                Size = size;
                 Prefab = prefab;
                 Bones = bones;
                 StageColour = stageColour;
@@ -223,6 +249,29 @@ namespace KryticalNova.Items.Visuals
             animations?.SetRestLoop(restLoop);
         }
 
+        /// <summary>
+        /// The animation in which the pet charges its owner (the name of a state of its Animator; empty = none) and
+        /// the bone that animation carries forward. While it plays the pet faces its owner instead of the way they
+        /// face, and is moved so that its nose just reaches them at the furthest point of the lunge.
+        /// </summary>
+        public void SetCharge(string animation, string bone)
+        {
+            if (chargeAnimation == animation && chargeBoneName == bone) return;
+            chargeAnimation = animation;
+            chargeBoneName = bone;
+            ResolveCharge();
+        }
+
+        /// <summary>
+        /// How the glow of a model's emission maps breathes: between these two shares of each material's own emission
+        /// colour, this many times a second. 1 and 1, or no breaths, leaves the materials as they are.
+        /// </summary>
+        public void SetEmissionBreath(Vector2 strength, float breathsPerSecond)
+        {
+            emissionBreath = strength;
+            emissionBreathsPerSecond = Mathf.Max(0f, breathsPerSecond);
+        }
+
         /// <summary>Plays one of the pet's animations now, by the hash of its name. False when this pet has no such animation.</summary>
         public bool PlayAnimation(int nameHash) => pet != null && animations != null && animations.Play(nameHash);
 
@@ -265,6 +314,10 @@ namespace KryticalNova.Items.Visuals
             sparkles = null; // children of the old pet
             footEffects.Clear();
             worn.Clear();
+            glowing.Clear();
+            chargeBone = null;
+            charging = false;
+            chargeOffset = Vector3.zero;
             rim?.Detach();   // its halo was the old pet's outline
             rimOn = false;
             hasBounds = false;
@@ -278,6 +331,7 @@ namespace KryticalNova.Items.Visuals
             animations = PetAnimations.For(pet);
             animations?.SetMoveLoop(moveLoop, moveLoopWalkSpeed, moveLoopRunSpeed);
             animations?.SetRestLoop(restLoop);
+            FindGlowing();
             // Prop art comes at any scale (Synty drones are metres across); normalise to a companion size.
             pet.transform.localScale = Vector3.one;
             hasBounds = PetPlacement.TryMeasure(pet, out unitBounds);
@@ -296,6 +350,106 @@ namespace KryticalNova.Items.Visuals
             lastPetPosition = pet.transform.position;
             petSpeed = 0f;
             moving = false;
+            ResolveCharge();
+        }
+
+        /// <summary>The materials of the model that have an emission map switched on, with the colour each was given.</summary>
+        private void FindGlowing()
+        {
+            glowing.Clear();
+            foreach (Renderer renderer in pet.GetComponentsInChildren<Renderer>(true))
+            {
+                if (renderer is ParticleSystemRenderer) continue;
+                Material[] materials = renderer.sharedMaterials;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    Material material = materials[i];
+                    if (material == null || !material.IsKeywordEnabled("_EMISSION") || !material.HasProperty(EmissionMapId) || material.GetTexture(EmissionMapId) == null) continue;
+                    glowing.Add((renderer, i, material.GetColor(EmissionColorId)));
+                }
+            }
+        }
+
+        /// <summary>The glow rises and falls like a slow breath. Each pet breathes in its own time.</summary>
+        private void Breathe()
+        {
+            if (glowing.Count == 0 || emissionBreathsPerSecond <= 0f || Mathf.Approximately(emissionBreath.x, emissionBreath.y)) return;
+            if (glowBlock == null) glowBlock = new MaterialPropertyBlock();
+            float breath = 0.5f - 0.5f * Mathf.Cos((Time.time + bobPhase) * emissionBreathsPerSecond * Mathf.PI * 2f);
+            float strength = Mathf.Lerp(emissionBreath.x, emissionBreath.y, breath);
+            foreach ((Renderer renderer, int index, Color colour) in glowing)
+            {
+                if (renderer == null) continue;
+                renderer.GetPropertyBlock(glowBlock, index);
+                glowBlock.SetColor(EmissionColorId, colour * strength);
+                renderer.SetPropertyBlock(glowBlock, index);
+            }
+        }
+
+        /// <summary>
+        /// Finds the charge on the model that is out: the bone, and how far the animation carries it forward by
+        /// itself, read off the clip once (the model is put through it and left on its first frame, which is where
+        /// its Animator starts from anyway). A model without that animation or bone has no charge.
+        /// </summary>
+        private void ResolveCharge()
+        {
+            chargeState = 0;
+            chargeBone = null;
+            chargeTravel = 0f;
+            charging = false;
+            if (pet == null || string.IsNullOrEmpty(chargeAnimation) || string.IsNullOrEmpty(chargeBoneName)) return;
+            var animator = pet.GetComponentInChildren<Animator>(true);
+            if (animator == null || animator.runtimeAnimatorController == null) return;
+            AnimationClip clip = null;
+            foreach (AnimationClip candidate in animator.runtimeAnimatorController.animationClips)
+                if (candidate != null && candidate.name == chargeAnimation) clip = candidate;
+            if (clip == null) return;
+            foreach (Transform bone in pet.GetComponentsInChildren<Transform>(true))
+                if (bone.name == chargeBoneName) chargeBone = bone;
+            if (chargeBone == null) return;
+
+            Transform root = pet.transform;
+            float from = 0f, furthest = 0f;
+            for (float time = 0f; time <= clip.length; time += ChargeSampleStep)
+            {
+                clip.SampleAnimation(animator.gameObject, time);
+                float ahead = root.InverseTransformPoint(chargeBone.position).z;
+                if (time <= 0f) from = ahead;
+                furthest = Mathf.Max(furthest, ahead - from);
+            }
+            clip.SampleAnimation(animator.gameObject, 0f);
+            chargeTravel = furthest;
+            if (chargeTravel > 0.0001f) chargeState = Animator.StringToHash(chargeAnimation);
+        }
+
+        /// <summary>
+        /// What the charge adds to the pet's place this frame. The animation says how far through its lunge the pet
+        /// is (how far it has carried the bone, as a share of the furthest it carries it: below nothing while it
+        /// draws back); the follower moves the pet by that share of whatever the animation's own reach leaves
+        /// between its nose and its owner. After the charge it comes back the short way.
+        /// </summary>
+        private Vector3 ChargeOffset(Transform t)
+        {
+            bool on = chargeState != 0 && chargeBone != null && animations != null
+                      && animations.TryGetPlaying(out int state, out _) && state == chargeState;
+            if (on && !charging) chargeFrom = t.InverseTransformPoint(chargeBone.position).z;
+            charging = on;
+            if (!on)
+            {
+                chargeOffset = Vector3.MoveTowards(chargeOffset, Vector3.zero, ChargeReturnSpeed * Time.deltaTime);
+                return chargeOffset;
+            }
+            Vector3 toOwner = transform.position - t.position;
+            toOwner.y = 0f;
+            float distance = toOwner.magnitude;
+            if (distance < 0.001f) return chargeOffset;
+            float through = Mathf.Clamp((t.InverseTransformPoint(chargeBone.position).z - chargeFrom) / chargeTravel, -1f, 1f);
+            float ownerHalfWidth = follow.spaced ? follow.ownerHalfWidth : FallbackOwnerHalfWidth;
+            float nose = hasBounds ? unitBounds.max.z * fullScale : 0f;
+            float needed = Mathf.Min(distance - ownerHalfWidth - nose, LongestCharge);
+            float carried = chargeTravel * fullScale;
+            chargeOffset = toOwner / distance * ((needed - carried) * through);
+            return chargeOffset;
         }
 
         private void ApplyStage()
@@ -367,7 +521,7 @@ namespace KryticalNova.Items.Visuals
             float footprint = Mathf.Max(unitBounds.size.x, unitBounds.size.z);
             effect.transform.localPosition = home + look.Offset * footprint;
             effect.transform.localRotation = Quaternion.identity;
-            effect.transform.localScale = Vector3.one * footprint;
+            effect.transform.localScale = Vector3.one * (footprint * (look.Size > 0f ? look.Size : 1f));
             VisualUtility.PrepareCosmetic(effect, gameObject.layer);
             var copy = new Worn
             {
@@ -519,7 +673,7 @@ namespace KryticalNova.Items.Visuals
         /// </summary>
         private void ApplyRim()
         {
-            if (glow.strength <= 0f)
+            if (glow.strength <= 0f || glow.noRim)
             {
                 if (rimOn) rim.Detach();
                 rimOn = false;
@@ -552,13 +706,14 @@ namespace KryticalNova.Items.Visuals
             {
                 sparkles = Instantiate(glow.sparkles, pet.transform);
                 sparkles.name = glow.sparkles.name;
-                sparkles.transform.localPosition = Vector3.zero;
                 sparkles.transform.localRotation = Quaternion.identity;
                 VisualUtility.PrepareCosmetic(sparkles, gameObject.layer);
             }
-            // The pet is scaled down from prop size; undo that for the effect so it keeps its own size whatever the model.
-            float inherited = Mathf.Max(0.0001f, fullScale);
-            sparkles.transform.localScale = Vector3.one * (glowSize * stageScale / inherited);
+            // Round the middle of the body and as big as the pet (it is the pet's child, so it grows with it): the
+            // sparkles of a small pet are small and close, whatever size its model was made at.
+            sparkles.transform.localPosition = hasBounds ? unitBounds.center : Vector3.zero;
+            float longest = hasBounds ? Mathf.Max(unitBounds.size.x, Mathf.Max(unitBounds.size.y, unitBounds.size.z)) : 1f;
+            sparkles.transform.localScale = Vector3.one * (sparkleReach * longest);
             float s = glow.strength;
             Color tint = glow.color;
             tint.a = Mathf.Lerp(0.55f, 1f, s);
@@ -566,7 +721,8 @@ namespace KryticalNova.Items.Visuals
             {
                 var main = particles.main;
                 main.startColor = tint;
-                main.startSizeMultiplier = Mathf.Lerp(0.8f, 1.3f, s);
+                // Their size is the effect's own. (It used to be multiplied here, which on a size given as a range
+                // sets the top of the range: every sparkle effect came out up to a whole pet-length across.)
                 var emission = particles.emission;
                 emission.rateOverTime = Mathf.Lerp(glow.sparkleRate.x, glow.sparkleRate.y, s);
             }
@@ -594,7 +750,8 @@ namespace KryticalNova.Items.Visuals
                 float petNow = petStep.sqrMagnitude > snapDistance * snapDistance ? 0f : petStep.magnitude / dt;
                 petSpeed = Mathf.Lerp(petSpeed, petNow, blend);
             }
-            float speed = Mathf.Max(ownerSpeed, petSpeed);
+            // In a charge only its owner's going counts: the lunge is the pet's own, and is not a reason to swim off.
+            float speed = charging ? ownerSpeed : Mathf.Max(ownerSpeed, petSpeed);
             // Once moving it rests only well below the speed that set it off, so it does not flicker at the edge.
             float restBelow = moving ? walkFromSpeed * RestHysteresis : walkFromSpeed;
             if (walkFromSpeed <= 0f || speed < restBelow)
@@ -616,6 +773,7 @@ namespace KryticalNova.Items.Visuals
         {
             if (pet == null) return;
             var t = pet.transform;
+            t.position -= chargeOffset; // back to where it keeps itself: a charge is added on top of that, below
             if (animations != null)
             {
                 animations.SetGait(OwnerGait(t));
@@ -624,8 +782,21 @@ namespace KryticalNova.Items.Visuals
 
             Vector3 forward = transform.forward;
             forward.y = 0f;
-            if (forward.sqrMagnitude > 0.0001f)
-                t.rotation = Quaternion.Slerp(t.rotation, Quaternion.LookRotation(forward), 1f - Mathf.Exp(-turnSpeed * Time.deltaTime));
+            // It looks the way its owner does, except in a charge: then it turns on them, twice as fast.
+            Vector3 facing = forward;
+            float turn = turnSpeed;
+            if (charging)
+            {
+                Vector3 toOwner = transform.position - t.position;
+                toOwner.y = 0f;
+                if (toOwner.sqrMagnitude > 0.0001f)
+                {
+                    facing = toOwner;
+                    turn = turnSpeed * 2f;
+                }
+            }
+            if (facing.sqrMagnitude > 0.0001f)
+                t.rotation = Quaternion.Slerp(t.rotation, Quaternion.LookRotation(facing), 1f - Mathf.Exp(-turn * Time.deltaTime));
 
             Vector3 targetOffset = TargetOffset();
             if (!steady) targetOffset.y += Mathf.Sin((Time.time + bobPhase) * bobFrequency * Mathf.PI * 2f) * bobAmplitude;
@@ -649,7 +820,9 @@ namespace KryticalNova.Items.Visuals
                         clearDistance - ClearSlack, -forward);
             }
             t.position = transform.position + offset;
+            t.position += ChargeOffset(t);
             PlaceFootEffects();
+            Breathe();
 
             StayClearOfCamera(t);
         }

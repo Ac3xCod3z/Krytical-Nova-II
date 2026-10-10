@@ -24,23 +24,23 @@ MonoBehaviour:
     glow: {r: 0.3529412, g: 0.84705883, b: 0.7764706, a: 1}
     glowStrength: 0
   - name: 
-    model: {fileID: 0}
-    scale: 1.08
+    model: {fileID: 4142792073563568587, guid: b61e20acf66c461f9f8b2ec3829a293a, type: 3}
+    scale: 1.322314
     glow: {r: 0.3529412, g: 0.84705883, b: 0.7764706, a: 1}
     glowStrength: 0.3
   - name: 
-    model: {fileID: 0}
-    scale: 1.16
+    model: {fileID: 2639337082324404009, guid: 89dcdfc34d7e48b2a3ef813327520995, type: 3}
+    scale: 1.6528925
     glow: {r: 0.3529412, g: 0.84705883, b: 0.7764706, a: 1}
     glowStrength: 0.5
   - name: 
-    model: {fileID: 0}
-    scale: 1.24
+    model: {fileID: 3664925530557616973, guid: 237c816e954b41b0832839eb1e36c69b, type: 3}
+    scale: 1.983471
     glow: {r: 0.24705882, g: 0.654902, b: 0.8392157, a: 1}
     glowStrength: 0.75
   - name: Apex
-    model: {fileID: 0}
-    scale: 1.35
+    model: {fileID: 3435682751848569900, guid: f257a86de1be43b09494d5ab647b4279, type: 3}
+    scale: 2.3140495
     glow: {r: 0.24705882, g: 0.654902, b: 0.8392157, a: 1}
     glowStrength: 1
   chatter: {fileID: 11400000, guid: 4c61681394ba4d84ba1d7ba615e88809, type: 2}
@@ -53,6 +53,8 @@ MonoBehaviour:
     anchor: 1
     offset: {x: 0, y: 0, z: 0}
     stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
     animation: HopSpin
     at:
     - 0.2
@@ -63,6 +65,8 @@ MonoBehaviour:
     anchor: 1
     offset: {x: 0, y: 0, z: 0}
     stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
     animation: VictoryBounce
     at:
     - 0.22666667
@@ -74,6 +78,8 @@ MonoBehaviour:
     anchor: 1
     offset: {x: 0, y: 0, z: 0}
     stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
     animation: Move
     at: []
     during: {x: 0, y: 0}
@@ -82,6 +88,8 @@ MonoBehaviour:
     anchor: 2
     offset: {x: 0, y: 0.72, z: 0}
     stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
     animation: WobbleNap
     at: []
     during: {x: 0.13422818, y: 0.70469797}
@@ -90,12 +98,59 @@ MonoBehaviour:
     anchor: 1
     offset: {x: 0, y: 0, z: 0}
     stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
     animation: TideCall
     at:
     - 0.22105263
+    during: {x: 0, y: 0}
+  - prefab: {fileID: 8822475102854033442, guid: e57dcc2149c19c64d806b7e9a061e89e, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.55
+    stages: {x: 1, y: 4}
+    animation: TideCall
+    at:
+    - 0.3821138
+    during: {x: 0, y: 0}
+  - prefab: {fileID: 8106798915853788611, guid: 33de14b1632b5a341b0dcecf77566f8c, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: Move
+    at: []
+    during: {x: 0, y: 0}
+  - prefab: {fileID: 9063877641883896414, guid: d785ed1728cea014ba95faa9bd4ae7e1, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: SwimFlip
+    at: []
+    during: {x: 0.2020202, y: 0.7070707}
+  - prefab: {fileID: 3581474576641248158, guid: 6fd9618941d2ef04a8208491982684f1, type: 3}
+    bones:
+    - body
+    anchor: 0
+    offset: {x: 0, y: 0.1, z: 0.5}
+    stageColour: 0
+    size: 0.55
+    stages: {x: 1, y: 4}
+    animation: Ram
+    at:
+    - 0.26506025
     during: {x: 0, y: 0}
   moveLoop: Move
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
   restLoop: 
+  chargeAnimation: Ram
+  chargeBone: body
   followGapAdjust: 0
