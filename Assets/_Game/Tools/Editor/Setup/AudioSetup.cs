@@ -1,6 +1,6 @@
 using System;
+using System.Linq;
 using System.Reflection;
-using MoreMountains.Feedbacks;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -11,13 +11,19 @@ namespace KryticalNova.EditorTools
     /// <summary>
     /// The game's AudioMixer and who plays into which group. The mixer starts as a copy of FEEL's sound-manager mixer
     /// (Master with Music, Sfx and UI under it, each volume exposed) and gains an Ambience group. The zone scene step
-    /// then routes what plays sound today: weather loops and thunder to Ambience, the game feel sound slots to Sfx.
+    /// then routes what plays sound: weather loops and thunder to Ambience, the game feel's sound slots to Sfx and
+    /// the menu feel's (with the world's click and select) to UI, so every sound answers to one of the Settings
+    /// sliders. <see cref="Sounds"/> is the same without the scene: how the clips are imported, the slots' clips
+    /// (<see cref="GameFeelBuilder.ApplySounds"/>) and the weather's (<see cref="WeatherAudioSetup"/>).
     /// Safe to run again; a mixer that already exists is kept as it is.
     /// </summary>
     public static class AudioSetup
     {
         public const string MixerPath = "Assets/_Game/Audio/Mixers/KN_Main.mixer";
         private const string SourceMixer = "Assets/_ThirdParty/Feel/MMTools/Core/MMAudio/MMSoundManager/Settings/MMSoundManagerAudioMixer.mixer";
+        public const string AudioFolder = "Assets/_Game/Audio";
+        /// <summary>A clip shorter than this is unpacked when it loads and plays with no decoding cost.</summary>
+        private const float ShortClipSeconds = 1.5f;
         private const string AmbienceGroup = "Ambience";
         private const string AmbienceParameter = "AmbienceVolume";
         // The volumes FEEL's mixer exposes already (and ours, once it is there).
@@ -97,7 +103,60 @@ namespace KryticalNova.EditorTools
             }
         }
 
-        /// <summary>Routes the open scene's sound sources, and the game feel prefab's sound slots, into the mixer.</summary>
+        /// <summary>
+        /// Sets up everything that sounds, outside any scene: the import settings of the game's clips, the clips of
+        /// the game feel and menu feel sound slots, and the weather's loops (with the thunder of the open scene).
+        /// </summary>
+        [MenuItem("Krytical Nova/Setup/Sounds")]
+        public static void Sounds()
+        {
+            int imported = ApplyImportSettings();
+            int slots = GameFeelBuilder.ApplySounds();
+            int loops = WeatherAudioSetup.Apply();
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[Audio] {slots} sound slot(s) of {GameFeelBuilder.SoundSlotNames.Count()} have clips; {loops} weather profile(s) have a loop; " +
+                      $"{WeatherAudioSetup.ThunderClips().Length} thunder clip(s); {imported} clip(s) had their import settings changed.");
+        }
+
+        /// <summary>
+        /// How the game's clips are imported, by what they are: a weather loop streams from disk; thunder and the
+        /// long one-shots stay packed in memory; a short effect is unpacked on load. Returns how many changed.
+        /// </summary>
+        public static int ApplyImportSettings()
+        {
+            if (!AssetDatabase.IsValidFolder(AudioFolder)) return 0;
+            int changed = 0;
+            foreach (string guid in AssetDatabase.FindAssets("t:AudioClip", new[] { AudioFolder }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var importer = AssetImporter.GetAtPath(path) as AudioImporter;
+                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                if (importer == null || clip == null) continue;
+
+                bool loop = System.IO.Path.GetFileName(path).StartsWith("AMB_");
+                bool brief = !loop && clip.length < ShortClipSeconds;
+                AudioImporterSampleSettings want = importer.defaultSampleSettings;
+                want.loadType = loop ? AudioClipLoadType.Streaming : brief ? AudioClipLoadType.DecompressOnLoad : AudioClipLoadType.CompressedInMemory;
+                want.compressionFormat = brief ? AudioCompressionFormat.ADPCM : AudioCompressionFormat.Vorbis;
+                want.quality = loop ? 0.5f : 0.7f;
+                want.sampleRateSetting = AudioSampleRateSetting.PreserveSampleRate;
+                want.preloadAudioData = !loop;
+
+                AudioImporterSampleSettings have = importer.defaultSampleSettings;
+                bool same = have.loadType == want.loadType && have.compressionFormat == want.compressionFormat &&
+                            Mathf.Approximately(have.quality, want.quality) && have.sampleRateSetting == want.sampleRateSetting &&
+                            have.preloadAudioData == want.preloadAudioData && !importer.forceToMono && importer.loadInBackground == !brief;
+                if (same) continue;
+                importer.defaultSampleSettings = want;
+                importer.forceToMono = false; // the files are already mono where one channel is enough
+                importer.loadInBackground = !brief;
+                importer.SaveAndReimport();
+                changed++;
+            }
+            return changed;
+        }
+
+        /// <summary>Routes the open scene's sound sources into the mixer, then sets up the sounds themselves.</summary>
         public static void RouteScene()
         {
             AudioMixer mixer = EnsureMixer();
@@ -117,28 +176,8 @@ namespace KryticalNova.EditorTools
             }
             if (routed > 0) EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
 
-            int slots = RouteGameFeel(effects);
-            Debug.Log($"[Audio] {routed} scene source(s) routed to {ambience.name}; {slots} game feel sound slot(s) routed to {effects.name}.");
-        }
-
-        private static int RouteGameFeel(AudioMixerGroup effects)
-        {
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(GameFeelBuilder.PrefabPath) == null) return 0;
-            int slots = 0;
-            using (var scope = new PrefabUtility.EditPrefabContentsScope(GameFeelBuilder.PrefabPath))
-            {
-                foreach (var player in scope.prefabContentsRoot.GetComponentsInChildren<MMF_Player>(true))
-                {
-                    foreach (MMF_Feedback feedback in player.FeedbacksList)
-                    {
-                        if (!(feedback is MoreMountains.Feedbacks.MMF_Sound sound) || sound.SfxAudioMixerGroup == effects) continue;
-                        sound.SfxAudioMixerGroup = effects;
-                        slots++;
-                    }
-                    if (slots > 0) EditorUtility.SetDirty(player);
-                }
-            }
-            return slots;
+            Debug.Log($"[Audio] {routed} scene source(s) routed to {ambience.name}.");
+            Sounds();
         }
 
         private static AudioMixerGroup First(AudioMixer mixer, string name)
