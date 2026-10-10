@@ -156,6 +156,16 @@ namespace KryticalNova.Player
         private float travelStalledFor;
         // First click on a unit selects it; a second click on the selected unit attacks / talks / walks to it.
         private Transform selectedTarget;
+        // The move ordered last, where movement is decided: where it is to end, and where the path handed to the
+        // agent ends (the same place, or the take-off point of a vault on the way).
+        private const float SameRouteDistance = 0.3f;
+        private const float ShortOfOrderDistance = 0.5f;
+        private bool hasOrder, orderReplanned;
+        private Vector3 orderedDestination, orderedPathEnd;
+        private Vector3 stallFrom;
+        private float stallWatched;
+        private float agentOffFor;
+        private PlayerDeathMotor deathMotor;
 
         private void Reset()
         {
@@ -190,6 +200,7 @@ namespace KryticalNova.Player
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
             meleeCombat = GetComponent<KryticalNova.Combat.PlayerMeleeCombat>();
             hotbar = GetComponent<PlayerSkillHotbar>();
+            deathMotor = GetComponent<PlayerDeathMotor>();
             if (meleeCombat != null)
             {
                 meleeCombat.OnCombatMessage += msg => CommandMessage?.Invoke(msg);
@@ -318,7 +329,7 @@ namespace KryticalNova.Player
             }
         }
 
-        private bool PlaceAgentOnNavigation()
+        private bool PlaceAgentOnNavigation(bool quiet = false)
         {
             if (agent.isActiveAndEnabled && agent.isOnNavMesh)
                 return true;
@@ -327,7 +338,7 @@ namespace KryticalNova.Player
             Vector3 feetPosition = transform.position - Vector3.up * agent.baseOffset;
             if (!NavMesh.SamplePosition(feetPosition, out NavMeshHit spawnHit, SpawnSampleRadius, filter))
             {
-                Debug.LogError("No NavMesh below the player. Enable RuntimeNavMeshBuilder or bake the scene's NavMeshSurface.", this);
+                if (!quiet) Debug.LogError("No NavMesh below the player. Enable RuntimeNavMeshBuilder or bake the scene's NavMeshSurface.", this);
                 return false;
             }
 
@@ -336,9 +347,28 @@ namespace KryticalNova.Player
             if (agent.isOnNavMesh)
                 return true;
 
-            Debug.LogError("The player could not attach to the NavMesh. Check the agent type and spawn position.", this);
+            if (!quiet) Debug.LogError("The player could not attach to the NavMesh. Check the agent type and spawn position.", this);
             agent.enabled = false;
             return false;
+        }
+
+        /// <summary>
+        /// A jump or a vault that could not put the body back on the NavMesh leaves the agent switched off, and with
+        /// it off every order is refused without a word: the character stands where it is for good. Where movement
+        /// is decided, an agent that has been off for a while with nothing holding it (no jump, no vault, not dead)
+        /// is put back on the nearest walkable ground.
+        /// </summary>
+        private void RecoverLostAgent()
+        {
+            bool lost = agent != null && !agent.enabled && didStart
+                && (resources == null || resources.IsAlive) && (deathMotor == null || !deathMotor.IsDead)
+                && !(jumpMotor != null && jumpMotor.IsBusy) && !(vaultMotor != null && vaultMotor.IsBusy);
+            if (!lost) { agentOffFor = 0f; return; }
+            agentOffFor += Time.deltaTime;
+            MovementSettings settings = movementSkills != null ? movementSkills.MovementSettings : null;
+            if (agentOffFor < (settings != null ? settings.agentRecoverySeconds : 1.5f)) return;
+            agentOffFor = 0f;
+            if (PlaceAgentOnNavigation(quiet: true)) hasOrder = false;
         }
 
         private void Update()
@@ -348,8 +378,10 @@ namespace KryticalNova.Player
 
             if (!IsSpawned || IsServer)
             {
+                RecoverLostAgent();
                 ApplyMovementSettings();
                 UpdateArrival();
+                WatchForStall();
                 TurnTowardsTravel();
                 TurnTowardsFacePoint();
             }
@@ -507,10 +539,9 @@ namespace KryticalNova.Player
             if (!TryPickPointerHit(ray, out RaycastHit hit))
                 return;
 
-            // Any new click replaces a walk-to-talk in progress, and a vault that was planned for the old route.
-            pendingInteract = null;
-            if (vaultMotor != null) vaultMotor.Disarm();
-
+            // A click that gives no new order (it only selects, or it lands on something that cannot be walked on)
+            // changes nothing: the move under way keeps its walk-to-talk and its vault. Each order below that does
+            // replace the route says so with ReplaceRoute.
             var targetEntity = hit.collider.GetComponentInParent<IDamageable>();
             if (targetEntity != null && targetEntity.Transform != transform)
             {
@@ -536,6 +567,7 @@ namespace KryticalNova.Player
                 // Second click on a friendly unit (another player): walk over to them.
                 if (!hostile)
                 {
+                    ReplaceRoute();
                     EndTravel(false);
                     CancelAttack();
                     WalkToUnit(targetEntity.Transform);
@@ -548,6 +580,7 @@ namespace KryticalNova.Player
                     return;
                 }
 
+                ReplaceRoute();
                 EndTravel(false);
                 ClientPresentationRegistry.Markers?.HideMoveMarker();
 
@@ -590,6 +623,7 @@ namespace KryticalNova.Player
                     return;
                 }
 
+                ReplaceRoute();
                 EndTravel(false);
                 CancelAttack();
                 ClientPresentationRegistry.Markers?.HideMoveMarker();
@@ -597,12 +631,16 @@ namespace KryticalNova.Player
                 return;
             }
 
+            // Not ground: nothing was ordered, so the attack, the selection and the move under way all stand.
+            if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
+            { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
+
             // Clicking ground or platform stops an active attack and drops the selection (its ring fades out).
             CancelAttack();
             if (selectedTarget != null) ClearSelection();
-
-            if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
-            { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
+            // It replaces a walk-to-talk in progress. The vault planned for the old route is replaced when the new
+            // route is planned, and kept if the new route is refused (ExecuteLocalMove, ServerMoveTo).
+            pendingInteract = null;
 
             // A new destination on the ground replaces one chosen on the map.
             EndTravel(false);
@@ -733,8 +771,16 @@ namespace KryticalNova.Player
         {
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
             if (vaultMotor != null) vaultMotor.Disarm();
+            hasOrder = false;
             agent.ResetPath();
             agent.velocity = Vector3.zero;
+        }
+
+        /// <summary>A new order takes the route over: the walk-to-talk and the vault planned for the old one go.</summary>
+        private void ReplaceRoute()
+        {
+            pendingInteract = null;
+            if (vaultMotor != null) vaultMotor.Disarm();
         }
 
         private void EndTravel(bool arrived)
@@ -911,24 +957,29 @@ namespace KryticalNova.Player
             if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
 
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            // Planning the new route forgets the vault planned for the one under way. Until the new route is given
+            // to the agent the old one still stands, so every refusal below puts that vault back.
+            PlayerVaultMotor.Standing vaultBefore = vaultMotor != null ? vaultMotor.Keep() : default;
             if (!NavMesh.SamplePosition(destinationPoint, out NavMeshHit destination, destinationSampleRadius, filter)
                 || !TryPlanRoute(destination.position))
-            { CommandMessage?.Invoke("No complete walking path to that point."); return false; }
+            { KeepRoute(vaultBefore); CommandMessage?.Invoke("No complete walking path to that point."); return false; }
             if (Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance)
-                return false;
+            { KeepRoute(vaultBefore); return false; }
 
             float paidCost = 0f;
             if (movementSkills != null && movementSkills.IsRunning
                 && !movementSkills.TryPayForCommand(MovementSkillId.Run, out paidCost, out string paymentReason))
-            { CommandMessage?.Invoke(paymentReason); return false; }
+            { KeepRoute(vaultBefore); CommandMessage?.Invoke(paymentReason); return false; }
             agent.isStopped = false;
             if (!agent.SetPath(requestedPath))
             {
+                KeepRoute(vaultBefore);
                 resources?.RestoreChi(paidCost);
                 CommandMessage?.Invoke("The path changed. Flux was not consumed.");
                 return false;
             }
             SnapVelocityToPath();
+            NoteOrder(destination.position);
             acceptedDestination = destination.position;
             // The host's own order, or the offline game's: shown as a client's is.
             if (IsSpawned) MoveOrderShownClientRpc();
@@ -974,28 +1025,118 @@ namespace KryticalNova.Player
             if (!NavMesh.SamplePosition(destinationPoint, out NavMeshHit destination, destinationSampleRadius, filter))
                 return false;
 
+            // As in ExecuteLocalMove: a refusal leaves the route under way with the vault that was planned for it.
+            PlayerVaultMotor.Standing vaultBefore = vaultMotor != null ? vaultMotor.Keep() : default;
             if (!TryPlanRoute(destination.position))
-                return false;
+            { KeepRoute(vaultBefore); return false; }
 
             if (Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance)
-                return false;
+            { KeepRoute(vaultBefore); return false; }
 
             // The server knows which movement skill is selected; the request only names the place.
             float paidCost = 0f;
             if (payRun && movementSkills != null && movementSkills.IsRunning
                 && !movementSkills.TryPayForCommand(MovementSkillId.Run, out paidCost, out _))
             {
+                KeepRoute(vaultBefore);
                 return false;
             }
 
             agent.isStopped = false;
             if (!agent.SetPath(requestedPath))
             {
+                KeepRoute(vaultBefore);
                 resources?.RestoreChi(paidCost);
                 return false;
             }
             SnapVelocityToPath();
+            NoteOrder(destination.position);
             return true;
+        }
+
+        /// <summary>The new route was refused: the one under way keeps the vault that was planned for it.</summary>
+        private void KeepRoute(PlayerVaultMotor.Standing vaultBefore)
+        {
+            if (vaultMotor != null) vaultMotor.PutBack(vaultBefore);
+        }
+
+        /// <summary>A move was ordered and its path given to the agent.</summary>
+        private void NoteOrder(Vector3 destination)
+        {
+            hasOrder = true;
+            orderReplanned = false;
+            orderedDestination = destination;
+            NoteRoute();
+        }
+
+        /// <summary>The path now with the agent is the ordered move's (its first, or the rest of it after a vault).</summary>
+        private void NoteRoute()
+        {
+            Vector3[] corners = requestedPath.corners;
+            orderedPathEnd = corners != null && corners.Length > 0 ? corners[corners.Length - 1] : agent.destination;
+            stallFrom = transform.position;
+            stallWatched = 0f;
+        }
+
+        /// <summary>Plans the ordered move again from where the body is now. False when no way is found.</summary>
+        private bool ReplanOrder()
+        {
+            if (!hasOrder || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
+            if (resources != null && !resources.IsAlive) return false;
+            if (!TryPlanRoute(orderedDestination)) return false;
+            if (Vector3.Distance(agent.nextPosition, orderedDestination + Vector3.up * agent.baseOffset) <= agent.stoppingDistance) return false;
+            agent.isStopped = false;
+            if (!agent.SetPath(requestedPath)) return false;
+            SnapVelocityToPath();
+            NoteRoute();
+            return true;
+        }
+
+        private static float FlatDistance(Vector3 a, Vector3 b)
+        {
+            a.y = b.y = 0f;
+            return Vector3.Distance(a, b);
+        }
+
+        /// <summary>
+        /// An ordered move that has a path and makes no headway (the body is held by something the path does not
+        /// know of) would run on the spot for good: nothing else ends it. The way is planned again once; if that
+        /// stalls too, the character stops where it is and says so. Only the player's own order is watched: a
+        /// route another system gave the agent (walking in to attack) is that system's to end.
+        /// </summary>
+        private void WatchForStall()
+        {
+            MovementSettings settings = movementSkills != null ? movementSkills.MovementSettings : null;
+            bool underWay = hasOrder && settings != null && agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh
+                && agent.hasPath && !agent.pathPending && !agent.isStopped && agent.speed > 0.05f
+                && !(jumpMotor != null && jumpMotor.IsBusy) && !(vaultMotor != null && vaultMotor.IsBusy)
+                && FlatDistance(agent.destination, orderedPathEnd) <= SameRouteDistance;
+            if (!underWay)
+            {
+                stallWatched = 0f;
+                stallFrom = transform.position;
+                return;
+            }
+
+            stallWatched += Time.deltaTime;
+            float gained = FlatDistance(transform.position, stallFrom);
+            if (gained >= settings.stallDistance)
+            {
+                stallWatched = 0f;
+                stallFrom = transform.position;
+                return;
+            }
+            if (!settings.HasStalled(gained, stallWatched)) return;
+
+            stallWatched = 0f;
+            stallFrom = transform.position;
+            if (!orderReplanned)
+            {
+                orderReplanned = true;
+                if (ReplanOrder()) return;
+            }
+            StopMoving();
+            CommandMessage?.Invoke("Something is in the way. The move was stopped.");
         }
 
         /// <summary>Where movement is decided: stops this player where it stands.</summary>
@@ -1035,7 +1176,11 @@ namespace KryticalNova.Player
             if (!NavMesh.SamplePosition(destination, out NavMeshHit target, destinationSampleRadius, filter) || !TryPlanRoute(target.position)) return;
             if (Vector3.Distance(agent.nextPosition, target.position + Vector3.up * agent.baseOffset) <= agent.stoppingDistance) return;
             agent.isStopped = false;
-            if (agent.SetPath(requestedPath)) SnapVelocityToPath();
+            if (!agent.SetPath(requestedPath)) return;
+            SnapVelocityToPath();
+            hasOrder = true;
+            orderedDestination = target.position;
+            NoteRoute();
         }
 
         /// <summary>
@@ -1074,9 +1219,38 @@ namespace KryticalNova.Player
             Vector3 destination = agent.destination;
             // Less than a frame's travel away: the body ends on the point rather than short of it or past it. Placed
             // there, not moved there: a move would read as speed for a frame and set the run going again.
-            if (remaining > agent.stoppingDistance) agent.Warp(destination);
+            if (remaining > agent.stoppingDistance) PlaceOn(destination);
             agent.ResetPath();
             agent.velocity = Vector3.zero;
+            FinishRoute(destination);
+        }
+
+        /// <summary>
+        /// Puts the agent on a NavMesh point and the root over it in the same step. Warp alone leaves the root on
+        /// the point itself, the agent's base offset too low, until the agent next updates: the body was drawn sunk
+        /// to the waist in the ground for a frame at the end of every run, and the camera dropped with it.
+        /// </summary>
+        private void PlaceOn(Vector3 navMeshPoint)
+        {
+            if (!agent.Warp(navMeshPoint)) return;
+            transform.position = navMeshPoint + Vector3.up * agent.baseOffset;
+        }
+
+        /// <summary>
+        /// The agent's path has ended at <paramref name="arrivedAt"/>. When that was the ordered move's path and it
+        /// ended short of the order with no vault taking over (the path led to a take-off point and the vault is
+        /// no longer planned), the rest of the way is planned from here, once: the character does not stop in
+        /// front of the obstacle.
+        /// </summary>
+        private void FinishRoute(Vector3 arrivedAt)
+        {
+            if (!hasOrder) return;
+            if (FlatDistance(arrivedAt, orderedPathEnd) > SameRouteDistance) { hasOrder = false; return; } // not the order's path
+            if (vaultMotor != null && (vaultMotor.IsArmed || vaultMotor.IsBusy)) return; // it carries on from the landing
+            bool there = FlatDistance(arrivedAt, orderedDestination) <= agent.stoppingDistance + ShortOfOrderDistance;
+            if (there || orderReplanned) { hasOrder = false; return; }
+            orderReplanned = true;
+            if (!ReplanOrder()) hasOrder = false;
         }
 
         /// <summary>On the last leg, right at the point, and travelling away from it: it was stepped over.</summary>

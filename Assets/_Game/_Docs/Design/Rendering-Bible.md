@@ -441,6 +441,22 @@ up to 29 m/s at rank 20), never for a walk. `GameFeelBuilder` puts the feedbacks
 Rebuild Smear Feel** does only that (and makes the settings asset when it is missing); **Build Game Feel** and
 **Rebuild Death Feel** include it.
 
+**One take-off for a burst of orders (10 Oct 2026).** A new move order given while running, and a run that stops and
+starts again at once, both ask for the take-off again. `GameFeelPresenter.RunStarted` plays it (dust, smear, and on the
+player's own screen the 4 degree kick of the view) only when `runTakeOffQuietSeconds` (1 s) have passed with no order
+and no restart for that character. Before, clicking about quickly kicked the view and smeared the body every 0.4 s:
+measured over 12 s of rapid clicks the field of view was changing for a quarter to a third of all frames.
+
+**A run ends on its point at the body's own height (10 Oct 2026).** At the end of a fast run the body is placed on the
+destination (`PointAndClickPlayer.PlaceOn`). `NavMeshAgent.Warp` alone puts the root on the NavMesh point, the agent's
+base offset (1 m) below where the root belongs, until the agent's next update: for one drawn frame the body stood
+waist-deep in the ground and the camera, which follows without damping, dropped with it. Measured: 15 to 33 such
+frames in 12 s of rapid clicks, none after. `NetworkPlacement.Place` already placed the root itself.
+
+**Props about to block the view fade early (10 Oct 2026).** `OccluderFader` checks every 0.1 s and a fade takes 0.2 s,
+in which the top Run rank covers nine metres: a tree or a truck filled the screen before it thinned. Above 8 m/s it
+checks every frame and also along the line the camera will be looking down 0.15 and 0.3 s from now.
+
 **The rules.** Every number is in `GameFeel/Data/Assets/SmearSettings.asset`, one profile per moment:
 
 | | Take-off | Death throw | What it does |

@@ -9,6 +9,10 @@ namespace KryticalNova.Rendering
     /// "KryticalNova/Occluder Dither" clones of their materials and ease their per-renderer _Fade up; once clear they
     /// ease back and get their original materials. Only occluders pay anything; no per-tick allocations.
     /// Ground/terrain are never faded (only <see cref="occluderLayers"/> are tested).
+    /// A player going fast is looked ahead for: at the top Run rank the camera covers three metres between two
+    /// checks and nine in the time a fade takes, so a tree or a truck filled the screen before it began to fade.
+    /// Above <see cref="FastSpeed"/> the check runs every frame and also along the line the camera will be looking
+    /// down a moment from now, so what is about to stand in the way is already thin when it does.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class OccluderFader : MonoBehaviour
@@ -18,6 +22,9 @@ namespace KryticalNova.Rendering
         private const float FadedAmount = 0.82f;
         private const float FadeSeconds = 0.2f;
         private const float SeeThroughAmount = 0.3f;
+        private const float FastSpeed = 8f;            // metres a second: above walking, the look-ahead is on
+        private const float LookAheadSeconds = 0.3f;   // a fade and a half
+        private const float SpeedEase = 12f;
         private static readonly int FadeId = Shader.PropertyToID("_Fade");
 
         [SerializeField] private LayerMask occluderLayers = 1; // Default
@@ -41,9 +48,12 @@ namespace KryticalNova.Rendering
         private MaterialPropertyBlock block;
         private float nextCheck;
         private int tick;
+        private Vector3 lastTargetPosition, targetVelocity;
+        private bool hasLastTargetPosition;
 
         public void Configure(Transform player, Shader shader)
         {
+            if (target != player) hasLastTargetPosition = false;
             target = player;
             if (shader != null) ditherShader = shader;
             if (ditherShader == null) ditherShader = Shader.Find("KryticalNova/Occluder Dither");
@@ -74,19 +84,32 @@ namespace KryticalNova.Rendering
         {
             if (target == null || ditherShader == null || !target.gameObject.activeInHierarchy) return;
 
-            if (Time.unscaledTime >= nextCheck)
+            Vector3 ahead = TravelAhead();
+            bool fast = ahead.sqrMagnitude > 0f;
+            if (fast || Time.unscaledTime >= nextCheck)
             {
                 nextCheck = Time.unscaledTime + CheckInterval;
                 tick++;
-                Cast(target.position + Vector3.up * 1.2f);
-                Cast(target.position + Vector3.up * 1.8f);
+                Vector3 eye = transform.position;
+                Vector3 chest = target.position + Vector3.up * 1.2f;
+                Cast(eye, chest);
+                Cast(eye, target.position + Vector3.up * 1.8f);
+                if (fast)
+                {
+                    // The camera travels with the player: where both will be half a look-ahead on, and a whole one.
+                    Cast(eye + ahead * 0.5f, chest + ahead * 0.5f);
+                    Cast(eye + ahead, chest + ahead);
+                }
             }
 
             float step = Time.deltaTime / FadeSeconds * FadedAmount;
+            // A check every frame would let go of a prop two frames after the line cleared it; it is held as long
+            // as two ordinary checks, as when standing.
+            int held = fast ? Mathf.Max(1, Mathf.CeilToInt(CheckInterval / Mathf.Max(Time.unscaledDeltaTime, 0.001f))) : 1;
             for (int i = active.Count - 1; i >= 0; i--)
             {
                 var o = active[i];
-                bool occluding = tick - o.seenTick <= 1; // still hit on this or the previous check
+                bool occluding = tick - o.seenTick <= held; // still hit on this or the previous check
                 float goal = occluding ? FadedAmount : 0f;
                 if (Mathf.Approximately(o.fade, goal) && (occluding || o.fade > 0f)) continue;
                 o.fade = Mathf.MoveTowards(o.fade, goal, step);
@@ -100,9 +123,30 @@ namespace KryticalNova.Rendering
             }
         }
 
-        private void Cast(Vector3 aim)
+        /// <summary>
+        /// How far the player travels in <see cref="LookAheadSeconds"/> at its present speed, or zero below
+        /// <see cref="FastSpeed"/>. The speed is eased, so one long frame or a placement does not read as a sprint.
+        /// </summary>
+        private Vector3 TravelAhead()
         {
-            Vector3 from = transform.position;
+            Vector3 now = target.position;
+            float delta = Time.deltaTime;
+            if (!hasLastTargetPosition || delta <= 0f)
+            {
+                hasLastTargetPosition = true;
+                lastTargetPosition = now;
+                targetVelocity = Vector3.zero;
+                return Vector3.zero;
+            }
+            Vector3 velocity = (now - lastTargetPosition) / delta;
+            lastTargetPosition = now;
+            velocity.y = 0f;
+            targetVelocity = Vector3.Lerp(targetVelocity, velocity, 1f - Mathf.Exp(-delta * SpeedEase));
+            return targetVelocity.sqrMagnitude >= FastSpeed * FastSpeed ? targetVelocity * LookAheadSeconds : Vector3.zero;
+        }
+
+        private void Cast(Vector3 from, Vector3 aim)
+        {
             Vector3 dir = aim - from;
             float dist = dir.magnitude - CastRadius; // stop short of the player
             if (dist <= 0.1f) return;

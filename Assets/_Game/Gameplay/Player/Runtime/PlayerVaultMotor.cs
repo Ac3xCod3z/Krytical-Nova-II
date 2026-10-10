@@ -89,10 +89,20 @@ namespace KryticalNova.Player
         [Tooltip("The warp component the jump uses (its own child object, Transform To Warp = this player).")]
         [SerializeField] private WarpComponent motionWarping;
 
-        private struct Plan
+        internal struct Plan
         {
             public Vector3 Takeoff, Landing, NearEdge, FarEdge, Destination;
             public float Top, FacingOffset;
+        }
+
+        /// <summary>What the motor has planned or is watching for at one moment (<see cref="Keep"/>, <see cref="PutBack"/>).</summary>
+        public struct Standing
+        {
+            internal bool Armed, Watching;
+            internal Plan Plan;
+            internal float ArmedAt, NextWatch, WatchFacingOffset;
+            internal Vector3 WatchDestination;
+            internal LayerMask WatchLayers;
         }
 
         private NavMeshAgent agent;
@@ -255,6 +265,39 @@ namespace KryticalNova.Player
         {
             armed = false;
             watching = false;
+        }
+
+        /// <summary>A vault is planned and the agent is on its way to the take-off point.</summary>
+        public bool IsArmed => armed;
+
+        /// <summary>
+        /// The planned or watched-for vault as it stands. Planning a new route forgets it; a command that is then
+        /// refused hands this back to <see cref="PutBack"/>, so the route still under way keeps its vault.
+        /// </summary>
+        public Standing Keep() => new Standing
+        {
+            Armed = armed,
+            Watching = watching,
+            Plan = plan,
+            ArmedAt = armedAt,
+            NextWatch = nextWatch,
+            WatchFacingOffset = watchFacingOffset,
+            WatchDestination = watchDestination,
+            WatchLayers = watchLayers,
+        };
+
+        /// <summary>Puts back what <see cref="Keep"/> took. A vault already in the air is left alone.</summary>
+        public void PutBack(Standing kept)
+        {
+            if (vaulting) return;
+            armed = kept.Armed;
+            watching = kept.Watching;
+            plan = kept.Plan;
+            armedAt = kept.ArmedAt;
+            nextWatch = kept.NextWatch;
+            watchFacingOffset = kept.WatchFacingOffset;
+            watchDestination = kept.WatchDestination;
+            watchLayers = kept.WatchLayers;
         }
 
         private void KeepWatching()
