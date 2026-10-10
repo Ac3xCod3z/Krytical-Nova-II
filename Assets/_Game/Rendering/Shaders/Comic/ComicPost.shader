@@ -81,13 +81,31 @@ Shader "Hidden/KryticalNova/ComicPost"
 
             // An Ascension Nova hides the characters and pets behind it (NovaHalo), but they are still in the depth
             // texture this pass inks from: without this their outlines would be drawn inside the Nova, round nothing.
-            // 0 where a Nova stands in front of something this deep at this pixel, 1 everywhere else.
+            // The depth texture cannot tell a hidden pet from the wall behind it, so NovaCull says which actors stand
+            // behind a Nova, as balls: the ink is left out only inside one of them. A wall or the ground behind a
+            // Nova keeps its lines. The comic shadow is a separate matter: see ShadeBehindNovas.
+            // 0 where a Nova hides what this pixel's depth belongs to, 1 everywhere else.
             #define NOVA_DISCS 8            // NovaCull.MaxDiscs
-            float4 _KN_NovaDiscs[NOVA_DISCS];   // xyz = a Nova's middle in the world, w = its radius in metres
+            #define NOVA_HIDDEN 8           // NovaCull.MaxHidden
+            float4 _KN_NovaDiscs[NOVA_DISCS];   // xyz = a Nova's middle in the world, w = its disc's radius in metres
             float  _KN_NovaDiscCount;
+            float4 _KN_NovaHidden[NOVA_HIDDEN]; // xyz = the middle of an actor behind a Nova, w = the radius of its ball
+            float  _KN_NovaHiddenCount;
+            float  _KN_NovaFeather;             // the share of a disc's radius over which the hidden comes back
 
-            half ShownPastNovas(float2 uv, float eyeDepth)
+            half ShownPastNovas(float2 uv, float eyeDepth, float3 posWS)
             {
+                int hidden = min((int)(_KN_NovaHiddenCount + 0.5), NOVA_HIDDEN);
+                half inBall = 0.0;
+                for (int h = 0; h < hidden; h++)
+                {
+                    float4 ball = _KN_NovaHidden[h];
+                    float3 off = posWS - ball.xyz;
+                    float r2 = ball.w * ball.w;
+                    inBall = max(inBall, 1.0 - smoothstep(r2 * 0.8, r2, dot(off, off)));
+                }
+                if (inBall <= 0.0) return 1.0;
+
                 half shown = 1.0;
                 int count = min((int)(_KN_NovaDiscCount + 0.5), NOVA_DISCS);
                 for (int i = 0; i < count; i++)
@@ -100,9 +118,35 @@ Shader "Hidden/KryticalNova/ComicPost"
                     at.y = 1.0 - at.y;
                 #endif
                     float radius = disc.w * unity_CameraProjection._m11 * 0.5 * _ScreenParams.y / clip.w;
-                    shown *= smoothstep(radius - 1.0, radius + 1.0, length((uv - at) * _ScreenParams.xy));
+                    // The ink comes back over the disc's rim, as the hidden thing does through the rim's dots.
+                    float solid = min(radius - 1.0, radius * (1.0 - _KN_NovaFeather));
+                    shown *= smoothstep(solid, radius + 1.0, length((uv - at) * _ScreenParams.xy));
                 }
-                return shown;
+                return lerp(1.0, shown, inBall);
+            }
+
+            // The comic shadow is laid over the finished picture, so it would dot and darken a Nova's own glow
+            // wherever the wall behind it is in shadow. It thins toward the Nova's middle instead, as the light of a
+            // lamp does: whole at the disc's rim, gone at the star, with no line anywhere between (taken off the
+            // whole disc at once, it showed as a pale circle on a shadowed wall).
+            // 1 = the shadow is whole, 0 = none.
+            half ShadeBehindNovas(float2 uv, float eyeDepth)
+            {
+                half shade = 1.0;
+                int count = min((int)(_KN_NovaDiscCount + 0.5), NOVA_DISCS);
+                for (int i = 0; i < count; i++)
+                {
+                    float4 disc = _KN_NovaDiscs[i];
+                    float4 clip = TransformWorldToHClip(disc.xyz);
+                    if (clip.w < 0.05 || eyeDepth < clip.w) continue;
+                    float2 at = clip.xy / clip.w * 0.5 + 0.5;
+                #if UNITY_UV_STARTS_AT_TOP
+                    at.y = 1.0 - at.y;
+                #endif
+                    float radius = max(1.0, disc.w * unity_CameraProjection._m11 * 0.5 * _ScreenParams.y / clip.w);
+                    shade *= smoothstep(0.12, 1.0, length((uv - at) * _ScreenParams.xy) / radius);
+                }
+                return shade;
             }
 
             bool IsSky(float rawDepth)
@@ -236,11 +280,11 @@ Shader "Hidden/KryticalNova/ComicPost"
                 float3 posWS = ComputeWorldSpacePosition(uv, rawDepth, UNITY_MATRIX_I_VP);
                 float centerDepth = LinearEyeDepth(rawDepth, _ZBufferParams);
 
-                // What a Nova hides is not there to be shaded or inked: its place in the depth texture is not what is seen.
-                half shown = ShownPastNovas(uv, centerDepth);
+                // What a Nova hides is not there to be inked: its place in the depth texture is not what is seen.
+                half shown = ShownPastNovas(uv, centerDepth, posWS);
 
                 if (_ShadowEnabled > 0.5)
-                    color.rgb = lerp(color.rgb, ApplyComicShadow(color.rgb, uv, posWS, screenPx), shown);
+                    color.rgb = lerp(color.rgb, ApplyComicShadow(color.rgb, uv, posWS, screenPx), ShadeBehindNovas(uv, centerDepth));
 
                 if (_PostHalftoneEnabled > 0.5)
                 {

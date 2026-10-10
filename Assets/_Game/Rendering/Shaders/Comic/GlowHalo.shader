@@ -65,6 +65,7 @@ Shader "Hidden/KryticalNova/GlowHalo"
         #define NOVA_DISCS 8        // the most Novas that hide the light behind them (NovaCull.MaxDiscs)
         float4 _KN_NovaDiscs[NOVA_DISCS];   // Composite: xyz = a Nova's middle in the world, w = its radius in metres
         float _KN_NovaDiscCount;
+        float _KN_NovaFeather;              // the share of a disc's radius over which what it hides comes back
         float4 _GlowEmber;          // Composite: x = the size of one ember in metres, y = metres a second towards the tip, z = how ragged they make the light's edge, w = how patchy its body
 
         // Parts of one weapon are never further apart than this (metres): a dark part further than that from the
@@ -469,7 +470,9 @@ Shader "Hidden/KryticalNova/GlowHalo"
                     float pixelsPerMetre = unity_CameraProjection._m11 * 0.5 * _GlowAttr_TexelSize.w;
                     if (IsPerspectiveProjection()) pixelsPerMetre /= clip.w;
                     float radius = disc.w * pixelsPerMetre;
-                    shown *= smoothstep(radius - 1.0, radius + 1.0, length(here - PixelOf(clip)));
+                    // Over the disc's rim the light comes back as the thing itself does, through the rim's dots.
+                    float solid = min(radius - 1.0, radius * (1.0 - _KN_NovaFeather));
+                    shown *= smoothstep(solid, radius + 1.0, length(here - PixelOf(clip)));
                 }
                 return shown;
             }
