@@ -17,7 +17,9 @@ namespace KryticalNova.Items.Visuals
     /// trigger it has is one animation that plays once and blends back, named after the trigger. Nothing here is
     /// written per pet: a model with other triggers has other animations. They are played in turn, one every so many
     /// seconds, and any of them can be played on demand. A controller with a true/false parameter called Walk or Run
-    /// also has that gait: a loop on the spot, held for as long as the parameter is true.
+    /// also has that gait: a loop on the spot, held for as long as the parameter is true. A model with a single
+    /// movement loop instead (<see cref="SetMoveLoop"/>) holds that one whenever it moves, played slower at a walk
+    /// than at a run.
     /// </summary>
     public sealed class PetAnimations
     {
@@ -30,6 +32,10 @@ namespace KryticalNova.Items.Visuals
         private bool read;
         private bool hasWalk;
         private bool hasRun;
+        private readonly List<int> bools = new List<int>();
+        private int moveLoop;
+        private float moveLoopWalkSpeed = 1f;
+        private float moveLoopRunSpeed = 1f;
         private PetGait gait;
         private int next;
         private float nextAt = -1f;
@@ -66,6 +72,7 @@ namespace KryticalNova.Items.Visuals
                 {
                     hasWalk |= parameter.nameHash == WalkParameter;
                     hasRun |= parameter.nameHash == RunParameter;
+                    bools.Add(parameter.nameHash);
                 }
                 if (parameter.type != AnimatorControllerParameterType.Trigger) continue;
                 names.Add(parameter.name);
@@ -95,6 +102,18 @@ namespace KryticalNova.Items.Visuals
         }
 
         /// <summary>
+        /// The one loop this model moves in, for a model that has no walk and run of its own: the true/false
+        /// parameter that holds it (empty = none) and how fast the whole model is played while its owner walks and
+        /// while its owner runs (1 = as it was made).
+        /// </summary>
+        public void SetMoveLoop(string parameter, float walkSpeed, float runSpeed)
+        {
+            moveLoop = string.IsNullOrEmpty(parameter) ? 0 : Animator.StringToHash(parameter);
+            moveLoopWalkSpeed = Mathf.Max(0.01f, walkSpeed);
+            moveLoopRunSpeed = Mathf.Max(0.01f, runSpeed);
+        }
+
+        /// <summary>
         /// Once a frame: the gait the pet should be in. A model without a run walks instead, and one without a walk
         /// rests. Told every frame, because an Animator forgets its parameters whenever the pet is hidden.
         /// </summary>
@@ -103,6 +122,14 @@ namespace KryticalNova.Items.Visuals
             if (animator == null || !animator.isActiveAndEnabled) return;
             Read();
             if (!read) return;
+            if (moveLoop != 0 && bools.Contains(moveLoop))
+            {
+                gait = wanted;
+                animator.SetBool(moveLoop, gait != PetGait.Rest);
+                // The speed is the whole Animator's: at rest it goes back to 1, so the other animations play as made.
+                animator.speed = gait == PetGait.Walk ? moveLoopWalkSpeed : gait == PetGait.Run ? moveLoopRunSpeed : 1f;
+                return;
+            }
             if (wanted == PetGait.Run && !hasRun) wanted = PetGait.Walk;
             if (wanted == PetGait.Walk && !hasWalk) wanted = PetGait.Rest;
             gait = wanted;

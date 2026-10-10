@@ -69,6 +69,10 @@ namespace KryticalNova.Items.Visuals
         private Vector3 lastOwnerPosition;
         private float ownerSpeed;
         private bool running;
+        // For a model with one movement loop instead of a walk and a run.
+        private string moveLoop;
+        private float moveLoopWalkSpeed = 1f;
+        private float moveLoopRunSpeed = 1f;
 
         // A pet that stands on something rather than flying: it does not bob, and wears an effect under each foot.
         private bool steady;
@@ -134,6 +138,19 @@ namespace KryticalNova.Items.Visuals
             runToWalkSpeed = Mathf.Clamp(runToWalk, walkFromSpeed, runFromSpeed);
         }
 
+        /// <summary>
+        /// For a pet whose model moves in a single loop rather than a walk and a run: the true/false parameter of
+        /// its Animator that holds the loop (empty = it has none), and how fast it is played while the owner walks
+        /// and while the owner runs.
+        /// </summary>
+        public void SetMoveLoop(string parameter, float walkSpeed, float runSpeed)
+        {
+            moveLoop = parameter;
+            moveLoopWalkSpeed = walkSpeed;
+            moveLoopRunSpeed = runSpeed;
+            animations?.SetMoveLoop(moveLoop, moveLoopWalkSpeed, moveLoopRunSpeed);
+        }
+
         /// <summary>Plays one of the pet's animations now, by the hash of its name. False when this pet has no such animation.</summary>
         public bool PlayAnimation(int nameHash) => pet != null && animations != null && animations.Play(nameHash);
 
@@ -172,6 +189,7 @@ namespace KryticalNova.Items.Visuals
             pet.name = $"Pet ({current.displayName})";
             VisualUtility.PrepareCosmetic(pet, gameObject.layer);
             animations = PetAnimations.For(pet);
+            animations?.SetMoveLoop(moveLoop, moveLoopWalkSpeed, moveLoopRunSpeed);
             // Prop art comes at any scale (Synty drones are metres across); normalise to a companion size.
             pet.transform.localScale = Vector3.one;
             hasBounds = PetPlacement.TryMeasure(pet, out unitBounds);

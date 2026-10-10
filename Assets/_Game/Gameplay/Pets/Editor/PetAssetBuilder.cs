@@ -12,7 +12,7 @@ namespace KryticalNova.EditorTools
     /// Builds the pets from one table (design: _Docs/Design/12_pet_evolution_system.md): the item that is each pet,
     /// its definition (stat, maximum, five stage looks), the pet catalog and the pet settings. Every pet is Common.
     /// Re-runnable. What the table owns is rewritten on every run (name, text, rarity, which model it has, whether it
-    /// stands or bobs);
+    /// stands or bobs, its movement loop);
     /// numbers and stage looks are only filled in when missing, so values tuned in the Inspector survive.
     /// Also carries out the move from the old drone pets: assets and icons are renamed in place (ids and
     /// references kept) and retired pets are removed.
@@ -41,6 +41,10 @@ namespace KryticalNova.EditorTools
             public string Model;
             /// <summary>It stands instead of bobbing like a drone, on a cloud under each of these bones of its model.</summary>
             public string[] Feet;
+            /// <summary>The true/false parameter of its Animator that holds its one movement loop, if it has no walk and run.</summary>
+            public string MoveLoop;
+            /// <summary>Its size against the size every pet is brought to (PetFollower's normalised size); 0 = leave the item's as it is.</summary>
+            public float Scale;
             public StatType Stat;
             public float Max;
             public string Description;
@@ -61,6 +65,8 @@ namespace KryticalNova.EditorTools
                 Glow = new[] { "D4AF37", "D4AF37", "D4AF37", "D4AF37", "2E86AB" },
                 OldAsset = "Pet_Drone", OldIcon = "Pet_DroneQuad" },
             new Row { Id = 8002, Asset = "Pet_DroneCore", Name = "Drone Core", StandIn = "SM_Prop_Drone_02",
+                Model = PetModels + "/DroneCore/Pet_DroneCore_S1.prefab", MoveLoop = "FrontRoll",
+                Scale = 0.45f, // a cube fills its whole box: at the common size it dwarfed its owner
                 Stat = StatType.MaxHP, Max = 2200f,
                 Description = "A boxy little robot buddy that bolts on plating and cannon pods. It grows your Health as it matures.",
                 Stages = new[] { "", "", "", "", "Gunship" },
@@ -160,6 +166,7 @@ namespace KryticalNova.EditorTools
             item.equipSlot = EquipSlot.Pet;
             item.maxStack = 1;
             item.itemLevel = 0; // any level may use a pet
+            if (row.Scale > 0f) item.petScale = row.Scale;
             string modelPath = string.IsNullOrEmpty(row.Model) ? Drones + row.StandIn + ".prefab" : row.Model;
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
             if (model != null) item.petPrefab = model;
@@ -199,6 +206,7 @@ namespace KryticalNova.EditorTools
             definition.itemId = row.Id;
             definition.displayName = row.Name;
             definition.description = row.Description;
+            definition.moveLoop = row.MoveLoop ?? "";
             bool stands = row.Feet != null && row.Feet.Length > 0;
             definition.bobs = !stands;
             if (stands)

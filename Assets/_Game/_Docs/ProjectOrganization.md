@@ -106,7 +106,7 @@ _Game/
 ├── Characters/            Representation only: models, rigs, materials, animations, visual prefabs
 │   ├── Player/            Player_01/ (Sidekick character)  Animations/
 │   ├── NPC/               Prefabs/  Animations/
-│   ├── Pets/              <Pet>/ (a pet's own model, prefab and animator controller: KitsuneSpirit/. Made in Blender, see
+│   ├── Pets/              <Pet>/ (a pet's own model, prefab and animator controller: KitsuneSpirit/, DroneCore/ (with its own texture and materials). Made in Blender, see
 │   │                      _ArtSource/Blender~/Pets; `PetAssetBuilder.PetModels` points here)
 │   ├── Shared/            Props/ (SM_EmoteProp_*: what a character holds during prop emotes; baked from Synty's samples)
 │   │                      Swatch/ (M_KN_Swatch and its T_KN_Swatch textures: the colour swatch every pet model of ours is painted from)
