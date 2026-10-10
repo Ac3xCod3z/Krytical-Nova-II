@@ -124,8 +124,10 @@ def material(swatch_guid, emission_guid):
     return t
 
 
-def own_material(name, texture_guid=None, colour=None, glow=False):
-    """A URP Lit material for a model that keeps its own look: its painted texture, or one flat colour."""
+def own_material(name, texture_guid=None, colour=None, glow=False, emission_guid=None):
+    """A URP Lit material for a model that keeps its own look: its painted texture, or one flat colour.
+    emission_guid: an emission map of its own (what glows, on black); its strength is then the material's
+    Emission colour in Unity, white to begin with."""
     t = MATERIAL_TEMPLATE.read_text(encoding="utf-8")
     if URP_LIT not in t:
         sys.exit("The material template is no longer a URP Lit material. Update make_unitypackage.py.")
@@ -141,6 +143,11 @@ def own_material(name, texture_guid=None, colour=None, glow=False):
         t = sub(t, r"^  m_LightmapFlags: \d+$", "  m_LightmapFlags: 2")
         t = sub(t, r"^    - _EmissionColor: [^\n]*$",
                 f"    - _EmissionColor: {{r: {r * 2:.4f}, g: {g * 2:.4f}, b: {b * 2:.4f}, a: 1}}")
+    if emission_guid:
+        t = sub(t, r"^  m_ValidKeywords: \[\]$", "  m_ValidKeywords:\n  - _EMISSION")
+        t = sub(t, r"^  m_LightmapFlags: \d+$", "  m_LightmapFlags: 2")
+        t = sub(t, r"^(    - _EmissionMap:\n        m_Texture: )[^\n]*$", rf"\g<1>{{fileID: 2800000, guid: {emission_guid}, type: 3}}")
+        t = sub(t, r"^    - _EmissionColor: [^\n]*$", "    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}")
     t = sub(t, r"^    - _Smoothness: [\d.]+$", "    - _Smoothness: 0.3")
     return t
 
@@ -211,6 +218,7 @@ def main():
     ap.add_argument("--swatch-folder", default="Assets/_Game/Characters/Shared/Swatch")
     ap.add_argument("--package-name", help="file name of the package without .unitypackage (default: the FBX's name)")
     ap.add_argument("--own-texture", help="the model keeps its own painted texture (this image) instead of the swatch")
+    ap.add_argument("--emission-texture", help="with --own-texture: the model's own emission map (what glows, on black)")
     ap.add_argument("--material", action="append", default=[],
                     help='with --own-texture, one per material in the FBX: "name in the FBX=texture" for the painted '
                          'texture, or "name in the FBX=#RRGGBB" / "=#RRGGBB:glow" for one flat colour')
@@ -238,12 +246,18 @@ def main():
         texture = Path(a.own_texture)
         tex_name = f"T_Pet_{pet}{texture.suffix.lower()}"
         items.append((f"{pet_folder}/{tex_name}", texture.read_bytes(), texture_meta(guid(tex_name), True, painted=True)))
+        em_guid = None
+        if a.emission_texture:
+            em = Path(a.emission_texture)
+            em_name = f"T_Pet_{pet}_Emission{em.suffix.lower()}"
+            items.append((f"{pet_folder}/{em_name}", em.read_bytes(), texture_meta(guid(em_name), True, painted=True)))
+            em_guid = guid(em_name)
         remaps, flat = [], 0
         for spec in a.material:
             fbx_name, _, kind = spec.partition("=")
             if kind == "texture":
                 mat_name = f"M_Pet_{pet}"
-                text = own_material(mat_name, texture_guid=guid(tex_name))
+                text = own_material(mat_name, texture_guid=guid(tex_name), emission_guid=em_guid)
             else:
                 hexa, _, extra = kind.partition(":")
                 rgb = tuple(int(hexa.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4))
