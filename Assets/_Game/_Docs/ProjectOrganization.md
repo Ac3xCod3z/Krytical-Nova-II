@@ -172,7 +172,11 @@ _Game/
 │                          Debug/ (QC commands)
 │                          (future: Profiling/ Importers/)
 ├── Audio/                 Mixers/ (KN_Main.mixer: Master with Music, Sfx, UI and Ambience; the Settings sliders drive it)
-│                          (future: Music/ SFX/ Ambience/ Voice/)
+│                          SFX/{Combat,Movement,Moments,Interface}/ (SFX_<Slot>[_<Faction>]_<nn>.wav: a sound slot plays every
+│                          numbered file of its name, never the same one twice running)  Ambience/Weather/ (AMB_Weather_<Name>
+│                          loops, SFX_Thunder_<nn>). Baked and levelled by the sound-scout skill from the library outside the
+│                          project; never edited by hand, never a whole pack imported
+│                          (future: Music/ Voice/)
 └── (future) Art/ (shared-only art)  Tests/ (cross-system tests)
 ```
 
@@ -343,6 +347,14 @@ Menu **Krytical Nova ▸ Setup** (the two wiring steps; both safe to run again a
 |----------------------------------------------|----------------------------------------------------------------------------------------|
 | Player Prefab                                | Wires every player component onto `Player.prefab` and hands each its settings asset (created with defaults when missing); builds the prefabs gameplay spawns (item drop, Kiosk stand) and registers them as network prefabs. **A new player system adds one row to `PlayerSystemsSetup`; a new spawned prefab adds its path to `GameplayPrefabsSetup.SpawnedPrefabs`** (a prefab that is not registered never appears on clients) |
 | Zone Scene (Open Scene)                      | Prepares the open scene as a zone: HUD and its controllers (`HudSetup.MoreControllers`), zone UI, game feel, the audio mixer and who plays into it (`AudioSetup`), matte terrain, post look, atmosphere, minimap renderer, lighting, hierarchy headers, the NetworkManager's prefab list; in the starter town also the stalls whose NPC has arrived and the trade zones |
+
+**Setup** also has **Sounds** (`AudioSetup.Sounds`, also run by Zone Scene): the import settings of every clip under
+`_Game/Audio` (a weather loop streams, a short effect is unpacked on load), the clips, volume, pitch range and mixer group of
+every sound slot on `PFX_GameFeel` and `PFX_MenuFeel` from the table in `GameFeelBuilder.Sounds` (interface slots to UI, the
+rest to Sfx; none louder than 0.7), and each weather profile's loop with the open scene's thunder (`WeatherAudioSetup`).
+Run it after the sound files change. **A new sound slot is a row in that table and files named for it.** Which library
+sound each file came from is `.claude/skills/sound-scout/sources.json`; choosing sounds is that skill's job
+(search by description, picture sheets, an audition page for the owner's ear, then the bake).
 
 **Setup** also has **GM Console (Open Scene)** (`GmConsoleSetup`): builds `Tools/Debug/Prefabs/GmConsole.prefab` (the vendor Quantum Console prefab nested untouched, with `GmConsoleGate`) and puts it in the open zone scene.
 

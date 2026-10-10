@@ -34,6 +34,9 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player swingFeel;
         [SerializeField] private MMF_Player hitFeel;
         [SerializeField] private MMF_Player heavyHitFeel;
+        [Tooltip("The local player's blow was evaded: the air it cut, in place of an impact. One for a swing, one for an attack skill.")]
+        [SerializeField] private MMF_Player swingMissFeel;
+        [SerializeField] private MMF_Player skillMissFeel;
         [SerializeField] private MMF_Player damagedFeel;
         [SerializeField] private MMF_Player clickFeel;
         [SerializeField] private MMF_Player selectFeel;
@@ -374,6 +377,11 @@ namespace KryticalNova.GameFeel
             if (isLocalPlayer) Play(swingFeel, attacker.position, comboStep == 3 ? 1f : 0.45f);
         }
 
+        public void Missed(Transform attacker, Vector3 point, bool skill, bool isLocalPlayer)
+        {
+            if (isLocalPlayer) Play(skill ? skillMissFeel : swingMissFeel, point, 1f);
+        }
+
         public void Hit(in HitFeel hit)
         {
             // The local player's pet has something to say about a critical hit, and knows its owner is not idle.
@@ -685,6 +693,9 @@ namespace KryticalNova.GameFeel
             if (!isLocalPlayer || chargeFeel == null) return;
             chargingLocalActor = actor;
             chargeFeel.DurationMultiplier = Mathf.Max(0.05f, seconds);
+            // The build-up is drawn out to last the whole charge; letting go early stops it (ChargeEnded).
+            foreach (MMF_Feedback feedback in chargeFeel.FeedbacksList)
+                if (feedback is MMF_VariedSound sound) sound.LastFor(seconds);
             Play(chargeFeel, actor.position, 1f);
         }
 
@@ -758,7 +769,16 @@ namespace KryticalNova.GameFeel
             }
 
             if (death.VictimIsLocalPlayer || death.KillerIsLocalPlayer)
-                Play(death.IsCritical ? critDeathFeel : deathFeel, death.Point, 1f);
+            {
+                // A death sounds of the local player's own faction, whichever end of it they were on.
+                MMF_Player feel = death.IsCritical ? critDeathFeel : deathFeel;
+                Transform local = death.VictimIsLocalPlayer ? death.Target : death.Killer;
+                PlayerIdentity identity = local != null ? local.GetComponentInParent<PlayerIdentity>() : null;
+                if (feel != null && identity != null)
+                    foreach (MMF_Feedback feedback in feel.FeedbacksList)
+                        if (feedback is MMF_VariedSound sound) sound.UseFaction((int)identity.Faction);
+                Play(feel, death.Point, 1f);
+            }
             if (death.KillerIsLocalPlayer)
             {
                 PlayKillConfirm(death);

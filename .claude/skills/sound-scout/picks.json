@@ -1,0 +1,1070 @@
+{
+ "round": 3,
+ "date": "2026-10-10",
+ "slots": {
+  "Swing Whoosh": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_01.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_03.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_06.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_09.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_13.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_19.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_30.wav"
+   ],
+   "note": "1-3 for connecting hits that didnt miss but also make more sound varations for them as well, 4-7 for when an attack is evaded as a airy miss target sound"
+  },
+  "Hit": {
+   "picks": [
+    {
+     "id": "mix: drop + slice",
+     "layers": [
+      {
+       "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_02.wav",
+       "gain": 1.0,
+       "delay": 0
+      },
+      {
+       "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_Sword_08.wav",
+       "gain": 0.25,
+       "delay": 0
+      }
+     ]
+    },
+    "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_04.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_06.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_01.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_02.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Doors/FL_GFX_Home_Fx_Door_Smack_01.wav"
+   ],
+   "note": ""
+  },
+  "Heavy Hit": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_05.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_03.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_03.wav"
+   ],
+   "note": ""
+  },
+  "Hurt": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_03.wav"
+   ],
+   "note": ""
+  },
+  "PvP Critical": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav"
+   ],
+   "note": "this one but make sure to make variations to break up the micking of the same sound can be done using sound mixing i think"
+  },
+  "Skill Slash": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_07.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_20.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_22.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_25.wav"
+   ],
+   "note": "4 would be used as a miss target"
+  },
+  "Buff Cast": {
+   "picks": [
+    "scifilabs_audiohero/Sci Fi Labs/SCI-FI-LABORATORY_GEN-HDF-20711.wav"
+   ],
+   "note": ""
+  },
+  "Charge Build-up": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_11.wav"
+   ],
+   "note": "needs to be drown out for a full legnth charge and like u said cut when released"
+  },
+  "Kill Confirm": {
+   "picks": [
+    {
+     "id": "mix: your Heavy Hit drop + kick",
+     "layers": [
+      {
+       "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav",
+       "gain": 0.8,
+       "delay": 0
+      },
+      {
+       "path": "bt25_ultimatesfxforgames_softwarebundle/Techno textures and SFX/Drums/Kicks/FL_VM_130_Drum_Kick_Knock.wav",
+       "gain": 1.0,
+       "delay": 0.115,
+       "max_seconds": 0.42
+      }
+     ]
+    }
+   ],
+   "note": ""
+  },
+  "Footstep Burst": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav"
+   ],
+   "note": "make slight variations"
+  },
+  "Jump": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_01.wav"
+   ],
+   "note": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_01.wav, use this one and make variations"
+  },
+  "Land Thud": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Drop_Material_03.wav"
+   ],
+   "note": "make variations so not always the exact same sound but this one works"
+  },
+  "Body Thud": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav"
+   ],
+   "note": ""
+  },
+  "Death": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Glitches/FL_GFX_Motion_Glitch_11.wav",
+    "deepspacephenomena_audiohero/Deep Space Phenomena/SCI-FI-HIT_GEN-HDF-20682.wav",
+    "spaceodyssey/Space Odyssey/Sci-Fi-Special-Fx_GEN-HD4-43862.wav"
+   ],
+   "note": "2 for null, 3 for covenant, 4 for hegemony. make variations as well"
+  },
+  "Critical Death": {
+   "picks": [
+    "deepspacephenomena_audiohero/Deep Space Phenomena/SCI-FI-HIT_GEN-HDF-20682.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_16.wav",
+    "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_28.wav"
+   ],
+   "note": "one for covenant, 2 for null, 3 for hegemony make variations"
+  },
+  "Respawn": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_02.wav"
+   ],
+   "note": "make variations"
+  },
+  "Pet Evolved": {
+   "picks": [
+    "magic_audiohero/Magic/Zap-Magic-Sparking-Zap_FANT366.wav"
+   ],
+   "note": "make variations"
+  },
+  "Level Up": {
+   "picks": [
+    {
+     "id": "mix: rise + bell + soft orchestral hit",
+     "layers": [
+      {
+       "path": "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_02.wav",
+       "gain": 0.8,
+       "delay": 0
+      },
+      {
+       "path": "magic_audiohero/Magic/BellMagicFairyB.wav",
+       "gain": 0.6,
+       "delay": 0.62
+      },
+      {
+       "path": "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_28.wav",
+       "gain": 0.45,
+       "delay": 0.62
+      }
+     ],
+     "max_seconds": 4.0
+    }
+   ],
+   "note": "make the bell ding a little softer and this is the one"
+  },
+  "Rare Find": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Messages SFX/FL_GFX_Message_Sfx_01.wav"
+   ],
+   "note": ""
+  },
+  "Forge Success": {
+   "picks": [
+    "magic_audiohero/Magic/BellMagicFairyB.wav"
+   ],
+   "note": ""
+  },
+  "Forge Fail": {
+   "picks": [
+    "magic_audiohero/Magic/Magic L2SN_45_1.wav"
+   ],
+   "note": "magic_audiohero/Magic/Magic L2SN_45_1.wav us this one"
+  },
+  "Forge Break": {
+   "picks": [
+    "explosionzone/Explosions Zone/ExplosionHvyGlass SDT024501.wav"
+   ],
+   "note": ""
+  },
+  "Ascension Rise": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_20.wav"
+   ],
+   "note": ""
+  },
+  "Nova Tier": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_08.wav"
+   ],
+   "note": "snip it to be a better length clip"
+  },
+  "Ascension Hold": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Magic Spells & Attack SFX/FL_GFX_Magic_Spell_Attack_Sfx_12.wav"
+   ],
+   "note": ""
+  },
+  "Ascension Slip": {
+   "picks": [
+    "glitchdominion_audiohero/Glitch Dominion/PowerHumHollo GFX038507.wav"
+   ],
+   "note": ""
+  },
+  "Nova Held": {
+   "picks": [
+    "spaceodyssey/Space Odyssey/Sci-Fi-Special-Fx_GEN-HD4-43862.wav"
+   ],
+   "note": ""
+  },
+  "Standing Rank": {
+   "picks": [
+    "buttonmasters/Button Masters/ButtonModeSwitchEn MM013503.wav"
+   ],
+   "note": ""
+  },
+  "Click Tick": {
+   "picks": [
+    "buttonmasters/Button Masters/el_interface_click_03_hpx.wav"
+   ],
+   "note": ""
+  },
+  "Select": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_01.wav"
+   ],
+   "note": ""
+  },
+  "Hover": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Ui Games Interface/FL_GFX_UI_Game_Interface_06.wav"
+   ],
+   "note": "needs to be a very subtle soft volume barely noticeable"
+  },
+  "Press": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_02.wav"
+   ],
+   "note": "needs to be a very subtle soft volume barely noticeable"
+  },
+  "Confirm": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Ui Sci-Fi Interface/FL_GFX_UI_SciFi_Interface_17.wav"
+   ],
+   "note": "needs to be a very subtle soft volume barely noticeable"
+  },
+  "Back": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_05.wav"
+   ],
+   "note": "needs to quieter but will work"
+  },
+  "Error": {
+   "picks": [
+    "uishaping/UI Shaping/el_interface_error_04_hpx.wav"
+   ],
+   "note": ""
+  },
+  "Toggle": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_28.wav"
+   ],
+   "note": ""
+  },
+  "Slide": {
+   "picks": [
+    "buttonmasters/Button Masters/el_interface_click_03_hpx.wav"
+   ],
+   "note": ""
+  },
+  "Open": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Inventory_Open.wav"
+   ],
+   "note": ""
+  },
+  "Tab": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_01.wav"
+   ],
+   "note": ""
+  },
+  "Page Forward": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Map_03.wav"
+   ],
+   "note": ""
+  },
+  "Page Back": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Map_03.wav"
+   ],
+   "note": ""
+  },
+  "Thunder": {
+   "picks": [
+    "weatherwounds_audiohero/Weather Wounds/Sound-Design-Lightning-Thunder-Elec_B08-03112.mp3"
+   ],
+   "note": ""
+  },
+  "Weather LightRain": {
+   "picks": [
+    "weatherwounds_audiohero/Weather Wounds/RainLightDrizzleOr PE050201.mp3"
+   ],
+   "note": ""
+  },
+  "Weather Rain": {
+   "picks": [
+    "weatherwounds_audiohero/Weather Wounds/Rain 6085_30.mp3"
+   ],
+   "note": ""
+  },
+  "Weather Storm": {
+   "picks": [
+    "dolbyatmosvol1_audiohero/Dolby Atmos Vol 1/STORM_Thunderstorm High Intensity Low Thunder_DLBATM108.wav"
+   ],
+   "note": ""
+  },
+  "Weather Snow": {
+   "picks": [
+    "weatherwounds_audiohero/Weather Wounds/WeatherWinter_DIGIC11-29.mp3"
+   ],
+   "note": ""
+  },
+  "Weather Blizzard": {
+   "picks": [
+    "weatherwounds_audiohero/Weather Wounds/WindColdAmbHvyBl SDT2046201.mp3"
+   ],
+   "note": ""
+  },
+  "Weather Wind": {
+   "picks": [
+    "weatherwounds_audiohero/Weather Wounds/Wind 7001_23.mp3"
+   ],
+   "note": "should be very faint sound"
+  },
+  "Weather FogWind": {
+   "picks": [
+    "weatherwounds_audiohero/Weather Wounds/WindMoaningAmbRu SDT2046301.mp3"
+   ],
+   "note": "should be very faint sound"
+  }
+ },
+ "bake": {
+  "Swing Whoosh": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_01.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_03.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_06.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_01.wav",
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_03.wav",
+    "pitch": -1.5,
+    "tilt": -1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_06.wav",
+    "pitch": 1.0,
+    "tilt": -1.0
+   }
+  ],
+  "Swing Miss": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_09.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_13.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_19.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_30.wav"
+   }
+  ],
+  "Hit": [
+   {
+    "layers": [
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_02.wav",
+      "gain": 1.0,
+      "delay": 0
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_Sword_08.wav",
+      "gain": 0.25,
+      "delay": 0
+     }
+    ]
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_04.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_06.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_01.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_02.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Doors/FL_GFX_Home_Fx_Door_Smack_01.wav"
+   }
+  ],
+  "Heavy Hit": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_05.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_03.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_03.wav"
+   }
+  ],
+  "Hurt": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_03.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav",
+    "pitch": -1.5,
+    "tilt": -1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_03.wav",
+    "pitch": 1.5,
+    "tilt": 1.0
+   }
+  ],
+  "PvP Critical": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav"
+   },
+   {
+    "layers": [
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav",
+      "gain": 1.0,
+      "delay": 0
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Medieval Fighting/FL_GFX_Medieval_Fighting_War_Club_05.wav",
+      "gain": 0.5,
+      "delay": 0
+     }
+    ]
+   },
+   {
+    "layers": [
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav",
+      "gain": 1.0,
+      "delay": 0,
+      "pitch": -2.0
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_03.wav",
+      "gain": 0.5,
+      "delay": 0.02
+     }
+    ]
+   }
+  ],
+  "Skill Slash": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_07.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_20.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_22.wav"
+   }
+  ],
+  "Skill Miss": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_25.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_25.wav",
+    "pitch": 2.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_25.wav",
+    "pitch": -2.0,
+    "tilt": -1.0
+   }
+  ],
+  "Buff Cast": [
+   {
+    "path": "scifilabs_audiohero/Sci Fi Labs/SCI-FI-LABORATORY_GEN-HDF-20711.wav"
+   },
+   {
+    "path": "scifilabs_audiohero/Sci Fi Labs/SCI-FI-LABORATORY_GEN-HDF-20711.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "scifilabs_audiohero/Sci Fi Labs/SCI-FI-LABORATORY_GEN-HDF-20711.wav",
+    "pitch": -1.0,
+    "tilt": -1.0
+   }
+  ],
+  "Charge Build-up": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_11.wav"
+   }
+  ],
+  "Kill Confirm": [
+   {
+    "layers": [
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav",
+      "gain": 0.8,
+      "delay": 0
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Techno textures and SFX/Drums/Kicks/FL_VM_130_Drum_Kick_Knock.wav",
+      "gain": 1.0,
+      "delay": 0.115,
+      "max_seconds": 0.42
+     }
+    ]
+   },
+   {
+    "layers": [
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav",
+      "gain": 0.8,
+      "delay": 0
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Techno textures and SFX/Drums/Kicks/FL_VM_130_Drum_Kick_Knock.wav",
+      "gain": 1.0,
+      "delay": 0.115,
+      "max_seconds": 0.42
+     }
+    ],
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "layers": [
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav",
+      "gain": 0.8,
+      "delay": 0
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Techno textures and SFX/Drums/Kicks/FL_VM_130_Drum_Kick_Knock.wav",
+      "gain": 1.0,
+      "delay": 0.115,
+      "max_seconds": 0.42
+     }
+    ],
+    "pitch": -1.5,
+    "tilt": -1.0
+   }
+  ],
+  "Footstep Burst": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav",
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav",
+    "pitch": -1.5,
+    "tilt": -1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav",
+    "pitch": 0.75,
+    "tilt": -1.5
+   }
+  ],
+  "Jump": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_01.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_01.wav",
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_01.wav",
+    "pitch": -1.5,
+    "tilt": -1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_01.wav",
+    "pitch": 0.75,
+    "tilt": -1.5
+   }
+  ],
+  "Land Thud": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Drop_Material_03.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Drop_Material_03.wav",
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Drop_Material_03.wav",
+    "pitch": -1.5,
+    "tilt": -1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Drop_Material_03.wav",
+    "pitch": 0.75,
+    "tilt": -1.5
+   }
+  ],
+  "Body Thud": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav",
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav",
+    "pitch": -1.5,
+    "tilt": -1.0
+   }
+  ],
+  "Death_Null": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Glitches/FL_GFX_Motion_Glitch_11.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Glitches/FL_GFX_Motion_Glitch_11.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Death_Covenant": [
+   {
+    "path": "deepspacephenomena_audiohero/Deep Space Phenomena/SCI-FI-HIT_GEN-HDF-20682.wav"
+   },
+   {
+    "path": "deepspacephenomena_audiohero/Deep Space Phenomena/SCI-FI-HIT_GEN-HDF-20682.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Death_Hegemony": [
+   {
+    "path": "spaceodyssey/Space Odyssey/Sci-Fi-Special-Fx_GEN-HD4-43862.wav"
+   },
+   {
+    "path": "spaceodyssey/Space Odyssey/Sci-Fi-Special-Fx_GEN-HD4-43862.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Critical Death_Covenant": [
+   {
+    "path": "deepspacephenomena_audiohero/Deep Space Phenomena/SCI-FI-HIT_GEN-HDF-20682.wav"
+   },
+   {
+    "path": "deepspacephenomena_audiohero/Deep Space Phenomena/SCI-FI-HIT_GEN-HDF-20682.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Critical Death_Null": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_16.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_16.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Critical Death_Hegemony": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_28.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_28.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Respawn": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_02.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_02.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_02.wav",
+    "pitch": -1.0,
+    "tilt": -1.0
+   }
+  ],
+  "Pet Evolved": [
+   {
+    "path": "magic_audiohero/Magic/Zap-Magic-Sparking-Zap_FANT366.wav"
+   },
+   {
+    "path": "magic_audiohero/Magic/Zap-Magic-Sparking-Zap_FANT366.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "magic_audiohero/Magic/Zap-Magic-Sparking-Zap_FANT366.wav",
+    "pitch": -1.0,
+    "tilt": -1.0
+   }
+  ],
+  "Level Up": [
+   {
+    "layers": [
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_02.wav",
+      "gain": 0.8,
+      "delay": 0
+     },
+     {
+      "path": "magic_audiohero/Magic/BellMagicFairyB.wav",
+      "gain": 0.6,
+      "delay": 0.62
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_28.wav",
+      "gain": 0.45,
+      "delay": 0.62
+     }
+    ],
+    "max_seconds": 4.0
+   }
+  ],
+  "Rare Find": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Messages SFX/FL_GFX_Message_Sfx_01.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Messages SFX/FL_GFX_Message_Sfx_01.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Forge Success": [
+   {
+    "path": "magic_audiohero/Magic/BellMagicFairyB.wav"
+   },
+   {
+    "path": "magic_audiohero/Magic/BellMagicFairyB.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "magic_audiohero/Magic/BellMagicFairyB.wav",
+    "pitch": -1.0,
+    "tilt": -1.0
+   }
+  ],
+  "Forge Fail": [
+   {
+    "path": "magic_audiohero/Magic/Magic L2SN_45_1.wav"
+   },
+   {
+    "path": "magic_audiohero/Magic/Magic L2SN_45_1.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Forge Break": [
+   {
+    "path": "explosionzone/Explosions Zone/ExplosionHvyGlass SDT024501.wav"
+   }
+  ],
+  "Ascension Rise": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Dreamy Whooshes/FL_GFX_Motion_Dreamy_Whoosh_20.wav"
+   }
+  ],
+  "Nova Tier": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Orchestral Impacts/FL_GFX_Orchestral_Impact_08.wav",
+    "max_seconds": 3.5
+   }
+  ],
+  "Ascension Hold": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Magic Spells & Attack SFX/FL_GFX_Magic_Spell_Attack_Sfx_12.wav"
+   }
+  ],
+  "Ascension Slip": [
+   {
+    "path": "glitchdominion_audiohero/Glitch Dominion/PowerHumHollo GFX038507.wav"
+   }
+  ],
+  "Nova Held": [
+   {
+    "path": "spaceodyssey/Space Odyssey/Sci-Fi-Special-Fx_GEN-HD4-43862.wav"
+   }
+  ],
+  "Standing Rank": [
+   {
+    "path": "buttonmasters/Button Masters/ButtonModeSwitchEn MM013503.wav"
+   }
+  ],
+  "Click Tick": [
+   {
+    "path": "buttonmasters/Button Masters/el_interface_click_03_hpx.wav"
+   },
+   {
+    "path": "buttonmasters/Button Masters/el_interface_click_03_hpx.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "buttonmasters/Button Masters/el_interface_click_03_hpx.wav",
+    "pitch": -1.0,
+    "tilt": -1.0
+   }
+  ],
+  "Select": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_01.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_01.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_01.wav",
+    "pitch": -1.0,
+    "tilt": -1.0
+   }
+  ],
+  "Hover": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Games Interface/FL_GFX_UI_Game_Interface_06.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Games Interface/FL_GFX_UI_Game_Interface_06.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Games Interface/FL_GFX_UI_Game_Interface_06.wav",
+    "pitch": -1.0,
+    "tilt": -1.0
+   }
+  ],
+  "Press": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_02.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_02.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_02.wav",
+    "pitch": -1.0,
+    "tilt": -1.0
+   }
+  ],
+  "Confirm": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Sci-Fi Interface/FL_GFX_UI_SciFi_Interface_17.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Sci-Fi Interface/FL_GFX_UI_SciFi_Interface_17.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Back": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_05.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Swing & Dash/FL_GFX_Swing_Dash_05.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Error": [
+   {
+    "path": "uishaping/UI Shaping/el_interface_error_04_hpx.wav"
+   }
+  ],
+  "Toggle": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_28.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_28.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Slide": [
+   {
+    "path": "buttonmasters/Button Masters/el_interface_click_03_hpx.wav"
+   },
+   {
+    "path": "buttonmasters/Button Masters/el_interface_click_03_hpx.wav",
+    "pitch": 2.0,
+    "tilt": 1.0
+   },
+   {
+    "path": "buttonmasters/Button Masters/el_interface_click_03_hpx.wav",
+    "pitch": -2.0,
+    "tilt": -1.0
+   }
+  ],
+  "Open": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Inventory_Open.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Inventory_Open.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Tab": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_01.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Ui Clicks/FL_GFX_UI_Click_01.wav",
+    "pitch": 1.0,
+    "tilt": 1.0
+   }
+  ],
+  "Page Forward": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Map_03.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Map_03.wav",
+    "pitch": 1.5,
+    "tilt": 1.0
+   }
+  ],
+  "Page Back": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Map_03.wav",
+    "pitch": -1.5,
+    "tilt": -1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Map_03.wav",
+    "pitch": -3.0,
+    "tilt": -1.0
+   }
+  ],
+  "Thunder": [
+   {
+    "path": "weatherwounds_audiohero/Weather Wounds/Sound-Design-Lightning-Thunder-Elec_B08-03112.mp3"
+   },
+   {
+    "path": "weatherwounds_audiohero/Weather Wounds/Sound-Design-Lightning-Thunder-Elec_B08-03112.mp3",
+    "pitch": -2.0,
+    "tilt": -1.0
+   },
+   {
+    "path": "weatherwounds_audiohero/Weather Wounds/Sound-Design-Lightning-Thunder-Elec_B08-03112.mp3",
+    "pitch": 1.5,
+    "tilt": 0.5
+   }
+  ],
+  "Weather LightRain": [
+   {
+    "path": "weatherwounds_audiohero/Weather Wounds/RainLightDrizzleOr PE050201.mp3",
+    "start": 20
+   }
+  ],
+  "Weather Rain": [
+   {
+    "path": "weatherwounds_audiohero/Weather Wounds/Rain 6085_30.mp3",
+    "start": 52
+   }
+  ],
+  "Weather Storm": [
+   {
+    "path": "dolbyatmosvol1_audiohero/Dolby Atmos Vol 1/STORM_Thunderstorm High Intensity Low Thunder_DLBATM108.wav"
+   }
+  ],
+  "Weather Snow": [
+   {
+    "path": "weatherwounds_audiohero/Weather Wounds/WeatherWinter_DIGIC11-29.mp3"
+   }
+  ],
+  "Weather Blizzard": [
+   {
+    "path": "weatherwounds_audiohero/Weather Wounds/WindColdAmbHvyBl SDT2046201.mp3"
+   }
+  ],
+  "Weather Wind": [
+   {
+    "path": "weatherwounds_audiohero/Weather Wounds/Wind 7001_23.mp3"
+   }
+  ],
+  "Weather FogWind": [
+   {
+    "path": "weatherwounds_audiohero/Weather Wounds/WindMoaningAmbRu SDT2046301.mp3",
+    "start": 8
+   }
+  ]
+ }
+}

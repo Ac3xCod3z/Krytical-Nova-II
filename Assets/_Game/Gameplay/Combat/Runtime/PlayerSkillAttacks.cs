@@ -211,7 +211,7 @@ namespace KryticalNova.Combat
 
         private bool ResolveSkillHit(SkillDefinitionSO skill, IDamageable victim, float multiplier, string label)
         {
-            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result, skill.canCrit) || result.IsEvaded) return false;
+            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result, skill.canCrit, fromSkill: true) || result.IsEvaded) return false;
             Vector3 position = victim.Transform.position + Vector3.up;
             if (IsSpawned) SkillHitVfxClientRpc(skill.skillId, position);
             else SpawnSkillHitVfxLocal(skill, position);

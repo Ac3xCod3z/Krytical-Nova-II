@@ -342446,7 +342446,7 @@ Transform:
   m_GameObject: {fileID: 1197532474}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.9622498, y: 18.133127, z: -2.7930298}
+  m_LocalPosition: {x: -6.9622803, y: 18.133127, z: -2.7930603}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -342467,7 +342467,7 @@ MonoBehaviour:
   version: 2
   globalVolume: 0
   mode: 0
-  size: {x: 902.12354, y: 53.769157, z: 909.9071}
+  size: {x: 902.1235, y: 53.769157, z: 909.9071}
   overrideRendererFilters: 0
   minRendererVolumeSize: 0.1
   objectLayerMask:
@@ -440733,7 +440733,10 @@ MonoBehaviour:
   farFlash: 0.35
   sheetLightningRatio: 0.5
   thunderSource: {fileID: 1742753964}
-  thunderClips: []
+  thunderClips:
+  - {fileID: 8300000, guid: fd433be6f134a704883d8164be34e786, type: 3}
+  - {fileID: 8300000, guid: 699b5a2f1313277448f2f547b23290f1, type: 3}
+  - {fileID: 8300000, guid: 2ab9818347e0abe4e86c50aca792aef7, type: 3}
   maxThunderDelay: 4
   farThunder: 0.45
 --- !u!114 &1523991251
@@ -507800,7 +507803,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.8
   m_Pitch: 1
   Loop: 0
   Mute: 0

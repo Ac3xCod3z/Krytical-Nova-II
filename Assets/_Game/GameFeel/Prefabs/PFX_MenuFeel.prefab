@@ -137,7 +137,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787916
-  - rid: 6309249705242787917
+  - rid: 6309249740506923185
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -283,13 +283,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787917
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923185
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -180265848
-        Label: Press (assign clip)
-        OriginalLabel: Sound
+        UniqueID: -928353428
+        Label: Press
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -297,7 +297,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -359,20 +359,23 @@ MonoBehaviour:
         Owner: {fileID: 9025180428466252891}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: 99ba026967cc01d46a68ceeda35e701f, type: 3}
+        - {fileID: 8300000, guid: d2bfbd3001b5e8747b0674569de6ca90, type: 3}
+        - {fileID: 8300000, guid: 07a8649f7f8b84b4ca77ae937259c537, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 2
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.135
+        MaxVolume: 0.15
+        MinPitch: 0.91700405
+        MaxPitch: 1.0905077
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -409,6 +412,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &729597864040757204
 GameObject:
   m_ObjectHideFlags: 0
@@ -546,7 +553,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787932
-  - rid: 6309249705242787933
+  - rid: 6309249740506923193
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -674,13 +681,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787933
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923193
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1345076263
-        Label: Page Forward (assign clip)
-        OriginalLabel: Sound
+        UniqueID: -111342419
+        Label: Page Forward
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -688,7 +695,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -750,20 +757,22 @@ MonoBehaviour:
         Owner: {fileID: 3408440584547029581}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: a6016a1e7fce7c84a9bfcc38c7c745f1, type: 3}
+        - {fileID: 8300000, guid: 1d258e8985d36c4468a7b3c39add92dc, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 2
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.27
+        MaxVolume: 0.3
         MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        MaxPitch: 1.122462
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -800,6 +809,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &1042235530589574237
 GameObject:
   m_ObjectHideFlags: 0
@@ -937,7 +950,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787928
-  - rid: 6309249705242787929
+  - rid: 6309249740506923191
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1065,13 +1078,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787929
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923191
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1435473434
-        Label: Open (assign clip)
-        OriginalLabel: Sound
+        UniqueID: -1480467882
+        Label: Open
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -1079,7 +1092,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -1141,20 +1154,22 @@ MonoBehaviour:
         Owner: {fileID: 2743324131928859040}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: 81248a083c3b5be40a4b29cb723de619, type: 3}
+        - {fileID: 8300000, guid: e27a40ff16690a84e8b9a2229158f35d, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 2
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.35999998
+        MaxVolume: 0.4
+        MinPitch: 0.91700405
+        MaxPitch: 1.0905077
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -1191,6 +1206,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &1798071834834719891
 GameObject:
   m_ObjectHideFlags: 0
@@ -1328,7 +1347,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787924
-  - rid: 6309249705242787925
+  - rid: 6309249740506923189
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1456,13 +1475,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787925
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923189
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1857619873
-        Label: Toggle (assign clip)
-        OriginalLabel: Sound
+        UniqueID: -435903403
+        Label: Toggle
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -1470,7 +1489,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -1532,20 +1551,22 @@ MonoBehaviour:
         Owner: {fileID: 5573937869170548225}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: 584b58357fb27fe44b6a9a465659b45e, type: 3}
+        - {fileID: 8300000, guid: ac4510c505b6a3d49ace2b46ced0d5df, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 2
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.35999998
+        MaxVolume: 0.4
+        MinPitch: 0.8908987
+        MaxPitch: 1.122462
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -1582,6 +1603,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &3018698206567306713
 GameObject:
   m_ObjectHideFlags: 0
@@ -1719,7 +1744,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787934
-  - rid: 6309249705242787935
+  - rid: 6309249740506923194
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -1847,13 +1872,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787935
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923194
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1314220756
-        Label: Page Back (assign clip)
-        OriginalLabel: Sound
+        UniqueID: 1612594401
+        Label: Page Back
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -1861,7 +1886,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -1923,20 +1948,22 @@ MonoBehaviour:
         Owner: {fileID: 1735843850963355983}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: fe74edcaf272c6b478097c1b0c17bd12, type: 3}
+        - {fileID: 8300000, guid: c2d726a3ed0e50645a0707bb5953bed4, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 2
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.27
+        MaxVolume: 0.3
+        MinPitch: 0.8908987
         MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -1973,6 +2000,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &3387469479467893756
 GameObject:
   m_ObjectHideFlags: 0
@@ -2110,7 +2141,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787914
-  - rid: 6309249705242787915
+  - rid: 6309249740506923184
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -2238,13 +2269,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787915
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923184
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 202834695
-        Label: Hover (assign clip)
-        OriginalLabel: Sound
+        UniqueID: 270803716
+        Label: Hover
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -2252,7 +2283,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -2314,20 +2345,23 @@ MonoBehaviour:
         Owner: {fileID: 8047429661733535241}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: 4239ea73bd2378c40a9816de3ca23057, type: 3}
+        - {fileID: 8300000, guid: 32cfc1edc364f81439968ce5cefa0355, type: 3}
+        - {fileID: 8300000, guid: f217eeca3868cfa4a81b4338331064ac, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 3
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.072
+        MaxVolume: 0.08
+        MinPitch: 0.8908987
+        MaxPitch: 1.122462
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -2364,6 +2398,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &3792639498916313020
 GameObject:
   m_ObjectHideFlags: 0
@@ -2583,7 +2621,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787926
-  - rid: 6309249705242787927
+  - rid: 6309249740506923190
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -2711,13 +2749,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787927
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923190
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 333612258
-        Label: Slide (assign clip)
-        OriginalLabel: Sound
+        UniqueID: 1187746082
+        Label: Slide
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -2725,7 +2763,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -2787,20 +2825,23 @@ MonoBehaviour:
         Owner: {fileID: 3608960888349681412}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: 3fa2c06180edbb946ab185a5140a50de, type: 3}
+        - {fileID: 8300000, guid: f235592992744a04081bc84e1f51ef2f, type: 3}
+        - {fileID: 8300000, guid: 784d377cdb99db04eb817a5c767a3af9, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 3
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.17999999
+        MaxVolume: 0.2
+        MinPitch: 0.7937005
+        MaxPitch: 1.2599211
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -2837,6 +2878,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &5381553062925280669
 GameObject:
   m_ObjectHideFlags: 0
@@ -2974,7 +3019,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787918
-  - rid: 6309249705242787919
+  - rid: 6309249740506923186
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -3120,13 +3165,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787919
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923186
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1507958477
-        Label: Confirm (assign clip)
-        OriginalLabel: Sound
+        UniqueID: 1580241024
+        Label: Confirm
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -3134,7 +3179,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -3196,20 +3241,22 @@ MonoBehaviour:
         Owner: {fileID: 4626957752330861401}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: 1f6f63de536b09f4597cb248ebf86017, type: 3}
+        - {fileID: 8300000, guid: 6b298a45c106dc84abb6c7a0f76ede74, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 2
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.162
+        MaxVolume: 0.18
+        MinPitch: 0.9438743
+        MaxPitch: 1.0594631
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -3246,6 +3293,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &5791917729296109903
 GameObject:
   m_ObjectHideFlags: 0
@@ -3383,7 +3434,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787922
-  - rid: 6309249705242787923
+  - rid: 6309249740506923188
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -3556,13 +3607,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787923
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923188
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 2130451936
-        Label: Error (assign clip)
-        OriginalLabel: Sound
+        UniqueID: 1292486212
+        Label: Error
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -3570,7 +3621,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -3632,20 +3683,21 @@ MonoBehaviour:
         Owner: {fileID: 9014347243206222539}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: b36fe50f172492647999523b19c973f5, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 2
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.40499997
+        MaxVolume: 0.45
+        MinPitch: 0.9715319
+        MaxPitch: 1.0293022
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -3682,6 +3734,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &5844629976210799272
 GameObject:
   m_ObjectHideFlags: 0
@@ -3819,7 +3875,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787930
-  - rid: 6309249705242787931
+  - rid: 6309249740506923192
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -3947,13 +4003,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787931
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923192
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 1060652820
-        Label: Tab (assign clip)
-        OriginalLabel: Sound
+        UniqueID: -1194014119
+        Label: Tab
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -3961,7 +4017,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -4023,20 +4079,22 @@ MonoBehaviour:
         Owner: {fileID: 2525041876086230854}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: e3103b19b4745f94d88901451f9bc9f7, type: 3}
+        - {fileID: 8300000, guid: 1c5b9eee1ce2dd647b64320e9c65d11b, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 2
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
-        MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.315
+        MaxVolume: 0.35
+        MinPitch: 0.8908987
+        MaxPitch: 1.122462
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -4073,6 +4131,10 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
 --- !u!1 &6802499326076575371
 GameObject:
   m_ObjectHideFlags: 0
@@ -4210,7 +4272,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249705242787920
-  - rid: 6309249705242787921
+  - rid: 6309249740506923187
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -4338,13 +4400,13 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-    - rid: 6309249705242787921
-      type: {class: MMF_Sound, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 6309249740506923187
+      type: {class: MMF_VariedSound, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1791165367
-        Label: Back (assign clip)
-        OriginalLabel: Sound
+        UniqueID: 1044005722
+        Label: Back
+        OriginalLabel: Varied Sound (Krytical Nova)
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -4352,7 +4414,7 @@ MonoBehaviour:
         Timing:
           TimescaleMode: 0
           ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
+          ContributeToTotalDuration: 0
           InitialDelay: 0
           CooldownDuration: 0
           InterruptsOnStop: 1
@@ -4414,20 +4476,22 @@ MonoBehaviour:
         Owner: {fileID: 7101414682737804635}
         DebugActive: 0
         Sfx: {fileID: 0}
-        RandomSfx: []
+        RandomSfx:
+        - {fileID: 8300000, guid: 4c65808806b778e4f8ff55c01abaf6b3, type: 3}
+        - {fileID: 8300000, guid: adf52140852a39448ac1e726951b2da3, type: 3}
         TestPlayButton:
           ButtonText: Debug Play Sound
         TestStopButton:
           ButtonText: Debug Stop Sound
-        PlayMethod: 0
-        PoolSize: 10
+        PlayMethod: 3
+        PoolSize: 2
         UseLegacyEventsMode: 0
-        StopSoundOnFeedbackStop: 1
-        MinVolume: 1
-        MaxVolume: 1
-        MinPitch: 1
+        StopSoundOnFeedbackStop: 0
+        MinVolume: 0.17999999
+        MaxVolume: 0.2
+        MinPitch: 0.8908987
         MaxPitch: 1
-        SfxAudioMixerGroup: {fileID: 0}
+        SfxAudioMixerGroup: {fileID: -3783893103257190392, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
         Priority: 128
         PanStereo: 0
         SpatialBlend: 0
@@ -4464,3 +4528,7 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
+        HegemonySfx: []
+        NullSfx: []
+        CovenantSfx: []
+        FitPitch: {x: 0.5, y: 2}
