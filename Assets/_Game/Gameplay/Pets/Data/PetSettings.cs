@@ -47,6 +47,13 @@ namespace KryticalNova.Pets
         [Tooltip("Such a pet plays its animations in turn, one every this many seconds, and rests in between. Keep it longer than the longest animation (2.5 s today). 0 = it only rests.")]
         [Min(0f)] public float animationCycleSeconds = 10f;
 
+        [Tooltip("Such a pet walks on the spot while its owner covers ground at this speed or more, in metres a second, so it seems to walk along. 0 = it never walks or runs.")]
+        [Min(0f)] public float walkFromOwnerSpeed = 0.3f;
+        [Tooltip("It runs while its owner goes this fast or faster. The owner's own run starts at 7 (Walk Speed Threshold on the player's animation motor): keep the two the same.")]
+        [Min(0f)] public float runFromOwnerSpeed = 7f;
+        [Tooltip("Once running it keeps running until its owner is slower than this, so it does not flicker between the two at the edge. The owner's own run ends at 5.")]
+        [Min(0f)] public float runToWalkOwnerSpeed = 5f;
+
         [Header("Follow: where a pet hovers beside its owner (which side and how high is the pet item's own offset)")]
         [Tooltip("Half the width of the owner's head and hair at the height pets hover, in metres from the owner's centre line. The clear air below starts here.")]
         [Min(0f)] public float ownerHalfWidth = 0.18f;
