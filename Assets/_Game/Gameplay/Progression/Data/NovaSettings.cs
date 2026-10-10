@@ -193,6 +193,11 @@ namespace KryticalNova.Progression
         public Material motesMaterial;
         [Tooltip("Shader KryticalNova/NovaMask: the disc behind a Nova that hides the characters, pets and effects behind it (and leaves the world behind them). None = everything shows through.")]
         public Shader maskShader;
+        [Tooltip("How much of the Nova's reach the hiding disc covers. 1 = out to the furthest ring.")]
+        [Range(0.3f, 1.2f)] public float maskSize = 1f;
+        [Tooltip("The share of the disc's radius, at its rim, over which what it hides comes back into view in dots. " +
+                 "0 = the disc ends on a line, which shows as a circle cut out of whatever stands behind the Nova.")]
+        [Range(0f, 0.9f)] public float maskFeather = 0.45f;
         [Tooltip("Gap between the top of the head and the lowest the Nova reaches (metres).")]
         public float gapAboveHead = 0.08f;
         [Tooltip("How dark the patch of night behind the Nova is. It is what lets the rings read against a bright sky.")]

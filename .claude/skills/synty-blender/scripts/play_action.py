@@ -61,12 +61,16 @@ def main():
     if slots and hasattr(rig.animation_data, "action_slot") and rig.animation_data.action_slot is None:
         rig.animation_data.action_slot = slots[0]
     first, last = (int(round(f)) for f in action.frame_range)
-    scene.frame_start, scene.frame_end = first, last
+    # a loop's last frame is its first frame again: leave it out, or every time round one pose shows twice
+    curves = getattr(action, "fcurves", None) or [fc for layer in getattr(action, "layers", []) for strip in layer.strips
+                                                  for bag in getattr(strip, "channelbags", []) for fc in bag.fcurves]
+    loops = last - first > 1 and bool(curves) and all(abs(fc.evaluate(first) - fc.evaluate(last)) < 1e-4 for fc in curves)         and any(abs(fc.evaluate(first) - fc.evaluate(first + 1)) > 1e-4 for fc in curves)
+    scene.frame_start, scene.frame_end = first, (last - 1 if loops else last)
     scene.frame_set(first)
     if not playing:
         with bpy.context.temp_override(window=window, screen=window.screen, area=area):
             bpy.ops.screen.animation_play()
-    kn.report("Playback", {"rig": rig.name, "action": action.name, "frames": f"{first}-{last}",
+    kn.report("Playback", {"rig": rig.name, "action": action.name, "frames": f"{scene.frame_start}-{scene.frame_end}", "loops": loops,
                            "frames_per_second": scene.render.fps, "playing": window.screen.is_animation_playing,
                            "to_stop": "press Space in the viewport, or run play_action.py --stop"})
 

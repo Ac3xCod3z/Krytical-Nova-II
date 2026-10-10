@@ -5,7 +5,7 @@
  */
 
 /* The window is wider while the Guide is read, and has no APPLY / REVERT / RESET under it. */
-/* The width is SettingsPages.GuideWindowWidth too. */
+/* The Controls page is as wide (Settings.uss). */
 #settings-window.guide-open { width: 920px; }
 #settings-window.guide-open #settings-body { max-height: 520px; }
 #settings-window.guide-open .settings-footer { display: none; }

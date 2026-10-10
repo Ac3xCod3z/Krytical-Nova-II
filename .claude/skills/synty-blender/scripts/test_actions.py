@@ -33,7 +33,7 @@ def main():
     ap.add_argument("--rig", required=True)
     ap.add_argument("--actions")
     ap.add_argument("--leave")
-    ap.add_argument("--loops", default="Idle",
+    ap.add_argument("--loops", default="Idle,Walk,Run,FrontRoll",
                     help="actions that loop, comma separated: these must end on their own first frame, not on rest")
     a = ap.parse_args(kn.tool_args())
     rig = kn.get_object(a.rig, "ARMATURE")

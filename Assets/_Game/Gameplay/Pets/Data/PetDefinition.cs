@@ -5,6 +5,21 @@ using UnityEngine;
 namespace KryticalNova.Pets
 {
     /// <summary>How a pet looks at one of its five growth stages.</summary>
+    /// <summary>
+    /// An effect a pet wears as its own mark (the Emberwing's cinders, the Drone Core's data chips): one copy on each
+    /// named bone of its model, or one on the middle of its body when none is named. The effect follows the bone's
+    /// place, never its turning, and decides for itself whether its particles stay behind in the world.
+    /// </summary>
+    [Serializable]
+    public sealed class PetEffect
+    {
+        public GameObject prefab;
+        [Tooltip("Bones of the pet's own model it is worn on. None = one, on the middle of the body.")]
+        public string[] bones = new string[0];
+        [Tooltip("On: its particles are tinted with the glow colour of the pet's growth stage, so the effect changes as the pet grows.")]
+        public bool stageColour = true;
+    }
+
     [Serializable]
     public struct PetStageLook
     {
@@ -53,6 +68,10 @@ namespace KryticalNova.Pets
         [Tooltip("The bones of the model that are its feet: each gets the effect above. Empty = one under the middle of the body.")]
         public string[] footBones = new string[0];
 
+        [Header("Effects of its own (besides the one under its feet)")]
+        [Tooltip("What marks this pet out: worn on the bones named, whether it stands or flies.")]
+        public PetEffect[] effects = new PetEffect[0];
+
         [Header("Movement loop (a model with one movement animation instead of a walk and a run)")]
         [Tooltip("The true/false parameter of the model's Animator that holds its movement loop (the Drone Core's FrontRoll). Empty = none: a model with Walk and Run parameters uses those.")]
         public string moveLoop = "";
@@ -60,6 +79,9 @@ namespace KryticalNova.Pets
         [Min(0.01f)] public float moveLoopWalkSpeed = 0.6f;
         [Tooltip("How fast the loop is played while the owner runs. 1 = as it was made.")]
         [Min(0.01f)] public float moveLoopRunSpeed = 1.5f;
+
+        [Tooltip("The true/false parameter that holds the loop the model waits in instead of its default state (Emberwing's Fly: it hovers on its wings rather than sitting perched in mid-air). It lets go for the movement loop and for the animations that play once. Empty = it waits in its default state.")]
+        public string restLoop = "";
 
         [Header("Follow")]
         [Tooltip("Added to the pet settings' follow gap for this pet only, in metres. More hovers further from its owner.")]

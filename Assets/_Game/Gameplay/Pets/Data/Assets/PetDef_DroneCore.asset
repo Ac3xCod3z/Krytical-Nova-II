@@ -47,7 +47,13 @@ MonoBehaviour:
   bobs: 1
   footEffect: {fileID: 0}
   footBones: []
+  effects:
+  - prefab: {fileID: 769357725117457455, guid: 2daa2ea8b6ec02f40a968b7dbfb36267, type: 3}
+    bones:
+    - body
+    stageColour: 1
   moveLoop: FrontRoll
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
+  restLoop: 
   followGapAdjust: 0

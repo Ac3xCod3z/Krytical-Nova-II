@@ -43,5 +43,20 @@ namespace KryticalNova.Progression.Tests
             Assert.IsFalse(settings.ArrivesThisFrame(5f, 29f, 1f / 30f));
             Assert.IsTrue(settings.ArrivesThisFrame(settings.stoppingDistance, 0f, 0f), "standing inside the stopping distance");
         }
+
+        [Test]
+        public void A_move_has_stalled_only_when_it_gained_nothing_for_the_whole_time()
+        {
+            Assert.IsFalse(settings.HasStalled(0f, settings.stallSeconds * 0.5f), "not watched for long enough yet");
+            Assert.IsTrue(settings.HasStalled(0f, settings.stallSeconds), "held on the spot for the whole time");
+            Assert.IsFalse(settings.HasStalled(settings.stallDistance, settings.stallSeconds), "it gained the distance");
+        }
+
+        // Walking is the slowest a move goes: in the time a stall takes to be called, it gains far more than a stall allows.
+        [Test]
+        public void A_walk_is_never_taken_for_a_stall()
+        {
+            Assert.Greater(settings.walkSpeed * settings.arrivalMinSpeedFactor * settings.stallSeconds, settings.stallDistance * 10f);
+        }
     }
 }

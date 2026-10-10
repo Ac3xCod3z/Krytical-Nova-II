@@ -15,6 +15,8 @@ using UnityEngine;
 
 public static class PetPackager
 {
+    private static readonly string[] Loops = { "Idle", "Walk", "Run", "FrontRoll", "Fly", "Move" };
+
     private static string Arg(string name)
     {
         var args = Environment.GetCommandLineArgs();
@@ -51,11 +53,12 @@ public static class PetPackager
         var importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
         var model = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
         if (importer == null || model == null) throw new Exception("No model at " + modelPath);
-        // A clip named Idle is the pet's resting loop: make it loop, and re-import so the clip carries that.
+        // Idle is the pet's resting loop; Walk and Run are loops played on the spot. Make them loop, and
+        // re-import so the clips carry that.
         var takes = importer.defaultClipAnimations;
         foreach (var take in takes)
         {
-            bool loop = take.name == "Idle";
+            bool loop = Loops.Contains(take.name);
             take.loopTime = loop;
             take.loopPose = false;
         }
@@ -74,14 +77,46 @@ public static class PetPackager
         var rest = machine.AddState(idle != null ? "Idle" : "Rest");
         rest.motion = idle;
         machine.defaultState = rest;
+        // A movement set (MoveStart, Move, MoveStop) is chained on one bool, "Move": Idle -> MoveStart -> Move
+        // (looping) -> MoveStop -> Idle. Move is only left at the end of a loop, where MoveStop picks up exactly.
+        var moveStart = clips.FirstOrDefault(c => c.name == "MoveStart");
+        var move = clips.FirstOrDefault(c => c.name == "Move");
+        var moveStop = clips.FirstOrDefault(c => c.name == "MoveStop");
+        bool chained = idle != null && moveStart != null && move != null && moveStop != null;
+        if (chained)
+        {
+            controller.AddParameter("Move", AnimatorControllerParameterType.Bool);
+            var sStart = machine.AddState("MoveStart"); sStart.motion = moveStart;
+            var sMove = machine.AddState("Move"); sMove.motion = move;
+            var sStop = machine.AddState("MoveStop"); sStop.motion = moveStop;
+            var t = rest.AddTransition(sStart);
+            t.AddCondition(AnimatorConditionMode.If, 0, "Move"); t.hasExitTime = false; t.duration = 0.1f;
+            t = sStart.AddTransition(sMove); t.hasExitTime = true; t.exitTime = 1f; t.duration = 0f;
+            t = sMove.AddTransition(sStop);
+            t.AddCondition(AnimatorConditionMode.IfNot, 0, "Move"); t.hasExitTime = true; t.exitTime = 1f; t.duration = 0f;
+            t = sStop.AddTransition(rest); t.hasExitTime = true; t.exitTime = 1f; t.duration = 0f;
+        }
         foreach (var clip in clips)
         {
             if (clip == idle) continue;
-            controller.AddParameter(clip.name, AnimatorControllerParameterType.Trigger);
+            if (chained && (clip == moveStart || clip == move || clip == moveStop)) continue;
+            bool held = Loops.Contains(clip.name);       // a loop is held by a bool; anything else is fired once
+            controller.AddParameter(clip.name, held ? AnimatorControllerParameterType.Bool : AnimatorControllerParameterType.Trigger);
             var state = machine.AddState(clip.name);
             state.motion = clip;
             var enter = machine.AddAnyStateTransition(state);
             enter.AddCondition(AnimatorConditionMode.If, 0, clip.name);
+            if (held)
+            {
+                enter.hasExitTime = false;
+                enter.duration = 0.12f;
+                enter.canTransitionToSelf = false;
+                var stop = state.AddTransition(rest);
+                stop.AddCondition(AnimatorConditionMode.IfNot, 0, clip.name);
+                stop.hasExitTime = false;
+                stop.duration = 0.15f;
+                continue;
+            }
             enter.hasExitTime = false;
             enter.duration = 0.08f;
             enter.canTransitionToSelf = false;

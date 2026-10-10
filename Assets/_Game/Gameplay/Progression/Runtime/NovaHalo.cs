@@ -53,6 +53,7 @@ namespace KryticalNova.Progression
         private static readonly int RaysId = Shader.PropertyToID("_Rays");
         private static readonly int RayLengthId = Shader.PropertyToID("_RayLength");
         private static readonly int BackdropId = Shader.PropertyToID("_Backdrop");
+        private static readonly int FeatherId = Shader.PropertyToID("_Feather");
         private static readonly int RadiusId = Shader.PropertyToID("_Radius");
         private static readonly int CountId = Shader.PropertyToID("_Count");
         private static readonly int SizeId = Shader.PropertyToID("_Size");
@@ -213,6 +214,7 @@ namespace KryticalNova.Progression
         {
             Material[] materials = MaskMaterials(look.maskShader);
             if (materials == null) return;
+            foreach (Material stage in materials) stage.SetFloat(FeatherId, Mathf.Clamp(look.maskFeather, 0f, 0.9f));
             var go = new GameObject("Mask") { layer = gameObject.layer };
             go.transform.SetParent(transform, false);
             mask = go.transform;
@@ -361,14 +363,16 @@ namespace KryticalNova.Progression
             float distance = away.magnitude;
             if (reach <= 0f || distance < 0.01f) return;
             away /= distance;
+            // The disc stands behind every ring, and is as wide from the camera as the setting says the Nova is.
+            float size = reach * Mathf.Clamp(look.maskSize, 0.3f, 1.2f);
             mask.SetPositionAndRotation(centre + away * reach, Quaternion.LookRotation(away, viewer.transform.up));
-            mask.localScale = Vector3.one * (reach * (distance + reach) / distance);
-            NovaCull.Report(centre, reach);
+            mask.localScale = Vector3.one * (size * (distance + reach) / distance);
+            NovaCull.Report(centre, size, look.maskFeather, ownerOrder);
 
             if (ownerOrder == null) return;
             Vector3 toCrown = Crown - eye;
             float along = Vector3.Dot(toCrown, away);
-            bool through = along > distance && (toCrown - away * along).magnitude < (reach + HeadRadius) * along / distance;
+            bool through = along > distance && (toCrown - away * along).magnitude < (size + HeadRadius) * along / distance;
             ownerOrder.DrawWithScenery = through;
         }
 

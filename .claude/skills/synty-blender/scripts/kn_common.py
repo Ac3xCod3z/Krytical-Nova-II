@@ -249,3 +249,41 @@ def zero_controls(rig):
         pb.rotation_quaternion = (1, 0, 0, 0)
         pb.rotation_axis_angle = (0, 0, 1, 0)
         pb.scale = (1, 1, 1)
+
+
+def keep_to_own_length(ob, rig, bone, parent, start=-0.05, full=0.2):
+    """Stop an appendage bone (an ear, a horn, a fin) from pulling on the body it sits on.
+
+    Nearest-bone weights give the bone every vertex that is closer to it than to the body's own bone,
+    which on a wide head takes in the cheek below an ear. Here the bone keeps a vertex only where the
+    vertex lies along the bone's own length: none of it behind `start`, all of it past `full` (both as a
+    share of the bone's length from its base), blended in between. What it gives up goes to `parent`.
+    Returns how many vertices changed."""
+    name = bone if bone.startswith("DEF-") else "DEF-" + bone
+    parent_name = parent if parent.startswith("DEF-") else "DEF-" + parent
+    group = ob.vertex_groups.get(name)
+    if group is None or name not in rig.data.bones:
+        return 0
+    parent_group = ob.vertex_groups.get(parent_name) or ob.vertex_groups.new(name=parent_name)
+    b = rig.data.bones[name]
+    to_rig = rig.matrix_world.inverted() @ ob.matrix_world
+    base, along = b.head_local, b.tail_local - b.head_local
+    changed = 0
+    for v in ob.data.vertices:
+        mine = next((e.weight for e in v.groups if e.group == group.index), 0.0)
+        if mine <= 0.0:
+            continue
+        t = ((to_rig @ v.co) - base).dot(along) / max(along.length_squared, 1e-12)
+        k = max(0.0, min(1.0, (t - start) / max(full - start, 1e-6)))
+        keep = mine * k * k * (3 - 2 * k)
+        if mine - keep < 1e-4:
+            continue
+        had = next((e.weight for e in v.groups if e.group == parent_group.index), 0.0)
+        if keep > 0.005:
+            group.add([v.index], keep, "REPLACE")
+        else:
+            group.remove([v.index])
+            keep = 0.0
+        parent_group.add([v.index], had + mine - keep, "REPLACE")
+        changed += 1
+    return changed

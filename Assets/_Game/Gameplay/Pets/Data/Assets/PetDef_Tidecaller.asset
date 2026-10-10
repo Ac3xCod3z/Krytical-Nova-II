@@ -50,4 +50,5 @@ MonoBehaviour:
   moveLoop: 
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
+  restLoop: 
   followGapAdjust: 0

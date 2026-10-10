@@ -43,6 +43,8 @@ namespace KryticalNova.GameFeel
         private float nextDustCheck;
         private GameObject runPrefab;
         private bool running, airborne;
+        /// <summary>When this character last set off at a run or was ordered on while running (GameFeelPresenter.RunStarted).</summary>
+        public float LastRunOrder { get; set; } = -100f;
         private TrailRenderer trail;
         private float trailUntil;
         private Color trailColour = Color.clear;

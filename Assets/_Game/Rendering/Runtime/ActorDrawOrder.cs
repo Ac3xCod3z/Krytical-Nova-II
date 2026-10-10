@@ -18,9 +18,27 @@ namespace KryticalNova.Rendering
         private const float RescanSeconds = 1f;
         private const int FirstBlendedQueue = 2501;
 
+        private static readonly List<ActorDrawOrder> Actors = new List<ActorDrawOrder>(64);
+        /// <summary>Every actor that is switched on, for whoever has to know which things a Nova can hide (<see cref="NovaCull"/>).</summary>
+        public static IReadOnlyList<ActorDrawOrder> All => Actors;
+
         private readonly List<Renderer> found = new List<Renderer>();
         private float nextScan;
         private bool withScenery;
+        // A ball round the solid models, kept in the root's own space so it travels with the actor between two looks.
+        private Vector3 ballCentre;
+        private float ballRadius;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Begin() => Actors.Clear();
+
+        /// <summary>A ball in the world that holds all of this actor's solid models. False while it has none.</summary>
+        public bool TryGetBall(out Vector3 centre, out float radius)
+        {
+            centre = transform.TransformPoint(ballCentre);
+            radius = ballRadius;
+            return ballRadius > 0f;
+        }
 
         /// <summary>Marks everything solid under <paramref name="root"/>, now and as it changes.</summary>
         public static ActorDrawOrder On(GameObject root)
@@ -46,7 +64,13 @@ namespace KryticalNova.Rendering
             }
         }
 
-        private void OnEnable() => Apply();
+        private void OnEnable()
+        {
+            if (!Actors.Contains(this)) Actors.Add(this);
+            Apply();
+        }
+
+        private void OnDisable() => Actors.Remove(this);
 
         private void LateUpdate()
         {
@@ -64,15 +88,25 @@ namespace KryticalNova.Rendering
             nextScan = Time.unscaledTime + RescanSeconds;
             int order = withScenery ? Scenery : Actor;
             GetComponentsInChildren(true, found);
+            bool any = false;
+            Bounds ball = default;
             foreach (Renderer body in found)
             {
-                // Only what this put there, or nothing, is changed: a renderer with an order of its own keeps it.
-                if (body.sortingOrder == order || (body.sortingOrder != Scenery && body.sortingOrder != Actor)) continue;
                 Material material = body.sharedMaterial;
                 if (material == null || material.renderQueue >= FirstBlendedQueue) continue;
+                if (body.enabled && body.gameObject.activeInHierarchy && (body.sortingOrder == Scenery || body.sortingOrder == Actor))
+                {
+                    if (any) ball.Encapsulate(body.bounds);
+                    else ball = body.bounds;
+                    any = true;
+                }
+                // Only what this put there, or nothing, is changed: a renderer with an order of its own keeps it.
+                if (body.sortingOrder == order || (body.sortingOrder != Scenery && body.sortingOrder != Actor)) continue;
                 body.sortingOrder = order;
             }
             found.Clear();
+            ballCentre = any ? transform.InverseTransformPoint(ball.center) : Vector3.zero;
+            ballRadius = any ? ball.extents.magnitude : 0f;
         }
     }
 }

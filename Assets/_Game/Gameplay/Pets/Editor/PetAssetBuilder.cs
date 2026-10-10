@@ -41,8 +41,12 @@ namespace KryticalNova.EditorTools
             public string Model;
             /// <summary>It stands instead of bobbing like a drone, on a cloud under each of these bones of its model.</summary>
             public string[] Feet;
+            /// <summary>The effects that are this pet's own mark: the effect's prefab, and the bones of the model it is worn on.</summary>
+            public (string Effect, string[] Bones)[] Effects;
             /// <summary>The true/false parameter of its Animator that holds its one movement loop, if it has no walk and run.</summary>
             public string MoveLoop;
+            /// <summary>The true/false parameter that holds the loop it waits in instead of its default state, if it has one.</summary>
+            public string RestLoop;
             /// <summary>Its size against the size every pet is brought to (PetFollower's normalised size); 0 = leave the item's as it is.</summary>
             public float Scale;
             public StatType Stat;
@@ -59,6 +63,9 @@ namespace KryticalNova.EditorTools
         private static readonly Row[] Rows =
         {
             new Row { Id = 8001, Asset = "Pet_Emberwing", Name = "Emberwing", StandIn = "SM_Prop_Drone_Quad_01",
+                Model = PetModels + "/Emberwing/Pet_Emberwing_S1.prefab", MoveLoop = "Move", RestLoop = "Fly",
+                // Cinders shed from the tips of its wings and the end of its tail.
+                Effects = new[] { (GameFeelBuilder.PetCindersPath, new[] { "wing.L.004", "wing.R.004", "tail.001" }) },
                 Stat = StatType.MaxChi, Max = 2000f,
                 Description = "A winged mystic beast in lacquer and gold. It grows your Flux as it matures.",
                 Stages = new[] { "", "", "", "", "Ascendant" },
@@ -66,6 +73,8 @@ namespace KryticalNova.EditorTools
                 OldAsset = "Pet_Drone", OldIcon = "Pet_DroneQuad" },
             new Row { Id = 8002, Asset = "Pet_DroneCore", Name = "Drone Core", StandIn = "SM_Prop_Drone_02",
                 Model = PetModels + "/DroneCore/Pet_DroneCore_S1.prefab", MoveLoop = "FrontRoll",
+                // Chips of data dropped behind it as it goes.
+                Effects = new[] { (GameFeelBuilder.PetCrumbsPath, new[] { "body" }) },
                 Scale = 0.45f, // a cube fills its whole box: at the common size it dwarfed its owner
                 Stat = StatType.MaxHP, Max = 2200f,
                 Description = "A boxy little robot buddy that bolts on plating and cannon pods. It grows your Health as it matures.",
@@ -207,6 +216,7 @@ namespace KryticalNova.EditorTools
             definition.displayName = row.Name;
             definition.description = row.Description;
             definition.moveLoop = row.MoveLoop ?? "";
+            definition.restLoop = row.RestLoop ?? "";
             bool stands = row.Feet != null && row.Feet.Length > 0;
             definition.bobs = !stands;
             if (stands)
@@ -215,6 +225,17 @@ namespace KryticalNova.EditorTools
                 definition.footEffect = AssetDatabase.LoadAssetAtPath<GameObject>(GameFeelBuilder.PetCloudPath);
                 if (definition.footEffect == null)
                     Debug.LogWarning($"[Pets] No pet cloud effect yet for {row.Name}. Run Krytical Nova/GameFeel/Rebuild Pet Cloud, then build the pets again.");
+            }
+
+            // Its own effects are the table's: a pet with none in the table wears none.
+            int effectCount = row.Effects != null ? row.Effects.Length : 0;
+            definition.effects = new PetEffect[effectCount];
+            for (int i = 0; i < effectCount; i++)
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(row.Effects[i].Effect);
+                if (prefab == null)
+                    Debug.LogWarning($"[Pets] No effect at {row.Effects[i].Effect} for {row.Name}. Run Krytical Nova/GameFeel/Rebuild Pet Effects, then build the pets again.");
+                definition.effects[i] = new PetEffect { prefab = prefab, bones = row.Effects[i].Bones ?? new string[0], stageColour = true };
             }
 
             if (definition.stages == null || definition.stages.Length != PetRules.StageCount)

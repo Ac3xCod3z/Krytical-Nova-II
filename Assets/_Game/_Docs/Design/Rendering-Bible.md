@@ -415,7 +415,12 @@ Characters, pets, Hostiles and their effects are not seen through an Ascension N
 
 - `ActorDrawOrder` (on players, pets, Hostiles and NPCs) gives their solid renderers sorting order 2, so they are drawn after the scenery (order 0). It looks its models over once a second, because gear and growth stages swap them.
 - `NovaHalo` draws a camera-facing disc behind its rings with `KryticalNova/NovaMask` (depth and stencil only), in stages: at order 1 it marks the disc's sky pixels and writes its depth, so the actors drawn next fail the depth test behind it; at order 3 it gives the marked sky pixels the far plane back, so the skybox fills them; first thing in the blended pass it writes its depth again, so sparkles and other blended light behind it stay hidden. Stencil bits 0x40 and 0x20 are its own.
-- The disc has no depth-only pass, so it is not in the depth texture: fog, ambient shading and the ink do not see a disc. What reads the depth texture is told where the Novas are instead (`NovaCull` → `_KN_NovaDiscs`, `_KN_NovaDiscCount`, at most 8): `GlowHalo.shader` drops the light of what is behind one, `ComicPost.shader` drops its ink and comic shadow.
+- The disc has no depth-only pass, so it is not in the depth texture: fog, ambient shading and the ink do not see a disc. What reads the depth texture is told where the Novas are instead (`NovaCull` → `_KN_NovaDiscs`, `_KN_NovaDiscCount`, at most 8): `GlowHalo.shader` drops the light of what is behind one, `ComicPost.shader` drops its ink.
+- **The disc must not be seen (10 Oct 2026, the same day).** As first built it showed, three ways, all fixed:
+  - *A pale circle on a shadowed wall.* `ComicPost` took the ink and the comic shadow off everything deeper than the Nova inside the disc, on a 2 pixel edge. It has only depth to go on, so walls and ground lost theirs too. Now `NovaCull` finds the actors that stand behind a Nova as the camera sees it (`ActorDrawOrder.All`, each with a ball round its solid models) and hands them over as `_KN_NovaHidden` / `_KN_NovaHiddenCount` (at most 8): the ink is left out only inside one of those balls. Scenery keeps its lines.
+  - *The comic shadow* is a separate rule (`ShadeBehindNovas`). It is laid over the finished picture, so it would dot and dim the Nova's own glow where the wall behind is in shadow; it thins toward the Nova's middle like the light of a lamp, whole at the disc's rim and gone at the star, with no line between.
+  - *A pet sliced on a circle.* The disc's rim is broken into dots on the screen's own grid that shrink to nothing at the edge (`NovaMask.shader`, the same dots in all six stages), so what it hides comes back into view through them. The halo's light and the ink come back over the same band (`_KN_NovaFeather`).
+  - Settings (`NovaLookSettings`): `maskSize` 1 (the share of the Nova's reach the disc covers) and `maskFeather` 0.45 (the share of the disc's radius that is rim). `backdrop` 0.4, the soft patch of night, is unchanged.
 - A character seen through its own Nova (the camera looking down on it) is drawn with the scenery for as long as that lasts, so it is never cut by its own Nova.
 - Not hidden: anything that is neither marked an actor nor blended (a new kind of creature needs `ActorDrawOrder.On(root)` where it is built), and the part of a model that sticks out past the disc.
 
@@ -440,6 +445,22 @@ with the moment's dust and comic text. Run Start fires only when the run clip st
 up to 29 m/s at rank 20), never for a walk. `GameFeelBuilder` puts the feedbacks there: **Krytical Nova ▸ GameFeel ▸
 Rebuild Smear Feel** does only that (and makes the settings asset when it is missing); **Build Game Feel** and
 **Rebuild Death Feel** include it.
+
+**One take-off for a burst of orders (10 Oct 2026).** A new move order given while running, and a run that stops and
+starts again at once, both ask for the take-off again. `GameFeelPresenter.RunStarted` plays it (dust, smear, and on the
+player's own screen the 4 degree kick of the view) only when `runTakeOffQuietSeconds` (1 s) have passed with no order
+and no restart for that character. Before, clicking about quickly kicked the view and smeared the body every 0.4 s:
+measured over 12 s of rapid clicks the field of view was changing for a quarter to a third of all frames.
+
+**A run ends on its point at the body's own height (10 Oct 2026).** At the end of a fast run the body is placed on the
+destination (`PointAndClickPlayer.PlaceOn`). `NavMeshAgent.Warp` alone puts the root on the NavMesh point, the agent's
+base offset (1 m) below where the root belongs, until the agent's next update: for one drawn frame the body stood
+waist-deep in the ground and the camera, which follows without damping, dropped with it. Measured: 15 to 33 such
+frames in 12 s of rapid clicks, none after. `NetworkPlacement.Place` already placed the root itself.
+
+**Props about to block the view fade early (10 Oct 2026).** `OccluderFader` checks every 0.1 s and a fade takes 0.2 s,
+in which the top Run rank covers nine metres: a tree or a truck filled the screen before it thinned. Above 8 m/s it
+checks every frame and also along the line the camera will be looking down 0.15 and 0.3 s from now.
 
 **The rules.** Every number is in `GameFeel/Data/Assets/SmearSettings.asset`, one profile per moment:
 

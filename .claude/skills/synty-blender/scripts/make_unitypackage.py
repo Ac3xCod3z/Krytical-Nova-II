@@ -59,12 +59,15 @@ def sub(text, pattern, replacement, count=1, need=True):
     return new
 
 
-def model_meta(guid, material_guid):
+def model_meta(guid, remaps):
+    """remaps: (material name inside the FBX, guid of the material asset it becomes), one per material."""
     t = MODEL_TEMPLATE.read_text(encoding="utf-8")
     t = sub(t, r"^guid: \w+$", f"guid: {guid}")
     t = sub(t, r"^  externalObjects:.*?(?=^  materials:)",
-            "  externalObjects:\n  - first:\n      type: UnityEngine:Material\n      assembly: UnityEngine.CoreModule\n"
-            f"      name: M_KN_Swatch\n    second: {{fileID: 2100000, guid: {material_guid}, type: 2}}\n")
+            "  externalObjects:\n" + "".join(
+                "  - first:\n      type: UnityEngine:Material\n      assembly: UnityEngine.CoreModule\n"
+                f"      name: {name}\n    second: {{fileID: 2100000, guid: {material_guid}, type: 2}}\n"
+                for name, material_guid in remaps))
     t = sub(t, r"^    materialImportMode: \d+$", "    materialImportMode: 2")
     t = sub(t, r"^    isReadable: \d+$", "    isReadable: 0")
     t = sub(t, r"^    keepQuads: \d+$", "    keepQuads: 0")
@@ -86,9 +89,18 @@ def model_meta(guid, material_guid):
     return t
 
 
-def texture_meta(guid, srgb):
+def texture_meta(guid, srgb, painted=False):
+    """painted: a model's own painted texture (smooth filtering, mip maps, normal compression) rather than
+    a swatch of flat colour cells (point filtered, no mip maps, uncompressed)."""
     t = TEXTURE_TEMPLATE.read_text(encoding="utf-8")
     t = sub(t, r"^guid: \w+$", f"guid: {guid}")
+    if painted:
+        t = sub(t, r"^    enableMipMap: \d+$", "    enableMipMap: 1")
+        t = sub(t, r"^    sRGBTexture: \d+$", f"    sRGBTexture: {1 if srgb else 0}")
+        t = sub(t, r"^  isReadable: \d+$", "  isReadable: 0")
+        t = sub(t, r"^    filterMode: -?\d+$", "    filterMode: 2")          # trilinear
+        t = sub(t, r"^    textureCompression: \d+$", "    textureCompression: 1", count=0)
+        return t
     t = sub(t, r"^    enableMipMap: \d+$", "    enableMipMap: 0")
     t = sub(t, r"^    sRGBTexture: \d+$", f"    sRGBTexture: {1 if srgb else 0}")
     t = sub(t, r"^  isReadable: \d+$", "  isReadable: 0")
@@ -109,6 +121,27 @@ def material(swatch_guid, emission_guid):
     t = sub(t, r"^(    - _EmissionMap:\n        m_Texture: )[^\n]*$", rf"\g<1>{{fileID: 2800000, guid: {emission_guid}, type: 3}}")
     t = sub(t, r"^    - _EmissionColor: [^\n]*$", "    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}")
     t = sub(t, r"^    - _Smoothness: [\d.]+$", "    - _Smoothness: 0.15")
+    return t
+
+
+def own_material(name, texture_guid=None, colour=None, glow=False):
+    """A URP Lit material for a model that keeps its own look: its painted texture, or one flat colour."""
+    t = MATERIAL_TEMPLATE.read_text(encoding="utf-8")
+    if URP_LIT not in t:
+        sys.exit("The material template is no longer a URP Lit material. Update make_unitypackage.py.")
+    t = sub(t, r"^  m_Name: \S+$", f"  m_Name: {name}")
+    tex = f"{{fileID: 2800000, guid: {texture_guid}, type: 3}}" if texture_guid else "{fileID: 0}"
+    for slot in ("_BaseMap", "_MainTex"):
+        t = sub(t, rf"^(    - {slot}:\n        m_Texture: )[^\n]*$", rf"\g<1>{tex}")
+    r, g, b = colour or (1.0, 1.0, 1.0)
+    for prop in ("_BaseColor", "_Color"):
+        t = sub(t, rf"^    - {prop}: [^\n]*$", f"    - {prop}: {{r: {r:.4f}, g: {g:.4f}, b: {b:.4f}, a: 1}}")
+    if glow:
+        t = sub(t, r"^  m_ValidKeywords: \[\]$", "  m_ValidKeywords:\n  - _EMISSION")
+        t = sub(t, r"^  m_LightmapFlags: \d+$", "  m_LightmapFlags: 2")
+        t = sub(t, r"^    - _EmissionColor: [^\n]*$",
+                f"    - _EmissionColor: {{r: {r * 2:.4f}, g: {g * 2:.4f}, b: {b * 2:.4f}, a: 1}}")
+    t = sub(t, r"^    - _Smoothness: [\d.]+$", "    - _Smoothness: 0.3")
     return t
 
 
@@ -176,6 +209,11 @@ def main():
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--pet-folder")
     ap.add_argument("--swatch-folder", default="Assets/_Game/Characters/Shared/Swatch")
+    ap.add_argument("--package-name", help="file name of the package without .unitypackage (default: the FBX's name)")
+    ap.add_argument("--own-texture", help="the model keeps its own painted texture (this image) instead of the swatch")
+    ap.add_argument("--material", action="append", default=[],
+                    help='with --own-texture, one per material in the FBX: "name in the FBX=texture" for the painted '
+                         'texture, or "name in the FBX=#RRGGBB" / "=#RRGGBB:glow" for one flat colour')
     a = ap.parse_args()
     fbx = Path(a.fbx)
     if not fbx.is_file():
@@ -196,16 +234,39 @@ def main():
 
     items = []      # (project path, bytes, meta text)
     swatch_folder = a.swatch_folder.rstrip("/")
-    for name, srgb in (("T_KN_Swatch.png", True), ("T_KN_Swatch_Emission.png", True), ("T_KN_Swatch_Metallic.png", False)):
+    if a.own_texture:
+        texture = Path(a.own_texture)
+        tex_name = f"T_Pet_{pet}{texture.suffix.lower()}"
+        items.append((f"{pet_folder}/{tex_name}", texture.read_bytes(), texture_meta(guid(tex_name), True, painted=True)))
+        remaps, flat = [], 0
+        for spec in a.material:
+            fbx_name, _, kind = spec.partition("=")
+            if kind == "texture":
+                mat_name = f"M_Pet_{pet}"
+                text = own_material(mat_name, texture_guid=guid(tex_name))
+            else:
+                hexa, _, extra = kind.partition(":")
+                rgb = tuple(int(hexa.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4))
+                flat += 1
+                mat_name = f"M_Pet_{pet}_" + "".join(w.capitalize() for w in fbx_name.replace(fbx.stem, "").split()) or f"M_Pet_{pet}_{flat}"
+                text = own_material(mat_name, colour=rgb, glow=extra == "glow")
+            items.append((f"{pet_folder}/{mat_name}.mat", text.encode("utf-8"), material_meta(guid(mat_name + ".mat"))))
+            remaps.append((fbx_name, guid(mat_name + ".mat")))
+        if not remaps:
+            sys.exit("--own-texture needs a --material for every material in the FBX.")
+        items.append((f"{pet_folder}/{fbx.name}", fbx.read_bytes(), model_meta(guid(fbx.name), remaps)))
+    for name, srgb in () if a.own_texture else (("T_KN_Swatch.png", True), ("T_KN_Swatch_Emission.png", True), ("T_KN_Swatch_Metallic.png", False)):
         items.append((f"{swatch_folder}/{name}", (SWATCH_SRC / name).read_bytes(), texture_meta(guid(name), srgb)))
-    mat_text = material(guid("T_KN_Swatch.png"), guid("T_KN_Swatch_Emission.png"))
-    items.append((f"{swatch_folder}/M_KN_Swatch.mat", mat_text.encode("utf-8"), material_meta(guid("M_KN_Swatch.mat"))))
-    items.append((f"{pet_folder}/{fbx.name}", fbx.read_bytes(), model_meta(guid(fbx.name), guid("M_KN_Swatch.mat"))))
+    if not a.own_texture:
+        mat_text = material(guid("T_KN_Swatch.png"), guid("T_KN_Swatch_Emission.png"))
+        items.append((f"{swatch_folder}/M_KN_Swatch.mat", mat_text.encode("utf-8"), material_meta(guid("M_KN_Swatch.mat"))))
+        items.append((f"{pet_folder}/{fbx.name}", fbx.read_bytes(),
+                      model_meta(guid(fbx.name), [("M_KN_Swatch", guid("M_KN_Swatch.mat"))])))
     guid_file.write_text(json.dumps(guids, indent=1), encoding="utf-8")
 
     out_dir = Path(a.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    package = out_dir / f"{fbx.stem}.unitypackage"
+    package = out_dir / f"{a.package_name or fbx.stem}.unitypackage"
     with tarfile.open(package, "w:gz") as tar:
         def add(name, data):
             info = tarfile.TarInfo(name)

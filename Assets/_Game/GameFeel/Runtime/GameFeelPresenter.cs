@@ -618,11 +618,21 @@ namespace KryticalNova.GameFeel
             Play(selectFeel, target.position, kind == WorldTargetKind.Hostile ? 1f : 0.6f);
         }
 
+        [Header("Run")]
+        [Tooltip("A run's take-off (its dust and smear, and for the player's own character the kick of the view) is one " +
+                 "take-off for a burst of move orders: it plays again only when this many seconds have passed with no " +
+                 "order and no restart. Clicking about quickly otherwise kicks the view and smears the body over and over.")]
+        [SerializeField, Min(0f)] private float runTakeOffQuietSeconds = 1f;
+
         public void RunStarted(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
+            ActorVfx vfx = ActorVfx.For(actor);
+            vfx.SetRunning(true, runLoopVfx);
+            bool takesOff = Time.time - vfx.LastRunOrder >= runTakeOffQuietSeconds;
+            vfx.LastRunOrder = Time.time;
+            if (!takesOff) return;
             PlayWorld(runWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
-            ActorVfx.For(actor).SetRunning(true, runLoopVfx);
             if (isLocalPlayer) Play(runFeel, actor.position, 1f);
         }
 

@@ -193,8 +193,11 @@
 .kn-faction-hegemony .controls-row .settings-row-label {
     color: rgb(236, 244, 250);
 }
-.kn-faction-hegemony .controls-device {
-    -unity-background-image-tint-color: rgb(236, 244, 250);
+.kn-faction-hegemony .board-caption {
+    color: rgb(244, 250, 255);
+}
+.kn-faction-hegemony .controls-mouse-says {
+    color: rgb(236, 244, 250);
 }
 .kn-faction-hegemony .preview-glow {
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/FX/SPR_FX_SciFiSoldier_Glow_01.png#SPR_FX_SciFiSoldier_Glow_01");

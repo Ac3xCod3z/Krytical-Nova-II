@@ -46,6 +46,10 @@ namespace KryticalNova.UI
 
         /// <summary>True while the window is on screen.</summary>
         public bool IsOpen => window != null && window.style.display != DisplayStyle.None;
+        // Where the window stands: its width, and the gaps to the right and top edges of the screen.
+        private const float WindowWidth = 540f, WindowRight = 24f, WindowTop = 64f;
+        private const float WindowMargin = 20f; // the skin's frame and close button stand outside the window's own box
+        private FloatingFit windowFit;
 
         private void OnEnable()
         {
@@ -127,6 +131,9 @@ namespace KryticalNova.UI
             window.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
             if (!open) return;
             window.BringToFront();
+            // Against the right edge under the menu, and wholly on screen whatever the screen and interface size.
+            VisualElement screen = window.panel != null ? window.panel.visualTree : null;
+            if (screen != null) windowFit.At(new Vector2(screen.worldBound.xMax - WindowRight - WindowWidth, screen.worldBound.yMin + WindowTop));
             filled = false;
             nextRefresh = 0f;
         }
@@ -165,10 +172,9 @@ namespace KryticalNova.UI
             // The frame of the Settings window: the same classes, so the same skin.
             window = new VisualElement { name = "autopilot-window" };
             foreach (string c in new[] { "panel", "window", "blocks-world" }) window.AddToClassList(c);
-            window.style.right = 24f;
-            window.style.top = 64f;
-            window.style.width = 540f;
+            window.style.width = WindowWidth;
             window.style.display = DisplayStyle.None;
+            windowFit = new FloatingFit(window, 0f, WindowMargin);
 
             var header = new VisualElement();
             header.AddToClassList("row");

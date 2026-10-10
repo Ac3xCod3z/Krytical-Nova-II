@@ -47,7 +47,15 @@ MonoBehaviour:
   bobs: 1
   footEffect: {fileID: 0}
   footBones: []
-  moveLoop: 
+  effects:
+  - prefab: {fileID: 3652940527550084352, guid: 3f3d9b64110a5d54d8cdb804769ade70, type: 3}
+    bones:
+    - wing.L.004
+    - wing.R.004
+    - tail.001
+    stageColour: 1
+  moveLoop: Move
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
+  restLoop: Fly
   followGapAdjust: 0

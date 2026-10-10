@@ -888,7 +888,9 @@ namespace KryticalNova.EditorTools
                 Rule(".key-cap-picture", $"-unity-background-image-tint-color: {Css(asset.keycapLetter)};");
                 Rule(".settings-key:hover .key-cap, .settings-key.listening .key-cap", $"-unity-background-image-tint-color: {Css(asset.keycapHot)};");
                 Rule(".controls-row .settings-row-label", $"color: {Css(asset.controlsLabel)};");
-                Rule(".controls-device", $"-unity-background-image-tint-color: {Css(asset.controlsLabel)};");
+                // The Controls page's keyboard: what a cap says a key does is in the cap's own lettering colour.
+                Rule(".board-caption", $"color: {Css(asset.keycapLetter)};");
+                Rule(".controls-mouse-says", $"color: {Css(asset.controlsLabel)};");
             }
             if (asset.previewGlow != null) Rule(".preview-glow", $"background-image: {UrlOf(asset.previewGlow)};");
             if (asset.previewBeams != null) Rule(".preview-beams", $"background-image: {UrlOf(asset.previewBeams)};");

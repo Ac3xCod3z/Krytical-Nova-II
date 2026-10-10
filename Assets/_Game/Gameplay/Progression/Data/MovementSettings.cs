@@ -36,6 +36,16 @@ namespace KryticalNova.Progression
         [Tooltip("Fraction of full speed kept when reaching the destination.")]
         [Range(0.1f, 1f)] public float arrivalMinSpeedFactor = DefaultArrivalMinSpeedFactor;
 
+        [Header("A move that makes no headway")]
+        [Tooltip("A move order under way that gains less than the distance below in this many seconds has stalled: " +
+                 "the way is planned again once, and if that stalls too the character stops where it is.")]
+        [Min(0.1f)] public float stallSeconds = 0.75f;
+        [Tooltip("Metres a move must gain in the time above to count as moving.")]
+        [Min(0.01f)] public float stallDistance = 0.1f;
+        [Tooltip("An agent that a jump or a vault failed to put back on the ground is put back after this many seconds. " +
+                 "Without it the character takes no order again.")]
+        [Min(0.1f)] public float agentRecoverySeconds = 1.5f;
+
         /// <summary>Distance before the destination where the agent starts easing off.</summary>
         public float ArrivalRadius(float speed) =>
             Mathf.Clamp(speed * arrivalSlowdownTime, arrivalMinRadius, Mathf.Max(arrivalMinRadius, arrivalMaxRadius));
@@ -57,6 +67,13 @@ namespace KryticalNova.Progression
         /// </summary>
         public bool ArrivesThisFrame(float remainingDistance, float speed, float deltaTime) =>
             remainingDistance <= stoppingDistance + Mathf.Max(0f, speed) * Mathf.Max(0f, deltaTime);
+
+        /// <summary>
+        /// True when a move that has been watched for <paramref name="watchedSeconds"/> and gained
+        /// <paramref name="gained"/> metres in that time has stalled: something holds the body where it is.
+        /// </summary>
+        public bool HasStalled(float gained, float watchedSeconds) =>
+            watchedSeconds >= stallSeconds && gained < stallDistance;
 
         private void OnValidate()
         {

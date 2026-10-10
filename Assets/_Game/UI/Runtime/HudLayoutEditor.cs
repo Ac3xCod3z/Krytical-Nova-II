@@ -22,6 +22,11 @@ namespace KryticalNova.UI
         private const string EditingClass = "hud-editing";
         private const string OverlayClass = "hud-edit-overlay";
         private const string BlockingClass = "blocks-world";
+        private const string WindowClass = "window";
+        /// <summary>On a window that keeps itself on screen by its own means (Settings, which also puts itself back): it is not fitted here.</summary>
+        public const string FitsItselfClass = "fits-itself";
+        /// <summary>Kept between a window and the screen's edge: a skin's frame and close button stand outside the window's own box.</summary>
+        private const float WindowMargin = 20f;
         private const float MinScale = 0.5f;
         private const float MaxScale = 2f;
         private const float ScaleStep = 0.05f;
@@ -98,6 +103,8 @@ namespace KryticalNova.UI
         private VisualElement activeElement;
         private VisualElement activeCapture;
         private int activePointerId = -1;
+        // Windows the player never placed that were moved or shrunk to stay on screen (FitWindow).
+        private readonly HashSet<VisualElement> fitted = new HashSet<VisualElement>();
         private bool resizing;
         private Vector2 pointerStart;
         private Vector2 positionStart;
@@ -176,11 +183,17 @@ namespace KryticalNova.UI
             }
         }
 
-        /// <summary>Keeps customised elements on screen after a resolution or window size change.</summary>
+        /// <summary>
+        /// Keeps the panels on screen after a resolution or interface size change: the ones the player placed, and
+        /// every window that is open.
+        /// </summary>
         public void ClampAllIntoView()
         {
             foreach (var pair in movables)
+            {
                 if (saved.ContainsKey(pair.Key)) ClampIntoView(pair.Value);
+                else if (!IsEditing && IsFittedWindow(pair.Value)) FitWindow(pair.Value);
+            }
         }
 
         public void ResetAll()
@@ -567,14 +580,15 @@ namespace KryticalNova.UI
         private Rect ScreenOf(VisualElement element) =>
             layoutRoot != null && layoutRoot.panel != null ? layoutRoot.worldBound : element.hierarchy.parent.worldBound;
 
+        /// <summary>
+        /// The area all of a panel must be seen in: the screen, less for a window the room its skin's frame and
+        /// close button take outside the window's own box.
+        /// </summary>
+        private Rect VisibleAreaOf(VisualElement element) =>
+            element.ClassListContains(WindowClass) ? ScreenFit.Inset(ScreenOf(element), WindowMargin) : ScreenOf(element);
+
         /// <summary>The top-left corner nearest to <paramref name="topLeft"/> that keeps a box of this size inside the area.</summary>
-        private static Vector2 ClampInto(Rect area, Vector2 topLeft, Vector2 size)
-        {
-            // A box larger than the area is pinned to its top-left corner.
-            float maxX = Mathf.Max(area.xMin, area.xMax - size.x);
-            float maxY = Mathf.Max(area.yMin, area.yMax - size.y);
-            return new Vector2(Mathf.Clamp(topLeft.x, area.xMin, maxX), Mathf.Clamp(topLeft.y, area.yMin, maxY));
-        }
+        private static Vector2 ClampInto(Rect area, Vector2 topLeft, Vector2 size) => ScreenFit.Clamp(area, topLeft, size);
 
         /// <summary>Keeps the whole panel on screen while it is dragged or resized (pixel space, no layout lag).</summary>
         private Vector2 ClampPixels(VisualElement element, Vector2 position, float scale)
@@ -830,9 +844,21 @@ namespace KryticalNova.UI
             if (parent == null || parent.layout.width < 1f || parent.layout.height < 1f || element.panel == null) return;
             Rect bounds = element.worldBound;
             if (bounds.width < 1f || bounds.height < 1f) return; // hidden: there is nothing to measure yet
-            Vector2 placed = ClampInto(ScreenOf(element), bounds.position, bounds.size);
-            if (Mathf.Abs(placed.x - bounds.x) < 0.5f && Mathf.Abs(placed.y - bounds.y) < 0.5f) return;
 
+            // A panel the player made larger than this screen has room for (a window at 150 % on a smaller screen,
+            // or one whose page grew) is drawn as large as fits. The size the player chose is kept, and comes back
+            // when there is room for it.
+            float own = Mathf.Max(0.01f, element.resolvedStyle.scale.value.x);
+            float chosen = saved.TryGetValue(element.name, out Entry entry) ? Mathf.Clamp(entry.scale, MinScale, MaxScale) : own;
+            Vector2 natural = bounds.size / own;
+            Rect area = VisibleAreaOf(element);
+            float scale = chosen * ScreenFit.ScaleToFit(area, natural * chosen);
+            Vector2 placed = ClampInto(area, bounds.position, natural * scale);
+            bool moved = Mathf.Abs(placed.x - bounds.x) >= 0.5f || Mathf.Abs(placed.y - bounds.y) >= 0.5f;
+            bool resized = Mathf.Abs(scale - own) >= 0.004f;
+            if (!moved && !resized) return;
+
+            if (resized) element.style.scale = new Scale(new Vector2(scale, scale));
             Vector2 local = parent.WorldToLocal(placed);
             element.style.left = Length.Percent(local.x / parent.layout.width * 100f);
             element.style.top = Length.Percent(local.y / parent.layout.height * 100f);
@@ -841,8 +867,64 @@ namespace KryticalNova.UI
         // A hidden panel has no size, so it can only be brought back on screen once it is shown or resized.
         private void OnPanelGeometry(VisualElement element)
         {
-            if (element == activeElement || !saved.ContainsKey(element.name)) return;
-            ClampIntoView(element);
+            if (element == activeElement) return;
+            // Settings moves itself by a margin and puts itself back: a clamp here would leave it where a wide page pushed it.
+            if (element.ClassListContains(FitsItselfClass)) return;
+            if (saved.ContainsKey(element.name)) ClampIntoView(element);
+            else if (!IsEditing && IsFittedWindow(element)) FitWindow(element);
+        }
+
+        private static bool IsFittedWindow(VisualElement element) =>
+            element.ClassListContains(WindowClass) && !element.ClassListContains(FitsItselfClass);
+
+        /// <summary>
+        /// A window the player never placed stands where its sheet, or the window it docks beside, puts it: fixed
+        /// numbers that leave the screen on a smaller one, at a larger interface size, in a faction skin with taller
+        /// lettering, or when a page of the window is taller than the one it opened on. Whenever such a window is
+        /// shown or changes size it is moved as little as it takes to be wholly on screen, and one too large for the
+        /// screen is shrunk to fit. Nothing is saved: its sheet places it again the next time it has room.
+        /// </summary>
+        private void FitWindow(VisualElement element)
+        {
+            VisualElement parent = element.hierarchy.parent;
+            if (parent == null || element.panel == null || parent.layout.width < 1f || parent.layout.height < 1f) return;
+            if (element.resolvedStyle.display == DisplayStyle.None)
+            {
+                Unfit(element);
+                return;
+            }
+            Rect bounds = element.worldBound;
+            if (float.IsNaN(bounds.width) || bounds.width < 1f || bounds.height < 1f) return;
+
+            float own = Mathf.Max(0.01f, element.resolvedStyle.scale.value.x);
+            Vector2 size = bounds.size / own; // at its own scale 1
+            Rect area = ScreenFit.Inset(ScreenOf(element), WindowMargin);
+            float scale = ScreenFit.ScaleToFit(area, size);
+            Vector2 placed = ScreenFit.Clamp(area, bounds.position, size * scale);
+            bool moved = Mathf.Abs(placed.x - bounds.x) >= 0.5f || Mathf.Abs(placed.y - bounds.y) >= 0.5f;
+            bool resized = Mathf.Abs(scale - own) >= 0.004f;
+            if (!moved && !resized) return;
+
+            Vector2 local = parent.WorldToLocal(placed);
+            element.style.left = local.x;
+            element.style.top = local.y;
+            element.style.right = StyleKeyword.Auto;
+            element.style.bottom = StyleKeyword.Auto;
+            element.style.marginLeft = 0f;
+            element.style.marginTop = 0f;
+            element.style.translate = new Translate(0f, 0f);
+            element.style.transformOrigin = new TransformOrigin(0f, 0f);
+            element.style.scale = new Scale(new Vector2(scale, scale));
+            fitted.Add(element);
+        }
+
+        /// <summary>A fitted window was closed: its sheet places it afresh the next time it opens.</summary>
+        private void Unfit(VisualElement element)
+        {
+            if (!fitted.Remove(element)) return;
+            ClearPlacement(element);
+            element.style.marginLeft = StyleKeyword.Null;
+            element.style.marginTop = StyleKeyword.Null;
         }
 
         /// <summary>

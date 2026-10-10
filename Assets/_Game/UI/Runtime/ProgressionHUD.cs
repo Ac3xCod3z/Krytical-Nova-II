@@ -1479,11 +1479,20 @@ namespace KryticalNova.UI
 
         private void OnLevelGained(int level) => Feedback($"Level {level} reached. New stat and skill points awarded.");
 
+        // A message stays this long. Left up for good, an old refusal ("Choose a walkable ground...") reads as the
+        // state of things now.
+        private const long MessageMilliseconds = 6000;
+        private IVisualElementScheduledItem messageFade;
+
         private void Feedback(string message)
         {
             if (string.IsNullOrEmpty(message)) return;
             Label feedback = root.Q<Label>("feedback");
-            if (feedback != null) feedback.text = message;
+            if (feedback == null) return;
+            feedback.text = message;
+            feedback.style.visibility = Visibility.Visible;
+            messageFade?.Pause();
+            messageFade = feedback.schedule.Execute(() => feedback.style.visibility = Visibility.Hidden).StartingIn(MessageMilliseconds);
         }
 
         private static void SetVisible(VisualElement element, bool visible)

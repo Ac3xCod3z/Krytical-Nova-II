@@ -453,6 +453,28 @@
     font-size: 15.36px;
     color: rgb(175, 140, 236);
 }
+.kn-faction-null .controls-help.listening {
+    color: rgb(170, 120, 255);
+}
+.kn-faction-null .board-key.fixed .board-caption {
+    color: rgb(192, 179, 196);
+}
+.kn-faction-null .group-fixed .board-band {
+    background-color: rgb(167, 153, 172);
+}
+.kn-faction-null .controls-legend-name {
+    font-size: 12.8px;
+    color: rgb(209, 194, 214);
+}
+.kn-faction-null .controls-mouse-says {
+    font-size: 14.08px;
+}
+.kn-faction-null .controls-reset-all {
+    font-size: 14.08px;
+}
+.kn-faction-null .controls-others .controls-row .settings-row-label {
+    font-size: 16.64px;
+}
 .kn-faction-null .controls-row .settings-row-label {
     font-size: 20.48px;
 }
@@ -1648,8 +1670,11 @@
 .kn-faction-null .controls-row .settings-row-label {
     color: rgb(228, 188, 108);
 }
-.kn-faction-null .controls-device {
-    -unity-background-image-tint-color: rgb(228, 188, 108);
+.kn-faction-null .board-caption {
+    color: rgb(248, 246, 240);
+}
+.kn-faction-null .controls-mouse-says {
+    color: rgb(228, 188, 108);
 }
 .kn-faction-null .preview-glow {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/FX/SPR_FX_DarkFantasy_Glow_01.png#SPR_FX_DarkFantasy_Glow_01");
