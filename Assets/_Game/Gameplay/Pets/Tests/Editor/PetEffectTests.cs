@@ -41,16 +41,123 @@ namespace KryticalNova.Pets.Tests
             Assert.GreaterOrEqual(seen, 2, "the Emberwing and the Drone Core each have an effect of their own");
         }
 
-        // A trail is left where it was shed: carried along in the pet's own space it would be a cloud round the pet.
+        // An effect that belongs to an animation waits for a state of that name: a name the Animator does not have
+        // is an effect that never plays, and says nothing about it.
         [Test]
-        public void The_effects_of_the_two_flyers_stay_behind_in_the_world()
+        public void An_effect_that_belongs_to_an_animation_names_one_the_pet_has_and_moments_inside_it()
+        {
+            int seen = 0;
+            foreach (PetDefinition pet in All())
+            {
+                if (pet.effects == null) continue;
+                foreach (PetEffect effect in pet.effects)
+                {
+                    if (string.IsNullOrEmpty(effect.animation)) continue;
+                    seen++;
+                    string name = pet.displayName.Replace(" ", string.Empty);
+                    var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{Models}/{name}/Pet_{name}_S1.prefab");
+                    Assert.IsNotNull(model, $"{pet.displayName}: no model of its own");
+                    var controller = model.GetComponentInChildren<Animator>(true).runtimeAnimatorController as UnityEditor.Animations.AnimatorController;
+                    Assert.IsNotNull(controller, $"{pet.displayName}: its model has no Animator controller");
+                    var states = new HashSet<string>();
+                    foreach (var layer in controller.layers)
+                        foreach (var state in layer.stateMachine.states) states.Add(state.state.name);
+                    Assert.IsTrue(states.Contains(effect.animation), $"{pet.displayName}: no animation '{effect.animation}' for {effect.prefab.name}");
+                    foreach (float moment in effect.at)
+                        Assert.IsTrue(moment >= 0f && moment <= 1f, $"{pet.displayName}: {effect.prefab.name} plays at {moment}, outside {effect.animation}");
+                    Assert.IsTrue(effect.during.x >= 0f && effect.during.y <= 1f && effect.during.x <= effect.during.y,
+                        $"{pet.displayName}: {effect.prefab.name} plays from {effect.during.x} to {effect.during.y} of {effect.animation}");
+                }
+            }
+            Assert.GreaterOrEqual(seen, 5, "the Tidecaller's hop, bounce, roll, nap and tide call each have an effect");
+        }
+
+        // The Tidecaller's four: dust on a hop and on a bounce, dust while it rolls, Zs while it naps, a wave on the tide call.
+        [Test]
+        public void The_Tidecaller_has_an_effect_for_each_of_its_animations_that_was_asked_for()
+        {
+            PetDefinition tidecaller = null;
+            foreach (PetDefinition pet in All())
+                if (pet.displayName == "Tidecaller") tidecaller = pet;
+            Assert.IsNotNull(tidecaller);
+            var wanted = new Dictionary<string, string>
+            {
+                { "HopSpin", "PFX_Pet_HopDust" }, { "VictoryBounce", "PFX_Pet_HopDust" }, { "Move", "PFX_Pet_RollDust" },
+                { "WobbleNap", "PFX_Pet_Zzz" }, { "TideCall", "PFX_Pet_TideWave" },
+            };
+            foreach (var pair in wanted)
+            {
+                bool found = false;
+                foreach (PetEffect effect in tidecaller.effects)
+                    found |= effect.animation == pair.Key && effect.prefab != null && effect.prefab.name == pair.Value;
+                Assert.IsTrue(found, $"{pair.Value} on {pair.Key}");
+            }
+        }
+
+        // A trail is left where it was shed: carried along in the pet's own space it would be a cloud round the pet.
+        // (An effect that belongs to an animation is another matter: the nap's bubble and the wave travel with the pet.)
+        [Test]
+        public void The_effects_a_flyer_wears_all_the_time_stay_behind_in_the_world()
         {
             foreach (PetDefinition pet in All())
             {
                 if (pet.effects == null || pet.bobs == false) continue;
                 foreach (PetEffect effect in pet.effects)
+                {
+                    if (!string.IsNullOrEmpty(effect.animation)) continue;
                     foreach (ParticleSystem particles in effect.prefab.GetComponentsInChildren<ParticleSystem>(true))
                         Assert.AreEqual(ParticleSystemSimulationSpace.World, particles.main.simulationSpace, $"{pet.displayName}: {effect.prefab.name}");
+                }
+            }
+        }
+
+        // The wave is a flip book: the swell and the shapes of its break, one after the other with no gap, and then
+        // the water that the break throws up. A shape left out, or one that outstays the next, shows as a wave that
+        // blinks or doubles.
+        [Test]
+        public void The_wave_is_a_run_of_shapes_with_no_gap_and_a_break_after_them()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/VFX/GameFeel/PFX_Pet_TideWave.prefab");
+            Assert.IsNotNull(prefab);
+            var shapes = new List<ParticleSystem>();
+            var thrown = new List<ParticleSystem>();
+            foreach (ParticleSystem particles in prefab.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                if (particles.name.StartsWith("Wave")) shapes.Add(particles);
+                else if (particles.name.StartsWith("Break")) thrown.Add(particles);
+            }
+            Assert.GreaterOrEqual(shapes.Count, 16, "the swell and the shapes of the break");
+            Assert.GreaterOrEqual(thrown.Count, 5, "foam along the floor, foam thrown up, shards, drops and mist");
+            shapes.Sort((a, b) => a.main.startDelay.constant.CompareTo(b.main.startDelay.constant));
+            var meshes = new HashSet<Mesh>();
+            float ends = 0f;
+            foreach (ParticleSystem shape in shapes)
+            {
+                var main = shape.main;
+                Assert.AreEqual(ends, main.startDelay.constant, 0.002f, $"{shape.name} starts when the one before it ends");
+                ends = main.startDelay.constant + main.startLifetime.constant;
+                Assert.AreEqual(1, main.maxParticles, shape.name);
+                Mesh mesh = shape.GetComponent<ParticleSystemRenderer>().mesh;
+                Assert.IsNotNull(mesh, shape.name);
+                meshes.Add(mesh);
+            }
+            Assert.GreaterOrEqual(meshes.Count, shapes.Count - 1, "a shape of its own for every moment (the swell shares the first)");
+            // What the break throws up starts as the lip comes down, not before.
+            float lipDown = ends - 0.2f;
+            foreach (ParticleSystem part in thrown)
+                Assert.GreaterOrEqual(part.main.startDelay.constant, lipDown - 0.05f, part.name);
+        }
+
+        // Dust is raised on the floor and left there; it must not be carried along by the pet that raised it.
+        [Test]
+        public void Dust_is_left_where_it_was_raised()
+        {
+            foreach (string path in new[] { "Assets/_Game/VFX/GameFeel/PFX_Pet_HopDust.prefab", "Assets/_Game/VFX/GameFeel/PFX_Pet_RollDust.prefab" })
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                Assert.IsNotNull(prefab, path);
+                foreach (ParticleSystem particles in prefab.GetComponentsInChildren<ParticleSystem>(true))
+                    Assert.AreEqual(ParticleSystemSimulationSpace.World, particles.main.simulationSpace, path);
             }
         }
     }

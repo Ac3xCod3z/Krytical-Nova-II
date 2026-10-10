@@ -42,7 +42,7 @@ namespace KryticalNova.EditorTools
             /// <summary>It stands instead of bobbing like a drone, on a cloud under each of these bones of its model.</summary>
             public string[] Feet;
             /// <summary>The effects that are this pet's own mark: the effect's prefab, and the bones of the model it is worn on.</summary>
-            public (string Effect, string[] Bones)[] Effects;
+            public Fx[] Effects;
             /// <summary>The true/false parameter of its Animator that holds its one movement loop, if it has no walk and run.</summary>
             public string MoveLoop;
             /// <summary>The true/false parameter that holds the loop it waits in instead of its default state, if it has one.</summary>
@@ -60,12 +60,37 @@ namespace KryticalNova.EditorTools
             public string OldAsset, OldIcon;
         }
 
+        /// <summary>
+        /// One effect of a pet's own: the effect's prefab, where it is worn (bones of the model, or a place on the
+        /// body moved by an offset in footprints), whether it takes the growth stage's colour, and the animation it
+        /// belongs to if it is not worn all the time, with the moments at which it plays or the stretch it plays for.
+        /// </summary>
+        private struct Fx
+        {
+            public string Effect;
+            public string[] Bones;
+            public PetEffectAnchor Anchor;
+            public Vector3 Offset;
+            public bool StageColour;
+            public string Animation;
+            public float[] At;
+            public Vector2 During;
+        }
+
+        /// <summary>Frames of a clip <paramref name="last"/> frames long, as shares of it.</summary>
+        private static float[] Frames(int last, params int[] frames)
+        {
+            var shares = new float[frames.Length];
+            for (int i = 0; i < frames.Length; i++) shares[i] = frames[i] / (float)last;
+            return shares;
+        }
+
         private static readonly Row[] Rows =
         {
             new Row { Id = 8001, Asset = "Pet_Emberwing", Name = "Emberwing", StandIn = "SM_Prop_Drone_Quad_01",
                 Model = PetModels + "/Emberwing/Pet_Emberwing_S1.prefab", MoveLoop = "Move", RestLoop = "Fly",
                 // Cinders shed from the tips of its wings and the end of its tail.
-                Effects = new[] { (GameFeelBuilder.PetCindersPath, new[] { "wing.L.004", "wing.R.004", "tail.001" }) },
+                Effects = new[] { new Fx { Effect = GameFeelBuilder.PetCindersPath, Bones = new[] { "wing.L.004", "wing.R.004", "tail.001" }, StageColour = true } },
                 Stat = StatType.MaxChi, Max = 2000f,
                 Description = "A winged mystic beast in lacquer and gold. It grows your Flux as it matures.",
                 Stages = new[] { "", "", "", "", "Ascendant" },
@@ -74,7 +99,7 @@ namespace KryticalNova.EditorTools
             new Row { Id = 8002, Asset = "Pet_DroneCore", Name = "Drone Core", StandIn = "SM_Prop_Drone_02",
                 Model = PetModels + "/DroneCore/Pet_DroneCore_S1.prefab", MoveLoop = "FrontRoll",
                 // Chips of data dropped behind it as it goes.
-                Effects = new[] { (GameFeelBuilder.PetCrumbsPath, new[] { "body" }) },
+                Effects = new[] { new Fx { Effect = GameFeelBuilder.PetCrumbsPath, Bones = new[] { "body" }, StageColour = true } },
                 Scale = 0.45f, // a cube fills its whole box: at the common size it dwarfed its owner
                 Stat = StatType.MaxHP, Max = 2200f,
                 Description = "A boxy little robot buddy that bolts on plating and cannon pods. It grows your Health as it matures.",
@@ -82,6 +107,24 @@ namespace KryticalNova.EditorTools
                 Glow = new[] { "4FD1FF", "4FD1FF", "F2C230", "4FD1FF", "4FD1FF" },
                 OldAsset = "Pet_DroneHeavy", OldIcon = "Pet_DroneHeavy" },
             new Row { Id = 8003, Asset = "Pet_Tidecaller", Name = "Tidecaller", StandIn = "SM_Prop_Drone_Ball_01",
+                Model = PetModels + "/Tidecaller/Pet_Tidecaller_S1.prefab", MoveLoop = "Move",
+                // Its effects belong to its animations. Moments and stretches are frames of the clip (24 a second).
+                Effects = new[]
+                {
+                    // A hop: dust where it leaves the floor (frame 7 of 35) and where it comes down (23).
+                    new Fx { Effect = GameFeelBuilder.PetHopDustPath, Anchor = PetEffectAnchor.Feet, Animation = "HopSpin", At = Frames(35, 7, 23) },
+                    // The victory bounce comes down three times: frames 17, 32 and 50 of 75.
+                    new Fx { Effect = GameFeelBuilder.PetHopDustPath, Anchor = PetEffectAnchor.Feet, Animation = "VictoryBounce", At = Frames(75, 17, 32, 50) },
+                    // Rolling along: dust that runs after it, for as long as the roll plays.
+                    new Fx { Effect = GameFeelBuilder.PetRollDustPath, Anchor = PetEffectAnchor.Feet, Animation = "Move" },
+                    // The nap: it dozes from frame 20 to 105 of 149 and starts awake at 110. Zs in a bubble over its top.
+                    new Fx { Effect = GameFeelBuilder.PetZzzPath, Anchor = PetEffectAnchor.Top, Offset = new Vector3(0f, 0.72f, 0f),
+                        Animation = "WobbleNap", During = new Vector2(20f / 149f, 105f / 149f) },
+                    // The tide call: it leans back from frame 10, heaves forward at 38 and again at 55 of 95. The wave is
+                    // called at 21, gathers behind it for 0.6 s, runs past it and breaks in front at 55.
+                    new Fx { Effect = GameFeelBuilder.PetTideWavePath, Anchor = PetEffectAnchor.Feet, Animation = "TideCall", At = Frames(95, 21) },
+                },
+                Scale = 0.55f, // an egg is nearly as wide as it is tall: at the common size it was as big as its owner's chest
                 Stat = StatType.DefensePower, Max = 2200f,
                 Description = "A pocket-sized kaiju that never outgrows its owner's shoulder. It grows your Defense as it matures.",
                 Stages = new[] { "Spawnling", "", "", "", "Apex" },
@@ -235,7 +278,18 @@ namespace KryticalNova.EditorTools
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(row.Effects[i].Effect);
                 if (prefab == null)
                     Debug.LogWarning($"[Pets] No effect at {row.Effects[i].Effect} for {row.Name}. Run Krytical Nova/GameFeel/Rebuild Pet Effects, then build the pets again.");
-                definition.effects[i] = new PetEffect { prefab = prefab, bones = row.Effects[i].Bones ?? new string[0], stageColour = true };
+                Fx fx = row.Effects[i];
+                definition.effects[i] = new PetEffect
+                {
+                    prefab = prefab,
+                    bones = fx.Bones ?? new string[0],
+                    anchor = fx.Anchor,
+                    offset = fx.Offset,
+                    stageColour = fx.StageColour,
+                    animation = fx.Animation ?? "",
+                    at = fx.At ?? new float[0],
+                    during = fx.During,
+                };
             }
 
             if (definition.stages == null || definition.stages.Length != PetRules.StageCount)

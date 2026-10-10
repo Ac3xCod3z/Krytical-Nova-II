@@ -89,6 +89,22 @@ namespace KryticalNova.Items.Visuals
             }
         }
 
+        /// <summary>
+        /// The state the Animator is in (Animator.StringToHash of its name) and how far through it, 0 to 1 (a loop
+        /// starts again from 0). While it blends from one state to the next it is the one it is going to. False
+        /// while the Animator is not running.
+        /// </summary>
+        public bool TryGetPlaying(out int state, out float share)
+        {
+            state = 0;
+            share = 0f;
+            if (animator == null || !animator.isActiveAndEnabled || !animator.isInitialized) return false;
+            AnimatorStateInfo info = animator.IsInTransition(0) ? animator.GetNextAnimatorStateInfo(0) : animator.GetCurrentAnimatorStateInfo(0);
+            state = info.shortNameHash;
+            share = info.loop ? Mathf.Repeat(info.normalizedTime, 1f) : Mathf.Clamp01(info.normalizedTime);
+            return true;
+        }
+
         /// <summary>The animation of that name, whatever its capitals; -1 when the pet has none.</summary>
         public int IndexOf(string name)
         {

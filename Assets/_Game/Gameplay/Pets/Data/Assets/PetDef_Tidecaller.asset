@@ -47,7 +47,54 @@ MonoBehaviour:
   bobs: 1
   footEffect: {fileID: 0}
   footBones: []
-  moveLoop: 
+  effects:
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    animation: HopSpin
+    at:
+    - 0.2
+    - 0.6571429
+    during: {x: 0, y: 0}
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    animation: VictoryBounce
+    at:
+    - 0.22666667
+    - 0.42666668
+    - 0.6666667
+    during: {x: 0, y: 0}
+  - prefab: {fileID: 1287036619844270357, guid: efae6e49676913044af8d9d218c49891, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    animation: Move
+    at: []
+    during: {x: 0, y: 0}
+  - prefab: {fileID: 3795252552468512517, guid: edc5f4204c973c3409320e8ab26a7346, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0.72, z: 0}
+    stageColour: 0
+    animation: WobbleNap
+    at: []
+    during: {x: 0.13422818, y: 0.70469797}
+  - prefab: {fileID: 8822475102854033442, guid: e57dcc2149c19c64d806b7e9a061e89e, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    animation: TideCall
+    at:
+    - 0.22105263
+    during: {x: 0, y: 0}
+  moveLoop: Move
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
   restLoop: 
