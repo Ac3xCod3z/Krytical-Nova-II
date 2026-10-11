@@ -552,6 +552,24 @@ def main():
 
     bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
     open_left = sum(1 for e in bm.edges if len(e.link_faces) != 2)
+    # every face that can be seen faces outwards. A game draws one side of a face only, and the scans are wound
+    # every which way (the 50 % stage's whole body came out inside out): each face is looked at from both its sides,
+    # and turned if its back is the side that is open to the outside.
+    bm.faces.ensure_lookup_table()
+    whole = BVHTree.FromBMesh(bm)
+    turned = []
+    for f in bm.faces:
+        if f.calc_area() < 1e-10:
+            continue
+        c_, n_ = f.calc_center_median(), f.normal
+        t1 = n_.orthogonal().normalized()
+        t2 = n_.cross(t1)
+        ways = [n_] + [(n_ + (t1 * a_ + t2 * b_) * 0.9).normalized() for a_, b_ in ((1, 0), (-1, 0), (0, 1), (0, -1), (0.7, 0.7), (-0.7, 0.7), (0.7, -0.7), (-0.7, -0.7))]
+        front_open = sum(1 for d in ways if whole.ray_cast(c_ + n_ * 2e-4, d)[0] is None)
+        back_open = sum(1 for d in ways if whole.ray_cast(c_ - n_ * 2e-4, -d)[0] is None)
+        if back_open > front_open:
+            turned.append(f)
+    bmesh.ops.reverse_faces(bm, faces=turned)
     tris = sum(len(f.verts) - 2 for f in bm.faces)
     bm.to_mesh(me)
     bm.free()

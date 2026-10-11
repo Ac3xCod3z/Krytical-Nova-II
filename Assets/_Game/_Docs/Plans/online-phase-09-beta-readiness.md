@@ -21,7 +21,7 @@ So there are two ways in, and one game world behind them.
 | --- | --- | --- |
 | Install and update | Steam | Our launcher |
 | Sign-in | The player's Steam account, through Unity Authentication's Steam sign-in | An email account (Unity Player Accounts, or our own through Unity Authentication) |
-| Purchases (Phase 10) | Steam's own purchase system | Stripe through Unity In-App Purchasing, or the shop on our website |
+| Purchases (Phase 10) | The Store Clerk opens Steam's own purchase window | The Store Clerk opens the Nova Store in the browser (Stripe's hosted checkout) |
 | Beta access | Steam Playtest or keys | Invite codes on the account |
 
 Both sign-ins end in the same kind of verified account (Phase 2 and Phase 4). A player can link the two
