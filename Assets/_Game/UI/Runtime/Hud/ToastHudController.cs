@@ -9,7 +9,9 @@ namespace KryticalNova.UI
     /// top), near the top of the screen, one at a time (<see cref="ToastQueue"/>). The server sends the text with
     /// its chat line; this only shows it. Any system can show one through
     /// <see cref="ClientPresentationRegistry.Announcements"/>. It uses the shared panel skin, so each player sees
-    /// it in the look of their own faction. Timings are in <see cref="ToastSettings"/>.
+    /// it in the look of their own faction. Timings are in <see cref="ToastSettings"/>. It heads the HUD's
+    /// milestone column (<see cref="HeraldWindowController.MilestoneColumn"/>), so news and a banner of the player's
+    /// own stack instead of covering each other, and it takes no room there while it has nothing to say.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -40,6 +42,9 @@ namespace KryticalNova.UI
             eyebrow = toast.Q<Label>("toast-eyebrow");
             text = toast.Q<Label>("toast-text");
             toast.RemoveFromClassList(ShownClass);
+            toast.style.display = DisplayStyle.None;
+            VisualElement column = root.Q(HeraldWindowController.MilestoneColumn);
+            if (column != null && toast.parent != column) column.Insert(0, toast);
             queue.Clear();
             ClientPresentationRegistry.RegisterAnnouncements(this);
         }
@@ -58,6 +63,9 @@ namespace KryticalNova.UI
             if (!queue.Showing)
             {
                 toast.RemoveFromClassList(ShownClass);
+                // Gone from the column once it has faded, unless the next one came up meanwhile.
+                toast.schedule.Execute(() => { if (!queue.Showing) toast.style.display = DisplayStyle.None; })
+                    .StartingIn(Mathf.RoundToInt(settings.fadeSeconds * 1000f) + 50);
                 return;
             }
 
@@ -68,8 +76,10 @@ namespace KryticalNova.UI
             toast.EnableInClassList(TemperClass, shown.Kind == AnnouncementKind.Temper);
             var fade = new StyleList<TimeValue>(new System.Collections.Generic.List<TimeValue> { new TimeValue(settings.fadeSeconds, TimeUnit.Second) });
             toast.style.transitionDuration = fade;
-            toast.AddToClassList(ShownClass);
-            toast.BringToFront();
+            toast.style.display = DisplayStyle.Flex;
+            // The class goes on a frame later so the transition has a state to start from.
+            toast.schedule.Execute(() => { if (queue.Showing) toast.AddToClassList(ShownClass); });
+            toast.parent?.BringToFront();
         }
 
         private static string Heading(in Toast shown)

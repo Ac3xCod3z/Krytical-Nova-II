@@ -238,6 +238,23 @@
 }
 
 .active-buffs-bar { position: absolute; bottom: 166px; left: 50%; translate: -50% 0; flex-direction: row; justify-content: center; align-items: center; }
+
+/* The moments of play, top centre: news for the whole server, then the player's own milestones (a level of
+   Ascension, a Nova, a Standing rank, a pet's evolution). One column, so two at once stack instead of covering each
+   other. It has a width of its own so its middle stays put whatever is in it; placed like any panel. */
+.milestone-banner {
+    position: absolute;
+    top: 2%;
+    left: 50%;
+    translate: -50% 0;
+    width: 760px;
+    align-items: center;
+}
+/* What stands in the column gives up its own place on the screen. */
+.milestone-banner > .toast { position: relative; top: auto; left: auto; translate: 0 -12px; }
+.milestone-banner > .toast--shown { translate: 0 0; }
+.milestone-banner > .nova-banner,
+.milestone-banner > .pet-evolved { position: relative; top: auto; left: auto; translate: 0 0; margin-top: 6px; }
 .buff-badge {
     flex-direction: row;
     align-items: center;

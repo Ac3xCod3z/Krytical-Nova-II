@@ -18,7 +18,8 @@ namespace KryticalNova.UI
     /// ring round the anvil shows how far the piece has come and where it would get to, and one button strikes.
     /// The request goes to <see cref="PlayerGearWork"/>; the server decides. Odds and reasons come from the same
     /// rules the server uses (<see cref="GearProgressionRules"/>), so the bench never promises what the server
-    /// refuses. Opened from the Armorer's dialogue and closed when the player walks away.
+    /// refuses. Opened from the Armorer's dialogue and closed when the player walks away. While the layout editor
+    /// has it out to be placed it shows itself with an empty anvil, wherever the player is.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -34,6 +35,7 @@ namespace KryticalNova.UI
         private const float GaugeSweep = 1.6f;            // of the whole gauge per second
         private const int MaterialsShown = 5;
         private const string PackWindowName = "inventory-window";
+        private const string WindowName = "forge-window";
         private static readonly string[] TabNames = { "temper", "fusion", "tuning", "reforge" };
         private static readonly string[] ActLabels = { "TEMPER", "FUSE", "TUNE", "REFORGE" };
         private static readonly string[] TabTitles = { "Tempering", "Fusion", "Tuning", "Reforge" };
@@ -71,6 +73,8 @@ namespace KryticalNova.UI
         private PlayerInventory inventory;
         private GearUIController gear;
         private bool initialized;
+        // Open at the Armorer, as against merely shown: the layout editor shows the window to have it placed.
+        private bool open, previewing;
         private bool openedPack;
         private float nextRangeCheck;
 
@@ -98,7 +102,7 @@ namespace KryticalNova.UI
         {
             if (!Application.isPlaying) return;
             root = GetComponent<UIDocument>().rootVisualElement;
-            window = root?.Q("forge-window");
+            window = root?.Q(WindowName);
             if (window == null)
             {
                 Debug.LogError("[Forge] ForgeWindow.uxml is not instanced in this UI document.", this);
@@ -142,6 +146,7 @@ namespace KryticalNova.UI
 
             NpcServices.Register(ServiceIds.Forge, NpcOffer.GearWork, "OPEN FORGE", Open);
             PlayerInventory.LocalChanged += Close;
+            HudLayoutEditor.RegisterPreview(WindowName, Preview);
             initialized = true;
         }
 
@@ -149,6 +154,8 @@ namespace KryticalNova.UI
         {
             if (!initialized) return;
             Close();
+            if (previewing) Preview(false);
+            HudLayoutEditor.UnregisterPreview(WindowName);
             initialized = false;
             gauge.generateVisualContent -= DrawGauge;
             PlayerInventory.LocalChanged -= Close;
@@ -170,11 +177,12 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ open / close
 
-        public bool IsOpen => initialized && window.style.display == DisplayStyle.Flex;
+        public bool IsOpen => initialized && open;
 
         public void Open()
         {
             if (!initialized) return;
+            previewing = false;
             PlayerGearWork next = PlayerGearWork.Local;
             if (next == null || next.Settings == null)
             {
@@ -222,10 +230,31 @@ namespace KryticalNova.UI
             openedPack = false;
         }
 
-        private void SetOpen(bool open)
+        private void SetOpen(bool shown)
         {
-            window.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
-            window.EnableInClassList("visible", open);
+            open = shown;
+            window.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+            window.EnableInClassList("visible", shown);
+        }
+
+        /// <summary>
+        /// The layout editor has the bench out to be placed, away from any Armorer: it shows the tab it was last on
+        /// with nothing on the anvil, and none of it can be pressed (the editor's frame lies over it).
+        /// </summary>
+        private void Preview(bool on)
+        {
+            if (!initialized || open) return; // open at the Armorer: it is its own likeness
+            previewing = on;
+            if (!on)
+            {
+                Bind(null);
+                return;
+            }
+            PlayerGearWork local = PlayerGearWork.Local;
+            if (local == null || local.Settings == null) return;
+            Bind(local);
+            pieceCell = materialCell = -1;
+            ShowTab(tab);
         }
 
         private void Update()
@@ -347,7 +376,7 @@ namespace KryticalNova.UI
 
         private void Refresh()
         {
-            if (!IsOpen || work == null || inventory == null) return;
+            if (!(open || previewing) || work == null || inventory == null) return;
             refreshHeld = false;
             RefreshPurse();
 

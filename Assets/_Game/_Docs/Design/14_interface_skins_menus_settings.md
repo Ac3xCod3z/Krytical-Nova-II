@@ -378,6 +378,21 @@ it does. APPLY keeps the changes; REVERT puts back everything as it was when the
 
 - From the menus the parts that need a character in the world are hidden (the HUD layout editor and its options, by
   the class `in-game-only`); the skill keys are not listed there, because there is no character to list them for.
+- **Saved keys are put right when they are loaded** (10 Oct 2026, `KeyBindings.Clean`): a key no action may be on (the
+  two mouse buttons the game is played with, Esc, Enter, no key at all) goes back to the action's own key, and two
+  actions on one key are settled in favour of the one that shipped there. `KeyBindings.AllowedControls` /
+  `RefusedPaths` are the one list, used by the Controls page too.
+- **The milestone column** (10 Oct 2026): the moments of play stand in one column at the top centre of the HUD,
+  `milestone-banner` in `ProgressionHUD.uxml`: the server news toast first, then the player's own banners (a level of
+  Ascension, a Nova, a Nova Standing rank, a pet's evolution). Their controllers move them into it, so two at once
+  stack instead of covering each other, and the toast takes no room while it has nothing to say. It is a panel like
+  any other in the layout editor (MILESTONE BANNER): where the player puts it is where they all appear.
+- **A panel that has nothing to show is placed by its likeness** (10 Oct 2026, `HudLayoutEditor.RegisterPreview`): a
+  window that only opens at an NPC (FORGE WINDOW, HERALD WINDOW) and the milestone column fill themselves in while
+  the layout editor has them out, anywhere in the world, and open where they were put the next time. A window's
+  controller keeps its own "open" (set by its `Open` and `Close`) and never reads it from the element's display: the
+  editor shows a window without opening it, and a controller that took that for open closed it again at once for
+  being out of reach of its NPC. The Vault and the Kiosk shop follow the same rule.
 - **The camera options go over the rig's own numbers and never past its limits** (`CameraPreferences.Turn`,
   `FurthestDistance`): 100 % is the camera as shipped, the furthest distance can only be brought in.
 - **Declining requests is done on this machine**: a request of a kind the player declines is answered no on arrival,

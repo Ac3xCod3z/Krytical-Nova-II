@@ -101,6 +101,7 @@ namespace KryticalNova.UI
             BuildCells(shopGrid, shopCells, false);
             SetDisplay(window, false);
             SetDisplay(shop, false);
+            shopOpen = false;
 
             KioskStand.Browsed += Browse;
             NpcServices.Register(ServiceIds.Kiosk, NpcOffer.None, "KIOSK", () => SetOwnOpen(true));
@@ -174,6 +175,9 @@ namespace KryticalNova.UI
 
         private static bool Shown(VisualElement element) => element != null && element.style.display == DisplayStyle.Flex;
 
+        // Browsing someone's Kiosk, as against the shop window merely shown: the layout editor shows it to have it placed.
+        private bool shopOpen;
+
         private ItemDefinition Definition(in ItemStack stack)
         {
             PlayerInventory local = PlayerInventory.Local;
@@ -195,7 +199,7 @@ namespace KryticalNova.UI
                 if (KeyBindings.Pressed(KeyBindings.Kiosk)) SetOwnOpen(!Shown(window));
                 if (keyboard.escapeKey.wasPressedThisFrame)
                 {
-                    if (Shown(shop)) CloseShop();
+                    if (shopOpen) CloseShop();
                     else if (Shown(window)) SetOwnOpen(false);
                 }
             }
@@ -203,7 +207,7 @@ namespace KryticalNova.UI
             if (Time.unscaledTime < nextSlowRefresh) return;
             nextSlowRefresh = Time.unscaledTime + SlowRefreshSeconds;
             if (Shown(window)) RefreshSlow();
-            if (!Shown(shop)) return;
+            if (!shopOpen) return;
             PlayerInventory local = PlayerInventory.Local;
             if (browsing == null || !browsing.IsSpawned || local == null) { CloseShop(); return; }
             Vector3 offset = browsing.Position - local.transform.position;
@@ -224,7 +228,7 @@ namespace KryticalNova.UI
         {
             if (!initialized || open == Shown(window)) return;
             if (open && kiosk == null) return;
-            if (open && Shown(shop)) CloseShop(); // one Kiosk window at a time: they share a place on screen
+            if (open && shopOpen) CloseShop(); // one Kiosk window at a time: they share a place on screen
             SetDisplay(window, open);
             GearUIController gear = GearUIController.Instance;
             if (gear != null)
@@ -491,6 +495,7 @@ namespace KryticalNova.UI
             SetOwnOpen(false);
             SetBrowsing(stand);
             SetDisplay(shop, true);
+            shopOpen = true;
             shop.BringToFront();
             GearUIController.Instance?.SuppressWorldInput();
             RefreshShop();
@@ -509,6 +514,7 @@ namespace KryticalNova.UI
             ClientPresentationRegistry.Prompts?.Hide(BuyPrompt);
             SetBrowsing(null);
             SetDisplay(shop, false);
+            shopOpen = false;
             GearUIController gear = GearUIController.Instance;
             if (gear == null) return;
             gear.HideItemTooltip();
@@ -517,7 +523,7 @@ namespace KryticalNova.UI
 
         private void RefreshShop()
         {
-            if (!initialized || !Shown(shop) || browsing == null) return;
+            if (!initialized || !shopOpen || browsing == null) return;
             shopTitle.text = browsing.ShopName.ToUpperInvariant();
             shopOwner.text = OwnerLine(browsing);
             shopLeft.text = KioskRules.TimeLeft(DateTime.UtcNow.Ticks, browsing.ExpiresUtc) + " left";

@@ -42,6 +42,9 @@ namespace KryticalNova.UI
             PetTooltip.BuildPips(bannerPips);
             banner.RemoveFromClassList(ShownClass);
             banner.style.display = DisplayStyle.None;
+            // With the HUD's other moments, top centre or where the player put them.
+            VisualElement column = root.Q(HeraldWindowController.MilestoneColumn);
+            if (column != null && banner.parent != column) column.Add(banner);
         }
 
         private void OnDisable() => Bind(null);
@@ -79,7 +82,7 @@ namespace KryticalNova.UI
             bannerDetail.text = $"{pet.StageLabel(stage)}  ·  {bonus}";
             PetTooltip.SetPips(bannerPips, stage);
             banner.style.display = DisplayStyle.Flex;
-            banner.BringToFront();
+            banner.parent?.BringToFront();
             // The class goes on a frame later so the transition has a state to start from.
             banner.schedule.Execute(() => banner.AddToClassList(ShownClass));
             bannerEnds = Time.unscaledTime + BannerSeconds;

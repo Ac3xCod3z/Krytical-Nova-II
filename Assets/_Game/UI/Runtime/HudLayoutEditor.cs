@@ -63,6 +63,7 @@ namespace KryticalNova.UI
             public Label ScaleLabel;
             public StyleEnum<DisplayStyle> PreviousDisplay;
             public string PreviousText;
+            public Action<bool> Preview;
         }
 
         private static readonly Dictionary<string, string> DisplayNames = new Dictionary<string, string>
@@ -92,8 +93,33 @@ namespace KryticalNova.UI
             { "npc-dialogue", "NPC DIALOGUE" },
             { "zone-toast", "ZONE NOTICE" },
             { "world-map", "WORLD MAP" },
-            { "party-frames", "SQUAD" }
+            { "party-frames", "SQUAD" },
+            { "milestone-banner", "MILESTONE BANNER" }
         };
+
+        // What a panel shows while it is being placed, when it has nothing to show by itself: a window that only
+        // opens at an NPC, a banner that only appears for a moment. Its owner fills it with a likeness (true) and
+        // takes that away again (false).
+        private static readonly Dictionary<string, Action<bool>> previews = new Dictionary<string, Action<bool>>();
+
+        /// <summary>The owner of a panel says how it looks while the layout editor has it out to be placed.</summary>
+        public static void RegisterPreview(string name, Action<bool> show)
+        {
+            if (!string.IsNullOrEmpty(name) && show != null) previews[name] = show;
+        }
+
+        public static void UnregisterPreview(string name)
+        {
+            if (!string.IsNullOrEmpty(name)) previews.Remove(name);
+        }
+
+        // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            previews.Clear();
+            Current = null;
+        }
 
         private readonly Dictionary<string, VisualElement> movables = new Dictionary<string, VisualElement>();
         private readonly Dictionary<VisualElement, EditState> editing = new Dictionary<VisualElement, EditState>();
@@ -318,6 +344,11 @@ namespace KryticalNova.UI
                 state.PreviousText = label.text;
                 label.text = Describe(element);
             }
+            if (previews.TryGetValue(element.name, out Action<bool> preview))
+            {
+                state.Preview = preview;
+                preview(true);
+            }
             element.AddToClassList(EditingClass);
             state.Overlay = CreateOverlay(element, out state.ScaleLabel);
             element.hierarchy.Add(state.Overlay);
@@ -330,6 +361,7 @@ namespace KryticalNova.UI
             if (!editing.TryGetValue(element, out EditState state)) return;
             state.Overlay.RemoveFromHierarchy();
             element.RemoveFromClassList(EditingClass);
+            state.Preview?.Invoke(false);
             element.style.display = state.PreviousDisplay;
             if (state.PreviousText != null && element is Label label) label.text = state.PreviousText;
             editing.Remove(element);
