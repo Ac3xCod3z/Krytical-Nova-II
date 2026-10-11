@@ -475,7 +475,7 @@ namespace KryticalNova.UI
                 var def = inventory != null && !stack.IsEmpty ? inventory.GetDefinition(i) : null;
                 if (def != null) used++;
                 bool unusable = def != null && def.IsEquippable && !inventory.CanEquip(def, out _);
-                SetItemVisual(cells[i], def, stack.count, null, unusable);
+                SetItemVisual(cells[i], def, stack, null, unusable);
                 SetTemperVisual(cells[i], def, stack);
                 cells[i].EnableInClassList(LockedClass, def != null && IsLocked(i));
             }
@@ -489,12 +489,25 @@ namespace KryticalNova.UI
             {
                 var def = equipment != null ? equipment.GetDefinition(kv.Key) : null;
                 // An empty slot shows the skin's picture of what it is for (.slot-glyph), not a faint item.
-                SetItemVisual(kv.Value, def, 1);
-                SetTemperVisual(kv.Value, def, inventory != null ? inventory.GetEquipped(kv.Key) : ItemStack.Empty);
+                ItemStack worn = inventory != null ? inventory.GetEquipped(kv.Key) : ItemStack.Empty;
+                if (def != null && !worn.IsEmpty) SetItemVisual(kv.Value, def, worn); else SetItemVisual(kv.Value, def, 1);
+                SetTemperVisual(kv.Value, def, worn);
             }
         }
 
         private void OnSlotChanged(EquipSlot slot, ushort previous, ushort next) => RefreshEquipment();
+
+        /// <summary>
+        /// An item's picture where the item itself is at hand: a pet shows the icon of the evolution it has reached
+        /// (<see cref="PetIcons"/>), everything else its own.
+        /// </summary>
+        public static void SetItemVisual(VisualElement host, ItemDefinition def, in ItemStack stack, Sprite silhouette = null, bool unusable = false)
+        {
+            SetItemVisual(host, def, stack.count, silhouette, unusable);
+            if (def == null || def.equipSlot != EquipSlot.Pet) return;
+            Sprite now = PetIcons.For(def, stack);
+            if (now != null && now != def.icon) host.Q(className: "item-icon").style.backgroundImage = new StyleBackground(now);
+        }
 
         public static void SetItemVisual(VisualElement host, ItemDefinition def, int count, Sprite silhouette = null, bool unusable = false)
         {
@@ -673,7 +686,8 @@ namespace KryticalNova.UI
             dragging = true;
             HideTooltip();
             pressElement.AddToClassList("drag-source");
-            ghost.style.backgroundImage = def.icon != null ? new StyleBackground(def.icon) : StyleKeyword.None;
+            Sprite picture = PetIcons.For(def, inventory != null ? inventory.GetStack(pressLocation) : ItemStack.Empty);
+            ghost.style.backgroundImage = picture != null ? new StyleBackground(picture) : StyleKeyword.None;
             SetGlyph(ghostGlyph, def);
             SetDisplay(ghost, true);
             ghost.BringToFront();
@@ -901,7 +915,7 @@ namespace KryticalNova.UI
         public void ShowItemTooltip(VisualElement element, ItemDefinition def, in ItemStack itemStack, string hint, bool equipped = false)
         {
             if (!initialized || element == null || def == null) { HideItemTooltip(); return; }
-            ShowCardPicture(def, equipped);
+            ShowCardPicture(def, equipped, PetIcons.For(def, itemStack));
 
             GearItemState gearState = def.IsLadderGear ? GearItemState.Of(itemStack) : default;
             tipName.text = gearState.IsClean ? def.displayName : $"{def.displayName}  {gearState}";
@@ -947,13 +961,13 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ the item card's parts
 
-        private void ShowCardPicture(ItemDefinition def, bool equipped)
+        private void ShowCardPicture(ItemDefinition def, bool equipped, Sprite shown)
         {
             VisualElement picture = tooltip.Q("tooltip-picture"), icon = tooltip.Q("tooltip-icon"), flag = tooltip.Q("tooltip-equipped");
             if (flag != null) SetDisplay(flag, equipped);
             if (picture == null || icon == null) return;
-            SetDisplay(picture, def.icon != null);
-            icon.style.backgroundImage = def.icon != null ? new StyleBackground(def.icon) : StyleKeyword.None;
+            SetDisplay(picture, shown != null);
+            icon.style.backgroundImage = shown != null ? new StyleBackground(shown) : StyleKeyword.None;
             foreach (string each in RarityCardClasses) picture.RemoveFromClassList(each);
             picture.AddToClassList(RarityCardClasses[Mathf.Clamp((int)def.rarity, 0, RarityCardClasses.Length - 1)]);
         }

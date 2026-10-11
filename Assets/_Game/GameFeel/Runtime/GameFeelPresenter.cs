@@ -62,6 +62,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player forgeSuccessFeel;
         [SerializeField] private MMF_Player forgeFailFeel;
         [SerializeField] private MMF_Player forgeBreakFeel;
+        [Tooltip("An Advanced Failsafe held the piece: a calm hold, not a fail.")]
+        [SerializeField] private MMF_Player forgeHeldFeel;
         [Tooltip("The local player lands a critical hit on another player, or takes one: the hit with a look of its own.")]
         [SerializeField] private MMF_Player pvpCritFeel;
         [Tooltip("The local player gained a level.")]
@@ -104,6 +106,7 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player forgeFailWorldFeel;
         [SerializeField] private MMF_Player forgeSavedWorldFeel;
         [SerializeField] private MMF_Player forgeBreakWorldFeel;
+        [SerializeField] private MMF_Player forgeHeldWorldFeel;
         [Tooltip("Anyone's moment at the Herald. All but the last two burst at the Nova itself, in its tier's colour; a new " +
                  "tier also lights the ground under the character, and a Standing rank is a seal at the feet.")]
         [SerializeField] private MMF_Player novaRiseWorldFeel;
@@ -216,7 +219,7 @@ namespace KryticalNova.GameFeel
             ClientPresentationRegistry.RegisterFeel(this);
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
                 attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, killConfirmFeel, bodyLandFeel, respawnFeel, petEvolveFeel,
-                forgeSuccessFeel, forgeFailFeel, forgeBreakFeel,
+                forgeSuccessFeel, forgeFailFeel, forgeBreakFeel, forgeHeldFeel,
                 novaRiseFeel, novaTierFeel, novaHoldFeel, novaSlipFeel, novaHeldFeel, standingFeel,
                 pvpCritFeel, levelUpFeel, pickupFeel };
             if (skills == null) skills = GetComponent<SkillFeelCatalog>();
@@ -864,6 +867,10 @@ namespace KryticalNova.GameFeel
                 case 3: // the piece broke
                     PlayWorld(forgeBreakWorldFeel, feet, facing, actor);
                     if (isLocalPlayer) Play(forgeBreakFeel, actor.position, 1f);
+                    break;
+                case 4: // an Advanced Failsafe held it: nothing lost, and nothing of a fail shown
+                    PlayWorld(forgeHeldWorldFeel, feet, facing, actor);
+                    if (isLocalPlayer) Play(forgeHeldFeel, actor.position, 1f);
                     break;
                 default: // a fail
                     PlayWorld(forgeFailWorldFeel, feet, facing, actor);

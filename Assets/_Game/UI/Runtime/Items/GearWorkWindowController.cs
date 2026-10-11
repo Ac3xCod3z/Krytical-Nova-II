@@ -40,7 +40,7 @@ namespace KryticalNova.UI
         private static readonly string[] TabNames = { "temper", "fusion", "tuning", "reforge" };
         private static readonly string[] ActLabels = { "TEMPER", "FUSE", "TUNE", "REFORGE" };
         private static readonly string[] TabTitles = { "Tempering", "Fusion", "Tuning", "Reforge" };
-        private static readonly string[] FlashClasses = { "hit-success", "hit-fail", "hit-broken" };
+        private static readonly string[] FlashClasses = { "hit-success", "hit-fail", "hit-broken", "hit-held" };
         private static readonly string[] Intros =
         {
             "Tempering raises what a piece is for, up to 120%. Each Alloy adds its percent on a success. A fail takes some back, and past 60% a fail can break the piece unless a Failsafe is used.",
@@ -883,6 +883,8 @@ namespace KryticalNova.UI
         {
             GearItemState was = GearItemState.Of(finished.before), now = GearItemState.Of(finished.after);
             bool success = finished.outcome == GearWorkOutcome.Success, broken = finished.outcome == GearWorkOutcome.Broken;
+            // An Advanced Failsafe held: nothing was lost, and the bench does not show a fail.
+            bool held = finished.outcome == GearWorkOutcome.FailHeld;
             string text;
             switch (finished.kind)
             {
@@ -902,18 +904,19 @@ namespace KryticalNova.UI
                 default:
                     text = success ? $"Tempered to +{now.Temper}%."
                         : broken ? "The piece broke."
+                        : held ? "Held. The Advanced Failsafe took it: nothing lost."
                         : finished.outcome == GearWorkOutcome.FailProtected
                             ? (now.Temper == was.Temper ? "Failed. The Failsafe took it: nothing lost." : $"Failed. The Failsafe stopped a break: Temper +{now.Temper}%.")
                         : $"Failed. Temper fell to +{now.Temper}%.";
                     break;
             }
-            SetResult(text, success ? "success" : broken ? "broken" : "fail");
+            SetResult(text, success ? "success" : broken ? "broken" : held ? "held" : "fail");
             if (broken) pieceCell = materialCell = -1;
 
             foreach (string name in FlashClasses) anvil.RemoveFromClassList(name);
-            anvil.AddToClassList(success ? "hit-success" : broken ? "hit-broken" : "hit-fail");
+            anvil.AddToClassList(success ? "hit-success" : broken ? "hit-broken" : held ? "hit-held" : "hit-fail");
             flashEnds = Time.unscaledTime + FlashSeconds;
-            if (!success) shakeEnds = Time.unscaledTime + ShakeSeconds;
+            if (!success && !held) shakeEnds = Time.unscaledTime + ShakeSeconds;
             // The number jumps and settles: the class is put on with no transition and taken off with one.
             value.AddToClassList("pop");
             value.schedule.Execute(() => value.RemoveFromClassList("pop")).StartingIn(60);
@@ -928,7 +931,7 @@ namespace KryticalNova.UI
         private void SetResult(string text, string tone)
         {
             result.text = text;
-            foreach (string name in new[] { "success", "fail", "broken" }) result.EnableInClassList(name, name == tone);
+            foreach (string name in new[] { "success", "fail", "broken", "held" }) result.EnableInClassList(name, name == tone);
         }
 
         // ------------------------------------------------------------------ the gauge

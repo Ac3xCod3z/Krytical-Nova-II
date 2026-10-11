@@ -143,7 +143,7 @@ namespace KryticalNova.Tests
             Assert.AreEqual(2, next.Fusion, "and nothing else");
 
             next = GearProgressionRules.ResolveTemper(temper, state, alloy, 10f, TemperProtection.Advanced, 0.99f, 0f, out outcome, out spent);
-            Assert.AreEqual(GearWorkOutcome.FailProtected, outcome);
+            Assert.AreEqual(GearWorkOutcome.FailHeld, outcome, "held, with a look of its own: not the fail a plain Failsafe softens");
             Assert.IsTrue(spent);
             Assert.AreEqual(90, next.Temper, "an Advanced Failsafe: a fail costs nothing");
         }

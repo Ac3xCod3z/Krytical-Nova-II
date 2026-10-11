@@ -63,6 +63,7 @@
 /* The flash of a result on the anvil. */
 .forge-anvil.hit-success .forge-piece > .item-frame { -unity-background-image-tint-color: rgb(114, 255, 206); }
 .forge-anvil.hit-fail .forge-piece > .item-frame { -unity-background-image-tint-color: rgb(255, 196, 96); }
+.forge-anvil.hit-held .forge-piece > .item-frame { -unity-background-image-tint-color: rgb(150, 226, 255); }
 .forge-anvil.hit-broken .forge-piece > .item-frame { -unity-background-image-tint-color: rgb(255, 72, 64); }
 
 /* ------------------------------------------------------------------ materials */
@@ -122,6 +123,7 @@
 .forge-result { margin: 4px 0 0 0; padding: 0 2px; min-height: 16px; white-space: normal; font-size: 12px; -unity-font-style: bold; -unity-text-align: middle-center; }
 .forge-result.success { color: rgb(114, 222, 196); }
 .forge-result.fail { color: rgb(236, 206, 140); }
+.forge-result.held { color: rgb(150, 226, 255); }
 .forge-result.broken { color: rgb(240, 96, 88); }
 
 /* Temper % on an item icon (Pack, Equipment). The colour is the glow band's, set in code. */

@@ -251,7 +251,7 @@ So a bigger Alloy is a bigger step at worse odds, and the higher the piece the h
 
 - **Failsafe** (TS2: Protection Charm): stops one break, and is only used up when it does. A fail it saves still costs the 3%.
 - **Lucky Failsafe** (TS2: Lucky enchant): +5% to one attempt and no break on it. Used up on the attempt.
-- **Advanced Failsafe**: a fail costs nothing and never breaks. Used up on a fail.
+- **Advanced Failsafe**: a fail costs nothing and never breaks. Used up on a fail. Since 11 Oct 2026 that fail is an outcome of its own (`GearWorkOutcome.FailHeld`) and is shown as a hold, not as a softened fail: a ring closing round the character, light rising, the word HELD!, a small lift of the view and the Herald's "held" sound (until one is chosen for it), and at the bench "Held. The Advanced Failsafe took it: nothing lost." with a pale-blue flash and no shake. A plain or Lucky Failsafe that stops a break keeps the old look (the fail's sparks, the blast, SAVED!).
 - A **break** destroys the piece. At 120% the forge answers "It is at 120%: the highest Temper there is." and takes nothing.
 - Cost per attempt *(proposed)*: `ItemLevel × 500 × RarityMultiplier` Creds, plus the Alloy.
 

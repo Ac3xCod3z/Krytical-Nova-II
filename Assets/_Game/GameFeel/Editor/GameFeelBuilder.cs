@@ -741,8 +741,8 @@ namespace KryticalNova.EditorTools
 
         // ---------------------------------------------------------------- the forge
 
-        private static readonly string[] ForgeCameraPlayers = { "Forge Success", "Forge Fail", "Forge Break" };
-        private static readonly string[] ForgeWorldPlayers = { "Forge Success", "Forge Fail", "Forge Saved", "Forge Break" };
+        private static readonly string[] ForgeCameraPlayers = { "Forge Success", "Forge Fail", "Forge Break", "Forge Held" };
+        private static readonly string[] ForgeWorldPlayers = { "Forge Success", "Forge Fail", "Forge Saved", "Forge Break", "Forge Held" };
         private static readonly Color ForgeAsh = new Color(0.62f, 0.64f, 0.7f);
 
         /// <summary>An attempt at the forge: a success, a fail, the flash of a Failsafe holding, a piece breaking.</summary>
@@ -754,6 +754,9 @@ namespace KryticalNova.EditorTools
             Make("FX_Sparks_01", "PFX_Forge_Fail", 0.75f, ForgeAsh);             // it did not: a dull spit of sparks
             Make("FX_MagicBlast_02", "PFX_Forge_Saved", 0.6f, Cyan);             // the Failsafe holding
             Make("FX_Explosion_Body_01", "PFX_Forge_Break", 0.6f, Red);          // the piece gone
+            // An Advanced Failsafe: nothing of a fail in it. A ring closes round the character and light rises, in the Failsafe's own colour.
+            Make("FX_Cartoony_Rings_01", "PFX_Forge_Ward", 0.5f, Cyan);
+            Make("FX_Heal_01", "PFX_Forge_HeldLights", 0.5f, Cyan);
         }
 
         /// <summary>
@@ -815,8 +818,18 @@ namespace KryticalNova.EditorTools
                 v.DotOpacity = HurtVignetteDots;
             });
 
+            // The Advanced Failsafe's hold: the sound and wash of the Herald's "held" (a slip the Nova held is the same
+            // kind of moment), a small lift where a fail drops. Its sound is the Herald's until one is chosen for it.
+            so.FindProperty("forgeHeldFeel").objectReferenceValue = Player(root, "Forge Held", p =>
+            {
+                Sound(p, "Nova Held");
+                Impulse(p, new Vector3(0f, 0.06f, 0f), 0.14f);
+                Chromatic(p, "Chromatic Shimmer", 0.3f, 0.3f);
+                Wash(p, "Held Wash (Beautify)", 0.45f, 0.16f, NovaHeldWash, 0f);
+            });
+
             // ---- world particles: every client, riding on the character
-            // The words are the forge's own: FORGED!, SAVED! when a Failsafe held, CRACK! when the piece broke.
+            // The words are the forge's own: FORGED!, SAVED! when a Failsafe stopped a break, HELD! when an Advanced one held, CRACK! when the piece broke.
             so.FindProperty("forgeSuccessWorldFeel").objectReferenceValue = World(world, "Forge Success",
                 AtFeet("PFX_Forge_Success"), AtFeet("PFX_Forge_Rays"), OnCaster("PFX_Forge_Sparkles"), ComicAt("PFX_Word_Forged", 2.3f));
             so.FindProperty("forgeFailWorldFeel").objectReferenceValue = World(world, "Forge Fail",
@@ -825,6 +838,8 @@ namespace KryticalNova.EditorTools
                 OnCaster("PFX_Forge_Fail"), OnCaster("PFX_Forge_Saved"), ComicAt("PFX_Word_Saved", 2.3f));
             so.FindProperty("forgeBreakWorldFeel").objectReferenceValue = World(world, "Forge Break",
                 OnCaster("PFX_Forge_Break"), ComicAt("PFX_Word_Crack", 2.3f));
+            so.FindProperty("forgeHeldWorldFeel").objectReferenceValue = World(world, "Forge Held",
+                AtFeet("PFX_Forge_Ward"), OnCaster("PFX_Forge_HeldLights"), ComicAt("PFX_Word_Held", 2.3f));
         }
 
         // ---------------------------------------------------------------- the Herald: Ascension and Nova Standings

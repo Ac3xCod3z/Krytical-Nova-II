@@ -788,6 +788,9 @@
 .kn-faction-covenant .forge-anvil.hit-success .forge-piece > .item-frame {
     -unity-background-image-tint-color: rgb(255, 183, 51);
 }
+.kn-faction-covenant .forge-anvil.hit-held .forge-piece > .item-frame {
+    -unity-background-image-tint-color: rgb(255, 202, 103);
+}
 .kn-faction-covenant .forge-material-label {
     font-size: 11.2px;
     color: rgb(188, 175, 161);
@@ -854,6 +857,9 @@
 }
 .kn-faction-covenant .forge-result.fail {
     color: rgb(140, 236, 172);
+}
+.kn-faction-covenant .forge-result.held {
+    color: rgb(255, 202, 103);
 }
 .kn-faction-covenant .item-temper {
     font-size: 10.08px;
