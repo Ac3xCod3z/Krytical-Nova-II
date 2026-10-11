@@ -32,7 +32,7 @@
          earned. No key of its own: it opens from the SPONSOR button above and from "/sponsor". -->
     <ui:VisualElement name="sponsor-window" class="panel window blocks-world hud-movable social-window">
         <ui:VisualElement class="row kn-header">
-            <ui:Label text="SPONSOR / RECRUIT" class="heading" />
+            <ui:Label text="SPONSOR" class="heading" />
             <ui:VisualElement class="social-spacer" picking-mode="Ignore" />
             <ui:Label name="sponsor-points" text="" class="accent social-count" />
             <ui:Button name="close-sponsor" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>

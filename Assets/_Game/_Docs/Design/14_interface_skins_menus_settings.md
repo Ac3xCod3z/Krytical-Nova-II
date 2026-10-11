@@ -436,22 +436,34 @@ is there from character select too.
   part's shape, so a tall window (the forge bench) is shown whole. A click on the clip shows it large, across the
   page with the text under it; another click puts it back. That is how a window is made readable
   at the screen's size.
-- **Recording**: **Krytical Nova ▸ Guide ▸ Record Clip** (`GuideClipRecorder`; `GuideClipRecorder.Record(topic,
-  seconds, withInterface)` from a script). 960 x 540, 30 frames a second, H.264, no sound, into
-  `UI/Guide/Clips/GC_<topic>.mp4`, handed to the topic when the time is up. Without the interface the main camera
-  alone is recorded. It needs the Unity Recorder package, which is editor only; the script compiles to nothing without
-  it (`KN_RECORDER`). The recorder switches the Game view to the clip's size; the tool puts the size back.
+- **Recording** (remade 11 Oct 2026): **Krytical Nova ▸ Guide ▸ Record Staged Clips** (`GuideClipStaging`, one
+  player or two; `GuideClipStaging.Record("tempering", "pets")` from a script) stages a topic and records it: the GM
+  set-up, what is in the picture, what happens meanwhile and for how long are a table in that file, so any clip is
+  made again with one command when its system changes. **Record Clip** (`GuideClipRecorder`) records whatever is on
+  the screen for a topic by hand. Both need Play mode and the Unity Recorder package, which is editor only
+  (`KN_RECORDER`); the recorder switches the Game view to the take's size and puts it back.
+- **A clip is encoded once for the game.** The take is the Game view at a high bitrate (40 Mbit/s), kept outside the
+  project in `Temp/GuideClips/`; ffmpeg cuts it to the part that matters and encodes it (H.264, x264 quality 21, no
+  sound, never larger than 1280 x 1000) into `UI/Guide/Clips/GC_<topic>.mp4`; the clip is imported with transcoding
+  off (`GuideClipRecorder.AsRecorded`), so a build plays that file as it is. On a PC without ffmpeg the take itself
+  becomes the clip (6 Mbit/s) and the topic's `focus` cuts the picture on the page. Until this date every clip was
+  encoded twice, the second time by Unity at the Low bitrate, which is what made them soft; the main camera alone
+  (the old way of leaving the HUD out) is drawn at the upscaler's small render size, which is what made the world
+  clips blocky, so the Game view is recorded with the HUD hidden instead.
 - One set of clips for all factions (owner, 9 Oct 2026): the page round them is the faction's, the clips are whatever
   skin they were recorded in (the Hegemony's).
-- **Every clip gets the same treatment** (owner, 10 Oct 2026): nothing of the HUD in the picture but what the topic is
-  about, daylight and a clear sky, and for a window the interface drawn at its smallest so the whole window is on the
-  screen, recorded at 1600 x 900 with the topic's `focus` on that window. World topics are the main camera alone, or
-  with the plates and namecards over heads where those are the point. 34 topics, 34 clips, 128 MB together as
-  recorded.
-- **A build carries Unity's copy of a clip, not the recorded file** (owner, 10 Oct 2026): each clip is transcoded on
-  import to H.264 at the Low bitrate with no sound track (`GuideClipRecorder.Slim`, applied to every new clip; the
-  setting is in the clip's `.meta`). That is 56 MB for the 34, and a window is still readable. The recorded files in
-  the repository are unchanged.
+- **Every clip gets the same treatment** (owner, 10 Oct 2026; the staging does it): late morning and a clear sky,
+  nothing of the HUD in the picture but what the topic is about, no performance readout, nobody selected. A window
+  clip is recorded at 2560 x 1440 with the interface at its smallest, so a tall window is whole, the windows it
+  shows stood side by side, and cut to them. A window is drawn nearly solid for its clip (95 %: in the game a window
+  lets the world through, a help clip has to be read). A fight is staged where the sun reaches: a tower's shadow
+  reads as night. None of this touches what the player has saved (interface size, window places, how solid windows
+  are): it is put on the panels for the take and taken off again.
+- **Two players**: Namecards, Callouts, Trade, Factions and Sponsor need a second client in the world running
+  `GuideClipStaging.Answer()`, which accepts what the host asks and plays a Trade out. A Squad is of one faction, so
+  its clip needs a second player of the host's faction (the staging says so and leaves the clip alone otherwise).
+- 39 topics, 39 clips, 129 MB together, and the same in a build. The clip's texture has smaller copies of itself
+  (mip maps), so a window's text does not shimmer at the page's small size.
 
 ### The rows, as the packs' settings rows
 

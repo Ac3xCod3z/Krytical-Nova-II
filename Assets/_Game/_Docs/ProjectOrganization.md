@@ -172,7 +172,7 @@ _Game/
 │                          character select)  NPC/  Shaders/ (UI_ComicPage = a page of the menus' book)
 │                          Menus/ (assets the front-end scenes use: Materials/, Prefabs/MenuBook.prefab, MenuBookSettings.asset,
 │                          KeyGlyphs.asset)  Guide/ (the Guide page of Settings: Guide.uss, GuideLibrary.asset = everything it says,
-│                          Clips/GC_<topic>.mp4 = its recorded clips; code in Runtime/Guide/, the recorder in Editor/Guide/)  Tests/Editor/
+│                          Clips/GC_<topic>.mp4 = its recorded clips; code in Runtime/Guide/; in Editor/Guide/ the recorder and GuideClipStaging = how each clip is staged)  Tests/Editor/
 │                          (future: Skills/ Character/ World/)
 ├── VFX/                   Gameplay/  GameFeel/ (Comic/ = the comic marks and words, generated)  Environment/{City,Portals,Vehicles,Weather}/
 │                          Materials/ (shared FX mats; Comic/<word>/ = our copies of a word's letter materials, generated)

@@ -1446,7 +1446,7 @@ namespace KryticalNova.UI
             ProgressBar chi = root.Q<ProgressBar>("chi-bar");
             chi.value = ProgressBarScale * resources.Chi / Mathf.Max(1f, resources.MaxChi);
             chi.title = $"FLUX {resources.Chi:0} / {resources.MaxChi:0}";
-            root.Q<Label>("resource-values").text = $"HP {resources.Health:0} / {resources.MaxHealth:0}    Chi {resources.Chi:0} / {resources.MaxChi:0}";
+            root.Q<Label>("resource-values").text = $"HP {resources.Health:0} / {resources.MaxHealth:0}    Flux {resources.Chi:0} / {resources.MaxChi:0}";
             RefreshVitals();
             if (resources.Data != null)
             {
