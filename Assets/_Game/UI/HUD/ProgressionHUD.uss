@@ -180,6 +180,9 @@
     background-color: rgba(20, 18, 43, 0.72);
 }
 .hotbar-slot.insufficient-chi > .kn-frame { -unity-background-image-tint-color: rgb(220, 80, 88); }
+/* The skill waiting to be cast: the character is walking into reach, or its swing is not over yet. */
+.hotbar-slot.queued { -unity-background-image-tint-color: rgba(40, 150, 124, 0.95); }
+.hotbar-slot.queued > .kn-frame { -unity-background-image-tint-color: rgb(140, 255, 220); }
 .hotbar-slot.charging { -unity-background-image-tint-color: rgba(150, 60, 70, 0.95); scale: 1.06 1.06; }
 .hotbar-slot.charging > .kn-frame { -unity-background-image-tint-color: rgb(255, 146, 156); }
 .hotbar-slot-letter .slot-key { color: rgb(140, 238, 212); }

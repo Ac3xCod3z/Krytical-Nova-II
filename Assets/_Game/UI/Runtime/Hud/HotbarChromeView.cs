@@ -165,7 +165,8 @@ namespace KryticalNova.UI.Hud
 
                 if (slot.key != null && slotKeys[i] != null && slot.key.text != slotKeys[i].text) slot.key.text = slotKeys[i].text;
 
-                Show(slot.selected, element.ClassListContains("selected"));
+                // A skill waiting to be cast is marked as a chosen movement skill is: the slot that is "on".
+                Show(slot.selected, element.ClassListContains("selected") || element.ClassListContains("queued"));
                 Show(slot.highlighted, hovered[i] || element.ClassListContains("drop-target") || element.ClassListContains("drop-hover"));
                 Show(slot.disabled, element.ClassListContains("insufficient-chi") || (cooling && left <= 0f));
                 if (slot.icon != null)

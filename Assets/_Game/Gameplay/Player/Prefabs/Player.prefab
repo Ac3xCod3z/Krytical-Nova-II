@@ -98,6 +98,7 @@ GameObject:
   - component: {fileID: 280678128926397855}
   - component: {fileID: 5335455843311859722}
   - component: {fileID: 7535587428304101747}
+  - component: {fileID: 4584245545938065754}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -3866,6 +3867,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Combat.PlayerCombatState
   ShowTopMostFoldoutHeaderGroup: 1
   lingerSeconds: 6
+--- !u!114 &4584245545938065754
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36937d67a2690a049b81be14e5deabe7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Combat.PlayerSkillQueue
+  ShowTopMostFoldoutHeaderGroup: 1
+  approachRange: 20
+  ringInset: 0.3
+  timeoutSeconds: 10
+  giveUpFactor: 1.5
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

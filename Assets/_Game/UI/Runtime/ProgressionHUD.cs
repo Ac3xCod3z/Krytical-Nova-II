@@ -1088,6 +1088,9 @@ namespace KryticalNova.UI
                 var entry = hotbar.GetSlotEntry(index);
                 bool charging = hotbar.ChargingSlot == index;
                 slotElements[index].EnableInClassList("charging", charging);
+                // The skill the character is walking in to cast, or will cast when its swing is over.
+                SkillDefinitionSO waiting = combatSkills.QueuedSkill;
+                slotElements[index].EnableInClassList("queued", waiting != null && entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill == waiting);
                 float cooldownLeft01 = 0f;
                 if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null)
                 {

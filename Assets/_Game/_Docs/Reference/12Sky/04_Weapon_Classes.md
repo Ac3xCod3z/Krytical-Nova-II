@@ -197,6 +197,17 @@ Viking + Elven.
 **Clip sets.** Monoblade: Grruzam katana (measured hit timings). Glaive, Harvester, Longaxe, Claymore: Grruzam great-sword, same clip per slot letter, default hit timings. Warbow: Synty Bow Combat (`Stand_Shoot_Reload`, `Stand_Shoot_Leaping` for S8), default hit timings. Carbine, Arc Caster, Servo Claws: the Monoblade's clips as stand-ins.
 
 **Stand-ins still to replace:** gun and unarmed animation sets (so a Sidearm or Servo Claws draw still reaches over the shoulder before the weapons appear in the hands); measured hit moments for the great-sword and bow clips; projectiles, and the cone / volley (S1) and called-in strike (S8) shapes for ranged classes (today ranged skills hit at reach 8–12 with no projectile, and their area skills are centred on the caster); one basic attack combo for every class (the katana combo); weapon grip poses per mesh (tuned on the look template).
+## A skill asked for too early walks in and casts (as built, 10 Oct 2026)
+
+An attack skill pressed when it cannot be cast yet is kept, one at a time, and cast the moment it can be (owner, 10 Oct 2026). Single-hit and multi-hit skills alike; the basic attack already walked in by itself.
+
+- **Out of reach:** with the target no further than the approach range, the character walks to the skill's ring round the target and casts on arrival. Further than that the press is refused as out of range, as before.
+- **Mid-swing or mid-cast:** the skill waits for the swing under way to play out and is cast straight after it.
+- **Let go only when** the player gives another order (a click on the ground or on something else, Escape: these also stop the walk the queue started), asks for another skill (which takes its place), when either side dies, or when the target gets away or there is no way in. A click on the target itself changes nothing. A skill on cooldown or without the Flux for it is refused as before, never kept; a charged skill is held, not kept.
+- **Who decides:** the owner asks (`PlayerCombatSkills.TryCastSkill` hands a press refused as `CastCheck.OutOfReach` or `CastCheck.Busy` to `ISkillQueue`); the server walks the player in with the same move order a click gives (the run is paid for once) and casts through the usual cast (`PlayerSkillQueue`, Gameplay/Combat). While the basic attack is already walking in on the same target the queue leaves the walking to it.
+- **On the Hotbar** the waiting skill's slot is lit like a chosen movement skill (class `queued`).
+- **Numbers** (on `PlayerSkillQueue`, the player prefab): approach range 20 m, the walk ends 0.3 m inside the skill's range, given up after 10 s, or at once when the target is 1.5 times the approach range away, or after 1.5 s with no way in.
+
 ## Hit looks (as built, 8 Oct 2026)
 
 A class is also told by how its hits look: the mark it leaves, the font of its words and the words themselves. The
