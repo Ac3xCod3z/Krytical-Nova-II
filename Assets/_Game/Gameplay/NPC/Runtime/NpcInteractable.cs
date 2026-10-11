@@ -67,6 +67,38 @@ namespace KryticalNova.NPC
             return false;
         }
 
+        /// <summary>
+        /// The nearest NPC offering <paramref name="offer"/> whose range (plus <paramref name="padding"/>) a point is
+        /// in, or null. For a service that needs to know which NPC it is at (a shop: whose shelf).
+        /// </summary>
+        public static NpcInteractable NearestOffering(NpcOffer offer, Vector3 position, float padding = 0f)
+        {
+            NpcInteractable best = null;
+            float bestDistance = float.MaxValue;
+            for (int i = 0; i < ActiveNpcs.Count; i++)
+            {
+                NpcInteractable npc = ActiveNpcs[i];
+                if (npc == null || (npc.Offers & offer) == 0) continue;
+                Vector3 offset = npc.transform.position - position;
+                offset.y = 0f;
+                float reach = npc.InteractRange + padding;
+                float distance = offset.sqrMagnitude;
+                if (distance > reach * reach || distance >= bestDistance) continue;
+                bestDistance = distance;
+                best = npc;
+            }
+            return best;
+        }
+
+        /// <summary>True when this NPC's own range (plus <paramref name="padding"/>) holds the point.</summary>
+        public bool InReachOf(Vector3 position, float padding = 0f)
+        {
+            Vector3 offset = transform.position - position;
+            offset.y = 0f;
+            float reach = InteractRange + padding;
+            return offset.sqrMagnitude <= reach * reach;
+        }
+
         private void Awake()
         {
             homeRotation = transform.rotation;

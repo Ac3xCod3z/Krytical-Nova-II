@@ -57,6 +57,9 @@
 
 #kiosk-window { left: 270px; top: 84px; width: 372px; display: none; }
 #shop-window { left: 270px; top: 84px; width: 372px; display: none; }
+/* An NPC's shop. Where it sits here is only a fallback: ServicePanelPlacement docks it beside the Pack when it opens. */
+#vendor-window { left: 270px; top: 84px; width: 372px; display: none; }
+.vendor-scroll { max-height: 440px; margin-top: 8px; }
 
 .kiosk-name-row { align-items: center; margin: 8px 12px 0 12px; }
 .kiosk-name { flex-grow: 1; margin-left: 8px; }
@@ -79,6 +82,8 @@
     background-color: rgba(8, 12, 18, 0.78);
     -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
 }
+/* A price the player's Creds do not reach. */
+.kiosk-price.too-dear { color: rgb(220, 80, 88); }
 /* The stack count moves up so the price does not cover it. */
 .kiosk-cell > .item-count { bottom: 13px; }
 

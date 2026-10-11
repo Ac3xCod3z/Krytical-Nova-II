@@ -33,6 +33,7 @@ namespace KryticalNova.EditorTools
         public const string EmoteWheelSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/EmoteWheelSettings.asset";
         public const string SerumSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/SerumSettings.asset";
         public const string AutopilotSettingsPath = "Assets/_Game/Gameplay/Autopilot/Data/Assets/AutopilotSettings.asset";
+        public const string VendorCatalogPath = "Assets/_Game/Gameplay/Economy/Data/Assets/Vendors/VendorCatalog.asset";
         public const string SquadSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SquadSettings.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
@@ -56,6 +57,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Economy.PlayerDeepVault"),
             new Row("KryticalNova.Economy.PlayerTrade", ("settings", EconomySettingsPath)),
             new Row("KryticalNova.Economy.PlayerKiosk", ("settings", EconomySettingsPath), ("standPrefab", GameplayPrefabsSetup.KioskStandPath)),
+            // NPC shops: buying from the vendor the player stands by, selling to any.
+            new Row("KryticalNova.Economy.PlayerShopping", ("settings", EconomySettingsPath), ("vendors", VendorCatalogPath)),
             new Row("KryticalNova.Social.PlayerContacts"),
             new Row("KryticalNova.Social.PlayerCrew", ("settings", "Assets/_Game/Gameplay/Social/Data/Assets/CrewSettings.asset")),
             new Row("KryticalNova.Player.PlayerAnimancerMotor", ("pickUpDownClip", PickUpDownClip), ("pickUpUpClip", PickUpUpClip)),

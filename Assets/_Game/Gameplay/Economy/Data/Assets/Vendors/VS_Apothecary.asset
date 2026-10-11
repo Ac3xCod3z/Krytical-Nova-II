@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8c955e5c341015409184ff588cd2fa7, type: 3}
+  m_Name: VS_Apothecary
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.VendorStock
+  vendor: {fileID: 11400000, guid: 6ffb63cc62da1f24580bc37cf01e2fde, type: 2}
+  shopName: 
+  listings:
+  - item: {fileID: 11400000, guid: 3229e03cb43202e428110eae3d2da85b, type: 2}
+    price: 30
+  - item: {fileID: 11400000, guid: 9ac330e53489baf46bcc3e133a42086a, type: 2}
+    price: 30
+  - item: {fileID: 11400000, guid: de525b46a44bcfd438104f52e7fe3d24, type: 2}
+    price: 80
+  - item: {fileID: 11400000, guid: 1b6a2685756e61348be0e42361f56a80, type: 2}
+    price: 50
+  sellsLadderGear: 0
+  gearRarity: 0
+  gearMinLevel: 1
+  gearMaxLevel: 1

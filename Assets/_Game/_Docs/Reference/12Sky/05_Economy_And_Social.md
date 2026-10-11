@@ -90,6 +90,38 @@ Walking more than 8 m apart, dying or leaving cancels. The trade window shows th
 - **The owner** is told of each sale in chat, or gets a summary on return. The till is collected from the Kiosk window anywhere. Closing, selling out or running out of time removes the stand and holds unsold items and the till until collected.
 - **GM:** `gm.kiosk` (list), `gm.kiosk.expire`.
 
+## NPC shops (rows 3, 22, 31; built 10 Oct 2026)
+
+A vendor sells from a shelf and buys what the player carries. Two are open, the ones whose goods already existed: the **Apothecary** and the **Armorer**. The Store Clerk, Fixer, Broker, Marshal and Instructors have no shop yet (their goods or their currency do not exist).
+
+**Every price here is a placeholder** (owner, 10 Oct 2026: "arbitrary amounts for now, will tune later"). They are data: a listed item's price is on the vendor's stock asset, the rest are in `EconomySettings`.
+
+| Vendor | Sells | Placeholder price, Creds for one |
+| --- | --- | --- |
+| Apothecary (`VS_Apothecary`) | HP Stim, Flux Stim | 30 |
+| | Dual Stim | 80 |
+| | Pet Ration | 50 |
+| Armorer (`VS_Armorer`) | Alumite (+3 %) | 500 |
+| | Iridion (+6 %) | 1,500 |
+| | Fusion Catalyst, Tuning Chip | 10,000 |
+| | Common ladder gear, levels 1 to 28, for the buyer's own faction and body | item level × 150 (150 at level 1, 4,200 at level 28) |
+
+| Tunable in `EconomySettings` *(placeholder)* | Value |
+| --- | --- |
+| Gear price: Creds per item level (`vendorGearCredsPerLevel`) | 150 |
+| Gear price: weight of Common / Uncommon / Rare / Epic (`vendorGearRarityMultiplier`) | 1 / 4 / 20 / 100 |
+| What an item is valued at when no shelf lists it and it is not ladder gear, by rarity (`vendorFallbackValueByRarity`) | 20 / 100 / 2,000 / 20,000 |
+| What a vendor pays: share of what the shops value the item at (`vendorSellBackPercent`) | 20 % |
+| A sale of this rarity or better must be confirmed (`vendorConfirmFromRarity`) | Rare |
+
+- **Opening:** the vendor's dialogue has a BROWSE WARES button (`NpcOffer.Shop`); the shop opens beside the Pack and closes when the player walks away. It is a movable window (SHOP in the layout editor).
+- **Buying:** right-click an item. A stackable item buys one, or Shift asks how many; a piece of gear says its price once more first. A price the player's Creds do not reach is red. The Armorer's shelf shows a buyer only the gear they can wear (`GearDictionary.CanUse`: faction and body); a level above the buyer's own is sold, to grow into.
+- **Selling (owner, 10 Oct 2026: yes, at a low rate):** with a shop open, right-click an item in the Pack or drop it on the window. Any vendor buys anything that has a value; nothing can be bought back. A stack always asks how many.
+- **Rare and better is never sold without a notice and a confirm** (owner, 10 Oct 2026): the notice names the item, its rarity and the Creds it would fetch, and it is sold only on a yes. The same holds for a pet (its growth goes with it) and for any gear that has been Tempered, Fused or Tuned, whatever its rarity: that part is Claude's addition, not the owner's word. The server refuses such a sale that did not come with the confirmation, so the rule does not rest on the window.
+- **Who decides:** `PlayerShopping` (Gameplay/Economy) sends requests; the server checks that the player stands by the vendor, the price (`VendorRules`, the same rules the window reads), the wallet, and the room in the Pack before any Creds move. Buying is the sink `CredsSink.Vendor`, selling the source `CredsSource.VendorSale`: both show in `gm.creds.report`. Online only, like Kiosks.
+- **A new vendor or a new item on a shelf** is a row in `VendorStockBuilder` (**Krytical Nova ▸ Items ▸ 10. Build Vendor Stock**; a price tuned on an asset is kept) and, for a new vendor, `NpcOffer.Shop` on its row in `Zone01Setup`.
+- **Selling is a second way Creds come in**, beside Hostile kills: at 20 % a level-28 Common weapon pays 840. To be weighed against the income target when the prices are tuned.
+
 ## Contacts (row 29)
 
 - **Mutual, per character.** One asks, the other accepts; then each is in the other's list. Removing takes both out. A request waits while either is offline.
@@ -204,7 +236,7 @@ Twelve Sky 2's Elixirs: a consumable that raises a stat for good, each kind a li
 
 ## Not built
 
-The Exchange board; selling Kiosk Permits (Nova Store); any Creds faucet but Hostile kills (Contracts, vendors); any shop; Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; handing a session on when its host leaves; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
+The Exchange board; selling Kiosk Permits (Nova Store); Contracts as a Creds faucet; every shop but the Apothecary's and the Armorer's (Store Clerk, Fixer, Instructors), Flasks and Recall Tags on the Apothecary's shelf, a source for the forge materials the Armorer does not sell; Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; handing a session on when its host leaves; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
 
 ## Verified
 

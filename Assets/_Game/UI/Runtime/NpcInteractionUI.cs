@@ -122,8 +122,9 @@ namespace KryticalNova.UI
             foreach (NpcServices.Entry entry in NpcServices.All)
             {
                 if ((offers & entry.Offer) == 0) continue;
-                System.Action open = entry.Open;
-                var button = new Button(() => { HideDialogue(); open(); }) { text = entry.Label };
+                string service = entry.Id;
+                var from = npc as NpcInteractable;
+                var button = new Button(() => { HideDialogue(); NpcServices.Open(service, from); }) { text = entry.Label };
                 button.AddToClassList("npc-action");
                 button.AddToClassList("kn-button-primary");
                 actions.Add(button);

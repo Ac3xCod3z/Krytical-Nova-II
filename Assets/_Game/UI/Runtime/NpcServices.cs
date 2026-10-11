@@ -40,9 +40,19 @@ namespace KryticalNova.UI
         /// <summary>Every registered service, in the order the dialogue shows them.</summary>
         public static IReadOnlyList<Entry> All => Entries;
 
+        /// <summary>
+        /// The NPC whose dialogue opened the service being opened now, or null when something else did (a command).
+        /// For a service that is not the same at every NPC offering it: a shop shows that vendor's shelf.
+        /// </summary>
+        public static NpcInteractable Opener { get; private set; }
+
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => Entries.Clear();
+        private static void ResetStatics()
+        {
+            Entries.Clear();
+            Opener = null;
+        }
 
         /// <param name="offer">The NPC offer that shows this service's button; None for a service no NPC opens.</param>
         public static void Register(string id, NpcOffer offer, string label, Action open)
@@ -59,12 +69,17 @@ namespace KryticalNova.UI
                 if (Entries[i].Id == id) Entries.RemoveAt(i);
         }
 
-        public static bool Open(string id)
+        public static bool Open(string id) => Open(id, null);
+
+        /// <summary>Opens a service from an NPC's dialogue: the service can ask which NPC (<see cref="Opener"/>) while it opens.</summary>
+        public static bool Open(string id, NpcInteractable opener)
         {
             for (int i = 0; i < Entries.Count; i++)
             {
                 if (Entries[i].Id != id) continue;
-                Entries[i].Open();
+                Opener = opener;
+                try { Entries[i].Open(); }
+                finally { Opener = null; }
                 return true;
             }
             return false;

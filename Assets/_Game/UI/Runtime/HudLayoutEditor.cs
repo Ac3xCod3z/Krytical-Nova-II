@@ -84,6 +84,7 @@ namespace KryticalNova.UI
             { "trade-window", "TRADE" },
             { "kiosk-window", "KIOSK" },
             { "shop-window", "KIOSK SHOP" },
+            { "vendor-window", "SHOP" },
             { "contacts-window", "CONTACTS" },
             { "crew-window", "CREW" },
             { "minimap", "MINIMAP" },

@@ -34,6 +34,8 @@ namespace KryticalNova.NPC
         GearWork = 1 << 3,
         /// <summary>The Renown ladders: Ascension and Nova Standings.</summary>
         Herald = 1 << 4,
+        /// <summary>A shop: it sells what its stock lists, and buys what the player has to sell.</summary>
+        Shop = 1 << 5,
     }
 
     /// <summary>Static data for one town NPC. Shops, quests and crafting hook in by role later.</summary>
