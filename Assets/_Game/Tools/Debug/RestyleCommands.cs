@@ -118,16 +118,16 @@ namespace KryticalNova.DevTools
             }
         }
 
-        [Command("gm.passes", "Give the targeted player what the appearance services use up: n Chroma Cells, n Restyle Passes and n Training Passes (10 unless told).")]
+        [Command("gm.passes", "Give the targeted player what the appearance services use up: n Chroma Cells, n Prism Cells, n Restyle Passes and n Training Passes (10 unless told).")]
         private static string Passes(int count = 10)
         {
             if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
             if (!player.TryGetComponent(out PlayerInventory inventory)) return NoComponent;
             int kinds = 0;
-            foreach (ushort id in new[] { CraftItemIds.ChromaCell, CraftItemIds.RestylePass, CraftItemIds.TrainingPass })
+            foreach (ushort id in new[] { CraftItemIds.ChromaCell, CraftItemIds.PrismCell, CraftItemIds.RestylePass, CraftItemIds.TrainingPass })
                 if (inventory.ServerGive(id, count, earned: true) > 0) kinds++;
-            return kinds == 3 ? $"Gave {count} Chroma Cells, {count} Restyle Passes and {count} Training Passes."
-                : $"Only {kinds} of the 3 kinds fitted: the Pack is full, or the items are missing (run Krytical Nova/Items/5. Generate Utility Items).";
+            return kinds == 4 ? $"Gave {count} Chroma Cells, {count} Prism Cells, {count} Restyle Passes and {count} Training Passes."
+                : $"Only {kinds} of the 4 kinds fitted: the Pack is full, or the items are missing (run Krytical Nova/Items/5. Generate Utility Items).";
         }
 
         // ------------------------------------------------------------------ crafting

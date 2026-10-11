@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 2458185685304702805}
   - component: {fileID: 9193325276775006065}
   - component: {fileID: 2035480040765815574}
+  - component: {fileID: 3990027888972295473}
   m_Layer: 0
   m_Name: W_Harvester_03
   m_TagString: Untagged
@@ -176,3 +177,22 @@ MonoBehaviour:
   - {x: 0.020397024, y: -0.074001804, z: -0.12875646}
   - {x: 0.011379907, y: -0.09519384, z: -0.1267355}
   - {x: -0.013588134, y: -0.093942165, z: -0.120802015}
+--- !u!114 &3990027888972295473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4286267127627927373}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.09195401
+    width: 0.06
+    role: 5
+    value: 0.32060385
+  paintMetal: 1
+  keepAsSet: 0

@@ -125,8 +125,37 @@ namespace KryticalNova.Items.Visuals
             }
             Place(settle: false);
             ConfigureHitbox(strikes);
+            ApplyDye(); // a new model wears the weapon's dye
             if (glowOn) AttachGlow(); // a new model for the same glow (the look changed, not the Temper)
         }
+
+        /// <summary>
+        /// The colourway the weapon is dyed in (0 = its own colours). It is the model shown that is repainted, so a
+        /// Weave over a dyed weapon is drawn in that dye, like an outfit piece.
+        /// </summary>
+        public void SetDye(GearThemeLibrary colourways, ushort colourway)
+        {
+            GearThemeLibrary.Theme theme = default;
+            if (colourway != 0 && (colourways == null || !colourways.TryGet(colourway, out theme))) theme = default;
+            if (theme.id == dye.id) return;
+            dye = theme;
+            ApplyDye();
+        }
+
+        private void ApplyDye()
+        {
+            Paint(spawned);
+            Paint(spawnedOff);
+        }
+
+        private void Paint(GameObject model)
+        {
+            if (model == null) return;
+            var paint = model.GetComponentInChildren<WeaponPaint>(true);
+            if (paint != null) paint.Apply(dye);
+        }
+
+        private GearThemeLibrary.Theme dye;
 
         private void ConfigureHitbox(ItemDefinition strikes)
         {

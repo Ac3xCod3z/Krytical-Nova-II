@@ -193,6 +193,7 @@ GameObject:
   - component: {fileID: 5943170462556763669}
   - component: {fileID: 270762115303226179}
   - component: {fileID: 5905365368210920775}
+  - component: {fileID: 8229606457853814646}
   m_Layer: 0
   m_Name: W_Carbine_05
   m_TagString: Untagged
@@ -281,6 +282,29 @@ MonoBehaviour:
   - {x: 0.01370532, y: 0.0018627166, z: 0.67302686}
   - {x: -0.013350491, y: -0.20754662, z: 0.15484828}
   - {x: 0.03108925, y: -0.006882324, z: -0.21775372}
+--- !u!114 &8229606457853814646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3477451846458736069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.09416778
+    width: 0.06
+    role: 1
+    value: 0.7137866
+  - hue: 0.71726185
+    width: 0.06
+    role: 2
+    value: 0.72156864
+  paintMetal: 1
+  keepAsSet: 0
 --- !u!1 &3970281501016451185
 GameObject:
   m_ObjectHideFlags: 0

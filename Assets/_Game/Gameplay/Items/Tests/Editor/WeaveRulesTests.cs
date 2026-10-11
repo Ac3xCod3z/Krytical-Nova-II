@@ -99,7 +99,7 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void OnlyAnOutfitPieceThatPaintsTheColourMap_TakesDye()
+        public void AnOutfitPieceThatPaintsTheColourMap_AndAWeaponWithAModel_TakeDye()
         {
             ItemDefinition armor = Piece(10016, EquipSlot.Armor, 2);
             armor.colorCells = new byte[] { 3, 4 };
@@ -109,7 +109,11 @@ namespace KryticalNova.Tests
             Assert.IsNull(WeaveRules.DyeBlockedReason(EquipSlot.Armor, armor, 0, null), "taking the dye off needs no colourway");
             Assert.AreEqual(WeaveRules.ReasonNoColourway, WeaveRules.DyeBlockedReason(EquipSlot.Armor, armor, 7, null));
             Assert.AreEqual(WeaveRules.ReasonNoDye, WeaveRules.DyeBlockedReason(EquipSlot.Boots, plain, 0, null));
-            Assert.AreEqual(WeaveRules.ReasonNoDye, WeaveRules.DyeBlockedReason(EquipSlot.Weapon, blade, 0, null));
+            Assert.IsNull(WeaveRules.DyeBlockedReason(EquipSlot.Weapon, blade, 0, null), "a weapon's model is repainted");
+            Assert.AreEqual(WeaveRules.ReasonNoColourway, WeaveRules.DyeBlockedReason(EquipSlot.Weapon, blade, 7, null));
+            ItemDefinition bare = Piece(10081, EquipSlot.Weapon, 6, (WeaponClassId)1, look: false);
+            Assert.AreEqual(WeaveRules.ReasonNoDye, WeaveRules.DyeBlockedReason(EquipSlot.Weapon, bare, 0, null), "a weapon with no model has nothing to repaint");
+            Assert.AreEqual(WeaveRules.ReasonNoDye, WeaveRules.DyeBlockedReason(EquipSlot.Ring, Piece(10200, EquipSlot.Ring, 9), 0, null));
             Assert.AreEqual(WeaveRules.ReasonNothingWorn, WeaveRules.DyeBlockedReason(EquipSlot.Armor, null, 0, null));
         }
 

@@ -16,6 +16,6 @@ MonoBehaviour:
   displayName: Outfitter
   title: "Dye \xB7 Colour Cells"
   greeting: Same cut, new colours. Bring a Chroma Cell for every piece you want dyed.
-  services: Dyes an outfit piece in another colourway for one Chroma Cell; the dye stays on the piece. Sells one of the four colour cells each day, a different one every day, and buys what you have to sell.
+  services: Dyes an outfit piece in another colourway for one Chroma Cell, or a weapon for one Prism Cell; the dye stays on the piece. Sells one of the four colour cells each day, a different one every day, and buys what you have to sell.
   offers: 160
   interactRange: 3

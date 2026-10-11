@@ -192,6 +192,7 @@ GameObject:
   - component: {fileID: 2017148209808058203}
   - component: {fileID: 7944443368478610497}
   - component: {fileID: 6858377331720689162}
+  - component: {fileID: 5548150763634397757}
   m_Layer: 0
   m_Name: W_ArcCaster_03
   m_TagString: Untagged
@@ -269,3 +270,22 @@ MonoBehaviour:
   - {x: -0.008294263, y: 0.03646042, z: 0.72960556}
   - {x: 0.008294263, y: 0.03646042, z: 0.72960556}
   - {x: 0, y: -0.105671, z: -0.033338927}
+--- !u!114 &5548150763634397757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8349965750577355173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.09366393
+    width: 0.06
+    role: 1
+    value: 0.79607844
+  paintMetal: 1
+  keepAsSet: 0

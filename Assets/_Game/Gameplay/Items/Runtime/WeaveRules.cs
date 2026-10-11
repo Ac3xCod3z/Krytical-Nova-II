@@ -22,7 +22,7 @@ namespace KryticalNova.Items
         /// <summary>The slots whose piece has a look of its own.</summary>
         public static readonly EquipSlot[] WeaveSlots = { EquipSlot.Weapon, EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape };
         /// <summary>The slots whose piece wears colours on the character's colour map. A weapon has materials of its own.</summary>
-        public static readonly EquipSlot[] DyeSlots = { EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape };
+        public static readonly EquipSlot[] DyeSlots = { EquipSlot.Weapon, EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Cape };
 
         public static bool IsWeaveSlot(EquipSlot slot) => System.Array.IndexOf(WeaveSlots, slot) >= 0;
         public static bool IsDyeSlot(EquipSlot slot) => System.Array.IndexOf(DyeSlots, slot) >= 0;
@@ -66,9 +66,16 @@ namespace KryticalNova.Items
             return null;
         }
 
-        /// <summary>Whether a piece wears colours a dye can change: it paints cells of the character's colour map.</summary>
-        public static bool TakesDye(ItemDefinition shown) =>
-            shown != null && IsDyeSlot(shown.equipSlot) && shown.colorCells != null && shown.colorCells.Length > 0;
+        /// <summary>
+        /// Whether a piece wears colours a dye can change: an outfit piece paints cells of the character's colour
+        /// map, a weapon has a model whose paints are repainted (<c>WeaponPaint</c>).
+        /// </summary>
+        public static bool TakesDye(ItemDefinition shown)
+        {
+            if (shown == null || !IsDyeSlot(shown.equipSlot)) return false;
+            if (shown.equipSlot == EquipSlot.Weapon) return shown.weaponPrefab != null;
+            return shown.colorCells != null && shown.colorCells.Length > 0;
+        }
 
         /// <summary>Why the piece shown in a slot may not be dyed in a colourway (0 = back to its own colours), or null.</summary>
         public static string DyeBlockedReason(EquipSlot slot, ItemDefinition shown, ushort colourway, GearThemeLibrary colourways)

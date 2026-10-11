@@ -810,6 +810,7 @@ GameObject:
   - component: {fileID: 7331756966390381519}
   - component: {fileID: 8250203082395343203}
   - component: {fileID: 1214630840421970366}
+  - component: {fileID: 7555184321233545609}
   m_Layer: 0
   m_Name: W_Warbow_05
   m_TagString: Untagged
@@ -877,6 +878,33 @@ MonoBehaviour:
   - {x: -0.04772553, y: -0.16244087, z: -0.5944044}
   - {x: 0.10508451, y: -0.16244102, z: 0.7379304}
   - {x: 0.10508451, y: -0.16244087, z: -0.5944044}
+--- !u!114 &7555184321233545609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7524077799373983510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.03623316
+    width: 0.06
+    role: 5
+    value: 0.42254388
+  - hue: 0.09955211
+    width: 0.06
+    role: 5
+    value: 0.531865
+  - hue: 0.5813621
+    width: 0.06
+    role: 1
+    value: 0.62783766
+  paintMetal: 1
+  keepAsSet: 0
 --- !u!1 &7679942528249344763
 GameObject:
   m_ObjectHideFlags: 0

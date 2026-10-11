@@ -37,6 +37,22 @@ MonoBehaviour:
     days: 30
     permitItemId: 9021
     storePrice: $3.99
+  vendorGearCredsPerLevel: 150
+  vendorGearRarityMultiplier:
+  - 1
+  - 4
+  - 20
+  - 100
+  - 100
+  vendorFallbackValueByRarity: 14000000000000006400000000000000d007000000000000204e000000000000204e000000000000l
+  vendorSellBackPercent: 20
+  vendorConfirmFromRarity: 2
+  weaveApplyFee: 5000
+  weaveClearFee: 0
+  dyeItemId: 9300
+  weaponDyeItemId: 9303
+  restyleItemId: 9301
+  trainingItemId: 9302
   incomeTarget:
   - level: 1
     credsPerHour: 3000
