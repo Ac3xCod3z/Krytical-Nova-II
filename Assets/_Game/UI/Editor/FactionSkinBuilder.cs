@@ -630,19 +630,25 @@ namespace KryticalNova.EditorTools
         /// the faction's HUD kit, which is what the game has at hand while it runs. A pointer chosen on the skin
         /// asset is kept.
         /// </summary>
+        /// <summary>
+        /// The pointer a faction's skin starts with: the owner's picks of 11 Oct 2026, each from another faction's
+        /// pack than the skin's own (Hegemony: Fantasy Warrior pointer 5; Null: Sci-Fi Menus pointer 2; Covenant:
+        /// Dark Fantasy Menus pointer 2).
+        /// </summary>
+        public static string DefaultCursor(FactionId faction) => faction switch
+        {
+            FactionId.Hegemony => FantasyWarrior + "Sprites/Cursors/SPR_MouseCursor_FantasyWarrior_Pointer_05.png",
+            FactionId.Null => "Assets/Synty/InterfaceSciFiMenus/Sprites/Cursors/SPR_SciFiMenus_Cursor_Pointer_02.png",
+            FactionId.Covenant => "Assets/Synty/InterfaceDarkFantasyMenus/Sprites/Cursors/SPR_DarkFantasyMenus_Cursor_Pointer_02.png",
+            _ => null,
+        };
+
         private static void EnsureCursor(UiSkin skin)
         {
             bool changed = false;
             if (skin.cursor == null)
             {
-                string path = skin.faction switch
-                {
-                    FactionId.Hegemony => SciFiHud + "Sprites/Cursors/SPR_MouseCursor_SciFiSoldier_Pointer_01.png",
-                    FactionId.Null => DarkFantasy + "Sprites/Cursors/SPR_DarkFantasy_Pointer_01.png",
-                    FactionId.Covenant => FantasyWarrior + "Sprites/Cursors/SPR_MouseCursor_FantasyWarrior_Pointer_01.png",
-                    _ => null,
-                };
-                skin.cursor = path != null ? Load<Texture2D>(path) : null;
+                skin.cursor = DefaultCursor(skin.faction) is string path ? Load<Texture2D>(path) : null;
                 skin.cursorHotspot = Vector2.zero;
                 changed = skin.cursor != null;
             }

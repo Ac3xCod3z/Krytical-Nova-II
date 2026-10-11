@@ -15,18 +15,18 @@ MonoBehaviour:
   sets:
   - faction: 1
     symbols:
-    - {fileID: 21300000, guid: 836f8e0c48f5a0b408148a66d0ceafb6, type: 3}
-    - {fileID: 21300000, guid: eb5c96ad9d5836241bba898d87f6a2c3, type: 3}
-    - {fileID: 21300000, guid: bfed679e8407de2419810b8b5fa618a6, type: 3}
-    - {fileID: 21300000, guid: d750eb4e3d7da84489ce145db72a1e77, type: 3}
-    - {fileID: 21300000, guid: ec1e5a812cb6627438e0df9a1fdc4229, type: 3}
-    - {fileID: 21300000, guid: 111c3d2717a5ffe49afc3e9b46c2f039, type: 3}
-    - {fileID: 21300000, guid: bc36315035986cc4fa5d20ffa3e63c77, type: 3}
-    - {fileID: 21300000, guid: 334ab7826b4e6bb4aadeca4a3f2be6f8, type: 3}
-    - {fileID: 21300000, guid: 6901682af0085d044b70981d9a2eb7be, type: 3}
-    - {fileID: 21300000, guid: cb2e14f1c1702ea42bb0f7de1f526920, type: 3}
-    - {fileID: 21300000, guid: c32c81ad0429a2649baebaf1dd0a5ba9, type: 3}
-    - {fileID: 21300000, guid: 6351d1cf862c0cb48bcb33164de5322e, type: 3}
+    - {fileID: 21300000, guid: 5ee3e98fe668f1846b416004df06f9bf, type: 3}
+    - {fileID: 21300000, guid: 3e9ee53f1a537ef4fa6b91f336a7ce05, type: 3}
+    - {fileID: 21300000, guid: 20b12a0485871d24b91678dfcd6cbbcb, type: 3}
+    - {fileID: 21300000, guid: 341b45a80a4ae4147ba055803bd2ca38, type: 3}
+    - {fileID: 21300000, guid: 531f493cedb4687488ef6bd666682079, type: 3}
+    - {fileID: 21300000, guid: b719cee884b3c444baa17d023ca1c8b0, type: 3}
+    - {fileID: 21300000, guid: 88a0f6328180a3a489451701f0e541b6, type: 3}
+    - {fileID: 21300000, guid: 5089ba11ce996474eb180d6cff1861c0, type: 3}
+    - {fileID: 21300000, guid: 3642cb3ce8b7b1d44965522b8eaf9b91, type: 3}
+    - {fileID: 21300000, guid: bcb88eb1b3473db4699145dd0c1565ed, type: 3}
+    - {fileID: 21300000, guid: eeb0603f5a6525a43ae94115d3258a6d, type: 3}
+    - {fileID: 21300000, guid: 0bca278d9f0f0c44ea3392232ade7061, type: 3}
   - faction: 2
     symbols:
     - {fileID: 21300000, guid: 00df18c7cd6106d41a3358ae6909cae6, type: 3}
@@ -43,15 +43,15 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 0b2a481a499e59149b90d7d9653e611b, type: 3}
   - faction: 3
     symbols:
-    - {fileID: 21300000, guid: c22acfe9d6f14c243834e30c7ba66443, type: 3}
-    - {fileID: 21300000, guid: 546b4b7290d094443b6b65b841e23371, type: 3}
-    - {fileID: 21300000, guid: d20d54784b06ec843bfd924f113526e1, type: 3}
-    - {fileID: 21300000, guid: a62d3355f8a5f8440946e43de649f476, type: 3}
-    - {fileID: 21300000, guid: 9e8de72c912ee6649a4eeb262dbbc361, type: 3}
-    - {fileID: 21300000, guid: 845913718bb0ed24aa3b9b1e6a172646, type: 3}
-    - {fileID: 21300000, guid: c84d324e0ee8e434a8554843088532f4, type: 3}
-    - {fileID: 21300000, guid: a5111d62b1f122844be1580501a6cc82, type: 3}
-    - {fileID: 21300000, guid: 9d2be23a1cf745246a19c472f937f5f0, type: 3}
-    - {fileID: 21300000, guid: c740b8735bac9cd4f9243c9262c2beda, type: 3}
     - {fileID: 21300000, guid: 5ea8b99a2bf349f4587175dad6b1b49a, type: 3}
-    - {fileID: 21300000, guid: b049481546fe44e449ef122a6166cfb5, type: 3}
+    - {fileID: 21300000, guid: e40177d020d589a48a2d6adeeec3c02b, type: 3}
+    - {fileID: 21300000, guid: e26b3511739656b4aae99ff22d7c1305, type: 3}
+    - {fileID: 21300000, guid: ad4cc1fafb06cd54683e6d48c3847bdd, type: 3}
+    - {fileID: 21300000, guid: 452012ebe6d33bc4bbb53a355f77ce63, type: 3}
+    - {fileID: 21300000, guid: d16aa192bb11e02499401fb42d1cba68, type: 3}
+    - {fileID: 21300000, guid: 970286c87a203f44b907114ac87aecb6, type: 3}
+    - {fileID: 21300000, guid: 3960861a25a518c4d9e33e35dd1beccc, type: 3}
+    - {fileID: 21300000, guid: 31419249372bb804a943f0a81c942779, type: 3}
+    - {fileID: 21300000, guid: 2b3889a2bb9beb444adf6734821e1c02, type: 3}
+    - {fileID: 21300000, guid: 81493905a0a451b469e3844bb85ebf22, type: 3}
+    - {fileID: 21300000, guid: 173f7bf0258285c4f8bf01825ac02a11, type: 3}

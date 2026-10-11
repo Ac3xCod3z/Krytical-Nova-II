@@ -53,7 +53,7 @@ namespace KryticalNova.UI
             public KryticalNova.Autopilot.PlayerAutopilot Autopilot;
             public float Height = float.NaN;
             public string NameText, StandingText, CrewText;
-            public int CrewSymbol = -1; // the symbol shown, or -1 for none
+            public int CrewSymbol = -1; // the Crew symbol shown in the emblem's place (symbol and colour in one number), or -1 for none
             public FactionId Faction = (FactionId)255;
             public FactionId ArtFaction; // whose art the card was made in
             public bool Duelling;
@@ -274,26 +274,38 @@ namespace KryticalNova.UI
             CrewTag tag = card.PlayerCrew != null ? card.PlayerCrew.Tag : default;
             string crew = tag.InCrew ? "<" + tag.crew + ">" : string.Empty;
             if (crew != card.CrewText) view.Crew(card.CrewText = crew);
-            // The Crew's symbol, in its own faction's art (a Crew is of one faction: its member's).
-            int symbol = tag.InCrew ? tag.symbol : -1;
-            if (symbol != card.CrewSymbol)
-            {
-                card.CrewSymbol = symbol;
-                CrewSymbolLibrary library = symbol >= 0 && card.PlayerCrew.Settings != null ? card.PlayerCrew.Settings.symbols : null;
-                view.CrewSymbol(library != null ? library.Get(faction, symbol) : null);
-            }
+            // A player in a Crew shows the Crew's symbol where the faction's emblem stands; without a Crew, the emblem.
+            int symbol = CrewEmblem(tag);
+            bool emblemChanged = symbol != card.CrewSymbol;
+            card.CrewSymbol = symbol;
 
             float share = card.Vitals != null && card.Vitals.MaxHealth > 0f ? Mathf.Clamp01(card.Vitals.Health / card.Vitals.MaxHealth) : 1f;
             view.Health(showHealth && card.Vitals != null, share);
 
             bool duelling = viewer != null && card.Identity != null && card.Identity != viewer && card.Identity.IsDuelling(viewer);
-            if (faction == card.Faction && duelling == card.Duelling) return;
+            if (faction == card.Faction && duelling == card.Duelling && !emblemChanged) return;
             card.Faction = faction;
             card.Duelling = duelling;
             FactionDefinition definition = card.Identity != null && card.Identity.Database != null && card.Identity.Database.Factions != null
                 ? card.Identity.Database.Factions.Get(faction) : null;
             view.Colour(duelling ? DuelColor : definition != null ? Opaque(definition.accentColor) : NoFactionColor);
-            view.Crest(definition != null ? definition.crest : null);
+            Sprite emblem = Emblem(card, tag, faction, definition, out Color tint);
+            view.Crest(emblem, tint);
+            view.CrewSymbol(null);
+        }
+
+        // The Crew's symbol and colour as one number, so a change of either is seen; -1 without a Crew.
+        private static int CrewEmblem(in CrewTag tag) => tag.InCrew ? tag.symbol | (tag.colour << 8) : -1;
+
+        /// <summary>What stands before the name: the Crew's symbol in the Crew's colour, or else the faction's emblem.</summary>
+        private static Sprite Emblem(Card card, in CrewTag tag, FactionId faction, FactionDefinition definition, out Color tint)
+        {
+            tint = Color.white;
+            CrewSettings settings = tag.InCrew && card.PlayerCrew != null ? card.PlayerCrew.Settings : null;
+            Sprite symbol = settings != null && settings.symbols != null ? settings.symbols.Get(faction, tag.symbol) : null;
+            if (symbol == null) return definition != null ? definition.crest : null;
+            tint = settings.SymbolColour(tag.colour);
+            return symbol;
         }
 
         /// <summary>Writes what changed since the card was last shown. Called only for cards on screen.</summary>
@@ -320,18 +332,25 @@ namespace KryticalNova.UI
                 card.Crew.text = card.CrewText = crew;
                 card.Crew.style.display = crew.Length > 0 ? DisplayStyle.Flex : DisplayStyle.None;
             }
+            int symbol = CrewEmblem(tag);
+            bool emblemChanged = symbol != card.CrewSymbol;
+            card.CrewSymbol = symbol;
 
             // A Callout opponent reads as an enemy for as long as the duel lasts.
             bool duelling = viewer != null && card.Identity != null && card.Identity != viewer && card.Identity.IsDuelling(viewer);
-            if (faction == card.Faction && duelling == card.Duelling) return;
+            if (faction == card.Faction && duelling == card.Duelling && !emblemChanged) return;
             card.Faction = faction;
             card.Duelling = duelling;
             FactionDefinition definition = card.Identity != null && card.Identity.Database != null && card.Identity.Database.Factions != null
                 ? card.Identity.Database.Factions.Get(faction) : null;
             card.Name.style.color = duelling ? DuelColor : definition != null ? Opaque(definition.accentColor) : NoFactionColor;
-            bool hasCrest = definition != null && definition.crest != null;
-            card.Crest.style.display = hasCrest ? DisplayStyle.Flex : DisplayStyle.None;
-            if (hasCrest) card.Crest.style.backgroundImage = new StyleBackground(definition.crest);
+            Sprite emblem = Emblem(card, tag, faction, definition, out Color tint);
+            card.Crest.style.display = emblem != null ? DisplayStyle.Flex : DisplayStyle.None;
+            if (emblem != null)
+            {
+                card.Crest.style.backgroundImage = new StyleBackground(emblem);
+                card.Crest.style.unityBackgroundImageTintColor = tint;
+            }
         }
 
         private static Color Opaque(Color color) => new Color(color.r, color.g, color.b, 1f);

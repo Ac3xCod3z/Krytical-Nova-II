@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: 'Zenith Dossier: Orbital Call'
   description: Unlocks Orbital Call, the Carbine's Zenith technique, which is then learned with skill points. Used up when it is read. Found only in the Prime grounds.
   icon: {fileID: 21300000, guid: 02d60b7df9be3964eb6992b9dc7b847f, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 4
   equipSlot: 0
   maxStack: 10

@@ -43,7 +43,7 @@ runs on the two Grruzam sets; Warbow runs on `Assets/Synty/AnimationBowCombat`.
 
 ## 2. The structure every class copies
 
-8 attacks + 2 buffs, identical per class; only the Stance stat follows the role.
+10 attacks + 2 buffs, identical per class; only the Stance stat follows the role. Ten since 11 Oct 2026 (owner): the single hit and the multi hit that were level 60 (S6, S7) are level 80 and wait for the Prime grounds like the Zenith technique, and a new single hit and multi hit took their place at level 60.
 
 | Slot | Role | Level / source |
 | --- | --- | --- |
@@ -52,8 +52,10 @@ runs on the two Grruzam sets; Warbow runs on `Assets/Synty/AnimationBowCombat`.
 | S3 | 3-hit, 3 s cooldown | L1 Instructor |
 | S4 | heavy single | L30 Instructor |
 | S5 | 3-hit flurry | L30 Instructor |
-| S6 | single, +101–110% bonus | L60 Skill Chip |
-| S7 | 3-hit, +101–110% bonus | L60 Skill Chip |
+| L60 single (`Lv60Single`) | single, +100–105% bonus, 38 ranks; between S4 and S6 in every number (Claude's numbers) | L60, its own Skill Chip: a drop from Hostiles of level 60 and up (0.1 %, placeholder; `gm.chips`) |
+| L60 multi (`Lv60Multi`) | 3-hit, +100–105% bonus, 38 ranks; between S5 and S7 | L60, its own Skill Chip, as above |
+| S6 | single, +101–110% bonus | **L80** since 11 Oct 2026 (was L60), its own Skill Chip: a drop of the Prime grounds only (level 113 and up, 0.02 %) |
+| S7 | 3-hit, +101–110% bonus | **L80** since 11 Oct 2026 (was L60), its own Skill Chip, as S6 |
 | S8 | Zenith technique (TS2: War God): AoE leap, hold-to-repeat, radius 5–7 | L80, its class's own Zenith Dossier (a drop of the Prime grounds; `gm.zenith`) |
 | Stance | +Attack Power % (offense) / +Defense Power % (defense) / +Evasion and Move Speed % (ranged), 28 ranks | L1 |
 | Guard | +Elemental Defense %, 20 ranks | L1 |
@@ -73,6 +75,8 @@ Monoblade's former names (TS2 Guanyin Blade) in parentheses.
 | S3 | Signature Series (Gentleman's Pen) | Compliance Combo | Triple Tap |
 | S4 | Severance (Devil's Strike) | Curfew | Headhunter |
 | S5 | Hostile Takeover (Flash of Rage) | Cease and Desist | Burst Contract |
+| L60 single | Margin Call | Injunction | Deadeye |
+| L60 multi | Short Squeeze | Crackdown | Suppressing Fire |
 | S6 | Zero Hour (Sunray's Strike) | Lockstep | Longshot |
 | S7 | Liquidation (Phantom Thunder) | Full Enforcement | Terminal Burst |
 | S8 | Market Crash (Thunderous Dragon) | Martial Law | Orbital Call |
@@ -88,6 +92,8 @@ Monoblade's former names (TS2 Guanyin Blade) in parentheses.
 | S3 | Threshing Combo | Servo Combo | Tri-Bolt |
 | S4 | Scrap Sentence | Compactor | Ion Spike |
 | S5 | Hydraulic Flurry | Overdrive Cycle | Cascade Fire |
+| L60 single | Shear Line | Ram Drive | Flashpoint |
+| L60 multi | Combine Pass | Ratchet Rush | Arc Volley |
 | S6 | Extinction Blow | Core Breach | Sunspot |
 | S7 | Kill Loop | Three-Phase Rend | Chain Storm |
 | S8 | Terminal Harvest | Zero Point | Extinction Beam |
@@ -103,6 +109,8 @@ Monoblade's former names (TS2 Guanyin Blade) in parentheses.
 | S3 | Clan Rhythm | Three Oaths | Three Feathers |
 | S4 | Oathbreaker | Bulwark Strike | Heartseeker |
 | S5 | Frostbite Flurry | Hearthguard Flurry | Volley |
+| L60 single | Bonecleaver | Oathkeeper | Falcon's Eye |
+| L60 multi | Raven's Feast | Vanguard's Tide | Swiftwind |
 | S6 | Skysplitter | Dawnguard | Moonshot |
 | S7 | Wolfpack | Highguard Trinity | Stormflight |
 | S8 | Northfall | Kingsfall | Skyfall |

@@ -146,6 +146,14 @@ namespace KryticalNova.EditorTools
                 string shown = target.Icon != null ? AssetDatabase.GetAssetPath(target.Icon) : null;
                 if (shown != baked) problems.Add($"{target.name} shows {(shown ?? "no icon")}, not its baked icon {baked}. Bake the icons.");
             }
+            // An item that shows another's icon (a Skill Chip) must show exactly that one.
+            foreach (string guid in AssetDatabase.FindAssets("t:ItemDefinition", new[] { IconTargets.ItemRoot }))
+            {
+                var item = AssetDatabase.LoadAssetAtPath<KryticalNova.Items.ItemDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+                if (item == null || item.sharesIconOf == null) continue;
+                if (item.sharesIconOf.sharesIconOf != null) problems.Add($"{item.displayName} shares the icon of {item.sharesIconOf.displayName}, which has none of its own.");
+                else if (item.icon != item.sharesIconOf.icon) problems.Add($"{item.displayName} does not show the icon of {item.sharesIconOf.displayName}. Run Items > 5. Generate Utility Items.");
+            }
             foreach (IconLibrary.Assignment assignment in library.assignments)
                 if (assignment != null && !known.Contains((assignment.kind, assignment.target)))
                     problems.Add($"The library has an icon for '{assignment.target}', but there is no such {assignment.kind} in the project.");

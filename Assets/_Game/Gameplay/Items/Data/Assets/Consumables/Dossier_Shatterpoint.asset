@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Shatterpoint Dossier
   description: Unlocks Shatterpoint, which is then learned with skill points. Used up when it is read. A Fabricator binds one from its four Pages.
   icon: {fileID: 21300000, guid: 928aa2a90264fc44e949144c6a8696c2, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 0
   maxStack: 10

@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Eversteel
   description: Alloy. Tempers a piece of gear by 12% on a success.
   icon: {fileID: 21300000, guid: 910148996ccd11f46897ffef5866928f, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 999

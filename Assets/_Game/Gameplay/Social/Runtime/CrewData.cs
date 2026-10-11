@@ -38,6 +38,8 @@ namespace KryticalNova.Social
         public string name;
         public int faction;
         public int symbol;
+        /// <summary>Which of <see cref="CrewSettings.symbolColours"/> the symbol is drawn in. The Leader picks it.</summary>
+        public int symbolColour;
         public string announcement = string.Empty;
         public long foundedUtc;
         public int level = 1;
@@ -58,6 +60,7 @@ namespace KryticalNova.Social
         public FixedString32Bytes title;
         public CrewRank rank;
         public byte symbol;
+        public byte colour;
 
         public bool InCrew => crew.Length > 0;
 
@@ -67,9 +70,11 @@ namespace KryticalNova.Social
             serializer.SerializeValue(ref title);
             serializer.SerializeValue(ref rank);
             serializer.SerializeValue(ref symbol);
+            serializer.SerializeValue(ref colour);
         }
 
-        public bool Equals(CrewTag other) => crew.Equals(other.crew) && title.Equals(other.title) && rank == other.rank && symbol == other.symbol;
+        public bool Equals(CrewTag other) =>
+            crew.Equals(other.crew) && title.Equals(other.title) && rank == other.rank && symbol == other.symbol && colour == other.colour;
     }
 
     /// <summary>What a member is told about their Crew, beside the roster.</summary>
@@ -78,6 +83,7 @@ namespace KryticalNova.Social
         public bool exists;
         public FixedString32Bytes name;
         public byte symbol;
+        public byte colour;
         public FixedString512Bytes announcement;
         public ushort memberCap;
         public CrewRank myRank;
@@ -87,6 +93,7 @@ namespace KryticalNova.Social
             serializer.SerializeValue(ref exists);
             serializer.SerializeValue(ref name);
             serializer.SerializeValue(ref symbol);
+            serializer.SerializeValue(ref colour);
             serializer.SerializeValue(ref announcement);
             serializer.SerializeValue(ref memberCap);
             serializer.SerializeValue(ref myRank);

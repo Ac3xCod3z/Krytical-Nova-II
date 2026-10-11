@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Trinity Platinum
   description: Alloy. Tempers a piece of gear by 15% on a success.
   icon: {fileID: 21300000, guid: 3ececcaaaa8f7564f91b6dc9a173ee69, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 0
   maxStack: 999

@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Shatterpoint Page I
   description: One of the four Pages of the Shatterpoint Dossier. A Fabricator binds all four into the Dossier.
   icon: {fileID: 21300000, guid: a0a54135ed140d94aa32ef232e84ecc7, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 99

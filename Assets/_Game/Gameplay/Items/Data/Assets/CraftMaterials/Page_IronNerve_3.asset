@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Iron Nerve Page III
   description: One of the four Pages of the Iron Nerve Dossier. A Fabricator binds all four into the Dossier.
   icon: {fileID: 21300000, guid: 9e02a353768de134dabf012aeea4db12, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 99

@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Reset Chip
   description: Returns a piece of gear to Tune 0. Nothing is refunded.
   icon: {fileID: 21300000, guid: 545c31d41acc97e4e8a99462f04a8d9b, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 999

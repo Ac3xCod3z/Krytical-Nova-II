@@ -36,10 +36,16 @@ namespace KryticalNova.EditorTools
         public const float MasterBitRate = 40f;
         /// <summary>Megabits a second of the clip itself on a PC without ffmpeg.</summary>
         public const float PlainBitRate = 6f;
-        /// <summary>The clip's quality as x264 counts it (lower is sharper and larger; 18 is near lossless to the eye, 23 its default).</summary>
-        public const int Quality = 21;
+        /// <summary>
+        /// The clip's quality as x264 counts it (lower is sharper and larger; 18 is near lossless to the eye, 23 its
+        /// default). 27 since 11 Oct 2026, the owner's choice of three shown side by side: the smallest, in which nothing could
+        /// be told apart on the page from 21, at under a third of the size.
+        /// </summary>
+        public const int Quality = 27;
         /// <summary>A clip is never wider or taller than this: the page shows it at half that, and large at about this.</summary>
         public const int LargestWidth = 1280, LargestHeight = 1000;
+        /// <summary>A clip of the world (the whole picture, nothing cut) is no wider than this: it has no small text to keep sharp.</summary>
+        public const int LargestWorldWidth = 960;
 
         /// <summary>
         /// The part of the take the clip keeps, as shares of the picture (x and y its top left corner); no size keeps
@@ -214,13 +220,13 @@ namespace KryticalNova.EditorTools
             // H.264 wants even sizes.
             int w = Even(whole ? width : crop.width * width), h = Even(whole ? height : crop.height * height);
             int x = whole ? 0 : Mathf.Clamp(Mathf.RoundToInt(crop.x * width), 0, width - w), y = whole ? 0 : Mathf.Clamp(Mathf.RoundToInt(crop.y * height), 0, height - h);
-            float fit = Mathf.Min(1f, Mathf.Min((float)LargestWidth / w, (float)LargestHeight / h));
+            float fit = Mathf.Min(1f, Mathf.Min((float)(whole ? LargestWorldWidth : LargestWidth) / w, (float)LargestHeight / h));
             int outWidth = Even(w * fit), outHeight = Even(h * fit);
             string filter = string.Format(CultureInfo.InvariantCulture, "crop={0}:{1}:{2}:{3},scale={4}:{5}:flags=lanczos", w, h, x, y, outWidth, outHeight);
             string made = $"{MasterFolder}/GC_{recordingTopic}_clip.mp4";
             if (File.Exists(made)) File.Delete(made);
             var start = new System.Diagnostics.ProcessStartInfo(ffmpeg,
-                $"-v error -y -i \"{take}\" -vf \"{filter}\" -an -c:v libx264 -preset slow -crf {Quality} -profile:v high -pix_fmt yuv420p -g {FrameRate} -movflags +faststart \"{made}\"")
+                $"-v error -y -i \"{take}\" -vf \"{filter}\" -an -c:v libx264 -preset veryslow -crf {Quality} -profile:v high -pix_fmt yuv420p -g {FrameRate * 2} -movflags +faststart \"{made}\"")
             {
                 UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true
             };

@@ -443,8 +443,8 @@ is there from character select too.
   the screen for a topic by hand. Both need Play mode and the Unity Recorder package, which is editor only
   (`KN_RECORDER`); the recorder switches the Game view to the take's size and puts it back.
 - **A clip is encoded once for the game.** The take is the Game view at a high bitrate (40 Mbit/s), kept outside the
-  project in `Temp/GuideClips/`; ffmpeg cuts it to the part that matters and encodes it (H.264, x264 quality 21, no
-  sound, never larger than 1280 x 1000) into `UI/Guide/Clips/GC_<topic>.mp4`; the clip is imported with transcoding
+  project in `Temp/GuideClips/`; ffmpeg cuts it to the part that matters and encodes it (H.264, x264 quality 27, no
+  sound, never larger than 1280 x 1000, a clip of the whole picture never wider than 960) into `UI/Guide/Clips/GC_<topic>.mp4`; the clip is imported with transcoding
   off (`GuideClipRecorder.AsRecorded`), so a build plays that file as it is. On a PC without ffmpeg the take itself
   becomes the clip (6 Mbit/s) and the topic's `focus` cuts the picture on the page. Until this date every clip was
   encoded twice, the second time by Unity at the Low bitrate, which is what made them soft; the main camera alone
@@ -462,7 +462,7 @@ is there from character select too.
 - **Two players**: Namecards, Callouts, Trade, Factions and Sponsor need a second client in the world running
   `GuideClipStaging.Answer()`, which accepts what the host asks and plays a Trade out. A Squad is of one faction, so
   its clip needs a second player of the host's faction (the staging says so and leaves the clip alone otherwise).
-- 39 topics, 39 clips, 129 MB together, and the same in a build. The clip's texture has smaller copies of itself
+- 39 topics, 39 clips, **34 MB** together, and the same in a build (129 MB at x264 quality 21 and 1280 wide; the owner asked for less and took the smallest of three shown side by side: quality 27, clips of the whole picture 960 wide. Nothing can be told apart on the page). The clip's texture has smaller copies of itself
   (mip maps), so a window's text does not shimmer at the page's small size.
 
 ### The rows, as the packs' settings rows
@@ -630,3 +630,16 @@ a swatch changes the look and is marked, Randomise and Undo, the five prompts, a
 and a bad one refused. The script clicks through the event system and sets values: no real pointer or key was used
 (the R, Z, Q, E, Enter and Esc keys were not pressed), nothing was dragged, and no character was finished from the new
 screens.
+
+### Item boosts: the running list (11 Oct 2026)
+
+What a player switches on with an item and that lasts for hours is not a badge on the buff bar: it is a line of text
+down the right edge of the screen, `[Field Booster] 0:59:12`, one line each, with a clock (owner: as Twelve Sky lists
+its timed scrolls). `BoostListView` draws it and asks its sources a few times a second; the XP Boosters are the first
+source (`ProgressionHUD.AddBoosterLines`), and time in a premium zone will be another. The last minute is drawn in
+another colour. It is the panel ITEM BOOSTS in the layout editor (`boost-list`), empty while nothing runs.
+
+### Pointers (owner's picks, 11 Oct 2026)
+
+Hegemony: Fantasy Warrior pointer 5. Null: Sci-Fi Menus pointer 2. Covenant: Dark Fantasy Menus pointer 2
+(`FactionSkinBuilder.DefaultCursor`; each is from another faction's pack than the skin's own, by choice).

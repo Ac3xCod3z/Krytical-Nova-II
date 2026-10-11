@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: 'Zenith Dossier: Market Crash'
   description: Unlocks Market Crash, the Monoblade's Zenith technique, which is then learned with skill points. Used up when it is read. Found only in the Prime grounds.
   icon: {fileID: 21300000, guid: 6e2eca4606d166f4dbe4b7c22a2c7a5d, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 4
   equipSlot: 0
   maxStack: 10

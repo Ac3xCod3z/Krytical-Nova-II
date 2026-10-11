@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Vitality Serum
   description: 'A one-way dose for the body: the health it adds stays for good.'
   icon: {fileID: 21300000, guid: 32a8f1d26680cac43aef2c4ec9ce0a0b, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 99

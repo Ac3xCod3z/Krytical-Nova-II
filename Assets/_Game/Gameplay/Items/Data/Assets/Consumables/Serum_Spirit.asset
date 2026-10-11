@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Spirit Serum
   description: 'A one-way dose for the mind: the Flux it adds stays for good.'
   icon: {fileID: 21300000, guid: 42c8f42b79dd4074db9b1cd6fded3d49, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 99

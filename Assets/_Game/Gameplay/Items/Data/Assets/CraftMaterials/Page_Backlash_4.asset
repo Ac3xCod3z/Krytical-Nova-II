@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Backlash Page IV
   description: One of the four Pages of the Backlash Dossier. A Fabricator binds all four into the Dossier.
   icon: {fileID: 21300000, guid: 8e14d02f18c2ad54c9357ddb008bbefc, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 99

@@ -42,13 +42,19 @@ namespace KryticalNova.Progression
         S7 = 7,
         S8 = 8,
         Stance = 9,
-        Guard = 10
+        Guard = 10,
+        /// <summary>
+        /// The single hit and the multi hit of level 60 (owner, 11 Oct 2026). S6 and S7 were those until then; they
+        /// are now the level 80 pair, which like the Zenith technique waits for the Prime grounds.
+        /// </summary>
+        Lv60Single = 11,
+        Lv60Multi = 12
     }
 
     public static class WeaponClasses
     {
         public const int Count = 9;
-        public const int SlotCount = 10;
+        public const int SlotCount = 12;
         /// <summary>Classes per faction; a faction's classes are consecutive ids.</summary>
         public const int PerFaction = 3;
 
@@ -62,7 +68,8 @@ namespace KryticalNova.Progression
         public static readonly ClassSkillSlot[] Slots =
         {
             ClassSkillSlot.S1, ClassSkillSlot.S2, ClassSkillSlot.S3, ClassSkillSlot.S4, ClassSkillSlot.S5,
-            ClassSkillSlot.S6, ClassSkillSlot.S7, ClassSkillSlot.S8, ClassSkillSlot.Stance, ClassSkillSlot.Guard
+            ClassSkillSlot.S6, ClassSkillSlot.S7, ClassSkillSlot.S8, ClassSkillSlot.Stance, ClassSkillSlot.Guard,
+            ClassSkillSlot.Lv60Single, ClassSkillSlot.Lv60Multi
         };
 
         public static bool IsValid(WeaponClassId id) => id >= WeaponClassId.Monoblade && id <= WeaponClassId.Warbow;

@@ -183,7 +183,7 @@ One bench, at the Fabricator (who stands at the Elder hall, and takes stat reset
 
 ## Crews (row 33)
 
-- **Founding:** at a Vaultkeeper, level 30, 10,000,000 Creds *(reference page 28)*. A name of 3 to 16 characters, unique, and one of 12 symbols. A symbol is a picture from the Crew's own faction's Synty interface pack (`CrewSymbolLibrary`, made by Krytical Nova ▸ UI ▸ Build Crew Symbols from the table in `CrewSymbolBuilder`; 12 a faction, never the faction's own emblem). It shows in the Crew window, in the Leader's picker, and before the Crew's name on every member's namecard. Which pictures is the owner's choice from the option sheets of 11 Oct 2026; until he chooses, the 12 a faction are a first pick.
+- **Founding:** at a Vaultkeeper, level 30, 10,000,000 Creds *(reference page 28)*. A name of 3 to 16 characters, unique, one of 12 symbols and one of 12 colours for it (`CrewSettings.symbolColours`; the Leader can change both later). Every symbol is a white picture, so it takes the colour whole; on the namecard it stands where the faction's emblem would, for a player in a Crew (owner, 11 Oct 2026). A symbol is a picture from the Crew's own faction's Synty interface pack (`CrewSymbolLibrary`, made by Krytical Nova ▸ UI ▸ Build Crew Symbols from the table in `CrewSymbolBuilder`; 12 a faction, never the faction's own emblem). It shows in the Crew window, in the Leader's picker, and before the Crew's name on every member's namecard. Which pictures is the owner's choice from the option sheets of 11 Oct 2026; until he chooses, the 12 a faction are a first pick.
 - **Ranks:** one **Leader**, up to 3 **Officers**, **Members**. 20 members at Crew level 1 (the table has later levels; Crews do not level yet).
 
 | | Member | Officer | Leader |

@@ -47,7 +47,7 @@ namespace KryticalNova.EditorTools
         private static readonly string LogFile = GuideClipRecorder.MasterFolder + "/staging.log";
         private static readonly string[] HudParts =
         {
-            "summary", "menu", "active-buffs-bar", "hotbar-dock", "network-panel", "chat-window", "minimap", "party-frames", "controls-hint", "feedback"
+            "summary", "menu", "active-buffs-bar", "hotbar-dock", "network-panel", "chat-window", "minimap", "party-frames", "controls-hint", "feedback", "boost-list"
         };
 
         /// <summary>Every topic with a staged clip, in the order they are recorded. Those marked need a second player.</summary>
@@ -528,15 +528,15 @@ namespace KryticalNova.EditorTools
                 }
                 case "xp-boosters":
                 {
-                    // The boosters are used from the Pack; what is running shows on the buff bar.
+                    // The boosters are used from the Pack; what is running is the list at the side of the screen.
                     Small();
-                    Clean(true, "active-buffs-bar");
+                    Clean(true, "boost-list");
                     Cmd("gm.boost.clear"); Cmd("gm.boosters 3");
                     Win("inventory-window", "open-inventory", true);
                     closers.Add(() => Win("inventory-window", "open-inventory", false));
                     closers.Add(() => Cmd("gm.boost.clear"));
                     yield return Wait(1.5f);
-                    Beside("inventory-window", "active-buffs-bar");
+                    Beside("inventory-window", "boost-list");
                     Rec(11f, true);
                     yield return Wait(1.3f);
                     Focus(14f, "inventory-window");
@@ -548,8 +548,8 @@ namespace KryticalNova.EditorTools
                         if (cell >= 0) local.RequestUse(cell);
                         Log("booster cell " + cell);
                         yield return Wait(0.5f);
-                        // The buff bar has no size until something runs: the cut takes it in once it has.
-                        Focus(14f, "inventory-window", "active-buffs-bar");
+                        // The list has no size until something runs: the cut takes it in once it has.
+                        Focus(14f, "inventory-window", "boost-list");
                     }
                     yield return Wait(3f);
                     break;

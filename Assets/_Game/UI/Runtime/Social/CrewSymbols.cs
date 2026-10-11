@@ -1,5 +1,6 @@
 using KryticalNova.Factions;
 using KryticalNova.Social;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace KryticalNova.UI
@@ -17,6 +18,17 @@ namespace KryticalNova.UI
             if (element == null) return;
             var picture = library != null ? library.Get(faction, index) : null;
             element.style.backgroundImage = picture != null ? new StyleBackground(picture) : StyleKeyword.Null;
+        }
+
+        /// <summary>
+        /// The same, drawn in one of the Crew colours. The pictures are white, so the colour is all the colour there
+        /// is: a Leader's choice shows the same in the window and over every member's head.
+        /// </summary>
+        public static void Apply(VisualElement element, CrewSettings settings, FactionId faction, int index, int colour)
+        {
+            if (element == null) return;
+            Apply(element, settings != null ? settings.symbols : null, faction, index);
+            element.style.unityBackgroundImageTintColor = settings != null ? settings.SymbolColour(colour) : Color.white;
         }
     }
 }

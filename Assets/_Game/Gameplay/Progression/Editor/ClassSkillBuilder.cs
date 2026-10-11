@@ -30,7 +30,8 @@ namespace KryticalNova.EditorTools
         private static readonly string[] MonobladeIds =
         {
             "FuryStrike", "HaeseoStroke", "GentlemansPen", "DevilsStrike", "FlashOfRage",
-            "SunraysStroke", "PhantomThunder", "ThunderousDragon", "LightningFlash", "AzureWall"
+            "SunraysStroke", "PhantomThunder", "ThunderousDragon", "LightningFlash", "AzureWall",
+            BladeSkillBuilder.Lv60SingleId, BladeSkillBuilder.Lv60MultiId
         };
 
         private enum ClipSet
@@ -48,10 +49,10 @@ namespace KryticalNova.EditorTools
             public WeaponClassId id;
             public ClipSet clips;
             public string summary;
-            public string[] names; // slot order: S1..S8, Stance, Guard
+            public string[] names; // slot order: S1..S8, Stance, Guard, the level 60 single hit, the level 60 multi hit
         }
 
-        // Clips per slot (S1..S8, Stance, Guard). Null keeps the template's clip.
+        // Clips per slot (S1..S8, Stance, Guard, level 60 single, level 60 multi). Null keeps the template's clip.
         private static readonly string[] GreatSwordClips =
         {
             GreatSword + "3_Skills/M_Big_Sword@Skill_H.FBX",
@@ -63,7 +64,9 @@ namespace KryticalNova.EditorTools
             GreatSword + "3_Skills/M_Big_Sword@Skill_G_ALL.FBX",
             GreatSword + "3_Skills/M_Big_Sword@Skill_D.FBX",
             GreatSword + "1_Movements/0__Intro/M_Big_Sword@Intro.FBX",
-            null
+            null,
+            GreatSword + "3_Skills/M_Big_Sword@Skill_C.FBX",
+            GreatSword + "3_Skills/M_Big_Sword@Skill_E.FBX"
         };
 
         private static readonly string[] BowClips =
@@ -77,7 +80,9 @@ namespace KryticalNova.EditorTools
             Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
             Bow + "A_POLY_BOW_Stand_Shoot_Leaping_Neut.fbx",
             null,
-            null
+            null,
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx"
         };
 
         private static readonly ClassSeed[] Classes =
@@ -85,47 +90,47 @@ namespace KryticalNova.EditorTools
             new ClassSeed
             {
                 id = WeaponClassId.Monoblade, clips = ClipSet.Katana, summary = "A single-edged blade. Fast, clean cuts on the front line.",
-                names = new[] { "Perimeter Cut", "Clean Cut", "Signature Series", "Severance", "Hostile Takeover", "Zero Hour", "Liquidation", "Market Crash", "Overclock", "Firewall" }
+                names = new[] { "Perimeter Cut", "Clean Cut", "Signature Series", "Severance", "Hostile Takeover", "Zero Hour", "Liquidation", "Market Crash", "Overclock", "Firewall", "Margin Call", "Short Squeeze" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Glaive, clips = ClipSet.GreatSword, summary = "A polearm that holds a line and controls the space around it.",
-                names = new[] { "Riot Sweep", "Suppression Thrust", "Compliance Combo", "Curfew", "Cease and Desist", "Lockstep", "Full Enforcement", "Martial Law", "Bulwark Protocol", "Shield Field" }
+                names = new[] { "Riot Sweep", "Suppression Thrust", "Compliance Combo", "Curfew", "Cease and Desist", "Lockstep", "Full Enforcement", "Martial Law", "Bulwark Protocol", "Shield Field", "Injunction", "Crackdown" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Carbine, clips = ClipSet.Katana, summary = "A firearm. Picks targets apart from range.",
-                names = new[] { "Spray Pattern", "Clean Shot", "Triple Tap", "Headhunter", "Burst Contract", "Longshot", "Terminal Burst", "Orbital Call", "Target Lock", "Reactive Plating" }
+                names = new[] { "Spray Pattern", "Clean Shot", "Triple Tap", "Headhunter", "Burst Contract", "Longshot", "Terminal Burst", "Orbital Call", "Target Lock", "Reactive Plating", "Deadeye", "Suppressing Fire" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Harvester, clips = ClipSet.GreatSword, summary = "A reaping blade. Wide, heavy swings that cut down whatever is close.",
-                names = new[] { "Reaping Cycle", "Culling Stroke", "Threshing Combo", "Scrap Sentence", "Hydraulic Flurry", "Extinction Blow", "Kill Loop", "Terminal Harvest", "Kill Protocol", "Null Shell" }
+                names = new[] { "Reaping Cycle", "Culling Stroke", "Threshing Combo", "Scrap Sentence", "Hydraulic Flurry", "Extinction Blow", "Kill Loop", "Terminal Harvest", "Kill Protocol", "Null Shell", "Shear Line", "Combine Pass" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.ServoClaws, clips = ClipSet.Katana, summary = "Powered claws. Close, relentless and hard to move.",
-                names = new[] { "Shockwave Stomp", "Piston Jab", "Servo Combo", "Compactor", "Overdrive Cycle", "Core Breach", "Three-Phase Rend", "Zero Point", "Lockdown Plating", "Faraday Skin" }
+                names = new[] { "Shockwave Stomp", "Piston Jab", "Servo Combo", "Compactor", "Overdrive Cycle", "Core Breach", "Three-Phase Rend", "Zero Point", "Lockdown Plating", "Faraday Skin", "Ram Drive", "Ratchet Rush" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.ArcCaster, clips = ClipSet.Katana, summary = "An energy projector. Burns targets down from a distance.",
-                names = new[] { "Arc Flare", "Lance Shot", "Tri-Bolt", "Ion Spike", "Cascade Fire", "Sunspot", "Chain Storm", "Extinction Beam", "Capacitor", "Static Veil" }
+                names = new[] { "Arc Flare", "Lance Shot", "Tri-Bolt", "Ion Spike", "Cascade Fire", "Sunspot", "Chain Storm", "Extinction Beam", "Capacitor", "Static Veil", "Flashpoint", "Arc Volley" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Longaxe, clips = ClipSet.GreatSword, summary = "A two-handed axe. Slow to raise, final when it lands.",
-                names = new[] { "Reaping Arc", "Hewing Blow", "Clan Rhythm", "Oathbreaker", "Frostbite Flurry", "Skysplitter", "Wolfpack", "Northfall", "Blood Oath", "Ancestor's Ward" }
+                names = new[] { "Reaping Arc", "Hewing Blow", "Clan Rhythm", "Oathbreaker", "Frostbite Flurry", "Skysplitter", "Wolfpack", "Northfall", "Blood Oath", "Ancestor's Ward", "Bonecleaver", "Raven's Feast" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Claymore, clips = ClipSet.GreatSword, summary = "A great sword. The clan's shield as much as its blade.",
-                names = new[] { "Shieldwall Sweep", "Steadfast Cut", "Three Oaths", "Bulwark Strike", "Hearthguard Flurry", "Dawnguard", "Highguard Trinity", "Kingsfall", "Shieldwall", "Stoneheart" }
+                names = new[] { "Shieldwall Sweep", "Steadfast Cut", "Three Oaths", "Bulwark Strike", "Hearthguard Flurry", "Dawnguard", "Highguard Trinity", "Kingsfall", "Shieldwall", "Stoneheart", "Oathkeeper", "Vanguard's Tide" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Warbow, clips = ClipSet.Bow, summary = "A war bow. Light on its feet, deadly at range.",
-                names = new[] { "Arrow Rain", "Hunter's Mark", "Three Feathers", "Heartseeker", "Volley", "Moonshot", "Stormflight", "Skyfall", "Windwalk", "Barkskin" }
+                names = new[] { "Arrow Rain", "Hunter's Mark", "Three Feathers", "Heartseeker", "Volley", "Moonshot", "Stormflight", "Skyfall", "Windwalk", "Barkskin", "Falcon's Eye", "Swiftwind" }
             },
         };
 
@@ -160,10 +165,12 @@ namespace KryticalNova.EditorTools
                 {
                     var slot = WeaponClasses.Slots[i];
                     SkillDefinitionSO skill;
+                    // The level 60 pair has no hit feel of its own yet: it borrows the level 80 pair's.
+                    string feel = slot == ClassSkillSlot.Lv60Single ? MonobladeIds[5] : slot == ClassSkillSlot.Lv60Multi ? MonobladeIds[6] : null;
                     if (seed.id == WeaponClassId.Monoblade)
                     {
                         skill = templates[i];
-                        skill.presentationId = string.Empty;
+                        skill.presentationId = feel ?? string.Empty;
                     }
                     else
                     {
@@ -174,8 +181,11 @@ namespace KryticalNova.EditorTools
                             ApplyClassShape(skill, seed, role, slot, i);
                         }
                         skill.skillId = $"{seed.id}_{slot}";
-                        skill.presentationId = templates[i].skillId;
+                        skill.presentationId = feel ?? templates[i].skillId;
                         skill.description = Describe(seed.id, role, slot);
+                        // What ranks and levels a slot asks is the same in every class: it follows the Monoblade's when that changes.
+                        skill.requiredCharacterLevel = templates[i].requiredCharacterLevel;
+                        skill.requiresSkillBook = templates[i].requiresSkillBook;
                     }
                     skill.displayName = seed.names[i];
                     skill.weaponClass = seed.id;
@@ -366,6 +376,8 @@ namespace KryticalNova.EditorTools
                 case ClassSkillSlot.S5: return $"A three-{hit} flurry at your target.";
                 case ClassSkillSlot.S6: return $"A single {hit} that lands with extra force.";
                 case ClassSkillSlot.S7: return $"Three {hits} that each land with extra force.";
+                case ClassSkillSlot.Lv60Single: return $"A hard single {hit} that lands with some extra force.";
+                case ClassSkillSlot.Lv60Multi: return $"Three hard {hits} that each land with some extra force.";
                 case ClassSkillSlot.S8: return $"Zenith technique. Crashes down on every enemy around you. Hold the key to keep {(ranged ? "firing" : "striking")}.";
                 case ClassSkillSlot.Stance:
                     return role == WeaponClassRole.Defense ? "Sets your stance, raising your Defense."
@@ -373,6 +385,15 @@ namespace KryticalNova.EditorTools
                         : "Quickens your weapon, raising all damage you deal.";
                 default: return "Hardens your guard, raising Elemental Defense.";
             }
+        }
+
+        /// <summary>What a class calls the skill in a slot, or null.</summary>
+        public static string SkillName(WeaponClassId id, ClassSkillSlot slot)
+        {
+            int index = System.Array.IndexOf(WeaponClasses.Slots, slot);
+            foreach (ClassSeed seed in Classes)
+                if (seed.id == id) return index >= 0 && index < seed.names.Length ? seed.names[index] : null;
+            return null;
         }
 
         private static AnimationClip LoadClip(string fbxPath)

@@ -38,6 +38,48 @@ namespace KryticalNova.Crafting
         public const ushort ZenithClaymore = 9437;
         public const ushort ZenithWarbow = 9438;
 
+        // Skill Chips (Twelve Sky 2: skill books). Four a weapon class, in the order of the classes: the level 60
+        // single hit, the level 60 multi hit, the level 80 single hit (slot 6), the level 80 multi hit (slot 7).
+        public const ushort SkillChipFirst = 9440;
+        public const int SkillChipsPerClass = 4;
+        // The three skills every class shares that open with a chip.
+        public const ushort AegisChip = 9480;
+        public const ushort KillerInstinctChip = 9481;
+        public const ushort HotStreakChip = 9482;
+
+        /// <summary>The chip of a class skill, or 0 for a slot that has none.</summary>
+        public static ushort SkillChip(KryticalNova.Progression.WeaponClassId weaponClass, KryticalNova.Progression.ClassSkillSlot slot)
+        {
+            int offset = slot switch
+            {
+                KryticalNova.Progression.ClassSkillSlot.Lv60Single => 0,
+                KryticalNova.Progression.ClassSkillSlot.Lv60Multi => 1,
+                KryticalNova.Progression.ClassSkillSlot.S6 => 2,
+                KryticalNova.Progression.ClassSkillSlot.S7 => 3,
+                _ => -1,
+            };
+            int index = System.Array.IndexOf(KryticalNova.Progression.WeaponClasses.All, weaponClass);
+            return offset < 0 || index < 0 ? (ushort)0 : (ushort)(SkillChipFirst + index * SkillChipsPerClass + offset);
+        }
+
+        /// <summary>The slots of a class that open with a Skill Chip.</summary>
+        public static readonly KryticalNova.Progression.ClassSkillSlot[] SkillChipSlots =
+        {
+            KryticalNova.Progression.ClassSkillSlot.Lv60Single, KryticalNova.Progression.ClassSkillSlot.Lv60Multi,
+            KryticalNova.Progression.ClassSkillSlot.S6, KryticalNova.Progression.ClassSkillSlot.S7,
+        };
+
+        /// <summary>Every Skill Chip: the class chips in class order, then the three shared ones.</summary>
+        public static System.Collections.Generic.IEnumerable<ushort> SkillChips()
+        {
+            foreach (KryticalNova.Progression.WeaponClassId weaponClass in KryticalNova.Progression.WeaponClasses.All)
+                foreach (KryticalNova.Progression.ClassSkillSlot slot in SkillChipSlots)
+                    yield return SkillChip(weaponClass, slot);
+            yield return AegisChip;
+            yield return KillerInstinctChip;
+            yield return HotStreakChip;
+        }
+
         /// <summary>Every Zenith Dossier, in the order of the weapon classes: three a faction (Hegemony, Null, Covenant).</summary>
         public static readonly ushort[] ZenithDossiers =
         {

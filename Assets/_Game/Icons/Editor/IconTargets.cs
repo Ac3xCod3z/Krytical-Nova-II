@@ -116,6 +116,8 @@ namespace KryticalNova.EditorTools
         public static bool TakesLibraryIcon(ItemDefinition item)
         {
             if (item == null || item.IsLadderGear || item.weaponPrefab != null || item.petPrefab != null) return false;
+            // It shows another item's icon: the library knows that one, not this.
+            if (item.sharesIconOf != null) return false;
             if (item.appearancePartIds != null && item.appearancePartIds.Length > 0) return false;
             return item.appearanceParts == null || item.appearanceParts.Count == 0;
         }

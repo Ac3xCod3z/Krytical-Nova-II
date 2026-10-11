@@ -4374,11 +4374,6 @@ MonoBehaviour:
     number: 48
     chosen: 1
   - kind: 2
-    target: Chip_Autopilot
-    set: Cyberpunk/Drone
-    number: 7
-    chosen: 1
-  - kind: 2
     target: Creds_Drop
     set: Cyberpunk/Pocket Thing
     number: 2
@@ -4557,4 +4552,109 @@ MonoBehaviour:
     target: Booster_Tandem
     set: Cyberpunk/Energy
     number: 43
+    chosen: 1
+  - kind: 0
+    target: Monoblade_Lv60Single
+    set: Fantasy/Swordman Skill
+    number: 1
+    chosen: 0
+  - kind: 0
+    target: Monoblade_Lv60Multi
+    set: Fantasy/Swordman Skill
+    number: 2
+    chosen: 0
+  - kind: 0
+    target: Glaive_Lv60Single
+    set: Fantasy/Spearman Skill
+    number: 1
+    chosen: 0
+  - kind: 0
+    target: Glaive_Lv60Multi
+    set: Fantasy/Spearman Skill
+    number: 2
+    chosen: 0
+  - kind: 0
+    target: Carbine_Lv60Single
+    set: Fantasy/Crossbowman Skill
+    number: 2
+    chosen: 0
+  - kind: 0
+    target: Carbine_Lv60Multi
+    set: Fantasy/Crossbowman Skill
+    number: 3
+    chosen: 0
+  - kind: 0
+    target: Harvester_Lv60Single
+    set: Fantasy/Blood Mage Skill
+    number: 1
+    chosen: 0
+  - kind: 0
+    target: Harvester_Lv60Multi
+    set: Fantasy/Blood Mage Skill
+    number: 2
+    chosen: 0
+  - kind: 0
+    target: ServoClaws_Lv60Single
+    set: Fantasy/Undead Skill
+    number: 1
+    chosen: 0
+  - kind: 0
+    target: ServoClaws_Lv60Multi
+    set: Fantasy/Undead Skill
+    number: 2
+    chosen: 0
+  - kind: 0
+    target: ArcCaster_Lv60Single
+    set: Fantasy/Lightning Mage Skill
+    number: 2
+    chosen: 0
+  - kind: 0
+    target: ArcCaster_Lv60Multi
+    set: Fantasy/Lightning Mage Skill
+    number: 3
+    chosen: 0
+  - kind: 0
+    target: Longaxe_Lv60Single
+    set: Fantasy/Berserker Skill
+    number: 1
+    chosen: 0
+  - kind: 0
+    target: Longaxe_Lv60Multi
+    set: Fantasy/Berserker Skill
+    number: 2
+    chosen: 0
+  - kind: 0
+    target: Claymore_Lv60Single
+    set: Fantasy/Warrior Skill
+    number: 2
+    chosen: 0
+  - kind: 0
+    target: Claymore_Lv60Multi
+    set: Fantasy/Warrior Skill
+    number: 4
+    chosen: 0
+  - kind: 0
+    target: Warbow_Lv60Single
+    set: Fantasy/Archer Skill
+    number: 1
+    chosen: 0
+  - kind: 0
+    target: Warbow_Lv60Multi
+    set: Fantasy/Archer Skill
+    number: 2
+    chosen: 0
+  - kind: 2
+    target: Chip_Aegis
+    set: Cyberpunk/Resource 3
+    number: 22
+    chosen: 1
+  - kind: 2
+    target: Chip_Autopilot
+    set: Cyberpunk/Drone
+    number: 7
+    chosen: 1
+  - kind: 2
+    target: Chip_Monoblade_Lv60Single
+    set: Cyberpunk/Resource 3
+    number: 44
     chosen: 1

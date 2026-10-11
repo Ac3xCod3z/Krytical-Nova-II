@@ -29,7 +29,8 @@ namespace KryticalNova.EditorTools
             new Seed
             {
                 id = FactionId.Hegemony, name = "Hegemony", tagline = "Efficiency. Expansion. Ownership.",
-                crest = "InterfaceSciFiMenus/Sprites/Crests/SPR_SciFiMenus_Crest_Symbol_10.png",
+                // The owner's pick (11 Oct 2026): the helmet the Hegemony had first.
+                crest = "InterfaceSciFiMenus/Sprites/Icons_Factions/ICON_SciFiMenus_Factions_Humans_01_Clean.png",
                 accent = new Color32(0x4F, 0xE3, 0xF0, 0xFF), secondary = new Color32(0xDC, 0xE8, 0xF0, 0xFF),
                 lore = "The Hegemony built their futuristic civilization on cold efficiency and boundless greed. Lacking the " +
                        "manual power to expand their high-tech cities, they turned to necromantic energy and advanced " +

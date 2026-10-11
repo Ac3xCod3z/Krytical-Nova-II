@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Orichalc
   description: Alloy. Tempers a piece of gear by 9% on a success.
   icon: {fileID: 21300000, guid: e8eef975a6d401c41a682b1ea4f43e76, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 1
   equipSlot: 0
   maxStack: 999

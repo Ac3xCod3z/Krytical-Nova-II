@@ -40,7 +40,8 @@ namespace KryticalNova.UI
         private PlayerCrew crew;
         private Edit editing;
         private string editingMember;
-        private int chosenSymbol;
+        private int chosenSymbol, chosenColour;
+        private VisualElement colourChoices, colourEdit;
         private bool atRegistry;
         private bool pickingSymbol;
         private float nextAgeRefresh;
@@ -147,7 +148,47 @@ namespace KryticalNova.UI
             if (faction == symbolsOf || symbolChoices == null || symbolEdit == null) return;
             symbolsOf = faction;
             BuildSymbols(symbolChoices, index => { chosenSymbol = index; Refresh(); });
-            BuildSymbols(symbolEdit, index => { pickingSymbol = false; crew?.SetSymbol(index); });
+            // The Leader's changes are sent as they are made: the symbol and its colour are one choice.
+            BuildSymbols(symbolEdit, index => crew?.SetSymbol(index, crew.Header.colour));
+            colourChoices = BuildColours(symbolChoices, index => { chosenColour = index; Refresh(); });
+            colourEdit = BuildColours(symbolEdit, index => crew?.SetSymbol(crew.Header.symbol, index));
+        }
+
+        // A row of swatches under a row of symbols: the colour the symbol is drawn in.
+        private VisualElement BuildColours(VisualElement under, Action<int> pick)
+        {
+            VisualElement row = under.parent.Q(under.name + "-colours");
+            if (row == null)
+            {
+                row = new VisualElement { name = under.name + "-colours" };
+                row.AddToClassList("row");
+                row.AddToClassList("crew-colours");
+                under.parent.Insert(under.parent.IndexOf(under) + 1, row);
+            }
+            row.Clear();
+            Color[] colours = crew != null && crew.Settings != null ? crew.Settings.symbolColours : null;
+            for (int i = 0; colours != null && i < colours.Length; i++)
+            {
+                int index = i;
+                var swatch = new VisualElement();
+                swatch.AddToClassList("crew-colour-choice");
+                swatch.style.backgroundColor = colours[i];
+                swatch.RegisterCallback<ClickEvent>(_ => pick(index));
+                row.Add(swatch);
+            }
+            return row;
+        }
+
+        private void ShowChoice(VisualElement symbols, VisualElement colours, int symbol, int colour)
+        {
+            CrewSettings settings = crew != null ? crew.Settings : null;
+            for (int i = 0; i < symbols.childCount; i++)
+            {
+                symbols[i].EnableInClassList("selected", i == symbol);
+                // Every symbol is shown in the colour chosen, so the choice is seen before it is made.
+                symbols[i].style.unityBackgroundImageTintColor = settings != null ? settings.SymbolColour(colour) : Color.white;
+            }
+            for (int i = 0; colours != null && i < colours.childCount; i++) colours[i].EnableInClassList("selected", i == colour);
         }
 
         private static void SetDisplay(VisualElement element, bool visible)
@@ -294,7 +335,7 @@ namespace KryticalNova.UI
                 noneText.text = $"{terms} You are level {crew.Level} and carry {WalletRules.Format(creds)}.";
                 foundButton.SetEnabled(ready);
                 foundButton.text = ready ? $"FOUND CREW  ·  {WalletRules.Format(cost)}" : "FOUND CREW";
-                for (int i = 0; i < symbolChoices.childCount; i++) symbolChoices[i].EnableInClassList("selected", i == chosenSymbol);
+                ShowChoice(symbolChoices, colourChoices, chosenSymbol, chosenColour);
                 helpLabel.text = "A Crew belongs to your faction. You lead it: invite players from the player menu (Shift+click them).";
             }
             else
@@ -309,7 +350,7 @@ namespace KryticalNova.UI
             CrewHeader header = crew.Header;
             CrewRank rank = header.myRank;
             titleLabel.text = header.name.ToString().ToUpperInvariant();
-            CrewSymbols.Apply(symbolHeader, Library, MyFaction, header.symbol);
+            CrewSymbols.Apply(symbolHeader, crew.Settings, MyFaction, header.symbol, header.colour);
             string text = header.announcement.ToString();
             announcement.text = text.Length > 0 ? text : "Nothing announced.";
 
@@ -331,7 +372,8 @@ namespace KryticalNova.UI
             SetDisplay(announceButton, CrewRules.CanAnnounce(rank));
             SetDisplay(symbolButton, rank == CrewRank.Leader);
             SetDisplay(symbolEdit, pickingSymbol && rank == CrewRank.Leader);
-            for (int i = 0; i < symbolEdit.childCount; i++) symbolEdit[i].EnableInClassList("selected", i == header.symbol);
+            SetDisplay(colourEdit, pickingSymbol && rank == CrewRank.Leader);
+            ShowChoice(symbolEdit, colourEdit, header.symbol, header.colour);
             leaveButton.text = rank == CrewRank.Leader && shown.Count > 1 ? "DISBAND" : "LEAVE";
             SetDisplay(editRow, editing != Edit.None);
             helpLabel.text = rank == CrewRank.Leader
@@ -400,7 +442,7 @@ namespace KryticalNova.UI
         private void Found()
         {
             if (crew == null) return;
-            crew.Found(nameField.value, chosenSymbol);
+            crew.Found(nameField.value, chosenSymbol, chosenColour);
             GearUIController.Instance?.SuppressWorldInput();
         }
 

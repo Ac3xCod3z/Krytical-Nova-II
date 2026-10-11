@@ -106,7 +106,8 @@ namespace KryticalNova.Progression
 
         private static readonly string[] SlotKeys =
         {
-            "slot:None", "slot:S1", "slot:S2", "slot:S3", "slot:S4", "slot:S5", "slot:S6", "slot:S7", "slot:S8", "slot:Stance", "slot:Guard"
+            "slot:None", "slot:S1", "slot:S2", "slot:S3", "slot:S4", "slot:S5", "slot:S6", "slot:S7", "slot:S8", "slot:Stance", "slot:Guard",
+            "slot:Lv60Single", "slot:Lv60Multi"
         };
 
         [Header("Targeting & Execution")]

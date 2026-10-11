@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Prism Cell
   description: Dyes one weapon in another colourway at an Outfitter. Used up by the dye. A Fabricator makes one from a Cyan, a Magenta, a Yellow and a Black Cell.
   icon: {fileID: 21300000, guid: af021609ec11cc9408f2b71cd1d28303, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 1
   equipSlot: 0
   maxStack: 99

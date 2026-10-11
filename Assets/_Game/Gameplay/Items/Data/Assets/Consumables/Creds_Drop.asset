@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Creds
   description: Creds. Picked up, they go straight into your wallet.
   icon: {fileID: 21300000, guid: ee64a7e98dbf819409a9a83c5ff3b633, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 0
   maxStack: 60000

@@ -20,19 +20,23 @@ namespace KryticalNova.EditorTools
         public const string LibraryPath = "Assets/_Game/Gameplay/Social/Data/Assets/CrewSymbolLibrary.asset";
         private const string SettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/CrewSettings.asset";
 
-        private const string SciFiCrests = "Assets/Synty/InterfaceSciFiMenus/Sprites/Crests/SPR_SciFiMenus_Crest_";
+        // Every picture is white, so a Crew's Leader can give it a colour (owner, 11 Oct 2026). A faction's own
+        // emblem is never in its list (the Hegemony's helmet Humans_01, the Covenant's lion head).
+        private const string SciFiFactions = "Assets/Synty/InterfaceSciFiMenus/Sprites/Icons_Factions/ICON_SciFiMenus_Factions_";
+        private const string SciFiSoldier = "Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/";
         private const string DarkFlat = "Assets/Synty/InterfaceDarkFantasyMenus/Sprites/Icons_DarkFantasyMenus_Flat/ICON_DarkFantasyMenus_";
         private const string DarkGeneral = "Assets/Synty/InterfaceDarkFantasyMenus/Sprites/General/SPR_DarkFantasyMenus_";
-        private const string FantasyCrests = "Assets/Synty/InterfaceFantasyMenus/Sprites/Crests/SPR_FantasyMenus_Crest_";
-        private const string WarriorHud = "Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_";
+        private const string Warrior = "Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/";
 
         private static readonly (FactionId faction, string[] pictures)[] Sets =
         {
             (FactionId.Hegemony, new[]
             {
-                SciFiCrests + "Symbol_01.png", SciFiCrests + "Symbol_02.png", SciFiCrests + "Symbol_04.png", SciFiCrests + "Symbol_07.png",
-                SciFiCrests + "Symbol_19.png", SciFiCrests + "Symbol_11.png", SciFiCrests + "Symbol_12.png", SciFiCrests + "Symbol_14.png",
-                SciFiCrests + "Symbol_17.png", SciFiCrests + "Symbol_20.png", SciFiCrests + "Symbol_23.png", SciFiCrests + "Symbol_24.png",
+                SciFiFactions + "Humans_02_Clean.png", SciFiFactions + "Humans_03_Clean.png", SciFiFactions + "Humans_04_Clean.png",
+                SciFiFactions + "Aliens_01_Clean.png", SciFiFactions + "Aliens_05_Clean.png", SciFiFactions + "Aliens_06_Clean.png",
+                SciFiFactions + "Robots_05_Clean.png", SciFiSoldier + "Icons_Map/ICON_SciFiSoldier_Map_Ship_01.png",
+                SciFiSoldier + "Icons_Map/ICON_SciFiSoldier_Map_Biohazard_01.png", SciFiSoldier + "Icons_Map/ICON_SciFiSoldier_Map_Target_01.png",
+                SciFiSoldier + "Icons_Map/ICON_SciFiSoldier_Map_Radiation_01.png", SciFiSoldier + "Icons_Inventory/ICON_SciFiSoldier_Inventory_Science_01.png",
             }),
             (FactionId.Null, new[]
             {
@@ -42,10 +46,12 @@ namespace KryticalNova.EditorTools
             }),
             (FactionId.Covenant, new[]
             {
-                FantasyCrests + "Greeble_Dragonhead_01_Gold.png", FantasyCrests + "Greeble_Lionhead_01_Gold.png", FantasyCrests + "Greeble_Sword_01.png",
-                FantasyCrests + "Greeble_SwordsCrossed_01.png", FantasyCrests + "Greeble_SwordsCrossed_03.png", FantasyCrests + "Shield_03.png",
-                FantasyCrests + "Shield_06.png", FantasyCrests + "Shield_07.png", FantasyCrests + "Wings_01_Gold.png", FantasyCrests + "Wings_02_Gold.png",
-                WarriorHud + "Symbol_FleurDeLis_01.png", FantasyCrests + "Greeble_Dragonhead_02_Gold.png",
+                Warrior + "HUD/SPR_HUD_FantasyWarrior_Symbol_FleurDeLis_01.png", Warrior + "Icons_Map/ICON_FantasyWarrior_Map_Dragon_01_Clean.png",
+                Warrior + "Icons_Map/ICON_FantasyWarrior_Map_Horse_01_Clean.png", Warrior + "Icons_Map/ICON_FantasyWarrior_Map_Home_01_Clean.png",
+                Warrior + "Icons_Inventory/ICON_FantasyWarrior_Inventory_Helmets_01_Clean.png", Warrior + "Icons_Stats/ICON_FantasyWarrior_Stat_Speed_02_Clean.png",
+                Warrior + "Icons_Inventory/ICON_FantasyWarrior_Inventory_Swords_01_Clean.png", Warrior + "Icons_Inventory/ICON_FantasyWarrior_Inventory_Axes_01_Clean.png",
+                Warrior + "Icons_Stats/ICON_FantasyWarrior_Stat_Strength_02_Clean.png", Warrior + "Icons_Elements/ICON_FantasyWarrior_Element_Air_01_Clean.png",
+                Warrior + "Icons_Map/ICON_FantasyWarrior_Map_Monster_01_Clean.png", Warrior + "Icons_Elements/ICON_FantasyWarrior_Element_Air_02_Clean.png",
             }),
         };
 

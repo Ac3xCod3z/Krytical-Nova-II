@@ -45,6 +45,8 @@ namespace KryticalNova.EditorTools
             public float Cooldown;
             /// <summary>Null = the consumables folder.</summary>
             public string Folder;
+            /// <summary>The asset name of the item whose icon this one shows. Null = an icon of its own.</summary>
+            public string IconOf;
         }
 
         // Stims keep their first asset names (Pill_*): saves, hotbars and GM commands are keyed on them.
@@ -196,6 +198,42 @@ namespace KryticalNova.EditorTools
                 Rarity = ItemRarity.Legendary, Stack = 10, Effect = ItemUseEffect.LearnSkill,
                 Description = $"Unlocks {skill}, the {weaponClass}'s Zenith technique, which is then learned with skill points. Used up when it is read. Found only in the Prime grounds." };
 
+        /// <summary>
+        /// The Skill Chips (11 Oct 2026): one for each class's level 60 pair and level 80 pair, and one each for Aegis,
+        /// Killer Instinct and Hot Streak. Their names follow the skills', which are the class skill builder's.
+        /// </summary>
+        private static IEnumerable<Row> SkillChipRows()
+        {
+            foreach (KryticalNova.Progression.WeaponClassId weaponClass in KryticalNova.Progression.WeaponClasses.All)
+            {
+                string className = KryticalNova.Progression.WeaponClasses.DisplayName(weaponClass);
+                foreach (KryticalNova.Progression.ClassSkillSlot slot in CraftItemIds.SkillChipSlots)
+                {
+                    bool prime = slot == KryticalNova.Progression.ClassSkillSlot.S6 || slot == KryticalNova.Progression.ClassSkillSlot.S7;
+                    string skill = ClassSkillBuilder.SkillName(weaponClass, slot);
+                    string asset = $"Chip_{weaponClass}_{slot}";
+                    yield return SkillChip(CraftItemIds.SkillChip(weaponClass, slot), asset, skill,
+                        $"a {className} skill of level {(prime ? 80 : 60)}", prime ? ItemRarity.Epic : ItemRarity.Rare,
+                        prime ? "Found only in the Prime grounds." : "Dropped by Hostiles of level 60 and up.", asset == AttackChipIcon ? null : AttackChipIcon);
+                }
+            }
+            yield return SkillChip(CraftItemIds.AegisChip, BuffChipIcon, "Aegis", "a buff of level 60 every class can learn", ItemRarity.Rare, "Dropped by Hostiles of level 60 and up.", null);
+            yield return SkillChip(CraftItemIds.KillerInstinctChip, "Chip_KillerInstinct", "Killer Instinct", "a buff of level 60 every class can learn", ItemRarity.Rare, "Dropped by Hostiles of level 60 and up.", BuffChipIcon);
+            yield return SkillChip(CraftItemIds.HotStreakChip, "Chip_HotStreak", "Hot Streak", "a buff of level 70 every class can learn", ItemRarity.Rare, "Dropped by Hostiles of level 70 and up.", BuffChipIcon);
+        }
+
+        /// <summary>
+        /// Two pictures for all the Skill Chips (owner, 11 Oct 2026): one for the chips of attack skills, one for the
+        /// chips of buffs. The chip named here has the picture in the icon library; the others of its kind show it.
+        /// What a chip teaches is in its name and its text.
+        /// </summary>
+        public const string AttackChipIcon = "Chip_Monoblade_Lv60Single", BuffChipIcon = "Chip_Aegis";
+
+        private static Row SkillChip(ushort id, string asset, string skill, string what, ItemRarity rarity, string source, string iconOf) =>
+            new Row { Id = id, Asset = asset, Name = $"Skill Chip: {skill}", Glyph = "CHIP", Rarity = rarity, Stack = 10, Effect = ItemUseEffect.LearnSkill,
+                IconOf = iconOf,
+                Description = $"Unlocks {skill}, {what}, which is then learned with skill points. Used up when it is read. {source}" };
+
         // What it adds and for how long is a number of the Economy Settings: the item's text does not repeat it (its tooltip reads it there).
         private static Row Booster(ushort id, string asset, string name, string glyph, string what) =>
             new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = ItemRarity.Rare, Stack = 99, Effect = ItemUseEffect.ExperienceBoost,
@@ -231,11 +269,24 @@ namespace KryticalNova.EditorTools
             WeatherVfxBuilder.EnsureFolder(CraftFolder);
             var made = new List<ItemDefinition>(Rows.Length);
             var bag = catalog.StarterBag.ToList();
-            foreach (Row row in Rows)
+            var byAsset = new Dictionary<string, ItemDefinition>();
+            var rows = Rows.Concat(SkillChipRows()).ToList();
+            foreach (Row row in rows)
             {
                 ItemDefinition item = Item(row);
                 made.Add(item);
+                byAsset[row.Asset] = item;
                 if (row.Starter > 0 && !bag.Any(s => s.item == item)) bag.Add(new StarterItem { item = item, count = row.Starter });
+            }
+            // A family that shares one picture: each shows the icon of the item named, which the icon library gives it.
+            foreach (Row row in rows)
+            {
+                ItemDefinition item = byAsset[row.Asset];
+                ItemDefinition source = row.IconOf != null && byAsset.TryGetValue(row.IconOf, out ItemDefinition found) ? found : null;
+                if (item.sharesIconOf == source && (source == null || item.icon == source.icon)) continue;
+                item.sharesIconOf = source;
+                if (source != null) item.icon = source.icon;
+                EditorUtility.SetDirty(item);
             }
 
             var items = catalog.Items.Where(i => i != null).Concat(made).Distinct().OrderBy(i => i.itemId).ToList();
@@ -264,6 +315,12 @@ namespace KryticalNova.EditorTools
             }
 
             // What the table owns on every run: the kind of item this is, and the text it shows until it has an icon.
+            // A Skill Chip's words are the table's too: they say which skill it teaches, which is all that tells chips apart.
+            if (row.Effect == ItemUseEffect.LearnSkill && row.Glyph == "CHIP")
+            {
+                def.displayName = row.Name;
+                def.description = row.Description;
+            }
             def.placeholderGlyph = row.Glyph;
             def.equipSlot = EquipSlot.None;
             def.usableFromHotbar = row.Hotbar;

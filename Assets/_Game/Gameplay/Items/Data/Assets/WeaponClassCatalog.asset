@@ -30,6 +30,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: fbbb9e5c549f70e4fa962f4328b61f34, type: 2}
     - {fileID: 11400000, guid: 809e339dc23f3984ca61f68b93bdd721, type: 2}
     - {fileID: 11400000, guid: f9c17b3ebd6552d4ba2a6504c936eb61, type: 2}
+    - {fileID: 11400000, guid: d837464e0171a374b915d9e339231908, type: 2}
+    - {fileID: 11400000, guid: a3a5e9838a7d7e146b7e7222ab08fba8, type: 2}
   - id: 2
     displayName: Glaive
     faction: 1
@@ -47,6 +49,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: fd371ce2975d20640b1178d4c3e3cc5c, type: 2}
     - {fileID: 11400000, guid: d1a696e927be1ac4db379c1692ee7198, type: 2}
     - {fileID: 11400000, guid: 1a3a1eebcf872744cbd2265fd52c9586, type: 2}
+    - {fileID: 11400000, guid: 995ee6680bbe205479875f29774357be, type: 2}
+    - {fileID: 11400000, guid: 767082d2bb63a474f9d34c86ae2b8c35, type: 2}
   - id: 3
     displayName: Carbine
     faction: 1
@@ -64,6 +68,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 7aa1abae30f9e8d448a9a10a4782fdc6, type: 2}
     - {fileID: 11400000, guid: 2a799eb3d3315c7408b14407d5b511ba, type: 2}
     - {fileID: 11400000, guid: 02dff6a5a75e127499555ddb3dc4d130, type: 2}
+    - {fileID: 11400000, guid: 5a110f636bbd0604ab55910b1a2b4bce, type: 2}
+    - {fileID: 11400000, guid: 23653008cca60bb46aab5c8cfcce8599, type: 2}
   - id: 4
     displayName: Harvester
     faction: 2
@@ -81,6 +87,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: d6bf4ec1ab817384d85fd45cdb3eddf6, type: 2}
     - {fileID: 11400000, guid: 6bdaa8beea8141e4e8e71461d6f819b5, type: 2}
     - {fileID: 11400000, guid: 492bb427db4c7b54f9ab2f4afcd887b5, type: 2}
+    - {fileID: 11400000, guid: 36b2443d3d36b3b42b66e7d8d0437a0d, type: 2}
+    - {fileID: 11400000, guid: 78b912674b342d042a47a2461f80063e, type: 2}
   - id: 5
     displayName: Servo Claws
     faction: 2
@@ -98,6 +106,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 6483e8cade278af4a968f5d2034cc1f4, type: 2}
     - {fileID: 11400000, guid: 03c07093d255862488eb89c9a86a46e8, type: 2}
     - {fileID: 11400000, guid: ba4b4e662ec6636418f9bf3a7eb515c4, type: 2}
+    - {fileID: 11400000, guid: 9f5d7489c859bd940882707c4c3bf3ec, type: 2}
+    - {fileID: 11400000, guid: 6be665a22292cfa41801a4921de09dfb, type: 2}
   - id: 6
     displayName: Arc Caster
     faction: 2
@@ -115,6 +125,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 441387988c722c84eb6140e994b1d9b6, type: 2}
     - {fileID: 11400000, guid: 5fabb94c10fed9946ab96cf71e14c56e, type: 2}
     - {fileID: 11400000, guid: 8706459c5c7cbc24abbb5623c3c647d8, type: 2}
+    - {fileID: 11400000, guid: f2058814becfeb841811ade483605375, type: 2}
+    - {fileID: 11400000, guid: e829b0f0982d8df4d9a5d072eace668d, type: 2}
   - id: 7
     displayName: Longaxe
     faction: 3
@@ -132,6 +144,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 9ce1886a5eb25fd4f83bad69e9da186d, type: 2}
     - {fileID: 11400000, guid: 595ebb06b47aaa94baac65535e8ecc93, type: 2}
     - {fileID: 11400000, guid: 52311485133e166499229cc8215d6b47, type: 2}
+    - {fileID: 11400000, guid: 26d379f398950f547944675f8145b8b5, type: 2}
+    - {fileID: 11400000, guid: bf5d5f1f1b4740145ac681fd231e4005, type: 2}
   - id: 8
     displayName: Claymore
     faction: 3
@@ -149,6 +163,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 9ccb55067699b0745aacb736c52773a4, type: 2}
     - {fileID: 11400000, guid: d7ef94df6b7103c4eb3557116f7f1210, type: 2}
     - {fileID: 11400000, guid: 4eff770881207c1468808b5134256c1c, type: 2}
+    - {fileID: 11400000, guid: 72e0afe10763cf24d9677eea24dc4da7, type: 2}
+    - {fileID: 11400000, guid: 178a56d589b606942a0c0470686f1a50, type: 2}
   - id: 9
     displayName: Warbow
     faction: 3
@@ -166,6 +182,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: d7319fe401846b44c9a3a4cd4d058433, type: 2}
     - {fileID: 11400000, guid: 81200c4285dabe747bed9efb38899a1b, type: 2}
     - {fileID: 11400000, guid: 639ab7824d320bb468948e4e0d3e72f3, type: 2}
+    - {fileID: 11400000, guid: ad808420e5db6954a8b8efcb02d663c9, type: 2}
+    - {fileID: 11400000, guid: ff2009e121dfe0e4e9531baa3bf60168, type: 2}
   sharedSkills:
   - {fileID: 11400000, guid: ab0c63122f105dc4d99ccbb6bbb52b32, type: 2}
   - {fileID: 11400000, guid: 2ba18aa81bbb41145ac999532c282a4d, type: 2}

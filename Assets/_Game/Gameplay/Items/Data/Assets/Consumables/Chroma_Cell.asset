@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Chroma Cell
   description: Dyes one piece of your outfit in another colourway at an Outfitter. Used up by the dye.
   icon: {fileID: 21300000, guid: 9bbc03cdbbc8ea94fb04116ac75dbc5b, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 1
   equipSlot: 0
   maxStack: 99

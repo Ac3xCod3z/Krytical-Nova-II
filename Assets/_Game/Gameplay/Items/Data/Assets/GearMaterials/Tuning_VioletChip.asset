@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Violet Chip
   description: Used up by a Tuning attempt, stages 13 to 25.
   icon: {fileID: 21300000, guid: 1180e42ea6ad0154cb106e75b0861700, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 0
   maxStack: 999
