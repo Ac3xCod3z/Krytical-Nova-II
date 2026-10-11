@@ -382,6 +382,15 @@ it does. APPLY keeps the changes; REVERT puts back everything as it was when the
   two mouse buttons the game is played with, Esc, Enter, no key at all) goes back to the action's own key, and two
   actions on one key are settled in favour of the one that shipped there. `KeyBindings.AllowedControls` /
   `RefusedPaths` are the one list, used by the Controls page too.
+- **The HUD is redrawn at most once a frame, and a shut window not at all** (10 Oct 2026, `ProgressionHUD`). Seven
+  events ("the skills changed", "the stats were worked out again", ...) each used to redraw everything at once, and
+  everything included the Skills window's hundred cards, found by name each time: 105 ms a redraw, two or three
+  redraws for one buff cast. That was the worst hitch in a fight: in a 60 s stress run at the training dummy
+  (Editor, every skill on rotation) the slowest frame went from 424 ms to 88 ms and the slowest 1 % from 330 ms to
+  39 ms, and what is left there is the Editor's own garbage collector. The rules, for any window: an event asks for
+  a redraw (`RequestRefresh`) and `LateUpdate` does one; the HUD's own parts are always redrawn, the Character Sheet
+  and the Skills window only while open, and each is brought up to date when it opens (`RefreshShown`); the parts of
+  a card are found once and kept (`PartsOfCard`), and a card whose skill has not changed is left alone.
 - **The milestone column** (10 Oct 2026): the moments of play stand in one column at the top centre of the HUD,
   `milestone-banner` in `ProgressionHUD.uxml`: the server news toast first, then the player's own banners (a level of
   Ascension, a Nova, a Nova Standing rank, a pet's evolution). Their controllers move them into it, so two at once
