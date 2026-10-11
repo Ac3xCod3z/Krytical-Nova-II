@@ -357,6 +357,8 @@ namespace KryticalNova.Vegetation.Grass
                 shadowCastingMode = ShadowCastingMode.Off,
                 receiveShadows = true,
                 layer = gameObject.layer,
+                // The blades sway: the shader's MotionVectors pass says by how much, for whatever needs it (an upscaler).
+                motionVectorMode = MotionVectorGenerationMode.Object,
             };
             Graphics.RenderMeshIndirect(rp, mesh, argsBuffer, 1, draw);
         }

@@ -12,6 +12,18 @@ namespace KryticalNova.Tests
     /// </summary>
     public sealed class SettingsTests
     {
+        // ---------------------------------------------------------------- upscalers
+
+        [Test]
+        public void TheFirstTwoRtxGenerations_KeepTheOlderDlssModel()
+        {
+            Assert.IsTrue(GraphicsSettingsApplier.OlderRtx("NVIDIA GeForce RTX 2080 SUPER"));
+            Assert.IsTrue(GraphicsSettingsApplier.OlderRtx("NVIDIA GeForce RTX 3060"));
+            Assert.IsFalse(GraphicsSettingsApplier.OlderRtx("NVIDIA GeForce RTX 4060 Ti"));
+            Assert.IsFalse(GraphicsSettingsApplier.OlderRtx("NVIDIA GeForce RTX 5070 Ti"));
+            Assert.IsFalse(GraphicsSettingsApplier.OlderRtx(null));
+        }
+
         // ---------------------------------------------------------------- APPLY and REVERT
 
         [Test]

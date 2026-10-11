@@ -370,6 +370,35 @@ farther away than the original 0.065 / 0.1.
   - Rebuild with **Krytical Nova > Zone > Rebuild Water**.
   - The water needs the depth and opaque textures, which are now on for the PC and Mobile URP assets.
 
+## 6d-2. Upscalers: DLSS and FSR 2 (10 Oct 2026)
+
+Settings ▸ Graphics has an **Upscaler** (Off / DLSS / FSR 2) and an **Upscaler quality** (Native AA, Quality, Balanced,
+Performance, Ultra Performance). An upscaler draws the game smaller and rebuilds the full picture from several
+frames. DLSS is offered only on an NVIDIA RTX card; FSR 2 runs on any card and is what a saved DLSS choice becomes on
+a PC that cannot run it. Neither is part of a quality preset. While one is on it sets the render scale and the
+pipeline switches on the temporal anti-aliasing it needs, so the Render scale and Anti-aliasing options wait.
+
+- **How it is switched on in the project** (**Krytical Nova ▸ Lighting ▸ Set Up Upscalers (DLSS, FSR 2)**, safe to run
+  again): the render pipeline has both behind its upscaler framework, which is compiled in only with the scripting
+  define `ENABLE_UPSCALER_FRAMEWORK` (Standalone) and the engine modules `com.unity.modules.nvidia` and
+  `com.unity.modules.amd` in `Packages/manifest.json`. Unity does not document that define for URP: it is an
+  opt-in of this version (6000.6, URP 17.6), so check it first after an engine upgrade. Each upscaler keeps an
+  options asset inside `PC_RPAsset`; `GraphicsSettingsApplier` changes those at run time and puts them back when the
+  session ends, like every other value it touches on that asset.
+- **DLSS is the 4.5 generation**: this Editor ships `nvngx_dlss.dll` 310.5.3. Each mode runs on a model, NVIDIA's own
+  pairing: its second transformer model on the two modes that gain from it (Preset M for Performance, Preset L for
+  Ultra Performance) and the DLSS 4 model (Preset K) for Native AA, Quality and Balanced. On RTX 20 and 30 cards the
+  4.5 models cost more than they give, so those run K throughout (`GraphicsSettingsApplier.OlderRtx`).
+- **Anything that moves by its shader must say so.** An upscaler follows each pixel from frame to frame by its
+  motion vector; a blade that sways in the vertex shader has none unless the shader writes one. `GrassBlades.shader`
+  has a `MotionVectors` pass (the same vertex maths run for last frame's wind sums) and `GrassRenderer` draws with
+  per-object motion: with it, grass in wind under DLSS Performance keeps its blades; without it they smear. Trees and
+  bushes (`FoliageWind.shader`) do not have one yet and rely on the camera's motion alone.
+- **Known cost to the look:** the comic dots and the ink outlines are drawn before the upscale, at the smaller size,
+  so at Performance and below the dots grow and soften. Not tuned yet.
+- **Not measured yet:** the gain. On the owner's PC (RTX 5070 Ti) at the Editor's Game view size the game is held
+  back by the main thread, not the graphics card, so no mode changes the frame rate there.
+
 ## 6e. Glow halo (tempered weapons, evolved pets)
 
 The glow is light **round** a thing, never a tint on it. It is drawn on the screen, not on the model

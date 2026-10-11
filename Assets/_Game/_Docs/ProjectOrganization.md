@@ -143,7 +143,8 @@ _Game/
 │                          IconPacks, IconLibraryWindow)  Data/Assets/ (IconLibrary.asset, IconTreatmentSettings.asset)  Tests/Editor/
 │                          The icons it bakes go to the owning systems: Gameplay/Progression/Data/Assets/Icons, Gameplay/Items/Data/Assets/Icons
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
-├── Rendering/             Runtime/ (renderer features; ComicLetteringFeature draws the `ComicLettering` layer, which every
+├── Rendering/             Editor/ (also UpscalerSetup: what DLSS and FSR 2 need from the project, menu Lighting ▸ Set Up Upscalers)
+│                          Runtime/ (renderer features; ComicLetteringFeature draws the `ComicLettering` layer, which every
 │                          comic mark and word is on, over the finished frame)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets, the menus' comic book and what the
 │                          menus say happened (MenuMoments), FactionShowcase = faction select's champions; Skins/ = UiSkin and MenuSkin; Settings/ = the Settings pages;

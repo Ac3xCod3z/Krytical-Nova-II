@@ -5,6 +5,9 @@
 //            rooted in a kept lawn are held inside its rectangle, which gives the lawn its trimmed edge.
 //  Fragment: root→mid→tip colour gradient × per-clump variation × field patches × wetness × fake root AO,
 //            lit with the comic cel band + Ben-Day dots using upward-biased (stylized) normals.
+//  Motion:   a MotionVectors pass says how far each blade moved since the last frame (the same vertex maths, run for
+//            last frame's wind), which temporal anti-aliasing and the upscalers (DLSS, FSR 2) need to keep swaying
+//            grass sharp. It is only drawn while one of those is on.
 Shader "KryticalNova/Grass Blades"
 {
     Properties { }
@@ -37,7 +40,8 @@ Shader "KryticalNova/Grass Blades"
         uint   debug;
     };
 
-    GrassVertexOut GrassVertex(float3 positionOS, float3 normalOS, uint instanceID)
+    // The blade at a moment of the wind: the time, the summed wind strength and how far the gust cells had drifted.
+    GrassVertexOut GrassVertexAt(float3 positionOS, float3 normalOS, uint instanceID, float t, float phase, float2 drift)
     {
         GrassVertexOut o = (GrassVertexOut)0;
         GrassInstance inst = _Instances[_InstanceOffset + min(instanceID, _InstanceCapacity - 1)];
@@ -56,7 +60,6 @@ Shader "KryticalNova/Grass Blades"
         float3 pos = root + rotated;
 
         // ---- Wind: three layers so neighbours never move in lockstep.
-        float t = _Time.y;
         float2 dir = KNWindDir();
         float2 side = float2(-dir.y, dir.x);
         float strength = KNWindStrength();
@@ -64,11 +67,10 @@ Shader "KryticalNova/Grass Blades"
         float bend = h01 * h01; // root planted, tip moves most
         // Every wave runs faster in more wind. That part of its phase comes summed up from the CPU (KNWind.hlsl):
         // time x strength would jump with every gust.
-        float phase = KNWindPhase();
         // Large: slow waves rolling across the whole field along the wind.
         float large = sin(dot(root.xz, dir) * 0.09 - (0.8 * t + 1.8 * phase)) * 0.5 + 0.5;
         // Medium: local gust cells drifting downwind.
-        float2 q = root.xz * 0.21 - KNWindDrift(t);
+        float2 q = root.xz * 0.21 - drift;
         float medium = sin(q.x + sin(q.y * 1.3)) * sin(q.y * 0.9 - sin(q.x * 0.7));
         // Small: per-blade flutter (each vertex column gets its own phase).
         float small = sin(5.0 * t + 9.0 * phase + rand * 37.0 + positionOS.x * 13.0 + positionOS.z * 11.0);
@@ -114,6 +116,19 @@ Shader "KryticalNova/Grass Blades"
         o.rootWS = root;
         o.debug = inst.packed & 0x00FFFFFFu;
         return o;
+    }
+
+    GrassVertexOut GrassVertex(float3 positionOS, float3 normalOS, uint instanceID)
+    {
+        return GrassVertexAt(positionOS, normalOS, instanceID, _Time.y, KNWindPhase(), KNWindDrift(_Time.y));
+    }
+
+    // Where the same vertex was one frame ago: last frame's time and wind sums (what pushes it is taken as it is now).
+    float3 GrassPreviousPositionWS(float3 positionOS, float3 normalOS, uint instanceID)
+    {
+        float t = _Time.y - unity_DeltaTime.x;
+        float2 drift = _KN_WindPhase.w > 0.5 ? _KN_WindDrift.zw : KNWindDir() * (t * 1.2);
+        return GrassVertexAt(positionOS, normalOS, instanceID, t, _KN_WindPhase.y, drift).positionWS;
     }
 
     float3 GrassAlbedo(float height01, float rand, float moisture, float3 rootWS)
@@ -232,6 +247,46 @@ Shader "KryticalNova/Grass Blades"
                 return TransformWorldToHClip(GrassVertex(input.positionOS.xyz, input.normalOS, input.instanceID).positionWS);
             }
             half Frag(float4 positionCS : SV_POSITION) : SV_Target { return positionCS.z; }
+            ENDHLSL
+        }
+
+        // How far each blade moved on screen since the last frame, for temporal anti-aliasing and the upscalers.
+        Pass
+        {
+            Name "MotionVectors"
+            Tags { "LightMode" = "MotionVectors" }
+            ColorMask RG
+
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex Vert
+            #pragma fragment Frag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MotionVectorsCommon.hlsl"
+
+            struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; uint instanceID : SV_InstanceID; };
+            struct Varyings
+            {
+                float4 positionCS : SV_POSITION;
+                float4 nowCS      : TEXCOORD0;
+                float4 beforeCS   : TEXCOORD1;
+            };
+
+            Varyings Vert(Attributes input)
+            {
+                Varyings o;
+                float3 now = GrassVertex(input.positionOS.xyz, input.normalOS, input.instanceID).positionWS;
+                float3 before = GrassPreviousPositionWS(input.positionOS.xyz, input.normalOS, input.instanceID);
+                o.positionCS = TransformWorldToHClip(now);
+                // Without the camera's sub-pixel jitter: the vectors are of the scene's own motion.
+                o.nowCS = mul(_NonJitteredViewProjMatrix, float4(now, 1.0));
+                o.beforeCS = mul(_PrevViewProjMatrix, float4(before, 1.0));
+                return o;
+            }
+
+            half4 Frag(Varyings input) : SV_Target
+            {
+                return half4(CalcNdcMotionVectorFromCsPositions(input.nowCS, input.beforeCS), 0, 0);
+            }
             ENDHLSL
         }
 
