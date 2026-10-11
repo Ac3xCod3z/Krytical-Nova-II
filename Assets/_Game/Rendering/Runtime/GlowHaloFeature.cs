@@ -35,7 +35,7 @@ namespace KryticalNova.Rendering
             [Tooltip("...and never wider than this, however close the camera. Also sets how far the flood has to reach.")]
             [Range(8f, 128f)] public float maxWidthPixels = 56f;
             [Tooltip("Something standing this far (metres) in front of a glowing thing hides its light completely; nearer than that it is lit a little. Keep it small: a large value lets the light of a weapon behind its owner show on the owner's body.")]
-            [Range(0.01f, 1f)] public float depthFade = 0.05f;
+            [Range(0.01f, 1f)] public float depthFade = 0.02f;
             [Tooltip("Where a glowing part meets one kept dark (a blade and its hilt, a gun and its grip), how softly the light ends, as a share of the halo's width. 0 = a hard cut.")]
             [Range(0f, 1f)] public float zoneSoftness = 0.3f;
             [Tooltip("Halos start to fade at this camera distance (metres)...")]
@@ -120,6 +120,20 @@ namespace KryticalNova.Rendering
 
         static float Clock => ClockOverride ?? Time.time;
 
+        /// <summary>
+        /// While true no light is drawn at all: for captures that compare a frame with the light and without it
+        /// (the glow leak check). Never left on.
+        /// </summary>
+        public static bool Suspended;
+
+        // Enter Play Mode runs without a domain reload.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Suspended = false;
+            ClockOverride = null;
+        }
+
         Material _material;
         HaloPass _pass;
         readonly List<Draw> _draws = new List<Draw>(64);
@@ -158,7 +172,7 @@ namespace KryticalNova.Rendering
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
             var halos = GlowHalo.Active;
-            if (halos.Count == 0 || shader == null) return;
+            if (halos.Count == 0 || shader == null || Suspended) return;
             var cameraData = renderingData.cameraData;
             if (cameraData.cameraType == CameraType.Preview || cameraData.cameraType == CameraType.Reflection) return;
 
@@ -270,6 +284,7 @@ namespace KryticalNova.Rendering
             public static readonly int GlowAttr = Shader.PropertyToID("_GlowAttr");
             public static readonly int GlowDepth = Shader.PropertyToID("_GlowDepth");
             public static readonly int GlowSeeds = Shader.PropertyToID("_GlowSeeds");
+            public static readonly int GlowBlock = Shader.PropertyToID("_GlowBlock");
             public static readonly int GlowBorder = Shader.PropertyToID("_GlowBorder");
             public static readonly int GlowPin = Shader.PropertyToID("_GlowPin");
             public static readonly int GlowPins = Shader.PropertyToID("_GlowPins");
@@ -296,7 +311,14 @@ namespace KryticalNova.Rendering
 
         class HaloPass : ScriptableRenderPass
         {
-            const int MaskPass = 0, SeedPass = 1, FloodPass = 2, CompositePass = 3;
+            const int MaskPass = 0, SeedPass = 1, FloodPass = 2, CompositePass = 3, BlockPass = 4;
+            // Further than anything drawn: where no fading prop stands.
+            const float NoBlock = 1e9f;
+
+            class BlockData
+            {
+                public Material material;
+            }
             const int MaxFloodSteps = 8;
 
             class MaskData
@@ -311,7 +333,7 @@ namespace KryticalNova.Rendering
                 public Material material;
                 public MaterialPropertyBlock block;
                 public int pass;
-                public TextureHandle attr, depth, seeds;
+                public TextureHandle attr, depth, seeds, blockers;
                 public Vector4 attrTexelSize, flood, shape, border;
                 public Settings settings;   // the composite alone reads the looks of sparks, lightning and flame from it
                 public Pins pins;
@@ -393,6 +415,32 @@ namespace KryticalNova.Rendering
                 var floodScissor = Rect.MinMaxRect(Mathf.Floor(scissor.xMin / scale), Mathf.Floor(scissor.yMin / scale),
                     Mathf.Min(floodWidth, Mathf.Ceil(scissor.xMax / scale)), Mathf.Min(floodHeight, Mathf.Ceil(scissor.yMax / scale)));
 
+                // 0. The props the camera is fading, drawn whole: the scene's depth has their holes in it, and a
+                // glow behind one would shine through each hole. Nearly always there are none, and this only clears.
+                TextureDesc blockDesc = attrDesc;
+                blockDesc.format = GraphicsFormat.R32_SFloat;
+                blockDesc.clearColor = new Color(NoBlock, NoBlock, NoBlock, NoBlock);
+                blockDesc.name = "_GlowHaloBlock";
+                TextureHandle blockers = renderGraph.CreateTexture(blockDesc);
+                using (var builder = renderGraph.AddRasterRenderPass<BlockData>("Glow Halo Block", out var data, profilingSampler))
+                {
+                    data.material = _material;
+                    builder.SetRenderAttachment(blockers, 0);
+                    builder.SetGlobalTextureAfterPass(blockers, ShaderIds.GlowBlock);
+                    builder.AllowPassCulling(false);
+                    builder.SetRenderFunc(static (BlockData d, RasterGraphContext ctx) =>
+                    {
+                        var faded = OccluderFader.Faded;
+                        for (int i = 0; i < faded.Count; i++)
+                        {
+                            Renderer prop = faded[i].renderer;
+                            if (prop == null || !prop.enabled || !prop.gameObject.activeInHierarchy) continue;
+                            for (int s = 0; s < faded[i].submeshes; s++)
+                                ctx.cmd.DrawRenderer(prop, d.material, s, BlockPass);
+                        }
+                    });
+                }
+
                 // 1. The mask: every glowing renderer, where the camera can see it.
                 using (var builder = renderGraph.AddRasterRenderPass<MaskData>("Glow Halo Mask", out var data, profilingSampler))
                 {
@@ -401,6 +449,7 @@ namespace KryticalNova.Rendering
                     data.fade = new Vector4(_settings.fadeStart, _settings.fadeEnd, 0f, 0f);
 
                     builder.UseTexture(resourceData.cameraDepthTexture);
+                    builder.UseTexture(blockers);
                     builder.UseAllGlobalTextures(true);
                     builder.SetRenderAttachment(attr, 0);
                     builder.SetRenderAttachment(depth, 1);
@@ -428,7 +477,7 @@ namespace KryticalNova.Rendering
                 // 2. Seeds, then the flood: jumps halve from the widest halo down to one texel.
                 int block = 0;
                 var flood = new Vector4(scale, 1f, 0f, 0f);
-                AddFull(renderGraph, "Glow Halo Seed", SeedPass, block++, seedsA, false, attr, default, default, default,
+                AddFull(renderGraph, "Glow Halo Seed", SeedPass, block++, seedsA, false, attr, default, default, default, default,
                     attrTexelSize, flood, default, floodScissor);
 
                 // The last step is taken twice: a jump flood misses the true nearest pixel here and there (small parts
@@ -440,7 +489,7 @@ namespace KryticalNova.Rendering
                 for (int step = 0; step < MaxFloodSteps && jump >= 1; step++)
                 {
                     flood.y = jump;
-                    AddFull(renderGraph, "Glow Halo Flood", FloodPass, block++, to, false, attr, default, from, default,
+                    AddFull(renderGraph, "Glow Halo Flood", FloodPass, block++, to, false, attr, default, from, default, default,
                         attrTexelSize, flood, default, floodScissor);
                     (from, to) = (to, from);
                     if (jump == 1 && again) again = false;
@@ -450,11 +499,11 @@ namespace KryticalNova.Rendering
                 // 3. The light, with its sparks, lightning and flame, over the frame.
                 var shape = new Vector4(_settings.softness, _settings.inkGap, _settings.solidity, _settings.depthFade);
                 AddFull(renderGraph, "Glow Halo Composite", CompositePass, block, color, true, attr, depth, from,
-                    resourceData.cameraDepthTexture, attrTexelSize, flood, shape, scissor);
+                    resourceData.cameraDepthTexture, blockers, attrTexelSize, flood, shape, scissor);
             }
 
             void AddFull(RenderGraph renderGraph, string name, int pass, int block, TextureHandle target, bool keepTarget,
-                         TextureHandle attr, TextureHandle depth, TextureHandle seeds, TextureHandle sceneDepth,
+                         TextureHandle attr, TextureHandle depth, TextureHandle seeds, TextureHandle sceneDepth, TextureHandle blockers,
                          Vector4 attrTexelSize, Vector4 flood, Vector4 shape, Rect scissor)
             {
                 using (var builder = renderGraph.AddRasterRenderPass<FullData>(name, out var data, profilingSampler))
@@ -465,6 +514,7 @@ namespace KryticalNova.Rendering
                     data.attr = attr;
                     data.depth = depth;
                     data.seeds = seeds;
+                    data.blockers = blockers;
                     data.attrTexelSize = attrTexelSize;
                     data.flood = flood;
                     data.shape = shape;
@@ -476,6 +526,7 @@ namespace KryticalNova.Rendering
                     builder.UseTexture(attr);
                     if (depth.IsValid()) builder.UseTexture(depth);
                     if (seeds.IsValid()) builder.UseTexture(seeds);
+                    if (blockers.IsValid()) builder.UseTexture(blockers);
                     if (sceneDepth.IsValid())
                     {
                         builder.UseTexture(sceneDepth);
@@ -489,6 +540,7 @@ namespace KryticalNova.Rendering
                         d.block.SetTexture(ShaderIds.GlowAttr, d.attr);
                         if (d.depth.IsValid()) d.block.SetTexture(ShaderIds.GlowDepth, d.depth);
                         if (d.seeds.IsValid()) d.block.SetTexture(ShaderIds.GlowSeeds, d.seeds);
+                        if (d.blockers.IsValid()) d.block.SetTexture(ShaderIds.GlowBlock, d.blockers);
                         d.block.SetVector(ShaderIds.GlowAttrTexelSize, d.attrTexelSize);
                         d.block.SetVector(ShaderIds.GlowFlood, d.flood);
                         d.block.SetVector(ShaderIds.GlowShape, d.shape);

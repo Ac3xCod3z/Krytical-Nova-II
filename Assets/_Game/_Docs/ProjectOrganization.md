@@ -150,7 +150,8 @@ _Game/
 │                          IconPacks, IconLibraryWindow)  Data/Assets/ (IconLibrary.asset, IconTreatmentSettings.asset)  Tests/Editor/
 │                          The icons it bakes go to the owning systems: Gameplay/Progression/Data/Assets/Icons, Gameplay/Items/Data/Assets/Icons
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
-├── Rendering/             Editor/ (also UpscalerSetup: what DLSS and FSR 2 need from the project, menu Lighting ▸ Set Up Upscalers)
+├── Rendering/             Editor/ (also UpscalerSetup: what DLSS and FSR 2 need from the project, menu Lighting ▸ Set Up Upscalers;
+│                          GlowLeakCheck: in Play, draws every weapon model with its glow and counts light that shows through a wall or a body)
 │                          Runtime/ (renderer features; ComicLetteringFeature draws the `ComicLettering` layer, which every
 │                          comic mark and word is on, over the finished frame)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets, the menus' comic book and what the

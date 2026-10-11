@@ -40,6 +40,18 @@ namespace KryticalNova.Rendering
             public bool swapped;
         }
 
+        /// <summary>
+        /// Every renderer drawn faded right now, with its number of submeshes. The depth the camera keeps has the
+        /// fade's holes in it: what must not show through a fading prop as if it were not there (a glow's light)
+        /// draws these whole (<see cref="GlowHaloFeature"/>).
+        /// </summary>
+        public static IReadOnlyList<(Renderer renderer, int submeshes)> Faded => FadedList;
+        private static readonly List<(Renderer renderer, int submeshes)> FadedList = new List<(Renderer, int)>(16);
+
+        // Enter Play Mode runs without a domain reload, so the list must be emptied by hand.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => FadedList.Clear();
+
         private Transform target;
         private readonly RaycastHit[] hits = new RaycastHit[32];
         private readonly Dictionary<Collider, Occluder> byCollider = new Dictionary<Collider, Occluder>();
@@ -213,7 +225,13 @@ namespace KryticalNova.Rendering
         private void Swap(Occluder o)
         {
             for (int i = 0; i < o.renderers.Length; i++)
-                if (o.renderers[i] != null) o.renderers[i].sharedMaterials = o.dithered[i];
+            {
+                Renderer r = o.renderers[i];
+                if (r == null) continue;
+                r.sharedMaterials = o.dithered[i];
+                int submeshes = r.TryGetComponent(out MeshFilter filter) && filter.sharedMesh != null ? filter.sharedMesh.subMeshCount : 0;
+                if (submeshes > 0) FadedList.Add((r, submeshes));
+            }
             o.swapped = true;
             ApplyFade(o);
         }
@@ -227,6 +245,7 @@ namespace KryticalNova.Rendering
                 r.sharedMaterials = o.originals[i];
                 r.SetPropertyBlock(null);
             }
+            if (o.swapped) FadedList.RemoveAll(faded => faded.renderer == null || System.Array.IndexOf(o.renderers, faded.renderer) >= 0);
             o.swapped = false;
             o.fade = 0f;
         }

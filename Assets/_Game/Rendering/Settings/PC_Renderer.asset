@@ -259,7 +259,7 @@ MonoBehaviour:
     solidity: 0.45
     minWidthPixels: 3
     maxWidthPixels: 56
-    depthFade: 0.05
+    depthFade: 0.02
     zoneSoftness: 0.3
     fadeStart: 55
     fadeEnd: 80
