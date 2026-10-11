@@ -7,7 +7,8 @@ namespace KryticalNova.Vegetation.Grass
     /// <summary>
     /// GPU grass. For each rendering camera (game camera, and the Scene view in the editor) a compute shader builds
     /// this frame's grass from a world-snapped grid around the camera: baked mask × biome × exclusion volumes ×
-    /// distance LOD × frustum. The passes share the same rules: real clumps near the camera, cheap far tufts
+    /// distance LOD × frustum. Only the part of the grid under the camera's view is walked. For the game camera it
+    /// also keeps the trample map (<see cref="GrassTrampleMap"/>), which is how characters bend the grass. The passes share the same rules: real clumps near the camera, cheap far tufts
     /// that take over across a hand-off band so the field never ends in a hard line, and (for biomes that ask for
     /// it) cheap fill tufts between the real clumps that only add fullness. Every (type, pass) pair is one
     /// Graphics.RenderMeshIndirect call reading a region of one shared instance buffer. No per-blade GameObjects,
@@ -49,6 +50,9 @@ namespace KryticalNova.Vegetation.Grass
         public static float DensityMultiplier = 1f;
         /// <summary>Runtime switch for the fill pass (debug: compare the lawn with and without its filler).</summary>
         public static bool FillEnabled = true;
+        /// <summary>Runtime switch (debug: compare the cost): off walks the whole square round the camera, as it used to.</summary>
+        public static bool ViewOnly = true;
+        private long cellsWalked, cellsInSquares;   // by the game camera's last frame, for Stats
         private float Density => (float.IsNaN(DensityOverride) ? rules.densityScale : DensityOverride) * DensityMultiplier;
         private float NearDistance => float.IsNaN(DistanceOverride) ? rules.maxDistance : DistanceOverride;
 
@@ -59,6 +63,7 @@ namespace KryticalNova.Vegetation.Grass
         private static readonly int TerrainSizeId = Shader.PropertyToID("_TerrainSize");
         private static readonly int GridOriginId = Shader.PropertyToID("_GridOrigin");
         private static readonly int GridId = Shader.PropertyToID("_Grid");
+        private static readonly int GridDimId = Shader.PropertyToID("_GridDim");
         private static readonly int CamPosId = Shader.PropertyToID("_CamPos");
         private static readonly int LodId = Shader.PropertyToID("_Lod");
         private static readonly int FadeId = Shader.PropertyToID("_Fade");
@@ -111,6 +116,10 @@ namespace KryticalNova.Vegetation.Grass
         private readonly Vector4[] frustum = new Vector4[6];
         private readonly Plane[] planes = new Plane[6];
         private readonly Vector4[] volumes = new Vector4[MaxVolumes * 2];
+        private readonly Vector3[] viewCorners = new Vector3[4];
+        private readonly GrassTrampleMap trample = new GrassTrampleMap();
+        // Round the view's footprint: a clump rooted just outside it can still lean in.
+        private const float FootprintMargin = 3f;
 
         private void OnEnable()
         {
@@ -245,6 +254,7 @@ namespace KryticalNova.Vegetation.Grass
             countBuffer = null;
             instances?.Release();
             instances = null;
+            trample.Release();
         }
 
         private bool ShouldDraw(Camera cam)
@@ -283,6 +293,20 @@ namespace KryticalNova.Vegetation.Grass
                 volumeCount++;
             }
 
+            // Who bends the grass: kept for the game camera only, the Scene view shares what it holds.
+            if (cam.cameraType == CameraType.Game)
+            {
+                if (rules.trample && rules.trampleShader != null && Application.isPlaying)
+                {
+                    // Centred a quarter of its width ahead of the camera: what is behind the camera is never seen.
+                    Vector3 ahead = cam.transform.forward;
+                    ahead.y = 0f;
+                    Vector3 centre = camPos + (ahead.sqrMagnitude > 0.0001f ? ahead.normalized * (rules.trampleMapMetres * 0.25f) : Vector3.zero);
+                    trample.Update(rules.trampleShader, centre, rules.trampleMapMetres, rules.trampleResolution, rules.trampleSpringSeconds);
+                }
+                else trample.Release();
+            }
+
             Vector3 tPos = terrain.transform.position;
             Vector3 tSize = data.size;
             var cs = generateShader;
@@ -311,12 +335,13 @@ namespace KryticalNova.Vegetation.Grass
             cs.SetVector(LawnClipId, new Vector4(rules.lawnEdgeInset, tSize.x / rules.mask.width, 0f, 0f));
             cs.SetVector(FillParamsId, new Vector4(rules.fillWidthScale, fillMeshHeight, rules.fillHeightScale, 0f));
 
+            if (cam.cameraType == CameraType.Game) cellsWalked = cellsInSquares = 0;
             // Near pass: real clumps.
-            Dispatch(cs, camPos, rules.cellSize, nearMax, NearPass, 0, nearCapacity);
+            Dispatch(cs, cam, rules.cellSize, nearMax, NearPass, 0, nearCapacity);
             // Far pass: cheap tufts on a coarse grid, same rules.
-            if (far) Dispatch(cs, camPos, rules.farCellSize, farMax, FarPass, MaxTypes * nearCapacity, farCapacity);
+            if (far) Dispatch(cs, cam, rules.farCellSize, farMax, FarPass, MaxTypes * nearCapacity, farCapacity);
             // Fill pass: cheap tufts between the real clumps, close to the camera.
-            if (fill) Dispatch(cs, camPos, rules.fillCellSize, fillMax, FillPass, MaxTypes * (nearCapacity + farCapacity), fillCapacity);
+            if (fill) Dispatch(cs, cam, rules.fillCellSize, fillMax, FillPass, MaxTypes * (nearCapacity + farCapacity), fillCapacity);
 
             cs.SetBuffer(clampKernel, ArgsId, countBuffer);
             cs.SetInts(ClampCapsId, nearCapacity, farCapacity, MaxTypes, fillCapacity);
@@ -333,18 +358,54 @@ namespace KryticalNova.Vegetation.Grass
             }
         }
 
-        private void Dispatch(ComputeShader cs, Vector3 camPos, float cell, float range, int pass, int regionBase, int capacity)
+        private void Dispatch(ComputeShader cs, Camera cam, float cell, float range, int pass, int regionBase, int capacity)
         {
-            int dim = Mathf.CeilToInt(range * 2f / cell) + 1;
-            var origin = new Vector2Int(Mathf.FloorToInt((camPos.x - range) / cell), Mathf.FloorToInt((camPos.z - range) / cell));
+            // The pass's square round the camera, cut down to what the view covers: the ground behind the camera
+            // is most of that square, and the generator would walk every cell of it only to throw it away.
+            Vector3 camPos = cam.transform.position;
+            float minX = camPos.x - range, maxX = camPos.x + range, minZ = camPos.z - range, maxZ = camPos.z + range;
+            long square = Mathf.CeilToInt(range * 2f / cell) + 1;
+            if (ViewOnly)
+            {
+                Rect view = ViewFootprint(cam, range);
+                minX = Mathf.Max(minX, view.xMin); maxX = Mathf.Min(maxX, view.xMax);
+                minZ = Mathf.Max(minZ, view.yMin); maxZ = Mathf.Min(maxZ, view.yMax);
+                if (maxX <= minX || maxZ <= minZ) return;
+            }
+
+            var origin = new Vector2Int(Mathf.FloorToInt(minX / cell), Mathf.FloorToInt(minZ / cell));
+            int dimX = Mathf.CeilToInt(maxX / cell) - origin.x + 1, dimZ = Mathf.CeilToInt(maxZ / cell) - origin.y + 1;
             cs.SetInts(GridOriginId, origin.x, origin.y);
-            cs.SetVector(GridId, new Vector4(cell, dim, range, Density));
+            cs.SetInts(GridDimId, dimX, dimZ);
+            cs.SetVector(GridId, new Vector4(cell, 0f, range, Density));
             cs.SetVector(FarParamsId, new Vector4(pass, rules.farWidthScale, 0f, 0f));
             cs.SetInt(DrawBaseId, MaxTypes * pass);
             cs.SetInt(RegionBaseId, regionBase);
             cs.SetInt(RegionCapacityId, capacity);
-            int groups = Mathf.CeilToInt(dim / 8f);
-            cs.Dispatch(generateKernel, groups, groups, 1);
+            cs.Dispatch(generateKernel, Mathf.CeilToInt(dimX / 8f), Mathf.CeilToInt(dimZ / 8f), 1);
+            if (cam.cameraType == CameraType.Game) { cellsWalked += (long)dimX * dimZ; cellsInSquares += square * square; }
+        }
+
+        /// <summary>
+        /// The world XZ rectangle the camera's view covers out to <paramref name="range"/> metres over the ground:
+        /// the camera itself and the four corners of its view at that depth (taken a little deeper, since a point
+        /// that far off over the ground is further than that from a camera standing above it).
+        /// </summary>
+        private Rect ViewFootprint(Camera cam, float range)
+        {
+            Transform view = cam.transform;
+            Vector3 eye = view.position;
+            float height = terrain != null ? Mathf.Abs(eye.y - terrain.SampleHeight(eye) - terrain.transform.position.y) : 0f;
+            float depth = Mathf.Min(cam.farClipPlane, Mathf.Sqrt(range * range + height * height) + FootprintMargin);
+            cam.CalculateFrustumCorners(new Rect(0f, 0f, 1f, 1f), depth, Camera.MonoOrStereoscopicEye.Mono, viewCorners);
+            float minX = eye.x, maxX = eye.x, minZ = eye.z, maxZ = eye.z;
+            for (int i = 0; i < 4; i++)
+            {
+                Vector3 corner = eye + view.TransformVector(viewCorners[i]);
+                minX = Mathf.Min(minX, corner.x); maxX = Mathf.Max(maxX, corner.x);
+                minZ = Mathf.Min(minZ, corner.z); maxZ = Mathf.Max(maxZ, corner.z);
+            }
+            return Rect.MinMaxRect(minX - FootprintMargin, minZ - FootprintMargin, maxX + FootprintMargin, maxZ + FootprintMargin);
         }
 
         private void Draw(Camera cam, Mesh mesh, int draw, Bounds bounds)
@@ -388,6 +449,8 @@ namespace KryticalNova.Vegetation.Grass
             }
             sb.Append("Total ").Append(tris.ToString("N0")).Append(" tris  ·  real ").Append(NearDistance.ToString("0"))
               .Append(" m, far ").Append(rules.farDistance.ToString("0")).Append(" m  ·  density x").Append(Density.ToString("0.##"));
+            sb.AppendLine().Append("Cells walked ").Append(cellsWalked.ToString("N0")).Append(" of ").Append(cellsInSquares.ToString("N0"))
+              .Append(ViewOnly ? " (only what the camera sees)" : " (the whole square: grass.view is off)");
             return sb.ToString();
         }
     }

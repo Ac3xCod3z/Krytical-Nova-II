@@ -27,13 +27,19 @@ namespace KryticalNova.World
     public sealed class FoliageInteractorSystem : MonoBehaviour
     {
         public const int MaxInteractors = 8; // must match KN_MAX_INTERACTORS in KNWind.hlsl
+        /// <summary>How many press the grass's trample map at once (GrassTrample.compute KN_MAX_TRAMPLERS).</summary>
+        public const int MaxTramplers = 32;
         private const float MaxDistance = 70f;
 
         private static readonly int InteractorsId = Shader.PropertyToID("_KN_Interactors");
         private static readonly int CountId = Shader.PropertyToID("_KN_InteractorCount");
+        private static readonly int TramplersId = Shader.PropertyToID("_KN_TrampleSources");
+        private static readonly int TramplerCountId = Shader.PropertyToID("_KN_TrampleSourceCount");
 
         private readonly Vector4[] packed = new Vector4[MaxInteractors];
         private readonly float[] distances = new float[MaxInteractors];
+        // Everyone near the camera, in no order: the grass's trample map takes them all (the first that fit).
+        private readonly Vector4[] tramplers = new Vector4[MaxTramplers];
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
@@ -43,13 +49,18 @@ namespace KryticalNova.World
             go.AddComponent<FoliageInteractorSystem>();
         }
 
-        private void OnDisable() => Shader.SetGlobalInt(CountId, 0);
+        private void OnDisable()
+        {
+            Shader.SetGlobalInt(CountId, 0);
+            Shader.SetGlobalInt(TramplerCountId, 0);
+        }
 
         private void LateUpdate()
         {
             var cam = Camera.main;
             Vector3 origin = cam != null ? cam.transform.position : Vector3.zero;
             int count = 0;
+            int trampling = 0;
 
             // Keep the N nearest (insertion into a tiny sorted array).
             var list = FoliageInteractor.Active;
@@ -59,6 +70,7 @@ namespace KryticalNova.World
                 Vector3 p = it.transform.position;
                 float d = (p - origin).sqrMagnitude;
                 if (d > MaxDistance * MaxDistance) continue;
+                if (trampling < MaxTramplers) tramplers[trampling++] = new Vector4(p.x, p.y, p.z, it.radius);
                 if (count == MaxInteractors && d >= distances[count - 1]) continue;
 
                 int slot = count < MaxInteractors ? count++ : MaxInteractors - 1;
@@ -74,6 +86,8 @@ namespace KryticalNova.World
 
             Shader.SetGlobalVectorArray(InteractorsId, packed);
             Shader.SetGlobalInt(CountId, count);
+            Shader.SetGlobalVectorArray(TramplersId, tramplers);
+            Shader.SetGlobalInt(TramplerCountId, trampling);
         }
     }
 }

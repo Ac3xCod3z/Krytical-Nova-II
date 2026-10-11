@@ -125,7 +125,9 @@ Driven by `EnvironmentPresenter` (`Assets/_Game/World/Runtime/Presentation/`). T
 | `_KN_WindScroll` | integrated wind drift (texture tiles) for water ripples; continuous as the wind turns |
 | `_KN_WindPhase` | x = wind strength summed over time, y = the same one frame ago, w = 1 once published. What a foliage wave's speed-up with the wind is multiplied by (`KNWindPhase()`) |
 | `_KN_WindDrift` | xy = how far the grass's gust cells have drifted downwind (`KNWindDrift()`), zw = one frame ago |
-| `_KN_Interactors[8]`, `_KN_InteractorCount` | xyz feet, w radius of the 8 `FoliageInteractor`s nearest the camera (grass parting) |
+| `_KN_Interactors[8]`, `_KN_InteractorCount` | xyz feet, w radius of the 8 `FoliageInteractor`s nearest the camera (bushes and town grass patches part round them; GPU grass only without a trample map) |
+| `_KN_TrampleSources[32]`, `_KN_TrampleSourceCount` | xyz feet, w radius of up to 32 `FoliageInteractor`s near the camera: who presses the grass's trample map |
+| `_KN_GrassTrample`, `_KN_GrassTrampleRect` | the trample map (rg push, b press, a height of who pressed) and where it lies: xy corner in world XZ, z 1 / width in metres, w 1 while there is a map |
 
 ### Sun
 - **Art treatment**: the centre is washed out by its own light (`_SunGlare*`), light bleeds over ink lines
@@ -330,9 +332,25 @@ farther away than the original 0.065 / 0.1.
     It picks a type per biome, applies distance LOD (full to 15 m, 45% to 35 m, 15% to 60 m; kept clumps widen,
     and clumps shrink out before the edge) and frustum-culls. One `RenderMeshIndirect` is issued per type. No
     instance data is stored.
+  - **Only the ground the camera sees is walked** (10 Oct 2026). `GrassRenderer.ViewFootprint` takes the camera and
+    the four corners of its view at the pass's range, and each pass walks that rectangle of its grid instead of the
+    whole square round the camera: at the game's camera angle about 158,000 cells a frame instead of 500,000, with
+    the same grass drawn to the triangle. Measured on an RTX 5070 Ti the frame's GPU time did not change by more
+    than the noise (grass as a whole costs about 1 ms there in the thickest meadow, nearly all of it drawing), so
+    this is headroom for weaker cards, not a gain proven on one. `grass.view` switches it off to compare;
+    `grass.stats` prints the cells walked.
   - **`KryticalNova/Grass Blades`** draws the blades:
     - Layered wind: field waves, local gust cells and blade flutter, with roots planted.
-    - `_KN_Interactors` push the grass aside.
+    - Characters bend it through the **trample map** (10 Oct 2026, `GrassTrampleMap` + `GrassTrample.compute`): a
+      256² picture of 64 m of ground, one texel per 25 cm, lying from 16 m behind the game camera to 48 m ahead of
+      it. Every frame it moves with the camera in whole texels, what it holds fades (to about a third in `trampleSpringSeconds`, 1.5 s) and every
+      `FoliageInteractor` near the camera, up to 32, presses its mark in again; the hardest press on a texel wins.
+      A blade reads one texel: which way it is pushed and how far it is pressed down. So any number of players,
+      NPCs and Hostiles bend grass at the cost of one texture read a vertex, and it stays down for a moment where
+      someone walked. A mark carries the height of who made it, and a blade more than 1.5 m above or below is left
+      alone (a bridge over a lawn). The numbers are on `GrassRuleSet` (Trample map). Outside Play, and with
+      `trample` off, a blade asks the 8 nearest `_KN_Interactors` instead, as it used to. Fill tufts take no part
+      (`playerBend` 0), and grass past the map's edge does not bend.
     - Colour is a root→tip gradient with per-clump, patch and wetness variation and fake AO.
     - Lighting is the comic cel band and dots on upward-biased normals.
     - It casts no shadows but receives them.
@@ -349,7 +367,24 @@ farther away than the original 0.065 / 0.1.
   - The terrain's grass layer is tinted (`TL_Grass` remap) so the ground past 60 m reads as the same grass.
   - **Rebuild with Krytical Nova > Zone > Grass > Build GPU Grass**, or *Bake Grass Mask* after town or terrain
     edits. The same menu has debug views. In game: `grass.debug 0-3`, `grass.density`, `grass.distance`,
-    `grass.toggle`, `grass.stats`.
+    `grass.toggle`, `grass.fill`, `grass.view`, `grass.stats`.
+  - **Two kinds of grass, and where each goes** (rule of 10 Oct 2026). Both are the same system and the same
+    shader; what differs is the biome (`GrassBiome`), its types (`GrassType`) and how the mask is baked. A new
+    zone takes these two as they are, and a third kind is a new biome, never a change to one of these.
+
+    | | **Overworld** (`GB_Meadow`) | **Town lawn** (`GB_Lawn`) |
+    |---|---|---|
+    | Where | Everything outside the walls: past `lawnRegionHalfSize` (112 m) from the zone's origin | Inside the walls, on ground painted as lawn |
+    | Reads as | Wild: stands of different grasses, uneven height, gaps | Kept: one short even cut, edge to edge |
+    | Types | Five, each in its own patches (patchiness 0.2-0.6, patches 8-14 m): tall grass A / B 0.5-1.3 m, medium 0.35-0.6 m, short 0.18-0.34 m, blade clumps 0.28-0.7 m | One: `GT_LawnBlades`, 0.13-0.15 m, wide clumps (5.5-7 x), no patches |
+    | Edge | Fades out over 1.5 m from roads, buildings and props; thins on slopes and with altitude | Stops in a straight line: the kept lawn rectangles (`lawnRects`, written by the mask bake) are filled completely, roots stay 4 cm inside, blades are clamped to the rectangle, and only paving, floors and buildings block it |
+    | Fill tufts | None (`fillDensity` 0): the gaps are part of the look | Half density (`fillDensity` 0.5) within 35 m, so no ground shows through |
+    | Wind | Full (`windStrength` 1-1.15, flutter 0.35-0.45) | Light (`windStrength` 0.6, flutter 0.25): a lawn shivers, it does not roll |
+    | Underfoot | Parts and lies down (`playerBend` 1.1-1.2 of blades up to 1.3 m): a walker leaves a path | Same setting on a 14 cm blade: a few centimetres, read as a footfall, not a path |
+    | Far tufts | Yes, 42-170 m | Yes: without them a lawn would go bare past 60 m |
+
+    A lawn is never made wilder by mixing meadow types into `GB_Lawn`, and the meadow is never tidied by raising
+    its density until the gaps close: the difference between the two is how a player knows they have left town.
   - Terrain details now carry only the flowers.
 - **`KryticalNova/Foliage Wind`** uses the same cel lighting and dots as Comic Toon Lit.
   - All motion happens in the vertex stage with no texture reads. Every pass (lit, shadow, depth, depth-normals)
@@ -667,6 +702,10 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
 
 ## Changelog
 
+- **2026-10-10 (grass)**:
+  - The wind no longer makes the grass jump (wave phase rule, 6d).
+  - Grass is generated only for the ground the camera sees; characters bend it through a trample map and it stays
+    pressed for a moment behind them; the rule for Overworld and Town lawn grass is written down (6d).
 - **2026-10-10**:
   - Glow halo: embers (Perlin noise) for the 120 % Temper band; an Epic at 120 % is red (6e).
   - A Nova hides the characters, pets and effects behind it: `ActorDrawOrder`, `NovaMask.shader`, `NovaCull` (6e).

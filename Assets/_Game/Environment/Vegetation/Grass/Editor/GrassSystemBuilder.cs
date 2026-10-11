@@ -20,12 +20,28 @@ namespace KryticalNova.EditorTools
         private const string MaskPath = ZoneTerrainGenerator.ZoneFolder + "/T_GrassMask_Zone01.png";
         private const string MaterialPath = "Assets/_Game/Environment/Vegetation/Grass/Materials/M_GrassBlades.mat";
         private const string ComputePath = "Assets/_Game/Environment/Vegetation/Grass/Compute/GrassGenerate.compute";
+        private const string TrampleComputePath = "Assets/_Game/Environment/Vegetation/Grass/Compute/GrassTrample.compute";
+
+        /// <summary>The rule set gets the trample map's compute shader (it is data the renderer reads from the rule set).</summary>
+        [MenuItem("Krytical Nova/Zone/Grass/Link Trample Map")]
+        public static void LinkTrampleMap()
+        {
+            var rules = AssetDatabase.LoadAssetAtPath<GrassRuleSet>(RulesPath);
+            var shader = AssetDatabase.LoadAssetAtPath<ComputeShader>(TrampleComputePath);
+            if (rules == null || shader == null) { Debug.LogError("[Grass] The rule set or GrassTrample.compute is missing."); return; }
+            if (rules.trampleShader == shader) return;
+            rules.trampleShader = shader;
+            EditorUtility.SetDirty(rules);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Grass] The rule set now holds the trample map's compute shader.");
+        }
         private const string RendererName = "GPU Grass";
 
         [MenuItem("Krytical Nova/Zone/Grass/Build GPU Grass (Assets + Mask + Scene)")]
         public static void BuildAll()
         {
             var rules = EnsureAssets();
+            LinkTrampleMap();
             BakeMask(rules);
             EnsureSceneRenderer(rules);
             // Grass blades are now GPU grass; terrain details keep only the flowers.

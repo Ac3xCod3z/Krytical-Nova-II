@@ -39,6 +39,16 @@ namespace KryticalNova.DevTools
             return on ? "Grass fill on." : "Grass fill off.";
         }
 
+        [Command("grass.view", "Toggle (or set) walking only the ground the camera sees when grass is generated, to compare the cost (grass.stats).")]
+        private static string View() => View(!GrassRenderer.ViewOnly);
+
+        [Command("grass.view")]
+        private static string View(bool on)
+        {
+            GrassRenderer.ViewOnly = on;
+            return on ? "Grass is generated for what the camera sees." : "Grass is generated for the whole square round the camera.";
+        }
+
         [Command("grass.toggle", "Turn GPU grass on or off.")]
         private static string Toggle(bool on)
         {

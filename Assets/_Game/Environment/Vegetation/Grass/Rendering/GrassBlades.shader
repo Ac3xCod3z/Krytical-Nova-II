@@ -28,6 +28,10 @@ Shader "KryticalNova/Grass Blades"
     float4 _GrassParams;    // x mid point, y brightness variation, z root occlusion, w normal-up
     float4 _GrassMotion;    // x wind strength, y flutter, z player bend (0 = takes no part in interaction), w mesh height
     int    _KN_GrassDebug;
+    // The trample map (GrassTrampleMap): where grass round the camera has been pushed, and which way.
+    TEXTURE2D(_KN_GrassTrample);
+    SAMPLER(sampler_KN_GrassTrample);
+    float4 _KN_GrassTrampleRect;    // xy world XZ of its corner, z 1 / its width in metres, w 1 while there is a map
 
     struct GrassVertexOut
     {
@@ -84,7 +88,24 @@ Shader "KryticalNova/Grass Blades"
         // ---- Interaction: push away from players / NPCs and flatten a little.
         float2 push = 0.0;
         float flatten = 0.0;
-        int interactors = _GrassMotion.z > 0.0 ? _KN_InteractorCount : 0; // filler tufts skip the loop
+        // With a trample map every blade reads one texel of it: who pressed the ground under it and which way,
+        // this frame or a moment ago. Without one (the Scene view outside Play) it asks the nearest characters.
+        bool mapped = _KN_GrassTrampleRect.w > 0.5;
+        if (mapped && _GrassMotion.z > 0.0)
+        {
+            float2 at = (root.xz - _KN_GrassTrampleRect.xy) * _KN_GrassTrampleRect.z;
+            float2 toEdge = min(at, 1.0 - at);
+            if (min(toEdge.x, toEdge.y) > 0.0)
+            {
+                float4 mark = SAMPLE_TEXTURE2D_LOD(_KN_GrassTrample, sampler_KN_GrassTrample, at, 0);
+                // Nothing bends at the very rim of the map, so no line shows where it ends; and a blade well above
+                // or below whoever pressed the ground there (a bridge, a floor underneath) is left alone.
+                float keep = saturate(min(toEdge.x, toEdge.y) * 12.0) * step(abs(root.y - mark.a), 1.5);
+                push = mark.rg * keep;
+                flatten = mark.b * keep;
+            }
+        }
+        int interactors = !mapped && _GrassMotion.z > 0.0 ? _KN_InteractorCount : 0; // filler tufts skip the loop
         [loop] for (int i = 0; i < interactors; i++)
         {
             float4 it = _KN_Interactors[i];
