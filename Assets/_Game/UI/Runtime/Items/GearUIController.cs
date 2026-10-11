@@ -907,6 +907,12 @@ namespace KryticalNova.UI
             tipName.text = gearState.IsClean ? def.displayName : $"{def.displayName}  {gearState}";
             ApplyRarityText(tipName, def.rarity);
             tipType.text = TypeLine(def);
+            // A dyed piece says so: the colour goes with it into a trade, a Kiosk or the Vault.
+            if (gearState.Dye != 0 && inventory != null && inventory.Catalog != null && inventory.Catalog.Themes != null)
+            {
+                string colourway = inventory.Catalog.Themes.DisplayNameOf(gearState.Dye);
+                if (colourway != null) tipType.text += $"  ·  Dyed {colourway}";
+            }
             string requirement = RequirementLine(def, out bool unmet);
             if (tipRequires != null)
             {

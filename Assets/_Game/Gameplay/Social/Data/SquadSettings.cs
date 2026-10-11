@@ -3,12 +3,16 @@ using UnityEngine;
 namespace KryticalNova.Social
 {
     /// <summary>
-    /// The numbers of a Squad that are tuned rather than ruled: how a member follows another. (Who may join a Squad
-    /// is <see cref="PartyRules"/>.)
+    /// The numbers of a Squad that are tuned rather than ruled: the experience boost, and how a member follows
+    /// another. (Who may join a Squad is <see cref="PartyRules"/>.)
     /// </summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Social/Squad Settings", fileName = "SquadSettings")]
     public sealed class SquadSettings : ScriptableObject
     {
+        [Header("Experience")]
+        [Tooltip("The extra share of kill XP of a full Squad whose members are all in the map of the kill: 0.2 is +20%. A smaller Squad, or one with members elsewhere, earns a part of it.")]
+        [Range(0f, 2f)] public float maxExperienceBoost = 0.2f;
+
         [Header("Follow")]
         [Tooltip("Metres the follower stops short of the member it follows.")]
         [Min(0.5f)] public float followKeepDistance = 2.5f;

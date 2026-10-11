@@ -160,7 +160,7 @@ namespace KryticalNova.UI
             title.text = mode == Mode.Weave ? "HOLOWEAVER" : "OUTFITTER";
             helpLabel.text = mode == Mode.Weave
                 ? "A Weave shows another look over what you wear  ·  Its stats, reach and glow stay your own gear's"
-                : "One Chroma Cell dyes one piece  ·  The dye stays on the slot when you change the piece in it";
+                : "One Chroma Cell dyes one piece  ·  The dye stays on the piece, wherever it goes";
             // A weapon has materials of its own: it takes no dye.
             tabs[0].style.display = mode == Mode.Weave ? DisplayStyle.Flex : DisplayStyle.None;
             if (mode == Mode.Dye && slot == EquipSlot.Weapon) slot = EquipSlot.Armor;
@@ -318,9 +318,7 @@ namespace KryticalNova.UI
         private string ColourwayName(ushort id)
         {
             GearThemeLibrary colourways = equipment != null ? equipment.Colourways : null;
-            if (colourways == null || !colourways.TryGet(id, out GearThemeLibrary.Theme theme) || string.IsNullOrEmpty(theme.name)) return "Colourway";
-            int cut = theme.name.IndexOf('_');
-            return cut >= 0 && cut < theme.name.Length - 1 ? theme.name.Substring(cut + 1) : theme.name;
+            return (colourways != null ? colourways.DisplayNameOf(id) : null) ?? "Colourway";
         }
 
         // ------------------------------------------------------------------ cells

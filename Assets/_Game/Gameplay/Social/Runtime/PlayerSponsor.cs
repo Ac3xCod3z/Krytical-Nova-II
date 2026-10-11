@@ -51,6 +51,7 @@ namespace KryticalNova.Social
         private SponsorLinkView[] lines = Array.Empty<SponsorLinkView>();
         private int shownPoints;
         private static readonly List<SponsorLink> recruitScratch = new List<SponsorLink>(4);
+        private static readonly List<SponsorLink> togetherScratch = new List<SponsorLink>(4);
 
         /// <summary>Raised on the owner's machine when its links, its points or its bonus change.</summary>
         public event Action Changed;
@@ -215,18 +216,41 @@ namespace KryticalNova.Social
             return (other.transform.position - transform.position).sqrMagnitude <= rangeMetres * rangeMetres;
         }
 
+        /// <summary>Server: true while this player is the Sponsor of <paramref name="other"/>.</summary>
+        public bool ServerSponsors(PlayerSponsor other) =>
+            other != null && other != this && SponsorService.Sponsors(CharacterId, other.CharacterId);
+
         /// <summary>
         /// Server: the extra share of kill XP this player earns right now for hunting near its Sponsor
-        /// (<see cref="SponsorSettings.experienceBonus"/>), or 0. Worked out afresh, so a kill never pays on stale news.
+        /// (<see cref="SponsorSettings.experienceBonusSteps"/>), or 0. In the Sponsor's Squad it grows with every
+        /// other Recruit of that Sponsor who is in the Squad and near the Sponsor too, and
+        /// <paramref name="inSponsorSquad"/> says so. Worked out afresh, so a kill never pays on stale news.
         /// </summary>
-        public float ServerExperienceBonus()
+        public float ServerExperienceBonus(out bool inSponsorSquad)
         {
+            inSponsorSquad = false;
             if (!IsSpawned || !IsServer || settings == null) return 0f;
             SponsorLink link = SponsorService.SponsorOf(CharacterId);
             if (link == null) return 0f;
             PlayerSponsor sponsor = SponsorService.Online(link.sponsorId);
             if (sponsor == null || SponsorRules.Outgrown(sponsor.Level, Level, settings.levelGap)) return 0f;
-            return IsNear(sponsor, settings.rangeMetres) ? Mathf.Max(0f, settings.experienceBonus) : 0f;
+            if (!IsNear(sponsor, settings.rangeMetres)) return 0f;
+
+            int together = 1;
+            var squad = GetComponent<PlayerParty>();
+            var sponsorSquad = sponsor.GetComponent<PlayerParty>();
+            if (squad != null && squad.IsInPartyWith(sponsorSquad))
+            {
+                inSponsorSquad = true;
+                SponsorService.RecruitsOf(link.sponsorId, togetherScratch);
+                foreach (SponsorLink other in togetherScratch)
+                {
+                    PlayerSponsor recruit = SponsorService.Online(other.recruitId);
+                    if (recruit == null || recruit == this || !recruit.IsNear(sponsor, settings.rangeMetres)) continue;
+                    if (recruit.TryGetComponent(out PlayerParty theirs) && theirs.IsInPartyWith(sponsorSquad)) together++;
+                }
+            }
+            return SponsorRules.Bonus(settings.experienceBonusSteps, together);
         }
 
         private void Update()
@@ -261,7 +285,7 @@ namespace KryticalNova.Social
             {
                 netBoostOn.Value = boost;
                 Tell(boost
-                    ? $"Your Sponsor is near: +{Mathf.RoundToInt(settings.experienceBonus * 100f)}% kill XP."
+                    ? $"Your Sponsor is near: +{Mathf.RoundToInt(ServerExperienceBonus(out _) * 100f)}% kill XP."
                     : "Your Sponsor is out of reach: the XP bonus is off.");
             }
 

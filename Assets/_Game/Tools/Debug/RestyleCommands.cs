@@ -80,7 +80,8 @@ namespace KryticalNova.DevTools
             if (!player.TryGetComponent(out PlayerWeaveLibrary library) || !player.TryGetComponent(out PlayerWeaves weaves)) return NoComponent;
             library.ServerClear();
             weaves.ServerSetLooks(default);
-            return "Weave Library emptied; no Weave or dye is on the character.";
+            weaves.ServerClearDyes();
+            return "Weave Library emptied; no Weave is on the character and no dye on what it wears.";
         }
 
         [Command("gm.weave.list", "Print what the targeted player shows in each slot (worn piece, Weave, dye) and how many looks its library holds.")]

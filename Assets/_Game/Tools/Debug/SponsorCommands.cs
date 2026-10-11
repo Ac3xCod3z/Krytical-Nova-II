@@ -35,7 +35,7 @@ namespace KryticalNova.DevTools
                 if (!TryGetSponsor(out var mine, out var error)) return error;
                 var lines = new System.Text.StringBuilder($"{mine.SponsorName} (level {mine.Level}): {mine.Points:N0} Sponsor points.");
                 SponsorLink link = SponsorService.SponsorOf(mine.CharacterId);
-                if (link != null) lines.Append($"\nSponsor: {link.sponsorName} (level {link.sponsorLevel}); bonus now {mine.ServerExperienceBonus() * 100f:0}%.");
+                if (link != null) lines.Append($"\nSponsor: {link.sponsorName} (level {link.sponsorLevel}); bonus now {mine.ServerExperienceBonus(out bool inSquad) * 100f:0}%{(inSquad ? " (in the Sponsor's Squad)" : string.Empty)}.");
                 var recruits = new System.Collections.Generic.List<SponsorLink>();
                 SponsorService.RecruitsOf(mine.CharacterId, recruits);
                 foreach (SponsorLink recruit in recruits) lines.Append($"\nRecruit: {recruit.recruitName} (level {recruit.recruitLevel}).");

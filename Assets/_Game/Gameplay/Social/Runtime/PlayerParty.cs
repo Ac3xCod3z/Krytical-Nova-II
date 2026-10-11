@@ -32,6 +32,7 @@ namespace KryticalNova.Social
 
         [Tooltip("Seconds an invitation waits for an answer.")]
         [SerializeField, Min(5f)] private float inviteSeconds = 30f;
+        [SerializeField] private SquadSettings settings;
 
         private readonly NetworkVariable<ulong> netPartyId = new NetworkVariable<ulong>(NoParty,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -42,6 +43,7 @@ namespace KryticalNova.Social
         private static readonly List<PlayerParty> OnlineParty = new List<PlayerParty>(16);
         private static readonly List<int> Found = new List<int>(4);
         private static readonly List<int> Levels = new List<int>(PartyRules.MaxSize);
+        private static readonly List<bool> LevelFree = new List<bool>(PartyRules.MaxSize);
 
         private PlayerIdentity identity;
         private PlayerCharacterProgression progression;
@@ -257,11 +259,27 @@ namespace KryticalNova.Social
         /// <summary>Why <paramref name="candidate"/> cannot join this player's party (or the one they would found), or null.</summary>
         private string Refusal(PlayerParty candidate)
         {
+            // A Sponsor may hunt with its Recruits whatever its level: the level rule leaves it out, both ways.
             Levels.Clear();
-            if (group == null) Levels.Add(Level);
-            else foreach (PlayerParty member in group.Members) Levels.Add(member.Level);
+            LevelFree.Clear();
+            bool candidateFree;
+            if (group == null)
+            {
+                Levels.Add(Level);
+                LevelFree.Add(Sponsors(this, candidate));
+                candidateFree = Sponsors(candidate, this);
+            }
+            else
+            {
+                foreach (PlayerParty member in group.Members)
+                {
+                    Levels.Add(member.Level);
+                    LevelFree.Add(SponsorsOneOf(member, group.Members, candidate));
+                }
+                candidateFree = SponsorsOneOf(candidate, group.Members);
+            }
 
-            switch (PartyRules.Check(FactionOf(this), Levels, FactionOf(candidate), candidate.Level))
+            switch (PartyRules.Check(FactionOf(this), Levels, FactionOf(candidate), candidate.Level, LevelFree, candidateFree))
             {
                 case PartyCheck.OtherFaction:
                     return $"{candidate.MemberName} is not of your faction.";
@@ -364,6 +382,21 @@ namespace KryticalNova.Social
 
         // ------------------------------------------------------------------ experience boost
 
+        private static bool Sponsors(PlayerParty sponsor, PlayerParty recruit) =>
+            sponsor != null && recruit != null && sponsor != recruit
+            && sponsor.TryGetComponent(out PlayerSponsor a) && recruit.TryGetComponent(out PlayerSponsor b) && a.ServerSponsors(b);
+
+        /// <summary>
+        /// Server only: true when <paramref name="sponsor"/> is the Sponsor of one of <paramref name="members"/>
+        /// (or of <paramref name="also"/>): it is in that Squad to help its Recruit, not to hunt.
+        /// </summary>
+        public static bool SponsorsOneOf(PlayerParty sponsor, List<PlayerParty> members, PlayerParty also = null)
+        {
+            foreach (PlayerParty member in members)
+                if (Sponsors(sponsor, member)) return true;
+            return Sponsors(sponsor, also);
+        }
+
         /// <summary>
         /// Server only: the extra share of experience this player earns for being in a party right now
         /// (<see cref="PartyRules.ExperienceBoost"/>). Hostile kills are paid with it (HostileKillRewards): the
@@ -376,7 +409,7 @@ namespace KryticalNova.Social
             int together = 0;
             foreach (PlayerParty member in group.Members)
                 if (member.gameObject.scene == gameObject.scene) together++;
-            return PartyRules.ExperienceBoost(group.Members.Count, together);
+            return PartyRules.ExperienceBoost(group.Members.Count, together, settings != null ? settings.maxExperienceBoost : PartyRules.MaxExperienceBoost);
         }
 
         /// <summary>

@@ -34,6 +34,27 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void ASponsorHuntingWithItsRecruit_IsLeftOutOfTheLevelRule()
+        {
+            // The Recruit (30) invites its Sponsor (112): the candidate is free of the rule.
+            Assert.AreEqual(PartyCheck.Allowed, PartyRules.Check(FactionId.Hegemony, new[] { 30 }, FactionId.Hegemony, 112, new[] { false }, true));
+            // The Sponsor (112) and its Recruit (30) take a level 35 player: only the Recruit's level counts.
+            Assert.AreEqual(PartyCheck.Allowed, PartyRules.Check(FactionId.Hegemony, new[] { 112, 30 }, FactionId.Hegemony, 35, new[] { true, false }));
+            Assert.AreEqual(PartyCheck.LevelTooFar, PartyRules.Check(FactionId.Hegemony, new[] { 112, 30 }, FactionId.Hegemony, 45, new[] { true, false }));
+            // Another faction and a full party are refused all the same.
+            Assert.AreEqual(PartyCheck.OtherFaction, PartyRules.Check(FactionId.Hegemony, new[] { 30 }, FactionId.Null, 112, null, true));
+            Assert.AreEqual(PartyCheck.Full, PartyRules.Check(FactionId.Hegemony, new[] { 30, 30, 30, 30, 30 }, FactionId.Hegemony, 112, null, true));
+        }
+
+        [Test]
+        public void TheFullBoost_IsANumberThatCanBeTuned()
+        {
+            Assert.AreEqual(0.4f, PartyRules.ExperienceBoost(5, 5, 0.4f), 1e-5f);
+            Assert.AreEqual(0.1f, PartyRules.ExperienceBoost(5, 2, 0.4f), 1e-5f);
+            Assert.AreEqual(0f, PartyRules.ExperienceBoost(5, 5, -1f));
+        }
+
+        [Test]
         public void OtherFactionsAndTheFactionlessCannotJoin()
         {
             Assert.AreEqual(PartyCheck.OtherFaction, Join(FactionId.Null, 20, 20));

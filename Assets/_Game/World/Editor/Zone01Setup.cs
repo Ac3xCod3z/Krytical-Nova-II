@@ -90,7 +90,7 @@ namespace KryticalNova.EditorTools
             new NpcSeed { Id = "Tailor", Role = NpcRole.Outfitter, Model = "SM_Chr_Cyber_Female_01",
                 Name = "Outfitter", Title = "Dye · Colour Cells", Offers = NpcOffer.Dye | NpcOffer.Shop,
                 Greeting = "Same cut, new colours. Bring a Chroma Cell for every piece you want dyed.",
-                Services = "Dyes an outfit piece in another colourway for one Chroma Cell; the dye stays on the slot. Sells one of the four colour cells each day, a different one every day, and buys what you have to sell." },
+                Services = "Dyes an outfit piece in another colourway for one Chroma Cell; the dye stays on the piece. Sells one of the four colour cells each day, a different one every day, and buys what you have to sell." },
             new NpcSeed { Id = "Holoweaver", Role = NpcRole.Holoweaver, Model = "SM_Chr_Alien_Male_01",
                 Name = "Holoweaver", Title = "Holoweave · Weave Library", Offers = NpcOffer.Holoweave,
                 Greeting = "Wear what protects you. Show what suits you. I keep every look you have ever earned.",

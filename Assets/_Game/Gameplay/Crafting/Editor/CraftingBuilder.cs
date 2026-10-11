@@ -131,7 +131,7 @@ namespace KryticalNova.EditorTools
             Row(CraftItemIds.ChromaCell, 0.2f, 0);
             foreach ((ushort dossier, string _) in Dossiers)
             {
-                for (int page = 1; page <= CraftItemIds.PagesPerDossier; page++) Row(CraftItemIds.PageOf(dossier, page), 0.5f, DossierDropLevel);
+                for (int page = 1; page <= CraftItemIds.PagesPerDossier; page++) Row(CraftItemIds.PageOf(dossier, page), 0.25f, DossierDropLevel);
                 Row(dossier, 0.02f, DossierDropLevel);
             }
             if (added == 0) return 0;
