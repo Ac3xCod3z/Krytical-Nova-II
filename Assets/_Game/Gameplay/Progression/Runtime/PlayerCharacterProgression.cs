@@ -116,6 +116,7 @@ namespace KryticalNova.Progression
         /// <summary>A level was gained here, on whichever machine this is: listeners are told, and the game feel shows it.</summary>
         private void Announce(int level)
         {
+            KryticalNova.Diagnostics.PerformanceLog.Mark("level.gained", null, level);
             LevelGained?.Invoke(level);
             ClientPresentationRegistry.Feel?.LevelUp(transform, !IsSpawned || IsOwner);
         }

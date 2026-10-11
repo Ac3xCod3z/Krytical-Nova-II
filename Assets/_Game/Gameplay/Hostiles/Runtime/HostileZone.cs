@@ -123,6 +123,7 @@ namespace KryticalNova.Hostiles
             due.Clear();
             slotOf.Clear();
             for (int i = 0; i < count; i++) due.Push(Time.time, i);
+            using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("zone.prewarm", definition.displayName, count);
             HostilePool.Prewarm(hostilePrefab, definition.maxAlive);
             if (bruiserPrefab != null) HostilePool.Prewarm(bruiserPrefab, 1);
         }
@@ -133,18 +134,22 @@ namespace KryticalNova.Hostiles
             if (nowAwake != awake)
             {
                 awake = nowAwake;
+                KryticalNova.Diagnostics.PerformanceLog.Mark(awake ? "zone.wake" : "zone.sleep", definition.displayName);
                 foreach (HostileNet hostile in slots)
                     if (hostile != null) hostile.SetAsleep(!awake);
             }
             if (!awake) return;
 
             int budget = settings.spawnsPerTick;
+            var timed = KryticalNova.Diagnostics.PerformanceLog.Time("zone.spawn", definition.displayName);
             while (budget > 0 && due.Count > 0 && due.PeekTime <= Time.time)
             {
                 int slot = due.Pop();
                 if (!Fill(slot)) { due.Push(Time.time + 1f, slot); break; } // no room or no ground: try again shortly
                 budget--;
             }
+            // A tick that spawned nothing is not worth a line.
+            if (budget != settings.spawnsPerTick) timed.End(settings.spawnsPerTick - budget);
             CallBackStrays();
         }
 

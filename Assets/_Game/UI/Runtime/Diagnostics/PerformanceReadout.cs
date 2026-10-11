@@ -201,6 +201,9 @@ namespace KryticalNova.UI
             machine ??= "\nMACHINE\n" + SystemInfo.graphicsDeviceName + "\n" + SystemInfo.processorType.Trim() + "\n"
                 + (SystemInfo.systemMemorySize / 1024f).ToString("0") + " GB memory, " + SystemInfo.graphicsDeviceType + "\n";
             text.Append(machine);
+            // The performance log this run is writing: what to send when the game stuttered.
+            if (KryticalNova.Diagnostics.PerformanceLog.IsRecording)
+                text.Append("\nLOG\nPerformanceLogs / ").Append(System.IO.Path.GetFileName(KryticalNova.Diagnostics.PerformanceLog.FilePath)).Append('\n');
             shown = text.ToString();
             content.text = shown;
             contentSize = Vector2.zero;

@@ -380,6 +380,7 @@ namespace KryticalNova.Pets
         private void PresentEvolved(int stage)
         {
             if (pet == null) return;
+            KryticalNova.Diagnostics.PerformanceLog.Mark("pet.evolved", null, stage);
             bool mine = !IsSpawned || IsOwner;
             Transform body = follower != null && follower.PetTransform != null ? follower.PetTransform : transform;
             ClientPresentationRegistry.Feel?.PetEvolved(body, pet.Stage(stage).glow, mine);

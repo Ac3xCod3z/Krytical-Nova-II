@@ -186,6 +186,12 @@ namespace KryticalNova.UI
             GrassRenderer.DensityMultiplier = GraphicsPreferences.GrassDensity;
             ApplyCamera();
             ApplyDisplay();
+            // Numbers before and after a change of options are not to be compared: the log says what is in force.
+            if (KryticalNova.Diagnostics.PerformanceLog.IsRecording)
+            {
+                KryticalNova.Diagnostics.PerformanceLog.Change("graphics", System.FormattableString.Invariant(
+                    $"{Screen.width}x{Screen.height} {GraphicsPreferences.Window} preset={GraphicsPreferences.Preset} upscaler={UpscalerInForce} quality={GraphicsPreferences.UpscalerQuality} scale={GraphicsPreferences.RenderScale:0.00} shadows={GraphicsPreferences.Shadows} aa={GraphicsPreferences.AntiAliasing} grass={GraphicsPreferences.GrassDensity:0.00} fog={GraphicsPreferences.VolumetricFog} shafts={GraphicsPreferences.SunShafts} outlines={GraphicsPreferences.ComicOutlines} vsync={GraphicsPreferences.VSync} cap={GraphicsPreferences.FrameCap}"));
+            }
         }
 
         // ------------------------------------------------------------------ upscalers
