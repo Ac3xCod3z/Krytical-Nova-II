@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3918348373990250449}
   - component: {fileID: 8554290641849126386}
   - component: {fileID: 3899130497868610372}
+  - component: {fileID: 6927836073376634110}
   m_Layer: 0
   m_Name: W_Monoblade_03
   m_TagString: Untagged
@@ -92,6 +93,25 @@ MonoBehaviour:
   - {x: 0.0026245117, y: -0.039497357, z: -0.18174288}
   - {x: 0.019866943, y: -0.052398708, z: 0.15902717}
   - {x: 0, y: -0.060501125, z: 0.15902711}
+--- !u!114 &6927836073376634110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5273534217963160086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.08202267
+    width: 0.06
+    role: 5
+    value: 0.47918394
+  paintMetal: 1
+  keepAsSet: 0
 --- !u!1 &5380912777663689624
 GameObject:
   m_ObjectHideFlags: 0

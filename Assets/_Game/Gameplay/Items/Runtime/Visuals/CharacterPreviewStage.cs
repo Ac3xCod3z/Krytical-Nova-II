@@ -231,8 +231,9 @@ namespace KryticalNova.Items.Visuals
         /// <paramref name="dye"/> paints an outfit piece in another colourway (a theme's colour grid).
         /// <paramref name="overWorn"/> says the item is a look over the worn piece (a Weave being chosen): a
         /// weapon then keeps the worn weapon's glow, as it will once the Weave is on.
+        /// <paramref name="colourway"/> is the colourway a weapon is shown in (its own colours when 0 and not a Weave).
         /// </summary>
-        public bool TryOn(ItemDefinition item, Color32[] dye = null, bool overWorn = false)
+        public bool TryOn(ItemDefinition item, Color32[] dye = null, bool overWorn = false, ushort colourway = 0)
         {
             if (doll == null || item == null) return false;
             switch (item.equipSlot)
@@ -240,7 +241,11 @@ namespace KryticalNova.Items.Visuals
                 case EquipSlot.Weapon:
                     if (dollWeapon == null) return false;
                     dollWeapon.SetWeapon(item);
-                    if (overWorn) SyncGlow(); // a Weave: the glow of the weapon really held moves onto it
+                    // A Weave is drawn in the worn weapon's dye; a colourway being chosen is shown as it would be.
+                    dollWeapon.SetDye(sourceEquipment != null ? sourceEquipment.Colourways : null,
+                        overWorn && sourceEquipment != null ? sourceEquipment.GetDye(EquipSlot.Weapon) : colourway);
+                    // The glow of the weapon really held stays on its Weave, and on itself while a dye is chosen.
+                    if (overWorn || (sourceEquipment != null && sourceEquipment.GetShownDefinition(EquipSlot.Weapon) == item)) SyncGlow();
                     else dollWeapon.SetGlow(false, default, default); // a weapon being tried on is not the tempered one worn
                     ApplyPreviewLayers(doll); // a paired or hip-carried weapon is not under the mount
                     break;
@@ -300,6 +305,8 @@ namespace KryticalNova.Items.Visuals
             if (dollWeapon != null && (tryOnItem == null || tryOnItem.equipSlot != EquipSlot.Weapon))
             {
                 dollWeapon.SetWeapon(sourceEquipment != null ? sourceEquipment.GetShownDefinition(EquipSlot.Weapon) : null);
+                dollWeapon.SetDye(sourceEquipment != null ? sourceEquipment.Colourways : null,
+                    sourceEquipment != null ? sourceEquipment.GetDye(EquipSlot.Weapon) : (ushort)0);
                 SyncGlow();
                 ApplyPreviewLayers(doll);
             }

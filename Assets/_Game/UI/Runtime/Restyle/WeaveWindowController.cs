@@ -160,10 +160,7 @@ namespace KryticalNova.UI
             title.text = mode == Mode.Weave ? "HOLOWEAVER" : "OUTFITTER";
             helpLabel.text = mode == Mode.Weave
                 ? "A Weave shows another look over what you wear  ·  Its stats, reach and glow stay your own gear's"
-                : "One Chroma Cell dyes one piece  ·  The dye stays on the piece, wherever it goes";
-            // A weapon has materials of its own: it takes no dye.
-            tabs[0].style.display = mode == Mode.Weave ? DisplayStyle.Flex : DisplayStyle.None;
-            if (mode == Mode.Dye && slot == EquipSlot.Weapon) slot = EquipSlot.Armor;
+                : "One Chroma Cell dyes one outfit piece, one Prism Cell a weapon  ·  The dye stays on the piece, wherever it goes";
             chosen = -1;
 
             SetOpen(true);
@@ -228,7 +225,7 @@ namespace KryticalNova.UI
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame && !HudTyping.IsTyping(root)) { Close(); return; }
             if (weaves == null) { Close(); return; }
             placement.Tick();
-            if (weaves.Creds != shownCreds || (mode == Mode.Dye && weaves.DyeItemsHeld != shownDyeItems)) ShowAction();
+            if (weaves.Creds != shownCreds || (mode == Mode.Dye && weaves.DyeItemsHeldFor(slot) != shownDyeItems)) ShowAction();
             if (Time.unscaledTime < nextRangeCheck) return;
             nextRangeCheck = Time.unscaledTime + RangeCheckSeconds;
             if (weaves.InReach(Offer)) return;
@@ -424,7 +421,7 @@ namespace KryticalNova.UI
             ItemDefinition shown = equipment.GetShownDefinition(slot);
             if (shown == null) return;
             Color32[] cells = choice.key != 0 && equipment.Colourways.TryGet(choice.key, out GearThemeLibrary.Theme theme) ? theme.cells : null;
-            gear.PreviewPiece(shown, cells, $"Dye: {choice.name}");
+            gear.PreviewPiece(shown, cells, $"Dye: {choice.name}", colourway: choice.key);
         }
 
         /// <summary>The button, its price, and why it would not work.</summary>
@@ -441,12 +438,13 @@ namespace KryticalNova.UI
                 : "REMOVE DYE";
             clear.style.display = weaveOn || dyeOn ? DisplayStyle.Flex : DisplayStyle.None;
 
-            // A Weave costs Creds; a dye uses up one Chroma Cell, wherever the player keeps them.
+            // A Weave costs Creds; a dye uses up one cell (a Prism Cell for a weapon), wherever the player keeps them.
             long fee = mode == Mode.Weave ? weaves.WeaveFee : 0;
-            shownDyeItems = weaves.DyeItemsHeld;
-            bool dyeCosts = mode == Mode.Dye && weaves.DyeItemId != 0;
+            shownDyeItems = weaves.DyeItemsHeldFor(slot);
+            bool dyeCosts = mode == Mode.Dye && weaves.DyeItemIdFor(slot) != 0;
+            string dyeItemName = weaves.DyeItemNameFor(slot);
             act.text = mode == Mode.Weave ? $"WEAVE   ·   {WalletRules.FormatCreds(fee)}"
-                : dyeCosts ? $"DYE   ·   1 {weaves.DyeItemName} (you have {shownDyeItems})" : "DYE";
+                : dyeCosts ? $"DYE   ·   1 {dyeItemName} (you have {shownDyeItems})" : "DYE";
 
             string reason = null;
             bool pickedOwn = chosen >= 0 && choices[chosen].key == 0;
@@ -463,7 +461,7 @@ namespace KryticalNova.UI
                 bool on = mode == Mode.Weave ? IsOn(choice) : equipment.Looks.GetDye(slot) == choice.key;
                 if (reason == null && on) reason = mode == Mode.Weave ? "That is what the slot shows now." : "It is that colour already.";
                 if (reason == null && !pickedOwn && shownCreds < fee) reason = "You don't have enough Creds.";
-                if (reason == null && !pickedOwn && dyeCosts && shownDyeItems < 1) reason = $"You have no {weaves.DyeItemName}.";
+                if (reason == null && !pickedOwn && dyeCosts && shownDyeItems < 1) reason = $"You have no {dyeItemName}.";
             }
             // The piece's own look or colours are what the remove button gives back: the main button is for the rest.
             act.SetEnabled(chosen >= 0 && !pickedOwn && reason == null);

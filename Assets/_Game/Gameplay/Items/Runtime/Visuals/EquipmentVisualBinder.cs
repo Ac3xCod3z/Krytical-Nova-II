@@ -69,7 +69,11 @@ namespace KryticalNova.Items.Visuals
             {
                 case EquipSlot.Weapon:
                     // The look of the Weave, the reach of the weapon really held.
-                    if (weaponMount != null) weaponMount.SetWeapon(equipment.GetShownDefinition(slot), worn);
+                    if (weaponMount != null)
+                    {
+                        weaponMount.SetWeapon(equipment.GetShownDefinition(slot), worn);
+                        weaponMount.SetDye(equipment.Colourways, equipment.GetDye(slot));
+                    }
                     break;
                 case EquipSlot.Pet:
                     if (petFollower != null) petFollower.SetPet(worn);

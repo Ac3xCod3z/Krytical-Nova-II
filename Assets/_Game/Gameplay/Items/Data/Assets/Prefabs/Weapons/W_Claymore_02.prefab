@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 7544379828499141159}
   - component: {fileID: 7657139926952971221}
   - component: {fileID: 7793721084527946201}
+  - component: {fileID: 1693822191545195282}
   m_Layer: 0
   m_Name: W_Claymore_02
   m_TagString: Untagged
@@ -178,3 +179,22 @@ MonoBehaviour:
   - {x: 0.00000011920929, y: -0.035485744, z: 0.6815424}
   - {x: 0.012860775, y: -0.12202012, z: 0.08106029}
   - {x: -0.012860417, y: -0.12202012, z: 0.10196759}
+--- !u!114 &1693822191545195282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6314513974847078715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.11660157
+    width: 0.06
+    role: 5
+    value: 0.55124134
+  paintMetal: 1
+  keepAsSet: 0

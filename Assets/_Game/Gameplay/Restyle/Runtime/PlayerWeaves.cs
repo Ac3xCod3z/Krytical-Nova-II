@@ -58,11 +58,12 @@ namespace KryticalNova.Restyle
         public long Creds => wallet != null ? wallet.Creds : 0;
         public long WeaveFee => settings != null ? Math.Max(0, settings.weaveApplyFee) : 0;
         public long WeaveClearFee => settings != null ? Math.Max(0, settings.weaveClearFee) : 0;
-        /// <summary>The item one dye uses up (the Chroma Cell), or 0 when dyeing is free.</summary>
-        public ushort DyeItemId => settings != null ? settings.dyeItemId : (ushort)0;
-        /// <summary>How many of the dye item the player has, carried or stored.</summary>
-        public int DyeItemsHeld => DyeItemId != 0 ? sources.Count(DyeItemId) : 0;
-        public string DyeItemName => NameOf(DyeItemId, "Chroma Cell");
+        /// <summary>The item one dye of a slot uses up (a Prism Cell for a weapon, a Chroma Cell for an outfit piece), or 0 when it is free.</summary>
+        public ushort DyeItemIdFor(EquipSlot slot) =>
+            settings == null ? (ushort)0 : slot == EquipSlot.Weapon ? settings.weaponDyeItemId : settings.dyeItemId;
+        /// <summary>How many of a slot's dye item the player has, carried or stored.</summary>
+        public int DyeItemsHeldFor(EquipSlot slot) => DyeItemIdFor(slot) != 0 ? sources.Count(DyeItemIdFor(slot)) : 0;
+        public string DyeItemNameFor(EquipSlot slot) => NameOf(DyeItemIdFor(slot), slot == EquipSlot.Weapon ? "Prism Cell" : "Chroma Cell");
         /// <summary>True while the NPC of a service is in reach (or the GM switch is on): its window closes when it stops being so.</summary>
         public bool InReach(NpcOffer offer) => GmAnywhere || NpcInteractable.IsOffered(offer, transform.position, ReachPadding);
 
@@ -199,10 +200,11 @@ namespace KryticalNova.Restyle
             if (colourway == shown.colorTheme) colourway = 0;
             GearItemState state = GearItemState.Of(piece);
             if (state.Dye == colourway) { Tell(colourway == 0 ? "That piece is not dyed." : "It is that colour already."); return; }
-            if (colourway != 0 && DyeItemId != 0)
+            ushort dyeItem = DyeItemIdFor(slot);
+            if (colourway != 0 && dyeItem != 0)
             {
-                dyeCost[0] = new ItemCost(DyeItemId, 1);
-                if (!sources.ServerSpend(dyeCost)) { Tell($"You have no {DyeItemName}."); return; }
+                dyeCost[0] = new ItemCost(dyeItem, 1);
+                if (!sources.ServerSpend(dyeCost)) { Tell($"You have no {DyeItemNameFor(slot)}."); return; }
             }
             inventory.ServerSetEquippedData(slot, state.WithDye(colourway).PackInto(piece.data));
             if (saveAgent != null) saveAgent.SaveSoon();

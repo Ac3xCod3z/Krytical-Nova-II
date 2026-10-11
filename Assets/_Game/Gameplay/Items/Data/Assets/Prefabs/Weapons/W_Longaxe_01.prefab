@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 5998258355400868663}
   - component: {fileID: 812295107457996586}
   - component: {fileID: 6418721863037566179}
+  - component: {fileID: 8982244026052696500}
   m_Layer: 0
   m_Name: W_Longaxe_01
   m_TagString: Untagged
@@ -185,3 +186,26 @@ MonoBehaviour:
   - {x: 0.0000013113022, y: -0.2620176, z: 0.3116254}
   - {x: 0.00000071525574, y: -0.24359928, z: 0.2087799}
   - {x: 0.017893165, y: -0.042933747, z: -0.2420554}
+--- !u!114 &8982244026052696500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6503092590029226818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.98275864
+    width: 0.06
+    role: 1
+    value: 0.4509804
+  - hue: 0.0925926
+    width: 0.06
+    role: 5
+    value: 0.33333334
+  paintMetal: 1
+  keepAsSet: 0

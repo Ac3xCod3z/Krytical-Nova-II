@@ -4493,3 +4493,8 @@ MonoBehaviour:
     set: Fantasy/Scroll
     number: 27
     chosen: 1
+  - kind: 2
+    target: Prism_Cell
+    set: Cyberpunk/Energy
+    number: 46
+    chosen: 1

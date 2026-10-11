@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7433983138813045913}
   - component: {fileID: 1953612821827011608}
   - component: {fileID: 3904802206030373822}
+  - component: {fileID: 6471483197038018155}
   m_Layer: 0
   m_Name: W_Glaive_03
   m_TagString: Untagged
@@ -91,6 +92,25 @@ MonoBehaviour:
   - {x: 0.028869629, y: -0.072505556, z: 0.8622048}
   - {x: -0.026184082, y: -0.030940393, z: -0.95272696}
   - {x: -0.0012207031, y: -0.023667276, z: 1.5435495}
+--- !u!114 &6471483197038018155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7346143864365163754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.09653493
+    width: 0.06
+    role: 1
+    value: 0.65127534
+  paintMetal: 1
+  keepAsSet: 0
 --- !u!1 &8053619541292391595
 GameObject:
   m_ObjectHideFlags: 0

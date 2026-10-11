@@ -58,6 +58,9 @@ namespace KryticalNova.EditorTools
             added += Add(settings, 3, GroupAlloys, GearMaterialIds.Eversteel, 0, (GearMaterialIds.Orichalc, 4));
             added += Add(settings, 10, GroupColour, CraftItemIds.ChromaCell, 0,
                 (CraftItemIds.CyanCell, 1), (CraftItemIds.MagentaCell, 1), (CraftItemIds.YellowCell, 1), (CraftItemIds.BlackCell, 1));
+            // The weapon's dye is made of the same four (owner, 11 Oct 2026).
+            added += Add(settings, 11, GroupColour, CraftItemIds.PrismCell, 0,
+                (CraftItemIds.CyanCell, 1), (CraftItemIds.MagentaCell, 1), (CraftItemIds.YellowCell, 1), (CraftItemIds.BlackCell, 1));
             for (int i = 0; i < Dossiers.Length; i++)
             {
                 ushort dossier = Dossiers[i].Dossier;
@@ -129,6 +132,7 @@ namespace KryticalNova.EditorTools
             Row(CraftItemIds.YellowCell, 1.5f, 0);
             Row(CraftItemIds.BlackCell, 1.5f, 0);
             Row(CraftItemIds.ChromaCell, 0.2f, 0);
+            Row(CraftItemIds.PrismCell, 0.2f, 0);
             foreach ((ushort dossier, string _) in Dossiers)
             {
                 for (int page = 1; page <= CraftItemIds.PagesPerDossier; page++) Row(CraftItemIds.PageOf(dossier, page), 0.25f, DossierDropLevel);

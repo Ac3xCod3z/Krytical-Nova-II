@@ -1398,7 +1398,7 @@ namespace KryticalNova.EditorTools.GM
         private void ListSerums() => Run("gm.serum");
 
         [TabGroup(Tabs, ItemsTab), Title("Appearance: Holoweave, dye, hair, face, build"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(545.1f)]
-        [InfoBox("Chroma Cells (one dyes one piece), Restyle Passes (Stylist, Reshaper) and Training Passes (Coach). The two Passes have no other source until the Nova Store exists.")]
+        [InfoBox("Chroma Cells (one dyes one outfit piece), Prism Cells (one dyes one weapon), Restyle Passes (Stylist, Reshaper) and Training Passes (Coach). The two Passes have no other source until the Nova Store exists.")]
         private void GivePasses([MinValue(1)] int countOfEach = 10) => Run($"gm.passes {countOfEach}");
 
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Appearance"), EnableIf(nameof(IsReady)), LabelText("Holoweaver Here"), PropertyOrder(545.2f)]

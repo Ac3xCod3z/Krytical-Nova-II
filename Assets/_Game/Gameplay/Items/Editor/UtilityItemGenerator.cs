@@ -84,6 +84,8 @@ namespace KryticalNova.EditorTools
             // the ids (dyeItemId, restyleItemId, trainingItemId).
             new Row { Id = CraftItemIds.ChromaCell, Asset = "Chroma_Cell", Name = "Chroma Cell", Glyph = "DYE", Rarity = ItemRarity.Uncommon,
                 Description = "Dyes one piece of your outfit in another colourway at an Outfitter. Used up by the dye. A Fabricator makes one from a Cyan, a Magenta, a Yellow and a Black Cell.", Stack = 99 },
+            new Row { Id = CraftItemIds.PrismCell, Asset = "Prism_Cell", Name = "Prism Cell", Glyph = "PRISM", Rarity = ItemRarity.Uncommon,
+                Description = "Dyes one weapon in another colourway at an Outfitter. Used up by the dye. A Fabricator makes one from a Cyan, a Magenta, a Yellow and a Black Cell.", Stack = 99 },
             new Row { Id = CraftItemIds.RestylePass, Asset = "Pass_Restyle", Name = "Restyle Pass", Glyph = "STYLE", Rarity = ItemRarity.Rare,
                 Description = "One change of hair at a Stylist, or of face at a Reshaper. Used up by the change.", Stack = 99 },
             new Row { Id = CraftItemIds.TrainingPass, Asset = "Pass_Training", Name = "Training Pass", Glyph = "TRAIN", Rarity = ItemRarity.Rare,

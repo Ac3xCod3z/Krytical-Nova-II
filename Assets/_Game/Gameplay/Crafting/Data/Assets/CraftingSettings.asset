@@ -100,4 +100,19 @@ MonoBehaviour:
       count: 1
     creds: 0
     requiredLevel: 80
+  - id: 11
+    group: COLOUR
+    resultItemId: 9303
+    resultCount: 1
+    ingredients:
+    - itemId: 9310
+      count: 1
+    - itemId: 9311
+      count: 1
+    - itemId: 9312
+      count: 1
+    - itemId: 9313
+      count: 1
+    creds: 0
+    requiredLevel: 0
   maxPerRequest: 99

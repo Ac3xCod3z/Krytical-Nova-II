@@ -1213,9 +1213,10 @@ namespace KryticalNova.UI
 
         /// <summary>
         /// Shows a piece on the equipment page's doll without wearing it, and opens the page for it: a piece being
-        /// tried on, a Weave or a colourway being chosen (<paramref name="dye"/> is then the colourway's colour grid).
+        /// tried on, a Weave or a colourway being chosen (<paramref name="dye"/> is then the colourway's colour grid,
+        /// and <paramref name="colourway"/> its id, which is what a weapon is repainted by).
         /// </summary>
-        public void PreviewPiece(ItemDefinition def, Color32[] dye = null, string label = null, bool overWorn = false)
+        public void PreviewPiece(ItemDefinition def, Color32[] dye = null, string label = null, bool overWorn = false, ushort colourway = 0)
         {
             if (!initialized || def == null || !CanTryOn(def)) return;
             bool wasOpen = IsOpen(equipmentWindow) && stage != null && stage.IsOpen;
@@ -1223,7 +1224,7 @@ namespace KryticalNova.UI
             // The stage opens after layout; defer the try-on until it has a doll.
             viewport.schedule.Execute(() =>
             {
-                if (stage == null || !stage.TryOn(def, dye, overWorn)) return;
+                if (stage == null || !stage.TryOn(def, dye, overWorn, colourway)) return;
                 tryOnLabel.text = label ?? $"Trying on: {def.displayName}";
                 SetDisplay(tryOnChip, true);
             }).StartingIn(wasOpen ? 0 : 30);

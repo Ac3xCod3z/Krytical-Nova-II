@@ -11,6 +11,8 @@ namespace KryticalNova.Crafting
         public const ushort ChromaCell = 9300;
         public const ushort RestylePass = 9301;
         public const ushort TrainingPass = 9302;
+        /// <summary>What dyeing one weapon uses up.</summary>
+        public const ushort PrismCell = 9303;
 
         // The four colours a Chroma Cell is made of: Hostile drops, and the Outfitter's shelf, one a day.
         public const ushort CyanCell = 9310;

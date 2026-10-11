@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 2418665981113311145}
   - component: {fileID: 8779031528851496824}
   - component: {fileID: 3052530690292712833}
+  - component: {fileID: 5534113266851932517}
   m_Layer: 0
   m_Name: W_ServoClaws_03
   m_TagString: Untagged
@@ -182,3 +183,26 @@ MonoBehaviour:
   - {x: -0.012872543, y: -0.07238311, z: -0.06038423}
   - {x: 0.0006755447, y: -0.11023778, z: 0.2638962}
   - {x: 0.0006755447, y: -0.111406274, z: 0.1634259}
+--- !u!114 &5534113266851932517
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4629520986247351721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.47843137
+    width: 0.06
+    role: 1
+    value: 1
+  - hue: 0.09381238
+    width: 0.06
+    role: 6
+    value: 0.9686275
+  paintMetal: 1
+  keepAsSet: 0

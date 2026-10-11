@@ -66,6 +66,7 @@ namespace KryticalNova.CharacterCreation
 
             ItemDefinition weapon = Find(worn, EquipSlot.Weapon, items, out int temper);
             mount.SetWeapon(Shown(worn, EquipSlot.Weapon, items, weapon));
+            mount.SetDye(colourways, ColourwayOf(worn, EquipSlot.Weapon));
             if (weapon != null && progression != null && GearProgressionRules.TryGetGlow(progression.temper, temper, weapon.rarity,
                     out Color color, out TemperGlowLook look))
                 mount.SetGlow(true, color, look);
@@ -97,14 +98,20 @@ namespace KryticalNova.CharacterCreation
             return piece;
         }
 
+        /// <summary>The colourway a slot is dyed in, or 0.</summary>
+        private static ushort ColourwayOf(IReadOnlyList<WornPiece> worn, EquipSlot slot)
+        {
+            if (worn == null) return 0;
+            for (int i = 0; i < worn.Count; i++)
+                if (worn[i].slot == (int)slot && worn[i].dye > 0 && worn[i].dye <= ushort.MaxValue) return (ushort)worn[i].dye;
+            return 0;
+        }
+
         /// <summary>The colour grid of the colourway a slot is dyed in, or null.</summary>
         private static Color32[] DyeOf(IReadOnlyList<WornPiece> worn, EquipSlot slot, GearThemeLibrary colourways)
         {
-            if (worn == null || colourways == null) return null;
-            for (int i = 0; i < worn.Count; i++)
-                if (worn[i].slot == (int)slot && worn[i].dye > 0 && worn[i].dye <= ushort.MaxValue)
-                    return colourways.TryGet((ushort)worn[i].dye, out var theme) ? theme.cells : null;
-            return null;
+            ushort colourway = ColourwayOf(worn, slot);
+            return colourway != 0 && colourways != null && colourways.TryGet(colourway, out var theme) ? theme.cells : null;
         }
 
         /// <summary>True when two records name the same pieces in the same order.</summary>

@@ -103,6 +103,8 @@ namespace KryticalNova.Economy
         [Tooltip("Outfitter: the item used up to dye one outfit piece in another colourway (the Chroma Cell). One a piece; " +
                  "giving a piece its own colours back is free. 0 = dyeing is free. Sold in the Nova Store later.")]
         public ushort dyeItemId = 9300;
+        [Tooltip("Outfitter: the item used up to dye one weapon in another colourway (the Prism Cell). 0 = free.")]
+        public ushort weaponDyeItemId = 9303;
         [Tooltip("Stylist and Reshaper: the item used up by one change of hair or of face (the Restyle Pass), however much " +
                  "is changed at once. 0 = free. Sold in the Nova Store later.")]
         public ushort restyleItemId = 9301;
