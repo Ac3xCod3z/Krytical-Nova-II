@@ -57,6 +57,8 @@ namespace KryticalNova.Items.Visuals
         // The view maths is shared with the character creator's showroom, so both feel the same.
         private readonly PreviewOrbit orbit = new PreviewOrbit();
         private ItemDefinition tryOnItem;
+        // The doll has been given a look of its own (a restyle being chosen): it no longer mirrors the character.
+        private bool ownLook;
 
         public RenderTexture Texture => texture;
         public ItemDefinition TryOnItem => tryOnItem;
@@ -133,6 +135,7 @@ namespace KryticalNova.Items.Visuals
             {
                 sourceEquipment.SlotChanged -= OnSourceSlotChanged;
                 sourceEquipment.TemperChanged -= OnSourceTemperChanged;
+                sourceEquipment.LookChanged -= OnSourceLookChanged;
             }
             sourceAppearance = appearance;
             sourceEquipment = equipment;
@@ -140,10 +143,12 @@ namespace KryticalNova.Items.Visuals
             if (doll != null) Destroy(doll);
             doll = null;
             tryOnItem = null;
+            ownLook = false;
             if (sourceEquipment != null)
             {
                 sourceEquipment.SlotChanged += OnSourceSlotChanged;
                 sourceEquipment.TemperChanged += OnSourceTemperChanged;
+                sourceEquipment.LookChanged += OnSourceLookChanged;
             }
             if (IsOpen)
             {
@@ -221,8 +226,13 @@ namespace KryticalNova.Items.Visuals
 
         // ---------------- Try-on ----------------
 
-        /// <summary>Show an item on the doll only. Returns false when the item has no visual to preview.</summary>
-        public bool TryOn(ItemDefinition item)
+        /// <summary>
+        /// Show an item on the doll only. Returns false when the item has no visual to preview.
+        /// <paramref name="dye"/> paints an outfit piece in another colourway (a theme's colour grid).
+        /// <paramref name="overWorn"/> says the item is a look over the worn piece (a Weave being chosen): a
+        /// weapon then keeps the worn weapon's glow, as it will once the Weave is on.
+        /// </summary>
+        public bool TryOn(ItemDefinition item, Color32[] dye = null, bool overWorn = false)
         {
             if (doll == null || item == null) return false;
             switch (item.equipSlot)
@@ -230,15 +240,17 @@ namespace KryticalNova.Items.Visuals
                 case EquipSlot.Weapon:
                     if (dollWeapon == null) return false;
                     dollWeapon.SetWeapon(item);
-                    dollWeapon.SetGlow(false, default, default); // a weapon being tried on is not the tempered one worn
+                    if (overWorn) SyncGlow(); // a Weave: the glow of the weapon really held moves onto it
+                    else dollWeapon.SetGlow(false, default, default); // a weapon being tried on is not the tempered one worn
                     ApplyPreviewLayers(doll); // a paired or hip-carried weapon is not under the mount
                     break;
                 case EquipSlot.Armor:
                 case EquipSlot.Gloves:
                 case EquipSlot.Boots:
                 case EquipSlot.Cape:
-                    if (sourceEquipment != null) dollAppearance.ApplyLoadout(sourceEquipment.Loadout, sourceEquipment.Catalog);
-                    dollAppearance.SetSlot(item.equipSlot, item);
+                    // From what the character shows (its Weaves and dyes), not from what it wears beneath them.
+                    dollAppearance.WearLike(sourceAppearance);
+                    dollAppearance.SetSlot(item.equipSlot, item, dye);
                     break;
                 default:
                     return false;
@@ -249,9 +261,34 @@ namespace KryticalNova.Items.Visuals
 
         public void ClearTryOn()
         {
-            if (tryOnItem == null) return;
+            if (tryOnItem == null && !ownLook) return;
             tryOnItem = null;
+            EndOwnLook();
             SyncFromSource();
+        }
+
+        /// <summary>
+        /// The doll stops mirroring the character and wears what the character shows as its own, so that a look
+        /// can be applied to the doll alone (a restyle being chosen). Returns the doll, or null while there is none.
+        /// </summary>
+        public GameObject BeginOwnLook()
+        {
+            if (doll == null || sourceAppearance == null) return null;
+            if (!ownLook)
+            {
+                ownLook = true;
+                dollAppearance.WearLike(sourceAppearance);
+            }
+            return doll;
+        }
+
+        // The doll's own parts (its look, its face) mirror the character again.
+        private void EndOwnLook()
+        {
+            if (!ownLook) return;
+            ownLook = false;
+            if (doll == null || sourceAppearance == null) return;
+            foreach (var part in doll.GetComponentsInChildren<IPreviewDollPart>(true)) part.BindToOriginal(sourceAppearance.gameObject);
         }
 
         // ---------------- Internals ----------------
@@ -259,10 +296,10 @@ namespace KryticalNova.Items.Visuals
         private void SyncFromSource()
         {
             if (doll == null || sourceAppearance == null) return;
-            if (tryOnItem == null) dollAppearance.ShareFrom(sourceAppearance);
+            if (tryOnItem == null && !ownLook) dollAppearance.ShareFrom(sourceAppearance);
             if (dollWeapon != null && (tryOnItem == null || tryOnItem.equipSlot != EquipSlot.Weapon))
             {
-                dollWeapon.SetWeapon(sourceEquipment != null ? sourceEquipment.GetDefinition(EquipSlot.Weapon) : null);
+                dollWeapon.SetWeapon(sourceEquipment != null ? sourceEquipment.GetShownDefinition(EquipSlot.Weapon) : null);
                 SyncGlow();
                 ApplyPreviewLayers(doll);
             }
@@ -292,6 +329,9 @@ namespace KryticalNova.Items.Visuals
             SyncGlow();
             ApplyPreviewLayers(doll); // the glow's own renderers are new
         }
+
+        // A Weave or a dye put on for real: the doll shows the character as it now is.
+        private void OnSourceLookChanged(EquipSlot slot) => OnSourceSlotChanged(slot, 0, 0);
 
         private void OnSourceSlotChanged(EquipSlot slot, ushort previous, ushort next)
         {
@@ -466,6 +506,7 @@ namespace KryticalNova.Items.Visuals
             {
                 sourceEquipment.SlotChanged -= OnSourceSlotChanged;
                 sourceEquipment.TemperChanged -= OnSourceTemperChanged;
+                sourceEquipment.LookChanged -= OnSourceLookChanged;
             }
             if (texture != null) { texture.Release(); Destroy(texture); }
         }

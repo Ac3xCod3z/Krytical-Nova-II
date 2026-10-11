@@ -59,6 +59,11 @@ namespace KryticalNova.Items
         public event Action Changed;
         /// <summary>Raised on the owner when the server rejects a request (reason is user-facing).</summary>
         public event Action<string> RequestFailed;
+        /// <summary>
+        /// Server (or offline): an item came to this player as its own (bought from an NPC, taken from a Hostile's
+        /// drop, granted), as against handed on by another player. The Weave Library collects its look.
+        /// </summary>
+        public event Action<ushort> Earned;
 
         public ItemCatalog Catalog => catalog;
         public GearDictionary Gear => gearDictionary;
@@ -448,8 +453,12 @@ namespace KryticalNova.Items
             return healthUseful || chiUseful ? null : ReasonAlreadyFull;
         }
 
-        /// <summary>Server only. Adds up to <paramref name="count"/> of an item (with its own state, if any). Returns how many were added.</summary>
-        public int ServerGive(ushort itemId, int count, ulong data = 0)
+        /// <summary>
+        /// Server only. Adds up to <paramref name="count"/> of an item (with its own state, if any). Returns how
+        /// many were added. <paramref name="earned"/> says the player came by it itself (see <see cref="Earned"/>);
+        /// leave it off for what passes from one player to another.
+        /// </summary>
+        public int ServerGive(ushort itemId, int count, ulong data = 0, bool earned = false)
         {
             if (!CanMutate()) return 0;
             int added = 0;
@@ -459,11 +468,13 @@ namespace KryticalNova.Items
                 r = added > 0 ? null : InventoryRules.ReasonBagFull;
                 return added > 0;
             });
+            if (added > 0 && earned) Earned?.Invoke(itemId);
             return added;
         }
 
         /// <summary>Server only. Adds a whole stack, state included. Returns how many of it fitted.</summary>
-        public int ServerGive(in ItemStack stack) => stack.IsEmpty ? 0 : ServerGive(stack.itemId, stack.count, stack.data);
+        public int ServerGive(in ItemStack stack, bool earned = false) =>
+            stack.IsEmpty ? 0 : ServerGive(stack.itemId, stack.count, stack.data, earned);
 
         /// <summary>
         /// Server only: rewrites what the worn item in <paramref name="slot"/> carries of its own (the system that

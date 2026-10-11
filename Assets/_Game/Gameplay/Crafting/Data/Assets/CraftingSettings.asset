@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d894de01b7876af4bb298410fa424855, type: 3}
+  m_Name: CraftingSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Crafting.CraftingSettings
+  recipes:
+  - id: 1
+    group: ALLOYS
+    resultItemId: 9101
+    resultCount: 1
+    ingredients:
+    - itemId: 9100
+      count: 4
+    creds: 0
+    requiredLevel: 0
+  - id: 2
+    group: ALLOYS
+    resultItemId: 9102
+    resultCount: 1
+    ingredients:
+    - itemId: 9101
+      count: 4
+    creds: 0
+    requiredLevel: 0
+  - id: 3
+    group: ALLOYS
+    resultItemId: 9103
+    resultCount: 1
+    ingredients:
+    - itemId: 9102
+      count: 4
+    creds: 0
+    requiredLevel: 0
+  - id: 10
+    group: COLOUR
+    resultItemId: 9300
+    resultCount: 1
+    ingredients:
+    - itemId: 9310
+      count: 1
+    - itemId: 9311
+      count: 1
+    - itemId: 9312
+      count: 1
+    - itemId: 9313
+      count: 1
+    creds: 0
+    requiredLevel: 0
+  - id: 20
+    group: DOSSIERS
+    resultItemId: 9400
+    resultCount: 1
+    ingredients:
+    - itemId: 9401
+      count: 1
+    - itemId: 9402
+      count: 1
+    - itemId: 9403
+      count: 1
+    - itemId: 9404
+      count: 1
+    creds: 0
+    requiredLevel: 80
+  - id: 21
+    group: DOSSIERS
+    resultItemId: 9410
+    resultCount: 1
+    ingredients:
+    - itemId: 9411
+      count: 1
+    - itemId: 9412
+      count: 1
+    - itemId: 9413
+      count: 1
+    - itemId: 9414
+      count: 1
+    creds: 0
+    requiredLevel: 80
+  - id: 22
+    group: DOSSIERS
+    resultItemId: 9420
+    resultCount: 1
+    ingredients:
+    - itemId: 9421
+      count: 1
+    - itemId: 9422
+      count: 1
+    - itemId: 9423
+      count: 1
+    - itemId: 9424
+      count: 1
+    creds: 0
+    requiredLevel: 80
+  maxPerRequest: 99

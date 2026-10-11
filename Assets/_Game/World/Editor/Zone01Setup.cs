@@ -86,6 +86,36 @@ namespace KryticalNova.EditorTools
                 Name = "Herald", Title = "Ascension · Nova Standings", Offers = NpcOffer.Herald,
                 Greeting = "Renown is only a number until someone speaks it aloud. Let me speak yours.",
                 Services = "Spends your Renown. Ascension: 100 Renown and Creds for a chance to rise a level; each level raises all four attributes, and every eighth level changes your Nova. Nova Standings: buy ranks on four tracks that each raise one stat, and wear one as your title." },
+            // The appearance services. The Outfitter keeps the id of the stall that was built for it (Tailor).
+            new NpcSeed { Id = "Tailor", Role = NpcRole.Outfitter, Model = "SM_Chr_Cyber_Female_01",
+                Name = "Outfitter", Title = "Dye · Colour Cells", Offers = NpcOffer.Dye | NpcOffer.Shop,
+                Greeting = "Same cut, new colours. Bring a Chroma Cell for every piece you want dyed.",
+                Services = "Dyes an outfit piece in another colourway for one Chroma Cell; the dye stays on the slot. Sells one of the four colour cells each day, a different one every day, and buys what you have to sell." },
+            new NpcSeed { Id = "Holoweaver", Role = NpcRole.Holoweaver, Model = "SM_Chr_Alien_Male_01",
+                Name = "Holoweaver", Title = "Holoweave · Weave Library", Offers = NpcOffer.Holoweave,
+                Greeting = "Wear what protects you. Show what suits you. I keep every look you have ever earned.",
+                Services = "Holoweave: puts a look from your Weave Library over the piece you wear in a slot, for Creds. Its stats, reach and glow stay your own gear's. The library is shared by every character of your account." },
+            new NpcSeed { Id = "Stylist", Role = NpcRole.Stylist, Model = "SM_Chr_CyberPunk_Male_01",
+                Name = "Stylist", Title = "Hair",
+                Offers = NpcOffer.Stylist,
+                Greeting = "Sit. Whatever they did to your hair out there, I can fix it.",
+                Services = "Changes your hair, brows, facial hair and hair colour. One Restyle Pass covers every change made at once." },
+            new NpcSeed { Id = "Reshaper", Role = NpcRole.Reshaper, Model = "SM_Chr_Alien_Male_02",
+                Name = "Reshaper", Title = "Face",
+                Offers = NpcOffer.Reshaper,
+                Greeting = "A new face is an hour's work. Who you are under it is your business.",
+                Services = "Changes your face: head, eyes, ears, nose, teeth, skin tone, eye colour, scars, eyeliner and grime. One Restyle Pass covers every change made at once." },
+            new NpcSeed { Id = "Coach", Role = NpcRole.Coach, Model = "SM_Chr_Cyber_Male_01",
+                Name = "Coach", Title = "Build · Muscle",
+                Offers = NpcOffer.Coach,
+                Greeting = "Heavier, leaner, bigger: tell me what you want to carry and we'll get you there.",
+                Services = "Changes your build and muscle. One Training Pass covers both." },
+            // The Fabricator stands where the Elder hall's slot was kept: crafting now, stat resets and castle entry later.
+            new NpcSeed { Id = "Fabricator", Role = NpcRole.Fabricator, Model = "SM_Chr_Robot_01",
+                Name = "Fabricator", Title = "Crafting",
+                Offers = NpcOffer.Craft,
+                Greeting = "Bring the parts. I return the whole.",
+                Services = "Crafts from what you bring, carried or stored: four Alloys of one grade into one of the next, a Cyan, a Magenta, a Yellow and a Black Cell into a Chroma Cell, and the four Pages of a Dossier into the Dossier. Stat resets and castle entry come later." },
         };
 
         // ---------------------------------------------------------------- all steps
@@ -261,7 +291,8 @@ namespace KryticalNova.EditorTools
         public static int OpenReadyStalls()
         {
             CreateNpcAssets();
-            int opened = StarterTownBuilder.OpenReadyStallsInScene();
+            RefreshNpcText(); // an NPC made earlier takes the services its seed has now
+            int opened = StarterTownBuilder.OpenReadyStallsInScene() + StarterTownBuilder.AddMissingStallsInScene();
             if (opened > 0)
             {
                 EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());

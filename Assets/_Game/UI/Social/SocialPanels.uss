@@ -166,6 +166,12 @@
 .contact-note:hover { color: rgb(214, 224, 232); }
 .contact-note-field { margin: 2px 0 0 22px; }
 
+/* ------------------------------------------------------------------ sponsor / recruit */
+
+#sponsor-window { left: 650px; }
+.sponsor-list { height: 120px; }
+.contacts-sponsor { margin-left: 4px; }
+
 /* ------------------------------------------------------------------ crew */
 
 #crew-window { left: 460px; }

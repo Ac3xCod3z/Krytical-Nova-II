@@ -84,6 +84,7 @@ namespace KryticalNova.UI
                 case "TRADE": return HudPreferences.RefuseTrades;
                 case "CONTACT REQUEST": return HudPreferences.RefuseContacts;
                 case "CREW INVITATION": return HudPreferences.RefuseCrewInvites;
+                case "SPONSOR REQUEST": return HudPreferences.RefuseSponsorRequests;
                 default: return false;
             }
         }

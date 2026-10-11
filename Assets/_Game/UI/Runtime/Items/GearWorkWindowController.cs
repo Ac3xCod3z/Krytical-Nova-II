@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using KryticalNova.Core;
+using KryticalNova.Economy;
 using KryticalNova.Forge;
 using KryticalNova.Items;
 using KryticalNova.NPC;
@@ -71,6 +72,8 @@ namespace KryticalNova.UI
         private Tab tab = Tab.Temper;
         private PlayerGearWork work;
         private PlayerInventory inventory;
+        // The Pack, the Vault and the Deep Vault as one: materials are counted, and spent, across all three.
+        private PlayerItemSources sources;
         private GearUIController gear;
         private bool initialized;
         // Open at the Armorer, as against merely shown: the layout editor shows the window to have it placed.
@@ -168,11 +171,12 @@ namespace KryticalNova.UI
         private void Bind(PlayerGearWork next)
         {
             if (work != null) work.Finished -= OnFinished;
-            if (inventory != null) inventory.Changed -= OnPackChanged;
+            if (sources != null) sources.Changed -= OnPackChanged;
             work = next;
             inventory = next != null ? next.Inventory : null;
+            sources = next != null ? next.GetComponent<PlayerItemSources>() : null;
             if (work != null) work.Finished += OnFinished;
-            if (inventory != null) inventory.Changed += OnPackChanged;
+            if (sources != null) sources.Changed += OnPackChanged;
         }
 
         // ------------------------------------------------------------------ open / close
@@ -486,14 +490,14 @@ namespace KryticalNova.UI
             bool primeInUse = GearProgressionRules.PrimeAlloyInUse(temper);
             bool wantPrime = primeInUse && state.Temper >= temper.softCap;
             GearProgressionRules.TryFindAlloy(temper, alloyItemId, out AlloyGrade alloy);
-            if (alloy.itemId == 0 || alloy.prime != wantPrime || inventory.CountItem(alloy.itemId) == 0)
+            if (alloy.itemId == 0 || alloy.prime != wantPrime || sources.Count(alloy.itemId) == 0)
             {
                 alloy = default;
                 foreach (AlloyGrade candidate in temper.alloys)
-                    if (candidate.prime == wantPrime && inventory.CountItem(candidate.itemId) > 0) { alloy = candidate; break; }
+                    if (candidate.prime == wantPrime && sources.Count(candidate.itemId) > 0) { alloy = candidate; break; }
                 alloyItemId = alloy.itemId;
             }
-            if (protectionItemId != 0 && inventory.CountItem(protectionItemId) == 0) protectionItemId = 0;
+            if (protectionItemId != 0 && sources.Count(protectionItemId) == 0) protectionItemId = 0;
 
             VisualElement alloys = Row("ALLOY");
             foreach (AlloyGrade candidate in temper.alloys)
@@ -585,10 +589,10 @@ namespace KryticalNova.UI
                 int needed = GearProgressionRules.FusionMaterialLevel(Settings.statTable, item);
                 Note(picks, $"An untouched Rare {KindOf(item).ToLowerInvariant()} of item level {needed}. None in your Pack.", true);
             }
-            int catalysts = inventory.CountItem(fusion.catalystItemId);
+            int catalysts = sources.Count(fusion.catalystItemId);
             VisualElement catalyst = Row("CATALYST");
             Pick(catalyst, fusion.catalystItemId, null, catalysts > 0, null);
-            Note(catalyst, $"One {NameOf(fusion.catalystItemId)} a try. You have {catalysts}.", catalysts < 1);
+            Note(catalyst, $"One {NameOf(fusion.catalystItemId)} a try. You have {catalysts}{Where(fusion.catalystItemId)}.", catalysts < 1);
 
             ItemStack material = materialCell >= 0 ? inventory.Get(materialCell) : ItemStack.Empty;
             ItemDefinition materialItem = materialCell >= 0 ? inventory.GetDefinition(materialCell) : null;
@@ -615,7 +619,7 @@ namespace KryticalNova.UI
         {
             TuningSettings tuning = Settings.tuning;
             string blocked = GearProgressionRules.TuneBlockedReason(Settings, item, state);
-            bool canReset = state.Tune > 0 && inventory.CountItem(tuning.resetChipItemId) > 0;
+            bool canReset = state.Tune > 0 && sources.Count(tuning.resetChipItemId) > 0;
             reset.style.display = canReset ? DisplayStyle.Flex : DisplayStyle.None;
             int next = Mathf.Min(tuning.maxStage, state.Tune + 1);
             value.text = $"T {state.Tune}";
@@ -628,10 +632,10 @@ namespace KryticalNova.UI
                 gain.text = string.Empty;
                 return blocked;
             }
-            int have = inventory.CountItem(bracket.chipItemId);
+            int have = sources.Count(bracket.chipItemId);
             VisualElement chipRow = Row("CHIPS");
             Pick(chipRow, bracket.chipItemId, $"x{bracket.chips}", have >= bracket.chips, null);
-            Note(chipRow, $"{bracket.chips} {NameOf(bracket.chipItemId)} and {bracket.renown} Renown a try. You have {have} and {work.Renown:N0}.",
+            Note(chipRow, $"{bracket.chips} {NameOf(bracket.chipItemId)} and {bracket.renown} Renown a try. You have {have}{Where(bracket.chipItemId)} and {work.Renown:N0}.",
                 have < bracket.chips || work.Renown < bracket.renown);
 
             act.text = $"TUNE   ·   {bracket.creds:N0} Creds";
@@ -680,11 +684,15 @@ namespace KryticalNova.UI
             return picks;
         }
 
-        /// <summary>One kind of material as an icon with how many the player carries. Item 0 is "none".</summary>
+        /// <summary>" (Pack 3 · Vault 12)" when some of a material is stored, so the count is not a surprise; empty when all of it is carried.</summary>
+        private string Where(ushort itemId) =>
+            sources.CountIn(ItemSourceKind.Pack, itemId) == sources.Count(itemId) ? string.Empty : $" ({sources.Describe(itemId)})";
+
+        /// <summary>One kind of material as an icon with how many the player has, carried or stored. Item 0 is "none".</summary>
         private void Pick(VisualElement parent, ushort itemId, string tag, bool chosen, Action choose)
         {
             ItemDefinition item = itemId != 0 && inventory.Catalog != null ? inventory.Catalog.Get(itemId) : null;
-            int have = itemId != 0 ? inventory.CountItem(itemId) : 0;
+            int have = itemId != 0 ? sources.Count(itemId) : 0;
             var pick = new VisualElement();
             pick.AddToClassList("item-cell");
             pick.AddToClassList("forge-pick");
@@ -708,7 +716,7 @@ namespace KryticalNova.UI
                 pick.RegisterCallback<ClickEvent>(_ => { if (!striking) choose(); });
             if (item != null)
             {
-                pick.RegisterCallback<PointerEnterEvent>(_ => { if (gear != null) gear.ShowItemTooltip(pick, item, new ItemStack(item.itemId, 1), have > 0 ? $"You have {have}" : "You have none"); });
+                pick.RegisterCallback<PointerEnterEvent>(_ => { if (gear != null) gear.ShowItemTooltip(pick, item, new ItemStack(item.itemId, 1), have > 0 ? $"You have {have}{Where(item.itemId)}" : "You have none"); });
                 pick.RegisterCallback<PointerLeaveEvent>(_ => HideTip());
             }
             parent.Add(pick);

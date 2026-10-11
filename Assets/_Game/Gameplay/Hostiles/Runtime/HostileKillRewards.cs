@@ -107,7 +107,10 @@ namespace KryticalNova.Hostiles
 
         private static void Pay(PlayerCharacterProgression player, HostileNet hostile, in HostileStats stats, LevelGapSettings gaps, int gap, float squadBoost)
         {
-            int amount = ExperienceFor(stats, gaps, gap, squadBoost);
+            // A Recruit hunting near its Sponsor is paid the Sponsor's bonus instead of the Squad's, when it is the larger.
+            float sponsorBonus = player.TryGetComponent(out PlayerSponsor sponsor) ? sponsor.ServerExperienceBonus() : 0f;
+            float boost = SponsorRules.ExperienceBoost(squadBoost, sponsorBonus);
+            int amount = ExperienceFor(stats, gaps, gap, boost);
             var chat = player.GetComponent<PlayerChat>();
             string name = hostile.Definition != null ? hostile.Definition.displayName : "Hostile";
             if (amount <= 0)
@@ -116,7 +119,9 @@ namespace KryticalNova.Hostiles
                 return;
             }
             player.GrantExperience(amount);
-            if (chat != null) chat.ServerCombatNotice($"+{amount} XP ({name})");
+            bool sponsored = sponsorBonus > 0f && sponsorBonus >= squadBoost;
+            if (chat != null)
+                chat.ServerCombatNotice(sponsored ? $"+{amount} XP ({name}) · Sponsor +{Mathf.RoundToInt(sponsorBonus * 100f)}%" : $"+{amount} XP ({name})");
         }
 
         // ------------------------------------------------------------------ dying to a Hostile

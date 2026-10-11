@@ -16,6 +16,11 @@ namespace KryticalNova.World
         public float TimeOffset01;
         /// <summary>1 = normal, 0 = paused (GM).</summary>
         public float TimeScale;
+        /// <summary>
+        /// The calendar day this session's clock started on, so the day number goes on from one session to the
+        /// next instead of starting at 0 each time (what is sold "one a day" depends on it).
+        /// </summary>
+        public int DayBase;
 
         public byte FromWeather;
         public byte ToWeather;
@@ -39,6 +44,7 @@ namespace KryticalNova.World
             serializer.SerializeValue(ref DayLengthSeconds);
             serializer.SerializeValue(ref TimeOffset01);
             serializer.SerializeValue(ref TimeScale);
+            serializer.SerializeValue(ref DayBase);
             serializer.SerializeValue(ref FromWeather);
             serializer.SerializeValue(ref ToWeather);
             serializer.SerializeValue(ref TransitionStart);
@@ -55,6 +61,20 @@ namespace KryticalNova.World
             if (DayLengthSeconds <= 0f) return TimeOffset01;
             double t = TimeOffset01 + (now - CycleEpoch) * TimeScale / DayLengthSeconds;
             return (float)(t - Math.Floor(t));
+        }
+
+        /// <summary>
+        /// The in-game calendar day: the day the session started on plus the days its clock has run. It turns over
+        /// at in-game midnight and is the same number on every machine.
+        /// </summary>
+        public long CalendarDay(double now) => DayBase + DayCount(now);
+
+        /// <summary>The calendar day a clock starting now begins on: real time since 2026, in in-game days.</summary>
+        public static int CalendarDayNow(float dayLengthSeconds)
+        {
+            if (dayLengthSeconds <= 0f) return 0;
+            double seconds = (DateTime.UtcNow - new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+            return (int)Math.Max(0, Math.Min(int.MaxValue, Math.Floor(seconds / dayLengthSeconds)));
         }
 
         /// <summary>Whole days elapsed on the world clock (drives slow cycles such as moon phases).</summary>
@@ -82,7 +102,7 @@ namespace KryticalNova.World
 
         public bool Equals(WorldEnvironmentState o) =>
             CycleEpoch.Equals(o.CycleEpoch) && DayLengthSeconds.Equals(o.DayLengthSeconds) &&
-            TimeOffset01.Equals(o.TimeOffset01) && TimeScale.Equals(o.TimeScale) &&
+            TimeOffset01.Equals(o.TimeOffset01) && TimeScale.Equals(o.TimeScale) && DayBase == o.DayBase &&
             FromWeather == o.FromWeather && ToWeather == o.ToWeather &&
             TransitionStart.Equals(o.TransitionStart) && TransitionSeconds.Equals(o.TransitionSeconds) && Seed == o.Seed &&
             FromWindHeading.Equals(o.FromWindHeading) && ToWindHeading.Equals(o.ToWindHeading) &&

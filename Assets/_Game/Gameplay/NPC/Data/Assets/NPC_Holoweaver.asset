@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a27028f02e4d244eb12188002cec6a8, type: 3}
+  m_Name: NPC_Holoweaver
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
+  role: 10
+  displayName: Holoweaver
+  title: "Holoweave \xB7 Weave Library"
+  greeting: Wear what protects you. Show what suits you. I keep every look you have ever earned.
+  services: 'Holoweave: puts a look from your Weave Library over the piece you wear in a slot, for Creds. Its stats, reach and glow stay your own gear''s. The library is shared by every character of your account.'
+  offers: 64
+  interactRange: 3

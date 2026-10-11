@@ -3,6 +3,19 @@ using UnityEngine;
 
 namespace KryticalNova.Hostiles
 {
+    /// <summary>One item a Hostile may drop besides its usual loot, and how often.</summary>
+    [System.Serializable]
+    public struct MaterialDrop
+    {
+        public ItemDefinition item;
+        [Tooltip("Chance that a kill drops one, percent, before the level gap and the server drop rate.")]
+        [Range(0f, 100f)] public float chancePercent;
+        [Tooltip("Only Hostiles of this level and above drop it. 0 = any.")]
+        [Min(0)] public int minLevel;
+        [Tooltip("Only Hostiles up to this level drop it. 0 = no upper limit.")]
+        [Min(0)] public int maxLevel;
+    }
+
     /// <summary>
     /// The numbers every Hostile shares that are not its stats: how long a corpse lies and how it burns away,
     /// how far one may be pulled from its Hostile Zone, how many a map may hold. Change them here, never in code.
@@ -39,6 +52,9 @@ namespace KryticalNova.Hostiles
         [Range(0f, 100f)] public float bruiserGearChancePercent = 25f;
         [Tooltip("Gear drops are of an item level from this many levels under the Hostile up to its own.")]
         [Min(0)] public int gearLevelsBelow = 3;
+        [Tooltip("What a kill may drop besides Creds, a Stim and gear: crafting materials (colour cells, Dossier Pages) and, " +
+                 "rarely, what they make. Each row is rolled on its own for every kill. Placeholder chances of 11 Oct 2026.")]
+        public MaterialDrop[] materialDrops = System.Array.Empty<MaterialDrop>();
 
         [Header("Hostile Zones")]
         [Tooltip("Hostiles a map may hold at once, in zones and out of them.")]

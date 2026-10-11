@@ -476,6 +476,7 @@ namespace KryticalNova.UI
         {
             if (!refreshWanted) return;
             refreshWanted = false;
+            using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("hud.redraw");
             Refresh();
         }
 
@@ -1002,7 +1003,7 @@ namespace KryticalNova.UI
                     string reqStr = $"Requires Level {skill.requiredCharacterLevel} · {skill.acquisitionNote}";
                     if (skill.requiredCraftingArchives != null && skill.requiredCraftingArchives.Length > 0)
                     {
-                        reqStr += $"\nDossiers: {string.Join(", ", skill.requiredCraftingArchives)}";
+                        reqStr += $"\nPages: {string.Join(", ", skill.requiredCraftingArchives)}";
                     }
                     reqLabel.text = reqStr;
                 }

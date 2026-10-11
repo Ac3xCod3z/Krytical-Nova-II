@@ -23,6 +23,7 @@ MonoBehaviour:
     price: 10000
   - item: {fileID: 11400000, guid: ed9c087580704a5408541f600fe78ad7, type: 2}
     price: 10000
+  rotation: []
   sellsLadderGear: 1
   gearRarity: 0
   gearMinLevel: 1

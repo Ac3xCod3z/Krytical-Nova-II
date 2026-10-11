@@ -44,13 +44,14 @@ namespace KryticalNova.Economy
     /// The owner is sent the state of their own Kiosk so the Kiosk window works anywhere in the world.
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(PlayerInventory))]
+    [RequireComponent(typeof(PlayerInventory), typeof(PlayerItemSources))]
     public sealed class PlayerKiosk : NetworkBehaviour
     {
         [SerializeField] private EconomySettings settings;
         [SerializeField] private KioskStand standPrefab;
 
         private PlayerInventory inventory;
+        private PlayerItemSources sources;
         private PlayerWallet wallet;
         private PlayerResources resources;
         private PlayerIdentity identity;
@@ -71,6 +72,7 @@ namespace KryticalNova.Economy
         public EconomySettings Settings => settings;
         public KioskStand StandPrefab => standPrefab;
         public PlayerInventory Inventory => inventory;
+        public PlayerItemSources Sources => sources;
         public PlayerWallet Wallet => wallet;
         public bool IsAlive => resources == null || resources.IsAlive;
         public FactionId Faction => identity != null ? identity.Faction : FactionId.None;
@@ -95,6 +97,7 @@ namespace KryticalNova.Economy
         private void Awake()
         {
             inventory = GetComponent<PlayerInventory>();
+            sources = GetComponent<PlayerItemSources>();
             wallet = GetComponent<PlayerWallet>();
             resources = GetComponent<PlayerResources>();
             identity = GetComponent<PlayerIdentity>();

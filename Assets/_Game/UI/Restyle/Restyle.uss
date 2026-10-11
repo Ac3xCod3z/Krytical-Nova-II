@@ -1,0 +1,67 @@
+/*
+ * The appearance services: the Holoweaver's and the Outfitter's window (WeaveWindowController). Shared looks
+ * (panel, buttons) come from ../Common/KryticalTheme.uss, item cells from ../Inventory/Items.uss, the tabs and
+ * the reason line from ../Inventory/Forge.uss. Where a window sits here is only a fallback:
+ * ServicePanelPlacement docks it beside the equipment page when it opens.
+ */
+
+#weave-window { right: 420px; top: 84px; width: 372px; display: none; }
+
+/* What the slot holds now: the piece worn, and what it shows. */
+.weave-worn { margin: 6px 4px 0 4px; padding: 0; min-height: 26px; font-size: 11px; white-space: normal; color: rgb(208, 220, 230); }
+.weave-scroll { height: 226px; margin-top: 6px; }
+/* What is picked, and so what the doll wears. */
+.weave-choice { margin: 6px 4px 0 4px; padding: 0; min-height: 15px; font-size: 12px; -unity-font-style: bold; white-space: normal; color: rgb(170, 230, 214); }
+
+/* Two classes each: the Pack's own look for a cell (Items.uss) would win otherwise. */
+.item-cell.weave-cell.chosen { -unity-background-image-tint-color: rgba(30, 112, 98, 0.95); }
+.weave-cell.chosen > .item-frame { -unity-background-image-tint-color: rgb(140, 255, 220); }
+/* A look is not a piece of a level: the number the Pack writes on gear is left off. */
+.weave-cell > .item-level { display: none; }
+/* The one the slot shows now. */
+.weave-on { position: absolute; left: 3px; top: 1px; margin: 0; padding: 0; font-size: 8px; -unity-font-style: bold; color: rgb(140, 255, 220); }
+/* The first cell: the piece's own look, or its own colours. */
+.weave-own { position: absolute; left: 0; right: 0; top: 0; bottom: 0; margin: 0; padding: 0; font-size: 9px; white-space: normal; -unity-text-align: middle-center; color: rgb(156, 172, 188); }
+
+/* A colourway: its four leading colours side by side over its name. Three to a row of the grid. */
+.weave-chip {
+    width: 104px;
+    height: 50px;
+    margin: 2px;
+    padding: 3px;
+    background-color: rgba(18, 26, 36, 0.9);
+    border-width: 1px;
+    border-color: rgba(120, 140, 160, 0.35);
+    border-radius: 3px;
+}
+.weave-chip.chosen { border-color: rgb(140, 255, 220); background-color: rgba(30, 112, 98, 0.55); }
+.weave-chip-colours { flex-direction: row; height: 22px; }
+.weave-chip-colour { flex-grow: 1; flex-basis: 0; }
+.weave-chip-name { margin: 3px 0 0 0; padding: 0; font-size: 10px; -unity-text-align: middle-center; color: rgb(208, 220, 230); }
+.weave-chip > .weave-on { left: auto; right: 4px; top: auto; bottom: 2px; }
+
+#weave-act { margin-top: 4px; min-height: 36px; }
+#weave-clear { margin-top: 4px; min-height: 24px; font-size: 10px; }
+
+/* ------------------------------------------------------------------ the Stylist, the Reshaper, the Coach */
+
+#restyle-window { right: 420px; top: 84px; width: 372px; display: none; }
+.restyle-scroll { max-height: 330px; margin-top: 6px; }
+.restyle-rows { padding: 0 2px; }
+/* One thing that can be changed: its name, a step back, where it stands, a step on. */
+.restyle-row {
+    flex-direction: row;
+    align-items: center;
+    margin: 2px 0;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background-color: rgba(18, 26, 36, 0.75);
+}
+.restyle-row-label { flex-grow: 1; flex-shrink: 1; margin: 0; padding: 0; font-size: 12px; color: rgb(214, 226, 236); }
+.restyle-row-value { width: 96px; margin: 0; padding: 0; font-size: 12px; -unity-text-align: middle-center; color: rgb(244, 244, 244); }
+.restyle-row-swatch { width: 16px; height: 16px; margin: 0 2px 0 4px; border-width: 1px; border-color: rgba(255, 255, 255, 0.5); border-radius: 2px; }
+.restyle-step { width: 28px; min-height: 24px; height: 24px; margin: 0 2px; padding: 0; font-size: 13px; -unity-font-style: bold; }
+.restyle-none { margin: 12px 6px; padding: 0; font-size: 12px; white-space: normal; color: rgb(156, 172, 188); }
+
+#restyle-act { margin-top: 6px; min-height: 36px; }
+#restyle-reset { margin-top: 4px; min-height: 24px; font-size: 10px; }

@@ -1,0 +1,41 @@
+/*
+ * The Fabricator's bench (CraftWindowController). Shared looks (panel, buttons, cards) come from
+ * ../Common/KryticalTheme.uss, item cells from ../Inventory/Items.uss, the material sockets and the reason line
+ * from ../Inventory/Forge.uss. Where it sits here is only a fallback: ServicePanelPlacement docks it beside the
+ * Pack when it opens.
+ */
+
+#craft-window { right: 420px; top: 84px; width: 372px; display: none; }
+
+.craft-scroll { height: 252px; margin-top: 6px; }
+.craft-list { padding: 0 2px; }
+/* A heading over the recipes of one kind. */
+.craft-group { margin: 6px 2px 2px 2px; padding: 0; font-size: 10px; letter-spacing: 1px; color: rgb(156, 172, 188); }
+
+/* One recipe: what it makes, its name, and how many the materials at hand would make. */
+.craft-row {
+    flex-direction: row;
+    align-items: center;
+    margin: 1px 0;
+    padding: 2px 4px;
+    border-width: 1px;
+    border-color: rgba(120, 140, 160, 0.2);
+    border-radius: 3px;
+    background-color: rgba(18, 26, 36, 0.75);
+}
+.craft-row:hover { border-color: rgba(140, 255, 220, 0.5); }
+.craft-row.chosen { border-color: rgb(140, 255, 220); background-color: rgba(30, 112, 98, 0.55); }
+.craft-row.short .craft-row-name { color: rgb(156, 172, 188); }
+/* Two classes each: the Pack's own size for a cell (Items.uss) would win otherwise. */
+.item-cell.craft-row-icon { width: 36px; height: 36px; margin: 0 6px 0 0; flex-shrink: 0; }
+.craft-row-name { flex-grow: 1; flex-shrink: 1; margin: 0; padding: 0; font-size: 12px; white-space: normal; color: rgb(232, 240, 246); }
+.craft-row-can { margin: 0 2px 0 4px; padding: 0; font-size: 11px; -unity-font-style: bold; color: rgb(140, 255, 220); }
+.craft-row.short .craft-row-can { color: rgb(120, 132, 146); }
+
+.craft-detail { margin-top: 6px; padding: 6px 8px; min-height: 96px; }
+.craft-name { margin: 0; padding: 0; font-size: 13px; -unity-font-style: bold; white-space: normal; color: rgb(232, 240, 246); }
+.craft-needs { margin-top: 4px; }
+.craft-note { margin: 4px 0 0 0; padding: 0; font-size: 11px; white-space: normal; color: rgb(170, 230, 214); }
+
+#craft-act { margin-top: 4px; min-height: 36px; }
+.craft-all { margin-top: 4px; min-height: 24px; font-size: 10px; }

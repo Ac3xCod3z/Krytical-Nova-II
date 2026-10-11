@@ -1201,17 +1201,49 @@ namespace KryticalNova.UI
             def.equipSlot == EquipSlot.Weapon || def.equipSlot == EquipSlot.Armor || def.equipSlot == EquipSlot.Gloves ||
             def.equipSlot == EquipSlot.Boots || def.equipSlot == EquipSlot.Cape;
 
-        private void TryOn(ItemDefinition def)
+        private void TryOn(ItemDefinition def) => PreviewPiece(def);
+
+        public bool IsEquipmentOpen => initialized && IsOpen(equipmentWindow);
+
+        /// <summary>
+        /// Shows a piece on the equipment page's doll without wearing it, and opens the page for it: a piece being
+        /// tried on, a Weave or a colourway being chosen (<paramref name="dye"/> is then the colourway's colour grid).
+        /// </summary>
+        public void PreviewPiece(ItemDefinition def, Color32[] dye = null, string label = null, bool overWorn = false)
         {
+            if (!initialized || def == null || !CanTryOn(def)) return;
+            bool wasOpen = IsOpen(equipmentWindow) && stage != null && stage.IsOpen;
             SetEquipmentOpen(true);
             // The stage opens after layout; defer the try-on until it has a doll.
             viewport.schedule.Execute(() =>
             {
-                if (stage == null || !stage.TryOn(def)) return;
-                tryOnLabel.text = $"Trying on: {def.displayName}";
+                if (stage == null || !stage.TryOn(def, dye, overWorn)) return;
+                tryOnLabel.text = label ?? $"Trying on: {def.displayName}";
                 SetDisplay(tryOnChip, true);
-            }).StartingIn(30);
+            }).StartingIn(wasOpen ? 0 : 30);
         }
+
+        /// <summary>
+        /// Gives the equipment page's doll a look of its own, and opens the page for it: <paramref name="dress"/>
+        /// is handed the doll once it stands there (a restyle being chosen applies its recipe to it).
+        /// </summary>
+        public void PreviewOnDoll(Action<GameObject> dress, string label)
+        {
+            if (!initialized || dress == null) return;
+            bool wasOpen = IsOpen(equipmentWindow) && stage != null && stage.IsOpen;
+            SetEquipmentOpen(true);
+            viewport.schedule.Execute(() =>
+            {
+                GameObject doll = stage != null ? stage.BeginOwnLook() : null;
+                if (doll == null) return;
+                dress(doll);
+                tryOnLabel.text = label;
+                SetDisplay(tryOnChip, true);
+            }).StartingIn(wasOpen ? 0 : 30);
+        }
+
+        /// <summary>The doll wears what the character shows again.</summary>
+        public void ClearPreview() => ClearTryOn();
 
         private void ClearTryOn()
         {

@@ -42,14 +42,20 @@ namespace KryticalNova.CharacterCreation
         /// <summary>
         /// Paints a worn piece's set colours over the map: only the cells that piece's own meshes use, so skin, hair
         /// and whatever the piece does not cover keep the character's colours. A piece without a theme (the basic
-        /// outfit) changes nothing.
+        /// outfit) changes nothing, unless it is dyed: <paramref name="dye"/> is then the colour grid of the
+        /// colourway it wears in place of its own (a theme's 256 cells).
         /// </summary>
-        public static void OverlayGear(ItemDefinition item, Color32[] pixels)
+        public static void OverlayGear(ItemDefinition item, Color32[] pixels, Color32[] dye = null)
         {
-            if (item == null || item.colorTheme == 0 || item.colorThemes == null || item.colorCells == null) return;
-            if (!item.colorThemes.TryGet(item.colorTheme, out var theme)) return;
+            if (item == null || item.colorCells == null) return;
+            Color32[] colours = dye != null && dye.Length == GearThemeLibrary.CellCount ? dye : null;
+            if (colours == null)
+            {
+                if (item.colorTheme == 0 || item.colorThemes == null || !item.colorThemes.TryGet(item.colorTheme, out var theme)) return;
+                colours = theme.cells;
+            }
             foreach (byte cell in item.colorCells)
-                SetCell(pixels, cell % CharacterPaletteLibrary.Grid, cell / CharacterPaletteLibrary.Grid, theme.cells[cell]);
+                SetCell(pixels, cell % CharacterPaletteLibrary.Grid, cell / CharacterPaletteLibrary.Grid, colours[cell]);
         }
 
         public static Texture2D CreateTexture(string name)

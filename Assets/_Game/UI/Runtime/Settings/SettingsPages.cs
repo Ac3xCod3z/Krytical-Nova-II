@@ -346,6 +346,7 @@ namespace KryticalNova.UI
             SettingsRows.Toggle(page, "Decline trade requests", () => HudPreferences.RefuseTrades, value => HudPreferences.RefuseTrades = value);
             SettingsRows.Toggle(page, "Decline contact requests", () => HudPreferences.RefuseContacts, value => HudPreferences.RefuseContacts = value);
             SettingsRows.Toggle(page, "Decline Crew invitations", () => HudPreferences.RefuseCrewInvites, value => HudPreferences.RefuseCrewInvites = value);
+            SettingsRows.Toggle(page, "Decline Sponsor requests", () => HudPreferences.RefuseSponsorRequests, value => HudPreferences.RefuseSponsorRequests = value);
         }
 
         private void Toggle(string elementName, Func<bool> get, Action<bool> set)

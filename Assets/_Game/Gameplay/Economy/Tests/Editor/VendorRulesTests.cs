@@ -194,13 +194,20 @@ namespace KryticalNova.Tests
                 Assert.IsNotNull(shelf, "an empty row in the catalog");
                 Assert.IsNotNull(shelf.vendor, shelf.name + " has no NPC");
                 Assert.AreNotEqual(NpcOffer.None, shelf.vendor.offers & NpcOffer.Shop, shelf.vendor.name + " does not offer the Shop service");
-                Assert.IsTrue(shelf.listings.Count > 0 || shelf.sellsLadderGear, shelf.name + " sells nothing");
+                Assert.IsTrue(shelf.listings.Count > 0 || shelf.sellsLadderGear || shelf.rotation.Count > 0, shelf.name + " sells nothing");
                 var seen = new HashSet<ItemDefinition>();
                 foreach (VendorListing listing in shelf.listings)
                 {
                     Assert.IsNotNull(listing.item, shelf.name + " lists a missing item");
                     Assert.Greater(listing.price, 0, $"{shelf.name}: {listing.item.displayName} has no price");
                     Assert.IsTrue(seen.Add(listing.item), $"{shelf.name}: {listing.item.displayName} is listed twice");
+                }
+                // What is sold one a day (the Outfitter's colour cells) is priced and named once, like the rest.
+                foreach (VendorListing listing in shelf.rotation)
+                {
+                    Assert.IsNotNull(listing.item, shelf.name + " rotates a missing item");
+                    Assert.Greater(listing.price, 0, $"{shelf.name}: {listing.item.displayName} has no price");
+                    Assert.IsTrue(seen.Add(listing.item), $"{shelf.name}: {listing.item.displayName} is on the shelf twice");
                 }
             }
         }

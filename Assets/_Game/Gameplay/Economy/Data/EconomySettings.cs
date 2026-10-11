@@ -95,6 +95,20 @@ namespace KryticalNova.Economy
         [Tooltip("Selling an item of this rarity or better to a vendor must be confirmed first. So must a pet and any worked gear, whatever this says.")]
         public ItemRarity vendorConfirmFromRarity = ItemRarity.Rare;
 
+        [Header("Appearance services")]
+        [Tooltip("Holoweaver: Creds for putting a collected look (a Weave) over the piece in one slot. Placeholder of 11 Oct 2026.")]
+        [Min(0)] public long weaveApplyFee = 5_000;
+        [Tooltip("Holoweaver: Creds for taking a Weave off a slot again.")]
+        [Min(0)] public long weaveClearFee = 0;
+        [Tooltip("Outfitter: the item used up to dye one outfit piece in another colourway (the Chroma Cell). One a piece; " +
+                 "giving a piece its own colours back is free. 0 = dyeing is free. Sold in the Nova Store later.")]
+        public ushort dyeItemId = 9300;
+        [Tooltip("Stylist and Reshaper: the item used up by one change of hair or of face (the Restyle Pass), however much " +
+                 "is changed at once. 0 = free. Sold in the Nova Store later.")]
+        public ushort restyleItemId = 9301;
+        [Tooltip("Coach: the item used up by one change of build and muscle (the Training Pass). 0 = free. Sold in the Nova Store later.")]
+        public ushort trainingItemId = 9302;
+
         [Header("Income target (what the faucets are tuned to pay)")]
         [Tooltip("Creds a player is meant to earn per hour of hunting at a level. Hostile drops, Contracts and shops are " +
                  "balanced against this when they are built; the inspector compares every cap and price with it.")]

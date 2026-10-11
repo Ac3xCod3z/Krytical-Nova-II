@@ -128,7 +128,7 @@ namespace KryticalNova.Items
                 Tell(paid < stack.count ? $"+{paid} Creds. Your wallet is full: the rest stays." : $"+{paid} Creds.");
                 return;
             }
-            int taken = inventory.ServerGive(stack); // tells the player when the Pack is full
+            int taken = inventory.ServerGive(stack, drop.Earned); // tells the player when the Pack is full
             if (taken <= 0) return;
             Vector3 lay = drop.Position;
             drop.ServerTake(taken, transform);
@@ -165,7 +165,8 @@ namespace KryticalNova.Items
         /// </summary>
         public WorldDrop ServerPlaceAt(ItemStack stack, Vector3 position, NetworkObject heldFor = null)
         {
-            return WorldDrop.ServerSpawn(dropPrefab, stack, position, heldFor != null && heldFor.IsSpawned ? heldFor : null, dropReserveSeconds);
+            return WorldDrop.ServerSpawn(dropPrefab, stack, position, heldFor != null && heldFor.IsSpawned ? heldFor : null, dropReserveSeconds,
+                earned: true);
         }
 
         private float FlatSqrDistance(Vector3 point)

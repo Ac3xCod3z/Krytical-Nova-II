@@ -23,12 +23,13 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 3
   requiresSkillBook: 1
-  acquisitionNote: Level 80 Skill Chip or Dossier
+  acquisitionNote: 'Backlash Dossier: a rare drop, or bound from its four Pages by a Fabricator'
   requiredCraftingArchives:
-  - Fire Dragon Dossier
-  - Munro's Finale
-  - Torn Spirit Finale
-  - Sun Dossier
+  - Backlash Page I
+  - Backlash Page II
+  - Backlash Page III
+  - Backlash Page IV
+  unlockItemId: 9400
   requiredCharacterLevel: 80
   minRank: 1
   maxRank: 100

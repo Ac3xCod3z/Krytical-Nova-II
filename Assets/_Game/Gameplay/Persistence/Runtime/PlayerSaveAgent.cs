@@ -68,6 +68,7 @@ namespace KryticalNova.Persistence
             {
                 equipment.SlotChanged += OnWornChanged;
                 equipment.TemperChanged += OnWornTemperChanged;
+                equipment.LookChanged += OnWornTemperChanged;
             }
             // The offline avatar comes back after a session: pick up what the networked player saved.
             if (!IsSpawned) TryLoad();
@@ -81,6 +82,7 @@ namespace KryticalNova.Persistence
             {
                 equipment.SlotChanged -= OnWornChanged;
                 equipment.TemperChanged -= OnWornTemperChanged;
+                equipment.LookChanged -= OnWornTemperChanged;
             }
             // The offline avatar is switched off while a session runs: its character belongs to the networked player now.
             if (!IsSpawned) SaveAndRelease();
@@ -136,7 +138,9 @@ namespace KryticalNova.Persistence
             {
                 var slot = (EquipSlot)i;
                 ushort itemId = equipment.Get(slot);
-                if (itemId != 0) wornScratch.Add(new WornPiece(slot, itemId, equipment.GetTemper(slot)));
+                if (itemId != 0)
+                    wornScratch.Add(new WornPiece(slot, itemId, equipment.GetTemper(slot),
+                        equipment.Looks.GetWeave(slot), equipment.Looks.GetDye(slot)));
             }
             CharacterSession.RememberWorn(wornScratch);
         }
@@ -194,6 +198,8 @@ namespace KryticalNova.Persistence
         {
             if (character == null || !HasAuthority) return;
             nextSave = Time.unscaledTime + autosaveSeconds;
+            // All of it happens on this frame: every system's state gathered, turned to text and written.
+            using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("save.player");
 
             bool changed = false;
             foreach (ISaveParticipant participant in participants)

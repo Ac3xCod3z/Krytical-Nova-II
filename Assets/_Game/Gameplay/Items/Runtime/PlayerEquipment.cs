@@ -12,6 +12,9 @@ namespace KryticalNova.Items
     /// What each worn piece carries of its own (its Temper, Fusion and Tuning) is handed over by the inventory on the
     /// server and on the owner. Everyone else is told only the Temper % of each slot: enough to show the glow.
     /// Offline (unspawned) the local copy is authoritative.
+    /// It also carries what the character shows in place of what it wears: the Weave and the dye of each slot
+    /// (<see cref="EquipmentLooks"/>), for everyone. Looks change how a character is drawn and nothing else: stats,
+    /// reach and the Temper glow always come from the worn piece.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PlayerEquipment : NetworkBehaviour
@@ -25,8 +28,11 @@ namespace KryticalNova.Items
         // Temper % per slot, for everyone: what an observer needs to draw the glow.
         private readonly NetworkVariable<EquipmentTemper> netTemper = new NetworkVariable<EquipmentTemper>(
             writePerm: NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<EquipmentLooks> netLooks = new NetworkVariable<EquipmentLooks>(
+            writePerm: NetworkVariableWritePermission.Server);
         private EquipmentData itemData;
         private bool hasItemData;
+        private EquipmentLooks looks;
 
         private CharacterCombatStats combatStats;
         private EquipmentLoadout current;
@@ -38,6 +44,8 @@ namespace KryticalNova.Items
         public event Action<EquipSlot, ushort, ushort> SlotChanged;
         /// <summary>The Temper % shown on a slot changed (also raised when the piece in it changes). On every peer.</summary>
         public event Action<EquipSlot> TemperChanged;
+        /// <summary>The Weave or the dye of a slot changed. On every peer.</summary>
+        public event Action<EquipSlot> LookChanged;
 
         public ItemCatalog Catalog => catalog;
         public GearProgressionSettings Progression => progression;
@@ -53,6 +61,50 @@ namespace KryticalNova.Items
         public ushort Get(EquipSlot slot) => current[slot];
         public ItemDefinition GetDefinition(EquipSlot slot) => catalog != null ? catalog.Get(current[slot]) : null;
 
+        /// <summary>The Weave and the dye of every slot, as everyone sees them.</summary>
+        public EquipmentLooks Looks => looks;
+        /// <summary>The colourways a dyed piece can wear.</summary>
+        public GearThemeLibrary Colourways => catalog != null ? catalog.Themes : null;
+
+        /// <summary>The piece a slot shows: the worn one, or the Weave over it. Null when nothing is worn.</summary>
+        public ItemDefinition GetShownDefinition(EquipSlot slot)
+        {
+            ItemDefinition worn = GetDefinition(slot);
+            ushort weave = looks.GetWeave(slot);
+            return weave == 0 || catalog == null ? worn : WeaveRules.Shown(worn, catalog.Get(weave));
+        }
+
+        /// <summary>The colour grid of the colourway a slot is dyed in, or null (the piece's own colours).</summary>
+        public Color32[] GetDyeCells(EquipSlot slot)
+        {
+            ushort colourway = looks.GetDye(slot);
+            GearThemeLibrary colourways = Colourways;
+            return colourway != 0 && colourways != null && colourways.TryGet(colourway, out var theme) ? theme.cells : null;
+        }
+
+        /// <summary>Server (or offline) only: commit validated looks.</summary>
+        public void ServerSetLooks(EquipmentLooks next)
+        {
+            if (IsSpawned && !IsServer) return;
+            ApplyLooks(next);
+            if (IsSpawned) netLooks.Value = next;
+        }
+
+        private void ApplyLooks(EquipmentLooks next)
+        {
+            EquipmentLooks previous = looks;
+            looks = next;
+            foreach (EquipSlot slot in WeaveRules.WeaveSlots)
+                if (previous.GetWeave(slot) != next.GetWeave(slot) || previous.GetDye(slot) != next.GetDye(slot))
+                    LookChanged?.Invoke(slot);
+        }
+
+        private void OnNetLooksChanged(EquipmentLooks previous, EquipmentLooks next)
+        {
+            if (IsServer) return; // already applied locally in ServerSetLooks
+            ApplyLooks(next);
+        }
+
         private void Awake()
         {
             combatStats = GetComponent<CharacterCombatStats>();
@@ -64,18 +116,25 @@ namespace KryticalNova.Items
             base.OnNetworkSpawn();
             netLoadout.OnValueChanged += OnNetLoadoutChanged;
             netTemper.OnValueChanged += OnNetTemperChanged;
+            netLooks.OnValueChanged += OnNetLooksChanged;
             if (IsServer)
             {
                 netLoadout.Value = current;
                 netTemper.Value = TemperOf(itemData);
+                netLooks.Value = looks;
             }
-            else Apply(netLoadout.Value);
+            else
+            {
+                looks = netLooks.Value; // first: each slot is then drawn once, with its look
+                Apply(netLoadout.Value);
+            }
         }
 
         public override void OnNetworkDespawn()
         {
             netLoadout.OnValueChanged -= OnNetLoadoutChanged;
             netTemper.OnValueChanged -= OnNetTemperChanged;
+            netLooks.OnValueChanged -= OnNetLooksChanged;
             base.OnNetworkDespawn();
         }
 

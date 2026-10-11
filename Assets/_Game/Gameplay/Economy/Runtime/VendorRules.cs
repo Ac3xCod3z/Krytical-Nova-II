@@ -39,12 +39,20 @@ namespace KryticalNova.Economy
             return Clamp(Math.Round(price));
         }
 
-        /// <summary>What this vendor asks for one of the item, or false when it does not sell it.</summary>
-        public static bool TryPrice(VendorStock stock, EconomySettings settings, ItemDefinition item, out long price)
+        /// <summary>
+        /// What this vendor asks for one of the item, or false when it does not sell it. <paramref name="day"/> is
+        /// the in-game day: a vendor with a rotating shelf sells one of its items each day.
+        /// </summary>
+        public static bool TryPrice(VendorStock stock, EconomySettings settings, ItemDefinition item, out long price, long day = 0)
         {
             price = 0;
             if (stock == null || item == null) return false;
             if (stock.TryGetListed(item, out price)) return price > 0;
+            if (stock.TryGetOfTheDay(day, out VendorListing today) && today.item == item)
+            {
+                price = today.price;
+                return true;
+            }
             if (!stock.SellsByRule(item)) return false;
             price = GearPrice(settings, item);
             return price > 0;
@@ -101,12 +109,14 @@ namespace KryticalNova.Economy
         /// the buyer can wear (<paramref name="canWear"/>), by slot and then by level.
         /// </summary>
         public static void List(VendorStock stock, EconomySettings settings, IReadOnlyList<ItemDefinition> allItems,
-            Func<ItemDefinition, bool> canWear, List<VendorOffer> results)
+            Func<ItemDefinition, bool> canWear, List<VendorOffer> results, long day = 0)
         {
             results.Clear();
             if (stock == null) return;
             foreach (VendorListing listing in stock.listings)
                 if (listing.item != null && listing.price > 0) results.Add(new VendorOffer(listing.item, listing.price));
+            // What the rotating shelf holds today (the Outfitter's colour of the day).
+            if (stock.TryGetOfTheDay(day, out VendorListing today)) results.Add(new VendorOffer(today.item, today.price));
             if (!stock.sellsLadderGear || allItems == null) return;
 
             int first = results.Count;

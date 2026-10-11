@@ -154,7 +154,10 @@ namespace KryticalNova.Economy
             PetTuning petTuning = owner.PetTuning;
             var listings = new List<KioskListing>(offers.Length);
             string refusal = null;
-            bool taken = inventory.ServerChangePack(pack =>
+            // The permit is used up, from the Pack or from what is stored. It is taken after the listings left the
+            // Pack, so a permit put up for sale does not count.
+            ItemCost[] permit = tier.IsFree ? null : new[] { new ItemCost(tier.permitItemId, 1) };
+            bool taken = owner.Sources.ServerSpend(permit, pack =>
             {
                 var seen = new HashSet<int>();
                 foreach (KioskOffer offer in offers)
@@ -171,18 +174,13 @@ namespace KryticalNova.Economy
                     listings.Add(new KioskListing(held.WithCount(count), offer.unitPrice));
                     pack[offer.cell] = held.WithCount(held.count - count);
                 }
-                if (tier.IsFree) return true;
-                // The permit is used up. It is looked for after the listings left, so a permit put up for sale does not count.
-                for (int i = 0; i < pack.Length; i++)
-                {
-                    if (pack[i].itemId != tier.permitItemId) continue;
-                    pack[i] = pack[i].WithCount(pack[i].count - 1);
-                    return true;
-                }
-                ItemDefinition permit = catalog.Get(tier.permitItemId);
-                refusal = $"{tier.label} needs a {(permit != null ? permit.displayName : "Kiosk Permit")} in your Pack.";
-                return false;
+                return true;
             });
+            if (!taken && refusal == null && !tier.IsFree)
+            {
+                ItemDefinition permitItem = catalog.Get(tier.permitItemId);
+                refusal = $"{tier.label} needs a {(permitItem != null ? permitItem.displayName : "Kiosk Permit")} in your Pack or Vault.";
+            }
             if (!taken) return refusal ?? "Your Kiosk could not be opened.";
 
             long now = DateTime.UtcNow.Ticks;

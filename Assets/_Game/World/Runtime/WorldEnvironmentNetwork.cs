@@ -266,6 +266,7 @@ namespace KryticalNova.World
                 DayLengthSeconds = dayCycle != null ? dayCycle.dayLengthSeconds : 3600f,
                 TimeOffset01 = dayCycle != null ? dayCycle.startTimeOfDay01 : 0.3f,
                 TimeScale = 1f,
+                DayBase = WorldEnvironmentState.CalendarDayNow(dayCycle != null ? dayCycle.dayLengthSeconds : 3600f),
                 FromWeather = start,
                 ToWeather = start,
                 TransitionStart = now,

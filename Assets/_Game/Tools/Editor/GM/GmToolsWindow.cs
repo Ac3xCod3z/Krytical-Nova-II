@@ -1051,6 +1051,22 @@ namespace KryticalNova.EditorTools.GM
 
         // ================================================================ SOCIAL (Crews, Contacts)
 
+        [TabGroup(Tabs, SocialTab), Title("Sponsor / Recruit"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(690)]
+        [InfoBox("Links two connected players at once, whatever their levels: the higher sponsors. Client ids are in the player list at the top.")]
+        private void LinkSponsor([MinValue(0)] int clientIdA = 0, [MinValue(0)] int clientIdB = 1) => Run($"gm.sponsor {clientIdA} {clientIdB}");
+
+        [ButtonGroup(Tabs + "/" + SocialTab + "/Sponsor"), EnableIf(nameof(IsReady)), LabelText("Player's Links"), PropertyOrder(691)]
+        private void ShowSponsor() => Run("gm.sponsor");
+
+        [ButtonGroup(Tabs + "/" + SocialTab + "/Sponsor"), EnableIf(nameof(IsReady)), LabelText("Open The Window"), PropertyOrder(692)]
+        private void OpenSponsorWindow() => Run("gm.sponsor.window");
+
+        [ButtonGroup(Tabs + "/" + SocialTab + "/Sponsor"), EnableIf(nameof(IsReady)), LabelText("End Every Link"), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(693)]
+        private void EndSponsorLinks() => Run("gm.sponsor.end");
+
+        [TabGroup(Tabs, SocialTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(694)]
+        private void SetSponsorPoints([MinValue(0)] int points = 1000) => Run($"gm.sponsor.points {points}");
+
         [TabGroup(Tabs, SocialTab), Title("Crew"), EnableIf(nameof(IsReady)), LabelText("Crew Name"), PropertyOrder(700)]
         [InfoBox("Puts the targeted player in that Crew, founding it when there is none: no fee, level or Vaultkeeper.")]
         [SerializeField] private string crewName = "Test Crew";
@@ -1290,6 +1306,12 @@ namespace KryticalNova.EditorTools.GM
                  "a place when this window overlaps the Game view; typed in the console it works anywhere.")]
         private void TeleportToCursor() => Run("gm.tpcursor");
 
+        [TabGroup(Tabs, WorldTab), Button("Print Wind"), EnableIf(nameof(IsReady)), PropertyOrder(432.8f)]
+        private void PrintWind() => Run("weather.wind");
+
+        [TabGroup(Tabs, WorldTab), Button("Grass: Only What The Camera Sees (toggle)"), EnableIf(nameof(IsReady)), PropertyOrder(432.9f)]
+        private void ToggleGrassView() => Run("grass.view");
+
         [TabGroup(Tabs, WorldTab), Title("Lists"), Button("Print Time and Weather"), EnableIf(nameof(IsReady)), PropertyOrder(433)]
         private void PrintTime() => Run("time.get");
 
@@ -1357,6 +1379,14 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(542)]
         private void SetTuning([MinValue(0), MaxValue(25)] int stage = 1, ForgeSlot slot = ForgeSlot.FirstInPack) => Run($"gm.tune {stage}{SlotArgument(slot)}");
 
+        [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(542.1f)]
+        [InfoBox("Sets the Temper % of the first piece of gear in the Pack (or the first of that slot), up to the cap.")]
+        private void SetTemperOfOne([MinValue(0), MaxValue(120)] int percent = 60, ForgeSlot slot = ForgeSlot.FirstInPack) => Run($"gm.temper {percent}{SlotArgument(slot)}");
+
+        [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(542.2f)]
+        [InfoBox("Puts an item on the ground in front of the player, free for anyone to take: an item id, asset name or display name.")]
+        private void DropOnGround(string item = "Pill_Vitality", [MinValue(1)] int count = 1) { if (!string.IsNullOrWhiteSpace(item)) Run($"gm.drop {Quote(item.Trim())} {count}"); }
+
         [TabGroup(Tabs, ItemsTab), Title("Serums"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(543)]
         private void GiveSerums([MinValue(1)] int countOfEach = 10) => Run($"gm.serums {countOfEach}");
 
@@ -1366,6 +1396,58 @@ namespace KryticalNova.EditorTools.GM
 
         [TabGroup(Tabs, ItemsTab), Button("List Serums Taken"), EnableIf(nameof(IsReady)), PropertyOrder(545)]
         private void ListSerums() => Run("gm.serum");
+
+        [TabGroup(Tabs, ItemsTab), Title("Appearance: Holoweave, dye, hair, face, build"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(545.1f)]
+        [InfoBox("Chroma Cells (one dyes one piece), Restyle Passes (Stylist, Reshaper) and Training Passes (Coach). The two Passes have no other source until the Nova Store exists.")]
+        private void GivePasses([MinValue(1)] int countOfEach = 10) => Run($"gm.passes {countOfEach}");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Appearance"), EnableIf(nameof(IsReady)), LabelText("Holoweaver Here"), PropertyOrder(545.2f)]
+        private void OpenHoloweaver() => Run("gm.weave");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Appearance"), EnableIf(nameof(IsReady)), LabelText("Outfitter (Dye) Here"), PropertyOrder(545.21f)]
+        private void OpenOutfitter() => Run("gm.dye");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Appearance"), EnableIf(nameof(IsReady)), LabelText("Unlock Every Weave"), PropertyOrder(545.22f)]
+        private void UnlockEveryWeave() => Run("gm.weave.unlock all");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Appearance"), EnableIf(nameof(IsReady)), LabelText("What It Shows"), PropertyOrder(545.23f)]
+        private void ListWeaves() => Run("gm.weave.list");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Appearance"), EnableIf(nameof(IsReady)), LabelText("Empty Weave Library"), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(545.24f)]
+        private void ClearWeaves() => Run("gm.weave.clear");
+
+        [TabGroup(Tabs, ItemsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(545.25f)]
+        [InfoBox("Adds the look of one item to the Weave Library: an item id, asset name or display name.")]
+        private void UnlockWeaveOf(string item = "") { if (!string.IsNullOrWhiteSpace(item)) Run($"gm.weave.unlock {Quote(item.Trim())}"); }
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Restyle"), EnableIf(nameof(IsReady)), LabelText("Stylist Here"), PropertyOrder(545.3f)]
+        private void OpenStylist() => Run("gm.restyle stylist");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Restyle"), EnableIf(nameof(IsReady)), LabelText("Reshaper Here"), PropertyOrder(545.31f)]
+        private void OpenReshaper() => Run("gm.restyle reshaper");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Restyle"), EnableIf(nameof(IsReady)), LabelText("Coach Here"), PropertyOrder(545.32f)]
+        private void OpenCoach() => Run("gm.restyle coach");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Restyle"), EnableIf(nameof(IsReady)), LabelText("NPCs Needed Again"), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(545.33f)]
+        private void AppearanceNeedsNpcs()
+        {
+            Run("gm.weave off");
+            Run("gm.restyle off");
+        }
+
+        [TabGroup(Tabs, ItemsTab), Title("Crafting (the Fabricator)"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(545.4f)]
+        [InfoBox("What every recipe uses up, that many times over: the four colour cells, every Dossier Page, and Alumite, Iridion and Orichalc by the four.")]
+        private void GiveCraftKit([MinValue(1)] int times = 4) => Run($"gm.craftkit {times}");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Crafting"), EnableIf(nameof(IsReady)), LabelText("Fabricator Here"), PropertyOrder(545.5f)]
+        private void OpenFabricator() => Run("gm.craft");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Crafting"), EnableIf(nameof(IsReady)), LabelText("Give The 3 Dossiers"), PropertyOrder(545.51f)]
+        private void GiveDossiers() => Run("gm.dossier");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Crafting"), EnableIf(nameof(IsReady)), LabelText("Fabricator Needed Again"), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(545.52f)]
+        private void CraftingNeedsNpc() => Run("gm.craft off");
 
         [TabGroup(Tabs, ItemsTab), Title("Catalog"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(546)]
         [InfoBox("Every item id. A slot narrows it: Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape, Pet. Empty lists all.")]

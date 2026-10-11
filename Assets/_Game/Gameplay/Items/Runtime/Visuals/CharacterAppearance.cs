@@ -52,6 +52,7 @@ namespace KryticalNova.Items.Visuals
 
         private readonly Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>> slotParts = new Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>>();
         private readonly Dictionary<EquipSlot, ItemDefinition> worn = new Dictionary<EquipSlot, ItemDefinition>();
+        private readonly Dictionary<EquipSlot, Color32[]> dyes = new Dictionary<EquipSlot, Color32[]>();
         private readonly SortedDictionary<BodyRegion, SidekickPartRef> resolved = new SortedDictionary<BodyRegion, SidekickPartRef>();
         private readonly List<SidekickPartRef> partList = new List<SidekickPartRef>(48);
         private readonly List<Transform> boneBuffer = new List<Transform>(160);
@@ -69,6 +70,8 @@ namespace KryticalNova.Items.Visuals
 
         /// <summary>The piece shown in a visual slot, or null.</summary>
         public ItemDefinition GetWorn(EquipSlot slot) => worn.TryGetValue(slot, out var item) ? item : null;
+        /// <summary>The colour grid a visual slot's piece is dyed in, or null (the piece's own colours).</summary>
+        public Color32[] GetDye(EquipSlot slot) => dyes.TryGetValue(slot, out var cells) ? cells : null;
 
         public bool IsConfigured => fixedParts.Count > 0 || defaultParts.Count > 0;
         public SkinnedMeshRenderer Renderer => targetRenderer;
@@ -130,13 +133,19 @@ namespace KryticalNova.Items.Visuals
             dirty = true;
         }
 
-        /// <summary>Show <paramref name="item"/>'s parts for <paramref name="slot"/>; null shows the default body.</summary>
-        public void SetSlot(EquipSlot slot, ItemDefinition item)
+        /// <summary>
+        /// Show <paramref name="item"/>'s parts for <paramref name="slot"/>; null shows the default body.
+        /// <paramref name="dye"/> is the colour grid of the colourway the piece is dyed in (a theme's cells), or
+        /// null for its own colours.
+        /// </summary>
+        public void SetSlot(EquipSlot slot, ItemDefinition item, Color32[] dye = null)
         {
             if (Array.IndexOf(VisualSlots, slot) < 0) return;
-            if (GetWorn(slot) != item)
+            if (item == null) dye = null;
+            if (GetWorn(slot) != item || !ReferenceEquals(GetDye(slot), dye))
             {
                 if (item == null) worn.Remove(slot); else worn[slot] = item;
+                if (dye == null) dyes.Remove(slot); else dyes[slot] = dye;
                 WornChanged?.Invoke();
             }
             IReadOnlyList<SidekickPartRef> parts = item != null ? item.GetAppearanceParts() : null;
@@ -145,6 +154,16 @@ namespace KryticalNova.Items.Visuals
             if (parts == null) slotParts.Remove(slot); else slotParts[slot] = parts;
             StopSharing();
             dirty = true;
+        }
+
+        /// <summary>
+        /// Wear what another appearance shows (pieces and dyes) as this one's own, merged here: where a try-on
+        /// starts from.
+        /// </summary>
+        public void WearLike(CharacterAppearance source)
+        {
+            if (source == null || source == this) return;
+            foreach (var slot in VisualSlots) SetSlot(slot, source.GetWorn(slot), source.GetDye(slot));
         }
 
         /// <summary>Apply every visual slot from a loadout in one rebuild.</summary>
@@ -170,6 +189,8 @@ namespace KryticalNova.Items.Visuals
             foreach (var kv in source.slotParts) slotParts[kv.Key] = kv.Value;
             worn.Clear();
             foreach (var kv in source.worn) worn[kv.Key] = kv.Value;
+            dyes.Clear();
+            foreach (var kv in source.dyes) dyes[kv.Key] = kv.Value;
             WornChanged?.Invoke();
             // The source's own look can change after this clone was made (a recipe applied at runtime): a later
             // try-on must merge from the current look, not the one copied at Instantiate.

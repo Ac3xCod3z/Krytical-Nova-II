@@ -362,12 +362,12 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
         private void InviteClosedRpc() => ClientPresentationRegistry.Party?.HideInvite();
 
-        // ------------------------------------------------------------------ experience boost (groundwork)
+        // ------------------------------------------------------------------ experience boost
 
         /// <summary>
         /// Server only: the extra share of experience this player earns for being in a party right now
-        /// (<see cref="PartyRules.ExperienceBoost"/>). Nothing awards experience with it yet: whatever does should
-        /// multiply the amount by 1 + this value. A member's map is the scene their player is in; once zones run as
+        /// (<see cref="PartyRules.ExperienceBoost"/>). Hostile kills are paid with it (HostileKillRewards): the
+        /// amount is multiplied by 1 + this value. A member's map is the scene their player is in; once zones run as
         /// separate sessions, the party itself must first outlive a member travelling to another one.
         /// </summary>
         public float ServerExperienceBoost()

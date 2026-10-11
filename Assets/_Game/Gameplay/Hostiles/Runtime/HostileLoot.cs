@@ -25,6 +25,8 @@ namespace KryticalNova.Hostiles
     public static class HostileLoot
     {
         private static readonly List<ItemDefinition> candidates = new List<ItemDefinition>(32);
+        private static readonly List<ItemDefinition> materials = new List<ItemDefinition>(4);
+        private static readonly Func<float> RandomRoll = () => UnityEngine.Random.value;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Listen()
@@ -54,6 +56,27 @@ namespace KryticalNova.Hostiles
                 loot.ServerPlaceAt(new ItemStack(LootRules.CredsItemId, (ushort)Math.Min(roll.Creds, LootRules.MaxCredsPerDrop)), kill.Position, owner);
             if (roll.Stim != null) loot.ServerPlaceAt(new ItemStack(roll.Stim.itemId, 1), kill.Position, owner);
             if (roll.Gear != null) loot.ServerPlaceAt(new ItemStack(roll.Gear.itemId, 1), kill.Position, owner);
+
+            RollMaterials(kill.Hostile.Stats.Level, settings, kill.DropPercent, HostileRates.Drops, RandomRoll, materials);
+            foreach (ItemDefinition material in materials) loot.ServerPlaceAt(new ItemStack(material.itemId, 1), kill.Position, owner);
+        }
+
+        /// <summary>
+        /// The crafting materials one kill drops: every row of <see cref="HostileSettings.materialDrops"/> that
+        /// suits the Hostile's level is rolled on its own, scaled like the rest by the level gap and the server
+        /// drop rate. <paramref name="roll"/> gives a number from 0 to 1 each time it is asked.
+        /// </summary>
+        public static void RollMaterials(int level, HostileSettings settings, float dropPercent, float rate, Func<float> roll,
+            List<ItemDefinition> results)
+        {
+            results.Clear();
+            float scale = Mathf.Max(0f, dropPercent) / 100f * Mathf.Max(0f, rate);
+            if (scale <= 0f || settings == null || settings.materialDrops == null || roll == null) return;
+            foreach (MaterialDrop drop in settings.materialDrops)
+            {
+                if (drop.item == null || level < drop.minLevel || (drop.maxLevel > 0 && level > drop.maxLevel)) continue;
+                if (roll() < drop.chancePercent / 100f * scale) results.Add(drop.item);
+            }
         }
 
         /// <summary>

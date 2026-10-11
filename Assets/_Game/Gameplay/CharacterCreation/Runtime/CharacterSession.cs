@@ -95,6 +95,25 @@ namespace KryticalNova.CharacterCreation
         }
 
         /// <summary>
+        /// Keeps the look the select screen shows in step with the character being played. The server holds the
+        /// look that counts (it changes at the Stylist, the Reshaper and the Coach); this is the player's own copy.
+        /// </summary>
+        public static void RememberRecipe(in CharacterRecipe recipe)
+        {
+            if (!TryGetActive(out var profile) || recipe.IsEmpty || profile.recipe.Equals(recipe)) return;
+            var roster = Store.Load();
+            for (int slot = 0; slot < CharacterRoster.SlotCount; slot++)
+            {
+                var saved = roster.Get(slot);
+                if (saved == null || saved.id != profile.id) continue;
+                saved.recipe = recipe.Clone();
+                Store.Save(roster);
+                break;
+            }
+            profile.recipe = recipe.Clone();
+        }
+
+        /// <summary>
         /// The store used by menus and players. Each Multiplayer Play Mode clone, and each build started with its
         /// own "-profile", gets its own save.
         /// </summary>

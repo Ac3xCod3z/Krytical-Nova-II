@@ -32,7 +32,7 @@ namespace KryticalNova.DevTools
             if (inv.Catalog == null) return NoPlayer;
             var def = inv.Catalog.Find(item);
             if (def == null) return $"Unknown item '{item}'. Try item.list.";
-            int added = inv.ServerGive(def.itemId, count);
+            int added = inv.ServerGive(def.itemId, count, earned: true);
             return added > 0 ? $"Gave {added}x {def.displayName}." : "Your Pack is full.";
         }
 
@@ -69,7 +69,7 @@ namespace KryticalNova.DevTools
                 return $"No {itemRarity} {equipSlot} gear fits this character{(cls != WeaponClassId.None ? $" as a {WeaponClasses.DisplayName(cls)}" : string.Empty)}.";
             var def = inv.Catalog.Get(entry.itemId);
             if (def == null) return $"Item {entry.itemId} is in the gear dictionary but not in the catalog. Re-bake the gear ladder.";
-            if (inv.ServerGive(entry.itemId, 1) <= 0) return "Your Pack is full.";
+            if (inv.ServerGive(entry.itemId, 1, earned: true) <= 0) return "Your Pack is full.";
             string note = inv.CanEquip(def, out string reason) ? string.Empty : $" ({reason})";
             return $"Gave {def.displayName}: level {entry.itemLevel} {entry.rarity} {equipSlot}{note}";
         }
@@ -141,7 +141,7 @@ namespace KryticalNova.DevTools
             }
             else
                 foreach (ItemStack piece in pieces)
-                    if (inv.ServerGive(piece) > 0) packed++; else lost++;
+                    if (inv.ServerGive(piece, earned: true) > 0) packed++; else lost++;
 
             string name = string.IsNullOrEmpty(setName) ? $"{itemRarity} set" : $"{setName} set";
             string tempered = temper > 0 ? $", Temper +{temper}%" : string.Empty;
@@ -215,7 +215,7 @@ namespace KryticalNova.DevTools
                 foreach (var entry in fits)
                 {
                     if (entry.itemLevel != tier || inv.Catalog.Get(entry.itemId) == null) continue;
-                    if (inv.ServerGive(entry.itemId, 1) > 0) given++; else lost++;
+                    if (inv.ServerGive(entry.itemId, 1, earned: true) > 0) given++; else lost++;
                 }
             }
             if (given == 0 && lost == 0) return $"No {rarity} gear fits this character. Re-bake the gear ladder.";
@@ -242,7 +242,7 @@ namespace KryticalNova.DevTools
             foreach (ushort id in ids)
             {
                 if (id == 0 || inv.Catalog.Get(id) == null) continue;
-                if (inv.ServerGive(id, count) > 0) kinds++; else lost++;
+                if (inv.ServerGive(id, count, earned: true) > 0) kinds++; else lost++;
             }
             return $"Temper kit: {count} each of {kinds} materials." + Unfitted(lost);
         }
@@ -254,7 +254,7 @@ namespace KryticalNova.DevTools
             foreach (ItemDefinition def in inv.Catalog.Items)
             {
                 if (def == null || def.equipSlot != EquipSlot.Pet) continue;
-                if (inv.ServerGive(def.itemId, 1) > 0) given++; else lost++;
+                if (inv.ServerGive(def.itemId, 1, earned: true) > 0) given++; else lost++;
             }
             if (given == 0 && lost == 0) return "There are no pets in the catalog.";
             return $"Pet kit: {given} pets." + Unfitted(lost);

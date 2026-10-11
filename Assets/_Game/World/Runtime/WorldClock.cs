@@ -17,6 +17,19 @@ namespace KryticalNova.World
 
         public static float Hours => TimeOfDay01 * 24f;
 
+        /// <summary>
+        /// The in-game calendar day: it turns over at in-game midnight, goes on from one session to the next, and
+        /// is the same number on every machine. 0 with no clock.
+        /// </summary>
+        public static long Day
+        {
+            get
+            {
+                var env = WorldEnvironmentNetwork.Instance;
+                return env != null ? env.State.CalendarDay(env.Now) : 0;
+            }
+        }
+
         /// <summary>True while the sun is below the horizon.</summary>
         public static bool IsNight => SunDirection.y < 0f;
 

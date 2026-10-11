@@ -115,6 +115,8 @@ namespace KryticalNova.Progression
         public string acquisitionNote = "Faction Instructor";
         [Tooltip("List of required archives to craft this skill (e.g. for HR, RF, HD).")]
         public string[] requiredCraftingArchives = Array.Empty<string>();
+        [Tooltip("The item that unlocks this skill when it is used (its Dossier). 0 = none. Set by the crafting builder.")]
+        public ushort unlockItemId;
         [Min(1)] public int requiredCharacterLevel = 1;
 
         [Header("Rank Progression & Skill Point Costs")]

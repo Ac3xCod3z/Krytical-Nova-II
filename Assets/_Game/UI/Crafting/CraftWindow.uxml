@@ -1,0 +1,33 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Crafting.uss" />
+
+    <!-- The Fabricator's bench (CraftWindowController). A list of what can be made on top, and under it what the
+         picked recipe uses up, with how many of each the player has (carried or stored). One button makes one,
+         the other as many as the materials allow. The material sockets reuse the forge bench's look (Forge.uss). -->
+    <ui:VisualElement name="craft-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="FABRICATOR" class="heading" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Button name="close-craft" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:ScrollView name="craft-scroll" class="craft-scroll">
+            <ui:VisualElement name="craft-list" class="craft-list" />
+        </ui:ScrollView>
+
+        <!-- The picked recipe -->
+        <ui:VisualElement name="craft-detail" class="craft-detail kn-card">
+            <ui:Label name="craft-name" class="craft-name" />
+            <ui:VisualElement name="craft-needs" class="forge-picks craft-needs" />
+            <ui:Label name="craft-note" class="craft-note" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="row storage-creds-row">
+            <ui:Label text="YOUR CREDS" class="muted inventory-creds-label" />
+            <ui:Label name="craft-creds" text="0" class="accent inventory-creds" />
+        </ui:VisualElement>
+        <ui:Label name="craft-reason" class="forge-reason" />
+        <ui:Button name="craft-act" text="CRAFT" class="kn-button-primary" />
+        <ui:Button name="craft-all" text="CRAFT ALL" class="craft-all" />
+        <ui:Label text="Materials are taken from your Pack first, then your Vault, then your Deep Vault" class="help" />
+    </ui:VisualElement>
+</ui:UXML>
