@@ -67,6 +67,18 @@ namespace KryticalNova.Tests
             Assert.AreEqual(sockets, packed & (0xFFFFUL << 40), "bits above the state are untouched");
             Assert.AreEqual(GearItemState.MaxTemper, new GearItemState(999, 0, 0).Temper, "clamped");
             Assert.AreEqual("+36%  FS3  T7", new GearItemState(36, 3, 7).ToString());
+
+            // The dye is carried beside the rest, and is no work done on the piece.
+            var dyed = new GearItemState(36, 3, 7, 24);
+            Assert.AreEqual(dyed, GearItemState.Unpack(dyed.Pack()));
+            Assert.AreEqual(24, GearItemState.Unpack(dyed.Pack()).Dye);
+            Assert.AreEqual(24, dyed.WithTemper(39).WithFusion(4).WithTune(8).Dye, "work on a piece leaves its dye");
+            Assert.AreEqual(36, dyed.WithDye(3).Temper, "a dye leaves the work on a piece");
+            Assert.IsTrue(new GearItemState(0, 0, 0, 5).IsClean, "a dyed piece is still untouched");
+            Assert.AreNotEqual(0UL, new GearItemState(0, 0, 0, 5).Pack());
+            Assert.AreEqual(GearItemState.MaxDye, new GearItemState(0, 0, 0, 999).Dye, "clamped");
+            ulong socketBits = 1UL << 40;
+            Assert.AreEqual(socketBits, new GearItemState(1, 1, 1, 9).PackInto(socketBits) & socketBits, "the bits above are kept");
         }
 
         // ---------------------------------------------------------------- Tempering

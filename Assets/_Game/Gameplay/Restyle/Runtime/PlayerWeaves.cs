@@ -191,18 +191,22 @@ namespace KryticalNova.Restyle
             string blocked = WeaveRules.DyeBlockedReason(slot, shown, colourway, equipment.Colourways);
             if (blocked != null) { Tell(blocked); return; }
 
+            // The dye goes on the piece worn in the slot and stays with it, wherever the piece goes.
+            ItemDefinition worn = equipment.GetDefinition(slot);
+            ItemStack piece = inventory.GetEquipped(slot);
+            if (worn == null || !worn.IsLadderGear || piece.IsEmpty || colourway > GearItemState.MaxDye) { Tell(WeaveRules.ReasonNoDye); return; }
             // The colourway a piece was made in is no dye: it is the dye coming off.
             if (colourway == shown.colorTheme) colourway = 0;
-            EquipmentLooks looks = equipment.Looks;
-            if (looks.GetDye(slot) == colourway) { Tell(colourway == 0 ? "That piece is not dyed." : "It is that colour already."); return; }
+            GearItemState state = GearItemState.Of(piece);
+            if (state.Dye == colourway) { Tell(colourway == 0 ? "That piece is not dyed." : "It is that colour already."); return; }
             if (colourway != 0 && DyeItemId != 0)
             {
                 dyeCost[0] = new ItemCost(DyeItemId, 1);
                 if (!sources.ServerSpend(dyeCost)) { Tell($"You have no {DyeItemName}."); return; }
             }
-            looks.SetDye(slot, colourway);
-            Commit(looks);
-            Tell(colourway == 0 ? $"Your {SlotName(slot)} has its own colours again." : $"Your {SlotName(slot)} is dyed.");
+            inventory.ServerSetEquippedData(slot, state.WithDye(colourway).PackInto(piece.data));
+            if (saveAgent != null) saveAgent.SaveSoon();
+            Tell(colourway == 0 ? $"Your {worn.displayName} has its own colours again." : $"Your {worn.displayName} is dyed.");
         }
 
         private readonly ItemCost[] dyeCost = new ItemCost[1];
@@ -219,6 +223,20 @@ namespace KryticalNova.Restyle
         public void ServerSetLooks(EquipmentLooks looks)
         {
             if (HasAuthority) Commit(looks);
+        }
+
+        /// <summary>GM: takes the dye off every worn piece. Server (or offline) only.</summary>
+        public void ServerClearDyes()
+        {
+            if (!HasAuthority) return;
+            foreach (EquipSlot slot in WeaveRules.DyeSlots)
+            {
+                ItemDefinition worn = equipment.GetDefinition(slot);
+                ItemStack piece = inventory.GetEquipped(slot);
+                if (worn == null || !worn.IsLadderGear || piece.IsEmpty) continue;
+                inventory.ServerSetEquippedData(slot, GearItemState.Of(piece).WithDye(0).PackInto(piece.data));
+            }
+            if (saveAgent != null) saveAgent.SaveSoon();
         }
 
         private void OnLoaded()
@@ -255,7 +273,7 @@ namespace KryticalNova.Restyle
 
         public string CaptureSave() => JsonUtility.ToJson(new WeaveSave { looks = equipment.Looks, collectedOwned = collectedOwned });
 
-        /// <summary>Puts the looks back. A Weave or a colourway the game no longer has is dropped.</summary>
+        /// <summary>Puts the Weaves back; one the game no longer has is dropped. A dye is not here: it is on its piece.</summary>
         public void RestoreSave(string json)
         {
             if (!HasAuthority || string.IsNullOrEmpty(json)) return;
@@ -265,13 +283,10 @@ namespace KryticalNova.Restyle
 
             EquipmentLooks looks = save.looks;
             ItemCatalog catalog = inventory.Catalog;
-            GearThemeLibrary colourways = equipment.Colourways;
             foreach (EquipSlot slot in WeaveRules.WeaveSlots)
             {
                 ushort weave = looks.GetWeave(slot);
                 if (weave != 0 && (catalog == null || WeaveRules.KeyOf(catalog.Get(weave)) == 0)) looks.SetWeave(slot, 0);
-                ushort dye = looks.GetDye(slot);
-                if (dye != 0 && (colourways == null || !colourways.TryGet(dye, out _))) looks.SetDye(slot, 0);
             }
             equipment.ServerSetLooks(looks);
         }

@@ -82,12 +82,28 @@ namespace KryticalNova.Items
             return colourway != 0 && colourways != null && colourways.TryGet(colourway, out var theme) ? theme.cells : null;
         }
 
-        /// <summary>Server (or offline) only: commit validated looks.</summary>
+        /// <summary>The colourway the piece worn in a slot is dyed in, as every peer knows it, or 0.</summary>
+        public ushort GetDye(EquipSlot slot) => looks.GetDye(slot);
+
+        /// <summary>Server (or offline) only: commit validated looks. The dyes are the worn pieces' own, whatever is passed.</summary>
         public void ServerSetLooks(EquipmentLooks next)
         {
             if (IsSpawned && !IsServer) return;
+            next = WithWornDyes(next);
+            if (next.Equals(looks)) return;
             ApplyLooks(next);
             if (IsSpawned) netLooks.Value = next;
+        }
+
+        /// <summary>The looks with each outfit slot's dye read off the piece worn in it.</summary>
+        private EquipmentLooks WithWornDyes(EquipmentLooks next)
+        {
+            foreach (EquipSlot slot in WeaveRules.DyeSlots)
+            {
+                var def = GetDefinition(slot);
+                next.SetDye(slot, hasItemData && def != null && def.IsLadderGear ? GearItemState.Unpack(itemData[slot]).Dye : (ushort)0);
+            }
+            return next;
         }
 
         private void ApplyLooks(EquipmentLooks next)
@@ -121,6 +137,7 @@ namespace KryticalNova.Items
             {
                 netLoadout.Value = current;
                 netTemper.Value = TemperOf(itemData);
+                looks = WithWornDyes(looks);
                 netLooks.Value = looks;
             }
             else
@@ -143,6 +160,7 @@ namespace KryticalNova.Items
         {
             if (IsSpawned && !IsServer) return;
             Apply(loadout);
+            ServerSetLooks(looks); // a new piece in a slot wears its own dye
             if (!IsSpawned) return;
             netLoadout.Value = loadout;
             // The Temper everyone sees is read per piece: a new piece in a slot means a new reading.
@@ -160,6 +178,7 @@ namespace KryticalNova.Items
             itemData = data;
             hasItemData = true;
             if (IsSpawned && IsServer) netTemper.Value = TemperOf(data);
+            if (!IsSpawned || IsServer) ServerSetLooks(looks); // a piece's dye is part of its state
             foreach (var slot in EquipSlots.All)
             {
                 if (!first && previous[slot] == data[slot]) continue;

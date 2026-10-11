@@ -76,6 +76,14 @@ namespace KryticalNova.Items
             return theme.IsValid;
         }
 
+        /// <summary>A colourway's name as players read it: "ELVN_Sunlord" reads "Sunlord" (the pack code is for the gear table). Null when there is none.</summary>
+        public string DisplayNameOf(ushort id)
+        {
+            if (!TryGet(id, out Theme theme) || string.IsNullOrEmpty(theme.name)) return null;
+            int cut = theme.name.IndexOf('_');
+            return cut >= 0 && cut < theme.name.Length - 1 ? theme.name.Substring(cut + 1) : theme.name;
+        }
+
         public ushort IdOf(string themeName)
         {
             if (string.IsNullOrEmpty(themeName)) return 0;
