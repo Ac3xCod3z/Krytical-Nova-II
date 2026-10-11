@@ -82,6 +82,19 @@ namespace KryticalNova.Economy
             new KioskTier { label = "30 days", days = 30, permitItemId = 9021, storePrice = "$3.99" },
         };
 
+        [Header("Vendors (NPC shops). Placeholder numbers of 10 Oct 2026: to be tuned")]
+        [Tooltip("What a vendor asks for ladder gear: this many Creds for each item level, times the rarity's weight below. " +
+                 "Listed items (Stims, Alloys) carry their own price on the vendor's stock asset.")]
+        [Min(0)] public long vendorGearCredsPerLevel = 150;
+        [Tooltip("The weight of a rarity in a gear price: Common, Uncommon, Rare, Epic, Legendary.")]
+        public float[] vendorGearRarityMultiplier = { 1f, 4f, 20f, 100f, 100f };
+        [Tooltip("What one of an item is valued at when no vendor lists it and it is not ladder gear (a Serum, a Permit, a pet), by rarity.")]
+        public long[] vendorFallbackValueByRarity = { 20, 100, 2_000, 20_000, 20_000 };
+        [Tooltip("What a vendor pays for an item sold to it: this share of what the shops value it at.")]
+        [Range(0f, 100f)] public float vendorSellBackPercent = 20f;
+        [Tooltip("Selling an item of this rarity or better to a vendor must be confirmed first. So must a pet and any worked gear, whatever this says.")]
+        public ItemRarity vendorConfirmFromRarity = ItemRarity.Rare;
+
         [Header("Income target (what the faucets are tuned to pay)")]
         [Tooltip("Creds a player is meant to earn per hour of hunting at a level. Hostile drops, Contracts and shops are " +
                  "balanced against this when they are built; the inspector compares every cap and price with it.")]
@@ -154,6 +167,20 @@ namespace KryticalNova.Economy
             return Math.Max(0, price - tax);
         }
 
+        /// <summary>The weight of a rarity in a vendor's gear price.</summary>
+        public float VendorGearMultiplier(ItemRarity rarity)
+        {
+            if (vendorGearRarityMultiplier == null || vendorGearRarityMultiplier.Length == 0) return 1f;
+            return Mathf.Max(0f, vendorGearRarityMultiplier[Mathf.Clamp((int)rarity, 0, vendorGearRarityMultiplier.Length - 1)]);
+        }
+
+        /// <summary>What one of an item of this rarity is valued at when nothing else prices it.</summary>
+        public long VendorFallbackValue(ItemRarity rarity)
+        {
+            if (vendorFallbackValueByRarity == null || vendorFallbackValueByRarity.Length == 0) return 0;
+            return Math.Max(0, vendorFallbackValueByRarity[Mathf.Clamp((int)rarity, 0, vendorFallbackValueByRarity.Length - 1)]);
+        }
+
         /// <summary>The tier at an index, or the first one when the index is out of range.</summary>
         public KioskTier Tier(int index)
         {
@@ -165,6 +192,10 @@ namespace KryticalNova.Economy
         {
             if (kioskPriceCapByRarity == null || kioskPriceCapByRarity.Length != RarityCount)
                 Array.Resize(ref kioskPriceCapByRarity, RarityCount);
+            if (vendorGearRarityMultiplier == null || vendorGearRarityMultiplier.Length != RarityCount)
+                Array.Resize(ref vendorGearRarityMultiplier, RarityCount);
+            if (vendorFallbackValueByRarity == null || vendorFallbackValueByRarity.Length != RarityCount)
+                Array.Resize(ref vendorFallbackValueByRarity, RarityCount);
         }
     }
 }

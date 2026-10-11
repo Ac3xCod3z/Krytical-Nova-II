@@ -63,7 +63,7 @@ drawn as an element over the map (`MinimapChromeView.overMap`: the Covenant dial
   the chat at the default sizes.
 - The live portrait is `CharacterPortraitStage` (`Gameplay/Items/Runtime/Visuals/`): a stripped doll that shares the
   player's merged mesh, as the Equipment page's does, drawn by its own camera into a 256 px texture with a clear
-  background. While an Equipment preview is lit it puts its own lights out (both are on the preview layer).
+  background, 30 times a second (a camera costs the frame nearly a millisecond however small its picture is). While an Equipment preview is lit it puts its own lights out (both are on the preview layer).
 - Labels that follow things in the world (namecards, nameplates, loot labels, Kiosk plates, combat numbers) are UI
   Toolkit and would draw over the pieces: each hides while it is over one (`HudChrome.HideOver`).
 - The plate over a Hostile is the exception since 9 Oct 2026: while the HUD wears a faction's art it is that
@@ -369,7 +369,7 @@ it does. APPLY keeps the changes; REVERT puts back everything as it was when the
 
 | Page | Options | Stored in |
 | --- | --- | --- |
-| Graphics | resolution, window mode, vertical sync, frame cap, quality preset, render scale, shadows, anti-aliasing, grass density, volumetric fog, sun shafts, ink outlines, **performance readout** (10 Oct 2026: a tick box; while on, `PerformanceReadout` lists on the left edge of the screen the frames a second and the 1 % low, frame time with its CPU main thread / render thread / GPU split, SetPass calls, triangles and vertices, resolution and preset, memory in use, and the session's role, ping, player count, tick rate and networked objects. In menus and in the world; it measures nothing while off; not part of a preset) | `GraphicsPreferences` |
+| Graphics | resolution, window mode, vertical sync, frame cap, **upscaler and its quality** (10 Oct 2026: Off / DLSS / FSR 2, see `Rendering-Bible.md` 6d-2), quality preset, render scale, shadows, anti-aliasing, grass density, volumetric fog, sun shafts, ink outlines, **performance readout** (10 Oct 2026: a tick box; while on, `PerformanceReadout` lists on the left edge of the screen the frames a second and the 1 % low, frame time with its CPU main thread / render thread / GPU split, SetPass calls, triangles and vertices, resolution and preset, memory in use, and the session's role, ping, player count, tick rate and networked objects. In menus and in the world; it measures nothing while off; not part of a preset) | `GraphicsPreferences` |
 | Audio | Master, Music, Effects, Ambience, Interface volumes; mute in the background | `AudioPreferences` |
 | Interface | HUD layout editor, reset, snap, grid size (game only); rings at the move point and under the target; names over NPCs and players; my own namecard; screen shake; hotbar hint; pet chatter; minimap rotation; interface size; **Menu theme**; **Chat text size**; **Time on chat lines** | `HudPreferences` |
 | Gameplay (new) | **How fast the camera turns**, **Invert the camera's up and down**, **How fast the wheel zooms**, **How far the camera pulls back**; **Damage numbers**; **Decline** Squad invitations, Callouts, trade requests, contact requests, Crew invitations | `CameraPreferences`, `HudPreferences` |
@@ -378,6 +378,30 @@ it does. APPLY keeps the changes; REVERT puts back everything as it was when the
 
 - From the menus the parts that need a character in the world are hidden (the HUD layout editor and its options, by
   the class `in-game-only`); the skill keys are not listed there, because there is no character to list them for.
+- **Saved keys are put right when they are loaded** (10 Oct 2026, `KeyBindings.Clean`): a key no action may be on (the
+  two mouse buttons the game is played with, Esc, Enter, no key at all) goes back to the action's own key, and two
+  actions on one key are settled in favour of the one that shipped there. `KeyBindings.AllowedControls` /
+  `RefusedPaths` are the one list, used by the Controls page too.
+- **The HUD is redrawn at most once a frame, and a shut window not at all** (10 Oct 2026, `ProgressionHUD`). Seven
+  events ("the skills changed", "the stats were worked out again", ...) each used to redraw everything at once, and
+  everything included the Skills window's hundred cards, found by name each time: 105 ms a redraw, two or three
+  redraws for one buff cast. That was the worst hitch in a fight: in a 60 s stress run at the training dummy
+  (Editor, every skill on rotation) the slowest frame went from 424 ms to 88 ms and the slowest 1 % from 330 ms to
+  39 ms, and what is left there is the Editor's own garbage collector. The rules, for any window: an event asks for
+  a redraw (`RequestRefresh`) and `LateUpdate` does one; the HUD's own parts are always redrawn, the Character Sheet
+  and the Skills window only while open, and each is brought up to date when it opens (`RefreshShown`); the parts of
+  a card are found once and kept (`PartsOfCard`), and a card whose skill has not changed is left alone.
+- **The milestone column** (10 Oct 2026): the moments of play stand in one column at the top centre of the HUD,
+  `milestone-banner` in `ProgressionHUD.uxml`: the server news toast first, then the player's own banners (a level of
+  Ascension, a Nova, a Nova Standing rank, a pet's evolution). Their controllers move them into it, so two at once
+  stack instead of covering each other, and the toast takes no room while it has nothing to say. It is a panel like
+  any other in the layout editor (MILESTONE BANNER): where the player puts it is where they all appear.
+- **A panel that has nothing to show is placed by its likeness** (10 Oct 2026, `HudLayoutEditor.RegisterPreview`): a
+  window that only opens at an NPC (FORGE WINDOW, HERALD WINDOW) and the milestone column fill themselves in while
+  the layout editor has them out, anywhere in the world, and open where they were put the next time. A window's
+  controller keeps its own "open" (set by its `Open` and `Close`) and never reads it from the element's display: the
+  editor shows a window without opening it, and a controller that took that for open closed it again at once for
+  being out of reach of its NPC. The Vault and the Kiosk shop follow the same rule.
 - **The camera options go over the rig's own numbers and never past its limits** (`CameraPreferences.Turn`,
   `FurthestDistance`): 100 % is the camera as shipped, the furthest distance can only be brought in.
 - **Declining requests is done on this machine**: a request of a kind the player declines is answered no on arrival,

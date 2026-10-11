@@ -17,8 +17,11 @@ namespace KryticalNova.Progression
         /// <summary>The local player's current target for a single-target skill, or null.</summary>
         Transform ResolveTarget(SkillDefinitionSO skill);
 
-        /// <summary>Checks target and range before any Chi is spent.</summary>
-        bool CanExecute(SkillDefinitionSO skill, int rank, Transform target, out string reason);
+        /// <summary>
+        /// Checks target and range before any Chi is spent. <paramref name="outOfReach"/> is true when the distance
+        /// is all that is wrong: the target is alive and hostile, and too far.
+        /// </summary>
+        bool CanExecute(SkillDefinitionSO skill, int rank, Transform target, out string reason, out bool outOfReach);
 
         /// <summary>Applies the skill's damage. Runs only where combat is authoritative (server or offline).</summary>
         void Execute(SkillDefinitionSO skill, int rank, Transform target);

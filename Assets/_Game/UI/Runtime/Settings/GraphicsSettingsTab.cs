@@ -12,6 +12,9 @@ namespace KryticalNova.UI
         private static readonly string[] ShadowNames = { "OFF", "LOW", "MEDIUM", "HIGH", "ULTRA" };
         private static readonly string[] AntiAliasingNames = { "OFF", "FXAA", "SMAA" };
         private static readonly string[] WindowNames = { "FULLSCREEN", "BORDERLESS", "WINDOWED" };
+        private static readonly string[] UpscalerQualityNames = { "NATIVE AA", "QUALITY", "BALANCED", "PERFORMANCE", "ULTRA PERFORMANCE" };
+        // The upscalers this machine can run, as the row lists them.
+        private readonly List<UpscalerChoice> upscalers = new List<UpscalerChoice>();
 
         private readonly List<Action> refreshers = new List<Action>();
         private readonly List<Vector2Int> resolutions = new List<Vector2Int>();
@@ -36,6 +39,19 @@ namespace KryticalNova.UI
                 index => GraphicsPreferences.FrameCap = GraphicsPreferences.FrameCaps[index]));
             if (Application.isEditor)
                 SettingsRows.Help(page, "Resolution and window mode take effect in the built game, not in the Editor's Game view.");
+
+            SettingsRows.Header(page, "UPSCALING");
+            upscalers.Clear();
+            upscalers.Add(UpscalerChoice.Off);
+            if (GraphicsSettingsApplier.DlssAvailable) upscalers.Add(UpscalerChoice.Dlss);
+            if (GraphicsSettingsApplier.Fsr2Available) upscalers.Add(UpscalerChoice.Fsr2);
+            string[] upscalerNames = upscalers.ConvertAll(choice => choice == UpscalerChoice.Dlss ? "DLSS" : choice == UpscalerChoice.Fsr2 ? "FSR 2" : "OFF").ToArray();
+            Add(SettingsRows.Choice(page, "Upscaler", upscalerNames,
+                () => Mathf.Max(0, upscalers.IndexOf(GraphicsSettingsApplier.UpscalerInForce)),
+                index => GraphicsPreferences.Upscaler = upscalers[index]));
+            Add(SettingsRows.Choice(page, "Upscaler quality", UpscalerQualityNames, () => (int)GraphicsPreferences.UpscalerQuality,
+                index => GraphicsPreferences.UpscalerQuality = (UpscalerQuality)index));
+            SettingsRows.Help(page, UpscalerHelp());
 
             SettingsRows.Header(page, "QUALITY");
             Add(SettingsRows.Choice(page, "Preset", PresetNames, () => (int)GraphicsPreferences.Preset,
@@ -68,6 +84,17 @@ namespace KryticalNova.UI
         }
 
         private void Add(Action refresh) => refreshers.Add(refresh);
+
+        private static string UpscalerHelp()
+        {
+            string what = "An upscaler draws the game smaller and rebuilds the full picture from several frames: more frames a second for a little softness. "
+                + "Quality loses least, Performance gains most; Native AA draws at full size and only smooths edges. "
+                + "While one is on it sets the render scale and does the anti-aliasing, so those two options below wait.";
+            if (GraphicsSettingsApplier.DlssAvailable) return what;
+            return what + (GraphicsSettingsApplier.Fsr2Available
+                ? " DLSS needs an NVIDIA RTX graphics card, which this PC does not have: FSR 2 works on any card."
+                : " No upscaler is available on this graphics card.");
+        }
 
         // A detail changed by hand turns the preset into Custom: the preset row must say so.
         private void Detail(Action change)

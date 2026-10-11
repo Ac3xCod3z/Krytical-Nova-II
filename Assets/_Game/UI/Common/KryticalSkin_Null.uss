@@ -297,6 +297,12 @@
 .kn-faction-null .slot-cooldown {
     background-color: rgba(38, 22, 43, 0.72);
 }
+.kn-faction-null .hotbar-slot.queued {
+    -unity-background-image-tint-color: rgba(150, 0, 7, 0.95);
+}
+.kn-faction-null .hotbar-slot.queued > .kn-frame {
+    -unity-background-image-tint-color: rgb(255, 88, 97);
+}
 .kn-faction-null .hotbar-slot-letter .slot-key {
     color: rgb(238, 96, 103);
 }

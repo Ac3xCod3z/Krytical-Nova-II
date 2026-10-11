@@ -40,6 +40,7 @@ namespace KryticalNova.EditorTools
             "KryticalNova.UI.StorageWindowController, KryticalNova.UI",
             "KryticalNova.UI.TradeWindowController, KryticalNova.UI",
             "KryticalNova.UI.KioskWindowController, KryticalNova.UI",
+            "KryticalNova.UI.VendorWindowController, KryticalNova.UI",
             "KryticalNova.UI.ContactsWindowController, KryticalNova.UI",
             "KryticalNova.UI.CrewWindowController, KryticalNova.UI",
             "KryticalNova.UI.GearWorkWindowController, KryticalNova.UI",

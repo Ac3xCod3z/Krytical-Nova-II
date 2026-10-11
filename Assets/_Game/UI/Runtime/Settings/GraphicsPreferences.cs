@@ -8,6 +8,10 @@ namespace KryticalNova.UI
     public enum ShadowQuality { Off, Low, Medium, High, Ultra }
     public enum AntiAliasingChoice { Off, Fxaa, Smaa }
     public enum WindowChoice { Fullscreen, Borderless, Windowed }
+    /// <summary>Draws the game at a lower resolution and rebuilds the full picture from several frames. DLSS needs an NVIDIA RTX card; FSR 2 runs on any.</summary>
+    public enum UpscalerChoice { Off, Dlss, Fsr2 }
+    /// <summary>How much lower: Native AA draws at full size (anti-aliasing only), each step after it draws less and runs faster.</summary>
+    public enum UpscalerQuality { NativeAA, Quality, Balanced, Performance, UltraPerformance }
 
     /// <summary>
     /// The player's graphics options, persisted in PlayerPrefs like <see cref="HudPreferences"/>. A preset is a row of
@@ -88,6 +92,22 @@ namespace KryticalNova.UI
         public static bool VSync { get => GetInt("vsync", 1) != 0; set => Set("vsync", value ? 1 : 0); }
 
         /// <summary>
+        /// The upscaler. Not part of a preset: which one a player can use depends on their graphics card. While one
+        /// is on it decides the render scale and does the anti-aliasing, so those two options wait.
+        /// </summary>
+        public static UpscalerChoice Upscaler
+        {
+            get => (UpscalerChoice)Mathf.Clamp(GetInt("upscaler", (int)UpscalerChoice.Off), 0, (int)UpscalerChoice.Fsr2);
+            set => Set("upscaler", (int)value);
+        }
+
+        public static UpscalerQuality UpscalerQuality
+        {
+            get => (UpscalerQuality)Mathf.Clamp(GetInt("upscalerQuality", (int)UpscalerQuality.Quality), 0, (int)UpscalerQuality.UltraPerformance);
+            set => Set("upscalerQuality", (int)value);
+        }
+
+        /// <summary>
         /// The performance readout is on screen: frame rate, where the frame's time goes, what is drawn, memory and
         /// the connection (<see cref="PerformanceReadout"/>). Not part of a preset.
         /// </summary>
@@ -134,7 +154,7 @@ namespace KryticalNova.UI
         /// <summary>Every graphics option back to what the game ships with (the High preset, the display's own size).</summary>
         public static void ResetToDefaults()
         {
-            foreach (string key in new[] { "preset", "renderScale", "shadows", "aa", "grass", "fog", "shafts", "outlines", "vsync", "frameCap", "window", "width", "height", "readout" })
+            foreach (string key in new[] { "preset", "renderScale", "shadows", "aa", "grass", "fog", "shafts", "outlines", "vsync", "frameCap", "window", "width", "height", "readout", "upscaler", "upscalerQuality" })
                 PlayerPrefs.DeleteKey(Prefix + key);
             Commit();
         }

@@ -117,6 +117,9 @@ namespace KryticalNova.UI
             SyntySkin.Decorate(root);
             characterWindow = root.Q("character-window");
             skillsWindow = root.Q("skills-window");
+            // Shown by the layout editor to be placed, they are brought up to date as when they open.
+            HudLayoutEditor.RegisterPreview("character-window", on => { if (on) RefreshShown(characterWindow); });
+            HudLayoutEditor.RegisterPreview("skills-window", on => { if (on) RefreshShown(skillsWindow); });
             runTile = root.Q("run-drag");
             jumpTile = root.Q("jump-drag");
             activeBuffsBar = root.Q("active-buffs-bar");
@@ -338,7 +341,9 @@ namespace KryticalNova.UI
             if (combatSkills == null) return;
             for (int i = 0; i < generatedCardIds.Count; i++)
             {
-                var card = root.Q($"{generatedCardIds[i]}-card");
+                SkillCardParts parts = PartsOfCard(generatedCardIds[i]);
+                if (parts.Card == null) parts.Card = root.Q($"{generatedCardIds[i]}-card");
+                VisualElement card = parts.Card;
                 if (card == null) continue;
                 var skill = combatSkills.GetSkill(generatedSkillIds[i]);
                 card.style.display = skill != null && combatSkills.IsInActiveKit(skill) ? DisplayStyle.Flex : DisplayStyle.None;
@@ -389,13 +394,13 @@ namespace KryticalNova.UI
 
             resources.Changed += RefreshResources;
             boundInventory = player.GetComponent<PlayerInventory>();
-            if (boundInventory != null) boundInventory.Changed += Refresh; // hotbar item counts
+            if (boundInventory != null) boundInventory.Changed += RequestRefresh; // hotbar item counts
             movement.CommandMessage += Feedback;
             jumpMotor.Message += Feedback;
-            if (combatStats != null) combatStats.OnStatsRecalculated += Refresh;
+            if (combatStats != null) combatStats.OnStatsRecalculated += RequestRefresh;
             if (combatSkills != null)
             {
-                combatSkills.Changed += Refresh;
+                combatSkills.Changed += RequestRefresh;
                 combatSkills.SkillMessage += Feedback;
             }
             if (buffManager != null)
@@ -403,11 +408,11 @@ namespace KryticalNova.UI
                 buffManager.BuffsChanged += RefreshBuffs;
                 buffManager.BuffMessage += Feedback;
             }
-            progression.Changed += Refresh;
+            progression.Changed += RequestRefresh;
             progression.LevelGained += OnLevelGained;
-            if (boundNova != null) boundNova.Changed += Refresh; // the Standing worn changes no stat
-            skills.Changed += Refresh;
-            hotbar.Changed += Refresh;
+            if (boundNova != null) boundNova.Changed += RequestRefresh; // the Standing worn changes no stat
+            skills.Changed += RequestRefresh;
+            hotbar.Changed += RequestRefresh;
             hotbar.CharacterWindowRequested += ToggleCharacter;
             hotbar.SkillsWindowRequested += ToggleSkills;
             hotbar.CancelRequested += CloseWindows;
@@ -416,6 +421,10 @@ namespace KryticalNova.UI
             initialized = true;
             EnsureGeneratedSkillCards();
             Refresh();
+            // The two windows are drawn once now, while the player is arriving, so the first time each is opened
+            // costs no more than any other (finding a hundred skill cards' parts takes a tenth of a second).
+            RefreshCharacterSheet();
+            RefreshSkillList();
         }
 
         private void UnbindPlayer()
@@ -424,14 +433,14 @@ namespace KryticalNova.UI
             StopHold();
             CancelDrag();
             resources.Changed -= RefreshResources;
-            if (boundInventory != null) boundInventory.Changed -= Refresh;
+            if (boundInventory != null) boundInventory.Changed -= RequestRefresh;
             boundInventory = null;
             movement.CommandMessage -= Feedback;
             jumpMotor.Message -= Feedback;
-            if (combatStats != null) combatStats.OnStatsRecalculated -= Refresh;
+            if (combatStats != null) combatStats.OnStatsRecalculated -= RequestRefresh;
             if (combatSkills != null)
             {
-                combatSkills.Changed -= Refresh;
+                combatSkills.Changed -= RequestRefresh;
                 combatSkills.SkillMessage -= Feedback;
             }
             if (buffManager != null)
@@ -439,13 +448,13 @@ namespace KryticalNova.UI
                 buffManager.BuffsChanged -= RefreshBuffs;
                 buffManager.BuffMessage -= Feedback;
             }
-            progression.Changed -= Refresh;
+            progression.Changed -= RequestRefresh;
             progression.LevelGained -= OnLevelGained;
-            if (boundNova != null) boundNova.Changed -= Refresh;
+            if (boundNova != null) boundNova.Changed -= RequestRefresh;
             boundNova = null;
             boundSerums = null;
-            skills.Changed -= Refresh;
-            hotbar.Changed -= Refresh;
+            skills.Changed -= RequestRefresh;
+            hotbar.Changed -= RequestRefresh;
             hotbar.CharacterWindowRequested -= ToggleCharacter;
             hotbar.SkillsWindowRequested -= ToggleSkills;
             hotbar.CancelRequested -= CloseWindows;
@@ -454,6 +463,21 @@ namespace KryticalNova.UI
         }
 
         private void Start() => Refresh();
+
+        // Something the HUD shows has changed. It is redrawn once, at the end of the frame, however many things
+        // said so in it: a single buff cast raises three or four of these, and each used to redraw everything.
+        private bool refreshWanted;
+        // A window that is shut is not redrawn while it is shut: it is brought up to date when it opens.
+        private bool characterStale = true, skillsStale = true;
+
+        private void RequestRefresh() => refreshWanted = true;
+
+        private void LateUpdate()
+        {
+            if (!refreshWanted) return;
+            refreshWanted = false;
+            Refresh();
+        }
 
         private void Update()
         {
@@ -477,6 +501,8 @@ namespace KryticalNova.UI
         {
             ClientPresentationRegistry.UnregisterPointerBlock(this);
             if (!uiReady) return;
+            HudLayoutEditor.UnregisterPreview("character-window");
+            HudLayoutEditor.UnregisterPreview("skills-window");
             PlayerInventory.LocalChanged -= OnLocalPlayerChanged;
             UnbindPlayer();
             foreach (Action removeCallback in removeUiCallbacks) removeCallback();
@@ -682,9 +708,32 @@ namespace KryticalNova.UI
             return text.ToString();
         }
 
+        /// <summary>
+        /// Redraws what is on screen: the HUD itself always, the Character Sheet and the Skills window only while
+        /// they are open. Those two hold a hundred skill cards and every stat, and redrawing them took a tenth of a
+        /// second: paid on every cast of a buff, with both windows shut, it was the worst hitch in a fight.
+        /// </summary>
         private void Refresh()
         {
             if (!initialized) return;
+            refreshWanted = false;
+            RefreshHud();
+            if (IsShown(characterWindow)) RefreshCharacterSheet(); else characterStale = true;
+            if (IsShown(skillsWindow)) RefreshSkillList(); else skillsStale = true;
+        }
+
+        private static bool IsShown(VisualElement window) => window != null && window.resolvedStyle.display != DisplayStyle.None;
+
+        /// <summary>A window was just shown: it is brought up to date if anything changed while it was shut.</summary>
+        private void RefreshShown(VisualElement window)
+        {
+            if (!initialized) return;
+            if (window == characterWindow && characterStale) RefreshCharacterSheet();
+            else if (window == skillsWindow && skillsStale) RefreshSkillList();
+        }
+
+        private void RefreshHud()
+        {
             root.Q<Label>("level-label").text = $"LEVEL {progression.CurrentLevel}";
             root.Q<Label>("mode-label").text = skills.IsJumpSelected ? "JUMP · choose landing" : $"{(skills.IsRunning ? "RUN" : "WALK")} · {skills.CurrentSpeed:0.0} m/s";
             RefreshResources();
@@ -692,6 +741,12 @@ namespace KryticalNova.UI
             ProgressBar xp = root.Q<ProgressBar>("xp-bar");
             xp.value = progression.IsAtLevelCap ? ProgressBarScale : ProgressBarScale * progression.Experience / Mathf.Max(1f, progression.ExperienceRequired);
             xp.title = progression.IsAtLevelCap ? "MAXIMUM LEVEL" : $"{progression.Experience:N0} / {progression.ExperienceRequired:N0} XP";
+            RefreshHotbarSlots();
+        }
+
+        private void RefreshCharacterSheet()
+        {
+            characterStale = false;
             RefreshRenown();
             RefreshSerums();
             root.Q<Label>("stat-points").text = $"{progression.StatPoints} points available";
@@ -720,6 +775,12 @@ namespace KryticalNova.UI
                 allocBtn.text = $"+{statStep}";
                 allocBtn.tooltip = GetAttributeAllocationTooltip(attribute, statStep);
             }
+            RefreshCombatStatLabels();
+        }
+
+        private void RefreshSkillList()
+        {
+            skillsStale = false;
             root.Q<Label>("skill-points").text = $"{progression.SkillPoints} skill point(s) available";
 
             RefreshSkillCard(MovementSkillId.Run, "run", runTile);
@@ -735,7 +796,10 @@ namespace KryticalNova.UI
             for (int i = 0; i < generatedCardIds.Count; i++)
                 RefreshCombatSkillCard(generatedCardIds[i], generatedSkillIds[i]);
             RefreshClassCards();
+        }
 
+        private void RefreshHotbarSlots()
+        {
             for (int index = 0; index < slotElements.Length; index++)
             {
                 HotbarSlotEntry entry = hotbar.GetSlotEntry(index);
@@ -787,7 +851,10 @@ namespace KryticalNova.UI
                 SetIcon(slotIcons[index], icon);
                 slot.EnableInClassList("has-icon", icon != null);
             }
+        }
 
+        private void RefreshCombatStatLabels()
+        {
             if (combatStats != null)
             {
                 Label apLabel = root.Q<Label>("combat-stat-ap");
@@ -837,6 +904,45 @@ namespace KryticalNova.UI
             }
         }
 
+        /// <summary>
+        /// The parts of one skill card, found once. Looking each up by name on every redraw meant seven searches of the
+        /// whole HUD for each of a hundred cards: a tenth of a second for the Skills window.
+        /// </summary>
+        private sealed class SkillCardParts
+        {
+            public Label Rank, Description, Values, Requirement, DragHint;
+            public Button Upgrade;
+            public VisualElement Tile;
+            // What the card was last drawn from: a card whose skill has not changed is left as it is.
+            public int DrawnRank = -1, DrawnStep = -1;
+            public bool DrawnLearned, DrawnLocked, DrawnCanUpgrade;
+            public string DrawnWhyNot;
+            public VisualElement DrawnUnder;
+            public VisualElement Card;
+        }
+
+        private readonly Dictionary<string, SkillCardParts> skillCardParts = new Dictionary<string, SkillCardParts>();
+
+        private SkillCardParts PartsOfCard(string cardPrefix)
+        {
+            // Found under another root (the HUD was built again): looked up afresh.
+            if (skillCardParts.TryGetValue(cardPrefix, out SkillCardParts parts) && parts.DrawnUnder == root) return parts;
+            parts = new SkillCardParts
+            {
+                Rank = root.Q<Label>($"{cardPrefix}-rank"),
+                Description = root.Q<Label>($"{cardPrefix}-description"),
+                Values = root.Q<Label>($"{cardPrefix}-values"),
+                Requirement = root.Q<Label>($"{cardPrefix}-requirement"),
+                Upgrade = root.Q<Button>($"upgrade-{cardPrefix}"),
+                DragHint = root.Q<Label>($"{cardPrefix}-drag-hint"),
+                Tile = root.Q($"{cardPrefix}-drag"),
+                DrawnUnder = root,
+            };
+            // A card that is not built yet is looked for again next time.
+            if (parts.Rank != null || parts.Upgrade != null || parts.Tile != null) skillCardParts[cardPrefix] = parts;
+            return parts;
+        }
+
         private void RefreshCombatSkillCard(string cardPrefix, string skillAssetId)
         {
             if (combatSkills == null) return;
@@ -848,7 +954,19 @@ namespace KryticalNova.UI
             bool isLearned = combatSkills.IsLearned(skill);
             int rank = combatSkills.GetRank(skill);
 
-            Label rankLabel = root.Q<Label>($"{cardPrefix}-rank");
+            SkillCardParts parts = PartsOfCard(cardPrefix);
+            string whyNot = null;
+            bool upgradable = !(isDropSkill && !isLearned) && combatSkills.CanUpgrade(skill, out whyNot);
+            if (parts.DrawnRank == rank && parts.DrawnStep == skillStep && parts.DrawnLearned == isLearned && parts.DrawnLocked == isDropSkill
+                && parts.DrawnCanUpgrade == upgradable && parts.DrawnWhyNot == whyNot) return; // nothing it shows has changed
+            parts.DrawnWhyNot = whyNot;
+            parts.DrawnRank = rank;
+            parts.DrawnStep = skillStep;
+            parts.DrawnLearned = isLearned;
+            parts.DrawnLocked = isDropSkill;
+            parts.DrawnCanUpgrade = upgradable;
+
+            Label rankLabel = parts.Rank;
             if (rankLabel != null)
             {
                 if (isDropSkill && !isLearned)
@@ -861,10 +979,10 @@ namespace KryticalNova.UI
                 }
             }
 
-            Label descLabel = root.Q<Label>($"{cardPrefix}-description");
+            Label descLabel = parts.Description;
             if (descLabel != null) descLabel.text = skill.description;
 
-            Label valuesLabel = root.Q<Label>($"{cardPrefix}-values");
+            Label valuesLabel = parts.Values;
             if (valuesLabel != null)
             {
                 int evalRank = rank > 0 ? rank : 1;
@@ -876,7 +994,7 @@ namespace KryticalNova.UI
                 valuesLabel.text = statsStr;
             }
 
-            Label reqLabel = root.Q<Label>($"{cardPrefix}-requirement");
+            Label reqLabel = parts.Requirement;
             if (reqLabel != null)
             {
                 if (isDropSkill && !isLearned)
@@ -899,7 +1017,7 @@ namespace KryticalNova.UI
                 }
             }
 
-            Button upgrade = root.Q<Button>($"upgrade-{cardPrefix}");
+            Button upgrade = parts.Upgrade;
             if (upgrade != null)
             {
                 if (isDropSkill && !isLearned)
@@ -919,7 +1037,7 @@ namespace KryticalNova.UI
                 }
             }
 
-            Label dragHint = root.Q<Label>($"{cardPrefix}-drag-hint");
+            Label dragHint = parts.DragHint;
             if (dragHint != null)
             {
                 if (isDropSkill && !isLearned)
@@ -931,7 +1049,7 @@ namespace KryticalNova.UI
                         : "Drag to a hotbar slot (1–0, Q W E R) to activate.";
             }
 
-            VisualElement tile = root.Q($"{cardPrefix}-drag");
+            VisualElement tile = parts.Tile;
             if (tile != null)
             {
                 tile.tooltip = isLearned ? $"Drag {skill.displayName} to hotbar" : isDropSkill ? skill.acquisitionNote : "Learn before assigning";
@@ -1088,6 +1206,9 @@ namespace KryticalNova.UI
                 var entry = hotbar.GetSlotEntry(index);
                 bool charging = hotbar.ChargingSlot == index;
                 slotElements[index].EnableInClassList("charging", charging);
+                // The skill the character is walking in to cast, or will cast when its swing is over.
+                SkillDefinitionSO waiting = combatSkills.QueuedSkill;
+                slotElements[index].EnableInClassList("queued", waiting != null && entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill == waiting);
                 float cooldownLeft01 = 0f;
                 if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null)
                 {
@@ -1473,7 +1594,11 @@ namespace KryticalNova.UI
             CancelDrag();
             bool show = window.resolvedStyle.display == DisplayStyle.None;
             SetVisible(window, show);
-            if (show) window.BringToFront();
+            if (show)
+            {
+                RefreshShown(window);
+                window.BringToFront();
+            }
         }
         private void CloseWindows() { HideCharacter(); HideSkills(); }
 

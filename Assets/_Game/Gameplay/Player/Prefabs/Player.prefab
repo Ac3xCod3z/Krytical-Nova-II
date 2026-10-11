@@ -97,6 +97,9 @@ GameObject:
   - component: {fileID: 8564388659051304428}
   - component: {fileID: 280678128926397855}
   - component: {fileID: 5335455843311859722}
+  - component: {fileID: 7535587428304101747}
+  - component: {fileID: 4584245545938065754}
+  - component: {fileID: 9061862105753895495}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -603,6 +606,7 @@ MonoBehaviour:
   stopPlaybackSpeed: 1.25
   stopFootIK: 1
   stopLeadDistance: 0.35
+  stopLeadSeconds: 0.08
   jumpStartClip: {fileID: 7400000, guid: c88529aecf507884c8f64971ba054338, type: 3}
   jumpLoopClip: {fileID: 7400000, guid: 278a20928cf87054ebeeb1fb49277f3d, type: 3}
   jumpLandClip: {fileID: 7400000, guid: 6a92a180c4391d24cb53c32a5bedc09d, type: 3}
@@ -3850,6 +3854,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b237c8452a214a6488afdbf371b8c505, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Autopilot.AutopilotController
+--- !u!114 &7535587428304101747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68c04caccda62e946bf1b0ebef5e2d75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Combat.PlayerCombatState
+  ShowTopMostFoldoutHeaderGroup: 1
+  lingerSeconds: 6
+--- !u!114 &4584245545938065754
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36937d67a2690a049b81be14e5deabe7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Combat.PlayerSkillQueue
+  ShowTopMostFoldoutHeaderGroup: 1
+  approachRange: 20
+  ringInset: 0.3
+  timeoutSeconds: 10
+  giveUpFactor: 1.5
+--- !u!114 &9061862105753895495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97c2ec49b6508774faf6ce07a25e57c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.PlayerShopping
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+  vendors: {fileID: 11400000, guid: e0a9146e5fb14384497188a023cd2567, type: 2}
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

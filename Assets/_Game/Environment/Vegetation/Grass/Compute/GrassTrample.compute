@@ -1,0 +1,56 @@
+// Krytical Nova grass: the trample map. A small picture of the ground round the camera, seen from above, that
+// remembers where grass has been pushed and which way. Every frame what it holds springs back a little, and
+// everyone standing in it (players, NPCs, Hostiles, pets) presses their mark in again. The blade shader reads one
+// texel of it per vertex instead of asking every blade about every character, so any number of characters can bend
+// grass, and it stays pressed for a moment where someone walked.
+//   rg = which way the grass is pushed (world XZ), length 0-1    b = how hard it is pressed, 0-1
+//   a  = the height of whoever pressed it (a blade far above or below them is left alone)
+// The map moves with the camera in whole texels, so what it holds only needs shifting, never resampling.
+#pragma kernel Trample
+
+Texture2D<float4> _Before;
+RWTexture2D<float4> _After;
+
+int2   _Shift;          // texels the map moved since last frame (new texel t held what old texel t + shift did)
+float4 _Map;            // xy world XZ of texel (0,0)'s corner, z texel size in metres, w texels across
+float4 _Spring;         // x share of a mark left after this frame (0 forgets at once, 1 never springs back)
+
+#define KN_MAX_TRAMPLERS 32
+float4 _KN_TrampleSources[KN_MAX_TRAMPLERS];    // xyz feet, w radius
+int    _KN_TrampleSourceCount;
+
+[numthreads(8, 8, 1)]
+void Trample(uint3 id : SV_DispatchThreadID)
+{
+    uint across = (uint)_Map.w;
+    if (id.x >= across || id.y >= across) return;
+
+    int2 from = int2(id.xy) + _Shift;
+    float4 mark = 0.0;
+    if (all(from >= 0) && all(from < (int)across)) mark = _Before[from];
+    mark.rgb *= _Spring.x;
+
+    float2 world = _Map.xy + (float2(id.xy) + 0.5) * _Map.z;
+    float nearest = 1e9;
+    float nearestHeight = mark.a;
+    for (int i = 0; i < _KN_TrampleSourceCount; i++)
+    {
+        float4 who = _KN_TrampleSources[i];
+        float2 away = world - who.xz;
+        float distance = length(away);
+        if (distance < nearest) { nearest = distance; nearestHeight = who.y; }
+        float press = saturate(1.0 - distance / max(who.w, 0.01));
+        press *= press;
+        // The hardest press wins: two characters side by side do not add up to more than flat.
+        if (press > mark.b)
+        {
+            mark.rg = (distance > 0.001 ? away / distance : float2(1.0, 0.0)) * press;
+            mark.b = press;
+            mark.a = who.y;
+        }
+    }
+    // Ground nobody has pressed takes the height of whoever is nearest, so the texels round a mark agree with it
+    // about its height (the blade shader reads between texels, and a mark's rim would otherwise be cut short).
+    if (mark.b < 0.004) mark.a = nearestHeight;
+    _After[id.xy] = mark;
+}

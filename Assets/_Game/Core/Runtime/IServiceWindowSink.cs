@@ -9,6 +9,7 @@ namespace KryticalNova.Core
         public const string Kiosk = "kiosk";
         public const string Forge = "forge";
         public const string Herald = "herald";
+        public const string Shop = "shop";
     }
 
     /// <summary>

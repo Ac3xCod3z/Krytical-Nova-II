@@ -73,12 +73,16 @@ _Game/
 │   ├── Autopilot/         Runtime/ (PlayerAutopilot = the server's flag, zone and time; AutopilotController and MagnetController
 │   │                      run on the player's own game; AutopilotPreferences, MagnetRules)  Data/ + Data/Assets/ (AutopilotSettings)
 │   │                      Tests/Editor/
-│   ├── Combat/            Runtime/
+│   ├── Combat/            Runtime/ (melee, skill attacks, duels, who is hostile to whom; PlayerCombatState = whether a player is
+│   │                      in a fight, decided by the server and told to every machine; PlayerSkillQueue = a skill asked for out
+│   │                      of reach or mid-swing: the server walks the player in and casts it)
 │   ├── Factions/          Runtime/ (ids, rules)  Data/ + Data/Assets/ (the three factions, catalog)  Editor/
 │   ├── CharacterCreation/ Runtime/ (recipe, look, roster, save, names)  Data/ + Data/Assets/ (lineages, palettes,
 │   │                      database)  Editor/ (bakers)  Tests/Editor/
-│   ├── Economy/           Runtime/ (Creds, Vault and Deep Vault, Trade, Kiosks, trade zones)  Data/ + Data/Assets/
-│   │                      (EconomySettings)  Editor/  Prefabs/ (KioskStand)  Tests/Editor/
+│   ├── Economy/           Runtime/ (Creds, Vault and Deep Vault, Trade, Kiosks, trade zones; NPC shops: PlayerShopping,
+│   │                      VendorRules)  Data/ (EconomySettings, VendorStock, VendorCatalog)  Data/Assets/ (EconomySettings;
+│   │                      Vendors/ = VS_<Vendor> = one vendor's shelf, VendorCatalog)  Editor/ (VendorStockBuilder)
+│   │                      Prefabs/ (KioskStand)  Tests/Editor/
 │   ├── Forge/             Runtime/ (PlayerGearWork: Tempering, Fusion, Tuning and Reforge at the Armorer. Sits above Items,
 │   │                      Economy, Progression and NPC, which is why it is its own system)
 │   ├── Hostiles/          Runtime/ (HostileNet = a Hostile on the network, HostileSpawner, HostilePool, HostileZone = one hunting
@@ -139,7 +143,8 @@ _Game/
 │                          IconPacks, IconLibraryWindow)  Data/Assets/ (IconLibrary.asset, IconTreatmentSettings.asset)  Tests/Editor/
 │                          The icons it bakes go to the owning systems: Gameplay/Progression/Data/Assets/Icons, Gameplay/Items/Data/Assets/Icons
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
-├── Rendering/             Runtime/ (renderer features; ComicLetteringFeature draws the `ComicLettering` layer, which every
+├── Rendering/             Editor/ (also UpscalerSetup: what DLSS and FSR 2 need from the project, menu Lighting ▸ Set Up Upscalers)
+│                          Runtime/ (renderer features; ComicLetteringFeature draws the `ComicLettering` layer, which every
 │                          comic mark and word is on, over the finished frame)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets, the menus' comic book and what the
 │                          menus say happened (MenuMoments), FactionShowcase = faction select's champions; Skins/ = UiSkin and MenuSkin; Settings/ = the Settings pages;
@@ -364,7 +369,7 @@ A vendor package whose runtime scripts cannot compile into a player build is kep
 
 Menu **Krytical Nova ▸ Icons** (the icons of skills and of items that have no model; see `Design/Rendering-Bible.md` 6g): **Icon Library** is the browser (`IconLibraryWindow`): every skill or item on the left, the icon packs' pictures in the middle (by set, or the best free matches for the chosen skill by its tags), and on the right the chosen icon as painted and as the game will show it, its tags, and the button that gives it to the skill; giving bakes the treated copy and hands it over at once. **Bake Every Assigned Icon** redraws them all after a change to `IconTreatmentSettings`. **Check Icons** lists every skill or item without an icon of its own. **A new skill, or a new item without a model, gets its icon here, never by hand.** The packs (`_ThirdParty/Fantasy RPG Icons Pack`, `_ThirdParty/Cyberpunk RPG Icons Pack`) are only read, and only by these tools: the game shows the baked copies, so a copy of the project without the packs (4.2 GB of pictures) plays and checks clean; it just cannot bake or hand out icons.
 
-Menu **Krytical Nova ▸ Items** also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration, forge materials: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`). **9. Bake Pet Emoji** (`PetEmojiBaker`) redraws the emoji the animal pets speak in from the Cartoon Emotion Pack (`PetEmojiLibrary`: which drawing, which two colours); **Krytical Nova ▸ GameFeel ▸ Rebuild Pet Chatter** puts the pets' reactions (`PetChatterDirector`) on the game feel prefab. **8. Bake Weapon Models (glow zones, reach)** (`WeaponGlowZoneBaker`) reads every weapon model's mesh and writes onto its prefab which part glows when tempered (`WeaponGlowZone`) and its outermost points (`WeaponReach`, which keeps long weapons out of the ground); run it after adding or changing a weapon model. A zone ticked "keep as set" on a prefab is left alone.
+Menu **Krytical Nova ▸ Items** also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration, forge materials: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`). **10. Build Vendor Stock** (`VendorStockBuilder`) makes each vendor's shelf (`Economy/Data/Assets/Vendors/VS_<Vendor>.asset`) and the catalog that lists them from the table in the builder; a price tuned on an asset is kept. **9. Bake Pet Emoji** (`PetEmojiBaker`) redraws the emoji the animal pets speak in from the Cartoon Emotion Pack (`PetEmojiLibrary`: which drawing, which two colours); **Krytical Nova ▸ GameFeel ▸ Rebuild Pet Chatter** puts the pets' reactions (`PetChatterDirector`) on the game feel prefab. **8. Bake Weapon Models (glow zones, reach)** (`WeaponGlowZoneBaker`) reads every weapon model's mesh and writes onto its prefab which part glows when tempered (`WeaponGlowZone`) and its outermost points (`WeaponReach`, which keeps long weapons out of the ground); run it after adding or changing a weapon model. A zone ticked "keep as set" on a prefab is left alone.
 
 Menu **Krytical Nova ▸ Hostiles ▸ Build Hostiles** (`HostileAssetBuilder`): for every species in the builder's roster, its
 `HostileDefinition`, and the networked prefab in `Gameplay/Hostiles/Prefabs/`, which it also registers as a network prefab;

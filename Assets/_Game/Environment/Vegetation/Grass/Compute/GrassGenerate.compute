@@ -1,6 +1,8 @@
 // Krytical Nova GPU grass: generates this frame's grass instances around one camera.
 // A world-snapped jittered grid (so grass never swims as the camera moves) is tested against the baked grass
 // mask (density / biome / moisture), runtime exclusion volumes, distance LOD and the camera frustum.
+// Only the cells under the camera's view are walked (GrassRenderer hands over that rectangle of the grid): the
+// ground behind the camera was most of the square round it, and nothing there is ever kept.
 // Dispatched up to three times per camera with the same rules:
 //   near pass  - real clumps on a fine grid, thinning with distance and fading out across the hand-off band;
 //   far pass   - cheap tufts on a coarse grid that fade in across the same band and carry the field to the
@@ -26,7 +28,8 @@ SamplerState sampler_linear_clamp;
 float4 _TerrainPos;     // xyz terrain origin, w = height scale (terrainData.size.y * 2, heightmapTexture stores 0..0.5)
 float4 _TerrainSize;    // x size X, y size Z, z heightmap resolution, w mask resolution
 int2   _GridOrigin;     // world cell index of grid (0,0)
-float4 _Grid;           // x cell size, y grid dimension, z pass max distance, w density scale
+int2   _GridDim;        // cells across and along: the part of the pass's square the camera's view covers
+float4 _Grid;           // x cell size, y unused, z pass max distance, w density scale
 float4 _CamPos;         // xyz camera position
 float4 _Lod;            // x full-density distance, y mid distance, z mid keep, w far keep (near pass)
 float4 _Fade;           // x hand-off start, y hand-off end (= near max), z far max distance, w far keep at far max
@@ -104,8 +107,7 @@ uint PackColor(float3 c) { c = saturate(c); return ((uint)(c.r * 255) << 16) | (
 [numthreads(8, 8, 1)]
 void Generate(uint3 id : SV_DispatchThreadID)
 {
-    uint dim = (uint)_Grid.y;
-    if (id.x >= dim || id.y >= dim) return;
+    if (id.x >= (uint)_GridDim.x || id.y >= (uint)_GridDim.y) return;
     bool far = _FarParams.x > 0.5 && _FarParams.x < 1.5;
     bool fill = _FarParams.x > 1.5;
     bool cheap = far || fill;

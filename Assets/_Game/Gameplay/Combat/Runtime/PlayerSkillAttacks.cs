@@ -108,9 +108,10 @@ namespace KryticalNova.Combat
             return melee.CurrentTarget != null ? melee.CurrentTarget.Transform : null;
         }
 
-        public bool CanExecute(SkillDefinitionSO skill, int rank, Transform target, out string reason)
+        public bool CanExecute(SkillDefinitionSO skill, int rank, Transform target, out string reason, out bool outOfReach)
         {
             reason = string.Empty;
+            outOfReach = false;
             if (skill.IsAreaAttack) return true; // hits whatever is in range; an empty swing is allowed
 
             if (target == null) { reason = "Select a target first."; return false; }
@@ -123,6 +124,7 @@ namespace KryticalNova.Combat
             if (distance > reach)
             {
                 reason = $"Out of range ({distance:0.0} m, reach {skill.GetRange(rank):0.0} m).";
+                outOfReach = true;
                 return false;
             }
             return true;

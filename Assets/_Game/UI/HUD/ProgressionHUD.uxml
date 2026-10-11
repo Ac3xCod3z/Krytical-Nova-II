@@ -320,6 +320,10 @@
         <!-- Server-wide news as a toast (ToastHudController): UI/HUD/Toast/ToastPanels.uxml -->
         <ui:Instance template="ToastPanels" name="toast-layer" class="hud-overlay-layer" picking-mode="Ignore" />
 
+        <!-- The moments of play, top centre: the news toast, then the player's own milestones (Ascension, a Nova, a
+             Standing rank, a pet's evolution). Their controllers move them in here; placed like any panel. -->
+        <ui:VisualElement name="milestone-banner" class="milestone-banner hud-movable" picking-mode="Ignore" />
+
         <!-- Network panel (NetworkSessionPanel) -->
         <ui:VisualElement name="network-panel" class="panel blocks-world hud-movable">
             <ui:VisualElement class="row kn-header"><ui:Label text="NETWORK" class="heading" /><ui:Button name="network-close" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button></ui:VisualElement>

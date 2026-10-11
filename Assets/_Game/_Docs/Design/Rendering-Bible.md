@@ -123,7 +123,11 @@ Driven by `EnvironmentPresenter` (`Assets/_Game/World/Runtime/Presentation/`). T
 | `_KN_WindVector` | xy wind (m/s, world XZ, gust included), z speed. Set by `PrecipitationController` |
 | `_KN_WindParams` | x gust now, y gustiness, z strength 0-1 (speed / 20 m/s). Drives foliage and water |
 | `_KN_WindScroll` | integrated wind drift (texture tiles) for water ripples; continuous as the wind turns |
-| `_KN_Interactors[8]`, `_KN_InteractorCount` | xyz feet, w radius of the 8 `FoliageInteractor`s nearest the camera (grass parting) |
+| `_KN_WindPhase` | x = wind strength summed over time, y = the same one frame ago, w = 1 once published. What a foliage wave's speed-up with the wind is multiplied by (`KNWindPhase()`) |
+| `_KN_WindDrift` | xy = how far the grass's gust cells have drifted downwind (`KNWindDrift()`), zw = one frame ago |
+| `_KN_Interactors[8]`, `_KN_InteractorCount` | xyz feet, w radius of the 8 `FoliageInteractor`s nearest the camera (bushes and town grass patches part round them; GPU grass only without a trample map) |
+| `_KN_TrampleSources[32]`, `_KN_TrampleSourceCount` | xyz feet, w radius of up to 32 `FoliageInteractor`s near the camera: who presses the grass's trample map |
+| `_KN_GrassTrample`, `_KN_GrassTrampleRect` | the trample map (rg push, b press, a height of who pressed) and where it lies: xy corner in world XZ, z 1 / width in metres, w 1 while there is a map |
 
 ### Sun
 - **Art treatment**: the centre is washed out by its own light (`_SunGlare*`), light bleeds over ink lines
@@ -309,6 +313,13 @@ farther away than the original 0.065 / 0.1.
   `calmChance`. The server rolls a speed per weather cycle (biased low, so strong days are rarer) and replicates it
   next to the heading. A slow shared lull/surge noise (±25%) and the gust noise ride on top. GM: `weather.windset
   <m/s> [heading]`, `weather.windclear`, `weather.wind`.
+- **A wave's phase is never time × the wind's strength** (rule of 10 Oct 2026). Strength changes every frame with
+  the gusts and the time is large, so `sin(t * (a + b * strength))` threw the whole field to another point of its
+  wave on every change: 80 s into a session the large grass wave jumped by up to 0.6 rad in a frame, half an hour in
+  by up to 16 rad on nearly every frame, which is the stutter the owner saw. A wave is written
+  `sin(a * t + b * KNWindPhase())`: `PrecipitationController` sums the strength over time (and the gust cells' travel,
+  `KNWindDrift()`), so a gust only changes how fast a wave goes on from where it is. The sums wrap at 20π, so `b`
+  must be a multiple of 0.1. Grass, trees and bushes all follow it (`KNWind.hlsl` says so at the declaration).
 - **Grass is GPU grass** (`GrassRenderer`, `Assets/_Game/Environment/Vegetation/Grass/Runtime`, `Assets/_Game/Environment/Vegetation/Grass/Rendering`). Data lives in
   `Assets/_Game/Environment/Vegetation/Grass/Data/Assets`:
   - `GrassType` sets the mesh, height and width ranges, root/mid/tip colours, fake AO, wind and player bend.
@@ -321,9 +332,25 @@ farther away than the original 0.065 / 0.1.
     It picks a type per biome, applies distance LOD (full to 15 m, 45% to 35 m, 15% to 60 m; kept clumps widen,
     and clumps shrink out before the edge) and frustum-culls. One `RenderMeshIndirect` is issued per type. No
     instance data is stored.
+  - **Only the ground the camera sees is walked** (10 Oct 2026). `GrassRenderer.ViewFootprint` takes the camera and
+    the four corners of its view at the pass's range, and each pass walks that rectangle of its grid instead of the
+    whole square round the camera: at the game's camera angle about 158,000 cells a frame instead of 500,000, with
+    the same grass drawn to the triangle. Measured on an RTX 5070 Ti the frame's GPU time did not change by more
+    than the noise (grass as a whole costs about 1 ms there in the thickest meadow, nearly all of it drawing), so
+    this is headroom for weaker cards, not a gain proven on one. `grass.view` switches it off to compare;
+    `grass.stats` prints the cells walked.
   - **`KryticalNova/Grass Blades`** draws the blades:
     - Layered wind: field waves, local gust cells and blade flutter, with roots planted.
-    - `_KN_Interactors` push the grass aside.
+    - Characters bend it through the **trample map** (10 Oct 2026, `GrassTrampleMap` + `GrassTrample.compute`): a
+      256² picture of 64 m of ground, one texel per 25 cm, lying from 16 m behind the game camera to 48 m ahead of
+      it. Every frame it moves with the camera in whole texels, what it holds fades (to about a third in `trampleSpringSeconds`, 1.5 s) and every
+      `FoliageInteractor` near the camera, up to 32, presses its mark in again; the hardest press on a texel wins.
+      A blade reads one texel: which way it is pushed and how far it is pressed down. So any number of players,
+      NPCs and Hostiles bend grass at the cost of one texture read a vertex, and it stays down for a moment where
+      someone walked. A mark carries the height of who made it, and a blade more than 1.5 m above or below is left
+      alone (a bridge over a lawn). The numbers are on `GrassRuleSet` (Trample map). Outside Play, and with
+      `trample` off, a blade asks the 8 nearest `_KN_Interactors` instead, as it used to. Fill tufts take no part
+      (`playerBend` 0), and grass past the map's edge does not bend.
     - Colour is a root→tip gradient with per-clump, patch and wetness variation and fake AO.
     - Lighting is the comic cel band and dots on upward-biased normals.
     - It casts no shadows but receives them.
@@ -340,7 +367,24 @@ farther away than the original 0.065 / 0.1.
   - The terrain's grass layer is tinted (`TL_Grass` remap) so the ground past 60 m reads as the same grass.
   - **Rebuild with Krytical Nova > Zone > Grass > Build GPU Grass**, or *Bake Grass Mask* after town or terrain
     edits. The same menu has debug views. In game: `grass.debug 0-3`, `grass.density`, `grass.distance`,
-    `grass.toggle`, `grass.stats`.
+    `grass.toggle`, `grass.fill`, `grass.view`, `grass.stats`.
+  - **Two kinds of grass, and where each goes** (rule of 10 Oct 2026). Both are the same system and the same
+    shader; what differs is the biome (`GrassBiome`), its types (`GrassType`) and how the mask is baked. A new
+    zone takes these two as they are, and a third kind is a new biome, never a change to one of these.
+
+    | | **Overworld** (`GB_Meadow`) | **Town lawn** (`GB_Lawn`) |
+    |---|---|---|
+    | Where | Everything outside the walls: past `lawnRegionHalfSize` (112 m) from the zone's origin | Inside the walls, on ground painted as lawn |
+    | Reads as | Wild: stands of different grasses, uneven height, gaps | Kept: one short even cut, edge to edge |
+    | Types | Five, each in its own patches (patchiness 0.2-0.6, patches 8-14 m): tall grass A / B 0.5-1.3 m, medium 0.35-0.6 m, short 0.18-0.34 m, blade clumps 0.28-0.7 m | One: `GT_LawnBlades`, 0.13-0.15 m, wide clumps (5.5-7 x), no patches |
+    | Edge | Fades out over 1.5 m from roads, buildings and props; thins on slopes and with altitude | Stops in a straight line: the kept lawn rectangles (`lawnRects`, written by the mask bake) are filled completely, roots stay 4 cm inside, blades are clamped to the rectangle, and only paving, floors and buildings block it |
+    | Fill tufts | None (`fillDensity` 0): the gaps are part of the look | Half density (`fillDensity` 0.5) within 35 m, so no ground shows through |
+    | Wind | Full (`windStrength` 1-1.15, flutter 0.35-0.45) | Light (`windStrength` 0.6, flutter 0.25): a lawn shivers, it does not roll |
+    | Underfoot | Parts and lies down (`playerBend` 1.1-1.2 of blades up to 1.3 m): a walker leaves a path | Same setting on a 14 cm blade: a few centimetres, read as a footfall, not a path |
+    | Far tufts | Yes, 42-170 m | Yes: without them a lawn would go bare past 60 m |
+
+    A lawn is never made wilder by mixing meadow types into `GB_Lawn`, and the meadow is never tidied by raising
+    its density until the gaps close: the difference between the two is how a player knows they have left town.
   - Terrain details now carry only the flowers.
 - **`KryticalNova/Foliage Wind`** uses the same cel lighting and dots as Comic Toon Lit.
   - All motion happens in the vertex stage with no texture reads. Every pass (lit, shadow, depth, depth-normals)
@@ -360,6 +404,35 @@ farther away than the original 0.065 / 0.1.
   - The old flat `Water` object keeps the collider and NavMesh modifiers with its renderer off.
   - Rebuild with **Krytical Nova > Zone > Rebuild Water**.
   - The water needs the depth and opaque textures, which are now on for the PC and Mobile URP assets.
+
+## 6d-2. Upscalers: DLSS and FSR 2 (10 Oct 2026)
+
+Settings ▸ Graphics has an **Upscaler** (Off / DLSS / FSR 2) and an **Upscaler quality** (Native AA, Quality, Balanced,
+Performance, Ultra Performance). An upscaler draws the game smaller and rebuilds the full picture from several
+frames. DLSS is offered only on an NVIDIA RTX card; FSR 2 runs on any card and is what a saved DLSS choice becomes on
+a PC that cannot run it. Neither is part of a quality preset. While one is on it sets the render scale and the
+pipeline switches on the temporal anti-aliasing it needs, so the Render scale and Anti-aliasing options wait.
+
+- **How it is switched on in the project** (**Krytical Nova ▸ Lighting ▸ Set Up Upscalers (DLSS, FSR 2)**, safe to run
+  again): the render pipeline has both behind its upscaler framework, which is compiled in only with the scripting
+  define `ENABLE_UPSCALER_FRAMEWORK` (Standalone) and the engine modules `com.unity.modules.nvidia` and
+  `com.unity.modules.amd` in `Packages/manifest.json`. Unity does not document that define for URP: it is an
+  opt-in of this version (6000.6, URP 17.6), so check it first after an engine upgrade. Each upscaler keeps an
+  options asset inside `PC_RPAsset`; `GraphicsSettingsApplier` changes those at run time and puts them back when the
+  session ends, like every other value it touches on that asset.
+- **DLSS is the 4.5 generation**: this Editor ships `nvngx_dlss.dll` 310.5.3. Each mode runs on a model, NVIDIA's own
+  pairing: its second transformer model on the two modes that gain from it (Preset M for Performance, Preset L for
+  Ultra Performance) and the DLSS 4 model (Preset K) for Native AA, Quality and Balanced. On RTX 20 and 30 cards the
+  4.5 models cost more than they give, so those run K throughout (`GraphicsSettingsApplier.OlderRtx`).
+- **Anything that moves by its shader must say so.** An upscaler follows each pixel from frame to frame by its
+  motion vector; a blade that sways in the vertex shader has none unless the shader writes one. `GrassBlades.shader`
+  has a `MotionVectors` pass (the same vertex maths run for last frame's wind sums) and `GrassRenderer` draws with
+  per-object motion: with it, grass in wind under DLSS Performance keeps its blades; without it they smear. Trees and
+  bushes (`FoliageWind.shader`) do not have one yet and rely on the camera's motion alone.
+- **Known cost to the look:** the comic dots and the ink outlines are drawn before the upscale, at the smaller size,
+  so at Performance and below the dots grow and soften. Not tuned yet.
+- **Not measured yet:** the gain. On the owner's PC (RTX 5070 Ti) at the Editor's Game view size the game is held
+  back by the main thread, not the graphics card, so no mode changes the frame rate there.
 
 ## 6e. Glow halo (tempered weapons, evolved pets)
 
@@ -594,6 +667,49 @@ corner, and a tail on the side the speaker is. Every number is a `--bubble-*` va
 Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Editor. Look for each feature's
 `ProfilingSampler` name ("Comic Style", "Sun Shafts", "Glow Halo", "Comic Lettering").
 
+### The frame rate the game must hold (owner, 10 Oct 2026)
+
+**A locked 60 frames a second on mid to upper-mid tier PCs, and no frame under 50 (20 ms), even as a spike.** An
+average does not count: performance is judged by the slowest frame. The test is the training dummy with every buff
+up, the pet out, a Nova lit and every hotbar skill on rotation for a minute. The performance readout shows the two
+numbers that decide it, **Slowest, last minute** and **Frames under 50**, and names the machine it is running on,
+so a reading from any PC can be judged.
+
+What mid tier means here is an estimate until a reading from such a PC says otherwise: an RTX 3060 / RX 6600 with
+a Ryzen 5 5600 at 1080p on Medium, and an RTX 4060 Ti / 4070 at 1440p on High. On the development PC (RTX 5070 Ti,
+Ryzen 7 9700X), about 2.5 to 3 times that GPU and 1.5 times that CPU, the same frame has to fit in: GPU 6 ms at
+1080p Medium and 8 ms at 1440p High; main thread 9 ms steady and 13 ms on its worst frame.
+
+**Measured in the Editor, 10 Oct 2026** (the game view's render scale raised to the pixel count of each screen;
+medians of 200 frames, GPU / main thread in ms):
+
+| | 1080p Low | Medium | High | Ultra | 1440p Low | Medium | High | Ultra |
+|---|---|---|---|---|---|---|---|---|
+| Plaza, noon | 4.1 / 8.5 | 4.2 / 8.3 | 4.4 / 8.5 | 4.9 / 8.7 | 4.3 / 8.4 | 4.6 / 8.7 | 5.2 / 9.0 | 5.8 / 9.0 |
+| Thick meadow, noon | 4.2 / 9.2 | 4.7 / 9.2 | 4.8 / 9.4 | 5.2 / 9.4 | 4.8 / 9.2 | 5.2 / 9.3 | 6.1 / 9.2 | 6.0 / 9.3 |
+
+- The steady budgets hold on this PC even inside the Editor. About 4 ms of the GPU figure does not move with the
+  screen or the preset, so it is not the picture's cost: in the Editor it cannot be told apart from the Editor's own
+  drawing, and no single effect could be ranked there (each came out under about 0.7 ms, within the noise of the
+  measurement, about 0.3 ms). Main shadows at 2048 with two cascades in place of 4096 with four saved 0.8 to 1.0 ms
+  three times out of three; the grass costs about 1 ms in the thickest meadow.
+- **The slowest frame cannot be judged in the Editor.** Standing still there, with nothing happening, about 7 % of
+  frames take longer than 20 ms: the Editor's own loop (57 ms at worst in the capture) and a second Editor sharing
+  the PC. The game's own part of an idle frame is small and even: scripts 1.5 ms, culling 1.3 ms, physics 0.2 ms,
+  garbage 2.5 KB. **The check that counts is the dummy test in a build, read off the readout.**
+- What was found and fixed on the way: the HUD rebuilt itself two or three times on every cast (105 ms each: the
+  30 fps drops), now once a frame and only what is open; the portrait's camera drew every frame (0.7 ms of the main
+  thread for a 256 px picture), now 30 times a second.
+
+### The world, and what draws it (10 Oct 2026)
+
+Zone 01 is one scene: a 1 km terrain, about 8,500 mesh renderers (3.3 million triangles of static geometry),
+6,500 colliders, 270 animators, 220 particle systems, 77 lights. The **GPU Resident Drawer is on** (Instanced
+Drawing, Forward+, SRP Batcher, BatchRendererGroup variants kept) and holds about 8,400 of those renderers, the
+static-batched ones included; nearly everything in the world is drawn with Synty's Shader Graph shaders, which it
+accepts. Its GPU occlusion culling is off: the camera looks down, so little hides behind anything. A frame draws
+0.4 to 1.8 million triangles in 240 to 300 set-pass calls. Nothing in the world has an LOD group.
+
 ## 8. Roadmap
 
 - **APV lighting scenarios** (Day/Night): turn baked lamps off at noon and on at night, blended by the clock.
@@ -629,10 +745,16 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
 
 ## Changelog
 
+- **2026-10-10 (grass)**:
+  - The wind no longer makes the grass jump (wave phase rule, 6d).
+  - Grass is generated only for the ground the camera sees; characters bend it through a trample map and it stays
+    pressed for a moment behind them; the rule for Overworld and Town lawn grass is written down (6d).
 - **2026-10-10**:
   - Glow halo: embers (Perlin noise) for the 120 % Temper band; an Epic at 120 % is red (6e).
   - A Nova hides the characters, pets and effects behind it: `ActorDrawOrder`, `NovaMask.shader`, `NovaCull` (6e).
   - Performance readout (Settings ▸ Graphics): frame times, what is drawn, memory, connection. Frame Timing Stats switched on in Player Settings for it.
+  - The frame rate target is written down with what was measured against it; the readout shows the slowest frame of
+    the last minute, how many frames fell under 50 a second, and the machine (section 7).
 
 - **2026-10-08 (polish pass: interface)**:
   - One interface skin per faction, in an asset; the game's style sheets are generated from it (section 6i,

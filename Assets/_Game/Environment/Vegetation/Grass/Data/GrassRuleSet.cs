@@ -89,6 +89,21 @@ namespace KryticalNova.Vegetation.Grass
         [Tooltip("Max far tufts per grass type per camera per frame.")]
         public int farCapacityPerType = 48000;
 
+        [Header("Trample map (how characters bend the grass)")]
+        [Tooltip("Characters press a mark into a small map of the ground round the camera; blades read it. Any number of " +
+                 "characters bend grass, and it stays pressed for a moment where someone walked. Off: each blade asks the " +
+                 "eight characters nearest the camera instead.")]
+        public bool trample = true;
+        [Tooltip("GrassTrample.compute.")]
+        public ComputeShader trampleShader;
+        [Tooltip("Metres across the map. It lies a quarter of this ahead of the camera: grass bends from a quarter of it " +
+                 "behind the camera to three quarters of it ahead.")]
+        [Range(16f, 128f)] public float trampleMapMetres = 64f;
+        [Tooltip("Texels across the map. 256 over 64 m is one texel per 25 cm.")]
+        public int trampleResolution = 256;
+        [Tooltip("Seconds a mark takes to fade to about a third: how long grass stays pressed after someone has passed.")]
+        [Range(0.1f, 6f)] public float trampleSpringSeconds = 1.5f;
+
         [Header("Fill grass (cheap, not interactive)")]
         [Tooltip("Few-triangle tufts between the real clumps of biomes with a Fill Density, so the ground reads as full. " +
                  "They sway with the wind but do not bend to characters.")]

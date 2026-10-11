@@ -9,7 +9,8 @@ namespace KryticalNova.Items.Visuals
     /// floats beside its owner's head with a gentle bob. Lives unparented and is damped towards its place, so it
     /// trails a little at a run. Where it hovers follows its size (<see cref="PetPlacement"/>): its nearest edge keeps
     /// the same clear air from the owner at every growth stage, it goes round its owner on a turn instead of through
-    /// them, and it shrinks out of the way of a camera that comes too close.
+    /// them, and it shrinks out of the way of a camera that comes too close. While its owner fights it is kept calm
+    /// (<see cref="SetCombatCalm"/>): idle, walk and run only.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PetFollower : MonoBehaviour
@@ -60,6 +61,7 @@ namespace KryticalNova.Items.Visuals
         // The model's own animations, when it has an Animator; null for one that has none.
         private PetAnimations animations;
         private float animationCycleSeconds;
+        private bool combatCalm;
 
         // The pet's gait follows how fast its owner is going over the ground (0 = it has no gait).
         private const float OwnerSpeedSmoothTime = 0.12f;
@@ -272,8 +274,22 @@ namespace KryticalNova.Items.Visuals
             emissionBreathsPerSecond = Mathf.Max(0f, breathsPerSecond);
         }
 
-        /// <summary>Plays one of the pet's animations now, by the hash of its name. False when this pet has no such animation.</summary>
+        /// <summary>
+        /// Plays one of the pet's animations now, by the hash of its name. False when this pet has no such animation,
+        /// or is being kept calm.
+        /// </summary>
         public bool PlayAnimation(int nameHash) => pet != null && animations != null && animations.Play(nameHash);
+
+        /// <summary>
+        /// The owner is in a fight (true) or out of one: in a fight the pet rests, walks and runs and does nothing
+        /// else. No animation is played once, by turn or on demand, so there is no charge and none of the effects
+        /// that belong to those animations; one under way is cut short.
+        /// </summary>
+        public void SetCombatCalm(bool calm)
+        {
+            combatCalm = calm;
+            animations?.SetCalm(calm);
+        }
 
         /// <summary>
         /// How the pet carries itself: <paramref name="standsSteady"/> = it keeps its height instead of bobbing like a
@@ -331,6 +347,7 @@ namespace KryticalNova.Items.Visuals
             animations = PetAnimations.For(pet);
             animations?.SetMoveLoop(moveLoop, moveLoopWalkSpeed, moveLoopRunSpeed);
             animations?.SetRestLoop(restLoop);
+            animations?.SetCalm(combatCalm);
             FindGlowing();
             // Prop art comes at any scale (Synty drones are metres across); normalise to a companion size.
             pet.transform.localScale = Vector3.one;

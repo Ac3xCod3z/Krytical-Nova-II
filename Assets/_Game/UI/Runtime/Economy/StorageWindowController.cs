@@ -34,6 +34,8 @@ namespace KryticalNova.UI
         private int currentPage;
         private PlayerStorage storage;
         private bool initialized;
+        // Open at its NPC, as against merely shown: the layout editor shows the window to have it placed.
+        private bool open;
 
         private int pressCell = -1;
         private int pressPointerId = -1;
@@ -112,7 +114,7 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ open / close
 
-        public bool IsOpen => initialized && window.style.display == DisplayStyle.Flex;
+        public bool IsOpen => initialized && open;
 
         /// <summary>Opens the window on one of the local player's storages.</summary>
         public void Open(StorageKind kind)
@@ -158,10 +160,11 @@ namespace KryticalNova.UI
             }
         }
 
-        private void SetOpen(bool open)
+        private void SetOpen(bool shown)
         {
-            window.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
-            window.EnableInClassList("visible", open);
+            open = shown;
+            window.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+            window.EnableInClassList("visible", shown);
         }
 
         private void Update()

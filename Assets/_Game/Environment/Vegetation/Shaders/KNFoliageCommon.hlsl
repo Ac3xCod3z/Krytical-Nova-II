@@ -56,11 +56,14 @@ float3 KNFoliageDisplace(float3 positionOS, float3 positionWS)
     float radial = 1.0;
 #endif
 
+    // Every wave runs faster in more wind. That part of its phase comes summed up from the CPU (KNWind.hlsl):
+    // time x strength would jump with every gust.
+    float phase = KNWindPhase();
     // Gust waves rolling across the field along the wind, so neighbouring plants move together.
-    float wave = sin(dot(pivotWS.xz, dir) * 0.12 - t * (1.2 + 2.5 * strength) + rnd * 0.8) * 0.5 + 0.5;
+    float wave = sin(dot(pivotWS.xz, dir) * 0.12 - (1.2 * t + 2.5 * phase) + rnd * 0.8) * 0.5 + 0.5;
     float lean = strength * (0.45 + 0.55 * gust) * (0.55 + 0.45 * wave);
-    float sway = sin(t * (1.3 + 2.2 * strength) + rnd * 6.2831) * (_IdleSway + 0.25 * strength);
-    float flutter = sin(t * (7.0 + 9.0 * strength) + dot(positionWS, float3(1.7, 2.3, 1.3))) * _FlutterStrength * (0.15 + strength) * radial;
+    float sway = sin(1.3 * t + 2.2 * phase + rnd * 6.2831) * (_IdleSway + 0.25 * strength);
+    float flutter = sin(7.0 * t + 9.0 * phase + dot(positionWS, float3(1.7, 2.3, 1.3))) * _FlutterStrength * (0.15 + strength) * radial;
 
     float2 offset = dir * (lean + sway) * _WindStrength + side * sway * 0.35 * _WindStrength;
     offset *= weight * max(heightWS, 0.05);

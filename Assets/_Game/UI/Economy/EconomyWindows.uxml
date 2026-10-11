@@ -124,4 +124,22 @@
         </ui:VisualElement>
         <ui:Label text="Right-click an item to buy it  ·  The price on each item is for one" class="help" />
     </ui:VisualElement>
+
+    <!-- An NPC's shop (VendorWindowController), opened from the vendor's dialogue. The shelf scrolls: an Armorer's is long. -->
+    <ui:VisualElement name="vendor-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label name="vendor-title" text="SHOP" class="heading" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Button name="close-vendor" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:ScrollView name="vendor-scroll" class="vendor-scroll">
+            <ui:VisualElement name="vendor-grid" class="inventory-grid" />
+        </ui:ScrollView>
+        <ui:VisualElement class="row storage-creds-row">
+            <ui:Label text="YOUR CREDS" class="muted inventory-creds-label" />
+            <ui:Label name="vendor-creds" text="0" class="accent inventory-creds" />
+        </ui:VisualElement>
+        <ui:Label text="Right-click an item to buy it  ·  The price on each item is for one" class="help" />
+        <ui:Label text="To sell: right-click an item in your Pack, or drop it here" class="help" />
+    </ui:VisualElement>
 </ui:UXML>

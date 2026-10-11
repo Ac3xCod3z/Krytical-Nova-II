@@ -16,7 +16,9 @@ namespace KryticalNova.UI
     /// refuses. Opened from the Herald's dialogue and closed when the player walks away.
     /// It also gives the moment its weight on the HUD: a short charge on the button before an attempt goes, the answer
     /// landing on the level, and a banner when the player's own Ascension rises, their Nova changes or they take a
-    /// Standing rank (the banner shows with the window shut too: the GM tools raise both without it).
+    /// Standing rank (the banner shows with the window shut too: the GM tools raise both without it). The banner
+    /// stands in the HUD's milestone column (<see cref="MilestoneColumn"/>), top centre or where the player put it.
+    /// While the layout editor has the window or the column out to be placed, each shows a likeness of itself.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -32,6 +34,10 @@ namespace KryticalNova.UI
         private const string FilledClass = "filled";
         private const string ChargingClass = "charging", PopClass = "pop", NewClass = "new", SmallClass = "small";
         private const string BannerShownClass = "nova-banner--shown";
+        private const string WindowName = "herald-window";
+        /// <summary>The HUD's column for the moments of play: news, then the player's own milestones. A movable panel.</summary>
+        public const string MilestoneColumn = "milestone-banner";
+        private static readonly Color PreviewColour = new Color(1f, 0.87f, 0.51f);
         private static readonly string[] CardTones = { "rise", "hold", "slip" };
         private static readonly string[] TabNames = { "ascension", "standings" };
         private static readonly string[] Tones = { "success", "fail", "slip" };
@@ -61,6 +67,8 @@ namespace KryticalNova.UI
         private PlayerNova nova;
         private readonly ServicePanelPlacement placement = new ServicePanelPlacement();
         private bool initialized;
+        // Open at the Herald, as against merely shown: the layout editor shows the window to have it placed.
+        private bool open, previewing;
         private float nextRefresh, nextRebind;
         private float chargeEnds = -1f, bannerEnds = -1f;
         private int bannerVersion;
@@ -71,7 +79,7 @@ namespace KryticalNova.UI
         {
             if (!Application.isPlaying) return;
             root = GetComponent<UIDocument>().rootVisualElement;
-            window = root?.Q("herald-window");
+            window = root?.Q(WindowName);
             if (window == null)
             {
                 Debug.LogError("[Herald] HeraldWindow.uxml is not instanced in this UI document.", this);
@@ -106,6 +114,8 @@ namespace KryticalNova.UI
                 bannerPips = banner.Q("nova-banner-pips");
                 banner.RemoveFromClassList(BannerShownClass);
                 banner.style.display = DisplayStyle.None;
+                VisualElement column = root.Q(MilestoneColumn);
+                if (column != null && banner.parent != column) column.Add(banner);
             }
             window.Q<Button>("close-herald").clicked += Close;
             for (int i = 0; i < TabNames.Length; i++)
@@ -122,6 +132,8 @@ namespace KryticalNova.UI
 
             NpcServices.Register(ServiceIds.Herald, NpcOffer.Herald, "SPEND RENOWN", Open);
             PlayerInventory.LocalChanged += Close;
+            HudLayoutEditor.RegisterPreview(WindowName, PreviewWindow);
+            HudLayoutEditor.RegisterPreview(MilestoneColumn, PreviewBanner);
             initialized = true;
         }
 
@@ -129,6 +141,9 @@ namespace KryticalNova.UI
         {
             if (!initialized) return;
             initialized = false;
+            open = previewing = false;
+            HudLayoutEditor.UnregisterPreview(WindowName);
+            HudLayoutEditor.UnregisterPreview(MilestoneColumn);
             PlayerInventory.LocalChanged -= Close;
             NpcServices.Unregister(ServiceIds.Herald);
             Bind(null);
@@ -149,11 +164,12 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ open / close
 
-        public bool IsOpen => initialized && window.style.display == DisplayStyle.Flex;
+        public bool IsOpen => initialized && open;
 
         public void Open()
         {
             if (!initialized) return;
+            previewing = false;
             PlayerNova next = PlayerNova.Local;
             if (next == null || next.Settings == null)
             {
@@ -182,10 +198,43 @@ namespace KryticalNova.UI
             GearUIController.Instance?.SuppressWorldInput();
         }
 
-        private void SetOpen(bool open)
+        private void SetOpen(bool shown)
         {
-            window.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
-            window.EnableInClassList("visible", open);
+            open = shown;
+            window.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+            window.EnableInClassList("visible", shown);
+        }
+
+        /// <summary>
+        /// The layout editor has the window out to be placed, away from any Herald: it shows the player's own
+        /// ladders as it would there, and none of it can be pressed (the editor's frame lies over it).
+        /// </summary>
+        private void PreviewWindow(bool on)
+        {
+            if (!initialized || open) return; // open at the Herald: it is its own likeness
+            previewing = on;
+            if (!on) return;
+            PlayerNova local = PlayerNova.Local;
+            if (local == null || local.Settings == null) return;
+            if (local != nova) Bind(local);
+            BuildPips();
+            BuildTracks();
+            ShowTab(tab);
+        }
+
+        /// <summary>The layout editor has the milestone column out: a banner stands in it for as long as it does.</summary>
+        private void PreviewBanner(bool on)
+        {
+            if (!initialized || banner == null) return;
+            if (on)
+            {
+                ShowBanner("ASCENSION", "+7", "Your milestones appear here", 7, 8, true, PreviewColour, BannerShortSeconds);
+                bannerEnds = -1f; // it stays until the editor lets go of it
+                return;
+            }
+            bannerVersion++;
+            banner.RemoveFromClassList(BannerShownClass);
+            banner.style.display = DisplayStyle.None;
         }
 
         private void Update()
@@ -323,7 +372,7 @@ namespace KryticalNova.UI
 
         private void Refresh()
         {
-            if (!IsOpen || nova == null || nova.Settings == null) return;
+            if (!(open || previewing) || nova == null || nova.Settings == null) return;
             purse.text = $"RENOWN {nova.Renown:N0}   ·   CREDS {nova.Creds:N0}";
             if (tab == Tab.Ascension) RefreshAscension();
             else RefreshStandings();
@@ -502,27 +551,11 @@ namespace KryticalNova.UI
                 }).StartingIn(delay);
             }
 
-            PlaceBanner();
             banner.style.display = DisplayStyle.Flex;
-            banner.BringToFront();
+            banner.parent?.BringToFront();
             // The class goes on a frame later so the transition has a state to start from.
             banner.schedule.Execute(() => { if (version == bannerVersion) banner.AddToClassList(BannerShownClass); });
             bannerEnds = Time.unscaledTime + seconds;
-        }
-
-        /// <summary>Over the middle of the screen, or of the wider side the open window leaves free: never over the window.</summary>
-        private void PlaceBanner()
-        {
-            float screen = root.resolvedStyle.width;
-            if (float.IsNaN(screen) || screen <= 0f) return;
-            float centre = screen * 0.5f;
-            if (IsOpen)
-            {
-                Rect taken = window.worldBound;
-                float left = Mathf.Max(0f, taken.xMin), right = Mathf.Max(0f, screen - taken.xMax);
-                centre = left >= right ? left * 0.5f : taken.xMax + right * 0.5f;
-            }
-            banner.style.left = centre;
         }
 
         private void TickBanner(float now)

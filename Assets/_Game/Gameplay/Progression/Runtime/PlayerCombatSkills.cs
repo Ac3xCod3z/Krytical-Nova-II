@@ -24,6 +24,7 @@ namespace KryticalNova.Progression
         private CharacterBuffManager buffManager;
         private CharacterCombatStats combatStats;
         private ISkillAttackExecutor attackExecutor;
+        private ISkillQueue queue;
         private PlayerGmState gmState;
         private IWeaponClassSource classSource;
 
@@ -84,6 +85,7 @@ namespace KryticalNova.Progression
             if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
             if (combatStats == null) combatStats = GetComponent<CharacterCombatStats>();
             if (attackExecutor == null) attackExecutor = GetComponent<ISkillAttackExecutor>();
+            if (queue == null) queue = GetComponent<ISkillQueue>();
             if (gmState == null) gmState = GetComponent<PlayerGmState>();
             if (classSource == null) classSource = GetComponent<IWeaponClassSource>();
         }
@@ -482,36 +484,49 @@ namespace KryticalNova.Progression
         }
 
         /// <summary>An empty <paramref name="reason"/> on failure means "not yet" (still casting), not a user error.</summary>
-        public bool CanCast(SkillDefinitionSO skill, Transform target, out string reason)
+        public bool CanCast(SkillDefinitionSO skill, Transform target, out string reason) =>
+            CheckCast(skill, target, out reason) == CastCheck.Ready;
+
+        /// <summary>The attack skill waiting to be cast on this machine's own player (it is walking into reach, or still in a swing), or null.</summary>
+        public SkillDefinitionSO QueuedSkill => queue != null ? queue.Queued : null;
+
+        /// <summary>How far this skill reaches at the rank it is learned to.</summary>
+        public float RangeOf(SkillDefinitionSO skill) => skill != null ? skill.GetRange(GetRank(skill)) : 0f;
+
+        /// <summary>
+        /// What stands between a skill and its cast right now. With <see cref="CastCheck.Busy"/> the reason is empty:
+        /// "not yet" is no fault of the player's.
+        /// </summary>
+        public CastCheck CheckCast(SkillDefinitionSO skill, Transform target, out string reason)
         {
             EnsureComponents();
             reason = string.Empty;
-            if (skill == null) { reason = "No skill selected"; return false; }
+            if (skill == null) { reason = "No skill selected"; return CastCheck.Refused; }
 
             if (!IsLearned(skill))
             {
                 reason = IsLocked(skill)
                     ? $"{skill.displayName} requires a Skill Chip ({skill.acquisitionNote})."
                     : $"Learn {skill.displayName} with a skill point first.";
-                return false;
+                return CastCheck.Refused;
             }
             if (!IsInActiveKit(skill))
             {
                 reason = $"{skill.displayName} needs a {WeaponClasses.DisplayName(skill.weaponClass)} in hand.";
-                return false;
+                return CastCheck.Refused;
             }
             if (resources == null || !resources.IsAlive)
             {
                 reason = "Cannot cast while defeated.";
-                return false;
+                return CastCheck.Refused;
             }
-            if (Time.time < castRequestPendingUntil) return false;
-            if (attackExecutor != null && attackExecutor.IsCasting && !attackExecutor.CanInterruptCast(skill)) return false;
+            if (Time.time < castRequestPendingUntil) return CastCheck.Busy;
+            if (attackExecutor != null && attackExecutor.IsCasting && !attackExecutor.CanInterruptCast(skill)) return CastCheck.Busy;
             if (IsOnCooldown(skill))
             {
                 float rem = GetRemainingCooldown(skill);
                 reason = $"{skill.displayName} on cooldown ({rem:0.0}s remaining).";
-                return false;
+                return CastCheck.Refused;
             }
 
             int rank = GetRank(skill);
@@ -519,14 +534,15 @@ namespace KryticalNova.Progression
             if (!resources.CanSpendChi(chiCost))
             {
                 reason = $"Not enough Flux ({chiCost:0} Flux required, current: {resources.Chi:0}).";
-                return false;
+                return CastCheck.Refused;
             }
             if (skill.IsAttack)
             {
-                if (attackExecutor == null) { reason = "This character cannot use attack skills."; return false; }
-                if (!attackExecutor.CanExecute(skill, rank, target, out reason)) return false;
+                if (attackExecutor == null) { reason = "This character cannot use attack skills."; return CastCheck.Refused; }
+                if (!attackExecutor.CanExecute(skill, rank, target, out reason, out bool outOfReach))
+                    return outOfReach ? CastCheck.OutOfReach : CastCheck.Refused;
             }
-            return true;
+            return CastCheck.Ready;
         }
 
         /// <summary>Shows a skill-related line in the player's feedback area.</summary>
@@ -535,16 +551,26 @@ namespace KryticalNova.Progression
             if (!string.IsNullOrEmpty(message)) SkillMessage?.Invoke(message);
         }
 
-        /// <param name="quiet">Suppresses the failure message (used while a hotbar key is held to repeat).</param>
+        /// <summary>
+        /// The player asks for a skill. One that can be cast is cast. An attack that cannot be cast yet, because its
+        /// target is out of reach or a swing is still playing, is kept by the queue (<see cref="ISkillQueue"/>),
+        /// which walks in and casts it; asking for another skill lets go of the one that was waiting.
+        /// </summary>
+        /// <param name="quiet">Suppresses the failure message and the queue (used while a hotbar key is held to repeat).</param>
         public bool TryCastSkill(SkillDefinitionSO skill, out string reason, bool quiet = false)
         {
             EnsureComponents();
             Transform target = ResolveTarget(skill);
-            if (!CanCast(skill, target, out reason))
+            if (!quiet && queue != null && queue.Queued != null && queue.Queued != skill) queue.Clear();
+            CastCheck check = CheckCast(skill, target, out reason);
+            if (check != CastCheck.Ready)
             {
+                bool waits = check == CastCheck.Busy || check == CastCheck.OutOfReach;
+                if (!quiet && waits && queue != null && skill != null && queue.Offer(skill, target, check == CastCheck.OutOfReach)) return false;
                 if (!quiet && !string.IsNullOrEmpty(reason)) SkillMessage?.Invoke(reason);
                 return false;
             }
+            if (queue != null && queue.Queued != null) queue.Clear(); // this cast is the answer to whatever was waiting
 
             if (IsSpawned && !IsServer)
             {
@@ -586,6 +612,17 @@ namespace KryticalNova.Progression
             if (!IsOwner) return;
             castRequestPendingUntil = 0f;
             if (!string.IsNullOrEmpty(reason)) SkillMessage?.Invoke(reason);
+        }
+
+        /// <summary>
+        /// Where combat is decided (the server, or the offline game): casts the skill now if it can be cast. For the
+        /// queue, which has already walked the player into reach. False with the reason when it cannot.
+        /// </summary>
+        public bool ServerTryCast(SkillDefinitionSO skill, Transform target, out string reason)
+        {
+            reason = string.Empty;
+            if (IsSpawned && !IsServer) return false;
+            return CanCast(skill, target, out reason) && ServerCast(skill, target, out reason);
         }
 
         /// <summary>Runs the cast where combat is authoritative, then shows it on every peer.</summary>

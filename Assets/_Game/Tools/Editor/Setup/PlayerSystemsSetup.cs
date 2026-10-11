@@ -33,6 +33,7 @@ namespace KryticalNova.EditorTools
         public const string EmoteWheelSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/EmoteWheelSettings.asset";
         public const string SerumSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/SerumSettings.asset";
         public const string AutopilotSettingsPath = "Assets/_Game/Gameplay/Autopilot/Data/Assets/AutopilotSettings.asset";
+        public const string VendorCatalogPath = "Assets/_Game/Gameplay/Economy/Data/Assets/Vendors/VendorCatalog.asset";
         public const string SquadSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SquadSettings.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
@@ -45,6 +46,10 @@ namespace KryticalNova.EditorTools
         {
             new Row("KryticalNova.Persistence.PlayerSaveAgent"),
             new Row("KryticalNova.Persistence.PlayerHotbarMemory"),
+            // A skill asked for out of reach, or in the middle of a swing: the player walks in and casts it.
+            new Row("KryticalNova.Combat.PlayerSkillQueue"),
+            // Whether the player is in a fight, told to every machine (a pet keeps calm in one).
+            new Row("KryticalNova.Combat.PlayerCombatState"),
             new Row("KryticalNova.Pets.PlayerPet", ("catalog", "Assets/_Game/Gameplay/Pets/Data/Assets/PetCatalog.asset")),
             new Row("KryticalNova.Economy.PlayerWallet", ("settings", EconomySettingsPath)),
             new Row("KryticalNova.Items.PlayerLoot", ("dropPrefab", GameplayPrefabsSetup.WorldDropPath)),
@@ -52,6 +57,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Economy.PlayerDeepVault"),
             new Row("KryticalNova.Economy.PlayerTrade", ("settings", EconomySettingsPath)),
             new Row("KryticalNova.Economy.PlayerKiosk", ("settings", EconomySettingsPath), ("standPrefab", GameplayPrefabsSetup.KioskStandPath)),
+            // NPC shops: buying from the vendor the player stands by, selling to any.
+            new Row("KryticalNova.Economy.PlayerShopping", ("settings", EconomySettingsPath), ("vendors", VendorCatalogPath)),
             new Row("KryticalNova.Social.PlayerContacts"),
             new Row("KryticalNova.Social.PlayerCrew", ("settings", "Assets/_Game/Gameplay/Social/Data/Assets/CrewSettings.asset")),
             new Row("KryticalNova.Player.PlayerAnimancerMotor", ("pickUpDownClip", PickUpDownClip), ("pickUpUpClip", PickUpUpClip)),
