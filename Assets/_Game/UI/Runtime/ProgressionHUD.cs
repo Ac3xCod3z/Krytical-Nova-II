@@ -19,7 +19,6 @@ namespace KryticalNova.UI
         private const int RightButton = 1;
         private const int NoSlot = -1;
         private const float DragThresholdSquared = 36f;
-        private const float GhostOffset = 14f;
         private const float ProgressBarScale = 100f;
         private const string BlockingClass = "blocks-world";
         [SerializeField] private PlayerCharacterProgression progression;
@@ -124,6 +123,8 @@ namespace KryticalNova.UI
             jumpTile = root.Q("jump-drag");
             activeBuffsBar = root.Q("active-buffs-bar");
             dragGhost = root.Q<Label>("drag-ghost");
+            // What is dragged sits on the cursor, by its middle, whatever its size (the icon or the text chip).
+            if (dragGhost != null) dragGhost.style.translate = new Translate(Length.Percent(-50f), Length.Percent(-50f));
 
             BindButton("open-character", ToggleCharacter);
             BindButton("open-skills", ToggleSkills);
@@ -1428,8 +1429,8 @@ namespace KryticalNova.UI
             dragGhost.style.backgroundImage = ghostIcon != null ? new StyleBackground(ghostIcon) : StyleKeyword.Null;
 
             Vector2 local = root.Q("game-ui").WorldToLocal(position);
-            dragGhost.style.left = local.x + GhostOffset;
-            dragGhost.style.top = local.y + GhostOffset;
+            dragGhost.style.left = local.x;
+            dragGhost.style.top = local.y;
             for (int index = 0; index < slotElements.Length; index++)
                 slotElements[index].EnableInClassList("drop-target", slotElements[index].worldBound.Contains(position));
             evt.StopPropagation();

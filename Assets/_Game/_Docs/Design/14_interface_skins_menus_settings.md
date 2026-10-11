@@ -469,7 +469,7 @@ flattened into `UI/HUD/Faction/<Faction>/Art/`):
 
 A slider's value is written on its handle and an arrow at either end moves it a twentieth of its range; a switch
 shows ON and OFF side by side with the one that holds lit (a click anywhere on its line still flips it). The game
-menu wears the item card's frame. **A window's backing is 65 % solid** (owner, 9 Oct 2026: first 40 %, which was too see-through; one value per skin asset) (`windowBacking`), so the world reads faintly
+menu wears the item card's frame. **A window's backing is 35 % solid** (owner, 11 Oct 2026: "65 % see-through", with sliders; it was 65 % solid from 9 Oct and 40 % before that; one value per skin asset, `windowBacking`). The Interface page of Settings has two sliders, 20 to 100 % in steps of 5: **How solid windows are** (35 %) and **How solid the panels inside them are** (the `.kn-card` panels; 60 %, which is my own pick). A style sheet cannot take one number of a colour from a setting, so each skin sheet carries one rule a step (`FactionSkinBuilder.Opacity`) and `PanelOpacity` puts the chosen step's class (`kn-win-35`, `kn-card-60`) on every UI document's root. The world reads
 through every window as through the packs' own; the item card stays solid.
 
 ### Controls: the keyboard (10 Oct 2026)

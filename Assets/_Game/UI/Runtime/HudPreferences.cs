@@ -37,6 +37,8 @@ namespace KryticalNova.UI
         private static readonly string ChatHeightKey = Prefix + "chat.height";
         private static readonly string ChatTimestampsKey = Prefix + "chat.timestamps";
         private static readonly string ChatTextScaleKey = Prefix + "chat.textScale";
+        private static readonly string WindowOpacityKey = Prefix + "opacity.window";
+        private static readonly string CardOpacityKey = Prefix + "opacity.card";
         private static readonly string GuideTopicKey = Prefix + "guide.topic";
 
         private static string BuildPrefix()
@@ -235,6 +237,31 @@ namespace KryticalNova.UI
             }
         }
 
+        /// <summary>
+        /// How solid a window's backing is (1 = nothing shows through), and the panels inside it. In steps of
+        /// <see cref="PanelOpacity.StepPercent"/>: the faction skins carry one rule a step.
+        /// </summary>
+        public static float WindowOpacity
+        {
+            get => PanelOpacity.Snap(PlayerPrefs.GetFloat(WindowOpacityKey, PanelOpacity.DefaultWindow));
+            set => SetOpacity(WindowOpacityKey, value, WindowOpacity);
+        }
+
+        public static float CardOpacity
+        {
+            get => PanelOpacity.Snap(PlayerPrefs.GetFloat(CardOpacityKey, PanelOpacity.DefaultCard));
+            set => SetOpacity(CardOpacityKey, value, CardOpacity);
+        }
+
+        private static void SetOpacity(string key, float value, float current)
+        {
+            value = PanelOpacity.Snap(value);
+            if (Mathf.Approximately(current, value)) return;
+            PlayerPrefs.SetFloat(key, value);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
+        }
+
         public static string LayoutJson
         {
             get => PlayerPrefs.GetString(LayoutKey, string.Empty);
@@ -302,7 +329,8 @@ namespace KryticalNova.UI
             foreach (string key in new[]
                      {
                          MoveMarkerKey, TargetRingKey, ControlsHintKey, NameplatesKey, OwnNamecardKey, PetChatterKey, MinimapRotatesKey,
-                         ScreenShakeKey, MenuThemeKey, SnapToGridKey, GridSizeKey, InterfaceScaleKey, ChatTimestampsKey, ChatTextScaleKey
+                         ScreenShakeKey, MenuThemeKey, SnapToGridKey, GridSizeKey, InterfaceScaleKey, ChatTimestampsKey, ChatTextScaleKey,
+                         WindowOpacityKey, CardOpacityKey
                      })
                 PlayerPrefs.DeleteKey(key);
             PlayerPrefs.Save();

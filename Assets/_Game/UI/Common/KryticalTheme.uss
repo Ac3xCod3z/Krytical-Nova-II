@@ -202,6 +202,14 @@ Button:disabled {
     margin: 0;
     flex-shrink: 0;
 }
+/* A window's close button is moved by SyntySkin to be the window's last child, so it is drawn over the frame:
+   it stands on the corner, and the title leaves it room. */
+.window > .close {
+    position: absolute;
+    right: 18px;
+    top: 14px;
+}
+.window > .kn-header { padding-right: 32px; min-height: 26px; }
 .kn-close-glyph {
     position: absolute;
     left: 7px;

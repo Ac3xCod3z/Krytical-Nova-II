@@ -1570,7 +1570,7 @@
 
 /* ---- window chrome: the pack's own frames and ornaments ---- */
 .kn-faction-null .window, .kn-faction-null .game-menu {
-    background-color: rgba(20, 13, 22, 0.65);
+    background-color: rgba(20, 13, 22, 0.35);
     -unity-background-image-tint-color: rgba(0, 0, 0, 0);
 }
 .kn-faction-null .item-tooltip, .kn-faction-null .item-menu, .kn-faction-null .item-confirm, .kn-faction-null .amount-dialog, .kn-faction-null .player-menu {
@@ -1734,8 +1734,8 @@
 }
 .kn-faction-null .window .close {
     position: absolute;
-    right: -18px;
-    top: -16px;
+    right: -8px;
+    top: -4px;
     width: 34px;
     height: 34px;
     min-width: 34px;
@@ -1967,4 +1967,106 @@
 }
 .kn-faction-null .doll-bar--foot > .doll-bar-right {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Bar_03_BottomRight.png#SPR_DarkFantasy_Bar_03_BottomRight");
+}
+.kn-faction-null .kn-win-20 .window, .kn-faction-null .kn-win-20 .game-menu {
+    background-color: rgba(20, 13, 22, 0.2);
+}
+.kn-faction-null .kn-card-20 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.2);
+}
+.kn-faction-null .kn-win-25 .window, .kn-faction-null .kn-win-25 .game-menu {
+    background-color: rgba(20, 13, 22, 0.25);
+}
+.kn-faction-null .kn-card-25 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.25);
+}
+.kn-faction-null .kn-win-30 .window, .kn-faction-null .kn-win-30 .game-menu {
+    background-color: rgba(20, 13, 22, 0.3);
+}
+.kn-faction-null .kn-card-30 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.3);
+}
+.kn-faction-null .kn-win-35 .window, .kn-faction-null .kn-win-35 .game-menu {
+    background-color: rgba(20, 13, 22, 0.35);
+}
+.kn-faction-null .kn-card-35 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.35);
+}
+.kn-faction-null .kn-win-40 .window, .kn-faction-null .kn-win-40 .game-menu {
+    background-color: rgba(20, 13, 22, 0.4);
+}
+.kn-faction-null .kn-card-40 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.4);
+}
+.kn-faction-null .kn-win-45 .window, .kn-faction-null .kn-win-45 .game-menu {
+    background-color: rgba(20, 13, 22, 0.45);
+}
+.kn-faction-null .kn-card-45 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.45);
+}
+.kn-faction-null .kn-win-50 .window, .kn-faction-null .kn-win-50 .game-menu {
+    background-color: rgba(20, 13, 22, 0.5);
+}
+.kn-faction-null .kn-card-50 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.5);
+}
+.kn-faction-null .kn-win-55 .window, .kn-faction-null .kn-win-55 .game-menu {
+    background-color: rgba(20, 13, 22, 0.55);
+}
+.kn-faction-null .kn-card-55 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.55);
+}
+.kn-faction-null .kn-win-60 .window, .kn-faction-null .kn-win-60 .game-menu {
+    background-color: rgba(20, 13, 22, 0.6);
+}
+.kn-faction-null .kn-card-60 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.6);
+}
+.kn-faction-null .kn-win-65 .window, .kn-faction-null .kn-win-65 .game-menu {
+    background-color: rgba(20, 13, 22, 0.65);
+}
+.kn-faction-null .kn-card-65 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.65);
+}
+.kn-faction-null .kn-win-70 .window, .kn-faction-null .kn-win-70 .game-menu {
+    background-color: rgba(20, 13, 22, 0.7);
+}
+.kn-faction-null .kn-card-70 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.7);
+}
+.kn-faction-null .kn-win-75 .window, .kn-faction-null .kn-win-75 .game-menu {
+    background-color: rgba(20, 13, 22, 0.75);
+}
+.kn-faction-null .kn-card-75 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.75);
+}
+.kn-faction-null .kn-win-80 .window, .kn-faction-null .kn-win-80 .game-menu {
+    background-color: rgba(20, 13, 22, 0.8);
+}
+.kn-faction-null .kn-card-80 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.8);
+}
+.kn-faction-null .kn-win-85 .window, .kn-faction-null .kn-win-85 .game-menu {
+    background-color: rgba(20, 13, 22, 0.85);
+}
+.kn-faction-null .kn-card-85 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.85);
+}
+.kn-faction-null .kn-win-90 .window, .kn-faction-null .kn-win-90 .game-menu {
+    background-color: rgba(20, 13, 22, 0.9);
+}
+.kn-faction-null .kn-card-90 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.9);
+}
+.kn-faction-null .kn-win-95 .window, .kn-faction-null .kn-win-95 .game-menu {
+    background-color: rgba(20, 13, 22, 0.95);
+}
+.kn-faction-null .kn-card-95 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 0.95);
+}
+.kn-faction-null .kn-win-100 .window, .kn-faction-null .kn-win-100 .game-menu {
+    background-color: rgba(20, 13, 22, 1);
+}
+.kn-faction-null .kn-card-100 .kn-card {
+    -unity-background-image-tint-color: rgba(46, 30, 52, 1);
 }

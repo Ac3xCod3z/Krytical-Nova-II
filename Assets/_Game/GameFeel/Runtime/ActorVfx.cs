@@ -45,6 +45,15 @@ namespace KryticalNova.GameFeel
         private bool running, airborne;
         /// <summary>When this character last set off at a run or was ordered on while running (GameFeelPresenter.RunStarted).</summary>
         public float LastRunOrder { get; set; } = -100f;
+        /// <summary>When a run's take-off last played on this character (<see cref="RunTakeOffRules"/>).</summary>
+        public float LastRunTakeOff { get; set; } = -100f;
+        /// <summary>When a take-off last kicked the view (the player's own character only).</summary>
+        public float LastRunKick { get; set; } = -100f;
+        /// <summary>When this character last stood still: the run that follows starts from a standstill, and kicks the view.</summary>
+        public float LastStillTime { get; private set; }
+        // Slower than this over the ground (metres a second) is standing still.
+        private const float StillSpeed = 0.5f;
+        private Vector3 lastPlace;
         private TrailRenderer trail;
         private float trailUntil;
         private Color trailColour = Color.clear;
@@ -76,6 +85,23 @@ namespace KryticalNova.GameFeel
         }
 
         private void Awake() => rootHeight = ActorAnchor.RootHeight(transform);
+
+        // A character that has just appeared, or come back, has not been seen to move: it counts as standing.
+        private void OnEnable()
+        {
+            lastPlace = transform.position;
+            LastStillTime = Time.time;
+        }
+
+        private void WatchStanding()
+        {
+            Vector3 place = transform.position;
+            Vector3 moved = place - lastPlace;
+            moved.y = 0f;
+            lastPlace = place;
+            float still = StillSpeed * Time.deltaTime;
+            if (moved.sqrMagnitude <= still * still) LastStillTime = Time.time;
+        }
 
         /// <summary>A point given in metres above the soles, in this root's local space.</summary>
         private Vector3 Local(Vector3 aboveSoles) => aboveSoles - Vector3.up * rootHeight;
@@ -256,6 +282,7 @@ namespace KryticalNova.GameFeel
         private void Update()
         {
             if (trail != null && trail.emitting && Time.time >= trailUntil) trail.emitting = false;
+            WatchStanding();
             TintRunDust();
 
             if (charges.Count > 0)

@@ -306,7 +306,7 @@ namespace KryticalNova.Player
             ReportRunning();
         }
 
-        [Tooltip("Seconds before a new move order given while running may take the run off again (its smear and dust). Shorter and a burst of clicks smears over and over.")]
+        [Tooltip("Seconds before a new move order given while running may take the run off again (its smear and dust): every new destination smears, but not more often than this.")]
         [SerializeField, Min(0f)] private float runRetakeSeconds = 0.4f;
         private float lastRunTakeOff = -100f;
 
@@ -333,8 +333,8 @@ namespace KryticalNova.Player
 
         /// <summary>
         /// The player ordered another move while already running: the run takes off again (the smear and the dust
-        /// of a run's start), as it does from a standstill. Not more often than <see cref="runRetakeSeconds"/>, so
-        /// a burst of clicks is one take-off. Called on every machine by the move order.
+        /// of a run's start), as it does from a standstill. Not more often than <see cref="runRetakeSeconds"/>.
+        /// Called on every machine by the move order.
         /// </summary>
         public void RunOrderedAgain()
         {

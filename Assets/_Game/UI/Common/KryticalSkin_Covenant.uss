@@ -1570,7 +1570,7 @@
 
 /* ---- window chrome: the pack's own frames and ornaments ---- */
 .kn-faction-covenant .window, .kn-faction-covenant .game-menu {
-    background-color: rgba(22, 18, 13, 0.65);
+    background-color: rgba(22, 18, 13, 0.35);
     -unity-background-image-tint-color: rgba(0, 0, 0, 0);
 }
 .kn-faction-covenant .item-tooltip, .kn-faction-covenant .item-menu, .kn-faction-covenant .item-confirm, .kn-faction-covenant .amount-dialog, .kn-faction-covenant .player-menu {
@@ -1727,8 +1727,8 @@
 }
 .kn-faction-covenant .window .close {
     position: absolute;
-    right: -18px;
-    top: -16px;
+    right: -8px;
+    top: -4px;
     width: 34px;
     height: 34px;
     min-width: 34px;
@@ -1964,4 +1964,106 @@
 }
 .kn-faction-covenant .doll-bar--foot > .doll-bar-right {
     background-image: url("/Assets/Synty/InterfaceFantasyMenus/Sprites/FantasyMenus/SPR_FantasyMenus_Frame_Bar_01_Bottom_Right.png#SPR_FantasyMenus_Frame_Bar_01_Bottom_Right");
+}
+.kn-faction-covenant .kn-win-20 .window, .kn-faction-covenant .kn-win-20 .game-menu {
+    background-color: rgba(22, 18, 13, 0.2);
+}
+.kn-faction-covenant .kn-card-20 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.2);
+}
+.kn-faction-covenant .kn-win-25 .window, .kn-faction-covenant .kn-win-25 .game-menu {
+    background-color: rgba(22, 18, 13, 0.25);
+}
+.kn-faction-covenant .kn-card-25 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.25);
+}
+.kn-faction-covenant .kn-win-30 .window, .kn-faction-covenant .kn-win-30 .game-menu {
+    background-color: rgba(22, 18, 13, 0.3);
+}
+.kn-faction-covenant .kn-card-30 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.3);
+}
+.kn-faction-covenant .kn-win-35 .window, .kn-faction-covenant .kn-win-35 .game-menu {
+    background-color: rgba(22, 18, 13, 0.35);
+}
+.kn-faction-covenant .kn-card-35 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.35);
+}
+.kn-faction-covenant .kn-win-40 .window, .kn-faction-covenant .kn-win-40 .game-menu {
+    background-color: rgba(22, 18, 13, 0.4);
+}
+.kn-faction-covenant .kn-card-40 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.4);
+}
+.kn-faction-covenant .kn-win-45 .window, .kn-faction-covenant .kn-win-45 .game-menu {
+    background-color: rgba(22, 18, 13, 0.45);
+}
+.kn-faction-covenant .kn-card-45 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.45);
+}
+.kn-faction-covenant .kn-win-50 .window, .kn-faction-covenant .kn-win-50 .game-menu {
+    background-color: rgba(22, 18, 13, 0.5);
+}
+.kn-faction-covenant .kn-card-50 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.5);
+}
+.kn-faction-covenant .kn-win-55 .window, .kn-faction-covenant .kn-win-55 .game-menu {
+    background-color: rgba(22, 18, 13, 0.55);
+}
+.kn-faction-covenant .kn-card-55 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.55);
+}
+.kn-faction-covenant .kn-win-60 .window, .kn-faction-covenant .kn-win-60 .game-menu {
+    background-color: rgba(22, 18, 13, 0.6);
+}
+.kn-faction-covenant .kn-card-60 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.6);
+}
+.kn-faction-covenant .kn-win-65 .window, .kn-faction-covenant .kn-win-65 .game-menu {
+    background-color: rgba(22, 18, 13, 0.65);
+}
+.kn-faction-covenant .kn-card-65 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.65);
+}
+.kn-faction-covenant .kn-win-70 .window, .kn-faction-covenant .kn-win-70 .game-menu {
+    background-color: rgba(22, 18, 13, 0.7);
+}
+.kn-faction-covenant .kn-card-70 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.7);
+}
+.kn-faction-covenant .kn-win-75 .window, .kn-faction-covenant .kn-win-75 .game-menu {
+    background-color: rgba(22, 18, 13, 0.75);
+}
+.kn-faction-covenant .kn-card-75 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.75);
+}
+.kn-faction-covenant .kn-win-80 .window, .kn-faction-covenant .kn-win-80 .game-menu {
+    background-color: rgba(22, 18, 13, 0.8);
+}
+.kn-faction-covenant .kn-card-80 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.8);
+}
+.kn-faction-covenant .kn-win-85 .window, .kn-faction-covenant .kn-win-85 .game-menu {
+    background-color: rgba(22, 18, 13, 0.85);
+}
+.kn-faction-covenant .kn-card-85 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.85);
+}
+.kn-faction-covenant .kn-win-90 .window, .kn-faction-covenant .kn-win-90 .game-menu {
+    background-color: rgba(22, 18, 13, 0.9);
+}
+.kn-faction-covenant .kn-card-90 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.9);
+}
+.kn-faction-covenant .kn-win-95 .window, .kn-faction-covenant .kn-win-95 .game-menu {
+    background-color: rgba(22, 18, 13, 0.95);
+}
+.kn-faction-covenant .kn-card-95 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 0.95);
+}
+.kn-faction-covenant .kn-win-100 .window, .kn-faction-covenant .kn-win-100 .game-menu {
+    background-color: rgba(22, 18, 13, 1);
+}
+.kn-faction-covenant .kn-card-100 .kn-card {
+    -unity-background-image-tint-color: rgba(52, 42, 30, 1);
 }

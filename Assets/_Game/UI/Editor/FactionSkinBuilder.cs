@@ -174,7 +174,7 @@ namespace KryticalNova.EditorTools
                 rules += count;
             }
             var chrome = new StringBuilder();
-            int chromeRules = Chrome(asset, skin.cssClass, chrome) + Design(asset, skin.cssClass, chrome);
+            int chromeRules = Chrome(asset, skin.cssClass, chrome) + Design(asset, skin.cssClass, chrome) + Opacity(asset, skin, chrome);
             if (chromeRules > 0)
             {
                 output.AppendLine();
@@ -641,7 +641,9 @@ namespace KryticalNova.EditorTools
                 // The faction's dark tone, darker still.
                 Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
                 Color backing = Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.1f), 0.085f);
-                backing.a = 0.65f; // the world reads faintly through a window (owner, 9 Oct 2026: 0.4 was too see-through); set per skin on its asset
+                // The world shows through a window (owner, 11 Oct 2026: 65 % see-through, and a slider on the Interface
+                // page: PanelOpacity). Set per skin on its asset; this is what a player who never moved the slider sees.
+                backing.a = PanelOpacity.DefaultWindow;
                 skin.windowBacking = backing;
                 EditorUtility.SetDirty(skin);
                 AssetDatabase.SaveAssetIfDirty(skin);
@@ -871,8 +873,9 @@ namespace KryticalNova.EditorTools
             }
             if (asset.closeButton != null)
             {
-                // A round button on the page's corner, over the frame.
-                Rule(".window .close", "position: absolute;", "right: -18px;", "top: -16px;", "width: 34px;", "height: 34px;", "min-width: 34px;", "min-height: 34px;",
+                // A round button on the page's corner, over the frame: SyntySkin makes it the window's last child,
+                // so these are measured from the window's own corner.
+                Rule(".window .close", "position: absolute;", "right: -8px;", "top: -4px;", "width: 34px;", "height: 34px;", "min-width: 34px;", "min-height: 34px;",
                     "margin: 0;", "padding: 0;", "align-items: center;", "justify-content: center;", $"background-image: {UrlOf(asset.closeButton)};",
                     "-unity-background-image-tint-color: rgb(225, 225, 225);", "-unity-slice-scale: 1px;", "-unity-background-scale-mode: scale-to-fit;");
                 Rule(".window .close:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);", "scale: 1.1 1.1;");
@@ -1087,6 +1090,49 @@ namespace KryticalNova.EditorTools
             count += FrameRule(output, cssClass, ".game-menu", asset.cardFrame, asset.cardFrameBorder, asset.cardFrameOutset);
             count += CrownRule(output, cssClass, SyntySkin.CrownBackClass, asset.crownBack, asset.crownBackSize, asset.crownBackRise);
             count += CrownRule(output, cssClass, SyntySkin.CrownClass, asset.crown, asset.crownSize, asset.crownRise);
+            return count;
+        }
+
+        private static readonly Regex CardTint = new Regex(@"\.kn-card\s*\{[^}]*?-unity-background-image-tint-color:\s*(rgba?\([^)]*\))");
+
+        /// <summary>
+        /// One rule for every step of the two opacity sliders of the Interface page (<see cref="PanelOpacity"/>): the
+        /// window's backing and the tint of the panels inside it, in this skin's colours, as solid as the step says.
+        /// PanelOpacity puts the class of the chosen step on each UI document's root, under the faction's class.
+        /// </summary>
+        private static int Opacity(UiSkin asset, Skin skin, StringBuilder output)
+        {
+            int count = 0;
+            // The panels' colour is the base sheet's, moved into the skin's palette like every other colour.
+            Match baseTint = File.Exists(BaseSheets[0]) ? CardTint.Match(Comment.Replace(File.ReadAllText(BaseSheets[0]), string.Empty)) : Match.Empty;
+            Match card = Match.Empty;
+            if (baseTint.Success)
+            {
+                float ratio = 1f;
+                card = Rgb.Match(ConvertValue("-unity-background-image-tint-color", baseTint.Groups[1].Value, skin, ref ratio, !skin.recolour));
+            }
+            else Debug.LogWarning($"[UI] {BaseSheets[0]} has no .kn-card tint: the panels inside windows get no opacity steps.");
+
+            Color32 backing = asset.windowBacking;
+            for (int percent = PanelOpacity.MinPercent; percent <= PanelOpacity.MaxPercent; percent += PanelOpacity.StepPercent)
+            {
+                string alpha = (percent / 100f).ToString("0.##", CultureInfo.InvariantCulture);
+                if (asset.windowBacking.a > 0f)
+                {
+                    string step = $".{skin.cssClass} .{PanelOpacity.WindowClass(percent)}";
+                    output.AppendLine($"{step} .window, {step} .game-menu {{");
+                    output.AppendLine($"    background-color: rgba({backing.r}, {backing.g}, {backing.b}, {alpha});");
+                    output.AppendLine("}");
+                    count++;
+                }
+                if (card.Success)
+                {
+                    output.AppendLine($".{skin.cssClass} .{PanelOpacity.CardClass(percent)} .kn-card {{");
+                    output.AppendLine($"    -unity-background-image-tint-color: rgba({card.Groups[1].Value}, {card.Groups[2].Value}, {card.Groups[3].Value}, {alpha});");
+                    output.AppendLine("}");
+                    count++;
+                }
+            }
             return count;
         }
 

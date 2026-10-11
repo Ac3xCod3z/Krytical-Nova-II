@@ -171,6 +171,55 @@ namespace KryticalNova.Tests
             Assert.AreEqual(kind, smear.Kind);
         }
 
+        // ------------------------------------------------------------------ when a run takes off
+
+        private const float Repeat = 0.4f;
+        private const float Rest = 1.5f;
+        private const float Quiet = 1f;
+
+        [Test]
+        public void TakeOff_PlaysOnEveryRunFromAStandstill_NotOnlyTheFirst()
+        {
+            // Stop and go, a second apart: every start smears and kicks the view.
+            float lastOrder = -100f, lastTakeOff = -100f, lastKick = -100f;
+            foreach (float stood in new[] { 10f, 11f, 12f, 13f })
+            {
+                float start = stood + 0.05f;
+                Assert.IsTrue(RunTakeOffRules.TakesOff(start, lastTakeOff, Repeat), $"the smear of the run that starts at {start}");
+                Assert.IsTrue(RunTakeOffRules.KicksView(start, stood, lastOrder, lastKick, Rest, Quiet), $"the kick of the run that starts at {start}");
+                lastOrder = lastTakeOff = lastKick = start;
+            }
+        }
+
+        [Test]
+        public void TakeOff_PlaysForANewDestinationChosenWhileRunning()
+        {
+            // Running since 10; a new destination every 0.6 s: each smears, none kicks the view again.
+            const float stood = 9.9f, start = 10f;
+            float lastOrder = start, lastTakeOff = start;
+            for (float order = start + 0.6f; order < start + 4f; order += 0.6f)
+            {
+                Assert.IsTrue(RunTakeOffRules.TakesOff(order, lastTakeOff, Repeat), $"the smear of the order at {order}");
+                Assert.IsFalse(RunTakeOffRules.KicksView(order, stood, lastOrder, start, Rest, Quiet), $"the kick of the order at {order}");
+                lastOrder = lastTakeOff = order;
+            }
+        }
+
+        [Test]
+        public void TakeOff_IsNotRepeatedWithinAMoment()
+        {
+            Assert.IsFalse(RunTakeOffRules.TakesOff(10f + Repeat * 0.5f, 10f, Repeat));
+            Assert.IsTrue(RunTakeOffRules.TakesOff(10f + Repeat * 1.1f, 10f, Repeat));
+        }
+
+        [Test]
+        public void ViewKick_ComesBackAfterAQuietSpell_WithoutAStop()
+        {
+            const float stood = 10f, start = 10.4f;
+            Assert.IsFalse(RunTakeOffRules.KicksView(start + Quiet * 0.9f, stood, start, start, Rest, Quiet));
+            Assert.IsTrue(RunTakeOffRules.KicksView(start + 6f, stood, start + 6f - Quiet * 1.1f, start, Rest, Quiet));
+        }
+
         // ------------------------------------------------------------------ the slow motion of a critical kill
 
         private static void CritKillSlow(out float slow, out float catchUp, out float rate)

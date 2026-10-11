@@ -519,11 +519,16 @@ up to 29 m/s at rank 20), never for a walk. `GameFeelBuilder` puts the feedbacks
 Rebuild Smear Feel** does only that (and makes the settings asset when it is missing); **Build Game Feel** and
 **Rebuild Death Feel** include it.
 
-**One take-off for a burst of orders (10 Oct 2026).** A new move order given while running, and a run that stops and
-starts again at once, both ask for the take-off again. `GameFeelPresenter.RunStarted` plays it (dust, smear, and on the
-player's own screen the 4 degree kick of the view) only when `runTakeOffQuietSeconds` (1 s) have passed with no order
-and no restart for that character. Before, clicking about quickly kicked the view and smeared the body every 0.4 s:
-measured over 12 s of rapid clicks the field of view was changing for a quarter to a third of all frames.
+**A take-off for every start and every new destination (11 Oct 2026).** A run that starts, and a new move order given
+while running, both ask for the take-off. `GameFeelPresenter.RunStarted` plays its dust and smear each time, at least
+`runTakeOffRepeatSeconds` (0.4 s) apart (`RunTakeOffRules.TakesOff`): the owner wants the smear on every new
+destination, also one chosen mid-run. The 4 degree kick of the view on the player's own screen is rarer
+(`RunTakeOffRules.KicksView`): once for a run from a standstill (`ActorVfx.LastStillTime`, within
+`runTakeOffRestSeconds`), and again only after `runTakeOffQuietSeconds` (1 s) with no order. Before 10 Oct clicking
+about quickly kicked the view every 0.4 s (the field of view was changing for a quarter to a third of all frames); from
+10 to 11 Oct one sliding 1 s window gated the smear as well, and since every order restarted it, a player who kept
+clicking saw the smear on the first take-off only. Measured after: 12 new destinations 0.43 s apart, 11 of them
+mid-run, gave 12 smears and one kick; five stop-and-go runs a second apart gave five of each.
 
 **A run ends on its point at the body's own height (10 Oct 2026).** At the end of a fast run the body is placed on the
 destination (`PointAndClickPlayer.PlaceOn`). `NavMeshAgent.Warp` alone puts the root on the NavMesh point, the agent's

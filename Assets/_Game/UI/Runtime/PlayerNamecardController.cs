@@ -16,8 +16,9 @@ namespace KryticalNova.UI
     /// faction's colour, and their Crew. Who sees whose is <see cref="NamecardRules"/>: your own (a setting), your
     /// faction always, another faction only while that player stands on neutral ground. It sits above the head and
     /// rises to clear a Nova. Everything on it is already replicated to every machine; nothing is sent for it.
-    /// While the HUD wears a faction's art the card is that faction's own (<see cref="PlayerCardView"/>, on the HUD
-    /// pieces' canvas), with the level in the pack's badge and the pack's health bar on the players whose health is
+    /// While the HUD wears a faction's art a card is the art of the faction of the player it names, not of who
+    /// reads it (<see cref="PlayerCardView"/>, on the HUD pieces' canvas): a player of another faction met on neutral
+    /// ground is named in their own faction's card. The level is in the pack's badge, and the pack's health bar is on the players whose health is
     /// the viewer's business: an enemy, a Callout opponent, a Squad member, the target. With no faction art it is
     /// the plain card drawn here.
     /// </summary>
@@ -53,6 +54,7 @@ namespace KryticalNova.UI
             public float Height = float.NaN;
             public string NameText, StandingText, CrewText;
             public FactionId Faction = (FactionId)255;
+            public FactionId ArtFaction; // whose art the card was made in
             public bool Duelling;
         }
 
@@ -119,6 +121,13 @@ namespace KryticalNova.UI
                 {
                     card = Create(player);
                     cards.Add(player, card);
+                }
+                // A player's faction is known a moment after the player appears: the card is made again in its art.
+                else if (card.Identity != null && card.Identity.Faction != card.ArtFaction)
+                {
+                    Remove(card);
+                    card = Create(player);
+                    cards[player] = card;
                 }
 
                 // The card rides on the body's own place; only its height follows the head, eased, so a head that
@@ -204,8 +213,11 @@ namespace KryticalNova.UI
                 Party = player.GetComponent<PlayerParty>(),
                 Body = player.GetComponent<IDamageable>(),
             };
-            // The faction's own card while the HUD wears a faction's art.
-            PlayerCardView art = HudChrome.ShownKit != null ? HudChrome.ShownKit.playerCard : null;
+            // The card of the player's own faction while the HUD wears a faction's art.
+            card.ArtFaction = card.Identity != null ? card.Identity.Faction : FactionId.None;
+            FactionHudKit kit = HudChrome.KitFor(card.ArtFaction);
+            PlayerCardView art = kit != null ? kit.playerCard : null;
+            if (art == null && HudChrome.ShownKit != null) art = HudChrome.ShownKit.playerCard;
             if (art != null && HudChrome.WorldLayer != null)
             {
                 card.View = Instantiate(art, HudChrome.WorldLayer, false);

@@ -37,7 +37,7 @@ MonoBehaviour:
   arrowIcon: {fileID: 21300000, guid: b48ef4feb994c544e97515d427184ac5, type: 3}
   softBacking: {fileID: 21300000, guid: f9105e4a9e0bec64eb45ff11305570c5, type: 3}
   techPatterns: 0
-  windowBacking: {r: 0.085, g: 0.06972834, b: 0.052275002, a: 0.65}
+  windowBacking: {r: 0.085, g: 0.06972834, b: 0.052275002, a: 0.35}
   windowFrame: {fileID: 21300000, guid: a8e3d345e9283604799176ff643765e0, type: 3}
   windowFrameBorder: 20
   windowFrameOutset: 6

@@ -15,6 +15,7 @@ namespace KryticalNova.UI
         public const string CrownClass = "kn-crown";
         public const string CrownBackClass = "kn-crown-back";
         private const string WindowClass = "window";
+        private const string CloseClass = "close";
         /// <summary>The pack's ornate frame over a card (a section of a page, a skill's card).</summary>
         public const string CardFrameClass = "kn-card-frame";
         /// <summary>The pack's slot frame over a skill's tile.</summary>
@@ -70,7 +71,19 @@ namespace KryticalNova.UI
             if (withPip) target.hierarchy.Add(CreateLayer(PipClass));
             if (target.ClassListContains(WindowClass)) target.hierarchy.Add(CreateLayer(CrownBackClass));
             target.hierarchy.Add(CreateLayer(FrameClass));
-            if (target.ClassListContains(WindowClass)) target.hierarchy.Add(CreateLayer(CrownClass));
+            if (!target.ClassListContains(WindowClass)) return;
+            target.hierarchy.Add(CreateLayer(CrownClass));
+            LiftClose(target);
+        }
+
+        // A window's close button stands on its corner, where the frame is drawn. Things are painted in the order
+        // they are in, so the button goes after the frame and the crown: it is the window's own child from here
+        // on, and keeps its name.
+        private static void LiftClose(VisualElement window)
+        {
+            Button close = window.Q<Button>(className: CloseClass);
+            if (close == null || close.hierarchy.parent == window) return;
+            window.hierarchy.Add(close);
         }
 
         private static VisualElement CreateLayer(string className)
