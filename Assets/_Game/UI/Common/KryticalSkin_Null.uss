@@ -220,6 +220,44 @@
 .kn-faction-null .vital-breakdown {
     font-size: 12.8px;
 }
+.kn-faction-null .skill-tree-title {
+    font-size: 15.36px;
+}
+.kn-faction-null .skill-tree-tier {
+    font-size: 12.8px;
+    color: rgb(174, 154, 180);
+}
+.kn-faction-null .skill-node-tile {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_02.png#SPR_HUD_DarkFantasy_Box_Small_Parchment_02");
+    -unity-background-image-tint-color: rgb(76, 6, 10);
+    -unity-slice-scale: 0.17px;
+}
+.kn-faction-null .skill-node-rank {
+    font-size: 12.8px;
+    background-color: rgba(16, 10, 18, 0.86);
+}
+.kn-faction-null .skill-node-name {
+    font-size: 11.52px;
+    color: rgb(231, 217, 236);
+}
+.kn-faction-null .skill-node.unlearned .skill-node-tile {
+    -unity-background-image-tint-color: rgb(47, 33, 52);
+}
+.kn-faction-null .skill-node.too-low .skill-node-name {
+    color: rgb(149, 134, 154);
+}
+.kn-faction-null .skill-node.locked .skill-node-rank {
+    color: rgb(167, 120, 248);
+}
+.kn-faction-null .skill-node.can-upgrade .skill-node-rank {
+    color: rgb(238, 96, 103);
+}
+.kn-faction-null .skill-node.can-upgrade.unlearned .skill-node-tile {
+    -unity-background-image-tint-color: rgb(62, 7, 10);
+}
+.kn-faction-null .skill-node.selected .skill-node-tile {
+    -unity-background-image-tint-color: rgb(138, 13, 20);
+}
 .kn-faction-null .skill-token {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_02.png#SPR_HUD_DarkFantasy_Box_Small_Parchment_02");
     -unity-background-image-tint-color: rgb(76, 6, 10);
