@@ -155,6 +155,9 @@ def main():
     ap.add_argument("--actions", default="all")
     ap.add_argument("--own-materials", action="store_true",
                     help="keep the model's own materials and texture (a pet that was not put on the swatch)")
+    ap.add_argument("--keep-materials", default="",
+                    help='materials that stay as they are beside the one swatch material, by the end of their names, '
+                         'comma separated: "Ring Glow,Mark,Mark Red" (parts that glow or have a colour of their own)')
     a = ap.parse_args(kn.tool_args())
 
     name = a.root or bpy.context.scene.get("kn_pet_root")
@@ -171,15 +174,25 @@ def main():
 
     palette = bpy.context.scene.get("kn_palette")
     # Everything on the shared swatch uses one material, so Unity can share it across pets and props.
-    mat_name = "M_KN_Swatch" if palette and Path(palette).name == "T_KN_Swatch.png" else "M_" + name
+    pages = {"T_KN_Swatch.png": "M_KN_Swatch", "T_KN_Swatch_Synty.png": "M_KN_Swatch_Synty"}
+    mat_name = pages.get(Path(palette).name, "M_" + name) if palette else "M_" + name
+    keep = [k.strip() for k in a.keep_materials.split(",") if k.strip()]
     mat = bpy.data.materials.get(mat_name) or bpy.data.materials.new(mat_name)
     if palette and Path(palette).is_file():
         mat = kn.preview_material(palette, name=mat_name, uv_layer="map1")
     swapped = []
     for o in ([] if a.own_materials else meshes):
         swapped.append((o, [s.material for s in o.material_slots], [p.material_index for p in o.data.polygons]))
+        kept = [m for m in swapped[-1][1] if m is not None and any(m.name.endswith(k) for k in keep)]
+        new_index = {m.name: i + 1 for i, m in enumerate(kept)}
+        was_named = [m.name if m is not None else "" for m in swapped[-1][1]]
+        to = [new_index.get(was_named[i], 0) if i < len(was_named) else 0 for i in swapped[-1][2]]
         o.data.materials.clear()
         o.data.materials.append(mat)
+        for m in kept:
+            o.data.materials.append(m)
+        o.data.polygons.foreach_set("material_index", to)
+        o.data.update()
 
     out_dir = Path(a.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

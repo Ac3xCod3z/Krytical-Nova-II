@@ -67,6 +67,8 @@ def main():
     ap.add_argument("--max-tris", type=int, default=2500)
     ap.add_argument("--assign", help='choose swatch colours by hand: "Colour 01=Fur 03,Colour 02=Orange Bold 5" '
                                      "(the material name may be given without the object's name in front)")
+    ap.add_argument("--swatch", choices=("kn", "synty"), default="kn",
+                    help="which page of the shared swatch to match colours to: ours, or Synty's own sci-fi colours")
     ap.add_argument("--own-palette", action="store_true",
                     help="bake this model's own palette texture instead of using the shared KN swatch")
     a = ap.parse_args(kn.tool_args())
@@ -183,7 +185,7 @@ def finish_look(a, meshes, root, problems, warnings, rig):
 
     # 4. Colour. With the shared KN swatch each material goes to the swatch cell closest to its colour, and
     #    every model uses the one swatch texture. Otherwise one cell per material in a palette of its own.
-    swatch = None if a.own_palette else kn.load_swatch()
+    swatch = None if a.own_palette else kn.load_swatch(a.swatch)
     chosen = {}
     if a.assign:
         if not swatch:

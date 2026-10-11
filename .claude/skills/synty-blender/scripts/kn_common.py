@@ -204,16 +204,19 @@ def swatch_dir():
     return project_root() / "Assets" / "_ArtSource" / "Blender~" / "Swatch"
 
 
-def load_swatch():
-    """The Krytical Nova swatch table (see make_swatch.py), or None if it has not been made."""
-    path = swatch_dir() / "KN_Swatch.json"
+def load_swatch(page="kn"):
+    """The Krytical Nova swatch table (see make_swatch.py), or None if it has not been made.
+    page "synty" is the second page: Synty's own sci-fi colours."""
+    tag = "_Synty" if page == "synty" else ""
+    path = swatch_dir() / f"KN_Swatch{tag}.json"
     if not path.is_file():
         return None
     with open(path, encoding="utf-8") as fh:
         data = json.load(fh)
     for c in data["cells"]:
         c["rgb"] = tuple(int(c["colour"][i:i + 2], 16) / 255 for i in (1, 3, 5))
-    data["image"] = str(swatch_dir() / "T_KN_Swatch.png")
+    data["image"] = str(swatch_dir() / f"T_KN_Swatch{tag}.png")
+    data["page"] = page
     return data
 
 
@@ -227,8 +230,9 @@ def nearest_swatch(swatch, linear_rgb, glow=False, metal=False):
     glow and metal cells, and plain ones never do, because those cells also carry emission / metalness."""
     r, g, b = (linear_to_srgb(x) for x in linear_rgb[:3])
     best, best_d = None, 1e9
+    plain_page = swatch.get("page") == "synty"            # that page has no glow or metal cells: everything matches as a plain colour
     for c in swatch["cells"]:
-        if c["glow"] != glow or c["metal"] != metal:
+        if not plain_page and (c["glow"] != glow or c["metal"] != metal):
             continue
         cr, cg, cb = c["rgb"]
         mean = (r + cr) / 2

@@ -1,0 +1,2023 @@
+{
+ "_about": "The Synty page of the Krytical Nova swatch: Synty's POLYGON Sci-Fi City colours. Made by make_swatch.py from assets/synty_scifi_palette.json. v counts from the bottom.",
+ "grid": 16,
+ "cell_px": 4,
+ "cells": [
+  {
+   "name": "Synty 001",
+   "u": 0,
+   "v": 15,
+   "colour": "#000000",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 002",
+   "u": 1,
+   "v": 15,
+   "colour": "#010101",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 003",
+   "u": 2,
+   "v": 15,
+   "colour": "#131213",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 004",
+   "u": 3,
+   "v": 15,
+   "colour": "#1E1F20",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 005",
+   "u": 4,
+   "v": 15,
+   "colour": "#211E1F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 006",
+   "u": 5,
+   "v": 15,
+   "colour": "#21201E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 007",
+   "u": 6,
+   "v": 15,
+   "colour": "#23201F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 008",
+   "u": 7,
+   "v": 15,
+   "colour": "#232323",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 009",
+   "u": 8,
+   "v": 15,
+   "colour": "#28282A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 010",
+   "u": 9,
+   "v": 15,
+   "colour": "#2C2C2C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 011",
+   "u": 10,
+   "v": 15,
+   "colour": "#312F33",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 012",
+   "u": 11,
+   "v": 15,
+   "colour": "#353837",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 013",
+   "u": 12,
+   "v": 15,
+   "colour": "#3D3639",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 014",
+   "u": 13,
+   "v": 15,
+   "colour": "#3D3E3E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 015",
+   "u": 14,
+   "v": 15,
+   "colour": "#434645",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 016",
+   "u": 15,
+   "v": 15,
+   "colour": "#474747",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 017",
+   "u": 0,
+   "v": 14,
+   "colour": "#47474B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 018",
+   "u": 1,
+   "v": 14,
+   "colour": "#4C4C4B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 019",
+   "u": 2,
+   "v": 14,
+   "colour": "#46494E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 020",
+   "u": 3,
+   "v": 14,
+   "colour": "#4E4E4E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 021",
+   "u": 4,
+   "v": 14,
+   "colour": "#4C4D4F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 022",
+   "u": 5,
+   "v": 14,
+   "colour": "#4D4F52",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 023",
+   "u": 6,
+   "v": 14,
+   "colour": "#5C5D5C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 024",
+   "u": 7,
+   "v": 14,
+   "colour": "#605B56",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 025",
+   "u": 8,
+   "v": 14,
+   "colour": "#5D5D62",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 026",
+   "u": 9,
+   "v": 14,
+   "colour": "#616569",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 027",
+   "u": 10,
+   "v": 14,
+   "colour": "#5E626A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 028",
+   "u": 11,
+   "v": 14,
+   "colour": "#6A6A6A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 029",
+   "u": 12,
+   "v": 14,
+   "colour": "#6D6C6B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 030",
+   "u": 13,
+   "v": 14,
+   "colour": "#6F6F6F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 031",
+   "u": 14,
+   "v": 14,
+   "colour": "#717171",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 032",
+   "u": 15,
+   "v": 14,
+   "colour": "#717170",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 033",
+   "u": 0,
+   "v": 13,
+   "colour": "#737374",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 034",
+   "u": 1,
+   "v": 13,
+   "colour": "#74716B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 035",
+   "u": 2,
+   "v": 13,
+   "colour": "#757575",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 036",
+   "u": 3,
+   "v": 13,
+   "colour": "#787878",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 037",
+   "u": 4,
+   "v": 13,
+   "colour": "#797876",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 038",
+   "u": 5,
+   "v": 13,
+   "colour": "#797674",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 039",
+   "u": 6,
+   "v": 13,
+   "colour": "#757579",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 040",
+   "u": 7,
+   "v": 13,
+   "colour": "#797979",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 041",
+   "u": 8,
+   "v": 13,
+   "colour": "#7A7A7A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 042",
+   "u": 9,
+   "v": 13,
+   "colour": "#75767A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 043",
+   "u": 10,
+   "v": 13,
+   "colour": "#76787B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 044",
+   "u": 11,
+   "v": 13,
+   "colour": "#7B7B7B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 045",
+   "u": 12,
+   "v": 13,
+   "colour": "#79787B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 046",
+   "u": 13,
+   "v": 13,
+   "colour": "#7A797C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 047",
+   "u": 14,
+   "v": 13,
+   "colour": "#7A7D71",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 048",
+   "u": 15,
+   "v": 13,
+   "colour": "#7B7A7D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 049",
+   "u": 0,
+   "v": 12,
+   "colour": "#7E7E7E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 050",
+   "u": 1,
+   "v": 12,
+   "colour": "#7F7F7F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 051",
+   "u": 2,
+   "v": 12,
+   "colour": "#7A7D81",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 052",
+   "u": 3,
+   "v": 12,
+   "colour": "#828282",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 053",
+   "u": 4,
+   "v": 12,
+   "colour": "#848484",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 054",
+   "u": 5,
+   "v": 12,
+   "colour": "#89847C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 055",
+   "u": 6,
+   "v": 12,
+   "colour": "#87898B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 056",
+   "u": 7,
+   "v": 12,
+   "colour": "#8B8782",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 057",
+   "u": 8,
+   "v": 12,
+   "colour": "#938F88",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 058",
+   "u": 9,
+   "v": 12,
+   "colour": "#949694",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 059",
+   "u": 10,
+   "v": 12,
+   "colour": "#9B9B9B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 060",
+   "u": 11,
+   "v": 12,
+   "colour": "#979C9D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 061",
+   "u": 12,
+   "v": 12,
+   "colour": "#9F9F9F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 062",
+   "u": 13,
+   "v": 12,
+   "colour": "#A1A1A1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 063",
+   "u": 14,
+   "v": 12,
+   "colour": "#9D9DA1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 064",
+   "u": 15,
+   "v": 12,
+   "colour": "#A1A6A2",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 065",
+   "u": 0,
+   "v": 11,
+   "colour": "#A6A6A6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 066",
+   "u": 1,
+   "v": 11,
+   "colour": "#ACACAC",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 067",
+   "u": 2,
+   "v": 11,
+   "colour": "#ADADAD",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 068",
+   "u": 3,
+   "v": 11,
+   "colour": "#AEAEAE",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 069",
+   "u": 4,
+   "v": 11,
+   "colour": "#A9ACB2",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 070",
+   "u": 5,
+   "v": 11,
+   "colour": "#B3B1B0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 071",
+   "u": 6,
+   "v": 11,
+   "colour": "#ACAFB7",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 072",
+   "u": 7,
+   "v": 11,
+   "colour": "#B6BDC1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 073",
+   "u": 8,
+   "v": 11,
+   "colour": "#CBC8C0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 074",
+   "u": 9,
+   "v": 11,
+   "colour": "#CCCCCC",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 075",
+   "u": 10,
+   "v": 11,
+   "colour": "#CCD1CE",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 076",
+   "u": 11,
+   "v": 11,
+   "colour": "#CACED4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 077",
+   "u": 12,
+   "v": 11,
+   "colour": "#DED9DC",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 078",
+   "u": 13,
+   "v": 11,
+   "colour": "#E3EAED",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 079",
+   "u": 14,
+   "v": 11,
+   "colour": "#FBFBFB",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 080",
+   "u": 15,
+   "v": 11,
+   "colour": "#FFFFFF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 081",
+   "u": 0,
+   "v": 10,
+   "colour": "#E2F6FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 082",
+   "u": 1,
+   "v": 10,
+   "colour": "#211E1B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 083",
+   "u": 2,
+   "v": 10,
+   "colour": "#261816",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 084",
+   "u": 3,
+   "v": 10,
+   "colour": "#45302B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 085",
+   "u": 4,
+   "v": 10,
+   "colour": "#4F2A21",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 086",
+   "u": 5,
+   "v": 10,
+   "colour": "#56443F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 087",
+   "u": 6,
+   "v": 10,
+   "colour": "#584E47",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 088",
+   "u": 7,
+   "v": 10,
+   "colour": "#644D47",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 089",
+   "u": 8,
+   "v": 10,
+   "colour": "#69625C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 090",
+   "u": 9,
+   "v": 10,
+   "colour": "#6B473E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 091",
+   "u": 10,
+   "v": 10,
+   "colour": "#7B6258",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 092",
+   "u": 11,
+   "v": 10,
+   "colour": "#7B554E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 093",
+   "u": 12,
+   "v": 10,
+   "colour": "#842E21",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 094",
+   "u": 13,
+   "v": 10,
+   "colour": "#924933",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 095",
+   "u": 14,
+   "v": 10,
+   "colour": "#95653A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 096",
+   "u": 15,
+   "v": 10,
+   "colour": "#9C4E3F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 097",
+   "u": 0,
+   "v": 9,
+   "colour": "#A87542",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 098",
+   "u": 1,
+   "v": 9,
+   "colour": "#AB9C90",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 099",
+   "u": 2,
+   "v": 9,
+   "colour": "#B38252",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 100",
+   "u": 3,
+   "v": 9,
+   "colour": "#BE0000",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 101",
+   "u": 4,
+   "v": 9,
+   "colour": "#CD5652",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 102",
+   "u": 5,
+   "v": 9,
+   "colour": "#DCC7B4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 103",
+   "u": 6,
+   "v": 9,
+   "colour": "#DEB1A0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 104",
+   "u": 7,
+   "v": 9,
+   "colour": "#E29B7C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 105",
+   "u": 8,
+   "v": 9,
+   "colour": "#EA7668",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 106",
+   "u": 9,
+   "v": 9,
+   "colour": "#EB7222",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 107",
+   "u": 10,
+   "v": 9,
+   "colour": "#EE3900",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 108",
+   "u": 11,
+   "v": 9,
+   "colour": "#EF877B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 109",
+   "u": 12,
+   "v": 9,
+   "colour": "#F13900",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 110",
+   "u": 13,
+   "v": 9,
+   "colour": "#F23D00",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 111",
+   "u": 14,
+   "v": 9,
+   "colour": "#F4CEB3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 112",
+   "u": 15,
+   "v": 9,
+   "colour": "#25221D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 113",
+   "u": 0,
+   "v": 8,
+   "colour": "#332C23",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 114",
+   "u": 1,
+   "v": 8,
+   "colour": "#443F2A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 115",
+   "u": 2,
+   "v": 8,
+   "colour": "#494433",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 116",
+   "u": 3,
+   "v": 8,
+   "colour": "#49371D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 117",
+   "u": 4,
+   "v": 8,
+   "colour": "#4C4741",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 118",
+   "u": 5,
+   "v": 8,
+   "colour": "#504417",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 119",
+   "u": 6,
+   "v": 8,
+   "colour": "#51412B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 120",
+   "u": 7,
+   "v": 8,
+   "colour": "#59554B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 121",
+   "u": 8,
+   "v": 8,
+   "colour": "#5C4C3A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 122",
+   "u": 9,
+   "v": 8,
+   "colour": "#796B5B",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 123",
+   "u": 10,
+   "v": 8,
+   "colour": "#847D72",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 124",
+   "u": 11,
+   "v": 8,
+   "colour": "#8A7D63",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 125",
+   "u": 12,
+   "v": 8,
+   "colour": "#94805A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 126",
+   "u": 13,
+   "v": 8,
+   "colour": "#967A58",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 127",
+   "u": 14,
+   "v": 8,
+   "colour": "#987D5D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 128",
+   "u": 15,
+   "v": 8,
+   "colour": "#A5957F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 129",
+   "u": 0,
+   "v": 7,
+   "colour": "#AD9980",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 130",
+   "u": 1,
+   "v": 7,
+   "colour": "#B09F7F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 131",
+   "u": 2,
+   "v": 7,
+   "colour": "#B4AD9E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 132",
+   "u": 3,
+   "v": 7,
+   "colour": "#B5A56F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 133",
+   "u": 4,
+   "v": 7,
+   "colour": "#B69C75",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 134",
+   "u": 5,
+   "v": 7,
+   "colour": "#C1AF97",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 135",
+   "u": 6,
+   "v": 7,
+   "colour": "#C1B69E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 136",
+   "u": 7,
+   "v": 7,
+   "colour": "#C3B7A6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 137",
+   "u": 8,
+   "v": 7,
+   "colour": "#C5BBA7",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 138",
+   "u": 9,
+   "v": 7,
+   "colour": "#CB9653",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 139",
+   "u": 10,
+   "v": 7,
+   "colour": "#D2A447",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 140",
+   "u": 11,
+   "v": 7,
+   "colour": "#D3C8B0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 141",
+   "u": 12,
+   "v": 7,
+   "colour": "#D3C7B1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 142",
+   "u": 13,
+   "v": 7,
+   "colour": "#D3C8B2",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 143",
+   "u": 14,
+   "v": 7,
+   "colour": "#D3C9B3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 144",
+   "u": 15,
+   "v": 7,
+   "colour": "#D3C8B1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 145",
+   "u": 0,
+   "v": 6,
+   "colour": "#E0BC6A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 146",
+   "u": 1,
+   "v": 6,
+   "colour": "#E1AB3C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 147",
+   "u": 2,
+   "v": 6,
+   "colour": "#E68F1C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 148",
+   "u": 3,
+   "v": 6,
+   "colour": "#E7A421",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 149",
+   "u": 4,
+   "v": 6,
+   "colour": "#E7A321",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 150",
+   "u": 5,
+   "v": 6,
+   "colour": "#E7CD00",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 151",
+   "u": 6,
+   "v": 6,
+   "colour": "#E7A121",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 152",
+   "u": 7,
+   "v": 6,
+   "colour": "#E79807",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 153",
+   "u": 8,
+   "v": 6,
+   "colour": "#E8A421",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 154",
+   "u": 9,
+   "v": 6,
+   "colour": "#E9A016",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 155",
+   "u": 10,
+   "v": 6,
+   "colour": "#EA9616",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 156",
+   "u": 11,
+   "v": 6,
+   "colour": "#EAA016",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 157",
+   "u": 12,
+   "v": 6,
+   "colour": "#EEA217",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 158",
+   "u": 13,
+   "v": 6,
+   "colour": "#EFA34A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 159",
+   "u": 14,
+   "v": 6,
+   "colour": "#F3C100",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 160",
+   "u": 15,
+   "v": 6,
+   "colour": "#F3D743",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 161",
+   "u": 0,
+   "v": 5,
+   "colour": "#F6DC00",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 162",
+   "u": 1,
+   "v": 5,
+   "colour": "#F8EC1E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 163",
+   "u": 2,
+   "v": 5,
+   "colour": "#F9E719",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 164",
+   "u": 3,
+   "v": 5,
+   "colour": "#FCF39A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 165",
+   "u": 4,
+   "v": 5,
+   "colour": "#FCF137",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 166",
+   "u": 5,
+   "v": 5,
+   "colour": "#252612",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 167",
+   "u": 6,
+   "v": 5,
+   "colour": "#829C5C",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 168",
+   "u": 7,
+   "v": 5,
+   "colour": "#B1B499",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 169",
+   "u": 8,
+   "v": 5,
+   "colour": "#E3F59F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 170",
+   "u": 9,
+   "v": 5,
+   "colour": "#A3F513",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 171",
+   "u": 10,
+   "v": 5,
+   "colour": "#293927",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 172",
+   "u": 11,
+   "v": 5,
+   "colour": "#5A6552",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 173",
+   "u": 12,
+   "v": 5,
+   "colour": "#6B7A67",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 174",
+   "u": 13,
+   "v": 5,
+   "colour": "#44B00D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 175",
+   "u": 14,
+   "v": 5,
+   "colour": "#79E73A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 176",
+   "u": 15,
+   "v": 5,
+   "colour": "#324833",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 177",
+   "u": 0,
+   "v": 4,
+   "colour": "#425346",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 178",
+   "u": 1,
+   "v": 4,
+   "colour": "#425345",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 179",
+   "u": 2,
+   "v": 4,
+   "colour": "#4A5D4E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 180",
+   "u": 3,
+   "v": 4,
+   "colour": "#466555",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 181",
+   "u": 4,
+   "v": 4,
+   "colour": "#4F7D65",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 182",
+   "u": 5,
+   "v": 4,
+   "colour": "#548D6E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 183",
+   "u": 6,
+   "v": 4,
+   "colour": "#788E83",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 184",
+   "u": 7,
+   "v": 4,
+   "colour": "#6A9274",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 185",
+   "u": 8,
+   "v": 4,
+   "colour": "#75B692",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 186",
+   "u": 9,
+   "v": 4,
+   "colour": "#396655",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 187",
+   "u": 10,
+   "v": 4,
+   "colour": "#0DD4BE",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 188",
+   "u": 11,
+   "v": 4,
+   "colour": "#76D6D3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 189",
+   "u": 12,
+   "v": 4,
+   "colour": "#B4D7C6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 190",
+   "u": 13,
+   "v": 4,
+   "colour": "#A3EDDC",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 191",
+   "u": 14,
+   "v": 4,
+   "colour": "#A3EDDB",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 192",
+   "u": 15,
+   "v": 4,
+   "colour": "#A2F0E3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 193",
+   "u": 0,
+   "v": 3,
+   "colour": "#00FEE1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 194",
+   "u": 1,
+   "v": 3,
+   "colour": "#444A4E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 195",
+   "u": 2,
+   "v": 3,
+   "colour": "#565D62",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 196",
+   "u": 3,
+   "v": 3,
+   "colour": "#5B6568",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 197",
+   "u": 4,
+   "v": 3,
+   "colour": "#3A556A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 198",
+   "u": 5,
+   "v": 3,
+   "colour": "#697479",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 199",
+   "u": 6,
+   "v": 3,
+   "colour": "#6F7A80",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 200",
+   "u": 7,
+   "v": 3,
+   "colour": "#748086",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 201",
+   "u": 8,
+   "v": 3,
+   "colour": "#748087",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 202",
+   "u": 9,
+   "v": 3,
+   "colour": "#818F96",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 203",
+   "u": 10,
+   "v": 3,
+   "colour": "#298FA1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 204",
+   "u": 11,
+   "v": 3,
+   "colour": "#0063AB",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 205",
+   "u": 12,
+   "v": 3,
+   "colour": "#0072BB",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 206",
+   "u": 13,
+   "v": 3,
+   "colour": "#0072BC",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 207",
+   "u": 14,
+   "v": 3,
+   "colour": "#06C0C3",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 208",
+   "u": 15,
+   "v": 3,
+   "colour": "#0075D1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 209",
+   "u": 0,
+   "v": 2,
+   "colour": "#00D3EA",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 210",
+   "u": 1,
+   "v": 2,
+   "colour": "#A3E8ED",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 211",
+   "u": 2,
+   "v": 2,
+   "colour": "#0F93EF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 212",
+   "u": 3,
+   "v": 2,
+   "colour": "#B9F7FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 213",
+   "u": 4,
+   "v": 2,
+   "colour": "#3BC1FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 214",
+   "u": 5,
+   "v": 2,
+   "colour": "#A3F5FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 215",
+   "u": 6,
+   "v": 2,
+   "colour": "#00EAFF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 216",
+   "u": 7,
+   "v": 2,
+   "colour": "#00F7FF",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 217",
+   "u": 8,
+   "v": 2,
+   "colour": "#292E36",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 218",
+   "u": 9,
+   "v": 2,
+   "colour": "#474D5A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 219",
+   "u": 10,
+   "v": 2,
+   "colour": "#2C4A73",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 220",
+   "u": 11,
+   "v": 2,
+   "colour": "#707880",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 221",
+   "u": 12,
+   "v": 2,
+   "colour": "#5B6D8D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 222",
+   "u": 13,
+   "v": 2,
+   "colour": "#565D9E",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 223",
+   "u": 14,
+   "v": 2,
+   "colour": "#3768B4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 224",
+   "u": 15,
+   "v": 2,
+   "colour": "#0072E6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 225",
+   "u": 0,
+   "v": 1,
+   "colour": "#31283D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 226",
+   "u": 1,
+   "v": 1,
+   "colour": "#5A4B78",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 227",
+   "u": 2,
+   "v": 1,
+   "colour": "#817EA5",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 228",
+   "u": 3,
+   "v": 1,
+   "colour": "#4E3E59",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 229",
+   "u": 4,
+   "v": 1,
+   "colour": "#9A4DA4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 230",
+   "u": 5,
+   "v": 1,
+   "colour": "#9F28AE",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 231",
+   "u": 6,
+   "v": 1,
+   "colour": "#B000C1",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 232",
+   "u": 7,
+   "v": 1,
+   "colour": "#B500D4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 233",
+   "u": 8,
+   "v": 1,
+   "colour": "#8500D6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 234",
+   "u": 9,
+   "v": 1,
+   "colour": "#DF00E4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 235",
+   "u": 10,
+   "v": 1,
+   "colour": "#552F47",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 236",
+   "u": 11,
+   "v": 1,
+   "colour": "#9E577D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 237",
+   "u": 12,
+   "v": 1,
+   "colour": "#DA6EA6",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 238",
+   "u": 13,
+   "v": 1,
+   "colour": "#EB0FDA",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 239",
+   "u": 14,
+   "v": 1,
+   "colour": "#EB86D0",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 240",
+   "u": 15,
+   "v": 1,
+   "colour": "#ED79BE",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 241",
+   "u": 0,
+   "v": 0,
+   "colour": "#EE7ACB",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 242",
+   "u": 1,
+   "v": 0,
+   "colour": "#EE7AC4",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 243",
+   "u": 2,
+   "v": 0,
+   "colour": "#FF00BB",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 244",
+   "u": 3,
+   "v": 0,
+   "colour": "#5F0827",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 245",
+   "u": 4,
+   "v": 0,
+   "colour": "#620A28",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 246",
+   "u": 5,
+   "v": 0,
+   "colour": "#680C2A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 247",
+   "u": 6,
+   "v": 0,
+   "colour": "#6C0C2D",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 248",
+   "u": 7,
+   "v": 0,
+   "colour": "#956C6F",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 249",
+   "u": 8,
+   "v": 0,
+   "colour": "#A70006",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 250",
+   "u": 9,
+   "v": 0,
+   "colour": "#E82E7A",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 251",
+   "u": 10,
+   "v": 0,
+   "colour": "#EE4096",
+   "glow": false,
+   "metal": false
+  },
+  {
+   "name": "Synty 252",
+   "u": 11,
+   "v": 0,
+   "colour": "#FF0027",
+   "glow": false,
+   "metal": false
+  }
+ ]
+}

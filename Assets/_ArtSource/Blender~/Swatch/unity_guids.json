@@ -54,5 +54,14 @@
  "M_Pet_Tidecaller_100.mat": "2b7c429818c44c47a633d51e29079e06",
  "SM_Pet_Tidecaller_100.fbx": "ba4620bd801f4a63b18b94ca0536c044",
  "AC_Pet_Tidecaller_100.controller": "3e7f6b10a7324dd2a6419425633845ea",
- "Pet_Tidecaller_100.prefab": "f257a86de1be43b09494d5ab647b4279"
+ "Pet_Tidecaller_100.prefab": "f257a86de1be43b09494d5ab647b4279",
+ "T_KN_Swatch_Synty.png": "f4d10ae32a724962a3d5d27ebbbe7d63",
+ "M_KN_Swatch_Synty.mat": "96045aea28964c488d7117bf4ab4b8a3",
+ "M_Pet_DroneCore_25_RingGlow.mat": "b2dc3730e2674d65b51aafba0d01b2e1",
+ "M_Pet_DroneCore_25_Mark.mat": "e7372e7404914456a3dac34cdecd665b",
+ "M_Pet_DroneCore_25_MarkRed.mat": "4e157ec2d5584bfaa0feb0fe5986b385",
+ "M_Pet_DroneCore_25_Flash.mat": "aac5b4fd30b04273832807ba8871f157",
+ "SM_Pet_DroneCore_25.fbx": "e295c400cc564915817569b2afeb7516",
+ "AC_Pet_DroneCore_25.controller": "ae4931135b7543fa98429242585c1906",
+ "Pet_DroneCore_25.prefab": "59cb63c5d4dc47649a751b3c3a0a0164"
 }
