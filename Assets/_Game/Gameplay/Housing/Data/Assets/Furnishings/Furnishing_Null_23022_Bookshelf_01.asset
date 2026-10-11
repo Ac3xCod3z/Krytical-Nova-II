@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Null_23022_Bookshelf_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 37b4b3f8ff33bbc49b6d44e6a853d2a1, type: 2}
+  itemId: 23022
+  faction: 2
+  mount: 0
+  place: 0
+  category: Storage
+  source: 0
+  prefab: {fileID: 8920503143522950627, guid: 62f975f4e03376d4fbc66fe6de81f725, type: 3}
+  boundsCenter: {x: -0.63214797, y: 1.4503388, z: 0.39449978}
+  boundsSize: {x: 1.267156, y: 2.9006777, z: 0.6430063}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  budgetCost: 4

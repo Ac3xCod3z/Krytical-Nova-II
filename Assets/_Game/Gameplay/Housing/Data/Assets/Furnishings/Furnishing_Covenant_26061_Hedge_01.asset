@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Covenant_26061_Hedge_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 39a10d47941fd37488ddbb43a2cec8df, type: 2}
+  itemId: 26061
+  faction: 3
+  mount: 0
+  place: 1
+  category: Plants
+  source: 0
+  prefab: {fileID: 1130060130238206, guid: b19fad002d048c74c8540978be2e6ad9, type: 3}
+  boundsCenter: {x: -0.14773619, y: 0.7517432, z: -0.052597046}
+  boundsSize: {x: 5.030781, y: 1.4139607, z: 1.0467453}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  budgetCost: 4

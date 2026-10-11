@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Null_23045_Well_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 2659552b0701e1d4a90e1a216afb6e21, type: 2}
+  itemId: 23045
+  faction: 2
+  mount: 0
+  place: 1
+  category: Decor
+  source: 0
+  prefab: {fileID: 5588130474426147851, guid: 98595a6531503c84eb939b1ff05c12da, type: 3}
+  boundsCenter: {x: -0.010070324, y: 0.51795316, z: -0.0021414757}
+  boundsSize: {x: 3.6384213, y: 1.162678, z: 3.2132664}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  budgetCost: 4

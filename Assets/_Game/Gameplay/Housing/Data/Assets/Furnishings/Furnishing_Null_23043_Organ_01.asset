@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Null_23043_Organ_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: cbed88a44a435364aa024a1421e94124, type: 2}
+  itemId: 23043
+  faction: 2
+  mount: 0
+  place: 0
+  category: Decor
+  source: 0
+  prefab: {fileID: 8338075240758655526, guid: 28462e33ee3fbb74a8649f07894b5b59, type: 3}
+  boundsCenter: {x: 0, y: 5.036715, z: 0.37807304}
+  boundsSize: {x: 7.242993, y: 10.092523, z: 2.267366}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  budgetCost: 4

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Hegemony_20022_Scav_Barrel_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: febdb8bd5a842324780a7c8d99d6556c, type: 2}
+  itemId: 20022
+  faction: 1
+  mount: 0
+  place: 0
+  category: Storage
+  source: 0
+  prefab: {fileID: 1877180036892300, guid: 1d9d852396b3f9147ad4e1e7a1e5f5af, type: 3}
+  boundsCenter: {x: -0.00000016391277, y: -0.00000008940697, z: 0}
+  boundsSize: {x: 0.8802966, y: 1.0875661, z: 0.88029647}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  budgetCost: 2

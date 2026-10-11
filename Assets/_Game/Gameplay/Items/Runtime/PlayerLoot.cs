@@ -116,6 +116,8 @@ namespace KryticalNova.Items
 
             ItemStack stack = drop.Stack;
             ItemDefinition item = drop.Definition;
+            // A faction's own item (a furnishing) is picked up only by its own.
+            if (!ItemFactionRules.MayHave(item, mine)) { Tell(ItemFactionRules.ReasonOtherFaction); return; }
             if (LootRules.IsCreds(stack.itemId))
             {
                 // Creds never enter the Pack: they are paid into the wallet, as much as it has room for.

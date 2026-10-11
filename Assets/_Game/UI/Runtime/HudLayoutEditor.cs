@@ -96,7 +96,8 @@ namespace KryticalNova.UI
             { "zone-toast", "ZONE NOTICE" },
             { "world-map", "WORLD MAP" },
             { "party-frames", "SQUAD" },
-            { "milestone-banner", "MILESTONE BANNER" }
+            { "milestone-banner", "MILESTONE BANNER" },
+            { "arrange-window", "FURNISHING CRATE" }
         };
 
         // What a panel shows while it is being placed, when it has nothing to show by itself: a window that only

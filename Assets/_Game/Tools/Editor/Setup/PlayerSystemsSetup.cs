@@ -37,6 +37,8 @@ namespace KryticalNova.EditorTools
         public const string CraftingSettingsPath = "Assets/_Game/Gameplay/Crafting/Data/Assets/CraftingSettings.asset";
         public const string SquadSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SquadSettings.asset";
         public const string SponsorSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SponsorSettings.asset";
+        public const string HousingSettingsPath = "Assets/_Game/Gameplay/Housing/Data/Assets/HousingSettings.asset";
+        public const string FurnishingCatalogPath = "Assets/_Game/Gameplay/Housing/Data/Assets/FurnishingCatalog.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
         // the hand comes down to 0.48 m, the top of a drop.
@@ -94,6 +96,9 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Autopilot.PlayerAutopilot", ("settings", AutopilotSettingsPath)),
             new Row("KryticalNova.Autopilot.MagnetController"),
             new Row("KryticalNova.Autopilot.AutopilotController"),
+            // Crew Halls: the Furnishing Crate, and the player's side of their Hall (the sandbox Lot, for now).
+            new Row("KryticalNova.Housing.PlayerCrate", ("settings", HousingSettingsPath), ("catalog", FurnishingCatalogPath)),
+            new Row("KryticalNova.Housing.PlayerHousing", ("settings", HousingSettingsPath), ("catalog", FurnishingCatalogPath)),
             // What lets a Hostile see, chase and strike a player (its own assembly: the only one that knows Emerald AI).
             new Row("KryticalNova.Hostiles.Emerald.KNEmeraldPlayerBridge, KryticalNova.Hostiles.Emerald"),
         };

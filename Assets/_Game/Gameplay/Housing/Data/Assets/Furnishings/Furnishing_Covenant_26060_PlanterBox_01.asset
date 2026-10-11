@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Covenant_26060_PlanterBox_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: fab5aa106bc4ba2498056a0e8751f81c, type: 2}
+  itemId: 26060
+  faction: 3
+  mount: 0
+  place: 0
+  category: Plants
+  source: 0
+  prefab: {fileID: 1288921569735934, guid: b32f11fe8a0299842b04b26deb01da1a, type: 3}
+  boundsCenter: {x: -1.2499983, y: 0.3631447, z: 0.41627347}
+  boundsSize: {x: 2.0971055, y: 0.7262893, z: 0.83254695}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  budgetCost: 2

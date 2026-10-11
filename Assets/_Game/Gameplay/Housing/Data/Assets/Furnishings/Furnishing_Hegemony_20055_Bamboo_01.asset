@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Hegemony_20055_Bamboo_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 0914c2a8b46780c4cbc81b115f0867ec, type: 2}
+  itemId: 20055
+  faction: 1
+  mount: 0
+  place: 1
+  category: Plants
+  source: 0
+  prefab: {fileID: 405606203298129695, guid: 3a73f30ef50d68649b0f431b5e6ff2eb, type: 3}
+  boundsCenter: {x: 0.011216581, y: 3.0813787, z: 0.12728822}
+  boundsSize: {x: 1.7426339, y: 7.4064, z: 1.7521696}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  budgetCost: 4

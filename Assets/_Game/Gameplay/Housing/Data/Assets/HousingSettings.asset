@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c373aa9d52021f4f9d8736ec8fca233, type: 3}
+  m_Name: HousingSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.HousingSettings
+  sandboxOrigin: {x: 6500, y: 0, z: 0}
+  lotPrefab: {fileID: 371366029329210599, guid: 95043c00d23fe3044b13a4ae3012f05f, type: 3}
+  facadeByFaction:
+  - {fileID: 1159825550740384, guid: 871736051670df6409b1c54e9710effe, type: 3}
+  - {fileID: 1693753269470630, guid: 84818640e562e274cb4ae56b74f142e5, type: 3}
+  - {fileID: 5512629917696555896, guid: 69c462dc26d4053408a387d05eb6b43a, type: 3}
+  - {fileID: 1159825550740384, guid: 871736051670df6409b1c54e9710effe, type: 3}
+  lawnBudget: 200
+  interiorBudgetByTier: 2c010000c201000058020000i
+  crateStackCap: 9999
+  gridStep: 0.5
+  fineGridStep: 0.125
+  rotateStep: 15
+  undoSteps: 50
+  maxStackDepth: 3
+  ghostMaterial: {fileID: 2100000, guid: 72f3a9047f383004bb8d85024c54a318, type: 2}
+  ghostAllowed: {r: 0.35, g: 1, b: 0.55, a: 0.55}
+  ghostRefused: {r: 1, g: 0.3, b: 0.25, a: 0.55}

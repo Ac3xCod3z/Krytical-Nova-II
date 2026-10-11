@@ -359,6 +359,9 @@ namespace KryticalNova.Economy
             if (count <= 0 && packCell >= 0 && packCell < pack.Length) count = pack[packCell].count;
             string blocked = TradeRules.AddBlockedReason(lines, pack, packCell, count, MaxLines);
             if (blocked != null) { Notice(blocked); return; }
+            // A faction's own item (a furnishing) is never handed to a character of another faction.
+            if (!ItemFactionRules.MayHave(inventory.Catalog != null ? inventory.Catalog.Get(pack[packCell].itemId) : null, Other(session, this).Faction))
+            { Notice(ItemFactionRules.ReasonTheirFaction); return; }
             lines.Add(new TradeLine(packCell, pack[packCell].WithCount(count)));
             OfferChanged();
         }

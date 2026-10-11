@@ -683,6 +683,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Arrange",
+                    "type": "Button",
+                    "id": "772bd0a0-88a1-4bfe-9388-01300000000f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -837,6 +846,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Guide",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "282bd0a0-88a1-4bfe-9388-01300000000f",
+                    "path": "<Keyboard>/l",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Arrange",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

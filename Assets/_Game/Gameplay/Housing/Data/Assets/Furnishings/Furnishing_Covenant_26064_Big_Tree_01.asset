@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Covenant_26064_Big_Tree_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: c512116cd8d381a41aab1d8f791167e9, type: 2}
+  itemId: 26064
+  faction: 3
+  mount: 0
+  place: 1
+  category: Plants
+  source: 0
+  prefab: {fileID: 1948078918282010, guid: 1847aa3ec5e8b29468675ceacfd7f8e6, type: 3}
+  boundsCenter: {x: -0.32757282, y: 5.067552, z: 0.05313778}
+  boundsSize: {x: 8.758913, y: 12.735112, z: 10.982998}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  budgetCost: 4

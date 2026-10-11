@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Hegemony_20030_Light_Panel_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: ff8344d2b357d7040a3a8770749cd5cb, type: 2}
+  itemId: 20030
+  faction: 1
+  mount: 0
+  place: 0
+  category: Lighting
+  source: 0
+  prefab: {fileID: 1107281013672346, guid: 402c5a51619eb754792b87e071f98b16, type: 3}
+  boundsCenter: {x: 0.00000014901161, y: 0.050998673, z: 0}
+  boundsSize: {x: 0.5125613, y: 0.101997346, z: 1.2063233}
+  hasTop: 0
+  castsShadow: 1
+  lights: 1
+  budgetCost: 2

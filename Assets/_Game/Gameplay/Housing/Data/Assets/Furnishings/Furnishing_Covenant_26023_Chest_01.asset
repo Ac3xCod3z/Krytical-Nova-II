@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Covenant_26023_Chest_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: e452a86206c13ac4bb07e571f1828849, type: 2}
+  itemId: 26023
+  faction: 3
+  mount: 0
+  place: 0
+  category: Storage
+  source: 0
+  prefab: {fileID: 1110624181899732, guid: e686bc0bb2dee5e4982d84f14142bb79, type: 3}
+  boundsCenter: {x: -0.00000029802322, y: 0.23176202, z: 0.013393283}
+  boundsSize: {x: 0.9999999, y: 0.46352404, z: 0.6097951}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  budgetCost: 2

@@ -55,6 +55,7 @@ namespace KryticalNova.EditorTools
             "KryticalNova.UI.PetBubbleController, KryticalNova.UI",
             "KryticalNova.UI.EmoteWheelController, KryticalNova.UI",
             "KryticalNova.UI.GameMenuController, KryticalNova.UI",
+            "KryticalNova.UI.ArrangeController, KryticalNova.UI",
             ToastType,
         };
 

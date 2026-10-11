@@ -31,6 +31,7 @@ namespace KryticalNova.Player
         public const string EmoteWheel = "EmoteWheel";
         public const string Autopilot = "Autopilot";
         public const string AutopilotSettings = "AutopilotSettings";
+        public const string Arrange = "Arrange";
 
         /// <summary>A window key: its action in the asset's Windows map, and what the Controls list calls it.</summary>
         public readonly struct WindowKey
@@ -56,6 +57,7 @@ namespace KryticalNova.Player
             new WindowKey(EmoteWheel, "Emote wheel (hold)"),
             new WindowKey(Autopilot, "Autopilot on / off"),
             new WindowKey(AutopilotSettings, "Autopilot and Magnet"),
+            new WindowKey(Arrange, "Arrange (Furnishing Crate)"),
         };
 
         /// <summary>The player-asset actions the Controls list offers, by map, with the name it shows for each.</summary>

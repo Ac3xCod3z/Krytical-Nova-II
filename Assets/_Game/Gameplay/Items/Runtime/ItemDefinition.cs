@@ -64,6 +64,9 @@ namespace KryticalNova.Items
         public ItemRarity rarity;
         public EquipSlot equipSlot;
         [Min(1)] public ushort maxStack = 1;
+        [Tooltip("A faction's own item (a furnishing): only its characters may have it. It is never traded or sold by a Kiosk " +
+                 "to another faction, and it goes in the Vault, never the Deep Vault an account's characters share. None = anyone's.")]
+        public KryticalNova.Factions.FactionId boundFaction;
 
         [Header("Gear ladder (baked by GearStatBaker: edit GearDictionary lines and GearStatTable, not these)")]
         [Tooltip("Level of this piece, and the level a character needs to equip it. 0 = no requirement.")]
