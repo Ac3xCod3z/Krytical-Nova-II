@@ -3534,6 +3534,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.PlayerParty
   ShowTopMostFoldoutHeaderGroup: 1
   inviteSeconds: 30
+  settings: {fileID: 11400000, guid: e1dab5ff32b794a4a94671778fedb8c5, type: 2}
 --- !u!114 &7132535965924402977
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -34,6 +34,7 @@ namespace KryticalNova.Hostiles
         public static event Action<HostileKill> Rewarded;
 
         private static readonly List<PlayerParty> members = new List<PlayerParty>(PartyRules.MaxSize);
+        private static readonly List<PlayerParty> escorts = new List<PlayerParty>(PartyRules.MaxSize);
 
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -63,23 +64,48 @@ namespace KryticalNova.Hostiles
             var party = credited.GetComponent<PlayerParty>();
             if (party != null) party.ServerGetMembers(members);
 
-            if (members.Count <= 1)
+            // A Sponsor in a Squad with one of its Recruits is there to help, not to hunt.
+            escorts.Clear();
+            if (members.Count > 1)
+                foreach (PlayerParty member in members)
+                    if (PlayerParty.SponsorsOneOf(member, members)) escorts.Add(member);
+            float dropPercent = LevelGapRules.DropPercent(gaps, creditedGap);
+            bool gearDrops = LevelGapRules.GearDrops(gaps, creditedGap);
+
+            if (party != null && escorts.Contains(party))
+            {
+                // What the Sponsor holds pays XP to no one, and far enough below it drops nothing either.
+                var sponsor = credited.GetComponent<PlayerSponsor>();
+                if (sponsor != null && sponsor.Settings != null
+                    && SponsorRules.SponsorDropsNothing(hostile.Level, credited.CurrentLevel, sponsor.Settings.sponsorNoDropLevels))
+                {
+                    dropPercent = 0f;
+                    gearDrops = false;
+                }
+                var chat = credited.GetComponent<PlayerChat>();
+                if (chat != null) chat.ServerCombatNotice("A Sponsor's kill pays no XP: let your Recruit strike first.");
+            }
+            else if (members.Count <= 1)
             {
                 Pay(credited, hostile, stats, gaps, creditedGap, 0f);
             }
             else
             {
                 // The gap of the Squad's highest member here is the worst one; a far lower member is paid by it.
+                // A Sponsor does not count: its Recruits are paid by their own gap.
                 int highestGap = int.MaxValue;
                 foreach (PlayerParty member in members)
-                    if (member.gameObject.scene == hostile.gameObject.scene) highestGap = Mathf.Min(highestGap, LevelGapRules.Gap(hostile.Level, member.Level));
+                    if (member.gameObject.scene == hostile.gameObject.scene && !escorts.Contains(member))
+                        highestGap = Mathf.Min(highestGap, LevelGapRules.Gap(hostile.Level, member.Level));
                 foreach (PlayerParty member in members)
                 {
                     if (member.gameObject.scene != hostile.gameObject.scene) continue; // only members in the map of the kill
                     var progression = member.GetComponent<PlayerCharacterProgression>();
                     if (progression == null) continue;
-                    int gap = LevelGapRules.SquadGap(gaps, LevelGapRules.Gap(hostile.Level, member.Level), highestGap);
-                    Pay(progression, hostile, stats, gaps, gap, member.ServerExperienceBoost());
+                    int ownGap = LevelGapRules.Gap(hostile.Level, member.Level);
+                    // The Sponsor is paid by its own gap and with no boost: the Squad's is for those it helps.
+                    if (escorts.Contains(member)) Pay(progression, hostile, stats, gaps, ownGap, 0f);
+                    else Pay(progression, hostile, stats, gaps, LevelGapRules.SquadGap(gaps, ownGap, highestGap), member.ServerExperienceBoost());
                 }
             }
 
@@ -91,8 +117,8 @@ namespace KryticalNova.Hostiles
                 Tier = stats.Tier,
                 Position = hostile.transform.position,
                 Credited = credited,
-                DropPercent = LevelGapRules.DropPercent(gaps, creditedGap),
-                GearDrops = LevelGapRules.GearDrops(gaps, creditedGap),
+                DropPercent = dropPercent,
+                GearDrops = gearDrops,
             });
         }
 
@@ -107,9 +133,12 @@ namespace KryticalNova.Hostiles
 
         private static void Pay(PlayerCharacterProgression player, HostileNet hostile, in HostileStats stats, LevelGapSettings gaps, int gap, float squadBoost)
         {
-            // A Recruit hunting near its Sponsor is paid the Sponsor's bonus instead of the Squad's, when it is the larger.
-            float sponsorBonus = player.TryGetComponent(out PlayerSponsor sponsor) ? sponsor.ServerExperienceBonus() : 0f;
-            float boost = SponsorRules.ExperienceBoost(squadBoost, sponsorBonus);
+            // A Recruit hunting near its Sponsor is paid the Sponsor's bonus: on top of the Squad's in the Sponsor's
+            // own Squad, instead of it anywhere else, when it is the larger.
+            bool inSponsorSquad = false;
+            float sponsorBonus = player.TryGetComponent(out PlayerSponsor sponsor) ? sponsor.ServerExperienceBonus(out inSponsorSquad) : 0f;
+            bool adds = inSponsorSquad && sponsor.Settings != null && sponsor.Settings.addsToSquadBoost;
+            float boost = SponsorRules.ExperienceBoost(squadBoost, sponsorBonus, adds);
             int amount = ExperienceFor(stats, gaps, gap, boost);
             var chat = player.GetComponent<PlayerChat>();
             string name = hostile.Definition != null ? hostile.Definition.displayName : "Hostile";
@@ -119,7 +148,7 @@ namespace KryticalNova.Hostiles
                 return;
             }
             player.GrantExperience(amount);
-            bool sponsored = sponsorBonus > 0f && sponsorBonus >= squadBoost;
+            bool sponsored = sponsorBonus > 0f && (adds || sponsorBonus >= squadBoost);
             if (chat != null)
                 chat.ServerCombatNotice(sponsored ? $"+{amount} XP ({name}) · Sponsor +{Mathf.RoundToInt(sponsorBonus * 100f)}%" : $"+{amount} XP ({name})");
         }

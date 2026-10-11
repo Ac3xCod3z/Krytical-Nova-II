@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KryticalNova.Factions;
 
 namespace KryticalNova.Social
@@ -45,8 +46,30 @@ namespace KryticalNova.Social
             return null;
         }
 
-        /// <summary>The boost a kill is paid with: the Sponsor's bonus does not add to the Squad's, the larger counts.</summary>
-        public static float ExperienceBoost(float squadBoost, float sponsorBonus) => Math.Max(Math.Max(0f, squadBoost), Math.Max(0f, sponsorBonus));
+        /// <summary>
+        /// The Recruit's bonus by how many of the Sponsor's Recruits hunt together: the first step with one, the
+        /// second with two and so on, the last for any more.
+        /// </summary>
+        public static float Bonus(IReadOnlyList<float> steps, int recruitsTogether)
+        {
+            if (steps == null || steps.Count == 0 || recruitsTogether < 1) return 0f;
+            return Math.Max(0f, steps[Math.Min(recruitsTogether, steps.Count) - 1]);
+        }
+
+        /// <summary>
+        /// The boost a kill is paid with. In the Sponsor's own Squad the two add (<paramref name="adds"/>);
+        /// anywhere else the Sponsor's bonus does not add to the Squad's, and the larger counts.
+        /// </summary>
+        public static float ExperienceBoost(float squadBoost, float sponsorBonus, bool adds = false)
+        {
+            squadBoost = Math.Max(0f, squadBoost);
+            sponsorBonus = Math.Max(0f, sponsorBonus);
+            return adds ? squadBoost + sponsorBonus : Math.Max(squadBoost, sponsorBonus);
+        }
+
+        /// <summary>True when a Hostile is far enough below a Sponsor hunting with its Recruit to drop nothing for it.</summary>
+        public static bool SponsorDropsNothing(int hostileLevel, int sponsorLevel, int noDropLevels) =>
+            sponsorLevel - hostileLevel >= Math.Max(0, noDropLevels);
 
         /// <summary>
         /// The Sponsor points owed for time spent near a Recruit: one payment for each full minute.

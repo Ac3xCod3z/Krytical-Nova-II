@@ -16,7 +16,12 @@ MonoBehaviour:
   levelGap: 5
   maxRecruits: 3
   requestSeconds: 30
-  experienceBonus: 0.5
+  experienceBonusSteps:
+  - 0.1
+  - 0.15
+  - 0.2
+  addsToSquadBoost: 1
   rangeMetres: 40
   pointsPerMinute: 250
   checkSeconds: 5
+  sponsorNoDropLevels: 5

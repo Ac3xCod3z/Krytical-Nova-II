@@ -60,12 +60,42 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void TheSponsorBonus_DoesNotAddToTheSquadBoost()
+        public void OutsideTheSponsorsSquad_TheBonusDoesNotAddToTheSquadBoost()
         {
             Assert.AreEqual(0.5f, SponsorRules.ExperienceBoost(0.2f, 0.5f), "the larger counts");
             Assert.AreEqual(0.2f, SponsorRules.ExperienceBoost(0.2f, 0f), "no Sponsor near: the Squad's");
             Assert.AreEqual(0.6f, SponsorRules.ExperienceBoost(0.6f, 0.5f));
             Assert.AreEqual(0f, SponsorRules.ExperienceBoost(-1f, -1f));
+        }
+
+        [Test]
+        public void InTheSponsorsSquad_TheBonusAddsToTheSquadBoost()
+        {
+            Assert.AreEqual(0.4f, SponsorRules.ExperienceBoost(0.2f, 0.2f, adds: true), 1e-5f, "a full Squad with all three Recruits");
+            Assert.AreEqual(0.1f, SponsorRules.ExperienceBoost(0f, 0.1f, adds: true), 1e-5f);
+            Assert.AreEqual(0.2f, SponsorRules.ExperienceBoost(0.2f, -1f, adds: true), 1e-5f);
+        }
+
+        [Test]
+        public void TheBonus_GrowsWithTheRecruitsHuntingTogether()
+        {
+            var steps = new[] { 0.1f, 0.15f, 0.2f };
+            Assert.AreEqual(0.1f, SponsorRules.Bonus(steps, 1));
+            Assert.AreEqual(0.15f, SponsorRules.Bonus(steps, 2));
+            Assert.AreEqual(0.2f, SponsorRules.Bonus(steps, 3));
+            Assert.AreEqual(0.2f, SponsorRules.Bonus(steps, 9), "the last step holds for more");
+            Assert.AreEqual(0f, SponsorRules.Bonus(steps, 0));
+            Assert.AreEqual(0f, SponsorRules.Bonus(null, 2));
+            Assert.AreEqual(0f, SponsorRules.Bonus(new float[0], 2));
+        }
+
+        [Test]
+        public void ASponsor_GetsNoDropsFromHostilesFarBelowIt()
+        {
+            Assert.IsTrue(SponsorRules.SponsorDropsNothing(hostileLevel: 60, sponsorLevel: 112, noDropLevels: 5));
+            Assert.IsTrue(SponsorRules.SponsorDropsNothing(107, 112, 5), "five below is far enough");
+            Assert.IsFalse(SponsorRules.SponsorDropsNothing(108, 112, 5));
+            Assert.IsFalse(SponsorRules.SponsorDropsNothing(115, 112, 5));
         }
 
         [Test]

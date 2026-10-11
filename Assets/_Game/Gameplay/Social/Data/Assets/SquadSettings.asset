@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ffccb21f39abfe488703ecd79162c47, type: 3}
   m_Name: SquadSettings
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.SquadSettings
+  maxExperienceBoost: 0.2
   followKeepDistance: 2.5
   followResumeDistance: 4
   followMaxDistance: 60

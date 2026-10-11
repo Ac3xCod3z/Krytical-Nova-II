@@ -37,6 +37,14 @@ namespace KryticalNova.Social
             return null;
         }
 
+        /// <summary>True while the first character is the Sponsor of the second.</summary>
+        public static bool Sponsors(string sponsorId, string recruitId)
+        {
+            if (string.IsNullOrEmpty(sponsorId)) return false;
+            SponsorLink link = SponsorOf(recruitId);
+            return link != null && link.sponsorId == sponsorId;
+        }
+
         /// <summary>The links in which this character is the Sponsor.</summary>
         public static void RecruitsOf(string sponsorId, List<SponsorLink> into)
         {
@@ -134,7 +142,7 @@ namespace KryticalNova.Social
             });
             Save();
             sponsor.Tell($"{recruit.SponsorName} is now your Recruit.");
-            recruit.Tell($"{sponsor.SponsorName} is now your Sponsor. Hunt near them for +{Mathf.RoundToInt(settings.experienceBonus * 100f)}% kill XP.");
+            recruit.Tell($"{sponsor.SponsorName} is now your Sponsor. Hunt near them for +{Mathf.RoundToInt(settings.FirstBonus * 100f)}% kill XP, and more in their Squad with their other Recruits.");
             sponsor.ServerPushView();
             recruit.ServerPushView();
             return null;

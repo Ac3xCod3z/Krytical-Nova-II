@@ -153,15 +153,17 @@ namespace KryticalNova.UI
             pointsLabel.text = sponsors || sponsor.Points > 0 ? $"{sponsor.Points:N0} Sponsor points" : string.Empty;
 
             if (settings == null) { helpLabel.text = string.Empty; return; }
-            int bonus = Mathf.RoundToInt(settings.experienceBonus * 100f);
+            int bonus = Mathf.RoundToInt(settings.FirstBonus * 100f), top = Mathf.RoundToInt(settings.TopBonus * 100f);
+            string more = top > bonus ? $", up to +{top}% with their other Recruits in the Squad" : string.Empty;
+            string squad = settings.addsToSquadBoost ? " In their Squad it adds to the Squad's boost." : string.Empty;
             if (recruited)
                 helpLabel.text = sponsor.BoostOn
-                    ? $"Your Sponsor is near: kills pay +{bonus}% XP (the larger of this and your Squad's boost)."
-                    : $"Hunt within {settings.rangeMetres:0} m of your Sponsor for +{bonus}% kill XP. The link ends when you are within {settings.levelGap} levels of them.";
+                    ? $"Your Sponsor is near: kills pay +{bonus}% XP{more}.{squad}"
+                    : $"Hunt within {settings.rangeMetres:0} m of your Sponsor for +{bonus}% kill XP{more}.{squad} The link ends when you are within {settings.levelGap} levels of them.";
             else if (sponsors)
-                helpLabel.text = $"You earn {settings.pointsPerMinute} Sponsor points for each minute spent within {settings.rangeMetres:0} m of a Recruit. A Recruit who closes to within {settings.levelGap} levels of you has caught up, and the link ends.";
+                helpLabel.text = $"You earn {settings.pointsPerMinute} Sponsor points for each minute spent within {settings.rangeMetres:0} m of a Recruit. You may Squad with your Recruits whatever their level; what you kill there pays XP to no one. A Recruit who closes to within {settings.levelGap} levels of you has caught up, and the link ends.";
             else
-                helpLabel.text = $"A level {settings.sponsorMinLevel} character can sponsor up to {settings.maxRecruits} characters of its faction who are more than {settings.levelGap} levels below it. The Recruit earns +{bonus}% kill XP while the Sponsor is near.";
+                helpLabel.text = $"A level {settings.sponsorMinLevel} character can sponsor up to {settings.maxRecruits} characters of its faction who are more than {settings.levelGap} levels below it. The Recruit earns +{bonus}% kill XP while the Sponsor is near{more}.";
         }
 
         private VisualElement Row(SponsorLinkView line)

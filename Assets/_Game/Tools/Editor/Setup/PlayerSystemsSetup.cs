@@ -82,6 +82,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Social.PlayerSponsor", ("settings", SponsorSettingsPath)),
             // Emotes picked on the emote wheel.
             new Row("KryticalNova.Social.PlayerEmotes", ("settings", EmoteWheelSettingsPath)),
+            // The Squad: its experience boost is a number of the Squad settings.
+            new Row("KryticalNova.Social.PlayerParty", ("settings", SquadSettingsPath)),
             // Following a Squad member.
             new Row("KryticalNova.Social.PlayerFollow", ("settings", SquadSettingsPath)),
             // Serums: what a character has taken, and the stats that stay.
