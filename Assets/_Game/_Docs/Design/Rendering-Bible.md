@@ -123,6 +123,8 @@ Driven by `EnvironmentPresenter` (`Assets/_Game/World/Runtime/Presentation/`). T
 | `_KN_WindVector` | xy wind (m/s, world XZ, gust included), z speed. Set by `PrecipitationController` |
 | `_KN_WindParams` | x gust now, y gustiness, z strength 0-1 (speed / 20 m/s). Drives foliage and water |
 | `_KN_WindScroll` | integrated wind drift (texture tiles) for water ripples; continuous as the wind turns |
+| `_KN_WindPhase` | x = wind strength summed over time, y = the same one frame ago, w = 1 once published. What a foliage wave's speed-up with the wind is multiplied by (`KNWindPhase()`) |
+| `_KN_WindDrift` | xy = how far the grass's gust cells have drifted downwind (`KNWindDrift()`), zw = one frame ago |
 | `_KN_Interactors[8]`, `_KN_InteractorCount` | xyz feet, w radius of the 8 `FoliageInteractor`s nearest the camera (grass parting) |
 
 ### Sun
@@ -309,6 +311,13 @@ farther away than the original 0.065 / 0.1.
   `calmChance`. The server rolls a speed per weather cycle (biased low, so strong days are rarer) and replicates it
   next to the heading. A slow shared lull/surge noise (±25%) and the gust noise ride on top. GM: `weather.windset
   <m/s> [heading]`, `weather.windclear`, `weather.wind`.
+- **A wave's phase is never time × the wind's strength** (rule of 10 Oct 2026). Strength changes every frame with
+  the gusts and the time is large, so `sin(t * (a + b * strength))` threw the whole field to another point of its
+  wave on every change: 80 s into a session the large grass wave jumped by up to 0.6 rad in a frame, half an hour in
+  by up to 16 rad on nearly every frame, which is the stutter the owner saw. A wave is written
+  `sin(a * t + b * KNWindPhase())`: `PrecipitationController` sums the strength over time (and the gust cells' travel,
+  `KNWindDrift()`), so a gust only changes how fast a wave goes on from where it is. The sums wrap at 20π, so `b`
+  must be a multiple of 0.1. Grass, trees and bushes all follow it (`KNWind.hlsl` says so at the declaration).
 - **Grass is GPU grass** (`GrassRenderer`, `Assets/_Game/Environment/Vegetation/Grass/Runtime`, `Assets/_Game/Environment/Vegetation/Grass/Rendering`). Data lives in
   `Assets/_Game/Environment/Vegetation/Grass/Data/Assets`:
   - `GrassType` sets the mesh, height and width ranges, root/mid/tip colours, fake AO, wind and player bend.

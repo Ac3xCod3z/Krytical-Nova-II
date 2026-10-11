@@ -62,13 +62,16 @@ Shader "KryticalNova/Grass Blades"
         float strength = KNWindStrength();
         float gust = KNWindGust();
         float bend = h01 * h01; // root planted, tip moves most
+        // Every wave runs faster in more wind. That part of its phase comes summed up from the CPU (KNWind.hlsl):
+        // time x strength would jump with every gust.
+        float phase = KNWindPhase();
         // Large: slow waves rolling across the whole field along the wind.
-        float large = sin(dot(root.xz, dir) * 0.09 - t * (0.8 + 1.8 * strength)) * 0.5 + 0.5;
+        float large = sin(dot(root.xz, dir) * 0.09 - (0.8 * t + 1.8 * phase)) * 0.5 + 0.5;
         // Medium: local gust cells drifting downwind.
-        float2 q = root.xz * 0.21 - dir * t * (1.2 + 3.0 * strength);
+        float2 q = root.xz * 0.21 - KNWindDrift(t);
         float medium = sin(q.x + sin(q.y * 1.3)) * sin(q.y * 0.9 - sin(q.x * 0.7));
         // Small: per-blade flutter (each vertex column gets its own phase).
-        float small = sin(t * (5.0 + 9.0 * strength) + rand * 37.0 + positionOS.x * 13.0 + positionOS.z * 11.0);
+        float small = sin(5.0 * t + 9.0 * phase + rand * 37.0 + positionOS.x * 13.0 + positionOS.z * 11.0);
 
         float lean = strength * (0.3 + 0.5 * large + 0.25 * gust) + medium * 0.12 * (0.25 + strength);
         float idle = sin(t * 1.3 + rand * 6.2831) * 0.05;

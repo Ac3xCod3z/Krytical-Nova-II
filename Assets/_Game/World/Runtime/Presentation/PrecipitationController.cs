@@ -45,7 +45,16 @@ namespace KryticalNova.World
         private static readonly int WindVectorId = Shader.PropertyToID("_KN_WindVector");
         private static readonly int WindParamsId = Shader.PropertyToID("_KN_WindParams");
         private static readonly int WindScrollId = Shader.PropertyToID("_KN_WindScroll");
+        private static readonly int WindPhaseId = Shader.PropertyToID("_KN_WindPhase");
+        private static readonly int WindDriftId = Shader.PropertyToID("_KN_WindDrift");
+        // The sums the foliage shaders read are wrapped here: every wave that uses them comes round whole at 20 pi,
+        // as long as what it multiplies them by is a multiple of 0.1 (KNWind.hlsl).
+        private const float WindSumWrap = 20f * Mathf.PI;
+        // How fast the grass's gust cells drift downwind: calm, and what full wind adds (GrassBlades.shader's own scale).
+        private const float GustCellDrift = 1.2f, GustCellDriftInWind = 3f;
         private Vector2 windScroll;
+        private float windPhase;
+        private Vector2 windDrift;
 
         [SerializeField] private Rig rain = new Rig();
         [SerializeField] private Rig rainSplash = new Rig { heightOffset = 0.05f, windInfluence = 0f, groundAnchored = true };
@@ -213,6 +222,10 @@ namespace KryticalNova.World
         {
             if (rippleMaterial != null) Destroy(rippleMaterial);
             if (jumpSpace != null) Destroy(jumpSpace.gameObject);
+            // Shader globals outlive Play in the Editor: without this the Scene view's grass would keep the last
+            // session's wind sums, frozen, instead of drifting by itself again (KNWindDrift).
+            Shader.SetGlobalVector(WindPhaseId, Vector4.zero);
+            Shader.SetGlobalVector(WindDriftId, Vector4.zero);
         }
 
         private void UseJumpSpace(Rig rig)
@@ -451,7 +464,21 @@ namespace KryticalNova.World
             windZone.windPulseFrequency = 0.15f + w.gustiness * 0.25f;
             Shader.SetGlobalVector(WindVectorId, new Vector4(w.wind.x, w.wind.y, speed, 0f));
             // Foliage/water: x = gust now (0-1), y = gustiness, z = strength (0 calm .. 1 at foliageFullWindSpeed), w unused.
-            Shader.SetGlobalVector(WindParamsId, new Vector4(w.gust, w.gustiness, Mathf.Clamp01(speed / foliageFullWindSpeed), 0f));
+            float strength = Mathf.Clamp01(speed / foliageFullWindSpeed);
+            Shader.SetGlobalVector(WindParamsId, new Vector4(w.gust, w.gustiness, strength, 0f));
+            // Foliage: wind strength and wind travel summed up over time. A shader that multiplied the time by the
+            // strength of the moment threw every blade to another point of its wave whenever a gust changed it; with
+            // the sums a gust only changes how fast the waves go on from where they are. Last frame's values go
+            // along for the passes that need to know how far a blade moved since.
+            float lastPhase = windPhase;
+            Vector2 lastDrift = windDrift;
+            Vector2 heading = speed > 0.05f ? w.wind / speed : Vector2.up; // as KNWindDir() falls back
+            windPhase = Mathf.Repeat(windPhase + strength * Time.deltaTime, WindSumWrap);
+            windDrift += heading * ((GustCellDrift + GustCellDriftInWind * strength) * Time.deltaTime);
+            windDrift.x = Mathf.Repeat(windDrift.x, WindSumWrap);
+            windDrift.y = Mathf.Repeat(windDrift.y, WindSumWrap);
+            Shader.SetGlobalVector(WindPhaseId, new Vector4(windPhase, lastPhase, 0f, 1f));
+            Shader.SetGlobalVector(WindDriftId, new Vector4(windDrift.x, windDrift.y, lastDrift.x, lastDrift.y));
             // Integrated wind drift for water ripples: continuous even as wind speed/heading change. Wrapped at a
             // whole number of texture tiles so the wrap is seamless.
             windScroll += w.wind * (Time.deltaTime * waterWindScroll);
