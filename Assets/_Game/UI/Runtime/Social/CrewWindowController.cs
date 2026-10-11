@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.Economy;
+using KryticalNova.Factions;
 using KryticalNova.Items;
 using KryticalNova.NPC;
 using KryticalNova.Player;
@@ -94,8 +95,6 @@ namespace KryticalNova.UI
             announceButton.clicked += () => BeginEdit(Edit.Announcement);
             symbolButton.clicked += () => { pickingSymbol = !pickingSymbol; Refresh(); };
             leaveButton.clicked += LeaveOrDisband;
-            BuildSymbols(symbolChoices, index => { chosenSymbol = index; Refresh(); });
-            BuildSymbols(symbolEdit, index => { pickingSymbol = false; crew?.SetSymbol(index); });
             SetDisplay(window, false);
 
             NpcServices.Register(ServiceIds.CrewRegistry, NpcOffer.CrewRegistry, "CREW REGISTRY", OpenRegistry);
@@ -130,7 +129,25 @@ namespace KryticalNova.UI
             if (crew != null) crew.Changed -= Refresh;
             crew = next;
             if (crew != null) crew.Changed += Refresh;
+            symbolsOf = (FactionId)255; // another character: its faction's symbols are laid out when next shown
             if (initialized) Refresh();
+        }
+
+        private CrewSymbolLibrary Library => crew != null && crew.Settings != null ? crew.Settings.symbols : null;
+
+        /// <summary>The faction whose symbols the window shows: the local character's (a Crew is of one faction).</summary>
+        private FactionId MyFaction => crew != null && crew.TryGetComponent(out PlayerIdentity identity) ? identity.Faction : FactionId.None;
+
+        // The two rows of symbols to choose from are laid out for the character's faction, once it is known.
+        private FactionId symbolsOf = (FactionId)255;
+
+        private void EnsureSymbols()
+        {
+            FactionId faction = MyFaction;
+            if (faction == symbolsOf || symbolChoices == null || symbolEdit == null) return;
+            symbolsOf = faction;
+            BuildSymbols(symbolChoices, index => { chosenSymbol = index; Refresh(); });
+            BuildSymbols(symbolEdit, index => { pickingSymbol = false; crew?.SetSymbol(index); });
         }
 
         private static void SetDisplay(VisualElement element, bool visible)
@@ -143,12 +160,13 @@ namespace KryticalNova.UI
         private void BuildSymbols(VisualElement into, Action<int> pick)
         {
             into.Clear();
-            for (int i = 0; i < CrewSymbols.Count; i++)
+            int count = crew != null && crew.Settings != null ? crew.Settings.symbolCount : 0;
+            for (int i = 0; i < count; i++)
             {
                 int index = i;
                 var choice = new VisualElement();
                 choice.AddToClassList("crew-symbol-choice");
-                CrewSymbols.Apply(choice, index);
+                CrewSymbols.Apply(choice, Library, symbolsOf, index);
                 choice.RegisterCallback<ClickEvent>(_ => pick(index));
                 into.Add(choice);
             }
@@ -248,6 +266,7 @@ namespace KryticalNova.UI
             if (!initialized) return;
             nextAgeRefresh = Time.unscaledTime + AgeRefreshSeconds;
             if (!IsOpen) return;
+            EnsureSymbols();
             bool inCrew = crew != null && crew.InCrew;
             SetDisplay(none, !inCrew);
             SetDisplay(some, inCrew);
@@ -290,7 +309,7 @@ namespace KryticalNova.UI
             CrewHeader header = crew.Header;
             CrewRank rank = header.myRank;
             titleLabel.text = header.name.ToString().ToUpperInvariant();
-            CrewSymbols.Apply(symbolHeader, header.symbol);
+            CrewSymbols.Apply(symbolHeader, Library, MyFaction, header.symbol);
             string text = header.announcement.ToString();
             announcement.text = text.Length > 0 ? text : "Nothing announced.";
 

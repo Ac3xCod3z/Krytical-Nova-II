@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7f0d19dbe2ec6c4db41fb64feeb1acc, type: 3}
+  m_Name: CrewSymbolLibrary
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.CrewSymbolLibrary
+  sets:
+  - faction: 1
+    symbols:
+    - {fileID: 21300000, guid: 836f8e0c48f5a0b408148a66d0ceafb6, type: 3}
+    - {fileID: 21300000, guid: eb5c96ad9d5836241bba898d87f6a2c3, type: 3}
+    - {fileID: 21300000, guid: bfed679e8407de2419810b8b5fa618a6, type: 3}
+    - {fileID: 21300000, guid: d750eb4e3d7da84489ce145db72a1e77, type: 3}
+    - {fileID: 21300000, guid: ec1e5a812cb6627438e0df9a1fdc4229, type: 3}
+    - {fileID: 21300000, guid: 111c3d2717a5ffe49afc3e9b46c2f039, type: 3}
+    - {fileID: 21300000, guid: bc36315035986cc4fa5d20ffa3e63c77, type: 3}
+    - {fileID: 21300000, guid: 334ab7826b4e6bb4aadeca4a3f2be6f8, type: 3}
+    - {fileID: 21300000, guid: 6901682af0085d044b70981d9a2eb7be, type: 3}
+    - {fileID: 21300000, guid: cb2e14f1c1702ea42bb0f7de1f526920, type: 3}
+    - {fileID: 21300000, guid: c32c81ad0429a2649baebaf1dd0a5ba9, type: 3}
+    - {fileID: 21300000, guid: 6351d1cf862c0cb48bcb33164de5322e, type: 3}
+  - faction: 2
+    symbols:
+    - {fileID: 21300000, guid: 00df18c7cd6106d41a3358ae6909cae6, type: 3}
+    - {fileID: 21300000, guid: 9ae055a3294c33141b32b12ef2309c2b, type: 3}
+    - {fileID: 21300000, guid: b04146737f01d8348a453644b21e3a72, type: 3}
+    - {fileID: 21300000, guid: a1287a0243b55c140808b93b5b954537, type: 3}
+    - {fileID: 21300000, guid: 4af70ff8adbff244ba319267105ab008, type: 3}
+    - {fileID: 21300000, guid: 3baf888cb0bb5084d9309e12428aba53, type: 3}
+    - {fileID: 21300000, guid: ea431a194593dc4479f9390233826818, type: 3}
+    - {fileID: 21300000, guid: 4969f677db5d0244091994c50dc35c19, type: 3}
+    - {fileID: 21300000, guid: 6bebd8451e94018428df094b712c0905, type: 3}
+    - {fileID: 21300000, guid: 7fb2e39924b17114ea3817b564e74469, type: 3}
+    - {fileID: 21300000, guid: a94b66a4cabc5d44d8560467e05b22c6, type: 3}
+    - {fileID: 21300000, guid: 0b2a481a499e59149b90d7d9653e611b, type: 3}
+  - faction: 3
+    symbols:
+    - {fileID: 21300000, guid: c22acfe9d6f14c243834e30c7ba66443, type: 3}
+    - {fileID: 21300000, guid: 546b4b7290d094443b6b65b841e23371, type: 3}
+    - {fileID: 21300000, guid: d20d54784b06ec843bfd924f113526e1, type: 3}
+    - {fileID: 21300000, guid: a62d3355f8a5f8440946e43de649f476, type: 3}
+    - {fileID: 21300000, guid: 9e8de72c912ee6649a4eeb262dbbc361, type: 3}
+    - {fileID: 21300000, guid: 845913718bb0ed24aa3b9b1e6a172646, type: 3}
+    - {fileID: 21300000, guid: c84d324e0ee8e434a8554843088532f4, type: 3}
+    - {fileID: 21300000, guid: a5111d62b1f122844be1580501a6cc82, type: 3}
+    - {fileID: 21300000, guid: 9d2be23a1cf745246a19c472f937f5f0, type: 3}
+    - {fileID: 21300000, guid: c740b8735bac9cd4f9243c9262c2beda, type: 3}
+    - {fileID: 21300000, guid: 5ea8b99a2bf349f4587175dad6b1b49a, type: 3}
+    - {fileID: 21300000, guid: b049481546fe44e449ef122a6166cfb5, type: 3}

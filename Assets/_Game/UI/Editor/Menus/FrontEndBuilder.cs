@@ -95,6 +95,7 @@ namespace KryticalNova.EditorTools
                 var screen = AddScreen(canvas, skin.titleScreen, "Screen_Title");
                 ComicBackground(screen);
                 TitleLettering(screen);
+                TitleEmblem(screen, each.faction);
                 // "Press [key] to Continue": the pack ships an Xbox button here.
                 StandaloneGlyph(MenuUi.Find(screen, "Input_Button"), Key.Enter);
                 // The way out: a quieter line under the prompt, and the popup that asks before the game closes.
@@ -112,6 +113,56 @@ namespace KryticalNova.EditorTools
             AddSkinSwitch(canvas, groups);
             AddTransition();
             End(build);
+        }
+
+        /// <summary>What the emblem over the game's name is called (the title screen of each skin has one).</summary>
+        public const string TitleEmblemName = "Faction_Emblem";
+        private const float TitleEmblemSize = 240f, TitleEmblemGap = 14f;
+
+        /// <summary>
+        /// The emblem of the faction whose skin this title screen wears, over the game's name and in the faction's
+        /// colour: the menus wear one faction's look at a time, and this says whose.
+        /// </summary>
+        private static void TitleEmblem(Transform screen, FactionId faction)
+        {
+            var title = MenuUi.Find(screen, "Title") as RectTransform;
+            var catalog = AssetDatabase.LoadAssetAtPath<FactionCatalog>(FactionAssetBuilder.CatalogPath);
+            FactionDefinition definition = catalog != null ? catalog.Get(faction) : null;
+            if (title == null || definition == null || definition.crest == null) return;
+
+            // Where the name is lettered, in the title's own space: the emblem stands over the middle of that, not of
+            // the rectangle the pack gave its own title.
+            Canvas.ForceUpdateCanvases();
+            float left = float.MaxValue, right = float.MinValue, top = float.MinValue;
+            foreach (TMP_Text label in title.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (!label.name.EndsWith("_Main")) continue;
+                label.ForceMeshUpdate();
+                Bounds lettered = label.textBounds;
+                if (lettered.size.x <= 0f) continue;
+                foreach (Vector3 corner in new[] { lettered.min, lettered.max })
+                {
+                    Vector3 inTitle = title.InverseTransformPoint(label.transform.TransformPoint(corner));
+                    left = Mathf.Min(left, inTitle.x);
+                    right = Mathf.Max(right, inTitle.x);
+                    top = Mathf.Max(top, inTitle.y);
+                }
+            }
+            if (left > right) return;
+
+            var go = new GameObject(TitleEmblemName, typeof(RectTransform), typeof(Image)) { layer = title.gameObject.layer };
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(title, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.sizeDelta = Vector2.one * TitleEmblemSize;
+            rect.position = title.TransformPoint(new Vector3((left + right) * 0.5f, top + TitleEmblemGap, 0f));
+            var image = go.GetComponent<Image>();
+            image.sprite = definition.crest;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            Color accent = definition.accentColor;
+            image.color = new Color(accent.r, accent.g, accent.b, 1f);
         }
 
         /// <summary>
@@ -520,7 +571,7 @@ namespace KryticalNova.EditorTools
 
         private static void EndSkin(List<MenuSkinSwitch.Group> groups)
         {
-            groups.Add(new MenuSkinSwitch.Group { faction = skin.faction, root = skinGroup.gameObject });
+            groups.Add(new MenuSkinSwitch.Group { faction = skin.faction, root = skinGroup.gameObject, cursor = skin.cursor, cursorHotspot = skin.cursorHotspot });
             skinGroup.gameObject.SetActive(false); // the switch wakes the one the menus wear
             skin = null;
             skinGroup = null;
@@ -537,6 +588,8 @@ namespace KryticalNova.EditorTools
                 SerializedProperty element = list.GetArrayElementAtIndex(i);
                 element.FindPropertyRelative("faction").intValue = (int)groups[i].faction;
                 element.FindPropertyRelative("root").objectReferenceValue = groups[i].root;
+                element.FindPropertyRelative("cursor").objectReferenceValue = groups[i].cursor;
+                element.FindPropertyRelative("cursorHotspot").vector2Value = groups[i].cursorHotspot;
             }
             so.ApplyModifiedPropertiesWithoutUndo();
         }

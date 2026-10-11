@@ -61,6 +61,10 @@ namespace KryticalNova.UI
         public Sprite pipOn, pipOff;
         [Tooltip("The close glyph of a window.")]
         public Sprite closeIcon;
+        [Tooltip("The mouse pointer: the pack's own cursor picture (imported as a Cursor texture).")]
+        public Texture2D cursor;
+        [Tooltip("Where the pointer points, in the picture's pixels from its top-left corner. Measured by the skin builder when it is (0, 0) and the picture's tip is elsewhere.")]
+        public Vector2 cursorHotspot;
         [Tooltip("The small arrow of a grab handle or a stepper.")]
         public Sprite arrowIcon;
         [Tooltip("The soft backing behind text that floats over the world.")]

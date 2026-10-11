@@ -112,7 +112,8 @@ _Game/
 │   ├── Progression/       Runtime/ (also PlayerNova, NovaRules, NovaHalo: Ascension and Nova Standings)  Data/ (SO classes,
 │   │                      NovaSettings)  Data/Assets/ (SO instances)  Shaders/ (the Nova's four shaders and their materials)  Editor/  Tests/Editor/
 │   ├── Social/            Runtime/ (chat channels and rules, PlayerChat, the combat log, Squads, Contacts, Crews, NamecardRules,
-│   │                      PlayerEmotes, EmoteCatalog)  Data/ + Data/Assets/ (CrewSettings, EmoteWheelSettings)  Tests/Editor/
+│   │                      PlayerEmotes, EmoteCatalog)  Data/ + Data/Assets/ (CrewSettings, EmoteWheelSettings, CrewSymbolLibrary = the
+│   │                      picture of each Crew symbol, a list a faction)  Editor/ (CrewSymbolBuilder)  Tests/Editor/
 │   └── (future) Skills/ Quests/ Interaction/ StatusEffects/ Inventory/
 ├── Characters/            Representation only: models, rigs, materials, animations, visual prefabs
 │   ├── Player/            Player_01/ (Sidekick character)  Animations/
@@ -395,6 +396,7 @@ Menu **Krytical Nova ▸ Characters** (run in order, or use *Bake Everything*):
 |----------------------------------------------|----------------------------------------------------------------------------------------|
 | 1. Bake Sidekick Part Catalog                | Indexes every Sidekick part on disk into `SidekickPartCatalog.asset` (stable ids, loaded on demand) |
 | 2. Build Faction Assets                      | The three faction assets and the catalog. Keeps text and colours tuned in the Inspector |
+| Set Faction Emblems                          | Gives the three factions the emblems named in `FactionAssetBuilder` (each from its own Synty interface pack), over whatever they had. The emblem is on namecards, faction select, character select and, since 11 Oct 2026, over the game's name on the title screen (rebuild the front-end scenes after changing one) |
 | 3. Bake Character Data                       | Lineages, palettes, ready-made faces and colour channels into `CharacterCreationDatabase.asset` |
 | 4. Set Up Player Identity Components         | Adds `PlayerIdentity` / `CharacterLook` to the player prefabs                          |
 | 5. Bake Expressions (Faces, Idles, Emotes)   | Fills `CharacterExpressionLibrary.asset` for the creator's Preview tab: Sidekick face poses, idles, emotes. Add clips in `CharacterExpressionBaker` |
@@ -420,7 +422,8 @@ Menu **Krytical Nova ▸ UI**:
 | Build Faction HUD                            | Composes each faction's uGUI HUD pieces (Hotbar, player plate, minimap dial) from that faction's Synty HUD pack into `UI/HUD/Faction/<Faction>/` and writes `UI/Skins/FactionHudKit_<Faction>.asset`. Run after changing `FactionHudBuilder`; then **Set Up HUD** on the world scene if a kit asset is new |
 | Build Faction Window Variants                | Spike. Makes a faction's version of a window its own pack lacks: a prefab variant of the pack that has it, with recoloured sprite copies in `UI/HUD/Faction/<Faction>/Art/` |
 | Rebuild Faction Skin Art                     | Makes each skin's flattened pictures again (button, menu row button, title band, cell, close button: the pack's frame over its fill, in `UI/HUD/Faction/<Faction>/Art/`), then the skin sheets. Run after changing what a picture is made from in `FactionSkinBuilder` |
-| Build Faction Skins                          | Regenerates `UI/Common/KryticalSkin_Hegemony.uss`, `_Null.uss` and `_Covenant.uss` from the three skin assets in `UI/Skins/` and the base sheets (the Hegemony layout). Run after editing a base sheet; a change to a skin asset rebuilds them by itself (`UiSkinWatcher`). Never edit the generated sheets, and never edit a base sheet for one faction. A new in-game style sheet must be added to the builder's list |
+| Build Crew Symbols                           | Makes `Gameplay/Social/Data/Assets/CrewSymbolLibrary.asset` from the table in `CrewSymbolBuilder`: for each faction, the pictures of its own Synty pack that a Crew's symbol number stands for, and writes how many there are to Crew Settings. Change a line of the table and run it again to swap a symbol |
+| Build Faction Skins                          | Regenerates `UI/Common/KryticalSkin_Hegemony.uss`, `_Null.uss` and `_Covenant.uss` from the three skin assets in `UI/Skins/` and the base sheets (the Hegemony layout). It also gives a skin its faction's mouse pointer when it has none (`UiSkin.cursor`, the pack's own cursor picture, with the point it clicks at measured from the picture) and copies it to the faction's HUD kit: the game shows the character's faction's pointer (`FactionCursor`, from `HudChrome`), the menus the pointer of the skin they wear (`MenuSkinSwitch`). Run after editing a base sheet; a change to a skin asset rebuilds them by itself (`UiSkinWatcher`). Never edit the generated sheets, and never edit a base sheet for one faction. A new in-game style sheet must be added to the builder's list |
 
 Menu **Krytical Nova ▸ GameFeel** also has **Rebuild Menu Feel**: builds `PFX_MenuFeel.prefab` again from the numbers in
 `GameFeelBuilder.Menus` (tuning done on the prefab is lost) and makes sure `PFX_GameFeel` carries it.

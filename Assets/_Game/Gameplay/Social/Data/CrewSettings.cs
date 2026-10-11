@@ -28,8 +28,10 @@ namespace KryticalNova.Social
         [Range(40, 300)] public int announcementMaxLength = 160;
 
         [Header("Other")]
-        [Tooltip("How many preset symbols a Crew chooses from.")]
+        [Tooltip("How many preset symbols a Crew chooses from. Build Crew Symbols sets it to what every faction has a picture for.")]
         [Range(1, 24)] public int symbolCount = 12;
+        [Tooltip("The picture of each symbol, in each faction's own interface art.")]
+        public CrewSymbolLibrary symbols;
         [Tooltip("Seconds a Crew invitation waits for an answer.")]
         [Min(5f)] public float inviteSeconds = 30f;
     }

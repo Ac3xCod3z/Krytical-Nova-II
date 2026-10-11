@@ -117,6 +117,8 @@ namespace KryticalNova.UI.Hud
         private void Refresh(bool again)
         {
             FactionHudKit kit = KitOf(FactionSkin.Current);
+            // The pointer is the faction's own too.
+            FactionCursor.Show(kit != null ? kit.cursor : null, kit != null ? kit.cursorHotspot : Vector2.zero);
             VisualElement root = document != null ? document.rootVisualElement : null;
             if (kit == shown && !again) return;
             Clear();

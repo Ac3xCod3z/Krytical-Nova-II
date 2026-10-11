@@ -53,6 +53,7 @@ namespace KryticalNova.UI
             public KryticalNova.Autopilot.PlayerAutopilot Autopilot;
             public float Height = float.NaN;
             public string NameText, StandingText, CrewText;
+            public int CrewSymbol = -1; // the symbol shown, or -1 for none
             public FactionId Faction = (FactionId)255;
             public FactionId ArtFaction; // whose art the card was made in
             public bool Duelling;
@@ -273,6 +274,14 @@ namespace KryticalNova.UI
             CrewTag tag = card.PlayerCrew != null ? card.PlayerCrew.Tag : default;
             string crew = tag.InCrew ? "<" + tag.crew + ">" : string.Empty;
             if (crew != card.CrewText) view.Crew(card.CrewText = crew);
+            // The Crew's symbol, in its own faction's art (a Crew is of one faction: its member's).
+            int symbol = tag.InCrew ? tag.symbol : -1;
+            if (symbol != card.CrewSymbol)
+            {
+                card.CrewSymbol = symbol;
+                CrewSymbolLibrary library = symbol >= 0 && card.PlayerCrew.Settings != null ? card.PlayerCrew.Settings.symbols : null;
+                view.CrewSymbol(library != null ? library.Get(faction, symbol) : null);
+            }
 
             float share = card.Vitals != null && card.Vitals.MaxHealth > 0f ? Mathf.Clamp01(card.Vitals.Health / card.Vitals.MaxHealth) : 1f;
             view.Health(showHealth && card.Vitals != null, share);

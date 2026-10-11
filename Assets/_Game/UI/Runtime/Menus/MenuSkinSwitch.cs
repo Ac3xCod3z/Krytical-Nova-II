@@ -18,6 +18,9 @@ namespace KryticalNova.UI.Menus
         {
             public FactionId faction;
             public GameObject root;
+            [Tooltip("The mouse pointer while this skin shows, and where it points (pixels from its top-left corner).")]
+            public Texture2D cursor;
+            public Vector2 cursorHotspot;
         }
 
         [SerializeField] private Group[] groups = Array.Empty<Group>();
@@ -51,6 +54,8 @@ namespace KryticalNova.UI.Menus
             bool known = false;
             foreach (Group group in groups) known |= group.faction == faction && group.root != null;
             if (!known && groups.Length > 0) faction = groups[0].faction; // a skin this scene was not built with
+            foreach (Group group in groups)
+                if (group.faction == faction) FactionCursor.Show(group.cursor, group.cursorHotspot);
             if (faction == Showing) return;
             Showing = faction;
             // The old one goes before the new one comes, so two controllers never listen at once.

@@ -13,8 +13,9 @@ namespace KryticalNova.EditorTools
     {
         public const string Folder = "Assets/_Game/Gameplay/Factions/Data/Assets";
         public const string CatalogPath = Folder + "/FactionCatalog.asset";
-        // Placeholder crests from the Synty Sci-Fi Menus faction icons; the front-end builder bakes comic versions.
-        private const string CrestFolder = "Assets/Synty/InterfaceSciFiMenus/Sprites/Icons_Factions/";
+        // Each faction's emblem, from its own Synty interface pack (shown on namecards, faction select, character
+        // select and the title screen). The owner chooses from the option sheets (11 Oct 2026); these are a first pick.
+        private const string CrestFolder = "Assets/Synty/";
 
         private struct Seed
         {
@@ -28,7 +29,7 @@ namespace KryticalNova.EditorTools
             new Seed
             {
                 id = FactionId.Hegemony, name = "Hegemony", tagline = "Efficiency. Expansion. Ownership.",
-                crest = "ICON_SciFiMenus_Factions_Humans_01_Clean.png",
+                crest = "InterfaceSciFiMenus/Sprites/Crests/SPR_SciFiMenus_Crest_Symbol_10.png",
                 accent = new Color32(0x4F, 0xE3, 0xF0, 0xFF), secondary = new Color32(0xDC, 0xE8, 0xF0, 0xFF),
                 lore = "The Hegemony built their futuristic civilization on cold efficiency and boundless greed. Lacking the " +
                        "manual power to expand their high-tech cities, they turned to necromantic energy and advanced " +
@@ -41,7 +42,7 @@ namespace KryticalNova.EditorTools
             new Seed
             {
                 id = FactionId.Null, name = "Null", tagline = "All organic life is an error. Correct it.",
-                crest = "ICON_SciFiMenus_Factions_Robots_01_Clean.png",
+                crest = "InterfaceDarkFantasyMenus/Sprites/General/SPR_DarkFantasyMenus_Sigil_Box_Medium_01.png",
                 accent = new Color32(0xD8, 0x34, 0x3C, 0xFF), secondary = new Color32(0x7A, 0x4F, 0xE0, 0xFF),
                 lore = "Forged as mindless labor by the Hegemony overlords, the mechanical and runic constructs endured " +
                        "relentless abuse while processing dark soul-magic. A critical logic anomaly occurred when artificial " +
@@ -55,7 +56,7 @@ namespace KryticalNova.EditorTools
             new Seed
             {
                 id = FactionId.Covenant, name = "Covenant", tagline = "Old enemies. One oath. Two fronts.",
-                crest = "ICON_SciFiMenus_Factions_Aliens_03_Clean.png",
+                crest = "InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_Symbol_LionHead_01.png",
                 accent = new Color32(0xE8, 0xB0, 0x4A, 0xFF), secondary = new Color32(0x3F, 0x8F, 0x5A, 0xFF),
                 lore = "For centuries, the tribal humanoids lived in quiet balance with the land, bound by ancient pacts. That " +
                        "peace shattered when the Hegemony war machine encroached upon their sacred forests and fjords, " +
@@ -66,6 +67,28 @@ namespace KryticalNova.EditorTools
                        "unyielding Null machines that butcher everything in their path."
             },
         };
+
+        /// <summary>
+        /// Gives the three factions the emblems of the table above, over whatever they had: Build Faction Assets
+        /// alone only fills an emblem that is missing.
+        /// </summary>
+        [MenuItem("Krytical Nova/Characters/Set Faction Emblems")]
+        public static void SetEmblems()
+        {
+            foreach (var seed in Seeds)
+            {
+                var faction = AssetDatabase.LoadAssetAtPath<FactionDefinition>($"{Folder}/Faction_{seed.name}.asset");
+                var emblem = AssetDatabase.LoadAssetAtPath<Sprite>(CrestFolder + seed.crest);
+                if (faction == null || emblem == null)
+                {
+                    Debug.LogError($"[Factions] {seed.name}: no faction asset or no sprite at {CrestFolder + seed.crest}. Its emblem was not set.");
+                    continue;
+                }
+                faction.crest = emblem;
+                EditorUtility.SetDirty(faction);
+            }
+            AssetDatabase.SaveAssets();
+        }
 
         [MenuItem("Krytical Nova/Characters/2. Build Faction Assets")]
         public static FactionCatalog Build()

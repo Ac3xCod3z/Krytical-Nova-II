@@ -18,6 +18,8 @@ namespace KryticalNova.UI.Hud
     {
         [SerializeField] private TMP_Text nameLabel, levelLabel, standingLabel, crewLabel;
         [SerializeField] private Image crest;
+        [Tooltip("The Crew's symbol, before the Crew's name.")]
+        [SerializeField] private Image crewSymbol;
         [SerializeField] private Slider health;
         [Tooltip("The pack's bar without its badge: switched off where health is not shown.")]
         [SerializeField] private GameObject bar;
@@ -75,6 +77,15 @@ namespace KryticalNova.UI.Hud
             bool any = !string.IsNullOrEmpty(text);
             if (any) label.text = text;
             if (label.gameObject.activeSelf != any) label.gameObject.SetActive(any);
+        }
+
+        /// <summary>The Crew's symbol before its name, or (with no picture) none.</summary>
+        public void CrewSymbol(Sprite picture)
+        {
+            if (crewSymbol == null) return;
+            if (picture != null) crewSymbol.sprite = picture;
+            if (crewSymbol.gameObject.activeSelf != (picture != null)) crewSymbol.gameObject.SetActive(picture != null);
+            stale = true;
         }
 
         public void Crest(Sprite picture)
@@ -159,7 +170,19 @@ namespace KryticalNova.UI.Hud
             float top = standing ? standingAt + standingLabel.rectTransform.sizeDelta.y : standingAt;
             float bottom = crew ? 0f : rowY - badgeHeight * 0.5f;
             if (standing) halfWidth = Mathf.Max(halfWidth, standingLabel.preferredWidth * 0.5f);
-            if (crew) halfWidth = Mathf.Max(halfWidth, crewLabel.preferredWidth * 0.5f);
+            if (crew)
+            {
+                // The symbol and the Crew's name are centred as a pair.
+                RectTransform crewRect = crewLabel.rectTransform;
+                bool symbol = crewSymbol != null && crewSymbol.gameObject.activeSelf;
+                float symbolWidth = symbol ? crewSymbol.rectTransform.sizeDelta.x : 0f;
+                float symbolGap = symbol ? gap * 0.6f : 0f;
+                float crewWidth = crewLabel.preferredWidth, pair = symbolWidth + symbolGap + crewWidth;
+                crewRect.anchoredPosition = new Vector2((symbolWidth + symbolGap) * 0.5f, crewRect.anchoredPosition.y);
+                if (symbol)
+                    crewSymbol.rectTransform.anchoredPosition = new Vector2(-pair * 0.5f + symbolWidth * 0.5f, crewRect.anchoredPosition.y - crewLabel.fontSize * 0.62f);
+                halfWidth = Mathf.Max(halfWidth, pair * 0.5f);
+            }
             back.sizeDelta = new Vector2(halfWidth * 2f + backPadding.x * 2f, top - bottom + backPadding.y * 2f);
             back.anchoredPosition = new Vector2(0f, (top + bottom) * 0.5f - half);
         }
