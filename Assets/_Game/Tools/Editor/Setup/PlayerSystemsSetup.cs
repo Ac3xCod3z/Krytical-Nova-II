@@ -45,6 +45,8 @@ namespace KryticalNova.EditorTools
         {
             new Row("KryticalNova.Persistence.PlayerSaveAgent"),
             new Row("KryticalNova.Persistence.PlayerHotbarMemory"),
+            // Whether the player is in a fight, told to every machine (a pet keeps calm in one).
+            new Row("KryticalNova.Combat.PlayerCombatState"),
             new Row("KryticalNova.Pets.PlayerPet", ("catalog", "Assets/_Game/Gameplay/Pets/Data/Assets/PetCatalog.asset")),
             new Row("KryticalNova.Economy.PlayerWallet", ("settings", EconomySettingsPath)),
             new Row("KryticalNova.Items.PlayerLoot", ("dropPrefab", GameplayPrefabsSetup.WorldDropPath)),

@@ -73,7 +73,8 @@ _Game/
 │   ├── Autopilot/         Runtime/ (PlayerAutopilot = the server's flag, zone and time; AutopilotController and MagnetController
 │   │                      run on the player's own game; AutopilotPreferences, MagnetRules)  Data/ + Data/Assets/ (AutopilotSettings)
 │   │                      Tests/Editor/
-│   ├── Combat/            Runtime/
+│   ├── Combat/            Runtime/ (melee, skill attacks, duels, who is hostile to whom; PlayerCombatState = whether a player is
+│   │                      in a fight, decided by the server and told to every machine)
 │   ├── Factions/          Runtime/ (ids, rules)  Data/ + Data/Assets/ (the three factions, catalog)  Editor/
 │   ├── CharacterCreation/ Runtime/ (recipe, look, roster, save, names)  Data/ + Data/Assets/ (lineages, palettes,
 │   │                      database)  Editor/ (bakers)  Tests/Editor/

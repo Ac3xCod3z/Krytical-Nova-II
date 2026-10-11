@@ -20,7 +20,8 @@ namespace KryticalNova.Items.Visuals
     /// also has that gait: a loop on the spot, held for as long as the parameter is true. A model with a single
     /// movement loop instead (<see cref="SetMoveLoop"/>) holds that one whenever it moves, played slower at a walk
     /// than at a run. A model that should not sit in its default state while it waits (a bird that would be perched
-    /// in mid-air) can name a loop to rest in (<see cref="SetRestLoop"/>).
+    /// in mid-air) can name a loop to rest in (<see cref="SetRestLoop"/>). While its owner is in a fight a pet is
+    /// kept calm (<see cref="SetCalm"/>): it rests and keeps its gait, and plays nothing else.
     /// </summary>
     public sealed class PetAnimations
     {
@@ -47,6 +48,9 @@ namespace KryticalNova.Items.Visuals
         private PetGait gait;
         private int next;
         private float nextAt = -1f;
+        // Calm: nothing is played once, by turn or on demand.
+        private const float CalmBlendSeconds = 0.2f;
+        private bool calm;
 
         private PetAnimations(Animator animator) => this.animator = animator;
 
@@ -114,9 +118,31 @@ namespace KryticalNova.Items.Visuals
             return -1;
         }
 
+        /// <summary>
+        /// Calm or not. A calm pet keeps to its resting state and its gait: it takes no turns and refuses an
+        /// animation asked of it, and one already under way is cut short. Out of it, the turn-taking starts again
+        /// from a full interval.
+        /// </summary>
+        public void SetCalm(bool on)
+        {
+            if (calm == on) return;
+            calm = on;
+            nextAt = -1f;
+            if (!on || animator == null || !animator.isActiveAndEnabled) return;
+            Read();
+            if (!read) return;
+            foreach (int hash in hashes) animator.ResetTrigger(hash);
+            // Each animation played once is a state named after its trigger: in one of those, or on the way into
+            // one, the pet goes back to the state it rests in.
+            AnimatorStateInfo now = animator.IsInTransition(0) ? animator.GetNextAnimatorStateInfo(0) : animator.GetCurrentAnimatorStateInfo(0);
+            if (hashes.Contains(now.shortNameHash)) animator.CrossFadeInFixedTime(defaultState, CalmBlendSeconds, 0);
+            oneShot = false;
+        }
+
         /// <summary>Plays one animation now (<paramref name="hash"/> = Animator.StringToHash of its name). The turn-taking waits a full interval after it.</summary>
         public bool Play(int hash)
         {
+            if (calm) return false;
             Read();
             int index = hashes.IndexOf(hash);
             if (index < 0 || !animator.isActiveAndEnabled) return false;
@@ -200,7 +226,7 @@ namespace KryticalNova.Items.Visuals
         /// </summary>
         public void Tick(float cycleSeconds)
         {
-            if (cycleSeconds <= 0f || animator == null || !animator.isActiveAndEnabled) return;
+            if (calm || cycleSeconds <= 0f || animator == null || !animator.isActiveAndEnabled) return;
             Read();
             if (gait != PetGait.Rest)
             {

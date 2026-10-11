@@ -97,6 +97,7 @@ GameObject:
   - component: {fileID: 8564388659051304428}
   - component: {fileID: 280678128926397855}
   - component: {fileID: 5335455843311859722}
+  - component: {fileID: 7535587428304101747}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -603,6 +604,7 @@ MonoBehaviour:
   stopPlaybackSpeed: 1.25
   stopFootIK: 1
   stopLeadDistance: 0.35
+  stopLeadSeconds: 0.08
   jumpStartClip: {fileID: 7400000, guid: c88529aecf507884c8f64971ba054338, type: 3}
   jumpLoopClip: {fileID: 7400000, guid: 278a20928cf87054ebeeb1fb49277f3d, type: 3}
   jumpLandClip: {fileID: 7400000, guid: 6a92a180c4391d24cb53c32a5bedc09d, type: 3}
@@ -3850,6 +3852,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b237c8452a214a6488afdbf371b8c505, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Autopilot.AutopilotController
+--- !u!114 &7535587428304101747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68c04caccda62e946bf1b0ebef5e2d75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Combat.PlayerCombatState
+  ShowTopMostFoldoutHeaderGroup: 1
+  lingerSeconds: 6
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

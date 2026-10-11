@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Combat;
 using KryticalNova.Core;
 using KryticalNova.Items;
 using KryticalNova.Items.Visuals;
@@ -35,7 +36,8 @@ namespace KryticalNova.Pets
     /// lets it grow hungry while the owner plays, and keeps both in the pet item itself, so they go with the item.
     /// Growth and fed / starving are replicated to everyone; each machine works out the stat bonus and the stage's
     /// look from them, the way worn gear does. Only the pet that is out grows or gets hungry.
-    /// Offline (the unspawned scene avatar) the local copy decides.
+    /// Offline (the unspawned scene avatar) the local copy decides. While the owner is in a fight
+    /// (<see cref="PlayerCombatState"/>) the pet is kept to its idle, walk and run on every machine.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment))]
@@ -54,6 +56,7 @@ namespace KryticalNova.Pets
         private CharacterCombatStats combatStats;
         private PetFollower follower;
         private PlayerChat chat;
+        private PlayerCombatState combat;
 
         // One stable source object so the pet's bonus can be replaced or removed on its own.
         private readonly object statSource = new object();
@@ -98,12 +101,18 @@ namespace KryticalNova.Pets
             combatStats = GetComponent<CharacterCombatStats>();
             follower = GetComponent<PetFollower>();
             chat = GetComponent<PlayerChat>();
+            combat = GetComponent<PlayerCombatState>();
         }
 
         private void OnEnable()
         {
             equipment.SlotChanged += OnSlotChanged;
             CombatEntity.AnyKilled += OnAnyKilled;
+            if (combat != null)
+            {
+                combat.Changed += OnCombatChanged;
+                OnCombatChanged(combat.InCombat);
+            }
             // The offline avatar comes back after a session with whatever is worn now.
             if (!IsSpawned) Adopt(equipment.Get(EquipSlot.Pet));
         }
@@ -112,7 +121,14 @@ namespace KryticalNova.Pets
         {
             equipment.SlotChanged -= OnSlotChanged;
             CombatEntity.AnyKilled -= OnAnyKilled;
+            if (combat != null) combat.Changed -= OnCombatChanged;
             if (!IsSpawned) WriteToItem();
+        }
+
+        // In a fight the pet keeps to its idle and its gait: fewer animations and effects to pay for when most is going on.
+        private void OnCombatChanged(bool fighting)
+        {
+            if (follower != null) follower.SetCombatCalm(fighting);
         }
 
         public override void OnNetworkSpawn()
