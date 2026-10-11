@@ -210,8 +210,18 @@ namespace KryticalNova.EditorTools
                 library.Set(index, theme);
             }
             EditorUtility.SetDirty(library);
+            LinkToCatalog(library);
             Debug.Log($"[Items] Gear themes: {library.Themes.Count} baked ({added} new), {named} lines given their set's theme.");
             return library;
+        }
+
+        /// <summary>The item catalog names the theme library, so the game can paint a dyed piece in any colourway.</summary>
+        public static void LinkToCatalog(GearThemeLibrary library)
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(SidekickGearGenerator.CatalogPath);
+            if (catalog == null || library == null || catalog.Themes == library) return;
+            catalog.SetThemes(library);
+            EditorUtility.SetDirty(catalog);
         }
 
         private static bool IsThemed(GearDictionary.Line line) =>

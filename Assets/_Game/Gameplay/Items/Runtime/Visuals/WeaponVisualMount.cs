@@ -61,6 +61,7 @@ namespace KryticalNova.Items.Visuals
         private NavMeshAgent owner;     // whose feet say where the ground is
         private bool ownerSought;
         private ItemDefinition current;
+        private ItemDefinition strikesAs;   // the weapon whose reach the hitbox has: the one really held
         private bool drawn;
         private bool capeWorn;
         private Coroutine settleRoutine;
@@ -97,9 +98,18 @@ namespace KryticalNova.Items.Visuals
             Place(settle: false);
         }
 
-        public void SetWeapon(ItemDefinition item)
+        /// <summary>
+        /// Shows <paramref name="item"/>'s model. <paramref name="worn"/> is the weapon really held when the model
+        /// is only a look over it (a Weave): the hitbox keeps the held weapon's reach.
+        /// </summary>
+        public void SetWeapon(ItemDefinition item, ItemDefinition worn = null)
         {
-            if (current == item && (item == null || spawned != null)) return;
+            ItemDefinition strikes = worn != null ? worn : item;
+            if (current == item && (item == null || spawned != null))
+            {
+                if (strikes != strikesAs && spawned != null) ConfigureHitbox(strikes);
+                return;
+            }
             current = item;
             ClearModels();
 
@@ -114,8 +124,14 @@ namespace KryticalNova.Items.Visuals
                 spawnedOffReach = ReachOf(spawnedOff, out spawnedOffRadius);
             }
             Place(settle: false);
-            if (hitbox != null) hitbox.Configure(item.hitboxCenter, item.hitboxSize);
+            ConfigureHitbox(strikes);
             if (glowOn) AttachGlow(); // a new model for the same glow (the look changed, not the Temper)
+        }
+
+        private void ConfigureHitbox(ItemDefinition strikes)
+        {
+            strikesAs = strikes;
+            if (hitbox != null && strikes != null) hitbox.Configure(strikes.hitboxCenter, strikes.hitboxSize);
         }
 
         private GameObject Spawn(ItemDefinition item)

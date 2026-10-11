@@ -701,6 +701,48 @@ medians of 200 frames, GPU / main thread in ms):
   30 fps drops), now once a frame and only what is open; the portrait's camera drew every frame (0.7 ms of the main
   thread for a 256 px picture), now 30 times a second.
 
+### The performance log (11 Oct 2026)
+
+The readout says that a slow frame happened; the log says when, and what the game was doing. **A built game always
+writes one**: a text file for each run, `PerformanceLogs/perf_<date>_<time>.txt` beside the exe (the newest 20 are
+kept, about half a megabyte an hour, nothing is sent anywhere; a tester sends the file by hand). Play in the Editor
+writes one only while **Krytical Nova ▸ Build ▸ Record Performance Log In Play** is ticked (into
+`Library/PerformanceLogs`), because the Editor's own slow frames are in it. **Show Performance Logs** in the same
+menu opens the folder, and a rebuild of the test build keeps the folder.
+
+Code: `Core/Runtime/Diagnostics/` (`PerformanceLog`, `PerformanceLogRecorder`, `FramePhaseProbes`, `MarkerRing`,
+`PerformanceLogText`). Lines are tab-separated and start with their kind:
+
+| Line | When | What it holds |
+|---|---|---|
+| `#` | once | when, version, the machine, the screen, the names of the columns |
+| `S` | every second | scene, frames, mean and slowest frame, frames over 20 ms, main thread / render thread / GPU ms, set-pass calls, triangles, memory, script memory, memory collections so far, players, networked objects, where the camera is, what the log itself cost |
+| `F` | every slow frame (over 20 ms, or over three times the usual frame of the second before) | its length, whether a memory collection ran in it, loading or play, its main thread / render thread / GPU split, **where in the frame the time went**, and **what the game did in the two seconds before** |
+| `E` | when the game does something that can cost a frame | its name, how long it took if it is a piece of work, a detail, a number |
+| `C` | on a change | graphics options applied, a scene arriving, a session starting or ending: numbers before and after are not to be compared |
+
+- **Where the time went** is measured by the game itself, because a built game has no profiler markers: a clock read
+  at the start and end of each top-level phase of Unity's player loop (`TimeUpdate`, `Initialization`,
+  `EarlyUpdate`, `FixedUpdate`, `PreUpdate`, `Update`, `PreLateUpdate`, `PostLateUpdate`, in which the frame is
+  drawn), and `other` for what falls between them. It names the part of the frame, not the function.
+- **Markers** are put where a hitch can plausibly come from, with `PerformanceLog.Mark(name, detail, number)` or
+  `using var timed = PerformanceLog.Time(name, detail, number);`. While nothing records a call is one test and
+  returns. Never build a string for a marker without asking `PerformanceLog.IsRecording` first. The ones in place:
+  `save.player`, `save.file`, `save.all`, `hud.redraw`, `window.service`, `skill.cast`, `level.gained`,
+  `pet.evolved`, `nova.work`, `zone.prewarm`, `zone.wake`, `zone.sleep`, `zone.spawn`, `drop.appeared`. A new
+  system that does a burst of work (builds a window, spawns a batch, writes a file) gets one.
+- **Reading one:** `python Assets/_Game/Tools/Editor/Build/ReadPerformanceLog.py` reads the newest log of the
+  test build (or a file or folder given to it) and prints the slow frames grouped by likeliest cause, the worst
+  fifteen with their split and markers, every timed piece of work, and what grew over the session.
+- **Limits:** garbage made per frame cannot be read in a built game, only that a collection ran. The split of a
+  slow frame is matched to it by length a few frames later; `~` before a number marks a match that is not certain.
+  Frames in the first five seconds, and three seconds after a scene or a session arrives, are marked `loading`.
+- **Cost:** 10 to 40 microseconds a frame measured in the Editor (the last column of every `S` line says what it
+  was), against a budget of 50.
+- **First things it showed** (in the Editor, so the sizes are not a built game's): preparing the eight Hostile
+  Zones' pools takes 100 to 200 ms each when the world loads, and a player's save takes 3 to 16 ms on the frame it
+  happens, every 60 seconds for each player on the host. Neither is changed yet.
+
 ### The world, and what draws it (10 Oct 2026)
 
 Zone 01 is one scene: a 1 km terrain, about 8,500 mesh renderers (3.3 million triangles of static geometry),
@@ -755,6 +797,8 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   - Performance readout (Settings ▸ Graphics): frame times, what is drawn, memory, connection. Frame Timing Stats switched on in Player Settings for it.
   - The frame rate target is written down with what was measured against it; the readout shows the slowest frame of
     the last minute, how many frames fell under 50 a second, and the machine (section 7).
+- **2026-10-11**: a built game writes a performance log beside its exe: every slow frame with where its time went
+  and what the game had just done (section 7).
 
 - **2026-10-08 (polish pass: interface)**:
   - One interface skin per faction, in an asset; the game's style sheets are generated from it (section 6i,

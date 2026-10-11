@@ -10,6 +10,13 @@ namespace KryticalNova.Core
         public const string Forge = "forge";
         public const string Herald = "herald";
         public const string Shop = "shop";
+        public const string Holoweave = "holoweave";
+        public const string Dye = "dye";
+        public const string Stylist = "stylist";
+        public const string Reshaper = "reshaper";
+        public const string Coach = "coach";
+        public const string Craft = "craft";
+        public const string Sponsor = "sponsor";
     }
 
     /// <summary>

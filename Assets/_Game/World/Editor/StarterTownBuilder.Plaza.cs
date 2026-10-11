@@ -10,7 +10,7 @@ namespace KryticalNova.EditorTools
     /// </summary>
     public static partial class StarterTownBuilder
     {
-        private enum StallKind { Market, Forge, HoloBooth, Watch, Tailor, Guild, Gate, Collector }
+        private enum StallKind { Market, Forge, HoloBooth, Watch, Tailor, Guild, Gate, Collector, Weaver, Salon, Clinic, Gym }
 
         private struct VendorStall
         {
@@ -26,13 +26,18 @@ namespace KryticalNova.EditorTools
         private static readonly VendorStall[] PlazaStalls =
         {
             new VendorStall("MallManager", false, StallKind.HoloBooth, -22.5f, 12.5f, 90f),
-            new VendorStall("Tailor", true, StallKind.Tailor, -22.5f, -12.5f, 90f),
+            new VendorStall("Tailor", false, StallKind.Tailor, -22.5f, -12.5f, 90f), // the Outfitter's stall
             new VendorStall("GuardCaptain", false, StallKind.Watch, 22.5f, 12.5f, 270f),
             new VendorStall("HerbMaster", false, StallKind.Market, 22.5f, -12.5f, 270f),
             new VendorStall("Blacksmith", false, StallKind.Forge, -12.5f, -22.5f, 0f),
             new VendorStall("Collector", false, StallKind.Collector, 12.5f, -22.5f, 0f), // the Herald's stall
             new VendorStall("GuildDirector", false, StallKind.Guild, -14f, 22.5f, 180f),
             new VendorStall("GateMaster", false, StallKind.Gate, 14f, 22.5f, 180f),
+            // The appearance services stand in the plaza's four corners, facing its middle.
+            new VendorStall("Holoweaver", false, StallKind.Weaver, -22.5f, -22.5f, 45f),
+            new VendorStall("Stylist", false, StallKind.Salon, 22.5f, -22.5f, 315f),
+            new VendorStall("Reshaper", false, StallKind.Clinic, -22.5f, 22.5f, 135f),
+            new VendorStall("Coach", false, StallKind.Gym, 22.5f, 22.5f, 225f),
         };
 
         private static readonly Vector2 ElderHall = new Vector2(0f, 18f);
@@ -130,7 +135,11 @@ namespace KryticalNova.EditorTools
                 case StallKind.Forge: return new StallLook { Title = "ARMORER", Subtitle = "forge · tempering", Style = SignStyle.NeonPanel, Font = FontOrbitron, Ink = ColorBible.SunsetCoral * 2.2f, Board = ColorBible.Ink };
                 case StallKind.HoloBooth: return new StallLook { Title = "NOVA STORE", Subtitle = "premium goods", Style = SignStyle.HoloPlate, Font = FontOrbitron, Ink = Color.white * 1.8f, Board = ColorBible.NeonCyan };
                 case StallKind.Watch: return new StallLook { Title = "MARSHAL POST", Subtitle = "contracts · battles", Style = SignStyle.Lightbox, Font = FontExo, Ink = ColorBible.Ink, Board = ColorBible.Hex("F4EBDD") };
-                case StallKind.Tailor: return new StallLook { Title = "OUTFITTER", Subtitle = "coming soon", Style = SignStyle.FabricBanner, Font = FontExo, Ink = Color.white, Board = ColorBible.NeonMagenta * 0.8f };
+                case StallKind.Tailor: return new StallLook { Title = "OUTFITTER", Subtitle = "dye · colour cells", Style = SignStyle.FabricBanner, Font = FontExo, Ink = Color.white, Board = ColorBible.NeonMagenta * 0.8f };
+                case StallKind.Weaver: return new StallLook { Title = "HOLOWEAVER", Subtitle = "weaves · looks", Style = SignStyle.HoloPlate, Font = FontOrbitron, Ink = Color.white * 1.8f, Board = ColorBible.NeonMagenta };
+                case StallKind.Salon: return new StallLook { Title = "STYLIST", Subtitle = "hair", Style = SignStyle.Lightbox, Font = FontExo, Ink = ColorBible.Ink, Board = ColorBible.Hex("F4EBDD") };
+                case StallKind.Clinic: return new StallLook { Title = "RESHAPER", Subtitle = "face", Style = SignStyle.NeonPanel, Font = FontOrbitron, Ink = ColorBible.NeonCyan * 2f, Board = ColorBible.Ink };
+                case StallKind.Gym: return new StallLook { Title = "COACH", Subtitle = "build · muscle", Style = SignStyle.BladeSign, Font = FontExo, Ink = ColorBible.SignalYellow, Board = ColorBible.ShadowIndigo };
                 case StallKind.Guild: return new StallLook { Title = "CREW HALL", Subtitle = "vault · crews", Style = SignStyle.BladeSign, Font = FontLato, Ink = ColorBible.SignalYellow, Board = ColorBible.ShadowIndigo };
                 case StallKind.Gate: return new StallLook { Title = "WAYFINDER", Subtitle = "deep vault · transit", Style = SignStyle.NeonPanel, Font = FontExo, Ink = ColorBible.NeonCyan * 2f, Board = ColorBible.Ink };
                 default: return new StallLook { Title = "HERALD", Subtitle = "ascension · standings", Style = SignStyle.WoodBoard, Font = FontOrbitron, Ink = ColorBible.SignalYellow, Board = ColorBible.Hex("3E3A48") };
@@ -193,6 +202,46 @@ namespace KryticalNova.EditorTools
             return opened;
         }
 
+        /// <summary>
+        /// For a town that is already built: builds, in the open scene, every stall of the table the town does not
+        /// have yet (stalls added to the table since), with its vendor and its sign, and stands the Fabricator on
+        /// the Elder hall's slot. Nothing that is there is touched. Returns how many it added.
+        /// </summary>
+        internal static int AddMissingStallsInScene()
+        {
+            GameObject known = GameObject.Find("Stall - HerbMaster");
+            var anyNpc = Object.FindAnyObjectByType<KryticalNova.NPC.NpcInteractable>(FindObjectsInactive.Include);
+            if (known == null || anyNpc == null) return 0; // not a town built from this table
+            Transform parent = known.transform.parent, npcRoot = anyNpc.transform.parent;
+            // What a whole build prepares before it places anything: the props by name, and the ground that is taken.
+            if (prefabIndex == null) IndexPrefabs();
+            if (occupied == null) occupied = new bool[OccSize, OccSize];
+            int added = 0;
+            foreach (VendorStall s in PlazaStalls)
+            {
+                if (s.Slot || GameObject.Find($"Stall - {s.NpcId}") != null || GameObject.Find($"Stall - {s.NpcId} (future)") != null) continue;
+                var stall = Group(parent, $"Stall - {s.NpcId}");
+                var origin = new Vector2(s.X, s.Z);
+                Vector2 npcLocal = BuildStallKit(stall, s.Kind, origin, s.Yaw);
+                BuildStallSign(stall, LookFor(s), origin, s.Yaw, dim: false);
+                Vector2 npcPosition = origin + Rotate(npcLocal, s.Yaw);
+                if (GameObject.Find("NPC_" + s.NpcId) == null) SpawnNpc(npcRoot, s.NpcId, npcPosition, s.Yaw);
+                added++;
+            }
+
+            GameObject elder = GameObject.Find("Slot_Elder");
+            if (elder != null && GameObject.Find("NPC_Fabricator") == null)
+            {
+                SpawnNpc(npcRoot, "Fabricator", new Vector2(elder.transform.position.x, elder.transform.position.z), elder.transform.eulerAngles.y);
+                if (GameObject.Find("NPC_Fabricator") != null)
+                {
+                    Object.DestroyImmediate(elder);
+                    added++;
+                }
+            }
+            return added;
+        }
+
         // Stall frame, local frame (+Z = toward customers): back wall at z −1.6, canopy over z −1.4..+0.9, counter at
         // z +0.5, vendor at z −0.6. Every prop is either grounded (snapped to y 0) or hung from the measured canopy.
         private const float StallWallZ = -1.6f, StallCounterZ = 0.55f, StallVendorZ = -0.6f, StallWidth = 5f;
@@ -253,6 +302,36 @@ namespace KryticalNova.EditorTools
                     Grounded(p, "SM_Prop_Paper_Banner_01", o, yaw, -2.9f, 0.6f);
                     Grounded(p, "SM_Prop_Paper_Banner_01", o, yaw, 2.9f, 0.6f);
                     Grounded(p, "SM_Prop_Box_Supplies_01", o, yaw, 1.8f, -1.1f);
+                    break;
+                case StallKind.Weaver: // Holoweaver: a booth to stand in, a screen to choose on
+                    Counter(p, "SM_Prop_MarketTable_05", o, yaw);
+                    OnCounter(p, "SM_Prop_Monitor_01", o, yaw, -0.5f, StallCounterZ, 180f);
+                    OnCounter(p, "SM_Prop_ControlPanel_01", o, yaw, 0.7f, StallCounterZ);
+                    Grounded(p, "SM_Prop_VRBooth_01", o, yaw, -3.4f, -0.6f, 90f);
+                    Grounded(p, "SM_Prop_Paper_Banner_01", o, yaw, 2.9f, 0.6f);
+                    break;
+                case StallKind.Salon: // Stylist: bottles and jars on the counter, plants at the door
+                    Counter(p, "SM_Prop_MarketTable_01", o, yaw);
+                    OnCounter(p, "SM_Prop_Bottle_02", o, yaw, -0.7f, StallCounterZ);
+                    OnCounter(p, "SM_Prop_Jar_02", o, yaw, 0.1f, StallCounterZ + 0.1f);
+                    OnCounter(p, "SM_Prop_Jar_03", o, yaw, 0.8f, StallCounterZ - 0.1f);
+                    Grounded(p, "SM_Prop_Plant_Vase_01", o, yaw, -2.9f, 1f);
+                    Grounded(p, "SM_Prop_Plant_Vase_02", o, yaw, 2.9f, 0.9f);
+                    break;
+                case StallKind.Clinic: // Reshaper: screens, a console, a charging frame
+                    Counter(p, "SM_Prop_MarketTable_02", o, yaw);
+                    OnCounter(p, "SM_Prop_Monitor_01", o, yaw, 0.5f, StallCounterZ, 180f);
+                    OnCounter(p, "SM_Prop_ControlPanel_01", o, yaw, -0.6f, StallCounterZ);
+                    Grounded(p, "SM_Prop_ChargingStation_01", o, yaw, -2.9f, 0.2f, 90f);
+                    Grounded(p, "SM_Prop_Box_Supplies_01", o, yaw, 1.8f, -1.1f);
+                    break;
+                case StallKind.Gym: // Coach: drums and crates to lift
+                    Counter(p, "SM_Prop_MarketTable_02", o, yaw);
+                    OnCounter(p, "SM_Prop_Box_Empty_01", o, yaw, -0.6f, StallCounterZ);
+                    Grounded(p, "SM_Prop_Cylinder_01", o, yaw, -2f, -1.1f);
+                    Grounded(p, "SM_Prop_Cylinder_01", o, yaw, -2.9f, 0.9f);
+                    Grounded(p, "SM_Prop_Crate_Military_01", o, yaw, 2.9f, 0.8f, 15f);
+                    Grounded(p, "SM_Prop_Crate_Military_02", o, yaw, 2f, -1f, -10f);
                     break;
                 case StallKind.Guild: // future Guild Director: notice pillar, ledgers
                     Counter(p, "SM_Prop_MarketTable_01", o, yaw);
@@ -371,7 +450,7 @@ namespace KryticalNova.EditorTools
                     break;
                 case SignStyle.HoloPlate:
                     // A translucent cyan plate floating just above the counter roof (hologram projector below it).
-                    SignBoard(root, Local(0f, top + 0.1f, 0.9f), facing, new Vector3(3.2f, 0.9f, 0.02f), ColorBible.SignMaterial("Holo", look.Board, 1.4f, true));
+                    SignBoard(root, Local(0f, top + 0.1f, 0.9f), facing, new Vector3(3.2f, 0.9f, 0.02f), ColorBible.SignMaterial(HoloName(look.Board), look.Board, 1.4f, true));
                     SignText(root, look, Local(0f, top + 0.15f, 0.93f), facing, new Vector2(3f, 0.7f), ink, 0.25f);
                     break;
                 case SignStyle.FabricBanner:
@@ -398,6 +477,10 @@ namespace KryticalNova.EditorTools
                     break;
             }
         }
+
+        /// <summary>The holo plate's material is shared by name: a plate of another colour needs a material of its own.</summary>
+        private static string HoloName(Color board) =>
+            board == ColorBible.NeonCyan ? "Holo" : "Holo_" + ColorUtility.ToHtmlStringRGB(board);
 
         private static void SignBoard(GameObject root, Vector3 position, Quaternion rotation, Vector3 size, Material material)
         {

@@ -20,11 +20,14 @@ namespace KryticalNova.EditorTools.Economy
         private const string NpcFolder = "Assets/_Game/Gameplay/NPC/Data/Assets";
         private const string Consumables = "Assets/_Game/Gameplay/Items/Data/Assets/Consumables/";
         private const string Materials = "Assets/_Game/Gameplay/Items/Data/Assets/GearMaterials/";
+        private const string CraftMaterials = "Assets/_Game/Gameplay/Items/Data/Assets/CraftMaterials/";
 
         private struct Shelf
         {
             public string Asset, Npc;
             public (string Item, long Price)[] Listings;
+            /// <summary>Sold one a day, in turn.</summary>
+            public (string Item, long Price)[] Rotation;
             public bool Gear;
             public ItemRarity GearRarity;
             public int GearFrom, GearTo;
@@ -56,6 +59,19 @@ namespace KryticalNova.EditorTools.Economy
                     (Materials + "Tuning_Chip.asset", 10_000L),
                 },
                 Gear = true, GearRarity = ItemRarity.Common, GearFrom = 1, GearTo = 28,
+            },
+            // The four colours of a Chroma Cell, one of them each in-game day.
+            new Shelf
+            {
+                Asset = "VS_Outfitter", Npc = "NPC_Tailor", // the Outfitter keeps its stall's first id
+                Listings = new (string, long)[0],
+                Rotation = new[]
+                {
+                    (CraftMaterials + "Cell_Cyan.asset", 1_500L),
+                    (CraftMaterials + "Cell_Magenta.asset", 1_500L),
+                    (CraftMaterials + "Cell_Yellow.asset", 1_500L),
+                    (CraftMaterials + "Cell_Black.asset", 1_500L),
+                },
             },
         };
 
@@ -99,6 +115,15 @@ namespace KryticalNova.EditorTools.Economy
                     stock.listings.Add(new VendorListing { item = item, price = price });
                     added++;
                 }
+                if (shelf.Rotation != null)
+                    foreach ((string itemPath, long price) in shelf.Rotation)
+                    {
+                        var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(itemPath);
+                        if (item == null) { Debug.LogError($"[Vendors] {shelf.Asset}: no item at {itemPath}."); continue; }
+                        if (stock.rotation.Exists(listing => listing.item == item)) continue; // its price may have been tuned
+                        stock.rotation.Add(new VendorListing { item = item, price = price });
+                        added++;
+                    }
                 EditorUtility.SetDirty(stock);
                 if (!catalog.stocks.Contains(stock)) catalog.stocks.Add(stock);
 

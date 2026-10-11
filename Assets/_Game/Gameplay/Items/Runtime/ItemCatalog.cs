@@ -27,10 +27,17 @@ namespace KryticalNova.Items
         [Header("Starter Loadout (granted on spawn)")]
         [SerializeField] private List<ItemDefinition> starterEquipped = new List<ItemDefinition>();
         [SerializeField] private List<StarterItem> starterBag = new List<StarterItem>();
+        [Header("Colourways")]
+        [Tooltip("The colour themes of the gear sets: what a dyed piece can be painted in. Linked by the gear look generator.")]
+        [SerializeField] private GearThemeLibrary themes;
 
         [NonSerialized] private Dictionary<ushort, ItemDefinition> byId;
 
         public IReadOnlyList<ItemDefinition> Items => items;
+        /// <summary>The colourways a dyed piece can wear, or null (a test catalog).</summary>
+        public GearThemeLibrary Themes => themes;
+        /// <summary>Editor generator entry point.</summary>
+        public void SetThemes(GearThemeLibrary library) => themes = library;
         public IReadOnlyList<ItemDefinition> StarterEquipped => starterEquipped;
         public IReadOnlyList<StarterItem> StarterBag => starterBag;
 

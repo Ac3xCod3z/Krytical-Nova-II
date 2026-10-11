@@ -58,6 +58,8 @@ namespace KryticalNova.EditorTools
             "Assets/_Game/UI/Social/SocialPanels.uss",
             "Assets/_Game/UI/Social/EmoteWheel.uss",
             "Assets/_Game/UI/Economy/EconomyWindows.uss",
+            "Assets/_Game/UI/Restyle/Restyle.uss",
+            "Assets/_Game/UI/Crafting/Crafting.uss",
             "Assets/_Game/UI/NPC/NpcInteraction.uss"
         };
 

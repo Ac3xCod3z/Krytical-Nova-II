@@ -89,7 +89,8 @@ namespace KryticalNova.Economy
 
         /// <summary>A vendor's shelf as this player sees it.</summary>
         public void List(VendorStock stock, List<VendorOffer> results) =>
-            VendorRules.List(stock, settings, inventory != null && inventory.Catalog != null ? inventory.Catalog.Items : null, CanWear, results);
+            VendorRules.List(stock, settings, inventory != null && inventory.Catalog != null ? inventory.Catalog.Items : null, CanWear, results,
+                KryticalNova.World.WorldClock.Day);
 
         /// <summary>What a vendor pays for one of an item. 0 = it will not buy it.</summary>
         public long SellValue(ItemDefinition item) => VendorRules.SellValue(vendors, settings, item);
@@ -135,7 +136,7 @@ namespace KryticalNova.Economy
             if (!InReachOf(stock)) return VendorRules.ReasonTooFar;
 
             ItemDefinition item = inventory.Catalog.Get(itemId);
-            if (item == null || !VendorRules.TryPrice(stock, settings, item, out long price)) return VendorRules.ReasonNotSold;
+            if (item == null || !VendorRules.TryPrice(stock, settings, item, out long price, KryticalNova.World.WorldClock.Day)) return VendorRules.ReasonNotSold;
             // Gear off the rule is sold to those who can wear it, as the shelf shows it.
             if (!stock.TryGetListed(item, out _) && !CanWear(item)) return VendorRules.ReasonNotSold;
 
@@ -150,7 +151,7 @@ namespace KryticalNova.Economy
             if (StorageRules.RoomFor(pack, wanted, Mathf.Max(1, (int)item.maxStack)) < count) return InventoryRules.ReasonBagFull;
 
             if (!wallet.ServerSpend(total, CredsSink.Vendor)) return VendorRules.ReasonNotEnoughCreds;
-            int given = inventory.ServerGive(item.itemId, count);
+            int given = inventory.ServerGive(item.itemId, count, earned: true);
             if (given < count)
             {
                 // The room was there a moment ago: whatever did not fit is not paid for.

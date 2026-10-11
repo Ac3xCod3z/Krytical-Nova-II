@@ -300,6 +300,7 @@ namespace KryticalNova.Progression
             }
             else
             {
+                KryticalNova.Diagnostics.PerformanceLog.Mark("nova.work");
                 Finished?.Invoke(result);
                 Show(result, true);
             }
@@ -307,7 +308,11 @@ namespace KryticalNova.Progression
 
         /// <summary>The owner alone is told the outcome in words.</summary>
         [Rpc(SendTo.Owner)]
-        private void FinishedRpc(NovaWorkResult result) => Finished?.Invoke(result);
+        private void FinishedRpc(NovaWorkResult result)
+        {
+            KryticalNova.Diagnostics.PerformanceLog.Mark("nova.work");
+            Finished?.Invoke(result);
+        }
 
         /// <summary>Everyone sees the moment on the character.</summary>
         [Rpc(SendTo.Everyone)]

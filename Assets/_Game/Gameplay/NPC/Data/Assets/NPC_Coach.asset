@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a27028f02e4d244eb12188002cec6a8, type: 3}
+  m_Name: NPC_Coach
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
+  role: 14
+  displayName: Coach
+  title: "Build \xB7 Muscle"
+  greeting: 'Heavier, leaner, bigger: tell me what you want to carry and we''ll get you there.'
+  services: Changes your build and muscle. One Training Pass covers both.
+  offers: 1024
+  interactRange: 3

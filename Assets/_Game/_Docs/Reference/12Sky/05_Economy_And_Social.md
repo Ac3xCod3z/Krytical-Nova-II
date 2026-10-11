@@ -16,12 +16,14 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 | | |
 | --- | --- |
 | Where | Files on the server host: `persistentDataPath/ServerSave/<profile>/` behind `ISaveStore` (`FileSaveStore`; `MemorySaveStore` in tests). A database or Cloud Save is another `ISaveStore`. |
-| Account document | `accounts/<accountId>`: the Deep Vault, the day's trade total, and the account's characters. |
-| Character | Progression, combat and movement skills, the Pack, worn items with their state, Creds, the Vault. |
-| World documents | `world/crews`, `world/kiosks`, `world/contacts`: they go on while their players are offline. |
+| Account document | `accounts/<accountId>`: the Deep Vault, the day's trade total, the Weave Library (`weaves`), and the account's characters. |
+| Character | Progression, combat and movement skills, the Pack, worn items with their state, Creds, the Vault; since 11 Oct 2026 also the character's look (`look`), the Weave and dye of each slot (`weave`) and its Sponsor points (`sponsor`). |
+| World documents | `world/crews`, `world/kiosks`, `world/contacts`, `world/sponsors`: they go on while their players are offline. |
+| The look | Saved with the character since 11 Oct 2026 (`PlayerIdentity`). The first time a character enters, the look its player's game sends is taken and saved; from then on the saved look is the one shown, whatever is sent, and only the server changes it (the Stylist, the Reshaper, the Coach). The player's own game copies it back into its roster so character select matches (`CharacterSession.RememberRecipe`). |
 | How a system saves | It implements `ISaveParticipant` (a key, a scope, capture, restore) on its player component. `PlayerSaveAgent` does the rest: load on entry, autosave every 60 s, save on leave, save at once after a trade, a sale or a founding. |
 | What the menus know | The roster (PlayerPrefs, per machine) is not the save: it holds who each character is, its look, its level and a record of the gear it was last played in, so character select can draw it. The player's own game keeps the level and the gear record current (`CharacterSession.RememberLevel`, `RememberWorn`). Nothing is ever read back from it into the game. |
 | Identity | The client sends an account id (generated locally, `kn.account.v1`) and its character id. Trusted until real sign-in exists. One character of an account in the world at a time. |
+| Decided, not built (11 Oct 2026) | The game is moving to dedicated servers with several map servers. The rules above stay (the server saves, each system saves its part, 60 s, on leave, at once after a trade). Underneath: verified sign-in instead of the trusted id, a database behind `ISaveStore`, one map server holding a character at a time, trades and Kiosk sales as single transactions, the roster and names held by the server, last map and position saved, backups. `../../Plans/online-phase-04-accounts-and-shared-save.md`. |
 | GM | `gm.save`, `gm.save.where`, `gm.save.wipe confirm` |
 | GM in a build | The host (or an offline player) opens the GM console with **F2** (`Windows/GmConsole`, rebindable; `GmConsoleGate`, prefab `Tools/Debug/Prefabs/GmConsole`). A joined client has no console and no GM commands; the host aims commands at a client with `gm.players` and `gm.target <clientId>`. In the Editor the GM Tools window does the same job. |
 
@@ -62,6 +64,7 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 - **Vault**: one per character, at a **Vaultkeeper**. **Deep Vault**: one per account, shared by all its characters, at a **Wayfinder**. 96 cells (two pages) and a Creds balance each.
 - Right-click moves an item between Pack and storage; Shift+right-click asks how many; drag onto a cell to place, top up or swap. The server refuses any request made away from an NPC offering the service.
 - Both NPCs stand at their plaza stalls (Crew Hall and Wayfinder). An NPC offers a service through `NpcDefinition.offers`; its dialogue then shows a button per service.
+- **What is stored pays costs (11 Oct 2026).** Anything that uses up items takes them from the Pack first, then the Vault, then the Deep Vault, wherever the player stands: the forge's Alloys, Failsafes, catalyst and Chips, a Kiosk Permit, a Chroma Cell for a dye, a Restyle or Training Pass, and every craft at the Fabricator. One place does it (`PlayerItemSources.ServerSpend`, rules in `ItemCostRules`): all of a cost is there or nothing is taken. Only plain items count (no state of their own), so a cost never eats a worked piece of gear. The piece being worked on, and the piece a Fusion uses up, must still be in the Pack. Using a consumable, selling and trading stay Pack-only. The forge and the Fabricator show where a material is ("Pack 3 · Vault 12"). Putting things in and taking them out by hand still needs the NPC.
 
 ## Trade (row 12, the Trade half)
 
@@ -121,6 +124,52 @@ A vendor sells from a shelf and buys what the player carries. Two are open, the 
 - **Who decides:** `PlayerShopping` (Gameplay/Economy) sends requests; the server checks that the player stands by the vendor, the price (`VendorRules`, the same rules the window reads), the wallet, and the room in the Pack before any Creds move. Buying is the sink `CredsSink.Vendor`, selling the source `CredsSource.VendorSale`: both show in `gm.creds.report`. Online only, like Kiosks.
 - **A new vendor or a new item on a shelf** is a row in `VendorStockBuilder` (**Krytical Nova ▸ Items ▸ 10. Build Vendor Stock**; a price tuned on an asset is kept) and, for a new vendor, `NpcOffer.Shop` on its row in `Zone01Setup`.
 - **Selling is a second way Creds come in**, beside Hostile kills: at 20 % a level-28 Common weapon pays 840. To be weighed against the income target when the prices are tuned.
+
+## Appearance services (rows 19 and 52; built 11 Oct 2026)
+
+Five NPCs in the plaza. Code: `Gameplay/Restyle/` (`PlayerWeaveLibrary`, `PlayerWeaves`, `PlayerRestyle`), rules in `WeaveRules` (Items) and `RestyleRules` (CharacterCreation), windows in `UI/Runtime/Restyle/`. Each window opens the equipment page beside it and shows the choice on the doll before anything is paid.
+
+| NPC | What it does | Cost | Where the number is |
+| --- | --- | --- | --- |
+| **Holoweaver** | Puts a look from the Weave Library (a **Weave**) over the piece worn in a slot: Weapon, Armor, Gloves, Boots, Cape. Taking it off again is free. | 5,000 Creds (placeholder) | `EconomySettings.weaveApplyFee`, `weaveClearFee` |
+| **Outfitter** | Dyes the outfit piece a slot shows in one of the 24 colourways (the gear sets' own themes). Its own colours back: free. Also a shop: one of the four colour cells each in-game day, in turn (1,500 Creds, placeholder). | 1 **Chroma Cell** a piece | `EconomySettings.dyeItemId`; the shelf is `VS_Outfitter.rotation` |
+| **Stylist** | Hair, brows, facial hair, hair colour. | 1 **Restyle Pass**, however much is changed at once | `EconomySettings.restyleItemId` |
+| **Reshaper** | Head, eyes, ears, nose, teeth, skin tone, eye and frame colours, scars, eyeliner, grime. | 1 **Restyle Pass** | `EconomySettings.restyleItemId` |
+| **Coach** | Build and muscle. | 1 **Training Pass** | `EconomySettings.trainingItemId` |
+
+- **The Weave Library** belongs to the account. A look is collected, by gear line, when its piece is earned (bought from an NPC, taken from a Hostile's drop, granted) or worn. A piece that only passed through a trade, a Kiosk or another player's hands counts once it is worn (`PlayerInventory.Earned`, `WorldDrop.Earned`). A character's gear from before this existed is collected the first time it loads.
+- **A Weave must suit what is worn**: the same slot, a look the character's faction and body can use, and for a weapon the same class. It changes what is drawn and nothing else: stats and reach are the worn piece's, and the Temper glow of the weapon really held is drawn on the Weave's model. A Weave and a dye stay on the slot when the piece in it changes; a weapon of another class shows itself until the class matches again.
+- **A restyle never trusts the request**: the server takes only the fields that service owns out of the look it is sent and keeps the rest of the saved look, then checks the result like a new character's. Faction, lineage, body type and Discipline are never changed.
+- **Where the items come from**: a Chroma Cell is crafted at the Fabricator from a Cyan, a Magenta, a Yellow and a Black Cell, and may drop; the four colours drop from Hostiles and the Outfitter sells one a day. Restyle and Training Passes are for the Nova Store: today only `gm.passes` gives them.
+- **The day** the Outfitter's shelf goes by is the in-game calendar day (`WorldClock.Day`): it turns over at in-game midnight and goes on from one session to the next.
+
+## Crafting at the Fabricator (row 53; built 11 Oct 2026)
+
+One bench, at the Fabricator (who stands at the Elder hall, and takes stat resets and castle entry later). Code: `Gameplay/Crafting/` (`PlayerCrafting`, `CraftRules`, `CraftingSettings`), window `UI/Runtime/Crafting/CraftWindowController`. The recipes are data (`CraftingSettings.asset`, built by Krytical Nova ▸ Items ▸ 11. Build Crafting Recipes, which keeps a tuned recipe).
+
+| Makes | From | Needs |
+| --- | --- | --- |
+| Iridion (+6 %) | 4 Alumite | |
+| Orichalc (+9 %) | 4 Iridion | |
+| Eversteel (+12 %) | 4 Orichalc | |
+| Chroma Cell | 1 Cyan Cell, 1 Magenta Cell, 1 Yellow Cell, 1 Black Cell | |
+| Backlash / Iron Nerve / Shatterpoint Dossier | its Pages I to IV | level 80 |
+
+- No recipe costs Creds today (`CraftRecipe.creds` is there for when one should). Materials are taken from the Pack, the Vault and the Deep Vault; what is made goes into the Pack, into the room its materials freed.
+- **Drops** (`HostileSettings.materialDrops`, each row rolled on its own for every kill, scaled by the level gap and the server drop rate; all placeholders): each colour cell 1.5 %, a Chroma Cell 0.2 %, each Dossier Page 0.5 % and each Dossier 0.02 %, the last two from Hostiles of level 70 and up.
+- **A Dossier** is read from the Pack (level 80): it unlocks its skill, which is then learned with skill points like any other.
+
+## Sponsor / Recruit (row 17; built 11 Oct 2026)
+
+| | |
+| --- | --- |
+| Who | A Sponsor is level 112 (the cap; Prime 1 and up once Prime levels exist). A Recruit is of the same faction and **more than 5 levels below** the Sponsor. A Sponsor has up to 3 Recruits; a Recruit has one Sponsor; nobody is both. |
+| Asking | "Sponsor Request" in a player's menu, `/sponsor name`, or the name box of the Sponsor window (opened by `/sponsor` or the SPONSOR button in Contacts). Either may ask; their levels decide who sponsors. The other answers on screen within 30 s. Both must be online; a block refuses it like every other request. |
+| The bonus | While the Sponsor is within 40 m in the same map and both are alive, the Recruit's Hostile kills pay +50 % XP. It does not add to the Squad boost: the larger of the two counts. The kill line says "Sponsor +50%", and a System line says when it goes on and off. |
+| Sponsor points | 250 for each full minute the Sponsor spends near a Recruit, however many are near. Stored and shown; nothing spends them yet. |
+| Ending | Either ends it in the window. **It ends itself when the Recruit is within 5 levels of the Sponsor** (owner's rule, 11 Oct 2026). |
+| Kept | Links are the world document `world/sponsors`, so they outlive both logging out; the points are the character's. |
+| Numbers | `SponsorSettings`: `sponsorMinLevel`, `levelGap`, `maxRecruits`, `experienceBonus`, `rangeMetres`, `pointsPerMinute`, `requestSeconds`, `checkSeconds`. Only the +50 % and the 250 are from the reference. |
 
 ## Contacts (row 29)
 
@@ -210,6 +259,7 @@ Twelve Sky 2's Elixirs: a consumable that raises a stat for good, each kind a li
 | Attacking | only in a Callout | off neutral ground while `gm.pvp` is on; **on neutral ground only in a Callout** |
 | Squad | yes | **never** |
 | Crew | yes | **never** |
+| Sponsor / Recruit | yes | **never** |
 | Picking up a dropped item (after its 20 s) | yes | yes |
 
 **Declined for the player.** In **Settings ▸ Gameplay** a player can have trade requests, contact requests, Crew invitations, Squad invitations and Callouts declined without being shown them (`HudPreferences.RefuseTrades`, `RefuseContacts`, `RefuseCrewInvites`, `RefuseSquadInvites`, `RefuseCallouts`; all off as shipped). The request still reaches the player's game, which answers no on arrival exactly as the Decline button would (`RequestPromptController.Refused`, `PartyHudController`, `DuelHudController`): the server is asked nothing new and the asker sees an ordinary refusal. It is kept per machine, like the other options, not per character.
@@ -234,6 +284,19 @@ Twelve Sky 2's Elixirs: a consumable that raises a stat for good, each kind a li
 | **G** | Crew | | **~** | Pick up the nearest item |
 | **B** (held) | Emote wheel | | **Esc** | Game menu (when nothing else is open) |
 
+No new keys came with the systems of 11 Oct 2026: the Holoweaver, Outfitter, Stylist, Reshaper, Coach and Fabricator windows open from their NPCs, the Sponsor window from `/sponsor` and from Contacts.
+
+| GM command | What it does |
+| --- | --- |
+| `gm.weave [off]`, `gm.dye` | Opens the Holoweaver / the Outfitter's dye window here; both then work with no NPC near |
+| `gm.weave.unlock <all\|item>`, `gm.weave.clear`, `gm.weave.list` | The Weave Library and what each slot shows |
+| `gm.restyle <stylist\|reshaper\|coach\|off>` | Opens that window here |
+| `gm.passes [n]` | Chroma Cells, Restyle Passes and Training Passes |
+| `gm.craft [off]`, `gm.craftkit [times]`, `gm.dossier` | The Fabricator here; the materials of every recipe; the three Dossiers |
+| `gm.sponsor [clientIdA clientIdB]`, `gm.sponsor.end`, `gm.sponsor.points [n]`, `gm.sponsor.window` | Links two players whatever the rules say (the higher sponsors); with no ids prints the links |
+
+Every one of them has a button in the Editor's GM Tools window (Items and Social tabs).
+
 ## Not built
 
 The Exchange board; selling Kiosk Permits (Nova Store); Contracts as a Creds faucet; every shop but the Apothecary's and the Armorer's (Store Clerk, Fixer, Instructors), Flasks and Recall Tags on the Apothecary's shelf, a source for the forge materials the Armorer does not sell; Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; handing a session on when its host leaves; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
@@ -241,3 +304,5 @@ The Exchange board; selling Kiosk Permits (Nova Store); Contracts as a Creds fau
 ## Verified
 
 EditMode tests for every rules class (242 pass on 5 Oct 2026). Host plus a Multiplayer Play Mode client, two factions: pickup and its gesture, drop hold, Vault, Trade, Kiosk (open, buy, tax, away summary, expiry, collect), Contacts (request, offline request, favourite, note, block), Crew (found, ranks, title, announcement, chat, hand over, close), and the neutral-ground rules. Saves survive a restart.
+
+**11 Oct 2026.** 555 EditMode tests pass (new: `ItemCostRules`, `WeaveRules`, `RestyleRules`, `CraftRules`, `SponsorRules`, the rotating shelf and material drops). Host plus a Multiplayer Play Mode client on a test port with a scratch save: a craft took two Alumite from the Pack and two from the Vault away from any NPC; a Weave on armour and on a weapon, and a dye, showed on the other machine, with the reach and the Temper glow of the weapon really held; the client's own requests (dye, Coach, crafting) went through and the Coach could not change scars; the client's look followed into its roster; the Sponsor bonus went off when the Sponsor walked away and on again when they came back; a Dossier unlocked its skill; all six windows opened in the Hegemony skin. Not run in Play: buying from the Outfitter at its stall, a real Hostile kill paying the Sponsor bonus, a drop from the material table, and the fix for the client's Kiosk window made after this pass.

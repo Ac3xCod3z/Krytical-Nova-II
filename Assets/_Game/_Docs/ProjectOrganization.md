@@ -68,6 +68,8 @@ _Game/
 ├── _Docs/                 Design docs (Design/), plans (Plans/), reference packs (Reference/: naming glossary, build list), this file
 ├── Core/Runtime/          Cross-cutting interfaces & registries. Defines KryticalNova.Runtime.asmdef
 │                          SaveSystem/ (ISaveStore, ISaveParticipant, file and memory stores)
+│                          Diagnostics/ (the performance log a built game writes: PerformanceLog.Mark / Time for any
+│                          system, the recorder, the frame-phase probes)   Core/Tests/Editor/ (its tests)
 │                          (future: Architecture/ Events/ Services/ Pooling/ Utilities/ Extensions/)
 ├── Gameplay/
 │   ├── Autopilot/         Runtime/ (PlayerAutopilot = the server's flag, zone and time; AutopilotController and MagnetController
@@ -85,6 +87,11 @@ _Game/
 │   │                      Prefabs/ (KioskStand)  Tests/Editor/
 │   ├── Forge/             Runtime/ (PlayerGearWork: Tempering, Fusion, Tuning and Reforge at the Armorer. Sits above Items,
 │   │                      Economy, Progression and NPC, which is why it is its own system)
+│   ├── Crafting/          Runtime/ (PlayerCrafting, CraftRules: the Fabricator's bench)  Data/ + Data/Assets/ (CraftingSettings =
+│   │                      every recipe; CraftItemIds)  Editor/ (CraftingBuilder: recipes, Dossier skills, drop rows)  Tests/Editor/
+│   ├── Restyle/           Runtime/ (PlayerWeaveLibrary + PlayerWeaves = Holoweave and dye, PlayerRestyle = the Stylist, the
+│   │                      Reshaper and the Coach. Sits above Items, Economy, CharacterCreation and NPC. Its rules live with what
+│   │                      they rule: WeaveRules in Items, RestyleRules in CharacterCreation)
 │   ├── Hostiles/          Runtime/ (HostileNet = a Hostile on the network, HostileSpawner, HostilePool, HostileZone = one hunting
 │   │                      ground, HostileCorpse = the body burning away, HostileKillRewards and HostileLoot = what a kill pays, LevelGapRules, IHostileBrain)  Data/ + Data/Assets/ (HostileStatCurve,
 │   │                      HostileSettings, LevelGapSettings, Species/ = one HostileDefinition per species, Emerald/ = the melee
@@ -216,7 +223,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 
 | Assembly                          | Defined in                                     | Covers (via .asmref)                                                     |
 |-----------------------------------|------------------------------------------------|---------------------------------------------------------------------------|
-| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets,Forge}/Runtime, {Progression,Factions,CharacterCreation,Social,Economy,Pets,Items}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
+| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets,Forge,Crafting,Restyle}/Runtime, {Progression,Factions,CharacterCreation,Social,Economy,Pets,Items,Crafting}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime and Vegetation.Grass (the graphics settings set grass density). Excluded from dedicated server (`!UNITY_SERVER`) |
 | `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | GameFeel/Data. FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |

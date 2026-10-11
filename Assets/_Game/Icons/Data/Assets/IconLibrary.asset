@@ -4383,3 +4383,113 @@ MonoBehaviour:
     set: Cyberpunk/Pocket Thing
     number: 2
     chosen: 1
+  - kind: 2
+    target: Chroma_Cell
+    set: Cyberpunk/Energy
+    number: 39
+    chosen: 1
+  - kind: 2
+    target: Cell_Cyan
+    set: Fantasy/Paint
+    number: 10
+    chosen: 1
+  - kind: 2
+    target: Cell_Magenta
+    set: Fantasy/Paint
+    number: 8
+    chosen: 1
+  - kind: 2
+    target: Cell_Yellow
+    set: Fantasy/Paint
+    number: 6
+    chosen: 1
+  - kind: 2
+    target: Cell_Black
+    set: Fantasy/Paint
+    number: 4
+    chosen: 1
+  - kind: 2
+    target: Pass_Restyle
+    set: Cyberpunk/Pocket Thing
+    number: 40
+    chosen: 1
+  - kind: 2
+    target: Pass_Training
+    set: Cyberpunk/Pocket Thing
+    number: 36
+    chosen: 1
+  - kind: 2
+    target: Dossier_Backlash
+    set: Fantasy/Book
+    number: 27
+    chosen: 1
+  - kind: 2
+    target: Dossier_IronNerve
+    set: Fantasy/Book
+    number: 28
+    chosen: 1
+  - kind: 2
+    target: Dossier_Shatterpoint
+    set: Fantasy/Book
+    number: 24
+    chosen: 1
+  - kind: 2
+    target: Page_Backlash_1
+    set: Fantasy/Scroll
+    number: 37
+    chosen: 1
+  - kind: 2
+    target: Page_Backlash_2
+    set: Fantasy/Scroll
+    number: 38
+    chosen: 1
+  - kind: 2
+    target: Page_Backlash_3
+    set: Fantasy/Scroll
+    number: 46
+    chosen: 1
+  - kind: 2
+    target: Page_Backlash_4
+    set: Fantasy/Scroll
+    number: 44
+    chosen: 1
+  - kind: 2
+    target: Page_IronNerve_1
+    set: Fantasy/Scroll
+    number: 31
+    chosen: 1
+  - kind: 2
+    target: Page_IronNerve_2
+    set: Fantasy/Scroll
+    number: 50
+    chosen: 1
+  - kind: 2
+    target: Page_IronNerve_3
+    set: Fantasy/Scroll
+    number: 45
+    chosen: 1
+  - kind: 2
+    target: Page_IronNerve_4
+    set: Fantasy/Scroll
+    number: 24
+    chosen: 1
+  - kind: 2
+    target: Page_Shatterpoint_1
+    set: Fantasy/Scroll
+    number: 32
+    chosen: 1
+  - kind: 2
+    target: Page_Shatterpoint_2
+    set: Fantasy/Scroll
+    number: 47
+    chosen: 1
+  - kind: 2
+    target: Page_Shatterpoint_3
+    set: Fantasy/Scroll
+    number: 49
+    chosen: 1
+  - kind: 2
+    target: Page_Shatterpoint_4
+    set: Fantasy/Scroll
+    number: 27
+    chosen: 1

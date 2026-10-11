@@ -26,7 +26,9 @@ namespace KryticalNova.Items
         /// <summary>Raises a stat for good, up to a number of times per character (a Serum).</summary>
         Serum = 2,
         /// <summary>Adds Autopilot time to the character (an Autopilot Chip).</summary>
-        AutopilotTime = 3
+        AutopilotTime = 3,
+        /// <summary>Unlocks the skill it teaches, to be learned with skill points (a Dossier).</summary>
+        LearnSkill = 4
     }
 
     /// <summary>Where a weapon rides while it is not in the hand. Append only.</summary>

@@ -16,10 +16,15 @@ namespace KryticalNova.Player
     /// so every peer shows the same character. The owner sends the character it chose in the menus when it spawns;
     /// the server checks the name and the recipe before accepting it. Offline (the unspawned scene avatar) the local
     /// copy is authoritative. Until an identity arrives the prefab's own look is shown.
+    /// The look is saved with the character: the first time a character enters, the look it was made with is
+    /// taken and saved; from then on the saved look is the one shown, whatever the player's own game sends, and
+    /// only the server changes it (<see cref="ServerRestyle"/>: the Stylist, the Reshaper, the Coach).
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerIdentity : NetworkBehaviour, IFactionMember, IGearWearer
+    public sealed class PlayerIdentity : NetworkBehaviour, IFactionMember, IGearWearer, ISaveParticipant
     {
+        public const string LookSaveKey = "look";
+
         [SerializeField] private CharacterCreationDatabase database;
         [Tooltip("Shown until a character identity arrives.")]
         [SerializeField] private string defaultName = "Player";
@@ -33,6 +38,11 @@ namespace KryticalNova.Player
             writePerm: NetworkVariableWritePermission.Server);
 
         private CharacterNetState current;
+        // The saved look arrives while the submitted one is being applied (the save loads on Changed): it is kept
+        // here and applied when that is done.
+        private bool assigning;
+        private bool hasSavedLook;
+        private CharacterNetState savedLook;
         // Which saved character this is. Known where the game is decided and to the owner; never replicated to others.
         private string accountId = string.Empty;
         private string characterId = string.Empty;
@@ -156,8 +166,32 @@ namespace KryticalNova.Player
             bool known = SaveKeys.IsId(account) && SaveKeys.IsId(character);
             accountId = known ? account : string.Empty;
             characterId = known ? character : string.Empty;
+            assigning = true;
+            hasSavedLook = false;
+            Apply(state);
+            assigning = false;
+            if (hasSavedLook)
+            {
+                hasSavedLook = false;
+                state = savedLook;
+                Apply(state);
+            }
+            if (IsSpawned) netState.Value = state;
+        }
+
+        /// <summary>
+        /// Server (or offline) only: gives the character another look and shows it to everyone. The recipe is
+        /// checked like a new character's; what may differ from the old look is the caller's business.
+        /// </summary>
+        public bool ServerRestyle(in CharacterRecipe recipe)
+        {
+            if ((IsSpawned && !IsServer) || !HasIdentity) return false;
+            if (!CharacterRecipeValidator.Validate(recipe, database, out _)) return false;
+            CharacterNetState state = CharacterNetState.From(CharacterName, recipe);
+            if (state.Equals(current)) return true;
             Apply(state);
             if (IsSpawned) netState.Value = state;
+            return true;
         }
 
         private void OnNetStateChanged(CharacterNetState previous, CharacterNetState next)
@@ -177,8 +211,51 @@ namespace KryticalNova.Player
             if (combatEntity != null) combatEntity.SetEntityName(CharacterName);
             // A new character starts in the level-1 outfit of its own pack, holding its Discipline's weapon.
             if (inventory != null && (!IsSpawned || IsServer)) inventory.ServerGrantStarterKit(GearPack, Faction, Body, Discipline);
+            // The player's own game keeps its copy of the look in step, so the select screen shows the same character.
+            if ((!IsSpawned || IsOwner) && CharacterSession.TryGetActive(out CharacterProfile mine) && mine.id == characterId)
+                CharacterSession.RememberRecipe(state.ToRecipe());
             WearerChanged?.Invoke();
             Changed?.Invoke();
+        }
+
+        // ---------------- saving ----------------
+
+        [Serializable]
+        private sealed class LookSave
+        {
+            public CharacterRecipe recipe;
+        }
+
+        public string SaveKey => LookSaveKey;
+        public SaveScope SaveScope => SaveScope.Character;
+
+        public string CaptureSave() => HasIdentity ? JsonUtility.ToJson(new LookSave { recipe = current.ToRecipe() }) : null;
+
+        /// <summary>
+        /// The saved look wins over the one the player's game sent. Nothing saved (a new character, or one from
+        /// before looks were saved) keeps the submitted look, which is saved from here on. A saved look the game
+        /// can no longer build (a part that was removed) is dropped the same way.
+        /// </summary>
+        public void RestoreSave(string json)
+        {
+            if ((IsSpawned && !IsServer) || !HasIdentity || string.IsNullOrEmpty(json)) return;
+            LookSave save = JsonUtility.FromJson<LookSave>(json);
+            if (save == null || save.recipe.IsEmpty) return;
+            if (!CharacterRecipeValidator.Validate(save.recipe, database, out string reason))
+            {
+                Debug.LogWarning($"[PlayerIdentity] The saved look of '{CharacterName}' is no longer valid ({reason}); keeping the one it came in with.", this);
+                return;
+            }
+            CharacterNetState state = CharacterNetState.From(CharacterName, save.recipe);
+            if (state.Equals(current)) return;
+            if (assigning)
+            {
+                savedLook = state;
+                hasSavedLook = true;
+                return;
+            }
+            Apply(state);
+            if (IsSpawned) netState.Value = state;
         }
     }
 }

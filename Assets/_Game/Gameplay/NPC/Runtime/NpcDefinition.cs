@@ -13,7 +13,13 @@ namespace KryticalNova.NPC
         Agent,
         Vaultkeeper,
         Wayfinder,
-        Herald
+        Herald,
+        Holoweaver,
+        Outfitter,
+        Stylist,
+        Reshaper,
+        Coach,
+        Fabricator
     }
 
     /// <summary>
@@ -36,6 +42,18 @@ namespace KryticalNova.NPC
         Herald = 1 << 4,
         /// <summary>A shop: it sells what its stock lists, and buys what the player has to sell.</summary>
         Shop = 1 << 5,
+        /// <summary>Holoweave: showing a collected look (a Weave) over worn gear.</summary>
+        Holoweave = 1 << 6,
+        /// <summary>Dyeing outfit pieces in another colourway.</summary>
+        Dye = 1 << 7,
+        /// <summary>A change of hair.</summary>
+        Stylist = 1 << 8,
+        /// <summary>A change of face.</summary>
+        Reshaper = 1 << 9,
+        /// <summary>A change of build and muscle.</summary>
+        Coach = 1 << 10,
+        /// <summary>Crafting: Alloys, Chroma Cells, Dossiers.</summary>
+        Craft = 1 << 11,
     }
 
     /// <summary>Static data for one town NPC. Shops, quests and crafting hook in by role later.</summary>

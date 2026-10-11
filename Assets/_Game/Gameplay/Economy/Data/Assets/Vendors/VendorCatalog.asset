@@ -15,3 +15,4 @@ MonoBehaviour:
   stocks:
   - {fileID: 11400000, guid: 6cbc354c668456b408795d8747dfcb3b, type: 2}
   - {fileID: 11400000, guid: 37c529c1e81dfb94182090d2a048f07f, type: 2}
+  - {fileID: 11400000, guid: c082824337cb1ca4e80f7c4414e29592, type: 2}

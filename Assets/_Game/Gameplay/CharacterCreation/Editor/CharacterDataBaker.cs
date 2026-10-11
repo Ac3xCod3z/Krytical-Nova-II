@@ -28,7 +28,8 @@ namespace KryticalNova.EditorTools
         private const string BaseModelPath = SidekickPartCatalogBaker.MeshRoot + "/SK_BaseModel.fbx";
 
         // Colour channel IDs are stored in saved characters: never renumber.
-        public const byte ChannelHair = 1, ChannelEyes = 2, ChannelGlow = 3, ChannelBone = 4, ChannelMetal = 5;
+        public const byte ChannelHair = CharacterColorChannels.Hair, ChannelEyes = CharacterColorChannels.Eyes,
+            ChannelGlow = CharacterColorChannels.Glow, ChannelBone = CharacterColorChannels.Bone, ChannelMetal = CharacterColorChannels.Metal;
 
         private sealed class LineageSpec
         {

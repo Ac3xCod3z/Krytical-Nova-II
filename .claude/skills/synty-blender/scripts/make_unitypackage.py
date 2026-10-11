@@ -218,6 +218,9 @@ def main():
     ap.add_argument("--swatch-folder", default="Assets/_Game/Characters/Shared/Swatch")
     ap.add_argument("--package-name", help="file name of the package without .unitypackage (default: the FBX's name)")
     ap.add_argument("--own-texture", help="the model keeps its own painted texture (this image) instead of the swatch")
+    ap.add_argument("--swatch-page", choices=("kn", "synty"), default="kn",
+                    help="which page of the shared swatch the model is on (pet_finish.py --swatch). On either page, "
+                         '--material "name in the FBX=#RRGGBB[:glow]" adds a flat material of the pet\'s own beside it')
     ap.add_argument("--emission-texture", help="with --own-texture: the model's own emission map (what glows, on black)")
     ap.add_argument("--material", action="append", default=[],
                     help='with --own-texture, one per material in the FBX: "name in the FBX=texture" for the painted '
@@ -269,13 +272,29 @@ def main():
         if not remaps:
             sys.exit("--own-texture needs a --material for every material in the FBX.")
         items.append((f"{pet_folder}/{fbx.name}", fbx.read_bytes(), model_meta(guid(fbx.name), remaps)))
-    for name, srgb in () if a.own_texture else (("T_KN_Swatch.png", True), ("T_KN_Swatch_Emission.png", True), ("T_KN_Swatch_Metallic.png", False)):
+    synty = a.swatch_page == "synty" and not a.own_texture
+    shared = () if a.own_texture else (("T_KN_Swatch_Synty.png", True),) if synty else (
+        ("T_KN_Swatch.png", True), ("T_KN_Swatch_Emission.png", True), ("T_KN_Swatch_Metallic.png", False))
+    for name, srgb in shared:
         items.append((f"{swatch_folder}/{name}", (SWATCH_SRC / name).read_bytes(), texture_meta(guid(name), srgb)))
     if not a.own_texture:
-        mat_text = material(guid("T_KN_Swatch.png"), guid("T_KN_Swatch_Emission.png"))
-        items.append((f"{swatch_folder}/M_KN_Swatch.mat", mat_text.encode("utf-8"), material_meta(guid("M_KN_Swatch.mat"))))
-        items.append((f"{pet_folder}/{fbx.name}", fbx.read_bytes(),
-                      model_meta(guid(fbx.name), [("M_KN_Swatch", guid("M_KN_Swatch.mat"))])))
+        if synty:           # the Synty page: flat colours only, no glow or metal cells
+            swatch_mat = "M_KN_Swatch_Synty"
+            mat_text = own_material(swatch_mat, texture_guid=guid("T_KN_Swatch_Synty.png"))
+        else:
+            swatch_mat = "M_KN_Swatch"
+            mat_text = material(guid("T_KN_Swatch.png"), guid("T_KN_Swatch_Emission.png"))
+        items.append((f"{swatch_folder}/{swatch_mat}.mat", mat_text.encode("utf-8"), material_meta(guid(swatch_mat + ".mat"))))
+        remaps = [(swatch_mat, guid(swatch_mat + ".mat"))]
+        for spec in a.material:                 # the pet's own flat materials beside the swatch
+            fbx_name, _, kind = spec.partition("=")
+            hexa, _, extra = kind.partition(":")
+            rgb = tuple(int(hexa.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4))
+            mat_name = f"M_Pet_{pet}_" + "".join(w.capitalize() for w in fbx_name.replace(fbx.stem, "").split())
+            text = own_material(mat_name, colour=rgb, glow=extra == "glow")
+            items.append((f"{pet_folder}/{mat_name}.mat", text.encode("utf-8"), material_meta(guid(mat_name + ".mat"))))
+            remaps.append((fbx_name, guid(mat_name + ".mat")))
+        items.append((f"{pet_folder}/{fbx.name}", fbx.read_bytes(), model_meta(guid(fbx.name), remaps)))
     guid_file.write_text(json.dumps(guids, indent=1), encoding="utf-8")
 
     out_dir = Path(a.out_dir)

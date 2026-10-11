@@ -20,6 +20,8 @@ namespace KryticalNova.EditorTools
         public const string OutputFolder = BuildRoot + "/KryticalNovaII";
         public const string ReportPath = BuildRoot + "/BuildReport.txt";
         private const string ExeName = "KryticalNovaII.exe";
+        /// <summary>Written by the game beside its exe (<c>PerformanceLogRecorder</c>). Not part of a hand-out.</summary>
+        public const string LogsFolder = "PerformanceLogs";
         private const int ReportAssets = 80;
         private const int ReportFolders = 30;
         private const int FolderDepth = 3;
@@ -47,8 +49,12 @@ namespace KryticalNova.EditorTools
             }
 
             // Only our own output folder: a file left from an older build must not be handed out with this one.
+            // The performance logs of the sessions played from it are kept across the rebuild.
+            string logs = OutputFolder + "/" + LogsFolder, keptLogs = BuildRoot + "/" + LogsFolder + "_kept";
+            if (Directory.Exists(logs) && !Directory.Exists(keptLogs)) Directory.Move(logs, keptLogs);
             if (Directory.Exists(OutputFolder)) Directory.Delete(OutputFolder, true);
             Directory.CreateDirectory(OutputFolder);
+            if (Directory.Exists(keptLogs)) Directory.Move(keptLogs, logs);
 
             var options = new BuildPlayerOptions
             {

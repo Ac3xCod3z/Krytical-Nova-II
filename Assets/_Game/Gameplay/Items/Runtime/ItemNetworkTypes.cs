@@ -221,6 +221,88 @@ namespace KryticalNova.Items
     }
 
     /// <summary>
+    /// What a character shows in place of what it wears, for the slots that have a look. The Weave of a slot is
+    /// the item whose look is shown there (0 = the worn piece's own); the dye of an outfit slot is the colourway it
+    /// is painted in (a <c>GearThemeLibrary</c> id, 0 = the piece's own colours). Both stay with the slot when the
+    /// piece in it changes. Readable by everyone: it is how others see the character.
+    /// </summary>
+    [Serializable]
+    public struct EquipmentLooks : INetworkSerializable, IEquatable<EquipmentLooks>
+    {
+        public ushort weapon, armor, gloves, boots, cape;
+        public ushort armorDye, glovesDye, bootsDye, capeDye;
+
+        public ushort GetWeave(EquipSlot slot)
+        {
+            switch (slot)
+            {
+                case EquipSlot.Weapon: return weapon;
+                case EquipSlot.Armor: return armor;
+                case EquipSlot.Gloves: return gloves;
+                case EquipSlot.Boots: return boots;
+                case EquipSlot.Cape: return cape;
+                default: return 0;
+            }
+        }
+
+        public void SetWeave(EquipSlot slot, ushort itemId)
+        {
+            switch (slot)
+            {
+                case EquipSlot.Weapon: weapon = itemId; break;
+                case EquipSlot.Armor: armor = itemId; break;
+                case EquipSlot.Gloves: gloves = itemId; break;
+                case EquipSlot.Boots: boots = itemId; break;
+                case EquipSlot.Cape: cape = itemId; break;
+            }
+        }
+
+        public ushort GetDye(EquipSlot slot)
+        {
+            switch (slot)
+            {
+                case EquipSlot.Armor: return armorDye;
+                case EquipSlot.Gloves: return glovesDye;
+                case EquipSlot.Boots: return bootsDye;
+                case EquipSlot.Cape: return capeDye;
+                default: return 0;
+            }
+        }
+
+        public void SetDye(EquipSlot slot, ushort colourway)
+        {
+            switch (slot)
+            {
+                case EquipSlot.Armor: armorDye = colourway; break;
+                case EquipSlot.Gloves: glovesDye = colourway; break;
+                case EquipSlot.Boots: bootsDye = colourway; break;
+                case EquipSlot.Cape: capeDye = colourway; break;
+            }
+        }
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref weapon);
+            serializer.SerializeValue(ref armor);
+            serializer.SerializeValue(ref gloves);
+            serializer.SerializeValue(ref boots);
+            serializer.SerializeValue(ref cape);
+            serializer.SerializeValue(ref armorDye);
+            serializer.SerializeValue(ref glovesDye);
+            serializer.SerializeValue(ref bootsDye);
+            serializer.SerializeValue(ref capeDye);
+        }
+
+        public bool Equals(EquipmentLooks o) =>
+            weapon == o.weapon && armor == o.armor && gloves == o.gloves && boots == o.boots && cape == o.cape &&
+            armorDye == o.armorDye && glovesDye == o.glovesDye && bootsDye == o.bootsDye && capeDye == o.capeDye;
+
+        public override bool Equals(object obj) => obj is EquipmentLooks o && Equals(o);
+        public override int GetHashCode() =>
+            HashCode.Combine(weapon, armor, gloves, boots, cape, HashCode.Combine(armorDye, glovesDye, bootsDye, capeDye));
+    }
+
+    /// <summary>
     /// What a character wears, as whole items: the ids everyone sees (<see cref="ids"/>) and each item's own
     /// <see cref="data"/>. The inventory rules work on this, so an item keeps its state on its way in and out of a slot.
     /// </summary>

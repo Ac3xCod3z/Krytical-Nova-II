@@ -1,0 +1,52 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Restyle.uss" />
+
+    <!-- The Holoweaver's and the Outfitter's window (WeaveWindowController): one window, two services. At the
+         Holoweaver it lists the looks in the Weave Library for a slot; at the Outfitter the colourways an outfit
+         piece can be dyed in. A click shows the choice on the equipment page's doll, the button below pays for it.
+         The tabs and the two buttons reuse the forge bench's look (Forge.uss). -->
+    <ui:VisualElement name="weave-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label name="weave-title" text="HOLOWEAVER" class="heading" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Button name="close-weave" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement class="forge-tabs">
+            <ui:Button name="weave-tab-weapon" text="WEAPON" class="forge-tab" />
+            <ui:Button name="weave-tab-armor" text="ARMOR" class="forge-tab" />
+            <ui:Button name="weave-tab-gloves" text="GLOVES" class="forge-tab" />
+            <ui:Button name="weave-tab-boots" text="BOOTS" class="forge-tab" />
+            <ui:Button name="weave-tab-cape" text="CAPE" class="forge-tab" />
+        </ui:VisualElement>
+        <ui:Label name="weave-worn" class="weave-worn" />
+        <ui:ScrollView name="weave-scroll" class="weave-scroll">
+            <ui:VisualElement name="weave-grid" class="inventory-grid" />
+        </ui:ScrollView>
+        <ui:Label name="weave-choice" class="weave-choice" />
+        <ui:VisualElement class="row storage-creds-row">
+            <ui:Label text="YOUR CREDS" class="muted inventory-creds-label" />
+            <ui:Label name="weave-creds" text="0" class="accent inventory-creds" />
+        </ui:VisualElement>
+        <ui:Label name="weave-reason" class="forge-reason" />
+        <ui:Button name="weave-act" text="WEAVE" class="kn-button-primary" />
+        <ui:Button name="weave-clear" text="REMOVE WEAVE" class="kn-button-danger" />
+        <ui:Label name="weave-help" class="help" />
+    </ui:VisualElement>
+
+    <!-- The Stylist's, the Reshaper's and the Coach's window (RestyleWindowController): one window, three
+         services. The rows are built by the controller from what the character's lineage offers that service. -->
+    <ui:VisualElement name="restyle-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label name="restyle-title" text="STYLIST" class="heading" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Button name="close-restyle" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:ScrollView name="restyle-scroll" class="restyle-scroll">
+            <ui:VisualElement name="restyle-rows" class="restyle-rows" />
+        </ui:ScrollView>
+        <ui:Label name="restyle-reason" class="forge-reason" />
+        <ui:Button name="restyle-act" text="APPLY" class="kn-button-primary" />
+        <ui:Button name="restyle-reset" text="START AGAIN" class="kn-button-danger" />
+        <ui:Label name="restyle-help" class="help" />
+    </ui:VisualElement>
+</ui:UXML>

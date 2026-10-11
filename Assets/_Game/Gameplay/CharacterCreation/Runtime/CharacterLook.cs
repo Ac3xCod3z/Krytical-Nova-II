@@ -128,7 +128,8 @@ namespace KryticalNova.CharacterCreation
             }
 
             CharacterColorMap.Fill(recipe, database, pixels);
-            foreach (var slot in CharacterAppearance.ColorOrder) CharacterColorMap.OverlayGear(appearance.GetWorn(slot), pixels);
+            foreach (var slot in CharacterAppearance.ColorOrder)
+                CharacterColorMap.OverlayGear(appearance.GetWorn(slot), pixels, appearance.GetDye(slot));
             colorMap.SetPixels32(pixels);
             colorMap.Apply(false, false);
             material.SetTexture(ColorMapId, colorMap);

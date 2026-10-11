@@ -73,6 +73,7 @@ namespace KryticalNova.Items
         private ItemRarity shownRarity;
         private ulong reservedFor = Nobody;
         private FactionId faction;
+        private bool earned;              // server: a Hostile left it, so whoever takes it has earned it
         private float reservedUntil;      // local clock (Time.time): what the machine that decides goes by
         private double heldUntil;         // the session's clock: what everyone counts down against
         private float holdSeconds;        // how long the hold was to begin with
@@ -92,6 +93,11 @@ namespace KryticalNova.Items
         public ItemRarity Rarity => Definition != null ? Definition.rarity : ItemRarity.Common;
         /// <summary>The faction of the player who dropped it, or None. Known where the game is decided.</summary>
         public FactionId Faction => faction;
+        /// <summary>
+        /// True for loot the world handed out (a Hostile's drop), false for what a player put down. Whoever takes
+        /// the first kind has earned it. Known where the game is decided.
+        /// </summary>
+        public bool Earned => earned;
         public float InteractRange => interactRange;
         public Vector3 InteractPoint => transform.position;
         public Vector3 Position => transform.position;
@@ -118,6 +124,7 @@ namespace KryticalNova.Items
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
+            KryticalNova.Diagnostics.PerformanceLog.Mark("drop.appeared");
             netStack.OnValueChanged += OnNetStackChanged;
             netHold.OnValueChanged += OnNetHoldChanged;
             if (IsServer)
@@ -165,10 +172,10 @@ namespace KryticalNova.Items
         /// <summary>
         /// Server (or offline): puts a stack on the ground near a point. <paramref name="reservedFor"/> may hold it
         /// for one player for <paramref name="reserveSeconds"/>; <paramref name="dropFaction"/> limits who may take
-        /// it afterwards (None = anyone).
+        /// it afterwards (None = anyone). <paramref name="earned"/> marks loot the world hands out.
         /// </summary>
         public static WorldDrop ServerSpawn(WorldDrop prefab, ItemStack stack, Vector3 position, NetworkObject reservedFor = null,
-            float reserveSeconds = 0f, FactionId dropFaction = FactionId.None)
+            float reserveSeconds = 0f, FactionId dropFaction = FactionId.None, bool earned = false)
         {
             if (prefab == null || stack.IsEmpty) return null;
             var network = NetworkManager.Singleton;
@@ -183,6 +190,7 @@ namespace KryticalNova.Items
             drop.stack = stack;
             drop.heldUntil = 0;
             drop.faction = dropFaction;
+            drop.earned = earned;
             drop.reservedFor = reservedFor != null && reserveSeconds > 0f ? reservedFor.NetworkObjectId : Nobody;
             drop.reservedUntil = Time.time + Mathf.Max(0f, reserveSeconds);
             drop.holdSeconds = drop.reservedFor != Nobody ? reserveSeconds : 0f;

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8baf221c0f72b4744b7afad3c9c62603, type: 3}
+  m_Name: SponsorSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.SponsorSettings
+  sponsorMinLevel: 112
+  levelGap: 5
+  maxRecruits: 3
+  requestSeconds: 30
+  experienceBonus: 0.5
+  rangeMetres: 40
+  pointsPerMinute: 250
+  checkSeconds: 5

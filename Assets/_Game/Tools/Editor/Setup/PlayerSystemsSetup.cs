@@ -34,7 +34,9 @@ namespace KryticalNova.EditorTools
         public const string SerumSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/SerumSettings.asset";
         public const string AutopilotSettingsPath = "Assets/_Game/Gameplay/Autopilot/Data/Assets/AutopilotSettings.asset";
         public const string VendorCatalogPath = "Assets/_Game/Gameplay/Economy/Data/Assets/Vendors/VendorCatalog.asset";
+        public const string CraftingSettingsPath = "Assets/_Game/Gameplay/Crafting/Data/Assets/CraftingSettings.asset";
         public const string SquadSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SquadSettings.asset";
+        public const string SponsorSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SponsorSettings.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
         // the hand comes down to 0.48 m, the top of a drop.
@@ -55,6 +57,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Items.PlayerLoot", ("dropPrefab", GameplayPrefabsSetup.WorldDropPath)),
             new Row("KryticalNova.Economy.PlayerVault"),
             new Row("KryticalNova.Economy.PlayerDeepVault"),
+            // The Pack, the Vault and the Deep Vault as one, for whatever costs items (the forge, a Kiosk Permit).
+            new Row("KryticalNova.Economy.PlayerItemSources"),
             new Row("KryticalNova.Economy.PlayerTrade", ("settings", EconomySettingsPath)),
             new Row("KryticalNova.Economy.PlayerKiosk", ("settings", EconomySettingsPath), ("standPrefab", GameplayPrefabsSetup.KioskStandPath)),
             // NPC shops: buying from the vendor the player stands by, selling to any.
@@ -65,8 +69,17 @@ namespace KryticalNova.EditorTools
             // Gear progression: worn gear reads its Temper / Fusion / Tuning, and the forge changes them.
             new Row("KryticalNova.Items.PlayerEquipment", ("progression", GearProgressionPath)),
             new Row("KryticalNova.Forge.PlayerGearWork", ("settings", GearProgressionPath)),
+            // Holoweave: the looks an account has collected, and the Weave and dye each slot of a character shows.
+            new Row("KryticalNova.Restyle.PlayerWeaveLibrary"),
+            new Row("KryticalNova.Restyle.PlayerWeaves", ("settings", EconomySettingsPath)),
+            // A change of hair, face or build at the Stylist, the Reshaper and the Coach.
+            new Row("KryticalNova.Restyle.PlayerRestyle", ("settings", EconomySettingsPath)),
+            // Crafting at the Fabricator: Alloys, Chroma Cells, Dossiers.
+            new Row("KryticalNova.Crafting.PlayerCrafting", ("settings", CraftingSettingsPath)),
             // The Renown ladders at the Herald: Ascension (the Nova) and Nova Standings.
             new Row("KryticalNova.Progression.PlayerNova", ("settings", NovaSettingsPath)),
+            // Sponsor / Recruit: a top-level character brings a lower one on; the Recruit earns more XP near its Sponsor.
+            new Row("KryticalNova.Social.PlayerSponsor", ("settings", SponsorSettingsPath)),
             // Emotes picked on the emote wheel.
             new Row("KryticalNova.Social.PlayerEmotes", ("settings", EmoteWheelSettingsPath)),
             // Following a Squad member.

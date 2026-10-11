@@ -32,6 +32,10 @@ namespace KryticalNova.Economy
         GearWork = 6,
         /// <summary>Ascension attempts at the Herald.</summary>
         Herald = 7,
+        /// <summary>The Holoweaver, the Outfitter, the Stylist, the Reshaper and the Coach.</summary>
+        Appearance = 8,
+        /// <summary>What the Fabricator takes for a craft.</summary>
+        Crafting = 9,
     }
 
     /// <summary>

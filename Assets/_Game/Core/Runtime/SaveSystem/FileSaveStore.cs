@@ -43,6 +43,8 @@ namespace KryticalNova.Core
         public void Write(string key, string json)
         {
             if (!TryPath(key, out string path)) return;
+            // The disk's share of a save, with how much text went out.
+            using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("save.file", key, json != null ? json.Length : 0);
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(path));

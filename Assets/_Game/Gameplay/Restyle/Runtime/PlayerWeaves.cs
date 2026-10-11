@@ -1,0 +1,279 @@
+using System;
+using KryticalNova.Core;
+using KryticalNova.Economy;
+using KryticalNova.Items;
+using KryticalNova.NPC;
+using KryticalNova.Persistence;
+using KryticalNova.Progression;
+using Unity.Netcode;
+using UnityEngine;
+
+namespace KryticalNova.Restyle
+{
+    /// <summary>
+    /// What a character shows in place of what it wears, and the two services that change it: the Holoweaver puts
+    /// a collected look (a Weave) over the piece in a slot, the Outfitter dyes an outfit piece in another colourway.
+    /// Both stay with the slot when the piece in it changes. The owner asks; the server checks that the player
+    /// stands by the right NPC, runs <see cref="WeaveRules"/>, takes the cost and writes the result into
+    /// <see cref="PlayerEquipment"/>, which shows it to everyone. A Weave costs Creds; a dye uses up one Chroma
+    /// Cell a piece, from the Pack or from what is stored. Both costs are in <see cref="EconomySettings"/>.
+    /// </summary>
+    [DisallowMultipleComponent]
+    [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment), typeof(PlayerWeaveLibrary))]
+    [RequireComponent(typeof(PlayerItemSources))]
+    public sealed class PlayerWeaves : NetworkBehaviour, ISaveParticipant
+    {
+        public const string WeaveSaveKey = "weave";
+        private const float ReachPadding = 2.5f;
+        private const string ReasonDefeated = "You can't do that while defeated.";
+        private const string ReasonWhereWeave = "Visit a Holoweaver to change a Weave.";
+        private const string ReasonWhereDye = "Visit an Outfitter to dye gear.";
+        private const string ReasonNoCreds = "You don't have enough Creds.";
+
+        [SerializeField] private EconomySettings settings;
+
+        private PlayerInventory inventory;
+        private PlayerEquipment equipment;
+        private PlayerWeaveLibrary library;
+        private PlayerItemSources sources;
+        private PlayerWallet wallet;
+        private PlayerResources resources;
+        private PlayerSaveAgent saveAgent;
+        private IGearWearer wearer;
+        // This character's gear from before looks were collected has been added to the library.
+        private bool collectedOwned;
+
+        /// <summary>GM switch: both services work anywhere until the session ends.</summary>
+        public static bool GmAnywhere;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => GmAnywhere = false;
+
+        /// <summary>The Weaves of the player this machine controls.</summary>
+        public static PlayerWeaves Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerWeaves>() : null;
+
+        public EconomySettings Settings => settings;
+        public PlayerEquipment Equipment => equipment;
+        public PlayerWeaveLibrary Library => library;
+        public long Creds => wallet != null ? wallet.Creds : 0;
+        public long WeaveFee => settings != null ? Math.Max(0, settings.weaveApplyFee) : 0;
+        public long WeaveClearFee => settings != null ? Math.Max(0, settings.weaveClearFee) : 0;
+        /// <summary>The item one dye uses up (the Chroma Cell), or 0 when dyeing is free.</summary>
+        public ushort DyeItemId => settings != null ? settings.dyeItemId : (ushort)0;
+        /// <summary>How many of the dye item the player has, carried or stored.</summary>
+        public int DyeItemsHeld => DyeItemId != 0 ? sources.Count(DyeItemId) : 0;
+        public string DyeItemName => NameOf(DyeItemId, "Chroma Cell");
+        /// <summary>True while the NPC of a service is in reach (or the GM switch is on): its window closes when it stops being so.</summary>
+        public bool InReach(NpcOffer offer) => GmAnywhere || NpcInteractable.IsOffered(offer, transform.position, ReachPadding);
+
+        /// <summary>Why this character may not put a collected look on a slot (shown beside it), or null. The same answer on the owner and the server.</summary>
+        public string WeaveBlockedReason(EquipSlot slot, ushort lineId)
+        {
+            ItemDefinition weave = inventory.Catalog != null ? inventory.Catalog.Get(WeaveRules.ItemOf(lineId)) : null;
+            return WeaveRules.ApplyBlockedReason(inventory.Gear, slot, equipment.GetDefinition(slot), weave, library.Has(lineId),
+                wearer != null ? wearer.Faction : Factions.FactionId.None, wearer != null ? wearer.Body : BodyFit.None);
+        }
+
+        private void Awake()
+        {
+            inventory = GetComponent<PlayerInventory>();
+            equipment = GetComponent<PlayerEquipment>();
+            library = GetComponent<PlayerWeaveLibrary>();
+            sources = GetComponent<PlayerItemSources>();
+            wallet = GetComponent<PlayerWallet>();
+            resources = GetComponent<PlayerResources>();
+            saveAgent = GetComponent<PlayerSaveAgent>();
+            wearer = GetComponent<IGearWearer>();
+        }
+
+        private void OnEnable()
+        {
+            if (saveAgent != null) saveAgent.Loaded += OnLoaded;
+        }
+
+        private void OnDisable()
+        {
+            if (saveAgent != null) saveAgent.Loaded -= OnLoaded;
+        }
+
+        // ------------------------------------------------------------------ requests (owner)
+
+        /// <summary>Put a collected look over the piece worn in a slot.</summary>
+        public void RequestWeave(EquipSlot slot, ushort lineId)
+        {
+            if (IsSpawned) WeaveRpc((byte)slot, lineId);
+            else ServerWeave(slot, lineId);
+        }
+
+        /// <summary>Show the worn piece in a slot as it is again.</summary>
+        public void RequestClearWeave(EquipSlot slot)
+        {
+            if (IsSpawned) ClearWeaveRpc((byte)slot);
+            else ServerClearWeave(slot);
+        }
+
+        /// <summary>Dye the piece shown in a slot in a colourway; 0 gives it its own colours back.</summary>
+        public void RequestDye(EquipSlot slot, ushort colourway)
+        {
+            if (IsSpawned) DyeRpc((byte)slot, colourway);
+            else ServerDye(slot, colourway);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void WeaveRpc(byte slot, ushort lineId) => ServerWeave((EquipSlot)slot, lineId);
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void ClearWeaveRpc(byte slot) => ServerClearWeave((EquipSlot)slot);
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void DyeRpc(byte slot, ushort colourway) => ServerDye((EquipSlot)slot, colourway);
+
+        // ------------------------------------------------------------------ server
+
+        private bool HasAuthority => !IsSpawned || IsServer;
+
+        /// <summary>True when this player may use a service now; otherwise they are told why not.</summary>
+        private bool Ready(NpcOffer offer, string where)
+        {
+            if (!HasAuthority || inventory.Catalog == null) return false;
+            string blocked = resources != null && !resources.IsAlive ? ReasonDefeated : !InReach(offer) ? where : null;
+            if (blocked == null) return true;
+            Tell(blocked);
+            return false;
+        }
+
+        private bool Pay(long fee)
+        {
+            if (fee <= 0) return true;
+            if (wallet == null || !wallet.CanAfford(fee)) { Tell(ReasonNoCreds); return false; }
+            return wallet.ServerSpend(fee, CredsSink.Appearance);
+        }
+
+        private void Commit(EquipmentLooks looks)
+        {
+            equipment.ServerSetLooks(looks);
+            if (saveAgent != null) saveAgent.SaveSoon();
+        }
+
+        private void ServerWeave(EquipSlot slot, ushort lineId)
+        {
+            if (!Ready(NpcOffer.Holoweave, ReasonWhereWeave)) return;
+            string blocked = WeaveBlockedReason(slot, lineId);
+            if (blocked != null) { Tell(blocked); return; }
+
+            ItemDefinition worn = equipment.GetDefinition(slot);
+            ItemDefinition weave = inventory.Catalog.Get(WeaveRules.ItemOf(lineId));
+            // The look the piece has anyway is no Weave: it is the Weave coming off.
+            if (WeaveRules.KeyOf(worn) == lineId) { ServerClearWeave(slot); return; }
+            EquipmentLooks looks = equipment.Looks;
+            if (looks.GetWeave(slot) == weave.itemId) { Tell("That Weave is already on."); return; }
+            if (!Pay(WeaveFee)) return;
+            looks.SetWeave(slot, weave.itemId);
+            Commit(looks);
+            Tell($"{weave.displayName} woven over your {SlotName(slot)}.");
+        }
+
+        private void ServerClearWeave(EquipSlot slot)
+        {
+            if (!Ready(NpcOffer.Holoweave, ReasonWhereWeave)) return;
+            EquipmentLooks looks = equipment.Looks;
+            if (!WeaveRules.IsWeaveSlot(slot) || looks.GetWeave(slot) == 0) { Tell("There is no Weave on that slot."); return; }
+            if (!Pay(WeaveClearFee)) return;
+            looks.SetWeave(slot, 0);
+            Commit(looks);
+            Tell($"The Weave is off your {SlotName(slot)}.");
+        }
+
+        private void ServerDye(EquipSlot slot, ushort colourway)
+        {
+            if (!Ready(NpcOffer.Dye, ReasonWhereDye)) return;
+            ItemDefinition shown = equipment.GetShownDefinition(slot);
+            string blocked = WeaveRules.DyeBlockedReason(slot, shown, colourway, equipment.Colourways);
+            if (blocked != null) { Tell(blocked); return; }
+
+            // The colourway a piece was made in is no dye: it is the dye coming off.
+            if (colourway == shown.colorTheme) colourway = 0;
+            EquipmentLooks looks = equipment.Looks;
+            if (looks.GetDye(slot) == colourway) { Tell(colourway == 0 ? "That piece is not dyed." : "It is that colour already."); return; }
+            if (colourway != 0 && DyeItemId != 0)
+            {
+                dyeCost[0] = new ItemCost(DyeItemId, 1);
+                if (!sources.ServerSpend(dyeCost)) { Tell($"You have no {DyeItemName}."); return; }
+            }
+            looks.SetDye(slot, colourway);
+            Commit(looks);
+            Tell(colourway == 0 ? $"Your {SlotName(slot)} has its own colours again." : $"Your {SlotName(slot)} is dyed.");
+        }
+
+        private readonly ItemCost[] dyeCost = new ItemCost[1];
+
+        private static string SlotName(EquipSlot slot) => slot.ToString().ToLowerInvariant();
+
+        private string NameOf(ushort itemId, string fallback)
+        {
+            ItemDefinition item = inventory.Catalog != null ? inventory.Catalog.Get(itemId) : null;
+            return item != null ? item.displayName : fallback;
+        }
+
+        /// <summary>GM: writes looks without a fee or an NPC. Server (or offline) only.</summary>
+        public void ServerSetLooks(EquipmentLooks looks)
+        {
+            if (HasAuthority) Commit(looks);
+        }
+
+        private void OnLoaded()
+        {
+            if (!HasAuthority || collectedOwned) return;
+            collectedOwned = true;
+            library.ServerCollectOwned();
+            if (saveAgent != null) saveAgent.SaveSoon();
+        }
+
+        // ------------------------------------------------------------------ telling the owner
+
+        private void Tell(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            if (IsSpawned && !IsOwnedByServer) TellRpc(text);
+            else if (!IsSpawned || IsOwner) ClientPresentationRegistry.Messages?.ShowMessage(text);
+        }
+
+        [Rpc(SendTo.Owner)]
+        private void TellRpc(string text) => ClientPresentationRegistry.Messages?.ShowMessage(text);
+
+        // ------------------------------------------------------------------ saving
+
+        [Serializable]
+        private sealed class WeaveSave
+        {
+            public EquipmentLooks looks;
+            public bool collectedOwned;
+        }
+
+        public string SaveKey => WeaveSaveKey;
+        public SaveScope SaveScope => SaveScope.Character;
+
+        public string CaptureSave() => JsonUtility.ToJson(new WeaveSave { looks = equipment.Looks, collectedOwned = collectedOwned });
+
+        /// <summary>Puts the looks back. A Weave or a colourway the game no longer has is dropped.</summary>
+        public void RestoreSave(string json)
+        {
+            if (!HasAuthority || string.IsNullOrEmpty(json)) return;
+            var save = JsonUtility.FromJson<WeaveSave>(json);
+            if (save == null) return;
+            collectedOwned = save.collectedOwned;
+
+            EquipmentLooks looks = save.looks;
+            ItemCatalog catalog = inventory.Catalog;
+            GearThemeLibrary colourways = equipment.Colourways;
+            foreach (EquipSlot slot in WeaveRules.WeaveSlots)
+            {
+                ushort weave = looks.GetWeave(slot);
+                if (weave != 0 && (catalog == null || WeaveRules.KeyOf(catalog.Get(weave)) == 0)) looks.SetWeave(slot, 0);
+                ushort dye = looks.GetDye(slot);
+                if (dye != 0 && (colourways == null || !colourways.TryGet(dye, out _))) looks.SetDye(slot, 0);
+            }
+            equipment.ServerSetLooks(looks);
+        }
+    }
+}

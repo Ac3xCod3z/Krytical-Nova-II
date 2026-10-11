@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using KryticalNova.Crafting;
 using KryticalNova.Items;
 using UnityEditor;
 using UnityEngine;
@@ -7,8 +8,9 @@ using UnityEngine;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Creates every item that is not gear from one table: the Stims, permits, rations, forge materials and Serums
-    /// today, and whatever a later system needs (Recall Tags, Skill Chips) as a new row. Registers them in the item catalog.
+    /// Creates every item that is not gear from one table: the Stims, permits, rations, forge materials, Serums and
+    /// what the appearance services use up today, and whatever a later system needs (Recall Tags, Skill Chips) as a
+    /// new row. Registers them in the item catalog.
     /// An asset that already exists keeps its numbers and text, so hand tuning survives a re-run; only what the
     /// table owns outright (what kind of item it is) is refreshed. IDs are never renumbered: append.
     /// </summary>
@@ -18,6 +20,9 @@ namespace KryticalNova.EditorTools
         private const string Folder = ItemsRoot + "/Consumables";
         /// <summary>What the forge uses up: Alloys, Failsafes, the Fusion Catalyst, Tuning Chips.</summary>
         private const string MaterialFolder = ItemsRoot + "/GearMaterials";
+        /// <summary>What the Fabricator uses up that is not for the forge: colour cells, Dossier Pages.</summary>
+        public const string CraftFolder = ItemsRoot + "/CraftMaterials";
+        public const string ConsumableFolder = Folder;
         private const string CatalogPath = ItemsRoot + "/ItemCatalog.asset";
 
         private const ushort StimStack = 99;
@@ -74,6 +79,34 @@ namespace KryticalNova.EditorTools
                 Description = "Adds 5 hours of Autopilot: your character hunts by itself inside a Hostile Zone. The time only runs while Autopilot is on.",
                 Stack = 99, Effect = ItemUseEffect.AutopilotTime },
 
+            // The appearance services: what one change uses up at the Outfitter, at the Stylist or the Reshaper, and
+            // at the Coach. Sold in the Nova Store later; only GM tools give them out for now. EconomySettings names
+            // the ids (dyeItemId, restyleItemId, trainingItemId).
+            new Row { Id = CraftItemIds.ChromaCell, Asset = "Chroma_Cell", Name = "Chroma Cell", Glyph = "DYE", Rarity = ItemRarity.Uncommon,
+                Description = "Dyes one piece of your outfit in another colourway at an Outfitter. Used up by the dye. A Fabricator makes one from a Cyan, a Magenta, a Yellow and a Black Cell.", Stack = 99 },
+            new Row { Id = CraftItemIds.RestylePass, Asset = "Pass_Restyle", Name = "Restyle Pass", Glyph = "STYLE", Rarity = ItemRarity.Rare,
+                Description = "One change of hair at a Stylist, or of face at a Reshaper. Used up by the change.", Stack = 99 },
+            new Row { Id = CraftItemIds.TrainingPass, Asset = "Pass_Training", Name = "Training Pass", Glyph = "TRAIN", Rarity = ItemRarity.Rare,
+                Description = "One change of build and muscle at a Coach. Used up by the change.", Stack = 99 },
+
+            // The four colours of a Chroma Cell: Hostile drops, and the Outfitter sells one of them each in-game day.
+            Colour(CraftItemIds.CyanCell, "Cell_Cyan", "Cyan Cell", "C"),
+            Colour(CraftItemIds.MagentaCell, "Cell_Magenta", "Magenta Cell", "M"),
+            Colour(CraftItemIds.YellowCell, "Cell_Yellow", "Yellow Cell", "Y"),
+            Colour(CraftItemIds.BlackCell, "Cell_Black", "Black Cell", "K"),
+
+            // Dossiers (Twelve Sky 2: Archives). Each teaches one skill when it is used; a Fabricator binds it from
+            // its four Pages. Pages are Hostile drops, and so, far more rarely, is the Dossier itself.
+            Dossier(CraftItemIds.BacklashDossier, "Dossier_Backlash", "Backlash"),
+            Dossier(CraftItemIds.IronNerveDossier, "Dossier_IronNerve", "Iron Nerve"),
+            Dossier(CraftItemIds.ShatterpointDossier, "Dossier_Shatterpoint", "Shatterpoint"),
+            Page(CraftItemIds.BacklashDossier, 1, "Backlash"), Page(CraftItemIds.BacklashDossier, 2, "Backlash"),
+            Page(CraftItemIds.BacklashDossier, 3, "Backlash"), Page(CraftItemIds.BacklashDossier, 4, "Backlash"),
+            Page(CraftItemIds.IronNerveDossier, 1, "Iron Nerve"), Page(CraftItemIds.IronNerveDossier, 2, "Iron Nerve"),
+            Page(CraftItemIds.IronNerveDossier, 3, "Iron Nerve"), Page(CraftItemIds.IronNerveDossier, 4, "Iron Nerve"),
+            Page(CraftItemIds.ShatterpointDossier, 1, "Shatterpoint"), Page(CraftItemIds.ShatterpointDossier, 2, "Shatterpoint"),
+            Page(CraftItemIds.ShatterpointDossier, 3, "Shatterpoint"), Page(CraftItemIds.ShatterpointDossier, 4, "Shatterpoint"),
+
             // The forge (_Docs/Reference/12Sky/02_Gear_System_Spec.md). Ids are named in GearMaterialIds, which the
             // settings asset reads; what each one does is decided there, not here.
             Material(GearMaterialIds.Alumite, "Alloy_Alumite", "Alumite", "+3%", ItemRarity.Common,
@@ -126,6 +159,24 @@ namespace KryticalNova.EditorTools
             new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = ItemRarity.Rare, Description = description,
                 Stack = 99, Effect = ItemUseEffect.Serum, Cooldown = SerumCooldown };
 
+        // A method, not a table: the rows above are built before any field declared after them.
+        private static string Numeral(int page) => page == 1 ? "I" : page == 2 ? "II" : page == 3 ? "III" : "IV";
+
+        private static Row Colour(ushort id, string asset, string name, string glyph) =>
+            new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = ItemRarity.Common, Stack = 99, Folder = CraftFolder,
+                Description = "One of the four colours of a Chroma Cell. A Fabricator joins one of each into a Chroma Cell." };
+
+        private static Row Dossier(ushort id, string asset, string skill) =>
+            new Row { Id = id, Asset = asset, Name = $"{skill} Dossier", Glyph = "DOSSIER", Rarity = ItemRarity.Epic, Stack = 10,
+                Effect = ItemUseEffect.LearnSkill,
+                Description = $"Unlocks {skill}, which is then learned with skill points. Used up when it is read. A Fabricator binds one from its four Pages." };
+
+        /// <summary>A Dossier's Page. Asset and name are worked out from the Dossier's: Page_Backlash_1, "Backlash Page I".</summary>
+        private static Row Page(ushort dossier, int page, string skill) =>
+            new Row { Id = CraftItemIds.PageOf(dossier, page), Asset = $"Page_{skill.Replace(" ", string.Empty)}_{page}", Name = $"{skill} Page {Numeral(page)}",
+                Glyph = "PAGE " + Numeral(page), Rarity = ItemRarity.Rare, Stack = 99, Folder = CraftFolder,
+                Description = $"One of the four Pages of the {skill} Dossier. A Fabricator binds all four into the Dossier." };
+
         private static Row Material(ushort id, string asset, string name, string glyph, ItemRarity rarity, string description) =>
             new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = rarity, Description = description, Stack = 999, Folder = MaterialFolder };
 
@@ -147,6 +198,7 @@ namespace KryticalNova.EditorTools
 
             WeatherVfxBuilder.EnsureFolder(Folder);
             WeatherVfxBuilder.EnsureFolder(MaterialFolder);
+            WeatherVfxBuilder.EnsureFolder(CraftFolder);
             var made = new List<ItemDefinition>(Rows.Length);
             var bag = catalog.StarterBag.ToList();
             foreach (Row row in Rows)

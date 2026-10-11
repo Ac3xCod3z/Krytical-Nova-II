@@ -23,12 +23,13 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 3
   requiresSkillBook: 1
-  acquisitionNote: Level 80 Skill Chip or Dossier
+  acquisitionNote: 'Shatterpoint Dossier: a rare drop, or bound from its four Pages by a Fabricator'
   requiredCraftingArchives:
-  - Bloody Sky Dossier
-  - Demon Gate Dossier
-  - Marble Dossier
-  - Demon God's Dossier
+  - Shatterpoint Page I
+  - Shatterpoint Page II
+  - Shatterpoint Page III
+  - Shatterpoint Page IV
+  unlockItemId: 9420
   requiredCharacterLevel: 80
   minRank: 1
   maxRank: 100

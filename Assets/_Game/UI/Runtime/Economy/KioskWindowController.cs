@@ -370,8 +370,8 @@ namespace KryticalNova.UI
 
         private int PermitsHeld(in KioskTier option)
         {
-            PlayerInventory local = PlayerInventory.Local;
-            return option.IsFree || local == null ? 0 : local.CountItem(option.permitItemId);
+            PlayerItemSources local = PlayerItemSources.Local; // a permit kept in the Vault counts
+            return option.IsFree || local == null ? 0 : local.Count(option.permitItemId);
         }
 
         private void UpdateTiers()

@@ -22,9 +22,27 @@
         <ui:VisualElement name="contacts-add-row" class="row social-add-row">
             <ui:TextField name="contacts-name" class="kn-textfield social-name" max-length="24" />
             <ui:Button name="contacts-add" text="ADD" class="kn-button-primary social-add" />
+            <ui:Button name="contacts-sponsor" text="SPONSOR" class="social-add contacts-sponsor" />
         </ui:VisualElement>
         <ui:ScrollView name="contacts-list" class="social-list" />
         <ui:Label name="contacts-help" text="" class="help" />
+    </ui:VisualElement>
+
+    <!-- Sponsor / Recruit (SponsorWindowController): the player's Sponsor or its Recruits, and the Sponsor points
+         earned. No key of its own: it opens from the SPONSOR button above and from "/sponsor". -->
+    <ui:VisualElement name="sponsor-window" class="panel window blocks-world hud-movable social-window">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="SPONSOR / RECRUIT" class="heading" />
+            <ui:VisualElement class="social-spacer" picking-mode="Ignore" />
+            <ui:Label name="sponsor-points" text="" class="accent social-count" />
+            <ui:Button name="close-sponsor" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement class="row social-add-row">
+            <ui:TextField name="sponsor-name" class="kn-textfield social-name" max-length="24" />
+            <ui:Button name="sponsor-request" text="REQUEST" class="kn-button-primary social-add" />
+        </ui:VisualElement>
+        <ui:ScrollView name="sponsor-list" class="social-list sponsor-list" />
+        <ui:Label name="sponsor-help" text="" class="help" />
     </ui:VisualElement>
 
     <!-- Crew [G] (CrewWindowController): the roster and what a member may do by rank; the founding form when opened

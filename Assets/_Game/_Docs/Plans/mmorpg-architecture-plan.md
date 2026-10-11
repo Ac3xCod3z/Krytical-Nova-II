@@ -1,3 +1,7 @@
+> **11 Oct 2026:** the plan for dedicated servers, Lines, security, saving across servers and the beta is
+> now `online-roadmap.md` with its phase documents. It replaces Phase 4 below ("Scalability, Interest
+> Management & MMO Performance") and the "Production MMORPG Phase" notes. Phases 1 to 3 below are built.
+
 # Project Overview
 - **Game Title**: Krytical Nova II
 - **High-Level Concept**: A martial-arts action MMORPG featuring point-and-click movement, fluid vertical traversal jumps, martial arts skill progression, and real-time stance/buff-driven combat across shared persistent zones.
@@ -76,7 +80,7 @@
     - *IsOwner (Local Player)*: Enable `PlayerInput`, Cinemachine camera target, local audio listener, UI bindings, and click raycaster.
     - *Remote Player (Proxy)*: Disable `PlayerInput`, `CinemachineOrbitalFollow`, local UI raycasters, and local `NavMeshAgent` collision avoidance. Remote players receive position/rotation via smooth interpolated `NetworkTransform` (client-side prediction and interpolation).
 - **Server Tick Budget & Zero-Allocation Hot Paths**:
-  - Headless server tick rates optimized for MMOs (20 Hz fixed tick rate).
+  - Headless server tick rates optimized for MMOs (20 Hz fixed tick rate). *As built the tick rate is 30 (`NetworkManager.prefab`, `DedicatedServerOptimizer`); 30 is the figure the online plan uses.*
   - Pre-allocated reusable buffers, static structs for RPC serialization, and pooling for dynamic entities to maintain near-zero garbage collection on the server process.
 
 ---

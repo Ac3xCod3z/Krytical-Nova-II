@@ -23,12 +23,13 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 3
   requiresSkillBook: 1
-  acquisitionNote: Level 80 Skill Chip or Dossier
+  acquisitionNote: 'Iron Nerve Dossier: a rare drop, or bound from its four Pages by a Fabricator'
   requiredCraftingArchives:
-  - Snow Legend
-  - Northern Wind Legend
-  - Gods Legend
-  - Moon Wolf's Legend
+  - Iron Nerve Page I
+  - Iron Nerve Page II
+  - Iron Nerve Page III
+  - Iron Nerve Page IV
+  unlockItemId: 9410
   requiredCharacterLevel: 80
   minRank: 1
   maxRank: 100

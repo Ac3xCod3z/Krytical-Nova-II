@@ -12,7 +12,7 @@ namespace KryticalNova.Progression
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacterProgression), typeof(PlayerResources), typeof(CharacterBuffManager))]
-    public sealed class PlayerCombatSkills : NetworkBehaviour, ISaveParticipant
+    public sealed class PlayerCombatSkills : NetworkBehaviour, ISaveParticipant, KryticalNova.Items.IItemUseHandler
     {
         /// <summary>A remote owner waits this long for the server's answer before it may ask to cast again.</summary>
         private const float CastRequestTimeout = 0.5f;
@@ -323,6 +323,39 @@ namespace KryticalNova.Progression
             }
         }
 
+        // ---------------- a Dossier is used (IItemUseHandler, server) ----------------
+
+        public KryticalNova.Items.ItemUseEffect Effect => KryticalNova.Items.ItemUseEffect.LearnSkill;
+
+        /// <summary>The skill an item unlocks when it is used, or null.</summary>
+        public SkillDefinitionSO SkillTaughtBy(ushort itemId)
+        {
+            if (itemId == 0 || availableSkills == null) return null;
+            foreach (SkillDefinitionSO skill in availableSkills)
+                if (skill != null && skill.unlockItemId == itemId) return skill;
+            return null;
+        }
+
+        public string UseBlockedReason(KryticalNova.Items.ItemDefinition item)
+        {
+            SkillDefinitionSO skill = item != null ? SkillTaughtBy(item.itemId) : null;
+            if (skill == null) return "There is nothing in it your character can learn.";
+            if (!IsLocked(skill)) return $"You have already unlocked {skill.displayName}.";
+            EnsureComponents();
+            if (progression != null && progression.CurrentLevel < skill.requiredCharacterLevel)
+                return $"Requires level {skill.requiredCharacterLevel}.";
+            return null;
+        }
+
+        public void ServerUse(KryticalNova.Items.ItemDefinition item)
+        {
+            if (!HasAuthority || item == null) return;
+            SkillDefinitionSO skill = SkillTaughtBy(item.itemId);
+            if (skill == null || !unlockedDropSkills.Add(skill.RankKey)) return;
+            SkillMessage?.Invoke($"{item.displayName} read: {skill.displayName} is unlocked. Learn it with skill points.");
+            Commit();
+        }
+
         public void LockDropSkill(string skillId)
         {
             if (!HasAuthority) return;
@@ -571,6 +604,7 @@ namespace KryticalNova.Progression
                 return false;
             }
             if (queue != null && queue.Queued != null) queue.Clear(); // this cast is the answer to whatever was waiting
+            KryticalNova.Diagnostics.PerformanceLog.Mark("skill.cast", skill != null ? skill.skillId : null);
 
             if (IsSpawned && !IsServer)
             {

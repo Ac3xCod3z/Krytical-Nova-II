@@ -268,6 +268,29 @@ namespace KryticalNova.Economy
             if (saveAgent != null) saveAgent.SaveSoon();
         }
 
+        /// <summary>
+        /// Server only: a scratch copy of the cells for something that pays in items (<see cref="PlayerItemSources"/>).
+        /// A cost is taken wherever the player stands: the NPC is only needed to put things in and take them out by hand.
+        /// </summary>
+        internal ItemStack[] ServerBeginCost()
+        {
+            if (!HasAuthority) return null;
+            Array.Copy(cells, scratch, cells.Length);
+            return scratch;
+        }
+
+        /// <summary>Server only: keeps what a cost took from the scratch copy, when it took anything.</summary>
+        internal void ServerCommitCost()
+        {
+            if (!HasAuthority) return;
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (scratch[i].Equals(cells[i])) continue;
+                Commit();
+                return;
+            }
+        }
+
         private void CommitCreds()
         {
             if (IsSpawned && IsServer) netCreds.Value = creds;

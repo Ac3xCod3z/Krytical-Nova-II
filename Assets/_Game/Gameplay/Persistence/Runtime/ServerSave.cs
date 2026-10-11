@@ -180,6 +180,7 @@ namespace KryticalNova.Persistence
         public static void FlushAll()
         {
             if (!HasAuthority) return;
+            using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("save.all");
             for (int i = Agents.Count - 1; i >= 0; i--)
                 if (Agents[i] != null) Agents[i].Save();
             foreach (var pair in WorldDocuments) WriteIfChanged(pair.Key, JsonUtility.ToJson(pair.Value));

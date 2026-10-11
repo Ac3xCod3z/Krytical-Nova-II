@@ -30,6 +30,10 @@ namespace KryticalNova.Economy
         public string shopName = string.Empty;
         public List<VendorListing> listings = new List<VendorListing>();
 
+        [Header("One a day")]
+        [Tooltip("One of these is on the shelf each in-game day, in turn (the Outfitter's colour cells). Empty = nothing rotates.")]
+        public List<VendorListing> rotation = new List<VendorListing>();
+
         [Header("Gear sold by rule")]
         [Tooltip("Sells every ladder piece of the rarity below within the level range, to those who can wear it.")]
         public bool sellsLadderGear;
@@ -43,6 +47,15 @@ namespace KryticalNova.Economy
         public bool SellsByRule(ItemDefinition item) =>
             sellsLadderGear && item != null && item.IsLadderGear && item.equipSlot != EquipSlot.Pet
             && item.rarity == gearRarity && item.itemLevel >= gearMinLevel && item.itemLevel <= gearMaxLevel;
+
+        /// <summary>What the rotating shelf holds on an in-game day, or false when nothing rotates.</summary>
+        public bool TryGetOfTheDay(long day, out VendorListing listing)
+        {
+            listing = default;
+            if (rotation == null || rotation.Count == 0) return false;
+            listing = rotation[(int)(((day % rotation.Count) + rotation.Count) % rotation.Count)];
+            return listing.item != null && listing.price > 0;
+        }
 
         /// <summary>The listed price of an item, or false when it is not listed.</summary>
         public bool TryGetListed(ItemDefinition item, out long price)

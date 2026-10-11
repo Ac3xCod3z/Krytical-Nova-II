@@ -78,6 +78,7 @@ namespace KryticalNova.UI
             {
                 if (Entries[i].Id != id) continue;
                 Opener = opener;
+                using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("window.service", id);
                 try { Entries[i].Open(); }
                 finally { Opener = null; }
                 return true;

@@ -1,6 +1,8 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <ui:Template name="EconomyWindows" src="../Economy/EconomyWindows.uxml" />
     <ui:Template name="ForgeWindow" src="ForgeWindow.uxml" />
+    <ui:Template name="RestyleWindows" src="../Restyle/RestyleWindows.uxml" />
+    <ui:Template name="CraftWindow" src="../Crafting/CraftWindow.uxml" />
     <Style src="Items.uss" />
     <Style src="../HUD/Pet/PetPanels.uss" />
     <!-- Instanced into ProgressionHUD.uxml as a full-screen, click-through layer; driven by GearUIController. -->
@@ -111,6 +113,12 @@
 
     <!-- The forge bench (GearWorkWindowController): here for the same reason, it takes pieces dragged from the Pack -->
     <ui:Instance template="ForgeWindow" name="forge-layer" class="item-layer" picking-mode="Ignore" />
+
+    <!-- The appearance services (the Holoweaver's and the Outfitter's window): they sit beside the equipment page -->
+    <ui:Instance template="RestyleWindows" name="restyle-layer" class="item-layer" picking-mode="Ignore" />
+
+    <!-- The Fabricator's bench (CraftWindowController): it sits beside the Pack, where what is made lands -->
+    <ui:Instance template="CraftWindow" name="craft-layer" class="item-layer" picking-mode="Ignore" />
 
     <!-- Floating layers -->
     <!-- The item card, as the packs lay one out: the item's picture on its rarity, its name, what it is, its numbers as strips -->

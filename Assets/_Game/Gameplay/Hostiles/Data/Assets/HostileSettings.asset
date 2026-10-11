@@ -27,6 +27,87 @@ MonoBehaviour:
   gearChancePercent: 2.5
   bruiserGearChancePercent: 25
   gearLevelsBelow: 3
+  materialDrops:
+  - item: {fileID: 11400000, guid: 2f0df2b84dbe23041a27da17560b99d9, type: 2}
+    chancePercent: 1.5
+    minLevel: 0
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 739cc380a5e48144c87a73300ad0ff18, type: 2}
+    chancePercent: 1.5
+    minLevel: 0
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 477b7ddd279719f479264bfa6bd33aea, type: 2}
+    chancePercent: 1.5
+    minLevel: 0
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: b6c273e030dc0004a8c208af184f50ac, type: 2}
+    chancePercent: 1.5
+    minLevel: 0
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: a30df60b58ba86c4795bdfdee9ccd24b, type: 2}
+    chancePercent: 0.2
+    minLevel: 0
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 85378e130fe95d14f8eb80b42ffce1bb, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 8ad3df372a9dd1f4285fb1d66a391c54, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 6a4e3dc7fdade9c4e83116791627e6b0, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: e03014d0315d90047ad10626742ebb86, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 65cd3a2ea2d85014e8794a20fcfaff51, type: 2}
+    chancePercent: 0.02
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 748a7f46e54f4464d922d22639ee2ece, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 208f4136c45f3d94d8a72025b150269a, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 8a92c94e33447db48b324ade5342cabf, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 782603cf5f1753a47a1db9ae6c325d23, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 58a0fce3ca25cf34fb7b7db3fb159b54, type: 2}
+    chancePercent: 0.02
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 841fe71d5361b444a8244bb4ccd838a4, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: c0dcbfa6d5995dc499180cb035c66853, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: b50b2069f87376f41b52dd0ee6a419a1, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 011baebeffee8b14092a50486cc11f36, type: 2}
+    chancePercent: 0.5
+    minLevel: 70
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 87fc083a9b88da446a98d1bd5d234978, type: 2}
+    chancePercent: 0.02
+    minLevel: 70
+    maxLevel: 0
   maxActiveHostiles: 300
   zoneTickSeconds: 0.5
   leashMetres: 15

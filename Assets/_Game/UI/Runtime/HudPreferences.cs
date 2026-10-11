@@ -26,6 +26,7 @@ namespace KryticalNova.UI
         private static readonly string RefuseContactsKey = Prefix + "refuse.contact";
         private static readonly string RefuseCrewKey = Prefix + "refuse.crew";
         private static readonly string RefuseSquadKey = Prefix + "refuse.squad";
+        private static readonly string RefuseSponsorKey = Prefix + "refuse.sponsor";
         private static readonly string RefuseCalloutsKey = Prefix + "refuse.callout";
         private static readonly string LayoutKey = Prefix + "layout.v1";
         private static readonly string SnapToGridKey = Prefix + "layout.snap";
@@ -127,6 +128,13 @@ namespace KryticalNova.UI
             set => SetBool(RefuseCrewKey, value);
         }
 
+        /// <summary>A request to become someone's Sponsor or Recruit is declined for the player, without being shown.</summary>
+        public static bool RefuseSponsorRequests
+        {
+            get => GetBool(RefuseSponsorKey, false);
+            set => SetBool(RefuseSponsorKey, value);
+        }
+
         /// <summary>An invitation to a Squad is declined for the player, without being shown.</summary>
         public static bool RefuseSquadInvites
         {
@@ -144,7 +152,7 @@ namespace KryticalNova.UI
         /// <summary>Every option of the Gameplay page that is kept here back to what the game ships with.</summary>
         public static void ResetGameplayToDefaults()
         {
-            foreach (string key in new[] { DamageNumbersKey, RefuseTradesKey, RefuseContactsKey, RefuseCrewKey, RefuseSquadKey, RefuseCalloutsKey })
+            foreach (string key in new[] { DamageNumbersKey, RefuseTradesKey, RefuseContactsKey, RefuseCrewKey, RefuseSquadKey, RefuseSponsorKey, RefuseCalloutsKey })
                 PlayerPrefs.DeleteKey(key);
             PlayerPrefs.Save();
             Changed?.Invoke();

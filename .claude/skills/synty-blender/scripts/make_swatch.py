@@ -5,6 +5,11 @@ that is not a Sidekick part (pets, props, weapons), the way Synty's packs share 
 
 Writes KN_Swatch.json (every cell's name, place and colour), T_KN_Swatch.png, T_KN_Swatch_Emission.png
 (the glow cells) and T_KN_Swatch_Metallic.png (the metal row) into Assets/_ArtSource/Blender~/Swatch/.
+
+That swatch is full (three cells free), so Synty's own colours live on a second page beside it:
+KN_Swatch_Synty.json and T_KN_Swatch_Synty.png, 16 x 16 cells named "Synty 001".., the colours of
+Synty's POLYGON Sci-Fi City palette (assets/synty_scifi_palette.json, measured from the pack's texture).
+A model is matched to that page with pet_finish.py --swatch synty. The page has no glow or metal cells.
 The layout is fixed here, in code, so the same cell always means the same colour; add colours only in
 cells that are still free, never by moving one, or every model already mapped to it changes colour.
 
@@ -129,8 +134,20 @@ def main():
     write_png(out / "T_KN_Swatch.png", a.cell_px, table, lambda c: from_hex(c["colour"]))
     write_png(out / "T_KN_Swatch_Emission.png", a.cell_px, table, lambda c: from_hex(c["colour"]) if c["glow"] else None)
     write_png(out / "T_KN_Swatch_Metallic.png", a.cell_px, table, lambda c: (1.0, 1.0, 1.0) if c["metal"] else None)
+    # the Synty page: the same grid, filled in the order of the palette file, which is never reordered
+    palette_file = Path(__file__).resolve().parent.parent / "assets" / "synty_scifi_palette.json"
+    synty = []
+    if palette_file.is_file():
+        colours = json.loads(palette_file.read_text(encoding="utf-8"))[:GRID * GRID]
+        synty = [{"name": f"Synty {i + 1:03d}", "u": i % GRID, "v": GRID - 1 - i // GRID, "colour": h, "glow": False, "metal": False}
+                 for i, h in enumerate(colours)]
+        with open(out / "KN_Swatch_Synty.json", "w", encoding="utf-8") as fh:
+            json.dump({"_about": "The Synty page of the Krytical Nova swatch: Synty's POLYGON Sci-Fi City colours. Made by "
+                                 "make_swatch.py from assets/synty_scifi_palette.json. v counts from the bottom.",
+                       "grid": GRID, "cell_px": a.cell_px, "cells": synty}, fh, indent=1)
+        write_png(out / "T_KN_Swatch_Synty.png", a.cell_px, synty, lambda c: from_hex(c["colour"]))
     kn.report("KN swatch", {"folder": str(out), "cells_named": len(table), "cells_free": GRID * GRID - len(table),
-                            "size_px": GRID * a.cell_px})
+                            "synty_page_cells": len(synty), "size_px": GRID * a.cell_px})
 
 
 main()

@@ -34,10 +34,12 @@ namespace KryticalNova.Forge
     /// The forge: Tempering, Fusion, Tuning and Reforge on gear in the player's Pack, done at an Armorer. The client
     /// only names the piece and the materials; the server checks everything again through
     /// <see cref="GearProgressionRules"/>, rolls, takes the materials, Creds and Renown, changes the piece and tells
-    /// the owner how it went. Every number is in <see cref="GearProgressionSettings"/>.
+    /// the owner how it went. The piece worked on (and the piece a Fusion uses up) must be in the Pack; Alloys,
+    /// Failsafes, the catalyst and Chips are also taken from the Vault and the Deep Vault
+    /// (<see cref="PlayerItemSources"/>). Every number is in <see cref="GearProgressionSettings"/>.
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(PlayerInventory))]
+    [RequireComponent(typeof(PlayerInventory), typeof(PlayerItemSources))]
     public sealed class PlayerGearWork : NetworkBehaviour
     {
         private const float ReachPadding = 2.5f;
@@ -48,12 +50,14 @@ namespace KryticalNova.Forge
         [SerializeField] private GearProgressionSettings settings;
 
         private PlayerInventory inventory;
+        private PlayerItemSources sources;
         private PlayerWallet wallet;
         private PlayerCharacterProgression progression;
         private CharacterCombatStats stats;
         private PlayerResources resources;
         private IGearWearer wearer;
         private readonly List<ushort> reforgeResults = new List<ushort>(64);
+        private readonly List<ItemCost> costs = new List<ItemCost>(2);
 
         /// <summary>GM switch: the forge works anywhere until the session ends.</summary>
         public static bool GmAnywhere;
@@ -79,6 +83,7 @@ namespace KryticalNova.Forge
         private void Awake()
         {
             inventory = GetComponent<PlayerInventory>();
+            sources = GetComponent<PlayerItemSources>();
             wallet = GetComponent<PlayerWallet>();
             progression = GetComponent<PlayerCharacterProgression>();
             stats = GetComponent<CharacterCombatStats>();
@@ -170,8 +175,8 @@ namespace KryticalNova.Forge
 
             string blocked = GearProgressionRules.TemperBlockedReason(settings, item, state, alloy, protection);
             if (blocked != null) { Tell(blocked); return; }
-            if (inventory.CountItem(alloy.itemId) < 1) { Tell($"You have no {NameOf(alloy.itemId)}."); return; }
-            if (protection != TemperProtection.None && inventory.CountItem(protectionItemId) < 1) { Tell($"You have no {NameOf(protectionItemId)}."); return; }
+            if (sources.Count(alloy.itemId) < 1) { Tell($"You have no {NameOf(alloy.itemId)}."); return; }
+            if (protection != TemperProtection.None && sources.Count(protectionItemId) < 1) { Tell($"You have no {NameOf(protectionItemId)}."); return; }
             long cost = GearProgressionRules.TemperCost(settings, item, state.Temper);
             if (wallet == null || !wallet.CanAfford(cost)) { Tell(ReasonNoCreds); return; }
 
@@ -180,10 +185,12 @@ namespace KryticalNova.Forge
                 UnityEngine.Random.value, UnityEngine.Random.value, out GearWorkOutcome outcome, out bool protectionSpent);
 
             ItemStack after = outcome == GearWorkOutcome.Broken ? ItemStack.Empty : new ItemStack(stack.itemId, 1, next.PackInto(stack.data));
-            bool done = inventory.ServerChangePack(pack =>
+            costs.Clear();
+            costs.Add(new ItemCost(alloy.itemId, 1));
+            if (protectionSpent) costs.Add(new ItemCost(protectionItemId, 1));
+            bool done = sources.ServerSpend(costs, pack =>
             {
-                if (!pack[cell].Equals(stack) || !Remove(pack, alloy.itemId, 1)) return false;
-                if (protectionSpent && !Remove(pack, protectionItemId, 1)) return false;
+                if (!pack[cell].Equals(stack)) return false;
                 pack[cell] = after;
                 return true;
             });
@@ -209,7 +216,7 @@ namespace KryticalNova.Forge
 
             string blocked = GearProgressionRules.FusionBlockedReason(settings, targetItem, state, materialItem, GearItemState.Of(material));
             if (blocked != null) { Tell(blocked); return; }
-            if (fusion.catalystItemId != 0 && inventory.CountItem(fusion.catalystItemId) < 1) { Tell($"You have no {NameOf(fusion.catalystItemId)}."); return; }
+            if (fusion.catalystItemId != 0 && sources.Count(fusion.catalystItemId) < 1) { Tell($"You have no {NameOf(fusion.catalystItemId)}."); return; }
             int nextStage = state.Fusion + 1;
             long cost = GearProgressionRules.FusionCost(fusion, nextStage);
             if (wallet == null || !wallet.CanAfford(cost)) { Tell(ReasonNoCreds); return; }
@@ -219,10 +226,11 @@ namespace KryticalNova.Forge
                 ? new ItemStack(target.itemId, 1, GearProgressionRules.ResolveFusion(fusion, state).PackInto(target.data))
                 : target; // a failed Fusion never harms the target
             bool materialGoes = success || fusion.failConsumesMaterial;
-            bool done = inventory.ServerChangePack(pack =>
+            costs.Clear();
+            costs.Add(new ItemCost(fusion.catalystItemId, 1)); // no catalyst set = nothing owed
+            bool done = sources.ServerSpend(costs, pack =>
             {
                 if (!pack[targetCell].Equals(target) || !pack[materialCell].Equals(material)) return false;
-                if (fusion.catalystItemId != 0 && !Remove(pack, fusion.catalystItemId, 1)) return false;
                 if (materialGoes) pack[materialCell] = ItemStack.Empty;
                 pack[targetCell] = after;
                 return true;
@@ -241,16 +249,18 @@ namespace KryticalNova.Forge
 
             int nextStage = state.Tune + 1;
             GearProgressionRules.TryGetBracket(tuning, nextStage, out TuningBracket bracket);
-            if (inventory.CountItem(bracket.chipItemId) < bracket.chips) { Tell($"You need {bracket.chips} {NameOf(bracket.chipItemId)}."); return; }
+            if (sources.Count(bracket.chipItemId) < bracket.chips) { Tell($"You need {bracket.chips} {NameOf(bracket.chipItemId)}."); return; }
             if (progression == null || progression.Renown < bracket.renown) { Tell($"You need {bracket.renown} Renown."); return; }
             if (wallet == null || !wallet.CanAfford(bracket.creds)) { Tell(ReasonNoCreds); return; }
 
             bool success = UnityEngine.Random.value * 100f < GearProgressionRules.TuneChance(tuning, nextStage);
             GearItemState next = GearProgressionRules.ResolveTune(tuning, state, success);
             ItemStack after = new ItemStack(stack.itemId, 1, next.PackInto(stack.data));
-            bool done = inventory.ServerChangePack(pack =>
+            costs.Clear();
+            costs.Add(new ItemCost(bracket.chipItemId, bracket.chips));
+            bool done = sources.ServerSpend(costs, pack =>
             {
-                if (!pack[cell].Equals(stack) || !Remove(pack, bracket.chipItemId, bracket.chips)) return false;
+                if (!pack[cell].Equals(stack)) return false;
                 pack[cell] = after;
                 return true;
             });
@@ -264,12 +274,14 @@ namespace KryticalNova.Forge
             GearItemState state = GearItemState.Of(stack);
             ushort chip = settings.tuning.resetChipItemId;
             if (state.Tune == 0) { Tell("It has no Tuning to reset."); return; }
-            if (inventory.CountItem(chip) < 1) { Tell($"You have no {NameOf(chip)}."); return; }
+            if (sources.Count(chip) < 1) { Tell($"You have no {NameOf(chip)}."); return; }
 
             ItemStack after = new ItemStack(stack.itemId, 1, state.WithTune(0).PackInto(stack.data));
-            bool done = inventory.ServerChangePack(pack =>
+            costs.Clear();
+            costs.Add(new ItemCost(chip, 1));
+            bool done = sources.ServerSpend(costs, pack =>
             {
-                if (!pack[cell].Equals(stack) || !Remove(pack, chip, 1)) return false;
+                if (!pack[cell].Equals(stack)) return false;
                 pack[cell] = after;
                 return true;
             });
@@ -301,23 +313,6 @@ namespace KryticalNova.Forge
             });
             if (!done || !wallet.ServerSpend(cost, CredsSink.GearWork)) return;
             Finish(GearWorkKind.Reforge, success ? GearWorkOutcome.Success : GearWorkOutcome.Fail, stack, after);
-        }
-
-        /// <summary>Takes <paramref name="count"/> of an item out of a Pack, from wherever it is stacked. False when there are not that many.</summary>
-        private static bool Remove(ItemStack[] pack, ushort itemId, int count)
-        {
-            if (itemId == 0 || count <= 0) return true;
-            int have = 0;
-            foreach (ItemStack cell in pack) if (cell.itemId == itemId) have += cell.count;
-            if (have < count) return false;
-            for (int i = 0; i < pack.Length && count > 0; i++)
-            {
-                if (pack[i].itemId != itemId) continue;
-                int take = Mathf.Min(count, pack[i].count);
-                pack[i] = pack[i].WithCount(pack[i].count - take);
-                count -= take;
-            }
-            return true;
         }
 
         private string NameOf(ushort itemId)
