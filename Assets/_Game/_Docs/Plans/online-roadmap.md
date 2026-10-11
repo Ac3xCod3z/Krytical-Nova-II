@@ -42,7 +42,7 @@ This document replaces Phase 4 of `mmorpg-architecture-plan.md` as the plan for 
 | Friends joining without port forwarding | Unity Relay (the server opens a session and gives a join code; your home address is not shown to players) | Free allowance (3 GiB per player, 150 GiB a month at the time of writing: check the pricing page) |
 | Knowing who a player is | Unity Authentication | Free |
 | Saves | Unity Cloud Save has a free tier (5 GiB, 1,000,000 writes a month at the time of writing). Whether we use it or our own database is decided in Phase 4 | Free either way while developing |
-| Payments | Unity In-App Purchasing 5.4+ links Stripe and Coda as merchant of record | Nothing until we sell |
+| Payments | Not needed from Unity: the Nova Store is a browser page opened from the Store Clerk, with the payment company's hosted checkout (Unity In-App Purchasing can link Stripe, but its in-game checkout is documented for phones) | Nothing until we sell; pretend payments and test modes are free |
 
 A rented machine is needed only from Phase 8 on. Prices and free allowances change; every figure here is
 checked again before it is relied on.
@@ -56,7 +56,7 @@ checked again before it is relied on.
 | **Sign-in** | Unity Authentication proves who a player is; the map server checks the proof before letting them in | The client signs in, but the save uses an id the client makes up (`CharacterSession`, `kn.account.v1`) |
 | **World service** | A small always-on program beside the map servers. It keeps the list of map servers and how full they are, knows who is online and where, hands out travel tickets, carries chat between servers, and is the only writer of Crews, Contacts and Kiosks | Nothing. Unity has no such piece; it is ours |
 | **Database** | Every save, behind `ISaveStore` | Files on the host (`FileSaveStore`) |
-| **Payments** | The Nova Store: Steam's own purchases on the Steam build, Stripe through Unity In-App Purchasing on the website build | Nothing |
+| **Payments** | The Nova Store: a stall in the game (the Store Clerk) opens it in the browser; Stripe's hosted checkout on the website build, Steam's own purchase window on the Steam build; goods go to the Pack, or the Vault when it is full | Nothing |
 | **Launcher** | A small signed Windows program for the website build: updates itself and the game, signs the player in, starts the game | Nothing |
 
 ```

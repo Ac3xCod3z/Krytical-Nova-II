@@ -57,14 +57,20 @@ The game already follows this for movement, combat, Flux, loot, trades, shops an
 
 - **A card number never enters our game and never reaches our servers.** The player pays on a page run by
   the payment company (Steam's own purchase window on the Steam build; Stripe's hosted checkout on the
-  website build, through Unity In-App Purchasing). We only ever see "this order was paid".
+  website build). We only ever see "this order was paid".
+- **The store is opened from the game, and lives in the browser** (owner, 11 Oct 2026). The Store Clerk
+  hands the player a link that works once, runs out in minutes, and signs them in to the store only. It
+  cannot enter the game and shows no personal details. The store's address is fixed in the build, so a
+  link in chat is never the store.
 - **Goods are granted by our server**, and only after the payment company's signed message arrives. The
   game client asking for its goods is never enough.
 - **A grant happens once.** Every order has an id; a second message for the same order does nothing.
 - **Refunds and chargebacks take the goods back** or mark the account, by the same signed-message route.
 - **Do not use an asset-store payment kit that puts a card form in the game or a payment key in the
-  build.** Unity's own In-App Purchasing package talks to Stripe as merchant of record, which leaves tax,
-  fraud checks and card handling with Stripe.
+  build.** Opening the payment company's own hosted page is the only shape allowed; it leaves card
+  handling and fraud checks with them.
+- **It is proved with pretend payments first**: GM commands, then a pretend payment page, then the
+  payment company's test mode, and only then one real purchase (`online-phase-10-payments.md`).
 - On Steam, purchases made inside the Steam build are expected to go through Steam's own system. Confirm
   against the Steamworks rules when Phase 10 starts.
 
