@@ -143,3 +143,8 @@ Used by the random-name button. One name, 3 to 16 letters.
   `gm.duel.end`. Code: `PlayerDuel`, `FactionRules.AreHostile`, `CombatHostility`.
 - **Faction skills, wars and leadership** (module 08 sections 2 to 11) are not built. When they are, they attach to
   these three factions.
+- **The Ronin, a fourth faction, are planned and not built** (owner, 11 Oct 2026; Twelve Sky 2's fourth faction).
+  They are players who left the Hegemony, the Null or the Covenant. A character cannot start as one. Going rogue
+  changes the look of their gear (samurai) and gives them a HUD of their own; their weapon class and skills stay.
+  They have maps of their own, joined to **The Scar**, the warzone between the faction lands. Their story, crest,
+  colours and rank words are not written. Build list row 56.

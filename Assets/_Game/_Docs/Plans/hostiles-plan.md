@@ -507,7 +507,7 @@ Gap = Hostile level − player level. The player sees the colour for their own l
 | Zone02 | 20–45 | 25, 28, 31, 34, 37, 40, 43 | 33, 44 |
 | Zone03 | 45–67 | 49, 52, 55, 58, 61, 64, 67 | 57, 67 |
 | Zone04 | 65–90 | 70, 73, 76, 79, 82, 85, 88 | 78, 89 |
-| Zone05 (PvP contested) | 88–105 | 91, 94, 97, 100, 103 | 98, 105 |
+| Zone05 (The Scar, PvP contested; TS2: Yanggok Valley) | 88–105 | 91, 94, 97, 100, 103 | 98, 105 |
 | Zone06 | 103–112 | 106, 109, 112 | 112 |
 | Prime grounds | P1–P33 | every 3 Prime levels | per ground |
 

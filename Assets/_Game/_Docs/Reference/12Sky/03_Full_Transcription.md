@@ -378,7 +378,7 @@ Dossier crafting [Craft Scrolls] at the Chancellor [Law Enforced HQ NPC]: choose
 - Warden [Leader of Grand Force] elected by vote among faction members, through the Chancellor [Prime Minister NPC] in each faction.
 - Powers: faction-wide announcement (all maps); appoint or expel Lieutenants [vice leaders] (max 12; must be Prime 1+ with 1,000+ Renown; both must be in the Home City during appointment). Term for Warden and Lieutenants: 30 days.
 - War Chest [faction vault]: Warden can withdraw Creds; needs 3+ Lieutenants in place.
-- Siege Rig [catapult / Guild Weapon]: Warden or Lieutenant buys from the Chancellor menu, 100M Creds each, place at key defensive spots. Only up to the outer valley [Yanggok Valley], not the Home City; max 5 per area / district.
+- Siege Rig [catapult / Guild Weapon]: Warden or Lieutenant buys from the Chancellor menu, 100M Creds each, place at key defensive spots. Only up to The Scar [Yanggok Valley], not the Home City; max 5 per area / district.
 
 ### Page 31: Accord [Alliance]
 
