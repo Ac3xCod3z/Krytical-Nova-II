@@ -15,6 +15,8 @@ namespace KryticalNova.Items
         FailProtected,
         /// <summary>It failed and the item is gone.</summary>
         Broken,
+        /// <summary>It failed and an Advanced Failsafe held the piece exactly as it was: nothing lost. Shown as a hold, not as a fail.</summary>
+        FailHeld,
     }
 
     /// <summary>The protection item a Tempering attempt is made with.</summary>
@@ -138,7 +140,7 @@ namespace KryticalNova.Items
             }
             if (protection == TemperProtection.Advanced)
             {
-                outcome = GearWorkOutcome.FailProtected;
+                outcome = GearWorkOutcome.FailHeld;
                 protectionSpent = true;
                 return state;
             }

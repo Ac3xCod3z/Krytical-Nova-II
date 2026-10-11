@@ -22,6 +22,9 @@
 // Pass 2 Flood     one jump-flood step: each texel takes the nearest of each kind its neighbours know of
 // Pass 3 Composite the light and the sparks, blended over the finished frame after the comic pass (so ink and dots
 //                  stay under them)
+// Pass 4 Block     one prop the camera is fading because it stands in the way (OccluderFader): its depth as if it
+//                  were whole. The depth the camera keeps has the fade's holes in it, and light laid down through
+//                  them reads as a ball of mirrors; behind a fading prop a thing is seen, but casts no light.
 Shader "Hidden/KryticalNova/GlowHalo"
 {
     SubShader
@@ -38,6 +41,7 @@ Shader "Hidden/KryticalNova/GlowHalo"
                                     // g = which pinned thing it is (its place in _GlowPins + 1, 0 = a plain glow)
         TEXTURE2D(_GlowSeeds);      // rg = where the nearest glowing pixel is, ba = where the nearest dark one is;
                                     // both as a fraction of the screen (0 = none)
+        TEXTURE2D(_GlowBlock);      // r = eye depth of the nearest prop the camera is fading, as if it were whole (far = none)
         float4 _GlowAttr_TexelSize;
 
         float4 _GlowColor;          // Mask: rgb = colour x brightness, as it breathes
@@ -94,8 +98,12 @@ Shader "Hidden/KryticalNova/GlowHalo"
         {
             Name "Mask"
             ZTest Always ZWrite Off Cull Back Blend Off
-            // A blade a fraction of a pixel wide still lights the pixels it crosses, so its halo does not flicker far away.
-            Conservative True
+            // Not rasterised conservatively (it was, so that a blade a fraction of a pixel wide far away still lit
+            // the pixels it crossed): a pixel that only touches a triangle gets a depth worked out beyond the
+            // triangle's edge, and on a face seen nearly edge-on (a gun's barrel from behind) that depth is far
+            // nearer than the face. Such pixels passed the test below while hidden, and their light was drawn
+            // through walls and through the body (measured 11 Oct 2026 with the glow leak check: 12 of 90 weapon
+            // looks lit a wall that hid them, none after).
 
             HLSLPROGRAM
             #pragma vertex MaskVert
@@ -133,6 +141,8 @@ Shader "Hidden/KryticalNova/GlowHalo"
                 // their hip, casts no halo. The allowance is for depth rounding only (5 mm, a little more far away): a
                 // looser one lets a hidden blade light the body in front of it.
                 float sceneEye = EyeDepth(LoadSceneDepth(uint2(input.positionCS.xy)));
+                // A prop the camera is fading still hides it: only the prop's holes are missing from the scene's depth.
+                sceneEye = min(sceneEye, LOAD_TEXTURE2D(_GlowBlock, uint2(input.positionCS.xy)).r);
                 clip(sceneEye - (eye * 0.998 - 0.005));
 
                 float fade = 1.0 - smoothstep(_GlowFade.x, max(_GlowFade.y, _GlowFade.x + 0.01), eye);
@@ -612,7 +622,7 @@ Shader "Hidden/KryticalNova/GlowHalo"
                     }
                 }
                 // Whatever stands in front of the glowing thing hides its light; what is level with it or behind is lit.
-                float sceneEye = EyeDepth(LoadSceneDepth(pixel));
+                float sceneEye = min(EyeDepth(LoadSceneDepth(pixel)), LOAD_TEXTURE2D(_GlowBlock, pixel).r);
                 lit *= saturate((sceneEye - seedEye) / max(_GlowShape.w, 0.001) + 1.0);
                 lit *= ShownPastNovas(here, seedEye);
                 // The model's own ink outline sits on its edge: the light starts just outside it and leaves it black.
@@ -665,6 +675,37 @@ Shader "Hidden/KryticalNova/GlowHalo"
                 half3 light = (colour * glow + extra) * lit;
                 half strength = saturate(max(light.r, max(light.g, light.b)));
                 return half4(light, strength * _GlowShape.z);
+            }
+            ENDHLSL
+        }
+
+        Pass
+        {
+            Name "Block"
+            // The nearest of them wins, whatever order they are drawn in: no depth buffer is needed.
+            ZTest Always ZWrite Off Cull Off
+            BlendOp Min
+            Blend One One
+
+            HLSLPROGRAM
+            #pragma vertex BlockVert
+            #pragma fragment BlockFrag
+
+            struct BlockAttributes
+            {
+                float4 positionOS : POSITION;
+            };
+
+            FullVaryings BlockVert(BlockAttributes input)
+            {
+                FullVaryings output;
+                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                return output;
+            }
+
+            float4 BlockFrag(FullVaryings input) : SV_Target
+            {
+                return EyeDepth(input.positionCS.z);
             }
             ENDHLSL
         }

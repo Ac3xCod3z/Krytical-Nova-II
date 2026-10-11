@@ -112,6 +112,42 @@ MonoBehaviour:
     chancePercent: 0.2
     minLevel: 0
     maxLevel: 0
+  - item: {fileID: 11400000, guid: 03ef123fc8c5a3e44b7b33db37c61eea, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 4620cc76f8fd0924bb8e1aeb011c820d, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 3cc50e211bc18f64e9a9133f17a82e99, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: c78a319da88f4b349b1172b18441b875, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: b6995b0a06b9c9b41b2b842b3e9f493e, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 1188cb96827fbfb488426c518de48446, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 894b7f4650e14fb4b8891cf651778c4d, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 58b328056d9298e4abdd94533efac504, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: e4f087dec3518be40a9b71eb42959771, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
   maxActiveHostiles: 300
   zoneTickSeconds: 0.5
   leashMetres: 15

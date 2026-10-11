@@ -223,7 +223,7 @@ namespace KryticalNova.UI
             for (int i = 0; i < cells.Length; i++)
             {
                 ItemStack stack = i < lines.Count ? lines[i].stack : ItemStack.Empty;
-                GearUIController.SetItemVisual(cells[i], Definition(stack), stack.count);
+                GearUIController.SetItemVisual(cells[i], Definition(stack), stack);
             }
         }
 

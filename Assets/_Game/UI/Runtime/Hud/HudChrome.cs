@@ -42,6 +42,7 @@ namespace KryticalNova.UI.Hud
         public static RectTransform WorldLayer { get; private set; }
         /// <summary>Raised when another kit shows, or none: what was made from the old one is to be made again.</summary>
         public static event System.Action KitChanged;
+        private static HudChrome active;
         private static CharacterPortraitStage portraitStage;
         private const float PortraitRetry = 0.5f;
 
@@ -58,6 +59,7 @@ namespace KryticalNova.UI.Hud
         private static void ResetStatics()
         {
             Showing.Clear();
+            active = null;
             portraitStage = null;
             ShownKit = null;
             WorldLayer = null;
@@ -67,6 +69,7 @@ namespace KryticalNova.UI.Hud
         private void OnEnable()
         {
             document = GetComponent<UIDocument>();
+            active = this;
             FactionSkin.Changed += Refresh;
             PlayerInventory.LocalChanged += BindPortrait;
             Refresh();
@@ -77,6 +80,7 @@ namespace KryticalNova.UI.Hud
         {
             FactionSkin.Changed -= Refresh;
             PlayerInventory.LocalChanged -= BindPortrait;
+            if (active == this) active = null;
             Clear();
             if (portraitStage != null) portraitStage.Show(false);
         }
@@ -113,6 +117,8 @@ namespace KryticalNova.UI.Hud
         private void Refresh(bool again)
         {
             FactionHudKit kit = KitOf(FactionSkin.Current);
+            // The pointer is the faction's own too.
+            FactionCursor.Show(kit != null ? kit.cursor : null, kit != null ? kit.cursorHotspot : Vector2.zero);
             VisualElement root = document != null ? document.rootVisualElement : null;
             if (kit == shown && !again) return;
             Clear();
@@ -161,6 +167,17 @@ namespace KryticalNova.UI.Hud
         }
 
         private static VisualElement Top(VisualElement root) => root.panel != null ? root.panel.visualTree : root;
+
+        /// <summary>
+        /// The kit of another faction than the one the HUD wears: what belongs to a player of that faction is drawn
+        /// in that faction's art (their namecard). Null while the HUD wears no faction's art; the shown kit when
+        /// that faction has none.
+        /// </summary>
+        public static FactionHudKit KitFor(FactionId faction)
+        {
+            if (ShownKit == null || active == null) return null;
+            return active.KitOf(faction) ?? ShownKit;
+        }
 
         private FactionHudKit KitOf(FactionId faction)
         {

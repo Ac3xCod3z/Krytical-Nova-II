@@ -109,7 +109,7 @@ namespace KryticalNova.Core
         void Respawned(Transform actor, bool isLocalPlayer);
 
         /// <summary>An attempt at the forge ended for this character.</summary>
-        /// <param name="outcome">0 success, 1 fail, 2 a fail a Failsafe absorbed, 3 the item broke.</param>
+        /// <param name="outcome">0 success, 1 fail, 2 a fail a Failsafe absorbed, 3 the item broke, 4 a fail an Advanced Failsafe held with nothing lost.</param>
         void GearWorked(Transform actor, int outcome, bool isLocalPlayer);
 
         /// <summary>A request at the Herald ended for a character, on every peer.</summary>

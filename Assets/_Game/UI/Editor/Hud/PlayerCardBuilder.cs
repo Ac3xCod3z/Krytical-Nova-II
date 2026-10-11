@@ -20,6 +20,7 @@ namespace KryticalNova.EditorTools
     public static class PlayerCardBuilder
     {
         private const float StandingSize = 0.72f, CrewSize = 0.76f, CrestSize = 1.25f; // of the name's own size
+        private const float CrewSymbolSize = 1.3f; // of the Crew line's size
         private static readonly Color StandingColor = new Color(1f, 0.84f, 0.42f);
         private static readonly Color CrewColor = new Color(0.78f, 0.86f, 0.9f);
         /// <summary>How see-through the panel behind a card is: the world shows a little through it.</summary>
@@ -198,9 +199,21 @@ namespace KryticalNova.EditorTools
                 var crest = crestGo.GetComponent<Image>();
                 crest.preserveAspect = true;
 
+                // The Crew's symbol, before the Crew's name: the view puts it there.
+                var symbolGo = new GameObject("CrewSymbol", typeof(RectTransform), typeof(Image)) { layer = rootGo.layer };
+                var symbolRect = (RectTransform)symbolGo.transform;
+                symbolRect.SetParent(root, false);
+                symbolRect.anchorMin = symbolRect.anchorMax = symbolRect.pivot = new Vector2(0.5f, 0.5f);
+                symbolRect.sizeDelta = Vector2.one * size * CrewSize * CrewSymbolSize;
+                symbolRect.anchoredPosition = crew.rectTransform.anchoredPosition;
+                var crewSymbol = symbolGo.GetComponent<Image>();
+                crewSymbol.preserveAspect = true;
+                crewSymbol.raycastTarget = false;
+
                 standing.gameObject.SetActive(false);
                 crew.gameObject.SetActive(false);
                 crestGo.SetActive(false);
+                symbolGo.SetActive(false);
 
                 var so = new SerializedObject(view);
                 so.FindProperty("nameLabel").objectReferenceValue = name;
@@ -208,6 +221,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("standingLabel").objectReferenceValue = standing;
                 so.FindProperty("crewLabel").objectReferenceValue = crew;
                 so.FindProperty("crest").objectReferenceValue = crest;
+                so.FindProperty("crewSymbol").objectReferenceValue = crewSymbol;
                 so.FindProperty("health").objectReferenceValue = slider;
                 so.FindProperty("bar").objectReferenceValue = barHolder.gameObject;
                 so.FindProperty("badge").objectReferenceValue = badge;

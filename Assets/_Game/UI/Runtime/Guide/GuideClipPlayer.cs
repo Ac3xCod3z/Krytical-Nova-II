@@ -47,7 +47,11 @@ namespace KryticalNova.UI.Guide
             // The Guide is read with the game going on behind it, or paused: the clip keeps its own time.
             player.timeUpdateMode = VideoTimeUpdateMode.UnscaledGameTime;
             player.renderMode = VideoRenderMode.RenderTexture;
-            target = new RenderTexture((int)clip.width, (int)clip.height, 0) { name = "Guide Clip" };
+            // The page shows a clip at a fraction of its size until it is clicked: smaller copies keep its text from shimmering there.
+            target = new RenderTexture((int)clip.width, (int)clip.height, 0)
+            {
+                name = "Guide Clip", useMipMap = true, autoGenerateMips = true, filterMode = FilterMode.Trilinear
+            };
             player.targetTexture = target;
             player.source = VideoSource.VideoClip;
             player.clip = clip;

@@ -171,7 +171,8 @@ namespace KryticalNova.EditorTools
             new Word("PFX_Word_Thud", "Texts/Text 016", "Titan One", 0.3f, 1.4f, "THUD!", 1f, DustRamp),          // a thrown body comes down
             new Word("PFX_Word_Forged", "Texts/Text 029", "Alfa Slab One", 0.3f, 1.7f, "FORGED!", 1f, Gold),      // the forge: it worked
             new Word("PFX_Word_Crack", "Texts/Text 012", "Frijole", 0.3f, 1.6f, "CRACK!", 1f, Broken),            // the forge: the piece broke
-            new Word("PFX_Word_Saved", "Texts/Text 027", "Carter One", 0.3f, 1.6f, "SAVED!", 1f, Saved),          // the forge: a Failsafe held
+            new Word("PFX_Word_Saved", "Texts/Text 027", "Carter One", 0.3f, 1.6f, "SAVED!", 1f, Saved),          // the forge: a Failsafe stopped a break
+            new Word("PFX_Word_Held", "Texts/Text 028", "Titan One", 0.3f, 1.5f, "HELD!", 1f, Saved),             // the forge: an Advanced Failsafe held, nothing lost
             new Word("PFX_Word_LevelUp", "Texts/Text 011", "Bungee Shade", 0.34f, 2.3f, "LEVEL UP!"), // in the faction's colours at run time
             new Word("PFX_Word_Evolved", "Texts/Text 001", "Slackey", 0.26f, 1.5f, "EVOLVED!"),       // in the pet's colour at run time
             new Word("PFX_Word_RareFind", "Texts/Text 033", null, 0.55f, 1.2f, null, 1f, RareFind),   // "!!" as the pack made it, in Rare's yellow

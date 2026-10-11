@@ -75,6 +75,58 @@
 .vital-breakdown { font-size: 10px; margin-top: 0; margin-bottom: 4px; }
 
 
+/* ------------------------------------------------------------------ the skill tree (SkillTreeView)
+   The Skills window is wide: tiles on tiers by level with lines along each line of skills, and beside them the card
+   of the tile that is chosen (the cards are the list this window always had; all but the chosen one are hidden). */
+#skills-window.skill-tree { width: 920px; }
+.skill-tree-layout { flex-direction: row; }
+.skill-tree-side { flex-grow: 1; flex-shrink: 1; }
+.skill-tree-title { font-size: 12px; letter-spacing: 1px; margin: 2px 0 6px 2px; }
+.skill-tree-scroll { max-height: 524px; }
+.skill-tree-canvas { flex-shrink: 0; }
+#skills-window.skill-tree #skills-body { width: 300px; max-height: 556px; flex-shrink: 0; margin-left: 12px; }
+#skills-window.skill-tree #skills-body .category-header, #skills-window.skill-tree #skills-body .kn-section-bar { display: none; }
+#skills-window.skill-tree #skills-body .skill-card { margin-top: 8px; }
+.skill-tree-row { position: absolute; left: 0; right: 0; border-top-width: 1px; border-top-color: rgba(255, 255, 255, 0.07); }
+.skill-tree-row.alternate { background-color: rgba(255, 255, 255, 0.035); }
+.skill-tree-tier { position: absolute; left: 4px; top: 22px; font-size: 10px; letter-spacing: 1px; color: rgb(150, 166, 180); }
+.skill-tree-lines { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.skill-node { position: absolute; align-items: center; padding-top: 6px; }
+.skill-node-tile {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Box_03.png#SPR_HUD_SciFiSoldier_Box_03");
+    -unity-background-image-tint-color: rgb(28, 76, 70);
+    -unity-slice-scale: 0.14px;
+    transition-property: scale;
+    transition-duration: 0.1s;
+}
+.skill-node-tile:hover { scale: 1.08 1.08; }
+.skill-node-icon { position: absolute; left: 4px; top: 4px; right: 4px; bottom: 4px; -unity-background-scale-mode: scale-to-fit; }
+.skill-node-rank {
+    position: absolute;
+    right: -6px;
+    bottom: -5px;
+    padding: 0 3px;
+    font-size: 10px;
+    -unity-font-style: bold;
+    color: rgb(232, 242, 250);
+    background-color: rgba(8, 12, 18, 0.86);
+}
+.skill-node-name { width: 62px; margin-top: 4px; font-size: 9px; -unity-text-align: upper-center; white-space: normal; color: rgb(214, 228, 236); }
+.skill-node.unlearned .skill-node-icon { opacity: 0.5; }
+.skill-node.unlearned .skill-node-tile { -unity-background-image-tint-color: rgb(30, 40, 52); }
+.skill-node.too-low .skill-node-icon { opacity: 0.22; }
+.skill-node.too-low .skill-node-name { color: rgb(130, 142, 154); }
+.skill-node.locked .skill-node-tile { -unity-background-image-tint-color: rgb(74, 58, 26); }
+.skill-node.locked .skill-node-icon { opacity: 0.3; }
+.skill-node.locked .skill-node-rank { color: rgb(248, 210, 120); }
+.skill-node.can-upgrade .skill-node-rank { color: rgb(140, 238, 212); }
+.skill-node.can-upgrade.unlearned .skill-node-tile { -unity-background-image-tint-color: rgb(24, 62, 58); }
+.skill-node.selected .skill-node-tile { scale: 1.14 1.14; -unity-background-image-tint-color: rgb(52, 138, 124); }
+.skill-node.selected .skill-node-name { color: rgb(255, 255, 255); -unity-font-style: bold; }
+
 /* ------------------------------------------------------------------ skill cards */
 
 .skill-card { padding: 12px; margin-top: 10px; }

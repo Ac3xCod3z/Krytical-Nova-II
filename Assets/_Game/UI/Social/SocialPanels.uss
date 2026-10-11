@@ -187,11 +187,13 @@
 .crew-announcement-text { white-space: normal; font-size: 13px; color: rgb(236, 240, 244); margin: 2px 0 0 0; padding: 0; }
 
 /* A Crew's symbol: one of a few shapes in one of a few colours (CrewSymbols). */
-.crew-symbol { width: 16px; height: 16px; margin: 0 10px 0 2px; border-width: 2px; border-color: rgba(255, 255, 255, 0.85); }
+.crew-symbol { width: 26px; height: 26px; margin: 0 8px 0 2px; flex-shrink: 0; -unity-background-scale-mode: scale-to-fit; }
+/* A long Crew name gives way to the count beside it. */
+#crew-title { flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; }
 .crew-symbols { flex-wrap: wrap; margin: 6px 12px 0 12px; }
-.crew-symbol-choice { width: 20px; height: 20px; margin: 6px 9px; border-width: 2px; border-color: rgba(255, 255, 255, 0.35); }
-.crew-symbol-choice:hover { border-color: rgb(255, 255, 255); }
-.crew-symbol-choice.selected { border-color: rgb(255, 255, 255); scale: 1.25 1.25; }
+.crew-symbol-choice { width: 34px; height: 34px; margin: 5px 6px; -unity-background-scale-mode: scale-to-fit; -unity-background-image-tint-color: rgba(255, 255, 255, 0.5); }
+.crew-symbol-choice:hover { -unity-background-image-tint-color: rgb(255, 255, 255); }
+.crew-symbol-choice.selected { -unity-background-image-tint-color: rgb(255, 255, 255); scale: 1.3 1.3; }
 
 .crew-rank { font-size: 9px; letter-spacing: 1px; min-width: 52px; margin: 0 6px 0 0; padding: 0; color: rgb(156, 172, 188); }
 .crew-rank-2 { color: rgb(255, 214, 92); }

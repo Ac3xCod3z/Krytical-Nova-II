@@ -106,13 +106,15 @@ _Game/
 │   ├── NPC/               Runtime/  Data/Assets/
 │   ├── Persistence/       Runtime/ (ServerSave, account and character documents, PlayerSaveAgent)  Tests/Editor/
 │   ├── Pets/              Runtime/ (growth, hunger, PlayerPet; PetChatterRules, PetChatterMoments)  Data/ + Data/Assets/ (settings, catalog, definitions;
-│   │                      Chatter/ = what each pet says, the emoji library and its baked emoji)
-│   │                      Editor/ (PetAssetBuilder)  Tests/Editor/
+│   │                      Chatter/ = what each pet says, the emoji library and its baked emoji;
+│   │                      Icons/ = Pet_<Pet>_S<stage>: the icon of each evolution that has a model of its own)
+│   │                      Editor/ (PetAssetBuilder; PetStageIconBaker: Items ▸ Bake Pet Stage Icons)  Tests/Editor/
 │   ├── Player/            Runtime/  Prefabs/ (Player.prefab = the networked gameplay player)
-│   ├── Progression/       Runtime/ (also PlayerNova, NovaRules, NovaHalo: Ascension and Nova Standings)  Data/ (SO classes,
+│   ├── Progression/       Runtime/ (also PlayerNova, NovaRules, NovaHalo: Ascension and Nova Standings; PlayerExperienceBoosts, ExperienceBoostRules: the XP boosters)  Data/ (SO classes,
 │   │                      NovaSettings)  Data/Assets/ (SO instances)  Shaders/ (the Nova's four shaders and their materials)  Editor/  Tests/Editor/
 │   ├── Social/            Runtime/ (chat channels and rules, PlayerChat, the combat log, Squads, Contacts, Crews, NamecardRules,
-│   │                      PlayerEmotes, EmoteCatalog)  Data/ + Data/Assets/ (CrewSettings, EmoteWheelSettings)  Tests/Editor/
+│   │                      PlayerEmotes, EmoteCatalog)  Data/ + Data/Assets/ (CrewSettings, EmoteWheelSettings, CrewSymbolLibrary = the
+│   │                      picture of each Crew symbol, a list a faction)  Editor/ (CrewSymbolBuilder)  Tests/Editor/
 │   └── (future) Skills/ Quests/ Interaction/ StatusEffects/ Inventory/
 ├── Characters/            Representation only: models, rigs, materials, animations, visual prefabs
 │   ├── Player/            Player_01/ (Sidekick character)  Animations/
@@ -150,7 +152,8 @@ _Game/
 │                          IconPacks, IconLibraryWindow)  Data/Assets/ (IconLibrary.asset, IconTreatmentSettings.asset)  Tests/Editor/
 │                          The icons it bakes go to the owning systems: Gameplay/Progression/Data/Assets/Icons, Gameplay/Items/Data/Assets/Icons
 ├── Networking/            Runtime/  Prefabs/ (NetworkManager)
-├── Rendering/             Editor/ (also UpscalerSetup: what DLSS and FSR 2 need from the project, menu Lighting ▸ Set Up Upscalers)
+├── Rendering/             Editor/ (also UpscalerSetup: what DLSS and FSR 2 need from the project, menu Lighting ▸ Set Up Upscalers;
+│                          GlowLeakCheck: in Play, draws every weapon model with its glow and counts light that shows through a wall or a body)
 │                          Runtime/ (renderer features; ComicLetteringFeature draws the `ComicLettering` layer, which every
 │                          comic mark and word is on, over the finished frame)  Shaders/  Settings/ (URP assets, volume profiles)  Editor/
 ├── UI/                    Runtime/ (KryticalNova.UI; Menus/ = front-end controllers and widgets, the menus' comic book and what the
@@ -169,7 +172,7 @@ _Game/
 │                          character select)  NPC/  Shaders/ (UI_ComicPage = a page of the menus' book)
 │                          Menus/ (assets the front-end scenes use: Materials/, Prefabs/MenuBook.prefab, MenuBookSettings.asset,
 │                          KeyGlyphs.asset)  Guide/ (the Guide page of Settings: Guide.uss, GuideLibrary.asset = everything it says,
-│                          Clips/GC_<topic>.mp4 = its recorded clips; code in Runtime/Guide/, the recorder in Editor/Guide/)  Tests/Editor/
+│                          Clips/GC_<topic>.mp4 = its recorded clips; code in Runtime/Guide/; in Editor/Guide/ the recorder and GuideClipStaging = how each clip is staged)  Tests/Editor/
 │                          (future: Skills/ Character/ World/)
 ├── VFX/                   Gameplay/  GameFeel/ (Comic/ = the comic marks and words, generated)  Environment/{City,Portals,Vehicles,Weather}/
 │                          Materials/ (shared FX mats; Comic/<word>/ = our copies of a word's letter materials, generated)
@@ -376,7 +379,7 @@ A vendor package whose runtime scripts cannot compile into a player build is kep
 
 Menu **Krytical Nova ▸ Icons** (the icons of skills and of items that have no model; see `Design/Rendering-Bible.md` 6g): **Icon Library** is the browser (`IconLibraryWindow`): every skill or item on the left, the icon packs' pictures in the middle (by set, or the best free matches for the chosen skill by its tags), and on the right the chosen icon as painted and as the game will show it, its tags, and the button that gives it to the skill; giving bakes the treated copy and hands it over at once. **Bake Every Assigned Icon** redraws them all after a change to `IconTreatmentSettings`. **Check Icons** lists every skill or item without an icon of its own. **A new skill, or a new item without a model, gets its icon here, never by hand.** The packs (`_ThirdParty/Fantasy RPG Icons Pack`, `_ThirdParty/Cyberpunk RPG Icons Pack`) are only read, and only by these tools: the game shows the baked copies, so a copy of the project without the packs (4.2 GB of pictures) plays and checks clean; it just cannot bake or hand out icons.
 
-Menu **Krytical Nova ▸ Items** also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration, forge materials: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`). **10. Build Vendor Stock** (`VendorStockBuilder`) makes each vendor's shelf (`Economy/Data/Assets/Vendors/VS_<Vendor>.asset`) and the catalog that lists them from the table in the builder; a price tuned on an asset is kept. **9. Bake Pet Emoji** (`PetEmojiBaker`) redraws the emoji the animal pets speak in from the Cartoon Emotion Pack (`PetEmojiLibrary`: which drawing, which two colours); **Krytical Nova ▸ GameFeel ▸ Rebuild Pet Chatter** puts the pets' reactions (`PetChatterDirector`) on the game feel prefab. **8. Bake Weapon Models (glow zones, reach)** (`WeaponGlowZoneBaker`) reads every weapon model's mesh and writes onto its prefab which part glows when tempered (`WeaponGlowZone`) and its outermost points (`WeaponReach`, which keeps long weapons out of the ground); run it after adding or changing a weapon model. A zone ticked "keep as set" on a prefab is left alone.
+Menu **Krytical Nova ▸ Items** also has **Bake Pet Stage Icons** (`PetStageIconBaker`): an icon for each evolution of a pet that has a model of its own (today the Tidecaller's four), drawn as every item icon is and written onto the stage (`PetStageLook.icon`); the interface shows the one for the pet as it is now (`PetIcons`), and the item's own icon for a stage without one. Run it when a pet gets its evolutions' models. It also has **5. Generate Utility Items** (Stims, Kiosk Permits, Pet Ration, forge materials: one table in `UtilityItemGenerator`) and **7. Build Pets** (`PetAssetBuilder`). **10. Build Vendor Stock** (`VendorStockBuilder`) makes each vendor's shelf (`Economy/Data/Assets/Vendors/VS_<Vendor>.asset`) and the catalog that lists them from the table in the builder; a price tuned on an asset is kept. **9. Bake Pet Emoji** (`PetEmojiBaker`) redraws the emoji the animal pets speak in from the Cartoon Emotion Pack (`PetEmojiLibrary`: which drawing, which two colours); **Krytical Nova ▸ GameFeel ▸ Rebuild Pet Chatter** puts the pets' reactions (`PetChatterDirector`) on the game feel prefab. **8. Bake Weapon Models (glow zones, reach)** (`WeaponGlowZoneBaker`) reads every weapon model's mesh and writes onto its prefab which part glows when tempered (`WeaponGlowZone`) and its outermost points (`WeaponReach`, which keeps long weapons out of the ground); run it after adding or changing a weapon model. A zone ticked "keep as set" on a prefab is left alone.
 
 Menu **Krytical Nova ▸ Hostiles ▸ Build Hostiles** (`HostileAssetBuilder`): for every species in the builder's roster, its
 `HostileDefinition`, and the networked prefab in `Gameplay/Hostiles/Prefabs/`, which it also registers as a network prefab;
@@ -394,6 +397,7 @@ Menu **Krytical Nova ▸ Characters** (run in order, or use *Bake Everything*):
 |----------------------------------------------|----------------------------------------------------------------------------------------|
 | 1. Bake Sidekick Part Catalog                | Indexes every Sidekick part on disk into `SidekickPartCatalog.asset` (stable ids, loaded on demand) |
 | 2. Build Faction Assets                      | The three faction assets and the catalog. Keeps text and colours tuned in the Inspector |
+| Set Faction Emblems                          | Gives the three factions the emblems named in `FactionAssetBuilder` (each from its own Synty interface pack), over whatever they had. The emblem is on namecards, faction select, character select and, since 11 Oct 2026, over the game's name on the title screen (rebuild the front-end scenes after changing one) |
 | 3. Bake Character Data                       | Lineages, palettes, ready-made faces and colour channels into `CharacterCreationDatabase.asset` |
 | 4. Set Up Player Identity Components         | Adds `PlayerIdentity` / `CharacterLook` to the player prefabs                          |
 | 5. Bake Expressions (Faces, Idles, Emotes)   | Fills `CharacterExpressionLibrary.asset` for the creator's Preview tab: Sidekick face poses, idles, emotes. Add clips in `CharacterExpressionBaker` |
@@ -419,7 +423,8 @@ Menu **Krytical Nova ▸ UI**:
 | Build Faction HUD                            | Composes each faction's uGUI HUD pieces (Hotbar, player plate, minimap dial) from that faction's Synty HUD pack into `UI/HUD/Faction/<Faction>/` and writes `UI/Skins/FactionHudKit_<Faction>.asset`. Run after changing `FactionHudBuilder`; then **Set Up HUD** on the world scene if a kit asset is new |
 | Build Faction Window Variants                | Spike. Makes a faction's version of a window its own pack lacks: a prefab variant of the pack that has it, with recoloured sprite copies in `UI/HUD/Faction/<Faction>/Art/` |
 | Rebuild Faction Skin Art                     | Makes each skin's flattened pictures again (button, menu row button, title band, cell, close button: the pack's frame over its fill, in `UI/HUD/Faction/<Faction>/Art/`), then the skin sheets. Run after changing what a picture is made from in `FactionSkinBuilder` |
-| Build Faction Skins                          | Regenerates `UI/Common/KryticalSkin_Hegemony.uss`, `_Null.uss` and `_Covenant.uss` from the three skin assets in `UI/Skins/` and the base sheets (the Hegemony layout). Run after editing a base sheet; a change to a skin asset rebuilds them by itself (`UiSkinWatcher`). Never edit the generated sheets, and never edit a base sheet for one faction. A new in-game style sheet must be added to the builder's list |
+| Build Crew Symbols                           | Makes `Gameplay/Social/Data/Assets/CrewSymbolLibrary.asset` from the table in `CrewSymbolBuilder`: for each faction, the pictures of its own Synty pack that a Crew's symbol number stands for, and writes how many there are to Crew Settings. Change a line of the table and run it again to swap a symbol |
+| Build Faction Skins                          | Regenerates `UI/Common/KryticalSkin_Hegemony.uss`, `_Null.uss` and `_Covenant.uss` from the three skin assets in `UI/Skins/` and the base sheets (the Hegemony layout). It also gives a skin its faction's mouse pointer when it has none (`UiSkin.cursor`, the pack's own cursor picture, with the point it clicks at measured from the picture) and copies it to the faction's HUD kit: the game shows the character's faction's pointer (`FactionCursor`, from `HudChrome`), the menus the pointer of the skin they wear (`MenuSkinSwitch`). Run after editing a base sheet; a change to a skin asset rebuilds them by itself (`UiSkinWatcher`). Never edit the generated sheets, and never edit a base sheet for one faction. A new in-game style sheet must be added to the builder's list |
 
 Menu **Krytical Nova ▸ GameFeel** also has **Rebuild Menu Feel**: builds `PFX_MenuFeel.prefab` again from the numbers in
 `GameFeelBuilder.Menus` (tuning done on the prefab is lost) and makes sure `PFX_GameFeel` carries it.

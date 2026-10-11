@@ -480,7 +480,41 @@ above wear all three; lower rarities glow plainly. At most 32 things in one view
 
 **Feature settings** (`PC_Renderer` ▸ Glow Halo): `softness` 1.8, `inkGap` 1 px, `solidity` 0.45 (how much of the
 background the light covers, so it does not burn out on a bright sky), halo width clamped to 3–56 px, `depthFade`
-0.05 m, fade-out from 55 to 80 m, `halfResolution` on. PC renderer only (it needs the depth texture).
+0.02 m (0.05 until 11 Oct 2026), fade-out from 55 to 80 m, `halfResolution` on. PC renderer only (it needs the depth
+texture).
+
+### The light is never drawn through things (11 Oct 2026)
+
+The owner saw a pet's rim as "a disco ball" behind an object, and the Epic 120 % glow of a Hegemony gun shining
+through the player and through other objects. Two causes, both measured and both closed:
+
+- **Props the camera is fading.** `OccluderFader` dithers whatever stands between the camera and the player, and
+  the dither is also in the depth the camera keeps: the light of a pet or a weapon behind such a prop was laid down
+  in every hole of the fade and nowhere else, a field of bright dots. The halo now draws the fading props whole
+  into a small depth target of its own first (pass 4 "Block" of `GlowHalo.shader`, the props from
+  `OccluderFader.Faded`, the nearest of them kept with a Min blend), and both of its depth tests take the nearer of
+  the scene and that. Behind a fading prop the pet and the weapon are still seen through the fade; their light is
+  not. With no prop fading the pass only clears.
+- **Conservative rasterisation of the mask.** The mask was drawn conservatively so that a blade thinner than a pixel
+  far away still lit the pixels it crossed. A pixel that only touches a triangle is given a depth worked out beyond
+  the triangle's edge; on a face seen nearly edge-on (a gun's barrel from behind, a bow's limb) that depth is far
+  nearer than the face, so hidden pixels passed the "can the camera see it" test and seeded a halo on whatever hid
+  them. It is off. The price: a blade under a pixel wide (beyond about 40 m at 1080p, where the halo is already
+  fading out) may flicker in and out of the mask.
+- `depthFade` went from 5 cm to 2 cm: less light on a body that stands just in front of the weapon it carries.
+
+**The glow leak check** (`Rendering/Editor/GlowLeakCheck.cs`, menu Krytical Nova ▸ Lighting ▸ Check Glow Leaks, in
+Play on the local player): for each of the 45 weapon models, as Rare and as Epic at 120 %, carried and drawn, it
+draws the character from a camera of its own with the glow and without (`GlowHaloFeature.Suspended`) and counts the
+light: on a wall that hides the character altogether (must be 0), and on the body where the weapon is not in front
+of it (for comparison between runs: a weapon held before the body lights it rightly). Table and marked sheets go to
+`Temp/GlowLeaks`. Before: 12 of the 90 looks lit the wall (Warbow 01, 04, 05 and Arc Caster 01, 04, 05, as Rare and
+as Epic; 40,832 pixels in all), and a drawn Carbine 01 put 2,448 pixels of light on its owner's back. After: 0 of
+90, and 369.
+
+Not done: `FX_PetWaterFlow` (the Tidecaller's ribbons) has no DepthNormals pass, so it is not in the camera's depth
+and a halo is drawn over it. Giving it one would also ink its outline, which changes the pet's look: left for the
+owner to ask for.
 
 ### A Nova hides what is behind it (10 Oct 2026)
 
@@ -519,11 +553,16 @@ up to 29 m/s at rank 20), never for a walk. `GameFeelBuilder` puts the feedbacks
 Rebuild Smear Feel** does only that (and makes the settings asset when it is missing); **Build Game Feel** and
 **Rebuild Death Feel** include it.
 
-**One take-off for a burst of orders (10 Oct 2026).** A new move order given while running, and a run that stops and
-starts again at once, both ask for the take-off again. `GameFeelPresenter.RunStarted` plays it (dust, smear, and on the
-player's own screen the 4 degree kick of the view) only when `runTakeOffQuietSeconds` (1 s) have passed with no order
-and no restart for that character. Before, clicking about quickly kicked the view and smeared the body every 0.4 s:
-measured over 12 s of rapid clicks the field of view was changing for a quarter to a third of all frames.
+**A take-off for every start and every new destination (11 Oct 2026).** A run that starts, and a new move order given
+while running, both ask for the take-off. `GameFeelPresenter.RunStarted` plays its dust and smear each time, at least
+`runTakeOffRepeatSeconds` (0.4 s) apart (`RunTakeOffRules.TakesOff`): the owner wants the smear on every new
+destination, also one chosen mid-run. The 4 degree kick of the view on the player's own screen is rarer
+(`RunTakeOffRules.KicksView`): once for a run from a standstill (`ActorVfx.LastStillTime`, within
+`runTakeOffRestSeconds`), and again only after `runTakeOffQuietSeconds` (1 s) with no order. Before 10 Oct clicking
+about quickly kicked the view every 0.4 s (the field of view was changing for a quarter to a third of all frames); from
+10 to 11 Oct one sliding 1 s window gated the smear as well, and since every order restarted it, a player who kept
+clicking saw the smear on the first take-off only. Measured after: 12 new destinations 0.43 s apart, 11 of them
+mid-run, gave 12 smears and one kick; five stop-and-go runs a second apart gave five of each.
 
 **A run ends on its point at the body's own height (10 Oct 2026).** At the end of a fast run the body is placed on the
 destination (`PointAndClickPlayer.PlaceOn`). `NavMeshAgent.Warp` alone puts the root on the NavMesh point, the agent's
@@ -791,6 +830,10 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   - The wind no longer makes the grass jump (wave phase rule, 6d).
   - Grass is generated only for the ground the camera sees; characters bend it through a trample map and it stays
     pressed for a moment behind them; the rule for Overworld and Town lawn grass is written down (6d).
+- **2026-10-11**:
+  - Glow halo: no light through props the camera fades or through bodies and walls (the Block pass, conservative
+    rasterisation off, `depthFade` 2 cm), and the glow leak check that measures it (6e).
+  - A run's dust and smear on every start and every new destination; the kick of the view stays one per burst.
 - **2026-10-10**:
   - Glow halo: embers (Perlin noise) for the 120 % Temper band; an Epic at 120 % is red (6e).
   - A Nova hides the characters, pets and effects behind it: `ActorDrawOrder`, `NovaMask.shader`, `NovaCull` (6e).

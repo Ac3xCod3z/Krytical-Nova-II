@@ -135,6 +135,7 @@ namespace KryticalNova.EditorTools
                 EnsureInventoryParts(asset);
                 EnsureInventoryFrames(asset);
                 EnsureSettingsParts(asset);
+                EnsureCursor(asset);
                 string text = Generate(asset, out int rules);
                 string target = SheetPath(faction);
                 // An unchanged sheet is left alone: writing it would re-import it and rebuild every open UI.
@@ -174,7 +175,7 @@ namespace KryticalNova.EditorTools
                 rules += count;
             }
             var chrome = new StringBuilder();
-            int chromeRules = Chrome(asset, skin.cssClass, chrome) + Design(asset, skin.cssClass, chrome);
+            int chromeRules = Chrome(asset, skin.cssClass, chrome) + Design(asset, skin.cssClass, chrome) + Opacity(asset, skin, chrome);
             if (chromeRules > 0)
             {
                 output.AppendLine();
@@ -621,6 +622,75 @@ namespace KryticalNova.EditorTools
             if (changed) EditorUtility.SetDirty(skin);
         }
 
+        // ---------------------------------------------------------------- the mouse pointer
+
+        /// <summary>
+        /// Gives a skin the pointer of its faction's HUD pack when it has none, measures where a pointer points when
+        /// that was never set (the tip of an arrow: its opaque pixel nearest the top-left corner), and copies both to
+        /// the faction's HUD kit, which is what the game has at hand while it runs. A pointer chosen on the skin
+        /// asset is kept.
+        /// </summary>
+        private static void EnsureCursor(UiSkin skin)
+        {
+            bool changed = false;
+            if (skin.cursor == null)
+            {
+                string path = skin.faction switch
+                {
+                    FactionId.Hegemony => SciFiHud + "Sprites/Cursors/SPR_MouseCursor_SciFiSoldier_Pointer_01.png",
+                    FactionId.Null => DarkFantasy + "Sprites/Cursors/SPR_DarkFantasy_Pointer_01.png",
+                    FactionId.Covenant => FantasyWarrior + "Sprites/Cursors/SPR_MouseCursor_FantasyWarrior_Pointer_01.png",
+                    _ => null,
+                };
+                skin.cursor = path != null ? Load<Texture2D>(path) : null;
+                skin.cursorHotspot = Vector2.zero;
+                changed = skin.cursor != null;
+            }
+            if (skin.cursor != null && skin.cursorHotspot == Vector2.zero && skin.cursor.isReadable)
+            {
+                Vector2 tip = CursorTip(skin.cursor);
+                if (tip != skin.cursorHotspot)
+                {
+                    skin.cursorHotspot = tip;
+                    changed = true;
+                }
+            }
+            if (changed)
+            {
+                EditorUtility.SetDirty(skin);
+                AssetDatabase.SaveAssetIfDirty(skin);
+            }
+
+            var kit = AssetDatabase.LoadAssetAtPath<KryticalNova.UI.Hud.FactionHudKit>(FactionHudBuilder.KitPath(skin.faction));
+            if (kit == null || (kit.cursor == skin.cursor && kit.cursorHotspot == skin.cursorHotspot)) return;
+            kit.cursor = skin.cursor;
+            kit.cursorHotspot = skin.cursorHotspot;
+            EditorUtility.SetDirty(kit);
+            AssetDatabase.SaveAssetIfDirty(kit);
+        }
+
+        // The opaque pixel nearest the picture's top-left corner, in pixels from that corner.
+        private static Vector2 CursorTip(Texture2D picture)
+        {
+            Color32[] pixels = picture.GetPixels32();
+            int width = picture.width, height = picture.height;
+            int best = int.MaxValue;
+            Vector2 tip = Vector2.zero;
+            for (int y = 0; y < height; y++)
+            {
+                int fromTop = height - 1 - y; // rows are stored from the bottom up
+                for (int x = 0; x < width; x++)
+                {
+                    if (pixels[y * width + x].a < 200) continue;
+                    int away = x * x + fromTop * fromTop;
+                    if (away >= best) continue;
+                    best = away;
+                    tip = new Vector2(x, fromTop);
+                }
+            }
+            return tip;
+        }
+
         // ---------------------------------------------------------------- window chrome
 
         // What is read rather than glanced at: these get the skin's nearly solid backing. The always-on panels (chat,
@@ -641,7 +711,9 @@ namespace KryticalNova.EditorTools
                 // The faction's dark tone, darker still.
                 Color.RGBToHSV(skin.panelTone, out float hue, out float saturation, out _);
                 Color backing = Color.HSVToRGB(hue, Mathf.Clamp01(saturation * 1.1f), 0.085f);
-                backing.a = 0.65f; // the world reads faintly through a window (owner, 9 Oct 2026: 0.4 was too see-through); set per skin on its asset
+                // The world shows through a window (owner, 11 Oct 2026: 65 % see-through, and a slider on the Interface
+                // page: PanelOpacity). Set per skin on its asset; this is what a player who never moved the slider sees.
+                backing.a = PanelOpacity.DefaultWindow;
                 skin.windowBacking = backing;
                 EditorUtility.SetDirty(skin);
                 AssetDatabase.SaveAssetIfDirty(skin);
@@ -871,8 +943,9 @@ namespace KryticalNova.EditorTools
             }
             if (asset.closeButton != null)
             {
-                // A round button on the page's corner, over the frame.
-                Rule(".window .close", "position: absolute;", "right: -18px;", "top: -16px;", "width: 34px;", "height: 34px;", "min-width: 34px;", "min-height: 34px;",
+                // A round button on the page's corner, over the frame: SyntySkin makes it the window's last child,
+                // so these are measured from the window's own corner.
+                Rule(".window .close", "position: absolute;", "right: -8px;", "top: -4px;", "width: 34px;", "height: 34px;", "min-width: 34px;", "min-height: 34px;",
                     "margin: 0;", "padding: 0;", "align-items: center;", "justify-content: center;", $"background-image: {UrlOf(asset.closeButton)};",
                     "-unity-background-image-tint-color: rgb(225, 225, 225);", "-unity-slice-scale: 1px;", "-unity-background-scale-mode: scale-to-fit;");
                 Rule(".window .close:hover", "-unity-background-image-tint-color: rgb(255, 255, 255);", "scale: 1.1 1.1;");
@@ -1087,6 +1160,49 @@ namespace KryticalNova.EditorTools
             count += FrameRule(output, cssClass, ".game-menu", asset.cardFrame, asset.cardFrameBorder, asset.cardFrameOutset);
             count += CrownRule(output, cssClass, SyntySkin.CrownBackClass, asset.crownBack, asset.crownBackSize, asset.crownBackRise);
             count += CrownRule(output, cssClass, SyntySkin.CrownClass, asset.crown, asset.crownSize, asset.crownRise);
+            return count;
+        }
+
+        private static readonly Regex CardTint = new Regex(@"\.kn-card\s*\{[^}]*?-unity-background-image-tint-color:\s*(rgba?\([^)]*\))");
+
+        /// <summary>
+        /// One rule for every step of the two opacity sliders of the Interface page (<see cref="PanelOpacity"/>): the
+        /// window's backing and the tint of the panels inside it, in this skin's colours, as solid as the step says.
+        /// PanelOpacity puts the class of the chosen step on each UI document's root, under the faction's class.
+        /// </summary>
+        private static int Opacity(UiSkin asset, Skin skin, StringBuilder output)
+        {
+            int count = 0;
+            // The panels' colour is the base sheet's, moved into the skin's palette like every other colour.
+            Match baseTint = File.Exists(BaseSheets[0]) ? CardTint.Match(Comment.Replace(File.ReadAllText(BaseSheets[0]), string.Empty)) : Match.Empty;
+            Match card = Match.Empty;
+            if (baseTint.Success)
+            {
+                float ratio = 1f;
+                card = Rgb.Match(ConvertValue("-unity-background-image-tint-color", baseTint.Groups[1].Value, skin, ref ratio, !skin.recolour));
+            }
+            else Debug.LogWarning($"[UI] {BaseSheets[0]} has no .kn-card tint: the panels inside windows get no opacity steps.");
+
+            Color32 backing = asset.windowBacking;
+            for (int percent = PanelOpacity.MinPercent; percent <= PanelOpacity.MaxPercent; percent += PanelOpacity.StepPercent)
+            {
+                string alpha = (percent / 100f).ToString("0.##", CultureInfo.InvariantCulture);
+                if (asset.windowBacking.a > 0f)
+                {
+                    string step = $".{skin.cssClass} .{PanelOpacity.WindowClass(percent)}";
+                    output.AppendLine($"{step} .window, {step} .game-menu {{");
+                    output.AppendLine($"    background-color: rgba({backing.r}, {backing.g}, {backing.b}, {alpha});");
+                    output.AppendLine("}");
+                    count++;
+                }
+                if (card.Success)
+                {
+                    output.AppendLine($".{skin.cssClass} .{PanelOpacity.CardClass(percent)} .kn-card {{");
+                    output.AppendLine($"    -unity-background-image-tint-color: rgba({card.Groups[1].Value}, {card.Groups[2].Value}, {card.Groups[3].Value}, {alpha});");
+                    output.AppendLine("}");
+                    count++;
+                }
+            }
             return count;
         }
 

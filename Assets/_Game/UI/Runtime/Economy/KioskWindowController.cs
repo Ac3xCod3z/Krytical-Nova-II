@@ -313,7 +313,7 @@ namespace KryticalNova.UI
         private void Fill(VisualElement cell, in ItemStack stack, long price)
         {
             ItemDefinition def = Definition(stack);
-            GearUIController.SetItemVisual(cell, def, stack.count);
+            GearUIController.SetItemVisual(cell, def, stack);
             var label = cell.Q<Label>(className: "kiosk-price");
             label.text = def != null ? KioskRules.ShortPrice(price) : string.Empty;
             label.style.display = def != null ? DisplayStyle.Flex : DisplayStyle.None;

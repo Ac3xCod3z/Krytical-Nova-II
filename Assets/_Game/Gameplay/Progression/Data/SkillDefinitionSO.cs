@@ -95,6 +95,12 @@ namespace KryticalNova.Progression
         /// three classes of a faction share one set; a shared skill is stored under its own ID.
         /// </summary>
         public string RankKey => IsClassSkill ? SlotKeys[(int)classSlot] : skillId;
+        /// <summary>
+        /// What reading this skill's own item is stored under. A class skill that has an item of its own (a Zenith
+        /// Dossier) is unlocked by itself: its rank is still its slot's, shared by the faction's three classes, but
+        /// each class's technique wants its own Dossier. Any other skill: the same as <see cref="RankKey"/>.
+        /// </summary>
+        public string LockKey => IsClassSkill && unlockItemId != 0 ? skillId : RankKey;
         /// <summary>The ID hit feel and effects are looked up under.</summary>
         public string PresentationId => string.IsNullOrEmpty(presentationId) ? skillId : presentationId;
 

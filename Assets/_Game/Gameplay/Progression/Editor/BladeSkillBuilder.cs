@@ -94,10 +94,10 @@ namespace KryticalNova.EditorTools
                     cooldown: 3f, clip: ClipPhantomThunder, speed: 1.1f, castLock: 0.95f, minBonus: 101, maxBonus: 110,
                     hitTimes: PhantomThunderHitTimes,
                     description: "Three cuts that each land with extra force."),
-                Attack("ThunderousDragon", "Market Crash", 80, "Lvl 80 War God Dossier", 50, 120, 806, 1203, 121, 434, 5, 7, area: true, hits: 1,
+                Attack("ThunderousDragon", "Market Crash", 80, "Lvl 80 Zenith Dossier", 50, 120, 806, 1203, 121, 434, 5, 7, area: true, hits: 1,
                     cooldown: 2.5f, clip: ClipThunderousDragon, speed: 1f, castLock: 0.95f,
                     hitTimes: new[] { ThunderousDragonHitTime }, leaps: true, holdToRepeat: true,
-                    description: "War God technique. A leaping strike that crashes down on every enemy around you. Hold the key to keep striking."),
+                    description: "Zenith technique. A leaping strike that crashes down on every enemy around you. Hold the key to keep striking."),
 
                 Buff("AzureWall", "Firewall", 20, 9, 88, 66, 180, ClipAzureWall, 1.2f,
                     "Hardens your guard, raising Elemental Defense.",

@@ -211,7 +211,7 @@ namespace KryticalNova.UI
             for (int i = 0; i < cells.Length; i++)
             {
                 ItemStack stack = storage.Get(i);
-                GearUIController.SetItemVisual(cells[i], Definition(stack), stack.count);
+                GearUIController.SetItemVisual(cells[i], Definition(stack), stack);
             }
             ShowPage(currentPage);
             countLabel.text = $"{storage.UsedCells} / {StorageRules.Capacity}";

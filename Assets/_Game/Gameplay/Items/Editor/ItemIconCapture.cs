@@ -182,6 +182,71 @@ namespace KryticalNova.EditorTools
             Debug.Log($"[Items] Captured {done} icons into {IconFolder}.");
         }
 
+        /// <summary>
+        /// Pictures of loose models, drawn as an item's icon is and written where each is asked for: for what has
+        /// more than one model to its name (a pet's evolutions). A model with an Animator is drawn in the first pose
+        /// of its Idle. Returns the sprites in the order asked, null for one that could not be drawn.
+        /// </summary>
+        public static List<Sprite> CaptureModels(IReadOnlyList<(GameObject model, string path)> subjects)
+        {
+            var sprites = new List<Sprite>(subjects.Count);
+            if (subjects.Count == 0) return sprites;
+            var scene = EditorSceneManager.NewPreviewScene();
+            var rt = new RenderTexture(Size * Supersample, Size * Supersample, 24, RenderTextureFormat.ARGB32);
+            rt.Create();
+            var comic = PreviewComicFeature();
+            float savedDotSize = comic != null ? comic.halftone.dotSize : 0f;
+            if (comic != null) comic.halftone.dotSize = savedDotSize * IconDotScale;
+            var written = new List<string>(subjects.Count);
+            try
+            {
+                var cam = CreateRig(scene);
+                Vector3 view = new Vector3(-0.55f, 0.25f, 1f).normalized; // as a pet item's own icon: from the front-left, above
+                for (int i = 0; i < subjects.Count; i++)
+                {
+                    written.Add(null);
+                    if (subjects[i].model == null) continue;
+                    var root = new GameObject($"Icon_{subjects[i].model.name}");
+                    var instance = (GameObject)Object.Instantiate(subjects[i].model, root.transform, false);
+                    foreach (var c in root.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
+                    if (root.GetComponentsInChildren<Renderer>(true).Length == 0) { Object.DestroyImmediate(root); continue; }
+                    SceneManager.MoveGameObjectToScene(root, scene);
+                    PoseAtIdle(instance);
+                    RenderToPng(cam, rt, root.transform, view, subjects[i].path);
+                    Object.DestroyImmediate(root);
+                    written[i] = subjects[i].path;
+                }
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                AssetDatabase.StartAssetEditing();
+                try { foreach (string path in written) if (path != null) ImportAsSprite(path); }
+                finally { AssetDatabase.StopAssetEditing(); }
+                foreach (string path in written) sprites.Add(path != null ? AssetDatabase.LoadAssetAtPath<Sprite>(path) : null);
+            }
+            finally
+            {
+                if (comic != null) comic.halftone.dotSize = savedDotSize;
+                rt.Release();
+                Object.DestroyImmediate(rt);
+                EditorSceneManager.ClosePreviewScene(scene);
+            }
+            return sprites;
+        }
+
+        // The first frame of the model's Idle (the first of its clips so named, or its first clip), when it has an Animator.
+        private static void PoseAtIdle(GameObject model)
+        {
+            var animator = model.GetComponentInChildren<Animator>(true);
+            if (animator == null || animator.runtimeAnimatorController == null) return;
+            AnimationClip pose = null;
+            foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
+            {
+                if (clip == null) continue;
+                if (pose == null) pose = clip;
+                if (clip.name.ToLowerInvariant().Contains("idle")) { pose = clip; break; }
+            }
+            if (pose != null) pose.SampleAnimation(animator.gameObject, 0f);
+        }
+
         private static Camera CreateRig(Scene scene)
         {
             var camGo = new GameObject("IconCamera");

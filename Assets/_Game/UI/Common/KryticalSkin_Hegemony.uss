@@ -7,7 +7,7 @@
 
 /* ---- window chrome: the pack's own frames and ornaments ---- */
 .kn-faction-hegemony .window, .kn-faction-hegemony .game-menu {
-    background-color: rgba(13, 15, 22, 0.65);
+    background-color: rgba(13, 15, 22, 0.35);
     -unity-background-image-tint-color: rgba(0, 0, 0, 0);
 }
 .kn-faction-hegemony .item-tooltip, .kn-faction-hegemony .item-menu, .kn-faction-hegemony .item-confirm, .kn-faction-hegemony .amount-dialog, .kn-faction-hegemony .player-menu {
@@ -152,8 +152,8 @@
 }
 .kn-faction-hegemony .window .close {
     position: absolute;
-    right: -18px;
-    top: -16px;
+    right: -8px;
+    top: -4px;
     width: 34px;
     height: 34px;
     min-width: 34px;
@@ -387,4 +387,106 @@
 .kn-faction-hegemony .doll-bar--foot > .doll-bar-right {
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Line_Horizontal_01.png#SPR_HUD_SciFiSoldier_Line_Horizontal_01");
     scale: -1 1;
+}
+.kn-faction-hegemony .kn-win-20 .window, .kn-faction-hegemony .kn-win-20 .game-menu {
+    background-color: rgba(13, 15, 22, 0.2);
+}
+.kn-faction-hegemony .kn-card-20 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.2);
+}
+.kn-faction-hegemony .kn-win-25 .window, .kn-faction-hegemony .kn-win-25 .game-menu {
+    background-color: rgba(13, 15, 22, 0.25);
+}
+.kn-faction-hegemony .kn-card-25 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.25);
+}
+.kn-faction-hegemony .kn-win-30 .window, .kn-faction-hegemony .kn-win-30 .game-menu {
+    background-color: rgba(13, 15, 22, 0.3);
+}
+.kn-faction-hegemony .kn-card-30 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.3);
+}
+.kn-faction-hegemony .kn-win-35 .window, .kn-faction-hegemony .kn-win-35 .game-menu {
+    background-color: rgba(13, 15, 22, 0.35);
+}
+.kn-faction-hegemony .kn-card-35 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.35);
+}
+.kn-faction-hegemony .kn-win-40 .window, .kn-faction-hegemony .kn-win-40 .game-menu {
+    background-color: rgba(13, 15, 22, 0.4);
+}
+.kn-faction-hegemony .kn-card-40 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.4);
+}
+.kn-faction-hegemony .kn-win-45 .window, .kn-faction-hegemony .kn-win-45 .game-menu {
+    background-color: rgba(13, 15, 22, 0.45);
+}
+.kn-faction-hegemony .kn-card-45 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.45);
+}
+.kn-faction-hegemony .kn-win-50 .window, .kn-faction-hegemony .kn-win-50 .game-menu {
+    background-color: rgba(13, 15, 22, 0.5);
+}
+.kn-faction-hegemony .kn-card-50 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.5);
+}
+.kn-faction-hegemony .kn-win-55 .window, .kn-faction-hegemony .kn-win-55 .game-menu {
+    background-color: rgba(13, 15, 22, 0.55);
+}
+.kn-faction-hegemony .kn-card-55 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.55);
+}
+.kn-faction-hegemony .kn-win-60 .window, .kn-faction-hegemony .kn-win-60 .game-menu {
+    background-color: rgba(13, 15, 22, 0.6);
+}
+.kn-faction-hegemony .kn-card-60 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.6);
+}
+.kn-faction-hegemony .kn-win-65 .window, .kn-faction-hegemony .kn-win-65 .game-menu {
+    background-color: rgba(13, 15, 22, 0.65);
+}
+.kn-faction-hegemony .kn-card-65 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.65);
+}
+.kn-faction-hegemony .kn-win-70 .window, .kn-faction-hegemony .kn-win-70 .game-menu {
+    background-color: rgba(13, 15, 22, 0.7);
+}
+.kn-faction-hegemony .kn-card-70 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.7);
+}
+.kn-faction-hegemony .kn-win-75 .window, .kn-faction-hegemony .kn-win-75 .game-menu {
+    background-color: rgba(13, 15, 22, 0.75);
+}
+.kn-faction-hegemony .kn-card-75 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.75);
+}
+.kn-faction-hegemony .kn-win-80 .window, .kn-faction-hegemony .kn-win-80 .game-menu {
+    background-color: rgba(13, 15, 22, 0.8);
+}
+.kn-faction-hegemony .kn-card-80 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.8);
+}
+.kn-faction-hegemony .kn-win-85 .window, .kn-faction-hegemony .kn-win-85 .game-menu {
+    background-color: rgba(13, 15, 22, 0.85);
+}
+.kn-faction-hegemony .kn-card-85 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.85);
+}
+.kn-faction-hegemony .kn-win-90 .window, .kn-faction-hegemony .kn-win-90 .game-menu {
+    background-color: rgba(13, 15, 22, 0.9);
+}
+.kn-faction-hegemony .kn-card-90 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.9);
+}
+.kn-faction-hegemony .kn-win-95 .window, .kn-faction-hegemony .kn-win-95 .game-menu {
+    background-color: rgba(13, 15, 22, 0.95);
+}
+.kn-faction-hegemony .kn-card-95 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 0.95);
+}
+.kn-faction-hegemony .kn-win-100 .window, .kn-faction-hegemony .kn-win-100 .game-menu {
+    background-color: rgba(13, 15, 22, 1);
+}
+.kn-faction-hegemony .kn-card-100 .kn-card {
+    -unity-background-image-tint-color: rgba(26, 38, 52, 1);
 }

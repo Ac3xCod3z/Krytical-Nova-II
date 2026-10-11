@@ -26,6 +26,24 @@ namespace KryticalNova.Crafting
         public const ushort ShatterpointDossier = 9420;
         public const int PagesPerDossier = 4;
 
+        // Zenith Dossiers: one for each weapon class's Zenith technique (the level-80 leap; Twelve Sky 2: War God).
+        // They have no Pages: each is dropped whole, in the Prime grounds only.
+        public const ushort ZenithMonoblade = 9430;
+        public const ushort ZenithGlaive = 9431;
+        public const ushort ZenithCarbine = 9432;
+        public const ushort ZenithHarvester = 9433;
+        public const ushort ZenithServoClaws = 9434;
+        public const ushort ZenithArcCaster = 9435;
+        public const ushort ZenithLongaxe = 9436;
+        public const ushort ZenithClaymore = 9437;
+        public const ushort ZenithWarbow = 9438;
+
+        /// <summary>Every Zenith Dossier, in the order of the weapon classes: three a faction (Hegemony, Null, Covenant).</summary>
+        public static readonly ushort[] ZenithDossiers =
+        {
+            ZenithMonoblade, ZenithGlaive, ZenithCarbine, ZenithHarvester, ZenithServoClaws, ZenithArcCaster, ZenithLongaxe, ZenithClaymore, ZenithWarbow,
+        };
+
         /// <summary>The id of a Dossier's Page, 1 to <see cref="PagesPerDossier"/>.</summary>
         public static ushort PageOf(ushort dossier, int page) => (ushort)(dossier + page);
     }

@@ -19,7 +19,6 @@ namespace KryticalNova.UI
         private const int RightButton = 1;
         private const int NoSlot = -1;
         private const float DragThresholdSquared = 36f;
-        private const float GhostOffset = 14f;
         private const float ProgressBarScale = 100f;
         private const string BlockingClass = "blocks-world";
         [SerializeField] private PlayerCharacterProgression progression;
@@ -123,7 +122,23 @@ namespace KryticalNova.UI
             runTile = root.Q("run-drag");
             jumpTile = root.Q("jump-drag");
             activeBuffsBar = root.Q("active-buffs-bar");
+            // The Skills window is a tree: tiles on tiers, the chosen skill's card beside them.
+            VisualElement skillCards = root.Q("skills-body");
+            skillTree = null;
+            if (skillsWindow != null && skillCards != null)
+            {
+                skillTree = new SkillTreeView(BindDragSource);
+                skillTree.Build(skillsWindow, skillCards);
+                skillTree.Pressed += OnSkillTreePressed;
+                // The list's own lines between its sections (headings, a note on locked skills) have no place beside
+                // a tree: what a locked skill wants is on its card.
+                foreach (VisualElement loose in skillCards.contentContainer.Children())
+                    if (loose is Label && (loose.ClassListContains("drop-book-note") || loose.ClassListContains("category-header")))
+                        loose.style.display = DisplayStyle.None;
+            }
             dragGhost = root.Q<Label>("drag-ghost");
+            // What is dragged sits on the cursor, by its middle, whatever its size (the icon or the text chip).
+            if (dragGhost != null) dragGhost.style.translate = new Translate(Length.Percent(-50f), Length.Percent(-50f));
 
             BindButton("open-character", ToggleCharacter);
             BindButton("open-skills", ToggleSkills);
@@ -384,6 +399,7 @@ namespace KryticalNova.UI
             combatStats = player.GetComponent<CharacterCombatStats>();
             combatSkills = player.GetComponent<PlayerCombatSkills>();
             buffManager = player.GetComponent<CharacterBuffManager>();
+            boosts = player.GetComponent<PlayerExperienceBoosts>();
             boundNova = player.GetComponent<PlayerNova>();
             boundSerums = player.GetComponent<PlayerSerums>();
             if (progression == null || skills == null || hotbar == null || movement == null || resources == null || jumpMotor == null)
@@ -408,6 +424,7 @@ namespace KryticalNova.UI
                 buffManager.BuffsChanged += RefreshBuffs;
                 buffManager.BuffMessage += Feedback;
             }
+            if (boosts != null) boosts.Changed += RefreshBuffs;
             progression.Changed += RequestRefresh;
             progression.LevelGained += OnLevelGained;
             if (boundNova != null) boundNova.Changed += RequestRefresh; // the Standing worn changes no stat
@@ -448,6 +465,7 @@ namespace KryticalNova.UI
                 buffManager.BuffsChanged -= RefreshBuffs;
                 buffManager.BuffMessage -= Feedback;
             }
+            if (boosts != null) boosts.Changed -= RefreshBuffs;
             progression.Changed -= RequestRefresh;
             progression.LevelGained -= OnLevelGained;
             if (boundNova != null) boundNova.Changed -= RequestRefresh;
@@ -797,6 +815,133 @@ namespace KryticalNova.UI
             for (int i = 0; i < generatedCardIds.Count; i++)
                 RefreshCombatSkillCard(generatedCardIds[i], generatedSkillIds[i]);
             RefreshClassCards();
+            RefreshSkillTree();
+        }
+
+        // ------------------------------------------------------------------ the skill tree
+
+        private SkillTreeView skillTree;
+        private readonly List<SkillTreeView.Node> treeNodes = new List<SkillTreeView.Node>(24);
+        private readonly List<(string, string)> treeLinks = new List<(string, string)>(16);
+        private const string RunKey = "run", JumpKey = "jump";
+
+        // Where each shared skill stands: two lines that meet in Hot Streak, and the three Dossier skills under it.
+        private static readonly Dictionary<string, float> SharedColumns = new Dictionary<string, float>
+        {
+            ["SpiritualRage"] = 5.4f, ["HeavenlySerenity"] = 6.4f, ["HeavenlyShield"] = 5.4f, ["HeavenlyBlow"] = 6.4f,
+            ["GarudasPrayer"] = 5.9f, ["HeavenlyRepulsion"] = 4.9f, ["ReverseFlow"] = 5.9f, ["HeavenlyDestruction"] = 6.9f,
+        };
+        private static readonly (string from, string to)[] SharedLinks =
+        {
+            ("SpiritualRage", "HeavenlyShield"), ("HeavenlySerenity", "HeavenlyBlow"), ("HeavenlyShield", "GarudasPrayer"),
+            ("HeavenlyBlow", "GarudasPrayer"), ("GarudasPrayer", "HeavenlyRepulsion"), ("GarudasPrayer", "ReverseFlow"),
+            ("GarudasPrayer", "HeavenlyDestruction"),
+        };
+        // A class's ten: the area line (1 and its Zenith technique, 8), the single line (2, 4, 6), the triple line (3, 5, 7), Stance and Guard.
+        private static readonly (ClassSkillSlot from, ClassSkillSlot to)[] ClassLinks =
+        {
+            (ClassSkillSlot.S1, ClassSkillSlot.S8), (ClassSkillSlot.S2, ClassSkillSlot.S4), (ClassSkillSlot.S4, ClassSkillSlot.S6),
+            (ClassSkillSlot.S3, ClassSkillSlot.S5), (ClassSkillSlot.S5, ClassSkillSlot.S7),
+        };
+
+        private static float ClassColumn(ClassSkillSlot slot)
+        {
+            switch (slot)
+            {
+                case ClassSkillSlot.S1: case ClassSkillSlot.S8: return 0f;
+                case ClassSkillSlot.S2: case ClassSkillSlot.S4: case ClassSkillSlot.S6: return 1f;
+                case ClassSkillSlot.S3: case ClassSkillSlot.S5: case ClassSkillSlot.S7: return 2f;
+                case ClassSkillSlot.Stance: return 3f;
+                default: return 4f;
+            }
+        }
+
+        // The tier a level opens on: 1, 30, 60, 70, 80.
+        private static int TierOf(int level) => level >= 80 ? 4 : level >= 70 ? 3 : level >= 60 ? 2 : level >= 30 ? 1 : 0;
+
+        private void RefreshSkillTree()
+        {
+            if (skillTree == null || skills == null) return;
+            treeNodes.Clear();
+            treeLinks.Clear();
+
+            AddMovementNode(MovementSkillId.Run, RunKey, runTile, 0f);
+            AddMovementNode(MovementSkillId.Jump, JumpKey, jumpTile, 1f);
+
+            if (combatSkills != null)
+            {
+                for (int i = 0; i < combatSkillCardIds.Length; i++)
+                {
+                    SkillDefinitionSO skill = combatSkills.GetSkill(combatSkillAssetIds[i]);
+                    if (skill == null || !SharedColumns.TryGetValue(skill.skillId, out float column)) continue;
+                    VisualElement tile = root.Q($"{combatSkillCardIds[i]}-drag");
+                    AddCombatNode(skill, column, TierOf(skill.requiredCharacterLevel), tile != null ? tile.parent : null);
+                }
+                foreach ((string from, string to) in SharedLinks) treeLinks.Add((from, to));
+
+                var bySlot = new Dictionary<ClassSkillSlot, string>();
+                float spare = 7.9f;
+                for (int i = 0; i < generatedCardIds.Count; i++)
+                {
+                    SkillDefinitionSO skill = combatSkills.GetSkill(generatedSkillIds[i]);
+                    if (skill == null || !combatSkills.IsInActiveKit(skill)) continue;
+                    VisualElement card = root.Q($"{generatedCardIds[i]}-card");
+                    if (skill.IsClassSkill)
+                    {
+                        AddCombatNode(skill, ClassColumn(skill.classSlot), TierOf(skill.requiredCharacterLevel), card);
+                        bySlot[skill.classSlot] = skill.skillId;
+                    }
+                    // A skill with no place in the tree yet still has a tile: beside it, on its level's tier.
+                    else AddCombatNode(skill, spare++, TierOf(skill.requiredCharacterLevel), card);
+                }
+                foreach ((ClassSkillSlot from, ClassSkillSlot to) in ClassLinks)
+                    if (bySlot.TryGetValue(from, out string a) && bySlot.TryGetValue(to, out string b)) treeLinks.Add((a, b));
+            }
+
+            WeaponClassId active = combatSkills != null ? combatSkills.ActiveClass : WeaponClassId.None;
+            string heading = (active != WeaponClassId.None ? WeaponClasses.DisplayName(active).ToUpperInvariant() : "SKILLS") + "   ·   ALL CLASSES";
+            skillTree.Show(heading, treeNodes, treeLinks);
+        }
+
+        private void AddMovementNode(MovementSkillId skill, string key, VisualElement tile, float column)
+        {
+            MovementSkillData definition = skills.GetDefinition(skill);
+            if (definition == null) return;
+            int rank = skills.GetRank(skill);
+            bool hasNext = definition.TryGetRank(rank + 1, out MovementSkillRank next);
+            treeNodes.Add(new SkillTreeView.Node
+            {
+                Key = key, Name = definition.displayName, Icon = definition.icon, Column = column, Row = SkillTreeView.Tiers.Length - 1,
+                Rank = rank > 0 ? $"{rank}/{definition.MaxRank}" : null, Learned = rank > 0,
+                TooLow = hasNext && progression != null && progression.CurrentLevel < next.requiredCharacterLevel,
+                CanUpgrade = skills.CanUpgrade(skill, out _), Card = tile != null ? tile.parent : null,
+            });
+        }
+
+        private void AddCombatNode(SkillDefinitionSO skill, float column, int row, VisualElement card)
+        {
+            int rank = combatSkills.GetRank(skill);
+            bool learned = rank > 0, locked = combatSkills.IsLocked(skill) && !learned;
+            treeNodes.Add(new SkillTreeView.Node
+            {
+                Key = skill.skillId, Name = skill.displayName, Icon = skill.icon, Column = column, Row = row,
+                Rank = learned ? $"{rank}/{skill.maxRank}" : locked ? "LOCKED" : null, Learned = learned, Locked = locked,
+                TooLow = progression != null && progression.CurrentLevel < skill.requiredCharacterLevel,
+                CanUpgrade = !locked && combatSkills.CanUpgrade(skill, out _), Card = card,
+            });
+        }
+
+        // A press on a tile has chosen it; a skill that is learned may be dragged to the Hotbar from there as from its card.
+        private void OnSkillTreePressed(string key, PointerDownEvent evt, VisualElement tile)
+        {
+            if (key == RunKey || key == JumpKey)
+            {
+                MovementSkillId movement = key == RunKey ? MovementSkillId.Run : MovementSkillId.Jump;
+                if (skills != null && skills.CanUse(movement)) OnSkillPointerDown(evt, movement, tile);
+                return;
+            }
+            SkillDefinitionSO skill = combatSkills != null ? combatSkills.GetSkill(key) : null;
+            if (skill != null && combatSkills.IsLearned(skill)) OnCombatSkillPointerDown(evt, skill, tile);
         }
 
         private void RefreshHotbarSlots()
@@ -1182,19 +1327,74 @@ namespace KryticalNova.UI
                 shownBuffs.Add(buff);
                 shownBuffTimers.Add(timerLbl);
             }
+            AddBoosterBadges();
             RefreshBuffTimers();
+        }
+
+        // The XP boosters that are running stand after the buffs: the item's icon and the time left. What each
+        // adds is in its tooltip.
+        private PlayerExperienceBoosts boosts;
+        private readonly List<(int index, Label timer, VisualElement badge)> shownBoosters = new List<(int, Label, VisualElement)>(3);
+
+        private void AddBoosterBadges()
+        {
+            shownBoosters.Clear();
+            if (boosts == null) return;
+            ItemCatalog catalog = boosts.TryGetComponent(out PlayerInventory pack) ? pack.Catalog : null;
+            for (int i = 0; i < boosts.Count; i++)
+            {
+                if (boosts.SecondsLeft(i) <= 0f) continue;
+                ItemDefinition item = catalog != null ? catalog.Get(boosts.BoosterAt(i).itemId) : null;
+                var badge = new VisualElement();
+                badge.AddToClassList("buff-badge");
+                badge.AddToClassList("booster-badge");
+                if (item != null && item.icon != null)
+                {
+                    var icon = new VisualElement();
+                    icon.AddToClassList("buff-badge-icon");
+                    SetIcon(icon, item.icon);
+                    badge.Add(icon);
+                }
+                else
+                {
+                    var name = new Label(item != null ? item.displayName : "XP Booster");
+                    name.AddToClassList("buff-badge-name");
+                    badge.Add(name);
+                }
+                var timer = new Label();
+                timer.AddToClassList("buff-badge-timer");
+                badge.Add(timer);
+                activeBuffsBar.Add(badge);
+                shownBoosters.Add((i, timer, badge));
+            }
+        }
+
+        private int RunningBoosters()
+        {
+            int running = 0;
+            if (boosts != null)
+                for (int i = 0; i < boosts.Count; i++)
+                    if (boosts.SecondsLeft(i) > 0f) running++;
+            return running;
         }
 
         private void RefreshBuffTimers()
         {
             if (activeBuffsBar == null || buffManager == null) return;
-            if (buffManager.ActiveBuffs.Count != shownBuffs.Count) { RefreshBuffs(); return; }
+            if (buffManager.ActiveBuffs.Count != shownBuffs.Count || RunningBoosters() != shownBoosters.Count) { RefreshBuffs(); return; }
             for (int i = 0; i < shownBuffs.Count; i++)
             {
                 var buff = shownBuffs[i];
                 shownBuffTimers[i].text = buff.Skill.isAbsorptionShield
                     ? $"{buff.CurrentShieldCapacity:0} HP ({buff.RemainingDuration:0}s)"
                     : $"{buff.RemainingDuration:0.0}s";
+            }
+            foreach ((int index, Label timer, VisualElement badge) in shownBoosters)
+            {
+                string left = PlayerExperienceBoosts.FormatTime(boosts.SecondsLeft(index));
+                if (timer.text == left) continue;
+                timer.text = left;
+                badge.tooltip = $"{PlayerExperienceBoosts.Describe(boosts.BoosterAt(index))}. {left} left.";
             }
         }
 
@@ -1246,7 +1446,7 @@ namespace KryticalNova.UI
             ProgressBar chi = root.Q<ProgressBar>("chi-bar");
             chi.value = ProgressBarScale * resources.Chi / Mathf.Max(1f, resources.MaxChi);
             chi.title = $"FLUX {resources.Chi:0} / {resources.MaxChi:0}";
-            root.Q<Label>("resource-values").text = $"HP {resources.Health:0} / {resources.MaxHealth:0}    Chi {resources.Chi:0} / {resources.MaxChi:0}";
+            root.Q<Label>("resource-values").text = $"HP {resources.Health:0} / {resources.MaxHealth:0}    Flux {resources.Chi:0} / {resources.MaxChi:0}";
             RefreshVitals();
             if (resources.Data != null)
             {
@@ -1428,8 +1628,8 @@ namespace KryticalNova.UI
             dragGhost.style.backgroundImage = ghostIcon != null ? new StyleBackground(ghostIcon) : StyleKeyword.Null;
 
             Vector2 local = root.Q("game-ui").WorldToLocal(position);
-            dragGhost.style.left = local.x + GhostOffset;
-            dragGhost.style.top = local.y + GhostOffset;
+            dragGhost.style.left = local.x;
+            dragGhost.style.top = local.y;
             for (int index = 0; index < slotElements.Length; index++)
                 slotElements[index].EnableInClassList("drop-target", slotElements[index].worldBound.Contains(position));
             evt.StopPropagation();

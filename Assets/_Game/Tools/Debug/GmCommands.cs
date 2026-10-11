@@ -133,7 +133,8 @@ namespace KryticalNova.DevTools
                 "SOCIAL       gm.guild [name|none] · gm.guild.list   (a Crew takes its own faction only, GM or not)",
                 "SPONSOR      gm.sponsor [clientIdA clientIdB]   (links two players, the higher sponsors; no ids prints the links) · gm.sponsor.end · gm.sponsor.points [n] · gm.sponsor.window",
                 "APPEARANCE   gm.weave [off]   (opens the Holoweaver here; Weaves and dyes then work with no NPC near) · gm.dye · gm.weave.unlock <all|item> · gm.weave.clear · gm.weave.list · gm.restyle <stylist|reshaper|coach|off> · gm.passes [n]   (Chroma Cells, Prism Cells, Restyle and Training Passes)",
-                "CRAFTING     gm.craft [off]   (opens the Fabricator here; crafting then works with no NPC near) · gm.craftkit [times]   (the materials of every recipe) · gm.dossier   (the three Dossiers)",
+                "CRAFTING     gm.craft [off]   (opens the Fabricator here; crafting then works with no NPC near) · gm.craftkit [times]   (the materials of every recipe) · gm.dossier   (the three Dossiers) · gm.zenith [all]   (the Zenith Dossiers of the player's faction, or all nine)",
+                "XP BOOSTERS  gm.boosters [n]   (n of each: Field, Companion, Tandem) · gm.boost   (what is running) · gm.boost.clear",
                 "PETS         gm.pet · gm.pet.growth <0-100> · gm.pet.hunger <0-100> · gm.pet.feed · gm.pet.xp <n> · gm.pet.event <win|loss> · gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>",
                 "EFFECTS      gm.fx.hit [normal|elemental|crit|shatter|backlash] [light|heavy] · gm.fx.pvpcrit [splash|frame|faction|default]   (shown on this screen; nothing is hit)",
                 "SAVING       gm.save · gm.save.where · gm.save.wipe confirm",
@@ -658,7 +659,7 @@ namespace KryticalNova.DevTools
             return unlock ? "All drop-book skills unlocked." : "All drop-book skills locked.";
         }
 
-        [Command("gm.unlockskill", "Unlock one drop-book skill (level-60 / Wargod) by skill id or name. It still costs skill points to learn.")]
+        [Command("gm.unlockskill", "Unlock one drop-book skill (level-60 / Zenith) by skill id or name. It still costs skill points to learn.")]
         private static string UnlockSkill(string skill)
         {
             if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;

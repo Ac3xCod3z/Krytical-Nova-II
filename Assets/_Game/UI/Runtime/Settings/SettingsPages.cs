@@ -309,6 +309,11 @@ namespace KryticalNova.UI
                 interfaceOptions.Clear();
                 SettingsRows.Slider(interfaceOptions, "Interface size (in the game)", HudPreferences.MinInterfaceScale, HudPreferences.MaxInterfaceScale,
                     () => HudPreferences.InterfaceScale, value => HudPreferences.InterfaceScale = (float)Math.Round(value * 20f) / 20f);
+                // 1 = nothing shows through. A tooltip, a menu and a dialog are always solid.
+                SettingsRows.Slider(interfaceOptions, "How solid windows are", PanelOpacity.MinPercent / 100f, PanelOpacity.MaxPercent / 100f,
+                    () => HudPreferences.WindowOpacity, value => HudPreferences.WindowOpacity = value);
+                SettingsRows.Slider(interfaceOptions, "How solid the panels inside them are", PanelOpacity.MinPercent / 100f, PanelOpacity.MaxPercent / 100f,
+                    () => HudPreferences.CardOpacity, value => HudPreferences.CardOpacity = value);
                 // The skin of the title screens only: the game itself always wears the character's faction.
                 SettingsRows.Choice(interfaceOptions, "Menu theme", MenuThemeNames,
                     () => (int)HudPreferences.MenuTheme, index => HudPreferences.MenuTheme = (MenuTheme)index);

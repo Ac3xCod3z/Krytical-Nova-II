@@ -54,6 +54,8 @@ namespace KryticalNova.Pets
         public string name;
         [Tooltip("The model for this stage. Empty = the pet item's own model (the stand-in until this stage's art exists).")]
         public GameObject model;
+        [Tooltip("The icon of the pet at this stage, baked from the model above (Items > Bake Pet Stage Icons). Empty = the pet item's own icon.")]
+        public Sprite icon;
         [Tooltip("Size relative to the base stage.")]
         [Min(0.1f)] public float scale;
         [Tooltip("Colour of the glow that rides on the pet.")]

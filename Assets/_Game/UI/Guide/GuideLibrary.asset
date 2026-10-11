@@ -108,10 +108,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.25822705
-        y: 0.72824425
-        width: 0.5589209
-        height: 0.27175575
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -175,9 +175,9 @@ MonoBehaviour:
       focus:
         serializedVersion: 2
         x: 0
-        y: 0.76251704
-        width: 0.32811958
-        height: 0.237483
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -208,10 +208,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.28
+        x: 0
         y: 0
-        width: 0.355
-        height: 0.74444443
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -236,6 +236,42 @@ MonoBehaviour:
         lines:
         - Click an NPC in the world to walk over and talk. A button for each service appears in the dialogue.
         - The minimap turns with your camera. Settings can fix it north-up instead.
+    - id: npc-shops
+      title: Shops
+      summary: The Apothecary and the Armorer keep shops. You buy with Creds, and any shop buys what you no longer need.
+      clip: {fileID: 32900000, guid: 5c913ffd80a3e70409b23d74fdb65272, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - Talk to the Apothecary or the Armorer in the town and press <b>BROWSE WARES</b>. The shop opens beside your Pack and closes when you walk away.
+      - kind: 2
+        heading: Who sells what
+        lines:
+        - Apothecary | HP Stims, Flux Stims, Dual Stims and Pet Rations
+        - Armorer | Alumite and Iridion, Fusion Catalysts, Tuning Chips, and Common gear your character can wear
+      - kind: 1
+        heading: Buying
+        lines:
+        - '{mouse:right} Right-click an item on the shelf.'
+        - A stack buys one. Hold {cap:SHIFT} to choose how many.
+        - A price in red is more than the Creds you carry.
+      - kind: 1
+        heading: Selling
+        lines:
+        - With a shop open, {mouse:right} right-click an item in your Pack, or drag it onto the shop.
+        - The shop pays {fact:shop.sellBack}% of what the item is worth. A stack asks how many.
+      - kind: 4
+        heading: 
+        lines:
+        - Nothing can be bought back. A Rare or better piece, a pet, and any gear you have worked at the forge is only sold after you confirm it.
   - title: Your character
     topics:
     - id: stats
@@ -246,9 +282,9 @@ MonoBehaviour:
       focus:
         serializedVersion: 2
         x: 0
-        y: 0.18333334
-        width: 0.1821875
-        height: 0.43977776
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -315,10 +351,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.20875
-        y: 0.023333333
-        width: 0.33425003
-        height: 0.6575556
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 2
         heading: The nine classes
@@ -348,10 +384,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.788125
-        y: 0.026666667
-        width: 0.1775
-        height: 0.54044443
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -363,19 +399,59 @@ MonoBehaviour:
         - First three attacks | A sweep round you, a single hit and a three-hit string, from level 1
         - Fourth and fifth | A heavy hit and a flurry, from level 30
         - Sixth and seventh | Stronger versions, from level 60
-        - Eighth | A leaping strike on an area, from level 80
+        - Eighth | The class's Zenith technique, a leaping strike on an area, from level 80. Its Zenith Dossier opens it
         - Stance | A lasting buff that fits your class's role
         - Guard | A lasting buff to Elemental Defense
       - kind: 1
         heading: Ranking up
         lines:
-        - Open the Skills window. Skill points left are shown on your plate.
-        - Press <b>+1</b>, <b>+5</b> or <b>+10</b> beside a skill to put ranks into it.
-        - Drag the skill onto the Hotbar if it is not there yet.
+        - 'Open the Skills window. It is a tree: your class''s skills and the skills every class shares, on tiers by the level that opens them.'
+        - Click a skill to read it beside the tree. Skill points left are shown at the top.
+        - Press <b>+1</b>, <b>+5</b> or <b>+10</b> on its card to put ranks into it.
+        - Drag the skill from the tree onto the Hotbar if it is not there yet.
       - kind: 4
         heading: 
         lines:
         - A higher rank hits harder and costs more Flux each use. Ranks stay where you put them, so spread them with your Flux in mind.
+    - id: fabricator-and-dossiers
+      title: The Fabricator and Dossiers
+      summary: The Fabricator turns materials into better ones. It also binds loose Pages into a Dossier, which teaches a skill no skill point can buy.
+      clip: {fileID: 32900000, guid: 80dee6474d359244da07a48b5c26ee2a, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - Talk to the Fabricator, at the Elder hall in the town.
+      - kind: 2
+        heading: What it makes
+        lines:
+        - 'Four Alloys of one grade | One Alloy of the next: Alumite, Iridion, Orichalc, Eversteel'
+        - A Cyan, a Magenta, a Yellow and a Black Cell | A Chroma Cell, which dyes a piece of your outfit
+        - The same four Cells | A Prism Cell, which dyes a weapon
+        - The four Pages of a Dossier | That Dossier
+      - kind: 1
+        heading: Making something
+        lines:
+        - Choose a recipe in the list. What it needs is shown with how many you have.
+        - Press <b>CRAFT</b>, or <b>CRAFT ALL</b> to make as many as your materials allow.
+        - Materials are taken from your Pack first, then your Vault, then your Deep Vault.
+      - kind: 2
+        heading: Dossiers
+        lines:
+        - Backlash, Iron Nerve, Shatterpoint | Skills every class can learn at level 80. Each has a Dossier, and four Pages that make one
+        - 'Zenith Dossiers | One for each weapon class: it opens that class''s eighth skill, its Zenith technique. They drop whole, in the hardest hunting grounds'
+        - Reading one | {mouse:right} Right-click the Dossier in your Pack. The skill can then be learned in the Skills window
+      - kind: 3
+        heading: 
+        lines:
+        - Colour Cells and Pages drop from Hostiles. A whole Dossier is a rare find.
     - id: serums
       title: Serums
       summary: A Serum raises one stat for good. Each kind can be taken {fact:serum.cap} times by a character.
@@ -384,9 +460,9 @@ MonoBehaviour:
       focus:
         serializedVersion: 2
         x: 0
-        y: 0.18333334
-        width: 0.1821875
-        height: 0.43977776
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -415,10 +491,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.5375
-        y: 0.06555556
-        width: 0.21012497
-        height: 0.65227777
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 2
         heading: Rarities
@@ -450,10 +526,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.20875
-        y: 0.023333333
-        width: 0.538875
-        height: 0.69449997
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -488,10 +564,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.0225
-        y: 0.03
-        width: 0.3275
-        height: 0.97
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -552,10 +628,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.0225
+        x: 0
         y: 0
-        width: 0.3275
-        height: 1
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -601,10 +677,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.0225
+        x: 0
         y: 0
-        width: 0.3275
-        height: 0.85944444
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -639,10 +715,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.649375
-        y: 0.07
-        width: 0.35
-        height: 0.5922222
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -670,10 +746,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.649375
-        y: 0.07
-        width: 0.35
-        height: 0.75777775
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -695,6 +771,45 @@ MonoBehaviour:
         heading: 
         lines:
         - Standings cost Renown only, no Creds. Later ranks cost far more than early ones, so the first ranks of all four tracks are the cheapest gains.
+    - id: holoweave-and-dye
+      title: Holoweave and dye
+      summary: Holoweave puts the look of one piece of gear over another. Dye changes the colours of a piece. Neither changes a single stat.
+      clip: {fileID: 32900000, guid: fd18e7fd43c82524cb6102fc9ec79912, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - 'Looks: the Holoweaver. Colours: the Outfitter. Both stand in the town''s plaza.'
+      - kind: 2
+        heading: Your Weave Library
+        lines:
+        - What goes in | The look of every piece of gear you earn or wear, kept after the piece is gone
+        - Who has it | Every character on your account
+        - Traded gear | Counts once you have worn it
+      - kind: 1
+        heading: Putting on a Weave
+        lines:
+        - 'At the Holoweaver, pick a slot: Weapon, Armor, Gloves, Boots or Cape.'
+        - Pick a look. It must be one your faction and body can wear, and for a weapon one of the class you hold.
+        - Press <b>WEAVE</b>. It costs Creds. The Weave stays on the slot when you change the piece under it.
+      - kind: 2
+        heading: Dye
+        lines:
+        - An outfit piece | One Chroma Cell, in any of 24 colourways
+        - A weapon | One Prism Cell
+        - 'Where it lives | On the piece itself: it goes with it into a Trade, a Kiosk or the Vault, and a new piece needs a new Cell'
+      - kind: 3
+        heading: 
+        lines:
+        - Your weapon's Temper glow shows on its Weave. Stats and reach stay those of the piece you really wear.
+        - The Outfitter sells one of the four colour Cells each day. The Fabricator makes Chroma and Prism Cells from them.
   - title: Hunting
     topics:
     - id: hostiles
@@ -742,10 +857,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.5375
-        y: 0.06555556
-        width: 0.21012497
-        height: 0.65227777
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 2
         heading: The three kinds
@@ -771,10 +886,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.64125
-        y: 0.046666667
-        width: 0.35
-        height: 0.70555556
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -828,7 +943,7 @@ MonoBehaviour:
         heading: Looking after it
         lines:
         - Growth | 0 to 100%. It rises as you kill Hostiles with the pet out. Its stat grows with it
-        - Stages | Five. At each one the pet grows and glows more
+        - Stages | Five, at 25, 50, 75 and 100% growth. At each one the pet evolves, and its icon changes with it
         - Hunger | Falls slowly while it is out. At empty it gives no stat and earns nothing
         - Pet Ration | Refills its hunger
       - kind: 3
@@ -837,6 +952,40 @@ MonoBehaviour:
         - 'Growth and hunger belong to the pet itself: they stay with it in the Vault, a Trade or a Kiosk.'
         - Your pet reacts to what you do in a small speech bubble only you see. Settings can quiet it.
         - Hold the pointer over the pet item to read its growth, hunger and what it gives now.
+    - id: xp-boosters
+      title: XP Boosters
+      summary: A booster raises the XP your kills pay for an hour. There is one for your character, one for your pet, and one for both.
+      clip: {fileID: 32900000, guid: c6a4da4e4e6f6ee4199c21eb78034162, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - A booster is an item. {mouse:right} Right-click it in your Pack to start it.
+      - kind: 2
+        heading: The three boosters
+        lines:
+        - Field Booster | Character XP +{fact:boost.field}%
+        - Companion Booster | Pet XP +{fact:boost.companion}%
+        - Tandem Booster | Character XP and pet XP +{fact:boost.tandem}% each
+      - kind: 2
+        heading: How they add up
+        lines:
+        - 'Two different boosters | Their bonuses add: Field and Tandem together pay your character double'
+        - The same booster again | Adds another {fact:boost.minutes} minutes to its clock, up to {fact:boost.maxHours} hours
+        - With a Squad or a Sponsor | The booster adds on top of that boost
+        - The clock | Only runs while you are in the game
+      - kind: 3
+        heading: 
+        lines:
+        - What is running, and for how long, shows beside your buffs. Hold the pointer over it for the detail.
+        - The pet's share needs the pet out and fed.
   - title: Other players
     topics:
     - id: namecards-and-emotes
@@ -904,6 +1053,44 @@ MonoBehaviour:
         heading: 
         lines:
         - Squad frames can be moved like any HUD panel. Settings can decline invitations for you.
+    - id: sponsor-and-recruit
+      title: Sponsor and Recruit
+      summary: A character at the level cap can sponsor lower characters of its faction. The Recruit earns more XP with its Sponsor near.
+      clip: {fileID: 32900000, guid: d87a4dcdec9d9e2459c1ea50886240ab, type: 3}
+      still: {fileID: 0}
+      focus:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      sections:
+      - kind: 5
+        heading: 
+        lines:
+        - Right-click a player and choose <b>Sponsor Request</b>, type <b>/sponsor</b> and their name, or use the Sponsor window, opened from Contacts.
+      - kind: 2
+        heading: The rules
+        lines:
+        - Sponsor | Level {fact:sponsor.level}
+        - Recruit | Same faction, more than {fact:sponsor.gap} levels below the Sponsor
+        - How many | Up to {fact:sponsor.max} Recruits
+        - Near | Within {fact:sponsor.range} m, on the same map, both alive
+      - kind: 2
+        heading: What each gets
+        lines:
+        - Recruit | +10% XP from kills with the Sponsor near
+        - In the Sponsor's Squad | +15% with two of its Recruits hunting together, +20% with three, on top of the Squad's own boost
+        - Sponsor | {fact:sponsor.points} Sponsor points for each full minute near a Recruit
+      - kind: 0
+        heading: Hunting together
+        lines:
+        - 'A Sponsor may Squad with its Recruits whatever their levels. There it helps and does not hunt: a Hostile the Sponsor hits first pays XP to no one, and it gets no Squad boost of its own.'
+      - kind: 3
+        heading: 
+        lines:
+        - The link ends by itself when the Recruit closes to within {fact:sponsor.gap} levels. Either of you can end it sooner.
+        - It lasts through logging out. Requests can be declined for you in Settings.
     - id: contacts
       title: Contacts
       summary: 'Contacts is your list of players you want to find again. It is mutual: when one accepts, each is on the other''s list.'
@@ -911,10 +1098,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.023125
-        y: 0.07333333
-        width: 0.2625
-        height: 0.5322222
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -947,10 +1134,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.0875
-        y: 0.016666668
-        width: 0.830125
-        height: 0.6722222
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -989,10 +1176,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.1625
-        y: 0.06888889
-        width: 0.245
-        height: 0.60555553
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -1029,10 +1216,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.1625
-        y: 0.016666668
-        width: 0.755125
-        height: 0.80222225
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 2
         heading: Where
@@ -1058,10 +1245,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.28125
-        y: 0.14222223
-        width: 0.2625
-        height: 0.58111113
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -1123,10 +1310,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.5375
-        y: 0.06555556
-        width: 0.21012497
-        height: 0.65227777
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 2
         heading: Where they come from
@@ -1212,10 +1399,10 @@ MonoBehaviour:
       still: {fileID: 0}
       focus:
         serializedVersion: 2
-        x: 0.378125
-        y: 0.14444445
-        width: 0.333125
-        height: 0.7079444
+        x: 0
+        y: 0
+        width: 0
+        height: 0
       sections:
       - kind: 5
         heading: 
@@ -1389,3 +1576,36 @@ MonoBehaviour:
   - name: hostile.leash
     source: {fileID: 11400000, guid: 5fc5ceac32329ca4ab5a9db2c541b0fd, type: 2}
     field: leashMetres
+  - name: boost.minutes
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: boosters[0].minutes
+  - name: boost.field
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: boosters[0].characterPercent
+  - name: boost.companion
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: boosters[1].petPercent
+  - name: boost.tandem
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: boosters[2].characterPercent
+  - name: boost.maxHours
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: boosterMaxHours
+  - name: shop.sellBack
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: vendorSellBackPercent
+  - name: sponsor.level
+    source: {fileID: 11400000, guid: db715893ed9d0214bbad235d62b929a1, type: 2}
+    field: sponsorMinLevel
+  - name: sponsor.gap
+    source: {fileID: 11400000, guid: db715893ed9d0214bbad235d62b929a1, type: 2}
+    field: levelGap
+  - name: sponsor.max
+    source: {fileID: 11400000, guid: db715893ed9d0214bbad235d62b929a1, type: 2}
+    field: maxRecruits
+  - name: sponsor.range
+    source: {fileID: 11400000, guid: db715893ed9d0214bbad235d62b929a1, type: 2}
+    field: rangeMetres
+  - name: sponsor.points
+    source: {fileID: 11400000, guid: db715893ed9d0214bbad235d62b929a1, type: 2}
+    field: pointsPerMinute

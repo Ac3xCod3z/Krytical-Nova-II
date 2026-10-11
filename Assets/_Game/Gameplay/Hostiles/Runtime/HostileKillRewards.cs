@@ -139,7 +139,9 @@ namespace KryticalNova.Hostiles
             float sponsorBonus = player.TryGetComponent(out PlayerSponsor sponsor) ? sponsor.ServerExperienceBonus(out inSponsorSquad) : 0f;
             bool adds = inSponsorSquad && sponsor.Settings != null && sponsor.Settings.addsToSquadBoost;
             float boost = SponsorRules.ExperienceBoost(squadBoost, sponsorBonus, adds);
-            int amount = ExperienceFor(stats, gaps, gap, boost);
+            // XP boosters add to whatever the Squad and the Sponsor give.
+            float boosters = player.TryGetComponent(out PlayerExperienceBoosts boosts) ? boosts.ServerCharacterBonus : 0f;
+            int amount = ExperienceFor(stats, gaps, gap, boost + boosters);
             var chat = player.GetComponent<PlayerChat>();
             string name = hostile.Definition != null ? hostile.Definition.displayName : "Hostile";
             if (amount <= 0)
@@ -150,7 +152,8 @@ namespace KryticalNova.Hostiles
             player.GrantExperience(amount);
             bool sponsored = sponsorBonus > 0f && (adds || sponsorBonus >= squadBoost);
             if (chat != null)
-                chat.ServerCombatNotice(sponsored ? $"+{amount} XP ({name}) · Sponsor +{Mathf.RoundToInt(sponsorBonus * 100f)}%" : $"+{amount} XP ({name})");
+                chat.ServerCombatNotice((sponsored ? $"+{amount} XP ({name}) · Sponsor +{Mathf.RoundToInt(sponsorBonus * 100f)}%" : $"+{amount} XP ({name})")
+                    + (boosters > 0f ? $" · Booster +{Mathf.RoundToInt(boosters * 100f)}%" : string.Empty));
         }
 
         // ------------------------------------------------------------------ dying to a Hostile

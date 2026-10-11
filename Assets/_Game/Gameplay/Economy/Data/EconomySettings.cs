@@ -34,6 +34,20 @@ namespace KryticalNova.Economy
         public bool IsFree => permitItemId == 0;
     }
 
+    /// <summary>One XP booster: the item, what it adds while it runs, and how long one of it lasts.</summary>
+    [Serializable]
+    public struct ExperienceBooster
+    {
+        [Tooltip("The item that is used up (a utility item, 9500 and up).")]
+        public ushort itemId;
+        [Tooltip("Added to the XP of the character's Hostile kills while it runs, in percent (50 = x1.5).")]
+        [Range(0, 500)] public int characterPercent;
+        [Tooltip("Added to the XP of the pet's Hostile kills while it runs, in percent (100 = x2).")]
+        [Range(0, 500)] public int petPercent;
+        [Tooltip("Minutes one of it runs for. Using another adds as many.")]
+        [Min(1)] public int minutes;
+    }
+
     /// <summary>
     /// Every number of the economy in one place: how much a wallet holds, how much may change hands, what things may
     /// cost, and how much a player is meant to earn. They belong together because they only make sense together: a
@@ -110,6 +124,19 @@ namespace KryticalNova.Economy
         public ushort restyleItemId = 9301;
         [Tooltip("Coach: the item used up by one change of build and muscle (the Training Pass). 0 = free. Sold in the Nova Store later.")]
         public ushort trainingItemId = 9302;
+
+        [Header("XP boosters (Nova Store stock; handed out by GM until the store is built)")]
+        [Tooltip("The boosters. Those that run together add up (+50 % and +50 % is x2), and they add to the Squad and Sponsor boosts.")]
+        public ExperienceBooster[] boosters =
+        {
+            new ExperienceBooster { itemId = 9500, characterPercent = 50, petPercent = 0, minutes = 60 },
+            new ExperienceBooster { itemId = 9501, characterPercent = 0, petPercent = 100, minutes = 60 },
+            new ExperienceBooster { itemId = 9502, characterPercent = 50, petPercent = 50, minutes = 60 },
+        };
+        [Tooltip("The most hours of one booster a character may hold: one more than that is refused, not wasted.")]
+        [Min(1)] public int boosterMaxHours = 24;
+        [Tooltip("On: a booster's clock runs only while the character is in the game. Off: it runs on while the character is away.")]
+        public bool boosterTimeRunsOnlyOnline = true;
 
         [Header("Income target (what the faucets are tuned to pay)")]
         [Tooltip("Creds a player is meant to earn per hour of hunting at a level. Hostile drops, Contracts and shops are " +

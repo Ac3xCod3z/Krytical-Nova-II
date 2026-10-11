@@ -62,6 +62,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player forgeSuccessFeel;
         [SerializeField] private MMF_Player forgeFailFeel;
         [SerializeField] private MMF_Player forgeBreakFeel;
+        [Tooltip("An Advanced Failsafe held the piece: a calm hold, not a fail.")]
+        [SerializeField] private MMF_Player forgeHeldFeel;
         [Tooltip("The local player lands a critical hit on another player, or takes one: the hit with a look of its own.")]
         [SerializeField] private MMF_Player pvpCritFeel;
         [Tooltip("The local player gained a level.")]
@@ -104,6 +106,7 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player forgeFailWorldFeel;
         [SerializeField] private MMF_Player forgeSavedWorldFeel;
         [SerializeField] private MMF_Player forgeBreakWorldFeel;
+        [SerializeField] private MMF_Player forgeHeldWorldFeel;
         [Tooltip("Anyone's moment at the Herald. All but the last two burst at the Nova itself, in its tier's colour; a new " +
                  "tier also lights the ground under the character, and a Standing rank is a seal at the feet.")]
         [SerializeField] private MMF_Player novaRiseWorldFeel;
@@ -216,7 +219,7 @@ namespace KryticalNova.GameFeel
             ClientPresentationRegistry.RegisterFeel(this);
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
                 attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, killConfirmFeel, bodyLandFeel, respawnFeel, petEvolveFeel,
-                forgeSuccessFeel, forgeFailFeel, forgeBreakFeel,
+                forgeSuccessFeel, forgeFailFeel, forgeBreakFeel, forgeHeldFeel,
                 novaRiseFeel, novaTierFeel, novaHoldFeel, novaSlipFeel, novaHeldFeel, standingFeel,
                 pvpCritFeel, levelUpFeel, pickupFeel };
             if (skills == null) skills = GetComponent<SkillFeelCatalog>();
@@ -627,21 +630,33 @@ namespace KryticalNova.GameFeel
         }
 
         [Header("Run")]
-        [Tooltip("A run's take-off (its dust and smear, and for the player's own character the kick of the view) is one " +
-                 "take-off for a burst of move orders: it plays again only when this many seconds have passed with no " +
-                 "order and no restart. Clicking about quickly otherwise kicks the view and smears the body over and over.")]
+        [Tooltip("A run's take-off (its dust and smear) plays when a run starts and for every new destination chosen " +
+                 "while running, but never twice within this many seconds.")]
+        [SerializeField, Min(0f)] private float runTakeOffRepeatSeconds = 0.4f;
+        [Tooltip("The kick of the view on the player's own screen is one kick for a burst of move orders given without " +
+                 "stopping: it comes again only when this many seconds have passed with no order. Clicking about quickly " +
+                 "otherwise pumps the view. A run that starts from a standstill always kicks, whatever this says.")]
         [SerializeField, Min(0f)] private float runTakeOffQuietSeconds = 1f;
+        [Tooltip("A run that starts within this many seconds of the character standing still starts from a standstill: " +
+                 "the time it may take to get from standing to the run.")]
+        [SerializeField, Min(0f)] private float runTakeOffRestSeconds = 1.5f;
 
         public void RunStarted(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
             ActorVfx vfx = ActorVfx.For(actor);
             vfx.SetRunning(true, runLoopVfx);
-            bool takesOff = Time.time - vfx.LastRunOrder >= runTakeOffQuietSeconds;
-            vfx.LastRunOrder = Time.time;
+            float now = Time.time;
+            bool takesOff = RunTakeOffRules.TakesOff(now, vfx.LastRunTakeOff, runTakeOffRepeatSeconds);
+            bool kicks = takesOff && isLocalPlayer && RunTakeOffRules.KicksView(now, vfx.LastStillTime, vfx.LastRunOrder,
+                vfx.LastRunKick, runTakeOffRestSeconds, runTakeOffQuietSeconds);
+            vfx.LastRunOrder = now;
             if (!takesOff) return;
+            vfx.LastRunTakeOff = now;
             PlayWorld(runWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
-            if (isLocalPlayer) Play(runFeel, actor.position, 1f);
+            if (!kicks) return;
+            vfx.LastRunKick = now;
+            Play(runFeel, actor.position, 1f);
         }
 
         public void RunStopped(Transform actor)
@@ -852,6 +867,10 @@ namespace KryticalNova.GameFeel
                 case 3: // the piece broke
                     PlayWorld(forgeBreakWorldFeel, feet, facing, actor);
                     if (isLocalPlayer) Play(forgeBreakFeel, actor.position, 1f);
+                    break;
+                case 4: // an Advanced Failsafe held it: nothing lost, and nothing of a fail shown
+                    PlayWorld(forgeHeldWorldFeel, feet, facing, actor);
+                    if (isLocalPlayer) Play(forgeHeldFeel, actor.position, 1f);
                     break;
                 default: // a fail
                     PlayWorld(forgeFailWorldFeel, feet, facing, actor);

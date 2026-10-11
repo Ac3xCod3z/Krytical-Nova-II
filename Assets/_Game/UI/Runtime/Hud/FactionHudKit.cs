@@ -28,6 +28,10 @@ namespace KryticalNova.UI.Hud
         [Tooltip("The namecard over a player: level badge, crest, name, Standing and Crew, and the health bar where it is shown (PlayerCardBuilder). One is made per player on screen.")]
         public PlayerCardView playerCard;
 
+        [Tooltip("The mouse pointer while this faction's HUD shows, and where it points (pixels from its top-left corner). Copied from the faction's UiSkin by Build Faction Skins.")]
+        public Texture2D cursor;
+        public Vector2 cursorHotspot;
+
         public IEnumerable<HudChromePiece> Pieces()
         {
             yield return hotbar;
