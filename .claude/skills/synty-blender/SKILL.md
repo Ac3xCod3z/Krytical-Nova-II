@@ -130,6 +130,11 @@ A pet that arrives as a dense textured model (the user generates them in Tripo a
 the Tripo Bridge add-on) goes through `pet_from_scan.py` first: it reduces the mesh and turns the texture
 into a few flat colours. The agreed route and numbers are in `references/pet-spec.md`.
 
+**A model with a UV map and no texture, or lights to be placed exactly** (painting on its own UV map from
+reference pictures): read `references/texture-painting.md` first. In short: flat colour per part, lights
+traced by hand as shapes that *select* the mesh's own creases and slots (they never paint by themselves),
+and close-up checks against the reference before anything is shown.
+
 Live sessions are for the tools that edit the open scene. Do not write files or create and remove scenes
 from a live tool: an attempt to copy objects out to a new .blend from the live bridge crashed the user's
 Blender. To give an asset its own file, ask the user to Save As, or work headless on a saved file.
