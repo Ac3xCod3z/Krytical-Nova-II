@@ -921,6 +921,13 @@ namespace KryticalNova.UI
                 SetDisplay(tipRequires, requirement.Length > 0);
             }
             tipDesc.text = def.description;
+            // A booster's numbers are settings, not text: its tooltip reads them, and the time left of it.
+            if (def.useEffect == ItemUseEffect.ExperienceBoost && inventory != null
+                && inventory.TryGetComponent(out KryticalNova.Progression.PlayerExperienceBoosts boosts))
+            {
+                string line = boosts.TooltipLine(def);
+                if (line != null) tipDesc.text = def.description + "\n" + line;
+            }
             // A pet's stage, growth, hunger and bonus are a block of their own; the line under it says what it grows.
             string petLine = tipPet.Show(def, itemStack.IsEmpty ? new ItemStack(def.itemId, 1) : itemStack);
             // What the piece gives is a strip a line; how far it has been worked on stays a paragraph under them.

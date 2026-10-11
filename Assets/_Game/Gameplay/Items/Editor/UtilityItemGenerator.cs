@@ -109,6 +109,24 @@ namespace KryticalNova.EditorTools
             Page(CraftItemIds.ShatterpointDossier, 1, "Shatterpoint"), Page(CraftItemIds.ShatterpointDossier, 2, "Shatterpoint"),
             Page(CraftItemIds.ShatterpointDossier, 3, "Shatterpoint"), Page(CraftItemIds.ShatterpointDossier, 4, "Shatterpoint"),
 
+            // Zenith Dossiers (Twelve Sky 2: the War God skills). One for each weapon class's Zenith technique; each
+            // unlocks that one skill. Dropped whole in the Prime grounds: no Pages, no recipe.
+            ZenithDossier(CraftItemIds.ZenithMonoblade, "Monoblade", "Market Crash"),
+            ZenithDossier(CraftItemIds.ZenithGlaive, "Glaive", "Martial Law"),
+            ZenithDossier(CraftItemIds.ZenithCarbine, "Carbine", "Orbital Call"),
+            ZenithDossier(CraftItemIds.ZenithHarvester, "Harvester", "Terminal Harvest"),
+            ZenithDossier(CraftItemIds.ZenithServoClaws, "Servo Claws", "Zero Point"),
+            ZenithDossier(CraftItemIds.ZenithArcCaster, "Arc Caster", "Extinction Beam"),
+            ZenithDossier(CraftItemIds.ZenithLongaxe, "Longaxe", "Northfall"),
+            ZenithDossier(CraftItemIds.ZenithClaymore, "Claymore", "Kingsfall"),
+            ZenithDossier(CraftItemIds.ZenithWarbow, "Warbow", "Skyfall"),
+
+            // XP boosters (Nova Store stock; what each adds and for how long is EconomySettings.boosters). Names are a
+            // first pick (11 Oct 2026).
+            Booster(9500, "Booster_Field", "Field Booster", "Field XP", "the XP of your Hostile kills"),
+            Booster(9501, "Booster_Companion", "Companion Booster", "Pet XP", "the XP your pet earns from your Hostile kills"),
+            Booster(9502, "Booster_Tandem", "Tandem Booster", "Both XP", "the XP of your Hostile kills, and your pet's"),
+
             // The forge (_Docs/Reference/12Sky/02_Gear_System_Spec.md). Ids are named in GearMaterialIds, which the
             // settings asset reads; what each one does is decided there, not here.
             Material(GearMaterialIds.Alumite, "Alloy_Alumite", "Alumite", "+3%", ItemRarity.Common,
@@ -172,6 +190,16 @@ namespace KryticalNova.EditorTools
             new Row { Id = id, Asset = asset, Name = $"{skill} Dossier", Glyph = "DOSSIER", Rarity = ItemRarity.Epic, Stack = 10,
                 Effect = ItemUseEffect.LearnSkill,
                 Description = $"Unlocks {skill}, which is then learned with skill points. Used up when it is read. A Fabricator binds one from its four Pages." };
+
+        private static Row ZenithDossier(ushort id, string weaponClass, string skill) =>
+            new Row { Id = id, Asset = $"Dossier_Zenith_{weaponClass.Replace(" ", string.Empty)}", Name = $"Zenith Dossier: {skill}", Glyph = "ZENITH",
+                Rarity = ItemRarity.Legendary, Stack = 10, Effect = ItemUseEffect.LearnSkill,
+                Description = $"Unlocks {skill}, the {weaponClass}'s Zenith technique, which is then learned with skill points. Used up when it is read. Found only in the Prime grounds." };
+
+        // What it adds and for how long is a number of the Economy Settings: the item's text does not repeat it (its tooltip reads it there).
+        private static Row Booster(ushort id, string asset, string name, string glyph, string what) =>
+            new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = ItemRarity.Rare, Stack = 99, Effect = ItemUseEffect.ExperienceBoost,
+                Description = $"Raises {what} for a time. Using another adds its time; different boosters add up. From the Nova Store." };
 
         /// <summary>A Dossier's Page. Asset and name are worked out from the Dossier's: Page_Backlash_1, "Backlash Page I".</summary>
         private static Row Page(ushort dossier, int page, string skill) =>

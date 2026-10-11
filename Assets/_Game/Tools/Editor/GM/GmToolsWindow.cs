@@ -1446,6 +1446,19 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Crafting"), EnableIf(nameof(IsReady)), LabelText("Give The 3 Dossiers"), PropertyOrder(545.51f)]
         private void GiveDossiers() => Run("gm.dossier");
 
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Crafting"), EnableIf(nameof(IsReady)), LabelText("Give Zenith Dossiers"), PropertyOrder(545.515f)]
+        private void GiveZenithDossiers() => Run("gm.zenith");
+
+        [TabGroup(Tabs, ItemsTab), Title("XP Boosters (Nova Store stock)"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(545.6f)]
+        [InfoBox("That many of each: Field (character XP x1.5), Companion (pet XP x2), Tandem (both x1.5), an hour each. They add up, and using one again adds its hour. Use them from the Pack.")]
+        private void GiveXpBoosters([MinValue(1)] int ofEach = 1) => Run($"gm.boosters {ofEach}");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Boosters"), EnableIf(nameof(IsReady)), LabelText("What Is Running"), PropertyOrder(545.61f)]
+        private void ShowXpBoosts() => Run("gm.boost");
+
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Boosters"), EnableIf(nameof(IsReady)), LabelText("End Every Boost"), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(545.62f)]
+        private void ClearXpBoosts() => Run("gm.boost.clear");
+
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Crafting"), EnableIf(nameof(IsReady)), LabelText("Fabricator Needed Again"), GUIColor(1f, 0.75f, 0.6f), PropertyOrder(545.52f)]
         private void CraftingNeedsNpc() => Run("gm.craft off");
 

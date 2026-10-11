@@ -176,5 +176,22 @@ namespace KryticalNova.DevTools
                 if (inventory.ServerGive(id, 1, earned: true) > 0) given++;
             return $"Gave {given} of the 3 Dossiers. Reading one needs level 80.";
         }
+
+        [Command("gm.zenith", "Give the targeted player the Zenith Dossiers its faction's three weapon classes can read, or with 'all' all nine. " +
+                              "Each unlocks that class's Zenith technique (level 80); in the game they drop only in the Prime grounds.")]
+        private static string ZenithDossiers(string which = "")
+        {
+            if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
+            if (!player.TryGetComponent(out PlayerInventory inventory)) return NoComponent;
+            bool all = which.Trim().ToLowerInvariant() == "all";
+            player.TryGetComponent(out KryticalNova.Progression.PlayerCombatSkills skills);
+            int given = 0, lost = 0;
+            foreach (ushort id in CraftItemIds.ZenithDossiers)
+            {
+                if (!all && (skills == null || skills.SkillTaughtBy(id) == null)) continue;
+                if (inventory.ServerGive(id, 1, earned: true) > 0) given++; else lost++;
+            }
+            return $"Gave {given} Zenith Dossier(s){(lost > 0 ? $", {lost} did not fit" : string.Empty)}. Reading one needs level 80.";
+        }
     }
 }

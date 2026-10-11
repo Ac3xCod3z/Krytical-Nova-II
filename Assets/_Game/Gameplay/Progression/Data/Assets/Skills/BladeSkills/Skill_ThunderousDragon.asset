@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
   skillId: ThunderousDragon
   displayName: Market Crash
-  description: War God technique. A leaping strike that crashes down on every enemy around you. Hold the key to keep striking.
+  description: Zenith technique. A leaping strike that crashes down on every enemy around you. Hold the key to keep striking.
   category: 4
   weaponClass: 1
   classSlot: 8
@@ -23,8 +23,9 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 1
   requiresSkillBook: 1
-  acquisitionNote: Lvl 80 War God Dossier
+  acquisitionNote: 'Zenith Dossier: Market Crash: a rare drop of the Prime grounds'
   requiredCraftingArchives: []
+  unlockItemId: 9430
   requiredCharacterLevel: 80
   minRank: 1
   maxRank: 71

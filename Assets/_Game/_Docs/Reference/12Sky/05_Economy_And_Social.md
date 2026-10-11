@@ -159,6 +159,7 @@ One bench, at the Fabricator (who stands at the Elder hall, and takes stat reset
 - No recipe costs Creds today (`CraftRecipe.creds` is there for when one should). Materials are taken from the Pack, the Vault and the Deep Vault; what is made goes into the Pack, into the room its materials freed.
 - **Drops** (`HostileSettings.materialDrops`, each row rolled on its own for every kill, scaled by the level gap and the server drop rate; all placeholders): each colour cell 1.5 %, a Chroma Cell 0.2 %, a Prism Cell 0.2 %, each Dossier Page 0.25 % (owner: rarer than the first 0.5 %; to be tuned) and each Dossier 0.02 %, the last two from Hostiles of level 70 and up.
 - **A Dossier** is read from the Pack (level 80): it unlocks its skill, which is then learned with skill points like any other.
+- **Zenith Dossiers** (11 Oct 2026; Twelve Sky 2: the War God skills): nine, one for each weapon class's Zenith technique (slot 8), with no Pages and no recipe. Each unlocks its own class's technique only (`SkillDefinitionSO.LockKey`; the rank stays the slot's). Drop: 0.02 % from Hostiles of level 113 and up (`CraftingBuilder.ZenithDropLevel`, the first Prime ground), so none drops until Prime grounds exist; `gm.zenith` gives a character its faction's three.
 
 ## Sponsor / Recruit (row 17; built 11 Oct 2026)
 
@@ -242,6 +243,24 @@ Twelve Sky 2's Elixirs: a consumable that raises a stat for good, each kind a li
 - **Shown**: the item tooltip ("+3 Attack Power each, for good", "Taken 37 / 100  ·  +111 Attack Power so far"), and the Character Sheet, whose last section (SERUMS, under the stats) lists every kind: its name with "37 / 100", and under it the total it adds ("+111 Attack Power"). Every kind is listed, from the start: one not taken yet reads "(0/100)   +0 ..." (9 Oct 2026: the section was hidden until the first Serum, and was missed).
 - **GM**: `gm.serums [count]` gives some of each; `gm.serum <kind> <taken>` sets a count; `gm.serum` lists them.
 - **Not built**: any source (GM only); the Expansion tier's own items; TS2's take-ten and take-all items. In a Kiosk a Serum is capped like any stackable item (`kioskStackablePriceCap`).
+
+## XP boosters (Nova Store stock; built 11 Oct 2026)
+
+Three items, used from the Pack. Each has a clock of its own; while a clock has time left its share is added to the XP of every Hostile kill.
+
+| Item | Adds | One lasts |
+| --- | --- | --- |
+| Field Booster (9500) | +50 % character XP (x1.5) | 60 min |
+| Companion Booster (9501) | +100 % pet XP (x2) | 60 min |
+| Tandem Booster (9502) | +50 % character XP and +50 % pet XP (x1.5 each) | 60 min |
+
+- **They add up** (owner, 11 Oct 2026): Field and Tandem together are character XP x2.0, Companion and Tandem pet XP x2.5; never multiplied with each other. They also add to the Squad and Sponsor boosts: a kill pays the Hostile's XP x level gap x (1 + Squad or Sponsor boost + boosters) x the server rate.
+- **The same one again adds its hour** to what is left, up to `boosterMaxHours` (24) of that booster; one more than that is refused and stays in the Pack.
+- **Numbers** (`EconomySettings.boosters`: item, character %, pet %, minutes; `boosterMaxHours`; `boosterTimeRunsOnlyOnline`, on: a clock runs only while the character is in the game, which is my pick). The names, the 24 hour limit and the icons are my picks too.
+- **Code**: `Gameplay/Progression/Runtime/PlayerExperienceBoosts` (the clocks, saved with the character under `xpboosts` by item id, the time left told to the owner; the `IItemUseHandler` for `ItemUseEffect.ExperienceBoost`) and `ExperienceBoostRules` (the sums). Character XP: `HostileKillRewards.Pay`. Pet XP: `PlayerPet.ServerCreditHostileKill` (a pet's kill XP had no multiplier before).
+- **Shown**: a badge for each running booster after the buffs (its icon and the time left; what it adds in the badge's tooltip), the item's tooltip (what one adds, for how long, and the time running), and the combat log line of a kill ("· Booster +100%").
+- **Sold nowhere yet**: they are Nova Store stock (row 32). Until the store is built: `gm.boosters [n]` gives n of each, `gm.boost` prints what runs, `gm.boost.clear` ends them; the GM Tools window has the same three buttons on its Items tab.
+- **Verified** with a second client (11 Oct 2026): a level-50 Hostile paid a level-50 character 104 XP with no booster, 156 with Field, 208 with Field and Tandem; a pet's kill was worth 4 units, 8 with Companion, 10 with Companion and Tandem; a second Field made 2 h; the clocks came back after leaving and entering the game.
 
 ## Toasts: news for the whole server
 

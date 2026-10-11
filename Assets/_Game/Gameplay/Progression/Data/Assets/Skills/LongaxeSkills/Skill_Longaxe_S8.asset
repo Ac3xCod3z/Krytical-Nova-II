@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
   skillId: Longaxe_S8
   displayName: Northfall
-  description: War God technique. Crashes down on every enemy around you. Hold the key to keep striking.
+  description: Zenith technique. Crashes down on every enemy around you. Hold the key to keep striking.
   category: 4
   weaponClass: 7
   classSlot: 8
@@ -23,8 +23,9 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 1
   requiresSkillBook: 1
-  acquisitionNote: Lvl 80 War God Dossier
+  acquisitionNote: 'Zenith Dossier: Northfall: a rare drop of the Prime grounds'
   requiredCraftingArchives: []
+  unlockItemId: 9436
   requiredCharacterLevel: 80
   minRank: 1
   maxRank: 71

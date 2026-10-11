@@ -19,6 +19,51 @@ namespace KryticalNova.DevTools
             return wallet != null;
         }
 
+        private static bool TryGetBoosts(out KryticalNova.Progression.PlayerExperienceBoosts boosts, out string error)
+        {
+            boosts = null;
+            if (!GmTarget.TryGetPlayer(out var player, out error)) return false;
+            boosts = player.GetComponent<KryticalNova.Progression.PlayerExperienceBoosts>();
+            if (boosts == null || boosts.Settings == null) error = "That player has no XP boosts (run Krytical Nova/Setup/Player Prefab).";
+            return boosts != null && boosts.Settings != null;
+        }
+
+        [Command("gm.boosters", "Give the targeted player n of each XP booster (1 unless told): Field (character XP), Companion (pet XP), Tandem (both). " +
+                                "They are Nova Store stock; this is how they are had until the store is built.")]
+        private static string Boosters(int count = 1)
+        {
+            if (!TryGetBoosts(out var boosts, out var error)) return error;
+            if (!boosts.TryGetComponent(out KryticalNova.Items.PlayerInventory inventory)) return "That player has no Pack.";
+            count = System.Math.Max(1, count);
+            int kinds = 0, lost = 0;
+            for (int i = 0; i < boosts.Count; i++)
+                if (inventory.ServerGive(boosts.BoosterAt(i).itemId, count, earned: true) > 0) kinds++; else lost++;
+            return $"Gave {count} of each of {kinds} XP booster(s){(lost > 0 ? $", {lost} did not fit" : string.Empty)}. Use them from the Pack.";
+        }
+
+        [Command("gm.boost", "Print the XP boosts the targeted player has running, and what they add up to.")]
+        private static string Boost()
+        {
+            if (!TryGetBoosts(out var boosts, out var error)) return error;
+            var text = new System.Text.StringBuilder();
+            for (int i = 0; i < boosts.Count; i++)
+            {
+                float left = boosts.SecondsLeft(i);
+                if (left <= 0f) continue;
+                text.Append($"{KryticalNova.Progression.PlayerExperienceBoosts.Describe(boosts.BoosterAt(i))}: {KryticalNova.Progression.PlayerExperienceBoosts.FormatTime(left)}. ");
+            }
+            if (text.Length == 0) return "No XP boost is running.";
+            return text + $"Together: character XP +{boosts.ServerCharacterBonus * 100f:0}%, pet XP +{boosts.ServerPetBonus * 100f:0}%.";
+        }
+
+        [Command("gm.boost.clear", "End every XP boost the targeted player has running.")]
+        private static string BoostClear()
+        {
+            if (!TryGetBoosts(out var boosts, out var error)) return error;
+            boosts.ServerClear();
+            return "XP boosts ended.";
+        }
+
         [Command("gm.creds", "Add Creds to the targeted player (negative takes them away). With no amount it prints the balance. " +
                              "A wallet never holds more than its cap.")]
         private static string Creds(long amount = 0)

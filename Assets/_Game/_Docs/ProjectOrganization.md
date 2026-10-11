@@ -109,7 +109,7 @@ _Game/
 │   │                      Chatter/ = what each pet says, the emoji library and its baked emoji)
 │   │                      Editor/ (PetAssetBuilder)  Tests/Editor/
 │   ├── Player/            Runtime/  Prefabs/ (Player.prefab = the networked gameplay player)
-│   ├── Progression/       Runtime/ (also PlayerNova, NovaRules, NovaHalo: Ascension and Nova Standings)  Data/ (SO classes,
+│   ├── Progression/       Runtime/ (also PlayerNova, NovaRules, NovaHalo: Ascension and Nova Standings; PlayerExperienceBoosts, ExperienceBoostRules: the XP boosters)  Data/ (SO classes,
 │   │                      NovaSettings)  Data/Assets/ (SO instances)  Shaders/ (the Nova's four shaders and their materials)  Editor/  Tests/Editor/
 │   ├── Social/            Runtime/ (chat channels and rules, PlayerChat, the combat log, Squads, Contacts, Crews, NamecardRules,
 │   │                      PlayerEmotes, EmoteCatalog)  Data/ + Data/Assets/ (CrewSettings, EmoteWheelSettings, CrewSymbolLibrary = the

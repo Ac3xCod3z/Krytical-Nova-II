@@ -18,7 +18,8 @@ namespace KryticalNova.EditorTools
     public static class CraftingBuilder
     {
         public const string SettingsPath = "Assets/_Game/Gameplay/Crafting/Data/Assets/CraftingSettings.asset";
-        private const string SkillFolder = "Assets/_Game/Gameplay/Progression/Data/Assets/Skills/SelfBuffSkills/";
+        private const string SkillsRoot = "Assets/_Game/Gameplay/Progression/Data/Assets/Skills/";
+        private const string SkillFolder = SkillsRoot + "SelfBuffSkills/";
         private const string HostileSettingsPath = "Assets/_Game/Gameplay/Hostiles/Data/Assets/HostileSettings.asset";
         private const string CatalogPath = "Assets/_Game/Gameplay/Items/Data/Assets/ItemCatalog.asset";
 
@@ -29,6 +30,26 @@ namespace KryticalNova.EditorTools
         private const int DossierLevel = 80;
         /// <summary>Pages and Dossiers drop from Hostiles of this level and above.</summary>
         private const int DossierDropLevel = 70;
+        /// <summary>
+        /// Zenith Dossiers drop from Hostiles of this level and above: the first Prime ground (the level cap is 112;
+        /// owner, 11 Oct 2026: "after Prime levels are out"). No Hostile is that high yet, so none drops until then.
+        /// </summary>
+        private const int ZenithDropLevel = 113;
+        private const float ZenithDropChance = 0.02f;
+
+        // A Zenith Dossier and the skill it unlocks: slot 8 of its weapon class.
+        private static readonly (ushort Dossier, string SkillPath)[] Zeniths =
+        {
+            (CraftItemIds.ZenithMonoblade, "BladeSkills/Skill_ThunderousDragon"),
+            (CraftItemIds.ZenithGlaive, "GlaiveSkills/Skill_Glaive_S8"),
+            (CraftItemIds.ZenithCarbine, "CarbineSkills/Skill_Carbine_S8"),
+            (CraftItemIds.ZenithHarvester, "HarvesterSkills/Skill_Harvester_S8"),
+            (CraftItemIds.ZenithServoClaws, "ServoClawsSkills/Skill_ServoClaws_S8"),
+            (CraftItemIds.ZenithArcCaster, "ArcCasterSkills/Skill_ArcCaster_S8"),
+            (CraftItemIds.ZenithLongaxe, "LongaxeSkills/Skill_Longaxe_S8"),
+            (CraftItemIds.ZenithClaymore, "ClaymoreSkills/Skill_Claymore_S8"),
+            (CraftItemIds.ZenithWarbow, "WarbowSkills/Skill_Warbow_S8"),
+        };
 
         private static readonly (ushort Dossier, string SkillAsset)[] Dossiers =
         {
@@ -108,6 +129,17 @@ namespace KryticalNova.EditorTools
                 EditorUtility.SetDirty(skill);
                 linked++;
             }
+            foreach ((ushort dossier, string path) in Zeniths)
+            {
+                var skill = AssetDatabase.LoadAssetAtPath<SkillDefinitionSO>($"{SkillsRoot}{path}.asset");
+                ItemDefinition item = catalog.Get(dossier);
+                if (skill == null || item == null) { Debug.LogError($"[Crafting] {path} or its Zenith Dossier ({dossier}) is missing: run Items > 5. Generate Utility Items first."); continue; }
+                skill.unlockItemId = dossier;
+                skill.requiredCraftingArchives = System.Array.Empty<string>();
+                skill.acquisitionNote = $"{item.displayName}: a rare drop of the Prime grounds";
+                EditorUtility.SetDirty(skill);
+                linked++;
+            }
             return linked;
         }
 
@@ -138,6 +170,7 @@ namespace KryticalNova.EditorTools
                 for (int page = 1; page <= CraftItemIds.PagesPerDossier; page++) Row(CraftItemIds.PageOf(dossier, page), 0.25f, DossierDropLevel);
                 Row(dossier, 0.02f, DossierDropLevel);
             }
+            foreach ((ushort dossier, string _) in Zeniths) Row(dossier, ZenithDropChance, ZenithDropLevel);
             if (added == 0) return 0;
             hostiles.materialDrops = rows.ToArray();
             EditorUtility.SetDirty(hostiles);

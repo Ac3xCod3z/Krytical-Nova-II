@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
   skillId: Warbow_S8
   displayName: Skyfall
-  description: War God technique. Crashes down on every enemy around you. Hold the key to keep firing.
+  description: Zenith technique. Crashes down on every enemy around you. Hold the key to keep firing.
   category: 4
   weaponClass: 9
   classSlot: 8
@@ -23,8 +23,9 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 1
   requiresSkillBook: 1
-  acquisitionNote: Lvl 80 War God Dossier
+  acquisitionNote: 'Zenith Dossier: Skyfall: a rare drop of the Prime grounds'
   requiredCraftingArchives: []
+  unlockItemId: 9438
   requiredCharacterLevel: 80
   minRank: 1
   maxRank: 71

@@ -28,7 +28,9 @@ namespace KryticalNova.Items
         /// <summary>Adds Autopilot time to the character (an Autopilot Chip).</summary>
         AutopilotTime = 3,
         /// <summary>Unlocks the skill it teaches, to be learned with skill points (a Dossier).</summary>
-        LearnSkill = 4
+        LearnSkill = 4,
+        /// <summary>Adds time to one of the character's XP boosts (a Field, Companion or Tandem Booster).</summary>
+        ExperienceBoost = 5,
     }
 
     /// <summary>Where a weapon rides while it is not in the hand. Append only.</summary>

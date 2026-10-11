@@ -366,7 +366,7 @@ namespace KryticalNova.EditorTools
                 case ClassSkillSlot.S5: return $"A three-{hit} flurry at your target.";
                 case ClassSkillSlot.S6: return $"A single {hit} that lands with extra force.";
                 case ClassSkillSlot.S7: return $"Three {hits} that each land with extra force.";
-                case ClassSkillSlot.S8: return $"War God technique. Crashes down on every enemy around you. Hold the key to keep {(ranged ? "firing" : "striking")}.";
+                case ClassSkillSlot.S8: return $"Zenith technique. Crashes down on every enemy around you. Hold the key to keep {(ranged ? "firing" : "striking")}.";
                 case ClassSkillSlot.Stance:
                     return role == WeaponClassRole.Defense ? "Sets your stance, raising your Defense."
                         : ranged ? "Lightens your step, raising Evasion and Move Speed."

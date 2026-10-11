@@ -53,6 +53,21 @@ MonoBehaviour:
   weaponDyeItemId: 9303
   restyleItemId: 9301
   trainingItemId: 9302
+  boosters:
+  - itemId: 9500
+    characterPercent: 50
+    petPercent: 0
+    minutes: 60
+  - itemId: 9501
+    characterPercent: 0
+    petPercent: 100
+    minutes: 60
+  - itemId: 9502
+    characterPercent: 50
+    petPercent: 50
+    minutes: 60
+  boosterMaxHours: 24
+  boosterTimeRunsOnlyOnline: 1
   incomeTarget:
   - level: 1
     credsPerHour: 3000

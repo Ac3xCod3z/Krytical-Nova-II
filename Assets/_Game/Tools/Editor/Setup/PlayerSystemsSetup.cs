@@ -88,6 +88,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Social.PlayerFollow", ("settings", SquadSettingsPath)),
             // Serums: what a character has taken, and the stats that stay.
             new Row("KryticalNova.Progression.PlayerSerums", ("settings", SerumSettingsPath)),
+            // XP boosters: the clocks of the Field, Companion and Tandem Boosters.
+            new Row("KryticalNova.Progression.PlayerExperienceBoosts", ("settings", EconomySettingsPath)),
             // Autopilot and Magnet: the server's flag and time, and the two helpers that run on the player's own game.
             new Row("KryticalNova.Autopilot.PlayerAutopilot", ("settings", AutopilotSettingsPath)),
             new Row("KryticalNova.Autopilot.MagnetController"),

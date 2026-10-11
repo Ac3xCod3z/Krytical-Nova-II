@@ -183,7 +183,7 @@ namespace KryticalNova.Progression
                 byte rank = skill != null ? (byte)Mathf.Clamp(GetRank(skill), 0, byte.MaxValue) : (byte)0;
                 if (i >= netRanks.Count) netRanks.Add(rank);
                 else if (netRanks[i] != rank) netRanks[i] = rank;
-                if (skill != null && i < 64 && unlockedDropSkills.Contains(skill.RankKey)) books |= 1UL << i;
+                if (skill != null && i < 64 && Unlocked(skill)) books |= 1UL << i;
             }
             // The list can shrink when the skill set changes (a character's faction becomes known).
             while (netRanks.Count > availableSkills.Length) netRanks.RemoveAt(netRanks.Count - 1);
@@ -202,7 +202,7 @@ namespace KryticalNova.Progression
                 var skill = availableSkills[i];
                 if (skill == null) continue;
                 if (i < netRanks.Count && netRanks[i] > 0) learnedRanks[skill.RankKey] = netRanks[i];
-                if (i < 64 && (books & (1UL << i)) != 0) unlockedDropSkills.Add(skill.RankKey);
+                if (i < 64 && (books & (1UL << i)) != 0) unlockedDropSkills.Add(skill.LockKey);
             }
             Changed?.Invoke();
         }
@@ -304,17 +304,32 @@ namespace KryticalNova.Progression
             return GetRank(skill) > 0;
         }
 
-        /// <summary>Book skills (level-60 drops, Wargod) stay locked until their book is acquired, whatever the level.</summary>
-        public bool IsLocked(SkillDefinitionSO skill) =>
-            skill != null && skill.requiresSkillBook && !unlockedDropSkills.Contains(skill.RankKey);
+        /// <summary>Book skills (level-60 drops, Zenith techniques) stay locked until their book is acquired, whatever the level.</summary>
+        public bool IsLocked(SkillDefinitionSO skill) => skill != null && skill.requiresSkillBook && !Unlocked(skill);
 
-        public bool IsDropSkillUnlocked(string skillId) => unlockedDropSkills.Contains(RankKeyOf(skillId));
+        // Unlocked by its own item, or by its whole slot (a GM unlock, or a save from before a Zenith technique had
+        // a Dossier of its own).
+        private bool Unlocked(SkillDefinitionSO skill) =>
+            unlockedDropSkills.Contains(skill.LockKey) || unlockedDropSkills.Contains(skill.RankKey);
+
+        public bool IsDropSkillUnlocked(string skillId)
+        {
+            var skill = GetSkill(skillId);
+            return skill != null ? Unlocked(skill) : unlockedDropSkills.Contains(skillId);
+        }
+
+        /// <summary>The key reading a skill's own item is stored under, from its ID.</summary>
+        private string LockKeyOf(string skillId)
+        {
+            var skill = GetSkill(skillId);
+            return skill != null ? skill.LockKey : skillId;
+        }
 
         /// <summary>Authority only: book unlocks come from the server (drops, GM).</summary>
         public void UnlockDropSkill(string skillId)
         {
             if (!HasAuthority) return;
-            string key = RankKeyOf(skillId);
+            string key = LockKeyOf(skillId);
             if (!unlockedDropSkills.Contains(key))
             {
                 unlockedDropSkills.Add(key);
@@ -351,7 +366,7 @@ namespace KryticalNova.Progression
         {
             if (!HasAuthority || item == null) return;
             SkillDefinitionSO skill = SkillTaughtBy(item.itemId);
-            if (skill == null || !unlockedDropSkills.Add(skill.RankKey)) return;
+            if (skill == null || !unlockedDropSkills.Add(skill.LockKey)) return;
             SkillMessage?.Invoke($"{item.displayName} read: {skill.displayName} is unlocked. Learn it with skill points.");
             Commit();
         }
@@ -359,7 +374,10 @@ namespace KryticalNova.Progression
         public void LockDropSkill(string skillId)
         {
             if (!HasAuthority) return;
-            if (unlockedDropSkills.Remove(RankKeyOf(skillId)))
+            // Its own lock and its slot's: a skill unlocked either way is locked again.
+            bool own = unlockedDropSkills.Remove(LockKeyOf(skillId));
+            bool slot = unlockedDropSkills.Remove(RankKeyOf(skillId));
+            if (own || slot)
             {
                 Commit();
             }
@@ -371,7 +389,7 @@ namespace KryticalNova.Progression
             foreach (var skill in availableSkills)
             {
                 if (skill != null && skill.requiresSkillBook)
-                    unlockedDropSkills.Add(skill.RankKey);
+                    unlockedDropSkills.Add(skill.LockKey);
             }
             SkillMessage?.Invoke("All Skill Chip skills unlocked for testing!");
             Commit();
@@ -392,7 +410,7 @@ namespace KryticalNova.Progression
             foreach (var skill in availableSkills)
             {
                 if (skill == null) continue;
-                if (skill.requiresSkillBook) unlockedDropSkills.Add(skill.RankKey);
+                if (skill.requiresSkillBook) unlockedDropSkills.Add(skill.LockKey);
                 learnedRanks[skill.RankKey] = skill.maxRank;
             }
             SkillMessage?.Invoke("GM: every skill unlocked at max rank.");

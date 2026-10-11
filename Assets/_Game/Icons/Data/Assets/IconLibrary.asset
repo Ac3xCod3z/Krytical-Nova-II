@@ -4498,3 +4498,63 @@ MonoBehaviour:
     set: Cyberpunk/Energy
     number: 46
     chosen: 1
+  - kind: 2
+    target: Dossier_Zenith_Monoblade
+    set: Fantasy/Book
+    number: 19
+    chosen: 1
+  - kind: 2
+    target: Dossier_Zenith_Glaive
+    set: Fantasy/Book
+    number: 25
+    chosen: 1
+  - kind: 2
+    target: Dossier_Zenith_Carbine
+    set: Fantasy/Book
+    number: 10
+    chosen: 1
+  - kind: 2
+    target: Dossier_Zenith_Harvester
+    set: Fantasy/Book
+    number: 48
+    chosen: 1
+  - kind: 2
+    target: Dossier_Zenith_ServoClaws
+    set: Fantasy/Book
+    number: 45
+    chosen: 1
+  - kind: 2
+    target: Dossier_Zenith_ArcCaster
+    set: Fantasy/Book
+    number: 5
+    chosen: 1
+  - kind: 2
+    target: Dossier_Zenith_Longaxe
+    set: Fantasy/Book
+    number: 26
+    chosen: 1
+  - kind: 2
+    target: Dossier_Zenith_Claymore
+    set: Fantasy/Book
+    number: 12
+    chosen: 1
+  - kind: 2
+    target: Dossier_Zenith_Warbow
+    set: Fantasy/Book
+    number: 23
+    chosen: 1
+  - kind: 2
+    target: Booster_Field
+    set: Cyberpunk/Energy
+    number: 17
+    chosen: 1
+  - kind: 2
+    target: Booster_Companion
+    set: Cyberpunk/Energy
+    number: 45
+    chosen: 1
+  - kind: 2
+    target: Booster_Tandem
+    set: Cyberpunk/Energy
+    number: 43
+    chosen: 1

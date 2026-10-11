@@ -385,6 +385,7 @@ namespace KryticalNova.UI
             combatStats = player.GetComponent<CharacterCombatStats>();
             combatSkills = player.GetComponent<PlayerCombatSkills>();
             buffManager = player.GetComponent<CharacterBuffManager>();
+            boosts = player.GetComponent<PlayerExperienceBoosts>();
             boundNova = player.GetComponent<PlayerNova>();
             boundSerums = player.GetComponent<PlayerSerums>();
             if (progression == null || skills == null || hotbar == null || movement == null || resources == null || jumpMotor == null)
@@ -409,6 +410,7 @@ namespace KryticalNova.UI
                 buffManager.BuffsChanged += RefreshBuffs;
                 buffManager.BuffMessage += Feedback;
             }
+            if (boosts != null) boosts.Changed += RefreshBuffs;
             progression.Changed += RequestRefresh;
             progression.LevelGained += OnLevelGained;
             if (boundNova != null) boundNova.Changed += RequestRefresh; // the Standing worn changes no stat
@@ -449,6 +451,7 @@ namespace KryticalNova.UI
                 buffManager.BuffsChanged -= RefreshBuffs;
                 buffManager.BuffMessage -= Feedback;
             }
+            if (boosts != null) boosts.Changed -= RefreshBuffs;
             progression.Changed -= RequestRefresh;
             progression.LevelGained -= OnLevelGained;
             if (boundNova != null) boundNova.Changed -= RequestRefresh;
@@ -1183,19 +1186,74 @@ namespace KryticalNova.UI
                 shownBuffs.Add(buff);
                 shownBuffTimers.Add(timerLbl);
             }
+            AddBoosterBadges();
             RefreshBuffTimers();
+        }
+
+        // The XP boosters that are running stand after the buffs: the item's icon and the time left. What each
+        // adds is in its tooltip.
+        private PlayerExperienceBoosts boosts;
+        private readonly List<(int index, Label timer, VisualElement badge)> shownBoosters = new List<(int, Label, VisualElement)>(3);
+
+        private void AddBoosterBadges()
+        {
+            shownBoosters.Clear();
+            if (boosts == null) return;
+            ItemCatalog catalog = boosts.TryGetComponent(out PlayerInventory pack) ? pack.Catalog : null;
+            for (int i = 0; i < boosts.Count; i++)
+            {
+                if (boosts.SecondsLeft(i) <= 0f) continue;
+                ItemDefinition item = catalog != null ? catalog.Get(boosts.BoosterAt(i).itemId) : null;
+                var badge = new VisualElement();
+                badge.AddToClassList("buff-badge");
+                badge.AddToClassList("booster-badge");
+                if (item != null && item.icon != null)
+                {
+                    var icon = new VisualElement();
+                    icon.AddToClassList("buff-badge-icon");
+                    SetIcon(icon, item.icon);
+                    badge.Add(icon);
+                }
+                else
+                {
+                    var name = new Label(item != null ? item.displayName : "XP Booster");
+                    name.AddToClassList("buff-badge-name");
+                    badge.Add(name);
+                }
+                var timer = new Label();
+                timer.AddToClassList("buff-badge-timer");
+                badge.Add(timer);
+                activeBuffsBar.Add(badge);
+                shownBoosters.Add((i, timer, badge));
+            }
+        }
+
+        private int RunningBoosters()
+        {
+            int running = 0;
+            if (boosts != null)
+                for (int i = 0; i < boosts.Count; i++)
+                    if (boosts.SecondsLeft(i) > 0f) running++;
+            return running;
         }
 
         private void RefreshBuffTimers()
         {
             if (activeBuffsBar == null || buffManager == null) return;
-            if (buffManager.ActiveBuffs.Count != shownBuffs.Count) { RefreshBuffs(); return; }
+            if (buffManager.ActiveBuffs.Count != shownBuffs.Count || RunningBoosters() != shownBoosters.Count) { RefreshBuffs(); return; }
             for (int i = 0; i < shownBuffs.Count; i++)
             {
                 var buff = shownBuffs[i];
                 shownBuffTimers[i].text = buff.Skill.isAbsorptionShield
                     ? $"{buff.CurrentShieldCapacity:0} HP ({buff.RemainingDuration:0}s)"
                     : $"{buff.RemainingDuration:0.0}s";
+            }
+            foreach ((int index, Label timer, VisualElement badge) in shownBoosters)
+            {
+                string left = PlayerExperienceBoosts.FormatTime(boosts.SecondsLeft(index));
+                if (timer.text == left) continue;
+                timer.text = left;
+                badge.tooltip = $"{PlayerExperienceBoosts.Describe(boosts.BoosterAt(index))}. {left} left.";
             }
         }
 

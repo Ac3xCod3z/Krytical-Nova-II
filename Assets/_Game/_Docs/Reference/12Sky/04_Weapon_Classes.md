@@ -54,7 +54,7 @@ runs on the two Grruzam sets; Warbow runs on `Assets/Synty/AnimationBowCombat`.
 | S5 | 3-hit flurry | L30 Instructor |
 | S6 | single, +101–110% bonus | L60 Skill Chip |
 | S7 | 3-hit, +101–110% bonus | L60 Skill Chip |
-| S8 | War God AoE leap, hold-to-repeat, radius 5–7 | L80 Dossier |
+| S8 | Zenith technique (TS2: War God): AoE leap, hold-to-repeat, radius 5–7 | L80, its class's own Zenith Dossier (a drop of the Prime grounds; `gm.zenith`) |
 | Stance | +Attack Power % (offense) / +Defense Power % (defense) / +Evasion and Move Speed % (ranged), 28 ranks | L1 |
 | Guard | +Elemental Defense %, 20 ranks | L1 |
 
