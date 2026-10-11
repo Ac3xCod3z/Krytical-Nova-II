@@ -63,7 +63,7 @@ drawn as an element over the map (`MinimapChromeView.overMap`: the Covenant dial
   the chat at the default sizes.
 - The live portrait is `CharacterPortraitStage` (`Gameplay/Items/Runtime/Visuals/`): a stripped doll that shares the
   player's merged mesh, as the Equipment page's does, drawn by its own camera into a 256 px texture with a clear
-  background. While an Equipment preview is lit it puts its own lights out (both are on the preview layer).
+  background, 30 times a second (a camera costs the frame nearly a millisecond however small its picture is). While an Equipment preview is lit it puts its own lights out (both are on the preview layer).
 - Labels that follow things in the world (namecards, nameplates, loot labels, Kiosk plates, combat numbers) are UI
   Toolkit and would draw over the pieces: each hides while it is over one (`HudChrome.HideOver`).
 - The plate over a Hostile is the exception since 9 Oct 2026: while the HUD wears a faction's art it is that

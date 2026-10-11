@@ -8,7 +8,8 @@ namespace KryticalNova.UI
 {
     /// <summary>
     /// The performance readout: a short list of how the game is running on this machine (frame rate and where the
-    /// frame's time goes, what is being drawn, memory, the connection), in a corner of the screen while
+    /// frame's time goes, the slowest frame of the last minute, what is being drawn, memory, the connection, and
+    /// which machine this is, so a reading sent from another PC can be judged), in a corner of the screen while
     /// <see cref="GraphicsPreferences.PerformanceReadout"/> is ticked on the Graphics page of Settings: on the left
     /// edge, half way down, the one stretch of the screen the HUD keeps clear. Lives on its
     /// own object for the whole session, so it shows in the menus as in the world. It measures nothing while it is off.
@@ -19,6 +20,8 @@ namespace KryticalNova.UI
     {
         private const float RefreshSeconds = 0.5f;
         private const int FrameWindow = 300;        // frames the 1 % low is taken over
+        private const int WorstSeconds = 60;        // the slowest frame is kept this long
+        private const float TooSlow = 1f / 50f;     // the game's floor: no frame may take longer (50 a second)
         private const float Margin = 12f, Padding = 8f;
         private const float Megabyte = 1024f * 1024f;
 
@@ -30,6 +33,14 @@ namespace KryticalNova.UI
         private float windowTime;
         private int windowFrames;
         private float nextRefresh;
+        // The slowest frame of each of the last sixty seconds, and how many of its frames were under the floor.
+        private readonly float[] worstBySecond = new float[WorstSeconds];
+        private readonly int[] slowBySecond = new int[WorstSeconds];
+        private int secondAt;
+        private float secondLeft;
+        private string machine;
+        private readonly GUIContent content = new GUIContent();
+        private Vector2 contentSize;
 
         private ProfilerRecorder drawCalls, batches, setPass, triangles, vertices;
         private ProfilerRecorder usedMemory, managedMemory, allocatedInFrame;
@@ -85,6 +96,10 @@ namespace KryticalNova.UI
                 managedMemory = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Used Memory");
                 allocatedInFrame = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
                 frameAt = frameCount = windowFrames = 0;
+                Array.Clear(worstBySecond, 0, WorstSeconds);
+                Array.Clear(slowBySecond, 0, WorstSeconds);
+                secondAt = 0;
+                secondLeft = 1f;
                 windowTime = 0f;
                 nextRefresh = 0f;
                 shown = string.Empty;
@@ -105,6 +120,16 @@ namespace KryticalNova.UI
             if (frameCount < FrameWindow) frameCount++;
             windowTime += frame;
             windowFrames++;
+            secondLeft -= frame;
+            if (secondLeft <= 0f)
+            {
+                secondLeft = 1f;
+                secondAt = (secondAt + 1) % WorstSeconds;
+                worstBySecond[secondAt] = 0f;
+                slowBySecond[secondAt] = 0;
+            }
+            if (frame > worstBySecond[secondAt]) worstBySecond[secondAt] = frame;
+            if (frame > TooSlow) slowBySecond[secondAt]++;
             FrameTimingManager.CaptureFrameTimings();
 
             if (Time.unscaledTime < nextRefresh) return;
@@ -132,6 +157,15 @@ namespace KryticalNova.UI
             Line("Frames a second", average > 0f ? (1f / average).ToString("0") : "-");
             Line("1 % low", slow > 0f ? (1f / slow).ToString("0") : "-");
             Line("Frame time", (average * 1000f).ToString("0.0") + " ms");
+            float worst = 0f;
+            int tooSlow = 0;
+            for (int i = 0; i < WorstSeconds; i++)
+            {
+                if (worstBySecond[i] > worst) worst = worstBySecond[i];
+                tooSlow += slowBySecond[i];
+            }
+            Line("Slowest, last minute", worst > 0f ? (worst * 1000f).ToString("0.0") + " ms  (" + (1f / worst).ToString("0") + " a second)" : "-");
+            Line("Frames under 50", tooSlow + " in the last minute");
             if (FrameTimingManager.GetLatestTimings(1, timings) > 0)
             {
                 FrameTiming t = timings[0];
@@ -148,7 +182,10 @@ namespace KryticalNova.UI
             Line("SetPass calls", Count(setPass));
             Line("Triangles", Count(triangles));
             Line("Vertices", Count(vertices));
-            Line("Resolution", Screen.width + " x " + Screen.height + "  (scale " + GraphicsPreferences.RenderScale.ToString("0.00") + ")");
+            UpscalerChoice upscaler = GraphicsSettingsApplier.UpscalerInForce;
+            Line("Resolution", Screen.width + " x " + Screen.height + (upscaler == UpscalerChoice.Off
+                ? "  (scale " + GraphicsPreferences.RenderScale.ToString("0.00") + ")"
+                : "  (" + (upscaler == UpscalerChoice.Dlss ? "DLSS" : "FSR 2") + ", " + GraphicsPreferences.UpscalerQuality + ")"));
             Line("Quality", GraphicsPreferences.Preset.ToString());
 
             text.Append("\nMEMORY\n");
@@ -159,7 +196,14 @@ namespace KryticalNova.UI
 
             text.Append("\nNETWORK\n");
             WriteNetwork();
+
+            // Which machine the numbers are from: a reading means nothing without it.
+            machine ??= "\nMACHINE\n" + SystemInfo.graphicsDeviceName + "\n" + SystemInfo.processorType.Trim() + "\n"
+                + (SystemInfo.systemMemorySize / 1024f).ToString("0") + " GB memory, " + SystemInfo.graphicsDeviceType + "\n";
+            text.Append(machine);
             shown = text.ToString();
+            content.text = shown;
+            contentSize = Vector2.zero;
         }
 
         private void WriteNetwork()
@@ -206,11 +250,13 @@ namespace KryticalNova.UI
             float scale = Mathf.Max(1f, Screen.height / 1080f);
             Matrix4x4 before = GUI.matrix;
             GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
-            Vector2 size = style.CalcSize(new GUIContent(shown));
+            // Measured once for each new text, not on every repaint.
+            if (contentSize == Vector2.zero) contentSize = style.CalcSize(content);
+            Vector2 size = contentSize;
             float height = size.y + Padding * 2f;
             var box = new Rect(Margin, Mathf.Max(Margin, (Screen.height / scale - height) * 0.5f), size.x + Padding * 2f, height);
             GUI.DrawTexture(box, plate);
-            GUI.Label(new Rect(box.x + Padding, box.y + Padding, size.x, size.y), shown, style);
+            GUI.Label(new Rect(box.x + Padding, box.y + Padding, size.x, size.y), content, style);
             GUI.matrix = before;
         }
     }

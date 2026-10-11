@@ -25,6 +25,9 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private float aimBelowHead = 0.16f;
         [Tooltip("The sitter is turned this far from facing the camera.")]
         [SerializeField] private float turn = 16f;
+        [Tooltip("How often the picture is drawn again. A camera costs the frame about a millisecond however small its " +
+                 "picture is, and a sitter breathing in a plate this small looks the same at 30 as at 144.")]
+        [SerializeField, Range(5f, 60f)] private float picturesPerSecond = 30f;
         [Header("Studio ambient (as the equipment page's)")]
         [SerializeField] private Color ambientSky = new Color(0.72f, 0.75f, 0.8f);
         [SerializeField] private Color ambientGround = new Color(0.4f, 0.38f, 0.36f);
@@ -43,6 +46,7 @@ namespace KryticalNova.Items.Visuals
         private bool fogWasOn, shown;
         private Vector3 aim;
         private bool aimed;
+        private float nextPicture;
 
         /// <summary>The picture. Its background is clear. Null until someone is drawn.</summary>
         public Texture Texture => texture;
@@ -125,6 +129,7 @@ namespace KryticalNova.Items.Visuals
                 portraitCamera.targetTexture = texture;
             }
             portraitCamera.enabled = live;
+            nextPicture = 0f; // the first picture at once
             if (doll != null) doll.SetActive(live);
             if (live)
             {
@@ -140,6 +145,11 @@ namespace KryticalNova.Items.Visuals
             bool ownLights = shown && doll != null && CharacterPreviewStage.OpenCount == 0;
             if (lightRig.activeSelf != ownLights) lightRig.SetActive(ownLights);
             if (!shown || doll == null) return;
+
+            // The camera is on only for the frames that draw a new picture; the texture keeps the last one between them.
+            bool draw = Time.unscaledTime >= nextPicture;
+            if (draw) nextPicture = Time.unscaledTime + 1f / picturesPerSecond - Time.unscaledDeltaTime * 0.5f;
+            if (portraitCamera.enabled != draw) portraitCamera.enabled = draw;
 
             // The camera keeps to where the head rests: the idle's sway is seen, a new body's height is followed.
             Vector3 target = head != null ? head.position : doll.transform.position + Vector3.up * 1.6f;

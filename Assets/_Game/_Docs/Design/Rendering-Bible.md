@@ -667,6 +667,49 @@ corner, and a tail on the side the speaker is. Every number is a `--bubble-*` va
 Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Editor. Look for each feature's
 `ProfilingSampler` name ("Comic Style", "Sun Shafts", "Glow Halo", "Comic Lettering").
 
+### The frame rate the game must hold (owner, 10 Oct 2026)
+
+**A locked 60 frames a second on mid to upper-mid tier PCs, and no frame under 50 (20 ms), even as a spike.** An
+average does not count: performance is judged by the slowest frame. The test is the training dummy with every buff
+up, the pet out, a Nova lit and every hotbar skill on rotation for a minute. The performance readout shows the two
+numbers that decide it, **Slowest, last minute** and **Frames under 50**, and names the machine it is running on,
+so a reading from any PC can be judged.
+
+What mid tier means here is an estimate until a reading from such a PC says otherwise: an RTX 3060 / RX 6600 with
+a Ryzen 5 5600 at 1080p on Medium, and an RTX 4060 Ti / 4070 at 1440p on High. On the development PC (RTX 5070 Ti,
+Ryzen 7 9700X), about 2.5 to 3 times that GPU and 1.5 times that CPU, the same frame has to fit in: GPU 6 ms at
+1080p Medium and 8 ms at 1440p High; main thread 9 ms steady and 13 ms on its worst frame.
+
+**Measured in the Editor, 10 Oct 2026** (the game view's render scale raised to the pixel count of each screen;
+medians of 200 frames, GPU / main thread in ms):
+
+| | 1080p Low | Medium | High | Ultra | 1440p Low | Medium | High | Ultra |
+|---|---|---|---|---|---|---|---|---|
+| Plaza, noon | 4.1 / 8.5 | 4.2 / 8.3 | 4.4 / 8.5 | 4.9 / 8.7 | 4.3 / 8.4 | 4.6 / 8.7 | 5.2 / 9.0 | 5.8 / 9.0 |
+| Thick meadow, noon | 4.2 / 9.2 | 4.7 / 9.2 | 4.8 / 9.4 | 5.2 / 9.4 | 4.8 / 9.2 | 5.2 / 9.3 | 6.1 / 9.2 | 6.0 / 9.3 |
+
+- The steady budgets hold on this PC even inside the Editor. About 4 ms of the GPU figure does not move with the
+  screen or the preset, so it is not the picture's cost: in the Editor it cannot be told apart from the Editor's own
+  drawing, and no single effect could be ranked there (each came out under about 0.7 ms, within the noise of the
+  measurement, about 0.3 ms). Main shadows at 2048 with two cascades in place of 4096 with four saved 0.8 to 1.0 ms
+  three times out of three; the grass costs about 1 ms in the thickest meadow.
+- **The slowest frame cannot be judged in the Editor.** Standing still there, with nothing happening, about 7 % of
+  frames take longer than 20 ms: the Editor's own loop (57 ms at worst in the capture) and a second Editor sharing
+  the PC. The game's own part of an idle frame is small and even: scripts 1.5 ms, culling 1.3 ms, physics 0.2 ms,
+  garbage 2.5 KB. **The check that counts is the dummy test in a build, read off the readout.**
+- What was found and fixed on the way: the HUD rebuilt itself two or three times on every cast (105 ms each: the
+  30 fps drops), now once a frame and only what is open; the portrait's camera drew every frame (0.7 ms of the main
+  thread for a 256 px picture), now 30 times a second.
+
+### The world, and what draws it (10 Oct 2026)
+
+Zone 01 is one scene: a 1 km terrain, about 8,500 mesh renderers (3.3 million triangles of static geometry),
+6,500 colliders, 270 animators, 220 particle systems, 77 lights. The **GPU Resident Drawer is on** (Instanced
+Drawing, Forward+, SRP Batcher, BatchRendererGroup variants kept) and holds about 8,400 of those renderers, the
+static-batched ones included; nearly everything in the world is drawn with Synty's Shader Graph shaders, which it
+accepts. Its GPU occlusion culling is off: the camera looks down, so little hides behind anything. A frame draws
+0.4 to 1.8 million triangles in 240 to 300 set-pass calls. Nothing in the world has an LOD group.
+
 ## 8. Roadmap
 
 - **APV lighting scenarios** (Day/Night): turn baked lamps off at noon and on at night, blended by the clock.
@@ -710,6 +753,8 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   - Glow halo: embers (Perlin noise) for the 120 % Temper band; an Epic at 120 % is red (6e).
   - A Nova hides the characters, pets and effects behind it: `ActorDrawOrder`, `NovaMask.shader`, `NovaCull` (6e).
   - Performance readout (Settings ▸ Graphics): frame times, what is drawn, memory, connection. Frame Timing Stats switched on in Player Settings for it.
+  - The frame rate target is written down with what was measured against it; the readout shows the slowest frame of
+    the last minute, how many frames fell under 50 a second, and the machine (section 7).
 
 - **2026-10-08 (polish pass: interface)**:
   - One interface skin per faction, in an asset; the game's style sheets are generated from it (section 6i,
