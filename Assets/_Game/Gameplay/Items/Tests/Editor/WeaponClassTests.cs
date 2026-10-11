@@ -18,18 +18,18 @@ namespace KryticalNova.Tests
     {
         private const string CatalogPath = "Assets/_Game/Gameplay/Items/Data/Assets/WeaponClassCatalog.asset";
 
-        // _Docs/Reference/12Sky/04_Weapon_Classes.md section 3, slot order S1..S8, Stance, Guard.
+        // _Docs/Reference/12Sky/04_Weapon_Classes.md section 3, slot order S1..S8, Stance, Guard, the level 60 single hit, the level 60 multi hit.
         private static readonly Dictionary<WeaponClassId, string[]> Names = new Dictionary<WeaponClassId, string[]>
         {
-            { WeaponClassId.Monoblade, new[] { "Perimeter Cut", "Clean Cut", "Signature Series", "Severance", "Hostile Takeover", "Zero Hour", "Liquidation", "Market Crash", "Overclock", "Firewall" } },
-            { WeaponClassId.Glaive, new[] { "Riot Sweep", "Suppression Thrust", "Compliance Combo", "Curfew", "Cease and Desist", "Lockstep", "Full Enforcement", "Martial Law", "Bulwark Protocol", "Shield Field" } },
-            { WeaponClassId.Carbine, new[] { "Spray Pattern", "Clean Shot", "Triple Tap", "Headhunter", "Burst Contract", "Longshot", "Terminal Burst", "Orbital Call", "Target Lock", "Reactive Plating" } },
-            { WeaponClassId.Harvester, new[] { "Reaping Cycle", "Culling Stroke", "Threshing Combo", "Scrap Sentence", "Hydraulic Flurry", "Extinction Blow", "Kill Loop", "Terminal Harvest", "Kill Protocol", "Null Shell" } },
-            { WeaponClassId.ServoClaws, new[] { "Shockwave Stomp", "Piston Jab", "Servo Combo", "Compactor", "Overdrive Cycle", "Core Breach", "Three-Phase Rend", "Zero Point", "Lockdown Plating", "Faraday Skin" } },
-            { WeaponClassId.ArcCaster, new[] { "Arc Flare", "Lance Shot", "Tri-Bolt", "Ion Spike", "Cascade Fire", "Sunspot", "Chain Storm", "Extinction Beam", "Capacitor", "Static Veil" } },
-            { WeaponClassId.Longaxe, new[] { "Reaping Arc", "Hewing Blow", "Clan Rhythm", "Oathbreaker", "Frostbite Flurry", "Skysplitter", "Wolfpack", "Northfall", "Blood Oath", "Ancestor's Ward" } },
-            { WeaponClassId.Claymore, new[] { "Shieldwall Sweep", "Steadfast Cut", "Three Oaths", "Bulwark Strike", "Hearthguard Flurry", "Dawnguard", "Highguard Trinity", "Kingsfall", "Shieldwall", "Stoneheart" } },
-            { WeaponClassId.Warbow, new[] { "Arrow Rain", "Hunter's Mark", "Three Feathers", "Heartseeker", "Volley", "Moonshot", "Stormflight", "Skyfall", "Windwalk", "Barkskin" } },
+            { WeaponClassId.Monoblade, new[] { "Perimeter Cut", "Clean Cut", "Signature Series", "Severance", "Hostile Takeover", "Zero Hour", "Liquidation", "Market Crash", "Overclock", "Firewall", "Margin Call", "Short Squeeze" } },
+            { WeaponClassId.Glaive, new[] { "Riot Sweep", "Suppression Thrust", "Compliance Combo", "Curfew", "Cease and Desist", "Lockstep", "Full Enforcement", "Martial Law", "Bulwark Protocol", "Shield Field", "Injunction", "Crackdown" } },
+            { WeaponClassId.Carbine, new[] { "Spray Pattern", "Clean Shot", "Triple Tap", "Headhunter", "Burst Contract", "Longshot", "Terminal Burst", "Orbital Call", "Target Lock", "Reactive Plating", "Deadeye", "Suppressing Fire" } },
+            { WeaponClassId.Harvester, new[] { "Reaping Cycle", "Culling Stroke", "Threshing Combo", "Scrap Sentence", "Hydraulic Flurry", "Extinction Blow", "Kill Loop", "Terminal Harvest", "Kill Protocol", "Null Shell", "Shear Line", "Combine Pass" } },
+            { WeaponClassId.ServoClaws, new[] { "Shockwave Stomp", "Piston Jab", "Servo Combo", "Compactor", "Overdrive Cycle", "Core Breach", "Three-Phase Rend", "Zero Point", "Lockdown Plating", "Faraday Skin", "Ram Drive", "Ratchet Rush" } },
+            { WeaponClassId.ArcCaster, new[] { "Arc Flare", "Lance Shot", "Tri-Bolt", "Ion Spike", "Cascade Fire", "Sunspot", "Chain Storm", "Extinction Beam", "Capacitor", "Static Veil", "Flashpoint", "Arc Volley" } },
+            { WeaponClassId.Longaxe, new[] { "Reaping Arc", "Hewing Blow", "Clan Rhythm", "Oathbreaker", "Frostbite Flurry", "Skysplitter", "Wolfpack", "Northfall", "Blood Oath", "Ancestor's Ward", "Bonecleaver", "Raven's Feast" } },
+            { WeaponClassId.Claymore, new[] { "Shieldwall Sweep", "Steadfast Cut", "Three Oaths", "Bulwark Strike", "Hearthguard Flurry", "Dawnguard", "Highguard Trinity", "Kingsfall", "Shieldwall", "Stoneheart", "Oathkeeper", "Vanguard's Tide" } },
+            { WeaponClassId.Warbow, new[] { "Arrow Rain", "Hunter's Mark", "Three Feathers", "Heartseeker", "Volley", "Moonshot", "Stormflight", "Skyfall", "Windwalk", "Barkskin", "Falcon's Eye", "Swiftwind" } },
         };
 
         // ---------------------------------------------------------------- rules (no assets)
@@ -112,7 +112,7 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void TheCatalogHasNineClassesOfTenNamedSkills()
+        public void TheCatalogHasNineClassesOfTwelveNamedSkills()
         {
             var catalog = LoadCatalog();
             Assert.AreEqual(WeaponClasses.Count, catalog.Classes.Count);
@@ -134,7 +134,7 @@ namespace KryticalNova.Tests
                     Assert.AreSame(skill, entry.SkillIn(WeaponClasses.Slots[i]));
                 }
             }
-            Assert.AreEqual(90, ids.Count);
+            Assert.AreEqual(WeaponClasses.Count * WeaponClasses.SlotCount, ids.Count);
         }
 
         [Test]
@@ -186,7 +186,7 @@ namespace KryticalNova.Tests
             {
                 var skills = catalog.SkillsFor(faction);
                 Assert.LessOrEqual(skills.Length, 64, $"{faction}: skill unlocks are mirrored as a 64-bit mask");
-                Assert.AreEqual(catalog.SharedSkills.Count + 30, skills.Length, faction.ToString());
+                Assert.AreEqual(catalog.SharedSkills.Count + WeaponClasses.PerFaction * WeaponClasses.SlotCount, skills.Length, faction.ToString());
                 Assert.AreSame(skills, catalog.SkillsFor(faction), "The same list every time: ranks are mirrored by position in it");
                 Assert.AreEqual(skills.Length, skills.Select(s => s.skillId).Distinct().Count(), $"{faction}: a skill is listed twice");
                 foreach (var skill in skills)

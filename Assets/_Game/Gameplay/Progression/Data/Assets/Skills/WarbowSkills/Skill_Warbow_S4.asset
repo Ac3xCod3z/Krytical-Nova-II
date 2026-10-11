@@ -25,6 +25,7 @@ MonoBehaviour:
   requiresSkillBook: 0
   acquisitionNote: Faction Instructor
   requiredCraftingArchives: []
+  unlockItemId: 0
   requiredCharacterLevel: 30
   minRank: 1
   maxRank: 35

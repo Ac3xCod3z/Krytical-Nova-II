@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: 'Zenith Dossier: Extinction Beam'
   description: Unlocks Extinction Beam, the Arc Caster's Zenith technique, which is then learned with skill points. Used up when it is read. Found only in the Prime grounds.
   icon: {fileID: 21300000, guid: 698ab3ac8fe80334586af8020624ef03, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 4
   equipSlot: 0
   maxStack: 10

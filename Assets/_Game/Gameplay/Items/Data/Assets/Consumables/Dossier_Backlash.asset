@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Backlash Dossier
   description: Unlocks Backlash, which is then learned with skill points. Used up when it is read. A Fabricator binds one from its four Pages.
   icon: {fileID: 21300000, guid: f7a2aede729a41340804efc043812c76, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 0
   maxStack: 10

@@ -72,6 +72,7 @@ namespace KryticalNova.UI
             { "menu", "MENU" },
             { "hotbar-dock", "HOTBAR" },
             { "active-buffs-bar", "ACTIVE BUFFS" },
+            { "boost-list", "ITEM BOOSTS" },
             { "feedback", "MESSAGES" },
             { "character-window", "CHARACTER WINDOW" },
             { "skills-window", "SKILLS WINDOW" },

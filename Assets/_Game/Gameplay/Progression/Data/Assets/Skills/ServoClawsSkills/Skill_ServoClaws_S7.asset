@@ -23,9 +23,10 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 1
   requiresSkillBook: 1
-  acquisitionNote: Lvl 60 Drop (Skill Chip)
+  acquisitionNote: 'Skill Chip: Three-Phase Rend: a rare drop of the Prime grounds'
   requiredCraftingArchives: []
-  requiredCharacterLevel: 60
+  unlockItemId: 9459
+  requiredCharacterLevel: 80
   minRank: 1
   maxRank: 40
   skillPointsToLearn: 1

@@ -88,10 +88,15 @@ namespace KryticalNova.UI.Hud
             stale = true;
         }
 
-        public void Crest(Sprite picture)
+        /// <summary>
+        /// The emblem before the name: the faction's, or the Crew's symbol in the Crew's colour for a player who is
+        /// in one (a white picture takes the colour; the faction's emblem is drawn as it is).
+        /// </summary>
+        public void Crest(Sprite picture, Color tint)
         {
             if (crest == null) return;
             crest.sprite = picture;
+            crest.color = tint;
             if (crest.gameObject.activeSelf != (picture != null)) crest.gameObject.SetActive(picture != null);
             stale = true;
         }

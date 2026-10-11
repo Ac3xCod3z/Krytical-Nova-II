@@ -23,8 +23,9 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 1
   requiresSkillBook: 1
-  acquisitionNote: Level 60 Skill Chip
+  acquisitionNote: 'Skill Chip: Killer Instinct: a drop from Hostiles of level 60 and up'
   requiredCraftingArchives: []
+  unlockItemId: 9481
   requiredCharacterLevel: 60
   minRank: 1
   maxRank: 30

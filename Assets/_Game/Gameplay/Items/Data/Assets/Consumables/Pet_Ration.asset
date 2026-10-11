@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Pet Ration
   description: 'Feeds the pet you have out: its hunger goes back to 100%. A starving pet gives no bonus and earns no XP.'
   icon: {fileID: 21300000, guid: 93bb3435a8c924c409aa94cbf0f6bd83, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 0
   maxStack: 99

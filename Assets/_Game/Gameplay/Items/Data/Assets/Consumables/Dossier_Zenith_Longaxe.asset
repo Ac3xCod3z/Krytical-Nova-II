@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: 'Zenith Dossier: Northfall'
   description: Unlocks Northfall, the Longaxe's Zenith technique, which is then learned with skill points. Used up when it is read. Found only in the Prime grounds.
   icon: {fileID: 21300000, guid: a998a5fe6715df2499c97bfd35833915, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 4
   equipSlot: 0
   maxStack: 10

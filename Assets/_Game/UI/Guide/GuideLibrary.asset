@@ -379,7 +379,7 @@ MonoBehaviour:
         - Skill ranks are shared by slot across your faction's three classes. Rank a skill up once and its match in the other two classes is ranked too.
     - id: skills
       title: Skills and ranks
-      summary: Every class has eight attacks and two buffs. Skill points make them stronger.
+      summary: Every class has ten attacks and two buffs. Skill points make them stronger.
       clip: {fileID: 32900000, guid: 513aa87d01c20b842a3b572d27e03d35, type: 3}
       still: {fileID: 0}
       focus:
@@ -394,14 +394,19 @@ MonoBehaviour:
         lines:
         - 'The Skills window: {key:SkillsWindow} .'
       - kind: 2
-        heading: The ten slots
+        heading: The twelve slots
         lines:
         - First three attacks | A sweep round you, a single hit and a three-hit string, from level 1
         - Fourth and fifth | A heavy hit and a flurry, from level 30
-        - Sixth and seventh | Stronger versions, from level 60
-        - Eighth | The class's Zenith technique, a leaping strike on an area, from level 80. Its Zenith Dossier opens it
+        - Sixth and seventh | A hard hit and a hard flurry, from level 60. Each opens with its own Skill Chip
+        - Eighth and ninth | Harder still, from level 80. Their Skill Chips drop only in the hardest hunting grounds
+        - Tenth | The class's Zenith technique, a leaping strike on an area, from level 80. Its Zenith Dossier opens it
         - Stance | A lasting buff that fits your class's role
         - Guard | A lasting buff to Elemental Defense
+      - kind: 0
+        heading: Skill Chips
+        lines:
+        - A locked skill opens with its Skill Chip, a drop from Hostiles. {mouse:right} Right-click the chip in your Pack to read it; the skill can then be learned with skill points. One chip opens one skill. Aegis, Killer Instinct and Hot Streak, which every class shares, open the same way.
       - kind: 1
         heading: Ranking up
         lines:
@@ -984,7 +989,7 @@ MonoBehaviour:
       - kind: 3
         heading: 
         lines:
-        - What is running, and for how long, shows beside your buffs. Hold the pointer over it for the detail.
+        - What is running is listed down the right side of your screen, each with a clock of the time it has left.
         - The pet's share needs the pet out and fed.
   - title: Other players
     topics:

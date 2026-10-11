@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Tuning Chip
   description: Used up by a Tuning attempt, stages 1 to 12.
   icon: {fileID: 21300000, guid: 910dc1009c0ba7f44908f437282751f3, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 999

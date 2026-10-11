@@ -23,8 +23,9 @@ MonoBehaviour:
   executionType: 0
   acquisitionMethod: 1
   requiresSkillBook: 1
-  acquisitionNote: Level 70 Skill Chip
+  acquisitionNote: 'Skill Chip: Hot Streak: a drop from Hostiles of level 70 and up'
   requiredCraftingArchives: []
+  unlockItemId: 9482
   requiredCharacterLevel: 70
   minRank: 1
   maxRank: 30

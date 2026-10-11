@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Elemental Ward Serum
   description: A one-way dose that hardens you against the elements, for good.
   icon: {fileID: 21300000, guid: 25072e22ff498a847af01a00ca4c9fd2, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 99

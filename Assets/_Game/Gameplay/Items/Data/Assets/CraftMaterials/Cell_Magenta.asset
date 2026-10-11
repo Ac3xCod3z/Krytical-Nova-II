@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Magenta Cell
   description: One of the four colours of a Chroma Cell. A Fabricator joins one of each into a Chroma Cell.
   icon: {fileID: 21300000, guid: 35af137489c8eaf48a67831ca989215e, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 0
   maxStack: 99

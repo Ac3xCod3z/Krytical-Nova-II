@@ -370,6 +370,11 @@
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_Gradient_Outwards_Smooth_01.png#SPR_HUD_FantasyWarrior_Gradient_Outwards_Smooth_01");
     -unity-background-image-tint-color: rgba(18, 13, 8, 0.9);
 }
+.kn-faction-covenant .boost-line {
+    font-size: 14.56px;
+    color: rgb(132, 255, 173);
+    background-color: rgba(18, 14, 10, 0.45);
+}
 .kn-faction-covenant .buff-badge {
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_Box_Small_Parchment_01.png#SPR_HUD_FantasyWarrior_Box_Small_Parchment_01");
     -unity-background-image-tint-color: rgba(50, 33, 1, 0.92);

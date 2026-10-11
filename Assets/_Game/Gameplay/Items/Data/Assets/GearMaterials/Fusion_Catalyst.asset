@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Fusion Catalyst
   description: Used up by every Fusion attempt.
   icon: {fileID: 21300000, guid: b8f480fdaab298c4f837fdd2fa40c765, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 999

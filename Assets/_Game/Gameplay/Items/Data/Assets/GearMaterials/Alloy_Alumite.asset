@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Alumite
   description: Alloy. Tempers a piece of gear by 3% on a success.
   icon: {fileID: 21300000, guid: ef5876c848a02e048a4691d85cc73c46, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 0
   maxStack: 999

@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Restyle Pass
   description: One change of hair at a Stylist, or of face at a Reshaper. Used up by the change.
   icon: {fileID: 21300000, guid: 7060de53825ff34419bdab07ff4c5fab, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 99

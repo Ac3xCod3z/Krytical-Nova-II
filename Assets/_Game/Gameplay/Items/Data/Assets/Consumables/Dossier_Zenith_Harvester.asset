@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: 'Zenith Dossier: Terminal Harvest'
   description: Unlocks Terminal Harvest, the Harvester's Zenith technique, which is then learned with skill points. Used up when it is read. Found only in the Prime grounds.
   icon: {fileID: 21300000, guid: fb0308b137426a848baa9ae849f480ba, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 4
   equipSlot: 0
   maxStack: 10

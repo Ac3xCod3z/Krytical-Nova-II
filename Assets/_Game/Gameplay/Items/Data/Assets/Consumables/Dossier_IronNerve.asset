@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Iron Nerve Dossier
   description: Unlocks Iron Nerve, which is then learned with skill points. Used up when it is read. A Fabricator binds one from its four Pages.
   icon: {fileID: 21300000, guid: 73f7685787c52364db2eb7226ac5e9a2, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 0
   maxStack: 10

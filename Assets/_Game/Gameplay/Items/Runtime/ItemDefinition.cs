@@ -58,6 +58,9 @@ namespace KryticalNova.Items
         public string displayName = "New Item";
         [TextArea] public string description;
         public Sprite icon;
+        [Tooltip("An item of a family that differs only in what it says shows this item's icon and has none of its own " +
+                 "(the Skill Chips: one picture for the attack chips, one for the buff chips; owner, 11 Oct 2026).")]
+        public ItemDefinition sharesIconOf;
         public ItemRarity rarity;
         public EquipSlot equipSlot;
         [Min(1)] public ushort maxStack = 1;

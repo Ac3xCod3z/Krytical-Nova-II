@@ -127,9 +127,9 @@ namespace KryticalNova.Social
         // ------------------------------------------------------------------ owner -> server
 
         /// <summary>Found a Crew (at a Vaultkeeper). <paramref name="symbol"/> is the index of one of the preset symbols.</summary>
-        public void Found(string crewName, int symbol)
+        public void Found(string crewName, int symbol, int colour = 0)
         {
-            if (IsSpawned && IsOwner) FoundRpc(crewName ?? string.Empty, (byte)Mathf.Clamp(symbol, 0, 255));
+            if (IsSpawned && IsOwner) FoundRpc(crewName ?? string.Empty, (byte)Mathf.Clamp(symbol, 0, 255), (byte)Mathf.Clamp(colour, 0, 255));
         }
 
         public void Invite(PlayerCrew target)
@@ -178,9 +178,10 @@ namespace KryticalNova.Social
             if (IsSpawned && IsOwner) AnnouncementRpc(text ?? string.Empty);
         }
 
-        public void SetSymbol(int symbol)
+        /// <summary>The Leader's choice of the Crew's symbol and of the colour it is drawn in.</summary>
+        public void SetSymbol(int symbol, int colour)
         {
-            if (IsSpawned && IsOwner) SymbolRpc((byte)Mathf.Clamp(symbol, 0, 255));
+            if (IsSpawned && IsOwner) SymbolRpc((byte)Mathf.Clamp(symbol, 0, 255), (byte)Mathf.Clamp(colour, 0, 255));
         }
 
         public void Disband()
@@ -189,7 +190,7 @@ namespace KryticalNova.Social
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void FoundRpc(string crewName, byte symbol) => CrewService.ServerFound(this, crewName, symbol);
+        private void FoundRpc(string crewName, byte symbol, byte colour) => CrewService.ServerFound(this, crewName, symbol, colour);
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void InviteRpc(NetworkObjectReference targetReference) =>
@@ -229,7 +230,7 @@ namespace KryticalNova.Social
         private void AnnouncementRpc(string text) => CrewService.ServerSetAnnouncement(this, text);
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SymbolRpc(byte symbol) => CrewService.ServerSetSymbol(this, symbol);
+        private void SymbolRpc(byte symbol, byte colour) => CrewService.ServerSetSymbol(this, symbol, colour);
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void DisbandRpc() => CrewService.ServerDisband(this);
@@ -274,9 +275,11 @@ namespace KryticalNova.Social
                 tag.title.CopyFromTruncated(me != null ? me.title ?? string.Empty : string.Empty);
                 tag.rank = me != null ? me.Rank : CrewRank.Member;
                 tag.symbol = (byte)Mathf.Clamp(crew.symbol, 0, 255);
+                tag.colour = (byte)Mathf.Clamp(crew.symbolColour, 0, 255);
                 head.exists = true;
                 head.name = tag.crew;
                 head.symbol = tag.symbol;
+                head.colour = tag.colour;
                 head.announcement.CopyFromTruncated(crew.announcement ?? string.Empty);
                 head.memberCap = (ushort)CrewRules.MemberCap(settings != null ? settings.memberCapByLevel : null, crew.level);
                 head.myRank = tag.rank;

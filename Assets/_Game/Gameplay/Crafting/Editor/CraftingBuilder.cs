@@ -37,6 +37,22 @@ namespace KryticalNova.EditorTools
         private const int ZenithDropLevel = 113;
         private const float ZenithDropChance = 0.02f;
 
+        /// <summary>
+        /// Skill Chips (11 Oct 2026). The level 60 pair, Aegis and Killer Instinct drop from Hostiles of level 60 and
+        /// up, Hot Streak from 70, at a better chance than anything of the Prime grounds; the level 80 pair drops only
+        /// there, as the Zenith Dossiers do. Every chance is a placeholder, tuned on the Hostile settings.
+        /// </summary>
+        private const int ChipDropLevel = 60, HotStreakDropLevel = 70;
+        private const float ChipDropChance = 0.1f;
+        private static readonly (ushort Chip, string Asset, int Level)[] SharedChips =
+        {
+            (CraftItemIds.AegisChip, "Skill_HeavenlyShield", ChipDropLevel),
+            (CraftItemIds.KillerInstinctChip, "Skill_HeavenlyBlow", ChipDropLevel),
+            (CraftItemIds.HotStreakChip, "Skill_GarudasPrayer", HotStreakDropLevel),
+        };
+
+        private static bool IsPrimeChip(ClassSkillSlot slot) => slot == ClassSkillSlot.S6 || slot == ClassSkillSlot.S7;
+
         // A Zenith Dossier and the skill it unlocks: slot 8 of its weapon class.
         private static readonly (ushort Dossier, string SkillPath)[] Zeniths =
         {
@@ -129,6 +145,7 @@ namespace KryticalNova.EditorTools
                 EditorUtility.SetDirty(skill);
                 linked++;
             }
+            linked += LinkChips(catalog);
             foreach ((ushort dossier, string path) in Zeniths)
             {
                 var skill = AssetDatabase.LoadAssetAtPath<SkillDefinitionSO>($"{SkillsRoot}{path}.asset");
@@ -140,6 +157,36 @@ namespace KryticalNova.EditorTools
                 EditorUtility.SetDirty(skill);
                 linked++;
             }
+            return linked;
+        }
+
+        /// <summary>Each skill that opens with a Skill Chip names its chip. A class skill's chip opens that class's skill alone.</summary>
+        private static int LinkChips(ItemCatalog catalog)
+        {
+            int linked = 0;
+            void Link(SkillDefinitionSO skill, ushort chip, string source)
+            {
+                ItemDefinition item = catalog.Get(chip);
+                if (skill == null || item == null) { Debug.LogError($"[Crafting] Skill Chip {chip} or its skill is missing: run Items > 5. Generate Utility Items and Progression > Build Class Skills first."); return; }
+                skill.unlockItemId = chip;
+                skill.requiresSkillBook = true;
+                skill.acquisitionNote = $"{item.displayName}: {source}";
+                EditorUtility.SetDirty(skill);
+                linked++;
+            }
+
+            var classes = AssetDatabase.LoadAssetAtPath<WeaponClassCatalog>(ClassSkillBuilder.CatalogPath);
+            if (classes == null) Debug.LogError($"[Crafting] No weapon class catalog at {ClassSkillBuilder.CatalogPath}: the class Skill Chips were not linked.");
+            else
+                foreach (WeaponClassId weaponClass in WeaponClasses.All)
+                {
+                    if (!classes.TryGet(weaponClass, out WeaponClassCatalog.Entry entry)) continue;
+                    foreach (ClassSkillSlot slot in CraftItemIds.SkillChipSlots)
+                        Link(entry.SkillIn(slot), CraftItemIds.SkillChip(weaponClass, slot),
+                            IsPrimeChip(slot) ? "a rare drop of the Prime grounds" : $"a drop from Hostiles of level {ChipDropLevel} and up");
+                }
+            foreach ((ushort chip, string asset, int level) in SharedChips)
+                Link(AssetDatabase.LoadAssetAtPath<SkillDefinitionSO>($"{SkillFolder}{asset}.asset"), chip, $"a drop from Hostiles of level {level} and up");
             return linked;
         }
 
@@ -171,6 +218,13 @@ namespace KryticalNova.EditorTools
                 Row(dossier, 0.02f, DossierDropLevel);
             }
             foreach ((ushort dossier, string _) in Zeniths) Row(dossier, ZenithDropChance, ZenithDropLevel);
+            foreach (WeaponClassId weaponClass in WeaponClasses.All)
+                foreach (ClassSkillSlot slot in CraftItemIds.SkillChipSlots)
+                {
+                    bool prime = IsPrimeChip(slot);
+                    Row(CraftItemIds.SkillChip(weaponClass, slot), prime ? ZenithDropChance : ChipDropChance, prime ? ZenithDropLevel : ChipDropLevel);
+                }
+            foreach ((ushort chip, string _, int level) in SharedChips) Row(chip, ChipDropChance, level);
             if (added == 0) return 0;
             hostiles.materialDrops = rows.ToArray();
             EditorUtility.SetDirty(hostiles);

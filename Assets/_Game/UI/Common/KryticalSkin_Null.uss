@@ -370,6 +370,11 @@
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Gradient_Outwards_01.png#SPR_HUD_DarkFantasy_Gradient_Outwards_01");
     -unity-background-image-tint-color: rgba(15, 8, 18, 0.9);
 }
+.kn-faction-null .boost-line {
+    font-size: 16.64px;
+    color: rgb(177, 132, 255);
+    background-color: rgba(16, 10, 18, 0.45);
+}
 .kn-faction-null .buff-badge {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_01.png#SPR_HUD_DarkFantasy_Box_Small_Parchment_01");
     -unity-background-image-tint-color: rgba(50, 1, 3, 0.92);

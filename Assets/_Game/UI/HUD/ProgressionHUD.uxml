@@ -56,6 +56,8 @@
 
         <!-- Bottom HUD (before the windows so open windows draw on top): each piece moves independently -->
         <ui:VisualElement name="active-buffs-bar" class="active-buffs-bar hud-movable" picking-mode="Ignore" />
+        <!-- What the player switched on with an item, and how long each has left: a running list at the side of the screen. -->
+        <ui:VisualElement name="boost-list" class="boost-list hud-movable empty" picking-mode="Ignore" />
         <ui:Label name="feedback" text="Open Skills [K] to learn skills and assign them to your hotbar." class="feedback hud-movable" picking-mode="Ignore" />
         <ui:VisualElement name="hotbar-dock" class="hud-movable" picking-mode="Ignore">
             <ui:VisualElement name="hotbar" class="panel blocks-world">

@@ -118,7 +118,7 @@ namespace KryticalNova.Social
 
         // ------------------------------------------------------------------ founding
 
-        public static void ServerFound(PlayerCrew player, string name, int symbol, bool gm = false)
+        public static void ServerFound(PlayerCrew player, string name, int symbol, int colour = 0, bool gm = false)
         {
             CrewSettings settings = player.Settings;
             string id = player.CharacterId;
@@ -140,6 +140,7 @@ namespace KryticalNova.Social
             var founder = new CrewMember();
             Describe(founder, player);
             Crew crew = CrewRules.Found(Guid.NewGuid().ToString("N"), clean, (int)player.Faction, Mathf.Clamp(symbol, 0, Mathf.Max(0, settings.symbolCount - 1)), founder, Now);
+            crew.symbolColour = ColourIndex(settings, colour);
             World.crews.Add(crew);
             ByMember[id] = crew;
             Save();
@@ -314,15 +315,20 @@ namespace KryticalNova.Social
             Publish(crew);
         }
 
-        public static void ServerSetSymbol(PlayerCrew actor, int symbol)
+        public static void ServerSetSymbol(PlayerCrew actor, int symbol, int colour)
         {
             if (!TryMine(actor, out Crew crew, out CrewMember me)) return;
             if (me.Rank != CrewRank.Leader) { actor.Notify(CrewRules.ReasonLeaderOnly); return; }
             int count = actor.Settings != null ? actor.Settings.symbolCount : 12;
             crew.symbol = Mathf.Clamp(symbol, 0, Mathf.Max(0, count - 1));
+            crew.symbolColour = ColourIndex(actor.Settings, colour);
             Save();
             Publish(crew);
         }
+
+        // A colour there is no swatch for is the first one.
+        private static int ColourIndex(CrewSettings settings, int colour) =>
+            settings != null && settings.symbolColours != null && colour >= 0 && colour < settings.symbolColours.Length ? colour : 0;
 
         // ------------------------------------------------------------------ GM
 

@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Field Booster
   description: Raises the XP of your Hostile kills for a time. Using another adds its time; different boosters add up. From the Nova Store.
   icon: {fileID: 21300000, guid: 0bd5ee45649d8fb4b9b069ac4b2e56fe, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 99

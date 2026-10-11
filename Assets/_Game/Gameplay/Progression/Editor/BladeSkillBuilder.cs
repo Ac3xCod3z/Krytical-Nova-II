@@ -40,6 +40,9 @@ namespace KryticalNova.EditorTools
         private const string ClipFlashOfRage = Katana + "3_Skills/M_katana_Blade@Skill_B.FBX";
         private const string ClipSunraysStroke = Katana + "3_Skills/M_katana_Blade@Skill_A.FBX";
         private const string ClipPhantomThunder = Katana + "3_Skills/M_katana_Blade@Skill_G.FBX";
+        // The level 60 pair (11 Oct 2026): clips of the pack that no skill used yet. Their hit moments are not measured.
+        private const string ClipLv60Single = Katana + "3_Skills/M_katana_Blade@Skill_C.FBX";
+        private const string ClipLv60Multi = Katana + "3_Skills/M_katana_Blade@Skill_E.FBX";
         private const string ClipThunderousDragon = Katana + "3_Skills/M_katana_Blade@Skill_D_Fix.FBX";
         private const string ClipAzureWall = Katana + "1_Movements/1__Idle/M_katana_Blade@Idle_A_to_B.FBX";
         private const string ClipLightningFlash = Katana + "1_Movements/0__Intro/M_katana_Blade@Intro.FBX";
@@ -61,6 +64,9 @@ namespace KryticalNova.EditorTools
         private static readonly float[] FlashOfRageHitTimes = { 0.10f, 0.34f, 0.38f };
         // Skill_G: a rising cut (frame 8 of 63), a cut at the top of the leap (27) and the blow coming down (32).
         private static readonly float[] PhantomThunderHitTimes = { 0.13f, 0.43f, 0.51f };
+
+        /// <summary>The Monoblade's level 60 single hit and multi hit. Named by slot: they came after the first ten.</summary>
+        public const string Lv60SingleId = "Monoblade_Lv60Single", Lv60MultiId = "Monoblade_Lv60Multi";
 
         [MenuItem("Krytical Nova/Progression/Build Blade Skills")]
         public static void Build()
@@ -86,11 +92,19 @@ namespace KryticalNova.EditorTools
                     cooldown: 3f, clip: ClipFlashOfRage, speed: 1.1f, castLock: 0.95f, hitTimes: FlashOfRageHitTimes,
                     description: "A furious three-hit flurry against your target."),
                 // The id keeps its first name ("Stroke"): saves, the icon and the feel catalog are keyed on it.
-                Attack("SunraysStroke", "Zero Hour", 60, "Lvl 60 Drop (Skill Chip)", 1, 40, 99, 194, 145, 336, MeleeReach, MeleeReach, area: false, hits: 1,
+                // The level 60 pair: between the level 30 pair and the level 80 pair in every number.
+                Attack(Lv60SingleId, "Margin Call", 60, "Lvl 60 Skill Chip", 1, 38, 86, 182, 140, 331, MeleeReach, MeleeReach, area: false, hits: 1,
+                    cooldown: 1.5f, clip: ClipLv60Single, speed: 1f, castLock: 0.9f, minBonus: 100, maxBonus: 105,
+                    description: "A hard single hit that lands with some extra force."),
+                Attack(Lv60MultiId, "Short Squeeze", 60, "Lvl 60 Skill Chip", 1, 38, 164, 344, 342, 926, MeleeReach, MeleeReach, area: false, hits: 3,
+                    cooldown: 3f, clip: ClipLv60Multi, speed: 1.1f, castLock: 0.95f, minBonus: 100, maxBonus: 105,
+                    description: "Three hard cuts that each land with some extra force."),
+                // Level 80 since 11 Oct 2026 (they were the level 60 pair): like the Zenith technique, their Skill Chips drop only in the Prime grounds.
+                Attack("SunraysStroke", "Zero Hour", 80, "Lvl 80 Skill Chip", 1, 40, 99, 194, 145, 336, MeleeReach, MeleeReach, area: false, hits: 1,
                     cooldown: 1.5f, clip: ClipSunraysStroke, speed: 1f, castLock: 0.9f, minBonus: 101, maxBonus: 110,
                     hitTimes: new[] { SunraysStrikeHitTime },
                     description: "A rising single hit that lands with extra force."),
-                Attack("PhantomThunder", "Liquidation", 60, "Lvl 60 Drop (Skill Chip)", 1, 40, 187, 367, 354, 939, MeleeReach, MeleeReach, area: false, hits: 3,
+                Attack("PhantomThunder", "Liquidation", 80, "Lvl 80 Skill Chip", 1, 40, 187, 367, 354, 939, MeleeReach, MeleeReach, area: false, hits: 3,
                     cooldown: 3f, clip: ClipPhantomThunder, speed: 1.1f, castLock: 0.95f, minBonus: 101, maxBonus: 110,
                     hitTimes: PhantomThunderHitTimes,
                     description: "Three cuts that each land with extra force."),

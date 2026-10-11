@@ -18,5 +18,5 @@ MonoBehaviour:
   minimap: {fileID: 7217947564200076539, guid: 28fd01b5e34601047bffebd3a2fcccc1, type: 3}
   hostilePlate: {fileID: 8561372004437207075, guid: 9b04b21d65ffb8c46904904879e41dfb, type: 3}
   playerCard: {fileID: 5276504002712698200, guid: df03fc77e31c70345a2ddb5c7a1a1aba, type: 3}
-  cursor: {fileID: 2800000, guid: fc85675b0cdd13a469ea8e097b0c0892, type: 3}
-  cursorHotspot: {x: 5, y: 4}
+  cursor: {fileID: 2800000, guid: 28e7b95cf832dc345b22f6a20714e74c, type: 3}
+  cursorHotspot: {x: 7, y: 4}

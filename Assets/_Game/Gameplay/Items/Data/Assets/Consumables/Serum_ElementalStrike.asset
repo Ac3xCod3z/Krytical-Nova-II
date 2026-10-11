@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Elemental Strike Serum
   description: A one-way dose that charges your strikes with the elements, for good.
   icon: {fileID: 21300000, guid: 740023593d4ec4440be13148a397eeb5, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
   maxStack: 99

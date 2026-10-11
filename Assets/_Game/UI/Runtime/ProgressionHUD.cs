@@ -122,6 +122,8 @@ namespace KryticalNova.UI
             runTile = root.Q("run-drag");
             jumpTile = root.Q("jump-drag");
             activeBuffsBar = root.Q("active-buffs-bar");
+            boostList = new BoostListView(root.Q("boost-list"));
+            boostList.AddSource(AddBoosterLines);
             // The Skills window is a tree: tiles on tiers, the chosen skill's card beside them.
             VisualElement skillCards = root.Q("skills-body");
             skillTree = null;
@@ -424,7 +426,7 @@ namespace KryticalNova.UI
                 buffManager.BuffsChanged += RefreshBuffs;
                 buffManager.BuffMessage += Feedback;
             }
-            if (boosts != null) boosts.Changed += RefreshBuffs;
+            if (boosts != null) boosts.Changed += RefreshBoostList;
             progression.Changed += RequestRefresh;
             progression.LevelGained += OnLevelGained;
             if (boundNova != null) boundNova.Changed += RequestRefresh; // the Standing worn changes no stat
@@ -465,7 +467,7 @@ namespace KryticalNova.UI
                 buffManager.BuffsChanged -= RefreshBuffs;
                 buffManager.BuffMessage -= Feedback;
             }
-            if (boosts != null) boosts.Changed -= RefreshBuffs;
+            if (boosts != null) boosts.Changed -= RefreshBoostList;
             progression.Changed -= RequestRefresh;
             progression.LevelGained -= OnLevelGained;
             if (boundNova != null) boundNova.Changed -= RequestRefresh;
@@ -837,11 +839,13 @@ namespace KryticalNova.UI
             ("HeavenlyBlow", "GarudasPrayer"), ("GarudasPrayer", "HeavenlyRepulsion"), ("GarudasPrayer", "ReverseFlow"),
             ("GarudasPrayer", "HeavenlyDestruction"),
         };
-        // A class's ten: the area line (1 and its Zenith technique, 8), the single line (2, 4, 6), the triple line (3, 5, 7), Stance and Guard.
+        // A class's twelve: the area line (1 and its Zenith technique, 8), the single line (2, 4, the level 60 hit, 6),
+        // the triple line (3, 5, the level 60 flurry, 7), Stance and Guard.
         private static readonly (ClassSkillSlot from, ClassSkillSlot to)[] ClassLinks =
         {
-            (ClassSkillSlot.S1, ClassSkillSlot.S8), (ClassSkillSlot.S2, ClassSkillSlot.S4), (ClassSkillSlot.S4, ClassSkillSlot.S6),
-            (ClassSkillSlot.S3, ClassSkillSlot.S5), (ClassSkillSlot.S5, ClassSkillSlot.S7),
+            (ClassSkillSlot.S1, ClassSkillSlot.S8), (ClassSkillSlot.S2, ClassSkillSlot.S4), (ClassSkillSlot.S4, ClassSkillSlot.Lv60Single),
+            (ClassSkillSlot.Lv60Single, ClassSkillSlot.S6), (ClassSkillSlot.S3, ClassSkillSlot.S5), (ClassSkillSlot.S5, ClassSkillSlot.Lv60Multi),
+            (ClassSkillSlot.Lv60Multi, ClassSkillSlot.S7),
         };
 
         private static float ClassColumn(ClassSkillSlot slot)
@@ -849,8 +853,8 @@ namespace KryticalNova.UI
             switch (slot)
             {
                 case ClassSkillSlot.S1: case ClassSkillSlot.S8: return 0f;
-                case ClassSkillSlot.S2: case ClassSkillSlot.S4: case ClassSkillSlot.S6: return 1f;
-                case ClassSkillSlot.S3: case ClassSkillSlot.S5: case ClassSkillSlot.S7: return 2f;
+                case ClassSkillSlot.S2: case ClassSkillSlot.S4: case ClassSkillSlot.Lv60Single: case ClassSkillSlot.S6: return 1f;
+                case ClassSkillSlot.S3: case ClassSkillSlot.S5: case ClassSkillSlot.Lv60Multi: case ClassSkillSlot.S7: return 2f;
                 case ClassSkillSlot.Stance: return 3f;
                 default: return 4f;
             }
@@ -1327,74 +1331,44 @@ namespace KryticalNova.UI
                 shownBuffs.Add(buff);
                 shownBuffTimers.Add(timerLbl);
             }
-            AddBoosterBadges();
             RefreshBuffTimers();
         }
 
-        // The XP boosters that are running stand after the buffs: the item's icon and the time left. What each
-        // adds is in its tooltip.
+        // What the player switched on with an item (the XP Boosters) is not on the buff bar: it is the running list
+        // at the side of the screen (BoostListView), text with a clock, since it lasts for hours.
         private PlayerExperienceBoosts boosts;
-        private readonly List<(int index, Label timer, VisualElement badge)> shownBoosters = new List<(int, Label, VisualElement)>(3);
+        private BoostListView boostList;
 
-        private void AddBoosterBadges()
+        private void AddBoosterLines(List<BoostListView.Line> lines)
         {
-            shownBoosters.Clear();
             if (boosts == null) return;
             ItemCatalog catalog = boosts.TryGetComponent(out PlayerInventory pack) ? pack.Catalog : null;
             for (int i = 0; i < boosts.Count; i++)
             {
-                if (boosts.SecondsLeft(i) <= 0f) continue;
-                ItemDefinition item = catalog != null ? catalog.Get(boosts.BoosterAt(i).itemId) : null;
-                var badge = new VisualElement();
-                badge.AddToClassList("buff-badge");
-                badge.AddToClassList("booster-badge");
-                if (item != null && item.icon != null)
+                float left = boosts.SecondsLeft(i);
+                if (left <= 0f) continue;
+                var booster = boosts.BoosterAt(i);
+                ItemDefinition item = catalog != null ? catalog.Get(booster.itemId) : null;
+                lines.Add(new BoostListView.Line
                 {
-                    var icon = new VisualElement();
-                    icon.AddToClassList("buff-badge-icon");
-                    SetIcon(icon, item.icon);
-                    badge.Add(icon);
-                }
-                else
-                {
-                    var name = new Label(item != null ? item.displayName : "XP Booster");
-                    name.AddToClassList("buff-badge-name");
-                    badge.Add(name);
-                }
-                var timer = new Label();
-                timer.AddToClassList("buff-badge-timer");
-                badge.Add(timer);
-                activeBuffsBar.Add(badge);
-                shownBoosters.Add((i, timer, badge));
+                    Name = item != null ? item.displayName : "XP Booster", SecondsLeft = left, Detail = PlayerExperienceBoosts.Describe(booster)
+                });
             }
         }
 
-        private int RunningBoosters()
-        {
-            int running = 0;
-            if (boosts != null)
-                for (int i = 0; i < boosts.Count; i++)
-                    if (boosts.SecondsLeft(i) > 0f) running++;
-            return running;
-        }
+        private void RefreshBoostList() => boostList?.Tick(true);
 
         private void RefreshBuffTimers()
         {
+            boostList?.Tick();
             if (activeBuffsBar == null || buffManager == null) return;
-            if (buffManager.ActiveBuffs.Count != shownBuffs.Count || RunningBoosters() != shownBoosters.Count) { RefreshBuffs(); return; }
+            if (buffManager.ActiveBuffs.Count != shownBuffs.Count) { RefreshBuffs(); return; }
             for (int i = 0; i < shownBuffs.Count; i++)
             {
                 var buff = shownBuffs[i];
                 shownBuffTimers[i].text = buff.Skill.isAbsorptionShield
                     ? $"{buff.CurrentShieldCapacity:0} HP ({buff.RemainingDuration:0}s)"
                     : $"{buff.RemainingDuration:0.0}s";
-            }
-            foreach ((int index, Label timer, VisualElement badge) in shownBoosters)
-            {
-                string left = PlayerExperienceBoosts.FormatTime(boosts.SecondsLeft(index));
-                if (timer.text == left) continue;
-                timer.text = left;
-                badge.tooltip = $"{PlayerExperienceBoosts.Describe(boosts.BoosterAt(index))}. {left} left.";
             }
         }
 

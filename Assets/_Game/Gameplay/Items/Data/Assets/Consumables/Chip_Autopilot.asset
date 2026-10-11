@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Autopilot Chip
   description: 'Adds 5 hours of Autopilot: your character hunts by itself inside a Hostile Zone. The time only runs while Autopilot is on.'
   icon: {fileID: 21300000, guid: f7238dc581af6b6498a4abf3c2cd47d5, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 1
   equipSlot: 0
   maxStack: 99

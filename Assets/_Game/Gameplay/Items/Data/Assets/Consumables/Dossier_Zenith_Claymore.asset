@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: 'Zenith Dossier: Kingsfall'
   description: Unlocks Kingsfall, the Claymore's Zenith technique, which is then learned with skill points. Used up when it is read. Found only in the Prime grounds.
   icon: {fileID: 21300000, guid: fcecf5a0e7523334d891d16181e566c8, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 4
   equipSlot: 0
   maxStack: 10
