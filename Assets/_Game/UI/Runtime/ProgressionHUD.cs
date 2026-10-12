@@ -53,6 +53,81 @@ namespace KryticalNova.UI
         private readonly VisualElement[] slotCooldowns = new VisualElement[PlayerSkillHotbar.SlotCount];
         private readonly List<ActiveBuff> shownBuffs = new List<ActiveBuff>();
         private readonly List<Label> shownBuffTimers = new List<Label>();
+        private readonly List<int> shownBuffClocks = new List<int>();
+
+        // The HUD is redrawn in pieces. Its parts are found once, here, not looked up by name on every redraw, and
+        // each piece remembers what it last showed: a redraw that changes nothing writes no text and makes no string.
+        private Label levelLabel, modeLabel, pointsSummary, resourceValues, resourceFormula;
+        private Label vitalHp, vitalChi, vitalHpBreakdown, vitalChiBreakdown;
+        private ProgressBar xpBar, hpBar, chiBar;
+        private readonly Label[] slotNames = new Label[PlayerSkillHotbar.SlotCount];
+        private readonly Label[] slotRanks = new Label[PlayerSkillHotbar.SlotCount];
+        private readonly SlotShown[] slotShown = new SlotShown[PlayerSkillHotbar.SlotCount];
+        private readonly SlotLine[] slotLines = new SlotLine[PlayerSkillHotbar.SlotCount];
+        private const int Unknown = int.MinValue;
+        private int shownLevel = Unknown, shownMode = Unknown, shownStatPoints = Unknown, shownSkillPoints = Unknown;
+        private int shownExperience = Unknown, shownExperienceRequired = Unknown;
+        private bool shownAtCap;
+        private int shownHealth = Unknown, shownMaxHealth = Unknown, shownChi = Unknown, shownMaxChi = Unknown;
+        private float barHealth = -1f, barMaxHealth = -1f, barChi = -1f, barMaxChi = -1f;
+
+        /// <summary>What a Hotbar slot was last drawn from. Unchanged, its name, tooltip and icon are left alone.</summary>
+        private struct SlotShown
+        {
+            public bool Drawn;
+            public HotbarItemType Type;
+            public MovementSkillId Movement;
+            public UnityEngine.Object Source;
+            public int Item, Number;
+            public bool Selected;
+
+            public bool Same(in SlotShown other) => Drawn && other.Drawn && Type == other.Type && Movement == other.Movement
+                && ReferenceEquals(Source, other.Source) && Item == other.Item && Number == other.Number && Selected == other.Selected;
+        }
+
+        /// <summary>The small line of a slot: which kind of text it holds and the number in it.</summary>
+        private struct SlotLine
+        {
+            public SlotLineKind Kind;
+            public int Number;
+        }
+
+        private enum SlotLineKind : byte { Unset, Empty, Rank, Count, Cooldown, Charge }
+
+        // A new player, or the HUD back on: nothing shown is taken to be still right.
+        private void ForgetShown()
+        {
+            shownLevel = shownMode = shownStatPoints = shownSkillPoints = Unknown;
+            shownExperience = shownExperienceRequired = Unknown;
+            shownHealth = shownMaxHealth = shownChi = shownMaxChi = Unknown;
+            barHealth = barMaxHealth = barChi = barMaxChi = -1f;
+            for (int i = 0; i < slotShown.Length; i++)
+            {
+                slotShown[i] = default;
+                slotLines[i] = default;
+            }
+        }
+
+        private void SetSlotLine(int index, SlotLineKind kind, int number)
+        {
+            if (slotLines[index].Kind == kind && slotLines[index].Number == number) return;
+            slotLines[index].Kind = kind;
+            slotLines[index].Number = number;
+            Label line = slotRanks[index];
+            if (line == null) return;
+            switch (kind)
+            {
+                case SlotLineKind.Rank: line.text = $"RANK {number}"; break;
+                case SlotLineKind.Count: line.text = $"x{number}"; break;
+                case SlotLineKind.Cooldown: line.text = $"{number / 10}.{number % 10}s"; break;
+                case SlotLineKind.Charge: line.text = $"CHARGE {number}%"; break;
+                default: line.text = "EMPTY"; break;
+            }
+        }
+
+        // As "0" and "0.0" print them: halves go up.
+        private static int Whole(float value) => Mathf.FloorToInt(value + 0.5f);
+        private static int Tenths(float value) => Mathf.FloorToInt(value * 10f + 0.5f);
         private VisualElement dragSource;
         private MovementSkillId draggedMovementSkill;
         private SkillDefinitionSO draggedCombatSkill;
@@ -116,6 +191,19 @@ namespace KryticalNova.UI
             SyntySkin.Decorate(root);
             characterWindow = root.Q("character-window");
             skillsWindow = root.Q("skills-window");
+            levelLabel = root.Q<Label>("level-label");
+            modeLabel = root.Q<Label>("mode-label");
+            pointsSummary = root.Q<Label>("points-summary");
+            resourceValues = root.Q<Label>("resource-values");
+            resourceFormula = root.Q<Label>("resource-formula");
+            vitalHp = root.Q<Label>("vital-hp");
+            vitalChi = root.Q<Label>("vital-chi");
+            vitalHpBreakdown = root.Q<Label>("vital-hp-breakdown");
+            vitalChiBreakdown = root.Q<Label>("vital-chi-breakdown");
+            xpBar = root.Q<ProgressBar>("xp-bar");
+            hpBar = root.Q<ProgressBar>("hp-bar");
+            chiBar = root.Q<ProgressBar>("chi-bar");
+            ForgetShown();
             // Shown by the layout editor to be placed, they are brought up to date as when they open.
             HudLayoutEditor.RegisterPreview("character-window", on => { if (on) RefreshShown(characterWindow); });
             HudLayoutEditor.RegisterPreview("skills-window", on => { if (on) RefreshShown(skillsWindow); });
@@ -204,6 +292,8 @@ namespace KryticalNova.UI
                 // Icon under the labels, cooldown sweep over it. Built here so the UXML keeps one line per slot.
                 slotIcons[index] = SlotLayer(slot, "slot-icon", 0);
                 slotCooldowns[index] = SlotLayer(slot, "slot-cooldown", 1);
+                slotNames[index] = slot.Q<Label>(className: "slot-name");
+                slotRanks[index] = slot.Q<Label>(className: "slot-rank");
                 BindPointer<PointerDownEvent>(slot, evt => OnSlotPointerDown(evt, slotIndex));
                 BindDragSource(slot);
             }
@@ -438,6 +528,7 @@ namespace KryticalNova.UI
 
             boundPlayer = player;
             initialized = true;
+            ForgetShown();
             EnsureGeneratedSkillCards();
             Refresh();
             // The two windows are drawn once now, while the player is arriving, so the first time each is opened
@@ -755,13 +846,41 @@ namespace KryticalNova.UI
 
         private void RefreshHud()
         {
-            root.Q<Label>("level-label").text = $"LEVEL {progression.CurrentLevel}";
-            root.Q<Label>("mode-label").text = skills.IsJumpSelected ? "JUMP · choose landing" : $"{(skills.IsRunning ? "RUN" : "WALK")} · {skills.CurrentSpeed:0.0} m/s";
+            int level = progression.CurrentLevel;
+            if (level != shownLevel)
+            {
+                shownLevel = level;
+                levelLabel.text = $"LEVEL {level}";
+            }
+
+            // Jump chosen, or walking or running at a speed (told apart to a tenth, as it is printed).
+            int mode = skills.IsJumpSelected ? -1 : Tenths(skills.CurrentSpeed) * 2 + (skills.IsRunning ? 1 : 0);
+            if (mode != shownMode)
+            {
+                shownMode = mode;
+                modeLabel.text = skills.IsJumpSelected ? "JUMP · choose landing" : $"{(skills.IsRunning ? "RUN" : "WALK")} · {skills.CurrentSpeed:0.0} m/s";
+            }
+
             RefreshResources();
-            root.Q<Label>("points-summary").text = $"{progression.StatPoints} stat points  |  {progression.SkillPoints} skill points";
-            ProgressBar xp = root.Q<ProgressBar>("xp-bar");
-            xp.value = progression.IsAtLevelCap ? ProgressBarScale : ProgressBarScale * progression.Experience / Mathf.Max(1f, progression.ExperienceRequired);
-            xp.title = progression.IsAtLevelCap ? "MAXIMUM LEVEL" : $"{progression.Experience:N0} / {progression.ExperienceRequired:N0} XP";
+
+            int statPoints = progression.StatPoints, skillPoints = progression.SkillPoints;
+            if (statPoints != shownStatPoints || skillPoints != shownSkillPoints)
+            {
+                shownStatPoints = statPoints;
+                shownSkillPoints = skillPoints;
+                pointsSummary.text = $"{statPoints} stat points  |  {skillPoints} skill points";
+            }
+
+            bool atCap = progression.IsAtLevelCap;
+            int experience = progression.Experience, required = progression.ExperienceRequired;
+            if (experience != shownExperience || required != shownExperienceRequired || atCap != shownAtCap)
+            {
+                shownExperience = experience;
+                shownExperienceRequired = required;
+                shownAtCap = atCap;
+                xpBar.value = atCap ? ProgressBarScale : ProgressBarScale * experience / Mathf.Max(1f, required);
+                xpBar.title = atCap ? "MAXIMUM LEVEL" : $"{experience:N0} / {required:N0} XP";
+            }
             RefreshHotbarSlots();
         }
 
@@ -770,6 +889,7 @@ namespace KryticalNova.UI
             characterStale = false;
             RefreshRenown();
             RefreshSerums();
+            RefreshVitals(); // left alone while the window was shut
             root.Q<Label>("stat-points").text = $"{progression.StatPoints} points available";
             root.Q<Label>("stat-note").text = $"Spend {progression.AllocationCost} point(s) per increase. Vitality raises HP; Spirit raises Chi. "
                 + (resources.Data != null && resources.Data.fillGainedCapacity ? "New capacity also raises current resources. " : "Only maximum capacity increases. ")
@@ -955,44 +1075,73 @@ namespace KryticalNova.UI
                 HotbarSlotEntry entry = hotbar.GetSlotEntry(index);
                 VisualElement slot = slotElements[index];
                 if (slot == null) continue;
-                string key = PlayerSkillHotbar.GetKeyLabel(index);
-                slot.EnableInClassList("on-cooldown", false); // skills re-apply theirs every frame
-                Sprite icon = null;
 
+                // What the slot is to show, as a few values: the same as last time, and it is left as it stands.
+                var now = new SlotShown { Drawn = true };
+                MovementSkillData movementDef = null;
+                bool item = false;
                 if (entry.itemType == HotbarItemType.Movement)
                 {
-                    MovementSkillData def = skills.GetDefinition(entry.movementSkill);
-                    icon = def != null ? def.icon : null;
-                    slot.Q<Label>(className: "slot-name").text = def == null ? "—" : def.displayName.ToUpperInvariant();
-                    slot.Q<Label>(className: "slot-rank").text = def == null ? "EMPTY" : $"RANK {skills.GetRank(entry.movementSkill)}";
-                    slot.EnableInClassList("selected", entry.movementSkill != MovementSkillId.None && entry.movementSkill == skills.SelectedSkill);
-                    slot.tooltip = $"{def?.displayName}: click or press {key}. Right-click to clear.";
+                    movementDef = skills.GetDefinition(entry.movementSkill);
+                    now.Type = HotbarItemType.Movement;
+                    now.Movement = entry.movementSkill;
+                    now.Source = movementDef;
+                    now.Number = movementDef != null ? skills.GetRank(entry.movementSkill) : 0;
+                    now.Selected = entry.movementSkill != MovementSkillId.None && entry.movementSkill == skills.SelectedSkill;
                 }
                 else if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null)
                 {
+                    now.Type = HotbarItemType.CombatSkill;
+                    now.Source = entry.combatSkill;
+                    now.Number = combatSkills != null ? combatSkills.GetRank(entry.combatSkill) : 0;
+                }
+                else if (entry.itemType == HotbarItemType.Item && hotbar.ItemSource != null)
+                {
+                    item = true;
+                    now.Type = HotbarItemType.Item;
+                    now.Item = entry.itemId;
+                    now.Number = hotbar.ItemSource.CountItem(entry.itemId);
+                }
+                if (now.Same(slotShown[index])) continue;
+                slotShown[index] = now;
+
+                string key = PlayerSkillHotbar.GetKeyLabel(index);
+                slot.EnableInClassList("on-cooldown", false); // skills re-apply theirs every frame
+                Sprite icon = null;
+                Label slotName = slotNames[index];
+
+                if (now.Type == HotbarItemType.Movement)
+                {
+                    MovementSkillData def = movementDef;
+                    icon = def != null ? def.icon : null;
+                    slotName.text = def == null ? "—" : def.displayName.ToUpperInvariant();
+                    SetSlotLine(index, def == null ? SlotLineKind.Empty : SlotLineKind.Rank, now.Number);
+                    slot.EnableInClassList("selected", now.Selected);
+                    slot.tooltip = $"{def?.displayName}: click or press {key}. Right-click to clear.";
+                }
+                else if (now.Type == HotbarItemType.CombatSkill)
+                {
                     SkillDefinitionSO def = entry.combatSkill;
                     icon = def.icon;
-                    slot.Q<Label>(className: "slot-name").text = def.displayName.ToUpperInvariant();
-                    int rank = combatSkills != null ? combatSkills.GetRank(def) : 0;
-                    slot.Q<Label>(className: "slot-rank").text = $"RANK {rank}";
+                    slotName.text = def.displayName.ToUpperInvariant();
+                    SetSlotLine(index, SlotLineKind.Rank, now.Number);
                     slot.EnableInClassList("selected", false);
                     string hold = def.IsCharged ? $"hold {key} to charge" : def.holdToRepeat ? $"press or hold {key}" : $"click or press {key}";
                     slot.tooltip = $"{def.displayName}: {hold} to activate. Right-click to clear.";
                 }
-                else if (entry.itemType == HotbarItemType.Item && hotbar.ItemSource != null)
+                else if (item)
                 {
-                    int count = hotbar.ItemSource.CountItem(entry.itemId);
                     icon = hotbar.ItemSource.GetItemIcon(entry.itemId);
-                    slot.Q<Label>(className: "slot-name").text = hotbar.ItemSource.GetItemLabel(entry.itemId).ToUpperInvariant();
-                    slot.Q<Label>(className: "slot-rank").text = $"x{count}";
+                    slotName.text = hotbar.ItemSource.GetItemLabel(entry.itemId).ToUpperInvariant();
+                    SetSlotLine(index, SlotLineKind.Count, now.Number);
                     slot.EnableInClassList("selected", false);
-                    slot.EnableInClassList("on-cooldown", count == 0);
+                    slot.EnableInClassList("on-cooldown", now.Number == 0);
                     slot.tooltip = $"Click or press {key} to use. Right-click to clear.";
                 }
                 else
                 {
-                    slot.Q<Label>(className: "slot-name").text = "—";
-                    slot.Q<Label>(className: "slot-rank").text = "EMPTY";
+                    slotName.text = "—";
+                    SetSlotLine(index, SlotLineKind.Empty, 0);
                     slot.EnableInClassList("selected", false);
                     slot.tooltip = "Drop a learned skill here.";
                 }
@@ -1295,6 +1444,7 @@ namespace KryticalNova.UI
             activeBuffsBar.Clear();
             shownBuffs.Clear();
             shownBuffTimers.Clear();
+            shownBuffClocks.Clear();
 
             var buffs = buffManager.ActiveBuffs;
             for (int i = 0; i < buffs.Count; i++)
@@ -1330,6 +1480,7 @@ namespace KryticalNova.UI
                 activeBuffsBar.Add(badge);
                 shownBuffs.Add(buff);
                 shownBuffTimers.Add(timerLbl);
+                shownBuffClocks.Add(Unknown);
             }
             RefreshBuffTimers();
         }
@@ -1366,11 +1517,20 @@ namespace KryticalNova.UI
             for (int i = 0; i < shownBuffs.Count; i++)
             {
                 var buff = shownBuffs[i];
-                shownBuffTimers[i].text = buff.Skill.isAbsorptionShield
-                    ? $"{buff.CurrentShieldCapacity:0} HP ({buff.RemainingDuration:0}s)"
-                    : $"{buff.RemainingDuration:0.0}s";
+                float left = buff.RemainingDuration;
+                // A clock is written when the number on it changes, not every frame: whole seconds while there are
+                // more than ten left, tenths for the last ten.
+                bool shield = buff.Skill.isAbsorptionShield, tenths = !shield && left < BuffTenthsBelow;
+                int clock = shield ? Whole(buff.CurrentShieldCapacity) * 4096 + Mathf.Min(4095, Whole(left))
+                    : tenths ? Tenths(left) : -1 - Mathf.CeilToInt(left);
+                if (clock == shownBuffClocks[i]) continue;
+                shownBuffClocks[i] = clock;
+                shownBuffTimers[i].text = shield ? $"{buff.CurrentShieldCapacity:0} HP ({left:0}s)"
+                    : tenths ? $"{left:0.0}s" : $"{Mathf.CeilToInt(left)}s";
             }
         }
+
+        private const float BuffTenthsBelow = 10f;
 
         private void RefreshHotbarCooldowns()
         {
@@ -1391,20 +1551,10 @@ namespace KryticalNova.UI
                     slotElements[index]?.EnableInClassList("on-cooldown", onCooldown);
                     if (onCooldown && entry.combatSkill.cooldown > 0f)
                         cooldownLeft01 = Mathf.Clamp01(combatSkills.GetRemainingCooldown(entry.combatSkill) / entry.combatSkill.cooldown);
-                    if (charging)
-                    {
-                        slotElements[index].Q<Label>(className: "slot-rank").text = $"CHARGE {hotbar.ChargeProgress * 100f:0}%";
-                    }
-                    else if (onCooldown)
-                    {
-                        float rem = combatSkills.GetRemainingCooldown(entry.combatSkill);
-                        slotElements[index].Q<Label>(className: "slot-rank").text = $"{rem:0.0}s";
-                    }
-                    else
-                    {
-                        int rank = combatSkills.GetRank(entry.combatSkill);
-                        slotElements[index].Q<Label>(className: "slot-rank").text = $"RANK {rank}";
-                    }
+                    // The line under the slot is written only when the number on it changes.
+                    if (charging) SetSlotLine(index, SlotLineKind.Charge, Whole(hotbar.ChargeProgress * 100f));
+                    else if (onCooldown) SetSlotLine(index, SlotLineKind.Cooldown, Tenths(combatSkills.GetRemainingCooldown(entry.combatSkill)));
+                    else SetSlotLine(index, SlotLineKind.Rank, combatSkills.GetRank(entry.combatSkill));
                 }
                 // The sweep drains downward as the cooldown runs out.
                 slotCooldowns[index].style.height = Length.Percent(cooldownLeft01 * 100f);
@@ -1414,19 +1564,42 @@ namespace KryticalNova.UI
         private void RefreshResources()
         {
             if (!initialized || resources == null) return;
-            ProgressBar hp = root.Q<ProgressBar>("hp-bar");
-            hp.value = ProgressBarScale * resources.Health / Mathf.Max(1f, resources.MaxHealth);
-            hp.title = $"HP {resources.Health:0} / {resources.MaxHealth:0}";
-            ProgressBar chi = root.Q<ProgressBar>("chi-bar");
-            chi.value = ProgressBarScale * resources.Chi / Mathf.Max(1f, resources.MaxChi);
-            chi.title = $"FLUX {resources.Chi:0} / {resources.MaxChi:0}";
-            root.Q<Label>("resource-values").text = $"HP {resources.Health:0} / {resources.MaxHealth:0}    Flux {resources.Chi:0} / {resources.MaxChi:0}";
-            RefreshVitals();
-            if (resources.Data != null)
+            // Called on every change of HP or Flux, which while either is filling up is many times a second: the
+            // bars move with the true values, the numbers are written only when a whole number on them changes.
+            float healthNow = resources.Health, maxHealthNow = resources.MaxHealth, chiNow = resources.Chi, maxChiNow = resources.MaxChi;
+            if (healthNow != barHealth || maxHealthNow != barMaxHealth)
             {
-                Label formulaLabel = root.Q<Label>("resource-formula");
-                if (formulaLabel != null)
-                    formulaLabel.text = "STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evade | AGI: +2 Evade, +1 DP | SPI: +20 Flux, +1 AP";
+                barHealth = healthNow;
+                barMaxHealth = maxHealthNow;
+                hpBar.value = ProgressBarScale * healthNow / Mathf.Max(1f, maxHealthNow);
+            }
+            if (chiNow != barChi || maxChiNow != barMaxChi)
+            {
+                barChi = chiNow;
+                barMaxChi = maxChiNow;
+                chiBar.value = ProgressBarScale * chiNow / Mathf.Max(1f, maxChiNow);
+            }
+            int health = Whole(healthNow), maxHealth = Whole(maxHealthNow), chi = Whole(chiNow), maxChi = Whole(maxChiNow);
+            bool healthChanged = health != shownHealth || maxHealth != shownMaxHealth, chiChanged = chi != shownChi || maxChi != shownMaxChi;
+            if (healthChanged)
+            {
+                shownHealth = health;
+                shownMaxHealth = maxHealth;
+                hpBar.title = $"HP {healthNow:0} / {maxHealthNow:0}";
+            }
+            if (chiChanged)
+            {
+                shownChi = chi;
+                shownMaxChi = maxChi;
+                chiBar.title = $"FLUX {chiNow:0} / {maxChiNow:0}";
+            }
+            if (healthChanged || chiChanged)
+            {
+                if (resourceValues != null) resourceValues.text = $"HP {healthNow:0} / {maxHealthNow:0}    Flux {chiNow:0} / {maxChiNow:0}";
+                if (resources.Data != null && resourceFormula != null)
+                    resourceFormula.text = "STR: +1 AP, +2 Hit Rate | VIT: +20 HP, +1 Evade | AGI: +2 Evade, +1 DP | SPI: +20 Flux, +1 AP";
+                // The Character Sheet's own numbers, while it is open; shut, it is brought up to date when it opens.
+                if (IsShown(characterWindow)) RefreshVitals(); else characterStale = true;
             }
             for (int index = 0; index < slotElements.Length; index++)
             {
@@ -1451,19 +1624,19 @@ namespace KryticalNova.UI
         /// </summary>
         private void RefreshVitals()
         {
-            Label hpLabel = root.Q<Label>("vital-hp");
+            Label hpLabel = vitalHp;
             if (hpLabel != null) hpLabel.text = $"{resources.Health:0} / {resources.MaxHealth:0}";
-            Label chiLabel = root.Q<Label>("vital-chi");
+            Label chiLabel = vitalChi;
             if (chiLabel != null) chiLabel.text = $"{resources.Chi:0} / {resources.MaxChi:0}";
             if (combatStats == null) return;
 
-            Label hpBreakdown = root.Q<Label>("vital-hp-breakdown");
+            Label hpBreakdown = vitalHpBreakdown;
             if (hpBreakdown != null)
             {
                 combatStats.GetPoolBreakdown(StatType.MaxHP, out float hpBase, out float fromVit, out float hpBonus);
                 hpBreakdown.text = $"Base {hpBase:0} · Vitality {FormatSigned(fromVit)} · Gear/Pets/Mounts {FormatSigned(hpBonus)}";
             }
-            Label chiBreakdown = root.Q<Label>("vital-chi-breakdown");
+            Label chiBreakdown = vitalChiBreakdown;
             if (chiBreakdown != null)
             {
                 combatStats.GetPoolBreakdown(StatType.MaxChi, out float chiBase, out float fromSpirit, out float chiBonus);
