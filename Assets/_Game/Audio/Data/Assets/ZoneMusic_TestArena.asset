@@ -13,7 +13,18 @@ MonoBehaviour:
   m_Name: ZoneMusic_TestArena
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Audio.ZoneMusic
   combat:
-  - {fileID: 11400000, guid: 1d587313621b4904fa1de3e750642779, type: 2}
+  - {fileID: 11400000, guid: 12b5219f30ecbf34daf05b7e93a58cea, type: 2}
+  - {fileID: 11400000, guid: a6bb1075312d9dd4c89ae94063867f34, type: 2}
+  - {fileID: 11400000, guid: 0d93a8c38cc93244e9a6015a288b7cce, type: 2}
+  - {fileID: 11400000, guid: 959d5494a9e515c41a1f0ac1d095817f, type: 2}
+  - {fileID: 11400000, guid: cd1f3ac421534714d95499e284423924, type: 2}
+  - {fileID: 11400000, guid: d29dc5811457ce84ea95d7d03ce05fa4, type: 2}
+  - {fileID: 11400000, guid: 47a7c8d8b046daa4db3855f6fd191b24, type: 2}
+  - {fileID: 11400000, guid: 4aac1d090111ec84a8981424942ee4ff, type: 2}
+  - {fileID: 11400000, guid: 683ff8b395a9c14468eda51951c01bae, type: 2}
+  - {fileID: 11400000, guid: 94aa595c0240d09489673353b68e75cc, type: 2}
+  - {fileID: 11400000, guid: c9f59998eba2b4047923ee7951ad928f, type: 2}
+  - {fileID: 11400000, guid: 8baf61ce03c1990449be725c067b5aed, type: 2}
   gapSeconds: 2
   fadeInSeconds: 0.6
   fadeOutSeconds: 2.5
