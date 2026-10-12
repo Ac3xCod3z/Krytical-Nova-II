@@ -94,6 +94,13 @@ _Game/
 │   ├── Restyle/           Runtime/ (PlayerWeaveLibrary + PlayerWeaves = Holoweave and dye, PlayerRestyle = the Stylist, the
 │   │                      Reshaper and the Coach. Sits above Items, Economy, CharacterCreation and NPC. Its rules live with what
 │   │                      they rule: WeaveRules in Items, RestyleRules in CharacterCreation)
+│   ├── Housing/           Crew Halls (`_Docs/Plans/crew-halls-plan.md`; Stage 1, the Hall sandbox).  Runtime/ (HousingLayout,
+│   │                      HousingRules, HousingPlacement, ArrangeHistory = the plain rules; IHomeAuthority + LocalHomeAuthority = who
+│   │                      decides what stands in a Hall; PlayerCrate = the Furnishing Crate; PlayerHousing = the sandbox Lot;
+│   │                      HousingLot, HomeView)  Data/ (HousingSettings, FurnishingDefinition, FurnishingCatalog)  Data/Assets/
+│   │                      (HousingSettings, FurnishingCatalog; Items/ = one item per furnishing, Furnishings/ = its definition,
+│   │                      Icons/ = pictures of the models)  Editor/ (HousingLotBuilder, FurnishingCatalogBuilder)  Prefabs/
+│   │                      (HousingLot_Sandbox)  Materials/  Tests/Editor/
 │   ├── Hostiles/          Runtime/ (HostileNet = a Hostile on the network, HostileSpawner, HostilePool, HostileZone = one hunting
 │   │                      ground, HostileCorpse = the body burning away, HostileKillRewards and HostileLoot = what a kill pays, LevelGapRules, IHostileBrain)  Data/ + Data/Assets/ (HostileStatCurve,
 │   │                      HostileSettings, LevelGapSettings, Species/ = one HostileDefinition per species, Emerald/ = the melee
@@ -229,14 +236,14 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 
 | Assembly                          | Defined in                                     | Covers (via .asmref)                                                     |
 |-----------------------------------|------------------------------------------------|---------------------------------------------------------------------------|
-| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets,Forge,Crafting,Restyle}/Runtime, {Progression,Factions,CharacterCreation,Social,Economy,Pets,Items,Crafting}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
+| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets,Forge,Crafting,Restyle,Housing}/Runtime, {Progression,Factions,CharacterCreation,Social,Economy,Pets,Items,Crafting,Housing}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime and Vegetation.Grass (the graphics settings set grass density). Excluded from dedicated server (`!UNITY_SERVER`) |
 | `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | GameFeel/Data. FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
 | `KryticalNova.Hostiles.Emerald`   | `Gameplay/Hostiles/Emerald/Runtime/`           | The Emerald AI side of a Hostile. Depends on Runtime, `EmeraldAI` and Netcode; nothing in Runtime depends on it. Compiles for the dedicated server |
 | `EmeraldAI`, `EmeraldAI.Editor`   | `_ThirdParty/Emerald AI/Scripts/` (ours, in a vendor folder: see `_ThirdParty/README.md`) | Emerald AI's own scripts, so that game assemblies can reference them |
 | `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
-| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, Economy, Pets, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel, Icons). References UI (the skin assets) and GameFeel |
+| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, Economy, Pets, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel, Icons, Housing). References UI (the skin assets) and GameFeel |
 | `KryticalNova.Editor.GM`          | `Tools/Editor/GM/`                             | GM tools window                                                           |
 | `KryticalNova.Editor.Menus`       | `UI/Editor/Menus/`                             | Front-end scene builder. Depends on Editor, UI, Runtime, uGUI, TextMesh Pro. `!UNITY_SERVER` |
 | `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
@@ -248,6 +255,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Pets.Tests.Editor`  | `Gameplay/Pets/Tests/Editor/`                  | EditMode tests (pet growth, stages, hunger; when a pet speaks, and what the four pets say) |
 | `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides; where a pet's bubble goes; the faction skins and the menus' pick of one; Settings: APPLY and REVERT, the pages, the camera maths; the menus' comic book; the character creator in every skin; faction select's champions). Depends on Runtime, UI, Editor and Editor.Menus |
 | `KryticalNova.Hostiles.Tests.Editor` | `Gameplay/Hostiles/Tests/Editor/`           | EditMode tests (the Hostile stat curve against the game's damage formula at every level; the respawn queue of a Hostile Zone; the level-gap table gap by gap; what a kill drops) |
+| `KryticalNova.Housing.Tests.Editor` | `Gameplay/Housing/Tests/Editor/`             | EditMode tests (setting a furnishing down, moving and putting away; what stands on what; the budget; the faction rule; the grid and overlapping footprints; undo and redo) |
 | `KryticalNova.Autopilot.Tests.Editor` | `Gameplay/Autopilot/Tests/Editor/`         | EditMode tests (what Magnet takes; saved Autopilot choices come back inside their limits) |
 | `KryticalNova.Icons.Tests.Editor` | `Icons/Tests/Editor/`                          | EditMode tests (the comic icon treatment, the icon library's rules, and that every skill and item shows an icon of its own). Depends on Runtime and Editor |
 | `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab; how hits look: the rules, a look of its own for every weapon class, no comic effect shared between two moments, the lettering layer and its pass, the pool's timing; the feel of the menus: a player for every menu moment, held by every menu scene and by the world, and a movement that leaves a thing where its animator put it). Depends on Runtime, GameFeel, UI. `!UNITY_SERVER` |

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Covenant_26033_Chandelier_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: dc8255650cbeac64faeb769daa491987, type: 2}
+  itemId: 26033
+  faction: 3
+  mount: 4
+  place: 2
+  category: Lighting
+  source: 0
+  prefab: {fileID: 1289649294188232, guid: 8c57979cea305c5459e166b353308aeb, type: 3}
+  boundsCenter: {x: 0.0000012218952, y: -0.8785343, z: 0.00000062584877}
+  boundsSize: {x: 1.6236255, y: 1.9227378, z: 1.6236227}
+  hasTop: 0
+  castsShadow: 1
+  lights: 1
+  budgetCost: 2

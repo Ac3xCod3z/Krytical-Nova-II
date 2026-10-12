@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Covenant_26024_Barrel_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: f9516ccd45600094da3ee5ab91e7b42c, type: 2}
+  itemId: 26024
+  faction: 3
+  mount: 0
+  place: 0
+  category: Storage
+  source: 0
+  prefab: {fileID: 1894982720226970, guid: b26e035715d763f409a7e837ae204dab, type: 3}
+  boundsCenter: {x: 0.01025115, y: 0.45489135, z: -0.0004169941}
+  boundsSize: {x: 0.71756864, y: 0.9097827, z: 0.71755946}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  budgetCost: 2

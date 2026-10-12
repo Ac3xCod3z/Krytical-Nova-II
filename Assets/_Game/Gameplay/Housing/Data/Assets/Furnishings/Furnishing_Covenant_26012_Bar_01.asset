@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Covenant_26012_Bar_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: c018827832bad9444a7262819f136d71, type: 2}
+  itemId: 26012
+  faction: 3
+  mount: 0
+  place: 0
+  category: Tables
+  source: 0
+  prefab: {fileID: 1056766267554406, guid: c3fcdefcc87b95b49a214855c6566c45, type: 3}
+  boundsCenter: {x: 0.21573709, y: 0.535126, z: -0.75994766}
+  boundsSize: {x: 1.0152003, y: 1.0702522, z: 1.6453147}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  budgetCost: 2

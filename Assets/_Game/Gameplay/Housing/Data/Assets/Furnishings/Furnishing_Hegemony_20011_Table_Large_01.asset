@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Hegemony_20011_Table_Large_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 4bd8c75a99c1ad847a9847b0f8772d6d, type: 2}
+  itemId: 20011
+  faction: 1
+  mount: 0
+  place: 0
+  category: Tables
+  source: 0
+  prefab: {fileID: 1378001097800756, guid: 2ca5f4a31293d2b489972a918057a08f, type: 3}
+  boundsCenter: {x: -0.00000011920929, y: 0.4399292, z: -0.00000008940697}
+  boundsSize: {x: 2.9114351, y: 0.8798584, z: 1.463054}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  budgetCost: 4

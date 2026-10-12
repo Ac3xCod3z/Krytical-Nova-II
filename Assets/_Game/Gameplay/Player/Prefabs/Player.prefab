@@ -107,6 +107,8 @@ GameObject:
   - component: {fileID: 2621018356870857394}
   - component: {fileID: 8828234450677200807}
   - component: {fileID: 599682507219348469}
+  - component: {fileID: 6197100756686350223}
+  - component: {fileID: 2784936230896995334}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -4005,6 +4007,36 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.PlayerExperienceBoosts
   ShowTopMostFoldoutHeaderGroup: 1
   settings: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+--- !u!114 &6197100756686350223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e7c3ef6c15368b4db4a453e17762cdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.PlayerCrate
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: 224fc480aa6244d43bcba3cd42cbd873, type: 2}
+  catalog: {fileID: 11400000, guid: 85d85e544bd9d2644a9391ef91738eda, type: 2}
+--- !u!114 &2784936230896995334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1397861d9f8dbab488f258997cd88872, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.PlayerHousing
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: 224fc480aa6244d43bcba3cd42cbd873, type: 2}
+  catalog: {fileID: 11400000, guid: 85d85e544bd9d2644a9391ef91738eda, type: 2}
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

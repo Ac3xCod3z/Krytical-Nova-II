@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Covenant_26040_Stove_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 6897dedd5f499964f80bdf1559b58f2b, type: 2}
+  itemId: 26040
+  faction: 3
+  mount: 0
+  place: 0
+  category: Decor
+  source: 0
+  prefab: {fileID: 1351543279898106, guid: 7ff6627311b82104f9bfebb5d2b6a0d2, type: 3}
+  boundsCenter: {x: 0.07802963, y: 1.25, z: 0.057266235}
+  boundsSize: {x: 1.0311428, y: 2.5, z: 1.1381536}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  budgetCost: 4

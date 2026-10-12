@@ -1,6 +1,24 @@
 # Crew Halls: guild housing, building first and server second
 
-Written 11 Oct 2026. Row 62 of `../Reference/12Sky/01_Systems_Build_List.md`. Nothing is built yet.
+Written 11 Oct 2026. Row 62 of `../Reference/12Sky/01_Systems_Build_List.md`.
+
+**As built, 11 Oct 2026: Stage 1, steps 1 to 3** (the Lot, furnishings and the Crate, Arrange on the lawns).
+What it does, its numbers and how it was checked are in `../Reference/12Sky/05_Economy_And_Social.md`,
+"Crew Halls". To try it: Play, press **L** and use GO TO MY HALL (or `gm.home`), fill the Crate with
+`gm.furnish.kit`, then click a furnishing and click the lawn. Where the build differs from the plan below:
+
+- The Lot's NavMesh is made when the Lot is set down, not baked into the prefab (a baked one comes with the
+  Crew Quarter maps).
+- The Hall on the pad is the vendor's own building for the faction, shrunk to fit; baked Facades of one
+  footprint are step 4.
+- A piece is one object per furnishing with no pooling yet; 73 pieces cost nothing measurable.
+- The Furnishing Crate is saved with the character. Stage 2 needs it where an owner who is offline can be
+  given pieces back.
+- There is no screen fade on the way to the Lot, and the minimap is not hidden there.
+- The faction rule is on the item itself (`ItemDefinition.boundFaction`, `ItemFactionRules`), so Trade,
+  Kiosks, the Deep Vault and pickup ask it without knowing about housing.
+
+Next: step 4 (the room inside, Finishes, Facades), then step 5 (the comfort set).
 
 ## The order (owner, 11 Oct 2026)
 

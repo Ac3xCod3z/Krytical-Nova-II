@@ -199,6 +199,10 @@ namespace KryticalNova.Economy
         private void ServerDeposit(int packCell, int toCell, int count)
         {
             if (!Ready()) return;
+            // What an account's characters share takes nothing that is one faction's own: it would hand it to another's.
+            if (SaveScope == SaveScope.Account && inventory.Catalog != null
+                && ItemFactionRules.IsBound(inventory.Catalog.Get(inventory.Get(packCell).itemId)))
+            { Tell(ItemFactionRules.ReasonNotDeepVault); return; }
             Array.Copy(cells, scratch, cells.Length);
             string why = null;
             bool moved = inventory.ServerChangePack(pack => StorageRules.TryTransfer(pack, packCell, scratch, toCell, count,

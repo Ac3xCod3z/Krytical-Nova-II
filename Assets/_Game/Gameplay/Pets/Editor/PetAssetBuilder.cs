@@ -47,6 +47,12 @@ namespace KryticalNova.EditorTools
             public float[] StageSizes;
             /// <summary>The animation in which it charges its owner, and the bone that animation carries forward.</summary>
             public string Charge, ChargeBone;
+            /// <summary>The animation whose first frame is the pose it rests in, for a model whose file holds another pose.</summary>
+            public string RestPose;
+            /// <summary>Animations followed by another instead of going back to rest: (the animation, how many times it plays, what follows).</summary>
+            public (string Animation, int Times, string Then)[] FollowOns;
+            /// <summary>What it says in its animations: (the animation, the share of it at which it is said, the words, the stages it is said at).</summary>
+            public (string Animation, float At, string Text, Vector2Int Stages)[] Lines;
             /// <summary>It stands instead of bobbing like a drone, on a cloud under each of these bones of its model.</summary>
             public string[] Feet;
             /// <summary>The effects that are this pet's own mark: the effect's prefab, and the bones of the model it is worn on.</summary>
@@ -87,6 +93,88 @@ namespace KryticalNova.EditorTools
             public string Animation;
             public float[] At;
             public Vector2 During;
+            /// <summary>Worn on a bone, it looks down the bone, and its offset is in the bone's frame in metres of the model (z = down the bone).</summary>
+            public bool Along;
+            /// <summary>Taken away at once when its animation is cut short.</summary>
+            public bool Ends;
+        }
+
+        // The Drone Core's stages: every form, the four grown ones, those with a cannon, the two with a minigun, the last.
+        private static readonly Vector2Int Grown = new Vector2Int(1, PetRules.LastStage);
+        private static readonly Vector2Int Minigun = new Vector2Int(2, 3);
+        private static readonly Vector2Int Gunship = new Vector2Int(PetRules.LastStage, PetRules.LastStage);
+
+        /// <summary>
+        /// The Drone Core's effects. Its data chips at every stage; the camera flash, the scan, the blur of a spin and
+        /// the steam of a temper for the forms that have those animations; and from 50 % what its cannon does, each
+        /// at the muzzle of that form's own barrel (the cannon bone's length: 0.137, 0.170 and 0.178 m).
+        /// </summary>
+        private static Fx[] DroneCoreEffects()
+        {
+            var cannon = new[] { "cannon" };
+            var list = new List<Fx>
+            {
+                // Chips of data dropped behind it as it goes.
+                new Fx { Effect = GameFeelBuilder.PetCrumbsPath, Bones = new[] { "body" }, StageColour = true },
+                // Taking a photo: the flash goes off on frame 34 of 80.
+                new Fx { Effect = GameFeelBuilder.DroneFlashPath, Bones = new[] { "flash" }, Animation = "BarrelTurn", At = Frames(80, 34), Stages = Grown, Size = 0.5f },
+                // Looking about: a cone of scan lines out of its lens.
+                new Fx { Effect = GameFeelBuilder.DroneScanPath, Bones = new[] { "lens" }, Animation = "EyeLook", Ends = true },
+                // Spinning: hoops of streaks round it.
+                new Fx { Effect = GameFeelBuilder.DroneWhirlPath, Animation = "AxisSpin", Ends = true },
+                new Fx { Effect = GameFeelBuilder.DroneWhirlPath, Animation = "AxisSpinDiagonal", Ends = true },
+                // Angry: it lets off steam.
+                new Fx { Effect = GameFeelBuilder.DroneSteamPath, Anchor = PetEffectAnchor.Top, Animation = "Mad", During = new Vector2(0.15f, 0.85f), Size = 0.25f },
+                // The swarm (100 %): scan lines as the cube bursts (frame 10 of 44) and as it locks again (36 of 46),
+                // arcs between the blocks while they are out, sparks on the lock (39 of 46).
+                new Fx { Effect = GameFeelBuilder.DroneGlitchPath, Animation = "Disassemble", At = Frames(44, 10), Stages = Gunship },
+                new Fx { Effect = GameFeelBuilder.DroneGlitchPath, Animation = "Assemble", At = Frames(46, 36), Stages = Gunship },
+                new Fx { Effect = GameFeelBuilder.DroneArcsPath, Animation = "Disassemble", During = new Vector2(10f / 44f, 1f), Stages = Gunship, Size = 0.3f, Ends = true },
+                new Fx { Effect = GameFeelBuilder.DroneArcsPath, Animation = "SwarmHover", Stages = Gunship, Size = 0.3f, Ends = true },
+                new Fx { Effect = GameFeelBuilder.DroneArcsPath, Animation = "Assemble", During = new Vector2(0.001f, 36f / 46f), Stages = Gunship, Size = 0.3f, Ends = true },
+                new Fx { Effect = GameFeelBuilder.DroneLockPath, Animation = "Assemble", At = Frames(46, 39), Stages = Gunship, Size = 0.35f },
+            };
+            float[] muzzles = { 0.137f, 0.170f, 0.178f };
+            for (int stage = 2; stage <= PetRules.LastStage; stage++)
+            {
+                var here = new Vector2Int(stage, stage);
+                var muzzle = new Vector3(0f, 0f, muzzles[stage - 2]);
+                // Two shots with recoil, on frames 12 and 30 of 60.
+                list.Add(new Fx { Effect = GameFeelBuilder.DroneShotPath, Bones = cannon, Along = true, Offset = muzzle, Animation = "CannonFire", At = Frames(60, 12, 30), Stages = here, Size = 0.3f });
+                if (stage <= Minigun.y)
+                {
+                    // The barrel spins up from frame 1, fires from 14 to 60 of 80 and winds down.
+                    var firing = new Vector2(14f / 80f, 60f / 80f);
+                    list.Add(new Fx { Effect = GameFeelBuilder.DroneSleevePath, Bones = cannon, Along = true, Animation = "MinigunFire", During = new Vector2(0.001f, 72f / 80f), Stages = here, Ends = true });
+                    list.Add(new Fx { Effect = GameFeelBuilder.DroneBurstPath, Bones = cannon, Along = true, Offset = muzzle, Animation = "MinigunFire", During = firing, Stages = here, Size = 0.3f, Ends = true });
+                    // The spent rounds, thrown out at the breech for as long as it fires (owner, 11 Oct 2026).
+                    list.Add(new Fx { Effect = GameFeelBuilder.DroneShellsPath, Bones = cannon, Along = true, Offset = muzzle * 0.2f, Animation = "MinigunFire", During = firing, Stages = here, Size = 0.7f });
+                    // The 75 % form's pod arms kick with each shot of the cannon: a rocket leaves each (owner, 11 Oct 2026).
+                    // A pod is 0.33 m long from its bone.
+                    // It flies straight for a third of a second and bursts: the burst is played where it has got to,
+                    // eight frames after it left (its speed at the effect's size on this form, 0.637 m across).
+                    if (stage == 3)
+                    {
+                        const float rocketSize = 0.45f, podLength = 0.33f, footprint = 0.637f;
+                        float flown = GameFeelBuilder.DroneRocketSpeed * GameFeelBuilder.DroneRocketSeconds * rocketSize * footprint;
+                        var pods = new[] { "pod.L", "pod.R" };
+                        list.Add(new Fx { Effect = GameFeelBuilder.DroneRocketPath, Bones = pods, Along = true, Offset = new Vector3(0f, 0f, podLength), Animation = "CannonFire", At = Frames(60, 12, 30), Stages = here, Size = rocketSize });
+                        list.Add(new Fx { Effect = GameFeelBuilder.DroneBoomPath, Bones = pods, Along = true, Offset = new Vector3(0f, 0f, podLength + flown), Animation = "CannonFire", At = Frames(60, 20, 38), Stages = here, Size = 0.2f });
+                    }
+                }
+                else
+                {
+                    // Eight shots off a spinning barrel, six frames apart from frame 26 of 91.
+                    list.Add(new Fx { Effect = GameFeelBuilder.DroneSleevePath, Bones = cannon, Along = true, Animation = "SpinShots", During = new Vector2(0.001f, 72f / 91f), Stages = here, Ends = true });
+                    list.Add(new Fx { Effect = GameFeelBuilder.DronePopPath, Bones = cannon, Along = true, Offset = muzzle, Animation = "SpinShots", At = Frames(91, 26, 32, 38, 44, 50, 56, 62, 68), Stages = here, Size = 0.3f });
+                    // The fake-out: it gathers power through "Ka... Me... Ha!" (the thrust lands on frame 31 of 130) and
+                    // only a puff comes out; the beam is on from frame 72 to 110.
+                    list.Add(new Fx { Effect = GameFeelBuilder.DroneChargePath, Bones = cannon, Along = true, Offset = muzzle, Animation = "FakeoutBlast", During = new Vector2(0.001f, 29f / 130f), Stages = here, Size = 0.3f, Ends = true });
+                    list.Add(new Fx { Effect = GameFeelBuilder.DroneFizzlePath, Bones = cannon, Along = true, Offset = muzzle, Animation = "FakeoutBlast", At = Frames(130, 31), Stages = here, Size = 0.2f });
+                    list.Add(new Fx { Effect = GameFeelBuilder.DroneBeamPath, Bones = cannon, Along = true, Offset = muzzle, Animation = "FakeoutBlast", During = new Vector2(72f / 130f, 110f / 130f), Stages = here, Size = 0.45f, Ends = true });
+                }
+            }
+            return list.ToArray();
         }
 
         // The Tidecaller's stages: the egg it starts as, and the four swimmers it grows into.
@@ -114,8 +202,24 @@ namespace KryticalNova.EditorTools
                 OldAsset = "Pet_Drone", OldIcon = "Pet_DroneQuad" },
             new Row { Id = 8002, Asset = "Pet_DroneCore", Name = "Drone Core", StandIn = "SM_Prop_Drone_02",
                 Model = PetModels + "/DroneCore/Pet_DroneCore_S1.prefab", MoveLoop = "FrontRoll",
-                // Chips of data dropped behind it as it goes.
-                Effects = new[] { new Fx { Effect = GameFeelBuilder.PetCrumbsPath, Bones = new[] { "body" }, StageColour = true } },
+                // The four grown forms are models of their own, each with more animations than the one before.
+                StageModels = new[]
+                {
+                    PetModels + "/DroneCore_25/Pet_DroneCore_25.prefab", PetModels + "/DroneCore_50/Pet_DroneCore_50.prefab",
+                    PetModels + "/DroneCore_75/Pet_DroneCore_75.prefab", PetModels + "/DroneCore_100/Pet_DroneCore_100.prefab",
+                },
+                // The longest side of each form with its cannon, pods and fins, at the scale the base cube is shown
+                // at (0.30 m as made, 0.25 m in the game): the cubes themselves come out 0.28, 0.31, 0.35 and 0.38 m.
+                StageSizes = new[] { 0.28f, 0.47f, 0.53f, 0.63f },
+                // The swarm: it comes apart, hovers as blocks for two rounds, and comes together again.
+                FollowOns = new[] { ("Disassemble", 1, "SwarmHover"), ("SwarmHover", 2, "Assemble") },
+                // The fake-out, at 24 frames a second in a clip of 130.
+                Lines = new[]
+                {
+                    ("FakeoutBlast", 1f / 130f, "Ka...", Gunship), ("FakeoutBlast", 13f / 130f, "Me...", Gunship), ("FakeoutBlast", 27f / 130f, "Ha!", Gunship),
+                    ("FakeoutBlast", 45f / 130f, "...just kidding", Gunship), ("FakeoutBlast", 65f / 130f, "Die!", Gunship),
+                },
+                Effects = DroneCoreEffects(),
                 Scale = 0.45f, // a cube fills its whole box: at the common size it dwarfed its owner
                 Stat = StatType.MaxHP, Max = 2200f,
                 Description = "A boxy little robot buddy that bolts on plating and cannon pods. It grows your Health as it matures.",
@@ -304,6 +408,15 @@ namespace KryticalNova.EditorTools
             definition.restLoop = row.RestLoop ?? "";
             definition.chargeAnimation = row.Charge ?? "";
             definition.chargeBone = row.ChargeBone ?? "";
+            definition.restPose = row.RestPose ?? "";
+            int followCount = row.FollowOns != null ? row.FollowOns.Length : 0;
+            definition.followOns = new PetFollowOn[followCount];
+            for (int i = 0; i < followCount; i++)
+                definition.followOns[i] = new PetFollowOn { animation = row.FollowOns[i].Animation, times = row.FollowOns[i].Times, then = row.FollowOns[i].Then };
+            int lineCount = row.Lines != null ? row.Lines.Length : 0;
+            definition.lines = new PetLine[lineCount];
+            for (int i = 0; i < lineCount; i++)
+                definition.lines[i] = new PetLine { animation = row.Lines[i].Animation, at = row.Lines[i].At, text = row.Lines[i].Text, stages = row.Lines[i].Stages };
             bool stands = row.Feet != null && row.Feet.Length > 0;
             definition.bobs = !stands;
             if (stands)
@@ -335,6 +448,8 @@ namespace KryticalNova.EditorTools
                     animation = fx.Animation ?? "",
                     at = fx.At ?? new float[0],
                     during = fx.During,
+                    alongBone = fx.Along,
+                    endsWithAnimation = fx.Ends,
                 };
             }
 

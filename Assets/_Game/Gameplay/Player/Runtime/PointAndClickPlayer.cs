@@ -407,7 +407,7 @@ namespace KryticalNova.Player
             if (cancelOrbitAction.WasPressedThisFrame())
             {
                 EndOrbit();
-                if (!inputSuppressed)
+                if (!inputSuppressed && !WorldClicksParked)
                 {
                     CancelAttack();
                     ClearSelection();
@@ -446,12 +446,12 @@ namespace KryticalNova.Player
                 return;
             }
 
-            if (!inputSuppressed && (resources == null || resources.IsAlive) && toggleWeaponAction.WasPressedThisFrame())
+            if (!inputSuppressed && !WorldClicksParked && (resources == null || resources.IsAlive) && toggleWeaponAction.WasPressedThisFrame())
             {
                 animancerMotor?.RequestToggleWeaponDraw();
             }
 
-            if (!orbitHeldAction.IsPressed() && moveAction.WasPressedThisFrame()
+            if (!WorldClicksParked && !orbitHeldAction.IsPressed() && moveAction.WasPressedThisFrame()
                 && !IsPointerOverUi(screenPosition))
                 TryMoveToPointer(screenPosition);
         }
@@ -1582,6 +1582,16 @@ namespace KryticalNova.Player
         /// camera eases there. The HUD uses it while a service window covers the middle (see ServicePanelPlacement).
         /// </summary>
         public void SetScreenFraming(float across) => screenFraming = Mathf.Clamp(across, -ScreenFramingLimit, ScreenFramingLimit);
+
+        /// <summary>
+        /// Set by a tool that takes the left button and Escape for itself (Arrange, while a Hall is furnished): a
+        /// click no longer walks or selects and Shift no longer draws the weapon. The camera is left alone, so the
+        /// right button still turns it and the wheel still zooms.
+        /// </summary>
+        public bool WorldClicksParked { get; set; }
+
+        /// <summary>The camera the game is seen through on this machine, or null.</summary>
+        public Camera GameplayCamera => gameplayCamera;
 
         private void ApplyScreenFraming()
         {

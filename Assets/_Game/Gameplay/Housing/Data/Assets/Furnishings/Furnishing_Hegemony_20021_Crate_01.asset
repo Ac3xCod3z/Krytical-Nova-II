@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_Hegemony_20021_Crate_01
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: ea975e8c5ca70314c924cf8e8f716d3d, type: 2}
+  itemId: 20021
+  faction: 1
+  mount: 0
+  place: 0
+  category: Storage
+  source: 0
+  prefab: {fileID: 1145926737824830, guid: 39a77ed314659264f8de984f7e67e12c, type: 3}
+  boundsCenter: {x: 0, y: 0.5678784, z: 0}
+  boundsSize: {x: 1.1167188, y: 1.1365216, z: 1.1167139}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  budgetCost: 2

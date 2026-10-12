@@ -31,6 +31,11 @@ namespace KryticalNova.Items.Visuals
         private readonly Animator animator;
         private readonly List<string> names = new List<string>();
         private readonly List<int> hashes = new List<int>();
+        // The animations that take a turn: all of them but those only reached through another.
+        private readonly List<int> turns = new List<int>();
+        private IReadOnlyList<FollowOn> followOns;
+        private int followedTimes;
+        private int followedState;
         private bool read;
         private bool hasWalk;
         private bool hasRun;
@@ -63,6 +68,98 @@ namespace KryticalNova.Items.Visuals
             return new PetAnimations(animator);
         }
 
+        /// <summary>An animation followed by another: the hashes of the two states' names, and how many times the first is played through before the second starts.</summary>
+        public readonly struct FollowOn
+        {
+            public readonly int From, Then, Times;
+
+            public FollowOn(string from, string then, int times)
+            {
+                From = Animator.StringToHash(from ?? "");
+                Then = Animator.StringToHash(then ?? "");
+                Times = Mathf.Max(1, times);
+            }
+        }
+
+        /// <summary>
+        /// Puts a model in the first frame of one of its animations, for a model whose file holds some other pose
+        /// than the one it should rest in. Done before its Animator has started, that pose is what the Animator
+        /// goes back to whenever nothing is playing. False when the model has no such animation.
+        /// </summary>
+        public static bool Pose(GameObject pet, string animation)
+        {
+            if (pet == null || string.IsNullOrEmpty(animation)) return false;
+            var animator = pet.GetComponentInChildren<Animator>(true);
+            if (animator == null || animator.runtimeAnimatorController == null) return false;
+            foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
+            {
+                // A clip is named after its state, or after the model's file and its state ("Armature|EyeLook").
+                if (clip == null || !(clip.name == animation || clip.name.EndsWith("|" + animation, StringComparison.Ordinal))) continue;
+                clip.SampleAnimation(animator.gameObject, 0f);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>The animations that are followed by another instead of going back to rest. Those that follow take no turn of their own.</summary>
+        public void SetFollowOns(IReadOnlyList<FollowOn> list)
+        {
+            followOns = list;
+            ReadTurns();
+        }
+
+        private void ReadTurns()
+        {
+            turns.Clear();
+            foreach (int hash in hashes)
+            {
+                bool follows = false;
+                if (followOns != null)
+                    foreach (FollowOn each in followOns) follows |= each.Then == hash;
+                if (!follows) turns.Add(hash);
+            }
+        }
+
+        /// <summary>
+        /// Once a frame: an animation that is followed by another hands over to it as it ends, instead of going back
+        /// to rest. One that is played more than once starts again until it has been through that many times.
+        /// </summary>
+        public void Continue()
+        {
+            if (followOns == null || followOns.Count == 0 || calm || animator == null || !animator.isActiveAndEnabled || !animator.isInitialized) return;
+            AnimatorStateInfo now = animator.GetCurrentAnimatorStateInfo(0);
+            bool leaving = animator.IsInTransition(0);
+            // Left for anything but rest (the pet moved off, another animation was asked for): the chain is dropped.
+            if (leaving && animator.GetNextAnimatorStateInfo(0).shortNameHash != defaultState) return;
+            foreach (FollowOn each in followOns)
+            {
+                if (each.From != now.shortNameHash) continue;
+                if (followedState != each.From)
+                {
+                    followedState = each.From;
+                    followedTimes = 0;
+                }
+                float oneFrame = now.length > 0f ? Time.deltaTime * Mathf.Abs(animator.speed) / now.length : 0f;
+                if (!leaving && now.normalizedTime < 1f - oneFrame) return;
+                followedTimes++;
+                if (followedTimes < each.Times) animator.Play(each.From, 0, 0f);
+                else
+                {
+                    followedState = 0;
+                    animator.Play(each.Then, 0, 0f);
+                }
+                if (HasRestLoop)
+                {
+                    oneShot = true;
+                    oneShotLeftDefault = true;
+                    oneShotSince = Time.time;
+                }
+                nextAt = -1f; // the turn-taking waits a full interval after the whole chain
+                return;
+            }
+            followedState = 0;
+        }
+
         /// <summary>What can be played, by name. Empty until the Animator has started.</summary>
         public IReadOnlyList<string> Names
         {
@@ -91,6 +188,7 @@ namespace KryticalNova.Items.Visuals
                 names.Add(parameter.name);
                 hashes.Add(parameter.nameHash);
             }
+            ReadTurns();
         }
 
         /// <summary>
@@ -233,16 +331,16 @@ namespace KryticalNova.Items.Visuals
                 nextAt = -1f;
                 return;
             }
-            if (hashes.Count == 0) return;
+            if (turns.Count == 0) return;
             if (nextAt < 0f)
             {
                 nextAt = Time.time + cycleSeconds;
                 return;
             }
             if (Time.time < nextAt) return;
-            int index = next % hashes.Count;
+            int index = next % turns.Count;
             next = index + 1;
-            Play(hashes[index]);
+            Play(turns[index]);
         }
     }
 }

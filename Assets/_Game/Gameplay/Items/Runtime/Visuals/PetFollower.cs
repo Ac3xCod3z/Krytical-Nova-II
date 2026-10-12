@@ -80,6 +80,9 @@ namespace KryticalNova.Items.Visuals
         private float moveLoopWalkSpeed = 1f;
         private float moveLoopRunSpeed = 1f;
         private string restLoop;
+        // The animation whose first frame is the pose the model rests in, when its file holds another.
+        private string restPose;
+        private IReadOnlyList<PetAnimations.FollowOn> followOns;
 
         // A charge: an animation in which the pet turns on its owner and drives at them. The animation carries one
         // bone forward a little way; the follower moves the whole pet so that the lunge ends at the owner.
@@ -131,10 +134,17 @@ namespace KryticalNova.Items.Visuals
             public readonly Vector2 During;
             /// <summary>Its size against the pet's footprint; 0 counts as 1.</summary>
             public readonly float Size;
+            /// <summary>Worn on a bone, it turns with the bone and looks down it; its offset is in the bone's frame, in metres of the model (z = down the bone).</summary>
+            public readonly bool AlongBone;
+            /// <summary>What is out of it is taken away at once when its animation is cut short.</summary>
+            public readonly bool EndsWithAnimation;
 
             public WornEffect(GameObject prefab, IReadOnlyList<string> bones, bool stageColour, EffectPlace place = EffectPlace.Body,
-                Vector3 offset = default, string animation = null, IReadOnlyList<float> at = null, Vector2 during = default, float size = 1f)
+                Vector3 offset = default, string animation = null, IReadOnlyList<float> at = null, Vector2 during = default, float size = 1f,
+                bool alongBone = false, bool endsWithAnimation = false)
             {
+                AlongBone = alongBone;
+                EndsWithAnimation = endsWithAnimation;
                 Size = size;
                 Prefab = prefab;
                 Bones = bones;
@@ -160,6 +170,45 @@ namespace KryticalNova.Items.Visuals
             public Vector2 During;
             public ParticleSystem[] Systems;
             public bool Playing;
+            public bool Along;              // it looks down its bone, and Offset is in the bone's frame
+            public bool Ends;               // cleared when its animation is left
+            public bool Out;                // it has played in the animation that is running
+        }
+
+        /// <summary>Something the pet says at a moment of one of its animations: the state's name, the share of it (0 to 1) and the words.</summary>
+        public readonly struct SpokenLine
+        {
+            public readonly int State;
+            public readonly float At;
+            public readonly string Text;
+
+            public SpokenLine(string animation, float at, string text)
+            {
+                State = Animator.StringToHash(animation ?? "");
+                At = at;
+                Text = text;
+            }
+        }
+
+        private IReadOnlyList<SpokenLine> lines;
+
+        /// <summary>A pet has reached a line of one of its animations. Whoever shows speech bubbles listens.</summary>
+        public static event System.Action<PetFollower, string> Spoke;
+
+        /// <summary>What the pet says in its animations (null = nothing).</summary>
+        public void SetLines(IReadOnlyList<SpokenLine> spoken) => lines = spoken;
+
+        /// <summary>
+        /// The animation whose first frame is the pose the model rests in (empty = it rests as its file has it).
+        /// Told before the stage look, since it is used when the model is brought out.
+        /// </summary>
+        public void SetRestPose(string animation) => restPose = animation;
+
+        /// <summary>The animations that are followed by another instead of going back to rest (null = none).</summary>
+        public void SetFollowOns(IReadOnlyList<PetAnimations.FollowOn> list)
+        {
+            followOns = list;
+            animations?.SetFollowOns(list);
         }
 
         // The pet's own effects, as asked for and as worn.
@@ -344,14 +393,16 @@ namespace KryticalNova.Items.Visuals
             pet.name = $"Pet ({current.displayName})";
             VisualUtility.PrepareCosmetic(pet, gameObject.layer);
             ActorDrawOrder.On(pet); // a Nova hides the pets behind it
+            bool posed = PetAnimations.Pose(pet, restPose); // before its Animator starts: this is the pose it goes back to
             animations = PetAnimations.For(pet);
+            animations?.SetFollowOns(followOns);
             animations?.SetMoveLoop(moveLoop, moveLoopWalkSpeed, moveLoopRunSpeed);
             animations?.SetRestLoop(restLoop);
             animations?.SetCalm(combatCalm);
             FindGlowing();
             // Prop art comes at any scale (Synty drones are metres across); normalise to a companion size.
             pet.transform.localScale = Vector3.one;
-            hasBounds = PetPlacement.TryMeasure(pet, out unitBounds);
+            hasBounds = posed ? PetPlacement.TryMeasurePosed(pet, out unitBounds) : PetPlacement.TryMeasure(pet, out unitBounds);
             float extent = hasBounds ? Mathf.Max(unitBounds.size.x, Mathf.Max(unitBounds.size.y, unitBounds.size.z)) : 0f;
             float scale = extent > 0.001f ? normalizedSize / extent : 1f;
             baseScale = scale * Mathf.Max(0.05f, current.petScale);
@@ -545,7 +596,9 @@ namespace KryticalNova.Items.Visuals
                 Effect = effect.transform,
                 Bone = bone,
                 Home = home,
-                Offset = look.Offset * footprint,
+                Offset = look.AlongBone ? look.Offset : look.Offset * footprint,
+                Along = look.AlongBone && bone != null,
+                Ends = look.EndsWithAnimation,
                 Tinted = look.StageColour,
                 State = string.IsNullOrEmpty(look.Animation) ? 0 : Animator.StringToHash(look.Animation),
                 At = look.At,
@@ -565,22 +618,34 @@ namespace KryticalNova.Items.Visuals
         /// </summary>
         private void PlayAnimationEffects()
         {
-            if (worn.Count == 0) return;
+            if (worn.Count == 0 && (lines == null || lines.Count == 0)) return;
             int state = 0;
             float share = 0f;
             bool running = animations != null && animations.TryGetPlaying(out state, out share);
             // A new state, or a loop come round again, starts from before its beginning.
             float before = running && state == lastState && share >= lastShare ? lastShare : -1f;
+            if (running && lines != null)
+                foreach (SpokenLine line in lines)
+                    if (line.State == state && line.At > before && line.At <= share) Spoke?.Invoke(this, line.Text);
             foreach (Worn copy in worn)
             {
                 if (copy.State == 0 || copy.Effect == null) continue;
                 bool mine = running && copy.State == state;
+                if (!mine && copy.Ends && (copy.Out || copy.Playing))
+                {
+                    // Its animation was left: nothing of it stays behind.
+                    copy.Out = false;
+                    copy.Playing = false;
+                    foreach (ParticleSystem particles in copy.Systems) particles.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    continue;
+                }
                 if (copy.At != null && copy.At.Count > 0)
                 {
                     if (!mine) continue;
                     for (int i = 0; i < copy.At.Count; i++)
                     {
                         if (copy.At[i] <= before || copy.At[i] > share) continue;
+                        copy.Out = true;
                         foreach (ParticleSystem particles in copy.Systems)
                         {
                             particles.Stop(false, ParticleSystemStopBehavior.StopEmitting);
@@ -653,7 +718,16 @@ namespace KryticalNova.Items.Visuals
             foreach ((Transform effect, Transform foot) in footEffects)
                 if (effect != null && foot != null) effect.position = foot.position;
             foreach (Worn copy in worn)
-                if (copy.Effect != null && copy.Bone != null) copy.Effect.position = copy.Bone.position + pet.transform.TransformVector(copy.Offset);
+            {
+                if (copy.Effect == null || copy.Bone == null) continue;
+                if (copy.Along)
+                {
+                    // A bone runs along its own y: the effect looks down it, and its offset is measured in that frame.
+                    Quaternion down = Quaternion.LookRotation(copy.Bone.up, -copy.Bone.forward);
+                    copy.Effect.SetPositionAndRotation(copy.Bone.position + down * (copy.Offset * pet.transform.lossyScale.x), down);
+                }
+                else copy.Effect.position = copy.Bone.position + pet.transform.TransformVector(copy.Offset);
+            }
             PlayAnimationEffects();
         }
 
@@ -794,6 +868,7 @@ namespace KryticalNova.Items.Visuals
             if (animations != null)
             {
                 animations.SetGait(OwnerGait(t));
+                animations.Continue();
                 animations.Tick(animationCycleSeconds);
             }
 

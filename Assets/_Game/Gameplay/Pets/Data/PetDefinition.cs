@@ -34,6 +34,41 @@ namespace KryticalNova.Pets
         public float[] at = new float[0];
         [Tooltip("With no moments above: the stretch of the animation during which it plays, as shares of it. 0 to 0 = the whole animation.")]
         public Vector2 during;
+        [Tooltip("On: when the animation is cut short (its owner walks off, a fight starts) what is out of this effect is taken away at once. For an effect that makes no sense without the pose: a beam, the blur round a spinning barrel.")]
+        public bool endsWithAnimation;
+
+        [Header("Only on a bone")]
+        [Tooltip("On: it turns with the bone and looks down it, the way the bone runs (a muzzle flash at the end of a gun barrel). Its offset is then measured in the bone's own frame, in metres of the model: z = down the bone, so the bone's length puts it at the tip.")]
+        public bool alongBone;
+    }
+
+    /// <summary>Something a pet says at a moment of one of its animations, in its speech bubble.</summary>
+    [Serializable]
+    public sealed class PetLine
+    {
+        [Tooltip("The animation it belongs to: the name of a state of the pet's Animator.")]
+        public string animation = "";
+        [Tooltip("The moment of that animation at which it is said, as a share of the animation (0 = its start, 1 = its end).")]
+        [Range(0f, 1f)] public float at;
+        public string text = "";
+        [Tooltip("The growth stages it is said at, first (x) to last (y).")]
+        public Vector2Int stages = new Vector2Int(0, PetRules.LastStage);
+    }
+
+    /// <summary>
+    /// An animation that is followed by another instead of going back to rest (the Drone Core at 100 %: it comes
+    /// apart, hovers as a swarm, then comes together again). The one that follows is never played by turn on its
+    /// own: it is only reached through the one before it.
+    /// </summary>
+    [Serializable]
+    public sealed class PetFollowOn
+    {
+        [Tooltip("The animation: the name of a state of the pet's Animator.")]
+        public string animation = "";
+        [Tooltip("How many times it is played through before the next one starts.")]
+        [Min(1)] public int times = 1;
+        [Tooltip("The animation that follows it.")]
+        public string then = "";
     }
 
     /// <summary>Where on a pet an effect goes when it names no bone.</summary>
@@ -117,6 +152,16 @@ namespace KryticalNova.Pets
         public string chargeAnimation = "";
         [Tooltip("The bone of the model that the animation carries forward in its lunge: how far it has gone tells how far through the lunge the pet is.")]
         public string chargeBone = "";
+
+        [Header("Rest pose (a model whose file was saved in some other pose than the one it rests in)")]
+        [Tooltip("The animation whose first frame is the pose the pet rests in. Its resting state has no animation of its own, so the model rests as its file has it; this puts it in that first frame before it is ever shown, and it is measured in that pose. Empty = it rests as its file has it.")]
+        public string restPose = "";
+
+        [Header("Animations that follow one another")]
+        public PetFollowOn[] followOns = new PetFollowOn[0];
+
+        [Header("What it says in its animations")]
+        public PetLine[] lines = new PetLine[0];
 
         [Header("Follow")]
         [Tooltip("Added to the pet settings' follow gap for this pet only, in metres. More hovers further from its owner.")]

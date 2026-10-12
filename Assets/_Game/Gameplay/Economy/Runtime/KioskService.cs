@@ -232,6 +232,8 @@ namespace KryticalNova.Economy
             if (index < 0 || index >= record.listings.Count) return KioskRules.ReasonGone;
             ItemDefinition item = inventory.Catalog.Get(record.listings[index].stack.itemId);
             if (item == null) return InventoryRules.ReasonUnknownItem;
+            // A faction's own item (a furnishing) is on show to everyone and sold only to its own, on neutral ground too.
+            if (!ItemFactionRules.MayHave(item, buyer.Faction)) return ItemFactionRules.ReasonOtherFaction;
 
             // Room first: nothing is paid for that cannot be carried.
             var pack = new ItemStack[PlayerInventory.Capacity];
