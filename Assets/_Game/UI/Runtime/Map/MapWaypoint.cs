@@ -14,13 +14,18 @@ namespace KryticalNova.UI
         public const float ArrivalRadius = 3f;
 
         private static string loadedZone;
+        // The scene the marker was read for. A scene's name is a new string every time it is asked for, and the
+        // maps ask every frame: the scene is told apart as a scene, and its name read once.
+        private static Scene loadedScene;
         private static bool hasWaypoint;
         private static Vector3 position;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => loadedZone = null;
-
-        private static string Zone => SceneManager.GetActiveScene().name;
+        private static void ResetStatics()
+        {
+            loadedZone = null;
+            loadedScene = default;
+        }
 
         public static bool TryGet(out Vector3 world)
         {
@@ -55,7 +60,10 @@ namespace KryticalNova.UI
 
         private static void EnsureLoaded()
         {
-            string zone = Zone;
+            Scene active = SceneManager.GetActiveScene();
+            if (loadedZone != null && active == loadedScene) return;
+            loadedScene = active;
+            string zone = active.name;
             if (zone == loadedZone) return;
             loadedZone = zone;
             hasWaypoint = HudPreferences.TryGetWaypoint(zone, out position);

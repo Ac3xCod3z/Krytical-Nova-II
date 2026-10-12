@@ -117,6 +117,8 @@ namespace KryticalNova.Vegetation.Grass
         private readonly Plane[] planes = new Plane[6];
         private readonly Vector4[] volumes = new Vector4[MaxVolumes * 2];
         private readonly Vector3[] viewCorners = new Vector3[4];
+        // SetInts(id, a, b) makes an array for its arguments on every call: these are handed over instead.
+        private readonly int[] twoInts = new int[2], fourInts = new int[4];
         private readonly GrassTrampleMap trample = new GrassTrampleMap();
         // Round the view's footprint: a clump rooted just outside it can still lean in.
         private const float FootprintMargin = 3f;
@@ -344,7 +346,8 @@ namespace KryticalNova.Vegetation.Grass
             if (fill) Dispatch(cs, cam, rules.fillCellSize, fillMax, FillPass, MaxTypes * (nearCapacity + farCapacity), fillCapacity);
 
             cs.SetBuffer(clampKernel, ArgsId, countBuffer);
-            cs.SetInts(ClampCapsId, nearCapacity, farCapacity, MaxTypes, fillCapacity);
+            fourInts[0] = nearCapacity; fourInts[1] = farCapacity; fourInts[2] = MaxTypes; fourInts[3] = fillCapacity;
+            cs.SetInts(ClampCapsId, fourInts);
             cs.Dispatch(clampKernel, Mathf.CeilToInt(DrawCount / 16f), 1, 1);
             Graphics.CopyBuffer(countBuffer, argsBuffer);
 
@@ -375,8 +378,10 @@ namespace KryticalNova.Vegetation.Grass
 
             var origin = new Vector2Int(Mathf.FloorToInt(minX / cell), Mathf.FloorToInt(minZ / cell));
             int dimX = Mathf.CeilToInt(maxX / cell) - origin.x + 1, dimZ = Mathf.CeilToInt(maxZ / cell) - origin.y + 1;
-            cs.SetInts(GridOriginId, origin.x, origin.y);
-            cs.SetInts(GridDimId, dimX, dimZ);
+            twoInts[0] = origin.x; twoInts[1] = origin.y;
+            cs.SetInts(GridOriginId, twoInts);
+            twoInts[0] = dimX; twoInts[1] = dimZ;
+            cs.SetInts(GridDimId, twoInts);
             cs.SetVector(GridId, new Vector4(cell, 0f, range, Density));
             cs.SetVector(FarParamsId, new Vector4(pass, rules.farWidthScale, 0f, 0f));
             cs.SetInt(DrawBaseId, MaxTypes * pass);

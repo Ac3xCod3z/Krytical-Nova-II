@@ -13,7 +13,10 @@ namespace KryticalNova.UI
     /// <see cref="GraphicsPreferences.PerformanceReadout"/> is ticked on the Graphics page of Settings: on the left
     /// edge, half way down, the one stretch of the screen the HUD keeps clear. Lives on its
     /// own object for the whole session, so it shows in the menus as in the world. It measures nothing while it is off.
-    /// Drawn with IMGUI on purpose: it must work in every scene, over every panel, and depend on none of them.
+    /// Drawn on a canvas of its own, made here in code and sorted above every other: it works in every scene, over
+    /// every panel, and depends on none of them. (It was IMGUI until 11 Oct 2026: that handed out some 4 KB of
+    /// memory every frame to draw the same text again, more than the rest of the game together, so the readout
+    /// itself was what brought on most of the collections it was there to show.)
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PerformanceReadout : MonoBehaviour
@@ -39,16 +42,17 @@ namespace KryticalNova.UI
         private int secondAt;
         private float secondLeft;
         private string machine;
-        private readonly GUIContent content = new GUIContent();
-        private Vector2 contentSize;
+        private const int CanvasOrder = 32000;      // over the menus' pages (30000) and the HUD's panel (10)
+        private const int FontSize = 13;
+        private Canvas canvas;
+        private RectTransform plate;
+        private UnityEngine.UI.Text label;
 
         private ProfilerRecorder drawCalls, batches, setPass, triangles, vertices;
         private ProfilerRecorder usedMemory, managedMemory, allocatedInFrame;
         private readonly FrameTiming[] timings = new FrameTiming[1];
         private readonly StringBuilder text = new StringBuilder(512);
         private string shown = string.Empty;
-        private GUIStyle style;
-        private Texture2D plate;
         private bool measuring;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -60,31 +64,35 @@ namespace KryticalNova.UI
             instance = host.AddComponent<PerformanceReadout>();
         }
 
-        private void OnEnable()
+        private void Awake()
         {
             GraphicsPreferences.Changed += Apply;
             Apply();
         }
 
-        private void OnDisable()
-        {
-            GraphicsPreferences.Changed -= Apply;
-            Measure(false);
-        }
+        private void OnDisable() => Measure(false);
 
         private void OnDestroy()
         {
-            if (plate != null) Destroy(plate);
+            GraphicsPreferences.Changed -= Apply;
             if (instance == this) instance = null;
         }
 
-        private void Apply() => Measure(GraphicsPreferences.PerformanceReadout);
+        // The component is on only while the readout is: switched off, it has no Update and its canvas is not drawn.
+        private void Apply()
+        {
+            bool on = GraphicsPreferences.PerformanceReadout;
+            if (enabled != on) enabled = on;
+            Measure(on && isActiveAndEnabled);
+        }
 
         /// <summary>Starts or stops the counters: none of them costs anything while the readout is off.</summary>
         private void Measure(bool on)
         {
             if (measuring == on) return;
             measuring = on;
+            if (on && canvas == null) BuildView();
+            if (canvas != null) canvas.gameObject.SetActive(on);
             if (on)
             {
                 drawCalls = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Draw Calls Count");
@@ -205,8 +213,49 @@ namespace KryticalNova.UI
             if (KryticalNova.Diagnostics.PerformanceLog.IsRecording)
                 text.Append("\nLOG\nPerformanceLogs / ").Append(System.IO.Path.GetFileName(KryticalNova.Diagnostics.PerformanceLog.FilePath)).Append('\n');
             shown = text.ToString();
-            content.text = shown;
-            contentSize = Vector2.zero;
+            if (label == null) return;
+            // Sized for a 1080-line screen and scaled with it, so it reads the same on a larger one.
+            canvas.scaleFactor = Mathf.Max(1f, Screen.height / 1080f);
+            label.text = shown;
+            plate.sizeDelta = new Vector2(label.preferredWidth + Padding * 2f, label.preferredHeight + Padding * 2f);
+        }
+
+        // A plate at the left edge, half way down, and the text on it. Nothing here can be clicked.
+        private void BuildView()
+        {
+            var host = new GameObject("Readout Canvas", typeof(RectTransform)) { layer = LayerMask.NameToLayer("UI") };
+            host.transform.SetParent(transform, false);
+            canvas = host.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = CanvasOrder;
+
+            var plateObject = new GameObject("Plate", typeof(RectTransform)) { layer = host.layer };
+            plate = (RectTransform)plateObject.transform;
+            plate.SetParent(host.transform, false);
+            plate.anchorMin = plate.anchorMax = new Vector2(0f, 0.5f);
+            plate.pivot = new Vector2(0f, 0.5f);
+            plate.anchoredPosition = new Vector2(Margin, 0f);
+            var backing = plateObject.AddComponent<UnityEngine.UI.Image>();
+            backing.color = new Color(0f, 0f, 0f, 0.72f);
+            backing.raycastTarget = false;
+
+            var textObject = new GameObject("Text", typeof(RectTransform)) { layer = host.layer };
+            var area = (RectTransform)textObject.transform;
+            area.SetParent(plate, false);
+            area.anchorMin = Vector2.zero;
+            area.anchorMax = Vector2.one;
+            area.offsetMin = new Vector2(Padding, Padding);
+            area.offsetMax = new Vector2(-Padding, -Padding);
+            label = textObject.AddComponent<UnityEngine.UI.Text>();
+            // Every letter as wide as the next, so the two columns line up.
+            label.font = Font.CreateDynamicFontFromOSFont(new[] { "Consolas", "Courier New", "Menlo", "DejaVu Sans Mono" }, FontSize);
+            label.fontSize = FontSize;
+            label.color = new Color(0.86f, 0.95f, 0.9f);
+            label.alignment = TextAnchor.UpperLeft;
+            label.supportRichText = false;
+            label.raycastTarget = false;
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.verticalOverflow = VerticalWrapMode.Overflow;
         }
 
         private void WriteNetwork()
@@ -233,34 +282,5 @@ namespace KryticalNova.UI
         private static string Count(ProfilerRecorder recorder) => recorder.Valid ? recorder.LastValue.ToString("N0") : "-";
 
         private static string Megabytes(ProfilerRecorder recorder) => recorder.Valid ? (recorder.LastValue / Megabyte).ToString("N0") + " MB" : "-";
-
-        private void OnGUI()
-        {
-            if (!measuring || shown.Length == 0 || Event.current.type != EventType.Repaint) return;
-            if (style == null)
-            {
-                style = new GUIStyle(GUI.skin.label)
-                {
-                    font = Font.CreateDynamicFontFromOSFont(new[] { "Consolas", "Courier New", "Menlo", "DejaVu Sans Mono" }, 13),
-                    fontSize = 13, richText = false, wordWrap = false, alignment = TextAnchor.UpperLeft,
-                };
-                style.normal.textColor = new Color(0.86f, 0.95f, 0.9f);
-                plate = new Texture2D(1, 1) { hideFlags = HideFlags.HideAndDontSave };
-                plate.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.72f));
-                plate.Apply();
-            }
-            // Sized for a 1080-line screen and scaled with it, so it reads the same on a larger one.
-            float scale = Mathf.Max(1f, Screen.height / 1080f);
-            Matrix4x4 before = GUI.matrix;
-            GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
-            // Measured once for each new text, not on every repaint.
-            if (contentSize == Vector2.zero) contentSize = style.CalcSize(content);
-            Vector2 size = contentSize;
-            float height = size.y + Padding * 2f;
-            var box = new Rect(Margin, Mathf.Max(Margin, (Screen.height / scale - height) * 0.5f), size.x + Padding * 2f, height);
-            GUI.DrawTexture(box, plate);
-            GUI.Label(new Rect(box.x + Padding, box.y + Padding, size.x, size.y), content, style);
-            GUI.matrix = before;
-        }
     }
 }
