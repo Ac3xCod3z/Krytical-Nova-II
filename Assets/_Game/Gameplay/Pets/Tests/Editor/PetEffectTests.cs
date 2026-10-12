@@ -118,8 +118,8 @@ namespace KryticalNova.Pets.Tests
 
         // The Drone Core grows through four models of its own. Each has every animation of the one before and more;
         // an effect that belongs to an animation is only worn by the forms whose Animator has that animation, and one
-        // that looks down the cannon only by the forms that have the bone. The last form's file holds it flown apart,
-        // so the pet names the pose it rests in, and its swarm is three animations that follow one another.
+        // that looks down the cannon only by the forms that have the bone. The last form's swarm is three animations
+        // that follow one another.
         [Test]
         public void The_grown_Drone_Cores_are_four_models_whose_effects_fit_their_animations()
         {
@@ -153,7 +153,7 @@ namespace KryticalNova.Pets.Tests
             }
 
             GameObject last = drone.Stage(PetRules.LastStage).model;
-            Assert.IsTrue(HasState(last, drone.restPose), "the pose it rests in is one of the last form's animations");
+            Assert.IsTrue(string.IsNullOrEmpty(drone.restPose), "its file holds the pose it rests in");
             Assert.AreEqual(2, drone.followOns.Length);
             foreach (PetFollowOn each in drone.followOns)
                 Assert.IsTrue(HasState(last, each.animation) && HasState(last, each.then), $"{each.animation} then {each.then}");

@@ -211,8 +211,6 @@ namespace KryticalNova.EditorTools
                 // The longest side of each form with its cannon, pods and fins, at the scale the base cube is shown
                 // at (0.30 m as made, 0.25 m in the game): the cubes themselves come out 0.28, 0.31, 0.35 and 0.38 m.
                 StageSizes = new[] { 0.28f, 0.47f, 0.53f, 0.63f },
-                // The 100 % model's file holds it flown apart into its swarm: it rests in the first frame of EyeLook.
-                RestPose = "EyeLook",
                 // The swarm: it comes apart, hovers as blocks for two rounds, and comes together again.
                 FollowOns = new[] { ("Disassemble", 1, "SwarmHover"), ("SwarmHover", 2, "Assemble") },
                 // The fake-out, at 24 frames a second in a clip of 130.
