@@ -4,6 +4,7 @@ using KryticalNova.Items;
 using KryticalNova.Pets;
 using KryticalNova.Progression;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 namespace KryticalNova.EditorTools
@@ -103,6 +104,65 @@ namespace KryticalNova.EditorTools
         private static readonly Vector2Int Grown = new Vector2Int(1, PetRules.LastStage);
         private static readonly Vector2Int Minigun = new Vector2Int(2, 3);
         private static readonly Vector2Int Gunship = new Vector2Int(PetRules.LastStage, PetRules.LastStage);
+
+        /// <summary>
+        /// Joins a model's animations that follow one another into one, in its Animator: the state of the first no
+        /// longer goes back to rest when it ends but straight into the next, on the frame it ends on and without a
+        /// blend (the clips are made to meet), after it has played through as many times as the table says. The one
+        /// that follows loses its own trigger, so it is only ever reached through the one before it. A model that
+        /// lacks either state is left alone. Safe to run again: it finds the work done.
+        /// </summary>
+        private static void JoinAnimations(string modelPath, in Row row)
+        {
+            var model = string.IsNullOrEmpty(modelPath) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+            var animator = model != null ? model.GetComponentInChildren<Animator>(true) : null;
+            var controller = animator != null ? animator.runtimeAnimatorController as AnimatorController : null;
+            if (controller == null || controller.layers.Length == 0) return;
+            AnimatorStateMachine machine = controller.layers[0].stateMachine;
+            bool changed = false;
+            foreach ((string animation, int times, string then) in row.FollowOns)
+            {
+                AnimatorState from = null, to = null;
+                foreach (ChildAnimatorState child in machine.states)
+                {
+                    if (child.state.name == animation) from = child.state;
+                    if (child.state.name == then) to = child.state;
+                }
+                if (from == null || to == null) continue;
+                var clip = from.motion as AnimationClip;
+                if (times > 1 && clip != null && !clip.isLooping)
+                    Debug.LogWarning($"[Pets] {controller.name}: '{animation}' is played {times} times before '{then}' but its clip does not loop, so it will hold its last frame instead.");
+
+                bool joined = from.transitions.Length == 1 && from.transitions[0].destinationState == to
+                    && from.transitions[0].hasExitTime && Mathf.Approximately(from.transitions[0].exitTime, times) && from.transitions[0].duration == 0f;
+                if (!joined)
+                {
+                    foreach (AnimatorStateTransition old in from.transitions) from.RemoveTransition(old);
+                    AnimatorStateTransition next = from.AddTransition(to);
+                    next.hasExitTime = true;
+                    next.exitTime = times; // on a loop, a whole number is that many times through
+                    next.hasFixedDuration = true;
+                    next.duration = 0f;
+                    next.offset = 0f;
+                    changed = true;
+                }
+                foreach (AnimatorStateTransition into in machine.anyStateTransitions)
+                {
+                    if (into.destinationState != to) continue;
+                    machine.RemoveAnyStateTransition(into);
+                    changed = true;
+                }
+                for (int i = controller.parameters.Length - 1; i >= 0; i--)
+                {
+                    if (controller.parameters[i].name != then || controller.parameters[i].type != AnimatorControllerParameterType.Trigger) continue;
+                    controller.RemoveParameter(i);
+                    changed = true;
+                }
+            }
+            if (!changed) return;
+            EditorUtility.SetDirty(controller);
+            Debug.Log($"[Pets] {controller.name}: its animations that follow one another are joined into one.");
+        }
 
         /// <summary>
         /// The Kitsune Spirit's effects, which are spirit fire off its tail tips. Its first form has one tail (the
@@ -256,7 +316,8 @@ namespace KryticalNova.EditorTools
                 // The longest side of each form with its cannon, pods and fins, at the scale the base cube is shown
                 // at (0.30 m as made, 0.25 m in the game): the cubes themselves come out 0.28, 0.31, 0.35 and 0.38 m.
                 StageSizes = new[] { 0.28f, 0.47f, 0.53f, 0.63f },
-                // The swarm: it comes apart, hovers as blocks for two rounds, and comes together again.
+                // The swarm: it comes apart, hovers as blocks for two rounds, and comes together again, as one
+                // animation (the states are joined in the 100 % model's Animator; Disassemble starts it).
                 FollowOns = new[] { ("Disassemble", 1, "SwarmHover"), ("SwarmHover", 2, "Assemble") },
                 // The fake-out, at 24 frames a second in a clip of 130.
                 Lines = new[]
@@ -490,6 +551,12 @@ namespace KryticalNova.EditorTools
             definition.followOns = new PetFollowOn[followCount];
             for (int i = 0; i < followCount; i++)
                 definition.followOns[i] = new PetFollowOn { animation = row.FollowOns[i].Animation, times = row.FollowOns[i].Times, then = row.FollowOns[i].Then };
+            if (followCount > 0)
+            {
+                JoinAnimations(row.Model, row);
+                if (row.StageModels != null)
+                    foreach (string stageModel in row.StageModels) JoinAnimations(stageModel, row);
+            }
             int lineCount = row.Lines != null ? row.Lines.Length : 0;
             definition.lines = new PetLine[lineCount];
             for (int i = 0; i < lineCount; i++)

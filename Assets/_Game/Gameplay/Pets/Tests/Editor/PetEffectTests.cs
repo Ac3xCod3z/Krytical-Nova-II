@@ -155,8 +155,20 @@ namespace KryticalNova.Pets.Tests
             GameObject last = drone.Stage(PetRules.LastStage).model;
             Assert.IsTrue(string.IsNullOrEmpty(drone.restPose), "its file holds the pose it rests in");
             Assert.AreEqual(2, drone.followOns.Length);
+            var controller = (UnityEditor.Animations.AnimatorController)last.GetComponentInChildren<Animator>(true).runtimeAnimatorController;
             foreach (PetFollowOn each in drone.followOns)
+            {
                 Assert.IsTrue(HasState(last, each.animation) && HasState(last, each.then), $"{each.animation} then {each.then}");
+                // The hand-over is in the Animator: straight into the next state, with no blend and no way in but this.
+                UnityEditor.Animations.AnimatorState from = null;
+                foreach (var child in controller.layers[0].stateMachine.states)
+                    if (child.state.name == each.animation) from = child.state;
+                Assert.AreEqual(1, from.transitions.Length, $"{each.animation} has one way on");
+                Assert.AreEqual(each.then, from.transitions[0].destinationState.name);
+                Assert.AreEqual(0f, from.transitions[0].duration, $"{each.animation} meets {each.then} without a blend");
+                Assert.AreEqual((float)each.times, from.transitions[0].exitTime, $"{each.animation} plays {each.times} time(s) through");
+                foreach (var parameter in controller.parameters) Assert.AreNotEqual(each.then, parameter.name, $"{each.then} has no trigger of its own");
+            }
             Assert.AreEqual(5, drone.lines.Length, "Ka, Me, Ha, just kidding, Die");
             foreach (PetLine line in drone.lines) Assert.IsTrue(HasState(last, line.animation), line.text);
         }
