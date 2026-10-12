@@ -868,8 +868,48 @@ picture, with markers for the player, the Squad's members, NPCs, portals, the ne
 `HostileSettings.minimapMetres`, a Bruiser with a marker of its own, and one kept for a boss), and **the portrait
 is a still picture**. Both took a camera out of the frame.
 
-None of this has been measured in a build yet: the numbers above are the Editor's. The check that counts is
-`gm.bench` in the new build, read with the reader, on the owner's PC and on the two others.
+**Measured in the first two builds** (owner's PC, 11 Oct 2026, `gm.bench`; IL2CPP 22:47 / Mono 20:59). Both hold
+the 144 cap. In play the scripts are handed 0.2 to 0.6 KB a frame (3.7 before) and memory is collected 0 to 1
+times a minute (10 before); `hud.redraw` 0.01 to 0.03 ms; a save 0.4 / 1.1 ms on its frame. Slowest frame:
+`bench.town` 8.7 / 47.7 ms, `bench.fight` 13.0 / 19.2 ms, and after the benchmark, standing, 10.5 / 101.5 ms. The
+IL2CPP build passes the turn and the fight with room for a PC one and a half times slower. `bench.run` failed in
+both, for the one reason below.
+
+### A fade may not cost a frame (the North Gate, 11 Oct 2026)
+
+Running through the North Gate took the graphics card from 2.4 ms to 22-35 ms for three seconds, and set-pass calls
+from 268 to 1,115. Three wall pieces were being faded (`OccluderFader`), no more. The cost was the glow halo's pass
+that draws "the faded props whole", so a glow does not shine through the fade's holes: it drew each prop's parts
+by the number its mesh reported, and a piece of the town's combined static mesh reports that whole mesh, 208
+parts. Three pieces, 624 draws of a town-sized mesh. With the fix the same view costs what it costs with the wall
+solid (4.6 ms, 235 set-pass calls, in the Editor).
+
+What is in place so that nothing can do this again:
+
+- **A faded piece answers for its own parts** (`OccluderFader.OwnSubmeshes`: as many as it has materials, never
+  the combined mesh's count). Anything that draws a renderer part by part must ask this, not the mesh.
+- **Only what is in the line of sight fades.** A prop of up to eight pieces fades whole; of a prop of many pieces
+  under one collider, only the pieces the line from camera to character passes through.
+- **A hard limit**: at most `OccluderFader.MostFadedRenderers` (48) pieces are faded at once; the rest stay solid.
+  The glow's pass has its own (96 draws, 8 parts a prop) whatever the list holds.
+- **A click goes through whatever is drawn faded** (`OccluderFader.IsFaded(hit)`): asked of the pieces drawn, at
+  the point clicked, not of the collider the line of sight happened to meet, so a destination behind a faded
+  wall can always be chosen.
+- **`gm.sweep [metres]`** (`BenchCommands`) is how the next such place is found before a player finds it: it
+  stands the character on a grid over every terrain (a spot every 50 m unless said), looks four ways from each,
+  and writes `sweep_<date>_<time>.txt` beside the performance logs: the costliest views for the graphics card
+  and by set-pass calls, looked at a second time for longer (a view can be caught while something loads; a place
+  that costs is costly both times), then every view. After the fix, in the Editor: 333 spots, 1,332 views, 185
+  of them with something faded; usual view 4.2 ms and 208 set-pass calls, most set-pass calls anywhere 249.
+  Run it after anything is added to the world or to what is drawn, and in a build on the slowest PC to hand.
+- The log reader's sections show a place like this as a section that fails with the time in
+  `TimeUpdate.WaitForLastPresentationAndUpdateTime` (the main thread waiting for the picture) and the `S` lines'
+  set-pass column jumping: the camera's x and z are on the same lines.
+
+**Known and not done:** a player appearing is costly. Building the networked character takes about 230 ms in the
+Editor and hands out 31 MB (instantiating the prefab 69 ms, `CharacterAppearance.Awake` 43 ms), which is the
+175 to 258 ms frame when hosting starts in the builds, and is paid again by everyone near whenever any player
+appears.
 
 ### The world, and what draws it (10 Oct 2026)
 

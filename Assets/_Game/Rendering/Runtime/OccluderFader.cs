@@ -13,6 +13,13 @@ namespace KryticalNova.Rendering
     /// checks and nine in the time a fade takes, so a tree or a truck filled the screen before it began to fade.
     /// Above <see cref="FastSpeed"/> the check runs every frame and also along the line the camera will be looking
     /// down a moment from now, so what is about to stand in the way is already thin when it does.
+    /// <para><b>What a fade may cost is bounded</b> (11 Oct 2026, after one wall of the North Gate took the frame from
+    /// 5 ms to 19 ms of the graphics card). A prop of a few pieces fades whole; of a prop of many pieces (a building
+    /// under one collider) only the pieces the line of sight passes through fade. No more than
+    /// <see cref="MostFadedRenderers"/> pieces are faded at once, whatever stands in the way: the rest stay solid.
+    /// And a piece is listed in <see cref="Faded"/> with the number of parts that are its own
+    /// (<see cref="OwnSubmeshes"/>): a piece of the world's combined static mesh answers for the whole of that mesh
+    /// when its mesh is asked, 208 parts for one wall, and whoever drew "the faded props whole" drew a town.</para>
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class OccluderFader : MonoBehaviour
@@ -25,6 +32,11 @@ namespace KryticalNova.Rendering
         private const float FastSpeed = 8f;            // metres a second: above walking, the look-ahead is on
         private const float LookAheadSeconds = 0.3f;   // a fade and a half
         private const float SpeedEase = 12f;
+        /// <summary>The most pieces faded at one time. More than this in the way, and the rest stay solid.</summary>
+        public const int MostFadedRenderers = 48;
+        // A prop of up to this many pieces fades whole; a larger one only where the line of sight goes through it.
+        private const int WholeUpTo = 8;
+        private const float SightPadding = 0.75f;      // metres round the line of sight that count as in the way
         private static readonly int FadeId = Shader.PropertyToID("_Fade");
 
         [SerializeField] private LayerMask occluderLayers = 1; // Default
@@ -35,9 +47,12 @@ namespace KryticalNova.Rendering
             public Renderer[] renderers;
             public Material[][] originals;
             public Material[][] dithered;
-            public float fade;
+            // Piece by piece: how far it is faded, when the line of sight last went through it, whether it wears its dither.
+            public float[] fades;
+            public int[] seenTicks;
+            public bool[] swapped;
+            public float fade;      // the most faded of its pieces: what "can be seen through" is asked of
             public int seenTick;
-            public bool swapped;
         }
 
         /// <summary>
@@ -60,6 +75,10 @@ namespace KryticalNova.Rendering
         private MaterialPropertyBlock block;
         private float nextCheck;
         private int tick;
+        private int fadedCount;
+        // The pieces faded enough to see through, and what each faded piece wore before its dither.
+        private readonly HashSet<Renderer> seeThrough = new HashSet<Renderer>();
+        private readonly Dictionary<Renderer, Material[]> worn = new Dictionary<Renderer, Material[]>();
         private Vector3 lastTargetPosition, targetVelocity;
         private bool hasLastTargetPosition;
 
@@ -74,16 +93,62 @@ namespace KryticalNova.Rendering
         private void Awake() => block = new MaterialPropertyBlock();
 
         /// <summary>
-        /// True while this collider's prop is faded enough to see through. What can be seen through can be clicked
-        /// through: pointer picks skip it, so the ground behind a faded building stays selectable.
+        /// True while what this collider stands for is drawn faded enough to see through. What can be seen through
+        /// can be clicked through: pointer picks skip it, so the ground behind a faded building stays selectable.
+        /// It is asked of what is drawn, not of the collider the line of sight happened to meet: a prop with two
+        /// colliders is see-through for a click on either.
         /// </summary>
-        public bool IsFaded(Collider col) =>
-            col != null && byCollider.TryGetValue(col, out var occluder) && occluder != null && occluder.fade >= SeeThroughAmount;
+        public bool IsFaded(Collider col) => IsFaded(col, false, default);
+
+        /// <summary>
+        /// The same for a pointer's hit. Of a prop of many pieces only the faded ones are see-through, so the piece
+        /// under the point clicked decides.
+        /// </summary>
+        public bool IsFaded(in RaycastHit hit) => IsFaded(hit.collider, true, hit.point);
+
+        private bool IsFaded(Collider col, bool atPoint, Vector3 point)
+        {
+            if (col == null || seeThrough.Count == 0) return false; // nothing is faded: nothing is looked up
+            if (!byCollider.TryGetValue(col, out var o))
+            {
+                o = Build(col);
+                byCollider[col] = o;
+            }
+            if (o == null) return false;
+            bool whole = !atPoint || o.renderers.Length <= WholeUpTo;
+            for (int r = 0; r < o.renderers.Length; r++)
+            {
+                Renderer piece = o.renderers[r];
+                if (piece == null || !seeThrough.Contains(piece)) continue;
+                if (whole) return true;
+                Bounds bounds = piece.bounds;
+                bounds.Expand(SightPadding);
+                if (bounds.Contains(point)) return true;
+            }
+            return false;
+        }
 
         private void OnDisable()
         {
             for (int i = active.Count - 1; i >= 0; i--) Restore(active[i]);
             active.Clear();
+            fadedCount = 0;
+            seeThrough.Clear();
+            worn.Clear();
+        }
+
+        /// <summary>
+        /// The parts of a renderer that are its own to draw: as many as it has materials, and no more than its mesh
+        /// has. A piece of a static batch shows the batch's combined mesh as its own, with every part of every piece
+        /// in it; its materials are still only its own.
+        /// </summary>
+        public static int OwnSubmeshes(Renderer renderer)
+        {
+            if (renderer == null) return 0;
+            int materials = renderer.sharedMaterials.Length;
+            if (renderer.isPartOfStaticBatch) return materials;
+            return renderer.TryGetComponent(out MeshFilter filter) && filter.sharedMesh != null
+                ? Mathf.Min(materials, filter.sharedMesh.subMeshCount) : 0;
         }
 
         private void OnDestroy()
@@ -121,17 +186,30 @@ namespace KryticalNova.Rendering
             for (int i = active.Count - 1; i >= 0; i--)
             {
                 var o = active[i];
-                bool occluding = tick - o.seenTick <= held; // still hit on this or the previous check
-                float goal = occluding ? FadedAmount : 0f;
-                if (Mathf.Approximately(o.fade, goal) && (occluding || o.fade > 0f)) continue;
-                o.fade = Mathf.MoveTowards(o.fade, goal, step);
-                if (o.fade <= 0f && !occluding)
+                float most = 0f;
+                bool any = false;
+                for (int r = 0; r < o.renderers.Length; r++)
                 {
-                    Restore(o);
-                    active.RemoveAt(i);
-                    continue;
+                    bool occluding = tick - o.seenTicks[r] <= held; // still in the way on this or the previous check
+                    if (!occluding && !o.swapped[r]) continue;
+                    if (!o.swapped[r] && !Swap(o, r)) continue;      // over the limit: it stays solid
+                    float goal = occluding ? FadedAmount : 0f;
+                    if (!Mathf.Approximately(o.fades[r], goal))
+                    {
+                        o.fades[r] = Mathf.MoveTowards(o.fades[r], goal, step);
+                        if (o.fades[r] <= 0f && !occluding)
+                        {
+                            Restore(o, r);
+                            continue;
+                        }
+                        ApplyFade(o, r);
+                    }
+                    if (o.fades[r] >= SeeThroughAmount) seeThrough.Add(o.renderers[r]); else seeThrough.Remove(o.renderers[r]);
+                    any = true;
+                    if (o.fades[r] > most) most = o.fades[r];
                 }
-                ApplyFade(o);
+                o.fade = most;
+                if (!any) active.RemoveAt(i);
             }
         }
 
@@ -162,8 +240,10 @@ namespace KryticalNova.Rendering
             Vector3 dir = aim - from;
             float dist = dir.magnitude - CastRadius; // stop short of the player
             if (dist <= 0.1f) return;
-            int count = Physics.SphereCastNonAlloc(from, CastRadius, dir / (dist + CastRadius), hits, dist,
+            Vector3 along = dir / (dist + CastRadius);
+            int count = Physics.SphereCastNonAlloc(from, CastRadius, along, hits, dist,
                 occluderLayers, QueryTriggerInteraction.Ignore);
+            var sight = new Ray(from, along);
             for (int i = 0; i < count; i++)
             {
                 var col = hits[i].collider;
@@ -176,7 +256,21 @@ namespace KryticalNova.Rendering
                 if (o == null) continue;
                 if (o.seenTick != tick && !active.Contains(o)) active.Add(o);
                 o.seenTick = tick;
-                if (!o.swapped) Swap(o);
+                // A prop of a few pieces is in the way as one thing. Of a prop of many, only the pieces the line of
+                // sight goes through are: a building under one collider is not made see-through from end to end.
+                bool whole = o.renderers.Length <= WholeUpTo;
+                for (int r = 0; r < o.renderers.Length; r++)
+                {
+                    if (!whole)
+                    {
+                        Renderer piece = o.renderers[r];
+                        if (piece == null) continue;
+                        Bounds bounds = piece.bounds;
+                        bounds.Expand(SightPadding * 2f);
+                        if (!bounds.Contains(from) && (!bounds.IntersectRay(sight, out float entered) || entered > dist)) continue;
+                    }
+                    o.seenTicks[r] = tick;
+                }
             }
         }
 
@@ -197,21 +291,23 @@ namespace KryticalNova.Rendering
 
             var kept = new List<Renderer>(renderers.Length);
             foreach (var r in renderers)
-                if (r is MeshRenderer && r.enabled && IsOpaque(r.sharedMaterials)) kept.Add(r);
+                if (r is MeshRenderer && r.enabled && IsOpaque(worn.TryGetValue(r, out Material[] real) ? real : r.sharedMaterials)) kept.Add(r);
             if (kept.Count == 0) return null;
 
             var o = new Occluder
             {
                 renderers = kept.ToArray(),
                 originals = new Material[kept.Count][],
-                dithered = new Material[kept.Count][]
+                dithered = new Material[kept.Count][],
+                fades = new float[kept.Count],
+                seenTicks = new int[kept.Count],
+                swapped = new bool[kept.Count],
             };
             for (int i = 0; i < kept.Count; i++)
             {
-                var mats = kept[i].sharedMaterials;
-                o.originals[i] = mats;
-                o.dithered[i] = new Material[mats.Length];
-                for (int m = 0; m < mats.Length; m++) o.dithered[i][m] = CloneFor(mats[m]);
+                // A piece another collider's prop has faded right now wears its dither: what it wore before is its own.
+                o.originals[i] = worn.TryGetValue(kept[i], out Material[] real) ? real : kept[i].sharedMaterials;
+                o.seenTicks[i] = int.MinValue / 2;
             }
             return o;
         }
@@ -222,43 +318,63 @@ namespace KryticalNova.Rendering
             return mats.Length > 0;
         }
 
-        private void Swap(Occluder o)
+        // One piece into its dither. False when as many are faded as may be: it stays as it is.
+        private bool Swap(Occluder o, int index)
         {
-            for (int i = 0; i < o.renderers.Length; i++)
+            Renderer r = o.renderers[index];
+            // Over the limit, or already faded as a piece of another collider's prop: that one answers for it.
+            if (r == null || fadedCount >= MostFadedRenderers || worn.ContainsKey(r)) return false;
+            // The dither copies of its materials are made the first time it fades, not when it is first met.
+            if (o.dithered[index] == null)
             {
-                Renderer r = o.renderers[i];
-                if (r == null) continue;
-                r.sharedMaterials = o.dithered[i];
-                int submeshes = r.TryGetComponent(out MeshFilter filter) && filter.sharedMesh != null ? filter.sharedMesh.subMeshCount : 0;
-                if (submeshes > 0) FadedList.Add((r, submeshes));
+                Material[] mats = o.originals[index];
+                o.dithered[index] = new Material[mats.Length];
+                for (int m = 0; m < mats.Length; m++) o.dithered[index][m] = CloneFor(mats[m]);
             }
-            o.swapped = true;
-            ApplyFade(o);
+            worn[r] = o.originals[index];
+            r.sharedMaterials = o.dithered[index];
+            int submeshes = OwnSubmeshes(r);
+            if (submeshes > 0) FadedList.Add((r, submeshes));
+            o.swapped[index] = true;
+            fadedCount++;
+            return true;
         }
 
         private void Restore(Occluder o)
         {
             for (int i = 0; i < o.renderers.Length; i++)
-            {
-                var r = o.renderers[i];
-                if (r == null) continue;
-                r.sharedMaterials = o.originals[i];
-                r.SetPropertyBlock(null);
-            }
-            if (o.swapped) FadedList.RemoveAll(faded => faded.renderer == null || System.Array.IndexOf(o.renderers, faded.renderer) >= 0);
-            o.swapped = false;
+                if (o.swapped[i]) Restore(o, i);
             o.fade = 0f;
         }
 
-        private void ApplyFade(Occluder o)
+        private void Restore(Occluder o, int index)
         {
-            foreach (var r in o.renderers)
+            Renderer r = o.renderers[index];
+            if (r != null)
             {
-                if (r == null) continue;
-                r.GetPropertyBlock(block);
-                block.SetFloat(FadeId, o.fade);
-                r.SetPropertyBlock(block);
+                r.sharedMaterials = o.originals[index];
+                r.SetPropertyBlock(null);
             }
+            // A piece that was destroyed while faded is still let go of.
+            if (!ReferenceEquals(r, null))
+            {
+                seeThrough.Remove(r);
+                worn.Remove(r);
+            }
+            for (int i = FadedList.Count - 1; i >= 0; i--)
+                if (FadedList[i].renderer == null || FadedList[i].renderer == r) FadedList.RemoveAt(i);
+            o.swapped[index] = false;
+            o.fades[index] = 0f;
+            fadedCount = Mathf.Max(0, fadedCount - 1);
+        }
+
+        private void ApplyFade(Occluder o, int index)
+        {
+            Renderer r = o.renderers[index];
+            if (r == null) return;
+            r.GetPropertyBlock(block);
+            block.SetFloat(FadeId, o.fades[index]);
+            r.SetPropertyBlock(block);
         }
 
         /// <summary>One dither clone per source material, copying the Synty Generic_Basic (or URP Lit) inputs.</summary>

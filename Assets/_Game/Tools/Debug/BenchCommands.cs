@@ -19,6 +19,10 @@ namespace KryticalNova.DevTools
     /// <c>Tools/Editor/Build/ReadPerformanceLog.py</c>. Like every GM command it runs where the game is decided.
     /// <para>It changes nothing that is saved: the character fights as it is, takes no damage and spends no Flux
     /// while the benchmark runs, and is put back where it stood.</para>
+    /// <para><c>gm.sweep</c> is the other tool: it stands the character on every walkable spot of a grid over the
+    /// map, looks four ways from each, and writes where the frame cost most to draw. The benchmark runs one road;
+    /// the North Gate, where three faded wall pieces took the graphics card from 5 ms to 19, was found only because
+    /// that road went through it. The sweep is how the next such place is found before a player finds it.</para>
     /// </summary>
     public static class BenchCommands
     {
@@ -28,6 +32,15 @@ namespace KryticalNova.DevTools
         private const float FightSeconds = 45f, CastEvery = 0.15f, StandOff = 2.5f;
         private const float RunSeconds = 60f, Arrived = 6f, LegSeconds = 25f;
         private const float SlowMs = 20f;
+        public const string SweepSection = "sweep";
+        private const float SweepSettleSeconds = 0.35f;   // after each move, for what streams in and wakes
+        private const int SweepSettleFrames = 6, SweepFrames = 6, SweepWorst = 40;
+        // The costliest views are looked at a second time, for longer: a place that costs is costly both times,
+        // while a view that was only caught as something loaded is not.
+        private const int SweepAgain = 12, SweepAgainFrames = 30;
+        private const float SweepAgainSettleSeconds = 1f;
+        private const float SweepReach = 6f;              // how far from a grid point walkable ground may be
+        private static readonly float[] SweepYaws = { 0f, 90f, 180f, 270f };
 
         private static Runner runner;
 
@@ -58,9 +71,195 @@ namespace KryticalNova.DevTools
                 + (PerformanceLog.IsRecording ? string.Empty : " The performance log is NOT recording (in the Editor: Krytical Nova > Build > Record Performance Log In Play), so only the short summary will be shown.");
         }
 
+        [Command("gm.sweep", "Find the places that cost most to draw: stands the character on a grid over the whole map (a spot every " +
+                             "so many metres, 50 unless said), looks four ways from each, and writes the worst to a sweep_ file beside the " +
+                             "performance logs. Several minutes; hands off. gm.bench stop ends it early.")]
+        private static string Sweep(float metres = 50f)
+        {
+            if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
+            if (runner != null && runner.Running) return "The benchmark or a sweep is already running (gm.bench stop ends it).";
+            if (runner == null)
+            {
+                var host = new GameObject("Benchmark") { hideFlags = HideFlags.HideAndDontSave };
+                Object.DontDestroyOnLoad(host);
+                runner = host.AddComponent<Runner>();
+            }
+            int spots = runner.BeginSweep(player, Mathf.Clamp(metres, 10f, 200f));
+            return spots == 0 ? "No walkable ground was found to sweep."
+                : $"Sweep started: {spots} spots, four views each, about {spots * 4 * 0.2f + spots * SweepSettleSeconds:0} seconds. Leave the keys and the mouse alone.";
+        }
+
         private sealed class Runner : MonoBehaviour
         {
             public bool Running { get; private set; }
+
+            private struct View
+            {
+                public Vector3 At;
+                public float Yaw, GpuMs, FrameMs;
+                public long SetPass, Triangles;
+                public int Faded;
+            }
+
+            private readonly List<Vector3> spots = new List<Vector3>(512);
+            private readonly List<View> views = new List<View>(2048);
+            private readonly List<View> again = new List<View>(32);
+            private readonly FrameTiming[] timing = new FrameTiming[1];
+
+            /// <summary>Lays the grid over the walkable ground and starts walking it. Returns how many spots it has.</summary>
+            public int BeginSweep(GameObject target, float metres)
+            {
+                spots.Clear();
+                views.Clear();
+                again.Clear();
+                // The ground the map has: every terrain's square, walked in rows, each point moved onto the NavMesh.
+                foreach (Terrain terrain in Terrain.activeTerrains)
+                {
+                    Vector3 corner = terrain.transform.position, size = terrain.terrainData.size;
+                    for (float z = metres * 0.5f; z < size.z; z += metres)
+                        for (float x = metres * 0.5f; x < size.x; x += metres)
+                        {
+                            var point = new Vector3(corner.x + x, 0f, corner.z + z);
+                            point.y = terrain.SampleHeight(point) + corner.y;
+                            if (UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, SweepReach, UnityEngine.AI.NavMesh.AllAreas))
+                                spots.Add(hit.position);
+                        }
+                }
+                if (spots.Count == 0) return 0;
+                player = target;
+                Running = true;
+                StartCoroutine(RunSweep());
+                return spots.Count;
+            }
+
+            private IEnumerator RunSweep()
+            {
+                summary.Clear();
+                startedAt = player.transform.position;
+                gm = player.GetComponent<PlayerGmState>();
+                if (gm != null)
+                {
+                    godWas = gm.GodMode;
+                    fluxWas = gm.InfiniteChi;
+                    gm.SetGodMode(true);
+                }
+                restore = true;
+                var orbit = FindAnyObjectByType<CinemachineOrbitalFollow>();
+                float yawWas = orbit != null ? orbit.HorizontalAxis.Value : 0f;
+                var setPass = Unity.Profiling.ProfilerRecorder.StartNew(Unity.Profiling.ProfilerCategory.Render, "SetPass Calls Count");
+                var triangles = Unity.Profiling.ProfilerRecorder.StartNew(Unity.Profiling.ProfilerCategory.Render, "Triangles Count");
+                Open(SweepSection);
+                // One look: the worst frame, the most calls and the mean time of the graphics card over a few frames.
+                IEnumerator Look(Vector3 at, float yaw, int frames, List<View> into)
+                {
+                    if (orbit != null) orbit.HorizontalAxis.Value = orbit.HorizontalAxis.ClampValue(yaw);
+                    for (int f = 0; f < SweepSettleFrames; f++) yield return null;
+                    var view = new View { At = at, Yaw = yaw };
+                    double gpu = 0;
+                    int gpuFrames = 0;
+                    for (int f = 0; f < frames; f++)
+                    {
+                        yield return null;
+                        FrameTimingManager.CaptureFrameTimings();
+                        if (FrameTimingManager.GetLatestTimings(1, timing) > 0 && timing[0].gpuFrameTime > 0 && timing[0].gpuFrameTime < 2000)
+                        {
+                            gpu += timing[0].gpuFrameTime;
+                            gpuFrames++;
+                        }
+                        view.FrameMs = Mathf.Max(view.FrameMs, Time.unscaledDeltaTime * 1000f);
+                        view.SetPass = System.Math.Max(view.SetPass, setPass.Valid ? setPass.LastValue : 0);
+                        view.Triangles = System.Math.Max(view.Triangles, triangles.Valid ? triangles.LastValue : 0);
+                    }
+                    view.GpuMs = gpuFrames > 0 ? (float)(gpu / gpuFrames) : -1f;
+                    view.Faded = KryticalNova.Rendering.OccluderFader.Faded.Count;
+                    into.Add(view);
+                }
+
+                for (int s = 0; s < spots.Count; s++)
+                {
+                    Place(spots[s]);
+                    yield return new WaitForSecondsRealtime(SweepSettleSeconds);
+                    foreach (float yaw in SweepYaws) yield return Look(spots[s], yaw, SweepFrames, views);
+                }
+
+                // The costliest again, by the graphics card and by set-pass calls.
+                var costly = new List<View>(views);
+                costly.Sort((a, b) => b.GpuMs.CompareTo(a.GpuMs));
+                var busiest = new List<View>(views);
+                busiest.Sort((a, b) => b.SetPass.CompareTo(a.SetPass));
+                var revisit = new List<View>(SweepAgain * 2);
+                for (int i = 0; i < SweepAgain && i < costly.Count; i++) revisit.Add(costly[i]);
+                for (int i = 0; i < SweepAgain && i < busiest.Count; i++)
+                {
+                    View candidate = busiest[i];
+                    if (!revisit.Exists(v => v.At == candidate.At && v.Yaw == candidate.Yaw)) revisit.Add(candidate);
+                }
+                foreach (View view in revisit)
+                {
+                    Place(view.At);
+                    yield return new WaitForSecondsRealtime(SweepAgainSettleSeconds);
+                    yield return Look(view.At, view.Yaw, SweepAgainFrames, again);
+                }
+                setPass.Dispose();
+                triangles.Dispose();
+                if (orbit != null) orbit.HorizontalAxis.Value = yawWas;
+                Close(SweepSection);
+                summary.Append(WriteSweep());
+                Finish("sweep done");
+            }
+
+            // The file: what is usual, the views that cost most (by the graphics card, then by set-pass calls), then every view.
+            private string WriteSweep()
+            {
+                if (views.Count == 0) return "  nothing was measured" + System.Environment.NewLine;
+                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                var byGpu = new List<View>(views);
+                byGpu.Sort((a, b) => b.GpuMs.CompareTo(a.GpuMs));
+                var byPass = new List<View>(views);
+                byPass.Sort((a, b) => b.SetPass.CompareTo(a.SetPass));
+                float usualGpu = byGpu[byGpu.Count / 2].GpuMs;
+                long usualPass = byPass[byPass.Count / 2].SetPass;
+
+                var text = new System.Text.StringBuilder(views.Count * 64 + 4096);
+                text.Append("Krytical Nova II sweep  ").Append(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", inv)).Append("  ")
+                    .Append(SystemInfo.graphicsDeviceName).Append("  ").Append(Screen.width).Append(" x ").Append(Screen.height)
+                    .Append(Application.isEditor ? "  EDITOR" : string.Empty).Append('\n');
+                text.Append(spots.Count).Append(" spots, ").Append(views.Count).Append(" views. Usual view: graphics card ")
+                    .Append(usualGpu.ToString("0.0", inv)).Append(" ms, ").Append(usualPass).Append(" set-pass calls.\n\n");
+                void Row(in View v) => text.Append("  x ").Append(v.At.x.ToString("0", inv).PadLeft(5)).Append("  z ").Append(v.At.z.ToString("0", inv).PadLeft(5))
+                    .Append("  looking ").Append(v.Yaw.ToString("0", inv).PadLeft(3)).Append("   gpu ").Append(v.GpuMs.ToString("0.0", inv).PadLeft(5))
+                    .Append(" ms   frame ").Append(v.FrameMs.ToString("0.0", inv).PadLeft(5)).Append(" ms   set-pass ").Append(v.SetPass.ToString(inv).PadLeft(5))
+                    .Append("   triangles ").Append(v.Triangles.ToString(inv).PadLeft(8)).Append("   faded ").Append(v.Faded).Append('\n');
+                if (again.Count > 0)
+                {
+                    again.Sort((a, b) => b.GpuMs.CompareTo(a.GpuMs));
+                    text.Append("THE COSTLIEST, LOOKED AT AGAIN (a second of standing there first, then ").Append(SweepAgainFrames)
+                        .Append(" frames: what is still costly here is costly; gm.tpxyz x 1 z goes there)\n");
+                    foreach (View v in again) Row(v);
+                    text.Append('\n');
+                }
+                text.Append("COSTLIEST FOR THE GRAPHICS CARD ON THE FIRST PASS (a view can be caught while something loads)\n");
+                for (int i = 0; i < byGpu.Count && i < SweepWorst; i++) Row(byGpu[i]);
+                text.Append("\nMOST SET-PASS CALLS\n");
+                for (int i = 0; i < byPass.Count && i < SweepWorst; i++) Row(byPass[i]);
+                text.Append("\nEVERY VIEW\n");
+                foreach (View v in views) Row(v);
+
+                string folder = PerformanceLog.IsRecording && !string.IsNullOrEmpty(PerformanceLog.FilePath)
+                    ? System.IO.Path.GetDirectoryName(PerformanceLog.FilePath) : PerformanceLogRecorder.Folder();
+                string path = System.IO.Path.Combine(folder, "sweep_" + System.DateTime.Now.ToString("yyyy-MM-dd_HHmmss", inv) + ".txt");
+                try
+                {
+                    System.IO.Directory.CreateDirectory(folder);
+                    System.IO.File.WriteAllText(path, text.ToString());
+                }
+                catch (System.Exception e) { return "  the sweep could not be written: " + e.Message + "\n"; }
+
+                View worst = again.Count > 0 ? again[0] : byGpu[0];
+                return "  usual view " + usualGpu.ToString("0.0", inv) + " ms of the graphics card and " + usualPass + " set-pass calls; costliest "
+                    + worst.GpuMs.ToString("0.0", inv) + " ms at x " + worst.At.x.ToString("0", inv) + " z " + worst.At.z.ToString("0", inv)
+                    + " looking " + worst.Yaw.ToString("0", inv) + "; most set-pass " + byPass[0].SetPass + "\n  written to " + path + "\n";
+            }
 
             private GameObject player;
             private PlayerGmState gm;
