@@ -852,7 +852,9 @@ still: firsts being paid for one by one. Eight things were done about it, in thi
    `Flush()` (on quitting, on `gm.save`) waits for the disk. What is left on the frame is turning the character
    into text.
 6. **A frame cap by default.** The Graphics page's frame cap (used with vertical sync off) has a new first choice,
-   **AS THE SCREEN**, and it is what the game ships with; NO CAP is still there. A PC that is not flat out has room
+   **AS THE SCREEN**: the highest refresh rate the screen is made for (the fastest mode it offers). The game ships
+   with vertical sync off and that cap (owner, 11 Oct 2026); NO CAP is still there. The cap is stored under a new
+   key, so an older "no cap" is not taken for a choice. A PC that is not flat out has room
    for a frame that takes longer, and frames the screen cannot show are work for nothing.
 7. **Naming the unnamed**: the steps and the cameras above.
 8. **Measuring**: the sections and the benchmark above.

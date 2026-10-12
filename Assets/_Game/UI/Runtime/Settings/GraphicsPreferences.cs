@@ -46,7 +46,7 @@ namespace KryticalNova.UI
 
         public const float MinRenderScale = 0.5f;
         public const float MinGrassDensity = 0.2f;
-        /// <summary>The frame cap that follows the screen: as many frames a second as the display shows.</summary>
+        /// <summary>The frame cap that follows the screen: as many frames a second as the display can show at its fastest.</summary>
         public const int FrameCapOfScreen = -1;
         public static readonly int[] FrameCaps = { FrameCapOfScreen, 30, 60, 120, 144, 240, 0 }; // 0 = no cap
 
@@ -91,7 +91,11 @@ namespace KryticalNova.UI
         public static bool SunShafts { get => GetInt("shafts", 1) != 0; set => SetDetail("shafts", value ? 1 : 0); }
         public static bool ComicOutlines { get => GetInt("outlines", 1) != 0; set => SetDetail("outlines", value ? 1 : 0); }
 
-        public static bool VSync { get => GetInt("vsync", 1) != 0; set => Set("vsync", value ? 1 : 0); }
+        /// <summary>
+        /// Off as the game ships (owner, 11 Oct 2026): the frame rate is held by the frame cap, at the highest the
+        /// screen is made for, not by waiting for the screen.
+        /// </summary>
+        public static bool VSync { get => GetInt("vsync", 0) != 0; set => Set("vsync", value ? 1 : 0); }
 
         /// <summary>
         /// The upscaler. Not part of a preset: which one a player can use depends on their graphics card. While one
@@ -117,21 +121,30 @@ namespace KryticalNova.UI
 
         /// <summary>
         /// Frames per second the game is held to with VSync off: <see cref="FrameCapOfScreen"/> (what the game ships
-        /// with) holds it to the screen's own rate, 0 is no cap. Frames the screen cannot show are work for nothing,
-        /// and a PC that is not flat out has room for a frame that takes longer.
+        /// with) holds it to the highest rate the screen is made for, 0 is no cap. Frames the screen cannot show are
+        /// work for nothing, and a PC that is not flat out has room for a frame that takes longer.
+        /// <para>Kept under a key of its own since 11 Oct 2026: what was stored before (no cap, as the game then
+        /// shipped) is not taken for a choice.</para>
         /// </summary>
         public static int FrameCap
         {
-            get => Mathf.Max(FrameCapOfScreen, GetInt("frameCap", FrameCapOfScreen));
-            set => Set("frameCap", Mathf.Max(FrameCapOfScreen, value));
+            get => Mathf.Max(FrameCapOfScreen, GetInt(FrameCapKey, FrameCapOfScreen));
+            set => Set(FrameCapKey, Mathf.Max(FrameCapOfScreen, value));
         }
 
-        /// <summary>The screen's refresh rate, as a whole number of frames a second (60 when the display does not say).</summary>
+        private const string FrameCapKey = "frameLimit";
+
+        /// <summary>
+        /// The highest refresh rate the screen is made for, as a whole number of frames a second: the fastest of the
+        /// modes it offers, and never less than the one it is running at (60 when the display does not say).
+        /// </summary>
         public static int ScreenRate
         {
             get
             {
                 double rate = Screen.currentResolution.refreshRateRatio.value;
+                foreach (Resolution mode in Screen.resolutions)
+                    if (mode.refreshRateRatio.value > rate) rate = mode.refreshRateRatio.value;
                 return rate >= 1.0 ? Mathf.RoundToInt((float)rate) : 60;
             }
         }
@@ -177,7 +190,7 @@ namespace KryticalNova.UI
         /// <summary>Every graphics option back to what the game ships with (the High preset, the display's own size).</summary>
         public static void ResetToDefaults()
         {
-            foreach (string key in new[] { "preset", "renderScale", "shadows", "aa", "grass", "fog", "shafts", "outlines", "vsync", "frameCap", "window", "width", "height", "readout", "upscaler", "upscalerQuality" })
+            foreach (string key in new[] { "preset", "renderScale", "shadows", "aa", "grass", "fog", "shafts", "outlines", "vsync", FrameCapKey, "window", "width", "height", "readout", "upscaler", "upscalerQuality" })
                 PlayerPrefs.DeleteKey(Prefix + key);
             Commit();
         }
