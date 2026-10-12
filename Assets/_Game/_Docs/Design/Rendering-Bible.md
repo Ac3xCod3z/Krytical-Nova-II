@@ -817,8 +817,12 @@ still: firsts being paid for one by one. Eight things were done about it, in thi
 1. **An IL2CPP build beside the Mono one.** `TestBuildBuilder.Build(ScriptingImplementation.IL2CPP)`, menu
    **Krytical Nova ▸ Build ▸ Windows Test Build (IL2CPP)**: scripts compiled to machine code before the game
    ships, so nothing is compiled while it runs. It needs Unity's "Windows Build Support (IL2CPP)" module and the
-   Visual Studio C++ build tools with a Windows SDK; `TestBuildBuilder.Il2CppMissing()` says which is not there
-   (on the development PC, on that day: all three, so no such build has been made yet). Stripping is Minimal for
+   Visual Studio C++ build tools with a Windows SDK; `TestBuildBuilder.Il2CppMissing()` says which is not there.
+   The first such build was made on 11 Oct 2026 at 22:47 (11 minutes, as long as the Mono one); it had not been
+   run when this was written. Unity's own Visual Studio module for 6000.6 (`unity install-modules --module
+   visualstudio`, Visual Studio Community 2026) installs the C++ tools but no Windows SDK, because the one it asks
+   for is not offered by that Visual Studio: `Microsoft.VisualStudio.Component.Windows11SDK.26100` was added
+   through the Visual Studio Installer. Stripping is Minimal for
    it (the GM console and Netcode find things by reflection). The Mono build touches no setting; the project's own are put back after the IL2CPP
    build. The log's header says `scripts Mono` or `scripts IL2CPP`.
 2. **Garbage.** `Krytical Nova ▸ Build ▸ Allocations ▸ Start Recording / Write Report` (`AllocationFinder`) records
