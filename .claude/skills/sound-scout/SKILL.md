@@ -68,6 +68,14 @@ The model runs on the CPU on purpose: the graphics card's memory belongs to the 
   (`bake.py --check` alone re-measures everything). Then, in the Editor, **Krytical Nova ▸ Setup ▸ Sounds**
   (`AudioSetup.Sounds()`), which sets import settings, fills the feel prefabs' sound slots and the weather.
 
+- `tempo.py` is for music a mechanic is timed to (Cadence, `Assets/_Game/_Docs/Design/17_music_and_cadence.md`), not
+  for sound effects. The music library is `~/Downloads/Music` (env `KN_MUSIC_LIBRARY`), only read.
+  `tempo.py scan` measures every track (beats a minute, the time of the first beat, a guess at the first beat of
+  the bar, how far the beat drifts from an even grid, how much of the track has a clear beat) into
+  `Library/KryticalNova.SoundIndex/music/tempo.jsonl`; `tempo.py list` prints the steady ones; `tempo.py show <file>`
+  measures one now; `tempo.py selftest` checks the measuring against made-up drums. A reading may be half or double
+  the tempo a listener would tap, and the bar is a guess: the owner checks every pick by ear with a click on the beat.
+
 ## Working a request
 
 - **A new or replaced sound for an existing slot:** `scout.py --only "<slot>" --sheets`, read the sheet, prune, then
