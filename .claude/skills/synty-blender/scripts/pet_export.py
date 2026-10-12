@@ -50,6 +50,23 @@ def activate(ob, mode):
     bpy.ops.object.mode_set(mode=mode)
 
 
+def starts_at_rest(action, frame):
+    """True when every bone of this baked action is on its rest pose at this frame."""
+    try:
+        curves = list(action.fcurves)
+    except Exception:
+        curves = []
+    if not curves and hasattr(action, "layers"):
+        curves = [fc for layer in action.layers for strip in layer.strips
+                  for bag in getattr(strip, "channelbags", []) for fc in bag.fcurves]
+    for fc in curves:
+        path = fc.data_path
+        rest = 1.0 if path.endswith("scale") or (path.endswith("rotation_quaternion") and fc.array_index == 0) else 0.0
+        if abs(fc.evaluate(frame) - rest) > 2e-3:
+            return False
+    return bool(curves)
+
+
 def export_rig(src, name, used):
     """A copy of the rig with only the deforming bones the meshes use (and the bones between them and the
     root), each parented to its nearest deforming ancestor."""
@@ -216,6 +233,7 @@ def main():
                     o.parent = exp
                     o.matrix_world = rebind[-1][3]
             actions = rig_actions(src, a.actions)
+            ready = []
             for act in actions:
                 src.animation_data_create()
                 src.animation_data.action = None
@@ -231,11 +249,20 @@ def main():
                 result = exp.animation_data.action
                 result.name = act.name + "__baked"
                 baked.append(result)
-                strip = exp.animation_data.nla_tracks.new().strips.new(act.name, start, result)
-                strip.name = act.name
-                strip.extrapolation = "NOTHING"      # so no strip poses the rig outside its own frames
+                ready.append((act.name, start, result))
                 takes_wanted.append(act.name)
                 exp.animation_data.action = None
+            # Unity takes a model's resting pose from the first animation in the file, at its first frame. So an
+            # animation that starts on the rest pose goes first (a pet whose first clip by name starts flown apart,
+            # the Drone Core 100 %'s Assemble, otherwise rests in pieces in the game).
+            ready.sort(key=lambda item: (not starts_at_rest(item[2], item[1]), item[0]))
+            if ready and not starts_at_rest(ready[0][2], ready[0][1]):
+                warnings.append("No animation starts on the rest pose: in Unity the model will rest in the first frame of "
+                                + ready[0][0] + ".")
+            for take_name, start, result in ready:
+                strip = exp.animation_data.nla_tracks.new().strips.new(take_name, start, result)
+                strip.name = take_name
+                strip.extrapolation = "NOTHING"      # so no strip poses the rig outside its own frames
             # the file's own pose must be the rest pose, not the last frame of whichever action was baked last
             src.animation_data.action = None
             kn.zero_controls(src)

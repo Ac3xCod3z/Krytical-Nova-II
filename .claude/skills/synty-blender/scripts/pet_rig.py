@@ -8,6 +8,10 @@ The landmarks file says where each metarig bone goes on this pet, in metres:
     "extra":  {"ear.L": {"parent": "spine.011", "head": [..], "tail": [..]}},  more bones, each with a control
     "eyelids": true,                           add eyelid.L / eyelid.R from what pet_eyes.py stored
     "rigid":  {"eye.L": "spine.011", "kn_details": {"spine.009": "z<0.19", ...}}   vertex group -> bone;
+    "give_to": {"spine.003": "spine.004"}      a bone's whole share of the skin goes to another bone
+    "plain": ["spine.004"]                     deforming bones that are made plain bones, not bendy ones
+    "hold_below": {"thigh": {"fade": 0.04, "to": "spine.004"}}   bones named so hold no skin above their own top
+    "reach": {"shin": {"r": 0.04, "to": "spine.004"}}            bones named so hold only the skin this near them
               in place of a bone, "@skin" makes each vertex follow the body's skin under it (a collar),
               and "@skin_as_one" makes the set follow the skin under its highest point (a hanging tag)
   }
@@ -18,7 +22,7 @@ spine.003, .002, .001, spine run down the tail.
 
 Binding: each vertex follows the bones nearest to it (Blender's automatic weights fail on these meshes),
 smoothed along the surface; "pieces" keeps a separate piece of mesh on the bones it names
-({"near": [x,y,z], "bones": ["spine.003", ...]}, e.g. the tail); the groups under "rigid" are then pinned. Safe to run again: the old
+({"near": [x,y,z], "bones": ["spine.003", ...]}, e.g. the tail; add "only": true and no other piece follows those bones); the groups under "rigid" are then pinned. Safe to run again: the old
 rig is removed first. The mesh must already be the right size (pet_finish.py --size).
 """
 import argparse
@@ -164,6 +168,13 @@ def main():
     meta.hide_set(True)
     meta.hide_render = True
     deform = {b.name for b in rig.data.bones if b.use_deform}
+    # "plain": deforming bones that must not be bendy bones. Rigify makes the spine's bones bendy, and steers the
+    # hips' bend by the first tail bone. Where the metarig's tail is only a stub inside the rump (a pet whose tails
+    # have chains of their own) that bends the hips out of shape even at rest: by 57 mm on the Kitsune's 25 % form.
+    for name in spec.get("plain", []):
+        name = name if name.startswith("DEF-") else "DEF-" + name
+        if name in rig.data.bones:
+            rig.data.bones[name].bbone_segments = 1
 
     # ---- bind. Blender's automatic weights give up on these meshes (many separate pieces, faces passing
     #      through each other), so weights are worked out here: each vertex follows the bones it is nearest
@@ -207,19 +218,22 @@ def main():
         pieces.append(group)
     neighbours = {v.index: [e.other_vert(v).index for e in v.link_edges] for v in bm.verts}
     bm.free()
-    allowed = {}
+    allowed, reserved = {}, set()
     for rule in spec.get("pieces", []):
         near = Vector(rule["near"])
         best = min(range(len(pieces)), key=lambda i: (sum((ob.matrix_world @ me.vertices[j].co for j in pieces[i]), Vector())
                                                       / len(pieces[i]) - near).length)
         names = ["DEF-" + n if not n.startswith("DEF-") else n for n in rule["bones"]]
         allowed[best] = {n: segments[n] for n in names if n in segments}
+        if rule.get("only"):          # ... and no other piece may follow these bones (the rump must not follow the tails)
+            reserved.update(names)
+    everything_else = {n: sg for n, sg in segments.items() if n not in reserved}
 
     raw = {}
     side_margin = float(spec.get("side_margin", 0.006))
     for v in me.vertices:
         p = to_rig @ v.co
-        pool = allowed.get(piece_of[v.index], segments)
+        pool = allowed.get(piece_of[v.index], everything_else)
         if p.x > side_margin:
             pool = {n: sg for n, sg in pool.items() if not (n.endswith(".R") or ".R." in n)}
         elif p.x < -side_margin:
@@ -258,6 +272,93 @@ def main():
                 kn.keep_to_own_length(ob, rig, n, extra["parent"], float(spec.get("extra_start", -0.05)),
                                       float(spec.get("extra_full", 0.2)))
     groups = {g.name: g for g in ob.vertex_groups}
+
+    groups_by_index = {g.index: n for n, g in groups.items()}
+    # "reach": a bone holds only the skin within this distance of itself. A belly or a flank is far from every bone,
+    # so nearest-bone weights hand it to whichever leg bones happen to be nearest, and then every step drags dents
+    # across the body. Past the reach a bone's hold fades out (gone at 1.4 times the reach); what it gives up goes
+    # to the vertex's other bones, or to "to".
+    for key, rule in spec.get("reach", {}).items():
+        reach = float(rule["r"])
+        to = rule["to"] if rule["to"].startswith("DEF-") else "DEF-" + rule["to"]
+        if to not in groups:
+            groups[to] = ob.vertex_groups.new(name=to)
+        mine = {g.index: segments[n] for n, g in groups.items() if n.startswith("DEF-" + key) and n in segments}
+        for v in me.vertices:
+            p = to_rig @ v.co
+            given, others = 0.0, []
+            for e in v.groups:
+                if e.group in mine:
+                    far = (distance(p, mine[e.group]) - reach) / (0.4 * reach)
+                    if far > 0.0:
+                        keep = e.weight * max(0.0, 1.0 - far)
+                        given += e.weight - keep
+                        e.weight = keep
+                elif e.weight > 0.0 and groups_by_index.get(e.group, "").startswith("DEF-spine"):
+                    others.append(e)
+            if given <= 0.0:
+                continue
+            total = sum(e.weight for e in others)
+            if total > 1e-6:
+                for e in others:
+                    e.weight += given * e.weight / total
+            else:
+                groups[to].add([v.index], given, "ADD")
+
+    # "hold_below": a leg's upper bone holds the skin only up to its own top. Nearest-bone weights also give it the
+    # flank and the back above the joint, and then every step drags creases across the back. Above the bone's head
+    # its hold fades out over "fade" metres; what it gives up goes to the vertex's other bones, or to "to".
+    for key, rule in spec.get("hold_below", {}).items():
+        fade = float(rule.get("fade", 0.04))
+        to = rule["to"] if rule["to"].startswith("DEF-") else "DEF-" + rule["to"]
+        if to not in groups:
+            groups[to] = ob.vertex_groups.new(name=to)
+        mine = {g.index: rig.data.bones[n].head_local.z for n, g in groups.items()
+                if n.startswith("DEF-" + key) and n in rig.data.bones}
+        tops = {}
+        for n, g in groups.items():      # every segment of one leg fades from the top of that leg's first bone
+            if g.index in mine:
+                side = "R" if (n.endswith(".R") or ".R." in n) else "L"
+                tops[side] = max(tops.get(side, -1e9), mine[g.index])
+        side_of = {g.index: ("R" if (n.endswith(".R") or ".R." in n) else "L") for n, g in groups.items() if g.index in mine}
+        for v in me.vertices:
+            z = (to_rig @ v.co).z
+            given, others = 0.0, []
+            for e in v.groups:
+                if e.group in mine:
+                    over = (z - tops[side_of[e.group]]) / max(fade, 1e-6)
+                    if over > 0.0:
+                        keep = e.weight * max(0.0, 1.0 - over)
+                        given += e.weight - keep
+                        e.weight = keep
+                elif e.weight > 0.0:
+                    others.append(e)
+            if given <= 0.0:
+                continue
+            total = sum(e.weight for e in others)
+            if total > 1e-6:
+                for e in others:
+                    e.weight += given * e.weight / total
+            else:
+                groups[to].add([v.index], given, "ADD")
+
+    # "give_to": a bone hands its whole share of the skin to another (a metarig bone the pet has no use for, such
+    # as the single tail on a pet whose tails have chains of their own, must not carry any of the body)
+    for name, to in spec.get("give_to", {}).items():
+        name = name if name.startswith("DEF-") else "DEF-" + name
+        to = to if to.startswith("DEF-") else "DEF-" + to
+        if name not in groups:
+            continue
+        if to not in groups:
+            groups[to] = ob.vertex_groups.new(name=to)
+        gi, ti = groups[name].index, groups[to].index
+        for v in me.vertices:
+            mine = next((e.weight for e in v.groups if e.group == gi), 0.0)
+            if mine > 0.0:
+                had = next((e.weight for e in v.groups if e.group == ti), 0.0)
+                groups[to].add([v.index], had + mine, "REPLACE")
+        ob.vertex_groups.remove(groups[name])
+        groups = {g.name: g for g in ob.vertex_groups}
 
     def members(group_name):
         g = groups.get(group_name)

@@ -1,0 +1,54 @@
+{
+ "_about": "Where Rigify's basic quadruped metarig sits on the Kitsune Spirit's 25 % form at 0.66 m. Metres; the fox faces -Y and its left is +X. Read by the synty-blender skill's pet_rig.py. Left side only: the right is mirrored. A null head means the bone continues from its parent. The same rig as the first form's (rig_kitsune.json), moved to this model's joints.",
+ "_tails": "Each tail turns where it leaves the rump (tail_1's head): the part of it sunk in the body stays with the hips. This form has two tails, one each side. Each is a chain of four bones of its own (tail_1 .. tail_4, .L and .R), every bone with a control. The metarig's own single tail (spine.003 .. spine) is kept, as Rigify needs it, but as a short stub inside the rump: nothing is animated on it.",
+ "head_bone": "spine.011",
+ "bones": {
+  "spine.004": [[0.0, 0.035, 0.185], [0.0, 0.0, 0.19]],
+  "spine.005": [null, [0.0, -0.04, 0.19]],
+  "spine.006": [null, [0.0, -0.08, 0.188]],
+  "spine.007": [null, [0.0, -0.12, 0.19]],
+  "spine.008": [null, [0.0, -0.158, 0.2]],
+  "spine.009": [[0.0, -0.158, 0.2], [0.0, -0.18, 0.225]],
+  "spine.010": [null, [0.0, -0.205, 0.25]],
+  "spine.011": [null, [0.0, -0.29, 0.265]],
+  "spine.003": [[0.0, 0.035, 0.185], [0.0, 0.043, 0.186]],
+  "spine.002": [null, [0.0, 0.051, 0.187]],
+  "spine.001": [null, [0.0, 0.059, 0.188]],
+  "spine": [null, [0.0, 0.067, 0.189]],
+  "shoulder.L": [[0.02, -0.14, 0.215], [0.034, -0.158, 0.168]],
+  "front_thigh.L": [[0.032, -0.158, 0.166], [0.032, -0.138, 0.1]],
+  "front_shin.L": [null, [0.032, -0.136, 0.045]],
+  "front_foot.L": [null, [0.032, -0.15, 0.012]],
+  "front_toe.L": [null, [0.032, -0.176, 0.002]],
+  "breast.L": [[0.02, -0.12, 0.15], [0.02, -0.15, 0.125]],
+  "pelvis.L": [[0.0, 0.03, 0.15], [0.03, 0.012, 0.2]],
+  "thigh.L": [[0.032, 0.025, 0.165], [0.032, -0.012, 0.108]],
+  "shin.L": [null, [0.03, 0.05, 0.062]],
+  "foot.L": [null, [0.03, 0.04, 0.012]],
+  "toe.L": [null, [0.03, 0.016, 0.002]]
+ },
+ "extra": {
+  "ear.L": {"parent": "spine.011", "head": [0.051, -0.219, 0.307], "tail": [0.072, -0.228, 0.374]},
+  "tail_1.L": {"parent": "spine.004", "head": [0.016, 0.052, 0.2], "tail": [0.028, 0.095, 0.203]},
+  "tail_2.L": {"parent": "tail_1.L", "head": [0.028, 0.095, 0.203], "tail": [0.033, 0.17, 0.194]},
+  "tail_3.L": {"parent": "tail_2.L", "head": [0.033, 0.17, 0.194], "tail": [0.052, 0.245, 0.203]},
+  "tail_4.L": {"parent": "tail_3.L", "head": [0.052, 0.245, 0.203], "tail": [0.074, 0.328, 0.27]}
+ },
+ "reach": {"thigh": {"r": 0.05, "to": "spine.004"}, "shin": {"r": 0.035, "to": "spine.004"}, "foot": {"r": 0.035, "to": "spine.004"},
+           "front_thigh": {"r": 0.045, "to": "spine.008"}, "front_shin": {"r": 0.035, "to": "spine.008"}, "front_foot": {"r": 0.035, "to": "spine.008"}},
+ "hold_below": {"thigh": {"fade": 0.04, "to": "spine.004"}, "front_thigh": {"fade": 0.04, "to": "spine.008"}},
+ "_plain": "The spine's bones are plain bones here, not Rigify's bendy ones. Bendy, the hips (steered by the stub tail) stood 57 mm out of shape at rest, and the bone ahead of them threw the hip skin 45 mm about on a turn of half a degree.",
+ "plain": ["spine.004", "spine.005", "spine.006", "spine.007", "spine.008", "spine.009", "spine.010"],
+ "give_to": {"spine.003": "spine.004", "spine.002": "spine.004", "spine.001": "spine.004", "spine": "spine.004"},
+ "eyelids": true,
+ "rigid": {
+  "eye.L": "spine.011",
+  "eye.R": "spine.011",
+  "kn_details": {"@skin_as_one tag": "True"}
+ },
+ "pieces": [
+  {"near": [0.0, 0.2, 0.2], "only": true,
+   "bones": ["tail_1.L", "tail_2.L", "tail_3.L", "tail_4.L", "tail_1.R", "tail_2.R", "tail_3.R", "tail_4.R"]}
+ ],
+ "_legs": "On this model a front leg whose middle bone leant forward (elbow the furthest-back joint) folded the paws backwards at rest, 34 mm off; with the middle bone upright, leaning a touch back as on the first form, it rests true. Check with rig_rest_check.py after any change. Rigify's paw limb needs a zigzag: upper bone leaning back, middle bone upright, foot bone leaning forward, with a clear bend (20 degrees or more) at both joints. A front leg laid out nearly straight made the rig fold the paws backwards at rest."
+}

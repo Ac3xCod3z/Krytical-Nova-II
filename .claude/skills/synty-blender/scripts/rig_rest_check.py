@@ -50,6 +50,21 @@ def main():
         if keys:
             props[pb.name] = keys
     problems = [f"{len(off)} deforming bones are not where the mesh was bound: the neutral rig bends the model."] if off else []
+    # the bones can all be home and the model still bent: a bendy bone steered by a badly placed neighbour bends the
+    # skin with every bone at rest. So the meshes themselves are measured too.
+    bent = {}
+    dg = bpy.context.evaluated_depsgraph_get()
+    for o in bpy.context.scene.objects:
+        if o.type == "MESH" and any(m.type == "ARMATURE" and m.object is rig for m in o.modifiers):
+            ev = o.evaluated_get(dg).to_mesh()
+            if len(ev.vertices) == len(o.data.vertices):
+                moved = [(ev.vertices[i].co - v.co).length * 1000 for i, v in enumerate(o.data.vertices)]
+                if max(moved, default=0.0) > 0.5:
+                    bent[o.name] = {"vertices_moved_over_half_a_mm": sum(1 for d in moved if d > 0.5), "worst_mm": round(max(moved), 1)}
+            o.evaluated_get(dg).to_mesh_clear()
+    if bent:
+        problems.append(f"With every control at zero the rig still moves the mesh: {bent}. Look for a bendy bone (bbone_segments > 1) "
+                        "next to a very short or oddly placed neighbour.")
     kn.report("Rig rest check", {"rig": rig.name, "auto_run_scripts": bpy.app.autoexec_fail is False and bpy.context.preferences.filepaths.use_scripts_auto_execute,
                                  "bones_off_rest (name, mm, degrees)": off[:24], "limb_switches": props}, problems)
     if problems:

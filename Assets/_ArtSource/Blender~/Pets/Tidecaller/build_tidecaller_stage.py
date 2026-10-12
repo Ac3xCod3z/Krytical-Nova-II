@@ -24,6 +24,9 @@ One script for all four; which stage it is building is read from the untouched m
             SwimFlip 100   one hard stroke upward into a backward somersault, brakes, bobs back into place
             Ram 84         draws back, drives forward head down and butts, rebounds, shakes its head, swims back
 
+The 50, 75 and 100 % stages have three more clips (ShellSpin, Undertow, Maelstrom). They are not made here: run
+more_clips_tidecaller.py on the file afterwards (see README_MoreClips.txt).
+
 Every run starts again from the untouched model.
 """
 import colorsys
@@ -39,11 +42,12 @@ from mathutils.bvhtree import BVHTree
 STAGES = {
     "25": {"height": 0.45, "pupil": True, "eye_glow": False, "emission": False},
     "50": {"height": 0.50, "pupil": True, "eye_glow": False, "emission": True},
-    "75": {"height": 0.55, "pupil": True, "eye_glow": False, "emission": True},
+    "75": {"height": 0.55, "pupil": True, "eye_glow": False, "emission": True, "pupils_in": (28.0, 3.0)},     # see turn_pupils
     "100": {"height": 0.60, "pupil": False, "eye_glow": True, "emission": True, "keep_eyes": True},
 }
 TEXTURE = 2048
 LID = {"gap": 0.002, "thick": 0.002, "margin": 7.0, "corners": 10.0, "pad": 6.0, "flat": 0.05}       # shares of the height; degrees
+PUPIL_CLEAR = 0.0012        # metres a moved pupil stands off its eyeball
 FIN = {"from": 1.10, "full": 0.28}          # how far outside the body's own roundness a fin starts, and where it is all fin
 
 
@@ -81,6 +85,38 @@ def sphere_through(points):
     x, _res, _rank, _sv = np.linalg.lstsq(a, b, rcond=None)
     centre = Vector(x[:3])
     return centre, math.sqrt(max(x[3] + centre.length_squared, 1e-12))
+
+
+def turn_pupils(ob, rig, turn_in, turn_down):
+    """Moves each pupil over its eyeball: towards the nose by turn_in degrees and down by turn_down.
+    A pupil is set where its socket faces. On the 75 % stage the sockets face 45 degrees outwards, which left it
+    wall-eyed; the owner asked for the pupils where the concept art has them, in the middle of the eye that shows
+    (12 Oct 2026). Only the pupil moves: the ball, and what is painted on it, stay with the socket."""
+    me = ob.data
+    slot = next(i for i, m in enumerate(me.materials) if m and m.name.endswith(" Pupil"))
+    for s, sign in (("L", 1.0), ("R", -1.0)):
+        group = ob.vertex_groups["eyeball." + s].index
+        centre = rig.data.bones["eyeball." + s].head_local.copy()
+        mine = set()
+        for poly in me.polygons:
+            if poly.material_index == slot and all(any(e.group == group and e.weight > 0.5 for e in me.vertices[v].groups) for v in poly.vertices):
+                mine.update(poly.vertices)
+                poly.use_smooth = True                        # one even black, not a facet for each face catching the light
+        turn = Quaternion(Vector((0, 0, 1)), math.radians(-sign * turn_in)) @ Quaternion(Vector((1, 0, 0)), math.radians(turn_down))
+        ball = [(v.co - centre) for v in me.vertices if v.index not in mine and any(e.group == group and e.weight > 0.5 for e in v.groups)]
+        dirs = [(p.normalized(), p.length) for p in ball]
+        # the ball is not a true sphere: the pupil is laid on it afresh where it now sits, as one smooth cap just
+        # clear of the highest point of the ball under it (laid point by point it came out in ridges)
+        mine = sorted(mine)
+        ways = [(turn @ (me.vertices[index].co - centre)).normalized() for index in mine]
+        middle = sum(ways, Vector()).normalized()
+        wide = min(way.dot(middle) for way in ways) - 0.03
+        reach = max(length for way, length in dirs if way.dot(middle) > wide)
+        was = [(me.vertices[index].co - centre).length for index in mine]
+        low = min(was)                                       # the pupil keeps its own small thickness, or its two sides would lie in one another
+        for index, way, far in zip(mine, ways, was):
+            me.vertices[index].co = centre + way * (reach + PUPIL_CLEAR + (far - low))
+    me.update()
 
 
 def main():
@@ -806,6 +842,9 @@ def main():
     shut_eyes(19, 27)
     blink(48)
     finish(a, END)
+
+    if cfg.get("pupils_in"):
+        turn_pupils(ob, rig, *cfg["pupils_in"])
 
     scene.frame_set(1)
 
