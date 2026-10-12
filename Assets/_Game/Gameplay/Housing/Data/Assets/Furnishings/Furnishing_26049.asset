@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_26049
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: b5c7408a4b5326f49adf4b5ea9e635a9, type: 2}
+  itemId: 26049
+  faction: 3
+  mount: 4
+  place: 2
+  category: Lighting
+  source: 0
+  prefab: {fileID: 413857744343135746, guid: aabc3f997222af145b109f8c5c2688f6, type: 3}
+  kind: chandelier
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0, y: -1.0210763, z: 0}
+  boundsSize: {x: 2.3244185, y: 2.1185834, z: 2.0700488}
+  hasTop: 0
+  castsShadow: 1
+  lights: 1
+  lightOffset: {x: 0, y: -1.444793, z: 0}
+  blocks: 0
+  solidCenter: {x: 0, y: -1.0210763, z: 0}
+  solidSize: {x: 2.3244185, y: 2.1185834, z: 2.0700488}
+  budgetCost: 2

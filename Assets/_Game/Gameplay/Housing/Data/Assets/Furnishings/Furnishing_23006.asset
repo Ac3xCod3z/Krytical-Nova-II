@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_23006
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 10c26a36f3dab1546a964f764faa281b, type: 2}
+  itemId: 23006
+  faction: 2
+  mount: 0
+  place: 0
+  category: Seating
+  source: 0
+  prefab: {fileID: 3897658030724079685, guid: b075ba2a474655c49822c537de4c3558, type: 3}
+  kind: throne
+  modelScale: 0.85871464
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0, y: 1.3304118, z: 0.092781395}
+  boundsSize: {x: 1.7997178, y: 2.7, z: 1.1005944}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0, y: 2.1404119, z: 0.092781395}
+  blocks: 1
+  solidCenter: {x: 0.000000059604645, y: 1.0244027, z: 0.092781395}
+  solidSize: {x: 1.7997179, y: 2.0879822, z: 1.1005944}
+  budgetCost: 4

@@ -113,9 +113,9 @@ namespace KryticalNova.Housing
             if (!HasAuthority || inventory == null) return null;
             ItemStack stack = inventory.Get(packCell);
             if (stack.IsEmpty) return null;
-            FurnishingDefinition furnishing = catalog != null ? catalog.Get(stack.itemId) : null;
-            if (furnishing == null || stack.data != 0) return ReasonNotFurnishing;
-            if (!HousingRules.MayHave(furnishing, Faction)) return HousingRules.ReasonOtherFaction;
+            // Furnishings, and the Facades and Finishes a Hall is not wearing. Only a Facade is its faction's own.
+            if (catalog == null || stack.data != 0 || !catalog.HeldInCrate(stack.itemId)) return ReasonNotFurnishing;
+            if (!catalog.MayKeep(stack.itemId, Faction)) return HousingRules.ReasonOtherFaction;
             int room = Cap - Count(stack.itemId);
             count = Mathf.Min(Mathf.Min(count, stack.count), room);
             if (count <= 0) return ReasonCrateFull;

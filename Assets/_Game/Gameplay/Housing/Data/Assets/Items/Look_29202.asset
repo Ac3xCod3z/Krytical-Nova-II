@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3622be29843aeb149be9b3196ff71071, type: 3}
+  m_Name: Look_29202
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
+  itemId: 29202
+  displayName: White Marble
+  description: 'A Finish in the Covenant style: every wall of a Hall''s rooms, changed at one stroke. Click it in the Furnishing Crate at your Hall.'
+  icon: {fileID: 21300000, guid: f70d27770addf5549869b7e249817ed6, type: 3}
+  sharesIconOf: {fileID: 0}
+  rarity: 0
+  equipSlot: 0
+  maxStack: 9
+  boundFaction: 0
+  itemLevel: 0
+  lineId: 0
+  weaponClass: 0
+  baseStats: []
+  secondaryStats: []
+  skillModifiers: []
+  statModifiers: []
+  restoreHealth: 0
+  restoreChi: 0
+  useEffect: 0
+  useCooldown: 1
+  usableFromHotbar: 0
+  placeholderGlyph: HALL
+  appearancePartIds: 
+  partCatalog: {fileID: 0}
+  appearanceParts: []
+  colorTheme: 0
+  colorThemes: {fileID: 0}
+  colorCells: 
+  weaponPrefab: {fileID: 0}
+  weaponLocalPosition: {x: 0, y: 0, z: 0}
+  weaponLocalEuler: {x: 0, y: 0, z: 0}
+  weaponLocalScale: {x: 1, y: 1, z: 1}
+  hitboxCenter: {x: 0, y: 0.01, z: 0.55}
+  hitboxSize: {x: 0.18, y: 0.18, z: 1.15}
+  paired: 0
+  offHandLocalPosition: {x: 0, y: 0, z: 0}
+  offHandLocalEuler: {x: 0, y: 0, z: 0}
+  leftHanded: 0
+  carry: 0
+  carryLocalPosition: {x: 0, y: 0, z: 0}
+  carryLocalEuler: {x: 0, y: 0, z: 0}
+  petPrefab: {fileID: 0}
+  petScale: 1
+  petOffset: {x: 0.45, y: 0.75, z: -0.15}

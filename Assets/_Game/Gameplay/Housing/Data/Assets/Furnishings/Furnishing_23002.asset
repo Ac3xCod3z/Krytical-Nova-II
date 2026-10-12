@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_23002
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: e5e5218c44d8c5d41bba6c75d7b6c49a, type: 2}
+  itemId: 23002
+  faction: 2
+  mount: 0
+  place: 0
+  category: Seating
+  source: 0
+  prefab: {fileID: 436521897933859927, guid: 04633d0f23dfebf48b9b913ad5cff168, type: 3}
+  kind: bed
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0.00000011920929, y: 0.9956489, z: 0}
+  boundsSize: {x: 2.3997707, y: 1.9912978, z: 2.506424}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0.00000011920929, y: 1.5930383, z: 0}
+  blocks: 1
+  solidCenter: {x: 0.00000011920929, y: 0.9956489, z: 0}
+  solidSize: {x: 2.3997707, y: 1.9912978, z: 2.506424}
+  budgetCost: 4

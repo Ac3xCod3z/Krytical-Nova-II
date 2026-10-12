@@ -108,10 +108,19 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void AnotherFactionsFurnishing_IsRefused()
+        public void AnotherFactionsFurnishing_IsSetDownLikeAnyOther_UnlessItsItemIsBound()
         {
-            Assert.AreEqual(HousingRules.ReasonOtherFaction, Apply(HomeOp.Place(At(NullChair, -12f, -10f))));
-            Assert.AreEqual(1, crate[NullChair]);
+            // Owner, 12 Oct 2026: furnishings are anyone's; a furnishing's faction is its style.
+            Assert.IsNull(Apply(HomeOp.Place(At(NullChair, -12f, -10f))));
+            Assert.AreEqual(1, home.lawn.Count);
+
+            var bound = ScriptableObject.CreateInstance<KryticalNova.Items.ItemDefinition>();
+            bound.boundFaction = FactionId.Null;
+            made.Add(bound);
+            catalog.Get(NullChair).item = bound;
+            crate[NullChair] = 1;
+            Assert.AreEqual(HousingRules.ReasonOtherFaction, Apply(HomeOp.Place(At(NullChair, -14f, -10f))));
+            Assert.AreEqual(1, home.lawn.Count);
         }
 
         [Test]

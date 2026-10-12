@@ -17,6 +17,8 @@ namespace KryticalNova.Housing
         public byte owner;
         public int budget;
         public int maxStackDepth;
+        /// <summary>The smallest and largest a piece may be made (0 for either: no limit).</summary>
+        public float minScale, maxScale;
         /// <summary>How many of an item the player's Furnishing Crate holds.</summary>
         public Func<ushort, int> crateCount;
     }
@@ -30,7 +32,7 @@ namespace KryticalNova.Housing
     public static class HousingRules
     {
         public const string ReasonUnknown = "That is not a furnishing.";
-        public const string ReasonOtherFaction = "That furnishing belongs to another faction.";
+        public const string ReasonOtherFaction = "That belongs to another faction.";
         public const string ReasonNoneLeft = "There is none of that left in your Furnishing Crate.";
         public const string ReasonOutside = "That is outside the Lot.";
         public const string ReasonBlocked = "Nothing can stand there.";
@@ -41,17 +43,38 @@ namespace KryticalNova.Housing
         public const string ReasonOutdoors = "That belongs outdoors.";
         public const string ReasonIndoors = "That belongs indoors.";
         public const string ReasonInTheWay = "Something is in the way.";
+        public const string ReasonNeedsWall = "That hangs on a wall.";
+        public const string ReasonNeedsCeiling = "That hangs from a ceiling.";
+        public const string ReasonSize = "It cannot be made that size.";
+        public const string ReasonStandingThere = "You are standing there.";
+        public const string ReasonNotALook = "That is not a Facade or a Finish.";
+        public const string ReasonWornAlready = "The Hall already wears that.";
 
-        /// <summary>Whether a character of a faction may have a furnishing at all: a faction's furnishings are its own.</summary>
+        // How near a wall or the ceiling a piece that hangs must be, in metres.
+        private const float HangReach = 0.35f;
+
+        /// <summary>
+        /// Whether a character of a faction may have a furnishing. Furnishings are anyone's (owner, 12 Oct 2026: a
+        /// Hall is furnished in any style its players like, indoors and on its lawns; only its Facade is its
+        /// faction's). A furnishing's faction is the style it is filed under, not a lock; one whose item is bound to
+        /// a faction would still be refused here.
+        /// </summary>
         public static bool MayHave(FurnishingDefinition furnishing, FactionId faction) =>
-            furnishing != null && (furnishing.faction == FactionId.None || furnishing.faction == faction);
+            furnishing != null && KryticalNova.Items.ItemFactionRules.MayHave(furnishing.item, faction);
+
+        /// <summary>
+        /// Whether a Hall of a faction may wear a look. A Facade is its faction's own, so that every Hall fits the
+        /// Crew Quarter it stands in; a Finish is anyone's.
+        /// </summary>
+        public static bool MayWear(HallLookDefinition look, FactionId faction) =>
+            look != null && (look.slot != HomeLook.Facade || look.faction == FactionId.None || look.faction == faction);
 
         /// <summary>Why a piece may not be where it is, or null. <paramref name="pieces"/> already holds it.</summary>
         public static string PoseBlockedReason(List<PlacedPiece> pieces, in PlacedPiece piece, FurnishingDefinition furnishing, in EditContext context)
         {
             if (furnishing == null) return ReasonUnknown;
             if (furnishing.place == FurnishingPlace.LawnOnly && context.area != HomeArea.Lawn) return ReasonOutdoors;
-            if (furnishing.place == FurnishingPlace.IndoorOnly && context.area != HomeArea.Interior) return ReasonIndoors;
+            if (furnishing.place == FurnishingPlace.IndoorOnly && !HomeAreas.IsInside(context.area)) return ReasonIndoors;
 
             if (piece.p != 0)
             {
@@ -61,9 +84,55 @@ namespace KryticalNova.Housing
                 if (HousingLayout.Depth(pieces, piece.u) > context.maxStackDepth) return ReasonTooHigh;
             }
 
+            float scale = piece.Scale;
+            if ((context.minScale > 0f && scale < context.minScale - 0.001f) || (context.maxScale > 0f && scale > context.maxScale + 0.001f))
+                return ReasonSize;
+
             HousingLayout.Pose(pieces, piece, out Vector3 position, out _);
             if (!context.shape.Contains(position)) return ReasonOutside;
-            if (context.shape.IsBlocked(position)) return ReasonBlocked;
+            // What hangs has no footing to be in the way of a door: only what stands is kept off the blocked ground.
+            bool hangs = furnishing.mount == FurnishingMount.Wall || furnishing.mount == FurnishingMount.Ceiling;
+            if (!hangs && context.shape.IsBlocked(position)) return ReasonBlocked;
+            // Set down freely (Alt, or Advanced), a banner may hang from a beam: the wall and the ceiling are Basic's rule.
+            if (hangs && !piece.Free && piece.p == 0)
+            {
+                if (furnishing.mount == FurnishingMount.Wall && (!context.shape.hasWalls || context.shape.WallDistance(position) > HangReach))
+                    return ReasonNeedsWall;
+                if (furnishing.mount == FurnishingMount.Ceiling &&
+                    (!context.shape.hasWalls || position.y + furnishing.Top * scale < context.shape.height - HangReach))
+                    return ReasonNeedsCeiling;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Changes one of a Hall's four looks, or puts its faction's standard one back (<paramref name="itemId"/> 0).
+        /// The look comes out of the Furnishing Crate and the one it replaces goes back in. On a refusal the Hall is
+        /// untouched and the reason is returned.
+        /// </summary>
+        public static string TryWear(HomeSave home, FurnishingCatalog catalog, FactionId faction, Func<ushort, int> crateCount,
+            HomeLook slot, ushort itemId, Dictionary<ushort, int> crateDelta)
+        {
+            crateDelta.Clear();
+            if (home == null) return ReasonGone;
+            ushort worn = home.Look(slot);
+            HallLookDefinition wornLook = catalog != null ? catalog.GetLook(worn) : null;
+            if (wornLook == null || wornLook.standard) worn = 0; // the standard look is no item
+
+            if (itemId != 0)
+            {
+                HallLookDefinition look = catalog != null ? catalog.GetLook(itemId) : null;
+                if (look == null || look.slot != slot) return ReasonNotALook;
+                if (!MayWear(look, faction)) return ReasonOtherFaction;
+                if (look.standard) itemId = 0;
+                else if (itemId == worn) return ReasonWornAlready;
+                else if (crateCount == null || crateCount(itemId) < 1) return ReasonNoneLeft;
+            }
+            if (itemId == worn) return ReasonWornAlready;
+
+            if (itemId != 0) crateDelta[itemId] = -1;
+            if (worn != 0) crateDelta[worn] = 1;
+            home.SetLook(slot, itemId);
             return null;
         }
 

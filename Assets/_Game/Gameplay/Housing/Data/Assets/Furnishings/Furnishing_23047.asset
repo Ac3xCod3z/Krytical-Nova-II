@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_23047
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 89a342f0007527443a0ecc2f873418c6, type: 2}
+  itemId: 23047
+  faction: 2
+  mount: 0
+  place: 0
+  category: Lighting
+  source: 0
+  prefab: {fileID: 1425826304776503381, guid: 8781a96c42c22cb4abf3a0f586949a1d, type: 3}
+  kind: floorlamp
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: -0.00036337972, y: 1.0277047, z: 0.0026852787}
+  boundsSize: {x: 0.23360807, y: 2.0554094, z: 0.27659583}
+  hasTop: 0
+  castsShadow: 1
+  lights: 1
+  lightOffset: {x: -0.00036337972, y: 1.6443275, z: 0.0026852787}
+  blocks: 1
+  solidCenter: {x: -0.00036337972, y: 1.0277047, z: 0.0026852787}
+  solidSize: {x: 0.23360807, y: 2.0554094, z: 0.27659583}
+  budgetCost: 2

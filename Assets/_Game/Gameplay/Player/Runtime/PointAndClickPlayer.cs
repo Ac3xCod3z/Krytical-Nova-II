@@ -1590,6 +1590,12 @@ namespace KryticalNova.Player
         /// </summary>
         public bool WorldClicksParked { get; set; }
 
+        /// <summary>
+        /// A click on the world made on the player's behalf by the tool that has parked the clicks: it walks, or
+        /// picks what is under the cursor, exactly as the player's own click would.
+        /// </summary>
+        public void ClickWorld(Vector2 screenPosition) => TryMoveToPointer(screenPosition);
+
         /// <summary>The camera the game is seen through on this machine, or null.</summary>
         public Camera GameplayCamera => gameplayCamera;
 

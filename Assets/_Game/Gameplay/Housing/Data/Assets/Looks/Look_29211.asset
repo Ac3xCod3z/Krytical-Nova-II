@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 623e2b8ee0bc1bf498dfe44d828957dd, type: 3}
+  m_Name: Look_29211
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.HallLookDefinition
+  item: {fileID: 11400000, guid: f9621f9d169dec64188d21d65575167b, type: 2}
+  itemId: 29211
+  faction: 3
+  slot: 2
+  standard: 1
+  prefab: {fileID: 8913305760099988204, guid: e2afc5ffe7f070147b9b6df8af3a1a72, type: 3}
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: -1.2499933, y: -0.034884475, z: 1.2499999}
+  boundsSize: {x: 2.4999914, y: 0.10060741, z: 2.4999998}
+  material: {fileID: 0}
+  padOffset: {x: 0, y: 0}

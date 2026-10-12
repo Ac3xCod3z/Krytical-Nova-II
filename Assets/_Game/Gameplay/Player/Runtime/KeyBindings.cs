@@ -171,6 +171,9 @@ namespace KryticalNova.Player
         public static bool Pressed(string action)
         {
             if (Listening || KeyboardTaken) return false;
+            // A key pressed with Ctrl is a command of the tool that is open (Ctrl+Z undoes in Arrange), not a window key.
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.ctrlKey.isPressed) return false;
             InputAction found = Window(action);
             return found != null && found.WasPressedThisFrame();
         }

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_20045
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 1005a89d45fb4fa4fad1c501018f268f, type: 2}
+  itemId: 20045
+  faction: 1
+  mount: 1
+  place: 0
+  category: Lighting
+  source: 0
+  prefab: {fileID: 1723357088762678, guid: d71ef14e65958ca4cb303cb74b7c1f3d, type: 3}
+  kind: tablelamp
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: -0.0000009685755, y: -0.51124835, z: -0.0000009685755}
+  boundsSize: {x: 0.38260457, y: 1.0224967, z: 0.3826065}
+  hasTop: 0
+  castsShadow: 1
+  lights: 1
+  lightOffset: {x: -0.0000009685755, y: -0.20449933, z: -0.0000009685755}
+  blocks: 0
+  solidCenter: {x: -0.0000009685755, y: -0.51124835, z: -0.0000009685755}
+  solidSize: {x: 0.38260457, y: 1.0224967, z: 0.3826065}
+  budgetCost: 2

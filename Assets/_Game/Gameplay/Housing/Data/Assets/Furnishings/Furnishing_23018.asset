@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_23018
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: e7bf620d56866c94c951a9243bf0f978, type: 2}
+  itemId: 23018
+  faction: 2
+  mount: 0
+  place: 0
+  category: Tables
+  source: 0
+  prefab: {fileID: 759549470132367127, guid: a18fff8d008f23d4ea4d65c6c32a7900, type: 3}
+  kind: table
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0.0000014305115, y: 0.39192063, z: -0.00043678284}
+  boundsSize: {x: 2.644675, y: 0.78384125, z: 1.3555293}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0.0000014305115, y: 0.627073, z: -0.00043678284}
+  blocks: 1
+  solidCenter: {x: 0.0000014305115, y: 0.39192063, z: -0.00043678284}
+  solidSize: {x: 2.644675, y: 0.78384125, z: 1.3555293}
+  budgetCost: 4

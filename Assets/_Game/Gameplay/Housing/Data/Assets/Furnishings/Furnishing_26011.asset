@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_26011
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 60026ebe944a909478023dd9afdde2db, type: 2}
+  itemId: 26011
+  faction: 3
+  mount: 0
+  place: 0
+  category: Seating
+  source: 0
+  prefab: {fileID: 3964614761717578714, guid: 7e1881711ce7c2046948605f1e442d21, type: 3}
+  kind: chair
+  modelScale: 0.9470793
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0.000000028225163, y: 0.59375, z: 0}
+  boundsSize: {x: 0.6542301, y: 1.1875, z: 0.5931351}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0.000000028225163, y: 0.95, z: 0}
+  blocks: 1
+  solidCenter: {x: 0, y: 0.59375, z: 0}
+  solidSize: {x: 0.65423006, y: 1.1875, z: 0.5931351}
+  budgetCost: 2

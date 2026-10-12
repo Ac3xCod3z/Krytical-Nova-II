@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_26064
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: e043755b8e9744a4587749eff53d65fc, type: 2}
+  itemId: 26064
+  faction: 3
+  mount: 0
+  place: 1
+  category: Decor
+  source: 0
+  prefab: {fileID: 5416266489001294621, guid: fe7da8fc567db9b4098c504a20852430, type: 3}
+  kind: shelter
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: -0.12678301, y: 1.2258247, z: 0.012409985}
+  boundsSize: {x: 3.835859, y: 2.7983508, z: 1.9886539}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: -0.12678301, y: 2.06533, z: 0.012409985}
+  blocks: 0
+  solidCenter: {x: -0.12756193, y: 0.84445536, z: 0.016385436}
+  solidSize: {x: 3.0086155, y: 2.035612, z: 1.8430635}
+  budgetCost: 4

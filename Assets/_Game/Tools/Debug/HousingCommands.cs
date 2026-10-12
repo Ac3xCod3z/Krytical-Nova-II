@@ -30,7 +30,29 @@ namespace KryticalNova.DevTools
         {
             if (!TryGetHousing(out var housing, out var error)) return error;
             if (housing.InHome) return "Already at the Hall. gm.home.leave returns to town.";
-            return housing.Enter() ?? $"At the Hall sandbox. {housing.Authority.Home.lawn.Count} piece(s) stand on its lawns.";
+            return housing.Enter() ?? "On the way to the Hall sandbox.";
+        }
+
+        [Command("gm.home.inside", "Take the targeted player through their Hall's door into the room inside. They must be at the Hall.")]
+        private static string HomeInside()
+        {
+            if (!TryGetHousing(out var housing, out var error)) return error;
+            return housing.GoInside() ?? "On the way in.";
+        }
+
+        [Command("gm.home.floor", "Take the targeted player to a floor inside their Hall: ground, up or basement. They must be inside.")]
+        private static string HomeFloor(string floor = "ground")
+        {
+            if (!TryGetHousing(out var housing, out var error)) return error;
+            HomeArea to = floor.StartsWith("u") ? HomeArea.Upper : floor.StartsWith("b") ? HomeArea.Basement : HomeArea.Interior;
+            return housing.GoToFloor(to) ?? $"On the way to the {HomeAreas.Name(to)}.";
+        }
+
+        [Command("gm.home.outside", "Take the targeted player out of their Hall's room to its doorstep.")]
+        private static string HomeOutside()
+        {
+            if (!TryGetHousing(out var housing, out var error)) return error;
+            return housing.GoOutside() ?? "On the way out.";
         }
 
         [Command("gm.home.leave", "Return the targeted player from their Hall sandbox to where they were.")]
@@ -38,19 +60,32 @@ namespace KryticalNova.DevTools
         {
             if (!TryGetHousing(out var housing, out var error)) return error;
             if (!housing.InHome) return "Not at the Hall.";
-            return housing.Leave() ?? "Back in town.";
+            return housing.Leave() ?? "On the way back to town.";
         }
 
-        [Command("gm.furnish.kit", "Put n of every furnishing of the targeted player's own faction into their Furnishing Crate (5 unless told).")]
-        private static string FurnishKit(int count = 5)
+        [Command("gm.furnish.kit", "Put n of every furnishing in the targeted player's own faction's style into their Furnishing Crate (5 unless told), with one of each of its Facades and Finishes. Add 'all' for the furnishings and Finishes of every style (Facades stay the faction's own).")]
+        private static string FurnishKit(int count = 5, string which = "own")
         {
+            bool every = which.StartsWith("a");
             if (!TryGetHousing(out var housing, out var error)) return error;
             count = Mathf.Clamp(count, 1, 999);
             var own = new List<FurnishingDefinition>();
-            housing.Catalog.ForFaction(housing.Faction, own);
+            if (every) own.AddRange(housing.Catalog.Furnishings);
+            else housing.Catalog.ForFaction(housing.Faction, own);
             if (own.Count == 0) return $"The {housing.Faction} have no furnishings in the catalog.";
             foreach (FurnishingDefinition furnishing in own) housing.Crate.ServerAdd(furnishing.itemId, count);
-            return $"{count} of each of {own.Count} {housing.Faction} furnishings are in the Furnishing Crate.";
+            int looks = 0;
+            foreach (HallLookDefinition look in housing.Catalog.Looks)
+            {
+                bool theirs = look != null && (look.faction == housing.Faction || (every && look.IsFinish));
+                if (!theirs || look.standard || housing.Crate.Count(look.itemId) > 0) continue;
+                // One is all a Hall can wear; the one it wears is not handed out again.
+                HomeSave home = housing.Authority != null ? housing.Authority.Home : null;
+                if (home != null && home.Look(look.slot) == look.itemId) continue;
+                housing.Crate.ServerAdd(look.itemId, 1);
+                looks++;
+            }
+            return $"{count} of each of {own.Count} furnishings ({(every ? "every style" : housing.Faction + " style")}) are in the Furnishing Crate, and {looks} Facade(s) and Finish(es).";
         }
 
         [Command("gm.furnish.clear", "Empty the targeted player's Furnishing Crate.")]
@@ -76,10 +111,11 @@ namespace KryticalNova.DevTools
             if (housing.Authority == null) return "Not at the Hall.";
             var own = new List<FurnishingDefinition>();
             housing.Catalog.ForFaction(housing.Faction, own);
-            own.RemoveAll(f => f.place == FurnishingPlace.IndoorOnly || f.mount == FurnishingMount.Wall || f.mount == FurnishingMount.Ceiling);
-            if (own.Count == 0) return $"The {housing.Faction} have no furnishings for a lawn.";
+            bool indoors = HomeAreas.IsInside(housing.Area);
+            own.RemoveAll(f => f.place == (indoors ? FurnishingPlace.LawnOnly : FurnishingPlace.IndoorOnly) || f.mount == FurnishingMount.Wall || f.mount == FurnishingMount.Ceiling);
+            if (own.Count == 0) return $"The {housing.Faction} have no furnishings for that part of a Hall.";
 
-            AreaShape shape = housing.Authority.Shape(HomeArea.Lawn);
+            AreaShape shape = housing.Authority.Shape(housing.Area);
             var random = new System.Random(12345);
             var ops = new List<HomeOp>(1);
             int placed = 0;
@@ -95,14 +131,14 @@ namespace KryticalNova.DevTools
                 piece.Yaw = random.Next(24) * 15f;
                 if (shape.IsBlocked(piece.Position)) continue;
 
-                int before = housing.Authority.Home.lawn.Count;
+                int before = housing.Authority.Home.Area(housing.Area).Count;
                 ops.Clear();
                 ops.Add(HomeOp.Place(piece));
-                housing.Authority.Submit(HomeArea.Lawn, ops);
-                if (housing.Authority.Home.lawn.Count > before) placed++;
-                else if (housing.Authority.BudgetUsed(HomeArea.Lawn) >= housing.Authority.Budget(HomeArea.Lawn)) break;
+                housing.Authority.Submit(housing.Area, ops);
+                if (housing.Authority.Home.Area(housing.Area).Count > before) placed++;
+                else if (housing.Authority.BudgetUsed(housing.Area) >= housing.Authority.Budget(housing.Area)) break;
             }
-            return $"{placed} piece(s) set down. The lawns hold {housing.Authority.Home.lawn.Count}, budget {housing.Authority.BudgetUsed(HomeArea.Lawn)} / {housing.Authority.Budget(HomeArea.Lawn)}.";
+            return $"{placed} piece(s) set down. That part of the Hall holds {housing.Authority.Home.Area(housing.Area).Count}, budget {housing.Authority.BudgetUsed(housing.Area)} / {housing.Authority.Budget(housing.Area)}.";
         }
     }
 }

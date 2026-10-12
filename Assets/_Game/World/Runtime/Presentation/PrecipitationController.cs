@@ -140,6 +140,15 @@ namespace KryticalNova.World
         [SerializeField] private float shelterFadeSpeed = 3f;
 
         private Transform cam;
+        /// <summary>
+        /// The local player is in a room (the inside of a Crew Hall): nothing falls there, whatever is overhead. The
+        /// roof test below cannot tell, because a room is looked into from above its ceiling.
+        /// </summary>
+        public static bool Indoors { get; set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetIndoors() => Indoors = false;
+
         private float shelter = 1f;
         private float shelterTarget = 1f;
         private float nextShelterCheck;
@@ -610,6 +619,7 @@ namespace KryticalNova.World
         {
             if (rig.system == null || rig.all == null) return;
             if (rig.useShelter) intensity *= shelter;
+            if (Indoors) intensity = 0f;
 
             var go = rig.system.gameObject;
             bool want = intensity > 0.001f;

@@ -25,8 +25,17 @@ namespace KryticalNova.Housing
         /// </summary>
         ushort Submit(HomeArea area, IReadOnlyList<HomeOp> ops);
 
+        /// <summary>
+        /// Asks for one of the Hall's four looks to be changed to a Facade or Finish out of the Furnishing Crate
+        /// (item id 0: back to the faction's standard one). Answered through <see cref="LooksChanged"/> or
+        /// <see cref="Refused"/>.
+        /// </summary>
+        ushort SubmitLook(HomeLook slot, ushort itemId);
+
         /// <summary>An edit was made: the area, the number its asker was given (0 for someone else's), what it did.</summary>
         event Action<HomeArea, ushort, IReadOnlyList<HomeChange>> Changed;
+        /// <summary>One of the Hall's four looks was changed.</summary>
+        event Action<HomeLook> LooksChanged;
         /// <summary>An edit was turned down, with the reason in words.</summary>
         event Action<ushort, string> Refused;
     }

@@ -222,6 +222,72 @@ GM: `gm.home`, `gm.home.leave`, `gm.furnish.kit [n]`, `gm.furnish.clear`, `gm.ho
 
 Not built: the inside of a Hall, Finishes and Facades (step 4); Advanced mode, eyedropper, duplicate, group move, the overhead camera (step 5); everything shared (Stage 2: Crew Quarters, Lots claimed by Crews, the Crew Fund, visitors, pieces going back to their owners, a Furnisher, drops). Pieces are walked through. The Lot's ground is plain; the minimap shows nothing useful there; there is no fade on the way.
 
+## Crew Halls: inside, Facades, Finishes, solid pieces and the comfort set (row 62; Stage 1, steps 4 and 5, built 12 Oct 2026)
+
+This section is later than the one above and wins where they differ: the Lot is now **40 x 52 m** with a **20 x 16 m**
+pad, there are **223 furnishings** (65 / 70 / 88, the Covenant's with the Viking Realm pack), and pieces are **no longer walked through**.
+
+**Trips.** Going to the Hall, through its door, up or down a stair and back to town are one thing: a curtain closes
+(`curtainSeconds` 0.25), the place arrived at is made ready over as many frames as it needs and never in less than
+`travelSeconds` (1.2), the player is set down, the curtain opens. Making ready means: the place itself, its
+furnishings a few a frame (`warmPiecesPerFrame` 24), the ground to walk on, and one drawing nobody sees so that
+meshes, textures and shaders are loaded behind the curtain.
+
+**The inside is an instance.** It does not exist until its player walks onto the door mark at the front of the pad
+(`doorRadius` 1.2 m; or GO INSIDE; or `gm.home.inside`), and it is destroyed when they go out. It is made
+`roomOffset` (150 m down) from the Lot, which is not drawn meanwhile; nothing falls there whatever the weather.
+It has **three floors** one above the other (`floorGap` 1 m): the ground floor, upstairs, the basement, each
+`roomSizeByTier` 20 x 15 m and `roomHeightByTier` 6 m at tier 1. Only the floor the player is on is drawn and lit.
+A stair is a marked 3 m place (`stairSize`) in a back corner, stepped onto like the door; UP A FLOOR / DOWN A FLOOR
+and `gm.home.floor up|ground|basement` do the same. The walls the camera would look through and the ceiling when the
+camera is above it are not drawn but still keep the sun out. The three floors share **one budget**
+(`interiorBudgetByTier` 400 / 500 / 600) and **one set of Finishes**.
+
+**What a Hall wears.** One Facade and three Finishes (walls, floor, ceiling). Each is an item kept in the
+Furnishing Crate (15 Facades, 35 Finishes); a click on one at the Hall makes the Hall wear it and puts the one
+it replaces back in the Crate. Each faction has a standard look for each of the four, which every Hall has and no
+Crate holds; the four buttons under the Crate's grid put a standard back. Item ids: Finishes 29000 to 29499,
+Facades 29500 to 29999. A Facade is stood at the front of the pad with its door to the gate, at up to 1.5 times the
+vendor's size (the scale standard's "heroic").
+
+**Solid pieces.** A furnishing that stands on the floor and is taller than `blockHeight` (0.35 m) stops a walker,
+with the part of its mesh between the ground and `walkBand` (2.1 m): a tree's trunk, not its crown. The walkable
+ground is cut away under it, so a click behind a table finds the way round. Rugs, flowers, arches and what hangs
+stop nobody. A piece is refused where the player stands (`standClear` 0.45 m), the door and the stairs are kept
+clear, and BACK TO THE DOOR gets a player out of a corner they have built shut. Tall pieces between the camera and
+the player fade like any other prop.
+
+**Hanging.** A wall piece is set on a wall of the floor the player is on, its back against it, on the grid along
+and up the wall; Q and E set it askew. A ceiling piece hangs above the place pointed at. Set down freely (Alt, or
+Advanced) either may hang anywhere. Lamps carry a light: the `interiorLights` (10) nearest the camera are lit
+indoors, `lawnLights` (4) on the lawns at night.
+
+**Arrange, the comfort set.** A click on bare ground walks there. Shift-click or a dragged box picks several pieces
+(`maxGroup` 60), a click on one of them moves them as one (Q / E turn them), Delete puts them away. **D** takes
+another like the piece under the cursor. **Tab** is Advanced: pieces are set down freely, and the piece in hand or
+the one piece picked is lifted (`liftStep` 0.25 m, PgUp / PgDn), tilted and leaned (`tiltStep` 15 degrees) and
+sized (`scaleStep` 0.125 between `minPieceScale` 0.5 and `maxPieceScale` 2, the brackets); Ctrl makes the steps
+fine. **V** looks straight down (arrow keys move, the wheel brings it nearer). Middle-click marks a favourite;
+the Crate also lists the last sixteen used. PUT ALL AWAY asks twice. Undo and redo are kept per floor. A window key
+pressed with Ctrl no longer opens its window, so Ctrl+Z undoes without starting Autopilot.
+
+**Who may deal with whom (owner, 12 Oct 2026; this replaces the faction row for furnishings in the table above).**
+Only a **Facade** is its faction's own, so that every Hall fits the Crew Quarter it stands in: it is never traded
+to, sold by a Kiosk to or picked up by another faction, the Deep Vault refuses it, and a Hall of another faction
+cannot wear it. **Furnishings and Finishes are anyone's**: a furnishing's faction is the style it is made in and
+filed under, and a player may own, trade, store and set down any of them, indoors and on the lawns. A new Hall
+starts with its faction's standard looks (Hegemony: Long Hab, Hull Plating walls, Deck Plates, Deck Head; Null:
+Grim Manor, Fortress Stone, Flagstones, Stone Vault; Covenant: Longhouse, Elven Hall, Elven Paving, Oak Rafters),
+chosen by the owner from lettered sheets. `gm.furnish.kit 5 all` fills a Crate with every style.
+
+**Checked, 12 Oct 2026:** 718 EditMode tests pass (30 for housing). In Play as a Hegemony host on a test port with
+a scratch save: the trip to the Hall took 3.5 s; a table lengthened the walk past it from 10.0 to 10.5 m; a Facade
+was changed; the trip inside took 1.7 s with no frame over 36 ms and made three floors; a doorway, a stair, a wall
+piece away from a wall, a ceiling piece at head height and a tree indoors were each refused with their reason; a
+Finish was changed; upstairs and the basement were reached and furnished; going out left no room behind and the
+layout was saved. **Not checked:** real mouse and key play (the tool's clicks, drags and keys were not driven), a
+second client (its Editor was stopped on a dialog), and a built game.
+
 ## Namecards (row 44)
 
 Over every player's head: the Standing they wear, their faction's crest, their name and level in the faction's colour, and their Crew (`<Crew Name>`). A Callout opponent's name is red while the duel lasts. The card sits just above the head and rises to clear a Nova.

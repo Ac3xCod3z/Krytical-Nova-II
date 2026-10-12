@@ -90,6 +90,9 @@ namespace KryticalNova.Rendering
             if (ditherShader == null) ditherShader = Shader.Find("KryticalNova/Occluder Dither");
         }
 
+        /// <summary>Also fades what is on these layers (the furnishings of a Crew Hall, which are not on Default).</summary>
+        public void AlsoFade(LayerMask layers) => occluderLayers |= layers;
+
         private void Awake() => block = new MaterialPropertyBlock();
 
         /// <summary>
