@@ -408,7 +408,7 @@ Menu **Krytical Nova ▸ Characters** (run in order, or use *Bake Everything*):
 |----------------------------------------------|----------------------------------------------------------------------------------------|
 | 1. Bake Sidekick Part Catalog                | Indexes every Sidekick part on disk into `SidekickPartCatalog.asset` (stable ids, loaded on demand) |
 | 2. Build Faction Assets                      | The three faction assets and the catalog. Keeps text and colours tuned in the Inspector |
-| Set Faction Emblems                          | Gives the three factions the emblems named in `FactionAssetBuilder` (each from its own Synty interface pack), over whatever they had. The emblem is on namecards, faction select, character select and, since 11 Oct 2026, over the game's name on the title screen (rebuild the front-end scenes after changing one) |
+| Set Faction Emblems                          | Gives the three factions the emblems named in `FactionAssetBuilder` (each from its own Synty interface pack), over whatever they had. The emblem is on namecards, faction select and character select (rebuild the front-end scenes after changing one); it stood over the game's name on the title screen for a day and was taken off again on 12 Oct 2026 (owner) |
 | 3. Bake Character Data                       | Lineages, palettes, ready-made faces and colour channels into `CharacterCreationDatabase.asset` |
 | 4. Set Up Player Identity Components         | Adds `PlayerIdentity` / `CharacterLook` to the player prefabs                          |
 | 5. Bake Expressions (Faces, Idles, Emotes)   | Fills `CharacterExpressionLibrary.asset` for the creator's Preview tab: Sidekick face poses, idles, emotes. Add clips in `CharacterExpressionBaker` |

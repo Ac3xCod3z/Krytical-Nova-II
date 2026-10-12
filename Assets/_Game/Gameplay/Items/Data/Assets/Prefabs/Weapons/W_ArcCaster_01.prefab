@@ -292,9 +292,21 @@ MonoBehaviour:
     value: 0.50331736
   - hue: 0.47843137
     width: 0.06
-    role: 1
+    role: 6
     value: 1
+  shades:
+  - value: 0.25962818
+    width: 0.08
+    role: 0
+  - value: 0.64350295
+    width: 0.08
+    role: 1
+  - value: 0.16470587
+    width: 0.08
+    role: 0
   paintMetal: 1
+  paintDark: 1
+  paintLights: 1
   keepAsSet: 0
 --- !u!1 &2687439193931041464
 GameObject:

@@ -44,7 +44,7 @@ namespace KryticalNova.Items
         public event Action<EquipSlot, ushort, ushort> SlotChanged;
         /// <summary>The Temper % shown on a slot changed (also raised when the piece in it changes). On every peer.</summary>
         public event Action<EquipSlot> TemperChanged;
-        /// <summary>The Weave or the dye of a slot changed. On every peer.</summary>
+        /// <summary>The Weave or the dye of a slot changed, or the Morph of the pet slot. On every peer.</summary>
         public event Action<EquipSlot> LookChanged;
 
         public ItemCatalog Catalog => catalog;
@@ -113,6 +113,8 @@ namespace KryticalNova.Items
             foreach (EquipSlot slot in WeaveRules.WeaveSlots)
                 if (previous.GetWeave(slot) != next.GetWeave(slot) || previous.GetDye(slot) != next.GetDye(slot))
                     LookChanged?.Invoke(slot);
+            // The pet slot's look is a Morph: a pet and a stage of it.
+            if (previous.pet != next.pet || previous.petStage != next.petStage) LookChanged?.Invoke(EquipSlot.Pet);
         }
 
         private void OnNetLooksChanged(EquipmentLooks previous, EquipmentLooks next)

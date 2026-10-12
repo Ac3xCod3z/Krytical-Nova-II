@@ -4,6 +4,7 @@ using KryticalNova.Core;
 using KryticalNova.Economy;
 using KryticalNova.Items;
 using KryticalNova.Persistence;
+using KryticalNova.Pets;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -15,6 +16,8 @@ namespace KryticalNova.Restyle
     /// is earned (bought from an NPC, taken from a Hostile's drop, granted) or worn; a piece that only passed
     /// through a trade, a Kiosk or another player's hands counts once it is worn. Looks are kept by gear line
     /// (<see cref="WeaveRules.KeyOf"/>). The server decides; only the owner is told what it holds.
+    /// It also holds the account's Morphs, the looks of pets (<see cref="MorphRules"/>): one for each stage a pet
+    /// evolved into while out with one of the account's characters, or was put out at.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment))]
@@ -24,9 +27,12 @@ namespace KryticalNova.Restyle
 
         private NetworkList<ushort> netLines;
         private readonly HashSet<ushort> lines = new HashSet<ushort>();
+        private NetworkList<uint> netMorphs;
+        private readonly HashSet<uint> morphs = new HashSet<uint>();
         private PlayerInventory inventory;
         private PlayerEquipment equipment;
         private PlayerSaveAgent saveAgent;
+        private PlayerPet pet;
         private bool pullPending;
         // A character's worn gear is collected as it loads: nothing is announced until the save is in place.
         private bool settled;
@@ -45,6 +51,16 @@ namespace KryticalNova.Restyle
         /// <summary>The collected gear lines. Do not modify.</summary>
         public IReadOnlyCollection<ushort> Lines => lines;
 
+        public int MorphCount => morphs.Count;
+        /// <summary>True when the look of a pet at a growth stage has been collected.</summary>
+        public bool HasMorph(ushort petItemId, int stage)
+        {
+            uint key = MorphRules.Key(petItemId, stage);
+            return key != 0 && morphs.Contains(key);
+        }
+        /// <summary>The collected Morphs, as <see cref="MorphRules.Key"/>. Do not modify.</summary>
+        public IReadOnlyCollection<uint> Morphs => morphs;
+
         private bool HasAuthority => !IsSpawned || IsServer;
 
         private void Awake()
@@ -52,7 +68,10 @@ namespace KryticalNova.Restyle
             inventory = GetComponent<PlayerInventory>();
             equipment = GetComponent<PlayerEquipment>();
             saveAgent = GetComponent<PlayerSaveAgent>();
+            pet = GetComponent<PlayerPet>();
             netLines = new NetworkList<ushort>(readPerm: NetworkVariableReadPermission.Owner,
+                writePerm: NetworkVariableWritePermission.Server);
+            netMorphs = new NetworkList<uint>(readPerm: NetworkVariableReadPermission.Owner,
                 writePerm: NetworkVariableWritePermission.Server);
         }
 
@@ -60,6 +79,7 @@ namespace KryticalNova.Restyle
         {
             inventory.Earned += OnEarned;
             equipment.SlotChanged += OnSlotChanged;
+            if (pet != null) pet.StageReached += OnPetStageReached;
             if (saveAgent != null) saveAgent.Loaded += OnLoaded;
         }
 
@@ -67,6 +87,7 @@ namespace KryticalNova.Restyle
         {
             inventory.Earned -= OnEarned;
             equipment.SlotChanged -= OnSlotChanged;
+            if (pet != null) pet.StageReached -= OnPetStageReached;
             if (saveAgent != null) saveAgent.Loaded -= OnLoaded;
         }
 
@@ -74,6 +95,7 @@ namespace KryticalNova.Restyle
         {
             base.OnNetworkSpawn();
             netLines.OnListChanged += OnNetLinesChanged;
+            netMorphs.OnListChanged += OnNetMorphsChanged;
             if (IsServer) WriteNetLines();
             else if (IsOwner) PullNetLines();
         }
@@ -81,6 +103,7 @@ namespace KryticalNova.Restyle
         public override void OnNetworkDespawn()
         {
             netLines.OnListChanged -= OnNetLinesChanged;
+            netMorphs.OnListChanged -= OnNetMorphsChanged;
             base.OnNetworkDespawn();
         }
 
@@ -88,6 +111,7 @@ namespace KryticalNova.Restyle
         {
             base.OnDestroy();
             netLines?.Dispose(); // guarded; covers the never-spawned offline avatar
+            netMorphs?.Dispose();
         }
 
         // ------------------------------------------------------------------ server
@@ -139,11 +163,33 @@ namespace KryticalNova.Restyle
             if (itemId != 0) ServerCollectLine(WeaveRules.KeyOf(inventory.Catalog.Get(itemId)));
         }
 
-        /// <summary>GM: empties the library. Server (or offline) only.</summary>
+        private void OnPetStageReached(PetDefinition reached, int stage) => ServerCollectMorph(reached, stage);
+
+        /// <summary>Server (or offline): adds the look of a pet at a growth stage. False when it was there already.</summary>
+        public bool ServerCollectMorph(PetDefinition of, int stage)
+        {
+            if (of == null || !ServerCollectMorph(MorphRules.Key(of.itemId, stage))) return false;
+            if (settled) Tell($"New Morph: {MorphRules.NameOf(of, stage)}.");
+            return true;
+        }
+
+        /// <summary>Server (or offline): adds a Morph by its key, saying nothing. False when it was there already.</summary>
+        public bool ServerCollectMorph(uint key)
+        {
+            if (!HasAuthority || key == 0 || !morphs.Add(key)) return false;
+            if (IsSpawned) netMorphs.Add(key);
+            Changed?.Invoke();
+            if (saveAgent != null) saveAgent.SaveSoon();
+            return true;
+        }
+
+        /// <summary>GM: empties the library, Morphs and all. Server (or offline) only.</summary>
         public void ServerClear()
         {
-            if (!HasAuthority || lines.Count == 0) return;
+            if (!HasAuthority || (lines.Count == 0 && morphs.Count == 0)) return;
             lines.Clear();
+            morphs.Clear();
+            if (IsSpawned) netMorphs.Clear();
             if (IsSpawned) netLines.Clear();
             Changed?.Invoke();
             if (saveAgent != null) saveAgent.SaveSoon();
@@ -167,13 +213,22 @@ namespace KryticalNova.Restyle
         {
             netLines.Clear();
             foreach (ushort line in lines) netLines.Add(line);
+            netMorphs.Clear();
+            foreach (uint morph in morphs) netMorphs.Add(morph);
         }
 
         private void PullNetLines()
         {
             lines.Clear();
             for (int i = 0; i < netLines.Count; i++) lines.Add(netLines[i]);
+            morphs.Clear();
+            for (int i = 0; i < netMorphs.Count; i++) morphs.Add(netMorphs[i]);
             Changed?.Invoke();
+        }
+
+        private void OnNetMorphsChanged(NetworkListEvent<uint> change)
+        {
+            if (!IsServer && IsOwner) pullPending = true;
         }
 
         private void OnNetLinesChanged(NetworkListEvent<ushort> change)
@@ -195,6 +250,7 @@ namespace KryticalNova.Restyle
         private sealed class LibrarySave
         {
             public List<ushort> lines = new List<ushort>();
+            public List<uint> morphs = new List<uint>();
         }
 
         public string SaveKey => LibrarySaveKey;
@@ -205,6 +261,8 @@ namespace KryticalNova.Restyle
             var save = new LibrarySave();
             save.lines.AddRange(lines);
             save.lines.Sort(); // the same library always writes the same text
+            save.morphs.AddRange(morphs);
+            save.morphs.Sort();
             return JsonUtility.ToJson(save);
         }
 
@@ -216,10 +274,14 @@ namespace KryticalNova.Restyle
         {
             if (!HasAuthority || string.IsNullOrEmpty(json)) return;
             var save = JsonUtility.FromJson<LibrarySave>(json);
-            if (save == null || save.lines == null) return;
+            if (save == null) return;
             bool added = false;
-            foreach (ushort line in save.lines)
-                if (line != 0) added |= lines.Add(line);
+            if (save.lines != null)
+                foreach (ushort line in save.lines)
+                    if (line != 0) added |= lines.Add(line);
+            if (save.morphs != null)
+                foreach (uint morph in save.morphs)
+                    if (morph != 0) added |= morphs.Add(morph);
             if (!added) return;
             if (IsSpawned && IsServer) WriteNetLines();
             Changed?.Invoke();

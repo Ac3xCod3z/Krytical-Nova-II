@@ -2,6 +2,7 @@ using KryticalNova.CharacterCreation;
 using KryticalNova.Crafting;
 using KryticalNova.Economy;
 using KryticalNova.Items;
+using KryticalNova.Pets;
 using KryticalNova.Restyle;
 using QFSW.QC;
 
@@ -54,12 +55,21 @@ namespace KryticalNova.DevTools
             return OpenWindow(KryticalNova.Core.ServiceIds.Dye, "Outfitter");
         }
 
-        [Command("gm.weave.unlock", "Add looks to the targeted player's Weave Library: gm.weave.unlock all, or an item by id or name (its look is added).")]
+        [Command("gm.weave.unlock", "Add looks to the targeted player's Weave Library: gm.weave.unlock all (every gear look), gm.weave.unlock morphs (every pet at every stage), or an item by id or name (its look is added).")]
         private static string WeaveUnlock(string what = "all")
         {
             if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
             if (!player.TryGetComponent(out PlayerWeaveLibrary library) || !player.TryGetComponent(out PlayerInventory inventory)) return NoComponent;
             if (inventory.Catalog == null) return "No item catalog.";
+            if (what == "morphs")
+            {
+                if (!player.TryGetComponent(out PlayerPet pets) || pets.Catalog == null) return NoComponent;
+                int morphs = 0;
+                foreach (PetDefinition pet in pets.Catalog.Pets)
+                    for (int stage = 0; pet != null && stage < PetRules.StageCount; stage++)
+                        if (library.ServerCollectMorph(MorphRules.Key(pet.itemId, stage))) morphs++;
+                return $"{morphs} Morph(s) added. {library.MorphCount} collected.";
+            }
             if (what != "all")
             {
                 ItemDefinition item = inventory.Catalog.Find(what);
@@ -89,13 +99,20 @@ namespace KryticalNova.DevTools
         {
             if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
             if (!player.TryGetComponent(out PlayerWeaveLibrary library) || !player.TryGetComponent(out PlayerEquipment equipment)) return NoComponent;
-            var lines = new System.Text.StringBuilder($"{library.Count} look(s) collected.");
+            var lines = new System.Text.StringBuilder($"{library.Count} look(s) and {library.MorphCount} Morph(s) collected.");
             foreach (EquipSlot slot in WeaveRules.WeaveSlots)
             {
                 ItemDefinition worn = equipment.GetDefinition(slot), shown = equipment.GetShownDefinition(slot);
                 ushort dye = equipment.Looks.GetDye(slot);
                 string colour = dye != 0 && equipment.Colourways != null && equipment.Colourways.TryGet(dye, out var theme) ? $", dyed {theme.name}" : string.Empty;
                 lines.Append($"\n{slot}: {(worn == null ? "nothing worn" : shown != worn ? $"{worn.displayName}, showing {shown.displayName}" : worn.displayName)}{colour}");
+            }
+            if (player.TryGetComponent(out PlayerPet pet))
+            {
+                EquipmentLooks looks = equipment.Looks;
+                PetDefinition morph = looks.pet != 0 && pet.Catalog != null ? pet.Catalog.Get(looks.pet) : null;
+                string own = pet.Pet == null ? "no pet out" : MorphRules.NameOf(pet.Pet, pet.Stage);
+                lines.Append($"\nPet: {own}{(morph == null ? string.Empty : pet.IsMorphed ? $", showing {MorphRules.NameOf(morph, looks.petStage)}" : $", Morph {MorphRules.NameOf(morph, looks.petStage)} kept but not shown (the pet has not grown that far)")}");
             }
             return lines.ToString();
         }

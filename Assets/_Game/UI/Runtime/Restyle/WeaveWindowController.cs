@@ -4,6 +4,7 @@ using KryticalNova.Core;
 using KryticalNova.Economy;
 using KryticalNova.Items;
 using KryticalNova.NPC;
+using KryticalNova.Pets;
 using KryticalNova.Restyle;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -17,6 +18,8 @@ namespace KryticalNova.UI
     /// the colourways, and dyes the outfit piece a slot shows. A click shows the choice on the equipment page's
     /// doll, which opens beside the window; the button pays for it. It sends requests to
     /// <see cref="PlayerWeaves"/>; the server decides. Closed when the player walks away.
+    /// The Holoweaver has one more tab, Morphweave: the Morphs in the library, one of which goes over the pet that
+    /// is out. It works as the gear tabs do, except that a pick is shown on the pet beside the player.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -38,12 +41,17 @@ namespace KryticalNova.UI
             public ItemDefinition item;      // Weave: the piece that shows the look
             public string name;
             public string blocked;           // why it cannot be put on, or null
+            public PetDefinition pet;        // Morph: the pet whose look it is
+            public int stage;                // Morph: the growth stage of that look
         }
 
         private VisualElement root, window, grid;
         private Label title, wornLabel, choiceLabel, credsLabel, reasonLabel, helpLabel;
         private Button act, clear;
         private readonly Button[] tabs = new Button[TabNames.Length];
+        private Button petTab;
+        private VisualElement petTabRow;
+        private PlayerPet pet;
         private readonly List<Choice> choices = new List<Choice>(64);
         private readonly List<VisualElement> cells = new List<VisualElement>(64);
         private readonly ServicePanelPlacement placement = new ServicePanelPlacement();
@@ -90,6 +98,9 @@ namespace KryticalNova.UI
                 tabs[i] = window.Q<Button>("weave-tab-" + TabNames[i]);
                 tabs[i].clicked += () => ShowSlot(target);
             }
+            petTabRow = window.Q("weave-tabs-pet");
+            petTab = window.Q<Button>("weave-tab-pet");
+            if (petTab != null) petTab.clicked += () => ShowSlot(EquipSlot.Pet);
             SetOpen(false);
 
             NpcServices.Register(ServiceIds.Holoweave, NpcOffer.Holoweave, "HOLOWEAVE", () => Open(Mode.Weave));
@@ -120,8 +131,15 @@ namespace KryticalNova.UI
                 equipment.SlotChanged -= OnWornChanged;
                 equipment.LookChanged -= OnLookChanged;
             }
+            if (pet != null)
+            {
+                pet.Changed -= OnPetChanged;
+                pet.ClearPreview(); // a Morph that was only being tried on
+            }
             weaves = next;
             equipment = next != null ? next.Equipment : null;
+            pet = next != null ? next.Pet : null;
+            if (pet != null) pet.Changed += OnPetChanged;
             if (weaves != null) weaves.Library.Changed += Refresh;
             if (equipment != null)
             {
@@ -132,10 +150,20 @@ namespace KryticalNova.UI
 
         private void OnWornChanged(EquipSlot changed, ushort previous, ushort next) => Refresh();
 
+        // The pet grew, was fed or starved: what a Morph may go over follows its stage.
+        private void OnPetChanged()
+        {
+            if (OnPet) Refresh();
+        }
+
+        /// <summary>True on the Morphweave tab: the choices are Morphs and the pick is shown on the pet.</summary>
+        private bool OnPet => mode == Mode.Weave && slot == EquipSlot.Pet;
+
         // What was paid for is on: nothing is picked any more, and the doll shows the character as it now is.
         private void OnLookChanged(EquipSlot changed)
         {
             chosen = -1;
+            if (pet != null) pet.ClearPreview();
             Refresh();
         }
 
@@ -158,9 +186,7 @@ namespace KryticalNova.UI
             }
             mode = which;
             title.text = mode == Mode.Weave ? "HOLOWEAVER" : "OUTFITTER";
-            helpLabel.text = mode == Mode.Weave
-                ? "A Weave shows another look over what you wear  ·  Its stats, reach and glow stay your own gear's"
-                : "One Chroma Cell dyes one outfit piece, one Prism Cell a weapon  ·  The dye stays on the piece, wherever it goes";
+            if (mode == Mode.Dye && slot == EquipSlot.Pet) slot = EquipSlot.Armor; // a pet takes no dye
             chosen = -1;
 
             SetOpen(true);
@@ -187,6 +213,7 @@ namespace KryticalNova.UI
             SetOpen(false);
             placement.Close();
             GearUIController gear = GearUIController.Instance;
+            if (pet != null) pet.ClearPreview();
             if (gear != null)
             {
                 gear.ClearPreview();
@@ -242,6 +269,7 @@ namespace KryticalNova.UI
             slot = target;
             chosen = -1;
             GearUIController.Instance?.ClearPreview();
+            if (pet != null) pet.ClearPreview();
             Refresh();
         }
 
@@ -249,17 +277,28 @@ namespace KryticalNova.UI
         {
             if (weaves == null || equipment == null || (!open && !previewing)) return;
             for (int i = 0; i < tabs.Length; i++) tabs[i].EnableInClassList(ActiveTabClass, WeaveRules.WeaveSlots[i] == slot);
+            if (petTab != null) petTab.EnableInClassList(ActiveTabClass, slot == EquipSlot.Pet);
+            if (petTabRow != null) petTabRow.style.display = mode == Mode.Weave ? DisplayStyle.Flex : DisplayStyle.None;
+            helpLabel.text = OnPet ? "A Morph shows another pet's look over the pet you have out  ·  Its bonus, growth and hunger stay your own pet's"
+                : mode == Mode.Weave ? "A Weave shows another look over what you wear  ·  Its stats, reach and glow stay your own gear's"
+                : "One Chroma Cell dyes one outfit piece, one Prism Cell a weapon  ·  The dye stays on the piece, wherever it goes";
 
             ItemDefinition worn = equipment.GetDefinition(slot);
             ItemDefinition shown = equipment.GetShownDefinition(slot);
-            if (worn == null) wornLabel.text = "Nothing is worn in this slot.";
+            if (OnPet)
+            {
+                PetDefinition out_ = pet != null ? pet.Pet : null;
+                wornLabel.text = out_ == null ? "No pet is out."
+                    : $"Out: {MorphRules.NameOf(out_, pet.Stage)}\n{(MorphOn ? "Showing " + MorphRules.NameOf(pet.Catalog.Get(equipment.Looks.pet), equipment.Looks.petStage) : "No Morph on it")}";
+            }
+            else if (worn == null) wornLabel.text = "Nothing is worn in this slot.";
             else if (mode == Mode.Weave)
                 wornLabel.text = shown != worn ? $"Wearing {worn.displayName}\nShowing {shown.displayName}" : $"Wearing {worn.displayName}\nNo Weave on it";
             else
                 wornLabel.text = $"Showing {shown.displayName}\n{(equipment.Looks.GetDye(slot) != 0 ? "Dyed " + ColourwayName(equipment.Looks.GetDye(slot)) : "In its own colours")}";
 
             choices.Clear();
-            if (mode == Mode.Weave) ListWeaves(worn); else ListColourways(shown);
+            if (OnPet) ListMorphs(); else if (mode == Mode.Weave) ListWeaves(worn); else ListColourways(shown);
             if (chosen >= choices.Count) chosen = -1;
 
             while (cells.Count < choices.Count) cells.Add(CreateCell(cells.Count));
@@ -291,6 +330,44 @@ namespace KryticalNova.UI
             choices.Sort(first, usable - first, ByRarityThenName);
             choices.Sort(usable, choices.Count - usable, ByRarityThenName);
         }
+
+        /// <summary>True while the Morph on the pet slot is really shown: the pet that is out has grown as far as it.</summary>
+        private bool MorphOn
+        {
+            get
+            {
+                EquipmentLooks looks = equipment.Looks;
+                return pet != null && pet.Pet != null && pet.Catalog != null && looks.pet != 0
+                    && MorphRules.Shown(pet.Pet, pet.Stage, pet.Catalog.Get(looks.pet), looks.petStage, out _, out _);
+            }
+        }
+
+        /// <summary>The pet's own look first, then every collected Morph: those the pet that is out can show before those it cannot.</summary>
+        private void ListMorphs()
+        {
+            if (pet == null || pet.Catalog == null) return;
+            PetDefinition worn = pet.Pet;
+            if (worn != null) choices.Add(new Choice { key = 0, pet = worn, stage = pet.Stage, name = "Its own look" });
+            int first = choices.Count, usable = first;
+            foreach (uint morph in weaves.Library.Morphs)
+            {
+                PetDefinition of = pet.Catalog.Get(MorphRules.PetOf(morph));
+                int stage = MorphRules.StageOf(morph);
+                if (of == null) continue;
+                if (of == worn && stage == pet.Stage) continue; // the first cell
+                var choice = new Choice { key = 1, pet = of, stage = stage, name = MorphRules.NameOf(of, stage), blocked = weaves.MorphBlockedReason(of.itemId, stage) };
+                if (choice.blocked == null) choices.Insert(usable++, choice);
+                else choices.Add(choice);
+            }
+            choices.Sort(first, usable - first, ByPetThenStage);
+            choices.Sort(usable, choices.Count - usable, ByPetThenStage);
+        }
+
+        private static readonly IComparer<Choice> ByPetThenStage = Comparer<Choice>.Create((a, b) =>
+        {
+            int kind = a.pet.itemId.CompareTo(b.pet.itemId);
+            return kind != 0 ? kind : a.stage.CompareTo(b.stage);
+        });
 
         private static readonly IComparer<Choice> ByRarityThenName = Comparer<Choice>.Create((a, b) =>
         {
@@ -342,8 +419,23 @@ namespace KryticalNova.UI
             cell.Clear();
             cell.ClearClassList();
             bool on = mode == Mode.Weave ? IsOn(choice) : equipment.Looks.GetDye(slot) == choice.key;
-            if (mode == Mode.Weave)
+            if (OnPet)
             {
+                // A Morph: the pet's picture at that stage over its name, as a colourway is its colours over its name.
+                cell.AddToClassList("weave-chip");
+                cell.AddToClassList("weave-morph");
+                var picture = new VisualElement { pickingMode = PickingMode.Ignore };
+                picture.AddToClassList("weave-chip-picture");
+                Sprite icon = choice.pet.Stage(choice.stage).icon;
+                if (icon == null && equipment.Catalog != null && equipment.Catalog.Get(choice.pet.itemId) is ItemDefinition item) icon = item.icon;
+                if (icon != null) picture.style.backgroundImage = new StyleBackground(icon);
+                cell.Add(picture);
+                AddLabel(cell, choice.name, "weave-chip-name");
+                cell.style.opacity = choice.blocked != null ? 0.4f : 1f;
+            }
+            else if (mode == Mode.Weave)
+            {
+                cell.style.opacity = 1f;
                 cell.AddToClassList("item-cell");
                 cell.AddToClassList("weave-cell");
                 GearUIController.CreateItemVisual(cell, false);
@@ -381,6 +473,12 @@ namespace KryticalNova.UI
         /// <summary>True for the look the slot shows now.</summary>
         private bool IsOn(in Choice choice)
         {
+            if (OnPet)
+            {
+                bool morphOn = MorphOn;
+                if (choice.key == 0) return !morphOn;
+                return morphOn && equipment.Looks.pet == choice.pet.itemId && equipment.Looks.petStage == choice.stage;
+            }
             ushort weave = equipment.Looks.GetWeave(slot);
             ItemDefinition shown = equipment.GetShownDefinition(slot);
             if (choice.key == 0) return weave == 0 || shown == equipment.GetDefinition(slot);
@@ -390,7 +488,7 @@ namespace KryticalNova.UI
         private void ShowTooltip(VisualElement cell, int index)
         {
             GearUIController gear = GearUIController.Instance;
-            if (gear == null || index >= choices.Count || mode != Mode.Weave) return;
+            if (gear == null || index >= choices.Count || mode != Mode.Weave || OnPet) return; // a Morph is named on its chip
             Choice choice = choices[index];
             if (choice.item == null) return;
             gear.ShowItemTooltip(cell, choice.item, new ItemStack(choice.item.itemId, 1), choice.blocked ?? "Click to see it on your character");
@@ -413,6 +511,14 @@ namespace KryticalNova.UI
             GearUIController gear = GearUIController.Instance;
             if (gear == null || !open || chosen < 0) return;
             Choice choice = choices[chosen];
+            if (OnPet)
+            {
+                // A pet has no doll: the pick is tried on the pet beside the player, for this player only.
+                if (pet == null) return;
+                if (choice.key == 0) pet.ClearPreview();
+                else pet.PreviewLook(choice.pet, choice.stage);
+                return;
+            }
             if (mode == Mode.Weave)
             {
                 if (choice.item != null) gear.PreviewPiece(choice.item, equipment.GetDyeCells(slot), $"Weave: {choice.name}", overWorn: true);
@@ -431,10 +537,13 @@ namespace KryticalNova.UI
             shownCreds = weaves.Creds;
             credsLabel.text = WalletRules.Format(shownCreds);
 
-            bool weaveOn = mode == Mode.Weave && equipment.Looks.GetWeave(slot) != 0 && equipment.GetShownDefinition(slot) != equipment.GetDefinition(slot);
+            bool onPet = OnPet;
+            bool weaveOn = onPet ? equipment.Looks.pet != 0
+                : mode == Mode.Weave && equipment.Looks.GetWeave(slot) != 0 && equipment.GetShownDefinition(slot) != equipment.GetDefinition(slot);
             bool dyeOn = mode == Mode.Dye && equipment.Looks.GetDye(slot) != 0;
+            string what = onPet ? "MORPH" : "WEAVE";
             clear.text = mode == Mode.Weave
-                ? weaves.WeaveClearFee > 0 ? $"REMOVE WEAVE   ·   {WalletRules.FormatCreds(weaves.WeaveClearFee)}" : "REMOVE WEAVE"
+                ? weaves.WeaveClearFee > 0 ? $"REMOVE {what}   ·   {WalletRules.FormatCreds(weaves.WeaveClearFee)}" : $"REMOVE {what}"
                 : "REMOVE DYE";
             clear.style.display = weaveOn || dyeOn ? DisplayStyle.Flex : DisplayStyle.None;
 
@@ -443,14 +552,16 @@ namespace KryticalNova.UI
             shownDyeItems = weaves.DyeItemsHeldFor(slot);
             bool dyeCosts = mode == Mode.Dye && weaves.DyeItemIdFor(slot) != 0;
             string dyeItemName = weaves.DyeItemNameFor(slot);
-            act.text = mode == Mode.Weave ? $"WEAVE   ·   {WalletRules.FormatCreds(fee)}"
+            act.text = mode == Mode.Weave ? $"{what}   ·   {WalletRules.FormatCreds(fee)}"
                 : dyeCosts ? $"DYE   ·   1 {dyeItemName} (you have {shownDyeItems})" : "DYE";
 
             string reason = null;
             bool pickedOwn = chosen >= 0 && choices[chosen].key == 0;
             if (chosen < 0)
             {
-                choiceLabel.text = choices.Count > 1 ? (mode == Mode.Weave ? "Pick a look to see it on your character." : "Pick a colourway to see it on your character.")
+                choiceLabel.text = onPet
+                    ? (choices.Count > 1 ? "Pick a Morph to see it on your pet." : pet != null && pet.Pet != null ? "No other Morph is in your Weave Library yet." : string.Empty)
+                    : choices.Count > 1 ? (mode == Mode.Weave ? "Pick a look to see it on your character." : "Pick a colourway to see it on your character.")
                     : mode == Mode.Weave && equipment.GetDefinition(slot) != null ? "No other look for this slot is in your Weave Library yet." : string.Empty;
             }
             else
@@ -459,7 +570,7 @@ namespace KryticalNova.UI
                 choiceLabel.text = choice.name;
                 reason = choice.blocked;
                 bool on = mode == Mode.Weave ? IsOn(choice) : equipment.Looks.GetDye(slot) == choice.key;
-                if (reason == null && on) reason = mode == Mode.Weave ? "That is what the slot shows now." : "It is that colour already.";
+                if (reason == null && on) reason = onPet ? "That is what your pet shows now." : mode == Mode.Weave ? "That is what the slot shows now." : "It is that colour already.";
                 if (reason == null && !pickedOwn && shownCreds < fee) reason = "You don't have enough Creds.";
                 if (reason == null && !pickedOwn && dyeCosts && shownDyeItems < 1) reason = $"You have no {dyeItemName}.";
             }
@@ -474,14 +585,16 @@ namespace KryticalNova.UI
             if (!open || weaves == null || chosen < 0 || chosen >= choices.Count) return;
             Choice choice = choices[chosen];
             if (choice.key == 0 || choice.blocked != null) return;
-            if (mode == Mode.Weave) weaves.RequestWeave(slot, choice.key);
+            if (OnPet) weaves.RequestMorph(choice.pet.itemId, choice.stage);
+            else if (mode == Mode.Weave) weaves.RequestWeave(slot, choice.key);
             else weaves.RequestDye(slot, choice.key);
         }
 
         private void Clear()
         {
             if (!open || weaves == null) return;
-            if (mode == Mode.Weave) weaves.RequestClearWeave(slot);
+            if (OnPet) weaves.RequestClearMorph();
+            else if (mode == Mode.Weave) weaves.RequestClearWeave(slot);
             else weaves.RequestDye(slot, 0);
         }
 

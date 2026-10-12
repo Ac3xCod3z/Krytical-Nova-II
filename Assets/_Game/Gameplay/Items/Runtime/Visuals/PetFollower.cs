@@ -258,6 +258,23 @@ namespace KryticalNova.Items.Visuals
             else ApplyStage();
         }
 
+        /// <summary>
+        /// The pet and the look of its stage in one step, for whatever decides both (<see cref="IPetPresenter"/>):
+        /// the model is built once when either changes, so a Morph of another pet is never built on the wrong one.
+        /// </summary>
+        public void SetPetLook(ItemDefinition item, GameObject model, float scale, in PetGlowLook stageGlow, in PetFollowLook spacing)
+        {
+            bool changed = current != item || stageModel != model || (item != null && pet == null);
+            current = item;
+            stageModel = model;
+            stageScale = Mathf.Max(0.1f, scale);
+            glow = stageGlow;
+            glow.strength = Mathf.Clamp01(glow.strength);
+            follow = spacing;
+            if (changed) Rebuild();
+            else ApplyStage();
+        }
+
         /// <summary>The names of the animations the pet that is out can play; empty for a pet with none.</summary>
         public IReadOnlyList<string> AnimationNames => pet != null && animations != null ? animations.Names : System.Array.Empty<string>();
 

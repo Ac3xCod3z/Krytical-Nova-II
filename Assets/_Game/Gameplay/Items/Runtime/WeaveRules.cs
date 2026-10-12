@@ -53,6 +53,21 @@ namespace KryticalNova.Items
             return weave;
         }
 
+        /// <summary>
+        /// A Weave as players read it, the way a dye is read by its colourway: the set it is from ("Commander"), or
+        /// the name of its line for a piece that belongs to no set (a weapon).
+        /// </summary>
+        public static string NameOf(GearDictionary gear, ItemDefinition weave)
+        {
+            if (weave == null) return string.Empty;
+            if (gear != null && gear.TryGetLine(weave.lineId, out GearDictionary.Line line))
+            {
+                if (!string.IsNullOrEmpty(line.set)) return line.set;
+                if (!string.IsNullOrEmpty(line.displayName)) return line.displayName;
+            }
+            return weave.displayName;
+        }
+
         /// <summary>Why a Weave may not go on a slot (shown to the player), or null.</summary>
         public static string ApplyBlockedReason(GearDictionary gear, EquipSlot slot, ItemDefinition worn, ItemDefinition weave,
             bool owned, FactionId faction, BodyFit body)

@@ -1410,6 +1410,9 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Appearance"), EnableIf(nameof(IsReady)), LabelText("Unlock Every Weave"), PropertyOrder(545.22f)]
         private void UnlockEveryWeave() => Run("gm.weave.unlock all");
 
+        [ButtonGroup(Tabs + "/" + ItemsTab + "/Appearance"), EnableIf(nameof(IsReady)), LabelText("Unlock Every Morph"), PropertyOrder(545.225f)]
+        private void UnlockEveryMorph() => Run("gm.weave.unlock morphs");
+
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Appearance"), EnableIf(nameof(IsReady)), LabelText("What It Shows"), PropertyOrder(545.23f)]
         private void ListWeaves() => Run("gm.weave.list");
 

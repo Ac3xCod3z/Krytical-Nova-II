@@ -4,6 +4,7 @@ using KryticalNova.Core;
 using KryticalNova.Economy;
 using KryticalNova.Items;
 using KryticalNova.Items.Visuals;
+using KryticalNova.Pets;
 using KryticalNova.Player;
 using KryticalNova.Progression;
 using UnityEngine;
@@ -904,7 +905,27 @@ namespace KryticalNova.UI
                 : IsUsable(def) ? (def.IsHotbarUsable ? "Right-click: use   ·   Drag to the hotbar to bind a key" : "Right-click: use   ·   Left-click: options")
                 : def.IsEquippable ? "Right-click: equip   ·   Left-click: options"
                 : "Left-click: options";
-            ShowItemTooltip(element, def, inventory != null ? inventory.GetStack(loc) : ItemStack.Empty, hint, !loc.IsBag);
+            ShowItemTooltip(element, def, inventory != null ? inventory.GetStack(loc) : ItemStack.Empty, hint, !loc.IsBag,
+                loc.IsBag ? null : LookLine(loc.Slot));
+        }
+
+        /// <summary>
+        /// What a worn slot shows in place of the piece in it: "Weave: Commander" (the set the Weave is from), or
+        /// "Morph: Kitsune Spirit, Nine Tails" for the pet. Null when the slot shows what is worn.
+        /// </summary>
+        private string LookLine(EquipSlot slot)
+        {
+            if (equipment == null) return null;
+            if (slot == EquipSlot.Pet)
+            {
+                PlayerPet pet = PlayerPet.Local;
+                EquipmentLooks looks = equipment.Looks;
+                if (pet == null || pet.Pet == null || pet.Catalog == null || looks.pet == 0) return null;
+                return MorphRules.Shown(pet.Pet, pet.Stage, pet.Catalog.Get(looks.pet), looks.petStage, out PetDefinition seen, out int stage)
+                    ? $"Morph: {MorphRules.NameOf(seen, stage)}" : null;
+            }
+            ItemDefinition worn = equipment.GetDefinition(slot), shown = equipment.GetShownDefinition(slot);
+            return shown != null && shown != worn ? $"Weave: {WeaveRules.NameOf(inventory != null ? inventory.Gear : null, shown)}" : null;
         }
 
         /// <summary>
@@ -912,7 +933,8 @@ namespace KryticalNova.UI
         /// (Vault, Trade, Kiosk). The stack carries the item's own state, so a pet reads the same everywhere.
         /// </summary>
         /// <param name="equipped">The item is being worn: the card says so.</param>
-        public void ShowItemTooltip(VisualElement element, ItemDefinition def, in ItemStack itemStack, string hint, bool equipped = false)
+        /// <param name="look">What the slot shows over the piece ("Weave: Commander"), or null. Only a worn piece has one.</param>
+        public void ShowItemTooltip(VisualElement element, ItemDefinition def, in ItemStack itemStack, string hint, bool equipped = false, string look = null)
         {
             if (!initialized || element == null || def == null) { HideItemTooltip(); return; }
             ShowCardPicture(def, equipped, PetIcons.For(def, itemStack));
@@ -927,6 +949,8 @@ namespace KryticalNova.UI
                 string colourway = inventory.Catalog.Themes.DisplayNameOf(gearState.Dye);
                 if (colourway != null) tipType.text += $"  ·  Dyed {colourway}";
             }
+            // So does a slot that shows another look: the Weave is named by its set, as the dye is by its colourway.
+            if (!string.IsNullOrEmpty(look)) tipType.text += $"  ·  {look}";
             string requirement = RequirementLine(def, out bool unmet);
             if (tipRequires != null)
             {

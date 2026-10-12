@@ -4,6 +4,7 @@ using KryticalNova.Economy;
 using KryticalNova.Items;
 using KryticalNova.NPC;
 using KryticalNova.Persistence;
+using KryticalNova.Pets;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
@@ -17,6 +18,8 @@ namespace KryticalNova.Restyle
     /// stands by the right NPC, runs <see cref="WeaveRules"/>, takes the cost and writes the result into
     /// <see cref="PlayerEquipment"/>, which shows it to everyone. A Weave costs Creds; a dye uses up one Chroma
     /// Cell a piece, from the Pack or from what is stored. Both costs are in <see cref="EconomySettings"/>.
+    /// The Holoweaver also puts a Morph over the pet that is out (Morphweave, <see cref="MorphRules"/>): the same
+    /// steps and the same fee as a Weave.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment), typeof(PlayerWeaveLibrary))]
@@ -39,6 +42,7 @@ namespace KryticalNova.Restyle
         private PlayerWallet wallet;
         private PlayerResources resources;
         private PlayerSaveAgent saveAgent;
+        private PlayerPet pet;
         private IGearWearer wearer;
         // This character's gear from before looks were collected has been added to the library.
         private bool collectedOwned;
@@ -75,6 +79,16 @@ namespace KryticalNova.Restyle
                 wearer != null ? wearer.Faction : Factions.FactionId.None, wearer != null ? wearer.Body : BodyFit.None);
         }
 
+        /// <summary>The pet system of this player: the pet that is out and the looks a Morph can show.</summary>
+        public PlayerPet Pet => pet;
+
+        /// <summary>Why this character may not put a collected Morph over the pet it has out (shown beside it), or null. The same answer on the owner and the server.</summary>
+        public string MorphBlockedReason(ushort petItemId, int stage)
+        {
+            if (pet == null || pet.Catalog == null) return MorphRules.ReasonNotAMorph;
+            return MorphRules.ApplyBlockedReason(pet.Pet, pet.Stage, pet.Catalog.Get(petItemId), stage, library.HasMorph(petItemId, stage));
+        }
+
         private void Awake()
         {
             inventory = GetComponent<PlayerInventory>();
@@ -84,6 +98,7 @@ namespace KryticalNova.Restyle
             wallet = GetComponent<PlayerWallet>();
             resources = GetComponent<PlayerResources>();
             saveAgent = GetComponent<PlayerSaveAgent>();
+            pet = GetComponent<PlayerPet>();
             wearer = GetComponent<IGearWearer>();
         }
 
@@ -113,6 +128,20 @@ namespace KryticalNova.Restyle
             else ServerClearWeave(slot);
         }
 
+        /// <summary>Put a collected Morph (a pet and one of its growth stages) over the pet that is out.</summary>
+        public void RequestMorph(ushort petItemId, int stage)
+        {
+            if (IsSpawned) MorphRpc(petItemId, (byte)Mathf.Clamp(stage, 0, PetRules.LastStage));
+            else ServerMorph(petItemId, stage);
+        }
+
+        /// <summary>Show the pet that is out as it is again.</summary>
+        public void RequestClearMorph()
+        {
+            if (IsSpawned) ClearMorphRpc();
+            else ServerClearMorph();
+        }
+
         /// <summary>Dye the piece shown in a slot in a colourway; 0 gives it its own colours back.</summary>
         public void RequestDye(EquipSlot slot, ushort colourway)
         {
@@ -128,6 +157,12 @@ namespace KryticalNova.Restyle
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void DyeRpc(byte slot, ushort colourway) => ServerDye((EquipSlot)slot, colourway);
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void MorphRpc(ushort petItemId, byte stage) => ServerMorph(petItemId, stage);
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void ClearMorphRpc() => ServerClearMorph();
 
         // ------------------------------------------------------------------ server
 
@@ -183,6 +218,34 @@ namespace KryticalNova.Restyle
             looks.SetWeave(slot, 0);
             Commit(looks);
             Tell($"The Weave is off your {SlotName(slot)}.");
+        }
+
+        private void ServerMorph(ushort petItemId, int stage)
+        {
+            if (!Ready(NpcOffer.Holoweave, ReasonWhereWeave)) return;
+            string blocked = MorphBlockedReason(petItemId, stage);
+            if (blocked != null) { Tell(blocked); return; }
+
+            PetDefinition morph = pet.Catalog.Get(petItemId);
+            // The look the pet has anyway is no Morph: it is the Morph coming off.
+            if (morph == pet.Pet && stage == pet.Stage) { ServerClearMorph(); return; }
+            EquipmentLooks looks = equipment.Looks;
+            if (looks.pet == petItemId && looks.petStage == stage) { Tell("That Morph is already on."); return; }
+            if (!Pay(WeaveFee)) return;
+            looks.SetMorph(petItemId, stage);
+            Commit(looks);
+            Tell($"{MorphRules.NameOf(morph, stage)} morphed over your {pet.Pet.displayName}.");
+        }
+
+        private void ServerClearMorph()
+        {
+            if (!Ready(NpcOffer.Holoweave, ReasonWhereWeave)) return;
+            EquipmentLooks looks = equipment.Looks;
+            if (looks.pet == 0) { Tell("There is no Morph on your pet."); return; }
+            if (!Pay(WeaveClearFee)) return;
+            looks.SetMorph(0, 0);
+            Commit(looks);
+            Tell("The Morph is off your pet.");
         }
 
         private void ServerDye(EquipSlot slot, ushort colourway)
@@ -290,6 +353,8 @@ namespace KryticalNova.Restyle
                 ushort weave = looks.GetWeave(slot);
                 if (weave != 0 && (catalog == null || WeaveRules.KeyOf(catalog.Get(weave)) == 0)) looks.SetWeave(slot, 0);
             }
+            if (looks.pet != 0 && (pet == null || pet.Catalog == null || pet.Catalog.Get(looks.pet) == null || looks.petStage > PetRules.LastStage))
+                looks.SetMorph(0, 0);
             equipment.ServerSetLooks(looks);
         }
     }

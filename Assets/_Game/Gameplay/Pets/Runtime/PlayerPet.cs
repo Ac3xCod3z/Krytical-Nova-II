@@ -38,10 +38,12 @@ namespace KryticalNova.Pets
     /// look from them, the way worn gear does. Only the pet that is out grows or gets hungry.
     /// Offline (the unspawned scene avatar) the local copy decides. While the owner is in a fight
     /// (<see cref="PlayerCombatState"/>) the pet is kept to its idle, walk and run on every machine.
+    /// What is seen of the pet may be a Morph (<see cref="MorphRules"/>): the look of another pet, or of an earlier
+    /// stage, from <see cref="EquipmentLooks"/>. The bonus, growth and hunger are always the real pet's.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment))]
-    public sealed class PlayerPet : NetworkBehaviour, IItemUseHandler
+    public sealed class PlayerPet : NetworkBehaviour, IItemUseHandler, IPetPresenter
     {
         private const string ReasonNoPet = "You have no pet out to feed.";
         private const string ReasonNotHungry = "Your pet is not hungry.";
@@ -70,11 +72,24 @@ namespace KryticalNova.Pets
         private float nextWrite;
         private bool warnedHungry;
         private bool decides;           // this machine held the pet's state when it was adopted
+        // What the worn pet item held when its state was last read from it or written to it: anything else in the
+        // slot is another pet, also when it is one of the same kind (the slot's item id does not change then).
+        private ulong itemData;
+        private PetDefinition shownPet; // every machine: the pet whose look is shown (a Morph, or the pet itself)
+        private int shownStage;
+        // The owner's machine only: a Morph being tried on at the Holoweaver, before it is paid for.
+        private PetDefinition previewPet;
+        private int previewStage;
 
         /// <summary>Raised on every machine when the pet, its growth or its hunger state changes.</summary>
         public event Action Changed;
         /// <summary>Raised on every machine at the moment a pet evolves: (pet, the stage it reached).</summary>
         public event Action<PetDefinition, int> Evolved;
+        /// <summary>
+        /// Raised where the game is decided when the pet that is out is at a stage as this player's own: it was put
+        /// out at that stage, or it has just evolved into it. The Weave Library collects the Morph.
+        /// </summary>
+        public event Action<PetDefinition, int> StageReached;
 
         /// <summary>This machine's own player, or null.</summary>
         public static PlayerPet Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerPet>() : null;
@@ -85,6 +100,12 @@ namespace KryticalNova.Pets
         public int GrowthPercent => pet != null ? shown.growth : 0;
         public bool IsFed => pet != null && shown.fed;
         public int Stage => PetRules.Stage(GrowthPercent);
+        /// <summary>The pet whose look is shown: the Morph over the pet that is out, or that pet itself. Null with no pet out.</summary>
+        public PetDefinition ShownPet => pet != null ? shownPet : null;
+        /// <summary>The growth stage whose look is shown.</summary>
+        public int ShownStage => pet != null ? shownStage : 0;
+        /// <summary>True while a Morph is shown in place of the pet's own look.</summary>
+        public bool IsMorphed => pet != null && shownPet != null && (shownPet != pet || shownStage != Stage);
         /// <summary>What the pet adds to its stat right now.</summary>
         public float StatBonus => pet != null ? PetRules.StatBonus(pet.maxValue, shown.growth, shown.fed) : 0f;
         /// <summary>The pet's exact XP and hunger. Known to the owner and where the game is decided; empty elsewhere.</summary>
@@ -107,6 +128,8 @@ namespace KryticalNova.Pets
         private void OnEnable()
         {
             equipment.SlotChanged += OnSlotChanged;
+            inventory.Changed += OnInventoryChanged;
+            equipment.LookChanged += OnLookChanged;
             CombatEntity.AnyKilled += OnAnyKilled;
             if (combat != null)
             {
@@ -120,6 +143,8 @@ namespace KryticalNova.Pets
         private void OnDisable()
         {
             equipment.SlotChanged -= OnSlotChanged;
+            inventory.Changed -= OnInventoryChanged;
+            equipment.LookChanged -= OnLookChanged;
             CombatEntity.AnyKilled -= OnAnyKilled;
             if (combat != null) combat.Changed -= OnCombatChanged;
             if (!IsSpawned) WriteToItem();
@@ -156,6 +181,39 @@ namespace KryticalNova.Pets
             if (slot == EquipSlot.Pet) Adopt(next);
         }
 
+        // One pet swapped for another of its kind: the slot shows the same item, but it is not the same pet. Without
+        // this the pet that came out would be given the growth and hunger of the one that went back into the Pack.
+        private void OnInventoryChanged()
+        {
+            if (pet == null || !decides || !HasAuthority) return;
+            ItemStack worn = inventory.GetEquipped(EquipSlot.Pet);
+            if (worn.itemId == pet.itemId && worn.data != itemData) Adopt(worn.itemId);
+        }
+
+        // A Morph was put on or taken off: the same pet, another look.
+        private void OnLookChanged(EquipSlot slot)
+        {
+            if (slot == EquipSlot.Pet) Show(shown);
+        }
+
+        /// <summary>
+        /// The owner's machine: shows a Morph on the pet that is out without paying for it, to be judged at the
+        /// Holoweaver. Nobody else sees it. <see cref="ClearPreview"/> puts back what the pet really shows.
+        /// </summary>
+        public void PreviewLook(PetDefinition morph, int stage)
+        {
+            previewPet = morph;
+            previewStage = Mathf.Clamp(stage, 0, PetRules.LastStage);
+            Show(shown);
+        }
+
+        public void ClearPreview()
+        {
+            if (previewPet == null) return;
+            previewPet = null;
+            Show(shown);
+        }
+
         // ------------------------------------------------------------------ the pet that is out
 
         /// <summary>A pet came out, was swapped or was put away. Its own state came with it in the item.</summary>
@@ -168,11 +226,15 @@ namespace KryticalNova.Pets
                 Show(netState.Value);
                 return;
             }
-            state = pet != null ? PetItemState.Of(inventory.GetEquipped(EquipSlot.Pet)) : default;
+            ItemStack worn = pet != null ? inventory.GetEquipped(EquipSlot.Pet) : ItemStack.Empty;
+            state = PetItemState.Of(worn);
+            itemData = worn.data;
             hungerCarry = 0.0;
             warnedHungry = pet != null && Settings != null && state.HungerPercent <= Settings.hungerWarningPercent;
             nextWrite = Time.time + WriteSeconds;
             Publish();
+            // Putting a pet out at a stage makes that stage's look this player's own (and no earlier one).
+            if (pet != null) StageReached?.Invoke(pet, PetRules.Stage(PetRules.GrowthPercent(state, Tuning)));
         }
 
         private float WriteSeconds => Settings != null ? Settings.hungerWriteSeconds : 10f;
@@ -197,12 +259,27 @@ namespace KryticalNova.Pets
             if (pet != null && bonus > 0f) modifiers.Add(new StatModifier(pet.stat, ModifierType.Flat, bonus, statSource));
             if (combatStats != null) combatStats.SetSourceModifiers(statSource, modifiers);
 
-            if (follower != null)
+            // What is seen: the pet itself, or the Morph over it. From here on only the look is the Morph's.
+            PetDefinition seen = pet;
+            int seenStage = Stage;
+            if (pet != null)
             {
-                if (pet == null) follower.ClearStageLook();
+                if (previewPet != null) { seen = previewPet; seenStage = previewStage; }
                 else
                 {
-                    PetStageLook look = pet.Stage(Stage);
+                    EquipmentLooks looks = equipment.Looks;
+                    if (looks.pet != 0 && catalog != null) MorphRules.Shown(pet, Stage, catalog.Get(looks.pet), looks.petStage, out seen, out seenStage);
+                }
+            }
+            shownPet = seen;
+            shownStage = seenStage;
+
+            if (follower != null)
+            {
+                if (pet == null) follower.SetPetLook(null, null, 1f, default, default);
+                else
+                {
+                    PetStageLook look = seen.Stage(seenStage);
                     var glow = new PetGlowLook { color = look.glow, strength = shown.fed ? look.glowStrength : 0f }; // a starving pet loses its glow with its bonus
                     var spacing = default(PetFollowLook);
                     if (Settings != null)
@@ -214,7 +291,7 @@ namespace KryticalNova.Pets
                         glow.rimPulseSpeed = Settings.rimPulseSpeed;
                         glow.rimPulseWidth = Settings.rimPulseWidth;
                         glow.sparkleRate = Settings.sparkleRate;
-                        glow.noRim = Stage < Settings.rimFromStage;
+                        glow.noRim = seenStage < Settings.rimFromStage;
                         // The halo at the top of its breath is the widest the pet is ever seen.
                         float reach = glow.strength > 0f && !glow.noRim
                             ? Mathf.Lerp(glow.rimWidth.x, glow.rimWidth.y, glow.strength) * (1f + Mathf.Lerp(glow.rimPulseWidth.x, glow.rimPulseWidth.y, glow.strength))
@@ -223,28 +300,29 @@ namespace KryticalNova.Pets
                         {
                             spaced = true,
                             ownerHalfWidth = Settings.ownerHalfWidth,
-                            gap = Settings.followGap + pet.followGapAdjust,
+                            gap = Settings.followGap + seen.followGapAdjust,
                             glowReach = reach,
                             gapGrowth = Settings.followGapGrowth,
                             cameraClearance = Settings.cameraClearance,
                             maxTrail = Settings.followMaxTrail,
                         };
                     }
-                    follower.SetRestPose(pet.restPose);
-                    follower.SetFollowOns(FollowOnsOf(pet));
-                    follower.SetStageLook(look.model, look.scale, glow, spacing);
+                    follower.SetRestPose(seen.restPose);
+                    follower.SetFollowOns(FollowOnsOf(seen));
+                    ItemDefinition item = inventory.Catalog != null ? inventory.Catalog.Get(seen.itemId) : null;
+                    follower.SetPetLook(item, look.model, look.scale, glow, spacing);
                 }
-                follower.SetLines(LinesOf(pet, Stage));
+                follower.SetLines(LinesOf(seen, seenStage));
                 follower.SetAnimationCycle(pet != null && Settings != null ? Settings.animationCycleSeconds : 0f);
                 if (pet != null && Settings != null) follower.SetGaitSpeeds(Settings.walkFromOwnerSpeed, Settings.runFromOwnerSpeed, Settings.runToWalkOwnerSpeed);
                 else follower.SetGaitSpeeds(0f, 0f, 0f);
-                if (pet != null) follower.SetMoveLoop(pet.moveLoop, pet.moveLoopWalkSpeed, pet.moveLoopRunSpeed);
+                if (seen != null) follower.SetMoveLoop(seen.moveLoop, seen.moveLoopWalkSpeed, seen.moveLoopRunSpeed);
                 else follower.SetMoveLoop(null, 1f, 1f);
-                follower.SetRestLoop(pet != null ? pet.restLoop : null);
-                follower.SetStance(pet != null && !pet.bobs, pet != null ? pet.footEffect : null, pet != null ? pet.footBones : null);
-                PetFollower.WornEffect[] effects = EffectsOf(pet, Stage);
+                follower.SetRestLoop(seen != null ? seen.restLoop : null);
+                follower.SetStance(seen != null && !seen.bobs, seen != null ? seen.footEffect : null, seen != null ? seen.footBones : null);
+                PetFollower.WornEffect[] effects = EffectsOf(seen, seenStage);
                 follower.SetEffects(effects, effects);
-                follower.SetCharge(pet != null ? pet.chargeAnimation : null, pet != null ? pet.chargeBone : null);
+                follower.SetCharge(seen != null ? seen.chargeAnimation : null, seen != null ? seen.chargeBone : null);
                 if (Settings != null) follower.SetEmissionBreath(Settings.emissionBreath, Settings.emissionBreathsPerSecond);
             }
             Changed?.Invoke();
@@ -300,7 +378,8 @@ namespace KryticalNova.Pets
         {
             if (pet == null || inventory == null || !decides) return;
             nextWrite = Time.time + WriteSeconds;
-            inventory.ServerSetEquippedData(EquipSlot.Pet, state.Pack());
+            itemData = state.Pack(); // before the write: the inventory tells of it at once
+            inventory.ServerSetEquippedData(EquipSlot.Pet, itemData);
         }
 
         // ------------------------------------------------------------------ hunger (server clock, while online)
@@ -393,6 +472,8 @@ namespace KryticalNova.Pets
             WriteToItem();
             if (growth != shown.growth || state.IsFed != shown.fed) Publish();
             if (stage <= stageBefore) return;
+            // Every stage it grew through in this player's hands is theirs (a GM may set growth past several at once).
+            for (int reached = stageBefore + 1; reached <= stage; reached++) StageReached?.Invoke(pet, reached);
 
             string bonus = StatDisplay.FormatModifier(pet.stat, ModifierType.Flat, PetRules.StatBonus(pet.maxValue, growth, true));
             Notify($"Your {pet.displayName} evolved: {pet.StageName(stage)} ({growth}% growth, {bonus}).", toast: false);
