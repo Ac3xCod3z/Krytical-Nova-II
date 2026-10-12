@@ -75,6 +75,16 @@ The model runs on the CPU on purpose: the graphics card's memory belongs to the 
   `Library/KryticalNova.SoundIndex/music/tempo.jsonl`; `tempo.py list` prints the steady ones; `tempo.py show <file>`
   measures one now; `tempo.py selftest` checks the measuring against made-up drums. A reading may be half or double
   the tempo a listener would tap, and the bar is a guess: the owner checks every pick by ear with a click on the beat.
+- `music_shortlist.py` orders the steady tracks by how close the audio model rates them to a description (fight
+  music by default; `--want` / `--avoid` for another purpose) and keeps a few from each pack.
+  `music_audition.py` levels each one, writes the file the game would get into `audition/music/media` and measures
+  the beat on that file; its page (`http://127.0.0.1:8765/music/`, served like the sound page) plays a track with a
+  click on every beat, at half or double speed, nudged, and with the first beat of the bar marked. A phone cannot
+  open that address: for the owner away from the PC, publish the page as an Artifact with MP3 copies of the tracks
+  (done 2026-10-12; the picks are then in the artifact's `picks/round1` document).
+  `music_bake.py <picks> --zone <Zone>` copies the picked files to `Assets/_Game/Audio/Music/MUS_<Name>.ogg` and
+  writes what the game needs into `music.json` (beside `slots.json`); `--test-beat` bakes made-up drums with an
+  exactly known beat; `--check` measures every baked track again. Then **Krytical Nova ▸ Setup ▸ Music**.
 
 ## Working a request
 

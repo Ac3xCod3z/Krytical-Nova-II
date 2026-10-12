@@ -21,6 +21,7 @@ namespace KryticalNova.EditorTools
     {
         public const string ScenePath = "Assets/_Game/Scenes/Development/Test_Cadence.unity";
         private const string DataFolder = "Assets/_Game/Scenes/Development/Test_Cadence";
+        private const string MusicZone = "TestArena";
 
         // What the arena has no use for. Roots of the town scene, by name.
         private static readonly string[] Removed =
@@ -52,8 +53,14 @@ namespace KryticalNova.EditorTools
             }
             string back = open.path;
 
-            if (File.Exists(ScenePath)) AssetDatabase.DeleteAsset(ScenePath);
-            if (!AssetDatabase.CopyAsset(Zone01Setup.ScenePath, ScenePath))
+            if (File.Exists(ScenePath))
+            {
+                // Built again over the same file, so the scene keeps its GUID: the build list and anything else that
+                // names the arena go on pointing at it.
+                File.Copy(Zone01Setup.ScenePath, ScenePath, true);
+                AssetDatabase.ImportAsset(ScenePath, ImportAssetOptions.ForceUpdate);
+            }
+            else if (!AssetDatabase.CopyAsset(Zone01Setup.ScenePath, ScenePath))
             {
                 Debug.LogError($"[Arena] Could not copy {Zone01Setup.ScenePath} to {ScenePath}.");
                 return false;
@@ -64,12 +71,15 @@ namespace KryticalNova.EditorTools
             RemoveBakedProbes(arena);
             string zone = KeepOneHostileZone();
             bool walkable = BakeNavMesh();
+            // The arena has fight music of its own (ZoneMusic_TestArena); the town gets its own at the last milestone.
+            MusicSetup.Build();
+            bool music = MusicSetup.EnsureInScene(MusicZone);
 
             EditorSceneManager.SaveScene(arena);
             BuildSceneOrder.Apply();
             AssetDatabase.SaveAssets();
             Debug.Log($"[Arena] {ScenePath} built from the town: {removed} root(s) taken out, Hostile Zone '{zone}' beside the spawn, " +
-                      $"NavMesh {(walkable ? "baked" : "NOT baked")}.");
+                      $"NavMesh {(walkable ? "baked" : "NOT baked")}, fight music {(music ? "wired" : "NOT wired")}.");
 
             if (!string.IsNullOrEmpty(back) && back != ScenePath) EditorSceneManager.OpenScene(back, OpenSceneMode.Single);
             return true;

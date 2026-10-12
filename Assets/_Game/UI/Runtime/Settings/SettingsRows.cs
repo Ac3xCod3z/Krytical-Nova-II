@@ -56,9 +56,11 @@ namespace KryticalNova.UI
         public static Action Slider(VisualElement page, string label, float min, float max, Func<float> get, Action<float> set)
             => Slider(page, label, min, max, get, set, out _);
 
-        public static Action Slider(VisualElement page, string label, float min, float max, Func<float> get, Action<float> set, out VisualElement row)
+        /// <param name="format">How the value is written on the handle; a percentage when left out.</param>
+        public static Action Slider(VisualElement page, string label, float min, float max, Func<float> get, Action<float> set, out VisualElement row,
+            Func<float, string> format = null)
         {
-            string Percent(float amount) => Mathf.RoundToInt(amount * 100f) + "%";
+            string Percent(float amount) => format != null ? format(amount) : Mathf.RoundToInt(amount * 100f) + "%";
             row = Row(page, label);
             var slider = new Slider(min, max);
             slider.AddToClassList("settings-slider");

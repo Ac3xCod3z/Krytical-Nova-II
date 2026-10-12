@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.Audio;
 using KryticalNova.Networking;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -19,6 +20,8 @@ namespace KryticalNova.UI
         private static readonly string[] Parameters = { "MasterVolume", "MusicVolume", "SfxVolume", "AmbienceVolume", "UiVolume" };
         private static readonly string[] Keys = { "master", "music", "effects", "ambience", "interface" };
         private const float Silent = -80f;
+        /// <summary>The furthest the beat can be moved either way, in milliseconds.</summary>
+        public const float BeatOffsetLimit = 150f;
 
         private static readonly string Prefix = BuildPrefix();
         private static AudioMixer mixer;
@@ -38,6 +41,7 @@ namespace KryticalNova.UI
             Application.focusChanged -= OnFocusChanged;
             Application.focusChanged += OnFocusChanged;
             AudioListener.volume = 1f;
+            CombatBeat.OutputDelaySeconds = BeatOffset / 1000.0;
         }
 
         public static float Get(AudioChannel channel) => Mathf.Clamp01(PlayerPrefs.GetFloat(Prefix + Keys[(int)channel], 1f));
@@ -52,11 +56,31 @@ namespace KryticalNova.UI
             Changed?.Invoke();
         }
 
-        /// <summary>Every volume back to full, and silence in the background on.</summary>
+        /// <summary>
+        /// How much later this player hears the fight music than the game plays it, in milliseconds (speakers, a
+        /// wireless headset). Everything that keeps time to the beat is moved by it; a negative value moves it earlier.
+        /// </summary>
+        public static float BeatOffset
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetFloat(Prefix + "beatOffset", 0f), -BeatOffsetLimit, BeatOffsetLimit);
+            set
+            {
+                value = Mathf.Round(Mathf.Clamp(value, -BeatOffsetLimit, BeatOffsetLimit));
+                if (Mathf.Approximately(BeatOffset, value)) return;
+                PlayerPrefs.SetFloat(Prefix + "beatOffset", value);
+                PlayerPrefs.Save();
+                CombatBeat.OutputDelaySeconds = value / 1000.0;
+                Changed?.Invoke();
+            }
+        }
+
+        /// <summary>Every volume back to full, the beat where the game plays it, and silence in the background on.</summary>
         public static void ResetToDefaults()
         {
             foreach (string key in Keys) PlayerPrefs.DeleteKey(Prefix + key);
             PlayerPrefs.DeleteKey(Prefix + "muteBackground");
+            PlayerPrefs.DeleteKey(Prefix + "beatOffset");
+            CombatBeat.OutputDelaySeconds = 0.0;
             PlayerPrefs.Save();
             Apply();
             Changed?.Invoke();

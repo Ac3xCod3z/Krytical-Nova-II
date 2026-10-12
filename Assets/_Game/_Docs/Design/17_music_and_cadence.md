@@ -112,6 +112,21 @@ sound, a mark on the damage number.
 - Between two tracks there is no beat, and no Cadence.
 - The world out of a fight has no music yet. That is its own later piece of work.
 
+**As built (M3, 12 Oct 2026).** `Audio/Runtime`: `MusicConductor` (on the zone's World Environment object; replicates
+`MusicState`: when the round began, a track forced by a GM, a GM's nudge), `CombatMusicPlayer` (books the track on
+the audio clock a little ahead, so it starts on the sample the shared clock asks for; sets it right again only when
+it has sat more than 45 ms off for three quarters of a second), `CombatBeat` (static: `Live01`, `HasBeat`, `Beats`,
+`Index`, `Phase01`, `OnBar`, `Pulse()`, `TryError()`), `BeatMath`. A track is a `MusicTrack` asset, a zone's fight
+tracks a `ZoneMusic` asset (gap 2 s, fade in 0.6 s, out 2.5 s: my picks); both are made by **Krytical Nova ▸ Setup ▸
+Music** from the sound-scout skill's `music.json`. Tracks are kept compressed in memory, not streamed, so that a
+start lands on the sample. GM: `gm.music`, `gm.music.track <n|name|round>`, `gm.music.click [on|off]`,
+`gm.music.nudge <ms>`. Settings ▸ Audio has **Beat timing offset** (-150 to +150 ms), which moves the beat
+everything keeps time to; it does not move the sound. Only the arena has a conductor so far, playing a made-up
+test beat (120 beats a minute) until the owner's picks are baked.
+Measured in the arena with two Editors on one PC: the sound sat within about 15 ms of the shared clock on the
+host and within about 30 ms on the client, and the client's place in the track was within a few tens of ms of the
+host's.
+
 ## 6. What keeps time
 
 All of it only while the local player is in a fight.

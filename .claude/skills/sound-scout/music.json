@@ -1,0 +1,24 @@
+{
+ "tracks": [
+  {
+   "name": "TestBeat",
+   "title": "Test Beat (made-up drums)",
+   "file": "MUS_TestBeat.ogg",
+   "bpm": 120.0,
+   "first_beat": 0.25,
+   "bar_beat": 0,
+   "beats_per_bar": 4,
+   "seconds": 64.0,
+   "source": "tempo.synth",
+   "test": true
+  }
+ ],
+ "zones": [
+  {
+   "name": "TestArena",
+   "tracks": [
+    "TestBeat"
+   ]
+  }
+ ]
+}
