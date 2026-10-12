@@ -17,7 +17,7 @@ namespace KryticalNova.EditorTools
     /// <para>Two scripting backends: Mono (the scripts are compiled while the game runs, so the first use of
     /// anything hitches) and IL2CPP (compiled to machine code beforehand: faster, and no such hitches). IL2CPP
     /// needs Unity's "Windows Build Support (IL2CPP)" module and the Visual Studio C++ build tools with a Windows
-    /// SDK; <see cref="Il2CppMissing"/> says what is not there. Neither build changes the project's own settings.</para>
+    /// SDK; <see cref="Il2CppMissing"/> says what is not there. Neither build leaves the project on another backend.</para>
     /// </summary>
     public static class TestBuildBuilder
     {
@@ -83,8 +83,10 @@ namespace KryticalNova.EditorTools
         public static bool Build() => Build(ScriptingImplementation.Mono2x);
 
         /// <summary>
-        /// Builds without asking, with the scripting backend named. The project's own backend and stripping settings
-        /// are put back afterwards, so a build never leaves ProjectSettings changed.
+        /// Builds without asking, with the scripting backend named. A build with the project's own backend (Mono)
+        /// touches no setting. For another one the backend, stripping level and compiler configuration are set for
+        /// the build and put back afterwards: the values are the project's again, though ProjectSettings then names
+        /// them where it left them unsaid before.
         /// </summary>
         public static bool Build(ScriptingImplementation backend)
         {
@@ -100,6 +102,8 @@ namespace KryticalNova.EditorTools
 
             NamedBuildTarget standalone = NamedBuildTarget.Standalone;
             ScriptingImplementation backendWas = PlayerSettings.GetScriptingBackend(standalone);
+            // The project's own backend: nothing is set and nothing has to be put back, so ProjectSettings is not written.
+            if (backendWas == backend && backend != ScriptingImplementation.IL2CPP) return BuildWith(backend);
             ManagedStrippingLevel strippingWas = PlayerSettings.GetManagedStrippingLevel(standalone);
             Il2CppCompilerConfiguration compilerWas = PlayerSettings.GetIl2CppCompilerConfiguration(standalone);
             try

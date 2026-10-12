@@ -819,7 +819,7 @@ still: firsts being paid for one by one. Eight things were done about it, in thi
    ships, so nothing is compiled while it runs. It needs Unity's "Windows Build Support (IL2CPP)" module and the
    Visual Studio C++ build tools with a Windows SDK; `TestBuildBuilder.Il2CppMissing()` says which is not there
    (on the development PC, on that day: all three, so no such build has been made yet). Stripping is Minimal for
-   it (the GM console and Netcode find things by reflection). The project's own settings are put back after either
+   it (the GM console and Netcode find things by reflection). The Mono build touches no setting; the project's own are put back after the IL2CPP
    build. The log's header says `scripts Mono` or `scripts IL2CPP`.
 2. **Garbage.** `Krytical Nova ▸ Build ▸ Allocations ▸ Start Recording / Write Report` (`AllocationFinder`) records
    Play with the Profiler and the call stack of every allocation, and writes who allocated how much a frame, by
