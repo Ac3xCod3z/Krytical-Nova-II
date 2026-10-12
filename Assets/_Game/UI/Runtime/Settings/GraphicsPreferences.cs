@@ -46,7 +46,9 @@ namespace KryticalNova.UI
 
         public const float MinRenderScale = 0.5f;
         public const float MinGrassDensity = 0.2f;
-        public static readonly int[] FrameCaps = { 30, 60, 120, 144, 240, 0 }; // 0 = no cap
+        /// <summary>The frame cap that follows the screen: as many frames a second as the display shows.</summary>
+        public const int FrameCapOfScreen = -1;
+        public static readonly int[] FrameCaps = { FrameCapOfScreen, 30, 60, 120, 144, 240, 0 }; // 0 = no cap
 
         private static readonly string Prefix = BuildPrefix();
 
@@ -113,8 +115,29 @@ namespace KryticalNova.UI
         /// </summary>
         public static bool PerformanceReadout { get => GetInt("readout", 0) != 0; set => Set("readout", value ? 1 : 0); }
 
-        /// <summary>Frames per second the game is held to with VSync off; 0 = no cap.</summary>
-        public static int FrameCap { get => Mathf.Max(0, GetInt("frameCap", 0)); set => Set("frameCap", Mathf.Max(0, value)); }
+        /// <summary>
+        /// Frames per second the game is held to with VSync off: <see cref="FrameCapOfScreen"/> (what the game ships
+        /// with) holds it to the screen's own rate, 0 is no cap. Frames the screen cannot show are work for nothing,
+        /// and a PC that is not flat out has room for a frame that takes longer.
+        /// </summary>
+        public static int FrameCap
+        {
+            get => Mathf.Max(FrameCapOfScreen, GetInt("frameCap", FrameCapOfScreen));
+            set => Set("frameCap", Mathf.Max(FrameCapOfScreen, value));
+        }
+
+        /// <summary>The screen's refresh rate, as a whole number of frames a second (60 when the display does not say).</summary>
+        public static int ScreenRate
+        {
+            get
+            {
+                double rate = Screen.currentResolution.refreshRateRatio.value;
+                return rate >= 1.0 ? Mathf.RoundToInt((float)rate) : 60;
+            }
+        }
+
+        /// <summary>The cap in force with VSync off, in frames a second; 0 = none.</summary>
+        public static int FrameCapInForce => FrameCap == FrameCapOfScreen ? ScreenRate : FrameCap;
 
         public static WindowChoice Window
         {
