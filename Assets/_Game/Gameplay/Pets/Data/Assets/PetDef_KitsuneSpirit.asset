@@ -25,25 +25,25 @@ MonoBehaviour:
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0
   - name: Three Tails
-    model: {fileID: 0}
+    model: {fileID: 7273318040934756614, guid: 0f97c9d21b8d4014bf6f48541ce359c5, type: 3}
     icon: {fileID: 0}
     scale: 1.08
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.3
   - name: Five Tails
-    model: {fileID: 0}
+    model: {fileID: 7273318040934756614, guid: 0f97c9d21b8d4014bf6f48541ce359c5, type: 3}
     icon: {fileID: 0}
     scale: 1.16
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.5
   - name: Seven Tails
-    model: {fileID: 0}
+    model: {fileID: 7273318040934756614, guid: 0f97c9d21b8d4014bf6f48541ce359c5, type: 3}
     icon: {fileID: 0}
     scale: 1.24
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.75
   - name: Nine Tails
-    model: {fileID: 0}
+    model: {fileID: 7273318040934756614, guid: 0f97c9d21b8d4014bf6f48541ce359c5, type: 3}
     icon: {fileID: 0}
     scale: 1.35
     glow: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
@@ -56,7 +56,307 @@ MonoBehaviour:
   - DEF-front_toe.R
   - DEF-toe.L
   - DEF-toe.R
-  effects: []
+  effects:
+  - prefab: {fileID: 5103678545179123837, guid: 08631a8999c0ca14aba775067e1b0255, type: 3}
+    bones:
+    - DEF-spine
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
+    animation: Idle
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-spine
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
+    animation: Run
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 0, y: 0}
+    animation: SpinChase
+    at:
+    - 0.25
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-spine
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
+    animation: SpinChase
+    at: []
+    during: {x: 0.21153846, y: 0.7692308}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-spine
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
+    animation: SpinChase
+    at:
+    - 0.7692308
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5103678545179123837, guid: 08631a8999c0ca14aba775067e1b0255, type: 3}
+    bones:
+    - DEF-tail_4.L
+    - DEF-tail_4.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: Idle
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_4.L
+    - DEF-tail_4.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: Run
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 1, y: 4}
+    animation: SpinChase
+    at:
+    - 0.25
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_4.L
+    - DEF-tail_4.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: SpinChase
+    at: []
+    during: {x: 0.21153846, y: 0.7692308}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_4.L
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: SpinChase
+    at:
+    - 0.7692308
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-front_toe.L
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 0, y: 0}
+    animation: PawLift
+    at:
+    - 0.2777778
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-spine.001
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1.3
+    stages: {x: 0, y: 0}
+    animation: TailCurl
+    at:
+    - 0.3125
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-ear.L
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.7
+    stages: {x: 0, y: 0}
+    animation: LookAround
+    at:
+    - 0.23333333
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-ear.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.7
+    stages: {x: 0, y: 0}
+    animation: LookAround
+    at:
+    - 0.6333333
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 1674210332858691641, guid: 343f64c2a342ab84da77dd4d0419b661, type: 3}
+    bones:
+    - DEF-spine.006
+    - DEF-spine.010
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: Shake
+    at: []
+    during: {x: 0.21428572, y: 0.6785714}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 4865811711560083084, guid: a79907a88abafa04491a14b9fc47aa33, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: Guard
+    at:
+    - 0.06944445
+    during: {x: 0, y: 0}
+    endsWithAnimation: 1
+    alongBone: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_4.L
+    - DEF-tail_4.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: Guard
+    at:
+    - 0.22222222
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 2066148865844936643, guid: 03de0591fc4437a4ea663cdf41085ca0, type: 3}
+    bones:
+    - DEF-tail_4.L
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.045
+    stages: {x: 1, y: 4}
+    animation: Guard
+    at: []
+    during: {x: 0.22222222, y: 0.75}
+    endsWithAnimation: 1
+    alongBone: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: -0.2}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 1, y: 4}
+    animation: Pounce
+    at:
+    - 0.35714287
+    - 0.64285713
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_4.L
+    - DEF-tail_4.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: Pounce
+    at: []
+    during: {x: 0.375, y: 0.60714287}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5919215169275605312, guid: e7036a54398350342a9c61570362c8bb, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0.08, z: 0.3}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: Pounce
+    at:
+    - 0.5714286
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 2035485925776671364, guid: c41733247b1bf97448987b623b45bcd5, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0.35, z: 0.2}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 4}
+    animation: Pounce
+    at:
+    - 0.5714286
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   moveLoop: 
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
