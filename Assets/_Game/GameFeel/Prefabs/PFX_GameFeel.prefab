@@ -13485,6 +13485,7 @@ GameObject:
   - component: {fileID: 2261704719579256328}
   - component: {fileID: 9074143639501137624}
   - component: {fileID: 2430772476998623506}
+  - component: {fileID: 1288751205682697107}
   m_Layer: 0
   m_Name: PFX_GameFeel
   m_TagString: Untagged
@@ -13809,6 +13810,19 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: 382e4db0e79fce5488d90a8ba434518f, type: 2}
   dropWatchDistance: 6
   idleSlack: 0.3
+--- !u!114 &1288751205682697107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3514794766457463837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0949238e41653d64ea34edf22b88fb58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.GameFeel::KryticalNova.GameFeel.SpiritReleaser
+  settings: {fileID: 11400000, guid: 616b673ef45785c4c88ff33823d9c32d, type: 2}
 --- !u!1 &3694003426351630226
 GameObject:
   m_ObjectHideFlags: 0

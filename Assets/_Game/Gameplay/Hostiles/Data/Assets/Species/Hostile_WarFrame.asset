@@ -17,6 +17,7 @@ MonoBehaviour:
   tier: 0
   level: 22
   behaviour: 1
+  spirit: 2
   isBossCandidate: 0
   healthMultiplier: 1
   attackRange: 2.2

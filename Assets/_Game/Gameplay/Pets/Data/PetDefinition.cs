@@ -40,6 +40,8 @@ namespace KryticalNova.Pets
         [Header("Only on a bone")]
         [Tooltip("On: it turns with the bone and looks down it, the way the bone runs (a muzzle flash at the end of a gun barrel). Its offset is then measured in the bone's own frame, in metres of the model: z = down the bone, so the bone's length puts it at the tip.")]
         public bool alongBone;
+        [Tooltip("With the one above: it is still placed in the bone's frame (so the bone's length puts it at the tip), but it faces the way the pet faces instead of down the bone. For something thrown ahead of the pet from the end of a tail.")]
+        public bool facesAhead;
     }
 
     /// <summary>Something a pet says at a moment of one of its animations, in its speech bubble.</summary>
@@ -97,6 +99,8 @@ namespace KryticalNova.Pets
         public Color glow;
         [Tooltip("How strong the glow is, 0 (none) to 1.")]
         [Range(0f, 1f)] public float glowStrength;
+        [Tooltip("What this stage stands on instead of the pet's own foot effect (the Kitsune Spirit's two largest forms stand on fire, not on clouds). Worn the same way: one under each foot bone. Empty = the pet's own.")]
+        public GameObject footEffect;
     }
 
     /// <summary>
@@ -152,6 +156,12 @@ namespace KryticalNova.Pets
         public string chargeAnimation = "";
         [Tooltip("The bone of the model that the animation carries forward in its lunge: how far it has gone tells how far through the lunge the pet is.")]
         public string chargeBone = "";
+
+        [Header("Vanish (an animation in which it is not there for a moment)")]
+        [Tooltip("The animation: the name of a state of the model's Animator (the Kitsune Spirit's SpiritStep). Empty = none.")]
+        public string vanishAnimation = "";
+        [Tooltip("The stretch of that animation, as shares of it, during which the pet's own body is not drawn. Its effects still are.")]
+        public Vector2 vanishDuring;
 
         [Header("Rest pose (a model whose file was saved in some other pose than the one it rests in)")]
         [Tooltip("The animation whose first frame is the pose the pet rests in. Its resting state has no animation of its own, so the model rests as its file has it; this puts it in that first frame before it is ever shown, and it is measured in that pose. Empty = it rests as its file has it.")]

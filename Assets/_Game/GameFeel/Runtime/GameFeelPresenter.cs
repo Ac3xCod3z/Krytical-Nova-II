@@ -772,6 +772,7 @@ namespace KryticalNova.GameFeel
         public void Death(in DeathFeel death)
         {
             if (death.VictimIsLocalPlayer) PetChatterDirector.Instance?.Notify(KryticalNova.Pets.PetChatterTrigger.OwnerDied);
+            SpiritReleaser.Instance?.Released(death.Target); // its spirit leaves it: several from a creature, one from a person
             // Effects face the way the body goes, so sparks and debris trail behind it.
             Quaternion along = death.Direction.sqrMagnitude > 0.001f ? Quaternion.LookRotation(death.Direction, Vector3.up) : Quaternion.identity;
             PlayWorld(death.IsCritical ? critDeathWorldFeel : deathWorldFeel, death.Point, along, death.Target);

@@ -62,6 +62,7 @@ namespace KryticalNova.Hostiles
 
         private void OnDied()
         {
+            if (!Application.isBatchMode) KryticalNova.Core.SpiritMoments.Raise(transform); // its spirit leaves it
             // A server with no screen has nobody to show it to.
             if (settings == null || settings.dissolveShader == null || Application.isBatchMode || !isActiveAndEnabled) return;
             if (running != null) StopCoroutine(running);

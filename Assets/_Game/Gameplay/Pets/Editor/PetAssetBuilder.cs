@@ -48,6 +48,11 @@ namespace KryticalNova.EditorTools
             public float[] StageSizes;
             /// <summary>The animation in which it charges its owner, and the bone that animation carries forward.</summary>
             public string Charge, ChargeBone;
+            /// <summary>What it stands on at 25, 50, 75 and 100 % growth instead of the cloud: the effect's path, or null for the cloud.</summary>
+            public string[] StageFeet;
+            /// <summary>The animation in which it is not there for a moment, and the stretch of it (shares) during which its body is not drawn.</summary>
+            public string Vanish;
+            public Vector2 VanishDuring;
             /// <summary>The animation whose first frame is the pose it rests in, for a model whose file holds another pose.</summary>
             public string RestPose;
             /// <summary>Animations followed by another instead of going back to rest: (the animation, how many times it plays, what follows).</summary>
@@ -98,6 +103,8 @@ namespace KryticalNova.EditorTools
             public bool Along;
             /// <summary>Taken away at once when its animation is cut short.</summary>
             public bool Ends;
+            /// <summary>With Along: placed in the bone's frame, but facing the way the pet faces.</summary>
+            public bool Ahead;
         }
 
         // The Drone Core's stages: every form, the four grown ones, those with a cannon, the two with a minigun, the last.
@@ -165,47 +172,125 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>
-        /// The Kitsune Spirit's effects, which are spirit fire off its tail tips. Its first form has one tail (the
-        /// tip is the bone DEF-spine) and the clips Blink, LookAround, PawLift and TailCurl; from 25 % it has two
-        /// (DEF-tail_4.L and .R) and Shake, Guard and Pounce instead. Both idle, walk, run and chase their tails.
+        /// The Kitsune Spirit's effects, which are spirit fire off its tail tips. Each form has its own tails: one at
+        /// first (the tip is the bone DEF-spine), two at 25 % (DEF-tail_4.L and .R), then three, six and nine
+        /// (DEF-tail_K_5, counted from its left; the tip is the far end of that bone, so those effects look down the
+        /// bone and sit its length along it). Each form keeps the animations of the one before and gains its own:
+        /// Shake, Guard and Pounce from 25 %, FoxfireFlick from 50 %, EmberWaltz and Kindle from 75 %, NinefoldBlaze
+        /// and SpiritStep at 100 %.
         /// </summary>
         private static Fx[] KitsuneEffects()
         {
-            var first = new Vector2Int(0, 0);
-            var later = new Vector2Int(1, PetRules.LastStage);
-            var tip = new[] { "DEF-spine" };
-            var tips = new[] { "DEF-tail_4.L", "DEF-tail_4.R" };
             var list = new List<Fx>();
-            foreach ((Vector2Int stages, string[] tail) in new[] { (first, tip), (later, tips) })
+            int[] tailCount = { 1, 2, 3, 6, 9 };
+            float[] tipBone = { 0f, 0f, 0.075f, 0.08f, 0.12f }; // the length of the last tail bone, in metres of the model
+            for (int stage = 0; stage <= PetRules.LastStage; stage++)
             {
-                // At rest: a mote off each tail tip now and then.
-                list.Add(new Fx { Effect = GameFeelBuilder.SpiritMotesPath, Bones = tail, Animation = "Idle", Stages = stages });
-                // Running: a ribbon of fire off each tip.
-                list.Add(new Fx { Effect = GameFeelBuilder.SpiritTrailPath, Bones = tail, Animation = "Run", Stages = stages });
-                // SpinChase (52 frames): pushes off on 13, the tip draws its ring from 11 to 40, where the ring closes.
-                list.Add(new Fx { Effect = GameFeelBuilder.PetHopDustPath, Anchor = PetEffectAnchor.Feet, Animation = "SpinChase", At = Frames(52, 13), Stages = stages, Size = 0.5f });
-                list.Add(new Fx { Effect = GameFeelBuilder.SpiritTrailPath, Bones = tail, Animation = "SpinChase", During = new Vector2(11f / 52f, 40f / 52f), Stages = stages });
-                list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { tail[0] }, Animation = "SpinChase", At = Frames(52, 40), Stages = stages });
+                var here = new Vector2Int(stage, stage);
+                int count = tailCount[stage];
+                bool along = stage >= 2;
+                var tipAt = new Vector3(0f, 0f, tipBone[stage]);
+                var tails = new string[count];
+                for (int k = 0; k < count; k++)
+                    tails[k] = stage == 0 ? "DEF-spine" : stage == 1 ? (k == 0 ? "DEF-tail_4.L" : "DEF-tail_4.R") : $"DEF-tail_{k + 1}_5";
+                // On the forms with many tails, what only needs to be suggested is worn by every other tip.
+                var some = new List<string>();
+                for (int k = 0; k < count; k += count > 3 ? 2 : 1) some.Add(tails[k]);
+                string[] fewTails = some.ToArray();
+                Fx OnTips(string effect, string[] bones) => new Fx { Effect = effect, Bones = bones, Along = along, Offset = along ? tipAt : Vector3.zero, Stages = here };
+
+                // At rest: a mote off a tail tip now and then.
+                Fx motes = OnTips(GameFeelBuilder.SpiritMotesPath, fewTails); motes.Animation = "Idle"; list.Add(motes);
+                // Running: a ribbon of fire off the tips.
+                Fx run = OnTips(GameFeelBuilder.SpiritTrailPath, fewTails); run.Animation = "Run"; list.Add(run);
+                // SpinChase (52 frames): pushes off on 13, the tips draw their rings from 11 to 40, where they close.
+                list.Add(new Fx { Effect = GameFeelBuilder.PetHopDustPath, Anchor = PetEffectAnchor.Feet, Animation = "SpinChase", At = Frames(52, 13), Stages = here, Size = 0.5f });
+                Fx spin = OnTips(GameFeelBuilder.SpiritTrailPath, tails); spin.Animation = "SpinChase"; spin.During = new Vector2(11f / 52f, 40f / 52f); list.Add(spin);
+                Fx closes = OnTips(GameFeelBuilder.SpiritGlintPath, new[] { tails[0] }); closes.Animation = "SpinChase"; closes.At = Frames(52, 40); list.Add(closes);
+
+                if (stage == 0)
+                {
+                    // The first form: a glint under the paw it holds up (10 to 20 of 36), a ring where its tail curls
+                    // (10 of 32), and a glint at its ear each way it looks (14 and 38 of 60).
+                    list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-front_toe.L" }, Animation = "PawLift", At = Frames(36, 10), Stages = here });
+                    list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-spine.001" }, Animation = "TailCurl", At = Frames(32, 10), Stages = here, Size = 1.3f });
+                    list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-ear.L" }, Animation = "LookAround", At = Frames(60, 14), Stages = here, Size = 0.7f });
+                    list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-ear.R" }, Animation = "LookAround", At = Frames(60, 38), Stages = here, Size = 0.7f });
+                    continue;
+                }
+
+                // From 25 %. Shake (56 frames): sparks fly off its neck and back from 12 to 38.
+                list.Add(new Fx { Effect = GameFeelBuilder.SpiritSprayPath, Bones = new[] { "DEF-spine.006", "DEF-spine.010" }, Animation = "Shake", During = new Vector2(12f / 56f, 38f / 56f), Stages = here });
+                // Guard (72 frames): the ward rises as the tails curl (5 to 16), holds to 54, drops by 68; the tips
+                // flare as they stop over its back (16) and arcs jump about one of them while it holds.
+                list.Add(new Fx { Effect = GameFeelBuilder.SpiritWardPath, Animation = "Guard", At = Frames(72, 5), Stages = here, Ends = true });
+                Fx flare = OnTips(GameFeelBuilder.SpiritGlintPath, fewTails); flare.Animation = "Guard"; flare.At = Frames(72, 16); list.Add(flare);
+                Fx arcs = OnTips(GameFeelBuilder.SpiritArcsPath, new[] { tails[0] }); arcs.Animation = "Guard"; arcs.During = new Vector2(16f / 72f, 54f / 72f); arcs.Size = 0.045f; arcs.Ends = true; list.Add(arcs);
+                // Pounce (56 frames): springs on 20, in the air 21 to 32, front paws land on 32 and hind paws on 36.
+                list.Add(new Fx { Effect = GameFeelBuilder.PetHopDustPath, Anchor = PetEffectAnchor.Feet, Offset = new Vector3(0f, 0f, -0.2f), Animation = "Pounce", At = Frames(56, 20, 36), Stages = here, Size = 0.5f });
+                Fx arc = OnTips(GameFeelBuilder.SpiritTrailPath, fewTails); arc.Animation = "Pounce"; arc.During = new Vector2(21f / 56f, 34f / 56f); list.Add(arc);
+                // The strike itself is comic: a Cartoon FX impact where the front paws land, and the word over it.
+                list.Add(new Fx { Effect = GameFeelBuilder.PetPounceMarkPath, Anchor = PetEffectAnchor.Feet, Offset = new Vector3(0f, 0.08f, 0.3f), Animation = "Pounce", At = Frames(56, 32), Stages = here });
+                list.Add(new Fx { Effect = GameFeelBuilder.PetPounceWordPath, Anchor = PetEffectAnchor.Top, Offset = new Vector3(0f, 0.35f, 0.2f), Animation = "Pounce", At = Frames(56, 32), Stages = here });
+                if (stage < 2) continue;
+
+                // From 50 %. FoxfireFlick (60 frames): all the tails whip up over its back (16 to 22), then each
+                // flicks outwards in turn from its left to its right and throws a wisp of foxfire ahead.
+                Fx whip = OnTips(GameFeelBuilder.SpiritTrailPath, tails); whip.Animation = "FoxfireFlick"; whip.During = new Vector2(16f / 60f, 30f / 60f); list.Add(whip);
+                int[] flicks = stage == 2 ? new[] { 20, 25, 30 } : stage == 3 ? new[] { 20, 22, 24, 26, 28, 30 } : new[] { 20, 21, 22, 24, 25, 26, 28, 29, 30 };
+                for (int k = 0; k < count; k++)
+                {
+                    // Thrown from the very tip of the tail, ahead of the fox.
+                    Fx thrown = OnTips(GameFeelBuilder.FoxfireWispPath, new[] { tails[k] }); thrown.Ahead = true; thrown.Animation = "FoxfireFlick"; thrown.At = Frames(60, flicks[k]); list.Add(thrown);
+                    Fx lit = OnTips(GameFeelBuilder.SpiritGlintPath, new[] { tails[k] }); lit.Animation = "FoxfireFlick"; lit.At = Frames(60, flicks[k]); lit.Size = 0.6f; list.Add(lit);
+                }
+                if (stage < 3) continue;
+
+                // From 75 %. EmberWaltz (96 frames): one full turn on its hind legs (18 to 62) in which the tail tips
+                // draw a ring of fire; the front paws land on 70 and the ring bursts outwards; embers drift through the bow.
+                Fx wheel = OnTips(GameFeelBuilder.SpiritTrailPath, tails); wheel.Animation = "EmberWaltz"; wheel.During = new Vector2(18f / 96f, 62f / 96f); list.Add(wheel);
+                list.Add(new Fx { Effect = GameFeelBuilder.FoxfireBurstPath, Animation = "EmberWaltz", At = Frames(96, 70), Stages = here });
+                list.Add(new Fx { Effect = GameFeelBuilder.FoxfireEmbersPath, Anchor = PetEffectAnchor.Top, Animation = "EmberWaltz", During = new Vector2(70f / 96f, 90f / 96f), Stages = here, Size = 0.25f });
+                // Kindle (108 frames): it sits, brings its leftmost tail round, and blows on the tip (54): a small
+                // flame burns there from 55 to 80 and gutters out by 88.
+                Fx breath = new Fx { Effect = GameFeelBuilder.FoxfirePuffPath, Bones = new[] { "DEF-spine.011" }, Along = true, Offset = new Vector3(0f, 0f, 0.16f), Animation = "Kindle", At = Frames(108, 54), Stages = here };
+                list.Add(breath);
+                Fx flame = OnTips(GameFeelBuilder.FoxfireFlamePath, new[] { tails[0] }); flame.Ahead = true; flame.Animation = "Kindle"; flame.During = new Vector2(55f / 108f, 84f / 108f); flame.Ends = true; list.Add(flame);
+                if (stage < 4) continue;
+
+                // At 100 %. NinefoldBlaze (132 frames): the tails snap open from the outside in, a beat apart, each
+                // lighting three frames after its beat; on 76 a pillar of fire goes up from it and a ring leaves
+                // along the ground; embers rain to 124.
+                (int frame, int[] pair)[] beats = { (39, new[] { 0, 8 }), (47, new[] { 1, 7 }), (55, new[] { 2, 6 }), (63, new[] { 3, 5 }), (73, new[] { 4 }) };
+                foreach ((int frame, int[] pair) in beats)
+                {
+                    var lit = new string[pair.Length];
+                    for (int n = 0; n < pair.Length; n++) lit[n] = tails[pair[n]];
+                    Fx beat = OnTips(GameFeelBuilder.SpiritGlintPath, lit); beat.Animation = "NinefoldBlaze"; beat.At = Frames(132, frame); beat.Size = 1.2f; list.Add(beat);
+                }
+                list.Add(new Fx { Effect = GameFeelBuilder.FoxfirePillarPath, Anchor = PetEffectAnchor.Feet, Animation = "NinefoldBlaze", During = new Vector2(76f / 132f, 98f / 132f), Stages = here });
+                list.Add(new Fx { Effect = GameFeelBuilder.FoxfireShockPath, Anchor = PetEffectAnchor.Feet, Animation = "NinefoldBlaze", At = Frames(132, 76), Stages = here });
+                list.Add(new Fx { Effect = GameFeelBuilder.PetClapMarkPath, Animation = "NinefoldBlaze", At = Frames(132, 76), Stages = here, Size = 0.5f });
+                list.Add(new Fx { Effect = GameFeelBuilder.PetBlazeWordPath, Anchor = PetEffectAnchor.Top, Offset = new Vector3(0f, 0.3f, 0.3f), Animation = "NinefoldBlaze", At = Frames(132, 77), Stages = here });
+                list.Add(new Fx { Effect = GameFeelBuilder.FoxfireEmbersPath, Anchor = PetEffectAnchor.Top, Animation = "NinefoldBlaze", During = new Vector2(80f / 132f, 124f / 132f), Stages = here, Size = 0.3f });
+                // SpiritStep (48 frames): it lunges and is gone on 12 (a burst where it was), is back on 18 (a burst
+                // where it lands) and its tails stream past to 30.
+                list.Add(new Fx { Effect = GameFeelBuilder.FoxfireBurstPath, Animation = "SpiritStep", At = Frames(48, 12, 18), Stages = here, Size = 0.6f });
+                Fx streams = OnTips(GameFeelBuilder.SpiritTrailPath, fewTails); streams.Animation = "SpiritStep"; streams.During = new Vector2(18f / 48f, 30f / 48f); list.Add(streams);
+                // Its six flame tufts burn all the time: a cone of flame stands where each tuft leaves the body and
+                // sweeps back along it. Each rides the bone its tuft rides but faces the way the fox faces, so the
+                // fire always sweeps behind it. Where each fire stands, in its bone's own frame (x across, y out of the
+                // bone, z down it), in metres of the model: MEASURED in the Editor from the artist's positions
+                // (README_Kitsune50-100). The shoulder tufts are the largest; the leg fires are worn at 0.7 of them.
+                (string bone, Vector3 at, float size)[] tufts =
+                {
+                    ("DEF-spine.007", new Vector3(-0.033f, 0.103f, 0.050f), 1f), ("DEF-spine.007", new Vector3(0.037f, 0.103f, 0.050f), 1f),
+                    ("DEF-front_thigh.L.001", new Vector3(0.020f, 0.050f, 0.090f), 0.7f), ("DEF-front_thigh.R.001", new Vector3(-0.023f, 0.051f, 0.090f), 0.7f),
+                    ("DEF-shin.L.001", new Vector3(-0.022f, -0.054f, 0.065f), 0.7f), ("DEF-shin.R.001", new Vector3(0.019f, -0.054f, 0.065f), 0.7f),
+                };
+                foreach ((string bone, Vector3 at, float size) in tufts)
+                    list.Add(new Fx { Effect = GameFeelBuilder.FoxfireTuftPath, Bones = new[] { bone }, Along = true, Ahead = true, Offset = at, Stages = here, Size = size });
             }
-            // The first form: a glint under the paw it holds up (10 to 20 of 36), a ring where its tail curls (10 of
-            // 32), and a glint at its ear each way it looks (14 and 38 of 60).
-            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-front_toe.L" }, Animation = "PawLift", At = Frames(36, 10), Stages = first });
-            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-spine.001" }, Animation = "TailCurl", At = Frames(32, 10), Stages = first, Size = 1.3f });
-            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-ear.L" }, Animation = "LookAround", At = Frames(60, 14), Stages = first, Size = 0.7f });
-            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-ear.R" }, Animation = "LookAround", At = Frames(60, 38), Stages = first, Size = 0.7f });
-            // From 25 %. Shake (56 frames): sparks fly off its neck and back from 12 to 38.
-            list.Add(new Fx { Effect = GameFeelBuilder.SpiritSprayPath, Bones = new[] { "DEF-spine.006", "DEF-spine.010" }, Animation = "Shake", During = new Vector2(12f / 56f, 38f / 56f), Stages = later });
-            // Guard (72 frames): the ward rises as the tails curl (5 to 16), holds to 54, drops by 68; the tips
-            // flare as they stop over its back (16) and arcs jump about them while it holds.
-            list.Add(new Fx { Effect = GameFeelBuilder.SpiritWardPath, Animation = "Guard", At = Frames(72, 5), Stages = later, Ends = true });
-            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = tips, Animation = "Guard", At = Frames(72, 16), Stages = later });
-            list.Add(new Fx { Effect = GameFeelBuilder.SpiritArcsPath, Bones = new[] { "DEF-tail_4.L" }, Animation = "Guard", During = new Vector2(16f / 72f, 54f / 72f), Stages = later, Size = 0.045f, Ends = true });
-            // Pounce (56 frames): springs on 20, in the air 21 to 32, front paws land on 32 and hind paws on 36.
-            list.Add(new Fx { Effect = GameFeelBuilder.PetHopDustPath, Anchor = PetEffectAnchor.Feet, Offset = new Vector3(0f, 0f, -0.2f), Animation = "Pounce", At = Frames(56, 20, 36), Stages = later, Size = 0.5f });
-            list.Add(new Fx { Effect = GameFeelBuilder.SpiritTrailPath, Bones = tips, Animation = "Pounce", During = new Vector2(21f / 56f, 34f / 56f), Stages = later });
-            // The strike itself is comic: a Cartoon FX impact where the front paws land, and the word over it.
-            list.Add(new Fx { Effect = GameFeelBuilder.PetPounceMarkPath, Anchor = PetEffectAnchor.Feet, Offset = new Vector3(0f, 0.08f, 0.3f), Animation = "Pounce", At = Frames(56, 32), Stages = later });
-            list.Add(new Fx { Effect = GameFeelBuilder.PetPounceWordPath, Anchor = PetEffectAnchor.Top, Offset = new Vector3(0f, 0.35f, 0.2f), Animation = "Pounce", At = Frames(56, 32), Stages = later });
             return list.ToArray();
         }
 
@@ -408,13 +493,19 @@ namespace KryticalNova.EditorTools
                 OldAsset = "Pet_DroneBall", OldIcon = "Pet_DroneBall" },
             new Row { Id = 8004, Asset = "Pet_KitsuneSpirit", Name = "Kitsune Spirit", StandIn = "SM_Prop_Drone_Insect_01",
                 Model = PetModels + "/KitsuneSpirit/Pet_KitsuneSpirit_S1.prefab",
-                // From 25 % it is the two-tailed fox. That model stands in for the later stages too until they
-                // have their own, so the fox never goes back to one tail as it grows.
+                // A fox of its own at every stage: two tails at 25 %, three at 50 %, six at 75 %, nine at 100 %.
                 StageModels = new[]
                 {
-                    PetModels + "/KitsuneSpirit_25/Pet_KitsuneSpirit_25.prefab", PetModels + "/KitsuneSpirit_25/Pet_KitsuneSpirit_25.prefab",
-                    PetModels + "/KitsuneSpirit_25/Pet_KitsuneSpirit_25.prefab", PetModels + "/KitsuneSpirit_25/Pet_KitsuneSpirit_25.prefab",
+                    PetModels + "/KitsuneSpirit_25/Pet_KitsuneSpirit_25.prefab", PetModels + "/KitsuneSpirit_50/Pet_KitsuneSpirit_50.prefab",
+                    PetModels + "/KitsuneSpirit_75/Pet_KitsuneSpirit_75.prefab", PetModels + "/KitsuneSpirit_100/Pet_KitsuneSpirit_100.prefab",
                 },
+                // The longest side of each form, tails and all, at the scale the first fox is shown at (0.66 m as
+                // made, 0.55 m in the game): the artist's sizes, in which each body is 0.1 m longer than the last.
+                StageSizes = new[] { 0.60f, 0.77f, 0.80f, 1.0f },
+                // The two largest stand on fire instead of clouds, worn the same way under each paw (owner, 12 Oct 2026).
+                StageFeet = new[] { null, null, GameFeelBuilder.FoxfirePawsPath, GameFeelBuilder.FoxfirePawsPath },
+                // SpiritStep (48 frames, 100 % only): it is not there from frame 12 to 18.
+                Vanish = "SpiritStep", VanishDuring = new Vector2(12f / 48f, 18f / 48f),
                 Feet = new[] { "DEF-front_toe.L", "DEF-front_toe.R", "DEF-toe.L", "DEF-toe.R" },
                 Effects = KitsuneEffects(),
                 Stat = StatType.AttackPower, Max = 1100f,
@@ -546,6 +637,8 @@ namespace KryticalNova.EditorTools
             definition.restLoop = row.RestLoop ?? "";
             definition.chargeAnimation = row.Charge ?? "";
             definition.chargeBone = row.ChargeBone ?? "";
+            definition.vanishAnimation = row.Vanish ?? "";
+            definition.vanishDuring = row.VanishDuring;
             definition.restPose = row.RestPose ?? "";
             int followCount = row.FollowOns != null ? row.FollowOns.Length : 0;
             definition.followOns = new PetFollowOn[followCount];
@@ -593,6 +686,7 @@ namespace KryticalNova.EditorTools
                     at = fx.At ?? new float[0],
                     during = fx.During,
                     alongBone = fx.Along,
+                    facesAhead = fx.Ahead,
                     endsWithAnimation = fx.Ends,
                 };
             }
@@ -613,6 +707,11 @@ namespace KryticalNova.EditorTools
                 // A size in metres is the table's too: the stage's scale is that size against the pet's base size.
                 if (stage > 0 && row.StageSizes != null && stage - 1 < row.StageSizes.Length && row.StageSizes[stage - 1] > 0f)
                     look.scale = row.StageSizes[stage - 1] / (NormalisedSize * (row.Scale > 0f ? row.Scale : 1f));
+                // What a stage stands on instead of the pet's own foot effect is the table's as well.
+                string feet = stage > 0 && row.StageFeet != null && stage - 1 < row.StageFeet.Length ? row.StageFeet[stage - 1] : null;
+                look.footEffect = string.IsNullOrEmpty(feet) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(feet);
+                if (!string.IsNullOrEmpty(feet) && look.footEffect == null)
+                    Debug.LogWarning($"[Pets] No foot effect at {feet} for {row.Name}. Run Krytical Nova/GameFeel/Rebuild Kitsune Foxfire Effects, then build the pets again.");
                 if (look.scale <= 0f)
                 {
                     // A stage that was never set up: the stand-in look of the art brief.

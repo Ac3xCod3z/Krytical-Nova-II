@@ -688,6 +688,7 @@ namespace KryticalNova.EditorTools
                 AddPetFeel(root, world.gameObject, so);
                 so.ApplyModifiedPropertiesWithoutUndo();
                 AddPetChatter(root);
+                AddSpiritReleaser(root);
             }
             AssetDatabase.SaveAssets();
             Debug.Log($"[GameFeel] Pet evolution feel rebuilt on {PrefabPath}. Assign a sound on the new MMF_Sound slot.");
@@ -1612,6 +1613,7 @@ namespace KryticalNova.EditorTools
                 AddDeathFeel(root, world, so);
                 AddPetFeel(root, world, so);
                 AddPetChatter(root);
+                AddSpiritReleaser(root);
                 AddForgeFeel(root, world, so);
                 AddNovaFeel(root, world, so);
 

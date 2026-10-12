@@ -24,30 +24,35 @@ MonoBehaviour:
     scale: 1
     glow: {r: 0.3529412, g: 0.84705883, b: 0.7764706, a: 1}
     glowStrength: 0
+    footEffect: {fileID: 0}
   - name: 
     model: {fileID: 4142792073563568587, guid: b61e20acf66c461f9f8b2ec3829a293a, type: 3}
     icon: {fileID: 21300000, guid: 7af6ac7b600a5d74c956b3486f6bd6ed, type: 3}
     scale: 1.322314
     glow: {r: 0.3529412, g: 0.84705883, b: 0.7764706, a: 1}
     glowStrength: 0.3
+    footEffect: {fileID: 0}
   - name: 
     model: {fileID: 2639337082324404009, guid: 89dcdfc34d7e48b2a3ef813327520995, type: 3}
     icon: {fileID: 21300000, guid: b9d2a092a8c4a4f4db3bd60a814152ca, type: 3}
     scale: 1.6528925
     glow: {r: 0.3529412, g: 0.84705883, b: 0.7764706, a: 1}
     glowStrength: 0.5
+    footEffect: {fileID: 0}
   - name: 
     model: {fileID: 3664925530557616973, guid: 237c816e954b41b0832839eb1e36c69b, type: 3}
     icon: {fileID: 21300000, guid: 14468f3db4b694745ac9806f1bf6f53f, type: 3}
     scale: 1.983471
     glow: {r: 0.24705882, g: 0.654902, b: 0.8392157, a: 1}
     glowStrength: 0.75
+    footEffect: {fileID: 0}
   - name: Apex
     model: {fileID: 3435682751848569900, guid: f257a86de1be43b09494d5ab647b4279, type: 3}
     icon: {fileID: 21300000, guid: 4db11c7bb4964474db7558470550cef0, type: 3}
     scale: 2.3140495
     glow: {r: 0.24705882, g: 0.654902, b: 0.8392157, a: 1}
     glowStrength: 1
+    footEffect: {fileID: 0}
   chatter: {fileID: 11400000, guid: 4c61681394ba4d84ba1d7ba615e88809, type: 2}
   bobs: 1
   footEffect: {fileID: 0}
@@ -67,6 +72,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
     bones: []
     anchor: 1
@@ -82,6 +88,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 1287036619844270357, guid: efae6e49676913044af8d9d218c49891, type: 3}
     bones: []
     anchor: 1
@@ -94,6 +101,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 3795252552468512517, guid: edc5f4204c973c3409320e8ab26a7346, type: 3}
     bones: []
     anchor: 2
@@ -106,6 +114,7 @@ MonoBehaviour:
     during: {x: 0.13422818, y: 0.70469797}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 8822475102854033442, guid: e57dcc2149c19c64d806b7e9a061e89e, type: 3}
     bones: []
     anchor: 1
@@ -119,6 +128,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 8822475102854033442, guid: e57dcc2149c19c64d806b7e9a061e89e, type: 3}
     bones: []
     anchor: 1
@@ -132,6 +142,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 8106798915853788611, guid: 33de14b1632b5a341b0dcecf77566f8c, type: 3}
     bones: []
     anchor: 0
@@ -144,6 +155,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 9063877641883896414, guid: d785ed1728cea014ba95faa9bd4ae7e1, type: 3}
     bones: []
     anchor: 0
@@ -156,6 +168,7 @@ MonoBehaviour:
     during: {x: 0.2020202, y: 0.7070707}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 3581474576641248158, guid: 6fd9618941d2ef04a8208491982684f1, type: 3}
     bones:
     - body
@@ -170,6 +183,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 4628599414691996026, guid: 70d8e3c9e8737bb45a4f025aad5d02d5, type: 3}
     bones: []
     anchor: 1
@@ -182,6 +196,7 @@ MonoBehaviour:
     during: {x: 0.16, y: 0.57}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 8062145702128548822, guid: 9cb2fea05d291b446bcc9a2d1dcf02fe, type: 3}
     bones: []
     anchor: 0
@@ -195,6 +210,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 6780777462006047156, guid: 43f4285851a663d4f963a8f2a864368c, type: 3}
     bones:
     - body
@@ -208,6 +224,7 @@ MonoBehaviour:
     during: {x: 0.21666667, y: 0.41666666}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 1457917502210401798, guid: cae7961b7f098c140af2d2dbf93d74c9, type: 3}
     bones:
     - body
@@ -221,6 +238,7 @@ MonoBehaviour:
     during: {x: 0.41666666, y: 0.48333332}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 6973374219161968300, guid: e64ee6126672dcf448c8a23ba8c5874d, type: 3}
     bones: []
     anchor: 1
@@ -234,6 +252,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 8596653687458522326, guid: bf26c9b662af68d4a98ef63d4d2d36e3, type: 3}
     bones: []
     anchor: 2
@@ -247,6 +266,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 2236274292231542957, guid: 9c8cdbaaba692004594f907c80afb06b, type: 3}
     bones:
     - body
@@ -261,6 +281,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 5627686568184674193, guid: 9d75387ef7557db4697701adc4163d2d, type: 3}
     bones: []
     anchor: 1
@@ -273,6 +294,7 @@ MonoBehaviour:
     during: {x: 0.26086956, y: 0.5072464}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 2493645151985093291, guid: 83cc856378c95ce448ac658e9228a753, type: 3}
     bones:
     - body
@@ -286,6 +308,7 @@ MonoBehaviour:
     during: {x: 0.4347826, y: 0.5507246}
     endsWithAnimation: 1
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 8822475102854033442, guid: e57dcc2149c19c64d806b7e9a061e89e, type: 3}
     bones: []
     anchor: 1
@@ -299,6 +322,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 7007473934122469452, guid: 7ab067725b96d3243ac8008a730fcb66, type: 3}
     bones: []
     anchor: 0
@@ -312,6 +336,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 3365025046408941287, guid: beb1163c936df764d84492c900c67576, type: 3}
     bones: []
     anchor: 0
@@ -325,6 +350,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 8499741059681131526, guid: 50e3c12703064064aa34b40fc58ee401, type: 3}
     bones: []
     anchor: 2
@@ -338,6 +364,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 4883250553673875953, guid: acef44b0e41b4584da76d3cbc7487082, type: 3}
     bones: []
     anchor: 1
@@ -352,6 +379,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 2236274292231542957, guid: 9c8cdbaaba692004594f907c80afb06b, type: 3}
     bones: []
     anchor: 2
@@ -365,12 +393,15 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   moveLoop: Move
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
   restLoop: 
   chargeAnimation: Ram
   chargeBone: body
+  vanishAnimation: 
+  vanishDuring: {x: 0, y: 0}
   restPose: 
   followOns: []
   lines: []
