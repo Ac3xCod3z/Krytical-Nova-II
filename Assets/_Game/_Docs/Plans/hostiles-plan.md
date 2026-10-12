@@ -581,7 +581,7 @@ Same pattern as the existing tools: Quantum Console commands, host, server or of
 | Command | What it does | Lands with task |
 |---|---|---|
 | `gm.hostile.list` | Lists every Hostile definition: id, name, level, tier | 5 |
-| `gm.hostile.spawn <id> [count] [level]` | Spawns Hostiles at the cursor, outside any zone, optionally at another level | 5 |
+| `gm.hostile.spawn <id> [count] [level] [health\|inf]` | Spawns Hostiles at the cursor, outside any zone, optionally at another level (0 = the species' own) and with that much health instead of the species', or `inf` for one that cannot die (12 Oct 2026: `HostileNet.SetGmHealth`, for that life only) | 5 |
 | `gm.hostile.clear [radius]` | Removes GM-spawned Hostiles (all, or within a radius) | 5 |
 | `gm.hostile.kill [radius]` | Kills the target, or every Hostile within a radius, with normal XP and drops | 5 |
 | `gm.hostile.info` | Target's definition, level, HP, AI state, current target, zone, distance to zone edge | 5 |
