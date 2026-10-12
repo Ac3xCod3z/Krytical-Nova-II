@@ -1065,6 +1065,9 @@
     background-color: rgb(222, 167, 65);
     border-color: rgb(30, 25, 20);
 }
+.kn-faction-covenant .minimap-marker.hostile {
+    border-color: rgb(30, 25, 20);
+}
 
 /* ---- WorldMap.uss ---- */
 .kn-faction-covenant .world-map .header-key {

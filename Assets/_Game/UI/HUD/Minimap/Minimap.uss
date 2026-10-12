@@ -98,6 +98,28 @@
     border-width: 1.5px;
     border-color: rgb(20, 18, 30);
 }
+/* Hostiles near the player: a small red dot. A Bruiser is larger, a diamond with a pale edge. The boss marker is
+   kept for the boss system; nothing in the game shows it yet. */
+.minimap-marker.hostile {
+    width: 6px; height: 6px;
+    background-color: rgb(226, 62, 54);
+    border-width: 1px;
+    border-color: rgb(20, 18, 30);
+}
+.minimap-marker.bruiser {
+    width: 13px; height: 13px;
+    border-radius: 2px;
+    rotate: 45deg;
+    background-color: rgb(255, 122, 36);
+    border-width: 2px;
+    border-color: rgb(255, 236, 190);
+}
+.minimap-marker.boss {
+    width: 22px; height: 22px;
+    border-radius: 0;
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Skull_01.png#ICON_SciFiSoldier_Map_Skull_01");
+    -unity-background-image-tint-color: rgb(255, 70, 60);
+}
 .minimap-marker.portal {
     width: 22px; height: 22px;
     border-radius: 0;
