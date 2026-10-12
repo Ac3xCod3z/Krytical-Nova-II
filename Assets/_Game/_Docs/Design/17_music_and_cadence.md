@@ -117,6 +117,19 @@ sound, a mark on the damage number.
   pet's pop and the sound come with M5; a mark on the damage number itself is not built.
 - `gm.cadence` prints the numbers and what became of the targeted player's last press; `gm.cadence log on`
   prints every press.
+- **The Cadence readout** (`gm.cadence window on|off`, `CadenceReadout` in `UI/Runtime/Diagnostics`; owner,
+  12 Oct 2026: "a running tool window like the performance window"). On the right edge of the screen, for
+  the local player, where the game is decided: the fight and why, the track and its tempo, the sound's distance
+  from the shared clock; a lane with the beats coming towards a "now" line (gold for the first of a bar, a
+  green stretch for what counts as on the beat) and each press where it fell; a strip of where the last sixteen
+  presses fell round the beat; the last key (how many ms early or late, ON BEAT or OFF BEAT, whether its bonus
+  was spent, kept or lost); hits on beat, hits off beat, the share, casts boosted, the average and spread of the
+  timing, and, once eight presses sit 20 ms or more to one side, the Beat timing offset that would centre them.
+  `gm.cadence reset` starts the counts again. Whether it is shown is kept on the machine between sessions.
+- **GM Tools window.** Everything above is also on a **Cadence** tab of the Editor's GM Tools window (owner,
+  12 Oct 2026: tools are made in the window too, not only as typed commands): the fight state and the hold; the
+  track picker, the click and the nudge; the last key, the counts, the readout and log switches. The Hostiles
+  tab's spawn button takes a health amount and "cannot die" (`gm.hostile.spawn <id> [count] [level] [health|inf]`).
 - Measured in the arena with two Editors: on-beat presses 2 to 7 ms from the beat were on Cadence on both
   machines and their hits were exactly 1.06 times the off-beat ones (470.3 and 498.5 on the host, 163.6 and
   173.4 on the client); a press on the beat while another cast held the body waited in the queue and kept its

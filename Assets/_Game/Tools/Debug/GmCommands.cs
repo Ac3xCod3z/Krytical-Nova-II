@@ -126,7 +126,7 @@ namespace KryticalNova.DevTools
                 "COMBAT       gm.dummy.hit [times] · gm.dummy.reset · gm.dummy.hp <n> · gm.dummy.maxhp <n> (0 = base) · gm.dummy.inf [on|off]",
                 "IN A FIGHT   gm.combat   (is the player in a fight, and why) · gm.combat hold [on|off]   (kept in one, as a war will) · gm.combat watch [on|off]",
                 "FIGHT MUSIC  gm.music   (the tracks, what is on) · gm.music.track <n|name|round> · gm.music.click [on|off]   (a click on every beat) · gm.music.nudge <ms>",
-                "CADENCE      gm.cadence   (its numbers, and how the last skill key pressed in a fight fell against the beat) · gm.cadence log [on|off]",
+                "CADENCE      gm.cadence   (its numbers, and how the last skill key pressed in a fight fell against the beat) · gm.cadence window [on|off]   (a running readout: beats coming, hits on and off the beat) · gm.cadence reset · gm.cadence log [on|off]",
                 "PVP          gm.pvp [on|off]   (factions fight each other, for everyone) · gm.duel <clientIdA> <clientIdB>   (a Callout between two players, no request) · gm.duel.end",
                 "GOD MODE     gm.god [on|off] · gm.infchi · gm.nocd · gm.oneshot · gm.speed <mult> · gm.reset",
                 "GAME SPEED   gm.slowmo [x]   (0.25 = quarter speed, 1 = normal; no value toggles quarter speed)",

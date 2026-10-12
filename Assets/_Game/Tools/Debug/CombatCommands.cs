@@ -60,6 +60,8 @@ namespace KryticalNova.DevTools
 
         [Command("gm.cadence", "Cadence for the targeted player: its numbers, and what became of their last skill key pressed in a fight " +
                                "(how far from the beat, on Cadence or not, whether it was spent on a cast). " +
+                               "gm.cadence window on|off shows a running readout on this screen: the beats coming, where each press fell, how many " +
+                               "were on and off the beat, the average timing. gm.cadence reset starts its counts again. " +
                                "gm.cadence log on|off prints every press of every player to the log.")]
         private static string Cadence(string what = "", string state = "")
         {
@@ -73,7 +75,17 @@ namespace KryticalNova.DevTools
                 PlayerCadence.Logging = state == "on";
                 return PlayerCadence.Logging ? "Every press is printed to the log." : "Presses are no longer printed.";
             }
-            if (what.Length > 0) return "Use gm.cadence or gm.cadence log on|off.";
+            if (what == "window" && (state == "on" || state == "off" || state.Length == 0))
+            {
+                PlayerCadence.ReadoutShown = state.Length == 0 ? !PlayerCadence.ReadoutShown : state == "on";
+                return PlayerCadence.ReadoutShown ? "The Cadence readout is on the right of the screen (it follows your own player)." : "The Cadence readout is off.";
+            }
+            if (what == "reset" && state.Length == 0)
+            {
+                cadence.ResetTally();
+                return "Counts and history started again.";
+            }
+            if (what.Length > 0) return "Use gm.cadence, gm.cadence window on|off, gm.cadence reset or gm.cadence log on|off.";
 
             CadenceSettings settings = cadence.Settings;
             return $"Cadence {(settings.enabled ? "on" : "OFF")}: within {settings.windowMs:0} ms of a beat, +{settings.bonusPercent:0.#} % damage, " +
