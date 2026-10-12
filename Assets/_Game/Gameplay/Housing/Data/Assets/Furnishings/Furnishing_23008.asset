@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_23008
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: ed735c83ebf81244e84a172d59d1384f, type: 2}
+  itemId: 23008
+  faction: 2
+  mount: 0
+  place: 0
+  category: Seating
+  source: 0
+  prefab: {fileID: 560227283709052015, guid: f98b06ef4c1305848b52c557f5d624bc, type: 3}
+  kind: bench
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0.0019940734, y: 0.25356257, z: -0.00000044703484}
+  boundsSize: {x: 1.7712272, y: 0.50712514, z: 0.5207761}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0.0019940734, y: 0.40570012, z: -0.00000044703484}
+  blocks: 1
+  solidCenter: {x: 0.0019940734, y: 0.25356257, z: -0.00000044703484}
+  solidSize: {x: 1.7712272, y: 0.50712514, z: 0.5207761}
+  budgetCost: 2

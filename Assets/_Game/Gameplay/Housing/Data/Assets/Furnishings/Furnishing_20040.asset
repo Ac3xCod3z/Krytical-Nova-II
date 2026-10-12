@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_20040
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 6f54e9505ba74234883fefdebd631bd5, type: 2}
+  itemId: 20040
+  faction: 1
+  mount: 0
+  place: 0
+  category: Lighting
+  source: 0
+  prefab: {fileID: 1163820377141166736, guid: 32841c30c67108342a40632ad8524cd8, type: 3}
+  kind: lamppost
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0.000000014901161, y: 1.8779695, z: -0.0023847371}
+  boundsSize: {x: 0.32101285, y: 3.755939, z: 0.28277475}
+  hasTop: 0
+  castsShadow: 1
+  lights: 1
+  lightOffset: {x: 0.000000014901161, y: 3.0047512, z: -0.0023847371}
+  blocks: 1
+  solidCenter: {x: 0, y: 0.7957997, z: 0.000000007450581}
+  solidSize: {x: 0.21770138, y: 1.5915992, z: 0.18853495}
+  budgetCost: 4

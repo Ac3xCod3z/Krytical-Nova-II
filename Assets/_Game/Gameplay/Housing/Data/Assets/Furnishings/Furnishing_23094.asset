@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_23094
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: b5d7418754312e34e9278acfcc573c87, type: 2}
+  itemId: 23094
+  faction: 2
+  mount: 0
+  place: 1
+  category: Plants
+  source: 0
+  prefab: {fileID: 3206095654881318828, guid: 311c4b132b767d541b3503f2cbaea1e3, type: 3}
+  kind: tree
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: -3.4288673, y: 3.710396, z: 0.24178576}
+  boundsSize: {x: 9.78779, y: 9.429904, z: 7.948283}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: -3.4288673, y: 6.539367, z: 0.24178576}
+  blocks: 1
+  solidCenter: {x: -0.18086326, y: 0.039798737, z: 0.16648173}
+  solidSize: {x: 3.291782, y: 2.0887094, z: 2.951775}
+  budgetCost: 4

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_26088
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 5b780164947ae0040ad3e68864d48395, type: 2}
+  itemId: 26088
+  faction: 3
+  mount: 0
+  place: 1
+  category: Plants
+  source: 0
+  prefab: {fileID: 4257292477500636117, guid: 86acfcdc44f21094f971b4d64c013360, type: 3}
+  kind: bush
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0.00000029802322, y: 0.85647255, z: -0.089371264}
+  boundsSize: {x: 1.8726764, y: 1.6595408, z: 1.6843355}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0.00000029802322, y: 1.3543348, z: -0.089371264}
+  blocks: 1
+  solidCenter: {x: 0.00000029802322, y: 0.85647255, z: -0.089371264}
+  solidSize: {x: 1.8726764, y: 1.6595408, z: 1.6843355}
+  budgetCost: 2

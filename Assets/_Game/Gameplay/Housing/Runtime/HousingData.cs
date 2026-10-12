@@ -26,8 +26,39 @@ namespace KryticalNova.Housing
     /// <summary>Where players get a furnishing. A tag for now: nothing sells or drops them yet.</summary>
     public enum FurnishingSource : byte { Vendor = 0, Drop = 1, NovaStore = 2 }
 
-    /// <summary>The two parts of a Hall that are furnished apart from each other.</summary>
-    public enum HomeArea : byte { Lawn = 0, Interior = 1 }
+    /// <summary>
+    /// The parts of a Hall that are furnished apart from each other: its lawns, and the three floors inside (owner,
+    /// 12 Oct 2026: the floor walked into from outside, the upstairs and a basement). <c>Interior</c> is the
+    /// ground floor.
+    /// </summary>
+    public enum HomeArea : byte { Lawn = 0, Interior = 1, Upper = 2, Basement = 3 }
+
+    public static class HomeAreas
+    {
+        public const int Count = 4;
+        public static readonly HomeArea[] All = { HomeArea.Lawn, HomeArea.Interior, HomeArea.Upper, HomeArea.Basement };
+        /// <summary>The floors inside, the one walked into first.</summary>
+        public static readonly HomeArea[] Inside = { HomeArea.Interior, HomeArea.Upper, HomeArea.Basement };
+
+        public static bool IsInside(HomeArea area) => area != HomeArea.Lawn;
+
+        public static string Name(HomeArea area)
+        {
+            switch (area)
+            {
+                case HomeArea.Interior: return "ground floor";
+                case HomeArea.Upper: return "upstairs";
+                case HomeArea.Basement: return "basement";
+                default: return "lawns";
+            }
+        }
+    }
+
+    /// <summary>
+    /// The four looks a Hall wears, each changed whole by one item: the building on the Lot (a Facade) and the
+    /// walls, the floor and the ceiling of the room inside (Finishes).
+    /// </summary>
+    public enum HomeLook : byte { Facade = 0, Wall = 1, Floor = 2, Ceiling = 3 }
 
     /// <summary>
     /// One furnishing set down in a Hall. Kept small because a Hall holds hundreds: a position to 1/64 m from the
@@ -143,9 +174,44 @@ namespace KryticalNova.Housing
         /// <summary>Character ids of the players whose pieces stand here; a piece names its owner by index.</summary>
         public List<string> owners = new List<string>();
         public List<PlacedPiece> lawn = new List<PlacedPiece>();
+        /// <summary>The ground floor inside.</summary>
         public List<PlacedPiece> interior = new List<PlacedPiece>();
+        public List<PlacedPiece> upper = new List<PlacedPiece>();
+        public List<PlacedPiece> basement = new List<PlacedPiece>();
 
-        public List<PlacedPiece> Area(HomeArea area) => area == HomeArea.Interior ? interior : lawn;
+        public List<PlacedPiece> Area(HomeArea area)
+        {
+            switch (area)
+            {
+                case HomeArea.Interior: return interior;
+                case HomeArea.Upper: return upper;
+                case HomeArea.Basement: return basement;
+                default: return lawn;
+            }
+        }
+
+        /// <summary>The item id of the look worn in one of the four, or 0 for the faction's standard one.</summary>
+        public ushort Look(HomeLook slot)
+        {
+            switch (slot)
+            {
+                case HomeLook.Facade: return facade;
+                case HomeLook.Wall: return wallFinish;
+                case HomeLook.Floor: return floorFinish;
+                default: return ceilingFinish;
+            }
+        }
+
+        public void SetLook(HomeLook slot, ushort itemId)
+        {
+            switch (slot)
+            {
+                case HomeLook.Facade: facade = itemId; break;
+                case HomeLook.Wall: wallFinish = itemId; break;
+                case HomeLook.Floor: floorFinish = itemId; break;
+                default: ceilingFinish = itemId; break;
+            }
+        }
 
         /// <summary>The index of a character in the owner table, added when new. 255 owners at most.</summary>
         public byte OwnerIndex(string characterId)
@@ -218,9 +284,15 @@ namespace KryticalNova.Housing
         public float height;
         /// <summary>Rectangles nothing may be set down in: the Hall's pad, the space kept clear at a door.</summary>
         public Rect[] blocked;
+        /// <summary>A room: it has walls at its edges and a ceiling at its height, for what hangs on them.</summary>
+        public bool hasWalls;
 
         public readonly bool Contains(Vector3 point) =>
             Mathf.Abs(point.x) <= halfSize.x && Mathf.Abs(point.z) <= halfSize.y && point.y >= -0.01f && point.y <= height;
+
+        /// <summary>How far a point is from the nearest wall, across the floor. Only a room has walls.</summary>
+        public readonly float WallDistance(Vector3 point) =>
+            Mathf.Min(halfSize.x - Mathf.Abs(point.x), halfSize.y - Mathf.Abs(point.z));
 
         public readonly bool IsBlocked(Vector3 point)
         {

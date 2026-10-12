@@ -4,148 +4,51 @@ using System.Linq;
 using KryticalNova.Factions;
 using KryticalNova.Housing;
 using KryticalNova.Items;
+using KryticalNova.World;
 using UnityEditor;
 using UnityEngine;
 
 namespace KryticalNova.EditorTools.Housing
 {
     /// <summary>
-    /// Makes the furnishings: for every row of the table, an item (so the piece is carried, stored and traded like
-    /// any other), a furnishing definition measured from the vendor's prefab, and an icon that is a picture of the
-    /// model. The vendor prefab is only read. How a piece mounts, whether things stand on it and whether it lights
-    /// are worked out from its name; the table corrects what the name gets wrong.
-    /// Ids are the table's and are never renumbered: 20000 Hegemony, 23000 Null, 26000 Covenant.
-    /// Names are first picks and want the owner's eye.
+    /// Makes the furnishings: for every row of the tables (<c>FurnishingCatalogBuilder.Tables.cs</c>), an item (so
+    /// the piece is carried, stored and traded like any other), a furnishing definition measured from the
+    /// vendor's prefab, and an icon that is a picture of the model. The vendor prefab is only read.
+    /// <para>Each piece is held to the world's measure (<see cref="WorldScaleSettings"/>): its row names what kind
+    /// of thing it is, and a model outside that kind's range is multiplied back into it. What of it stands in a
+    /// walker's way is measured over the height a person takes up, so a tree stops nobody under its crown.</para>
+    /// The Null's pieces from the Fantasy Kingdom pack are prefab variants in the Null's own colours
+    /// (<see cref="NullTreatment"/>). Ids are the tables' and are never renumbered: 20000 Hegemony, 23000 Null,
+    /// 26000 Covenant. Names are first picks and want the owner's eye.
     /// </summary>
-    public static class FurnishingCatalogBuilder
+    public static partial class FurnishingCatalogBuilder
     {
         public const string ItemFolder = HousingLotBuilder.DataFolder + "/Items";
         public const string FurnishingFolder = HousingLotBuilder.DataFolder + "/Furnishings";
         public const string IconFolder = HousingLotBuilder.DataFolder + "/Icons";
         public const string CatalogPath = HousingLotBuilder.DataFolder + "/FurnishingCatalog.asset";
-        private const string SyntyRoot = "Assets/Synty";
+        public const string SyntyRoot = "Assets/Synty";
 
         private struct Row
         {
             public ushort Id;
             public FactionId Faction;
-            public string Pack, Prefab, Name, Category;
+            public string Pack, Prefab, Name, Category, Kind;
             public FurnishingMount? Mount;
             public FurnishingPlace? Place;
-            public bool? HasTop;
+            public bool? HasTop, Blocks;
+            public bool Flip;
         }
 
-        private static Row R(ushort id, FactionId faction, string pack, string prefab, string name, string category,
-            FurnishingMount? mount = null, FurnishingPlace? place = null, bool? hasTop = null) =>
-            new Row { Id = id, Faction = faction, Pack = pack, Prefab = prefab, Name = name, Category = category, Mount = mount, Place = place, HasTop = hasTop };
+        private static Row R(ushort id, FactionId faction, string pack, string prefab, string name, string category, string kind,
+            FurnishingMount? mount = null, FurnishingPlace? place = null, bool? hasTop = null, bool? blocks = null, bool flip = false) =>
+            new Row { Id = id, Faction = faction, Pack = pack, Prefab = prefab, Name = name, Category = category, Kind = kind,
+                Mount = mount, Place = place, HasTop = hasTop, Blocks = blocks, Flip = flip };
 
-        private const FactionId H = FactionId.Hegemony, N = FactionId.Null, C = FactionId.Covenant;
-        private const string Space = "PolygonSciFiSpace", Worlds = "PolygonSciFiWorlds", City = "PolygonSciFiCity",
-            Empire = "PolygonSamuraiEmpire", Samurai = "PolygonSamurai", Fortress = "PolygonDarkFortress", Dark = "PolygonDarkFantasy",
-            Kingdom = "PolygonFantasyKingdom", Elven = "PolygonElvenRealm";
-
-        // The starter set: enough of each kind, for each faction, to try the building with.
-        private static readonly Row[] Rows =
-        {
-            // ---- Hegemony: clean corporate tech, with a garden from the old country
-            R(20001, H, Space, "SM_Prop_Bed_01", "Crew Bunk", "Seating"),
-            R(20002, H, Worlds, "SM_Prop_Bed_Double_01", "Executive Bed", "Seating"),
-            R(20003, H, Worlds, "SM_Prop_Sofa_01", "Lounge Sofa", "Seating"),
-            R(20004, H, Worlds, "SM_Prop_Chair_01", "Station Chair", "Seating"),
-            R(20005, H, Space, "SM_Prop_Stool_01", "Deck Stool", "Seating"),
-            R(20006, H, Space, "SM_Prop_CornerSeat_01", "Corner Booth", "Seating"),
-            R(20007, H, City, "SM_Prop_Bench_01", "Plaza Bench", "Seating"),
-            R(20010, H, Space, "SM_Prop_SquareTable_01", "Mess Table", "Tables"),
-            R(20011, H, Worlds, "SM_Prop_Table_Large_01", "Briefing Table", "Tables"),
-            R(20012, H, Space, "SM_Prop_Desk_Small_01", "Duty Desk", "Tables"),
-            R(20013, H, Space, "SM_Prop_MapTable_01", "Map Table", "Tables"),
-            R(20014, H, Worlds, "SM_Prop_Projection_Table_01", "Holo Table", "Tables"),
-            R(20020, H, Worlds, "SM_Prop_Locker_01", "Kit Locker", "Storage"),
-            R(20021, H, Worlds, "SM_Prop_Crate_01", "Supply Crate", "Storage"),
-            R(20022, H, Worlds, "SM_Prop_Scav_Barrel_01", "Coolant Drum", "Storage"),
-            R(20030, H, Space, "SM_Prop_Light_Panel_01", "Light Panel", "Lighting"),
-            R(20031, H, City, "SM_Prop_Streetlight_01", "Street Lamp", "Lighting", place: FurnishingPlace.LawnOnly),
-            R(20032, H, Empire, "SM_Prop_Lantern_01", "Stone Lantern", "Lighting"),
-            R(20040, H, Space, "SM_Prop_Screen_01", "Wall Screen", "Decor"),
-            R(20041, H, Worlds, "SM_Prop_Monitor_01", "Desk Monitor", "Decor", FurnishingMount.Surface),
-            R(20042, H, Space, "SM_Prop_Sink_01", "Wash Basin", "Decor"),
-            R(20043, H, City, "SM_Prop_VendingMachine_01", "Vending Unit", "Decor"),
-            R(20050, H, Space, "SM_Prop_Plant_Vase_01", "Potted Fern", "Plants", FurnishingMount.Surface),
-            R(20051, H, City, "SM_Prop_Plant_Vase_02", "Tall Planter", "Plants"),
-            R(20052, H, City, "SM_Env_Hedge_01", "Clipped Hedge", "Plants", place: FurnishingPlace.LawnOnly),
-            R(20053, H, City, "SM_Env_Tree_01", "Plaza Tree", "Plants", place: FurnishingPlace.LawnOnly),
-            R(20054, H, Empire, "SM_Env_Tree_Maple_01", "Red Maple", "Plants", place: FurnishingPlace.LawnOnly),
-            R(20055, H, Empire, "SM_Env_Bamboo_01", "Bamboo Stand", "Plants", place: FurnishingPlace.LawnOnly),
-            R(20056, H, Samurai, "SM_Prop_Bonsai_01", "Bonsai", "Plants", FurnishingMount.Surface),
-
-            // ---- Null: machines in old stone
-            R(23001, N, Fortress, "SM_Prop_Bed_01", "Iron Cot", "Seating"),
-            R(23002, N, Fortress, "SM_Prop_Hammock_01", "Hammock", "Seating"),
-            R(23003, N, Fortress, "SM_Prop_Chair_01", "Hall Chair", "Seating"),
-            R(23004, N, Fortress, "SM_Prop_Throne_01", "Iron Throne", "Seating"),
-            R(23005, N, Dark, "SM_Prop_Pew_01", "Chapel Pew", "Seating"),
-            R(23010, N, Fortress, "SM_Prop_Table_01", "Trestle Table", "Tables"),
-            R(23011, N, Fortress, "SM_Prop_Desk_01", "Scribe's Desk", "Tables"),
-            R(23020, N, Fortress, "SM_Prop_Bookshelf_01", "Archive Shelf", "Storage"),
-            R(23021, N, Fortress, "SM_Prop_Cupboard_01", "Cupboard", "Storage"),
-            R(23022, N, Dark, "SM_Prop_Bookshelf_01", "Crypt Shelf", "Storage"),
-            R(23023, N, Fortress, "SM_Prop_Barrel_01", "Tar Barrel", "Storage"),
-            R(23024, N, Fortress, "SM_Prop_Crate_01", "Iron-bound Crate", "Storage"),
-            R(23030, N, Fortress, "SM_Prop_Brazier_01", "Brazier", "Lighting"),
-            R(23031, N, Dark, "SM_Prop_Candelabra_01", "Candelabra", "Lighting"),
-            R(23032, N, Dark, "SM_Prop_Lantern_01", "Grave Lantern", "Lighting", FurnishingMount.Surface),
-            R(23033, N, Fortress, "SM_Prop_Chandelier_01", "Iron Chandelier", "Lighting", FurnishingMount.Ceiling),
-            R(23040, N, Fortress, "SM_Prop_Fireplace_01", "Hearth", "Decor"),
-            R(23041, N, Fortress, "SM_Prop_Statue_01", "Sentinel Statue", "Decor"),
-            R(23042, N, Dark, "SM_Prop_Gargoyle_01", "Gargoyle", "Decor"),
-            R(23043, N, Dark, "SM_Prop_Organ_01", "Pipe Organ", "Decor"),
-            R(23044, N, Fortress, "SM_Prop_Fountain_01", "Black Fountain", "Decor", place: FurnishingPlace.LawnOnly),
-            R(23045, N, Dark, "SM_Prop_Well_01", "Old Well", "Decor", place: FurnishingPlace.LawnOnly),
-            R(23050, N, Fortress, "SM_Prop_Rug_01", "Hall Rug", "Rugs", FurnishingMount.Rug),
-            R(23051, N, Fortress, "SM_Prop_Banner_01", "War Banner", "Walls", FurnishingMount.Wall),
-            R(23060, N, Fortress, "SM_Prop_Planter_01", "Stone Planter", "Plants"),
-            R(23061, N, Fortress, "SM_Env_Thorns_01", "Thorn Bush", "Plants", place: FurnishingPlace.LawnOnly),
-            R(23062, N, Dark, "SM_Env_Tree_Dead_01", "Dead Tree", "Plants", place: FurnishingPlace.LawnOnly),
-            R(23063, N, Dark, "SM_Env_Rock_01", "Standing Stone", "Plants", place: FurnishingPlace.LawnOnly),
-
-            // ---- Covenant: clans, timber and hearth
-            R(26001, C, Kingdom, "SM_Prop_Bed_01", "Clan Bed", "Seating"),
-            R(26002, C, Kingdom, "SM_Prop_Chair_Wood_01", "Oak Chair", "Seating"),
-            R(26003, C, Kingdom, "SM_Prop_Chair_Fancy_01", "Carved Chair", "Seating"),
-            R(26004, C, Kingdom, "SM_Prop_Throne_01", "Chieftain's Seat", "Seating"),
-            R(26005, C, Elven, "SM_Prop_Couch_01", "Elven Couch", "Seating"),
-            R(26010, C, Kingdom, "SM_Prop_Table_Wood_01", "Oak Table", "Tables"),
-            R(26011, C, Elven, "SM_Prop_Table_01", "Elven Table", "Tables"),
-            R(26012, C, Kingdom, "SM_Prop_Bar_01", "Tavern Bar", "Tables"),
-            R(26020, C, Kingdom, "SM_Prop_Wardrobe_01", "Wardrobe", "Storage"),
-            R(26021, C, Kingdom, "SM_Prop_Dresser_01", "Dresser", "Storage"),
-            R(26022, C, Kingdom, "SM_Prop_Cabinet_01", "Cabinet", "Storage"),
-            R(26023, C, Kingdom, "SM_Prop_Chest_01", "Sea Chest", "Storage"),
-            R(26024, C, Kingdom, "SM_Prop_Barrel_01", "Ale Barrel", "Storage"),
-            R(26030, C, Kingdom, "SM_Prop_Street_Lamp_01", "Lamp Post", "Lighting", place: FurnishingPlace.LawnOnly),
-            R(26031, C, Elven, "SM_Prop_Lamp_01", "Elven Lamp", "Lighting"),
-            R(26032, C, Elven, "SM_Prop_Lantern_01", "Moon Lantern", "Lighting", FurnishingMount.Surface),
-            R(26033, C, Kingdom, "SM_Prop_Chandelier_01", "Antler Chandelier", "Lighting", FurnishingMount.Ceiling),
-            R(26040, C, Kingdom, "SM_Prop_Stove_01", "Cook Stove", "Decor"),
-            R(26041, C, Elven, "SM_Prop_Statue_01", "Ancestor Statue", "Decor"),
-            R(26042, C, Elven, "SM_Prop_Vase_01", "Glazed Vase", "Decor", FurnishingMount.Surface),
-            R(26043, C, Kingdom, "SM_Env_Fountain_01", "Village Fountain", "Decor", place: FurnishingPlace.LawnOnly),
-            R(26044, C, Elven, "SM_Prop_Fountain_01", "Spring Fountain", "Decor", place: FurnishingPlace.LawnOnly),
-            R(26045, C, Kingdom, "SM_Prop_Well_01", "Stone Well", "Decor", place: FurnishingPlace.LawnOnly),
-            R(26046, C, Kingdom, "SM_Prop_Gazebo_01", "Gazebo", "Decor", place: FurnishingPlace.LawnOnly, hasTop: false),
-            R(26047, C, Elven, "SM_Prop_BirdBath_01", "Bird Bath", "Decor", place: FurnishingPlace.LawnOnly),
-            R(26050, C, Kingdom, "SM_Prop_Rug_01", "Woven Rug", "Rugs", FurnishingMount.Rug),
-            R(26051, C, Kingdom, "SM_Prop_Painting_01", "Painting", "Walls", FurnishingMount.Wall),
-            R(26052, C, Kingdom, "SM_Prop_Banner_01", "Clan Banner", "Walls", FurnishingMount.Wall),
-            R(26060, C, Kingdom, "SM_Prop_PlanterBox_01", "Planter Box", "Plants"),
-            R(26061, C, Kingdom, "SM_Env_Hedge_01", "Hedgerow", "Plants", place: FurnishingPlace.LawnOnly),
-            R(26062, C, Kingdom, "SM_Env_Bush_01", "Bush", "Plants", place: FurnishingPlace.LawnOnly),
-            R(26063, C, Kingdom, "SM_Env_Flowers_01", "Wildflowers", "Plants", place: FurnishingPlace.LawnOnly),
-            R(26064, C, Kingdom, "SM_Env_Big_Tree_01", "Great Oak", "Plants", place: FurnishingPlace.LawnOnly),
-        };
-
-        private static readonly string[] TopWords = { "Table", "Desk", "Cabinet", "Shelf", "Bar", "Counter", "Crate", "Barrel", "Chest", "Dresser", "Cupboard", "Stove", "Locker", "Organ" };
-        private static readonly string[] LightWords = { "Light", "Lamp", "Lantern", "Candle", "Candelabra", "Torch", "Chandelier", "Brazier", "Fireplace" };
+        private static readonly string[] TopKinds = { "table", "lowtable", "counter", "lowcase", "crate", "barrel", "chest" };
+        private static readonly string[] LightKinds = { "candle", "tablelamp", "floorlamp", "lamppost", "chandelier", "brazier", "hearth" };
+        private static readonly string[] LawnKinds = { "smalltree", "tree", "greattree", "hedge", "bush", "lamppost", "fountain", "well", "shelter", "rock", "monument" };
+        private static readonly string[] WalkedThroughKinds = { "rug", "flowers", "shelter", "small", "picture", "banner", "candle" };
 
         [MenuItem("Krytical Nova/Housing/2. Build Furnishings")]
         public static void Build() => Build(captureIcons: true);
@@ -156,11 +59,13 @@ namespace KryticalNova.EditorTools.Housing
         public static void Build(bool captureIcons)
         {
             var items = AssetDatabase.LoadAssetAtPath<ItemCatalog>(SidekickGearGenerator.CatalogPath);
-            if (items == null)
+            var housing = AssetDatabase.LoadAssetAtPath<HousingSettings>(HousingLotBuilder.SettingsPath);
+            if (items == null || housing == null)
             {
-                Debug.LogError($"[Housing] No item catalog at {SidekickGearGenerator.CatalogPath}.");
+                Debug.LogError($"[Housing] No item catalog at {SidekickGearGenerator.CatalogPath}, or no housing settings (build the Lot first).");
                 return;
             }
+            WorldScaleSettings scale = WorldScaleBuilder.Load();
             WeatherVfxBuilder.EnsureFolder(ItemFolder);
             WeatherVfxBuilder.EnsureFolder(FurnishingFolder);
             WeatherVfxBuilder.EnsureFolder(IconFolder);
@@ -169,6 +74,8 @@ namespace KryticalNova.EditorTools.Housing
             var made = new List<ItemDefinition>(Rows.Length);
             var pictures = new List<(GameObject model, string path)>();
             var pictured = new List<ItemDefinition>();
+            var kept = new HashSet<string>();
+            var report = new System.Text.StringBuilder();
             int missing = 0;
 
             foreach (Row row in Rows)
@@ -181,40 +88,35 @@ namespace KryticalNova.EditorTools.Housing
                     missing++;
                     continue;
                 }
+                // The Null wear the Fantasy Kingdom's things in their own colours.
+                if (row.Faction == FactionId.Null && row.Pack == Kingdom) prefab = NullTreatment.Variant(prefab);
 
-                string asset = $"Furnishing_{row.Faction}_{row.Id}_{row.Prefab.Replace("SM_Prop_", string.Empty).Replace("SM_Env_", string.Empty)}";
-                ItemDefinition item = Item(row, asset);
-                FurnishingDefinition furnishing = Furnishing(row, asset, item, prefab);
+                string asset = $"Furnishing_{row.Id}";
+                string iconPath = $"{IconFolder}/{asset}_{row.Prefab.Replace("SM_Prop_", string.Empty).Replace("SM_Env_", string.Empty).Replace("SM_Bld_", string.Empty)}.png";
+                // A furnishing is anyone's: its faction is the style it is made in, not a lock.
+                ItemDefinition item = Item(row.Id, FactionId.None, row.Name, asset,
+                    $"A furnishing in the {row.Faction} style. Set it down at your Hall with Arrange; it is kept in the Furnishing Crate.", "HOME");
+                FurnishingDefinition furnishing = Furnishing(row, asset, item, prefab, scale, housing);
                 made.Add(item);
                 furnishings.Add(furnishing);
-                if (captureIcons && item.icon == null)
+                kept.Add($"{ItemFolder}/{asset}.asset");
+                kept.Add($"{FurnishingFolder}/{asset}.asset");
+                kept.Add(iconPath);
+                report.Append(row.Id).Append('\t').Append(row.Name).Append('\t').Append(row.Kind).Append('\t')
+                    .Append(furnishing.modelScale.ToString("0.00")).Append('\t').Append(furnishing.boundsSize.x.ToString("0.00")).Append('\t')
+                    .Append(furnishing.boundsSize.y.ToString("0.00")).Append('\t').Append(furnishing.boundsSize.z.ToString("0.00")).Append('\t')
+                    .Append(furnishing.mount).Append('\t').Append(furnishing.blocks ? "blocks" : "-").Append('\n');
+
+                // A picture is taken again when the model behind an id has changed.
+                bool stale = item.icon == null || AssetDatabase.GetAssetPath(item.icon) != iconPath;
+                if (captureIcons && stale)
                 {
-                    pictures.Add((prefab, $"{IconFolder}/{asset}.png"));
+                    pictures.Add((prefab, iconPath));
                     pictured.Add(item);
                 }
             }
 
-            if (pictures.Count > 0)
-            {
-                // The picture is of the model alone: flames, glows and other effects are not part of the icon, and
-                // the icon rig measures meshes only.
-                var models = new List<(GameObject model, string path)>(pictures.Count);
-                foreach ((GameObject model, string path) in pictures) models.Add((MeshesOnly(model), path));
-                try
-                {
-                    List<Sprite> sprites = ItemIconCapture.CaptureModels(models);
-                    for (int n = 0; n < sprites.Count; n++)
-                    {
-                        if (sprites[n] == null) continue;
-                        pictured[n].icon = sprites[n];
-                        EditorUtility.SetDirty(pictured[n]);
-                    }
-                }
-                finally
-                {
-                    foreach ((GameObject model, string _) in models) Object.DestroyImmediate(model);
-                }
-            }
+            CaptureIcons(pictures, pictured);
 
             var catalog = AssetDatabase.LoadAssetAtPath<FurnishingCatalog>(CatalogPath);
             if (catalog == null)
@@ -225,11 +127,57 @@ namespace KryticalNova.EditorTools.Housing
             catalog.SetContents(furnishings.OrderBy(f => f.itemId).ToList());
             EditorUtility.SetDirty(catalog);
 
-            var all = items.Items.Where(i => i != null).Concat(made).Distinct().OrderBy(i => i.itemId).ToList();
+            int removed = RemoveStale(items, made, kept, new[] { ItemFolder, FurnishingFolder, IconFolder }, "Furnishing_");
+            AssetDatabase.SaveAssets();
+            File.WriteAllText(Path.Combine(Path.GetTempPath(), "kn_furnishings.tsv"), report.ToString());
+            Debug.Log($"[Housing] {furnishings.Count} furnishings built ({pictures.Count} icons taken, {missing} missing prefabs, {removed} old assets removed). Catalog: {CatalogPath}.");
+        }
+
+        /// <summary>
+        /// Puts the made items into the item catalog and deletes what an earlier table made that this one no longer
+        /// does: assets under the folders whose name starts with the prefix and that are not among the kept.
+        /// </summary>
+        public static int RemoveStale(ItemCatalog items, List<ItemDefinition> made, HashSet<string> kept, string[] folders, string prefix)
+        {
+            var gone = new List<string>();
+            foreach (string guid in AssetDatabase.FindAssets(string.Empty, folders))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (AssetDatabase.IsValidFolder(path) || kept.Contains(path)) continue;
+                if (Path.GetFileName(path).StartsWith(prefix)) gone.Add(path);
+            }
+            var goneItems = new HashSet<ItemDefinition>(gone.Select(AssetDatabase.LoadAssetAtPath<ItemDefinition>).Where(i => i != null));
+            var all = items.Items.Where(i => i != null && !goneItems.Contains(i)).Concat(made).Distinct().OrderBy(i => i.itemId).ToList();
             items.SetContents(all, items.StarterEquipped.ToList(), items.StarterBag.ToList());
             EditorUtility.SetDirty(items);
-            AssetDatabase.SaveAssets();
-            Debug.Log($"[Housing] {furnishings.Count} furnishings built ({pictures.Count} icons taken, {missing} missing prefabs). Catalog: {CatalogPath}.");
+            if (gone.Count > 0)
+            {
+                var failed = new List<string>();
+                AssetDatabase.DeleteAssets(gone.ToArray(), failed);
+            }
+            return gone.Count;
+        }
+
+        /// <summary>Takes the pictures: of the model alone, since flames and glows are no part of an icon and the icon rig measures meshes only.</summary>
+        public static void CaptureIcons(List<(GameObject model, string path)> pictures, List<ItemDefinition> pictured)
+        {
+            if (pictures.Count == 0) return;
+            var models = new List<(GameObject model, string path)>(pictures.Count);
+            foreach ((GameObject model, string path) in pictures) models.Add((MeshesOnly(model), path));
+            try
+            {
+                List<Sprite> sprites = ItemIconCapture.CaptureModels(models);
+                for (int n = 0; n < sprites.Count; n++)
+                {
+                    if (sprites[n] == null) continue;
+                    pictured[n].icon = sprites[n];
+                    EditorUtility.SetDirty(pictured[n]);
+                }
+            }
+            finally
+            {
+                foreach ((GameObject model, string _) in models) Object.DestroyImmediate(model);
+            }
         }
 
         // A copy of a prefab with nothing in it but its meshes, to be pictured. The prefab itself is not touched.
@@ -249,7 +197,7 @@ namespace KryticalNova.EditorTools.Housing
             return copy;
         }
 
-        private static string FindPrefab(string pack, string name)
+        public static string FindPrefab(string pack, string name)
         {
             string folder = $"{SyntyRoot}/{pack}/Prefabs";
             if (!AssetDatabase.IsValidFolder(folder)) return null;
@@ -261,7 +209,11 @@ namespace KryticalNova.EditorTools.Housing
             return null;
         }
 
-        private static ItemDefinition Item(in Row row, string asset)
+        /// <summary>
+        /// The item a furnishing or a Hall's look is carried as, never renumbered once made. <paramref name="faction"/>
+        /// binds it to one faction (a Facade); None leaves it anyone's (a furnishing, a Finish).
+        /// </summary>
+        public static ItemDefinition Item(ushort id, FactionId faction, string displayName, string asset, string description, string glyph)
         {
             string path = $"{ItemFolder}/{asset}.asset";
             var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(path);
@@ -269,31 +221,51 @@ namespace KryticalNova.EditorTools.Housing
             if (created)
             {
                 item = ScriptableObject.CreateInstance<ItemDefinition>();
-                item.itemId = row.Id; // never renumbered once made
                 item.rarity = ItemRarity.Common;
             }
             // What the table owns on every run.
-            item.displayName = row.Name;
-            item.description = $"A furnishing of the {row.Faction}. Set it down at your Hall with Arrange; it is kept in the Furnishing Crate.";
+            item.itemId = id;
+            item.displayName = displayName;
+            item.description = description;
             item.maxStack = 99;
             item.equipSlot = EquipSlot.None;
-            item.placeholderGlyph = "HOME";
-            item.boundFaction = row.Faction;
+            item.placeholderGlyph = glyph;
+            item.boundFaction = faction;
             if (created) AssetDatabase.CreateAsset(item, path);
             else EditorUtility.SetDirty(item);
             return item;
         }
 
-        private static FurnishingDefinition Furnishing(in Row row, string asset, ItemDefinition item, GameObject prefab)
+        private static FurnishingDefinition Furnishing(in Row row, string asset, ItemDefinition item, GameObject prefab,
+            WorldScaleSettings scale, HousingSettings housing)
         {
             string path = $"{FurnishingFolder}/{asset}.asset";
             var furnishing = AssetDatabase.LoadAssetAtPath<FurnishingDefinition>(path);
             bool created = furnishing == null;
             if (created) furnishing = ScriptableObject.CreateInstance<FurnishingDefinition>();
+            string kind = row.Kind;
 
-            Bounds bounds = HousingLotBuilder.PrefabBounds(prefab);
-            float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            string name = row.Prefab;
+            FurnishingMount mount = row.Mount ?? (kind == "rug" ? FurnishingMount.Rug
+                : kind == "picture" || kind == "banner" ? FurnishingMount.Wall
+                : kind == "chandelier" ? FurnishingMount.Ceiling
+                : kind == "small" || kind == "candle" || kind == "tablelamp" ? FurnishingMount.Surface
+                : FurnishingMount.Floor);
+
+            // What hangs on a wall is turned so that its thin side is its depth and its face looks out from the wall (+z).
+            Vector3 euler = Vector3.zero;
+            if (mount == FurnishingMount.Wall)
+            {
+                Bounds asMade = Measure(prefab, Vector3.zero, 1f, float.NegativeInfinity, float.PositiveInfinity);
+                if (asMade.size.x < asMade.size.z) euler.y = 90f;
+            }
+            if (row.Flip) euler.y += 180f;
+
+            Bounds raw = Measure(prefab, euler, 1f, float.NegativeInfinity, float.PositiveInfinity);
+            float factor = scale.Fit(kind, raw.size);
+            Bounds box = new Bounds(raw.center * factor, raw.size * factor);
+            // What of it is in a walker's way: its mesh between the ground and a person's height.
+            Bounds solid = mount == FurnishingMount.Floor ? Measure(prefab, euler, factor, box.min.y - 0.01f, box.min.y + housing.walkBand) : box;
+            float largest = Mathf.Max(box.size.x, box.size.y, box.size.z);
 
             furnishing.item = item;
             furnishing.itemId = row.Id;
@@ -301,28 +273,66 @@ namespace KryticalNova.EditorTools.Housing
             furnishing.category = row.Category;
             furnishing.source = FurnishingSource.Vendor;
             furnishing.prefab = prefab;
-            furnishing.boundsCenter = bounds.center;
-            furnishing.boundsSize = bounds.size;
-            furnishing.mount = row.Mount ?? GuessMount(name, largest);
-            furnishing.hasTop = row.HasTop ?? (furnishing.mount == FurnishingMount.Floor && TopWords.Any(name.Contains));
-            furnishing.lights = LightWords.Any(name.Contains);
+            furnishing.kind = kind;
+            furnishing.modelScale = factor;
+            furnishing.modelEuler = euler;
+            furnishing.boundsCenter = box.center;
+            furnishing.boundsSize = box.size;
+            furnishing.solidCenter = solid.center;
+            furnishing.solidSize = solid.size;
+            furnishing.mount = mount;
+            furnishing.hasTop = row.HasTop ?? (mount == FurnishingMount.Floor && TopKinds.Contains(kind));
+            furnishing.lights = LightKinds.Contains(kind);
+            furnishing.lightOffset = new Vector3(box.center.x, box.min.y + box.size.y * (mount == FurnishingMount.Ceiling ? 0.3f : 0.8f), box.center.z);
+            furnishing.blocks = row.Blocks ?? (mount == FurnishingMount.Floor && !WalkedThroughKinds.Contains(kind) && solid.size.y >= housing.blockHeight);
             furnishing.castsShadow = largest >= 0.4f;
             furnishing.budgetCost = largest < 0.6f ? 1 : largest < 2.5f ? 2 : 4;
-            // Until Halls have an inside, what hangs on a wall or from a ceiling has nowhere to go on a lawn.
-            furnishing.place = row.Place ?? (furnishing.mount == FurnishingMount.Wall || furnishing.mount == FurnishingMount.Ceiling
-                ? FurnishingPlace.IndoorOnly : FurnishingPlace.Anywhere);
+            furnishing.place = row.Place ?? (mount == FurnishingMount.Wall || mount == FurnishingMount.Ceiling ? FurnishingPlace.IndoorOnly
+                : LawnKinds.Contains(kind) ? FurnishingPlace.LawnOnly : FurnishingPlace.Anywhere);
 
             if (created) AssetDatabase.CreateAsset(furnishing, path);
             else EditorUtility.SetDirty(furnishing);
             return furnishing;
         }
 
-        private static FurnishingMount GuessMount(string name, float largest)
+        /// <summary>
+        /// A model's box as a piece holds it: turned and multiplied as it will be in the game, measured from the
+        /// points of its meshes that lie between two heights (all of them, when the heights are infinite). Returns
+        /// the whole box when no point lies between them.
+        /// </summary>
+        public static Bounds Measure(GameObject prefab, Vector3 euler, float factor, float fromHeight, float toHeight)
         {
-            if (name.Contains("Rug") || name.Contains("Carpet")) return FurnishingMount.Rug;
-            if (name.Contains("Painting") || name.Contains("Banner") || name.Contains("Mirror") || name.Contains("Poster")) return FurnishingMount.Wall;
-            if (name.Contains("Chandelier") || name.Contains("Hanging")) return FurnishingMount.Ceiling;
-            return largest < 0.6f ? FurnishingMount.Surface : FurnishingMount.Floor;
+            var holder = new GameObject("Measure") { hideFlags = HideFlags.HideAndDontSave };
+            try
+            {
+                GameObject model = Object.Instantiate(prefab, holder.transform, false);
+                model.transform.localPosition = Vector3.zero;
+                model.transform.localRotation = Quaternion.Euler(euler);
+                model.transform.localScale = prefab.transform.localScale * factor;
+
+                bool any = false, anyAtAll = false;
+                Bounds within = default, whole = default;
+                foreach (MeshFilter filter in model.GetComponentsInChildren<MeshFilter>())
+                {
+                    Mesh mesh = filter.sharedMesh;
+                    if (mesh == null || !filter.TryGetComponent(out MeshRenderer _)) continue;
+                    Matrix4x4 toWorld = filter.transform.localToWorldMatrix;
+                    foreach (Vector3 vertex in mesh.vertices)
+                    {
+                        Vector3 point = toWorld.MultiplyPoint3x4(vertex);
+                        if (anyAtAll) whole.Encapsulate(point); else whole = new Bounds(point, Vector3.zero);
+                        anyAtAll = true;
+                        if (point.y < fromHeight || point.y > toHeight) continue;
+                        if (any) within.Encapsulate(point); else within = new Bounds(point, Vector3.zero);
+                        any = true;
+                    }
+                }
+                return any ? within : anyAtAll ? whole : new Bounds(Vector3.zero, Vector3.one);
+            }
+            finally
+            {
+                Object.DestroyImmediate(holder);
+            }
         }
     }
 }

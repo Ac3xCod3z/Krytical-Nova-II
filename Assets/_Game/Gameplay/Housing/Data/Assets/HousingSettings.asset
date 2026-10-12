@@ -14,13 +14,53 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.HousingSettings
   sandboxOrigin: {x: 6500, y: 0, z: 0}
   lotPrefab: {fileID: 371366029329210599, guid: 95043c00d23fe3044b13a4ae3012f05f, type: 3}
-  facadeByFaction:
-  - {fileID: 1159825550740384, guid: 871736051670df6409b1c54e9710effe, type: 3}
-  - {fileID: 1693753269470630, guid: 84818640e562e274cb4ae56b74f142e5, type: 3}
-  - {fileID: 5512629917696555896, guid: 69c462dc26d4053408a387d05eb6b43a, type: 3}
-  - {fileID: 1159825550740384, guid: 871736051670df6409b1c54e9710effe, type: 3}
+  facadeByFaction: []
+  travelSeconds: 1.2
+  curtainSeconds: 0.25
+  warmPiecesPerFrame: 24
+  roomOffset: {x: 0, y: -150, z: 0}
+  roomSizeByTier:
+  - {x: 20, y: 15}
+  - {x: 25, y: 20}
+  - {x: 30, y: 25}
+  roomHeightByTier:
+  - 6
+  - 6
+  - 9
+  floorGap: 1
+  stairSize: 3
+  roomStairsByFaction:
+  - {fileID: 969424880222815913, guid: 46abf8ee020461c4d9d4313bcdeff4f8, type: 3}
+  - {fileID: 969424880222815913, guid: 46abf8ee020461c4d9d4313bcdeff4f8, type: 3}
+  - {fileID: 969424880222815913, guid: 46abf8ee020461c4d9d4313bcdeff4f8, type: 3}
+  - {fileID: 969424880222815913, guid: 46abf8ee020461c4d9d4313bcdeff4f8, type: 3}
+  doorSize: {x: 2.4, y: 3.2}
+  doorRadius: 1.2
+  doorStep: 2.5
+  roomDoorByFaction:
+  - {fileID: 6999110965889708540, guid: 055921344324e30418d0c3196680e515, type: 3}
+  - {fileID: 3471480226202986885, guid: 62a6298e79e185847ac940eff888ba88, type: 3}
+  - {fileID: 3925812988780314064, guid: 3bd23ea1594abfc4fa7fc2483a4bc742, type: 3}
+  - {fileID: 6999110965889708540, guid: 055921344324e30418d0c3196680e515, type: 3}
+  roomPlainMaterial: {fileID: 2100000, guid: 05190808f1a9a0a4f88a5dd64fea4902, type: 2}
+  roomSurroundMaterial: {fileID: 2100000, guid: 25ec298bc15710244b24ba98ee86e895, type: 2}
+  doorMarkMaterial: {fileID: 2100000, guid: ec93225d5984a604a99ccbe8b2d46d12, type: 2}
+  blockHeight: 0.35
+  walkBand: 2.1
+  standClear: 0.45
+  interiorLights: 10
+  lawnLights: 4
+  pieceLightRange: 7
+  pieceLightIntensity: 9
+  lightColorByFaction:
+  - {r: 1, g: 0.82, b: 0.6, a: 1}
+  - {r: 0.75, g: 0.9, b: 1, a: 1}
+  - {r: 0.72, g: 0.62, b: 1, a: 1}
+  - {r: 1, g: 0.8, b: 0.55, a: 1}
+  roomLightIntensity: 14
+  roomLightColor: {r: 1, g: 0.94, b: 0.84, a: 1}
   lawnBudget: 200
-  interiorBudgetByTier: 2c010000c201000058020000i
+  interiorBudgetByTier: 90010000f401000058020000i
   crateStackCap: 9999
   gridStep: 0.5
   fineGridStep: 0.125
@@ -30,3 +70,16 @@ MonoBehaviour:
   ghostMaterial: {fileID: 2100000, guid: 72f3a9047f383004bb8d85024c54a318, type: 2}
   ghostAllowed: {r: 0.35, g: 1, b: 0.55, a: 0.55}
   ghostRefused: {r: 1, g: 0.3, b: 0.25, a: 0.55}
+  frameHover: {r: 1, g: 1, b: 1, a: 0.8}
+  framePicked: {r: 0.4, g: 0.85, b: 1, a: 0.95}
+  minPieceScale: 0.5
+  maxPieceScale: 2
+  scaleStep: 0.125
+  liftStep: 0.25
+  fineLiftStep: 0.0625
+  tiltStep: 15
+  fineTiltStep: 5
+  maxGroup: 60
+  overheadHeight: 34
+  overheadHeightRange: {x: 10, y: 70}
+  overheadPanSpeed: 22

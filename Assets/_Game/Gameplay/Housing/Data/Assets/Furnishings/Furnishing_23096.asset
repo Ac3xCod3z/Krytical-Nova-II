@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_23096
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: a0509074e8585fa46be1e6cc63d76d9b, type: 2}
+  itemId: 23096
+  faction: 2
+  mount: 0
+  place: 0
+  category: Plants
+  source: 0
+  prefab: {fileID: 9002921641215027478, guid: 60379b17d4ab95e44a65779ac18e8a81, type: 3}
+  kind: flowers
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0.032484233, y: 0.409001, z: -0.00864166}
+  boundsSize: {x: 1.412336, y: 0.8590083, z: 1.2914444}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0.032484233, y: 0.6667035, z: -0.00864166}
+  blocks: 0
+  solidCenter: {x: 0.032484233, y: 0.409001, z: -0.00864166}
+  solidSize: {x: 1.412336, y: 0.8590083, z: 1.2914444}
+  budgetCost: 2

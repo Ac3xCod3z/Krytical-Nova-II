@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_20005
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 23b5de1557f10f7479957f496dd644dd, type: 2}
+  itemId: 20005
+  faction: 1
+  mount: 0
+  place: 0
+  category: Seating
+  source: 0
+  prefab: {fileID: 1300844556262866, guid: d6e9eedc2c7baeb46ab65cba90d8505b, type: 3}
+  kind: sofa
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0.00000047683716, y: 0.5233746, z: 0}
+  boundsSize: {x: 2.4195662, y: 1.0467492, z: 0.89571}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0.00000047683716, y: 0.8373994, z: 0}
+  blocks: 1
+  solidCenter: {x: 0.00000047683716, y: 0.5233746, z: 0}
+  solidSize: {x: 2.4195662, y: 1.0467492, z: 0.89571}
+  budgetCost: 2

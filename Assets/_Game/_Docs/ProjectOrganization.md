@@ -96,11 +96,13 @@ _Game/
 │   │                      they rule: WeaveRules in Items, RestyleRules in CharacterCreation)
 │   ├── Housing/           Crew Halls (`_Docs/Plans/crew-halls-plan.md`; Stage 1, the Hall sandbox).  Runtime/ (HousingLayout,
 │   │                      HousingRules, HousingPlacement, ArrangeHistory = the plain rules; IHomeAuthority + LocalHomeAuthority = who
-│   │                      decides what stands in a Hall; PlayerCrate = the Furnishing Crate; PlayerHousing = the sandbox Lot;
-│   │                      HousingLot, HomeView)  Data/ (HousingSettings, FurnishingDefinition, FurnishingCatalog)  Data/Assets/
-│   │                      (HousingSettings, FurnishingCatalog; Items/ = one item per furnishing, Furnishings/ = its definition,
-│   │                      Icons/ = pictures of the models)  Editor/ (HousingLotBuilder, FurnishingCatalogBuilder)  Prefabs/
-│   │                      (HousingLot_Sandbox)  Materials/  Tests/Editor/
+│   │                      decides what stands in a Hall; PlayerCrate = the Furnishing Crate; PlayerHousing = the Lot, the trips and
+│   │                      the instance inside; HallRoom = one floor of it; HousingLot, HomeView, ArrangeOverhead)  Data/
+│   │                      (HousingSettings, FurnishingDefinition, HallLookDefinition, FurnishingCatalog)  Data/Assets/ (Items/,
+│   │                      Furnishings/, Looks/ = Facades and Finishes, Icons/)  Editor/ (HousingLotBuilder,
+│   │                      FurnishingCatalogBuilder + its Tables, HallLookBuilder, NullTreatment, HousingSheets = review pictures)
+│   │                      Prefabs/ (HousingLot_Sandbox; Null/ = darkened variants of Fantasy Kingdom prefabs; Facades/ = Facades put
+│   │                      together from vendor parts)  Materials/  Textures/ (the Null's palettes)  Tests/Editor/
 │   ├── Hostiles/          Runtime/ (HostileNet = a Hostile on the network, HostileSpawner, HostilePool, HostileZone = one hunting
 │   │                      ground, HostileCorpse = the body burning away, HostileKillRewards and HostileLoot = what a kill pays, LevelGapRules, IHostileBrain)  Data/ + Data/Assets/ (HostileStatCurve,
 │   │                      HostileSettings, LevelGapSettings, Species/ = one HostileDefinition per species, Emerald/ = the melee

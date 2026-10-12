@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_23087
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 7e79d17bdbedfff4ebb1c89f1aece753, type: 2}
+  itemId: 23087
+  faction: 2
+  mount: 2
+  place: 0
+  category: Rugs
+  source: 0
+  prefab: {fileID: 5587743106026948471, guid: f2609535960d6874fa4eec7bfcba2247, type: 3}
+  kind: rug
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0, y: 0.01057177, z: -0.0053756237}
+  boundsSize: {x: 1.0119227, y: 0.02114354, z: 1.2102704}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0, y: 0.016914833, z: -0.0053756237}
+  blocks: 0
+  solidCenter: {x: 0, y: 0.01057177, z: -0.0053756237}
+  solidSize: {x: 1.0119227, y: 0.02114354, z: 1.2102704}
+  budgetCost: 2

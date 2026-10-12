@@ -27,6 +27,8 @@ namespace KryticalNova.Housing
         [SerializeField] private Transform facadeAnchor;
         [Tooltip("Furnishings are drawn under this.")]
         [SerializeField] private Transform pieceRoot;
+        [Tooltip("Everything of the Lot that is seen: not drawn while its player is indoors.")]
+        [SerializeField] private Transform outside;
 
         public Vector2 Size => size;
         public Vector2 PadCenter => padCenter;
@@ -34,6 +36,12 @@ namespace KryticalNova.Housing
         public Transform Arrival => arrival != null ? arrival : transform;
         public Transform FacadeAnchor => facadeAnchor != null ? facadeAnchor : transform;
         public Transform PieceRoot => pieceRoot != null ? pieceRoot : transform;
+        /// <summary>Everything of the Lot that is seen, or null for a Lot made before it had one.</summary>
+        public Transform Outside => outside;
+        /// <summary>The middle of the Hall's doorway, on the ground, in the world: at the front of the pad.</summary>
+        public Vector3 DoorPoint => transform.TransformPoint(new Vector3(padCenter.x, 0f, padCenter.y - padSize.y * 0.5f - 0.4f));
+        /// <summary>Where a player stands on coming out of the Hall.</summary>
+        public Vector3 DoorStep(float metres) => transform.TransformPoint(new Vector3(padCenter.x, 0f, padCenter.y - padSize.y * 0.5f - metres));
 
         /// <summary>The lawns as the rules see them.</summary>
         public AreaShape LawnShape => new AreaShape
@@ -49,8 +57,9 @@ namespace KryticalNova.Housing
 
         /// <summary>Editor builder entry point.</summary>
         public void Configure(Vector2 lotSize, Vector2 padMiddle, Vector2 padExtent, Vector2 doorMiddle, Vector2 doorExtent,
-            Transform arrivalPoint, Transform facade, Transform pieces)
+            Transform arrivalPoint, Transform facade, Transform pieces, Transform seen = null)
         {
+            outside = seen;
             size = lotSize;
             padCenter = padMiddle;
             padSize = padExtent;

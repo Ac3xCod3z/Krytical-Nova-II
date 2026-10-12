@@ -204,7 +204,7 @@ The plan is `../../Plans/crew-halls-plan.md`: the building is made playable firs
 
 - **The Lot** (`HousingLot`, prefab `HousingLot_Sandbox`, built by **Krytical Nova ▸ Housing ▸ 1. Build Sandbox Lot**): 36 x 48 m inside a fence, a pad of 16 x 14 m for the Hall, a path from the gate. It is set down far from the starter town (`HousingSettings.sandboxOrigin`, x = 6500) when the player goes there, with a NavMesh made on the spot, and removed when they leave. The Hall on the pad is the vendor's own building for the character's faction (`HousingSettings.facadeByFaction`), made smaller when it would not fit the pad.
 - **Furnishings are items** (`FurnishingDefinition`, `FurnishingCatalog`, built by **Krytical Nova ▸ Housing ▸ 2. Build Furnishings**): 89 to start with (29 Hegemony from 20001, 27 Null from 23001, 33 Covenant from 26001), each an item with a picture of its model for an icon. How a piece mounts (floor, on a surface, rug, wall, ceiling), whether things stand on it, and its budget cost (1, 2 or 4 by size) are worked out from the vendor prefab. Wall and ceiling pieces wait for the inside of a Hall.
-- **A faction's furnishings are for that faction only** (owner, 11 Oct 2026; `ItemDefinition.boundFaction`, `ItemFactionRules`). A character can place, crate, be traded, buy from a Kiosk and pick up only its own faction's. A Kiosk shows another faction's furnishing and will not sell it, on neutral ground too. They are kept in the **Vault** and refused by the **Deep Vault**, which an account's characters of any faction share.
+- **Replaced on 12 Oct 2026: only a Facade is its faction's own; furnishings and Finishes are anyone's (see the next section).** As first built: **A faction's furnishings are for that faction only** (owner, 11 Oct 2026; `ItemDefinition.boundFaction`, `ItemFactionRules`). A character can place, crate, be traded, buy from a Kiosk and pick up only its own faction's. A Kiosk shows another faction's furnishing and will not sell it, on neutral ground too. They are kept in the **Vault** and refused by the **Deep Vault**, which an account's characters of any faction share.
 - **The Furnishing Crate** (`PlayerCrate`): a character's own store of furnishings, apart from the Pack, counted by kind, saved with the character. A piece set down comes out of it; a piece put away goes back. Right-click a furnishing in the Pack with the window open to store it; right-click one in the Crate to take it into the Pack (Shift: all of them).
 - **Arrange** (`ArrangeController`, key **L**): the Crate window. At the Hall, a click on a furnishing puts a preview under the cursor, green where it may stand and red with the reason where it may not; a click sets it down, Shift-click sets down another. Pieces snap to a 0.5 m grid (Ctrl: 0.125 m; Alt: off the grid and free to overlap), turn 15 degrees at a press (Q and E), and small pieces stand on tables and shelves and move with them. A click on a standing piece picks it up; Delete puts it away; Ctrl+Z and Ctrl+Y undo and redo up to 50 steps. While the window is open at the Hall the left button and the hotbar keys are the tool's; the right button still turns the camera.
 - **Who decides** (`IHomeAuthority`): the tool asks for every edit and draws what comes back. In the sandbox the authority is local (`LocalHomeAuthority`) and runs the same `HousingRules` a server will: the piece is the player's faction's and is in the Crate, it stands inside the Lot and off the pad and the door's clear space, what it stands on has a top, and the budget is not passed. Two pieces overlapping is the tool's own courtesy, not a rule.
@@ -221,6 +221,72 @@ The plan is `../../Plans/crew-halls-plan.md`: the building is made playable firs
 GM: `gm.home`, `gm.home.leave`, `gm.furnish.kit [n]`, `gm.furnish.clear`, `gm.home.reset`, `gm.home.fill [n]`. The GO TO MY HALL button at the foot of the Crate window does what `gm.home` does, until Halls have a way in of their own.
 
 Not built: the inside of a Hall, Finishes and Facades (step 4); Advanced mode, eyedropper, duplicate, group move, the overhead camera (step 5); everything shared (Stage 2: Crew Quarters, Lots claimed by Crews, the Crew Fund, visitors, pieces going back to their owners, a Furnisher, drops). Pieces are walked through. The Lot's ground is plain; the minimap shows nothing useful there; there is no fade on the way.
+
+## Crew Halls: inside, Facades, Finishes, solid pieces and the comfort set (row 62; Stage 1, steps 4 and 5, built 12 Oct 2026)
+
+This section is later than the one above and wins where they differ: the Lot is now **40 x 52 m** with a **20 x 16 m**
+pad, there are **223 furnishings** (65 / 70 / 88, the Covenant's with the Viking Realm pack), and pieces are **no longer walked through**.
+
+**Trips.** Going to the Hall, through its door, up or down a stair and back to town are one thing: a curtain closes
+(`curtainSeconds` 0.25), the place arrived at is made ready over as many frames as it needs and never in less than
+`travelSeconds` (1.2), the player is set down, the curtain opens. Making ready means: the place itself, its
+furnishings a few a frame (`warmPiecesPerFrame` 24), the ground to walk on, and one drawing nobody sees so that
+meshes, textures and shaders are loaded behind the curtain.
+
+**The inside is an instance.** It does not exist until its player walks onto the door mark at the front of the pad
+(`doorRadius` 1.2 m; or GO INSIDE; or `gm.home.inside`), and it is destroyed when they go out. It is made
+`roomOffset` (150 m down) from the Lot, which is not drawn meanwhile; nothing falls there whatever the weather.
+It has **three floors** one above the other (`floorGap` 1 m): the ground floor, upstairs, the basement, each
+`roomSizeByTier` 20 x 15 m and `roomHeightByTier` 6 m at tier 1. Only the floor the player is on is drawn and lit.
+A stair is a marked 3 m place (`stairSize`) in a back corner, stepped onto like the door; UP A FLOOR / DOWN A FLOOR
+and `gm.home.floor up|ground|basement` do the same. The walls the camera would look through and the ceiling when the
+camera is above it are not drawn but still keep the sun out. The three floors share **one budget**
+(`interiorBudgetByTier` 400 / 500 / 600) and **one set of Finishes**.
+
+**What a Hall wears.** One Facade and three Finishes (walls, floor, ceiling). Each is an item kept in the
+Furnishing Crate (15 Facades, 35 Finishes); a click on one at the Hall makes the Hall wear it and puts the one
+it replaces back in the Crate. Each faction has a standard look for each of the four, which every Hall has and no
+Crate holds; the four buttons under the Crate's grid put a standard back. Item ids: Finishes 29000 to 29499,
+Facades 29500 to 29999. A Facade is stood at the front of the pad with its door to the gate, at up to 1.5 times the
+vendor's size (the scale standard's "heroic").
+
+**Solid pieces.** A furnishing that stands on the floor and is taller than `blockHeight` (0.35 m) stops a walker,
+with the part of its mesh between the ground and `walkBand` (2.1 m): a tree's trunk, not its crown. The walkable
+ground is cut away under it, so a click behind a table finds the way round. Rugs, flowers, arches and what hangs
+stop nobody. A piece is refused where the player stands (`standClear` 0.45 m), the door and the stairs are kept
+clear, and BACK TO THE DOOR gets a player out of a corner they have built shut. Tall pieces between the camera and
+the player fade like any other prop.
+
+**Hanging.** A wall piece is set on a wall of the floor the player is on, its back against it, on the grid along
+and up the wall; Q and E set it askew. A ceiling piece hangs above the place pointed at. Set down freely (Alt, or
+Advanced) either may hang anywhere. Lamps carry a light: the `interiorLights` (10) nearest the camera are lit
+indoors, `lawnLights` (4) on the lawns at night.
+
+**Arrange, the comfort set.** A click on bare ground walks there. Shift-click or a dragged box picks several pieces
+(`maxGroup` 60), a click on one of them moves them as one (Q / E turn them), Delete puts them away. **D** takes
+another like the piece under the cursor. **Tab** is Advanced: pieces are set down freely, and the piece in hand or
+the one piece picked is lifted (`liftStep` 0.25 m, PgUp / PgDn), tilted and leaned (`tiltStep` 15 degrees) and
+sized (`scaleStep` 0.125 between `minPieceScale` 0.5 and `maxPieceScale` 2, the brackets); Ctrl makes the steps
+fine. **V** looks straight down (arrow keys move, the wheel brings it nearer). Middle-click marks a favourite;
+the Crate also lists the last sixteen used. PUT ALL AWAY asks twice. Undo and redo are kept per floor. A window key
+pressed with Ctrl no longer opens its window, so Ctrl+Z undoes without starting Autopilot.
+
+**Who may deal with whom (owner, 12 Oct 2026; this replaces the faction row for furnishings in the table above).**
+Only a **Facade** is its faction's own, so that every Hall fits the Crew Quarter it stands in: it is never traded
+to, sold by a Kiosk to or picked up by another faction, the Deep Vault refuses it, and a Hall of another faction
+cannot wear it. **Furnishings and Finishes are anyone's**: a furnishing's faction is the style it is made in and
+filed under, and a player may own, trade, store and set down any of them, indoors and on the lawns. A new Hall
+starts with its faction's standard looks (Hegemony: Long Hab, Hull Plating walls, Deck Plates, Deck Head; Null:
+Grim Manor, Fortress Stone, Flagstones, Stone Vault; Covenant: Longhouse, Elven Hall, Elven Paving, Oak Rafters),
+chosen by the owner from lettered sheets. `gm.furnish.kit 5 all` fills a Crate with every style.
+
+**Checked, 12 Oct 2026:** 718 EditMode tests pass (30 for housing). In Play as a Hegemony host on a test port with
+a scratch save: the trip to the Hall took 3.5 s; a table lengthened the walk past it from 10.0 to 10.5 m; a Facade
+was changed; the trip inside took 1.7 s with no frame over 36 ms and made three floors; a doorway, a stair, a wall
+piece away from a wall, a ceiling piece at head height and a tree indoors were each refused with their reason; a
+Finish was changed; upstairs and the basement were reached and furnished; going out left no room behind and the
+layout was saved. **Not checked:** real mouse and key play (the tool's clicks, drags and keys were not driven), a
+second client (its Editor was stopped on a dialog), and a built game.
 
 ## Namecards (row 44)
 
@@ -308,7 +374,7 @@ Three items, used from the Pack. Each has a clock of its own; while a clock has 
 | Crew | yes | **never** |
 | Sponsor / Recruit | yes | **never** |
 | Picking up a dropped item (after its 20 s) | yes | yes |
-| **A faction's own item** (a furnishing): trading it, buying it from a Kiosk, picking it up | yes | **never**, on neutral ground too; a Kiosk still shows it |
+| **A faction's own item** (a Facade; since 12 Oct 2026 furnishings and Finishes are anyone's): trading it, buying it from a Kiosk, picking it up | yes | **never**, on neutral ground too; a Kiosk still shows it |
 
 **Declined for the player.** In **Settings ▸ Gameplay** a player can have trade requests, contact requests, Crew invitations, Squad invitations and Callouts declined without being shown them (`HudPreferences.RefuseTrades`, `RefuseContacts`, `RefuseCrewInvites`, `RefuseSquadInvites`, `RefuseCallouts`; all off as shipped). The request still reaches the player's game, which answers no on arrival exactly as the Decline button would (`RequestPromptController.Refused`, `PartyHudController`, `DuelHudController`): the server is asked nothing new and the asker sees an ordinary refusal. It is kept per machine, like the other options, not per character.
 

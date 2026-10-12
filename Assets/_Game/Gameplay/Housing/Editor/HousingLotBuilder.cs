@@ -24,23 +24,37 @@ namespace KryticalNova.EditorTools.Housing
         public const string FurnishingLayerName = "Furnishing";
         private const string GroundLayerName = "Ground";
 
+        public const string PlainMaterialPath = MaterialFolder + "/M_Room_Plain.mat";
+        public const string SurroundMaterialPath = MaterialFolder + "/M_Room_Surround.mat";
+        public const string DoorMarkMaterialPath = MaterialFolder + "/M_Door_Mark.mat";
+
         // The Lot's measurements, in metres. Every Lot of a faction will share them.
-        private static readonly Vector2 LotSize = new Vector2(36f, 48f);
-        private static readonly Vector2 PadCenter = new Vector2(0f, 5f);
-        private static readonly Vector2 PadSize = new Vector2(16f, 14f);
+        private static readonly Vector2 LotSize = new Vector2(40f, 52f);
+        private static readonly Vector2 PadCenter = new Vector2(0f, 6f);
+        public static readonly Vector2 PadSize = new Vector2(20f, 16f);
         private const float Apron = 5f;          // ground outside the fence, so the gate can be walked up to
         private const float GateWidth = 4f;
         private const float PathWidth = 2.4f;
         private const float Outskirts = 1200f;   // the country round the Lot, as far as the eye goes
+        private const float DoorMarkDepth = 1.6f;
 
         private const string FencePrefab = "Assets/Synty/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Fence_01.prefab";
-        // The Hall that stands on the pad, by faction (index = FactionId): Hegemony, Null, Covenant.
-        private static readonly string[] Facades =
+        // The door that stands in the room's front wall, by faction (index = FactionId): none, Hegemony, Null, Covenant.
+        private static readonly string[] RoomDoors =
         {
-            "Assets/Synty/PolygonFantasyKingdom/Prefabs/Buildings/Presets/SM_Bld_Preset_House_01_A_Optimized.prefab",
-            "Assets/Synty/PolygonSciFiWorlds/Prefabs/Buildings/SM_Bld_Pod_Hab_Large_01.prefab",
-            "Assets/Synty/PolygonDarkFortress/Prefabs/Buildings/SM_Bld_Corner_Tower_01.prefab",
-            "Assets/Synty/PolygonFantasyKingdom/Prefabs/Buildings/Presets/SM_Bld_Preset_House_01_A_Optimized.prefab",
+            "Assets/Synty/PolygonElvenRealm/Prefabs/Buildings/SM_Bld_Door_01.prefab",
+            "Assets/Synty/PolygonCyberCity/Prefabs/Buildings/SM_Bld_Door_Double_Large_01.prefab",
+            "Assets/Synty/PolygonDarkFortress/Prefabs/Buildings/SM_Bld_Door_03.prefab",
+            "Assets/Synty/PolygonElvenRealm/Prefabs/Buildings/SM_Bld_Door_01.prefab",
+        };
+
+        // The stair that stands where a floor's way up is, by faction.
+        private static readonly string[] RoomStairs =
+        {
+            "Assets/Synty/PolygonElvenRealm/Prefabs/Buildings/SM_Bld_Stairs_interior_01.prefab",
+            "Assets/Synty/PolygonElvenRealm/Prefabs/Buildings/SM_Bld_Stairs_interior_01.prefab",
+            "Assets/Synty/PolygonElvenRealm/Prefabs/Buildings/SM_Bld_Stairs_interior_01.prefab",
+            "Assets/Synty/PolygonElvenRealm/Prefabs/Buildings/SM_Bld_Stairs_interior_01.prefab",
         };
 
         [MenuItem("Krytical Nova/Housing/1. Build Sandbox Lot")]
@@ -55,32 +69,39 @@ namespace KryticalNova.EditorTools.Housing
             Material pad = Lit("M_Lot_Pad", new Color(0.46f, 0.45f, 0.43f));
             Material path = Lit("M_Lot_Path", new Color(0.62f, 0.56f, 0.45f));
             Material country = Lit("M_Lot_Country", new Color(0.27f, 0.43f, 0.24f));
+            Material plain = Lit("M_Room_Plain", new Color(0.55f, 0.53f, 0.5f));
+            Material surround = Unlit("M_Room_Surround", new Color(0.035f, 0.04f, 0.05f, 1f), seeThrough: false);
+            Material doorMark = Unlit("M_Door_Mark", new Color(1f, 0.82f, 0.35f, 0.55f), seeThrough: true);
             Material ghost = Ghost();
 
             var root = new GameObject("HousingLot_Sandbox");
             try
             {
                 int ground = LayerMask.NameToLayer(GroundLayerName);
+                // Everything that is seen of the Lot, so that it can be left undrawn while its player is indoors.
+                Transform outside = Point(root.transform, "Outside", Vector3.zero);
                 Vector3 groundSize = new Vector3(LotSize.x + Apron * 2f, 1f, LotSize.y + Apron * 2f);
-                GameObject slab = Slab(root.transform, "Ground", new Vector3(0f, -0.5f, 0f), groundSize, lawn, keepCollider: true);
+                GameObject slab = Slab(outside, "Ground", new Vector3(0f, -0.5f, 0f), groundSize, lawn, keepCollider: true);
                 slab.layer = ground >= 0 ? ground : 0;
                 // Open country round the Lot, so it does not stand in the sky. Looked at, never walked on.
-                Slab(root.transform, "Surroundings", new Vector3(0f, -0.56f, 0f), new Vector3(Outskirts, 1f, Outskirts), country, keepCollider: false);
+                Slab(outside, "Surroundings", new Vector3(0f, -0.56f, 0f), new Vector3(Outskirts, 1f, Outskirts), country, keepCollider: false);
 
-                Slab(root.transform, "Pad", new Vector3(PadCenter.x, 0.01f, PadCenter.y), new Vector3(PadSize.x, 0.02f, PadSize.y), pad, keepCollider: false);
+                Slab(outside, "Pad", new Vector3(PadCenter.x, 0.01f, PadCenter.y), new Vector3(PadSize.x, 0.02f, PadSize.y), pad, keepCollider: false);
                 float front = -LotSize.y * 0.5f - Apron;
                 float padFront = PadCenter.y - PadSize.y * 0.5f;
-                Slab(root.transform, "Path", new Vector3(0f, 0.012f, (front + padFront) * 0.5f), new Vector3(PathWidth, 0.02f, padFront - front), path, keepCollider: false);
+                Slab(outside, "Path", new Vector3(0f, 0.012f, (front + padFront) * 0.5f), new Vector3(PathWidth, 0.02f, padFront - front), path, keepCollider: false);
+                // Where the Hall's door is, whatever Facade stands behind it.
+                Slab(outside, "Door Mark", new Vector3(PadCenter.x, 0.03f, padFront - DoorMarkDepth * 0.5f), new Vector3(PathWidth, 0.02f, DoorMarkDepth), doorMark, keepCollider: false);
 
-                Fence(root.transform);
+                Fence(outside);
 
                 Transform arrival = Point(root.transform, "Arrival", new Vector3(0f, 0f, -LotSize.y * 0.5f + 2.5f));
-                Transform facade = Point(root.transform, "FacadeAnchor", new Vector3(PadCenter.x, 0f, PadCenter.y));
-                Transform pieces = Point(root.transform, "Pieces", Vector3.zero);
+                Transform facade = Point(outside, "FacadeAnchor", new Vector3(PadCenter.x, 0f, PadCenter.y));
+                Transform pieces = Point(outside, "Pieces", Vector3.zero);
 
                 var lot = root.AddComponent<HousingLot>();
-                Vector2 doorClear = new Vector2(PathWidth + 0.6f, 3f);
-                lot.Configure(LotSize, PadCenter, PadSize, new Vector2(0f, padFront - doorClear.y * 0.5f), doorClear, arrival, facade, pieces);
+                Vector2 doorClear = new Vector2(PathWidth + 0.6f, 3.5f);
+                lot.Configure(LotSize, PadCenter, PadSize, new Vector2(0f, padFront - doorClear.y * 0.5f), doorClear, arrival, facade, pieces, outside);
 
                 // Walked on from the moment the Lot is set down: the mesh is made then, from the Lot's own colliders.
                 var surface = root.AddComponent<NavMeshSurface>();
@@ -103,13 +124,20 @@ namespace KryticalNova.EditorTools.Housing
             }
             settings.lotPrefab = AssetDatabase.LoadAssetAtPath<HousingLot>(LotPath);
             settings.ghostMaterial = ghost;
-            if (settings.facadeByFaction == null || settings.facadeByFaction.Length != Facades.Length) settings.facadeByFaction = new GameObject[Facades.Length];
-            for (int n = 0; n < Facades.Length; n++)
+            settings.roomPlainMaterial = plain;
+            settings.roomSurroundMaterial = surround;
+            settings.doorMarkMaterial = doorMark;
+            settings.facadeByFaction = new GameObject[0]; // Facades are looks in the catalog now
+            if (settings.roomDoorByFaction == null || settings.roomDoorByFaction.Length != RoomDoors.Length) settings.roomDoorByFaction = new GameObject[RoomDoors.Length];
+            for (int n = 0; n < RoomDoors.Length; n++)
             {
-                if (settings.facadeByFaction[n] != null) continue; // chosen by hand: left alone
-                settings.facadeByFaction[n] = AssetDatabase.LoadAssetAtPath<GameObject>(Facades[n]);
-                if (settings.facadeByFaction[n] == null) Debug.LogWarning($"[Housing] No Hall for faction {n}: {Facades[n]} is missing.");
+                if (settings.roomDoorByFaction[n] != null) continue; // chosen by hand: left alone
+                settings.roomDoorByFaction[n] = AssetDatabase.LoadAssetAtPath<GameObject>(RoomDoors[n]);
+                if (settings.roomDoorByFaction[n] == null) Debug.LogWarning($"[Housing] No room door for faction {n}: {RoomDoors[n]} is missing.");
             }
+            if (settings.roomStairsByFaction == null || settings.roomStairsByFaction.Length != RoomStairs.Length) settings.roomStairsByFaction = new GameObject[RoomStairs.Length];
+            for (int n = 0; n < RoomStairs.Length; n++)
+                if (settings.roomStairsByFaction[n] == null) settings.roomStairsByFaction[n] = AssetDatabase.LoadAssetAtPath<GameObject>(RoomStairs[n]);
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             Debug.Log($"[Housing] Sandbox Lot built: {LotPath} ({LotSize.x} x {LotSize.y} m, pad {PadSize.x} x {PadSize.y} m).");
@@ -227,7 +255,12 @@ namespace KryticalNova.EditorTools.Housing
         private static Material Ghost()
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(GhostMaterialPath);
-            if (material != null) return material;
+            if (material != null)
+            {
+                // Drawn from both sides: the frame round a piece is a flat line seen from above.
+                if (material.GetFloat("_Cull") != 0f) { material.SetFloat("_Cull", 0f); EditorUtility.SetDirty(material); }
+                return material;
+            }
             material = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "M_ArrangeGhost" };
             material.SetFloat("_Surface", 1f);
             material.SetFloat("_Blend", 0f);
@@ -238,7 +271,30 @@ namespace KryticalNova.EditorTools.Housing
             material.SetOverrideTag("RenderType", "Transparent");
             material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             material.SetColor("_BaseColor", new Color(0.35f, 1f, 0.55f, 0.55f));
+            material.SetFloat("_Cull", 0f);
             AssetDatabase.CreateAsset(material, GhostMaterialPath);
+            return material;
+        }
+
+        private static Material Unlit(string name, Color colour, bool seeThrough)
+        {
+            string path = $"{MaterialFolder}/{name}.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material != null) return material;
+            material = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = name };
+            if (seeThrough)
+            {
+                material.SetFloat("_Surface", 1f);
+                material.SetFloat("_Blend", 0f);
+                material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                material.SetFloat("_ZWrite", 0f);
+                material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                material.SetOverrideTag("RenderType", "Transparent");
+                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            }
+            material.SetColor("_BaseColor", colour);
+            AssetDatabase.CreateAsset(material, path);
             return material;
         }
 

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_26006
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 7b1946d1b9809f94e8eee62dc6ee2728, type: 2}
+  itemId: 26006
+  faction: 3
+  mount: 0
+  place: 0
+  category: Seating
+  source: 0
+  prefab: {fileID: 7420220999910938486, guid: 326407d265f9d1e4784a6536e41802c8, type: 3}
+  kind: stool
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: -0.011328876, y: 0.24024744, z: 0}
+  boundsSize: {x: 0.6598079, y: 0.49599674, z: 0.605966}
+  hasTop: 0
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: -0.011328876, y: 0.38904646, z: 0}
+  blocks: 1
+  solidCenter: {x: -0.011328876, y: 0.24024744, z: 0}
+  solidSize: {x: 0.6598079, y: 0.49599674, z: 0.605966}
+  budgetCost: 2

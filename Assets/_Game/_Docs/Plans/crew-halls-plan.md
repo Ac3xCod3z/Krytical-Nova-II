@@ -2,23 +2,41 @@
 
 Written 11 Oct 2026. Row 62 of `../Reference/12Sky/01_Systems_Build_List.md`.
 
-**As built, 11 Oct 2026: Stage 1, steps 1 to 3** (the Lot, furnishings and the Crate, Arrange on the lawns).
-What it does, its numbers and how it was checked are in `../Reference/12Sky/05_Economy_And_Social.md`,
-"Crew Halls". To try it: Play, press **L** and use GO TO MY HALL (or `gm.home`), fill the Crate with
-`gm.furnish.kit`, then click a furnishing and click the lawn. Where the build differs from the plan below:
+**As built, 11 and 12 Oct 2026: Stage 1, all five steps.** What it does, its numbers and how it was checked are in
+`../Reference/12Sky/05_Economy_And_Social.md`, "Crew Halls". To try it: Play, press **L** and use GO TO MY HALL (or
+`gm.home`), fill the Crate with `gm.furnish.kit`, click a furnishing and click the lawn; walk into the door mark at
+the Hall to go inside. Where the build differs from the plan below, and what the owner added on 12 Oct 2026:
 
-- The Lot's NavMesh is made when the Lot is set down, not baked into the prefab (a baked one comes with the
-  Crew Quarter maps).
-- The Hall on the pad is the vendor's own building for the faction, shrunk to fit; baked Facades of one
-  footprint are step 4.
-- A piece is one object per furnishing with no pooling yet; 73 pieces cost nothing measurable.
-- The Furnishing Crate is saved with the character. Stage 2 needs it where an owner who is offline can be
-  given pieces back.
-- There is no screen fade on the way to the Lot, and the minimap is not hidden there.
-- The faction rule is on the item itself (`ItemDefinition.boundFaction`, `ItemFactionRules`), so Trade,
-  Kiosks, the Deep Vault and pickup ask it without knowing about housing.
+- **The inside is an instance** (owner): it is made when someone goes through the door, warmed during the trip in,
+  and gone when they leave. In the sandbox the instance is made on the player's own machine; a server opening one per
+  Hall is Stage 2.
+- **It has three floors** (owner, "like FFXIV"): the one walked into, the upstairs and a basement, one above the
+  other, sharing one budget and one set of Finishes. Stairs are marked places that are stepped onto; climbing a real
+  staircase between floors is not built.
+- **Pieces are solid** (owner): what the plan called "walked through" is gone. A piece stops a walker with the part
+  of it that is within a person's height, the walkable ground is cut away under it, and nothing is set down on the
+  player.
+- **The world's measure** (owner asked for one): `_Docs/Design/16_world_scale.md`, `WorldScaleSettings`. Every
+  furnishing names its kind and is held to that kind's real size.
+- **Which packs a faction draws on** (owner): Hegemony from Sci-Fi Worlds, Sci-Fi City, Cyber City and Sci-Fi Space;
+  Covenant from the Elven Realm and the Vikings; Null from the Dark Fortress and Dark Fantasy packs and, as darkened
+  prefab variants, from the Fantasy Kingdom.
+- A Facade and a Finish are items like furnishings: the Hall wears one of each and what it does not wear is in the
+  Crate. A Finish is one panel or tile the room repeats, in its own material or in one of the pack's tiling surfaces.
+- The Lot's NavMesh is made when the Lot is set down, and each floor's when the instance opens.
+- A piece is one object per furnishing with no pooling. Advanced mode is a panel of steps (lift, tilt, lean, size)
+  and keys, not a handle drawn in the world.
+- The Furnishing Crate is saved with the character. Stage 2 needs it where an owner who is offline can be given
+  pieces back.
+- **Only a Facade is its faction's own** (owner, 12 Oct 2026, replacing the furnishing rule of 11 Oct under
+  "Decisions" below): a Hall fits its faction's Quarter from outside, and is furnished in any style inside and on
+  its lawns. The lock is still on the item (`ItemDefinition.boundFaction`, `ItemFactionRules`); only Facades carry it.
+- The owner chose from lettered sheets: the scale rule, the Null's look (Ashen), each faction's first Facade and
+  room, and to bring in the Viking Realm pack for the Covenant (26 more furnishings, three Finishes). The Boat House
+  Facade was dropped ("doesnt fit or work") for a Mead Hall. A great hall from the Viking Realm's roof pieces is
+  not put together yet: the pack has no whole buildings.
 
-Next: step 4 (the room inside, Finishes, Facades), then step 5 (the comfort set).
+Next: Stage 2, when the dedicated server exists. Nothing of Stage 2 is built.
 
 ## The order (owner, 11 Oct 2026)
 

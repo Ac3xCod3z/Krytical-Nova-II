@@ -13,7 +13,7 @@ namespace KryticalNova.Housing
     {
         private readonly string document;
         private readonly PlayerCrate crate;
-        private readonly AreaShape lawn, interior;
+        private readonly Func<HomeArea, AreaShape> shapes;
         private readonly Func<FactionId> faction;
         private readonly string characterId;
         private readonly List<HomeChange> changes = new List<HomeChange>();
@@ -25,6 +25,7 @@ namespace KryticalNova.Housing
         public HousingSettings Settings { get; }
 
         public event Action<HomeArea, ushort, IReadOnlyList<HomeChange>> Changed;
+        public event Action<HomeLook> LooksChanged;
         public event Action<ushort, string> Refused;
 
         /// <summary>The name of a character's sandbox Hall among the world documents.</summary>
@@ -32,23 +33,33 @@ namespace KryticalNova.Housing
             "housing/sandbox/" + (string.IsNullOrEmpty(characterId) ? "offline" : characterId);
 
         public LocalHomeAuthority(string characterId, Func<FactionId> faction, PlayerCrate crate, FurnishingCatalog catalog,
-            HousingSettings settings, AreaShape lawn, AreaShape interior)
+            HousingSettings settings, Func<HomeArea, AreaShape> shapes)
         {
             this.characterId = characterId ?? string.Empty;
             this.faction = faction;
             this.crate = crate;
-            this.lawn = lawn;
-            this.interior = interior;
+            this.shapes = shapes;
             Catalog = catalog;
             Settings = settings;
             document = DocumentName(characterId);
             Home = HousingMigrations.Upgrade(ServerSave.World<HomeSave>(document));
         }
 
-        public AreaShape Shape(HomeArea area) => area == HomeArea.Interior ? interior : lawn;
+        public AreaShape Shape(HomeArea area) => shapes != null ? shapes(area) : default;
         public int Budget(HomeArea area) => Settings != null ? Settings.Budget(area) : int.MaxValue;
 
-        public int BudgetUsed(HomeArea area) => HousingLayout.BudgetUsed(Home.Area(area), CostOf);
+        /// <summary>What is used of an area's budget. The three floors inside share one budget, so each answers for all three.</summary>
+        public int BudgetUsed(HomeArea area)
+        {
+            if (!HomeAreas.IsInside(area)) return HousingLayout.BudgetUsed(Home.Area(area), CostOf);
+            int used = 0;
+            foreach (HomeArea floor in HomeAreas.Inside) used += HousingLayout.BudgetUsed(Home.Area(floor), CostOf);
+            return used;
+        }
+
+        // What the rules may fill of the one area an edit is in: the budget, less what the other floors hold of it.
+        private int BudgetLeftFor(HomeArea area) =>
+            Budget(area) - (BudgetUsed(area) - HousingLayout.BudgetUsed(Home.Area(area), CostOf));
 
         private int CostOf(ushort itemId)
         {
@@ -66,8 +77,10 @@ namespace KryticalNova.Housing
                 shape = Shape(area),
                 faction = faction != null ? faction() : FactionId.None,
                 owner = Home.OwnerIndex(characterId),
-                budget = Budget(area),
+                budget = BudgetLeftFor(area),
                 maxStackDepth = Settings != null ? Settings.maxStackDepth : 3,
+                minScale = Settings != null ? Settings.minPieceScale : 0f,
+                maxScale = Settings != null ? Settings.maxPieceScale : 0f,
                 crateCount = id => crate != null ? crate.Count(id) : 0,
             };
 
@@ -78,24 +91,43 @@ namespace KryticalNova.Housing
                 return request;
             }
 
-            if (crate != null)
-            {
-                foreach (KeyValuePair<ushort, int> delta in crateDelta)
-                {
-                    if (delta.Value > 0) crate.ServerAdd(delta.Key, delta.Value);
-                    else if (delta.Value < 0) crate.ServerTake(delta.Key, -delta.Value);
-                }
-            }
+            ApplyCrateDelta();
             ServerSave.SaveWorld(document);
             Changed?.Invoke(area, request, changes);
             return request;
+        }
+
+        public ushort SubmitLook(HomeLook slot, ushort itemId)
+        {
+            ushort request = ++lastRequest == 0 ? ++lastRequest : lastRequest;
+            string refusal = HousingRules.TryWear(Home, Catalog, faction != null ? faction() : FactionId.None,
+                id => crate != null ? crate.Count(id) : 0, slot, itemId, crateDelta);
+            if (refusal != null)
+            {
+                Refused?.Invoke(request, refusal);
+                return request;
+            }
+            ApplyCrateDelta();
+            ServerSave.SaveWorld(document);
+            LooksChanged?.Invoke(slot);
+            return request;
+        }
+
+        private void ApplyCrateDelta()
+        {
+            if (crate == null) return;
+            foreach (KeyValuePair<ushort, int> delta in crateDelta)
+            {
+                if (delta.Value > 0) crate.ServerAdd(delta.Key, delta.Value);
+                else if (delta.Value < 0) crate.ServerTake(delta.Key, -delta.Value);
+            }
         }
 
         /// <summary>Puts everything in the Hall back into the Crate and empties it (a GM command).</summary>
         public int PutEverythingAway()
         {
             int count = 0;
-            foreach (HomeArea area in new[] { HomeArea.Lawn, HomeArea.Interior })
+            foreach (HomeArea area in HomeAreas.All)
             {
                 List<PlacedPiece> pieces = Home.Area(area);
                 if (pieces.Count == 0) continue;
@@ -121,10 +153,12 @@ namespace KryticalNova.Housing
             home.owners ??= new List<string>();
             home.lawn ??= new List<PlacedPiece>();
             home.interior ??= new List<PlacedPiece>();
+            home.upper ??= new List<PlacedPiece>();
+            home.basement ??= new List<PlacedPiece>();
             if (home.nextUid == 0) home.nextUid = 1;
             // A number is never given twice, whatever a damaged document says.
-            foreach (PlacedPiece piece in home.lawn) if (piece.u >= home.nextUid) home.nextUid = piece.u + 1;
-            foreach (PlacedPiece piece in home.interior) if (piece.u >= home.nextUid) home.nextUid = piece.u + 1;
+            foreach (HomeArea area in HomeAreas.All)
+                foreach (PlacedPiece piece in home.Area(area)) if (piece.u >= home.nextUid) home.nextUid = piece.u + 1;
             home.version = HomeSave.CurrentVersion;
             return home;
         }

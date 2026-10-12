@@ -12,62 +12,58 @@ using UnityEngine.UIElements;
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// Arrange: the Furnishing Crate window and the tool that sets furnishings down at a Hall. The window lists what
-    /// the Crate holds; a click on a furnishing puts a preview of it under the cursor, green where it may stand and
-    /// red with the reason where it may not, and a click on the ground sets it down. A piece already standing is
-    /// picked up by a click, turned with Q and E, put away with Delete. Away from the Hall the window is the Crate
-    /// alone: furnishings go in from the Pack and come out to it.
+    /// Arrange: the Furnishing Crate window and the tool that furnishes a Hall, on its lawns and in the room
+    /// inside. The window lists what the Crate holds; a click on a furnishing puts a preview of it under the
+    /// cursor, green where it may stand and red with the reason where it may not, and a click sets it down. A piece
+    /// already standing is picked up by a click, turned with Q and E, put away with Delete; a click on bare ground
+    /// walks there. A Facade or a Finish in the Crate is worn by the Hall at a click. Away from the Hall the window
+    /// is the Crate alone: furnishings go in from the Pack and come out to it.
+    /// <para>The comfort set is in the two other parts of this class: several pieces picked and moved together,
+    /// Advanced mode with its lift, tilt and size, copying a piece, the view from above.</para>
     /// The tool decides nothing. It asks the Hall's authority for every edit (<see cref="IHomeAuthority"/>) and
     /// draws what comes back, with the same rules the authority uses to say beforehand what will be refused.
     /// While it is open at the Hall the left button and the hotbar are the tool's; the camera stays the player's.
+    /// It also draws the curtain of a trip to the Hall or through its door.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
-    public sealed class ArrangeController : MonoBehaviour, IPackTarget
+    public sealed partial class ArrangeController : MonoBehaviour, IPackTarget
     {
         private const string WindowName = "arrange-window";
         private const string PackWindowName = "inventory-window";
         private const float WindowWidth = 372f, WindowRight = 24f, WindowTop = 64f, WindowMargin = 20f;
-        private const float RayDistance = 400f;
-        private const float RugLift = 0.01f;
-        private const uint PreviewUid = uint.MaxValue;
-        private const int LeftButton = 0, RightButton = 1;
-        private const string AllCategories = "All";
-        private const string GroundLayerName = "Ground";
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private const int LeftButton = 0, RightButton = 1, MiddleButton = 2;
+        private const string AllCategories = "All", Favourites = "★", Recent = "Recent", HallCategory = "Hall";
+        private const string FavouritesKeyPrefix = "kn.housing.favourites.";
+        private const int MostRecent = 16;
+        private const float AwayConfirmSeconds = 3f;
+        private static readonly HomeLook[] LookSlots = { HomeLook.Facade, HomeLook.Wall, HomeLook.Floor, HomeLook.Ceiling };
+        private static readonly string[] LookNames = { "FACADE", "WALLS", "FLOOR", "CEILING" };
 
         private enum PendingKind { Edit, Undo, Redo }
-        private struct Pending { public PendingKind kind; public List<HomeOp> ops; }
+        private struct Pending { public PendingKind kind; public List<HomeOp> ops; public HomeArea area; }
 
-        private VisualElement root, window, grid, categoryRow, budgetFill;
-        private Label budgetLabel, statusLabel, keyLabel;
-        private Button travelButton;
+        private VisualElement root, window, grid, categoryRow, budgetFill, toolRow, adjustPanel, looksRow, boxRect, curtain;
+        private Label budgetLabel, statusLabel, keyLabel, adjustLabel, curtainLabel;
+        private Button travelButton, doorButton, backButton, upButton, downButton, modeButton, overheadButton, awayButton;
+        private readonly Button[] lookButtons = new Button[4];
         private TextField search;
         private FloatingFit windowFit;
         private readonly List<VisualElement> cells = new List<VisualElement>(64);
+        private readonly List<Label> cellStars = new List<Label>(64);
         private readonly List<CrateEntry> shownEntries = new List<CrateEntry>(64);
         private readonly List<string> categories = new List<string>(12);
         private string category = AllCategories;
+        private readonly HashSet<ushort> favourites = new HashSet<ushort>();
+        private readonly List<ushort> recents = new List<ushort>(MostRecent);
+        private string favouritesKey;
+        private float awayArmedUntil;
 
         private PlayerHousing housing;
         private PlayerCrate crate;
         private IHomeAuthority authority;
-        private ArrangeHistory history;
+        private readonly ArrangeHistory[] histories = new ArrangeHistory[HomeAreas.Count];
         private readonly Queue<Pending> pending = new Queue<Pending>();
-
-        // What is under the cursor, and what is being carried.
-        private readonly RaycastHit[] hits = new RaycastHit[32];
-        private readonly List<PlacedPiece> scratch = new List<PlacedPiece>(256);
-        private readonly List<HomeOp> oneOp = new List<HomeOp>(1);
-        private FurnishingPiece hovered;
-        private FurnishingDefinition carried;
-        private uint carriedUid;
-        private PlacedPiece carriedBefore, candidate;
-        private bool hasCandidate;
-        private string refusal;
-        private float yaw;
-        private GameObject ghost;
-        private MaterialPropertyBlock ghostBlock;
         private bool parked;
         private bool open;
 
@@ -79,6 +75,7 @@ namespace KryticalNova.UI
             root = GetComponent<UIDocument>().rootVisualElement;
             if (root == null) return;
             BuildWindow();
+            BuildOverlays();
             PlayerInventory.LocalChanged += OnLocalChanged;
         }
 
@@ -89,6 +86,8 @@ namespace KryticalNova.UI
             Bind(null);
             if (GearUIController.Instance != null) GearUIController.Instance.UnregisterPackTarget(this);
             window?.RemoveFromHierarchy();
+            boxRect?.RemoveFromHierarchy();
+            curtain?.RemoveFromHierarchy();
             window = null;
         }
 
@@ -104,27 +103,34 @@ namespace KryticalNova.UI
             if (housing != null) housing.Changed += OnHomeChanged;
             if (crate != null) crate.Changed += OnCrateChanged;
             if (housing != null) BindAuthority(housing.Authority);
+            LoadFavourites();
         }
 
         private void BindAuthority(IHomeAuthority next)
         {
-            StopCarrying();
+            if (next == authority && next != null) return;
+            DropEverything();
             if (authority != null)
             {
                 authority.Changed -= OnEdited;
                 authority.Refused -= OnRefused;
+                authority.LooksChanged -= OnLooksChanged;
             }
             authority = next;
             pending.Clear();
-            history = null;
+            for (int n = 0; n < histories.Length; n++) histories[n] = null;
             if (authority == null) return;
             authority.Changed += OnEdited;
             authority.Refused += OnRefused;
-            history = new ArrangeHistory(authority.Settings != null ? authority.Settings.undoSteps : 50);
+            authority.LooksChanged += OnLooksChanged;
+            int steps = authority.Settings != null ? authority.Settings.undoSteps : 50;
+            for (int n = 0; n < histories.Length; n++) histories[n] = new ArrangeHistory(steps);
         }
 
+        // The player arrived, left, or went through the door: whatever was in hand belongs to where they were.
         private void OnHomeChanged()
         {
+            DropEverything();
             BindAuthority(housing != null ? housing.Authority : null);
             if (open) Refresh();
         }
@@ -134,7 +140,18 @@ namespace KryticalNova.UI
             if (open) Refresh();
         }
 
-        private bool AtHall => housing != null && housing.InHome && authority != null;
+        private void OnLooksChanged(HomeLook slot)
+        {
+            if (open) Refresh();
+        }
+
+        private bool AtHall => housing != null && housing.InHome && authority != null && !housing.Travelling;
+        /// <summary>The part of the Hall the player is in: the one the tool works on.</summary>
+        private HomeArea Area => housing != null ? housing.Area : HomeArea.Lawn;
+        private ArrangeHistory History => histories[(int)Area];
+        private HomeView View => housing != null ? housing.View(Area) : null;
+        private Transform PieceRoot => housing != null ? housing.PieceRoot(Area) : null;
+        private List<PlacedPiece> Pieces => authority.Home.Area(Area);
 
         // ------------------------------------------------------------------ every frame
 
@@ -146,23 +163,28 @@ namespace KryticalNova.UI
                 PlayerHousing local = PlayerHousing.Local;
                 if (local != null) Bind(local);
             }
+            DrawCurtain();
 
             bool typing = HudTyping.IsTyping(root);
             if (housing != null && !typing && KeyBindings.Pressed(KeyBindings.Arrange)) SetOpen(!open);
 
-            bool tool = open && AtHall;
+            bool tool = open && AtHall && PieceRoot != null && View != null;
             Park(tool);
+            if (!tool) DropEverything();
             if (!open) return;
 
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame && !typing)
             {
+                // One thing at a time is let go of, the last taken up first.
                 if (carried != null) StopCarrying();
+                else if (groupCarried) StopCarryingGroup();
+                else if (picked.Count > 0) ClearPicked();
+                else if (overhead.Active) SetOverhead(false);
                 else SetOpen(false);
                 return;
             }
             if (tool) Tool(keyboard, typing);
-            else if (carried != null) StopCarrying();
         }
 
         // While the tool is out, a click is the tool's and the hotbar keys turn pieces: both are handed back after.
@@ -172,58 +194,24 @@ namespace KryticalNova.UI
             PlayerInventory local = PlayerInventory.Local;
             if (local != null)
             {
-                if (local.TryGetComponent(out PointAndClickPlayer mover)) mover.WorldClicksParked = on;
+                // A trip parks the clicks for itself and hands them back when it ends.
+                if (local.TryGetComponent(out PointAndClickPlayer mover) && (housing == null || !housing.Travelling)) mover.WorldClicksParked = on;
                 // Asked for again every frame: a text field that loses focus hands the hotbar back by itself.
                 if (local.TryGetComponent(out PlayerSkillHotbar hotbar) && (on || parked)) hotbar.InputSuppressed = on;
             }
             parked = on;
         }
 
-        private void Tool(Keyboard keyboard, bool typing)
+        // Lets go of everything the tool holds: the piece in hand, the pieces picked, the box, the view from above.
+        private void DropEverything()
         {
-            Mouse mouse = Mouse.current;
-            Camera view = ViewCamera();
-            if (mouse == null || view == null) return;
-
-            Vector2 screen = mouse.position.ReadValue();
-            bool overUi = !view.pixelRect.Contains(screen) || ClientPresentationRegistry.BlocksWorldPointer(screen) || OverWindow(screen);
-            bool turningCamera = mouse.rightButton.isPressed;
-            bool free = keyboard != null && keyboard.altKey.isPressed;
-            bool fine = keyboard != null && keyboard.ctrlKey.isPressed;
-            bool again = keyboard != null && keyboard.shiftKey.isPressed;
-
-            Look(view.ScreenPointToRay(screen), overUi || turningCamera, free, fine);
-
-            if (keyboard != null && !typing) Keys(keyboard);
-            if (overUi || turningCamera || !mouse.leftButton.wasPressedThisFrame) return;
-
-            if (carried != null) SetDown(again);
-            else if (hovered != null) PickUp(hovered);
-        }
-
-        private void Keys(Keyboard keyboard)
-        {
-            HousingSettings settings = authority.Settings;
-            float step = settings != null ? settings.rotateStep : 15f;
-            int turn = (keyboard.eKey.wasPressedThisFrame ? 1 : 0) - (keyboard.qKey.wasPressedThisFrame ? 1 : 0);
-            if (turn != 0)
-            {
-                if (carried != null) yaw = HousingPlacement.StepYaw(yaw, step, turn);
-                else if (hovered != null) TurnWhereItStands(hovered, step, turn);
-            }
-
-            if (keyboard.deleteKey.wasPressedThisFrame || keyboard.backspaceKey.wasPressedThisFrame)
-            {
-                if (carried != null && carriedUid != 0) { uint uid = carriedUid; StopCarrying(); PutAway(uid); }
-                else if (carried != null) StopCarrying();
-                else if (hovered != null) PutAway(hovered.Uid);
-            }
-
-            if (keyboard.ctrlKey.isPressed && carried == null)
-            {
-                if (keyboard.zKey.wasPressedThisFrame && !keyboard.shiftKey.isPressed) Undo();
-                else if (keyboard.yKey.wasPressedThisFrame || (keyboard.zKey.wasPressedThisFrame && keyboard.shiftKey.isPressed)) Redo();
-            }
+            if (carried != null) StopCarrying();
+            if (groupCarried) StopCarryingGroup();
+            if (picked.Count > 0) ClearPicked();
+            ClearFrames();
+            pressed = boxing = false;
+            if (boxRect != null) boxRect.style.display = DisplayStyle.None;
+            if (overhead.Active) SetOverhead(false);
         }
 
         private Camera ViewCamera()
@@ -236,299 +224,43 @@ namespace KryticalNova.UI
         private bool OverWindow(Vector2 screen)
         {
             if (window == null || window.panel == null) return false;
-            Vector2 panel = RuntimePanelUtils.ScreenToPanel(window.panel, new Vector2(screen.x, Screen.height - screen.y));
-            return window.worldBound.Contains(panel);
+            return window.worldBound.Contains(ToPanel(screen));
         }
 
-        // ------------------------------------------------------------------ what is under the cursor
-
-        private void Look(Ray ray, bool blocked, bool free, bool fine)
-        {
-            hovered = null;
-            hasCandidate = false;
-            if (blocked)
-            {
-                if (ghost != null) ghost.SetActive(false);
-                return;
-            }
-
-            int furnishingLayer = HomeView.FurnishingLayer;
-            int groundLayer = LayerMask.NameToLayer(GroundLayerName);
-            int mask = (1 << furnishingLayer) | (1 << groundLayer) | 1; // and Default: the Hall itself hides what is behind it
-            int count = Physics.RaycastNonAlloc(ray, hits, RayDistance, mask, QueryTriggerInteraction.Ignore);
-            Array.Sort(hits, 0, count, HitDistance.Instance);
-
-            FurnishingPiece under = null;
-            RaycastHit ground = default;
-            bool hasGround = false;
-            for (int n = 0; n < count; n++)
-            {
-                GameObject hit = hits[n].collider.gameObject;
-                if (hit.layer == furnishingLayer)
-                {
-                    FurnishingPiece piece = hit.GetComponentInParent<FurnishingPiece>();
-                    if (piece == null || piece.Uid == carriedUid) continue;
-                    if (under == null) under = piece;
-                    if (carried == null) break;
-                    // Carrying: a piece with a top takes what is small enough to stand on it; otherwise look past it.
-                    if (CanStandOn(piece, hits[n].normal, free)) { ground = hits[n]; hasGround = true; break; }
-                    continue;
-                }
-                if (hit.layer == groundLayer) { ground = hits[n]; hasGround = true; under = carried != null ? null : under; }
-                break; // the ground, or something solid that is neither: nothing behind it counts
-            }
-
-            if (carried == null)
-            {
-                hovered = under;
-                SetStatus(hovered != null ? $"{hovered.Furnishing.DisplayName}: click to move  ·  Q / E turn  ·  Del puts it away" : null);
-                return;
-            }
-
-            if (!hasGround)
-            {
-                if (ghost != null) ghost.SetActive(false);
-                SetStatus(HousingRules.ReasonBlocked);
-                return;
-            }
-            FurnishingPiece on = ground.collider.gameObject.layer == furnishingLayer ? ground.collider.GetComponentInParent<FurnishingPiece>() : null;
-            Propose(ground.point, on, free, fine);
-        }
-
-        private bool CanStandOn(FurnishingPiece piece, Vector3 normal, bool free)
-        {
-            if (piece.Furnishing == null || !piece.Furnishing.hasTop || normal.y < 0.7f) return false;
-            return free || carried.mount == FurnishingMount.Surface;
-        }
-
-        // Works out where the carried piece would stand, asks the rules, and shows it.
-        private void Propose(Vector3 point, FurnishingPiece on, bool free, bool fine)
-        {
-            HousingSettings settings = authority.Settings;
-            List<PlacedPiece> pieces = authority.Home.Area(HomeArea.Lawn);
-            Transform pieceRoot = housing.Lot.PieceRoot;
-            float step = settings == null ? 0.5f : fine ? settings.fineGridStep : settings.gridStep;
-
-            PlacedPiece piece = carriedUid != 0 ? carriedBefore : new PlacedPiece { i = carried.itemId, s = PlacedPiece.NormalScale };
-            piece.u = carriedUid != 0 ? carriedUid : PreviewUid;
-            piece.f = (byte)(free ? PieceFlags.Free : PieceFlags.None);
-            Vector3 areaPoint = pieceRoot.InverseTransformPoint(point);
-            Quaternion areaTurn = Quaternion.Euler(0f, yaw, 0f);
-
-            if (on != null && HousingLayout.TryFind(pieces, on.Uid, out PlacedPiece under))
-            {
-                // On a piece's top: a finer grid, in that piece's own space, and never over its edge.
-                HousingLayout.Pose(pieces, under, out Vector3 underPosition, out Quaternion underTurn);
-                Vector3 local = Quaternion.Inverse(underTurn) * (areaPoint - underPosition) / under.Scale;
-                float topStep = settings != null ? settings.fineGridStep : 0.125f;
-                if (!free) local = HousingPlacement.SnapToGrid(local, topStep);
-                Bounds top = on.Furnishing.LocalBounds;
-                local.x = Mathf.Clamp(local.x, top.min.x, top.max.x);
-                local.z = Mathf.Clamp(local.z, top.min.z, top.max.z);
-                local.y = on.Furnishing.Top - carried.Bottom;
-                piece.p = under.u;
-                piece.Position = local;
-                piece.Rotation = Quaternion.Inverse(underTurn) * areaTurn;
-            }
-            else
-            {
-                if (!free) areaPoint = HousingPlacement.SnapToGrid(areaPoint, step);
-                areaPoint.y = -carried.Bottom + (carried.mount == FurnishingMount.Rug ? RugLift : 0f);
-                piece.p = 0;
-                piece.Position = areaPoint;
-                piece.Rotation = areaTurn;
-            }
-
-            candidate = piece;
-            hasCandidate = true;
-            refusal = Judge(pieces, piece, free);
-            ShowGhost(pieces, piece, pieceRoot, refusal == null);
-            SetStatus(refusal ?? Hint());
-        }
-
-        // The same rules the authority will use, and one courtesy of the tool's own: pieces do not overlap unless
-        // the player holds Alt.
-        private string Judge(List<PlacedPiece> pieces, in PlacedPiece piece, bool free)
-        {
-            scratch.Clear();
-            scratch.AddRange(pieces);
-            int index = HousingLayout.IndexOf(scratch, piece.u);
-            if (index >= 0) scratch[index] = piece; else scratch.Add(piece);
-
-            var context = new EditContext
-            {
-                catalog = authority.Catalog,
-                area = HomeArea.Lawn,
-                shape = authority.Shape(HomeArea.Lawn),
-                faction = housing.Faction,
-                budget = authority.Budget(HomeArea.Lawn),
-                maxStackDepth = authority.Settings != null ? authority.Settings.maxStackDepth : 3,
-            };
-            if (!HousingRules.MayHave(carried, context.faction)) return HousingRules.ReasonOtherFaction;
-            string reason = HousingRules.PoseBlockedReason(scratch, piece, carried, context);
-            if (reason != null) return reason;
-
-            if (carriedUid == 0)
-            {
-                if (crate == null || crate.Count(carried.itemId) < 1) return HousingRules.ReasonNoneLeft;
-                if (authority.BudgetUsed(HomeArea.Lawn) + carried.budgetCost > context.budget) return HousingRules.ReasonBudget;
-            }
-            if (free || piece.p != 0 || carried.mount == FurnishingMount.Rug) return null;
-
-            HousingLayout.Pose(scratch, piece, out Vector3 position, out Quaternion turn);
-            Vector2 middle = HousingPlacement.FootprintCenter(position, turn.eulerAngles.y, carried.FootprintCenter, piece.Scale);
-            Vector2 half = carried.FootprintHalf * piece.Scale;
-            for (int n = 0; n < scratch.Count; n++)
-            {
-                PlacedPiece other = scratch[n];
-                if (other.u == piece.u || other.p != 0) continue;
-                FurnishingDefinition furnishing = authority.Catalog.Get(other.i);
-                if (furnishing == null || furnishing.mount == FurnishingMount.Rug) continue;
-                Vector2 otherMiddle = HousingPlacement.FootprintCenter(other.Position, other.Yaw, furnishing.FootprintCenter, other.Scale);
-                if (HousingPlacement.FootprintsOverlap(middle, half, turn.eulerAngles.y, otherMiddle, furnishing.FootprintHalf * other.Scale, other.Yaw))
-                    return HousingRules.ReasonInTheWay;
-            }
-            return null;
-        }
-
-        private string Hint() => carriedUid != 0
-            ? "Click to set it down  ·  Q / E turn  ·  Alt: off the grid  ·  Ctrl: fine steps  ·  Esc: leave it where it was"
-            : "Click to set it down  ·  Shift-click: and another  ·  Q / E turn  ·  Alt: off the grid  ·  Ctrl: fine steps";
-
-        // ------------------------------------------------------------------ the preview
-
-        private void ShowGhost(List<PlacedPiece> pieces, in PlacedPiece piece, Transform pieceRoot, bool allowed)
-        {
-            if (ghost == null) return;
-            // Drawn where the piece would really stand: through the same sums as a piece that is set down.
-            int index = HousingLayout.IndexOf(scratch, piece.u);
-            HousingLayout.Pose(scratch, index >= 0 ? scratch[index] : piece, out Vector3 position, out Quaternion turn);
-            ghost.transform.SetPositionAndRotation(pieceRoot.TransformPoint(position), pieceRoot.rotation * turn);
-            ghost.transform.localScale = Vector3.one * piece.Scale;
-            ghost.SetActive(true);
-
-            HousingSettings settings = authority.Settings;
-            Color colour = settings == null ? (allowed ? Color.green : Color.red) : allowed ? settings.ghostAllowed : settings.ghostRefused;
-            ghostBlock ??= new MaterialPropertyBlock();
-            ghostBlock.SetColor(BaseColorId, colour);
-            foreach (Renderer renderer in ghost.GetComponentsInChildren<Renderer>(true)) renderer.SetPropertyBlock(ghostBlock);
-        }
-
-        private void MakeGhost(FurnishingDefinition furnishing)
-        {
-            if (ghost != null) Destroy(ghost);
-            ghost = HomeView.Spawn(furnishing, null, HomeView.FurnishingLayer, pickable: false);
-            if (ghost == null) return;
-            ghost.name = "Arrange Preview";
-            Material tint = authority.Settings != null ? authority.Settings.ghostMaterial : null;
-            foreach (Renderer renderer in ghost.GetComponentsInChildren<Renderer>(true))
-            {
-                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                if (tint == null) continue;
-                var materials = new Material[renderer.sharedMaterials.Length];
-                for (int n = 0; n < materials.Length; n++) materials[n] = tint;
-                renderer.sharedMaterials = materials;
-            }
-            ghost.SetActive(false);
-        }
-
-        // ------------------------------------------------------------------ carrying
-
-        /// <summary>Takes a furnishing out of the Crate to be set down.</summary>
-        private void CarryNew(FurnishingDefinition furnishing)
-        {
-            if (furnishing == null) return;
-            if (!AtHall)
-            {
-                Notify("Furnishings are set down at your Hall.");
-                return;
-            }
-            if (!HousingRules.MayHave(furnishing, housing.Faction)) { Notify(HousingRules.ReasonOtherFaction); return; }
-            StopCarrying();
-            carried = furnishing;
-            carriedUid = 0;
-            yaw = 0f;
-            MakeGhost(furnishing);
-            GearUIController.Instance?.HideItemTooltip();
-        }
-
-        private void PickUp(FurnishingPiece piece)
-        {
-            List<PlacedPiece> pieces = authority.Home.Area(HomeArea.Lawn);
-            if (!HousingLayout.TryFind(pieces, piece.Uid, out PlacedPiece standing)) return;
-            StopCarrying();
-            carried = piece.Furnishing;
-            carriedUid = piece.Uid;
-            carriedBefore = standing;
-            HousingLayout.Pose(pieces, standing, out _, out Quaternion turn);
-            yaw = turn.eulerAngles.y;
-            MakeGhost(carried);
-            housing.LawnView?.SetVisible(carriedUid, false);
-            hovered = null;
-        }
-
-        private void StopCarrying()
-        {
-            if (carriedUid != 0 && housing != null && housing.LawnView != null) housing.LawnView.SetVisible(carriedUid, true);
-            carried = null;
-            carriedUid = 0;
-            hasCandidate = false;
-            if (ghost != null) Destroy(ghost);
-            ghost = null;
-        }
-
-        private void SetDown(bool again)
-        {
-            if (!hasCandidate) return;
-            if (refusal != null) { Notify(refusal); return; }
-
-            PlacedPiece piece = candidate;
-            FurnishingDefinition furnishing = carried;
-            bool fresh = carriedUid == 0;
-            if (fresh) piece.u = 0;
-            else if (piece.SamePose(carriedBefore)) { StopCarrying(); return; } // put back where it stood: nothing to ask for
-            Ask(PendingKind.Edit, fresh ? HomeOp.Place(piece) : HomeOp.Move(piece));
-
-            if (fresh && again && crate != null && crate.Count(furnishing.itemId) > 0) return; // still in hand
-            StopCarrying();
-        }
-
-        private void TurnWhereItStands(FurnishingPiece piece, float step, int direction)
-        {
-            List<PlacedPiece> pieces = authority.Home.Area(HomeArea.Lawn);
-            if (!HousingLayout.TryFind(pieces, piece.Uid, out PlacedPiece standing)) return;
-            standing.Yaw = HousingPlacement.StepYaw(standing.Yaw, step, direction);
-            Ask(PendingKind.Edit, HomeOp.Move(standing));
-        }
-
-        private void PutAway(uint uid) => Ask(PendingKind.Edit, HomeOp.Remove(uid));
+        private Vector2 ToPanel(Vector2 screen) =>
+            RuntimePanelUtils.ScreenToPanel(window.panel, new Vector2(screen.x, Screen.height - screen.y));
 
         // ------------------------------------------------------------------ asking the authority
 
-        private void Ask(PendingKind kind, HomeOp op)
-        {
-            oneOp.Clear();
-            oneOp.Add(op);
-            Ask(kind, new List<HomeOp>(oneOp));
-        }
+        private void Ask(PendingKind kind, HomeOp op) => Ask(kind, new List<HomeOp>(1) { op });
 
         private void Ask(PendingKind kind, List<HomeOp> ops)
         {
             if (authority == null || ops == null || ops.Count == 0) return;
             // Answers come back in the order they were asked for (at once, in the sandbox).
-            pending.Enqueue(new Pending { kind = kind, ops = ops });
-            authority.Submit(HomeArea.Lawn, ops);
+            pending.Enqueue(new Pending { kind = kind, ops = ops, area = Area });
+            authority.Submit(Area, ops);
         }
 
         private void OnEdited(HomeArea area, ushort request, IReadOnlyList<HomeChange> changes)
         {
-            if (request != 0 && pending.Count > 0 && history != null)
+            if (request != 0 && pending.Count > 0)
             {
                 Pending asked = pending.Dequeue();
-                if (asked.kind == PendingKind.Edit) history.Record(changes);
-                else history.Settle(asked.kind == PendingKind.Undo, asked.ops, changes);
+                ArrangeHistory history = histories[(int)asked.area];
+                if (history != null)
+                {
+                    if (asked.kind == PendingKind.Edit) history.Record(changes);
+                    else history.Settle(asked.kind == PendingKind.Undo, asked.ops, changes);
+                }
             }
-            if (carriedUid != 0 && housing != null && housing.LawnView != null) housing.LawnView.SetVisible(carriedUid, false);
+            // Pieces that were picked and are gone are picked no longer.
+            if (picked.Count > 0)
+            {
+                List<PlacedPiece> pieces = authority.Home.Area(area);
+                picked.RemoveAll(uid => HousingLayout.IndexOf(pieces, uid) < 0);
+            }
+            if (carriedUid != 0 && View != null) View.SetVisible(carriedUid, false);
             if (open) ShowBudget();
         }
 
@@ -537,15 +269,16 @@ namespace KryticalNova.UI
             if (pending.Count > 0)
             {
                 Pending asked = pending.Dequeue();
-                if (asked.kind != PendingKind.Edit) history?.Discard(asked.kind == PendingKind.Undo);
+                if (asked.kind != PendingKind.Edit) histories[(int)asked.area]?.Discard(asked.kind == PendingKind.Undo);
             }
             Notify(reason);
         }
 
         private void Undo()
         {
+            ArrangeHistory history = History;
             if (history == null || !history.CanUndo) { Notify("Nothing to undo."); return; }
-            List<HomeOp> ops = history.BeginUndo(authority.Home.Area(HomeArea.Lawn));
+            List<HomeOp> ops = history.BeginUndo(Pieces);
             if (ops == null || ops.Count == 0)
             {
                 history.Discard(true);
@@ -557,8 +290,9 @@ namespace KryticalNova.UI
 
         private void Redo()
         {
+            ArrangeHistory history = History;
             if (history == null || !history.CanRedo) { Notify("Nothing to redo."); return; }
-            List<HomeOp> ops = history.BeginRedo(authority.Home.Area(HomeArea.Lawn));
+            List<HomeOp> ops = history.BeginRedo(Pieces);
             if (ops == null || ops.Count == 0)
             {
                 history.Discard(false);
@@ -582,7 +316,7 @@ namespace KryticalNova.UI
             GearUIController gear = GearUIController.Instance;
             if (!show)
             {
-                StopCarrying();
+                DropEverything();
                 Park(false);
                 if (gear != null) gear.UnregisterPackTarget(this);
                 return;
@@ -638,14 +372,11 @@ namespace KryticalNova.UI
             search.RegisterValueChangedCallback(_ => Refresh());
             window.Add(search);
 
-            categoryRow = new VisualElement();
-            categoryRow.AddToClassList("row");
-            categoryRow.style.flexWrap = Wrap.Wrap;
-            categoryRow.style.marginTop = 4f;
+            categoryRow = Row(4f, wrap: true);
             window.Add(categoryRow);
 
             var scroll = new ScrollView(ScrollViewMode.Vertical) { horizontalScrollerVisibility = ScrollerVisibility.Hidden };
-            scroll.style.maxHeight = 300f;
+            scroll.style.maxHeight = 260f;
             scroll.style.minHeight = 120f;
             scroll.style.marginTop = 4f;
             grid = new VisualElement();
@@ -653,9 +384,30 @@ namespace KryticalNova.UI
             scroll.Add(grid);
             window.Add(scroll);
 
-            var budgetRow = new VisualElement();
-            budgetRow.AddToClassList("row");
-            budgetRow.style.marginTop = 6f;
+            // What the Hall wears, each put back to its faction's standard at a press.
+            looksRow = Row(4f, wrap: true);
+            for (int n = 0; n < LookSlots.Length; n++)
+            {
+                HomeLook slot = LookSlots[n];
+                lookButtons[n] = Chip(LookNames[n], () => { if (AtHall) authority.SubmitLook(slot, 0); });
+                looksRow.Add(lookButtons[n]);
+            }
+            window.Add(looksRow);
+
+            toolRow = Row(6f, wrap: true);
+            modeButton = Chip("BASIC", () => SetAdvanced(!advanced));
+            overheadButton = Chip("FROM ABOVE", () => SetOverhead(!overhead.Active));
+            toolRow.Add(modeButton);
+            toolRow.Add(overheadButton);
+            toolRow.Add(Chip("UNDO", Undo));
+            toolRow.Add(Chip("REDO", Redo));
+            awayButton = Chip("PUT ALL AWAY", PutAllAway);
+            toolRow.Add(awayButton);
+            window.Add(toolRow);
+
+            BuildAdjustPanel();
+
+            var budgetRow = Row(6f, wrap: false);
             budgetRow.style.alignItems = Align.Center;
             budgetLabel = new Label("LAWN");
             budgetLabel.AddToClassList("muted");
@@ -675,8 +427,27 @@ namespace KryticalNova.UI
             statusLabel = new Label();
             statusLabel.AddToClassList("help");
             statusLabel.style.whiteSpace = WhiteSpace.Normal;
-            statusLabel.style.minHeight = 34f;
+            statusLabel.style.minHeight = 46f;
             window.Add(statusLabel);
+
+            var doors = Row(4f, wrap: false);
+            doorButton = new Button(ThroughDoor);
+            doorButton.style.flexGrow = 1f;
+            backButton = new Button(() => Do(housing != null ? housing.BackToDoor() : null)) { text = "BACK TO THE DOOR" };
+            backButton.style.flexGrow = 1f;
+            doors.Add(doorButton);
+            doors.Add(backButton);
+            window.Add(doors);
+
+            // The stairs, for whoever would sooner press than walk.
+            var floors = Row(2f, wrap: false);
+            upButton = new Button(() => TakeStair(up: true)) { text = "UP A FLOOR" };
+            upButton.style.flexGrow = 1f;
+            downButton = new Button(() => TakeStair(up: false)) { text = "DOWN A FLOOR" };
+            downButton.style.flexGrow = 1f;
+            floors.Add(upButton);
+            floors.Add(downButton);
+            window.Add(floors);
 
             travelButton = new Button(Travel);
             travelButton.AddToClassList("kn-button-primary");
@@ -689,11 +460,95 @@ namespace KryticalNova.UI
             (pack != null && pack.parent != null ? pack.parent : root).Add(window);
         }
 
+        private static VisualElement Row(float marginTop, bool wrap)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("row");
+            row.style.marginTop = marginTop;
+            if (wrap) row.style.flexWrap = Wrap.Wrap;
+            return row;
+        }
+
+        private static Button Chip(string text, Action clicked)
+        {
+            var chip = new Button(clicked) { text = text };
+            chip.style.fontSize = 10f;
+            chip.style.marginRight = 3f;
+            chip.style.marginBottom = 3f;
+            chip.style.paddingLeft = chip.style.paddingRight = 6f;
+            return chip;
+        }
+
+        // The box drawn while several pieces are picked, and the curtain of a trip: over the whole screen, under no window.
+        private void BuildOverlays()
+        {
+            boxRect = new VisualElement { name = "arrange-box", pickingMode = PickingMode.Ignore };
+            boxRect.style.position = Position.Absolute;
+            boxRect.style.display = DisplayStyle.None;
+            boxRect.style.backgroundColor = new Color(0.4f, 0.85f, 1f, 0.12f);
+            Color edge = new Color(0.4f, 0.85f, 1f, 0.9f);
+            boxRect.style.borderLeftColor = boxRect.style.borderRightColor = boxRect.style.borderTopColor = boxRect.style.borderBottomColor = edge;
+            boxRect.style.borderLeftWidth = boxRect.style.borderRightWidth = boxRect.style.borderTopWidth = boxRect.style.borderBottomWidth = 1f;
+            root.Add(boxRect);
+
+            curtain = new VisualElement { name = "hall-curtain", pickingMode = PickingMode.Ignore };
+            curtain.style.position = Position.Absolute;
+            curtain.style.left = curtain.style.right = curtain.style.top = curtain.style.bottom = 0f;
+            curtain.style.backgroundColor = Color.black;
+            curtain.style.alignItems = Align.Center;
+            curtain.style.justifyContent = Justify.Center;
+            curtain.style.display = DisplayStyle.None;
+            curtainLabel = new Label { pickingMode = PickingMode.Ignore };
+            curtainLabel.AddToClassList("heading");
+            curtainLabel.style.fontSize = 22f;
+            curtainLabel.style.color = new Color(1f, 1f, 1f, 0.85f);
+            curtain.Add(curtainLabel);
+            root.Add(curtain);
+        }
+
+        private void DrawCurtain()
+        {
+            if (curtain == null) return;
+            float closed = housing != null ? housing.Curtain : 0f;
+            bool show = closed > 0.001f;
+            if (show != (curtain.style.display == DisplayStyle.Flex))
+            {
+                curtain.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+                // A trip takes the click that began it: the curtain stops what is under it being pressed meanwhile.
+                curtain.pickingMode = show ? PickingMode.Position : PickingMode.Ignore;
+                if (show) curtain.BringToFront();
+            }
+            if (!show) return;
+            curtain.style.opacity = closed;
+            string label = housing.TravelLabel ?? string.Empty;
+            if (curtainLabel.text != label) curtainLabel.text = label;
+        }
+
         private void Travel()
         {
             if (housing == null) return;
             GearUIController.Instance?.SuppressWorldInput();
-            string refusal = housing.InHome ? housing.Leave() : housing.Enter();
+            Do(housing.InHome ? housing.Leave() : housing.Enter());
+        }
+
+        private void ThroughDoor()
+        {
+            if (housing == null || !housing.InHome) return;
+            GearUIController.Instance?.SuppressWorldInput();
+            Do(housing.Indoors ? housing.GoOutside() : housing.GoInside());
+        }
+
+        private void TakeStair(bool up)
+        {
+            if (housing == null || !housing.Indoors) return;
+            GearUIController.Instance?.SuppressWorldInput();
+            HomeArea to = up ? (housing.Area == HomeArea.Basement ? HomeArea.Interior : HomeArea.Upper)
+                : (housing.Area == HomeArea.Upper ? HomeArea.Interior : HomeArea.Basement);
+            Do(housing.GoToFloor(to));
+        }
+
+        private void Do(string refusal)
+        {
             if (refusal != null) Notify(refusal);
             Refresh();
         }
@@ -706,28 +561,28 @@ namespace KryticalNova.UI
 
             categories.Clear();
             categories.Add(AllCategories);
+            if (favourites.Count > 0) categories.Add(Favourites);
+            if (recents.Count > 0) categories.Add(Recent);
             shownEntries.Clear();
             foreach (CrateEntry entry in crate.Entries)
             {
-                FurnishingDefinition furnishing = catalog != null ? catalog.Get(entry.itemId) : null;
-                if (furnishing == null) continue;
-                if (!categories.Contains(furnishing.category)) categories.Add(furnishing.category);
-                if (category != AllCategories && furnishing.category != category) continue;
-                if (find.Length > 0 && furnishing.DisplayName.IndexOf(find, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                if (!Describe(catalog, entry.itemId, out string name, out string filedUnder, out _)) continue;
+                if (!categories.Contains(filedUnder)) categories.Add(filedUnder);
+                if (category == Favourites ? !favourites.Contains(entry.itemId)
+                    : category == Recent ? !recents.Contains(entry.itemId)
+                    : category != AllCategories && filedUnder != category) continue;
+                if (find.Length > 0 && name.IndexOf(find, StringComparison.OrdinalIgnoreCase) < 0) continue;
                 shownEntries.Add(entry);
             }
             if (!categories.Contains(category)) category = AllCategories;
+            // The last used come first among the recent.
+            if (category == Recent) shownEntries.Sort((a, b) => recents.IndexOf(a.itemId).CompareTo(recents.IndexOf(b.itemId)));
 
             categoryRow.Clear();
             foreach (string name in categories)
             {
-                string picked = name;
-                var chip = new Button(() => { category = picked; Refresh(); }) { text = name.ToUpperInvariant() };
-
-                chip.style.fontSize = 10f;
-                chip.style.marginRight = 3f;
-                chip.style.marginBottom = 3f;
-                chip.style.paddingLeft = chip.style.paddingRight = 6f;
+                string chosen = name;
+                Button chip = Chip(name.ToUpperInvariant(), () => { category = chosen; Refresh(); });
                 chip.style.opacity = name == category ? 1f : 0.6f;
                 categoryRow.Add(chip);
             }
@@ -738,17 +593,67 @@ namespace KryticalNova.UI
                 bool used = n < shownEntries.Count;
                 cells[n].style.display = used ? DisplayStyle.Flex : DisplayStyle.None;
                 if (!used) continue;
-                FurnishingDefinition furnishing = catalog.Get(shownEntries[n].itemId);
-                GearUIController.SetItemVisual(cells[n], furnishing.item, Mathf.Min(shownEntries[n].count, ushort.MaxValue));
+                Describe(catalog, shownEntries[n].itemId, out _, out _, out ItemDefinition item);
+                GearUIController.SetItemVisual(cells[n], item, Mathf.Min(shownEntries[n].count, ushort.MaxValue));
+                cellStars[n].style.display = favourites.Contains(shownEntries[n].itemId) ? DisplayStyle.Flex : DisplayStyle.None;
             }
 
+            bool atHall = AtHall;
+            toolRow.style.display = atHall ? DisplayStyle.Flex : DisplayStyle.None;
+            looksRow.style.display = atHall ? DisplayStyle.Flex : DisplayStyle.None;
+            doorButton.parent.style.display = atHall ? DisplayStyle.Flex : DisplayStyle.None;
+            upButton.parent.style.display = atHall && housing.Indoors ? DisplayStyle.Flex : DisplayStyle.None;
+            if (atHall)
+            {
+                doorButton.text = housing.Indoors ? "GO OUTSIDE" : "GO INSIDE";
+                upButton.SetEnabled(housing.Area != HomeArea.Upper);
+                downButton.SetEnabled(housing.Area != HomeArea.Basement);
+                for (int n = 0; n < LookSlots.Length; n++)
+                {
+                    HallLookDefinition worn = catalog != null ? catalog.GetLook(authority.Home.Look(LookSlots[n])) : null;
+                    bool own = worn != null && !worn.standard;
+                    lookButtons[n].text = own ? $"{LookNames[n]}: {worn.DisplayName.ToUpperInvariant()}  ↺" : $"{LookNames[n]}: STANDARD";
+                    lookButtons[n].SetEnabled(own);
+                }
+            }
+            modeButton.text = advanced ? "ADVANCED" : "BASIC";
+            overheadButton.style.opacity = overhead.Active ? 1f : 0.6f;
+            awayButton.text = "PUT ALL AWAY";
+            awayArmedUntil = 0f;
             travelButton.text = housing != null && housing.InHome ? "RETURN TO TOWN" : "GO TO MY HALL (SANDBOX)";
             ShowBudget();
-            if (!AtHall)
+            ShowAdjust();
+            if (!atHall)
                 SetStatus(crate.Entries.Count == 0
                     ? "The Crate is empty. Right-click a furnishing in your Pack to store it here."
                     : "Furnishings are set down at your Hall. Right-click one here to take it into your Pack.");
-            else if (carried == null) SetStatus("Click a furnishing, then click the lawn to set it down. Click a piece that stands to move it.");
+            else if (carried == null) SetStatus(IdleHint());
+        }
+
+        private string IdleHint() => housing.Indoors
+            ? $"The {HomeAreas.Name(housing.Area)}. Click a furnishing, then the floor or a wall. Click a piece to move it; drag across the floor to pick several. Step onto a marked stair to change floor. Tab: Advanced  ·  V: from above."
+            : "Click a furnishing, then the lawn. Click a piece to move it; drag across the lawn to pick several. Walk into the Hall's door to go inside.";
+
+        // A Crate item is a furnishing, or a look the Hall is not wearing: what it is called, where it is filed, its item.
+        private static bool Describe(FurnishingCatalog catalog, ushort itemId, out string name, out string filedUnder, out ItemDefinition item)
+        {
+            name = filedUnder = null;
+            item = null;
+            if (catalog == null) return false;
+            FurnishingDefinition furnishing = catalog.Get(itemId);
+            if (furnishing != null)
+            {
+                name = furnishing.DisplayName;
+                filedUnder = furnishing.category;
+                item = furnishing.item;
+                return item != null;
+            }
+            HallLookDefinition look = catalog.GetLook(itemId);
+            if (look == null) return false;
+            name = look.DisplayName;
+            filedUnder = HallCategory;
+            item = look.item;
+            return item != null;
         }
 
         private void ShowBudget()
@@ -760,8 +665,8 @@ namespace KryticalNova.UI
                 budgetFill.style.width = Length.Percent(0f);
                 return;
             }
-            int used = authority.BudgetUsed(HomeArea.Lawn), most = Mathf.Max(1, authority.Budget(HomeArea.Lawn));
-            budgetLabel.text = $"LAWN  {used} / {most}";
+            int used = authority.BudgetUsed(Area), most = Mathf.Max(1, authority.Budget(Area));
+            budgetLabel.text = $"{(HomeAreas.IsInside(Area) ? "INSIDE" : "LAWN")}  {used} / {most}";
             float part = Mathf.Clamp01(used / (float)most);
             budgetFill.style.width = Length.Percent(part * 100f);
             budgetFill.style.backgroundColor = part >= 1f ? new Color(0.9f, 0.3f, 0.25f) : part >= 0.8f ? new Color(0.95f, 0.7f, 0.2f) : new Color(0.35f, 0.8f, 0.5f);
@@ -772,13 +677,26 @@ namespace KryticalNova.UI
             VisualElement cell = GearUIController.CreateItemVisual(new VisualElement(), true);
             cell.AddToClassList("item-cell");
             grid.Add(cell);
-            cell.RegisterCallback<PointerEnterEvent>(_ =>
+            var star = new Label(Favourites) { pickingMode = PickingMode.Ignore };
+            star.style.position = Position.Absolute;
+            star.style.left = 2f;
+            star.style.top = 0f;
+            star.style.fontSize = 11f;
+            star.style.color = new Color(1f, 0.85f, 0.3f);
+            star.style.display = DisplayStyle.None;
+            cell.Add(star);
+            cellStars.Add(star);
+
+            cell.RegisterCallback<PointerEnterEvent>(entered =>
             {
                 if (index >= shownEntries.Count || crate == null || GearUIController.Instance == null) return;
-                FurnishingDefinition furnishing = crate.Catalog.Get(shownEntries[index].itemId);
-                if (furnishing == null || furnishing.item == null) return;
-                string hint = AtHall ? "Click: set it down  ·  Right-click: to the Pack" : "Right-click: to the Pack (Shift: all of them)";
-                GearUIController.Instance.ShowItemTooltip(cell, furnishing.item, new ItemStack(furnishing.itemId, 1), hint);
+                ushort id = shownEntries[index].itemId;
+                if (!Describe(crate.Catalog, id, out _, out _, out ItemDefinition item)) return;
+                bool look = crate.Catalog.GetLook(id) != null;
+                string hint = !AtHall ? "Right-click: to the Pack (Shift: all of them)"
+                    : look ? "Click: the Hall wears it  ·  Right-click: to the Pack"
+                    : "Click: set it down  ·  Right-click: to the Pack  ·  Middle-click: favourite";
+                GearUIController.Instance.ShowItemTooltip(cell, item, new ItemStack(id, 1), hint);
             });
             cell.RegisterCallback<PointerLeaveEvent>(_ => GearUIController.Instance?.HideItemTooltip());
             cell.RegisterCallback<PointerDownEvent>(evt =>
@@ -788,9 +706,75 @@ namespace KryticalNova.UI
                 if (index >= shownEntries.Count || crate == null) return;
                 CrateEntry entry = shownEntries[index];
                 if (evt.button == RightButton) crate.RequestWithdraw(entry.itemId, evt.shiftKey ? entry.count : 1);
-                else if (evt.button == LeftButton) CarryNew(crate.Catalog.Get(entry.itemId));
+                else if (evt.button == MiddleButton) ToggleFavourite(entry.itemId);
+                else if (evt.button == LeftButton) Use(entry.itemId);
             });
             return cell;
+        }
+
+        // A click on what the Crate holds: a furnishing is taken in hand, a Facade or a Finish is worn by the Hall.
+        private void Use(ushort itemId)
+        {
+            HallLookDefinition look = crate.Catalog != null ? crate.Catalog.GetLook(itemId) : null;
+            if (look == null)
+            {
+                CarryNew(crate.Catalog != null ? crate.Catalog.Get(itemId) : null);
+                return;
+            }
+            if (!AtHall) { Notify("A Hall's looks are changed at the Hall."); return; }
+            GearUIController.Instance?.HideItemTooltip();
+            authority.SubmitLook(look.slot, itemId);
+        }
+
+        private void PutAllAway()
+        {
+            if (!AtHall) return;
+            List<PlacedPiece> pieces = Pieces;
+            if (pieces.Count == 0) { Notify("Nothing stands here."); return; }
+            if (Time.unscaledTime > awayArmedUntil)
+            {
+                // Asked twice: it is one press from an empty lawn.
+                awayArmedUntil = Time.unscaledTime + AwayConfirmSeconds;
+                awayButton.text = "PRESS AGAIN: ALL OF IT";
+                return;
+            }
+            awayArmedUntil = 0f;
+            awayButton.text = "PUT ALL AWAY";
+            DropEverything();
+            var ops = new List<HomeOp>(pieces.Count);
+            foreach (PlacedPiece piece in pieces)
+                if (piece.p == 0) ops.Add(HomeOp.Remove(piece.u)); // what stands on it goes with it
+            Ask(PendingKind.Edit, ops);
+        }
+
+        // ------------------------------------------------------------------ favourites and the last used
+
+        // A player's own marks, kept with their other interface settings on this machine.
+        private void LoadFavourites()
+        {
+            favourites.Clear();
+            recents.Clear();
+            favouritesKey = null;
+            if (housing == null) return;
+            var identity = housing.GetComponent<PlayerIdentity>();
+            favouritesKey = FavouritesKeyPrefix + (identity != null && !string.IsNullOrEmpty(identity.CharacterId) ? identity.CharacterId : "offline");
+            foreach (string part in PlayerPrefs.GetString(favouritesKey, string.Empty).Split(','))
+                if (ushort.TryParse(part, out ushort id) && id != 0) favourites.Add(id);
+        }
+
+        private void ToggleFavourite(ushort itemId)
+        {
+            if (favouritesKey == null) return;
+            if (!favourites.Remove(itemId)) favourites.Add(itemId);
+            PlayerPrefs.SetString(favouritesKey, string.Join(",", favourites));
+            Refresh();
+        }
+
+        private void Remember(ushort itemId)
+        {
+            recents.Remove(itemId);
+            recents.Insert(0, itemId);
+            if (recents.Count > MostRecent) recents.RemoveAt(recents.Count - 1);
         }
 
         private void SetStatus(string text)
@@ -816,15 +800,9 @@ namespace KryticalNova.UI
             PlayerInventory pack = PlayerInventory.Local;
             if (!from.IsBag || pack == null || crate == null || crate.Catalog == null) return false;
             ItemStack stack = pack.Get(from.index);
-            if (stack.IsEmpty || !crate.Catalog.IsFurnishing(stack.itemId)) return false; // not ours: the Pack does what it would have
+            if (stack.IsEmpty || !crate.Catalog.HeldInCrate(stack.itemId)) return false; // not ours: the Pack does what it would have
             crate.RequestStore(from.index, stack.count);
             return true;
-        }
-
-        private sealed class HitDistance : IComparer<RaycastHit>
-        {
-            public static readonly HitDistance Instance = new HitDistance();
-            public int Compare(RaycastHit a, RaycastHit b) => a.distance.CompareTo(b.distance);
         }
     }
 }

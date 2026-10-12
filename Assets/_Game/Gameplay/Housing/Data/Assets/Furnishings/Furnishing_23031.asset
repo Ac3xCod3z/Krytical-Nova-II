@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d844ec48ee538014bb855d42d152601b, type: 3}
+  m_Name: Furnishing_23031
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.FurnishingDefinition
+  item: {fileID: 11400000, guid: 59f206904a27e994cb330ec6da33c82c, type: 2}
+  itemId: 23031
+  faction: 2
+  mount: 0
+  place: 0
+  category: Storage
+  source: 0
+  prefab: {fileID: 5995187935144783874, guid: 0d4fb2d818837d841b82ce1d9f11472b, type: 3}
+  kind: barrel
+  modelScale: 1
+  modelEuler: {x: 0, y: 0, z: 0}
+  boundsCenter: {x: 0.00011754036, y: 0.48186967, z: -0.00029551983}
+  boundsSize: {x: 0.73390174, y: 0.9515158, z: 0.71294564}
+  hasTop: 1
+  castsShadow: 1
+  lights: 0
+  lightOffset: {x: 0.00011754036, y: 0.7673244, z: -0.00029551983}
+  blocks: 1
+  solidCenter: {x: 0.00011754036, y: 0.48186967, z: -0.00029551983}
+  solidSize: {x: 0.73390174, y: 0.9515158, z: 0.71294564}
+  budgetCost: 2
