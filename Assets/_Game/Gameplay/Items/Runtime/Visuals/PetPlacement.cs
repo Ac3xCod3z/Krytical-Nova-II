@@ -59,6 +59,41 @@ namespace KryticalNova.Items.Visuals
         }
 
         /// <summary>
+        /// The box of a model as it is posed now, from where its skin actually is: for a model whose stored bounds
+        /// cover more than its body (the Drone Core at 100 %, whose bounds take in the swarm it can fly apart
+        /// into). Slower than <see cref="TryMeasure"/>: every vertex is read once.
+        /// </summary>
+        public static bool TryMeasurePosed(GameObject model, out Bounds bounds)
+        {
+            bounds = default;
+            if (model == null) return false;
+            bool any = false;
+            Matrix4x4 toRoot = model.transform.worldToLocalMatrix;
+            var baked = new Mesh();
+            var points = new System.Collections.Generic.List<Vector3>();
+            foreach (var skinned in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (skinned.sharedMesh == null) continue;
+                skinned.BakeMesh(baked, true);
+                baked.GetVertices(points);
+                Matrix4x4 toModel = toRoot * skinned.transform.localToWorldMatrix;
+                foreach (Vector3 vertex in points)
+                {
+                    Vector3 point = toModel.MultiplyPoint3x4(vertex);
+                    if (any) bounds.Encapsulate(point);
+                    else
+                    {
+                        bounds = new Bounds(point, Vector3.zero);
+                        any = true;
+                    }
+                }
+            }
+            if (Application.isPlaying) Object.Destroy(baked);
+            else Object.DestroyImmediate(baked);
+            return any || TryMeasure(model, out bounds);
+        }
+
+        /// <summary>
         /// Where the pet's pivot belongs at <paramref name="scale"/>, in the owner's frame (x right, y up, z forward),
         /// given the point it was authored to hover at with <paramref name="baseScale"/>. Its nearest point is put
         /// <paramref name="clearDistance"/> from the owner's centre line, on the side the authored point is on; a

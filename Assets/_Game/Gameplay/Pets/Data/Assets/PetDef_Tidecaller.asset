@@ -65,6 +65,8 @@ MonoBehaviour:
     - 0.2
     - 0.6571429
     during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
     bones: []
     anchor: 1
@@ -78,6 +80,8 @@ MonoBehaviour:
     - 0.42666668
     - 0.6666667
     during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   - prefab: {fileID: 1287036619844270357, guid: efae6e49676913044af8d9d218c49891, type: 3}
     bones: []
     anchor: 1
@@ -88,6 +92,8 @@ MonoBehaviour:
     animation: Move
     at: []
     during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   - prefab: {fileID: 3795252552468512517, guid: edc5f4204c973c3409320e8ab26a7346, type: 3}
     bones: []
     anchor: 2
@@ -98,6 +104,8 @@ MonoBehaviour:
     animation: WobbleNap
     at: []
     during: {x: 0.13422818, y: 0.70469797}
+    endsWithAnimation: 0
+    alongBone: 0
   - prefab: {fileID: 8822475102854033442, guid: e57dcc2149c19c64d806b7e9a061e89e, type: 3}
     bones: []
     anchor: 1
@@ -109,6 +117,8 @@ MonoBehaviour:
     at:
     - 0.22105263
     during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   - prefab: {fileID: 8822475102854033442, guid: e57dcc2149c19c64d806b7e9a061e89e, type: 3}
     bones: []
     anchor: 1
@@ -120,6 +130,8 @@ MonoBehaviour:
     at:
     - 0.3821138
     during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   - prefab: {fileID: 8106798915853788611, guid: 33de14b1632b5a341b0dcecf77566f8c, type: 3}
     bones: []
     anchor: 0
@@ -130,6 +142,8 @@ MonoBehaviour:
     animation: Move
     at: []
     during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   - prefab: {fileID: 9063877641883896414, guid: d785ed1728cea014ba95faa9bd4ae7e1, type: 3}
     bones: []
     anchor: 0
@@ -140,6 +154,8 @@ MonoBehaviour:
     animation: SwimFlip
     at: []
     during: {x: 0.2020202, y: 0.7070707}
+    endsWithAnimation: 0
+    alongBone: 0
   - prefab: {fileID: 3581474576641248158, guid: 6fd9618941d2ef04a8208491982684f1, type: 3}
     bones:
     - body
@@ -152,10 +168,15 @@ MonoBehaviour:
     at:
     - 0.26506025
     during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   moveLoop: Move
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
   restLoop: 
   chargeAnimation: Ram
   chargeBone: body
+  restPose: 
+  followOns: []
+  lines: []
   followGapAdjust: 0

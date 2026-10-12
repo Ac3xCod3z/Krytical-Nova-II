@@ -20,26 +20,31 @@ MonoBehaviour:
   stages:
   - name: 
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1
     glow: {r: 0.83137256, g: 0.6862745, b: 0.21568628, a: 1}
     glowStrength: 0
   - name: 
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1.08
     glow: {r: 0.83137256, g: 0.6862745, b: 0.21568628, a: 1}
     glowStrength: 0.3
   - name: 
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1.16
     glow: {r: 0.83137256, g: 0.6862745, b: 0.21568628, a: 1}
     glowStrength: 0.5
   - name: 
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1.24
     glow: {r: 0.83137256, g: 0.6862745, b: 0.21568628, a: 1}
     glowStrength: 0.75
   - name: Ascendant
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1.35
     glow: {r: 0.18039216, g: 0.5254902, b: 0.67058825, a: 1}
     glowStrength: 1
@@ -61,10 +66,15 @@ MonoBehaviour:
     animation: 
     at: []
     during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   moveLoop: Move
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
   restLoop: Fly
   chargeAnimation: 
   chargeBone: 
+  restPose: 
+  followOns: []
+  lines: []
   followGapAdjust: 0

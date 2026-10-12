@@ -48,13 +48,28 @@ namespace KryticalNova.GameFeel
         {
             Instance = this;
             PetChatterMoments.Raised += Notify;
+            PetFollower.Spoke += OnSpoke;
         }
 
         private void OnDisable()
         {
             PetChatterMoments.Raised -= Notify;
+            PetFollower.Spoke -= OnSpoke;
             Bind(null);
             if (Instance == this) Instance = null;
+        }
+
+        /// <summary>
+        /// A pet has come to a line of one of its animations (the Drone Core's "Ka... Me... Ha!"). Any pet in sight,
+        /// not only the local player's: the bubble is part of the animation.
+        /// </summary>
+        private void OnSpoke(PetFollower from, string line)
+        {
+            PetBubbleController bubbles = PetBubbleController.Instance;
+            Transform petBody = from != null ? from.PetTransform : null;
+            if (bubbles == null || petBody == null || settings == null || string.IsNullOrEmpty(line)) return;
+            Bounds? box = from.TryGetBodyBox(out Bounds own) ? own : (Bounds?)null;
+            bubbles.Say(petBody, from.transform.root, line, null, settings.BubbleSeconds(line), box);
         }
 
         /// <summary>The local player has just had this moment. When several come in one frame the most important is kept.</summary>

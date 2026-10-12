@@ -116,6 +116,60 @@ namespace KryticalNova.Pets.Tests
             }
         }
 
+        // The Drone Core grows through four models of its own. Each has every animation of the one before and more;
+        // an effect that belongs to an animation is only worn by the forms whose Animator has that animation, and one
+        // that looks down the cannon only by the forms that have the bone. The last form's file holds it flown apart,
+        // so the pet names the pose it rests in, and its swarm is three animations that follow one another.
+        [Test]
+        public void The_grown_Drone_Cores_are_four_models_whose_effects_fit_their_animations()
+        {
+            PetDefinition drone = null;
+            foreach (PetDefinition pet in All())
+                if (pet.displayName == "Drone Core") drone = pet;
+            Assert.IsNotNull(drone);
+            var models = new HashSet<GameObject>();
+            for (int stage = 1; stage <= PetRules.LastStage; stage++)
+            {
+                Assert.IsNotNull(drone.Stage(stage).model, $"stage {stage} has a model of its own");
+                models.Add(drone.Stage(stage).model);
+                Assert.Greater(drone.Stage(stage).scale, drone.Stage(stage - 1).scale, $"stage {stage} is larger than the one before");
+            }
+            Assert.AreEqual(4, models.Count, "a different model at each stage");
+
+            foreach (PetEffect effect in drone.effects)
+            {
+                Assert.IsNotNull(effect.prefab, $"an effect on '{effect.animation}' has its prefab");
+                for (int stage = effect.stages.x; stage <= effect.stages.y; stage++)
+                {
+                    GameObject model = drone.Stage(stage).model;
+                    if (model == null) continue; // the base form: the item's own model
+                    if (!string.IsNullOrEmpty(effect.animation)) Assert.IsTrue(HasState(model, effect.animation), $"{model.name} has the animation '{effect.animation}' that {effect.prefab.name} belongs to");
+                    if (!effect.alongBone) continue;
+                    bool hasBone = false;
+                    foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
+                        foreach (string wanted in effect.bones) hasBone |= bone.name == wanted;
+                    Assert.IsTrue(hasBone, $"{model.name} has the bone {effect.prefab.name} looks down");
+                }
+            }
+
+            GameObject last = drone.Stage(PetRules.LastStage).model;
+            Assert.IsTrue(HasState(last, drone.restPose), "the pose it rests in is one of the last form's animations");
+            Assert.AreEqual(2, drone.followOns.Length);
+            foreach (PetFollowOn each in drone.followOns)
+                Assert.IsTrue(HasState(last, each.animation) && HasState(last, each.then), $"{each.animation} then {each.then}");
+            Assert.AreEqual(5, drone.lines.Length, "Ka, Me, Ha, just kidding, Die");
+            foreach (PetLine line in drone.lines) Assert.IsTrue(HasState(last, line.animation), line.text);
+        }
+
+        private static bool HasState(GameObject model, string animation)
+        {
+            var animator = model.GetComponentInChildren<Animator>(true);
+            if (animator == null || animator.runtimeAnimatorController == null) return false;
+            foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
+                if (clip != null && (clip.name == animation || clip.name.EndsWith("|" + animation))) return true;
+            return false;
+        }
+
         // From 25 % the Tidecaller is a swimmer, another creature at each stage, with effects that are not the egg's:
         // the same wave on its tide call, water streaming past while it swims, water dragged round its somersault,
         // and a bump where its ram lands. It also names the charge that turns it on its owner.

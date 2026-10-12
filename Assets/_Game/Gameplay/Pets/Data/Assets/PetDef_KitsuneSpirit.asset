@@ -20,26 +20,31 @@ MonoBehaviour:
   stages:
   - name: One Tail
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0
   - name: Three Tails
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1.08
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.3
   - name: Five Tails
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1.16
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.5
   - name: Seven Tails
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1.24
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.75
   - name: Nine Tails
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1.35
     glow: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
     glowStrength: 1
@@ -58,4 +63,7 @@ MonoBehaviour:
   restLoop: 
   chargeAnimation: 
   chargeBone: 
+  restPose: 
+  followOns: []
+  lines: []
   followGapAdjust: 0

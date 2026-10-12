@@ -20,27 +20,32 @@ MonoBehaviour:
   stages:
   - name: 
     model: {fileID: 0}
+    icon: {fileID: 0}
     scale: 1
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 0
   - name: 
-    model: {fileID: 0}
-    scale: 1.08
+    model: {fileID: 2833523302994752292, guid: 59cb63c5d4dc47649a751b3c3a0a0164, type: 3}
+    icon: {fileID: 0}
+    scale: 1.1313131
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 0.3
   - name: 
-    model: {fileID: 0}
-    scale: 1.16
+    model: {fileID: 4965629365694552753, guid: 447149d9f0d445abbb7846bde4403af4, type: 3}
+    icon: {fileID: 0}
+    scale: 1.8989899
     glow: {r: 0.9490196, g: 0.7607843, b: 0.1882353, a: 1}
     glowStrength: 0.5
   - name: 
-    model: {fileID: 0}
-    scale: 1.24
+    model: {fileID: 1956028097219735418, guid: 1d7bcc14782742f48fc6971f409c1f87, type: 3}
+    icon: {fileID: 0}
+    scale: 2.141414
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 0.75
   - name: Gunship
-    model: {fileID: 0}
-    scale: 1.35
+    model: {fileID: 8843660432523149750, guid: a42f0e7964df4e68ae869a0795378127, type: 3}
+    icon: {fileID: 0}
+    scale: 2.5454545
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 1
   chatter: {fileID: 11400000, guid: 723124e015ae46e4c8609d00697651b4, type: 2}
@@ -59,10 +64,408 @@ MonoBehaviour:
     animation: 
     at: []
     during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 6438689351087496931, guid: b5e82b8e092b6dd4aafedbdc89e53872, type: 3}
+    bones:
+    - flash
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 1, y: 4}
+    animation: BarrelTurn
+    at:
+    - 0.425
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 1856831320927881553, guid: 6c87d082a05f8e244861f864cf9aa222, type: 3}
+    bones:
+    - lens
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 0, y: 4}
+    animation: EyeLook
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 1
+    alongBone: 0
+  - prefab: {fileID: 566126850682844114, guid: 1175f6878c965614988fec9ea49ddf54, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 0, y: 4}
+    animation: AxisSpin
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 1
+    alongBone: 0
+  - prefab: {fileID: 566126850682844114, guid: 1175f6878c965614988fec9ea49ddf54, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 0, y: 4}
+    animation: AxisSpinDiagonal
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 1
+    alongBone: 0
+  - prefab: {fileID: 6984245081855451938, guid: 8034a12c7f3c0d14eb345cd912f5f782, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.25
+    stages: {x: 0, y: 4}
+    animation: Mad
+    at: []
+    during: {x: 0.15, y: 0.85}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 7192229318050473886, guid: 51480e35def537843b87f6a25286e2a7, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Disassemble
+    at:
+    - 0.22727273
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 7192229318050473886, guid: 51480e35def537843b87f6a25286e2a7, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Assemble
+    at:
+    - 0.7826087
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 7953355054499191895, guid: 67dcde3ba64d6cf4e8aa6e33e85c310c, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 4, y: 4}
+    animation: Disassemble
+    at: []
+    during: {x: 0.22727273, y: 1}
+    endsWithAnimation: 1
+    alongBone: 0
+  - prefab: {fileID: 7953355054499191895, guid: 67dcde3ba64d6cf4e8aa6e33e85c310c, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 4, y: 4}
+    animation: SwarmHover
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 1
+    alongBone: 0
+  - prefab: {fileID: 7953355054499191895, guid: 67dcde3ba64d6cf4e8aa6e33e85c310c, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 4, y: 4}
+    animation: Assemble
+    at: []
+    during: {x: 0.001, y: 0.7826087}
+    endsWithAnimation: 1
+    alongBone: 0
+  - prefab: {fileID: 3191881434483483998, guid: 09573a165e39b314193cf7d55f84197e, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.35
+    stages: {x: 4, y: 4}
+    animation: Assemble
+    at:
+    - 0.84782606
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5498819225520917107, guid: bb9bc30276c543e4eb3f329111ae256c, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.137}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 2, y: 2}
+    animation: CannonFire
+    at:
+    - 0.2
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+  - prefab: {fileID: 4324674158713960591, guid: 662af8de4bf05f6469ead025d5ef9c88, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: MinigunFire
+    at: []
+    during: {x: 0.001, y: 0.9}
+    endsWithAnimation: 1
+    alongBone: 1
+  - prefab: {fileID: 7547308714770775956, guid: b7bba1c417cee1546ab8d491b438bd8f, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.137}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 2, y: 2}
+    animation: MinigunFire
+    at: []
+    during: {x: 0.175, y: 0.75}
+    endsWithAnimation: 1
+    alongBone: 1
+  - prefab: {fileID: 2301997120641234907, guid: 4101cc3874480c848aa3badcfb625af1, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.0274}
+    stageColour: 0
+    size: 0.7
+    stages: {x: 2, y: 2}
+    animation: MinigunFire
+    at: []
+    during: {x: 0.175, y: 0.75}
+    endsWithAnimation: 0
+    alongBone: 1
+  - prefab: {fileID: 5498819225520917107, guid: bb9bc30276c543e4eb3f329111ae256c, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.17}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 3, y: 3}
+    animation: CannonFire
+    at:
+    - 0.2
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+  - prefab: {fileID: 4324674158713960591, guid: 662af8de4bf05f6469ead025d5ef9c88, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: MinigunFire
+    at: []
+    during: {x: 0.001, y: 0.9}
+    endsWithAnimation: 1
+    alongBone: 1
+  - prefab: {fileID: 7547308714770775956, guid: b7bba1c417cee1546ab8d491b438bd8f, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.17}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 3, y: 3}
+    animation: MinigunFire
+    at: []
+    during: {x: 0.175, y: 0.75}
+    endsWithAnimation: 1
+    alongBone: 1
+  - prefab: {fileID: 2301997120641234907, guid: 4101cc3874480c848aa3badcfb625af1, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.034}
+    stageColour: 0
+    size: 0.7
+    stages: {x: 3, y: 3}
+    animation: MinigunFire
+    at: []
+    during: {x: 0.175, y: 0.75}
+    endsWithAnimation: 0
+    alongBone: 1
+  - prefab: {fileID: 4285462041405197998, guid: 8079f88cafc9294448eb161f4d33f2ab, type: 3}
+    bones:
+    - pod.L
+    - pod.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.33}
+    stageColour: 0
+    size: 0.45
+    stages: {x: 3, y: 3}
+    animation: CannonFire
+    at:
+    - 0.2
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+  - prefab: {fileID: 8481305170766986572, guid: c6d5569c15c020440a66ba78518d12f9, type: 3}
+    bones:
+    - pod.L
+    - pod.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 2.27922}
+    stageColour: 0
+    size: 0.2
+    stages: {x: 3, y: 3}
+    animation: CannonFire
+    at:
+    - 0.33333334
+    - 0.6333333
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+  - prefab: {fileID: 5498819225520917107, guid: bb9bc30276c543e4eb3f329111ae256c, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.178}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 4, y: 4}
+    animation: CannonFire
+    at:
+    - 0.2
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+  - prefab: {fileID: 4324674158713960591, guid: 662af8de4bf05f6469ead025d5ef9c88, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: SpinShots
+    at: []
+    during: {x: 0.001, y: 0.7912088}
+    endsWithAnimation: 1
+    alongBone: 1
+  - prefab: {fileID: 3283586523542785387, guid: 9def26ff0306e5745aebd7544cc23481, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.178}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 4, y: 4}
+    animation: SpinShots
+    at:
+    - 0.2857143
+    - 0.35164836
+    - 0.41758242
+    - 0.48351648
+    - 0.5494506
+    - 0.61538464
+    - 0.6813187
+    - 0.74725276
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+  - prefab: {fileID: 3252400771738598800, guid: 19feaaa255613024c9be1f2b49291245, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.178}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 4, y: 4}
+    animation: FakeoutBlast
+    at: []
+    during: {x: 0.001, y: 0.22307692}
+    endsWithAnimation: 1
+    alongBone: 1
+  - prefab: {fileID: 5062491663581170048, guid: 5800629ce35345346b8e25d59ddd52c5, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.178}
+    stageColour: 0
+    size: 0.2
+    stages: {x: 4, y: 4}
+    animation: FakeoutBlast
+    at:
+    - 0.23846154
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+  - prefab: {fileID: 716236601540882454, guid: 0fb6071ddbeffef4585635d77bfdd753, type: 3}
+    bones:
+    - cannon
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.178}
+    stageColour: 0
+    size: 0.45
+    stages: {x: 4, y: 4}
+    animation: FakeoutBlast
+    at: []
+    during: {x: 0.5538462, y: 0.84615386}
+    endsWithAnimation: 1
+    alongBone: 1
   moveLoop: FrontRoll
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
   restLoop: 
   chargeAnimation: 
   chargeBone: 
+  restPose: EyeLook
+  followOns:
+  - animation: Disassemble
+    times: 1
+    then: SwarmHover
+  - animation: SwarmHover
+    times: 2
+    then: Assemble
+  lines:
+  - animation: FakeoutBlast
+    at: 0.0076923077
+    text: Ka...
+    stages: {x: 4, y: 4}
+  - animation: FakeoutBlast
+    at: 0.1
+    text: Me...
+    stages: {x: 4, y: 4}
+  - animation: FakeoutBlast
+    at: 0.20769231
+    text: Ha!
+    stages: {x: 4, y: 4}
+  - animation: FakeoutBlast
+    at: 0.34615386
+    text: ...just kidding
+    stages: {x: 4, y: 4}
+  - animation: FakeoutBlast
+    at: 0.5
+    text: Die!
+    stages: {x: 4, y: 4}
   followGapAdjust: 0

@@ -230,8 +230,11 @@ namespace KryticalNova.Pets
                             maxTrail = Settings.followMaxTrail,
                         };
                     }
+                    follower.SetRestPose(pet.restPose);
+                    follower.SetFollowOns(FollowOnsOf(pet));
                     follower.SetStageLook(look.model, look.scale, glow, spacing);
                 }
+                follower.SetLines(LinesOf(pet, Stage));
                 follower.SetAnimationCycle(pet != null && Settings != null ? Settings.animationCycleSeconds : 0f);
                 if (pet != null && Settings != null) follower.SetGaitSpeeds(Settings.walkFromOwnerSpeed, Settings.runFromOwnerSpeed, Settings.runToWalkOwnerSpeed);
                 else follower.SetGaitSpeeds(0f, 0f, 0f);
@@ -264,10 +267,31 @@ namespace KryticalNova.Pets
             {
                 if (effect == null || stage < effect.stages.x || stage > effect.stages.y) continue;
                 effects.Add(new PetFollower.WornEffect(effect.prefab, effect.bones, effect.stageColour, (PetFollower.EffectPlace)(int)effect.anchor,
-                    effect.offset, effect.animation, effect.at, effect.during, effect.size));
+                    effect.offset, effect.animation, effect.at, effect.during, effect.size, effect.alongBone, effect.endsWithAnimation));
             }
             PetFollower.WornEffect[] list = effects.Count > 0 ? effects.ToArray() : null;
             effectLists[(pet, stage)] = list;
+            return list;
+        }
+
+        /// <summary>What a pet says in its animations at a growth stage, as the follower takes it, or null.</summary>
+        private static PetFollower.SpokenLine[] LinesOf(PetDefinition pet, int stage)
+        {
+            if (pet == null || pet.lines == null || pet.lines.Length == 0) return null;
+            var spoken = new List<PetFollower.SpokenLine>(pet.lines.Length);
+            foreach (PetLine line in pet.lines)
+                if (line != null && stage >= line.stages.x && stage <= line.stages.y && !string.IsNullOrEmpty(line.text))
+                    spoken.Add(new PetFollower.SpokenLine(line.animation, line.at, line.text));
+            return spoken.Count > 0 ? spoken.ToArray() : null;
+        }
+
+        /// <summary>The animations of a pet that are followed by another, as the follower takes them, or null.</summary>
+        private static PetAnimations.FollowOn[] FollowOnsOf(PetDefinition pet)
+        {
+            if (pet == null || pet.followOns == null || pet.followOns.Length == 0) return null;
+            var list = new PetAnimations.FollowOn[pet.followOns.Length];
+            for (int i = 0; i < list.Length; i++)
+                list[i] = new PetAnimations.FollowOn(pet.followOns[i].animation, pet.followOns[i].then, pet.followOns[i].times);
             return list;
         }
 

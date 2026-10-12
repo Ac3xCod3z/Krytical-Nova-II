@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Tidecaller
   description: A pocket-sized kaiju that never outgrows its owner's shoulder. It grows your Defense as it matures.
   icon: {fileID: 21300000, guid: c12a4cacc6617b64a8ab25fce73e210a, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 8
   maxStack: 1
+  boundFaction: 0
   itemLevel: 0
   lineId: 0
   weaponClass: 0
