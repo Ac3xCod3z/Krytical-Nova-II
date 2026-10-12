@@ -589,7 +589,8 @@ namespace KryticalNova.Items.Visuals
             float footprint = Mathf.Max(unitBounds.size.x, unitBounds.size.z);
             effect.transform.localPosition = home + look.Offset * footprint;
             effect.transform.localRotation = Quaternion.identity;
-            effect.transform.localScale = Vector3.one * (footprint * (look.Size > 0f ? look.Size : 1f));
+            // The effect's own size times the pet's: one made at a size of its own (a comic mark or word) keeps it.
+            effect.transform.localScale = look.Prefab.transform.localScale * (footprint * (look.Size > 0f ? look.Size : 1f));
             VisualUtility.PrepareCosmetic(effect, gameObject.layer);
             var copy = new Worn
             {

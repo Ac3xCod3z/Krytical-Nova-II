@@ -170,6 +170,201 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+  - prefab: {fileID: 4628599414691996026, guid: 70d8e3c9e8737bb45a4f025aad5d02d5, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 4}
+    animation: ShellSpin
+    at: []
+    during: {x: 0.16, y: 0.57}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 8062145702128548822, guid: 9cb2fea05d291b446bcc9a2d1dcf02fe, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 4}
+    animation: ShellSpin
+    at:
+    - 0.6
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 6780777462006047156, guid: 43f4285851a663d4f963a8f2a864368c, type: 3}
+    bones:
+    - body
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 4}
+    animation: Undertow
+    at: []
+    during: {x: 0.21666667, y: 0.41666666}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 1457917502210401798, guid: cae7961b7f098c140af2d2dbf93d74c9, type: 3}
+    bones:
+    - body
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 3, y: 4}
+    animation: Undertow
+    at: []
+    during: {x: 0.41666666, y: 0.48333332}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 6973374219161968300, guid: e64ee6126672dcf448c8a23ba8c5874d, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 4}
+    animation: Undertow
+    at:
+    - 0.49166667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 8596653687458522326, guid: bf26c9b662af68d4a98ef63d4d2d36e3, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0.5, y: 0.5, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 4}
+    animation: Undertow
+    at:
+    - 0.5083333
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 2236274292231542957, guid: 9c8cdbaaba692004594f907c80afb06b, type: 3}
+    bones:
+    - body
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 4}
+    animation: Undertow
+    at:
+    - 0.6666667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 5627686568184674193, guid: 9d75387ef7557db4697701adc4163d2d, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Maelstrom
+    at: []
+    during: {x: 0.26086956, y: 0.5072464}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 2493645151985093291, guid: 83cc856378c95ce448ac658e9228a753, type: 3}
+    bones:
+    - body
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.1
+    stages: {x: 4, y: 4}
+    animation: Maelstrom
+    at: []
+    during: {x: 0.4347826, y: 0.5507246}
+    endsWithAnimation: 1
+    alongBone: 0
+  - prefab: {fileID: 8822475102854033442, guid: e57dcc2149c19c64d806b7e9a061e89e, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Maelstrom
+    at:
+    - 0.3188406
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 7007473934122469452, guid: 7ab067725b96d3243ac8008a730fcb66, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.5}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Maelstrom
+    at:
+    - 0.5652174
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 3365025046408941287, guid: beb1163c936df764d84492c900c67576, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.5}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Maelstrom
+    at:
+    - 0.5652174
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 8499741059681131526, guid: 50e3c12703064064aa34b40fc58ee401, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0.6, z: 0.4}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Maelstrom
+    at:
+    - 0.57246375
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 4883250553673875953, guid: acef44b0e41b4584da76d3cbc7487082, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 1}
+    stageColour: 0
+    size: 0.25
+    stages: {x: 4, y: 4}
+    animation: Maelstrom
+    at:
+    - 0.5652174
+    - 0.5869565
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+  - prefab: {fileID: 2236274292231542957, guid: 9c8cdbaaba692004594f907c80afb06b, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Maelstrom
+    at:
+    - 0.6086956
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
   moveLoop: Move
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5

@@ -105,6 +105,51 @@ namespace KryticalNova.EditorTools
         private static readonly Vector2Int Gunship = new Vector2Int(PetRules.LastStage, PetRules.LastStage);
 
         /// <summary>
+        /// The Kitsune Spirit's effects, which are spirit fire off its tail tips. Its first form has one tail (the
+        /// tip is the bone DEF-spine) and the clips Blink, LookAround, PawLift and TailCurl; from 25 % it has two
+        /// (DEF-tail_4.L and .R) and Shake, Guard and Pounce instead. Both idle, walk, run and chase their tails.
+        /// </summary>
+        private static Fx[] KitsuneEffects()
+        {
+            var first = new Vector2Int(0, 0);
+            var later = new Vector2Int(1, PetRules.LastStage);
+            var tip = new[] { "DEF-spine" };
+            var tips = new[] { "DEF-tail_4.L", "DEF-tail_4.R" };
+            var list = new List<Fx>();
+            foreach ((Vector2Int stages, string[] tail) in new[] { (first, tip), (later, tips) })
+            {
+                // At rest: a mote off each tail tip now and then.
+                list.Add(new Fx { Effect = GameFeelBuilder.SpiritMotesPath, Bones = tail, Animation = "Idle", Stages = stages });
+                // Running: a ribbon of fire off each tip.
+                list.Add(new Fx { Effect = GameFeelBuilder.SpiritTrailPath, Bones = tail, Animation = "Run", Stages = stages });
+                // SpinChase (52 frames): pushes off on 13, the tip draws its ring from 11 to 40, where the ring closes.
+                list.Add(new Fx { Effect = GameFeelBuilder.PetHopDustPath, Anchor = PetEffectAnchor.Feet, Animation = "SpinChase", At = Frames(52, 13), Stages = stages, Size = 0.5f });
+                list.Add(new Fx { Effect = GameFeelBuilder.SpiritTrailPath, Bones = tail, Animation = "SpinChase", During = new Vector2(11f / 52f, 40f / 52f), Stages = stages });
+                list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { tail[0] }, Animation = "SpinChase", At = Frames(52, 40), Stages = stages });
+            }
+            // The first form: a glint under the paw it holds up (10 to 20 of 36), a ring where its tail curls (10 of
+            // 32), and a glint at its ear each way it looks (14 and 38 of 60).
+            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-front_toe.L" }, Animation = "PawLift", At = Frames(36, 10), Stages = first });
+            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-spine.001" }, Animation = "TailCurl", At = Frames(32, 10), Stages = first, Size = 1.3f });
+            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-ear.L" }, Animation = "LookAround", At = Frames(60, 14), Stages = first, Size = 0.7f });
+            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = new[] { "DEF-ear.R" }, Animation = "LookAround", At = Frames(60, 38), Stages = first, Size = 0.7f });
+            // From 25 %. Shake (56 frames): sparks fly off its neck and back from 12 to 38.
+            list.Add(new Fx { Effect = GameFeelBuilder.SpiritSprayPath, Bones = new[] { "DEF-spine.006", "DEF-spine.010" }, Animation = "Shake", During = new Vector2(12f / 56f, 38f / 56f), Stages = later });
+            // Guard (72 frames): the ward rises as the tails curl (5 to 16), holds to 54, drops by 68; the tips
+            // flare as they stop over its back (16) and arcs jump about them while it holds.
+            list.Add(new Fx { Effect = GameFeelBuilder.SpiritWardPath, Animation = "Guard", At = Frames(72, 5), Stages = later, Ends = true });
+            list.Add(new Fx { Effect = GameFeelBuilder.SpiritGlintPath, Bones = tips, Animation = "Guard", At = Frames(72, 16), Stages = later });
+            list.Add(new Fx { Effect = GameFeelBuilder.SpiritArcsPath, Bones = new[] { "DEF-tail_4.L" }, Animation = "Guard", During = new Vector2(16f / 72f, 54f / 72f), Stages = later, Size = 0.045f, Ends = true });
+            // Pounce (56 frames): springs on 20, in the air 21 to 32, front paws land on 32 and hind paws on 36.
+            list.Add(new Fx { Effect = GameFeelBuilder.PetHopDustPath, Anchor = PetEffectAnchor.Feet, Offset = new Vector3(0f, 0f, -0.2f), Animation = "Pounce", At = Frames(56, 20, 36), Stages = later, Size = 0.5f });
+            list.Add(new Fx { Effect = GameFeelBuilder.SpiritTrailPath, Bones = tips, Animation = "Pounce", During = new Vector2(21f / 56f, 34f / 56f), Stages = later });
+            // The strike itself is comic: a Cartoon FX impact where the front paws land, and the word over it.
+            list.Add(new Fx { Effect = GameFeelBuilder.PetPounceMarkPath, Anchor = PetEffectAnchor.Feet, Offset = new Vector3(0f, 0.08f, 0.3f), Animation = "Pounce", At = Frames(56, 32), Stages = later });
+            list.Add(new Fx { Effect = GameFeelBuilder.PetPounceWordPath, Anchor = PetEffectAnchor.Top, Offset = new Vector3(0f, 0.35f, 0.2f), Animation = "Pounce", At = Frames(56, 32), Stages = later });
+            return list.ToArray();
+        }
+
+        /// <summary>
         /// The Drone Core's effects. Its data chips at every stage; the camera flash, the scan, the blur of a spin and
         /// the steam of a temper for the forms that have those animations; and from 50 % what its cannon does, each
         /// at the muzzle of that form's own barrel (the cannon bone's length: 0.137, 0.170 and 0.178 m).
@@ -269,6 +314,30 @@ namespace KryticalNova.EditorTools
                     // The ram lands on frame 22 of 83: a comic bump where its nose meets its owner.
                     new Fx { Effect = GameFeelBuilder.PetRamBumpPath, Bones = new[] { "body" }, Offset = new Vector3(0f, 0.1f, 0.5f),
                         Animation = "Ram", At = Frames(83, 22), Stages = Swimmers, Size = 0.55f }, // a little bump, even on the largest
+
+                    // The three animations the later swimmers gained (12 Oct 2026), made of the same water: the
+                    // flow's ribbons, the wave's shards, and the tide call's own wave. ShellSpin from 50 %, Undertow
+                    // from 75 %, Maelstrom at 100 %.
+                    // ShellSpin (100 frames): it lets go on 16, spins to 58, throws its fins out on 60.
+                    new Fx { Effect = GameFeelBuilder.TideTornadoPath, Anchor = PetEffectAnchor.Feet, Animation = "ShellSpin", During = new Vector2(16f / 100f, 57f / 100f), Stages = new Vector2Int(2, PetRules.LastStage) },
+                    new Fx { Effect = GameFeelBuilder.TideFlingPath, Animation = "ShellSpin", At = Frames(100, 60), Stages = new Vector2Int(2, PetRules.LastStage) },
+                    // Undertow (120 frames): corkscrews down 26 to 50, hangs to 58, the great stroke on 59, brakes on 80.
+                    new Fx { Effect = GameFeelBuilder.TideFunnelPath, Bones = new[] { "body" }, Animation = "Undertow", During = new Vector2(26f / 120f, 50f / 120f), Stages = new Vector2Int(3, PetRules.LastStage) },
+                    new Fx { Effect = GameFeelBuilder.TideBubblesPath, Bones = new[] { "body" }, Animation = "Undertow", During = new Vector2(50f / 120f, 58f / 120f), Stages = new Vector2Int(3, PetRules.LastStage), Size = 0.3f },
+                    new Fx { Effect = GameFeelBuilder.TideGeyserPath, Anchor = PetEffectAnchor.Feet, Animation = "Undertow", At = Frames(120, 59), Stages = new Vector2Int(3, PetRules.LastStage) },
+                    new Fx { Effect = GameFeelBuilder.PetWhooshWordPath, Anchor = PetEffectAnchor.Top, Offset = new Vector3(0.5f, 0.5f, 0f), Animation = "Undertow", At = Frames(120, 61), Stages = new Vector2Int(3, PetRules.LastStage) },
+                    new Fx { Effect = GameFeelBuilder.TideSprayPath, Bones = new[] { "body" }, Animation = "Undertow", At = Frames(120, 80), Stages = new Vector2Int(3, PetRules.LastStage) },
+                    // Maelstrom (138 frames): gathers 36 to 72, the clap on 78. The wave is the tide call's, which
+                    // breaks 34 frames after it is called: called on 44 and at full size, it breaks on the clap.
+                    new Fx { Effect = GameFeelBuilder.TideGatherPath, Anchor = PetEffectAnchor.Feet, Animation = "Maelstrom", During = new Vector2(36f / 138f, 70f / 138f), Stages = new Vector2Int(4, 4) },
+                    new Fx { Effect = GameFeelBuilder.TideArcsPath, Bones = new[] { "body" }, Animation = "Maelstrom", During = new Vector2(60f / 138f, 76f / 138f), Stages = new Vector2Int(4, 4), Size = 0.1f, Ends = true },
+                    new Fx { Effect = GameFeelBuilder.PetTideWavePath, Anchor = PetEffectAnchor.Feet, Animation = "Maelstrom", At = Frames(138, 44), Stages = new Vector2Int(4, 4) },
+                    new Fx { Effect = GameFeelBuilder.TideShockPath, Offset = new Vector3(0f, 0f, 0.5f), Animation = "Maelstrom", At = Frames(138, 78), Stages = new Vector2Int(4, 4) },
+                    // The clap is comic too: a Cartoon FX ring of puffs round it, and the word over it.
+                    new Fx { Effect = GameFeelBuilder.PetClapMarkPath, Offset = new Vector3(0f, 0f, 0.5f), Animation = "Maelstrom", At = Frames(138, 78), Stages = new Vector2Int(4, 4) },
+                    new Fx { Effect = GameFeelBuilder.PetClapWordPath, Anchor = PetEffectAnchor.Top, Offset = new Vector3(0f, 0.6f, 0.4f), Animation = "Maelstrom", At = Frames(138, 79), Stages = new Vector2Int(4, 4) },
+                    new Fx { Effect = GameFeelBuilder.TideLightningPath, Anchor = PetEffectAnchor.Feet, Offset = new Vector3(0f, 0f, 1f), Animation = "Maelstrom", At = Frames(138, 78, 81), Stages = new Vector2Int(4, 4), Size = 0.25f },
+                    new Fx { Effect = GameFeelBuilder.TideSprayPath, Anchor = PetEffectAnchor.Top, Animation = "Maelstrom", At = Frames(138, 84), Stages = new Vector2Int(4, 4) },
                 },
                 Scale = 0.55f, // an egg is nearly as wide as it is tall: at the common size it was as big as its owner's chest
                 Stat = StatType.DefensePower, Max = 2200f,
@@ -278,7 +347,15 @@ namespace KryticalNova.EditorTools
                 OldAsset = "Pet_DroneBall", OldIcon = "Pet_DroneBall" },
             new Row { Id = 8004, Asset = "Pet_KitsuneSpirit", Name = "Kitsune Spirit", StandIn = "SM_Prop_Drone_Insect_01",
                 Model = PetModels + "/KitsuneSpirit/Pet_KitsuneSpirit_S1.prefab",
+                // From 25 % it is the two-tailed fox. That model stands in for the later stages too until they
+                // have their own, so the fox never goes back to one tail as it grows.
+                StageModels = new[]
+                {
+                    PetModels + "/KitsuneSpirit_25/Pet_KitsuneSpirit_25.prefab", PetModels + "/KitsuneSpirit_25/Pet_KitsuneSpirit_25.prefab",
+                    PetModels + "/KitsuneSpirit_25/Pet_KitsuneSpirit_25.prefab", PetModels + "/KitsuneSpirit_25/Pet_KitsuneSpirit_25.prefab",
+                },
                 Feet = new[] { "DEF-front_toe.L", "DEF-front_toe.R", "DEF-toe.L", "DEF-toe.R" },
+                Effects = KitsuneEffects(),
                 Stat = StatType.AttackPower, Max = 1100f,
                 Description = "A fox spirit wrapped in paper talismans, gaining tails as it grows. It grows your Attack as it matures.",
                 Stages = new[] { "One Tail", "Three Tails", "Five Tails", "Seven Tails", "Nine Tails" },
