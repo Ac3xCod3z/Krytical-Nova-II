@@ -50,6 +50,9 @@ def activate(ob, mode):
     bpy.ops.object.mode_set(mode=mode)
 
 
+OFF_REST = {}        # action -> the first curve found off its rest pose on the first frame (for the warning)
+
+
 def starts_at_rest(action, frame):
     """True when every bone of this baked action is on its rest pose at this frame."""
     try:
@@ -61,8 +64,13 @@ def starts_at_rest(action, frame):
                   for bag in getattr(strip, "channelbags", []) for fc in bag.fcurves]
     for fc in curves:
         path = fc.data_path
-        rest = 1.0 if path.endswith("scale") or (path.endswith("rotation_quaternion") and fc.array_index == 0) else 0.0
-        if abs(fc.evaluate(frame) - rest) > 2e-3:
+        value = fc.evaluate(frame)
+        if path.endswith("rotation_quaternion") and fc.array_index == 0:
+            value = abs(value)          # w = -1 is the same rest as w = 1 (a bone that has been turned once right round)
+        # (a bendy bone's own bbone_scalein / bbone_scaleout rest at 1 as well)
+        rest = 1.0 if "scale" in path.rsplit(".", 1)[-1] or (path.endswith("rotation_quaternion") and fc.array_index == 0) else 0.0
+        if abs(value - rest) > 2e-3:
+            OFF_REST[action.name] = "%s[%d] = %.4f" % (path, fc.array_index, value)
             return False
     return bool(curves)
 
@@ -258,7 +266,7 @@ def main():
             ready.sort(key=lambda item: (not starts_at_rest(item[2], item[1]), item[0]))
             if ready and not starts_at_rest(ready[0][2], ready[0][1]):
                 warnings.append("No animation starts on the rest pose: in Unity the model will rest in the first frame of "
-                                + ready[0][0] + ".")
+                                + ready[0][0] + ". Off rest there: " + "; ".join("%s %s" % kv for kv in list(OFF_REST.items())[:4]))
             for take_name, start, result in ready:
                 strip = exp.animation_data.nla_tracks.new().strips.new(take_name, start, result)
                 strip.name = take_name

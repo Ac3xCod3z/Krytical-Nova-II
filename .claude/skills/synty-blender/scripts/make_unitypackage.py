@@ -152,6 +152,27 @@ def own_material(name, texture_guid=None, colour=None, glow=False, emission_guid
     return t
 
 
+def see_through(text, alpha):
+    """A URP Lit material made Transparent (alpha blended), its base colour's alpha set. Written from what URP saves
+    for such a material; check it in Unity."""
+    for prop in ("_BaseColor", "_Color"):
+        text = re.sub(rf"^(    - {prop}: \{{r: [\d.]+, g: [\d.]+, b: [\d.]+, a: )[\d.]+\}}", rf"\g<1>{alpha:.2f}}}", text, flags=re.M)
+    for key, value in (("_Surface", 1), ("_Blend", 0), ("_SrcBlend", 5), ("_DstBlend", 10), ("_SrcBlendAlpha", 1),
+                       ("_DstBlendAlpha", 10), ("_ZWrite", 0), ("_ZWriteControl", 0)):
+        text = re.sub(rf"^    - {key}: [\d.]+$", f"    - {key}: {value}", text, flags=re.M)
+    text = re.sub(r"^  m_CustomRenderQueue: -?\d+$", "  m_CustomRenderQueue: 3000", text, flags=re.M)
+    if "_SURFACE_TYPE_TRANSPARENT" not in text:
+        if re.search(r"^  m_ValidKeywords: \[\]$", text, flags=re.M):
+            text = re.sub(r"^  m_ValidKeywords: \[\]$", "  m_ValidKeywords:\n  - _SURFACE_TYPE_TRANSPARENT", text, flags=re.M)
+        else:
+            text = re.sub(r"^  m_ValidKeywords:\n", "  m_ValidKeywords:\n  - _SURFACE_TYPE_TRANSPARENT\n", text, count=1, flags=re.M)
+    if re.search(r"^  stringTagMap: \{\}$", text, flags=re.M):
+        text = re.sub(r"^  stringTagMap: \{\}$", "  stringTagMap:\n    RenderType: Transparent", text, flags=re.M)
+    else:
+        text = re.sub(r"^(  stringTagMap:\n    RenderType: )\w+$", r"\g<1>Transparent", text, flags=re.M)
+    return text
+
+
 def material_meta(guid):
     return (f"fileFormatVersion: 2\nguid: {guid}\nNativeFormatImporter:\n  externalObjects: {{}}\n"
             "  mainObjectFileID: 2100000\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n")
@@ -258,9 +279,15 @@ def main():
         remaps, flat = [], 0
         for spec in a.material:
             fbx_name, _, kind = spec.partition("=")
-            if kind == "texture":
-                mat_name = f"M_Pet_{pet}"
+            if kind == "texture" or kind.startswith("texture:"):
+                # "texture:Tails" is a second material with the same maps, M_Pet_<pet>_Tails, so that part of the model
+                # can be set up differently in Unity; "texture:Tails:0.6" also makes it see-through to that much
+                _t, _, rest_ = kind.partition(":")
+                suffix, _, see = rest_.partition(":")
+                mat_name = f"M_Pet_{pet}" + (f"_{suffix}" if suffix else "")
                 text = own_material(mat_name, texture_guid=guid(tex_name), emission_guid=em_guid)
+                if see:
+                    text = see_through(text, float(see))
             else:
                 hexa, _, extra = kind.partition(":")
                 rgb = tuple(int(hexa.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4))
