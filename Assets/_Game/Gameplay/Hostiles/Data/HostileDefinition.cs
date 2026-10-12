@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.Hostiles
@@ -33,6 +34,8 @@ namespace KryticalNova.Hostiles
         public HostileTier tier = HostileTier.Normal;
         [Min(1)] public int level = 1;
         public HostileBehaviour behaviour = HostileBehaviour.FightsBack;
+        [Tooltip("What leaves its body when it dies: several green spirits from a creature, one small one from the mouth of a person (light blue), a robot or a skeleton (reddish).")]
+        public SpiritKind spirit = SpiritKind.Creature;
         [Tooltip("Ticked by the model inventory for anything boss-sized. Such a species is refused by every Hostile Zone.")]
         public bool isBossCandidate;
 

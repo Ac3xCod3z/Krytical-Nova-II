@@ -24,30 +24,35 @@ MonoBehaviour:
     scale: 1
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0
+    footEffect: {fileID: 0}
   - name: Three Tails
     model: {fileID: 7273318040934756614, guid: 0f97c9d21b8d4014bf6f48541ce359c5, type: 3}
     icon: {fileID: 0}
-    scale: 1.08
+    scale: 1.0909091
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.3
+    footEffect: {fileID: 0}
   - name: Five Tails
-    model: {fileID: 7273318040934756614, guid: 0f97c9d21b8d4014bf6f48541ce359c5, type: 3}
+    model: {fileID: 8683272349235272071, guid: 9737b364cc5c428180230202edcad978, type: 3}
     icon: {fileID: 0}
-    scale: 1.16
+    scale: 1.4
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.5
+    footEffect: {fileID: 0}
   - name: Seven Tails
-    model: {fileID: 7273318040934756614, guid: 0f97c9d21b8d4014bf6f48541ce359c5, type: 3}
+    model: {fileID: 3866516584454416215, guid: e59db151f7d543379349a078ed580bd8, type: 3}
     icon: {fileID: 0}
-    scale: 1.24
+    scale: 1.4545455
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.75
+    footEffect: {fileID: 2965738704842738394, guid: 2344c1fd1fca3f4439438a4f3934cf42, type: 3}
   - name: Nine Tails
-    model: {fileID: 7273318040934756614, guid: 0f97c9d21b8d4014bf6f48541ce359c5, type: 3}
+    model: {fileID: 281834179834464942, guid: 36f043866d904d08b623b61a7fc92795, type: 3}
     icon: {fileID: 0}
-    scale: 1.35
+    scale: 1.8181818
     glow: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
     glowStrength: 1
+    footEffect: {fileID: 2965738704842738394, guid: 2344c1fd1fca3f4439438a4f3934cf42, type: 3}
   chatter: {fileID: 11400000, guid: 977b32b6db0977e45b19654ea059ca17, type: 2}
   bobs: 0
   footEffect: {fileID: 5331249427255145735, guid: 780f8b30a33e26c438a75e4aa59738ce, type: 3}
@@ -70,6 +75,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
     bones:
     - DEF-spine
@@ -83,6 +89,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
     bones: []
     anchor: 1
@@ -96,6 +103,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
     bones:
     - DEF-spine
@@ -109,6 +117,7 @@ MonoBehaviour:
     during: {x: 0.21153846, y: 0.7692308}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
     bones:
     - DEF-spine
@@ -123,75 +132,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
-  - prefab: {fileID: 5103678545179123837, guid: 08631a8999c0ca14aba775067e1b0255, type: 3}
-    bones:
-    - DEF-tail_4.L
-    - DEF-tail_4.R
-    anchor: 0
-    offset: {x: 0, y: 0, z: 0}
-    stageColour: 0
-    size: 1
-    stages: {x: 1, y: 4}
-    animation: Idle
-    at: []
-    during: {x: 0, y: 0}
-    endsWithAnimation: 0
-    alongBone: 0
-  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
-    bones:
-    - DEF-tail_4.L
-    - DEF-tail_4.R
-    anchor: 0
-    offset: {x: 0, y: 0, z: 0}
-    stageColour: 0
-    size: 1
-    stages: {x: 1, y: 4}
-    animation: Run
-    at: []
-    during: {x: 0, y: 0}
-    endsWithAnimation: 0
-    alongBone: 0
-  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
-    bones: []
-    anchor: 1
-    offset: {x: 0, y: 0, z: 0}
-    stageColour: 0
-    size: 0.5
-    stages: {x: 1, y: 4}
-    animation: SpinChase
-    at:
-    - 0.25
-    during: {x: 0, y: 0}
-    endsWithAnimation: 0
-    alongBone: 0
-  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
-    bones:
-    - DEF-tail_4.L
-    - DEF-tail_4.R
-    anchor: 0
-    offset: {x: 0, y: 0, z: 0}
-    stageColour: 0
-    size: 1
-    stages: {x: 1, y: 4}
-    animation: SpinChase
-    at: []
-    during: {x: 0.21153846, y: 0.7692308}
-    endsWithAnimation: 0
-    alongBone: 0
-  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
-    bones:
-    - DEF-tail_4.L
-    anchor: 0
-    offset: {x: 0, y: 0, z: 0}
-    stageColour: 0
-    size: 1
-    stages: {x: 1, y: 4}
-    animation: SpinChase
-    at:
-    - 0.7692308
-    during: {x: 0, y: 0}
-    endsWithAnimation: 0
-    alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
     bones:
     - DEF-front_toe.L
@@ -206,6 +147,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
     bones:
     - DEF-spine.001
@@ -220,6 +162,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
     bones:
     - DEF-ear.L
@@ -234,6 +177,7 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
     bones:
     - DEF-ear.R
@@ -248,34 +192,8 @@ MonoBehaviour:
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
-  - prefab: {fileID: 1674210332858691641, guid: 343f64c2a342ab84da77dd4d0419b661, type: 3}
-    bones:
-    - DEF-spine.006
-    - DEF-spine.010
-    anchor: 0
-    offset: {x: 0, y: 0, z: 0}
-    stageColour: 0
-    size: 1
-    stages: {x: 1, y: 4}
-    animation: Shake
-    at: []
-    during: {x: 0.21428572, y: 0.6785714}
-    endsWithAnimation: 0
-    alongBone: 0
-  - prefab: {fileID: 4865811711560083084, guid: a79907a88abafa04491a14b9fc47aa33, type: 3}
-    bones: []
-    anchor: 0
-    offset: {x: 0, y: 0, z: 0}
-    stageColour: 0
-    size: 1
-    stages: {x: 1, y: 4}
-    animation: Guard
-    at:
-    - 0.06944445
-    during: {x: 0, y: 0}
-    endsWithAnimation: 1
-    alongBone: 0
-  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    facesAhead: 0
+  - prefab: {fileID: 5103678545179123837, guid: 08631a8999c0ca14aba775067e1b0255, type: 3}
     bones:
     - DEF-tail_4.L
     - DEF-tail_4.R
@@ -283,40 +201,13 @@ MonoBehaviour:
     offset: {x: 0, y: 0, z: 0}
     stageColour: 0
     size: 1
-    stages: {x: 1, y: 4}
-    animation: Guard
-    at:
-    - 0.22222222
-    during: {x: 0, y: 0}
-    endsWithAnimation: 0
-    alongBone: 0
-  - prefab: {fileID: 2066148865844936643, guid: 03de0591fc4437a4ea663cdf41085ca0, type: 3}
-    bones:
-    - DEF-tail_4.L
-    anchor: 0
-    offset: {x: 0, y: 0, z: 0}
-    stageColour: 0
-    size: 0.045
-    stages: {x: 1, y: 4}
-    animation: Guard
+    stages: {x: 1, y: 1}
+    animation: Idle
     at: []
-    during: {x: 0.22222222, y: 0.75}
-    endsWithAnimation: 1
-    alongBone: 0
-  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
-    bones: []
-    anchor: 1
-    offset: {x: 0, y: 0, z: -0.2}
-    stageColour: 0
-    size: 0.5
-    stages: {x: 1, y: 4}
-    animation: Pounce
-    at:
-    - 0.35714287
-    - 0.64285713
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
     bones:
     - DEF-tail_4.L
@@ -325,44 +216,1801 @@ MonoBehaviour:
     offset: {x: 0, y: 0, z: 0}
     stageColour: 0
     size: 1
-    stages: {x: 1, y: 4}
+    stages: {x: 1, y: 1}
+    animation: Run
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 1, y: 1}
+    animation: SpinChase
+    at:
+    - 0.25
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_4.L
+    - DEF-tail_4.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 1}
+    animation: SpinChase
+    at: []
+    during: {x: 0.21153846, y: 0.7692308}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_4.L
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 1}
+    animation: SpinChase
+    at:
+    - 0.7692308
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 1674210332858691641, guid: 343f64c2a342ab84da77dd4d0419b661, type: 3}
+    bones:
+    - DEF-spine.006
+    - DEF-spine.010
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 1}
+    animation: Shake
+    at: []
+    during: {x: 0.21428572, y: 0.6785714}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 4865811711560083084, guid: a79907a88abafa04491a14b9fc47aa33, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 1}
+    animation: Guard
+    at:
+    - 0.06944445
+    during: {x: 0, y: 0}
+    endsWithAnimation: 1
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_4.L
+    - DEF-tail_4.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 1}
+    animation: Guard
+    at:
+    - 0.22222222
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 2066148865844936643, guid: 03de0591fc4437a4ea663cdf41085ca0, type: 3}
+    bones:
+    - DEF-tail_4.L
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.045
+    stages: {x: 1, y: 1}
+    animation: Guard
+    at: []
+    during: {x: 0.22222222, y: 0.75}
+    endsWithAnimation: 1
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: -0.2}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 1, y: 1}
+    animation: Pounce
+    at:
+    - 0.35714287
+    - 0.64285713
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_4.L
+    - DEF-tail_4.R
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 1, y: 1}
     animation: Pounce
     at: []
     during: {x: 0.375, y: 0.60714287}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 5919215169275605312, guid: e7036a54398350342a9c61570362c8bb, type: 3}
     bones: []
     anchor: 1
     offset: {x: 0, y: 0.08, z: 0.3}
     stageColour: 0
     size: 1
-    stages: {x: 1, y: 4}
+    stages: {x: 1, y: 1}
     animation: Pounce
     at:
     - 0.5714286
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
   - prefab: {fileID: 2035485925776671364, guid: c41733247b1bf97448987b623b45bcd5, type: 3}
     bones: []
     anchor: 2
     offset: {x: 0, y: 0.35, z: 0.2}
     stageColour: 0
     size: 1
-    stages: {x: 1, y: 4}
+    stages: {x: 1, y: 1}
     animation: Pounce
     at:
     - 0.5714286
     during: {x: 0, y: 0}
     endsWithAnimation: 0
     alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 5103678545179123837, guid: 08631a8999c0ca14aba775067e1b0255, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: Idle
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: Run
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 2, y: 2}
+    animation: SpinChase
+    at:
+    - 0.25
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: SpinChase
+    at: []
+    during: {x: 0.21153846, y: 0.7692308}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: SpinChase
+    at:
+    - 0.7692308
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1674210332858691641, guid: 343f64c2a342ab84da77dd4d0419b661, type: 3}
+    bones:
+    - DEF-spine.006
+    - DEF-spine.010
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: Shake
+    at: []
+    during: {x: 0.21428572, y: 0.6785714}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 4865811711560083084, guid: a79907a88abafa04491a14b9fc47aa33, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: Guard
+    at:
+    - 0.06944445
+    during: {x: 0, y: 0}
+    endsWithAnimation: 1
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: Guard
+    at:
+    - 0.22222222
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 2066148865844936643, guid: 03de0591fc4437a4ea663cdf41085ca0, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 0.045
+    stages: {x: 2, y: 2}
+    animation: Guard
+    at: []
+    during: {x: 0.22222222, y: 0.75}
+    endsWithAnimation: 1
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: -0.2}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 2, y: 2}
+    animation: Pounce
+    at:
+    - 0.35714287
+    - 0.64285713
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: Pounce
+    at: []
+    during: {x: 0.375, y: 0.60714287}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5919215169275605312, guid: e7036a54398350342a9c61570362c8bb, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0.08, z: 0.3}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: Pounce
+    at:
+    - 0.5714286
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 2035485925776671364, guid: c41733247b1bf97448987b623b45bcd5, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0.35, z: 0.2}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: Pounce
+    at:
+    - 0.5714286
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: FoxfireFlick
+    at: []
+    during: {x: 0.26666668, y: 0.5}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: FoxfireFlick
+    at:
+    - 0.33333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 2, y: 2}
+    animation: FoxfireFlick
+    at:
+    - 0.33333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_2_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: FoxfireFlick
+    at:
+    - 0.41666666
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_2_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 2, y: 2}
+    animation: FoxfireFlick
+    at:
+    - 0.41666666
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 1
+    stages: {x: 2, y: 2}
+    animation: FoxfireFlick
+    at:
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.075}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 2, y: 2}
+    animation: FoxfireFlick
+    at:
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5103678545179123837, guid: 08631a8999c0ca14aba775067e1b0255, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_3_5
+    - DEF-tail_5_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Idle
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_3_5
+    - DEF-tail_5_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Run
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 3, y: 3}
+    animation: SpinChase
+    at:
+    - 0.25
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    - DEF-tail_4_5
+    - DEF-tail_5_5
+    - DEF-tail_6_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: SpinChase
+    at: []
+    during: {x: 0.21153846, y: 0.7692308}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: SpinChase
+    at:
+    - 0.7692308
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1674210332858691641, guid: 343f64c2a342ab84da77dd4d0419b661, type: 3}
+    bones:
+    - DEF-spine.006
+    - DEF-spine.010
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Shake
+    at: []
+    during: {x: 0.21428572, y: 0.6785714}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 4865811711560083084, guid: a79907a88abafa04491a14b9fc47aa33, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Guard
+    at:
+    - 0.06944445
+    during: {x: 0, y: 0}
+    endsWithAnimation: 1
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_3_5
+    - DEF-tail_5_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Guard
+    at:
+    - 0.22222222
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 2066148865844936643, guid: 03de0591fc4437a4ea663cdf41085ca0, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 0.045
+    stages: {x: 3, y: 3}
+    animation: Guard
+    at: []
+    during: {x: 0.22222222, y: 0.75}
+    endsWithAnimation: 1
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: -0.2}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 3, y: 3}
+    animation: Pounce
+    at:
+    - 0.35714287
+    - 0.64285713
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_3_5
+    - DEF-tail_5_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Pounce
+    at: []
+    during: {x: 0.375, y: 0.60714287}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5919215169275605312, guid: e7036a54398350342a9c61570362c8bb, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0.08, z: 0.3}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Pounce
+    at:
+    - 0.5714286
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 2035485925776671364, guid: c41733247b1bf97448987b623b45bcd5, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0.35, z: 0.2}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Pounce
+    at:
+    - 0.5714286
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    - DEF-tail_4_5
+    - DEF-tail_5_5
+    - DEF-tail_6_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at: []
+    during: {x: 0.26666668, y: 0.5}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.33333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.33333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_2_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.36666667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_2_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.36666667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.4
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.4
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_4_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.43333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_4_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.43333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_5_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.46666667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_5_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.46666667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_6_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_6_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 3, y: 3}
+    animation: FoxfireFlick
+    at:
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    - DEF-tail_4_5
+    - DEF-tail_5_5
+    - DEF-tail_6_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: EmberWaltz
+    at: []
+    during: {x: 0.1875, y: 0.6458333}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1435398601305351752, guid: 52a47f53fa24ae94abeab7463369b6f0, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: EmberWaltz
+    at:
+    - 0.7291667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 45633419354041812, guid: b2119a0603855424587431a5bf9b7a40, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.25
+    stages: {x: 3, y: 3}
+    animation: EmberWaltz
+    at: []
+    during: {x: 0.7291667, y: 0.9375}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 3338489929883147511, guid: f4ac490516e69394e8575b7724a15248, type: 3}
+    bones:
+    - DEF-spine.011
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.16}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Kindle
+    at:
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1997527907795187951, guid: e685763e6a55dd744abb84aac4639ca7, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.08}
+    stageColour: 0
+    size: 1
+    stages: {x: 3, y: 3}
+    animation: Kindle
+    at: []
+    during: {x: 0.5092593, y: 0.7777778}
+    endsWithAnimation: 1
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5103678545179123837, guid: 08631a8999c0ca14aba775067e1b0255, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_3_5
+    - DEF-tail_5_5
+    - DEF-tail_7_5
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Idle
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_3_5
+    - DEF-tail_5_5
+    - DEF-tail_7_5
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Run
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 4, y: 4}
+    animation: SpinChase
+    at:
+    - 0.25
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    - DEF-tail_4_5
+    - DEF-tail_5_5
+    - DEF-tail_6_5
+    - DEF-tail_7_5
+    - DEF-tail_8_5
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: SpinChase
+    at: []
+    during: {x: 0.21153846, y: 0.7692308}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: SpinChase
+    at:
+    - 0.7692308
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1674210332858691641, guid: 343f64c2a342ab84da77dd4d0419b661, type: 3}
+    bones:
+    - DEF-spine.006
+    - DEF-spine.010
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Shake
+    at: []
+    during: {x: 0.21428572, y: 0.6785714}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 4865811711560083084, guid: a79907a88abafa04491a14b9fc47aa33, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Guard
+    at:
+    - 0.06944445
+    during: {x: 0, y: 0}
+    endsWithAnimation: 1
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_3_5
+    - DEF-tail_5_5
+    - DEF-tail_7_5
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Guard
+    at:
+    - 0.22222222
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 2066148865844936643, guid: 03de0591fc4437a4ea663cdf41085ca0, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.045
+    stages: {x: 4, y: 4}
+    animation: Guard
+    at: []
+    during: {x: 0.22222222, y: 0.75}
+    endsWithAnimation: 1
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 3865014065349646713, guid: d34b82b07986fff4780b084de890ba80, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: -0.2}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 4, y: 4}
+    animation: Pounce
+    at:
+    - 0.35714287
+    - 0.64285713
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_3_5
+    - DEF-tail_5_5
+    - DEF-tail_7_5
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Pounce
+    at: []
+    during: {x: 0.375, y: 0.60714287}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5919215169275605312, guid: e7036a54398350342a9c61570362c8bb, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0.08, z: 0.3}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Pounce
+    at:
+    - 0.5714286
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 2035485925776671364, guid: c41733247b1bf97448987b623b45bcd5, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0.35, z: 0.2}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Pounce
+    at:
+    - 0.5714286
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    - DEF-tail_4_5
+    - DEF-tail_5_5
+    - DEF-tail_6_5
+    - DEF-tail_7_5
+    - DEF-tail_8_5
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at: []
+    during: {x: 0.26666668, y: 0.5}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.33333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.33333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_2_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.35
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_2_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.35
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.36666667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_3_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.36666667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_4_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.4
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_4_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.4
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_5_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.41666666
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_5_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.41666666
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_6_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.43333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_6_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.43333334
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_7_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.46666667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_7_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.46666667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_8_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.48333332
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_8_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.48333332
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1487463494920326249, guid: 639b7f02e4efdeb499a423db4712d50e, type: 3}
+    bones:
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: FoxfireFlick
+    at:
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_2_5
+    - DEF-tail_3_5
+    - DEF-tail_4_5
+    - DEF-tail_5_5
+    - DEF-tail_6_5
+    - DEF-tail_7_5
+    - DEF-tail_8_5
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: EmberWaltz
+    at: []
+    during: {x: 0.1875, y: 0.6458333}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1435398601305351752, guid: 52a47f53fa24ae94abeab7463369b6f0, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: EmberWaltz
+    at:
+    - 0.7291667
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 45633419354041812, guid: b2119a0603855424587431a5bf9b7a40, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.25
+    stages: {x: 4, y: 4}
+    animation: EmberWaltz
+    at: []
+    during: {x: 0.7291667, y: 0.9375}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 3338489929883147511, guid: f4ac490516e69394e8575b7724a15248, type: 3}
+    bones:
+    - DEF-spine.011
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.16}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Kindle
+    at:
+    - 0.5
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 1997527907795187951, guid: e685763e6a55dd744abb84aac4639ca7, type: 3}
+    bones:
+    - DEF-tail_1_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: Kindle
+    at: []
+    during: {x: 0.5092593, y: 0.7777778}
+    endsWithAnimation: 1
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1.2
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at:
+    - 0.29545453
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_2_5
+    - DEF-tail_8_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1.2
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at:
+    - 0.3560606
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_3_5
+    - DEF-tail_7_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1.2
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at:
+    - 0.41666666
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_4_5
+    - DEF-tail_6_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1.2
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at:
+    - 0.47727272
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 5269602474833033574, guid: 1407832764296d74e8e5636cb5c0cbdf, type: 3}
+    bones:
+    - DEF-tail_5_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1.2
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at:
+    - 0.5530303
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 4430437223857228189, guid: 4e4337c8a07956e4e85b4dfb7e15518c, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at: []
+    during: {x: 0.57575756, y: 0.74242425}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 6327913328178179466, guid: 5bdecb1a71eb563439a49e00b5e06b83, type: 3}
+    bones: []
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at:
+    - 0.57575756
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 3365025046408941287, guid: beb1163c936df764d84492c900c67576, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.5
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at:
+    - 0.57575756
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 8328564449121143341, guid: a2f0bea388b0dd845a7edc225507e3f9, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0.3, z: 0.3}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at:
+    - 0.5833333
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 45633419354041812, guid: b2119a0603855424587431a5bf9b7a40, type: 3}
+    bones: []
+    anchor: 2
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.3
+    stages: {x: 4, y: 4}
+    animation: NinefoldBlaze
+    at: []
+    during: {x: 0.6060606, y: 0.93939394}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 1435398601305351752, guid: 52a47f53fa24ae94abeab7463369b6f0, type: 3}
+    bones: []
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+    stageColour: 0
+    size: 0.6
+    stages: {x: 4, y: 4}
+    animation: SpiritStep
+    at:
+    - 0.25
+    - 0.375
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 0
+    facesAhead: 0
+  - prefab: {fileID: 7819615535330351270, guid: cf5075a0768081d45a44d292b8691f54, type: 3}
+    bones:
+    - DEF-tail_1_5
+    - DEF-tail_3_5
+    - DEF-tail_5_5
+    - DEF-tail_7_5
+    - DEF-tail_9_5
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0.12}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: SpiritStep
+    at: []
+    during: {x: 0.375, y: 0.625}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 0
+  - prefab: {fileID: 4118947800716944269, guid: 0d90fb10bb6dcbe48aca85a23af99a05, type: 3}
+    bones:
+    - DEF-spine.007
+    anchor: 0
+    offset: {x: -0.033, y: 0.103, z: 0.05}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: 
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 4118947800716944269, guid: 0d90fb10bb6dcbe48aca85a23af99a05, type: 3}
+    bones:
+    - DEF-spine.007
+    anchor: 0
+    offset: {x: 0.037, y: 0.103, z: 0.05}
+    stageColour: 0
+    size: 1
+    stages: {x: 4, y: 4}
+    animation: 
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 4118947800716944269, guid: 0d90fb10bb6dcbe48aca85a23af99a05, type: 3}
+    bones:
+    - DEF-front_thigh.L.001
+    anchor: 0
+    offset: {x: 0.02, y: 0.05, z: 0.09}
+    stageColour: 0
+    size: 0.7
+    stages: {x: 4, y: 4}
+    animation: 
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 4118947800716944269, guid: 0d90fb10bb6dcbe48aca85a23af99a05, type: 3}
+    bones:
+    - DEF-front_thigh.R.001
+    anchor: 0
+    offset: {x: -0.023, y: 0.051, z: 0.09}
+    stageColour: 0
+    size: 0.7
+    stages: {x: 4, y: 4}
+    animation: 
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 4118947800716944269, guid: 0d90fb10bb6dcbe48aca85a23af99a05, type: 3}
+    bones:
+    - DEF-shin.L.001
+    anchor: 0
+    offset: {x: -0.022, y: -0.054, z: 0.065}
+    stageColour: 0
+    size: 0.7
+    stages: {x: 4, y: 4}
+    animation: 
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
+  - prefab: {fileID: 4118947800716944269, guid: 0d90fb10bb6dcbe48aca85a23af99a05, type: 3}
+    bones:
+    - DEF-shin.R.001
+    anchor: 0
+    offset: {x: 0.019, y: -0.054, z: 0.065}
+    stageColour: 0
+    size: 0.7
+    stages: {x: 4, y: 4}
+    animation: 
+    at: []
+    during: {x: 0, y: 0}
+    endsWithAnimation: 0
+    alongBone: 1
+    facesAhead: 1
   moveLoop: 
   moveLoopWalkSpeed: 0.6
   moveLoopRunSpeed: 1.5
   restLoop: 
   chargeAnimation: 
   chargeBone: 
+  vanishAnimation: SpiritStep
+  vanishDuring: {x: 0.25, y: 0.375}
   restPose: 
   followOns: []
   lines: []

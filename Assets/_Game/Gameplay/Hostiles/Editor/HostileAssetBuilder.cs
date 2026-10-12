@@ -67,6 +67,8 @@ namespace KryticalNova.EditorTools.Hostiles
             public int Level;
             public HostileTier Tier;
             public HostileBehaviour Behaviour;
+            /// <summary>What leaves its body when it dies.</summary>
+            public KryticalNova.Core.SpiritKind Spirit;
             public float Scale, AttackRange;
             /// <summary>Radius and height of the body, metres, before scale. Zero = an ordinary person.</summary>
             public Vector2 Body;
@@ -97,14 +99,14 @@ namespace KryticalNova.EditorTools.Hostiles
         /// </summary>
         private static readonly Species[] Roster =
         {
-            Humanoid(2, "Bonewalker", "Bonewalker", 1, DarkFantasy + "SM_Chr_Skeleton_01.prefab"),
-            Humanoid(3, "Blightborn", "Blightborn", 4, DarkFortress + "SM_Chr_Undead_01.prefab"),
-            Humanoid(4, "BlightReaver", "Blight Reaver", 7, DarkFortress + "SM_Chr_Undead_02.prefab"),
+            Humanoid(2, "Bonewalker", "Bonewalker", 1, DarkFantasy + "SM_Chr_Skeleton_01.prefab", spirit: KryticalNova.Core.SpiritKind.Unliving),
+            Humanoid(3, "Blightborn", "Blightborn", 4, DarkFortress + "SM_Chr_Undead_01.prefab", spirit: KryticalNova.Core.SpiritKind.Living),
+            Humanoid(4, "BlightReaver", "Blight Reaver", 7, DarkFortress + "SM_Chr_Undead_02.prefab", spirit: KryticalNova.Core.SpiritKind.Living),
             Humanoid(5, "Gargoyle", "Gargoyle", 10, DarkFantasy + "SM_Chr_Gargoyle_01.prefab"),
             Humanoid(6, "Wraith", "Wraith", 13, DarkFortress + "SM_Chr_Wraith_01.prefab"),
-            Humanoid(7, "SeraphUnit", "Seraph Unit", 16, SciFiSpace + "SM_Chr_RobotFemale_01.prefab"),
-            Humanoid(8, "CarapaceRaider", "Carapace Raider", 19, SciFiWorlds + "SM_Chr_ScifiWorlds_AlienArmor_01.prefab"),
-            Humanoid(9, "WarFrame", "War Frame", 22, SciFiSpace + "SM_Chr_BR_War_Robot_01.prefab", body: new Vector2(0.6f, 2.1f), range: 2.2f),
+            Humanoid(7, "SeraphUnit", "Seraph Unit", 16, SciFiSpace + "SM_Chr_RobotFemale_01.prefab", spirit: KryticalNova.Core.SpiritKind.Unliving),
+            Humanoid(8, "CarapaceRaider", "Carapace Raider", 19, SciFiWorlds + "SM_Chr_ScifiWorlds_AlienArmor_01.prefab", spirit: KryticalNova.Core.SpiritKind.Living),
+            Humanoid(9, "WarFrame", "War Frame", 22, SciFiSpace + "SM_Chr_BR_War_Robot_01.prefab", body: new Vector2(0.6f, 2.1f), range: 2.2f, spirit: KryticalNova.Core.SpiritKind.Unliving),
             Humanoid(10, "Hellion", "Hellion", 12, DarkFantasy + "SM_Chr_Demon_Male_01.prefab", HostileTier.Bruiser, 1.3f, range: 2.4f),
             Humanoid(11, "Colossus", "Colossus", 21, DarkFortress + "SM_Chr_Colossus_01.prefab", HostileTier.Bruiser, 1.3f, new Vector2(0.6f, 2.1f), 2.6f),
         };
@@ -117,8 +119,10 @@ namespace KryticalNova.EditorTools.Hostiles
         private static readonly Dictionary<string, AnimationProfile> profilesDone = new Dictionary<string, AnimationProfile>();
 
         private static Species Humanoid(ushort id, string asset, string displayName, int level, string model,
-            HostileTier tier = HostileTier.Normal, float scale = 1f, Vector2 body = default, float range = 1.8f) => new Species
+            HostileTier tier = HostileTier.Normal, float scale = 1f, Vector2 body = default, float range = 1.8f,
+            KryticalNova.Core.SpiritKind spirit = KryticalNova.Core.SpiritKind.Creature) => new Species
         {
+            Spirit = spirit,
             Id = id, Asset = asset, DisplayName = displayName, Level = level, Tier = tier, Model = model, Scale = scale, Body = body,
             AnimSet = "Unarmed",
             AttackRange = range,
@@ -129,6 +133,23 @@ namespace KryticalNova.EditorTools.Hostiles
             Stunned = Unarmed + "Stunned.FBX",
             Attacks = UnarmedAttacks, Hits = UnarmedHits, Deaths = HumanoidDeaths,
         };
+
+        /// <summary>
+        /// Writes only what leaves each species' body when it dies (the roster's Spirit) into the species that are
+        /// built already: nothing else of them is touched, and no prefab is made again.
+        /// </summary>
+        [MenuItem("Krytical Nova/Hostiles/Apply Spirit Kinds")]
+        public static void ApplySpiritKinds()
+        {
+            foreach (Species species in Roster)
+            {
+                var definition = AssetDatabase.LoadAssetAtPath<HostileDefinition>($"{SpeciesFolder}/Hostile_{species.Asset}.asset");
+                if (definition == null || definition.spirit == species.Spirit) continue;
+                definition.spirit = species.Spirit;
+                EditorUtility.SetDirty(definition);
+            }
+            AssetDatabase.SaveAssets();
+        }
 
         /// <summary>The prefab of a species by its asset name, or null before it is built.</summary>
         public static HostileNet PrefabOf(string asset)
@@ -280,6 +301,7 @@ namespace KryticalNova.EditorTools.Hostiles
             definition.id = species.Id;
             definition.displayName = species.DisplayName;
             definition.tier = species.Tier;
+            definition.spirit = species.Spirit;
             definition.level = species.Level;
             definition.behaviour = species.Behaviour;
             definition.attackRange = species.AttackRange;

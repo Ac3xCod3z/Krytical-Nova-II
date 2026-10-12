@@ -319,7 +319,11 @@ namespace KryticalNova.Pets
                 if (seen != null) follower.SetMoveLoop(seen.moveLoop, seen.moveLoopWalkSpeed, seen.moveLoopRunSpeed);
                 else follower.SetMoveLoop(null, 1f, 1f);
                 follower.SetRestLoop(seen != null ? seen.restLoop : null);
-                follower.SetStance(seen != null && !seen.bobs, seen != null ? seen.footEffect : null, seen != null ? seen.footBones : null);
+                // A stage may stand on something of its own (the largest foxes on fire); otherwise on the pet's.
+                GameObject underFeet = seen != null ? seen.Stage(seenStage).footEffect : null;
+                if (underFeet == null && seen != null) underFeet = seen.footEffect;
+                follower.SetStance(seen != null && !seen.bobs, underFeet, seen != null ? seen.footBones : null);
+                follower.SetVanish(seen != null ? seen.vanishAnimation : null, seen != null ? seen.vanishDuring : default);
                 PetFollower.WornEffect[] effects = EffectsOf(seen, seenStage);
                 follower.SetEffects(effects, effects);
                 follower.SetCharge(seen != null ? seen.chargeAnimation : null, seen != null ? seen.chargeBone : null);
@@ -345,7 +349,7 @@ namespace KryticalNova.Pets
             {
                 if (effect == null || stage < effect.stages.x || stage > effect.stages.y) continue;
                 effects.Add(new PetFollower.WornEffect(effect.prefab, effect.bones, effect.stageColour, (PetFollower.EffectPlace)(int)effect.anchor,
-                    effect.offset, effect.animation, effect.at, effect.during, effect.size, effect.alongBone, effect.endsWithAnimation));
+                    effect.offset, effect.animation, effect.at, effect.during, effect.size, effect.alongBone, effect.endsWithAnimation, effect.facesAhead));
             }
             PetFollower.WornEffect[] list = effects.Count > 0 ? effects.ToArray() : null;
             effectLists[(pet, stage)] = list;

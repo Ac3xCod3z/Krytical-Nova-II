@@ -138,11 +138,14 @@ namespace KryticalNova.Items.Visuals
             public readonly bool AlongBone;
             /// <summary>What is out of it is taken away at once when its animation is cut short.</summary>
             public readonly bool EndsWithAnimation;
+            /// <summary>With <see cref="AlongBone"/>: placed in the bone's frame, but facing the way the pet faces.</summary>
+            public readonly bool FacesAhead;
 
             public WornEffect(GameObject prefab, IReadOnlyList<string> bones, bool stageColour, EffectPlace place = EffectPlace.Body,
                 Vector3 offset = default, string animation = null, IReadOnlyList<float> at = null, Vector2 during = default, float size = 1f,
-                bool alongBone = false, bool endsWithAnimation = false)
+                bool alongBone = false, bool endsWithAnimation = false, bool facesAhead = false)
             {
+                FacesAhead = facesAhead;
                 AlongBone = alongBone;
                 EndsWithAnimation = endsWithAnimation;
                 Size = size;
@@ -171,6 +174,7 @@ namespace KryticalNova.Items.Visuals
             public ParticleSystem[] Systems;
             public bool Playing;
             public bool Along;              // it looks down its bone, and Offset is in the bone's frame
+            public bool Ahead;              // ... but it faces the way the pet faces
             public bool Ends;               // cleared when its animation is left
             public bool Out;                // it has played in the animation that is running
         }
@@ -322,6 +326,33 @@ namespace KryticalNova.Items.Visuals
         /// the bone that animation carries forward. While it plays the pet faces its owner instead of the way they
         /// face, and is moved so that its nose just reaches them at the furthest point of the lunge.
         /// </summary>
+        /// <summary>
+        /// An animation in which the pet is not there for a moment: the name of a state of its Animator (empty =
+        /// none) and the stretch of it, as shares, during which the pet's own body is not drawn. Its effects are.
+        /// </summary>
+        public void SetVanish(string animation, Vector2 during)
+        {
+            vanishState = string.IsNullOrEmpty(animation) ? 0 : Animator.StringToHash(animation);
+            vanishDuring = during;
+        }
+
+        private int vanishState;
+        private Vector2 vanishDuring;
+        private bool vanished;
+        private Renderer[] bodyRenderers;
+
+        /// <summary>Once a frame: the pet's own body is hidden while its vanish animation is inside its stretch.</summary>
+        private void ApplyVanish()
+        {
+            bool gone = false;
+            if (vanishState != 0 && animations != null && animations.TryGetPlaying(out int state, out float share))
+                gone = state == vanishState && share >= vanishDuring.x && share <= vanishDuring.y;
+            if (gone == vanished || bodyRenderers == null) return;
+            vanished = gone;
+            foreach (Renderer body in bodyRenderers)
+                if (body != null) body.enabled = !gone;
+        }
+
         public void SetCharge(string animation, string bone)
         {
             if (chargeAnimation == animation && chargeBoneName == bone) return;
@@ -410,6 +441,8 @@ namespace KryticalNova.Items.Visuals
             pet.name = $"Pet ({current.displayName})";
             VisualUtility.PrepareCosmetic(pet, gameObject.layer);
             ActorDrawOrder.On(pet); // a Nova hides the pets behind it
+            bodyRenderers = pet.GetComponentsInChildren<Renderer>(true); // before its effects are added: the body only
+            vanished = false;
             bool posed = PetAnimations.Pose(pet, restPose); // before its Animator starts: this is the pose it goes back to
             animations = PetAnimations.For(pet);
             animations?.SetFollowOns(followOns);
@@ -616,6 +649,7 @@ namespace KryticalNova.Items.Visuals
                 Home = home,
                 Offset = look.AlongBone ? look.Offset : look.Offset * footprint,
                 Along = look.AlongBone && bone != null,
+                Ahead = look.FacesAhead,
                 Ends = look.EndsWithAnimation,
                 Tinted = look.StageColour,
                 State = string.IsNullOrEmpty(look.Animation) ? 0 : Animator.StringToHash(look.Animation),
@@ -719,7 +753,8 @@ namespace KryticalNova.Items.Visuals
             effect.name = footEffectPrefab.name;
             effect.transform.localPosition = new Vector3(unitBounds.center.x, unitBounds.min.y, unitBounds.center.z);
             effect.transform.localRotation = Quaternion.identity;
-            effect.transform.localScale = Vector3.one * Mathf.Max(unitBounds.size.x, unitBounds.size.z);
+            // The effect's own size times the pet's footprint (the cloud is made at size 1; the fire is made small).
+            effect.transform.localScale = footEffectPrefab.transform.localScale * Mathf.Max(unitBounds.size.x, unitBounds.size.z);
             VisualUtility.PrepareCosmetic(effect, gameObject.layer);
             foreach (var particles in effect.GetComponentsInChildren<ParticleSystem>(true))
             {
@@ -742,11 +777,12 @@ namespace KryticalNova.Items.Visuals
                 {
                     // A bone runs along its own y: the effect looks down it, and its offset is measured in that frame.
                     Quaternion down = Quaternion.LookRotation(copy.Bone.up, -copy.Bone.forward);
-                    copy.Effect.SetPositionAndRotation(copy.Bone.position + down * (copy.Offset * pet.transform.lossyScale.x), down);
+                    copy.Effect.SetPositionAndRotation(copy.Bone.position + down * (copy.Offset * pet.transform.lossyScale.x), copy.Ahead ? pet.transform.rotation : down);
                 }
                 else copy.Effect.position = copy.Bone.position + pet.transform.TransformVector(copy.Offset);
             }
             PlayAnimationEffects();
+            ApplyVanish();
         }
 
         /// <summary>The pet at its stage's size, less whatever the camera has shrunk away; gone altogether at nothing.</summary>
