@@ -32,7 +32,15 @@ namespace KryticalNova.Diagnostics
         private const int SplitKnownAfterFrames = 6;    // FrameTimingManager reports a frame a few frames late
         private const double LoadingSeconds = 3.0;      // frames this soon after a scene or a session arrives are loading, not play
         private const double StartSeconds = 5.0;        // and this long after the game's first frame
+        private const double HistogramEverySeconds = 60.0;
+        private const double CameraWorthNamingMs = 0.3;
         private const float Megabyte = 1024f * 1024f;
+        // Mono compiles a method the first time it runs (a hitch each time); IL2CPP has it compiled beforehand.
+#if ENABLE_IL2CPP
+        private const string ScriptingBackend = "IL2CPP";
+#else
+        private const string ScriptingBackend = "Mono";
+#endif
 
         private static PerformanceLogRecorder instance;
 
@@ -57,12 +65,20 @@ namespace KryticalNova.Diagnostics
         private struct Pending
         {
             public PerformanceLogText.SlowFrame Frame;
-            public float[] Phases;
+            public float[] Phases, Steps;
+            public string Cameras;
             public long KnownAtFrame;
             public bool Used;
         }
 
         private readonly Pending[] pending = new Pending[MaxPending];
+
+        // How long every frame of play took, in bins, for the section being played.
+        private readonly int[] bins = new int[PerformanceLogText.Bins];
+        private int sectionSerial;
+        private string sectionName = PerformanceLog.DefaultSection;
+        private long sectionFrames, sectionOverTwenty, sectionLoadingFrames;
+        private double sectionSeconds, sectionSlowestMs, histogramLeft = HistogramEverySeconds;
         private readonly FrameTiming[] oneTiming = new FrameTiming[1];
         private readonly FrameTiming[] lateTimings = new FrameTiming[SplitKnownAfterFrames + 4];
         private ProfilerRecorder setPass, triangles, usedMemory, scriptMemory;
@@ -77,6 +93,7 @@ namespace KryticalNova.Diagnostics
             instance = null;
             FramePhaseProbes.FrameEnded = null;
             FramePhaseProbes.Remove();
+            FrameCameraProbes.Remove();
             PerformanceLog.Reset();
         }
 
@@ -120,11 +137,14 @@ namespace KryticalNova.Diagnostics
             triangles = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Triangles Count");
             usedMemory = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Total Used Memory");
             scriptMemory = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Used Memory");
-            for (int i = 0; i < MaxPending; i++) pending[i].Phases = Array.Empty<float>();
+            for (int i = 0; i < MaxPending; i++) pending[i].Phases = pending[i].Steps = Array.Empty<float>();
+            sectionSerial = PerformanceLog.SectionSerial;
+            sectionName = PerformanceLog.SectionName;
 
             SceneManager.sceneLoaded += OnSceneLoaded;
             FramePhaseProbes.FrameEnded = OnFrame;
             FramePhaseProbes.Install();
+            FrameCameraProbes.Install();
             PerformanceLog.IsRecording = true;
             WriteHeader();
             Debug.Log($"[PerformanceLog] Recording to {PerformanceLog.FilePath}");
@@ -160,7 +180,8 @@ namespace KryticalNova.Diagnostics
             text.Append("# Krytical Nova II performance log\n");
             text.Append("# started\t").Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture))
                 .Append("\tversion ").Append(Application.version).Append("\tUnity ").Append(Application.unityVersion)
-                .Append(Application.isEditor ? "\tEDITOR (its own slow frames are in here)" : "\tbuilt " + built).Append('\n');
+                .Append(Application.isEditor ? "\tEDITOR (its own slow frames are in here)" : "\tbuilt " + built)
+                .Append("\tscripts ").Append(ScriptingBackend).Append('\n');
             text.Append("# machine\t").Append(SystemInfo.graphicsDeviceName).Append("\t").Append(SystemInfo.processorType.Trim())
                 .Append("\t").Append(SystemInfo.processorCount).Append(" threads\t").Append((SystemInfo.systemMemorySize / 1024f).ToString("0", CultureInfo.InvariantCulture))
                 .Append(" GB\t").Append(SystemInfo.graphicsDeviceType).Append("\t").Append(SystemInfo.operatingSystem).Append('\n');
@@ -170,7 +191,8 @@ namespace KryticalNova.Diagnostics
                 .Append(SlowAgainstUsual.ToString("0", CultureInfo.InvariantCulture)).Append(" times the usual frame of the second before; ~ before a number: matched to its frame by length, not for certain\n");
             text.Append("# phases\t").Append(string.Join(" ", FramePhaseProbes.Names)).Append('\n');
             text.Append(PerformanceLogText.SecondColumns).Append('\n').Append(PerformanceLogText.SlowFrameColumns).Append('\n')
-                .Append(PerformanceLogText.MarkerColumns).Append('\n').Append(PerformanceLogText.ChangeColumns).Append('\n');
+                .Append(PerformanceLogText.MarkerColumns).Append('\n').Append(PerformanceLogText.ChangeColumns).Append('\n')
+                .Append(PerformanceLogText.HistogramColumns).Append('\n');
             writer.Write(text.ToString());
             writer.Flush();
             text.Clear();
@@ -227,10 +249,49 @@ namespace KryticalNova.Diagnostics
 
             if (ms > SlowMs || (usualMs > 0 && ms > Math.Max(NeverSlowBelowMs, usualMs * SlowAgainstUsual))) Keep(ms, collected, began);
             Resolve(false);
+            Count(ms, began);
+            FrameCameraProbes.NewFrame();
 
             secondLeft -= ms / 1000.0;
             if (secondLeft <= 0) WriteSecond(began);
             logTicks += Stopwatch.GetTimestamp() - began;
+        }
+
+        // Every frame of play is counted by its length, for the section it fell in. A new section closes the old one's count.
+        private void Count(double ms, long endedAt)
+        {
+            if (PerformanceLog.SectionSerial != sectionSerial)
+            {
+                WriteHistogram(endedAt);
+                Array.Clear(bins, 0, bins.Length);
+                sectionFrames = sectionOverTwenty = sectionLoadingFrames = 0;
+                sectionSeconds = sectionSlowestMs = 0;
+                sectionSerial = PerformanceLog.SectionSerial;
+                sectionName = PerformanceLog.SectionName;
+                histogramLeft = HistogramEverySeconds;
+            }
+            if (Seconds(endedAt) < loadingUntil)
+            {
+                sectionLoadingFrames++;
+                return;
+            }
+            bins[PerformanceLogText.BinOf(ms)]++;
+            sectionFrames++;
+            sectionSeconds += ms / 1000.0;
+            if (ms > sectionSlowestMs) sectionSlowestMs = ms;
+            if (ms > SlowMs) sectionOverTwenty++;
+            // Now and then as it stands, so a game that is killed leaves its count behind.
+            histogramLeft -= ms / 1000.0;
+            if (histogramLeft > 0) return;
+            histogramLeft = HistogramEverySeconds;
+            WriteHistogram(endedAt);
+        }
+
+        private void WriteHistogram(long now)
+        {
+            if (sectionFrames == 0 && sectionLoadingFrames == 0) return;
+            PerformanceLogText.AppendHistogram(text, Seconds(now), sectionSerial, sectionName, sectionFrames, sectionSeconds, sectionSlowestMs,
+                sectionOverTwenty, sectionLoadingFrames, bins);
         }
 
         private void Keep(double ms, bool collected, long endedAt)
@@ -242,6 +303,10 @@ namespace KryticalNova.Diagnostics
                 long[] ticks = FramePhaseProbes.Ticks;
                 if (slot.Phases.Length != ticks.Length) slot.Phases = new float[ticks.Length];
                 for (int p = 0; p < ticks.Length; p++) slot.Phases[p] = (float)(ticks[p] * 1000.0 / Stopwatch.Frequency);
+                long[] steps = FramePhaseProbes.StepTicks;
+                if (slot.Steps.Length != steps.Length) slot.Steps = new float[steps.Length];
+                for (int s = 0; s < steps.Length; s++) slot.Steps[s] = (float)(steps[s] * 1000.0 / Stopwatch.Frequency);
+                slot.Cameras = FrameCameraProbes.Describe(CameraWorthNamingMs);
                 double time = Seconds(endedAt);
                 slot.Frame = new PerformanceLogText.SlowFrame
                 {
@@ -285,7 +350,9 @@ namespace KryticalNova.Diagnostics
                         if (other != i && pending[other].Used && Math.Abs(pending[other].Frame.Frame - slot.Frame.Frame) <= SplitKnownAfterFrames + 2) slot.Frame.SplitCertain = false;
                 }
                 else slot.Frame.SplitCertain = true; // nothing reported matches: the split is unknown, not doubtful
-                PerformanceLogText.Append(text, slot.Frame, FramePhaseProbes.Names, slot.Phases, PerformanceLog.Markers, Stopwatch.Frequency);
+                PerformanceLogText.Append(text, slot.Frame, FramePhaseProbes.Names, slot.Phases, PerformanceLog.Markers, Stopwatch.Frequency,
+                    FramePhaseProbes.StepNames, slot.Steps, slot.Cameras);
+                slot.Cameras = null;
                 slot.Used = false;
             }
         }
@@ -394,10 +461,12 @@ namespace KryticalNova.Diagnostics
             SceneManager.sceneLoaded -= OnSceneLoaded;
             FramePhaseProbes.FrameEnded = null;
             FramePhaseProbes.Remove();
+            FrameCameraProbes.Remove();
             try
             {
                 Resolve(true);
                 WriteMarkers();
+                WriteHistogram(Stopwatch.GetTimestamp());
                 text.Append("# ended\t").Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)).Append('\n');
                 writer.Write(text.ToString());
                 writer.Flush();

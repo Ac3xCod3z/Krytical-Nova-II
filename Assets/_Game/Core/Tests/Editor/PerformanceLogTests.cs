@@ -72,7 +72,8 @@ namespace KryticalNova.Tests
             PerformanceLogText.Append(text, frame, new[] { "Update", "PreLateUpdate", "PostLateUpdate", "Idle" }, new[] { 2f, 18.5f, 4f, 0f }, ring, TicksPerSecond);
 
             string[] cells = text.ToString().TrimEnd('\n').Split('\t');
-            Assert.AreEqual(12, cells.Length, text.ToString());
+            Assert.AreEqual(PerformanceLogText.SlowFrameColumns.Split('\t').Length, cells.Length, text.ToString());
+            Assert.AreEqual("-", cells[12], "no steps were given");
             Assert.AreEqual("F", cells[0]);
             Assert.AreEqual("12.346", cells[1]);
             Assert.AreEqual("777", cells[2]);
@@ -83,6 +84,41 @@ namespace KryticalNova.Tests
             Assert.AreEqual("3.6", cells[9]);
             Assert.AreEqual("PreLateUpdate=18.5 PostLateUpdate=4.0 Update=2.0 other=2.2", cells[10], "largest first, a phase that took nothing left out, the rest as 'other'");
             Assert.AreEqual("save.player 14.5ms @0.30, skill.cast:Stroke @0.05", cells[11], "only the two seconds before the frame ended, oldest first");
+        }
+
+        [Test]
+        public void ASlowFrameNamesTheStepsThatTookLongestAndTheCameras()
+        {
+            var frame = new PerformanceLogText.SlowFrame { Ms = 40, SplitCertain = true, MainMs = -1, PresentWaitMs = -1, RenderMs = -1, GpuMs = -1, EndedAt = 5000 };
+            string[] names = { "Update.Scripts", "PreLateUpdate.Animation", "PreLateUpdate.Scripts", "PostLateUpdate.Layout", "PostLateUpdate.Draw", "A", "B", "C", "D" };
+            float[] ms = { 2f, 0.1f, 7.5f, 2f, 21f, 0.4f, 0.5f, 0.6f, 0.29f };
+            var text = new StringBuilder();
+            PerformanceLogText.Append(text, frame, null, null, null, TicksPerSecond, names, ms, "camera:Main_Camera=18.2 camera:Portrait=1.1");
+            string steps = text.ToString().TrimEnd('\n').Split('\t')[12];
+            Assert.AreEqual("PostLateUpdate.Draw=21.0 PreLateUpdate.Scripts=7.5 Update.Scripts=2.0 PostLateUpdate.Layout=2.0 C=0.6 B=0.5 camera:Main_Camera=18.2 camera:Portrait=1.1",
+                steps, "the six longest, longest first (two of a length in their own order), none under " + PerformanceLogText.StepWorthNamingMs + " ms, then the cameras");
+        }
+
+        [Test]
+        public void EveryFrameIsCountedInABinOfItsLength()
+        {
+            Assert.AreEqual(0, PerformanceLogText.BinOf(0.1));
+            Assert.AreEqual(16, PerformanceLogText.BinOf(4.0));
+            Assert.AreEqual(4.0, PerformanceLogText.BinFromMs(PerformanceLogText.BinOf(4.2)), 1e-9, "a quarter of a millisecond wide up to 50 ms");
+            Assert.AreEqual(50.0, PerformanceLogText.BinFromMs(PerformanceLogText.BinOf(54.9)), 1e-9, "5 ms wide after");
+            Assert.AreEqual(PerformanceLogText.Bins - 1, PerformanceLogText.BinOf(5000), "anything longer than a second in the last");
+            for (int bin = 0; bin < PerformanceLogText.Bins; bin++)
+                Assert.AreEqual(bin, PerformanceLogText.BinOf(PerformanceLogText.BinFromMs(bin) + 0.01), "bin " + bin + " holds its own start");
+
+            var bins = new int[PerformanceLogText.Bins];
+            bins[PerformanceLogText.BinOf(4.0)] = 900;
+            bins[PerformanceLogText.BinOf(4.3)] = 90;
+            bins[PerformanceLogText.BinOf(61.0)] = 1;
+            var text = new StringBuilder();
+            PerformanceLogText.AppendHistogram(text, 75.25, 3, "bench.fight", 991, 4.1, 61.0, 1, 12, bins);
+            string[] cells = text.ToString().TrimEnd('\n').Split('\t');
+            Assert.AreEqual(PerformanceLogText.HistogramColumns.Split('\t').Length, cells.Length, text.ToString());
+            Assert.AreEqual("H\t75.3\t3\tbench.fight\t991\t4.1\t61.0\t1\t12\t4:900 4.25:90 60:1", text.ToString().TrimEnd('\n'));
         }
 
         [Test]
