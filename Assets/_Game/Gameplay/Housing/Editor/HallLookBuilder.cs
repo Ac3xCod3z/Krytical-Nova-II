@@ -192,7 +192,17 @@ namespace KryticalNova.EditorTools.Housing
                 Keep(look, prefab, looks, made, kept, pictures, pictured, captureIcons);
             }
 
-            FurnishingCatalogBuilder.CaptureIcons(pictures, pictured);
+            try
+            {
+                FurnishingCatalogBuilder.CaptureIcons(pictures, pictured);
+            }
+            finally
+            {
+                // A Finish's panel is a copy made for its picture (Pictured). Hidden and in no scene, it would stay in
+                // the Editor at the world's origin, in front of every camera that looks there, until Unity is closed.
+                foreach ((GameObject model, string _) in pictures)
+                    if (model != null && !EditorUtility.IsPersistent(model)) Object.DestroyImmediate(model);
+            }
             catalog.SetLooks(looks.OrderBy(l => l.itemId).ToList());
             EditorUtility.SetDirty(catalog);
             int removed = FurnishingCatalogBuilder.RemoveStale(items, made, kept,
