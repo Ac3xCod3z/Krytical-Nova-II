@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Combat;
 using KryticalNova.Core;
 using KryticalNova.Networking;
 using KryticalNova.Progression;
@@ -31,6 +32,8 @@ namespace KryticalNova.Hostiles
         private static readonly int DeadParam = Animator.StringToHash("Dead");
 
         private const float AnimSendInterval = 0.1f;
+        // How often the player it is after is told so: well inside the seconds a fight lingers.
+        private const float ThreatTellInterval = 0.5f;
         private const float IdleSpeed = 0.05f;
 
         [SerializeField] private HostileDefinition definition;
@@ -52,6 +55,9 @@ namespace KryticalNova.Hostiles
         private bool setUp;
         private bool asleep;
         private float nextAnimSend;
+        private float nextThreatTell;
+        private Transform threatTarget;
+        private PlayerCombatState threatened;
         private Coroutine leaving;
         private PlayerCharacterProgression tagHolder;
         private float tagRefreshed;
@@ -378,10 +384,30 @@ namespace KryticalNova.Hostiles
             return player == null ? 0f : LevelGapRules.HitChanceModifier(levelGap, LevelGapRules.Gap(Level, player.CurrentLevel));
         }
 
+        // ------------------------------------------------------------------ who it is after
+
+        /// <summary>
+        /// The player this Hostile is after is in a fight for as long as it is, blows or no blows: the fight starts
+        /// when the Hostile turns on them, not at the first hit.
+        /// </summary>
+        private void TellThreat()
+        {
+            if (Time.time < nextThreatTell) return;
+            nextThreatTell = Time.time + ThreatTellInterval;
+            Transform target = brain != null && entity.IsAlive ? brain.Target : null;
+            if (target != threatTarget)
+            {
+                threatTarget = target;
+                threatened = target != null ? target.GetComponentInParent<PlayerCombatState>() : null;
+            }
+            if (threatened != null) threatened.ServerNoteThreat();
+        }
+
         // ------------------------------------------------------------------ animation: what lasts
 
         private void Update()
         {
+            if (setUp && !asleep && HasAuthority) TellThreat();
             if (!setUp || asleep || !IsSpawned || !IsServer || animator == null || Time.time < nextAnimSend) return;
             nextAnimSend = Time.time + AnimSendInterval;
 
