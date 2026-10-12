@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
+using KryticalNova.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -68,6 +69,11 @@ namespace KryticalNova.UI.Menus
             load.allowSceneActivation = false;
             yield return null; // draw the screen once before doing any work on the main thread
             WarmCharacter(profile);
+            // The scripts are compiled ahead of their first use (ScriptWarmUp). Most of it was done in the menus;
+            // what is left is done here, where nothing moves, and the door stays shut until it is.
+            ScriptWarmUp.Playing = false;
+            ScriptWarmUp.Hurry = true;
+            if (!ScriptWarmUp.Done) LoadingGate.Require("Preparing", () => ScriptWarmUp.Done);
 
             float elapsed = 0f;
             float shown = 0f;
@@ -98,10 +104,22 @@ namespace KryticalNova.UI.Menus
                 yield return null;
             }
 
-            // The world has no transition of its own, so this one goes along and uncovers it.
+            // The world has no transition of its own, so this one goes along and uncovers it. It asks the gate again
+            // once the world has stopped starting up under its picture: that is when the world is the player's.
+            LoadingGate.WhenTheDoorOpens(WorldIsThePlayers);
             var transition = MenuTransition.Current;
             if (transition != null) transition.Close(() => load.allowSceneActivation = true, carryIntoNextScene: true);
             else load.allowSceneActivation = true;
+        }
+
+        // The last thing done under the picture that covers the world's first frames: the memory the menus and the
+        // world's start-up left behind is collected now, where nobody sees the pause, so play starts with none of it
+        // owed; and what the game still warms up takes next to nothing of a frame from here on.
+        private static void WorldIsThePlayers()
+        {
+            using (KryticalNova.Diagnostics.PerformanceLog.Time("world.collect")) GC.Collect();
+            ScriptWarmUp.Hurry = false;
+            ScriptWarmUp.Playing = true;
         }
 
         /// <summary>Loads the character's own parts now, so its first frame in the world does not hitch on them.</summary>
@@ -131,10 +149,43 @@ namespace KryticalNova.UI.Menus
     public static class LoadingGate
     {
         private static readonly List<(string label, Func<bool> ready)> Tasks = new List<(string, Func<bool>)>();
+        private static readonly List<Action> AtTheDoor = new List<Action>();
 
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void Clear() => Tasks.Clear();
+        private static void ResetStatics()
+        {
+            Tasks.Clear();
+            AtTheDoor.Clear();
+        }
+
+        /// <summary>Stops waiting for whatever is still running: the door opens without it.</summary>
+        public static void Clear()
+        {
+            Tasks.Clear();
+            OpenTheDoor();
+        }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> once, the next time the gate is asked and nothing is pending (or the wait
+        /// is given up): the moment the screen in front of the world comes away.
+        /// </summary>
+        public static void WhenTheDoorOpens(Action action)
+        {
+            if (action != null) AtTheDoor.Add(action);
+        }
+
+        private static void OpenTheDoor()
+        {
+            if (AtTheDoor.Count == 0) return;
+            Action[] actions = AtTheDoor.ToArray();
+            AtTheDoor.Clear();
+            foreach (Action action in actions)
+            {
+                try { action(); }
+                catch (Exception e) { Debug.LogException(e); }
+            }
+        }
 
         /// <summary>Hold the loading screen until <paramref name="ready"/> returns true. The label is shown to the player.</summary>
         public static void Require(string label, Func<bool> ready)
@@ -156,6 +207,7 @@ namespace KryticalNova.UI.Menus
                 }
                 if (done) Tasks.RemoveAt(i);
             }
+            if (Tasks.Count == 0) OpenTheDoor();
             return Tasks.Count > 0 ? Tasks[0].label : null;
         }
     }
