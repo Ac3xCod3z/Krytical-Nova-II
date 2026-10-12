@@ -78,6 +78,43 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void FileStore_InTheBackground_GivesBackWhatWaits_AndPutsTheNewestOnDisk()
+        {
+            string root = Path.Combine(Application.temporaryCachePath, "kn-save-test-" + System.Guid.NewGuid().ToString("N"));
+            var store = new FileSaveStore(root, background: true);
+            try
+            {
+                for (int i = 0; i < 50; i++) store.Write("world/crews", "{\"a\":" + i + "}");
+                store.Write("accounts/" + Account, "{}");
+                // Before the disk has it, a read gives the newest text handed over.
+                Assert.IsTrue(store.TryRead("world/crews", out string waiting));
+                Assert.AreEqual("{\"a\":49}", waiting);
+
+                store.Flush();
+                Assert.AreEqual("{\"a\":49}", File.ReadAllText(Path.Combine(root, "world", "crews.json")));
+                Assert.AreEqual(2, store.Keys(string.Empty).Count);
+                Assert.AreEqual(0, Directory.GetFiles(root, "*.tmp", SearchOption.AllDirectories).Length, "no temporary file is left behind");
+
+                // A delete takes out what waits as well as what is on disk.
+                store.Write("world/crews", "{\"a\":50}");
+                store.Delete("world/crews");
+                store.Flush();
+                Assert.IsFalse(store.TryRead("world/crews", out _));
+                Assert.IsFalse(File.Exists(Path.Combine(root, "world", "crews.json")));
+
+                // Closed, a write is on disk when it returns.
+                store.Dispose();
+                store.Write("world/late", "{\"b\":1}");
+                Assert.AreEqual("{\"b\":1}", File.ReadAllText(Path.Combine(root, "world", "late.json")));
+            }
+            finally
+            {
+                store.Dispose();
+                if (Directory.Exists(root)) Directory.Delete(root, true);
+            }
+        }
+
+        [Test]
         public void Account_RoundTripsWithEveryPartAndItemData()
         {
             var stack = new ItemStack(8001, 1, ulong.MaxValue - 5);

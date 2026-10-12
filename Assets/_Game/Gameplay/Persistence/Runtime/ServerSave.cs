@@ -32,6 +32,8 @@ namespace KryticalNova.Persistence
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
+            // The store of the session before (Play in the Editor starts without the statics being made anew).
+            (store as IDisposable)?.Dispose();
             store = null;
             BoundAccounts.Clear();
             Agents.Clear();
@@ -41,15 +43,18 @@ namespace KryticalNova.Persistence
             {
                 quitHooked = true;
                 Application.quitting += FlushAll;
+                Application.quitting += WaitForDisk; // also when this machine no longer decides the game
             }
         }
 
         /// <summary>Where saves are kept. Files under the game's data folder unless something else is set (tests, a database).</summary>
         public static ISaveStore Store
         {
-            get => store ??= new FileSaveStore(DefaultRoot());
+            // The files are written by a thread of the store's own, so a save takes none of a frame's time for the disk.
+            get => store ??= new FileSaveStore(DefaultRoot(), background: true);
             set
             {
+                if (!ReferenceEquals(store, value)) (store as IDisposable)?.Dispose();
                 store = value;
                 WorldDocuments.Clear();
                 LastWritten.Clear();
@@ -184,7 +189,11 @@ namespace KryticalNova.Persistence
             for (int i = Agents.Count - 1; i >= 0; i--)
                 if (Agents[i] != null) Agents[i].Save();
             foreach (var pair in WorldDocuments) WriteIfChanged(pair.Key, JsonUtility.ToJson(pair.Value));
+            WaitForDisk();
         }
+
+        /// <summary>Waits until every save handed to the store is on disk. The game does on quitting; a test may at any time.</summary>
+        public static void WaitForDisk() => (store as FileSaveStore)?.Flush();
 
         /// <summary>GM: deletes every save in the store. Characters in the world are released first and keep playing unsaved.</summary>
         public static int WipeAll()
