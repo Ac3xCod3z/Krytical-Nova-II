@@ -886,7 +886,6 @@ namespace KryticalNova.Items.Visuals
             if (animations != null)
             {
                 animations.SetGait(OwnerGait(t));
-                animations.Continue();
                 animations.Tick(animationCycleSeconds);
             }
 

@@ -33,7 +33,7 @@ namespace FastScriptReload.Runtime
 
                 _allTypesInNonDynamicGeneratedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
                     .Where(a => !CustomAttributeExtensions.GetCustomAttributes<DynamicallyCreatedAssemblyAttribute>((Assembly)a).Any())
-                    .SelectMany(a => a.GetTypes())
+                    .SelectMany(a => LoadableTypes(a)) // KN: one type that cannot be loaded no longer stops every hot reload
                     .GroupBy(t => t.FullName)
                     .Select(g => g.First()) //TODO: quite odd that same type full name can be defined multiple times? eg Microsoft.CodeAnalysis.EmbeddedAttribute throws 'An item with the same key has already been added' 
                     .ToDictionary(t => t.FullName, t => t);
@@ -41,6 +41,21 @@ namespace FastScriptReload.Runtime
 #if ImmersiveVrTools_DebugEnabled
                 ImmersiveVrToolsCommon.Runtime.Logging.LoggerScoped.Log($"Initialized type-lookup dictionary, took: {typeLookupSw.ElapsedMilliseconds}ms - cached");
 #endif
+            }
+        }
+
+        // KN: Assembly.GetTypes throws when any one type of the assembly cannot be loaded (on Unity 6000.6 the vendor's
+        // own GenericTableTreeView cannot: its TreeView base class changed), and the exception left the cache empty,
+        // so every hot reload failed. The types that did load are in the exception.
+        private static IEnumerable<Type> LoadableTypes(Assembly assembly)
+        {
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                return e.Types.Where(t => t != null);
             }
         }
 

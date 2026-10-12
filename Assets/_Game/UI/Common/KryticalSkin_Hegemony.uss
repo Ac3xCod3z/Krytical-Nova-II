@@ -228,7 +228,7 @@
 .kn-faction-hegemony .equip-column .equip-slot:hover {
     background-color: rgba(39, 61, 73, 0.91);
 }
-.kn-faction-hegemony .equip-column .equip-slot > .item-frame {
+.kn-faction-hegemony .equip-column .equip-slot > .item-rim, .kn-faction-hegemony .equip-column .equip-slot > .item-frame {
     background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_10.png#SPR_SciFiMenus_Frame_Box_Small_10");
     -unity-slice-scale: 0.22px;
     left: -7px;
@@ -236,7 +236,7 @@
     right: -7px;
     bottom: -7px;
 }
-.kn-faction-hegemony .equip-column .equip-slot.item-empty > .item-frame {
+.kn-faction-hegemony .equip-column .equip-slot.item-empty > .item-rim {
     -unity-background-image-tint-color: rgb(132, 132, 132);
 }
 .kn-faction-hegemony .card-picture-frame {

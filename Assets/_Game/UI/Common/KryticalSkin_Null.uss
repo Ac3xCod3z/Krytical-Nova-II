@@ -625,9 +625,8 @@
     -unity-background-image-tint-color: rgba(72, 49, 80, 0.85);
     -unity-slice-scale: 0.19px;
 }
-.kn-faction-null .item-frame {
+.kn-faction-null .item-rim, .kn-faction-null .item-frame {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Frame_Box_03.png#SPR_HUD_DarkFantasy_Frame_Box_03");
-    -unity-background-image-tint-color: rgba(186, 157, 196, 0.35);
 }
 .kn-faction-null .item-glyph {
     font-size: 14.08px;
@@ -809,9 +808,6 @@
 }
 .kn-faction-null .forge-gauge {
     color: rgb(222, 65, 73);
-}
-.kn-faction-null .item-cell.forge-piece.temper-rim > .item-frame {
-    -unity-background-image-tint-color: rgba(186, 157, 196, 0.35);
 }
 .kn-faction-null .forge-value {
     font-size: 33.28px;
@@ -1862,7 +1858,7 @@
 .kn-faction-null .equip-column .equip-slot:hover {
     background-color: rgba(60, 81, 88, 0.82);
 }
-.kn-faction-null .equip-column .equip-slot > .item-frame {
+.kn-faction-null .equip-column .equip-slot > .item-rim, .kn-faction-null .equip-column .equip-slot > .item-frame {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_17.png#SPR_DarkFantasy_Frame_Box_Medium_17");
     -unity-slice-scale: 0.1667px;
     left: -6px;
@@ -1870,7 +1866,7 @@
     right: -6px;
     bottom: -6px;
 }
-.kn-faction-null .equip-column .equip-slot.item-empty > .item-frame {
+.kn-faction-null .equip-column .equip-slot.item-empty > .item-rim {
     -unity-background-image-tint-color: rgb(132, 132, 132);
 }
 .kn-faction-null .card-picture-frame {

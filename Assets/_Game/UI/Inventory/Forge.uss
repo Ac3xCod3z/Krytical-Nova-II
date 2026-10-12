@@ -30,9 +30,8 @@
 /* Two classes each: the Pack's own size for a cell (Items.uss) is read after this sheet and would win. */
 .item-cell.forge-piece { width: 104px; height: 104px; margin: 0; }
 .item-cell.forge-piece.empty { opacity: 0.55; }
-/* On the Temper tab the rim says how far the piece is tempered, not how rare it is: the controller tints it with the
-   glow band's colour. An untempered piece is in no band and gets the plain rim (the colour of an empty cell's). */
-.item-cell.forge-piece.temper-rim > .item-frame { -unity-background-image-tint-color: rgba(150, 176, 196, 0.35); }
+/* The socket's rim is the piece's, as in the Pack (Items.uss): its Temper glow's colour, or its rarity's while it is
+   untempered. It changes with the ring and the number when a strike lands. */
 .forge-value {
     position: absolute;
     left: 0;

@@ -34,8 +34,6 @@ namespace KryticalNova.Items.Visuals
         // The animations that take a turn: all of them but those only reached through another.
         private readonly List<int> turns = new List<int>();
         private IReadOnlyList<FollowOn> followOns;
-        private int followedTimes;
-        private int followedState;
         private bool read;
         private bool hasWalk;
         private bool hasRun;
@@ -101,7 +99,11 @@ namespace KryticalNova.Items.Visuals
             return false;
         }
 
-        /// <summary>The animations that are followed by another instead of going back to rest. Those that follow take no turn of their own.</summary>
+        /// <summary>
+        /// The animations that are followed by another instead of going back to rest. The hand-over itself is in the
+        /// model's Animator (PetAssetBuilder joins the states end to start, so the chain plays as one animation);
+        /// here it only means that those that follow take no turn of their own.
+        /// </summary>
         public void SetFollowOns(IReadOnlyList<FollowOn> list)
         {
             followOns = list;
@@ -118,46 +120,6 @@ namespace KryticalNova.Items.Visuals
                     foreach (FollowOn each in followOns) follows |= each.Then == hash;
                 if (!follows) turns.Add(hash);
             }
-        }
-
-        /// <summary>
-        /// Once a frame: an animation that is followed by another hands over to it as it ends, instead of going back
-        /// to rest. One that is played more than once starts again until it has been through that many times.
-        /// </summary>
-        public void Continue()
-        {
-            if (followOns == null || followOns.Count == 0 || calm || animator == null || !animator.isActiveAndEnabled || !animator.isInitialized) return;
-            AnimatorStateInfo now = animator.GetCurrentAnimatorStateInfo(0);
-            bool leaving = animator.IsInTransition(0);
-            // Left for anything but rest (the pet moved off, another animation was asked for): the chain is dropped.
-            if (leaving && animator.GetNextAnimatorStateInfo(0).shortNameHash != defaultState) return;
-            foreach (FollowOn each in followOns)
-            {
-                if (each.From != now.shortNameHash) continue;
-                if (followedState != each.From)
-                {
-                    followedState = each.From;
-                    followedTimes = 0;
-                }
-                float oneFrame = now.length > 0f ? Time.deltaTime * Mathf.Abs(animator.speed) / now.length : 0f;
-                if (!leaving && now.normalizedTime < 1f - oneFrame) return;
-                followedTimes++;
-                if (followedTimes < each.Times) animator.Play(each.From, 0, 0f);
-                else
-                {
-                    followedState = 0;
-                    animator.Play(each.Then, 0, 0f);
-                }
-                if (HasRestLoop)
-                {
-                    oneShot = true;
-                    oneShotLeftDefault = true;
-                    oneShotSince = Time.time;
-                }
-                nextAt = -1f; // the turn-taking waits a full interval after the whole chain
-                return;
-            }
-            followedState = 0;
         }
 
         /// <summary>What can be played, by name. Empty until the Animator has started.</summary>

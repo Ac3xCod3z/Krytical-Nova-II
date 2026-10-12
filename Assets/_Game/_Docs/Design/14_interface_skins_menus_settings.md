@@ -130,9 +130,13 @@ the same arrangement in every faction, each in its own pack's parts (`FactionSki
 
 - **Equipment:** the owner's name, level and lineage over the model; slots down either side, larger, with no captions.
 - **Pack:** the page tabs stand on a well that holds the grid; count, SORT and Creds on one foot bar. An empty cell
-  has no outline (class `item-empty`). **In the grid an item's rarity is the colour of the cell it lies on**, not a
-  square outline (the packs' grids have none); the outline is kept for a pointer over a cell and for drops. On an
-  equipment slot the rarity tints the slot's ornate frame, which is grey while the slot is empty.
+  has no outline (class `item-empty`). **In the grid an item lies on a cell of its rarity's colour, inside a rim of
+  that colour** (owner, 12 Oct 2026; before that the grids had the ground alone), and a tempered piece's rim is its
+  Temper glow's colour instead (`02_Gear_System_Spec.md`, Glow). The rim is the skin's own frame art (`.item-rim`);
+  over it lies a second outline of the same art (`.item-frame`), clear but for a pointer over the cell, a drop or a
+  flash, so what is happening to a cell never has to fight the colour of what is in it. On an equipment slot the
+  rim is the slot's ornate frame, which is grey while the slot is empty. The same holds in every window that draws
+  an item cell (forge, Vault, Trade, Kiosk, shops, crafting, Holoweave).
 - **Item card** (the tooltip, everywhere an item is hovered): the item's picture on the pack's slot lit in its rarity,
   the name in the title face, what it gives as one strip a line, an EQUIPPED flag on worn pieces, and the hint as
   mouse prompts. The texts are the ones the tooltip had.
@@ -154,7 +158,7 @@ A UI Toolkit background draws one image, so a part that is a frame over a fill i
 (`SpriteRecolourer.Flatten`, into `UI/HUD/Faction/<Faction>/Art/`) the first time the skins are built; **Krytical Nova ▸
 UI ▸ Rebuild Faction Skin Art** makes them again. The builder writes the rules after the converted sheets (the "window
 chrome" section of each `KryticalSkin_<Faction>.uss`); they name a part through its parent, so they win over the tinted
-look. `SyntySkin.Decorate` adds the two ornament layers to windows. A cell's rarity outline is drawn over the pack's cell
+look. `SyntySkin.Decorate` adds the two ornament layers to windows. A cell's rim (its rarity's colour, or its Temper glow's) is drawn over the pack's cell
 and keeps its colours; a button's state only lightens or darkens its art. Nothing a window does, and no element name,
 changed.
 

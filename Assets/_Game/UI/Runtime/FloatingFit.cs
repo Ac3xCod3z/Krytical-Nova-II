@@ -17,6 +17,9 @@ namespace KryticalNova.UI
         private Rect anchor;
         private Vector2 corner;
         private bool beside, placed;
+        // Where the last two moves of this frame put it (see Fit: it is never sent back and forth).
+        private Vector2 last, beforeLast;
+        private int moves, movesFrame = -1;
 
         /// <param name="gap">Kept between the element and what it stands beside.</param>
         /// <param name="margin">Kept to the screen's edge: a skin's frame stands a little outside the element's own box.</param>
@@ -48,6 +51,7 @@ namespace KryticalNova.UI
         {
             if (element == null) return;
             placed = true;
+            moves = 0;
             Fit();
             // Its content was set this frame: the layout pass that sizes it comes after this, and tells Fit again.
             // This is for an element whose size and place turn out the same as last time, which hears nothing.
@@ -71,6 +75,21 @@ namespace KryticalNova.UI
             Vector2 local = parent.WorldToLocal(at);
             Vector2 now = parent.WorldToLocal(bounds.position);
             if (Mathf.Abs(local.x - now.x) < 0.5f && Mathf.Abs(local.y - now.y) < 0.5f && Mathf.Abs(scale - own) < 0.004f) return;
+
+            // The layout snaps to whole pixels, so an element's size can differ by one pixel with where it stands.
+            // When that pixel decides the side it goes on, each move calls for the other and the layout never
+            // settles ("Layout update failed to stabilize"). Sent back to where it stood before its last move, in
+            // the same frame, it stays where it is: both places are on screen to within that pixel.
+            if (movesFrame != Time.frameCount)
+            {
+                movesFrame = Time.frameCount;
+                moves = 0;
+            }
+            if (moves >= 2 && (at - beforeLast).sqrMagnitude < 4f) return;
+            beforeLast = last;
+            last = at;
+            moves++;
+
             element.style.transformOrigin = new TransformOrigin(0f, 0f);
             element.style.scale = scale < 0.999f ? new Scale(new Vector2(scale, scale)) : new StyleScale(StyleKeyword.Null);
             element.style.left = local.x;
