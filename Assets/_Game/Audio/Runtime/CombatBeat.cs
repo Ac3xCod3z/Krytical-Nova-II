@@ -36,6 +36,13 @@ namespace KryticalNova.Audio
         public static double BeatSeconds { get; private set; }
 
         /// <summary>
+        /// Seconds the beat this player keeps time to runs behind the zone's shared clock: how far the sound sits from
+        /// that clock, plus the player's own offset. A moment the player judged against the beat is this much earlier
+        /// on the shared clock, which is how it is told to the server.
+        /// </summary>
+        public static double ClockLagSeconds { get; private set; }
+
+        /// <summary>
         /// How much later the player hears a sound than the game plays it, in seconds (Settings: Beat timing offset).
         /// The beat everything keeps time to is moved by it, so that it falls where the player hears it.
         /// </summary>
@@ -62,11 +69,12 @@ namespace KryticalNova.Audio
             return true;
         }
 
-        internal static void Set(float live, MusicTrack track, double heardPosition, double firstBeat)
+        internal static void Set(float live, MusicTrack track, double heardPosition, double firstBeat, double clockPosition = 0.0)
         {
             Live01 = Mathf.Clamp01(live);
             Track = track;
             HasBeat = track != null;
+            ClockLagSeconds = HasBeat ? clockPosition - (heardPosition - OutputDelaySeconds) : 0.0;
             if (!HasBeat)
             {
                 Beats = 0.0;

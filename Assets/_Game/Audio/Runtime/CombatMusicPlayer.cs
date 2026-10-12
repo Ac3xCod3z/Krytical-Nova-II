@@ -22,6 +22,8 @@ namespace KryticalNova.Audio
         // ...and only when it has been that far off for this long: one late frame is not drift.
         private const float DriftPatience = 0.75f;
         private const double ClickLead = 0.2;
+        // Seconds a second the kept lead of the audio clock over real time may sink: far less than time itself moves.
+        private const double LeadSink = 0.002;
 
         [SerializeField] private MusicConductor conductor;
         [SerializeField] private AudioSource source;
@@ -35,8 +37,9 @@ namespace KryticalNova.Audio
         private double dspStart;
         private double positionAtStart;
         private float adrift;
-        private double lastDsp;
-        private double realAtLastDsp;
+        private double dspLead;
+        private double leadReadAt;
+        private bool leadKnown;
         private AudioClip click;
         private AudioClip barClick;
         private long clickBooked = long.MinValue;
@@ -110,7 +113,7 @@ namespace KryticalNova.Audio
 
             source.volume = track.volume * live;
             double firstBeat = conductor.FirstBeatOf(track);
-            CombatBeat.Set(live, track, heard, firstBeat);
+            CombatBeat.Set(live, track, heard, firstBeat, position);
             BookClick(track, firstBeat, heard, dsp);
             Report = $"{track.Title}: {track.beatsPerMinute:0.###} beats a minute, {heard:0.0} s in, beat {CombatBeat.Index}, " +
                      $"sound {off * 1000.0:+0;-0} ms from the shared clock, volume {live:0.00}.";
@@ -163,19 +166,21 @@ namespace KryticalNova.Audio
         }
 
         /// <summary>
-        /// The audio clock moves a whole buffer at a time (about 20 ms); between its steps real time fills in, so
-        /// that the beat is read smoothly every frame.
+        /// The audio clock moves a whole buffer at a time (about 20 ms) and is exact only at the moment it moves. Real
+        /// time fills in between: the audio clock is taken to be real time plus the largest lead over real time it has
+        /// shown lately, which is its lead at the steps themselves. Read this way the beat is smooth every frame and
+        /// never runs backwards.
         /// </summary>
         private double SmoothDsp()
         {
-            double dsp = AudioSettings.dspTime;
             double real = Time.realtimeSinceStartupAsDouble;
-            if (dsp != lastDsp)
-            {
-                lastDsp = dsp;
-                realAtLastDsp = real;
-            }
-            return lastDsp + System.Math.Min(real - realAtLastDsp, 0.05);
+            double lead = AudioSettings.dspTime - real;
+            // Between two steps the lead only falls behind. The kept one sinks slowly, so that a real drift between the
+            // two clocks is still followed.
+            dspLead = leadKnown ? System.Math.Max(lead, dspLead - LeadSink * (real - leadReadAt)) : lead;
+            leadKnown = true;
+            leadReadAt = real;
+            return real + dspLead;
         }
 
         // ------------------------------------------------------------------ the GM's click

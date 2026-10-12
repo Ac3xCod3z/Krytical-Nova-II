@@ -79,7 +79,9 @@ _Game/
 │   │                      Tests/Editor/
 │   ├── Combat/            Runtime/ (melee, skill attacks, duels, who is hostile to whom; PlayerCombatState = whether a player is
 │   │                      in a fight, decided by the server and told to every machine; PlayerSkillQueue = a skill asked for out
-│   │                      of reach or mid-swing: the server walks the player in and casts it)  Tests/Editor/
+│   │                      of reach or mid-swing: the server walks the player in and casts it; PlayerCadence and CadenceRules =
+│   │                      a skill key pressed on the beat of the fight music, design 17)  Data/ + Data/Assets/ (CadenceSettings)
+│   │                      Tests/Editor/
 │   ├── Factions/          Runtime/ (ids, rules)  Data/ + Data/Assets/ (the three factions, catalog)  Editor/
 │   ├── CharacterCreation/ Runtime/ (recipe, look, roster, save, names)  Data/ + Data/Assets/ (lineages, palettes,
 │   │                      database)  Editor/ (bakers)  Tests/Editor/
@@ -246,7 +248,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 
 | Assembly                          | Defined in                                     | Covers (via .asmref)                                                     |
 |-----------------------------------|------------------------------------------------|---------------------------------------------------------------------------|
-| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets,Forge,Crafting,Restyle,Housing}/Runtime, {Progression,Factions,CharacterCreation,Social,Economy,Pets,Items,Crafting,Housing}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data, Audio/Runtime, Audio/Data |
+| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets,Forge,Crafting,Restyle,Housing}/Runtime, {Combat,Progression,Factions,CharacterCreation,Social,Economy,Pets,Items,Crafting,Housing}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data, Audio/Runtime, Audio/Data |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime and Vegetation.Grass (the graphics settings set grass density). Excluded from dedicated server (`!UNITY_SERVER`) |
 | `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | GameFeel/Data. FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
@@ -267,7 +269,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Hostiles.Tests.Editor` | `Gameplay/Hostiles/Tests/Editor/`           | EditMode tests (the Hostile stat curve against the game's damage formula at every level; the respawn queue of a Hostile Zone; the level-gap table gap by gap; what a kill drops) |
 | `KryticalNova.Housing.Tests.Editor` | `Gameplay/Housing/Tests/Editor/`             | EditMode tests (setting a furnishing down, moving and putting away; what stands on what; the budget; the faction rule; the grid and overlapping footprints; undo and redo) |
 | `KryticalNova.Autopilot.Tests.Editor` | `Gameplay/Autopilot/Tests/Editor/`         | EditMode tests (what Magnet takes; saved Autopilot choices come back inside their limits) |
-| `KryticalNova.Combat.Tests.Editor` | `Gameplay/Combat/Tests/Editor/`             | EditMode tests (when a player counts as in a fight, and why) |
+| `KryticalNova.Combat.Tests.Editor` | `Gameplay/Combat/Tests/Editor/`             | EditMode tests (when a player counts as in a fight, and why; Cadence: when a press is on the beat, and when the server believes it) |
 | `KryticalNova.Audio.Tests.Editor` | `Audio/Tests/Editor/`                        | EditMode tests (keeping time by arithmetic: where a moment falls against a track's beats, which track of a round is on) |
 | `KryticalNova.Icons.Tests.Editor` | `Icons/Tests/Editor/`                          | EditMode tests (the comic icon treatment, the icon library's rules, and that every skill and item shows an icon of its own). Depends on Runtime and Editor |
 | `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab; how hits look: the rules, a look of its own for every weapon class, no comic effect shared between two moments, the lettering layer and its pass, the pool's timing; the feel of the menus: a player for every menu moment, held by every menu scene and by the world, and a movement that leaves a thing where its animator put it). Depends on Runtime, GameFeel, UI. `!UNITY_SERVER` |

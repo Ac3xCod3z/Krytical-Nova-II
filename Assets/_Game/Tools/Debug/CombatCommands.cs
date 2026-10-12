@@ -58,6 +58,30 @@ namespace KryticalNova.DevTools
                                    : "No longer watching.";
         }
 
+        [Command("gm.cadence", "Cadence for the targeted player: its numbers, and what became of their last skill key pressed in a fight " +
+                               "(how far from the beat, on Cadence or not, whether it was spent on a cast). " +
+                               "gm.cadence log on|off prints every press of every player to the log.")]
+        private static string Cadence(string what = "", string state = "")
+        {
+            if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
+            var cadence = player.GetComponent<PlayerCadence>();
+            if (cadence == null || cadence.Settings == null) return "That player has no Cadence (run Krytical Nova/Setup/Player Prefab).";
+            what = (what ?? string.Empty).Trim().ToLowerInvariant();
+            state = (state ?? string.Empty).Trim().ToLowerInvariant();
+            if (what == "log" && (state == "on" || state == "off"))
+            {
+                PlayerCadence.Logging = state == "on";
+                return PlayerCadence.Logging ? "Every press is printed to the log." : "Presses are no longer printed.";
+            }
+            if (what.Length > 0) return "Use gm.cadence or gm.cadence log on|off.";
+
+            CadenceSettings settings = cadence.Settings;
+            return $"Cadence {(settings.enabled ? "on" : "OFF")}: within {settings.windowMs:0} ms of a beat, +{settings.bonusPercent:0.#} % damage, " +
+                   $"kept {settings.keepSeconds:0.#} s, {(settings.againstPlayers ? "also against players" : "not against players")}." +
+                   System.Environment.NewLine +
+                   $"Last press: {cadence.LastPress}";
+        }
+
         private static void OnWatchedChanged(bool fighting)
         {
             if (watched == null) return;

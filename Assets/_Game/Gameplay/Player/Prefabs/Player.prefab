@@ -109,6 +109,7 @@ GameObject:
   - component: {fileID: 599682507219348469}
   - component: {fileID: 6197100756686350223}
   - component: {fileID: 2784936230896995334}
+  - component: {fileID: 2739452034050256493}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -4037,6 +4038,20 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   settings: {fileID: 11400000, guid: 224fc480aa6244d43bcba3cd42cbd873, type: 2}
   catalog: {fileID: 11400000, guid: 85d85e544bd9d2644a9391ef91738eda, type: 2}
+--- !u!114 &2739452034050256493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61cf34d87d3ffa5408d6b4292308a33e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Combat.PlayerCadence
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: a79832ad2d330ef4a8e51470bb518b16, type: 2}
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

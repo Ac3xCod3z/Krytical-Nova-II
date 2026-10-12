@@ -97,6 +97,31 @@ casting anyway; that is accepted for now and noted for the security pass (row 59
 **What the player is shown.** Only the player who earned it, as with damage numbers: the pet pops, a small
 sound, a mark on the damage number.
 
+**As built (M4, 12 Oct 2026).** `PlayerCadence` (on the player; row in `PlayerSystemsSetup`), `CadenceRules`,
+`CadenceSettings` (`Gameplay/Combat/Data/Assets/CadenceSettings.asset`).
+
+- The moment a player times is `PlayerSkillHotbar.SkillKeyPressed`: the player's own key going down on a skill
+  that casts at the press. A held key repeating, Autopilot and a click on the slot do not raise it.
+- The player's game sends one small message with the moment of the press on the zone's shared clock, as that
+  player heard the beat (`CombatBeat.ClockLagSeconds` takes the sound's own lag and the Beat timing offset out).
+  It is sent just before the cast request, so the server always has it first.
+- The server reads its own beat at that moment (`MusicConductor.TryBeatError`) and judges
+  (`CadenceRules.Judge`): Cadence on, the player in a fight, the press no older than `maxPressAgeSeconds` (0.6 s),
+  a beat playing, and within the window. Every press is the latest word: one off the beat lets go of an earlier
+  one that was on it.
+- An on-beat press is kept for that skill for `keepSeconds` and spent when a cast of it begins
+  (`PlayerSkillAttacks.ExecuteRoutine` asks `ServerTake`). The cast's hits are then scaled by the bonus after
+  everything else is worked out (`PlayerMeleeCombat.ResolveHit`, `damageScale`), so +6 % is 6 % of the damage
+  dealt, critical or not. Against other players only when `againstPlayers` is set.
+- Shown to the player who earned it: the words ON CADENCE over the character and a line in the skill feed. The
+  pet's pop and the sound come with M5; a mark on the damage number itself is not built.
+- `gm.cadence` prints the numbers and what became of the targeted player's last press; `gm.cadence log on`
+  prints every press.
+- Measured in the arena with two Editors: on-beat presses 2 to 7 ms from the beat were on Cadence on both
+  machines and their hits were exactly 1.06 times the off-beat ones (470.3 and 498.5 on the host, 163.6 and
+  173.4 on the client); a press on the beat while another cast held the body waited in the queue and kept its
+  Cadence; the server heard of a client's press 3 to 130 ms after it.
+
 ## 5. The beat
 
 - A `MusicConductor` on the zone's World Environment object keeps the zone's **combat playlist** running on

@@ -49,6 +49,7 @@ namespace KryticalNova.Combat
         private PointAndClickPlayer player;
         private PlayerSkillHotbar hotbar;
         private CharacterBuffManager buffManager;
+        private PlayerCadence cadence;
         private Coroutine executeRoutine;
         private Coroutine presentRoutine;
         private Transform model;        // the animated rig; raised and lowered by casts that leap
@@ -178,6 +179,9 @@ namespace KryticalNova.Combat
             var single = target != null ? target.GetComponentInParent<IDamageable>() : null;
             bool empowerSpent = false;
             float elapsed = 0f;
+            // Cadence: a key pressed on the beat of the fight music makes this one cast hit a little harder.
+            if (cadence == null) cadence = GetComponent<PlayerCadence>();
+            float onCadence = cadence != null ? cadence.ServerTake(skill) : 1f;
 
             for (int i = 0; i < hits; i++)
             {
@@ -193,12 +197,12 @@ namespace KryticalNova.Combat
                 if (skill.IsAreaAttack)
                 {
                     CollectAreaTargets(range);
-                    foreach (var victim in areaTargets) landed |= ResolveSkillHit(skill, victim, perHit, label);
+                    foreach (var victim in areaTargets) landed |= ResolveSkillHit(skill, victim, perHit, label, CadenceFor(victim, onCadence));
                 }
                 else if (single != null && single.IsAlive
                          && FlatDistance(single.Transform.position) <= (range + rangeTolerance) * impactRangeLeniency)
                 {
-                    landed = ResolveSkillHit(skill, single, perHit, label);
+                    landed = ResolveSkillHit(skill, single, perHit, label, CadenceFor(single, onCadence));
                 }
 
                 // One-hit buffs (Spiritual Rage) empower only the first hit that lands.
@@ -211,9 +215,12 @@ namespace KryticalNova.Combat
             executeRoutine = null;
         }
 
-        private bool ResolveSkillHit(SkillDefinitionSO skill, IDamageable victim, float multiplier, string label)
+        private float CadenceFor(IDamageable victim, float onCadence) =>
+            onCadence > 1f && cadence != null && cadence.AppliesTo(victim) ? onCadence : 1f;
+
+        private bool ResolveSkillHit(SkillDefinitionSO skill, IDamageable victim, float multiplier, string label, float damageScale = 1f)
         {
-            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result, skill.canCrit, fromSkill: true) || result.IsEvaded) return false;
+            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result, skill.canCrit, fromSkill: true, damageScale: damageScale) || result.IsEvaded) return false;
             Vector3 position = victim.Transform.position + Vector3.up;
             if (IsSpawned) SkillHitVfxClientRpc(skill.skillId, position);
             else SpawnSkillHitVfxLocal(skill, position);

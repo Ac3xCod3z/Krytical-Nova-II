@@ -62,6 +62,11 @@ namespace KryticalNova.Progression
         public event Action CharacterWindowRequested;
         public event Action SkillsWindowRequested;
         public event Action CancelRequested;
+        /// <summary>
+        /// The player's own key went down on a skill that is cast at the press, just before it is asked for. Not
+        /// raised by a held key repeating, by Autopilot or by a click on the slot: it is the moment a player times.
+        /// </summary>
+        public event Action<SkillDefinitionSO> SkillKeyPressed;
         /// <summary>The local player began holding a charged skill's key.</summary>
         public event Action<SkillDefinitionSO> ChargeStarted;
         /// <summary>The hold ended; true when the charge filled and the skill was cast.</summary>
@@ -189,6 +194,7 @@ namespace KryticalNova.Progression
             HotbarSlotEntry entry = slots[index];
             if (entry.itemType != HotbarItemType.CombatSkill || entry.combatSkill == null || !entry.combatSkill.IsCharged)
             {
+                if (entry.itemType == HotbarItemType.CombatSkill && entry.combatSkill != null) SkillKeyPressed?.Invoke(entry.combatSkill);
                 ActivateSlot(index);
                 return;
             }
