@@ -90,7 +90,7 @@ namespace KryticalNova.Items.Visuals
                 merger = new SkinnedMeshMerger(transform, null, null);
                 var bones = new Transform[referenceBoneNames.Length];
                 for (int i = 0; i < bones.Length; i++) bones[i] = merger.FindBone(referenceBoneNames[i]);
-                merger = new SkinnedMeshMerger(transform, bones, referenceBindposes);
+                merger.SetReference(bones, referenceBindposes);
             }
             else if (targetRenderer.sharedMesh != null && targetRenderer.sharedMesh.isReadable)
                 merger = new SkinnedMeshMerger(transform, targetRenderer.bones, targetRenderer.sharedMesh.bindposes);

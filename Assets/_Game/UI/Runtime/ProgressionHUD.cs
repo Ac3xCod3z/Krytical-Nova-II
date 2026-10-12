@@ -531,11 +531,16 @@ namespace KryticalNova.UI
             ForgetShown();
             EnsureGeneratedSkillCards();
             Refresh();
-            // The two windows are drawn once now, while the player is arriving, so the first time each is opened
-            // costs no more than any other (finding a hundred skill cards' parts takes a tenth of a second).
-            RefreshCharacterSheet();
-            RefreshSkillList();
+            // The two windows are drawn once while the player is arriving, so the first time each is opened costs no
+            // more than any other (finding a hundred skill cards' parts takes a tenth of a second). Not on this
+            // frame, which is the one the player is being made on and long enough: one window on each of the next two.
+            windowsToDraw = 2;
+            drawWindowsFrom = Time.frameCount + 2;
         }
+
+        // The Character Sheet and the Skills window still owed their first drawing after a player arrived, and the
+        // frame from which they are drawn.
+        private int windowsToDraw, drawWindowsFrom;
 
         private void UnbindPlayer()
         {
@@ -585,6 +590,14 @@ namespace KryticalNova.UI
 
         private void LateUpdate()
         {
+            if (windowsToDraw > 0 && initialized && Time.frameCount >= drawWindowsFrom)
+            {
+                // A window opened meanwhile has been drawn already: it is not drawn twice.
+                if (windowsToDraw == 2) { if (characterStale) RefreshCharacterSheet(); }
+                else if (skillsStale) RefreshSkillList();
+                windowsToDraw--;
+                return;
+            }
             if (!refreshWanted) return;
             refreshWanted = false;
             using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("hud.redraw");

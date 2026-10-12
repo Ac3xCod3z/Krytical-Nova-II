@@ -906,10 +906,23 @@ What is in place so that nothing can do this again:
   `TimeUpdate.WaitForLastPresentationAndUpdateTime` (the main thread waiting for the picture) and the `S` lines'
   set-pass column jumping: the camera's x and z are on the same lines.
 
-**Known and not done:** a player appearing is costly. Building the networked character takes about 230 ms in the
-Editor and hands out 31 MB (instantiating the prefab 69 ms, `CharacterAppearance.Awake` 43 ms), which is the
-175 to 258 ms frame when hosting starts in the builds, and is paid again by everyone near whenever any player
-appears.
+### A player appearing (12 Oct 2026)
+
+The frame hosting starts on was 175 to 258 ms in the first two builds, and it is the frame a character is made on,
+so a part of it is paid by everyone near whenever any player appears. Taken apart in the Editor (ending the session
+and hosting again with the Profiler on): 229 ms and 31 MB handed out.
+
+- **Done.** Every character's `SkinnedMeshMerger` had six megabytes of scratch lists of its own, and
+  `CharacterAppearance.Awake` made the merger twice (once to look the bones up by name): 43 ms and 12 MB for each
+  character that woke, a player or a doll. The scratch is now one set for the whole game (every merge clears it
+  first; merges run one at a time on the main thread) and the merger is made once (`SetReference`). After: the
+  appearance's waking is gone from the frame and the frame hands out 7.8 MB. And `ProgressionHUD` draws its two
+  windows for the first time on the two frames after the player arrives, not on that one.
+- **Left**, in the Editor's numbers: making the player prefab's copy 50 to 100 ms (1,373 managed objects are read
+  back for it: the prefab is large), 65 ms inside the session's start that the Profiler does not name, the whole
+  interface restyled when the local player's faction is known 26 ms, the old avatar letting go of the interface
+  17 ms, the two mesh merges 12 ms. The frame is still about 180 to 200 ms there. The next step is the prefab's
+  size, and it has not been taken.
 
 ### The world, and what draws it (10 Oct 2026)
 
