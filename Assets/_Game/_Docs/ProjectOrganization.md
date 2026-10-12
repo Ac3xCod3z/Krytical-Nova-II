@@ -69,7 +69,9 @@ _Game/
 ├── Core/Runtime/          Cross-cutting interfaces & registries. Defines KryticalNova.Runtime.asmdef
 │                          SaveSystem/ (ISaveStore, ISaveParticipant, file and memory stores)
 │                          Diagnostics/ (the performance log a built game writes: PerformanceLog.Mark / Time for any
-│                          system, the recorder, the frame-phase probes)   Core/Tests/Editor/ (its tests)
+│                          system, the recorder, the frame-phase, step and camera probes)   Core/Tests/Editor/ (its tests)
+│                          WarmUp/ (ScriptWarmUp: the scripts compiled ahead of their first use, in the menus and
+│                          behind the Loading page)
 │                          (future: Architecture/ Events/ Services/ Pooling/ Utilities/ Extensions/)
 ├── Gameplay/
 │   ├── Autopilot/         Runtime/ (PlayerAutopilot = the server's flag, zone and time; AutopilotController and MagnetController
@@ -182,7 +184,8 @@ _Game/
 │                          World/Towns/ (Zone01_StarterTown + its lighting/APV/navmesh data)  Development/
 │                          (future: Bootstrap/ World/Overworld/ Dungeons/ Cinematics/)
 ├── Settings/              Project-level config assets for packages (Animancer Settings)
-├── Tools/                 Editor/ (KryticalNova.Editor.asmdef, Organization/, GM/, Build/ = build scene order,
+├── Tools/                 Editor/ (KryticalNova.Editor.asmdef, Organization/, GM/, Build/ = build scene order, the
+│                          test build (Mono or IL2CPP), the performance log's menu and reader, the allocation finder,
 │                          Setup/ = the two wiring steps: player prefab and zone scene, Hierarchy/ = vHierarchy data)
 │                          Debug/ (QC commands)
 │                          (future: Profiling/ Importers/)
