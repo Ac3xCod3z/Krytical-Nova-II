@@ -132,12 +132,12 @@ Every system, item, place and stat in this doc has one Krytical Nova name, chose
 | **The Scar** (planned) | Yanggok Valley (the always-on PvP map between the faction lands, level 90+) | — (the "Zone05, PvP contested" slot of `hostiles-plan.md`) | World |
 | **Line** (planned) | Channel (one of several running copies of a map). The owner's word, 11 Oct 2026; not a weapon line | — | World |
 | **Merc** (planned) | (none: a player who fights for another faction for one event, to even the sides) | — | PvP |
-| **Crew Hall** (the sandbox is built; every word in this group is a proposal) | (none: guild housing) | `PlayerHousing` (the Hall sandbox), `HousingLot`, `HomeSave`; `gm.home` (`../../Plans/crew-halls-plan.md`) | Housing |
+| **Crew Hall** (the sandbox is built; every word in this group is a proposal) | (none: guild housing) | `PlayerHousing` (the Hall sandbox: the Lot, the trips, the instance inside), `HallRoom` (one of its three floors), `HousingLot`, `HomeSave`; `gm.home`, `gm.home.inside`, `gm.home.floor` (`../../Plans/crew-halls-plan.md`) | Housing |
 | **Crew Quarter** (planned) | (none: a faction's housing map, split into Lines like a Home City) | — | Housing |
 | **Lot** | (none: a plot in a Crew Quarter) | `HousingLot`, prefab `HousingLot_Sandbox` (`HousingLotBuilder`) | Housing |
-| **Furnishing** / **Furnishing Crate** | (none: an item that can be placed / a character's own store of them, apart from the Pack) | `FurnishingDefinition`, `FurnishingCatalog` (items 20001 to 28999, each with `ItemDefinition.boundFaction`), `PlayerCrate`; `gm.furnish.kit` | Housing |
+| **Furnishing** / **Furnishing Crate** | (none: an item that can be placed / a character's own store of them, apart from the Pack) | `FurnishingDefinition`, `FurnishingCatalog` (items 20001 to 28999; anyone's, whatever the faction whose style they are in), `PlayerCrate`, held to `WorldScaleSettings` (`../../Design/16_world_scale.md`) | Housing |
 | **Arrange** (L) | (none: the decorating mode) | `ArrangeController` (the Crate window and the tool), `HousingRules`, `HousingPlacement`, `ArrangeHistory`, `IHomeAuthority`; key `KeyBindings.Arrange` | Housing |
-| **Facade** / **Finish** (planned) | (none: a whole outside look of a Hall / an item that changes every wall, the floor or the ceiling at once) | — | Housing |
+| **Facade** / **Finish** | (none: a whole outside look of a Hall / an item that changes every wall, the floor or the ceiling at once) | `HallLookDefinition` (items 29000 to 29499 Finishes, 29500 to 29999 Facades; only a Facade carries `ItemDefinition.boundFaction`), `HallLookBuilder`, `HousingRules.TryWear` | Housing |
 | **Crew Fund** (planned) | (none: a Crew's shared Creds, paid in by its members) | — | Housing |
 
 ## Master build list
