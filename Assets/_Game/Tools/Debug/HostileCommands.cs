@@ -68,7 +68,7 @@ namespace KryticalNova.DevTools
         }
 
         private static string Line(HostileNet hostile) =>
-            $"{hostile.Definition.displayName} Lv {hostile.Level} · HP {hostile.Entity.CurrentHealth:0}/{hostile.Entity.MaxHealth:0}";
+            $"{hostile.Definition.displayName} Lv {hostile.Level} · HP {hostile.Entity.CurrentHealth:0}/{hostile.Entity.MaxHealth:0}{(hostile.Entity.InfiniteHealth ? " (cannot die)" : "")}";
 
         [Command("gm.hostile.list", "List every Hostile species: id, name, level, tier.")]
         private static string List()
@@ -85,10 +85,18 @@ namespace KryticalNova.DevTools
             return sb.ToString().TrimEnd();
         }
 
-        [Command("gm.hostile.spawn", "Spawn Hostiles under the mouse cursor (or beside you): gm.hostile.spawn <id|name> [count] [level]. Outside any Hostile Zone.")]
-        private static string Spawn(string idOrName, int count = 1, int level = 0)
+        [Command("gm.hostile.spawn", "Spawn Hostiles under the mouse cursor (or beside you): gm.hostile.spawn <id|name> [count] [level] [health]. " +
+                                     "Level 0 is the species' own. Health is a number (that much instead of the species') or inf (it cannot die: " +
+                                     "a blow that would kill it fills it up again). Outside any Hostile Zone.")]
+        private static string Spawn(string idOrName, int count = 1, int level = 0, string health = "")
         {
             if (!TryGetPlayer(out var player, out var error)) return error;
+            health = (health ?? string.Empty).Trim().ToLowerInvariant();
+            bool infinite = health == "inf" || health == "infinite";
+            float maxHealth = 0f;
+            if (health.Length > 0 && !infinite &&
+                (!float.TryParse(health, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out maxHealth) || maxHealth < 1f))
+                return "Health is a number of 1 or more, or inf: gm.hostile.spawn Gargoyle 1 0 50000, gm.hostile.spawn Gargoyle 1 0 inf.";
             HostileNet species = HostileSpawner.Find(idOrName);
             if (species == null) return $"No Hostile species '{idOrName}'. gm.hostile.list shows them.";
             HostileStatCurve curve = species.Curve;
@@ -108,11 +116,15 @@ namespace KryticalNova.DevTools
                 Vector3 at = centre + offset;
                 Vector3 toPlayer = player.transform.position - at;
                 float facing = Mathf.Atan2(toPlayer.x, toPlayer.z) * Mathf.Rad2Deg;
-                if (HostileSpawner.Spawn(species, at, facing, level, true) != null) made++;
+                HostileNet hostile = HostileSpawner.Spawn(species, at, facing, level, true);
+                if (hostile == null) continue;
+                if (infinite || maxHealth > 0f) hostile.SetGmHealth(maxHealth, infinite);
+                made++;
             }
             if (made == 0) return "No walkable ground there.";
             int shownLevel = level > 0 ? level : species.Definition.level;
-            return $"Spawned {made} {species.Definition.displayName} at level {shownLevel}.";
+            string with = infinite ? ", which cannot die" : maxHealth > 0f ? $", with {maxHealth:0} health" : string.Empty;
+            return $"Spawned {made} {species.Definition.displayName} at level {shownLevel}{with}.";
         }
 
         [Command("gm.hostile.clear", "Remove GM-spawned Hostiles: all of them, or those within [radius] metres.")]

@@ -56,6 +56,9 @@ namespace KryticalNova.Hostiles
         private bool asleep;
         private float nextAnimSend;
         private float nextThreatTell;
+        // GM: the health of this life when it is not its species' own.
+        private float gmMaxHealth;
+        private bool gmInfinite;
         private Transform threatTarget;
         private PlayerCombatState threatened;
         private Coroutine leaving;
@@ -216,6 +219,8 @@ namespace KryticalNova.Hostiles
         {
             Home = transform.position;
             asleep = false;
+            gmMaxHealth = 0f;
+            gmInfinite = false;
             SetTag(null);
             Stand();
             ApplyNumbers();
@@ -284,9 +289,27 @@ namespace KryticalNova.Hostiles
             stats = definition.StatsFrom(curve, Level);
             entity.InitializeEntity();
             stats.ApplyTo(entity.CombatStats);
-            entity.SetMaxHealthOverride(stats.MaxHealth);
+            ApplyHealth();
             ApplyIdentity();
             if (brain != null) brain.Configure(definition, stats);
+        }
+
+        private void ApplyHealth()
+        {
+            entity.SetMaxHealthOverride(gmMaxHealth > 0f ? gmMaxHealth : stats.MaxHealth);
+            entity.SetInfiniteHealth(gmInfinite);
+        }
+
+        /// <summary>
+        /// Server or offline, for GM tools: this life has <paramref name="maxHealth"/> health instead of its species'
+        /// (0 = the species' own), or cannot die at all. Gone when the body goes back to the pool.
+        /// </summary>
+        public void SetGmHealth(float maxHealth, bool infinite)
+        {
+            if (!HasAuthority) return;
+            gmMaxHealth = Mathf.Max(0f, maxHealth);
+            gmInfinite = infinite;
+            if (setUp) ApplyHealth();
         }
 
         private void ApplyIdentity()
