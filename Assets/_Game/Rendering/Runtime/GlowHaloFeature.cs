@@ -314,6 +314,7 @@ namespace KryticalNova.Rendering
             const int MaskPass = 0, SeedPass = 1, FloodPass = 2, CompositePass = 3, BlockPass = 4;
             // Further than anything drawn: where no fading prop stands.
             const float NoBlock = 1e9f;
+            const int MostBlockDraws = OccluderFader.MostFadedRenderers * 2, MostPartsOfAProp = 8;
 
             class BlockData
             {
@@ -430,12 +431,17 @@ namespace KryticalNova.Rendering
                     builder.AllowPassCulling(false);
                     builder.SetRenderFunc(static (BlockData d, RasterGraphContext ctx) =>
                     {
+                        // Never more draws than the fader may have pieces faded, each with a handful of parts: whatever
+                        // is in the list, this pass cannot grow into a second drawing of the world (one wall of a
+                        // combined static mesh once listed that mesh's 208 parts, and this drew them all).
                         var faded = OccluderFader.Faded;
-                        for (int i = 0; i < faded.Count; i++)
+                        int draws = 0;
+                        for (int i = 0; i < faded.Count && draws < MostBlockDraws; i++)
                         {
                             Renderer prop = faded[i].renderer;
                             if (prop == null || !prop.enabled || !prop.gameObject.activeInHierarchy) continue;
-                            for (int s = 0; s < faded[i].submeshes; s++)
+                            int parts = Mathf.Min(faded[i].submeshes, MostPartsOfAProp);
+                            for (int s = 0; s < parts && draws < MostBlockDraws; s++, draws++)
                                 ctx.cmd.DrawRenderer(prop, d.material, s, BlockPass);
                         }
                     });

@@ -59,7 +59,22 @@ namespace KryticalNova.Player
 
         public CharacterCreationDatabase Database => database;
         public bool HasIdentity => !current.IsEmpty;
-        public string CharacterName => HasIdentity ? current.name.ToString() : defaultName;
+        public string CharacterName => HasIdentity ? ShownName() : defaultName;
+
+        // The name as text is made once for each name: the namecards and the lists ask for it every frame, and
+        // turning the replicated name into a string made a new one each time.
+        private string shownName;
+        private Unity.Collections.FixedString32Bytes shownNameOf;
+
+        private string ShownName()
+        {
+            if (shownName == null || !shownNameOf.Equals(current.name))
+            {
+                shownNameOf = current.name;
+                shownName = current.name.ToString();
+            }
+            return shownName;
+        }
         public FactionId Faction => current.faction;
         public byte LineageId => current.lineage;
         public LineageDefinition Lineage => lineage;

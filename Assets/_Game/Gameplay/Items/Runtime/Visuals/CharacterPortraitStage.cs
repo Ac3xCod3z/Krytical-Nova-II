@@ -1,4 +1,5 @@
 using Animancer;
+using KryticalNova.CharacterCreation;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
@@ -7,11 +8,14 @@ using UnityEngine.Rendering.Universal;
 namespace KryticalNova.Items.Visuals
 {
     /// <summary>
-    /// The HUD's live picture of the local player: head and shoulders, in what they wear now. A stripped clone of
-    /// the player's model (the same kind of doll as the equipment page's, <see cref="CharacterPreviewStage"/>) stands
-    /// in its idle far below the world, beside that page's stage, and one small camera draws it into a texture with
-    /// a clear background, so the HUD's own portrait frame shows behind it. The doll shares the player's merged
-    /// mesh, so a change of gear or look shows at once and costs no second merge.
+    /// The HUD's picture of the local player: head and shoulders, in the armor they wear. A stripped clone of the
+    /// player's model (the same kind of doll as the equipment page's, <see cref="CharacterPreviewStage"/>) stands in
+    /// its idle far below the world, beside that page's stage, and one small camera draws it into a texture with a
+    /// clear background, so the HUD's own portrait frame shows behind it.
+    /// <para>It is a still picture (owner, 11 Oct 2026): taken when the player arrives, and again only when the
+    /// armor piece changes (the piece, its dye or its Holoweave look) or the character's look is changed at the
+    /// Stylist or the Reshaper. Gloves, boots, cape and weapon do not retake it: from this angle they are not what
+    /// the picture shows. Between pictures the doll is switched off, so nothing is animated and no camera draws.</para>
     /// </summary>
     public sealed class CharacterPortraitStage : MonoBehaviour
     {
@@ -25,9 +29,11 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private float aimBelowHead = 0.16f;
         [Tooltip("The sitter is turned this far from facing the camera.")]
         [SerializeField] private float turn = 16f;
-        [Tooltip("How often the picture is drawn again. A camera costs the frame about a millisecond however small its " +
-                 "picture is, and a sitter breathing in a plate this small looks the same at 30 as at 144.")]
-        [SerializeField, Range(5f, 60f)] private float picturesPerSecond = 30f;
+        [Tooltip("Frames from a change to its picture: the new mesh and its colours are on the doll a frame after the " +
+                 "player's, and the idle has to have posed it.")]
+        [SerializeField, Range(2, 10)] private int framesToSettle = 3;
+        [Tooltip("A second picture this many seconds after the first, for a texture that arrived late. 0 takes none.")]
+        [SerializeField, Min(0f)] private float secondPictureAfter = 0.6f;
         [Header("Studio ambient (as the equipment page's)")]
         [SerializeField] private Color ambientSky = new Color(0.72f, 0.75f, 0.8f);
         [SerializeField] private Color ambientGround = new Color(0.4f, 0.38f, 0.36f);
@@ -39,14 +45,18 @@ namespace KryticalNova.Items.Visuals
         private CharacterAppearance dollAppearance;
         private WeaponVisualMount dollWeapon;
         private CharacterAppearance sourceAppearance;
+        private CharacterLook sourceLook;
+        private ItemDefinition picturedArmor;
+        private Color32[] picturedDye;
         private Transform head;
         private AnimationClip idleClip;
         private MaterialPropertyBlock studioAmbient;
         private int previewLayer;
         private bool fogWasOn, shown;
-        private Vector3 aim;
-        private bool aimed;
-        private float nextPicture;
+        // A picture is owed: the doll is on and settling, then the camera draws for one frame.
+        private bool sitting, drawing, hasPicture, firstTaken;
+        private int settleFrames;
+        private float secondPictureAt;
 
         /// <summary>The picture. Its background is clear. Null until someone is drawn.</summary>
         public Texture Texture => texture;
@@ -68,7 +78,7 @@ namespace KryticalNova.Items.Visuals
             studioAmbient = CharacterPreviewStage.StudioAmbient(ambientSky, ambientGround);
             lightRig = CharacterPreviewStage.StudioLights(transform, previewLayer);
             BuildCamera();
-            Apply();
+            lightRig.SetActive(false);
         }
 
         private void OnEnable()
@@ -101,63 +111,118 @@ namespace KryticalNova.Items.Visuals
         public void Bind(CharacterAppearance appearance, AnimationClip idle)
         {
             if (appearance == sourceAppearance && (doll != null || appearance == null)) return;
+            Unwatch();
             sourceAppearance = appearance;
             idleClip = idle;
             if (doll != null) Destroy(doll);
             doll = null;
             head = null;
-            aimed = false;
-            if (sourceAppearance != null) BuildDoll();
-            Apply();
+            sitting = drawing = hasPicture = false;
+            portraitCamera.enabled = false;
+            if (sourceAppearance != null)
+            {
+                BuildDoll();
+                sourceAppearance.WornChanged += OnWornChanged;
+                sourceLook = sourceAppearance.GetComponent<CharacterLook>();
+                if (sourceLook != null) sourceLook.Applied += TakePicture;
+                Remember();
+                doll.SetActive(false);
+                if (shown) TakePicture();
+            }
         }
 
-        /// <summary>Draws the picture, or stops (nothing is animated or drawn while it is not looked at).</summary>
+        /// <summary>Shows the picture, or stops (no picture is taken while nobody looks at it).</summary>
         public void Show(bool on)
         {
             if (shown == on) return;
             shown = on;
-            Apply();
+            if (shown && doll != null && !hasPicture) TakePicture();
         }
 
-        private void Apply()
+        // Only the armor piece is in the picture: a change of gloves, boots, cape or weapon is not a reason for a new one.
+        private void OnWornChanged()
         {
-            bool live = shown && doll != null;
-            if (live && texture == null)
+            if (sourceAppearance == null) return;
+            if (sourceAppearance.GetWorn(EquipSlot.Armor) == picturedArmor && ReferenceEquals(sourceAppearance.GetDye(EquipSlot.Armor), picturedDye)) return;
+            TakePicture();
+        }
+
+        private void Remember()
+        {
+            picturedArmor = sourceAppearance.GetWorn(EquipSlot.Armor);
+            picturedDye = sourceAppearance.GetDye(EquipSlot.Armor);
+        }
+
+        private void Unwatch()
+        {
+            if (sourceAppearance != null) sourceAppearance.WornChanged -= OnWornChanged;
+            if (sourceLook != null) sourceLook.Applied -= TakePicture;
+            sourceLook = null;
+        }
+
+        /// <summary>Has the picture taken again: the doll sits for a few frames, the camera draws once, and both go off.</summary>
+        public void TakePicture()
+        {
+            if (doll == null || sourceAppearance == null) return;
+            Remember();
+            if (!shown) { hasPicture = false; return; } // taken when it is next looked at
+            if (texture == null)
             {
                 texture = new RenderTexture(size, size, 24, GraphicsFormat.R8G8B8A8_SRGB) { name = "CharacterPortraitRT", antiAliasing = 4, useMipMap = false };
                 texture.Create();
                 portraitCamera.targetTexture = texture;
             }
-            portraitCamera.enabled = live;
-            nextPicture = 0f; // the first picture at once
-            if (doll != null) doll.SetActive(live);
-            if (live)
-            {
-                var main = Camera.main;
-                if (main != null) main.cullingMask &= ~(1 << previewLayer);
-                if (idleClip != null && doll.TryGetComponent<AnimancerComponent>(out var animancer) && !animancer.IsPlaying(idleClip)) animancer.Play(idleClip);
-            }
+            var main = Camera.main;
+            if (main != null) main.cullingMask &= ~(1 << previewLayer);
+            if (!doll.activeSelf) doll.SetActive(true);
+            if (idleClip != null && doll.TryGetComponent<AnimancerComponent>(out var animancer) && !animancer.IsPlaying(idleClip)) animancer.Play(idleClip);
+            sitting = true;
+            drawing = firstTaken = false;
+            portraitCamera.enabled = false;
+            settleFrames = framesToSettle;
+        }
+
+        private void Rise()
+        {
+            sitting = false;
+            lightRig.SetActive(false);
+            doll.SetActive(false);
         }
 
         private void LateUpdate()
         {
+            if (doll == null) return;
+            // The picture is gone with the graphics device (a change of screen mode can do it): take it again.
+            if (hasPicture && !sitting && texture != null && !texture.IsCreated()) TakePicture();
+
             // An open equipment page lights every doll on the preview layer: two sets of lights would burn this one out.
-            bool ownLights = shown && doll != null && CharacterPreviewStage.OpenCount == 0;
+            bool ownLights = sitting && CharacterPreviewStage.OpenCount == 0;
             if (lightRig.activeSelf != ownLights) lightRig.SetActive(ownLights);
-            if (!shown || doll == null) return;
+            if (!sitting) return;
 
-            // The camera is on only for the frames that draw a new picture; the texture keeps the last one between them.
-            bool draw = Time.unscaledTime >= nextPicture;
-            if (draw) nextPicture = Time.unscaledTime + 1f / picturesPerSecond - Time.unscaledDeltaTime * 0.5f;
-            if (portraitCamera.enabled != draw) portraitCamera.enabled = draw;
+            if (drawing)
+            {
+                // The camera drew at the end of the last frame: the texture holds the picture.
+                drawing = false;
+                portraitCamera.enabled = false;
+                hasPicture = true;
+                if (firstTaken || secondPictureAfter <= 0f) Rise();
+                else
+                {
+                    firstTaken = true;
+                    secondPictureAt = Time.unscaledTime + secondPictureAfter;
+                }
+                return;
+            }
+            if (settleFrames > 0) { settleFrames--; return; }
+            if (firstTaken && Time.unscaledTime < secondPictureAt) return;
 
-            // The camera keeps to where the head rests: the idle's sway is seen, a new body's height is followed.
             Vector3 target = head != null ? head.position : doll.transform.position + Vector3.up * 1.6f;
-            aim = aimed ? Vector3.Lerp(aim, target, 1f - Mathf.Exp(-2f * Time.unscaledDeltaTime)) : target;
-            aimed = true;
-            Vector3 lookAt = aim + Vector3.down * aimBelowHead;
+            Vector3 lookAt = target + Vector3.down * aimBelowHead;
             // The doll faces -Z.
             portraitCamera.transform.SetPositionAndRotation(lookAt + Vector3.back * distance, Quaternion.identity);
+            portraitCamera.enabled = true;
+            drawing = true;
         }
 
         private void BuildDoll()
@@ -205,6 +270,7 @@ namespace KryticalNova.Items.Visuals
 
         private void OnDestroy()
         {
+            Unwatch();
             if (texture != null) { texture.Release(); Destroy(texture); }
         }
     }

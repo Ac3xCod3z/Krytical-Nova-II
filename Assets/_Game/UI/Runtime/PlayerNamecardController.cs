@@ -53,6 +53,10 @@ namespace KryticalNova.UI
             public KryticalNova.Autopilot.PlayerAutopilot Autopilot;
             public float Height = float.NaN;
             public string NameText, StandingText, CrewText;
+            // What the name and the Crew line were last made from: the lines are put together again only when these change.
+            public string NameSource;
+            public bool Auto;
+            public Unity.Collections.FixedString32Bytes CrewName;
             public int CrewSymbol = -1; // the Crew symbol shown in the emblem's place (symbol and colour in one number), or -1 for none
             public FactionId Faction = (FactionId)255;
             public FactionId ArtFaction; // whose art the card was made in
@@ -257,23 +261,28 @@ namespace KryticalNova.UI
         private static void FillView(Card card, FactionId faction, PlayerIdentity viewer, bool showHealth)
         {
             PlayerCardView view = card.View;
-            string nameText = card.Identity != null ? card.Identity.CharacterName : view.name;
+            string name = card.Identity != null ? card.Identity.CharacterName : view.name;
             // A character hunting on Autopilot says so, to everyone who can read its name.
-            if (card.Autopilot != null && card.Autopilot.IsOn) nameText += "   AUTO";
+            bool auto = card.Autopilot != null && card.Autopilot.IsOn;
             int level = card.Progression != null ? card.Progression.CurrentLevel : 1;
-            if (nameText != card.NameText || level != card.Level)
+            if (name != card.NameSource || auto != card.Auto || level != card.Level || card.NameText == null)
             {
-                card.NameText = nameText;
+                card.NameSource = name;
+                card.Auto = auto;
+                card.NameText = auto ? name + "   AUTO" : name;
                 card.Level = level;
-                view.Say(nameText, level);
+                view.Say(card.NameText, level);
             }
 
             string standing = card.Nova != null ? card.Nova.WornStanding ?? string.Empty : string.Empty;
             if (standing != card.StandingText) view.Standing(card.StandingText = standing);
 
             CrewTag tag = card.PlayerCrew != null ? card.PlayerCrew.Tag : default;
-            string crew = tag.InCrew ? "<" + tag.crew + ">" : string.Empty;
-            if (crew != card.CrewText) view.Crew(card.CrewText = crew);
+            if (card.CrewText == null || !tag.crew.Equals(card.CrewName))
+            {
+                card.CrewName = tag.crew;
+                view.Crew(card.CrewText = tag.InCrew ? "<" + tag.crew + ">" : string.Empty);
+            }
             // A player in a Crew shows the Crew's symbol where the faction's emblem stands; without a Crew, the emblem.
             int symbol = CrewEmblem(tag);
             bool emblemChanged = symbol != card.CrewSymbol;

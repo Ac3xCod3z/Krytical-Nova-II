@@ -43,6 +43,24 @@ namespace KryticalNova.Diagnostics
             Markers.Add(what, detail, NoNumber, -1f, true);
         }
 
+        /// <summary>The stretch of play being measured now ("session" unless something named another).</summary>
+        public static string SectionName { get; private set; } = DefaultSection;
+        /// <summary>Goes up by one with every new section, so two of the same name are told apart.</summary>
+        public static int SectionSerial { get; private set; }
+        public const string DefaultSection = "session";
+
+        /// <summary>
+        /// From now on the frames belong to a stretch of play of this name: the log keeps how long every frame of
+        /// it took (not only the slow ones) and writes the count when the next section begins, so a benchmark's
+        /// fight is read apart from its run and from whatever the player did before. Null goes back to "session".
+        /// </summary>
+        public static void Section(string name)
+        {
+            SectionName = string.IsNullOrEmpty(name) ? DefaultSection : name;
+            SectionSerial++;
+            if (IsRecording) Markers.Add("section", SectionName, NoNumber, -1f, true);
+        }
+
         /// <summary>
         /// Times a piece of work: <c>using var timed = PerformanceLog.Time("save");</c> writes its marker when the
         /// block ends. Kept as a plain local instead, it writes one only if <see cref="Scope.End"/> is called.
@@ -80,6 +98,8 @@ namespace KryticalNova.Diagnostics
             Markers.Clear();
             IsRecording = false;
             FilePath = null;
+            SectionName = DefaultSection;
+            SectionSerial = 0;
         }
     }
 }

@@ -698,7 +698,8 @@ corner, and a tail on the side the speaker is. Every number is a `--bubble-*` va
 | Environment CPU | < 0.1 ms, 0 B GC | presenter, flare cloud sample |
 | Volumetric mist + Beautify | < 2 ms together | mist at half res, 0.6 m min step, 300 m max distance; mist volumes off when unused |
 | Lamp cones | < 0.5 ms at night in fog | Faster raymarch preset, no shadows, off beyond 65 m, off by day |
-| Live minimap | ~8 renders/s, 512² | opaque-only Forward+ renderer, no shadows/post/features |
+| Minimap | no camera | the zone's baked picture with markers on it (11 Oct 2026); until then a live top-down camera drew the world again 8 times a second at 512² |
+| Portrait on the player plate | no camera at rest | a still picture, taken again only for a change of armor or of the character's look (11 Oct 2026); until then its camera drew 30 times a second |
 | Menus' page turn | nothing while a screen is at rest; during a turn one picture of the screen and one mesh drawn by one camera for 0.7 s | not measured against a budget yet |
 | Comic marks and words | nothing created in a fight, 0 B GC a hit, < 1 ms a frame in a crowd | measured in the Editor at 30 hits a second by other players: +0.6 ms mean frame, 0 effects created, 0 B allocated by the layer's own calls; the pool is filled when a scene starts (about 86 MB of sleeping comic effects by the Editor's count) |
 | Glow Halo | < 0.5 ms GPU, < 0.3 ms CPU with 40 glowing weapons | measured 0.22 ms GPU / 0.18 ms CPU with 42 halos (flame, lightning, sparks) at 925×1067 in the Editor, 0.07 / 0.06 ms with 2; the flood runs at half res inside the glowing things' screen rectangle only; nothing glowing = no pass |
@@ -764,15 +765,38 @@ Code: `Core/Runtime/Diagnostics/` (`PerformanceLog`, `PerformanceLogRecorder`, `
   at the start and end of each top-level phase of Unity's player loop (`TimeUpdate`, `Initialization`,
   `EarlyUpdate`, `FixedUpdate`, `PreUpdate`, `Update`, `PreLateUpdate`, `PostLateUpdate`, in which the frame is
   drawn), and `other` for what falls between them. It names the part of the frame, not the function.
+- **Which steps** (11 Oct 2026, the last column of an `F` line): a phase is many steps, and "PostLateUpdate took
+  37 ms" named nobody (48 of the 83 slow frames of the first real log). The clock is also read between the steps
+  of every phase (some 130 of them: `PreLateUpdate.ScriptRunBehaviourLateUpdate`, `PreLateUpdate.DirectorUpdateAnimationEnd`,
+  `PostLateUpdate.PlayerUpdateCanvases`, `PostLateUpdate.FinishFrameRendering`...), and a slow frame names the six
+  that took longest. Inside the step that draws, `FrameCameraProbes` says which camera took the main thread's time
+  (`camera:Main_Camera=12.3`). A step is still not a function: inside the scripts' own Update and LateUpdate it is
+  the markers below that name the work.
+- **Sections** (`H` lines, 11 Oct 2026): the log counts every frame of play by its length, not only the slow ones,
+  in bins a quarter of a millisecond wide (5 ms wide past 50 ms), so the 1 % and 0.1 % lows can be worked out
+  afterwards. `PerformanceLog.Section(name)` starts a stretch of its own (the benchmark's three); everything else
+  is the section `session`. A section's count is written when it ends, at the end of the run, and once a minute as
+  it stands; the last `H` line of a section number is the whole of it. Frames marked `loading` are left out.
 - **Markers** are put where a hitch can plausibly come from, with `PerformanceLog.Mark(name, detail, number)` or
   `using var timed = PerformanceLog.Time(name, detail, number);`. While nothing records a call is one test and
   returns. Never build a string for a marker without asking `PerformanceLog.IsRecording` first. The ones in place:
   `save.player`, `save.file`, `save.all`, `hud.redraw`, `window.service`, `skill.cast`, `level.gained`,
-  `pet.evolved`, `nova.work`, `zone.prewarm`, `zone.wake`, `zone.sleep`, `zone.spawn`, `drop.appeared`. A new
-  system that does a burst of work (builds a window, spawns a batch, writes a file) gets one.
+  `pet.evolved`, `nova.work`, `zone.prewarm`, `zone.wake`, `zone.sleep`, `zone.spawn`, `drop.appeared`,
+  `warmup.scripts`, `world.collect`, `bench.begin`, `bench.end`, and `save.disk` (the file being written on the
+  save store's own thread: timed, but not the frame's). A new system that does a burst of work (builds a window,
+  spawns a batch, writes a file) gets one.
 - **Reading one:** `python Assets/_Game/Tools/Editor/Build/ReadPerformanceLog.py` reads the newest log of the
-  test build (or a file or folder given to it) and prints the slow frames grouped by likeliest cause, the worst
-  fifteen with their split and markers, every timed piece of work, and what grew over the session.
+  test build (or a file or folder given to it) and prints each section with its average, 1 % low, 0.1 % low,
+  slowest frame and whether it passes the mark (60 locked, none under 50), the slow frames grouped by likeliest
+  cause, where their time went by step and by camera, the worst fifteen with their split and markers, every timed
+  piece of work, what grew over the session, and how much memory the scripts were handed a minute and a frame.
+  It reads older logs too (they have no steps and no sections).
+- **The benchmark:** `gm.bench` in the GM console (host, standing in town, hands off for two and a half minutes)
+  plays the same three stretches every time, a section each: `bench.town` (two turns of the camera in 20 s),
+  `bench.fight` (45 s at the nearest training dummy, auto-attack and every learned skill on rotation: the owner's
+  test) and `bench.run` (60 s running towards the Hostile Zones, nearest first). The character is not changed: it
+  takes no damage and spends no Flux while it runs, and is put back where it stood. `gm.bench stop` ends it.
+  `Tools/Debug/BenchCommands.cs`. One build is compared with another, and one PC with another, by these three.
 - **Limits:** garbage made per frame cannot be read in a built game, only that a collection ran. The split of a
   slow frame is matched to it by length a few frames later; `~` before a number marks a match that is not certain.
   Frames in the first five seconds, and three seconds after a scene or a session arrives, are marked `loading`.
@@ -781,6 +805,124 @@ Code: `Core/Runtime/Diagnostics/` (`PerformanceLog`, `PerformanceLogRecorder`, `
 - **First things it showed** (in the Editor, so the sizes are not a built game's): preparing the eight Hostile
   Zones' pools takes 100 to 200 ms each when the world loads, and a player's save takes 3 to 16 ms on the frame it
   happens, every 60 seconds for each player on the host. Neither is changed yet.
+
+### What the first real log led to (11 Oct 2026, branch `perf/top-tier`)
+
+The owner's 23 minutes in the 09:53 build (RTX 5070 Ti, Ryzen 7 9700X, 1440p, no cap): 4.0 ms a frame as a rule,
+98 frames over 20 ms, a collection of memory every six seconds with one of 258 ms, the scripts handed 55 MB a
+minute (3.7 KB a frame), `hud.redraw` 4.2 ms about every 11 seconds, a save 3.9 ms of which 3.5 ms the disk, and
+slow frames thinning out over the session (35, 23, 12, 10, 3 in each five minutes) though the character stood
+still: firsts being paid for one by one. Eight things were done about it, in this order.
+
+1. **An IL2CPP build beside the Mono one.** `TestBuildBuilder.Build(ScriptingImplementation.IL2CPP)`, menu
+   **Krytical Nova ▸ Build ▸ Windows Test Build (IL2CPP)**: scripts compiled to machine code before the game
+   ships, so nothing is compiled while it runs. It needs Unity's "Windows Build Support (IL2CPP)" module and the
+   Visual Studio C++ build tools with a Windows SDK; `TestBuildBuilder.Il2CppMissing()` says which is not there.
+   The first such build was made on 11 Oct 2026 at 22:47 (11 minutes, as long as the Mono one); it had not been
+   run when this was written. Unity's own Visual Studio module for 6000.6 (`unity install-modules --module
+   visualstudio`, Visual Studio Community 2026) installs the C++ tools but no Windows SDK, because the one it asks
+   for is not offered by that Visual Studio: `Microsoft.VisualStudio.Component.Windows11SDK.26100` was added
+   through the Visual Studio Installer. Stripping is Minimal for
+   it (the GM console and Netcode find things by reflection). The Mono build touches no setting; the project's own are put back after the IL2CPP
+   build. The log's header says `scripts Mono` or `scripts IL2CPP`.
+2. **Garbage.** `Krytical Nova ▸ Build ▸ Allocations ▸ Start Recording / Write Report` (`AllocationFinder`) records
+   Play with the Profiler and the call stack of every allocation, and writes who allocated how much a frame, by
+   our own method and line, to `Library/KryticalNova.Allocations.txt`. What it found, standing still, in bytes a
+   frame: the performance readout itself 4,600 (IMGUI drawing the same text again every frame: more than the rest
+   of the game together), the Hotbar's cooldown lines 620, the grass's shader calls 330 (`SetInts(id, a, b)` makes
+   an array each call), the map marker 116 (a scene's name is a new string every time), namecards 210 (names
+   turned from their replicated form to text every frame), the Settings window's five-times-a-second check of every
+   setting while shut 150, the minimap 170. All of them are gone: 7.7 KB a frame became 2.7 KB in the Editor, and
+   of what is left 0.4 KB is the Editor's alone (Cinemachine's IMGUI), 0.3 KB the log's own lines for the
+   Editor's many slow frames. The readout is now a canvas of its own and off costs nothing at all.
+3. **Warming up.** `ScriptWarmUp` (`Core/Runtime/WarmUp/`) compiles every method of the game's assemblies and of
+   the engine's largest that run in play (the interface, the render pipeline, Netcode, Cinemachine, Animancer, about
+   40,000 methods) ahead of its first use: a few milliseconds a frame in the menus, more behind the Loading page,
+   which stays up until it is done (`LoadingGate`, "Preparing"). Tried in the Editor: 39,838 methods, 2.4 seconds of the main thread in all, none refused. Under Mono `RuntimeHelpers.PrepareMethod` does
+   nothing; asking for the method's function pointer compiles it (measured: 2,500 methods 211 ms the first time,
+   0.6 ms the second). Compiled on the main thread, since compiling can run a class's static set-up. An IL2CPP
+   build needs none of it. And the memory left behind by the menus and the world's start-up is collected once,
+   under the picture that covers the world's first frames (`LoadingGate.WhenTheDoorOpens`, marker `world.collect`),
+   so play starts with none of it owed. **Not done:** shaders are still compiled by the graphics driver the first
+   time each is drawn, effects are not rehearsed, and windows other than the Character Sheet and Skills are still
+   built when first opened; the steps column will say whether those are what is left.
+4. **The HUD in pieces.** `ProgressionHUD` finds its parts once, and each piece (level, the walk/run line, points,
+   the XP bar, HP and Flux, each Hotbar slot, each cooldown line, each buff's clock) remembers what it last
+   showed: a redraw that changes nothing writes nothing. Cooldown and buff clocks are written when the number on
+   them changes, not every frame (a buff with more than ten seconds left counts in whole seconds). `hud.redraw`
+   went from about 4 ms to 0.02 ms in the Editor.
+5. **Saving off the main thread.** `FileSaveStore` made with `background: true` (what `ServerSave` uses) hands a
+   write to a thread of its own; a read gives back what is still waiting, the newest write of a key wins, and
+   `Flush()` (on quitting, on `gm.save`) waits for the disk. What is left on the frame is turning the character
+   into text.
+6. **A frame cap by default.** The Graphics page's frame cap (used with vertical sync off) has a new first choice,
+   **AS THE SCREEN**: the highest refresh rate the screen is made for (the fastest mode it offers). The game ships
+   with vertical sync off and that cap (owner, 11 Oct 2026); NO CAP is still there. The cap is stored under a new
+   key, so an older "no cap" is not taken for a choice. A PC that is not flat out has room
+   for a frame that takes longer, and frames the screen cannot show are work for nothing.
+7. **Naming the unnamed**: the steps and the cameras above.
+8. **Measuring**: the sections and the benchmark above.
+
+Two more came from the owner while this was being done: **the minimap no longer draws the world** (the baked
+picture, with markers for the player, the Squad's members, NPCs, portals, the nearest Hostiles within
+`HostileSettings.minimapMetres`, a Bruiser with a marker of its own, and one kept for a boss), and **the portrait
+is a still picture**. Both took a camera out of the frame.
+
+**Measured in the first two builds** (owner's PC, 11 Oct 2026, `gm.bench`; IL2CPP 22:47 / Mono 20:59). Both hold
+the 144 cap. In play the scripts are handed 0.2 to 0.6 KB a frame (3.7 before) and memory is collected 0 to 1
+times a minute (10 before); `hud.redraw` 0.01 to 0.03 ms; a save 0.4 / 1.1 ms on its frame. Slowest frame:
+`bench.town` 8.7 / 47.7 ms, `bench.fight` 13.0 / 19.2 ms, and after the benchmark, standing, 10.5 / 101.5 ms. The
+IL2CPP build passes the turn and the fight with room for a PC one and a half times slower. `bench.run` failed in
+both, for the one reason below.
+
+### A fade may not cost a frame (the North Gate, 11 Oct 2026)
+
+Running through the North Gate took the graphics card from 2.4 ms to 22-35 ms for three seconds, and set-pass calls
+from 268 to 1,115. Three wall pieces were being faded (`OccluderFader`), no more. The cost was the glow halo's pass
+that draws "the faded props whole", so a glow does not shine through the fade's holes: it drew each prop's parts
+by the number its mesh reported, and a piece of the town's combined static mesh reports that whole mesh, 208
+parts. Three pieces, 624 draws of a town-sized mesh. With the fix the same view costs what it costs with the wall
+solid (4.6 ms, 235 set-pass calls, in the Editor).
+
+What is in place so that nothing can do this again:
+
+- **A faded piece answers for its own parts** (`OccluderFader.OwnSubmeshes`: as many as it has materials, never
+  the combined mesh's count). Anything that draws a renderer part by part must ask this, not the mesh.
+- **Only what is in the line of sight fades.** A prop of up to eight pieces fades whole; of a prop of many pieces
+  under one collider, only the pieces the line from camera to character passes through.
+- **A hard limit**: at most `OccluderFader.MostFadedRenderers` (48) pieces are faded at once; the rest stay solid.
+  The glow's pass has its own (96 draws, 8 parts a prop) whatever the list holds.
+- **A click goes through whatever is drawn faded** (`OccluderFader.IsFaded(hit)`): asked of the pieces drawn, at
+  the point clicked, not of the collider the line of sight happened to meet, so a destination behind a faded
+  wall can always be chosen.
+- **`gm.sweep [metres]`** (`BenchCommands`) is how the next such place is found before a player finds it: it
+  stands the character on a grid over every terrain (a spot every 50 m unless said), looks four ways from each,
+  and writes `sweep_<date>_<time>.txt` beside the performance logs: the costliest views for the graphics card
+  and by set-pass calls, looked at a second time for longer (a view can be caught while something loads; a place
+  that costs is costly both times), then every view. After the fix, in the Editor: 333 spots, 1,332 views, 185
+  of them with something faded; usual view 4.2 ms and 208 set-pass calls, most set-pass calls anywhere 249.
+  Run it after anything is added to the world or to what is drawn, and in a build on the slowest PC to hand.
+- The log reader's sections show a place like this as a section that fails with the time in
+  `TimeUpdate.WaitForLastPresentationAndUpdateTime` (the main thread waiting for the picture) and the `S` lines'
+  set-pass column jumping: the camera's x and z are on the same lines.
+
+### A player appearing (12 Oct 2026)
+
+The frame hosting starts on was 175 to 258 ms in the first two builds, and it is the frame a character is made on,
+so a part of it is paid by everyone near whenever any player appears. Taken apart in the Editor (ending the session
+and hosting again with the Profiler on): 229 ms and 31 MB handed out.
+
+- **Done.** Every character's `SkinnedMeshMerger` had six megabytes of scratch lists of its own, and
+  `CharacterAppearance.Awake` made the merger twice (once to look the bones up by name): 43 ms and 12 MB for each
+  character that woke, a player or a doll. The scratch is now one set for the whole game (every merge clears it
+  first; merges run one at a time on the main thread) and the merger is made once (`SetReference`). After: the
+  appearance's waking is gone from the frame and the frame hands out 7.8 MB. And `ProgressionHUD` draws its two
+  windows for the first time on the two frames after the player arrives, not on that one.
+- **Left**, in the Editor's numbers: making the player prefab's copy 50 to 100 ms (1,373 managed objects are read
+  back for it: the prefab is large), 65 ms inside the session's start that the Profiler does not name, the whole
+  interface restyled when the local player's faction is known 26 ms, the old avatar letting go of the interface
+  17 ms, the two mesh merges 12 ms. The frame is still about 180 to 200 ms there. The next step is the prefab's
+  size, and it has not been taken.
 
 ### The world, and what draws it (10 Oct 2026)
 
@@ -825,6 +967,12 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   uGUI draw with a loop of at most eight panels a pixel, for about 1.25 s; not measured against a budget yet).
 
 ## Changelog
+
+- **2026-10-11 (performance, branch `perf/top-tier`)**: what the first real performance log led to, section 7:
+  an IL2CPP build option, the allocation finder and the per-frame garbage it found removed, scripts compiled ahead
+  behind the Loading page, the HUD redrawn in pieces, saves written on a thread of their own, a frame cap that
+  follows the screen, the log's steps, cameras and sections, the `gm.bench` benchmark; and no camera for the
+  minimap or the portrait.
 
 - **2026-10-10 (grass)**:
   - The wind no longer makes the grass jump (wave phase rule, 6d).

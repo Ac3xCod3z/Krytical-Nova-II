@@ -102,7 +102,15 @@ namespace KryticalNova.UI
         {
             if (panel == null || queue.Count == 0) return;
             float now = Time.unscaledTime;
-            if (queue.RemoveAll(request => now >= request.Ends) > 0)
+            // A loop, not RemoveAll with a test that reads "now": that makes an object every frame, queue or no queue.
+            bool ended = false;
+            for (int i = queue.Count - 1; i >= 0; i--)
+            {
+                if (now < queue[i].Ends) continue;
+                queue.RemoveAt(i);
+                ended = true;
+            }
+            if (ended)
             {
                 if (shown != null && now >= shown.Ends) shown = null;
                 Present();

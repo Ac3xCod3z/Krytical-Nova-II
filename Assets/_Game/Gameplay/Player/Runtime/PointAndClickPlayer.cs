@@ -500,7 +500,7 @@ namespace KryticalNova.Player
             for (int i = 0; i < count; i++)
             {
                 Collider c = pointerHits[i].collider;
-                if (occluderFader != null && occluderFader.IsFaded(c)) continue;
+                if (occluderFader != null && occluderFader.IsFaded(pointerHits[i])) continue;
                 var damageable = c.GetComponentInParent<IDamageable>();
                 bool isOtherUnit = damageable != null && damageable.Transform != transform;
                 if (!isOtherUnit && (raycastLayers.value & (1 << c.gameObject.layer)) == 0) continue;

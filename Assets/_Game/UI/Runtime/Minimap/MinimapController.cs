@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using KryticalNova.Hostiles;
 using KryticalNova.Items;
 using KryticalNova.NPC;
 using KryticalNova.Player;
+using KryticalNova.Social;
 using KryticalNova.World.Minimap;
 using KryticalNova.World.Portals;
 using UnityEngine;
@@ -10,11 +12,14 @@ using UnityEngine.UIElements;
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// HUD minimap. The zone is baked once into a texture (Krytical Nova/World/Bake Minimap) that fills the map layer;
-    /// on the PC tier a live top-down capture (<see cref="MinimapLiveCamera"/>, ~8 Hz) is laid over it around the
-    /// player, so ruins, traffic and other changes show as they happen. Each frame only style transforms change: the
-    /// map layer's translate/rotate (live patch and markers are its children, so they ride along) and the arrow.
-    /// Markers move every frame from pooled elements; nothing allocates per frame.
+    /// HUD minimap. The zone is baked once into a picture (Krytical Nova/World/Bake Minimap) that fills the map layer;
+    /// nothing of the world is drawn again while the game runs (owner, 11 Oct 2026: the map need not show traffic as
+    /// it happens). What lives on it is markers: the player's arrow, the members of the player's Squad, NPCs,
+    /// portals, the player's own marker, and the Hostiles nearest the player within
+    /// <see cref="HostileSettings.minimapMetres"/>, a Bruiser with a marker of its own. A marker for a boss is kept
+    /// (<see cref="HostileTier.BossReserved"/>); nothing in the game is one yet.
+    /// Each frame only style transforms change: the map layer's translate/rotate (the markers are its children, so
+    /// they ride along) and the arrow. Markers move every frame from pooled elements; nothing allocates per frame.
     /// Orientation: rotates with the camera, or fixed north-up (Settings → HudPreferences.MinimapRotates).
     /// Hovering an NPC, a portal or the player's marker names it; double-clicking it leads the player there
     /// (<see cref="MapTravel"/>) and draws the route.
@@ -24,18 +29,17 @@ namespace KryticalNova.UI
     public sealed class MinimapController : MonoBehaviour
     {
         private static readonly float[] ZoomLevels = { 1.4f, 2.4f, 4f }; // UI pixels per metre
-        // The mask is 190 px; at the widest zoom (1.4 px/m, rotated) it shows ~96 m from the player.
-        private const float LiveRadius = 100f;
-        private const float LiveCapturesPerSecond = 8f;
         private const float InitRetryInterval = 1f;
+        // Which Hostiles are the nearest is settled a few times a second; where their markers are, every frame.
+        private const float HostilePickInterval = 0.25f;
+        private const float AllyIconSize = 9f, HostileIconSize = 6f, BruiserIconSize = 13f, BossIconSize = 22f;
         private const float EdgeInset = 9f; // portals far away stick to the rim instead of vanishing
         private const float RouteLineWidth = 2.5f;
         private const float HoverPadding = 4f;  // pixels beyond an icon's edge that still count as over it
         private const float NpcIconSize = 9f, PortalIconSize = 22f, WaypointIconSize = 20f;
         private const int LeftButton = 0;
 
-        private VisualElement root, minimap, mask, map, north, liveLayer;
-        private MinimapLiveCamera live;
+        private VisualElement root, minimap, mask, map, north;
         private float nextInitAttempt;
         private MinimapArrow arrow;
         private ZoneMinimapData data;
@@ -46,6 +50,13 @@ namespace KryticalNova.UI
         private readonly List<VisualElement> allyMarkers = new List<VisualElement>();
         private readonly List<VisualElement> portalMarkers = new List<VisualElement>();
         private readonly List<VisualElement> waypointMarkers = new List<VisualElement>();
+        private readonly List<VisualElement> hostileMarkers = new List<VisualElement>();
+        private readonly List<VisualElement> bruiserMarkers = new List<VisualElement>();
+        private readonly List<VisualElement> bossMarkers = new List<VisualElement>();
+        // The Hostiles shown, nearest first, and how far each was when they were picked.
+        private readonly List<HostileNet> nearHostiles = new List<HostileNet>(32);
+        private readonly List<float> nearDistances = new List<float>(32);
+        private float nextHostilePick;
         // Edge-clamped markers keep their counter-rotation in sync every frame (they don't move with the map).
         private float currentMapRotation;
         private MapHoverLabel hoverLabel;
@@ -84,14 +95,8 @@ namespace KryticalNova.UI
             minimap.RegisterCallback<PointerDownEvent>(OnPointerDown);
             ZoneMinimapAnchor.CurrentChanged += OnZoneChanged;
 
-            liveLayer = new VisualElement { name = "minimap-live", pickingMode = PickingMode.Ignore };
-            liveLayer.style.position = Position.Absolute;
-            liveLayer.style.display = DisplayStyle.None;
-            map.Insert(0, liveLayer); // under the markers
-            live = MinimapLiveCamera.TryCreate(LiveRadius, LiveCapturesPerSecond, transform);
-            if (live != null) liveLayer.style.backgroundImage = Background.FromRenderTexture(live.Texture);
             routeLine = new MapRouteLine(RouteLineWidth);
-            map.Insert(1, routeLine); // over the live patch, under the markers
+            map.Insert(0, routeLine); // under the markers
             hoverLabel = new MapHoverLabel();
             root.Add(hoverLabel);
 
@@ -113,9 +118,8 @@ namespace KryticalNova.UI
             routeLine?.RemoveFromHierarchy();
             hoverLabel?.RemoveFromHierarchy();
             arrow?.RemoveFromHierarchy();
-            liveLayer?.RemoveFromHierarchy();
-            live?.Dispose();
-            live = null;
+            nearHostiles.Clear();
+            nearDistances.Clear();
         }
 
         private void OnZoneChanged()
@@ -229,14 +233,22 @@ namespace KryticalNova.UI
             arrow.style.rotate = new Rotate(rotates ? playerYaw - cameraYaw : playerYaw);
 
             PlaceNorth(currentMapRotation);
-            UpdateLive(player);
             RefreshMarkers(player, playerPx, half);
+            RefreshHostiles(player, playerPx, half);
             routeLine.Begin();
-            foreach (Vector3 corner in MapTravel.Route()) routeLine.Add(MapPixel(corner));
+            IReadOnlyList<Vector3> route = MapTravel.Route();
+            for (int i = 0; i < route.Count; i++) routeLine.Add(MapPixel(route[i]));
             routeLine.Apply();
             // Keep icons upright while the map spins under them.
-            foreach (var m in portalMarkers) if (m.style.display != DisplayStyle.None) m.style.rotate = new Rotate(-currentMapRotation);
-            foreach (var m in waypointMarkers) if (m.style.display != DisplayStyle.None) m.style.rotate = new Rotate(-currentMapRotation);
+            Upright(portalMarkers);
+            Upright(waypointMarkers);
+            Upright(bossMarkers);
+        }
+
+        private void Upright(List<VisualElement> markers)
+        {
+            for (int i = 0; i < markers.Count; i++)
+                if (markers[i].style.display != DisplayStyle.None) markers[i].style.rotate = new Rotate(-currentMapRotation);
         }
 
         private Vector2 MapPixel(Vector3 world)
@@ -260,31 +272,17 @@ namespace KryticalNova.UI
             var inv = PlayerInventory.Local;
             if (inv != null && inv.isActiveAndEnabled) return inv.transform;
             // Before the networked player spawns (or offline), fall back to the locally controlled avatar.
-            foreach (var p in PointAndClickPlayer.Active)
+            IReadOnlyList<PointAndClickPlayer> players = PointAndClickPlayer.Active;
+            for (int i = 0; i < players.Count; i++)
+            {
+                PointAndClickPlayer p = players[i];
                 if (p != null && p.isActiveAndEnabled && (!p.IsSpawned || p.IsOwner)) return p.transform;
+            }
             return null;
         }
 
-        private static float FacingYaw(Transform player)
-        {
-            var pc = player.GetComponent<PointAndClickPlayer>();
-            return pc != null ? pc.FacingYaw : player.eulerAngles.y;
-        }
-
-        /// <summary>Keeps the live patch on the world spot it was captured at (it rides the map layer).</summary>
-        private void UpdateLive(Transform player)
-        {
-            if (live == null) return;
-            live.Tick(player.position);
-            if (!live.HasFrame) return;
-            float sizePx = live.Radius * 2f * PixelsPerMetre;
-            Vector2 c = MapPixel(live.Center);
-            liveLayer.style.display = DisplayStyle.Flex;
-            liveLayer.style.left = c.x - sizePx * 0.5f;
-            liveLayer.style.top = c.y - sizePx * 0.5f;
-            liveLayer.style.width = sizePx;
-            liveLayer.style.height = sizePx;
-        }
+        private static float FacingYaw(Transform player) =>
+            player.TryGetComponent(out PointAndClickPlayer pc) ? pc.FacingYaw : player.eulerAngles.y;
 
         private void PlaceNorth(float mapRotation)
         {
@@ -301,21 +299,33 @@ namespace KryticalNova.UI
         private void RefreshMarkers(Transform player, Vector2 playerPx, float maskHalf)
         {
             int npcCount = 0;
-            foreach (var npc in NpcInteractable.Active)
-                if (npc != null) Place(Pooled(npcMarkers, npcCount++, "npc"), MapPixel(npc.Position), NpcIconSize);
+            IReadOnlyList<NpcInteractable> npcs = NpcInteractable.Active;
+            for (int i = 0; i < npcs.Count; i++)
+                if (npcs[i] != null) Place(Pooled(npcMarkers, npcCount++, "npc"), MapPixel(npcs[i].Position), NpcIconSize);
             Hide(npcMarkers, npcCount);
 
+            // The members of the player's Squad, and nobody else: who else is about is not the map's to tell.
             int allyCount = 0;
-            foreach (var p in PointAndClickPlayer.Active)
-                if (p != null && p.transform != player) Place(Pooled(allyMarkers, allyCount++, "ally"), MapPixel(p.transform.position), 9f);
+            PlayerParty squad = player.TryGetComponent(out PlayerParty own) && own.InParty ? own : null;
+            if (squad != null)
+            {
+                IReadOnlyList<PointAndClickPlayer> players = PointAndClickPlayer.Active;
+                for (int i = 0; i < players.Count; i++)
+                {
+                    PointAndClickPlayer p = players[i];
+                    if (p == null || p.transform == player || !p.TryGetComponent(out PlayerParty other) || !squad.IsInPartyWith(other)) continue;
+                    Place(Pooled(allyMarkers, allyCount++, "ally"), MapPixel(p.transform.position), AllyIconSize);
+                }
+            }
             Hide(allyMarkers, allyCount);
 
             int portalCount = 0;
-            foreach (var portal in ZonePortal.Active)
+            IReadOnlyList<ZonePortal> portals = ZonePortal.Active;
+            for (int i = 0; i < portals.Count; i++)
             {
-                if (portal == null) continue;
+                if (portals[i] == null) continue;
                 // Clamp to the rim so the way onward is always visible.
-                Place(Pooled(portalMarkers, portalCount++, "portal"), ClampToRim(MapPixel(portal.transform.position), playerPx, maskHalf), PortalIconSize);
+                Place(Pooled(portalMarkers, portalCount++, "portal"), ClampToRim(MapPixel(portals[i].transform.position), playerPx, maskHalf), PortalIconSize);
             }
             Hide(portalMarkers, portalCount);
 
@@ -325,6 +335,67 @@ namespace KryticalNova.UI
             if (MapWaypoint.TryGet(out Vector3 waypoint))
                 Place(Pooled(waypointMarkers, waypointCount++, "waypoint"), ClampToRim(MapPixel(waypoint), playerPx, maskHalf), WaypointIconSize);
             Hide(waypointMarkers, waypointCount);
+        }
+
+        // ------------------------------------------------------------------ Hostiles near the player
+
+        private void RefreshHostiles(Transform player, Vector2 playerPx, float maskHalf)
+        {
+            if (Time.unscaledTime >= nextHostilePick)
+            {
+                nextHostilePick = Time.unscaledTime + HostilePickInterval;
+                PickHostiles(player.position);
+            }
+
+            int normal = 0, bruisers = 0, bosses = 0;
+            for (int i = 0; i < nearHostiles.Count; i++)
+            {
+                HostileNet hostile = nearHostiles[i];
+                // Killed, or gone back to the pool, since the last pick.
+                if (hostile == null || !hostile.isActiveAndEnabled || hostile.Entity == null || !hostile.Entity.IsAlive) continue;
+                Vector2 px = MapPixel(hostile.transform.position);
+                HostileTier tier = hostile.Definition != null ? hostile.Definition.tier : HostileTier.Normal;
+                if (tier == HostileTier.BossReserved)
+                    Place(Pooled(bossMarkers, bosses++, "boss"), ClampToRim(px, playerPx, maskHalf), BossIconSize); // a boss is never off the map
+                else if (tier == HostileTier.Bruiser) Place(Pooled(bruiserMarkers, bruisers++, "bruiser"), px, BruiserIconSize);
+                else Place(Pooled(hostileMarkers, normal++, "hostile"), px, HostileIconSize);
+            }
+            Hide(hostileMarkers, normal);
+            Hide(bruiserMarkers, bruisers);
+            Hide(bossMarkers, bosses);
+        }
+
+        // The nearest Hostiles within the distance the settings give, as many as they allow, nearest first.
+        private void PickHostiles(Vector3 from)
+        {
+            nearHostiles.Clear();
+            nearDistances.Clear();
+            IReadOnlyList<HostileNet> all = HostileNet.Active;
+            if (all.Count == 0) return;
+            HostileSettings settings = null;
+            for (int i = 0; i < all.Count && settings == null; i++) settings = all[i] != null ? all[i].Settings : null;
+            if (settings == null || settings.minimapMarkers <= 0) return;
+            float reach = settings.minimapMetres * settings.minimapMetres;
+            int most = settings.minimapMarkers;
+
+            for (int i = 0; i < all.Count; i++)
+            {
+                HostileNet hostile = all[i];
+                if (hostile == null || !hostile.isActiveAndEnabled || hostile.Entity == null || !hostile.Entity.IsAlive) continue;
+                Vector3 offset = hostile.transform.position - from;
+                float distance = offset.x * offset.x + offset.z * offset.z;
+                if (distance > reach) continue;
+                if (nearHostiles.Count >= most && distance >= nearDistances[nearDistances.Count - 1]) continue;
+                int at = nearDistances.Count;
+                while (at > 0 && nearDistances[at - 1] > distance) at--;
+                nearHostiles.Insert(at, hostile);
+                nearDistances.Insert(at, distance);
+                if (nearHostiles.Count > most)
+                {
+                    nearHostiles.RemoveAt(most);
+                    nearDistances.RemoveAt(most);
+                }
+            }
         }
 
         private static Vector2 ClampToRim(Vector2 px, Vector2 playerPx, float maskHalf)

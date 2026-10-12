@@ -96,7 +96,24 @@ namespace KryticalNova.Progression
         public int Tier => settings != null ? NovaRules.Tier(settings.ascension, state.ascension) : 0;
         public FactionId Faction => member != null ? member.Faction : FactionId.None;
         /// <summary>The Standing this character wears ("Vanguard Thane"), or null.</summary>
-        public string WornStanding => settings != null ? NovaRules.WornName(settings.standings, Faction, state) : null;
+        public string WornStanding
+        {
+            get
+            {
+                if (settings == null) return null;
+                // Put together once for each Standing worn: the namecard asks every frame.
+                int key = state.TryGetWorn(out StandingTrack track) ? ((int)Faction << 24) | ((int)track << 16) | (state.Standing(track) & 0xFFFF) : -1;
+                if (key != wornKey)
+                {
+                    wornKey = key;
+                    wornName = key < 0 ? null : NovaRules.StandingName(settings.standings, Faction, track, state.Standing(track));
+                }
+                return wornName;
+            }
+        }
+
+        private int wornKey = int.MinValue;
+        private string wornName;
         public long Creds => wallet != null ? wallet.Creds : 0;
         public int Renown => progression != null ? progression.Renown : 0;
         /// <summary>True while a Herald is in reach (or the GM switch is on): the window closes when it stops being so.</summary>

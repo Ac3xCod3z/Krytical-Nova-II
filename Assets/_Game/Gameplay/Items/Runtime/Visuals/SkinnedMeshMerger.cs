@@ -65,35 +65,37 @@ namespace KryticalNova.Items.Visuals
         private const int MaxUvChannels = 4;
 
         private readonly Dictionary<string, Transform> skeleton = new Dictionary<string, Transform>(StringComparer.Ordinal);
-        private readonly Transform[] referenceBones;
-        private readonly Matrix4x4[] referenceBindposes;
+        private Transform[] referenceBones;
+        private Matrix4x4[] referenceBindposes;
 
-        // Scratch buffers reused across merges (equip-time work, but no reason to churn the GC).
-        private readonly List<Vector3> positions = new List<Vector3>(32768);
-        private readonly List<Vector3> normals = new List<Vector3>(32768);
-        private readonly List<Vector4> tangents = new List<Vector4>(32768);
-        private readonly List<Vector4>[] uvs = new List<Vector4>[MaxUvChannels];
-        private readonly int[] uvDimensions = new int[MaxUvChannels];
-        private readonly List<BoneWeight> boneWeights = new List<BoneWeight>(32768);
-        private readonly List<int> triangles = new List<int>(98304);
+        // Scratch buffers, one set for the whole game (every merge clears them first, and merges run one at a time on
+        // the main thread). They were each merger's own until 12 Oct 2026: six megabytes handed out and wiped for
+        // every character that woke, twice over, which was most of the frame a player appeared on.
+        private static readonly List<Vector3> positions = new List<Vector3>(32768);
+        private static readonly List<Vector3> normals = new List<Vector3>(32768);
+        private static readonly List<Vector4> tangents = new List<Vector4>(32768);
+        private static readonly List<Vector4>[] uvs = new List<Vector4>[MaxUvChannels];
+        private static readonly int[] uvDimensions = new int[MaxUvChannels];
+        private static readonly List<BoneWeight> boneWeights = new List<BoneWeight>(32768);
+        private static readonly List<int> triangles = new List<int>(98304);
         private readonly Dictionary<string, int> boneIndexByName = new Dictionary<string, int>(StringComparer.Ordinal);
-        private readonly List<Matrix4x4> bindposes = new List<Matrix4x4>(160);
+        private static readonly List<Matrix4x4> bindposes = new List<Matrix4x4>(160);
 
-        private readonly List<Vector3> partVerts = new List<Vector3>(8192);
-        private readonly List<Vector3> partNormals = new List<Vector3>(8192);
-        private readonly List<Vector4> partTangents = new List<Vector4>(8192);
-        private readonly List<Vector4> partUv = new List<Vector4>(8192);
-        private readonly List<BoneWeight> partWeights = new List<BoneWeight>(8192);
-        private readonly List<int> partTris = new List<int>(24576);
-        private readonly List<Matrix4x4> partBindposes = new List<Matrix4x4>(128);
-        private readonly List<Vector2> uv2Buffer = new List<Vector2>(32768);
-        private Vector3[] deltaV = Array.Empty<Vector3>();
-        private Vector3[] deltaN = Array.Empty<Vector3>();
-        private Vector3[] deltaT = Array.Empty<Vector3>();
-        private Vector3[] deltaV2 = Array.Empty<Vector3>();
-        private Vector3[] deltaN2 = Array.Empty<Vector3>();
-        private Vector3[] deltaT2 = Array.Empty<Vector3>();
-        private int[] remap = Array.Empty<int>();
+        private static readonly List<Vector3> partVerts = new List<Vector3>(8192);
+        private static readonly List<Vector3> partNormals = new List<Vector3>(8192);
+        private static readonly List<Vector4> partTangents = new List<Vector4>(8192);
+        private static readonly List<Vector4> partUv = new List<Vector4>(8192);
+        private static readonly List<BoneWeight> partWeights = new List<BoneWeight>(8192);
+        private static readonly List<int> partTris = new List<int>(24576);
+        private static readonly List<Matrix4x4> partBindposes = new List<Matrix4x4>(128);
+        private static readonly List<Vector2> uv2Buffer = new List<Vector2>(32768);
+        private static Vector3[] deltaV = Array.Empty<Vector3>();
+        private static Vector3[] deltaN = Array.Empty<Vector3>();
+        private static Vector3[] deltaT = Array.Empty<Vector3>();
+        private static Vector3[] deltaV2 = Array.Empty<Vector3>();
+        private static Vector3[] deltaN2 = Array.Empty<Vector3>();
+        private static Vector3[] deltaT2 = Array.Empty<Vector3>();
+        private static int[] remap = Array.Empty<int>();
 
         // Live (un-baked) blendshape deltas gathered per part, then stitched into full-mesh frames.
         private sealed class LiveShapeChunk
@@ -109,11 +111,20 @@ namespace KryticalNova.Items.Visuals
 
         public SkinnedMeshMerger(Transform skeletonRoot, Transform[] referenceBones, Matrix4x4[] referenceBindposes)
         {
-            this.referenceBones = referenceBones ?? Array.Empty<Transform>();
-            this.referenceBindposes = referenceBindposes ?? Array.Empty<Matrix4x4>();
+            SetReference(referenceBones, referenceBindposes);
             foreach (var t in skeletonRoot.GetComponentsInChildren<Transform>(true))
                 skeleton.TryAdd(t.name, t);
-            for (int c = 0; c < MaxUvChannels; c++) uvs[c] = new List<Vector4>(32768);
+            for (int c = 0; c < MaxUvChannels; c++) uvs[c] ??= new List<Vector4>(32768);
+        }
+
+        /// <summary>
+        /// The bones the merged mesh keeps in the prefab's own order, with their bind poses. Set after the merger is
+        /// made when the bones have to be looked up by name in it first.
+        /// </summary>
+        public void SetReference(Transform[] bones, Matrix4x4[] bindposes)
+        {
+            referenceBones = bones ?? Array.Empty<Transform>();
+            referenceBindposes = bindposes ?? Array.Empty<Matrix4x4>();
         }
 
         public bool HasBone(string name) => skeleton.ContainsKey(name);

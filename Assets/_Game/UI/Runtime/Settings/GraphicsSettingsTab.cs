@@ -26,7 +26,8 @@ namespace KryticalNova.UI
             page.Clear();
             refreshers.Clear();
             CollectResolutions();
-            frameCapNames = Array.ConvertAll(GraphicsPreferences.FrameCaps, cap => cap <= 0 ? "NO CAP" : cap + " FPS");
+            frameCapNames = Array.ConvertAll(GraphicsPreferences.FrameCaps, cap =>
+                cap == GraphicsPreferences.FrameCapOfScreen ? "AS THE SCREEN (" + GraphicsPreferences.ScreenRate + ")" : cap <= 0 ? "NO CAP" : cap + " FPS");
 
             SettingsRows.Header(page, "DISPLAY");
             Add(SettingsRows.Choice(page, "Resolution", resolutionNames, ResolutionIndex,

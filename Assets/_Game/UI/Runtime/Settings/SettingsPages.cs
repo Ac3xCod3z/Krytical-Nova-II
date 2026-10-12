@@ -109,8 +109,9 @@ namespace KryticalNova.UI
             Click("settings-apply", Apply);
             Click("settings-revert", Revert);
             Click("settings-reset", ResetPage);
-            // The two buttons are live only while there is something to keep or to put back.
-            root.schedule.Execute(ShowFooter).Every(200);
+            // The two buttons are live only while there is something to keep or to put back. Asked only while the
+            // window is open: the answer reads every setting and the key bindings, five times a second.
+            root.schedule.Execute(() => { if (open) ShowFooter(); }).Every(200);
             Show(activePage);
             ShowFooter();
         }

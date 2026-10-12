@@ -141,7 +141,7 @@ namespace KryticalNova.UI
         public static void ApplyDisplay()
         {
             QualitySettings.vSyncCount = GraphicsPreferences.VSync ? 1 : 0;
-            int cap = GraphicsPreferences.FrameCap;
+            int cap = GraphicsPreferences.FrameCapInForce;
             Application.targetFrameRate = GraphicsPreferences.VSync || cap <= 0 ? -1 : cap;
 #if !UNITY_EDITOR
             Vector2Int size = GraphicsPreferences.Resolution;
@@ -190,7 +190,7 @@ namespace KryticalNova.UI
             if (KryticalNova.Diagnostics.PerformanceLog.IsRecording)
             {
                 KryticalNova.Diagnostics.PerformanceLog.Change("graphics", System.FormattableString.Invariant(
-                    $"{Screen.width}x{Screen.height} {GraphicsPreferences.Window} preset={GraphicsPreferences.Preset} upscaler={UpscalerInForce} quality={GraphicsPreferences.UpscalerQuality} scale={GraphicsPreferences.RenderScale:0.00} shadows={GraphicsPreferences.Shadows} aa={GraphicsPreferences.AntiAliasing} grass={GraphicsPreferences.GrassDensity:0.00} fog={GraphicsPreferences.VolumetricFog} shafts={GraphicsPreferences.SunShafts} outlines={GraphicsPreferences.ComicOutlines} vsync={GraphicsPreferences.VSync} cap={GraphicsPreferences.FrameCap}"));
+                    $"{Screen.width}x{Screen.height} {GraphicsPreferences.Window} preset={GraphicsPreferences.Preset} upscaler={UpscalerInForce} quality={GraphicsPreferences.UpscalerQuality} scale={GraphicsPreferences.RenderScale:0.00} shadows={GraphicsPreferences.Shadows} aa={GraphicsPreferences.AntiAliasing} grass={GraphicsPreferences.GrassDensity:0.00} fog={GraphicsPreferences.VolumetricFog} shafts={GraphicsPreferences.SunShafts} outlines={GraphicsPreferences.ComicOutlines} vsync={GraphicsPreferences.VSync} cap={GraphicsPreferences.FrameCapInForce}"));
             }
         }
 

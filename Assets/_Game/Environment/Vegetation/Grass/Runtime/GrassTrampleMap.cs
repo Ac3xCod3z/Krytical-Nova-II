@@ -27,6 +27,7 @@ namespace KryticalNova.Vegetation.Grass
         private const int MaxSources = 32; // GrassTrample.compute KN_MAX_TRAMPLERS
 
         private readonly List<Vector4> sources = new List<Vector4>(MaxSources);
+        private readonly int[] shiftInts = new int[2];
         private readonly Vector4[] sent = new Vector4[MaxSources];
         private RenderTexture before, after;
         private int kernel = -1;
@@ -62,7 +63,8 @@ namespace KryticalNova.Vegetation.Grass
             float spring = springSeconds > 0.01f ? Mathf.Exp(-Time.deltaTime / springSeconds) : 0f;
             shader.SetTexture(kernel, BeforeId, before);
             shader.SetTexture(kernel, AfterId, after);
-            shader.SetInts(ShiftId, shift.x, shift.y);
+            shiftInts[0] = shift.x; shiftInts[1] = shift.y;
+            shader.SetInts(ShiftId, shiftInts); // an array of our own: SetInts(id, a, b) makes one on every call
             shader.SetVector(MapId, new Vector4(corner.x * texel, corner.y * texel, texel, texels));
             shader.SetVector(SpringId, new Vector4(spring, 0f, 0f, 0f));
             shader.SetVectorArray(SourcesId, sent);

@@ -1065,6 +1065,9 @@
     background-color: rgb(222, 65, 73);
     border-color: rgb(27, 20, 30);
 }
+.kn-faction-null .minimap-marker.hostile {
+    border-color: rgb(27, 20, 30);
+}
 
 /* ---- WorldMap.uss ---- */
 .kn-faction-null .world-map .header-key {

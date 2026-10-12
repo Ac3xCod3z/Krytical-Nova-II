@@ -61,9 +61,19 @@ drawn as an element over the map (`MinimapChromeView.overMap`: the Covenant dial
 - Sizes are the builder's: every faction's main bar, plate and dial glass is as wide as the others' (`MainBarPanelWidth`,
   `VitalsPanelWidth`, `MinimapGlassPanelWidth` in `FactionHudBuilder`). The main bar is centred on the screen and clears
   the chat at the default sizes.
-- The live portrait is `CharacterPortraitStage` (`Gameplay/Items/Runtime/Visuals/`): a stripped doll that shares the
+- The portrait is `CharacterPortraitStage` (`Gameplay/Items/Runtime/Visuals/`): a stripped doll that shares the
   player's merged mesh, as the Equipment page's does, drawn by its own camera into a 256 px texture with a clear
-  background, 30 times a second (a camera costs the frame nearly a millisecond however small its picture is). While an Equipment preview is lit it puts its own lights out (both are on the preview layer).
+  background. **It is a still picture** (owner, 11 Oct 2026): taken when the player arrives and again only when the
+  armor piece changes (the piece, its dye or its Holoweave look) or the character's look is changed at the Stylist
+  or the Reshaper; gloves, boots, cape and weapon do not retake it. For a picture the doll is switched on for a few
+  frames (and half a second later once more, for a texture that came late), the camera draws one frame, and both
+  go off: between pictures nothing is animated and no camera draws. While an Equipment preview is lit it puts its
+  own lights out (both are on the preview layer).
+- The minimap is the zone's baked picture with markers on it, and no camera (owner, 11 Oct 2026): the player's
+  arrow, the members of the player's Squad (other players are not shown), NPCs, portals, the player's own marker,
+  and the nearest Hostiles within `HostileSettings.minimapMetres` (60 m, at most `minimapMarkers`, 24): a small red
+  dot, a Bruiser a larger orange diamond, and a skull kept for a boss (`HostileTier.BossReserved`), which nothing in
+  the game is yet. `.minimap-marker.hostile / .bruiser / .boss` in `Minimap.uss`.
 - Labels that follow things in the world (namecards, nameplates, loot labels, Kiosk plates, combat numbers) are UI
   Toolkit and would draw over the pieces: each hides while it is over one (`HudChrome.HideOver`).
 - The plate over a Hostile is the exception since 9 Oct 2026: while the HUD wears a faction's art it is that

@@ -248,8 +248,9 @@ namespace KryticalNova.Hostiles
             NetworkManager manager = NetworkManager.Singleton;
             if (manager != null && manager.IsListening)
             {
-                foreach (NetworkClient client in manager.ConnectedClientsList)
-                    if (client.PlayerObject != null) players.Add(client.PlayerObject.transform);
+                IReadOnlyList<NetworkClient> clients = manager.ConnectedClientsList;
+                for (int i = 0; i < clients.Count; i++)
+                    if (clients[i].PlayerObject != null) players.Add(clients[i].PlayerObject.transform);
             }
             else if (PlayerInventory.Local != null) players.Add(PlayerInventory.Local.transform);
             return players;

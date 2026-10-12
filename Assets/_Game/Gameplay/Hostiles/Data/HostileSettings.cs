@@ -70,6 +70,12 @@ namespace KryticalNova.Hostiles
         [Tooltip("Hostiles a zone may bring back in one check, so a zone that wakes does not fill in a single frame.")]
         [Min(1)] public int spawnsPerTick = 4;
 
+        [Header("Minimap")]
+        [Tooltip("A Hostile within this many metres of the player has a marker on the minimap.")]
+        [Min(0f)] public float minimapMetres = 60f;
+        [Tooltip("The most Hostile markers the minimap shows at once: the nearest ones. 0 shows none.")]
+        [Min(0)] public int minimapMarkers = 24;
+
         /// <summary>Seconds from a death until the body has gone and the Hostile is back in the pool.</summary>
         public float CorpseLifetime => corpseSeconds + dissolveSeconds;
     }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
@@ -13,6 +14,10 @@ namespace KryticalNova.EditorTools
     /// The Windows build handed to testers. It takes the scenes of <see cref="BuildSceneOrder"/> and nothing else, so
     /// only what those scenes reference (and the Resources folders) ships. Not a development build. Next to the
     /// build it writes a size report, largest first, so anything that should not be in there shows up.
+    /// <para>Two scripting backends: Mono (the scripts are compiled while the game runs, so the first use of
+    /// anything hitches) and IL2CPP (compiled to machine code beforehand: faster, and no such hitches). IL2CPP
+    /// needs Unity's "Windows Build Support (IL2CPP)" module and the Visual Studio C++ build tools with a Windows
+    /// SDK; <see cref="Il2CppMissing"/> says what is not there. Neither build leaves the project on another backend.</para>
     /// </summary>
     public static class TestBuildBuilder
     {
@@ -37,8 +42,92 @@ namespace KryticalNova.EditorTools
             Build();
         }
 
-        /// <summary>Builds without asking. True when the build succeeded; the report is written either way.</summary>
-        public static bool Build()
+        [MenuItem("Krytical Nova/Build/Windows Test Build (IL2CPP)", priority = 51)]
+        private static void MenuIl2Cpp()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                EditorUtility.DisplayDialog("Windows Test Build", "Stop Play first.", "OK");
+                return;
+            }
+            string missing = Il2CppMissing();
+            if (missing != null)
+            {
+                EditorUtility.DisplayDialog("Windows Test Build (IL2CPP)", missing, "OK");
+                return;
+            }
+            Build(ScriptingImplementation.IL2CPP);
+        }
+
+        /// <summary>
+        /// What this PC lacks for an IL2CPP build, in words for whoever has to install it; null when nothing is seen
+        /// to be missing. The Unity module is certain (its player files are a folder of the Editor); the C++ tools
+        /// are looked for where Visual Studio's installer registers them, so a build can still fail on those.
+        /// </summary>
+        public static string Il2CppMissing()
+        {
+            var missing = new List<string>();
+            string variations = Path.Combine(EditorApplication.applicationContentsPath, "PlaybackEngines", "windowsstandalonesupport", "Variations");
+            bool module = Directory.Exists(variations) && Directory.GetDirectories(variations, "*il2cpp*").Length > 0;
+            if (!module) missing.Add("Unity's module \"Windows Build Support (IL2CPP)\" for " + Application.unityVersion + " (Unity Hub > Installs > the gear on this version > Add modules)");
+
+            string programs = Environment.GetEnvironmentVariable("ProgramFiles(x86)") ?? string.Empty;
+            bool studio = File.Exists(Path.Combine(programs, "Microsoft Visual Studio", "Installer", "vswhere.exe"));
+            bool sdk = Directory.Exists(Path.Combine(programs, "Windows Kits", "10", "Include"));
+            if (!studio) missing.Add("Visual Studio or its Build Tools with the workload \"Desktop development with C++\" (the Hub offers it with the module)");
+            if (!sdk) missing.Add("a Windows 10 or 11 SDK (part of that workload)");
+            return missing.Count == 0 ? null : "An IL2CPP build needs, and this PC does not have:\n\n- " + string.Join("\n- ", missing) + "\n\nRestart the Editor after installing.";
+        }
+
+        /// <summary>Builds without asking, with Mono. True when the build succeeded; the report is written either way.</summary>
+        public static bool Build() => Build(ScriptingImplementation.Mono2x);
+
+        /// <summary>
+        /// Builds without asking, with the scripting backend named. A build with the project's own backend (Mono)
+        /// touches no setting. For another one the backend, stripping level and compiler configuration are set for
+        /// the build and put back afterwards: the values are the project's again, though ProjectSettings then names
+        /// them where it left them unsaid before.
+        /// </summary>
+        public static bool Build(ScriptingImplementation backend)
+        {
+            if (backend == ScriptingImplementation.IL2CPP)
+            {
+                string missing = Il2CppMissing();
+                if (missing != null)
+                {
+                    Debug.LogError("[Build] " + missing.Replace("\n\n", " ").Replace("\n", " "));
+                    return false;
+                }
+            }
+
+            NamedBuildTarget standalone = NamedBuildTarget.Standalone;
+            ScriptingImplementation backendWas = PlayerSettings.GetScriptingBackend(standalone);
+            // The project's own backend: nothing is set and nothing has to be put back, so ProjectSettings is not written.
+            if (backendWas == backend && backend != ScriptingImplementation.IL2CPP) return BuildWith(backend);
+            ManagedStrippingLevel strippingWas = PlayerSettings.GetManagedStrippingLevel(standalone);
+            Il2CppCompilerConfiguration compilerWas = PlayerSettings.GetIl2CppCompilerConfiguration(standalone);
+            try
+            {
+                PlayerSettings.SetScriptingBackend(standalone, backend);
+                if (backend == ScriptingImplementation.IL2CPP)
+                {
+                    // Minimal: only Unity's and .NET's own libraries are trimmed. The game's assemblies and the
+                    // packages' go in whole, because the GM console finds its commands, and Netcode its messages,
+                    // by reflection, which trimming cannot see.
+                    PlayerSettings.SetManagedStrippingLevel(standalone, ManagedStrippingLevel.Minimal);
+                    PlayerSettings.SetIl2CppCompilerConfiguration(standalone, Il2CppCompilerConfiguration.Release);
+                }
+                return BuildWith(backend);
+            }
+            finally
+            {
+                PlayerSettings.SetScriptingBackend(standalone, backendWas);
+                PlayerSettings.SetManagedStrippingLevel(standalone, strippingWas);
+                PlayerSettings.SetIl2CppCompilerConfiguration(standalone, compilerWas);
+            }
+        }
+
+        private static bool BuildWith(ScriptingImplementation backend)
         {
             BuildSceneOrder.Apply();
             string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
@@ -65,19 +154,22 @@ namespace KryticalNova.EditorTools
                 options = BuildOptions.CompressWithLz4HC
             };
             BuildReport report = BuildPipeline.BuildPlayer(options);
-            WriteReport(report, scenes);
+            WriteReport(report, scenes, backend);
 
             bool ok = report.summary.result == BuildResult.Succeeded;
-            if (ok) Debug.Log($"[Build] Windows test build written to {OutputFolder} ({Megabytes(report.summary.totalSize)}). Sizes: {ReportPath}");
+            if (ok) Debug.Log($"[Build] Windows test build ({BackendName(backend)}) written to {OutputFolder} ({Megabytes(report.summary.totalSize)}). Sizes: {ReportPath}");
             else Debug.LogError($"[Build] Windows test build {report.summary.result}: {report.summary.totalErrors} errors. See {ReportPath}");
             return ok;
         }
 
-        private static void WriteReport(BuildReport report, string[] scenes)
+        private static string BackendName(ScriptingImplementation backend) => backend == ScriptingImplementation.IL2CPP ? "IL2CPP" : "Mono";
+
+        private static void WriteReport(BuildReport report, string[] scenes, ScriptingImplementation backend)
         {
             var text = new StringBuilder();
             BuildSummary summary = report.summary;
             text.AppendLine($"Windows test build: {summary.result}");
+            text.AppendLine($"Scripting backend: {BackendName(backend)}");
             text.AppendLine($"Built {summary.buildEndedAt.ToLocalTime():yyyy-MM-dd HH:mm} in {summary.totalTime:hh\\:mm\\:ss}");
             text.AppendLine($"Size {Megabytes(summary.totalSize)}, errors {summary.totalErrors}, warnings {summary.totalWarnings}");
             text.AppendLine();

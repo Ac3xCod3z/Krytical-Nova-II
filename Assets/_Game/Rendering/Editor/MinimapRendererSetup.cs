@@ -7,8 +7,9 @@ namespace KryticalNova.EditorTools
 {
     /// <summary>
     /// Creates "Minimap_Renderer" (a feature-less Forward+ renderer, copied from Mobile_Renderer, that draws opaques only) and
-    /// registers it on the PC pipeline asset, where MinimapLiveCamera finds it by name. Not added to the Mobile asset,
-    /// so the Mobile tier keeps the baked minimap image. Re-runnable.
+    /// registers it on the PC pipeline asset, where the minimap's bake and the menus' book find it by name. Not added
+    /// to the Mobile asset. Re-runnable. (The minimap itself draws nothing of the world while the game runs: it is
+    /// the baked picture with markers on it.)
     /// </summary>
     public static class MinimapRendererSetup
     {
