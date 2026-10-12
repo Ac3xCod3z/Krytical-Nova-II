@@ -87,7 +87,7 @@ def read(path):
                         start, count = part.split(':', 1)
                         bins[float(start)] = int(count)
                 # A section's last line is the whole of it: a later one of the same number replaces the earlier.
-                sections[int(cells[2])] = dict(time=float(cells[1]), name=cells[3], frames=int(cells[4]), seconds=float(cells[5]),
+                sections[int(cells[2])] = dict(serial=int(cells[2]), time=float(cells[1]), name=cells[3], frames=int(cells[4]), seconds=float(cells[5]),
                                                slowest=float(cells[6]), over20=int(cells[7]), loading=int(cells[8]), bins=bins)
     return header, seconds, slow, events, changes, [sections[key] for key in sorted(sections)]
 
@@ -156,13 +156,33 @@ def slowest_share(bins, frames, share):
     return total / (wanted - left) if wanted > left else 0.0
 
 
-def print_sections(sections):
+def handed_out(section, seconds, changes):
+    """What the scripts were handed during a section, in KB a frame, and the collections that ran in it."""
+    starts = [0.0] + [c['time'] for c in changes if c['what'] == 'section']  # a section's number is its place in this list
+    serial = section['serial']
+    if serial >= len(starts):
+        return None, None
+    start = starts[serial]
+    end = starts[serial + 1] if serial + 1 < len(starts) else float('inf')
+    rows = [s for s in seconds if start < s['time'] <= end]
+    if len(rows) < 2:
+        return None, None
+    handed = sum(max(0, b['scripts'] - a['scripts']) for a, b in zip(rows, rows[1:]))
+    frames = sum(r['frames'] for r in rows[1:])
+    return handed * 1024.0 / max(1, frames), rows[-1]['collections'] - rows[0]['collections']
+
+
+def print_sections(sections, seconds, changes):
     print()
     print('SECTIONS (every frame of play counted, not only the slow ones; frames while loading left out)')
-    print('  %-22s %8s %8s %9s %9s %10s %9s  %s' % ('section', 'seconds', 'average', '1 % low', '0.1 % low', 'slowest ms', 'over 20', 'mark'))
+    print('  %-22s %8s %8s %9s %9s %10s %9s %9s %11s  %s' % ('section', 'seconds', 'average', '1 % low', '0.1 % low', 'slowest ms', 'over 20',
+                                                           'KB/frame', 'collections', 'mark'))
     for section in sections:
         if section['frames'] == 0:
             continue
+        garbage, collections = handed_out(section, seconds, changes)
+        garbage = '-' if garbage is None else '%.1f' % garbage
+        collections = '-' if collections is None else '%d' % collections
         low = slowest_share(section['bins'], section['frames'], 0.01)
         lowest = slowest_share(section['bins'], section['frames'], 0.001)
         if section['over20'] > 0:
@@ -172,10 +192,11 @@ def print_sections(sections):
         else:
             # How much slower a PC could be and still pass, by the worst frame alone.
             mark = 'passes; room for a PC %.1f times slower by the worst frame' % (FLOOR_MS / max(0.01, section['slowest']))
-        print('  %-22s %8.0f %8.0f %9.0f %9.0f %10.1f %9d  %s'
+        print('  %-22s %8.0f %8.0f %9.0f %9.0f %10.1f %9d %9s %11s  %s'
               % (section['name'][:22], section['seconds'], section['frames'] / max(0.001, section['seconds']),
-                 1000.0 / max(0.01, low), 1000.0 / max(0.01, lowest), section['slowest'], section['over20'], mark))
-    print('  (frames a second; a "low" is the mean of the slowest 1 % / 0.1 % of the frames; the mark is 60 locked, none under 50)')
+                 1000.0 / max(0.01, low), 1000.0 / max(0.01, lowest), section['slowest'], section['over20'], garbage, collections, mark))
+    print('  (frames a second; a "low" is the mean of the slowest 1 % / 0.1 % of the frames; the mark is 60 locked, none under 50;')
+    print('   KB/frame is the memory the scripts were handed, which the collections are for: the first section holds the game starting up)')
 
 
 def main():
@@ -207,7 +228,7 @@ def main():
     print('the log itself cost %.1f microseconds a frame' % (sum(costs) / len(costs)))
 
     if sections:
-        print_sections(sections)
+        print_sections(sections, seconds, changes)
 
     if changes:
         print()
@@ -277,7 +298,7 @@ def main():
     print('  %-18s %12d in all (%.1f a minute)' % ('collections', collections, collections * 60.0 / max(1.0, length)))
     # What the scripts were handed between collections: every rise of script memory from one second to the next.
     handed = sum(max(0, b['scripts'] - a['scripts']) for a, b in zip(seconds, seconds[1:]))
-    print('  %-18s %12.1f MB a minute handed out to scripts (what the collections are for), %.1f KB a frame'
+    print('  %-18s %12.1f MB a minute handed out to scripts over the whole run, starting up included (%.1f KB a frame); by section above'
           % ('garbage', handed * 60.0 / max(1.0, length), handed * 1024.0 / max(1, frames)))
 
 
