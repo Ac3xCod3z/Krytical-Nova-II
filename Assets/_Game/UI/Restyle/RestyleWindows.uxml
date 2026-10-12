@@ -18,8 +18,12 @@
             <ui:Button name="weave-tab-boots" text="BOOTS" class="forge-tab" />
             <ui:Button name="weave-tab-cape" text="CAPE" class="forge-tab" />
         </ui:VisualElement>
+        <!-- Morphweave: a Morph over the pet that is out. At the Holoweaver only. -->
+        <ui:VisualElement name="weave-tabs-pet" class="forge-tabs">
+            <ui:Button name="weave-tab-pet" text="MORPHWEAVE" class="forge-tab weave-tab-pet" />
+        </ui:VisualElement>
         <ui:Label name="weave-worn" class="weave-worn" />
-        <ui:ScrollView name="weave-scroll" class="weave-scroll">
+        <ui:ScrollView name="weave-scroll" class="weave-scroll" horizontal-scroller-visibility="Hidden">
             <ui:VisualElement name="weave-grid" class="inventory-grid" />
         </ui:ScrollView>
         <ui:Label name="weave-choice" class="weave-choice" />

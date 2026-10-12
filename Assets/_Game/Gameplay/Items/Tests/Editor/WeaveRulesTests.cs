@@ -138,6 +138,39 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void AWeaveIsNamedByItsSet_AndAWeaponByItsLine()
+        {
+            var gear = AssetDatabase.LoadAssetAtPath<GearDictionary>(Root + "GearDictionary.asset");
+            Assert.IsNotNull(gear);
+            bool sawSet = false, sawWeapon = false;
+            foreach (GearDictionary.Line line in gear.Lines)
+            {
+                if (!line.IsValid) continue;
+                ItemDefinition piece = Piece(line.FirstItemId, line.slot, line.lineId);
+                string name = WeaveRules.NameOf(gear, piece);
+                if (!string.IsNullOrEmpty(line.set))
+                {
+                    Assert.AreEqual(line.set, name, $"line {line.lineId}");
+                    sawSet = true;
+                }
+                else if (line.slot == EquipSlot.Weapon)
+                {
+                    Assert.AreEqual(line.displayName, name, $"line {line.lineId}");
+                    sawWeapon = true;
+                }
+                Assert.IsNotEmpty(name, $"line {line.lineId}");
+            }
+            Assert.IsTrue(sawSet, "no gear line has a set");
+            Assert.IsTrue(sawWeapon, "no weapon line");
+
+            ItemDefinition loose = Piece(2001, EquipSlot.Armor, 0);
+            loose.displayName = "Plain Jacket";
+            Assert.AreEqual("Plain Jacket", WeaveRules.NameOf(gear, loose), "a piece of no line is named as itself");
+            Assert.AreEqual("Plain Jacket", WeaveRules.NameOf(null, loose));
+            Assert.AreEqual(string.Empty, WeaveRules.NameOf(gear, null));
+        }
+
+        [Test]
         public void TheCatalogNamesTheColourways()
         {
             var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(Root + "ItemCatalog.asset");

@@ -147,9 +147,11 @@ For each call the review answers five questions, and the Status column is filled
 | 36 | Social | `PlayerContacts.cs` : 205 | `FavouriteRpc(string characterId, bool favourite)` | new | text length and content | Not reviewed |
 | 37 | Social | `PlayerContacts.cs` : 208 | `NoteRpc(string characterId, string note)` | new | text length and content | Not reviewed |
 | 38 | Social | `PlayerChat.cs` : 122 | `SendRpc(ChatChannel channel, string text, string whisperTarget)` | new | text length and content | Not reviewed |
-| 39 | Restyle | `PlayerWeaves.cs` : 122 | `WeaveRpc(byte slot, ushort lineId)` | new | index in range | Not reviewed |
-| 40 | Restyle | `PlayerWeaves.cs` : 125 | `ClearWeaveRpc(byte slot)` | new | index in range | Not reviewed |
-| 41 | Restyle | `PlayerWeaves.cs` : 128 | `DyeRpc(byte slot, ushort colourway)` | new | index in range | Not reviewed |
+| 39 | Restyle | `PlayerWeaves.cs` : 153 | `WeaveRpc(byte slot, ushort lineId)` | new | index in range | Not reviewed |
+| 40 | Restyle | `PlayerWeaves.cs` : 156 | `ClearWeaveRpc(byte slot)` | new | index in range | Not reviewed |
+| 41 | Restyle | `PlayerWeaves.cs` : 159 | `DyeRpc(byte slot, ushort colourway)` | new | index in range | Not reviewed |
+| 41a | Restyle | `PlayerWeaves.cs` : 162 | `MorphRpc(ushort petItemId, byte stage)` (12 Oct 2026) | new | index in range; a pet or stage that does not exist | Not reviewed |
+| 41b | Restyle | `PlayerWeaves.cs` : 165 | `ClearMorphRpc()` (12 Oct 2026) | new | rate only | Not reviewed |
 | 42 | Restyle | `PlayerRestyle.cs` : 90 | `RestyleRpc(byte service, CharacterNetState proposed)` | new | the look is sent by the client | Not reviewed |
 | 43 | Crafting | `PlayerCrafting.cs` : 90 | `CraftRpc(ushort recipeId, ushort times)` | new | count: zero, huge | Not reviewed |
 | 44 | Autopilot | `PlayerAutopilot.cs` : 105 | `SetOnServerRpc(bool value)` | new | rate only | Not reviewed |

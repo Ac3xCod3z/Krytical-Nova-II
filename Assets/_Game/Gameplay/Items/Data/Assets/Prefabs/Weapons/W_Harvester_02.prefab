@@ -102,7 +102,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.Visuals.WeaponPaint
   bands: []
+  shades:
+  - value: 0.65485024
+    width: 0.08
+    role: 0
+  - value: 0.78431374
+    width: 0.08
+    role: 1
+  - value: 0.32518944
+    width: 0.08
+    role: 2
+  - value: 0.21386951
+    width: 0.08
+    role: 0
   paintMetal: 1
+  paintDark: 1
+  paintLights: 1
   keepAsSet: 0
 --- !u!1 &9153971579183785592
 GameObject:

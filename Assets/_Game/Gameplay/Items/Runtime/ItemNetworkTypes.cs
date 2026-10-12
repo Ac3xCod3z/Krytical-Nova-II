@@ -226,6 +226,8 @@ namespace KryticalNova.Items
     /// changes. The dye of an outfit slot is the colourway of the piece worn in it (a <c>GearThemeLibrary</c> id,
     /// 0 = its own colours): it belongs to the piece (<see cref="GearItemState.Dye"/>) and is only repeated here,
     /// by the server, so that everyone can draw it. Readable by everyone: it is how others see the character.
+    /// The pet slot has a look too, a Morph: the pet (<see cref="pet"/>, an item id) and the growth stage
+    /// (<see cref="petStage"/>) whose look the pet that is out shows.
     /// </summary>
     [Serializable]
     public struct EquipmentLooks : INetworkSerializable, IEquatable<EquipmentLooks>
@@ -233,6 +235,8 @@ namespace KryticalNova.Items
         public ushort weapon, armor, gloves, boots, cape;
         public ushort armorDye, glovesDye, bootsDye, capeDye;
         public ushort weaponDye;
+        public ushort pet;
+        public byte petStage;
 
         public ushort GetWeave(EquipSlot slot)
         {
@@ -257,6 +261,13 @@ namespace KryticalNova.Items
                 case EquipSlot.Boots: boots = itemId; break;
                 case EquipSlot.Cape: cape = itemId; break;
             }
+        }
+
+        /// <summary>The Morph of the pet slot: a pet and one of its growth stages. 0 takes it off.</summary>
+        public void SetMorph(ushort petItemId, int stage)
+        {
+            pet = petItemId;
+            petStage = petItemId == 0 ? (byte)0 : (byte)stage;
         }
 
         public ushort GetDye(EquipSlot slot)
@@ -296,15 +307,18 @@ namespace KryticalNova.Items
             serializer.SerializeValue(ref bootsDye);
             serializer.SerializeValue(ref capeDye);
             serializer.SerializeValue(ref weaponDye);
+            serializer.SerializeValue(ref pet);
+            serializer.SerializeValue(ref petStage);
         }
 
         public bool Equals(EquipmentLooks o) =>
             weapon == o.weapon && armor == o.armor && gloves == o.gloves && boots == o.boots && cape == o.cape &&
-            armorDye == o.armorDye && glovesDye == o.glovesDye && bootsDye == o.bootsDye && capeDye == o.capeDye && weaponDye == o.weaponDye;
+            armorDye == o.armorDye && glovesDye == o.glovesDye && bootsDye == o.bootsDye && capeDye == o.capeDye && weaponDye == o.weaponDye &&
+            pet == o.pet && petStage == o.petStage;
 
         public override bool Equals(object obj) => obj is EquipmentLooks o && Equals(o);
         public override int GetHashCode() =>
-            HashCode.Combine(weapon, armor, gloves, boots, cape, HashCode.Combine(armorDye, glovesDye, bootsDye, capeDye, weaponDye));
+            HashCode.Combine(weapon, armor, gloves, boots, cape, HashCode.Combine(armorDye, glovesDye, bootsDye, capeDye, weaponDye, pet, petStage));
     }
 
     /// <summary>

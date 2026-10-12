@@ -116,7 +116,10 @@ MonoBehaviour:
     width: 0.06
     role: 1
     value: 0.68758446
+  shades: []
   paintMetal: 1
+  paintDark: 1
+  paintLights: 1
   keepAsSet: 0
 --- !u!1 &8774970993905401012
 GameObject:

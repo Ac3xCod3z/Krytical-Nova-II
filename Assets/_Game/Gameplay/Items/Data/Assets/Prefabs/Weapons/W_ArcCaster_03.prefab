@@ -285,7 +285,25 @@ MonoBehaviour:
   bands:
   - hue: 0.09366393
     width: 0.06
-    role: 1
+    role: 4
     value: 0.79607844
+  shades:
+  - value: 0.25694767
+    width: 0.08
+    role: 0
+  - value: 0.63529414
+    width: 0.08
+    role: 1
+  - value: 0.48780292
+    width: 0.08
+    role: 2
+  - value: 0.15736642
+    width: 0.08
+    role: 0
+  - value: 0.34509805
+    width: 0.08
+    role: 0
   paintMetal: 1
+  paintDark: 1
+  paintLights: 1
   keepAsSet: 0

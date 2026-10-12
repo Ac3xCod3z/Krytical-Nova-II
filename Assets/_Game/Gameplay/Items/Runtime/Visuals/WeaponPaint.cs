@@ -6,7 +6,8 @@ namespace KryticalNova.Items.Visuals
 {
     /// <summary>
     /// The paints of a weapon model, so that it can be dyed in a colourway (a <see cref="GearThemeLibrary"/> theme):
-    /// which hues of its pack's palette texture are its primary, its secondary, its leather and so on. Sits on the
+    /// which hues of its pack's palette texture are its primary, its secondary, its leather and so on, and which of
+    /// its greys is the blade and which a guard or a housing. Its lights take the colourway's glow. Sits on the
     /// weapon's model prefab (Items/Data/Assets/Prefabs/Weapons) beside <see cref="WeaponGlowZone"/>. Worked out from
     /// the mesh by Krytical Nova ▸ Items ▸ 12. Bake Weapon Paints; tick <see cref="keepAsSet"/> to keep paints set by
     /// hand. A dye never touches the pack's own texture or material: the model is given a small repainted copy,
@@ -16,19 +17,32 @@ namespace KryticalNova.Items.Visuals
     public sealed class WeaponPaint : MonoBehaviour
     {
         public WeaponPaintBand[] bands = Array.Empty<WeaponPaintBand>();
+        [Tooltip("The metals of the model, when it has more than one: the first is the blade or the barrel and keeps the colourway's metal, the others take a colour.")]
+        public WeaponPaintShade[] shades = Array.Empty<WeaponPaintShade>();
         [Tooltip("The greys of the model take the colourway's metal. Off: only the paints change.")]
         public bool paintMetal = true;
+        [Tooltip("Dark grips and barrels take a dark shade of the colourway. Off: they are left as they are. Black is left alone either way.")]
+        public bool paintDark = true;
+        [Tooltip("What the model lights up takes the colourway's glow colour. Off: its lights keep the pack's colours.")]
+        public bool paintLights = true;
         [Tooltip("Set by hand: the baker leaves these paints as they are.")]
         public bool keepAsSet;
 
         /// <summary>The side of the repainted copy of a palette texture. The palettes are blocks of flat colour: this is plenty.</summary>
         public const int Size = 512;
         private static readonly string[] TextureProperties = { "_Albedo_Map", "_BaseMap", "_MainTex" };
+        // The packs' shader and Unity's own name the same three things differently.
+        private static readonly string[] LightTextureProperties = { "_Emission_Map", "_EmissionMap" };
+        private static readonly string[] LightColourProperties = { "_Emission_Color", "_EmissionColor" };
+        private const string LightSwitchProperty = "_Enable_Emission";
+        private const string LightKeyword = "_EMISSION";
 
         // Shared by every weapon: the palettes read back once, the repainted copies and the materials that show them.
         private static readonly Dictionary<Texture, Color32[]> Palettes = new Dictionary<Texture, Color32[]>();
         private static readonly Dictionary<(Texture palette, int paint, ushort colourway), Texture2D> Painted =
             new Dictionary<(Texture, int, ushort), Texture2D>();
+        private static readonly Dictionary<(Texture lights, ushort colourway), Texture2D> Lit =
+            new Dictionary<(Texture, ushort), Texture2D>();
         private static readonly Dictionary<(Material material, Texture2D painted), Material> Materials =
             new Dictionary<(Material, Texture2D), Material>();
         private static readonly Dictionary<int, Color32> Memo = new Dictionary<int, Color32>(64);
@@ -43,11 +57,12 @@ namespace KryticalNova.Items.Visuals
         {
             Palettes.Clear();
             Painted.Clear();
+            Lit.Clear();
             Materials.Clear();
         }
 
         /// <summary>True when a dye would change anything on this model.</summary>
-        public bool HasPaint => paintMetal || (bands != null && bands.Length > 0);
+        public bool HasPaint => paintMetal || paintDark || paintLights || (bands != null && bands.Length > 0) || (shades != null && shades.Length > 0);
 
         /// <summary>Shows the model in a colourway; one that is not valid gives it its own colours back.</summary>
         public void Apply(in GearThemeLibrary.Theme theme)
@@ -84,6 +99,15 @@ namespace KryticalNova.Items.Visuals
 
             var hash = new HashCode();
             hash.Add(paintMetal);
+            hash.Add(paintDark);
+            hash.Add(paintLights);
+            if (shades != null)
+                foreach (WeaponPaintShade shade in shades)
+                {
+                    hash.Add(shade.value);
+                    hash.Add(shade.width);
+                    hash.Add((byte)shade.role);
+                }
             if (bands != null)
                 foreach (WeaponPaintBand band in bands)
                 {
@@ -122,9 +146,60 @@ namespace KryticalNova.Items.Visuals
             {
                 shown = new Material(material) { name = material.name + " (dyed)" };
                 shown.SetTexture(property, painted);
+                if (paintLights) RepaintLights(material, shown, theme);
                 Materials[shownKey] = shown;
             }
             return shown;
+        }
+
+        /// <summary>
+        /// The lights of a material in the colourway's glow colour: its emission map repainted, and the colour the
+        /// shader multiplies it by made white at the strength it had (a pack that tints its lights would tint ours).
+        /// A material that lights nothing up is left as it is.
+        /// </summary>
+        private static void RepaintLights(Material material, Material shown, in GearThemeLibrary.Theme theme)
+        {
+            bool on = material.HasProperty(LightSwitchProperty) ? material.GetFloat(LightSwitchProperty) > 0.5f : material.IsKeywordEnabled(LightKeyword);
+            if (!on) return;
+            foreach (string name in LightTextureProperties)
+            {
+                if (!material.HasProperty(name)) continue;
+                Texture lights = material.GetTexture(name);
+                if (lights == null) continue;
+                var key = (lights, theme.id);
+                if (!Lit.TryGetValue(key, out Texture2D lit) || lit == null)
+                {
+                    lit = PaintLights(lights, theme);
+                    if (lit == null) return;
+                    Lit[key] = lit;
+                }
+                shown.SetTexture(name, lit);
+                foreach (string colourName in LightColourProperties)
+                {
+                    if (!material.HasProperty(colourName)) continue;
+                    Color tint = material.GetColor(colourName);
+                    float strength = tint.maxColorComponent;
+                    shown.SetColor(colourName, new Color(strength, strength, strength, tint.a));
+                }
+                return;
+            }
+        }
+
+        private static Texture2D PaintLights(Texture lights, in GearThemeLibrary.Theme theme)
+        {
+            Color32[] source = PaletteOf(lights);
+            if (source == null) return null;
+            var pixels = new Color32[source.Length];
+            for (int i = 0; i < source.Length; i++) pixels[i] = WeaponPaintRules.RecolourLight(source[i], theme);
+            var painted = new Texture2D(Size, Size, TextureFormat.RGBA32, false)
+            {
+                name = $"{lights.name} ({theme.name})",
+                filterMode = lights.filterMode,
+                wrapMode = lights.wrapMode,
+            };
+            painted.SetPixels32(pixels);
+            painted.Apply(false, true);
+            return painted;
         }
 
         private Texture2D Paint(Texture palette, in GearThemeLibrary.Theme theme)
@@ -139,7 +214,7 @@ namespace KryticalNova.Items.Visuals
                 int packed = colour.r << 16 | colour.g << 8 | colour.b;
                 if (!Memo.TryGetValue(packed, out Color32 dyed))
                 {
-                    dyed = WeaponPaintRules.Recolour(colour, bands, theme, paintMetal);
+                    dyed = WeaponPaintRules.Recolour(colour, bands, shades, theme, paintMetal, paintDark);
                     Memo[packed] = dyed;
                 }
                 dyed.a = colour.a;

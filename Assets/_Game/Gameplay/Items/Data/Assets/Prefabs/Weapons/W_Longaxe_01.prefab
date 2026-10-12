@@ -207,5 +207,20 @@ MonoBehaviour:
     width: 0.06
     role: 5
     value: 0.33333334
+  shades:
+  - value: 0.34509805
+    width: 0.08
+    role: 0
+  - value: 0.25882354
+    width: 0.08
+    role: 2
+  - value: 0.43137255
+    width: 0.08
+    role: 0
+  - value: 0.6980393
+    width: 0.08
+    role: 0
   paintMetal: 1
+  paintDark: 1
+  paintLights: 1
   keepAsSet: 0

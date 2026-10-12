@@ -12,6 +12,8 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private PetFollower petFollower;
 
         private PlayerEquipment equipment;
+        // The pet's own system shows the pet (its stage, a Morph): the pet slot is then left to it.
+        private bool petPresented;
 
         public CharacterAppearance Appearance => appearance;
 
@@ -21,6 +23,7 @@ namespace KryticalNova.Items.Visuals
             if (appearance == null) appearance = GetComponentInChildren<CharacterAppearance>(true);
             if (weaponMount == null) weaponMount = GetComponentInChildren<WeaponVisualMount>(true);
             if (petFollower == null) petFollower = GetComponent<PetFollower>();
+            petPresented = GetComponent<IPetPresenter>() != null;
         }
 
         private void OnEnable()
@@ -76,7 +79,7 @@ namespace KryticalNova.Items.Visuals
                     }
                     break;
                 case EquipSlot.Pet:
-                    if (petFollower != null) petFollower.SetPet(worn);
+                    if (petFollower != null && !petPresented) petFollower.SetPet(worn);
                     break;
                 case EquipSlot.Ring:
                 case EquipSlot.Amulet:

@@ -778,7 +778,7 @@ MonoBehaviour:
         - Standings cost Renown only, no Creds. Later ranks cost far more than early ones, so the first ranks of all four tracks are the cheapest gains.
     - id: holoweave-and-dye
       title: Holoweave and dye
-      summary: Holoweave puts the look of one piece of gear over another. Dye changes the colours of a piece. Neither changes a single stat.
+      summary: Holoweave puts the look of one piece of gear over another, and Morphweave the look of one pet over another. Dye changes the colours of a piece. None of them changes a single stat.
       clip: {fileID: 32900000, guid: fd18e7fd43c82524cb6102fc9ec79912, type: 3}
       still: {fileID: 0}
       focus:
@@ -804,11 +804,21 @@ MonoBehaviour:
         - 'At the Holoweaver, pick a slot: Weapon, Armor, Gloves, Boots or Cape.'
         - Pick a look. It must be one your faction and body can wear, and for a weapon one of the class you hold.
         - Press <b>WEAVE</b>. It costs Creds. The Weave stays on the slot when you change the piece under it.
+        - The tooltip of a piece you wear names the Weave over it, after its dye.
+      - kind: 2
+        heading: Morphweave, for your pet
+        lines:
+        - What a Morph is | The look of one pet at one of its five stages
+        - How you earn one | Your pet evolves into that stage while it is out, or you put a pet out at that stage
+        - A pet you bought grown | Gives the look it has now and the ones it grows into with you, never the earlier ones
+        - What it goes over | Any pet that has grown at least as far as the Morph's stage
+        - Where | The Holoweaver's MORPHWEAVE tab, for the same Creds as a Weave
+        - What stays your pet's | Its bonus, growth and hunger
       - kind: 2
         heading: Dye
         lines:
         - An outfit piece | One Chroma Cell, in any of 24 colourways
-        - A weapon | One Prism Cell
+        - A weapon | One Prism Cell. The colourway reaches its metals, trim, lights and dark grips, where the weapon has them
         - 'Where it lives | On the piece itself: it goes with it into a Trade, a Kiosk or the Vault, and a new piece needs a new Cell'
       - kind: 3
         heading: 

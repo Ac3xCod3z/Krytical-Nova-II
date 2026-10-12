@@ -9,13 +9,16 @@ namespace KryticalNova.EditorTools
     /// <summary>
     /// Gives every weapon model its <see cref="WeaponPaint"/>: the paints a dye changes. A weapon's mesh points into
     /// its pack's palette texture; the baker reads which colours of it the model uses and how much of its surface
-    /// each covers, and <see cref="WeaponPaintRules.Bands"/> turns them into paints. A model whose paints were set
-    /// by hand (<see cref="WeaponPaint.keepAsSet"/>) is left alone.
+    /// each covers, and <see cref="WeaponPaintRules.Bands"/> turns them into paints and
+    /// <see cref="WeaponPaintRules.Shades"/> its greys into its metals. It also reads the pack's emission map at the
+    /// same places, so what the model lights up is known as its glow. A model whose paints were set by hand
+    /// (<see cref="WeaponPaint.keepAsSet"/>) is left alone.
     /// </summary>
     public static class WeaponPaintBaker
     {
         private const int ReadSize = 2048;
         private static readonly string[] TextureProperties = { "_Albedo_Map", "_BaseMap", "_MainTex" };
+        private static readonly string[] LightTextureProperties = { "_Emission_Map", "_EmissionMap" };
 
         [MenuItem("Krytical Nova/Items/12. Bake Weapon Paints (for weapon dye)")]
         public static void Bake()
@@ -55,11 +58,15 @@ namespace KryticalNova.EditorTools
                     }
                     List<WeaponPaintRules.Sample> samples = Samples(root, palettes, out float grey);
                     paint.bands = WeaponPaintRules.Bands(samples);
+                    paint.shades = WeaponPaintRules.Shades(samples, paint.bands);
                     PrefabUtility.SaveAsPrefabAsset(root, path);
                     written++;
                     var roles = new System.Text.StringBuilder();
                     foreach (WeaponPaintBand band in paint.bands) roles.Append($" {band.role}@{Mathf.RoundToInt(band.hue * 360f)}°");
-                    report.AppendLine($"  {root.name}: {paint.bands.Length} paint(s){roles}; {Mathf.RoundToInt(grey * 100f)}% metal or dark");
+                    var metals = new System.Text.StringBuilder();
+                    foreach (WeaponPaintShade shade in paint.shades)
+                        metals.Append($" {(shade.role == WeaponPaintRole.Keep ? "Metal" : shade.role.ToString())}@{Mathf.RoundToInt(shade.value * 100f)}%");
+                    report.AppendLine($"  {root.name}: {paint.bands.Length} paint(s){roles}; {paint.shades.Length} metal(s){metals}; {Mathf.RoundToInt(grey * 100f)}% metal or dark");
                 }
                 finally
                 {
@@ -74,6 +81,7 @@ namespace KryticalNova.EditorTools
         private static List<WeaponPaintRules.Sample> Samples(GameObject root, Dictionary<Texture, Color32[]> palettes, out float greyShare)
         {
             var byColour = new Dictionary<int, float>();
+            var litByColour = new Dictionary<int, float>();
             float total = 0f, grey = 0f;
             foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
             {
@@ -90,6 +98,7 @@ namespace KryticalNova.EditorTools
                     Material material = sub < materials.Length ? materials[sub] : null;
                     Color32[] pixels = PaletteOf(material, palettes);
                     if (pixels == null) continue;
+                    Color32[] lights = LightsOf(material, palettes);
                     int[] triangles = mesh.GetTriangles(sub);
                     for (int t = 0; t + 2 < triangles.Length; t += 3)
                     {
@@ -106,14 +115,34 @@ namespace KryticalNova.EditorTools
                         if (s < WeaponPaintRules.GreySaturation || v < WeaponPaintRules.DarkValue) grey += area;
                         int key = colour.r << 16 | colour.g << 8 | colour.b;
                         byColour[key] = byColour.TryGetValue(key, out float had) ? had + area : area;
+                        if (lights == null) continue;
+                        Color32 light = lights[y * ReadSize + x];
+                        if (Mathf.Max(light.r, Mathf.Max(light.g, light.b)) / 255f < WeaponPaintRules.LightFloor) continue;
+                        litByColour[key] = litByColour.TryGetValue(key, out float lit) ? lit + area : area;
                     }
                 }
             }
             greyShare = total > 0f ? grey / total : 0f;
             var samples = new List<WeaponPaintRules.Sample>(byColour.Count);
             foreach (KeyValuePair<int, float> pair in byColour)
-                samples.Add(new WeaponPaintRules.Sample(new Color32((byte)(pair.Key >> 16), (byte)(pair.Key >> 8), (byte)pair.Key, 255), pair.Value));
+                samples.Add(new WeaponPaintRules.Sample(new Color32((byte)(pair.Key >> 16), (byte)(pair.Key >> 8), (byte)pair.Key, 255), pair.Value,
+                    litByColour.TryGetValue(pair.Key, out float lit) && lit * 2f > pair.Value));
             return samples;
+        }
+
+        /// <summary>A material's emission map, when the material lights anything up, read the same way as its palette. Null when it does not.</summary>
+        private static Color32[] LightsOf(Material material, Dictionary<Texture, Color32[]> palettes)
+        {
+            if (material == null) return null;
+            bool on = material.HasProperty("_Enable_Emission") ? material.GetFloat("_Enable_Emission") > 0.5f : material.IsKeywordEnabled("_EMISSION");
+            if (!on) return null;
+            foreach (string name in LightTextureProperties)
+            {
+                if (!material.HasProperty(name)) continue;
+                Texture lights = material.GetTexture(name);
+                if (lights != null) return PixelsOf(lights, palettes);
+            }
+            return null;
         }
 
         /// <summary>A material's palette texture, drawn and read back: the packs' textures are not readable.</summary>
@@ -127,7 +156,11 @@ namespace KryticalNova.EditorTools
                 palette = material.GetTexture(name);
                 if (palette != null) break;
             }
-            if (palette == null) return null;
+            return palette != null ? PixelsOf(palette, palettes) : null;
+        }
+
+        private static Color32[] PixelsOf(Texture palette, Dictionary<Texture, Color32[]> palettes)
+        {
             if (palettes.TryGetValue(palette, out Color32[] pixels)) return pixels;
 
             RenderTexture target = RenderTexture.GetTemporary(ReadSize, ReadSize, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
