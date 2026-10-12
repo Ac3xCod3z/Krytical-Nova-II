@@ -39,6 +39,7 @@ namespace KryticalNova.UI
         private const string LevelClass = "item-level";
         private const string TemperClass = "item-temper";
         private const string GlowClass = "item-glow";
+        private const string RimClass = "item-rim";
         private const string UnusableClass = "item-unusable";
         private const string UnmetClass = "tooltip-requires--unmet";
         private const string LockedClass = "item-locked";
@@ -424,7 +425,10 @@ namespace KryticalNova.UI
             }
         }
 
-        /// <summary>Adds icon / stack count / frame children. Frame goes last so it draws over the icon.</summary>
+        /// <summary>
+        /// Adds icon / stack count / rim / frame children. The rim and the frame go last so they draw over the icon:
+        /// the rim is the item's own outline (<see cref="SetRim"/>), the frame over it what is happening to the cell.
+        /// </summary>
         public static VisualElement CreateItemVisual(VisualElement host, bool withCount)
         {
             // Behind the icon: the glow rim of a tempered weapon (SetTemperGlow). Empty for everything else.
@@ -450,6 +454,9 @@ namespace KryticalNova.UI
                 count.AddToClassList("item-count");
                 host.Add(count);
             }
+            var rim = new VisualElement { pickingMode = PickingMode.Ignore };
+            rim.AddToClassList(RimClass);
+            host.Add(rim);
             var frame = new VisualElement { pickingMode = PickingMode.Ignore };
             frame.AddToClassList("item-frame");
             host.Add(frame);
@@ -500,11 +507,19 @@ namespace KryticalNova.UI
 
         /// <summary>
         /// An item's picture where the item itself is at hand: a pet shows the icon of the evolution it has reached
-        /// (<see cref="PetIcons"/>), everything else its own.
+        /// (<see cref="PetIcons"/>), everything else its own, and a tempered piece's rim is its Temper glow's colour
+        /// (<see cref="SetRim"/>).
         /// </summary>
         public static void SetItemVisual(VisualElement host, ItemDefinition def, in ItemStack stack, Sprite silhouette = null, bool unusable = false)
         {
             SetItemVisual(host, def, stack.count, silhouette, unusable);
+            if (def != null && def.IsLadderGear)
+            {
+                // Every window draws the local player's items, by that player's settings.
+                PlayerInventory local = PlayerInventory.Local;
+                PlayerEquipment worn = local != null ? local.Equipment : null;
+                SetRim(host, def, GearItemState.Of(stack).Temper, worn != null ? worn.Progression : null);
+            }
             if (def == null || def.equipSlot != EquipSlot.Pet) return;
             Sprite now = PetIcons.For(def, stack);
             if (now != null && now != def.icon) host.Q(className: "item-icon").style.backgroundImage = new StyleBackground(now);
@@ -532,6 +547,24 @@ namespace KryticalNova.UI
             SetGlyph(host.Q<Label>(className: GlyphClass), def);
             var countLabel = host.Q<Label>(className: "item-count");
             if (countLabel != null) countLabel.text = def != null && count > 1 ? count.ToString() : string.Empty;
+            SetRim(host, def, 0, null); // its rarity's, until a caller that knows the piece's Temper says otherwise
+        }
+
+        /// <summary>
+        /// The rim round an item's icon, in every window that shows one. A tempered piece's is the colour of the glow
+        /// band its Temper % is in, as its rarity shows it: the colour the piece glows in the world, so the rim
+        /// changes when a strike takes the piece into another band, up or down. Everything else, and an untempered
+        /// piece, keeps its rarity's colour (the <c>.rarity-</c> rules of Items.uss). The art of the rim is the
+        /// faction skin's.
+        /// </summary>
+        public static void SetRim(VisualElement host, ItemDefinition def, int temper, GearProgressionSettings settings)
+        {
+            VisualElement rim = host != null ? host.Q(className: RimClass) : null;
+            if (rim == null) return;
+            if (def != null && def.IsLadderGear && settings != null && GearProgressionRules.TryGetGlow(settings.temper, temper, out TemperGlowBand band))
+                rim.style.unityBackgroundImageTintColor = band.ColorFor(def.rarity);
+            else
+                rim.style.unityBackgroundImageTintColor = StyleKeyword.Null;
         }
 
         /// <summary>The Temper % of a piece of gear, in the corner of its icon and in its glow colour.</summary>

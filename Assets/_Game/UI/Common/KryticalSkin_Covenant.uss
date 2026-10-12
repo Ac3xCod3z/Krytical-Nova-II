@@ -625,9 +625,8 @@
     -unity-background-image-tint-color: rgba(80, 66, 49, 0.85);
     -unity-slice-scale: 0.17px;
 }
-.kn-faction-covenant .item-frame {
+.kn-faction-covenant .item-rim, .kn-faction-covenant .item-frame {
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/HUD/SPR_HUD_FantasyWarrior_Frame_Box_Small_01.png#SPR_HUD_FantasyWarrior_Frame_Box_Small_01");
-    -unity-background-image-tint-color: rgba(196, 178, 157, 0.35);
 }
 .kn-faction-covenant .item-glyph {
     font-size: 12.32px;
@@ -809,9 +808,6 @@
 }
 .kn-faction-covenant .forge-gauge {
     color: rgb(222, 167, 65);
-}
-.kn-faction-covenant .item-cell.forge-piece.temper-rim > .item-frame {
-    -unity-background-image-tint-color: rgba(196, 178, 157, 0.35);
 }
 .kn-faction-covenant .forge-value {
     font-size: 29.12px;
@@ -1855,7 +1851,7 @@
 .kn-faction-covenant .equip-column .equip-slot:hover {
     background-color: rgba(36, 69, 94, 0.91);
 }
-.kn-faction-covenant .equip-column .equip-slot > .item-frame {
+.kn-faction-covenant .equip-column .equip-slot > .item-rim, .kn-faction-covenant .equip-column .equip-slot > .item-frame {
     background-image: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/FantasyWarrior/SPR_FantasyWarrior_Frame_Box_04.png#SPR_FantasyWarrior_Frame_Box_04");
     -unity-slice-scale: 0.12px;
     left: -6px;
@@ -1863,7 +1859,7 @@
     right: -6px;
     bottom: -6px;
 }
-.kn-faction-covenant .equip-column .equip-slot.item-empty > .item-frame {
+.kn-faction-covenant .equip-column .equip-slot.item-empty > .item-rim {
     -unity-background-image-tint-color: rgb(132, 132, 132);
 }
 .kn-faction-covenant .card-picture-frame {

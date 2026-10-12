@@ -1004,14 +1004,16 @@ namespace KryticalNova.EditorTools
             if (asset.slotFrame != null)
             {
                 // An equipment slot: its fill, and over it the pack's ornate frame reaching out past the slot. The
-                // frame takes the rarity of what is worn (the rarity rules tint it) and is grey while the slot is empty.
+                // rim takes the rarity of what is worn, or its Temper glow's colour (the rarity rules and the
+                // controller tint it), and is grey while the slot is empty; the frame over it is the same art, for a
+                // pointer over the slot and a drop.
                 const string slot = ".equip-column .equip-slot";
                 string reach = (-asset.slotFrameOutset).ToString("0.##", CultureInfo.InvariantCulture) + "px";
                 Rule(slot, "background-image: none;", $"background-color: {Rgba(asset.slotFill)};");
                 Rule(slot + ":hover", $"background-color: {Rgba(Color.Lerp(asset.slotFill, Color.white, 0.12f))};");
-                Rule(slot + " > .item-frame", $"background-image: {UrlOf(asset.slotFrame)};", $"-unity-slice-scale: {Scale(asset.slotFrame, asset.slotFrameBorder)};",
+                Rule($"{slot} > .item-rim, {slot} > .item-frame", $"background-image: {UrlOf(asset.slotFrame)};", $"-unity-slice-scale: {Scale(asset.slotFrame, asset.slotFrameBorder)};",
                     $"left: {reach};", $"top: {reach};", $"right: {reach};", $"bottom: {reach};");
-                Rule(slot + ".item-empty > .item-frame", "-unity-background-image-tint-color: rgb(132, 132, 132);");
+                Rule(slot + ".item-empty > .item-rim", "-unity-background-image-tint-color: rgb(132, 132, 132);");
             }
             if (asset.cardPictureFrame != null)
             {
@@ -1022,10 +1024,11 @@ namespace KryticalNova.EditorTools
             if (asset.cardFrame != null) Rule(".item-tooltip.item-card", $"background-color: {Rgba(asset.cardBacking)};", $"-unity-background-image-tint-color: {Rgba(asset.cardBacking)};");
             if (asset.gridCell != null)
             {
-                // In the grid the rarity of an item is the colour of the cell it lies on, as the packs' grids have no
-                // outlines: the outline is kept for what is happening to a cell (a pointer over it, a drop).
+                // In the grid an item lies on a cell of its rarity's colour, inside a rim of that colour or of its
+                // Temper glow's (owner, 12 Oct 2026). The rim is the skin's own frame art (.item-rim, from the base
+                // sheets); the frame over it is kept for what is happening to a cell (a pointer over it, a drop).
                 const string cell = ".item-cell";
-                // (The grounds themselves are the base sheets' rarity rules, the same in every skin: nothing here names a rarity.)
+                // (The grounds and the rims' colours are the base sheets' rarity rules, the same in every skin: nothing here names a rarity.)
                 Rule($"{cell} > .item-frame", "-unity-background-image-tint-color: rgba(0, 0, 0, 0);");
                 Rule($"{cell}:hover > .item-frame", "-unity-background-image-tint-color: rgba(220, 236, 246, 0.6);");
                 Rule($"{cell}.drop-valid > .item-frame", "-unity-background-image-tint-color: rgb(140, 255, 220);");

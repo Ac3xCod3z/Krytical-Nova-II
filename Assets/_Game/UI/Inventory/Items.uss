@@ -45,19 +45,20 @@
     height: 84px;
 }
 
-.item-frame {
+/* Two outlines of the same art, one over the other. The rim is what the item is: its rarity's colour, or for a
+   tempered piece its Temper glow's (set by the controller). The frame over it is what is happening to the cell (a
+   pointer over it, a drop, a flash) and is clear the rest of the time. Both are clear until a rule or the controller
+   colours them, so an empty cell or slot has no outline of its own. */
+.item-rim, .item-frame {
     position: absolute;
     left: 0;
     top: 0;
     right: 0;
     bottom: 0;
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Frame_04.png#SPR_HUD_SciFiSoldier_Frame_04");
-    -unity-background-image-tint-color: rgba(150, 176, 196, 0.35);
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0);
     -unity-slice-scale: 0.12px;
 }
-
-/* An empty cell or slot has no outline of its own: the outline says what is in it (its rarity, a drop that fits). */
-.item-empty > .item-frame { -unity-background-image-tint-color: rgba(0, 0, 0, 0); }
 
 .item-icon {
     position: absolute;
@@ -145,16 +146,17 @@
 .item-cell:hover, .equip-slot:hover { -unity-background-image-tint-color: rgba(70, 100, 124, 0.95); scale: 1.05 1.05; }
 .item-cell:hover > .item-frame, .equip-slot:hover > .item-frame { -unity-background-image-tint-color: rgba(220, 236, 246, 0.85); }
 
-/* Rarity: tinted frame + a soft glow inside the slot. Common white, Uncommon blue, Rare yellow, Epic purple
-   (Legendary, reserved, orange). These are game signals: the faction skin builder leaves .rarity- rules alone. */
-.rarity-0 > .item-frame { -unity-background-image-tint-color: rgba(242, 245, 248, 0.5); }
-/* On an equipment slot the frame is the pack's ornate one: a common piece leaves it in its own colours. */
-.equip-slot.rarity-0 > .item-frame { -unity-background-image-tint-color: rgb(255, 255, 255); }
-.rarity-1 > .item-frame { -unity-background-image-tint-color: rgb(84, 150, 255); }
-.rarity-2 > .item-frame { -unity-background-image-tint-color: rgb(255, 212, 64); }
-.rarity-3 > .item-frame { -unity-background-image-tint-color: rgb(186, 104, 255); }
-.rarity-4 > .item-frame { -unity-background-image-tint-color: rgb(255, 128, 48); }
-/* The ground an item lies on, by rarity. In the Pack's grid this is how a rarity is told (the cells have no outlines). */
+/* Rarity: the rim in the rarity's colour, on a ground of the same colour. Common white, Uncommon blue, Rare yellow,
+   Epic purple (Legendary, reserved, orange). These are game signals: the faction skin builder leaves .rarity- rules
+   alone. A tempered piece's rim is its Temper glow's colour instead (GearUIController.SetRim). */
+.rarity-0 > .item-rim { -unity-background-image-tint-color: rgba(242, 245, 248, 0.5); }
+/* On an equipment slot the rim is the pack's ornate frame: a common piece leaves it in its own colours. */
+.equip-slot.rarity-0 > .item-rim { -unity-background-image-tint-color: rgb(255, 255, 255); }
+.rarity-1 > .item-rim { -unity-background-image-tint-color: rgb(84, 150, 255); }
+.rarity-2 > .item-rim { -unity-background-image-tint-color: rgb(255, 212, 64); }
+.rarity-3 > .item-rim { -unity-background-image-tint-color: rgb(186, 104, 255); }
+.rarity-4 > .item-rim { -unity-background-image-tint-color: rgb(255, 128, 48); }
+/* The ground an item lies on, by rarity. */
 .item-cell.rarity-0, .equip-slot.rarity-0 { -unity-background-image-tint-color: rgba(34, 37, 42, 0.92); }
 .item-cell.rarity-1, .equip-slot.rarity-1 { -unity-background-image-tint-color: rgba(22, 44, 92, 0.95); }
 .item-cell.rarity-2, .equip-slot.rarity-2 { -unity-background-image-tint-color: rgba(90, 70, 16, 0.95); }
