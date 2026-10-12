@@ -129,8 +129,7 @@ namespace KryticalNova.EditorTools
 
         private static bool BuildWith(ScriptingImplementation backend)
         {
-            BuildSceneOrder.Apply();
-            string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
+            string[] scenes = BuildSceneOrder.Shipped();
             if (scenes.Length == 0)
             {
                 Debug.LogError("[Build] There are no scenes to build.");

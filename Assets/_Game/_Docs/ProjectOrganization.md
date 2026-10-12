@@ -190,7 +190,9 @@ _Game/
 ├── Input/Actions/         InputSystem_Actions.inputactions (project-wide actions)
 ├── Scenes/                MainMenu/ (Title, FactionSelect, CharacterCreator, CharacterSelect, Loading: generated, rebuild
 │                          with Krytical Nova ▸ Front End ▸ 1. Build Front-End Scenes; never edit by hand)
-│                          World/Towns/ (Zone01_StarterTown + its lighting/APV/navmesh data)  Development/
+│                          World/Towns/ (Zone01_StarterTown + its lighting/APV/navmesh data)  Development/ (Test_Cadence + its
+│                          navmesh: the arena for Cadence, design 17. Generated from the town by Krytical Nova ▸ Zone ▸ Build
+│                          Cadence Test Arena (`TestArenaBuilder`); never edited by hand, never in a build: `BuildSceneOrder.Shipped`)
 │                          (future: Bootstrap/ World/Overworld/ Dungeons/ Cinematics/)
 ├── Settings/              Project-level config assets for packages (Animancer Settings)
 ├── Tools/                 Editor/ (KryticalNova.Editor.asmdef, Organization/, GM/, Build/ = build scene order, the

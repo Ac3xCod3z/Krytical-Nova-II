@@ -49,6 +49,16 @@ M1 adds what is missing:
   that holds a player in combat while it is set, for those systems to use. Only a GM command calls it for now.
 - It remembers **why** the player is in a fight (blow, attack, Callout, Hostile, held), for `gm.combat`.
 
+**As built (M1, 12 Oct 2026).** `PlayerCombatState.Reasons` (`CombatReasons`: Blow, Attack, Callout, Hostile, Held;
+several can hold at once; known where the fight is decided, a client is only told in or out),
+`ServerNoteThreat()` (called twice a second by `HostileNet` for the player its brain is after) and
+`ServerSetHeld(by, held)`. A fight still ends six seconds after the last blow or the last moment a Hostile was
+after the player; a Callout and a hold end at once. `gm.combat` prints the state, `gm.combat hold on|off` holds
+it, `gm.combat watch on|off` prints every start and end to the log. The arena is
+`Scenes/Development/Test_Cadence.unity`, made from the town by **Krytical Nova ▸ Zone ▸ Build Cadence Test Arena**:
+the town, NPCs, traffic and portals taken out, one Hostile Zone (`north-gate`, Bonewalkers, which only fight
+back) north of the spawn. A Hostile that attacks on sight is one command away: `gm.hostile.spawn Gargoyle`.
+
 ## 4. Cadence
 
 **The rule.** While in a fight, an attack skill's key pressed within the window around a beat makes that cast
