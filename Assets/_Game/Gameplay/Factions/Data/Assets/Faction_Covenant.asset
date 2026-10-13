@@ -15,7 +15,7 @@ MonoBehaviour:
   id: 3
   displayName: Covenant
   tagline: Old enemies. One oath. Two fronts.
-  lore: 'For centuries, the tribal humanoids lived in quiet balance with the land, bound by ancient pacts. That peace shattered when the Hegemony war machine encroached upon their sacred forests and fjords, strip-mining terrain and capturing souls for technology. Realizing their individual clans could not withstand the advanced technology, traditional enemies joined forces to form a unified defense. Armed with primal elemental magic, runic weapons, and guerrilla tactics, the Covenant fights a desperate two-front war: striking back against the expanding Hegemony cities while destroying the unyielding Null machines that butcher everything in their path.'
+  lore: 'For centuries the clans and houses of the wildlands lived in balance with the land and with their dead, who returned to it. That ended when the Hegemony''s extraction reached their forests and fjords, strip-mining the terrain and catching the souls of their dead on the way home. Old enemies joined under one pact. Armed with primal elemental magic, runic weapons and guerrilla tactics, the Covenant fights to restore Nova''s cycle, protect the ancestral lands and let the dead find peace: striking at the Hegemony in front of it and holding off the Null behind it.'
   crest: {fileID: 21300000, guid: 59ce264bf11f6dd4b86a5f000422d6af, type: 3}
   accentColor: {r: 0.9098039, g: 0.6901961, b: 0.2901961, a: 1}
   secondaryColor: {r: 0.24705882, g: 0.56078434, b: 0.3529412, a: 1}

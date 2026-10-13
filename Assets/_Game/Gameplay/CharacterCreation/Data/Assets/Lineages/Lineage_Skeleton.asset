@@ -15,7 +15,7 @@ MonoBehaviour:
   id: 4
   faction: 2
   displayName: Skeleton
-  description: 'Reanimated relic-cores given a body: the necromantic half of the Null.'
+  description: 'The dead who woke in skeletal bodies when the cycle broke: the undead half of the Null.'
   traits:
   - Deathless
   - Ancient

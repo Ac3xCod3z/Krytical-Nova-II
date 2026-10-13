@@ -83,7 +83,7 @@ namespace KryticalNova.EditorTools
             new LineageSpec
             {
                 id = 4, faction = FactionId.Null, asset = "Skeleton", name = "Skeleton", species = "SN", skinSpecies = null,
-                description = "Reanimated relic-cores given a body: the necromantic half of the Null.",
+                description = "The dead who woke in skeletal bodies when the cycle broke: the undead half of the Null.",
                 traits = new[] { "Deathless", "Ancient", "Hollow" }, body = BodyFit.Skeleton,
                 ownPack = "FANT_SKTN", basePack = "SKTN_BASE", headPacks = new[] { "SKTN_BASE" },
                 premades = new[] { "FantasySkeletons" }, wrapPart = null,

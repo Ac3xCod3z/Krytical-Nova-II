@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Factions.FactionDefinition
   id: 1
   displayName: Hegemony
-  tagline: Efficiency. Expansion. Ownership.
-  lore: The Hegemony built their futuristic civilization on cold efficiency and boundless greed. Lacking the manual power to expand their high-tech cities, they turned to necromantic energy and advanced engineering to manufacture a synthetic workforce. Driven by corporate elites and enforced by heavily armored void-marines, Hegemony society treated their mechanical creations as disposable, torture-tested labor. When their urban sprawl breached ancestral wildlands, they treated native inhabitants with the same clinical indifference, viewing living souls merely as raw fuel for their necromantic generators.
+  tagline: Civilization must endure.
+  lore: 'The Hegemony is the civilization that learned to catch souls before they return to Nova. Captured soul energy powers its cities, its weapons and the mechanical workers that built them, and millions live on what it provides. Run by corporate elites and enforced by heavily armored void-marines, it used its machines as disposable labor, and when its extraction reached the ancestral wildlands it treated the people there with the same clinical indifference: living souls were fuel. Its answer to Nova''s wound is necessity. Give up soul energy and the cities go dark, so it must be controlled, not abandoned.'
   crest: {fileID: 21300000, guid: 1d451406eb7b65346a9a7ec52fe74601, type: 3}
   accentColor: {r: 0.30980393, g: 0.8901961, b: 0.9411765, a: 1}
   secondaryColor: {r: 0.8627451, g: 0.9098039, b: 0.9411765, a: 1}
