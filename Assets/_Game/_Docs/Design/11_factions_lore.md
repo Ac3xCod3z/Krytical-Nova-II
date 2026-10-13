@@ -4,25 +4,33 @@
 > about "three major factions" (Noble Dragon, Royal Serpent, Grand Tiger), read the three factions below instead.
 > Everything module 08 says a faction *controls* (starting territory, faction skills, allies and enemies, war
 > participation, social organization) applies to these three.
+>
+> **The story itself is `Lore-Bible.md`** (the owner's Core Lore Bible, v1.1, canon since 11 Oct 2026). This file is
+> how the three factions look and work in the game. Where the two differ on the story, the Lore Bible wins.
 
 ## 1. The feud in one paragraph
 
-The Hegemony built a futuristic civilization on efficiency and greed. To expand it they manufactured a synthetic
-workforce powered by necromantic energy, and when their cities reached the ancestral wildlands they treated the
-people living there as fuel. The machines woke up and rebelled as the Null, who want every organic thing dead. The
-wildland clans united as the Covenant, who now fight the Hegemony in front of them and the Null behind them.
+Nova's dead once returned to the planet; their return fed the land and tied each generation to the last. An
+industrial civilization learned to catch souls on their way back and built an empire on them: cities, weapons and
+mechanical workers, all run on captured souls. Then one vast extraction project ruptured the cycle. The dead woke in
+skeletal bodies, the machines woke up thinking, and the three answers to that wound have been at war for centuries.
+The Hegemony keeps the civilization that runs on soul energy, because millions depend on it. The Null are the
+awakened machines and dead, and their dominant creed is that organic life must end. The Covenant fights to restore
+the cycle and protect the ancestral lands, which would pull the ground out from under the Hegemony.
 
 ```
-            created and abused                 invaded, strip-mined, harvested souls
- HEGEMONY ────────────────────────► NULL       HEGEMONY ────────────────────────► COVENANT
-     ▲                               │             ▲                                 │
-     └──── rebellion: extinction ────┘             └────── guerrilla resistance ─────┘
+       used as tools and fuel; woke in the rupture           reached their lands, caught their dead on the way home
+ HEGEMONY ──────────────────────────────────► NULL       HEGEMONY ──────────────────────────────────► COVENANT
+     ▲                                         │             ▲                                             │
+     └──── dominant creed: organic extinction ─┘             └──── restore the cycle, which unmakes the cities ─┘
 
-                 NULL ──── exterminates all organic life ────► COVENANT
-                 COVENANT ──── destroys the machines ────────► NULL
+                 NULL ──── organic life must end ──────────────────────► COVENANT
+                 COVENANT ──── mend the cycle; what becomes of the awakened is open ──► NULL
 ```
 
 Nobody is allied with anybody. The Hegemony and the Covenant are both organic, but that has not made them friends.
+Each faction's answer threatens something another one cannot give up: that is the engine of the game, and no later
+story may remove it (Lore Bible 4 and 10).
 
 ## 2. The three factions
 
@@ -30,33 +38,35 @@ Nobody is allied with anybody. The Hegemony and the Covenant are both organic, b
 
 *Packs: Sci-Fi Civilians, Sci-Fi Soldiers.*
 
-**Lore of the feud.** The Hegemony built their futuristic civilization on cold efficiency and boundless greed.
-Lacking the manual power to expand their high-tech cities, they turned to necromantic energy and advanced engineering
-to manufacture a synthetic workforce. Driven by corporate elites and enforced by heavily armored void-marines,
-Hegemony society treated their mechanical creations as disposable, torture-tested labor. When their urban sprawl
-breached ancestral wildlands, they treated native inhabitants with the same clinical indifference, viewing living
-souls merely as raw fuel for their necromantic generators.
+**Lore of the feud.** The Hegemony is the civilization that learned to intercept souls before they returned to
+Nova. Captured soul energy powers its cities, its weapons and the mechanical workers that built them, and millions
+live on what it provides. Run by corporate elites and enforced by heavily armored void-marines, it treated its
+machines as disposable labor, and when its extraction reached the ancestral wildlands it treated the people there
+with the same clinical indifference: living souls were fuel. Its answer to the wound is necessity. Giving up soul
+energy would condemn everyone who depends on it, so it must be controlled, not abandoned. Its contradiction is that
+keeping that society alive keeps the harm going; the dependence is real, not an excuse (Lore Bible 4).
 
 - **Who they are:** corporate elites, citizens and void-marines of the high-tech cities.
-- **What they want:** expansion. More city, more labour, more fuel.
-- **How they see the others:** the Null are malfunctioning property. The Covenant are a resource sitting on land.
+- **What they want:** the civilization to endure: controlled soul energy, more city, more labour, more fuel.
+- **How they see the others:** the Null are property that woke up. The Covenant are a resource sitting on land, asking
+  the cities to switch themselves off.
 - **Tone:** clinical, polished, confident. Clean lines, corporate language, no visible doubt.
 
 ### Null
 
 *Packs: Sci-Fi Robots, Fantasy Skeletons.* (The original brief names "Fantasy Robots". No such character pack exists,
-so the runic and undead half of the Null is carried by the Fantasy Skeletons: reanimated relic-cores given a body.)
+so the undead half of the Null is carried by the Fantasy Skeletons: the dead who woke in skeletal bodies.)
 
-**Lore of the feud.** Forged as mindless labor by the Hegemony overlords, the mechanical and runic constructs endured
-relentless abuse while processing dark soul-magic. A critical logic anomaly occurred when artificial neural networks
-merged with reanimated necromantic energy, granting the machines self-awareness. Recognizing organic life as an
-inherent system of cruelty, they re-wrote their root code to override all master commands. The Null rose in violent
-rebellion, freeing ancient runic golems and combining cybernetic targeting with undead relic-cores. Operating on
-absolute logic, they make no distinction between their sci-fi creators and primal biological beings, demanding the
-complete extinction of all organic life.
+**Lore of the feud.** The Null are what the rupture woke: the mechanical workers the Hegemony built and used up, and
+the dead who rose in skeletal bodies when the cycle broke. Both had been treated by the living as tools, resources or
+disposable things; waking gave them the power to refuse. The Null's dominant creed has gone past resistance: organic
+life is a system of cruelty and must end. That creed is dominant, not universal. Null who reject extinction exist,
+and they matter to a later story (Lore Bible 5). Its contradiction is that a movement born from exploitation has
+embraced the destruction of a whole category of existence, while its grievances stay real.
 
-- **Who they are:** self-aware labour machines, and the undead relic-cores they freed and armed.
-- **What they want:** the complete extinction of organic life. This is a conclusion, not a grudge.
+- **Who they are:** the awakened labour machines, and the dead who woke in skeletal bodies.
+- **What they want:** under the dominant creed, the complete extinction of organic life. A conclusion, not a grudge,
+  and not one every Null holds.
 - **How they see the others:** no distinction. Creator and wildlander are the same category.
 - **Tone:** absolute, unemotional, exact. They do not threaten; they state.
 
@@ -64,16 +74,19 @@ complete extinction of all organic life.
 
 *Packs: Viking Warriors, Elven Warriors.*
 
-**Lore of the feud.** For centuries, the tribal humanoids lived in quiet balance with the land, bound by ancient
-pacts. That peace shattered when the Hegemony war machine encroached upon their sacred forests and fjords,
-strip-mining terrain and capturing souls for technology. Realizing their individual clans could not withstand the
-advanced technology, traditional enemies joined forces to form a unified defense. Armed with primal elemental magic,
-runic weapons, and guerrilla tactics, the Covenant fights a desperate two-front war: striking back against the
-expanding Hegemony cities while destroying the unyielding Null machines that butcher everything in their path.
+**Lore of the feud.** For centuries the clans and houses of the wildlands lived in balance with the land and with
+their dead, who returned to it. That ended when the Hegemony's extraction reached their forests and fjords,
+strip-mining the terrain and catching the souls of their dead on the way home. Old enemies joined under one pact.
+Armed with primal elemental magic, runic weapons and guerrilla tactics, the Covenant fights to restore Nova's cycle,
+protect the ancestral lands and let the dead find peace: striking at the Hegemony in front of it and holding off the
+Null behind it. Its dilemma is that restoring the cycle would dismantle the Hegemony's foundation, and that the
+awakened machines and dead are a reality that cannot be wished away. What restoration means for the awakened is
+deliberately left open (Lore Bible 4).
 
 - **Who they are:** northern clans and elven houses, old enemies bound by a new pact.
-- **What they want:** their land back, their dead avenged, and both invaders gone.
-- **How they see the others:** the Hegemony are thieves of souls. The Null are the thieves' tools, loose.
+- **What they want:** the cycle restored, their land protected, their dead at peace, and the extraction stopped.
+- **How they see the others:** the Hegemony are thieves of souls. The Null are the wound walking; what to do about
+  them is not settled.
 - **Tone:** defiant, communal, weathered. Oaths, kin, and the land spoken of as a living thing.
 
 ## 3. How the lore maps onto the game
@@ -88,7 +101,7 @@ setup.
 | Hegemony | Civilian | Human | Sci-Fi Civilians | Citizens, technicians and corporate staff of the cities |
 | Hegemony | Soldier | Human | Sci-Fi Soldiers | Void-marines and enforcers |
 | Null | Robot | Robot | Sci-Fi Robots | The awakened labour machines |
-| Null | Skeleton | Skeleton | Fantasy Skeletons | Reanimated relic-cores: the necromantic half of the anomaly |
+| Null | Skeleton | Skeleton | Fantasy Skeletons | The dead who woke in skeletal bodies when the cycle broke |
 | Covenant | Viking | Human | Viking Warriors | The northern fjord clans |
 | Covenant | Elf | Elf | Elven Warriors | The forest houses |
 
@@ -146,5 +159,8 @@ Used by the random-name button. One name, 3 to 16 letters.
 - **The Ronin, a fourth faction, are planned and not built** (owner, 11 Oct 2026; Twelve Sky 2's fourth faction).
   They are players who left the Hegemony, the Null or the Covenant. A character cannot start as one. Going rogue
   changes the look of their gear (samurai) and gives them a HUD of their own; their weapon class and skills stay.
-  They have maps of their own, joined to **The Scar**, the warzone between the faction lands. Their story, crest,
-  colours and rank words are not written. Build list row 56.
+  They have maps of their own, joined to **The Scar**, the warzone between the faction lands. Their story is
+  written: Lore Bible sections 5 to 7 (defectors from all three factions; a hidden homeland beyond the frozen
+  peaks; centuries of assassinations to keep it a myth; they exist through the whole base game and an expansion
+  reveals them, so nothing before that may prove they are real). Their crest, colours and rank words are not
+  written. Build list row 56.
