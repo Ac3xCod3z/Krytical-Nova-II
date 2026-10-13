@@ -10,135 +10,135 @@ The 86-second recording pages through all 31 screens of the 12Sky (Twelve Sky) i
 
 ## Glossary: Twelve Sky reference → Krytical Nova term
 
-Every system, item, place and stat in this doc has one Krytical Nova name, chosen to fit the setting (Hegemony corporate tech, Null machines, Covenant clans, comic-book register) rather than copied. The reference column holds the Twelve Sky 2 term and, in brackets, the 12Sky (first game) term from the help pages where it differs. "In code" names what the repo calls it today; a different display name costs one string, a different identifier one rename.
+Every system, item, place and stat in this doc has one Krytical Nova name, chosen to fit the setting (Hegemony corporate tech, Null machines, Covenant clans, comic-book register) rather than copied. The reference column holds the Twelve Sky 2 term and, in brackets, the 12Sky (first game) term from the help pages where it differs. "In code" names what the repo calls it today; a different display name costs one string, a different identifier one rename. "What it is for" says in a line or two what the thing does for a player, and whether it is built.
 
-| Krytical Nova term | Twelve Sky 2 reference [12Sky] | In code today | Group |
-| --- | --- | --- | --- |
-| **Creds** | Silver [Silver Jeon] | `PlayerWallet` (owner-only balance), `WalletRules`, `CredsLedger`; every number in `EconomySettings` | Currency |
-| **Renown** (RN) | Contribution Points, CP | `ProgressionState.renown` (`PlayerCharacterProgression.Renown`, `TrySpendRenown`); spent on Tuning, Ascension and Nova Standings; shown at the top of the Character Sheet; nothing earns it yet (`gm.renown`) | Currency |
-| **Valor** | Class Points | — | Currency |
-| **XP** | EXP | `ProgressionState` | Currency |
-| **Nova Store** | Item Mall / Item Shop (real money) | Mall Manager NPC | Economy |
-| **The Exchange** | Consignment [Consigner] | Trader NPC text, Exchange square in plaza | Economy |
-| **Kiosk** | Private Shop / stall (proxy selling) | `PlayerKiosk`, `KioskService`, `KioskStand`, `KioskRules`; window on **T** | Economy |
-| **Vault** / **Deep Vault** | Storage per character / account Warehouse | `PlayerVault`, `PlayerDeepVault` (`PlayerStorage`), `StorageRules`; what is stored also pays item costs: `PlayerItemSources`, `ItemCostRules` | Economy |
-| **Trade** | Trade | `PlayerTrade`, `TradeRules`; `/trade`, TRADE on the target strip | Economy |
-| **Kiosk Permit** (14 Days / 30 Days) | (none: Nova Store item that lengthens a Kiosk) | items 9020 / 9021 from `UtilityItemGenerator`; tiers in `EconomySettings.kioskTiers` | Economy |
-| **Trade zone** / **neutral ground** | Central Plaza and Home City shop areas / (the planned non-combat zone) | `TradeZone` (`allowKiosks`, `crossFaction`) | Economy |
-| **Reboot** | Rebirth | — | Progression |
-| **Prime levels** | Master levels (Master 1+, Deity) | — | Progression |
-| **Zenith technique** (a class's level-80 leap; its item is a **Zenith Dossier**) | War God skill (owner's name for it, 11 Oct 2026: Zenith) | Slot 8 of a weapon class (`ClassSkillSlot.S8`, `requiresSkillBook`); items `Dossier_Zenith_<Class>` (9430 to 9438), `SkillDefinitionSO.LockKey`; `gm.zenith` | Progression, Crafting |
-| **Field / Companion / Tandem Booster** (XP boosters; names are a first pick) | EXP items of the Item Mall | Items `Booster_Field` / `_Companion` / `_Tandem` (9500 to 9502), `ItemUseEffect.ExperienceBoost`, `PlayerExperienceBoosts`, `EconomySettings.boosters`; `gm.boosters`, `gm.boost` | Progression, Economy |
-| **Ascension** (the halo is a **Nova**, in twelve tiers) | CP Reinforcement / halo bonus levels | `PlayerNova`, `NovaRules`, `NovaSettings.ascension`; the Nova is `NovaHalo`, a star with turning rings drawn by the four `KryticalNova/Nova…` shaders; `gm.ascension` | Progression |
-| **Nova Standings** (tracks Vanguard, Bulwark, Ironblood, Mindwell; a rank is worn as "Vanguard Thane", the rank word being the faction's own) | CP stat Titles L1–L12 | `PlayerNova`, `NovaSettings.standings` (`StandingTrack`, `rankWords`); `gm.standing` | Progression |
-| **Spotlight** | Hero Rank (weekly) | — | Progression |
-| **Valor Rank** | Class System | — | Progression |
-| **Respec Chip** / **Memory Wipe** | Stats Reset item / Skill Reset Scroll | `gm.resetstats`, `gm.dropskills` | Progression |
-| **Tempering** (Temper %) | Reinforcement / Upgrade / Enchant % | `GearItemState.Temper`, `GearProgressionRules`, `TemperSettings`; done at the forge (`PlayerGearWork`) | Gear |
-| **Fusion** (FS1–12) | Combination, Combine (CS1–12) | `GearItemState.Fusion`, `FusionSettings` | Gear |
-| **Tuning** (Tune 1–25) | Refine / Refinement | `GearItemState.Tune`, `TuningSettings` | Gear |
-| **Reforge** | Item Exchange [12Sky: Item Exchange] | `ReforgeSettings`, `PlayerGearWork.RequestReforge` (named Reforge because The Exchange is the Broker's board) | Gear |
-| **The forge** | the Blacksmith's upgrade windows | `NpcOffer.GearWork` on the Armorer, `GearWorkWindowController`, `gm.forge` | Gear |
-| **Slotting** + **Cores** | Item Penetration + Diamonds / gems | Agent NPC text | Gear |
-| **Epic Mk I / Mk II** | WarLord 1 / 2 | — | Gear |
-| **Legendary** (deferred) | Requiem | `ItemRarity.Legendary` | Gear |
-| Common / **Uncommon** / Rare / **Epic** / Legendary | Common / Unique / Rare / Elite (WarLord) / Requiem | `ItemRarity` | Gear |
-| Weapon, Armor, Gloves, Boots, Ring, **Amulet**, **Cape**, Pet | Weapon, Costume, Gloves, Shoes, Ring, Necklace, Cloak, Pet | `EquipSlot` | Gear |
-| **Alumite**, **Iridion**, **Orichalc**, **Eversteel**, **Trinity Platinum** (the Alloys: 3 / 6 / 9 / 12 / 15 %), **Prime Alloy** | Aluminium, Iridium, Oracite, Steel of Eternity, Holy Trinity Platinum (upgrade stones), Millennial Gold | items 9100–9105 (`GearMaterialIds`, `UtilityItemGenerator`) | Gear materials |
-| **Failsafe** / **Advanced Failsafe** / **Lucky Failsafe** | Protection Charm / APS, Comrade Scroll / Lucky enchant | items 9110–9112 | Gear materials |
-| **Fusion Catalyst** | Combine Scroll | item 9120 | Gear materials |
-| **Tuning Chip** / **Violet Chip** / **Reset Chip** | Refining Stone / Purple Stone / Chaos Stone | items 9130–9132 | Gear materials |
-| **Slot Cutter** / **Deep Cutter** / **Core Extractor** / **Slot Sealer** | Unril Stone / Plus Penetrate Scroll / Gem Removal Scroll / Socket Removal Stone | — | Gear materials |
-| **Mark Stone** | WarLord Upgrade Stone | — | Gear materials |
-| **Armorer** | Blacksmith [Forge] | `NpcRole.Blacksmith`, shown as Armorer | NPC |
-| **Apothecary** | Herb Master [Herbal Medicine Shop] | `NpcRole.HerbMaster`, shown as Apothecary | NPC |
-| **Instructor** (Blade Instructor …) | Trainer [Home of the Falchion etc.] | `NpcRole.Trainer`, shown as Monoblade Instructor / Servo Claws Instructor | NPC |
-| **Monoblade**, Glaive, Carbine · Harvester, Servo Claws, Arc Caster · Longaxe, Claymore, Warbow | Blade, Sword, Marble · Katana, Double Blade, Lute · Spear, Light Blade, Sceptre (offense / defense / ranged per faction) | `WeaponClassId`, `WeaponClassCatalog`; see `04_Weapon_Classes.md` | Classes |
-| **Discipline** | starting weapon class (TS2: fixed by faction and weapon choice) | `CharacterRecipe.weaponClass`; the class in use is the equipped weapon's (`PlayerWeaponClass`) | Classes |
-| **Broker** | Trader [Consigner] | `NpcRole.Trader`, shown as Broker | NPC |
-| **Store Clerk** | Mall Manager [Merchant] | `NpcRole.MallManager`, shown as Store Clerk | NPC |
-| **Fixer** | Agent [Beggar] | `NpcRole.Agent`, shown as Fixer | NPC |
-| **Marshal** | Guard Captain [Chief Guard] | `NpcRole.GuardCaptain`, shown as Marshal | NPC |
-| **Chancellor** | Elder / Prime Minister [Law Enforced HQ] | Not built. Its crafting, stat resets and castle entry belong to the **Fabricator** (owner, 11 Oct 2026) | NPC |
-| **Fabricator** | (none: takes the Elder's crafting, and later stat resets and castle entry) | `NpcRole.Fabricator`, NPC id `Fabricator` (stands at the Elder hall); offers Craft: `PlayerCrafting`, `CraftRules`, `CraftingSettings` | NPC |
-| **Vaultkeeper** | Hermit (storage, guild) | `NpcRole.Vaultkeeper`, NPC id `GuildDirector`; offers Vault and Crew Registry | NPC |
-| **Wayfinder** | Gate Master [Yellow Gateway Express] | `NpcRole.Wayfinder`, NPC id `GateMaster`; offers the Deep Vault (Transit later) | NPC |
-| **Herald** (new) | — (TS2 puts CP Reinforcement on the Elder) | `NpcRole.Herald`, `NpcOffer.Herald`, NPC id `Collector` (the plaza stall first kept for a Collector); window `HeraldWindowController`; `gm.herald` | NPC |
-| **Outfitter**, **Stylist**, **Reshaper**, **Coach** | Tailor, (none), (none), (none) | `NpcRole.Outfitter` (NPC id `Tailor`: dye and the colour-cell shelf), `Stylist`, `Reshaper`, `Coach`; `PlayerWeaves` (dye), `PlayerRestyle`, `RestyleRules` | NPC |
-| **Holoweaver** | (none) | `NpcRole.Holoweaver`, NPC id `Holoweaver`; offers Holoweave | NPC |
-| **Crew** | Guild / Clan | `PlayerCrew`, `CrewService`, `CrewRules`, `CrewSettings`; window on **G**; chat channel `Guild` shown as Crew (`/crew`, `/g`) | Social |
-| **Squad** | Party | `PlayerParty`, `PartyRules`, shown as Squad; `/squad` (`/p` still works) | Social |
-| **Namecard** | (the name, guild and title over a player's head) | `PlayerNamecardController`, `NamecardRules`; settings "Names over NPCs and players" and "My own namecard" | Social |
-| **Emote wheel** | (emotes / motions) | `PlayerEmotes`, `EmoteCatalog`, `EmoteWheelSettings`, `EmoteWheelController`; held on **B** (`KeyBindings.EmoteWheel`) | Social |
-| **Contacts** | Friend list | `PlayerContacts`, `ContactsService`, `ContactRules`; window on **F**; `/contact`, `/block` | Social |
-| **Emberwing**, **Drone Core**, **Tidecaller**, **Kitsune Spirit** | (none: Krytical Nova's first four pets) | items 8001–8004, `PetDefinition` assets; `PlayerPet`, `PetRules`, `PetItemState` | Pets |
-| **Pet Ration** | Pet food | item 9010 (`ItemUseEffect.FeedPet`); sold by the Apothecary | Pets |
-| **Sponsor / Recruit** | Mentor / Disciple (teacher / student) | `PlayerSponsor`, `SponsorService`, `SponsorRules`, `SponsorSettings`; `/sponsor`; "Sponsor Request" in the player menu | Social |
-| **Accord** | Alliance | — | Social |
-| **Broadcast** / **Hailer** | Shout [Grand Force chat] / Megaphone | chat has Faction channel | Social |
-| **Callout** | PvP request / Duel | `PlayerDuel`, shown as Callout; `/callout` (`/duel` still works) | PvP |
-| **Siege Night** | Regular Warfare (castle battles) | — | PvP |
-| **Outpost Raid** | Outpost battle | — | PvP |
-| **Beacon War** | Holy Stone Battle [Sacred Stone] | — | PvP |
-| **The Pit** | Coliseum | — | PvP |
-| **Lockdown** | Alcatraz | — | PvP |
-| **The Gauntlet** | Circuit Valley | — | PvP |
-| **The Maze** | Labyrinth | — | PvP |
-| **Warden** / **Lieutenants** | Faction Leader / Vice Leaders | — | Faction |
-| **War Chest** | Faction Vault | — | Faction |
-| **Siege Rig** | Catapult / Guild Weapon | — | Faction |
-| **Beacon** | Divine Stone / Alliance Stone / Sacred Stone | — | Faction |
-| **Spire** | Tower / defensive structure | — | Faction |
-| **Turf War** | Territory warfare | — | Faction |
-| **Faction** (Hegemony, Null, Covenant) | Faction [Grand Force] | `FactionId` | Faction |
-| **Ronin** (the fourth faction; planned) | The fourth faction (Nangin), joined by players who leave their own for good | — | Faction |
-| **Hostiles** | Monsters | `HostileDefinition`, `HostileNet`, `HostileZone`, `HostileKillRewards`, `HostileLoot` (who may fight whom is `CombatHostility`) | PvE |
-| **Bruiser** | Field Champion | `HostileTier.Bruiser` | PvE |
-| **Run** | Dungeon | — | PvE |
-| **Sweep** | Battue hunt | — | PvE |
-| **Autopilot** / **Magnet** | Auto Hunt (Auto Hunt Scroll, Auto Pill) / pickup lists | `PlayerAutopilot`, `AutopilotController`, `MagnetController` | PvE |
-| **Lucky Drop** | Fortune Pouch | — | PvE |
-| **Contract** | Quest / Mission | — | PvE |
-| **Bounty Board** | (none) | — | PvE |
-| **Redline**, **Second Wind**, **Aegis**, **Killer Instinct**, **Hot Streak**, **Backlash**, **Shatterpoint**, **Iron Nerve** | Spiritual Rage, Heavenly Serenity, Heavenly Shield, Heavenly Blow, Garuda's Prayer, Heavenly Repulsion, Heavenly Destruction, Reverse Flow (the eight skills every character shares) | skill ids and assets keep the TS2 names (`SpiritualRage`, `HeavenlyShield` …); display names in `ClassSkillBuilder.SharedSkillText` | Skills |
-| **Stim** (HP Stim, Flux Stim, Dual Stim) | Pill / Tablet (Healing, Chi, Stamina) | `Pill_*` assets, shown as HP Stim / Flux Stim / Dual Stim | Items |
-| **Flask** | Calabash bottle | NPC text | Items |
-| **Serum** (Strength, Vitality, Agility, Spirit, Elemental Strike, Elemental Ward) | Elixir (STR, VIT, AGI, Sprite, A.ATK, A.DEF; a permanent stat, capped per character) | items 9200–9205 (`SerumIds`, `ItemUseEffect.Serum`), `PlayerSerums`, `SerumRules`, `SerumSettings` | Items |
-| **Recall Tag** | Scroll of Return [Return Scroll] | NPC text | Items |
-| **Skill Chip** | Skill Book | `requiresSkillBook`; items `Chip_<Class>_<Slot>` and `Chip_Aegis` / `_KillerInstinct` / `_HotStreak` (9440 to 9482, `CraftItemIds.SkillChip`), read to unlock their skill (`SkillDefinitionSO.unlockItemId`); `gm.chips` | Items |
-| **Dossier** (4 **Pages** per Dossier) | Archive / Craft Scroll (4 shards) | Items `Dossier_<Skill>` and `Page_<Skill>_1..4` (ids in `CraftItemIds`); read to unlock its skill (`ItemUseEffect.LearnSkill`, `SkillDefinitionSO.unlockItemId`); bound at the Fabricator | Items |
-| **Holoweave**; a **Weave**; the **Weave Library** | (none: a transmog, as in other MMOs) | `PlayerWeaveLibrary` (account), `PlayerWeaves` (character), `WeaveRules`, `EquipmentLooks` | Gear |
-| **Morphweave**; a **Morph** | (none) | Holoweave for the pet: the look of one pet at one growth stage, shown over the pet that is out. `MorphRules`, `PlayerWeaveLibrary.Morphs` (account), `EquipmentLooks.pet` / `petStage`, `PlayerPet.ShownPet` | Pets |
-| **Colourway**; **Chroma Cell**; **Prism Cell**; **Cyan / Magenta / Yellow / Black Cell** | (none) | A gear theme of `GearThemeLibrary` worn as a dye, kept on the piece (`GearItemState.Dye`); a Chroma Cell dyes an outfit piece, a Prism Cell a weapon (`WeaponPaint`, `WeaponPaintRules`); items 9300, 9303 and 9310-9313 (`CraftItemIds`) | Items |
-| **Restyle Pass**, **Training Pass** | (none) | Items 9301, 9302: one change at the Stylist or Reshaper, one at the Coach (`EconomySettings.restyleItemId`, `trainingItemId`) | Items |
-| **Pack** | Bag / Traveler's Bag | `PlayerInventory`, window titled Pack | Items |
-| **Flux** (display) | Chi (resource pool) | `MaxChi`, `PlayerResources`, shown as Flux everywhere (approved 4 Oct 2026) | Stats |
-| Strength, Agility, Vitality, **Spirit** | Str, Agi, Vit, Chi (stat) | `StatType` | Stats |
-| **Critical** | Deadly / Deathblow | `CriticalRate`, shown as Critical | Stats |
-| **Hit Rate** | Attack Rate / Attack Success | `HitRate` | Stats |
-| **Evasion** | Evade / Dodge | `EvasionRate` | Stats |
-| **Elemental** | Attribution / Attribute | `ElementalAttack` | Stats |
-| **Lockup** | Acupressure stun [AccuPoint] | `AcupressureStunResistance`, shown as Lockup Resist | Stats |
-| **Knockback Resist** | Bounce | — | Stats |
-| **Core Resist** | Socket attribute resistance | — | Stats |
-| **Hotbar** | Shortcut Window (F1–F10, 1–0) | `PlayerSkillHotbar` | UI |
-| **Settings** (O) | Game Option Setup (ESC) | `SettingsPages` (one window, shown in the game by `HudSettingsController` and from character select by `MenuSettings`) with `GraphicsPreferences`, `AudioPreferences`, `HudPreferences`, `CameraPreferences`, `KeyBindings` (rebindable keys; the window keys are the `Windows` map of `Input/Actions/InputSystem_Actions`); APPLY and REVERT are `SettingsLedger` | UI |
-| **Guide** (H) | Tooltip (H): the 31-page in-game help | `GuideLibrary` (the text, one asset), `GuidePage` (the sixth page of Settings), `GuideClipPlayer`; key `KeyBindings.Guide` | UI |
-| **Menu theme** | (none) | `MenuSkin`, `MenuTheme` (Rotate, Hegemony, Null, Covenant): which faction's skin the title flow wears | UI |
-| **Character Sheet** (C) | Character Status Window | `ProgressionHUD` | UI |
-| **Transit** | Teleport | `ZonePortal`, `gm.tp` | World |
-| **Central Plaza** (Zone01) | Saigo Temple (neutral hub) | `StarterTownBuilder.Plaza` | World |
-| **Home Cities** | Faction fortresses (Kailan, LingChi, Ronyan) | — | World |
-| **The Scar** (planned) | Yanggok Valley (the always-on PvP map between the faction lands, level 90+) | — (the "Zone05, PvP contested" slot of `hostiles-plan.md`) | World |
-| **Line** (planned) | Channel (one of several running copies of a map). The owner's word, 11 Oct 2026; not a weapon line | — | World |
-| **Merc** (planned) | (none: a player who fights for another faction for one event, to even the sides) | — | PvP |
-| **Crew Hall** (the sandbox is built; every word in this group is a proposal) | (none: guild housing) | `PlayerHousing` (the Hall sandbox: the Lot, the trips, the instance inside), `HallRoom` (one of its three floors), `HousingLot`, `HomeSave`; `gm.home`, `gm.home.inside`, `gm.home.floor` (`../../Plans/crew-halls-plan.md`) | Housing |
-| **Crew Quarter** (planned) | (none: a faction's housing map, split into Lines like a Home City) | — | Housing |
-| **Lot** | (none: a plot in a Crew Quarter) | `HousingLot`, prefab `HousingLot_Sandbox` (`HousingLotBuilder`) | Housing |
-| **Furnishing** / **Furnishing Crate** | (none: an item that can be placed / a character's own store of them, apart from the Pack) | `FurnishingDefinition`, `FurnishingCatalog` (items 20001 to 28999; anyone's, whatever the faction whose style they are in), `PlayerCrate`, held to `WorldScaleSettings` (`../../Design/16_world_scale.md`) | Housing |
-| **Arrange** (L) | (none: the decorating mode) | `ArrangeController` (the Crate window and the tool), `HousingRules`, `HousingPlacement`, `ArrangeHistory`, `IHomeAuthority`; key `KeyBindings.Arrange` | Housing |
-| **Facade** / **Finish** | (none: a whole outside look of a Hall / an item that changes every wall, the floor or the ceiling at once) | `HallLookDefinition` (items 29000 to 29499 Finishes, 29500 to 29999 Facades; only a Facade carries `ItemDefinition.boundFaction`), `HallLookBuilder`, `HousingRules.TryWear` | Housing |
-| **Crew Fund** (planned) | (none: a Crew's shared Creds, paid in by its members) | — | Housing |
+| Krytical Nova term | Twelve Sky 2 reference [12Sky] | In code today | Group | What it is for |
+| --- | --- | --- | --- | --- |
+| **Creds** | Silver [Silver Jeon] | `PlayerWallet` (owner-only balance), `WalletRules`, `CredsLedger`; every number in `EconomySettings` | Currency | The money. Hostile kills drop it and NPCs pay it for what a player sells; it is spent at shops, the forge, the Herald and the Holoweaver, in trades and Kiosks, and to found a Crew. |
+| **Renown** (RN) | Contribution Points, CP | `ProgressionState.renown` (`PlayerCharacterProgression.Renown`, `TrySpendRenown`); spent on Tuning, Ascension and Nova Standings; shown at the top of the Character Sheet; nothing earns it yet (`gm.renown`) | Currency | The prestige currency. It pays for Tuning, Ascension and Nova Standings. Nothing in the world earns it yet. |
+| **Valor** | Class Points | — | Currency | Points earned in PvP and Beacon Wars, to be spent on class-based bonuses (Valor Rank). Not built. |
+| **XP** | EXP | `ProgressionState` | Currency | What a kill pays. It fills the level bar up to the cap of 112, and each level gives stat points and skill points. |
+| **Nova Store** | Item Mall / Item Shop (real money) | Mall Manager NPC | Economy | The real-money shop, opened in the browser from the Store Clerk's stall: Kiosk Permits, passes, XP Boosters. Not built; its first goods exist as items. |
+| **The Exchange** | Consignment [Consigner] | Trader NPC text, Exchange square in plaza | Economy | A board at the Broker where a player lists Rare gear and others buy it later, without the two meeting. Not built. |
+| **Kiosk** | Private Shop / stall (proxy selling) | `PlayerKiosk`, `KioskService`, `KioskStand`, `KioskRules`; window on **T** | Economy | A player's own shop stand. Set up in a trade zone, a stand-in sells the goods while the owner plays or is offline; a 5 % tax comes off each sale. |
+| **Vault** / **Deep Vault** | Storage per character / account Warehouse | `PlayerVault`, `PlayerDeepVault` (`PlayerStorage`), `StorageRules`; what is stored also pays item costs: `PlayerItemSources`, `ItemCostRules` | Economy | Storage. The Vault belongs to one character (at the Vaultkeeper); the Deep Vault is shared by every character of the account (at the Wayfinder). What is stored also pays for forge work and crafting. |
+| **Trade** | Trade | `PlayerTrade`, `TradeRules`; `/trade`, TRADE on the target strip | Economy | Two players swap items and Creds face to face: both lock, both confirm, and it goes through whole or not at all. |
+| **Kiosk Permit** (14 Days / 30 Days) | (none: Nova Store item that lengthens a Kiosk) | items 9020 / 9021 from `UtilityItemGenerator`; tiers in `EconomySettings.kioskTiers` | Economy | An item that lets a Kiosk run for 14 or 30 days instead of the free 3. |
+| **Trade zone** / **neutral ground** | Central Plaza and Home City shop areas / (the planned non-combat zone) | `TradeZone` (`allowKiosks`, `crossFaction`) | Economy | A trade zone is where Kiosks may stand. Neutral ground is where the factions are at peace and may trade, talk and add each other; the starter town is both for now. |
+| **Reboot** | Rebirth | — | Progression | Twelve Sky 2's Rebirth: a late-game restart of the climb for lasting bonuses, which Legendary gear would ask for. Not designed. |
+| **Prime levels** | Master levels (Master 1+, Deity) | — | Progression | Levels beyond the cap of 112, with hunting grounds of their own. Not built; a few rules already wait on them (who may sponsor, where Zenith Dossiers drop). |
+| **Zenith technique** (a class's level-80 leap; its item is a **Zenith Dossier**) | War God skill (owner's name for it, 11 Oct 2026: Zenith) | Slot 8 of a weapon class (`ClassSkillSlot.S8`, `requiresSkillBook`); items `Dossier_Zenith_<Class>` (9430 to 9438), `SkillDefinitionSO.LockKey`; `gm.zenith` | Progression, Crafting | Each weapon class's strongest skill, at level 80. Reading that class's Zenith Dossier unlocks it; it is then learned with skill points. |
+| **Field / Companion / Tandem Booster** (XP boosters; names are a first pick) | EXP items of the Item Mall | Items `Booster_Field` / `_Companion` / `_Tandem` (9500 to 9502), `ItemUseEffect.ExperienceBoost`, `PlayerExperienceBoosts`, `EconomySettings.boosters`; `gm.boosters`, `gm.boost` | Progression, Economy | Items that raise XP for an hour: Field for the character, Companion for the pet, Tandem for both. Several running at once add up. |
+| **Ascension** (the halo is a **Nova**, in twelve tiers) | CP Reinforcement / halo bonus levels | `PlayerNova`, `NovaRules`, `NovaSettings.ascension`; the Nova is `NovaHalo`, a star with turning rings drawn by the four `KryticalNova/Nova…` shaders; `gm.ascension` | Progression | A long ladder at the Herald. Each attempt costs Renown and Creds and raises, holds or drops a level; a level gives +1 to all four attributes, up to +96. Every 8 levels the Nova over the head grows a tier. |
+| **Nova Standings** (tracks Vanguard, Bulwark, Ironblood, Mindwell; a rank is worn as "Vanguard Thane", the rank word being the faction's own) | CP stat Titles L1–L12 | `PlayerNova`, `NovaSettings.standings` (`StandingTrack`, `rankWords`); `gm.standing` | Progression | Four tracks of twelve ranks bought with Renown at the Herald. Each rank gives +1 % of its track's stat, every track held counts, and one is worn as a title on the namecard. |
+| **Spotlight** | Hero Rank (weekly) | — | Progression | A weekly ranking of the best players. Not built. |
+| **Valor Rank** | Class System | — | Progression | The ladder Valor is spent on, for class-based bonuses. Not built. |
+| **Respec Chip** / **Memory Wipe** | Stats Reset item / Skill Reset Scroll | `gm.resetstats`, `gm.dropskills` | Progression | Items that hand back spent attribute points (Respec Chip) or skill points (Memory Wipe) so they can be placed again. Not built as items; GM commands do it today. |
+| **Tempering** (Temper %) | Reinforcement / Upgrade / Enchant % | `GearItemState.Temper`, `GearProgressionRules`, `TemperSettings`; done at the forge (`PlayerGearWork`) | Gear | The main gear upgrade. At the forge an Alloy raises a piece's Temper %, which raises the stat its slot is for. An attempt can fail, lose Temper or break the piece; the cap is 120 %. |
+| **Fusion** (FS1–12) | Combination, Combine (CS1–12) | `GearItemState.Fusion`, `FusionSettings` | Gear | Twelve stages for Rare and Epic gear: an untouched Rare of the same kind is fed into the piece for a lasting step up. A fail destroys only the material. |
+| **Tuning** (Tune 1–25) | Refine / Refinement | `GearItemState.Tune`, `TuningSettings` | Gear | Twenty-five stages of bonus stats per slot, paid in Tuning Chips, Renown and Creds. From stage 13 a fail drops a stage. |
+| **Reforge** | Item Exchange [12Sky: Item Exchange] | `ReforgeSettings`, `PlayerGearWork.RequestReforge` (named Reforge because The Exchange is the Broker's board) | Gear | Turns an untouched Rare into a random other Rare of its level for Creds: a way to chase the piece a build wants. |
+| **The forge** | the Blacksmith's upgrade windows | `NpcOffer.GearWork` on the Armorer, `GearWorkWindowController`, `gm.forge` | Gear | The Armorer's bench, where Tempering, Fusion, Tuning and Reforge are done. |
+| **Slotting** + **Cores** | Item Penetration + Diamonds / gems | Agent NPC text | Gear | Cutting slots into a piece of gear and setting Cores in them for extra stats. Not built. |
+| **Epic Mk I / Mk II** | WarLord 1 / 2 | — | Gear | A second tier for Epic gear: a Mark Stone lifts a Mk I piece to Mk II. Not built. |
+| **Legendary** (deferred) | Requiem | `ItemRarity.Legendary` | Gear | The rarity above Epic, kept for later. Only the name exists. |
+| Common / **Uncommon** / Rare / **Epic** / Legendary | Common / Unique / Rare / Elite (WarLord) / Requiem | `ItemRarity` | Gear | How good a piece is, shown by its frame: Common white, Uncommon blue, Rare yellow, Epic purple. A higher rarity has better stats and sits at higher level tiers. |
+| Weapon, Armor, Gloves, Boots, Ring, **Amulet**, **Cape**, Pet | Weapon, Costume, Gloves, Shoes, Ring, Necklace, Cloak, Pet | `EquipSlot` | Gear | The eight places gear is worn. Tempering a slot raises the stat that slot is for: Weapon Attack, Armor and Cape Defense, Gloves Hit Rate, Boots Evasion, Ring Critical, Amulet Luck. |
+| **Alumite**, **Iridion**, **Orichalc**, **Eversteel**, **Trinity Platinum** (the Alloys: 3 / 6 / 9 / 12 / 15 %), **Prime Alloy** | Aluminium, Iridium, Oracite, Steel of Eternity, Holy Trinity Platinum (upgrade stones), Millennial Gold | items 9100–9105 (`GearMaterialIds`, `UtilityItemGenerator`) | Gear materials | The materials Tempering uses up. The better the Alloy, the more Temper % one success adds (3 to 15 %). Prime Alloy is for the later 121 to 150 % range and has no use yet. |
+| **Failsafe** / **Advanced Failsafe** / **Lucky Failsafe** | Protection Charm / APS, Comrade Scroll / Lucky enchant | items 9110–9112 | Gear materials | Items that take risk out of a Tempering attempt. A Failsafe saves the piece from breaking; a Lucky Failsafe adds 5 % to one attempt and rules out a break; with an Advanced Failsafe a fail costs nothing. |
+| **Fusion Catalyst** | Combine Scroll | item 9120 | Gear materials | The item a Fusion attempt uses up, beside the Rare that is fed in. |
+| **Tuning Chip** / **Violet Chip** / **Reset Chip** | Refining Stone / Purple Stone / Chaos Stone | items 9130–9132 | Gear materials | What Tuning is paid in: Tuning Chips for the early stages, Violet Chips from stage 13. A Reset Chip clears a piece's Tuning so it can be done again. |
+| **Slot Cutter** / **Deep Cutter** / **Core Extractor** / **Slot Sealer** | Unril Stone / Plus Penetrate Scroll / Gem Removal Scroll / Socket Removal Stone | — | Gear materials | The tools of Slotting: cut the first slots, cut more, take a Core back out, close a slot. Not built. |
+| **Mark Stone** | WarLord Upgrade Stone | — | Gear materials | The material that lifts Epic gear from Mk I to Mk II and moves gear up or down a rank. Not built. |
+| **Armorer** | Blacksmith [Forge] | `NpcRole.Blacksmith`, shown as Armorer | NPC | The NPC with the forge. Also a shop: Common gear, the two basic Alloys, Fusion Catalysts and Tuning Chips, and he buys what a player sells. |
+| **Apothecary** | Herb Master [Herbal Medicine Shop] | `NpcRole.HerbMaster`, shown as Apothecary | NPC | The NPC who sells Stims and Pet Rations, and buys what a player sells. |
+| **Instructor** (Blade Instructor …) | Trainer [Home of the Falchion etc.] | `NpcRole.Trainer`, shown as Monoblade Instructor / Servo Claws Instructor | NPC | The NPC of a weapon class, meant to teach its first skills. Today he only talks; the skills are learned from the Skills window. |
+| **Monoblade**, Glaive, Carbine · Harvester, Servo Claws, Arc Caster · Longaxe, Claymore, Warbow | Blade, Sword, Marble · Katana, Double Blade, Lute · Spear, Light Blade, Sceptre (offense / defense / ranged per faction) | `WeaponClassId`, `WeaponClassCatalog`; see `04_Weapon_Classes.md` | Classes | The nine weapon classes, three per faction: one for offense, one for defense, one ranged. A character's class is the weapon it holds, and it can switch among its faction's three at any time. |
+| **Discipline** | starting weapon class (TS2: fixed by faction and weapon choice) | `CharacterRecipe.weaponClass`; the class in use is the equipped weapon's (`PlayerWeaponClass`) | Classes | The weapon class picked in the character creator. It only decides the starter weapon; after that the class is whatever weapon is equipped. |
+| **Broker** | Trader [Consigner] | `NpcRole.Trader`, shown as Broker | NPC | The NPC who will run The Exchange. Today he only describes it. |
+| **Store Clerk** | Mall Manager [Merchant] | `NpcRole.MallManager`, shown as Store Clerk | NPC | The NPC whose stall will open the Nova Store. Today he only describes it. |
+| **Fixer** | Agent [Beggar] | `NpcRole.Agent`, shown as Fixer | NPC | The NPC meant for Slotting and Cores, paid in Renown. Today he only describes it. |
+| **Marshal** | Guard Captain [Chief Guard] | `NpcRole.GuardCaptain`, shown as Marshal | NPC | The NPC meant to hand out Contracts and send players to battles. Today he only talks. |
+| **Chancellor** | Elder / Prime Minister [Law Enforced HQ] | Not built. Its crafting, stat resets and castle entry belong to the **Fabricator** (owner, 11 Oct 2026) | NPC | Twelve Sky 2's Elder. Not built: his crafting, stat resets and castle entry go to the Fabricator instead. |
+| **Fabricator** | (none: takes the Elder's crafting, and later stat resets and castle entry) | `NpcRole.Fabricator`, NPC id `Fabricator` (stands at the Elder hall); offers Craft: `PlayerCrafting`, `CraftRules`, `CraftingSettings` | NPC | The crafting NPC. One bench for every recipe: four Alloys into one of the next grade, colour cells into a Chroma or Prism Cell, four Pages into a Dossier. |
+| **Vaultkeeper** | Hermit (storage, guild) | `NpcRole.Vaultkeeper`, NPC id `GuildDirector`; offers Vault and Crew Registry | NPC | The NPC who opens a character's Vault and registers a new Crew. |
+| **Wayfinder** | Gate Master [Yellow Gateway Express] | `NpcRole.Wayfinder`, NPC id `GateMaster`; offers the Deep Vault (Transit later) | NPC | The NPC who opens the Deep Vault, and later sells Transit between maps. |
+| **Herald** (new) | — (TS2 puts CP Reinforcement on the Elder) | `NpcRole.Herald`, `NpcOffer.Herald`, NPC id `Collector` (the plaza stall first kept for a Collector); window `HeraldWindowController`; `gm.herald` | NPC | The NPC where Renown is spent: Ascension and Nova Standings. |
+| **Outfitter**, **Stylist**, **Reshaper**, **Coach** | Tailor, (none), (none), (none) | `NpcRole.Outfitter` (NPC id `Tailor`: dye and the colour-cell shelf), `Stylist`, `Reshaper`, `Coach`; `PlayerWeaves` (dye), `PlayerRestyle`, `RestyleRules` | NPC | Four NPCs who change how a character looks. The Outfitter dyes gear; the Stylist changes hair; the Reshaper the face and skin; the Coach build and muscle. The last three each use up a pass. |
+| **Holoweaver** | (none) | `NpcRole.Holoweaver`, NPC id `Holoweaver`; offers Holoweave | NPC | The NPC who puts a collected look over a worn piece (Holoweave) or over the pet that is out (Morphweave), for Creds. |
+| **Crew** | Guild / Clan | `PlayerCrew`, `CrewService`, `CrewRules`, `CrewSettings`; window on **G**; chat channel `Guild` shown as Crew (`/crew`, `/g`) | Social | A guild: one faction, founded at the Vaultkeeper at level 30 for Creds. It has a Leader, Officers and Members, its own chat channel, a symbol and titles. |
+| **Squad** | Party | `PlayerParty`, `PartyRules`, shown as Squad; `/squad` (`/p` still works) | Social | A party of up to five from one faction, within 10 levels of each other. Kills pay an XP boost to members on the same map, and a member can be followed. |
+| **Namecard** | (the name, guild and title over a player's head) | `PlayerNamecardController`, `NamecardRules`; settings "Names over NPCs and players" and "My own namecard" | Social | The plate over a player's head: Standing worn, name and level in the faction's colour, and the Crew with its symbol. |
+| **Emote wheel** | (emotes / motions) | `PlayerEmotes`, `EmoteCatalog`, `EmoteWheelSettings`, `EmoteWheelController`; held on **B** (`KeyBindings.EmoteWheel`) | Social | A ring held open on B to pick one of 127 emotes and stances, which everyone nearby sees. |
+| **Contacts** | Friend list | `PlayerContacts`, `ContactsService`, `ContactRules`; window on **F**; `/contact`, `/block` | Social | The friends list, per character: online status, favourites, private notes, a list of recent players, and a block list. |
+| **Emberwing**, **Drone Core**, **Tidecaller**, **Kitsune Spirit** | (none: Krytical Nova's first four pets) | items 8001–8004, `PetDefinition` assets; `PlayerPet`, `PetRules`, `PetItemState` | Pets | The four pets. A pet follows its owner, adds a stat that grows with it, gets hungry, and evolves through five stages as it gains XP from kills. |
+| **Pet Ration** | Pet food | item 9010 (`ItemUseEffect.FeedPet`); sold by the Apothecary | Pets | Pet food. It fills the pet's hunger; a starving pet gives no bonus and gains no XP. Sold by the Apothecary. |
+| **Sponsor / Recruit** | Mentor / Disciple (teacher / student) | `PlayerSponsor`, `SponsorService`, `SponsorRules`, `SponsorSettings`; `/sponsor`; "Sponsor Request" in the player menu | Social | A level 112 character takes up to three lower characters of its faction under its wing. While the Sponsor is near, the Recruit's kills pay bonus XP and the Sponsor earns Sponsor points. |
+| **Accord** | Alliance | — | Social | An alliance of two factions against the strongest one: shared maps and chat, and no attacking each other. Not built. |
+| **Broadcast** / **Hailer** | Shout [Grand Force chat] / Megaphone | chat has Faction channel | Social | A chat channel that reaches everyone, and the item (Hailer) a player needs to speak on it. Not built. |
+| **Callout** | PvP request / Duel | `PlayerDuel`, shown as Callout; `/callout` (`/duel` still works) | PvP | A duel. One player challenges another; after a countdown the two fight to the death while everyone else stays out of it. |
+| **Siege Night** | Regular Warfare (castle battles) | — | PvP | A scheduled faction war fought over a castle. Not built. |
+| **Outpost Raid** | Outpost battle | — | PvP | A faction battle over an outpost. Not built. |
+| **Beacon War** | Holy Stone Battle [Sacred Stone] | — | PvP | A faction's attack on another faction's Beacon in its Home City, fought map by map from The Scar. Open to everyone; no Mercs. Not built. |
+| **The Pit** | Coliseum | — | PvP | An arena for fights between players. Not built. |
+| **Lockdown** | Alcatraz | — | PvP | A Twelve Sky 2 PvP place (Alcatraz), listed so the name is kept for it. Not designed. |
+| **The Gauntlet** | Circuit Valley | — | PvP | A Twelve Sky 2 PvP place (Circuit Valley), listed so the name is kept for it. Not designed. |
+| **The Maze** | Labyrinth | — | PvP | A Twelve Sky 2 PvP place (Labyrinth), listed so the name is kept for it. Not designed. |
+| **Warden** / **Lieutenants** | Faction Leader / Vice Leaders | — | Faction | A faction's leader and deputies, who run its War Chest and Siege Rigs. Not built. |
+| **War Chest** | Faction Vault | — | Faction | A faction's shared Creds, which its Warden can draw on. Not built. |
+| **Siege Rig** | Catapult / Guild Weapon | — | Faction | A war machine a faction's leaders buy and place at a defensive spot. Not built. |
+| **Beacon** | Divine Stone / Alliance Stone / Sacred Stone | — | Faction | The stone in a faction's Home City that the other factions try to take in a Beacon War. In Twelve Sky 2 taking one raised the taker's damage; ours is not decided. Not built. |
+| **Spire** | Tower / defensive structure | — | Faction | A defensive tower a faction can hold. Not built. |
+| **Turf War** | Territory warfare | — | Faction | A faction war won by holding a territory for a set time. Not built. |
+| **Faction** (Hegemony, Null, Covenant) | Faction [Grand Force] | `FactionId` | Faction | The side a character belongs to for good: Hegemony, Null or Covenant. It decides the weapon classes, the look of gear and interface, who is an ally and who can be fought. |
+| **Ronin** (the fourth faction; planned) | The fourth faction (Nangin), joined by players who leave their own for good | — | Faction | A fourth faction for players who leave their own for good: a samurai look and their own HUD, with class, skills and level kept. Not built. |
+| **Hostiles** | Monsters | `HostileDefinition`, `HostileNet`, `HostileZone`, `HostileKillRewards`, `HostileLoot` (who may fight whom is `CombatHostility`) | PvE | The monsters. They live in Hostile Zones by level and pay XP, Creds and drops when killed; the gap between their level and the player's decides how much. |
+| **Bruiser** | Field Champion | `HostileTier.Bruiser` | PvE | A stronger Hostile on a timer in a zone, which drops the best rarity of gear its level has. |
+| **Run** | Dungeon | — | PvE | A dungeon. Not built. |
+| **Sweep** | Battue hunt | — | PvE | Luring several Hostiles to one spot and killing them together with area skills. A way of hunting, not a system; Autopilot's gather count does it. |
+| **Autopilot** / **Magnet** | Auto Hunt (Auto Hunt Scroll, Auto Pill) / pickup lists | `PlayerAutopilot`, `AutopilotController`, `MagnetController` | PvE | Autopilot hunts by itself inside one Hostile Zone, for as long as Autopilot Chips have paid for. Magnet picks up nearby drops of the kinds the player ticked, with or without Autopilot. |
+| **Lucky Drop** | Fortune Pouch | — | PvE | A pouch of random loot that Bruisers would drop. Not built. |
+| **Contract** | Quest / Mission | — | PvE | A quest: a task from an NPC with a reward. Not built. |
+| **Bounty Board** | (none) | — | PvE | A board of kill targets that would pay Renown. Not built; its design is still open. |
+| **Redline**, **Second Wind**, **Aegis**, **Killer Instinct**, **Hot Streak**, **Backlash**, **Shatterpoint**, **Iron Nerve** | Spiritual Rage, Heavenly Serenity, Heavenly Shield, Heavenly Blow, Garuda's Prayer, Heavenly Repulsion, Heavenly Destruction, Reverse Flow (the eight skills every character shares) | skill ids and assets keep the TS2 names (`SpiritualRage`, `HeavenlyShield` …); display names in `ClassSkillBuilder.SharedSkillText` | Skills | The eight skills every character shares whatever its weapon. Three are unlocked by Skill Chips (Aegis, Killer Instinct, Hot Streak) and three by Dossiers (Backlash, Shatterpoint, Iron Nerve). |
+| **Stim** (HP Stim, Flux Stim, Dual Stim) | Pill / Tablet (Healing, Chi, Stamina) | `Pill_*` assets, shown as HP Stim / Flux Stim / Dual Stim | Items | The potions: HP Stim heals, Flux Stim refills Flux, Dual Stim does both. Used from the Pack or the Hotbar. |
+| **Flask** | Calabash bottle | NPC text | Items | Twelve Sky's Calabash bottle, a potion container the Apothecary would sell. Not built. |
+| **Serum** (Strength, Vitality, Agility, Spirit, Elemental Strike, Elemental Ward) | Elixir (STR, VIT, AGI, Sprite, A.ATK, A.DEF; a permanent stat, capped per character) | items 9200–9205 (`SerumIds`, `ItemUseEffect.Serum`), `PlayerSerums`, `SerumRules`, `SerumSettings` | Items | An item that raises one stat for good. A character can take 100 of each of the six kinds. |
+| **Recall Tag** | Scroll of Return [Return Scroll] | NPC text | Items | An item for a quick trip back to town. Not built. |
+| **Skill Chip** | Skill Book | `requiresSkillBook`; items `Chip_<Class>_<Slot>` and `Chip_Aegis` / `_KillerInstinct` / `_HotStreak` (9440 to 9482, `CraftItemIds.SkillChip`), read to unlock their skill (`SkillDefinitionSO.unlockItemId`); `gm.chips` | Items | An item that unlocks one skill when read; the skill is then learned with skill points. Dropped by Hostiles of level 60 and up. |
+| **Dossier** (4 **Pages** per Dossier) | Archive / Craft Scroll (4 shards) | Items `Dossier_<Skill>` and `Page_<Skill>_1..4` (ids in `CraftItemIds`); read to unlock its skill (`ItemUseEffect.LearnSkill`, `SkillDefinitionSO.unlockItemId`); bound at the Fabricator | Items | An item that unlocks one of three shared skills when read. Bound at the Fabricator from its four Pages, which drop from Hostiles of level 70 and up. |
+| **Holoweave**; a **Weave**; the **Weave Library** | (none: a transmog, as in other MMOs) | `PlayerWeaveLibrary` (account), `PlayerWeaves` (character), `WeaveRules`, `EquipmentLooks` | Gear | Wearing the look of one piece over another. Every look an account has earned is kept in its Weave Library; the Holoweaver puts one over a worn piece. Stats stay the real piece's. |
+| **Morphweave**; a **Morph** | (none) | Holoweave for the pet: the look of one pet at one growth stage, shown over the pet that is out. `MorphRules`, `PlayerWeaveLibrary.Morphs` (account), `EquipmentLooks.pet` / `petStage`, `PlayerPet.ShownPet` | Pets | Holoweave for the pet: the look of one pet at one growth stage, shown over the pet that is out. Growth and bonus stay the real pet's. |
+| **Colourway**; **Chroma Cell**; **Prism Cell**; **Cyan / Magenta / Yellow / Black Cell** | (none) | A gear theme of `GearThemeLibrary` worn as a dye, kept on the piece (`GearItemState.Dye`); a Chroma Cell dyes an outfit piece, a Prism Cell a weapon (`WeaponPaint`, `WeaponPaintRules`); items 9300, 9303 and 9310-9313 (`CraftItemIds`) | Items | Dye. A Colourway is one of 24 colour themes; a Chroma Cell dyes an outfit piece in one and a Prism Cell a weapon. Both are crafted from the four colour cells. |
+| **Restyle Pass**, **Training Pass** | (none) | Items 9301, 9302: one change at the Stylist or Reshaper, one at the Coach (`EconomySettings.restyleItemId`, `trainingItemId`) | Items | What a change of looks is paid in: a Restyle Pass at the Stylist or Reshaper, a Training Pass at the Coach. Meant for the Nova Store. |
+| **Pack** | Bag / Traveler's Bag | `PlayerInventory`, window titled Pack | Items | The bag: everything a character carries that is not worn. |
+| **Flux** (display) | Chi (resource pool) | `MaxChi`, `PlayerResources`, shown as Flux everywhere (approved 4 Oct 2026) | Stats | The pool skills are cast from, beside HP. Spirit raises it and Flux Stims refill it. |
+| Strength, Agility, Vitality, **Spirit** | Str, Agi, Vit, Chi (stat) | `StatType` | Stats | The four attributes a level's stat points go into. Strength raises attack, Vitality HP, Agility hitting and dodging, Spirit Flux. |
+| **Critical** | Deadly / Deathblow | `CriticalRate`, shown as Critical | Stats | The chance for a hit to land as a critical, for more damage. |
+| **Hit Rate** | Attack Rate / Attack Success | `HitRate` | Stats | How likely an attack is to land. It is weighed against the target's Evasion. |
+| **Evasion** | Evade / Dodge | `EvasionRate` | Stats | How likely a character is to dodge an attack. It is weighed against the attacker's Hit Rate. |
+| **Elemental** | Attribution / Attribute | `ElementalAttack` | Stats | A second kind of damage on top of normal attack, with its own defense stat. |
+| **Lockup** | Acupressure stun [AccuPoint] | `AcupressureStunResistance`, shown as Lockup Resist | Stats | A stun that stops a character acting for a moment. Lockup Resist works against it. |
+| **Knockback Resist** | Bounce | — | Stats | Resistance to being thrown back by a hit. The stat is given by gear and shown, but nothing reads it yet. |
+| **Core Resist** | Socket attribute resistance | — | Stats | Resistance to the effects of an enemy's Cores. The stat is given by gear and shown, but nothing reads it yet. |
+| **Hotbar** | Shortcut Window (F1–F10, 1–0) | `PlayerSkillHotbar` | UI | The row of skill and item slots along the bottom of the screen, on 1 to 0 and Q W E R. |
+| **Settings** (O) | Game Option Setup (ESC) | `SettingsPages` (one window, shown in the game by `HudSettingsController` and from character select by `MenuSettings`) with `GraphicsPreferences`, `AudioPreferences`, `HudPreferences`, `CameraPreferences`, `KeyBindings` (rebindable keys; the window keys are the `Windows` map of `Input/Actions/InputSystem_Actions`); APPLY and REVERT are `SettingsLedger` | UI | One window for graphics, audio, interface layout, gameplay options, key bindings and the Guide. |
+| **Guide** (H) | Tooltip (H): the 31-page in-game help | `GuideLibrary` (the text, one asset), `GuidePage` (the sixth page of Settings), `GuideClipPlayer`; key `KeyBindings.Guide` | UI | The in-game help: a topic for every system a player can use, each with a short clip of the real game. |
+| **Menu theme** | (none) | `MenuSkin`, `MenuTheme` (Rotate, Hegemony, Null, Covenant): which faction's skin the title flow wears | UI | Which faction's skin the title screens wear: one fixed, or a different one each run. |
+| **Character Sheet** (C) | Character Status Window | `ProgressionHUD` | UI | The window with a character's level, attributes, every stat, Renown, Ascension and Serums taken. |
+| **Transit** | Teleport | `ZonePortal`, `gm.tp` | World | Travel between maps: portals today, and later a paid service at the Wayfinder. |
+| **Central Plaza** (Zone01) | Saigo Temple (neutral hub) | `StarterTownBuilder.Plaza` | World | The starter town and the one map built so far: every NPC stands here, with eight Hostile Zones round it. |
+| **Home Cities** | Faction fortresses (Kailan, LingChi, Ronyan) | — | World | Each faction's own capital, with its shops, trade zone and Beacon. Not built. |
+| **The Scar** (planned) | Yanggok Valley (the always-on PvP map between the faction lands, level 90+) | — (the "Zone05, PvP contested" slot of `hostiles-plan.md`) | World | The always-on PvP map between the faction lands, from level 90, which every faction has to cross. Not built. |
+| **Line** (planned) | Channel (one of several running copies of a map). The owner's word, 11 Oct 2026; not a weapon line | — | World | One running copy of a map. A second Line of a map opens only when one cannot hold everyone. Not built. |
+| **Merc** (planned) | (none: a player who fights for another faction for one event, to even the sides) | — | PvP | A player who fights for another faction for one event, in that faction's look, so that uneven sides are evened. Not built. |
+| **Crew Hall** (the sandbox is built; every word in this group is a proposal) | (none: guild housing) | `PlayerHousing` (the Hall sandbox: the Lot, the trips, the instance inside), `HallRoom` (one of its three floors), `HousingLot`, `HomeSave`; `gm.home`, `gm.home.inside`, `gm.home.floor` (`../../Plans/crew-halls-plan.md`) | Housing | Housing: a building a Crew furnishes together. Built so far as a sandbox for one player. |
+| **Crew Quarter** (planned) | (none: a faction's housing map, split into Lines like a Home City) | — | Housing | A faction's housing map, where its Crews' Halls stand on Lots. Not built. |
+| **Lot** | (none: a plot in a Crew Quarter) | `HousingLot`, prefab `HousingLot_Sandbox` (`HousingLotBuilder`) | Housing | The fenced plot a Hall stands on, with lawns to furnish. |
+| **Furnishing** / **Furnishing Crate** | (none: an item that can be placed / a character's own store of them, apart from the Pack) | `FurnishingDefinition`, `FurnishingCatalog` (items 20001 to 28999; anyone's, whatever the faction whose style they are in), `PlayerCrate`, held to `WorldScaleSettings` (`../../Design/16_world_scale.md`) | Housing | A Furnishing is an item that can be set down in a Hall or on its lawns. The Furnishing Crate is a character's own store of them, apart from the Pack. |
+| **Arrange** (L) | (none: the decorating mode) | `ArrangeController` (the Crate window and the tool), `HousingRules`, `HousingPlacement`, `ArrangeHistory`, `IHomeAuthority`; key `KeyBindings.Arrange` | Housing | The decorating mode: place, move, turn, copy and undo furnishings, with a preview that says whether a spot is allowed. |
+| **Facade** / **Finish** | (none: a whole outside look of a Hall / an item that changes every wall, the floor or the ceiling at once) | `HallLookDefinition` (items 29000 to 29499 Finishes, 29500 to 29999 Facades; only a Facade carries `ItemDefinition.boundFaction`), `HallLookBuilder`, `HousingRules.TryWear` | Housing | A Facade is the whole outside look of a Hall, in its faction's style. A Finish changes every wall, the floor or the ceiling inside at one stroke. |
+| **Crew Fund** (planned) | (none: a Crew's shared Creds, paid in by its members) | — | Housing | A Crew's shared Creds, paid in by its members, which pays for its Lot and Hall. Not built. |
 
 ## Master build list
 
