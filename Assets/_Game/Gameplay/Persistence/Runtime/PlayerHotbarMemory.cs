@@ -131,6 +131,9 @@ namespace KryticalNova.Persistence
                     if (skill == null) return false;
                     hotbar.RestoreSlot(slot.index, new HotbarSlotEntry { itemType = HotbarItemType.CombatSkill, combatSkill = skill }, notify: false);
                     return true;
+                case HotbarItemType.Autobuff:
+                    hotbar.RestoreSlot(slot.index, new HotbarSlotEntry { itemType = HotbarItemType.Autobuff }, notify: false);
+                    return true;
                 default:
                     return true;
             }

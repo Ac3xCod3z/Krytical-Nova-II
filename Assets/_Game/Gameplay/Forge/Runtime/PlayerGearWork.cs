@@ -202,7 +202,7 @@ namespace KryticalNova.Forge
             {
                 string owner = TryGetComponent(out KryticalNova.Social.PlayerChat chat) ? chat.SpeakerName : name;
                 KryticalNova.Social.PlayerChat.ServerAnnounce(AnnouncementKind.Temper, ChatChannel.System, string.Empty,
-                    GearProgressionRules.TemperAnnouncement(owner, item.displayName, next.Temper));
+                    GearProgressionRules.TemperAnnouncement(owner, item.displayName, next.Temper), owner + "|" + item.displayName);
             }
         }
 

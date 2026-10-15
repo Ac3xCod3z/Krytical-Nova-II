@@ -37,6 +37,7 @@ namespace KryticalNova.Autopilot
         public int attackSlot = NoSlot;
         public int areaSlot = NoSlot;
         public int gatherCount = 1;
+        // Unused since the Autobuff (15 Oct 2026) keeps the buffs: kept so older saves still parse.
         public int buffSlotA = NoSlot;
         public int buffSlotB = NoSlot;
 

@@ -52,8 +52,7 @@ namespace KryticalNova.EditorTools
         private static void BuildFactionSelectScreen(Transform canvas, CharacterCreationDatabase database, FactionShowcase showcase)
         {
             var screen = AddScreen(canvas, skin.choiceScreen, "Screen_FactionSelect");
-            ShowroomBackground(screen); // the champions are behind the canvas
-            SoftenWashes(screen);
+            ShowroomBackground(screen); // the champions are behind the canvas; it keeps the pack's washes faint
 
             // One difficulty card per faction. The controller fills them from the faction catalog when the scene opens.
             var cards = new List<Transform>();

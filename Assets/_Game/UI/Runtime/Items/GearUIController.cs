@@ -967,7 +967,8 @@ namespace KryticalNova.UI
         /// </summary>
         /// <param name="equipped">The item is being worn: the card says so.</param>
         /// <param name="look">What the slot shows over the piece ("Weave: Commander"), or null. Only a worn piece has one.</param>
-        public void ShowItemTooltip(VisualElement element, ItemDefinition def, in ItemStack itemStack, string hint, bool equipped = false, string look = null)
+        /// <param name="above">Over the element rather than beside it: for the Hotbar, whose slots stand in a row.</param>
+        public void ShowItemTooltip(VisualElement element, ItemDefinition def, in ItemStack itemStack, string hint, bool equipped = false, string look = null, bool above = false)
         {
             if (!initialized || element == null || def == null) { HideItemTooltip(); return; }
             ShowCardPicture(def, equipped, PetIcons.For(def, itemStack));
@@ -976,14 +977,9 @@ namespace KryticalNova.UI
             tipName.text = gearState.IsClean ? def.displayName : $"{def.displayName}  {gearState}";
             ApplyRarityText(tipName, def.rarity);
             tipType.text = TypeLine(def);
-            // A dyed piece says so: the colour goes with it into a trade, a Kiosk or the Vault.
-            if (gearState.Dye != 0 && inventory != null && inventory.Catalog != null && inventory.Catalog.Themes != null)
-            {
-                string colourway = inventory.Catalog.Themes.DisplayNameOf(gearState.Dye);
-                if (colourway != null) tipType.text += $"  ·  Dyed {colourway}";
-            }
-            // So does a slot that shows another look: the Weave is named by its set, as the dye is by its colourway.
-            if (!string.IsNullOrEmpty(look)) tipType.text += $"  ·  {look}";
+            // A dyed piece says so (the colour goes with it into a trade, a Kiosk or the Vault), and so does a slot that
+            // shows another look: each on a strip of its own, so it is not lost in the small type line.
+            ShowCardLooks(gearState, look);
             string requirement = RequirementLine(def, out bool unmet);
             if (tipRequires != null)
             {
@@ -999,10 +995,14 @@ namespace KryticalNova.UI
                 string line = boosts.TooltipLine(def);
                 if (line != null) tipDesc.text = def.description + "\n" + line;
             }
+            // A Flask says how many drinks it has left: they travel with the bottle.
+            if (def.useEffect == ItemUseEffect.FluxFlask && inventory != null && inventory.TryGetComponent(out PlayerFlask flask))
+                tipDesc.text = def.description + "\n" + flask.TooltipLine(itemStack);
             // A pet's stage, growth, hunger and bonus are a block of their own; the line under it says what it grows.
             string petLine = tipPet.Show(def, itemStack.IsEmpty ? new ItemStack(def.itemId, 1) : itemStack);
             // What the piece gives is a strip a line; how far it has been worked on stays a paragraph under them.
-            ShowCardStats(petLine != null ? null : FormatStats(def));
+            // A Dossier or Skill Chip says what kind of skill it teaches (area, single, two or three hits, or a ward).
+            ShowCardStats(petLine != null ? null : def.useEffect == ItemUseEffect.LearnSkill ? TaughtSkillLines(def) : FormatStats(def));
             tipStats.text = petLine != null ? $"<color={SkillColor}>{petLine}</color>" : FormatProgression(def, itemStack, gearState).TrimStart('\n');
             SetDisplay(tipStats, tipStats.text.Length > 0);
             tipHint.text = hint ?? string.Empty;
@@ -1011,7 +1011,7 @@ namespace KryticalNova.UI
             SetDisplay(tooltip, true);
             tooltip.BringToFront();
             // Beside the cell, on whichever side has room, and never off the screen (see FloatingFit).
-            tooltipFit.Beside(element.worldBound);
+            if (above) tooltipFit.Above(element.worldBound); else tooltipFit.Beside(element.worldBound);
         }
 
         private void HideTooltip() => SetDisplay(tooltip, false);
@@ -1027,6 +1027,56 @@ namespace KryticalNova.UI
             icon.style.backgroundImage = shown != null ? new StyleBackground(shown) : StyleKeyword.None;
             foreach (string each in RarityCardClasses) picture.RemoveFromClassList(each);
             picture.AddToClassList(RarityCardClasses[Mathf.Clamp((int)def.rarity, 0, RarityCardClasses.Length - 1)]);
+        }
+
+        /// <summary>
+        /// The dye and the look strips: the colourway's name beside its two colours, and the Weave or Morph the worn
+        /// slot shows ("Weave: Commander" reads as a WEAVE strip saying Commander). A strip is hidden when there is
+        /// nothing for it.
+        /// </summary>
+        private void ShowCardLooks(GearItemState gearState, string look)
+        {
+            VisualElement dyeRow = tooltip.Q("tooltip-dye"), weaveRow = tooltip.Q("tooltip-weave");
+            if (dyeRow == null || weaveRow == null) return;
+            bool dyed = false;
+            if (gearState.Dye != 0 && inventory != null && inventory.Catalog != null && inventory.Catalog.Themes != null
+                && inventory.Catalog.Themes.TryGet(gearState.Dye, out GearThemeLibrary.Theme theme))
+            {
+                string colourway = inventory.Catalog.Themes.DisplayNameOf(gearState.Dye);
+                if (colourway != null)
+                {
+                    dyed = true;
+                    Label value = dyeRow.Q<Label>("tooltip-dye-value");
+                    if (value != null) value.text = colourway;
+                    VisualElement primary = dyeRow.Q("tooltip-dye-primary"), secondary = dyeRow.Q("tooltip-dye-secondary");
+                    if (primary != null) primary.style.backgroundColor = (Color)theme.primary;
+                    if (secondary != null) secondary.style.backgroundColor = (Color)theme.secondary;
+                }
+            }
+            SetDisplay(dyeRow, dyed);
+
+            bool shown = !string.IsNullOrEmpty(look);
+            if (shown)
+            {
+                int cut = look.IndexOf(':');
+                string tag = cut > 0 ? look.Substring(0, cut).Trim().ToUpperInvariant() : "LOOK";
+                string value = cut > 0 ? look.Substring(cut + 1).Trim() : look;
+                Label tagLabel = weaveRow.Q<Label>("tooltip-weave-tag"), valueLabel = weaveRow.Q<Label>("tooltip-weave-value");
+                if (tagLabel != null) tagLabel.text = tag;
+                if (valueLabel != null) valueLabel.text = value;
+            }
+            SetDisplay(weaveRow, shown);
+        }
+
+        /// <summary>
+        /// A Dossier's or Skill Chip's strips: the kind of skill it teaches and what the skill does at its first rank.
+        /// </summary>
+        private static string TaughtSkillLines(ItemDefinition def)
+        {
+            PlayerCombatSkills skills = PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerCombatSkills>() : null;
+            SkillDefinitionSO skill = skills != null ? skills.SkillTaughtBy(def.itemId) : null;
+            if (skill == null) return string.Empty;
+            return $"<color={PrimaryColor}>{SkillKinds.KindLine(skill, 1)}</color>\n{SkillKinds.Describe(skill, 1)}";
         }
 
         private void ShowCardStats(string stats)

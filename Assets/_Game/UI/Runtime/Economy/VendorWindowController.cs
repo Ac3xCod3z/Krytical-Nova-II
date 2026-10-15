@@ -65,6 +65,8 @@ namespace KryticalNova.UI
             SetOpen(false);
 
             NpcServices.Register(ServiceIds.Shop, NpcOffer.Shop, "BROWSE WARES", Open);
+            // The Apothecary also refills the Flux Flasks a player carries, for Creds.
+            NpcServices.Register(ServiceIds.FlaskRefill, NpcOffer.FlaskRefill, "REFILL FLASKS", () => PlayerFlask.Local?.RequestRefill());
             PlayerInventory.LocalChanged += Close;
             HudLayoutEditor.RegisterPreview(WindowName, Preview);
             initialized = true;
@@ -79,6 +81,7 @@ namespace KryticalNova.UI
             HudLayoutEditor.UnregisterPreview(WindowName);
             PlayerInventory.LocalChanged -= Close;
             NpcServices.Unregister(ServiceIds.Shop);
+            NpcServices.Unregister(ServiceIds.FlaskRefill);
             if (GearUIController.Instance != null) GearUIController.Instance.UnregisterPackTarget(this);
         }
 

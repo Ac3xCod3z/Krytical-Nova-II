@@ -9,6 +9,8 @@ namespace KryticalNova.UI
         public AnnouncementKind Kind;
         public string Sender;
         public string Text;
+        /// <summary>The names the news is about (a player, a piece of gear), "|" between them: lit in the line. May be null.</summary>
+        public string Highlight;
     }
 
     /// <summary>

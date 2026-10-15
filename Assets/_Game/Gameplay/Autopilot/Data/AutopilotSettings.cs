@@ -2,8 +2,20 @@ using UnityEngine;
 
 namespace KryticalNova.Autopilot
 {
+    /// <summary>One Autobuff Pass: how many days it adds, which item it is, and what the store will ask for it.</summary>
+    [System.Serializable]
+    public struct AutobuffTier
+    {
+        public string label;
+        [Min(1)] public int days;
+        [Tooltip("The Pass item's id (UtilityItemGenerator). 0: not an item.")]
+        public ushort passItemId;
+        [Tooltip("What the Nova Store will ask, as text for now (the store is not built).")]
+        public string storePrice;
+    }
+
     /// <summary>
-    /// The limits of Autopilot (hunting by itself) and Magnet (picking up by itself). What a player chooses within
+    /// The limits of Autopilot (hunting by itself), Magnet (picking up by itself) and the Autobuff (buffing by itself). What a player chooses within
     /// them is that player's own <see cref="AutopilotPreferences"/>. Change a number here, never in code.
     /// </summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Autopilot/Autopilot Settings")]
@@ -35,7 +47,27 @@ namespace KryticalNova.Autopilot
         [Tooltip("Metres past the Hostile Zone's edge at which the server switches Autopilot off.")]
         [Min(0f)] public float zoneExitMargin = 20f;
 
+        [Header("Autobuff")]
+        [Tooltip("The Autobuff Passes: each adds its days to the licence, by the clock (owner, 15 Oct 2026). The 3-day one also drops from Hostiles.")]
+        public AutobuffTier[] autobuffTiers =
+        {
+            new AutobuffTier { label = "3 days", days = 3, passItemId = 9031, storePrice = "$0.99" },
+            new AutobuffTier { label = "14 days", days = 14, passItemId = 9032, storePrice = "$2.99" },
+            new AutobuffTier { label = "30 days", days = 30, passItemId = 9033, storePrice = "$4.99" },
+        };
+        [Tooltip("The most days of Autobuff a character may hold at once: a Pass that would go past it is refused, not wasted.")]
+        [Min(1)] public int autobuffMaxDays = 90;
+
         public float SecondsPerChip => hoursPerChip * 3600f;
         public float MaxSeconds => maxHours * 3600f;
+
+        /// <summary>The Pass an item is, or null when it is none.</summary>
+        public AutobuffTier? AutobuffTierFor(ushort itemId)
+        {
+            if (itemId == 0 || autobuffTiers == null) return null;
+            foreach (AutobuffTier tier in autobuffTiers)
+                if (tier.passItemId == itemId) return tier;
+            return null;
+        }
     }
 }

@@ -134,6 +134,21 @@
         </ui:VisualElement>
         <ui:Label name="tooltip-name" text="Item" class="tooltip-name heading" />
         <ui:Label name="tooltip-type" text="Armor · Common" class="tooltip-type" />
+        <!-- The piece's looks, each on a strip of its own: its dye (with the colourway's two colours) and the Weave or Morph the slot shows -->
+        <ui:VisualElement name="tooltip-looks" class="card-looks" picking-mode="Ignore">
+            <ui:VisualElement name="tooltip-dye" class="look-row" picking-mode="Ignore">
+                <ui:Label text="DYE" class="look-tag" picking-mode="Ignore" />
+                <ui:VisualElement class="look-swatch" picking-mode="Ignore">
+                    <ui:VisualElement name="tooltip-dye-primary" class="look-swatch-half" picking-mode="Ignore" />
+                    <ui:VisualElement name="tooltip-dye-secondary" class="look-swatch-half" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:Label name="tooltip-dye-value" text="" class="look-value" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement name="tooltip-weave" class="look-row" picking-mode="Ignore">
+                <ui:Label name="tooltip-weave-tag" text="WEAVE" class="look-tag" picking-mode="Ignore" />
+                <ui:Label name="tooltip-weave-value" text="" class="look-value" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
         <ui:Label name="tooltip-requires" text="" class="tooltip-requires" />
         <ui:Label name="tooltip-desc" text="" class="tooltip-desc" />
         <!-- A pet's own state, shown only for pet items (PetTooltip) -->

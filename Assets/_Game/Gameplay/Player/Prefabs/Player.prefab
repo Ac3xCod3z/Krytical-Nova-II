@@ -109,6 +109,10 @@ GameObject:
   - component: {fileID: 599682507219348469}
   - component: {fileID: 6197100756686350223}
   - component: {fileID: 2784936230896995334}
+  - component: {fileID: 2366587013574556075}
+  - component: {fileID: 8844105511440399059}
+  - component: {fileID: 6510543614626846735}
+  - component: {fileID: 9206807049269114004}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -4037,6 +4041,60 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   settings: {fileID: 11400000, guid: 224fc480aa6244d43bcba3cd42cbd873, type: 2}
   catalog: {fileID: 11400000, guid: 85d85e544bd9d2644a9391ef91738eda, type: 2}
+--- !u!114 &2366587013574556075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3366412fcd0ee54ea56122517b54c59, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.PlayerRecall
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: e1e23d40baf63594bb33aa067880bb35, type: 2}
+--- !u!114 &8844105511440399059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c862b4420cdb3a48bbfc969fb36b2fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.PlayerFlask
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: 3a9f9402fedf5cb44bab5e62d25d088a, type: 2}
+--- !u!114 &6510543614626846735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25dab1c2065373f49a0662b16d541a66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Autopilot.PlayerAutobuff
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: 103a4e791aa9fae4095473743729c5df, type: 2}
+--- !u!114 &9206807049269114004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61af8aa8f69f2b049b8f55850ea83f4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Autopilot.AutobuffCaster
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

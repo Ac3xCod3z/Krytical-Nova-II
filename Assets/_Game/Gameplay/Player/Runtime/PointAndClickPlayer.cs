@@ -1011,6 +1011,19 @@ namespace KryticalNova.Player
         /// it directly and says whether this move is a new order to be paid for (<paramref name="payRun"/>) or the
         /// same one being steered. False when no move was started.
         /// </summary>
+        /// <summary>
+        /// Server (or offline): a jump to <paramref name="landing"/> as a click there would give, with the same layers
+        /// and offset, planned and paid for by this player's own jump (its rank, its Flux). Not a move order of the
+        /// player's own: a Squad follower copies the member's jump through it. False, with the reason, when it cannot.
+        /// </summary>
+        public bool ServerJumpTo(Vector3 landing, out string reason)
+        {
+            reason = null;
+            if (IsSpawned && !IsServer) { reason = "Only the server may do this."; return false; }
+            if (jumpMotor == null) { reason = "Jump controller is missing."; return false; }
+            return jumpMotor.TryJump(landing, raycastLayers, modelForwardOffset, out reason);
+        }
+
         public bool ServerMoveTo(Vector3 destinationPoint, bool payRun = true)
         {
             if (IsSpawned && !IsServer) return false;

@@ -2,6 +2,7 @@
     "name": "KryticalNova.Editor.GM",
     "rootNamespace": "KryticalNova.EditorTools.GM",
     "references": [
+        "KryticalNova.Editor.Skin",
         "KryticalNova.Runtime",
         "KryticalNova.DevTools",
         "QFSW.QC",

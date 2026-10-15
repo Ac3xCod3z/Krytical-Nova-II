@@ -83,6 +83,10 @@ namespace KryticalNova.Player
         private float remoteLandTime;
 
         public bool IsBusy { get; private set; }
+        /// <summary>A jump may start now: none is in the air and the last landing has settled. Where the game is decided.</summary>
+        public bool IsReady => !IsBusy && Time.time >= cooldownUntil;
+        /// <summary>A jump starts where it is simulated: the feet at take-off and where they will land. A Squad follower copies it.</summary>
+        public event Action<Vector3, Vector3> JumpStarted;
         public event Action<string> Message;
 
         /// <summary>True where this player's jump is simulated (the server, or offline).</summary>
@@ -136,6 +140,7 @@ namespace KryticalNova.Player
         /// <summary>Starts the planned jump where it is simulated and shows it on every other machine.</summary>
         private void BeginJump()
         {
+            JumpStarted?.Invoke(startFeet, landingFeet);
             if (planUsesWarp) BeginWarpedJump();
             else BeginParabolaJump();
             if (IsSpawned) JumpStartedClientRpc(landingFeet, peakHeight);

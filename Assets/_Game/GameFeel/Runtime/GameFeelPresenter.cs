@@ -662,6 +662,7 @@ namespace KryticalNova.GameFeel
         public void RunStopped(Transform actor)
         {
             ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+            ActorSmear.Find(actor)?.Release(); // the smear kept up through the run fades now
         }
 
         public void JumpTakeoff(Transform actor, bool isLocalPlayer)
@@ -674,6 +675,7 @@ namespace KryticalNova.GameFeel
         public void Landed(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
+            ActorSmear.Find(actor)?.Release(); // the smear kept up through the air fades now
             PlayWorld(landWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
             if (isLocalPlayer) Play(landFeel, actor.position, 1f);
         }

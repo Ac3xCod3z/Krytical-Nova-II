@@ -53,7 +53,7 @@ MonoBehaviour:
       m_RotationOrder: 4
     strength: 1.25
     longest: 1.8
-    slowest: 7
+    slowest: 5.5
   deathThrow:
     seconds: 0.5
     trailSeconds: 0.1

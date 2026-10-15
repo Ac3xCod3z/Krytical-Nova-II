@@ -66,6 +66,9 @@ namespace KryticalNova.EditorTools
         private void OnGUI()
         {
             if (library == null || settings == null) { OnEnable(); if (library == null) return; }
+            KryticalNova.EditorTools.Skin.KnSkinScope.Backdrop(new Rect(0f, 0f, position.width, position.height));
+            using var comic = new KryticalNova.EditorTools.Skin.KnSkinScope();
+            KryticalNova.EditorTools.Skin.KnEditorSkin.Banner("Icon Library", "every skill and model-less item has an icon of its own; none twice");
             Toolbar();
             if (!string.IsNullOrEmpty(message)) EditorGUILayout.HelpBox(message, MessageType.Info);
             using (new EditorGUILayout.HorizontalScope())

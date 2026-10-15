@@ -17,6 +17,7 @@ namespace KryticalNova.Core
         public const string Coach = "coach";
         public const string Craft = "craft";
         public const string Sponsor = "sponsor";
+        public const string FlaskRefill = "flaskrefill";
     }
 
     /// <summary>

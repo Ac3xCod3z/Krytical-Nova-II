@@ -19,6 +19,8 @@ namespace KryticalNova.GameFeel
         [Min(0f)] public float longest;
         [Tooltip("Below this speed (metres a second) nothing is smeared: walking (5), a shuffle, a small correction of position. The smear is whole from a third above it.")]
         [Min(0f)] public float slowest;
+        [Tooltip("How much of the stretch stays once the smear's life is over, for as long as the motion goes on (a run until it stops, a jump until it lands): 0 = none, the smear is the take-off alone; 0.35 = a lighter smear the whole way (owner, 15 Oct 2026).")]
+        [Range(0f, 1f)] public float sustain;
 
         // The smear is whole from this many times the slowest speed it shows at.
         private const float WholeFrom = 1.33f;
@@ -29,10 +31,12 @@ namespace KryticalNova.GameFeel
         /// says at this point of its <paramref name="life"/> (0 = its start, 1 = its end), and not at all below the
         /// slowest speed.
         /// </summary>
-        public readonly Vector3 Stretch(Vector3 back, float span, float life)
+        /// <param name="floor">The least that shows while the motion goes on (<see cref="sustain"/>, or less as it is let go).</param>
+        public readonly Vector3 Stretch(Vector3 back, float span, float life, float floor = 0f)
         {
             float speed = span > 0.0001f ? back.magnitude / span : 0f;
-            float show = shape != null && shape.length > 0 ? Mathf.Clamp01(shape.Evaluate(life)) : Mathf.Clamp01(1f - life);
+            float show = shape != null && shape.length > 0 ? Mathf.Clamp01(shape.Evaluate(Mathf.Clamp01(life))) : Mathf.Clamp01(1f - life);
+            show = Mathf.Max(show, Mathf.Clamp01(floor));
             // Slow motion is not smeared at all, and the smear comes in over the next third of that speed.
             show *= Mathf.InverseLerp(slowest, slowest * WholeFrom + 0.01f, speed);
             return Vector3.ClampMagnitude(back, longest) * show;
@@ -56,11 +60,22 @@ namespace KryticalNova.GameFeel
         [Min(1f)] public float placedSpeed = 200f;
 
         [Header("Taking off at a run")]
+        [Tooltip("Whole for the take-off, then (sustain) lighter for as long as the run goes on; it is let go when the run stops.")]
         public SmearProfile takeOff = new SmearProfile
         {
-            seconds = 0.45f, trailSeconds = 0.1f, strength = 1.25f, longest = 1.8f, slowest = 7f,
+            seconds = 0.45f, trailSeconds = 0.1f, strength = 1.25f, longest = 1.8f, slowest = 5.5f, sustain = 0.35f,
             shape = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(0.45f, 1f), new Keyframe(1f, 0f)),
         };
+
+        [Header("A jump")]
+        [Tooltip("Whole as the feet leave the ground, then (sustain) lighter through the air; it is let go on landing.")]
+        public SmearProfile jump = new SmearProfile
+        {
+            seconds = 0.35f, trailSeconds = 0.08f, strength = 1.1f, longest = 1.4f, slowest = 4f, sustain = 0.3f,
+            shape = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(0.4f, 1f), new Keyframe(1f, 0f)),
+        };
+        [Tooltip("Seconds a sustained smear takes to fade once the motion ends (the run stops, the feet land).")]
+        [Range(0f, 1f)] public float releaseSeconds = 0.15f;
 
         [Header("Thrown by the blow that kills")]
         [Tooltip("The throw of a critical death, backwards or forwards. A normal death only knocks the body over (at up to about 2.5 metres a second): that is below this smear's slowest speed, so it is not smeared. Lower 'slowest' to smear it too.")]

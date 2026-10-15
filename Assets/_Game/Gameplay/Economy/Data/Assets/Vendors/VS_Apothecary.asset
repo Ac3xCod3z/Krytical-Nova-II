@@ -23,6 +23,22 @@ MonoBehaviour:
     price: 80
   - item: {fileID: 11400000, guid: 1b6a2685756e61348be0e42361f56a80, type: 2}
     price: 50
+  - item: {fileID: 11400000, guid: d5ee1f3743b5ec840b6aa2ffd09b2a8f, type: 2}
+    price: 120
+  - item: {fileID: 11400000, guid: df334604ada46204da045b192abed437, type: 2}
+    price: 120
+  - item: {fileID: 11400000, guid: 560317b4a2c6ffe4a9ce409a0d9adf1b, type: 2}
+    price: 320
+  - item: {fileID: 11400000, guid: 9d645b1b5f38ee947bc49253192e6ca2, type: 2}
+    price: 400
+  - item: {fileID: 11400000, guid: 17bbb39169b043048b0102212f6c7f0c, type: 2}
+    price: 400
+  - item: {fileID: 11400000, guid: 40dc5356fe01cf84d8c5a263d8068162, type: 2}
+    price: 1000
+  - item: {fileID: 11400000, guid: f08105efe3ef24241b36723993a5aa3e, type: 2}
+    price: 150
+  - item: {fileID: 11400000, guid: 2a7f4099c68c36a4cadc335f7ce5b409, type: 2}
+    price: 600
   rotation: []
   sellsLadderGear: 0
   gearRarity: 0

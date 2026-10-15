@@ -1603,7 +1603,7 @@ namespace KryticalNova.EditorTools
                 AddHitFeel(root, world, so);
                 so.FindProperty("looks").objectReferenceValue = AssetDatabase.LoadAssetAtPath<HitLookSettings>(HitLookSettingsPath);
                 so.FindProperty("runWorldFeel").objectReferenceValue = Smeared(World(world, RunStartPlayer, Dust("PFX_Dust_Run")), SmearKind.TakeOff);
-                so.FindProperty("jumpWorldFeel").objectReferenceValue = World(world, "Jump", Dust("PFX_Dust_Jump"), Dust("PFX_Jump_Burst"));
+                so.FindProperty("jumpWorldFeel").objectReferenceValue = Smeared(World(world, "Jump", Dust("PFX_Dust_Jump"), Dust("PFX_Jump_Burst")), SmearKind.Jump);
                 so.FindProperty("landWorldFeel").objectReferenceValue = World(world, "Land", Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"));
                 so.FindProperty("attackCastWorldFeel").objectReferenceValue = World(world, "Attack Skill", Slash());
                 so.FindProperty("buffCastWorldFeel").objectReferenceValue = World(world, "Buff Skill", AtFeet("PFX_Cast_Buff"));
@@ -1728,7 +1728,7 @@ namespace KryticalNova.EditorTools
                     return;
                 }
                 int done = 0;
-                foreach (var (name, kind) in new[] { (RunStartPlayer, SmearKind.TakeOff), (DeathPlayer, SmearKind.DeathThrow), (CritDeathPlayer, SmearKind.DeathThrow) })
+                foreach (var (name, kind) in new[] { (RunStartPlayer, SmearKind.TakeOff), ("Jump", SmearKind.Jump), (DeathPlayer, SmearKind.DeathThrow), (CritDeathPlayer, SmearKind.DeathThrow) })
                 {
                     Transform child = world.Find(name);
                     if (child == null || !child.TryGetComponent(out MMF_Player player))
@@ -1751,7 +1751,7 @@ namespace KryticalNova.EditorTools
             if (player == null || settings == null) return player;
             player.FeedbacksList.RemoveAll(feedback => feedback is MMF_Smear);
             var smear = player.AddFeedback(typeof(MMF_Smear)) as MMF_Smear;
-            smear.Label = kind == SmearKind.TakeOff ? "Smear (take-off)" : "Smear (death throw)";
+            smear.Label = kind == SmearKind.TakeOff ? "Smear (take-off)" : kind == SmearKind.Jump ? "Smear (jump)" : "Smear (death throw)";
             smear.Settings = settings;
             smear.Kind = kind;
             EditorUtility.SetDirty(player);

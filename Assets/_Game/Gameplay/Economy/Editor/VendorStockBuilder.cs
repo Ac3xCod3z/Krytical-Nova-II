@@ -35,7 +35,7 @@ namespace KryticalNova.EditorTools.Economy
 
         private static readonly Shelf[] Shelves =
         {
-            // Stims and what a pet eats. Flasks and Recall Tags join when they exist.
+            // Stims in three sizes, the Flux Flask (refilled in its dialogue), Recall Tags and what a pet eats.
             new Shelf
             {
                 Asset = "VS_Apothecary", Npc = "NPC_HerbMaster",
@@ -44,6 +44,14 @@ namespace KryticalNova.EditorTools.Economy
                     (Consumables + "Pill_Vitality.asset", 30L),
                     (Consumables + "Pill_Chi.asset", 30L),
                     (Consumables + "Pill_DualHarmony.asset", 80L),
+                    (Consumables + "Stim_HP_M.asset", 120L),
+                    (Consumables + "Stim_Flux_M.asset", 120L),
+                    (Consumables + "Stim_Dual_M.asset", 320L),
+                    (Consumables + "Stim_HP_L.asset", 400L),
+                    (Consumables + "Stim_Flux_L.asset", 400L),
+                    (Consumables + "Stim_Dual_L.asset", 1_000L),
+                    (Consumables + "Recall_Tag.asset", 150L),
+                    (Consumables + "Flux_Flask.asset", 600L),
                     (Consumables + "Pet_Ration.asset", 50L),
                 },
             },

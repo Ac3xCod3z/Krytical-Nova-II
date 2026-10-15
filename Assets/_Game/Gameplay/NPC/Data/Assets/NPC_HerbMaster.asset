@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 0
   displayName: Apothecary
-  title: "Stims \xB7 Pet Rations"
+  title: "Stims \xB7 Flasks \xB7 Recall Tags"
   greeting: Stims for the body, Flux for the mind. Stock up before you leave the walls.
-  services: Sells HP, Flux and Dual Stims and Pet Rations, and buys what you have to sell. Flasks and Recall Tags come later.
-  offers: 32
+  services: Sells HP, Flux and Dual Stims in three sizes, Flux Flasks, Recall Tags and Pet Rations, refills your Flasks, and buys what you have to sell.
+  offers: 4128
   interactRange: 3

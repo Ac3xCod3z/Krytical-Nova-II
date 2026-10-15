@@ -56,6 +56,7 @@ What exists in code for saving, Creds, item pickup, the Vault and Deep Vault, Tr
 - `WorldDrop` is the item on the ground: networked, carries the whole stack, cleared after 180 s, at most 200 per zone (oldest goes). Several drops on one spot spread out in a spiral.
 - Click a drop to walk over and take it; **~** takes the nearest within 3.5 m. The server checks reach, who it is held for, and Pack space. What does not fit stays.
 - The character crouches (the Synty Base Locomotion Stand-to-Crouch and Crouch-to-Stand clips: no pack has a pick-up clip) and turns to the item; the parcel goes to the hand. Everyone sees it.
+- **Magnet needs Autopilot time (owner, 15 Oct 2026):** it still runs with Autopilot off, but only while the character has Autopilot time left (`MagnetRules.MayRun`; a GM's free mode counts). Before that it was free, which is why an item put down with `gm.drop` vanished at once. `gm.magnet.test` says so when it is waiting.
 - **Dropping from the Pack:** the item is held for its dropper for **20 seconds**, then it is free for all, whatever their faction (`PlayerLoot.dropsOpenToEveryone`; off limits it to the dropper's faction). The dropper sees a small countdown notice above the hotbar; labels over held drops show the seconds left.
 - Hostile drops (since 9 Oct 2026): a Stim (6 %) or a piece of ladder gear of the Hostile's level (2.5 %; a Bruiser 25 %, of the best rarity its level has) falls where it died, through `PlayerLoot.ServerPlaceAt`, held for the player who holds the kill for the usual 20 s. Chances are `HostileSettings`. Magnet (`MagnetController`) picks up what a player has ticked: Common, Uncommon, Rare and Epic gear each have a box, as do Stims and materials and other items; Creds are always taken. Drops are pooled (`WorldDropPool`): one that is picked up or runs out goes back to be used again, on the server and on every client.
 
@@ -87,6 +88,8 @@ Walking more than 8 m apart, dying or leaving cancels. The trade window shows th
 | 14 days | one **Kiosk Permit (14 Days)**, item 9020, Nova Store $1.99 |
 | 30 days | one **Kiosk Permit (30 Days)**, item 9021, Nova Store $3.99 |
 
+The Autobuff's Passes (3 / 14 / 30 days, items 9031 to 9033) run on the same clock: see "Autobuff" below.
+
   The Nova Store does not sell yet; `item.give Permit_Kiosk14` hands one out. A duration without its permit shows locked with its store price.
 - **The stand-in** is a doll of the owner as they looked when they opened it, with the shop's name over it. The items leave the Pack and the owner is free to go: it sells while they play or are offline, and survives a server restart.
 - **Buying:** click the stand, right-click an item, choose how many, confirm. The buyer pays the price; 5 % is tax; the rest goes to the till.
@@ -101,8 +104,14 @@ A vendor sells from a shelf and buys what the player carries. Two are open, the 
 
 | Vendor | Sells | Placeholder price, Creds for one |
 | --- | --- | --- |
-| Apothecary (`VS_Apothecary`) | HP Stim, Flux Stim | 30 |
-| | Dual Stim | 80 |
+| Apothecary (`VS_Apothecary`) | HP Stim (S), Flux Stim (S) | 30 |
+| | Dual Stim (S) | 80 |
+| | HP Stim (M), Flux Stim (M) | 120 |
+| | Dual Stim (M) | 320 |
+| | HP Stim (L), Flux Stim (L) | 400 |
+| | Dual Stim (L) | 1,000 |
+| | Recall Tag | 150 |
+| | Flux Flask (and its refill, 60 a drink, from the Apothecary's dialogue) | 600 |
 | | Pet Ration | 50 |
 | Armorer (`VS_Armorer`) | Alumite (+3 %) | 500 |
 | | Iridion (+6 %) | 1,500 |
@@ -314,7 +323,22 @@ Hold **B** (rebindable): a ring of eight categories; a click turns it into that 
 - **Follow** is in the player menu of a Squad member (Shift+click them, MORE on the target strip, or a click on their Squad frame, which now opens that menu) and on `/follow [name]` (no name: the selected player). The character walks after the member by itself and stops a short way off.
 - The server does it (`PlayerFollow`, rules in `FollowRules`): it moves every player and knows where each one is however far apart they are, so following works beyond what the follower's own game can see. It walks through the player's own move order (`PointAndClickPlayer.ServerMoveTo`): the way taken, vaults and the Flux a run costs are those of a click, paid once each time the follower sets off, not at every look.
 - It **ends** when the follower gives a move order of their own (a click, a jump, map travel, Escape on a journey), fights (strikes, casts a skill, is struck, or is in a Callout), or is defeated; when the two are no longer in one Squad; when the member leaves the map (their player is gone: there is one map today); or when the member is more than the maximum distance ahead. The follower is told why in the System channel.
-- **Numbers** (`SquadSettings.asset`): stop 2.5 m short, set off again once the member is 4 m away, lost beyond 60 m, a look every 0.4 s.
+- **Jumps are copied (15 Oct 2026).** When the member jumps, the server tells the follower where they took off and landed (`PlayerJumpMotor.JumpStarted`). The follower walks to the take-off and, within 0.8 m of it, jumps to the landing with its own Jump (`PointAndClickPlayer.ServerJumpTo`: the follower's rank, Flux and arc, the same layers a click uses), so two cross a river together. Up to 4 jumps are remembered, each for 15 s; one the follower is already past is forgotten. A copied jump is not a move order of the follower's own, so following goes on; a jump the follower cannot make (Jump not learned, no Flux, too far for its rank) ends following with the reason. While a jump waits to be copied the member may be far across the water: the distance limit is not applied until it is done.
+- **Numbers** (`SquadSettings.asset`): stand 3.5 m behind (owner, 15 Oct 2026: three to four), set off again once the member is 5 m away, lost beyond 60 m, a look every 0.4 s; a jump is copied within 0.8 m of the take-off, 4 remembered, 15 s each.
+
+## Autobuff (row 9; built 15 Oct 2026)
+
+A licence by the clock, like a Kiosk's, that buffs for the player: up to eight buff skills are slotted in the Autopilot window (two rows of four cells; a learned buff is dragged in from the Arsenal, the Hotbar or another cell; right-click clears), and the **AUTOBUFF** tile dragged to a Hotbar key casts every slotted buff that is down, one per action tick at Autopilot's own pace (0.3 to 0.5 s), through the ordinary cast path: its rank, its Flux, its cooldown, nothing a hand press would not do. Autopilot keeps the buffs up through it, in place of the two buff rows it had. It works with or without Autopilot time; with no running licence the tile is greyed and says so.
+
+| Autobuff Pass (item) | Adds | Rarity | Where from | Nova Store |
+| --- | --- | --- | --- | --- |
+| Autobuff Pass (3 Days), 9031 | 3 days | Uncommon | Hostiles of level 10 and up, 0.3 % (placeholder); the store | $0.99 (placeholder) |
+| Autobuff Pass (14 Days), 9032 | 14 days | Rare | the store | $2.99 (placeholder) |
+| Autobuff Pass (30 Days), 9033 | 30 days | Epic | the store | $4.99 (placeholder) |
+
+- The days count by the wall clock whether the character plays or not (`AutobuffRules.Extend`: a running licence is lengthened from its end, one that ran out starts from now). At most **90 days** may be held: a Pass past that is refused, not wasted. Numbers in `AutopilotSettings` (`autobuffTiers`, `autobuffMaxDays`).
+- The server keeps the expiry and the eight cells, saved with the character (`PlayerAutobuff`, key `autobuff`); the owner's game presses the buffs (`AutobuffCaster`). The 14 and 30-day Passes share the 3-day one's picture until they are given their own in the Icon Library.
+- GM: `gm.autobuff.days <days>` (0 ends it), `item.give "Autobuff Pass (3 Days)" [n]`, and buttons in the GM window.
 
 ## Serums (row 49)
 
@@ -354,9 +378,10 @@ Three items, used from the Pack. Each has a clock of its own; while a clock has 
 - **Sold nowhere yet**: they are Nova Store stock (row 32). Until the store is built: `gm.boosters [n]` gives n of each, `gm.boost` prints what runs, `gm.boost.clear` ends them; the GM Tools window has the same three buttons on its Items tab.
 - **Verified** with a second client (11 Oct 2026): a level-50 Hostile paid a level-50 character 104 XP with no booster, 156 with Field, 208 with Field and Tandem; a pet's kill was worth 4 units, 8 with Companion, 10 with Companion and Tandem; a second Field made 2 h; the clocks came back after leaving and entering the game.
 
-## Toasts: news for the whole server
+## The ticker: news for the whole server
 
-- A **toast** is a short panel near the top of the screen, in the player's faction skin, for news every player on the server is told. Two things use it: a **GM message** (`gm.say "text"`, or the host's own `/gm text`) and a piece of gear **tempered to 120 %** (the player's and the item's name).
+- Since 15 Oct 2026 (owner) the news runs on a **ticker**: a thin band across the top of the HUD on which the line runs right to left **three passes** (`ToastSettings.passes`, at 160 px/s), so whoever missed it the first time reads it the next. The kind is a tag at the front of the line in its colour (GM gold, TEMPERING orange) and the names the news is about (the player, the piece of gear) are lit in the same colour: the server sends them with the text (`IAnnouncementSink.Announce`'s `highlight`, "|" between them). The band fades in and out over 0.35 s and takes no room while there is nothing to say. Before that it was a toast, a short panel shown once for 5 s; the rest of this section still holds.
+- A **toast** was a short panel near the top of the screen, in the player's faction skin, for news every player on the server is told. Two things use it: a **GM message** (`gm.say "text"`, or the host's own `/gm text`) and a piece of gear **tempered to 120 %** (the player's and the item's name).
 - The toast is added to the chat line, which stays as it was: the server sends both in one message (`PlayerChat.ServerAnnounce` → `AnnounceRpc`, to each player on their own player object, so distance does not matter), and the player's game puts the line in chat and hands the same text to `ClientPresentationRegistry.Announcements` (`ToastHudController`).
 - One at a time: a toast waits until the one on screen has had its time and faded (`ToastQueue`). **Numbers** (`UI/HUD/Toast/ToastSettings.asset`): 5 s on screen, 0.35 s fade, 8 may wait (one more and the oldest waiting is dropped). The Temper that is announced is `temper.announceFrom` in `GearProgressionSettings.asset`.
 - The older one-line notice in the middle of the screen (`IGameMessageSink`, the zone toast) is a different thing: the player's own notices, no queue. It is unchanged.
@@ -414,7 +439,7 @@ Every one of them has a button in the Editor's GM Tools window (Items and Social
 
 ## Not built
 
-The Exchange board; selling Kiosk Permits (Nova Store); Contracts as a Creds faucet; every shop but the Apothecary's and the Armorer's (Store Clerk, Fixer, Instructors), Flasks and Recall Tags on the Apothecary's shelf, a source for the forge materials the Armorer does not sell; Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; handing a session on when its host leaves; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
+The Exchange (decided 15 Oct 2026: a search over every open Kiosk at the Broker, buying at a distance for a commission); selling Kiosk Permits (Nova Store); Contracts as a Creds faucet; every shop but the Apothecary's and the Armorer's (Store Clerk, Fixer, Instructors), a source for the forge materials the Armorer does not sell; Crew levels; the Crew Title and symbol on the namecard (the Crew's name is there); any Renown source; emotes for two players; handing a session on when its host leaves; trade zones in faction Home Cities; the dedicated non-combat zone; real sign-in.
 
 ## Verified
 

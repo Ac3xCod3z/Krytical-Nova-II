@@ -50,6 +50,8 @@ namespace KryticalNova.GameFeel
         private SmearProfile profile;
         private float started;
         private bool playing;
+        // A smear with a sustain goes on after its life until it is let go (Release), then fades out.
+        private float releasedAt = -1f;
 
         /// <summary>The character's smear, created on first use. Moments reported from a child land on the root.</summary>
         public static ActorSmear For(Transform actor)
@@ -60,6 +62,24 @@ namespace KryticalNova.GameFeel
             return actor.TryGetComponent(out ActorSmear smear) ? smear : actor.gameObject.AddComponent<ActorSmear>();
         }
 
+        /// <summary>The character's smear if it has one; nothing is made.</summary>
+        public static ActorSmear Find(Transform actor)
+        {
+            if (actor == null) return null;
+            var net = actor.GetComponentInParent<NetworkObject>();
+            if (net != null) actor = net.transform;
+            return actor.TryGetComponent(out ActorSmear smear) ? smear : null;
+        }
+
+        /// <summary>
+        /// The motion the smear belongs to is over (the run stopped, the feet landed): a smear kept up by its sustain
+        /// fades out now. A smear still in its take-off plays that out and ends as it would have.
+        /// </summary>
+        public void Release()
+        {
+            if (playing && releasedAt < 0f) releasedAt = Time.time;
+        }
+
         /// <summary>Starts a smear from where the character is now. A smear already playing is replaced.</summary>
         public void Play(SmearSettings with, in SmearProfile kind)
         {
@@ -68,6 +88,7 @@ namespace KryticalNova.GameFeel
             profile = kind;
             if (!Dress()) return;
             started = Time.time;
+            releasedAt = -1f;
             historyCount = 0;
             Remember(Tracked());
             Show(true);
@@ -86,7 +107,16 @@ namespace KryticalNova.GameFeel
         {
             if (!playing) return;
             float life = (Time.time - started) / profile.seconds;
-            if (life >= 1f || skins.Count == 0 || skins[0].body == null) { Stop(); return; }
+            if (skins.Count == 0 || skins[0].body == null) { Stop(); return; }
+            // Past its life the smear stays at its sustain while the motion goes on, and fades once it is let go.
+            float floor = 0f;
+            if (life >= 1f)
+            {
+                if (profile.sustain <= 0f) { Stop(); return; }
+                float fade = releasedAt < 0f ? 1f : settings.releaseSeconds > 0f ? 1f - (Time.time - releasedAt) / settings.releaseSeconds : 0f;
+                if (fade <= 0f) { Stop(); return; }
+                floor = profile.sustain * fade;
+            }
 
             Vector3 now = Tracked();
             // Put somewhere in one step: that is not motion, and a smear across it would be a spike through the world.
@@ -94,7 +124,7 @@ namespace KryticalNova.GameFeel
             Remember(now);
 
             Vector3 back = Recall(Time.time - profile.trailSeconds, out float span) - now;
-            Apply(now, profile.Stretch(back, span, life));
+            Apply(now, profile.Stretch(back, span, life, floor));
         }
 
         private void OnDisable() => Stop();

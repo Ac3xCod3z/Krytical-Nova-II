@@ -55,9 +55,9 @@ MonoBehaviour:
   paperColour: {r: 0.93333334, g: 0.9019608, b: 0.8235294, a: 1}
   paperShade: {r: 0.7254902, g: 0.68235296, b: 0.59607846, a: 1}
   inkColour: {r: 0.078431375, g: 0.07058824, b: 0.16862746, a: 1}
-  edgeLeaves: 5
-  cover: {r: 0.16862746, g: 0.17254902, b: 0.43137255, a: 1}
-  coverEdge: {r: 0.29803923, g: 0.32156864, b: 0.7490196, a: 1}
-  coverMargin: 0.007
+  edgeLeaves: 3
+  cover: {r: 0.10980392, g: 0.11372549, b: 0.29019608, a: 1}
+  coverEdge: {r: 0.29803923, g: 0.32156864, b: 0.7490196, a: 0.5}
+  coverMargin: 0.004
   tintWithTheSkin: 1
   backTint: {r: 0.29803923, g: 0.32156864, b: 0.7490196, a: 1}

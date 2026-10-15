@@ -308,7 +308,10 @@ and bar count a long frame as a short one for the same reason.
 **How it differs from the plan.** The G-1 report proposed a book lying open in the scene with the live screen drawn on
 its right-hand page. That needs every screen moved onto a camera-space canvas fitted to the page, which changes every
 layout, and the brief says to keep them. So the screens stay exactly as they are and the book is what moves between
-them. The book is not on screen while a screen is at rest.
+them. At rest the screen is a page of the open book (`pageScale` 0.88), with the cover's edge along the top, the page
+before on the left and the stack of leaves on the right; since 15 Oct 2026 (owner: the lines read as stray lines in
+the build) the cover stands out less (`coverMargin` 0.004, a darker cover, its edge line at half strength), three
+leaves show instead of five and the ink line round the page is thinner.
 
 **Parts.**
 

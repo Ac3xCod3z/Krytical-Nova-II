@@ -36,6 +36,18 @@ namespace KryticalNova.UI
         /// to its left, else on the side with more room; level with its top, then moved as little as it takes to be
         /// inside the area.
         /// </summary>
+        /// <summary>
+        /// Centred over something, a gap above it; under it when there is no room above; and never past the area's
+        /// sides. For the Hotbar's hover card, which must not cover the slots beside the one under the pointer.
+        /// </summary>
+        public static Vector2 Above(Rect anchor, Vector2 size, Rect area, float gap)
+        {
+            float x = anchor.center.x - size.x * 0.5f;
+            float y = anchor.yMin - gap - size.y;
+            if (y < area.yMin) y = anchor.yMax + gap;
+            return Clamp(area, new Vector2(x, y), size);
+        }
+
         public static Vector2 Beside(Rect anchor, Vector2 size, Rect area, float gap)
         {
             float right = anchor.xMax + gap, left = anchor.xMin - gap - size.x;

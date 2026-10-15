@@ -37,6 +37,8 @@ namespace KryticalNova.Autopilot
         private PlayerInventory inventory;
         private PlayerResources resources;
         private CharacterBuffManager buffs;
+        private PlayerAutobuff autobuff;
+        private AutobuffCaster caster;
         private PlayerLoot loot;
         private PlayerCharacterProgression progression;
         private NetworkObject networkObject;
@@ -121,7 +123,7 @@ namespace KryticalNova.Autopilot
             if (resources != null && !resources.IsAlive) { Stop("defeated"); return; }
             AutopilotPreferences preferences = autopilot.Preferences;
             if (UseStim(preferences)) return;
-            if (KeepBuff(preferences.buffSlotA) || KeepBuff(preferences.buffSlotB)) return;
+            if (KeepBuffs()) return;
             if (FetchDrop(preferences)) return;
             Fight(preferences);
         }
@@ -135,7 +137,8 @@ namespace KryticalNova.Autopilot
             bool lowFlux = resources.MaxChi > 0f && resources.Chi / resources.MaxChi * 100f < preferences.stimFluxPercent;
             if (!lowHealth && !lowFlux) return false;
 
-            ItemDefinition stim = FindStim(lowHealth, lowFlux);
+            float missing = (lowHealth ? resources.MaxHealth - resources.Health : 0f) + (lowFlux ? resources.MaxChi - resources.Chi : 0f);
+            ItemDefinition stim = FindStim(lowHealth, lowFlux, missing);
             if (stim == null)
             {
                 // Low on Flux alone is no reason to stop: the basic attack costs none.
@@ -152,13 +155,16 @@ namespace KryticalNova.Autopilot
             return true;
         }
 
-        /// <summary>The Stim that does the most of what is needed, among those in the Pack.</summary>
-        private ItemDefinition FindStim(bool health, bool flux)
+        /// <summary>
+        /// The Stim for what is missing, among those in the Pack: the smallest that makes all of it good, so a Large
+        /// one is not spent on a scratch; when none is that big, the one that does the most.
+        /// </summary>
+        private ItemDefinition FindStim(bool health, bool flux, float missing)
         {
             ItemCatalog catalog = inventory.Catalog;
             if (catalog == null) return null;
-            ItemDefinition best = null;
-            float bestScore = 0f;
+            ItemDefinition biggest = null, enough = null;
+            float biggestScore = 0f, enoughScore = float.MaxValue;
             for (int i = 0; i < PlayerInventory.Capacity; i++)
             {
                 ItemStack cell = inventory.Get(i);
@@ -166,21 +172,25 @@ namespace KryticalNova.Autopilot
                 ItemDefinition item = catalog.Get(cell.itemId);
                 if (item == null) continue;
                 float score = (health ? item.restoreHealth : 0f) + (flux ? item.restoreChi : 0f);
-                if (score > bestScore) { bestScore = score; best = item; }
+                if (score <= 0f) continue;
+                if (score > biggestScore) { biggestScore = score; biggest = item; }
+                if (score >= missing && score < enoughScore) { enoughScore = score; enough = item; }
             }
-            return best;
+            return enough ?? biggest;
         }
 
         // ------------------------------------------------------------------ 2. buffs
 
-        private bool KeepBuff(int slot)
+        // The buffs to keep up are the Autobuff's cells (owner, 15 Oct 2026): with a running licence, the next one
+        // that is down is cast; without one, Autopilot keeps no buffs.
+        private bool KeepBuffs()
         {
-            if (slot == AutopilotPreferences.NoSlot || hotbar == null || skills == null) return false;
-            SkillDefinitionSO skill = hotbar.GetSlotEntry(slot).combatSkill;
-            if (skill == null || (buffs != null && buffs.HasBuff(skill.skillId))) return false;
-            if (!skills.CanCast(skill, out _)) return false;
-            Note($"recasting {skill.skillId} (Hotbar {slot + 1})");
-            return hotbar.ActivateSlot(slot);
+            if (autobuff == null) autobuff = GetComponent<PlayerAutobuff>();
+            if (caster == null) caster = GetComponent<AutobuffCaster>();
+            if (autobuff == null || caster == null || !autobuff.IsActive) return false;
+            bool cast = caster.CastNext();
+            if (cast) Note("recasting a buff through the Autobuff");
+            return cast;
         }
 
         // ------------------------------------------------------------------ 3. drops

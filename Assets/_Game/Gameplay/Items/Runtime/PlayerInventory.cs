@@ -406,6 +406,19 @@ namespace KryticalNova.Items
             ItemDefinition used = null;
             Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
             {
+                // A Flux Flask is kept: a drink uses one of its charges, which it carries in its data.
+                if (bagIndex < b.Length && !b[bagIndex].IsEmpty && catalog.Get(b[bagIndex].itemId) is ItemDefinition kept
+                    && kept.useEffect == ItemUseEffect.FluxFlask)
+                {
+                    int charges = TryGetComponent(out PlayerFlask flask) ? flask.Charges : 3;
+                    ItemStack bottle = b[bagIndex];
+                    if (!FlaskRules.HasDrink(bottle.data, charges)) { r = FlaskRules.ReasonEmpty; return false; }
+                    r = UseBlockedReason(kept);
+                    if (r != null) return false;
+                    b[bagIndex] = new ItemStack(bottle.itemId, bottle.count, FlaskRules.AfterDrink(bottle.data, charges));
+                    used = kept;
+                    return true;
+                }
                 if (!InventoryRules.TryConsume(b, catalog, bagIndex, out used, out r)) return false;
                 r = UseBlockedReason(used);
                 if (r == null) return true;
@@ -506,6 +519,26 @@ namespace KryticalNova.Items
         /// Server only: takes <paramref name="count"/> from the stack in a Pack cell (all of it when the count is
         /// the stack's). False when the cell does not hold that many.
         /// </summary>
+        /// <summary>
+        /// Server only: rewrites the state an item in a Pack cell carries (a Flask's drinks). Only when the cell still
+        /// holds <paramref name="expected"/>; false when it changed or the cell is empty.
+        /// </summary>
+        public bool ServerSetCellData(int cell, ItemStack expected, ulong data)
+        {
+            if (!CanMutate() || cell < 0 || cell >= Capacity) return false;
+            bool done = false;
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
+            {
+                r = null;
+                ItemStack held = b[cell];
+                if (held.IsEmpty || !held.Equals(expected)) { r = InventoryRules.ReasonEmpty; return false; }
+                b[cell] = new ItemStack(held.itemId, held.count, data);
+                done = true;
+                return true;
+            });
+            return done;
+        }
+
         public bool ServerTakeFromCell(int cell, int count, out ItemStack taken)
         {
             ItemStack result = ItemStack.Empty;

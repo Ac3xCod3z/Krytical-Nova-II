@@ -2,6 +2,7 @@
     "name": "KryticalNova.Editor",
     "rootNamespace": "KryticalNova.EditorTools",
     "references": [
+        "KryticalNova.Editor.Skin",
         "KryticalNova.Runtime",
         "KryticalNova.Vegetation.Grass",
         "Unity.Netcode.Runtime",

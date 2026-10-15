@@ -650,6 +650,14 @@ namespace KryticalNova.EditorTools
             // Fantasy Screens darkens the top and bottom with two tall gradients.
             Retint(MenuUi.Find<Image>(background, "SPR_Gradient_Top"), Ink);
             Retint(MenuUi.Find<Image>(background, "SPR_Gradient_Bottom"), Ink);
+            // Sci-Fi Menus washes the whole screen blue (two big gradients, a hexagon field, scan lines) and frames it
+            // in cyan: over the showroom that put a blue cast on everything (owner, 15 Oct 2026). The big washes go,
+            // the rest is kept faint, and the frame takes the skin's own accent, quietly.
+            Hide(MenuUi.Find(background, "SPR_Gradient_Large"));
+            Hide(MenuUi.Find(background, "SPR_Gradient_Small"));
+            SoftenWashes(screen);
+            foreach (string frame in new[] { "Frame_Techy_Left", "Frame_Techy_Right" })
+                Tint(MenuUi.Find<Image>(background, frame), skin != null ? skin.menuAccent : ShadowIndigo, 0.35f);
         }
 
         /// <summary>The pack's dark blue header and footer bands, recoloured to Ink so they sit with any faction colour.</summary>
@@ -718,8 +726,18 @@ namespace KryticalNova.EditorTools
             if (icon == null || glyphs == null || !glyphs.TryGet(key, out var glyph)) return;
             icon.sprite = glyph.standalone;
             icon.preserveAspect = true;
+            // The pack's slot is a gamepad button's size: a keycap in it read as a speck in the build (15 Oct 2026).
+            RectTransform rect = icon.rectTransform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            float aspect = glyph.standalone != null && glyph.standalone.rect.height > 0f ? glyph.standalone.rect.width / glyph.standalone.rect.height : 1f;
+            rect.sizeDelta = new Vector2(StandaloneGlyphHeight * aspect, StandaloneGlyphHeight);
             Record(icon);
         }
+
+        // The height of a bare keycap prompt, in canvas units (the canvas is 3840 x 2160).
+        private const float StandaloneGlyphHeight = 120f;
 
         private static void EnsureMaterials()
         {

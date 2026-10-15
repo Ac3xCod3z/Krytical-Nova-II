@@ -20,6 +20,7 @@ MonoBehaviour:
   rarity: 2
   equipSlot: 0
   maxStack: 99
+  boundFaction: 0
   itemLevel: 0
   lineId: 0
   weaponClass: 0

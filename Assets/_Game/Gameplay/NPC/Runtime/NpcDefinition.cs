@@ -54,6 +54,8 @@ namespace KryticalNova.NPC
         Coach = 1 << 10,
         /// <summary>Crafting: Alloys, Chroma Cells, Dossiers.</summary>
         Craft = 1 << 11,
+        /// <summary>Refilling the Flux Flasks in the Pack, for Creds (the Apothecary).</summary>
+        FlaskRefill = 1 << 12,
     }
 
     /// <summary>Static data for one town NPC. Shops, quests and crafting hook in by role later.</summary>

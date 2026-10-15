@@ -10,7 +10,9 @@ namespace KryticalNova.Progression
         Movement,
         CombatSkill,
         /// <summary>A bag item flagged as usable from the hotbar (e.g. a pill).</summary>
-        Item
+        Item,
+        /// <summary>The Autobuff tile: one press casts every slotted buff that is down (<see cref="IHotbarAutobuff"/>).</summary>
+        Autobuff = 4,
     }
 
     [Serializable]
@@ -265,6 +267,21 @@ namespace KryticalNova.Progression
         public IHotbarItemSource ItemSource => itemSource ??= GetComponent<IHotbarItemSource>();
         private IHotbarItemSource itemSource;
 
+        /// <summary>The Autobuff on this player, or null where the system is not set up.</summary>
+        public IHotbarAutobuff Autobuff => autobuffTile ??= GetComponent<IHotbarAutobuff>();
+        private IHotbarAutobuff autobuffTile;
+
+        /// <summary>Puts the Autobuff tile on a slot. One slot at most holds it: an older one is cleared.</summary>
+        public bool AssignAutobuff(int index)
+        {
+            if (!IsValidSlot(index) || Autobuff == null) return false;
+            for (int i = 0; i < SlotCount; i++)
+                if (i != index && slots[i].itemType == HotbarItemType.Autobuff) slots[i] = default;
+            slots[index] = new HotbarSlotEntry { itemType = HotbarItemType.Autobuff };
+            Changed?.Invoke();
+            return true;
+        }
+
         /// <summary>Assigns a bag item to a hotbar slot. Only items flagged as usable from the hotbar are accepted.</summary>
         public bool AssignItem(int index, ushort itemId)
         {
@@ -356,6 +373,10 @@ namespace KryticalNova.Progression
             else if (entry.itemType == HotbarItemType.Item)
             {
                 return ItemSource != null && ItemSource.UseItem(entry.itemId);
+            }
+            else if (entry.itemType == HotbarItemType.Autobuff)
+            {
+                return Autobuff != null && Autobuff.Press();
             }
             return false;
         }

@@ -16,7 +16,7 @@ namespace KryticalNova.UI
         private readonly float gap, margin;
         private Rect anchor;
         private Vector2 corner;
-        private bool beside, placed;
+        private bool beside, above, placed;
         // Where the last two moves of this frame put it (see Fit: it is never sent back and forth).
         private Vector2 last, beforeLast;
         private int moves, movesFrame = -1;
@@ -35,6 +35,16 @@ namespace KryticalNova.UI
         public void Beside(Rect anchorBounds)
         {
             beside = true;
+            above = false;
+            anchor = anchorBounds;
+            Start();
+        }
+
+        /// <summary>Over something (its bounds in the panel), centred; under it when there is no room above.</summary>
+        public void Above(Rect anchorBounds)
+        {
+            beside = false;
+            above = true;
             anchor = anchorBounds;
             Start();
         }
@@ -43,6 +53,7 @@ namespace KryticalNova.UI
         public void At(Vector2 panelPoint)
         {
             beside = false;
+            above = false;
             corner = panelPoint;
             Start();
         }
@@ -70,7 +81,8 @@ namespace KryticalNova.UI
             Vector2 size = bounds.size / own;
             Rect area = ScreenFit.Inset(element.panel.visualTree.worldBound, margin);
             float scale = ScreenFit.ScaleToFit(area, size);
-            Vector2 at = beside ? ScreenFit.Beside(anchor, size * scale, area, gap) : ScreenFit.Clamp(area, corner, size * scale);
+            Vector2 at = beside ? ScreenFit.Beside(anchor, size * scale, area, gap)
+                : above ? ScreenFit.Above(anchor, size * scale, area, gap) : ScreenFit.Clamp(area, corner, size * scale);
 
             Vector2 local = parent.WorldToLocal(at);
             Vector2 now = parent.WorldToLocal(bounds.position);

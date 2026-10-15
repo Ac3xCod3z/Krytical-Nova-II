@@ -410,7 +410,7 @@ MonoBehaviour:
       - kind: 1
         heading: Ranking up
         lines:
-        - 'Open the Skills window. It is a tree: your class''s skills and the skills every class shares, on tiers by the level that opens them.'
+        - 'Open the Skills window, the Arsenal. It has three tabs: STRIKES (attacks, grouped as area, single hit, two-hit and three-hit), WARDS (buffs, stances and guards) and STRIDES (Run and Jump), each on tiers by the level that opens it.'
         - Click a skill to read it beside the tree. Skill points left are shown at the top.
         - Press <b>+1</b>, <b>+5</b> or <b>+10</b> on its card to put ranks into it.
         - Drag the skill from the tree onto the Hotbar if it is not there yet.
@@ -867,7 +867,7 @@ MonoBehaviour:
         - Hunt White names for full rewards. Gather a few and use an area skill to clear them together.
     - id: stims
       title: Stims
-      summary: Stims give back health or Flux in the middle of a fight. Keep them on your Hotbar.
+      summary: Stims give back health or Flux in the middle of a fight, in three sizes. Keep them on your Hotbar.
       clip: {fileID: 32900000, guid: 57803170b23dbc44aa9fc209dcbae660, type: 3}
       still: {fileID: 0}
       focus:
@@ -883,6 +883,13 @@ MonoBehaviour:
         - HP Stim | Restores health
         - Flux Stim | Restores Flux
         - Dual Stim | Restores both
+      - kind: 2
+        heading: The three sizes
+        lines:
+        - (S) Small | 300
+        - (M) Medium | 900
+        - (L) Large | 2,400
+        - A Dual Stim | Gives a third as much Flux as HP
       - kind: 1
         heading: Using one
         lines:
@@ -892,7 +899,9 @@ MonoBehaviour:
       - kind: 3
         heading: 
         lines:
-        - A new character starts with ten. Hostiles drop more.
+        - A new character starts with ten small ones. Hostiles drop more, and the Apothecary sells every size.
+        - A Recall Tag, also from the Apothecary, takes you back to town after five seconds standing still. Moving, being hit or a fight stops it, and you keep the Tag.
+        - A Flux Flask is a bottle you keep. Each of its three drinks gives a large part of your Flux back over a few seconds. The Apothecary refills it from its dialogue.
         - Autopilot can use Stims for you when your health or Flux falls below a level you set.
     - id: autopilot
       title: Autopilot and Magnet
@@ -914,7 +923,7 @@ MonoBehaviour:
         heading: Setting it up
         lines:
         - Stand in a Hostile Zone. Autopilot will not start anywhere else.
-        - 'Open the window and choose: the whole zone or a circle round you, which Hostiles to skip, which Hotbar slots to attack with, which buffs to keep up, and when to use a Stim.'
+        - 'Open the window and choose: the whole zone or a circle round you, which Hostiles to skip, which Hotbar slots to attack with, and when to use a Stim. The buffs it keeps up are the Autobuff''s.'
         - Press {key:Autopilot} . An AUTO tag shows on your namecard while it runs.
       - kind: 2
         heading: It stops when
@@ -926,7 +935,11 @@ MonoBehaviour:
       - kind: 0
         heading: Magnet
         lines:
-        - 'Magnet takes what you tick: Common, Uncommon, Rare and Epic gear each have a box, and so do Stims and other items. Creds are always taken. It needs no time and works while you hunt by hand.'
+        - 'Magnet takes what you tick: Common, Uncommon, Rare and Epic gear each have a box, and so do Stims and other items. Creds are always taken. It works while you hunt by hand, but only while you have Autopilot time left.'
+      - kind: 0
+        heading: Autobuff
+        lines:
+        - 'An Autobuff Pass (3, 14 or 30 days; the 3-day one drops from Hostiles) buys days of Autobuff, by the clock. In this window, drag up to eight learned buff skills into its cells, and drag the AUTOBUFF tile to a Hotbar key: one press casts every buff that is down, in turn, and Autopilot keeps them up for you.'
       - kind: 3
         heading: 
         lines:
@@ -1063,7 +1076,7 @@ MonoBehaviour:
       - kind: 0
         heading: Follow
         lines:
-        - Click a member's frame and choose <b>Follow</b>, or type <b>/follow</b>. Your character walks after them and stops a little way off. Any move of your own, or a fight, ends it.
+        - Click a member's frame and choose <b>Follow</b>, or type <b>/follow</b>. Your character walks after them, stops a few metres behind and jumps where they jump (it needs Jump learned, and the Flux). Any move of your own, or a fight, ends it.
       - kind: 3
         heading: 
         lines:

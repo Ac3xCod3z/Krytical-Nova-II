@@ -22,6 +22,18 @@ namespace KryticalNova.UI
             target.RegisterCallback<DetachFromPanelEvent>(_ => Hide(target));
         }
 
+        /// <summary>Shows the tooltip beside (or, <paramref name="above"/>, over) an element, now: for an element whose hover is handled by hand.</summary>
+        public static void ShowFor(VisualElement target, string title, string body, bool above = false)
+        {
+            if (target != null) Show(target, title, body, above);
+        }
+
+        /// <summary>Hides the tooltip an element showed.</summary>
+        public static void HideFor(VisualElement target)
+        {
+            if (target != null && target.panel != null) Hide(target);
+        }
+
         /// <summary>The element a tooltip is drawn in: the HUD's own root, so the HUD's styles and faction skin reach it.</summary>
         private static VisualElement HostOf(VisualElement target)
         {
@@ -34,7 +46,7 @@ namespace KryticalNova.UI
             return top;
         }
 
-        private static void Show(VisualElement target, string title, string body)
+        private static void Show(VisualElement target, string title, string body, bool above = false)
         {
             if (target.panel == null || (string.IsNullOrEmpty(title) && string.IsNullOrEmpty(body))) return;
             VisualElement host = HostOf(target);
@@ -53,6 +65,8 @@ namespace KryticalNova.UI
                 host.Add(tip);
             }
             Label heading = tip.Q<Label>("text-tooltip-title");
+            heading.enableRichText = true;
+            tip.Q<Label>("text-tooltip-body").enableRichText = true;
             heading.text = title ?? string.Empty;
             heading.style.display = string.IsNullOrEmpty(title) ? DisplayStyle.None : DisplayStyle.Flex;
             tip.Q<Label>("text-tooltip-body").text = body ?? string.Empty;
@@ -61,7 +75,7 @@ namespace KryticalNova.UI
             tip.BringToFront();
             // Beside the element, on whichever side has room, and never off the screen. One fitter per tooltip.
             if (!(tip.userData is FloatingFit fit)) tip.userData = fit = new FloatingFit(tip, Gap);
-            fit.Beside(target.worldBound);
+            if (above) fit.Above(target.worldBound); else fit.Beside(target.worldBound);
         }
 
         private static void Hide(VisualElement target)

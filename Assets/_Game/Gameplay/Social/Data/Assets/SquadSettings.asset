@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SquadSettings
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Social.SquadSettings
   maxExperienceBoost: 0.2
-  followKeepDistance: 2.5
-  followResumeDistance: 4
+  followKeepDistance: 3.5
+  followResumeDistance: 5
   followMaxDistance: 60
   followRepathSeconds: 0.4

@@ -66,6 +66,16 @@ namespace KryticalNova.DevTools
             return AutopilotController.Logging ? "Autopilot's turns are printed to the log." : "Autopilot's turns are no longer printed.";
         }
 
+        [Command("gm.autobuff.days", "Set the targeted player's Autobuff licence to run this many days from now (0 ends it): gm.autobuff.days <days>.")]
+        private static string AutobuffDays(int days)
+        {
+            if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
+            var autobuff = player.GetComponent<PlayerAutobuff>();
+            if (autobuff == null) return "That player has no Autobuff (run Krytical Nova/Setup/Player Prefab).";
+            autobuff.ServerSetDays(days);
+            return autobuff.TimeLeftLine;
+        }
+
         [Command("gm.magnet.test", "List every drop in the targeted player's pickup reach and whether Magnet would take it.")]
         private static string MagnetTest()
         {

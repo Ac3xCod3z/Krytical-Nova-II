@@ -616,6 +616,7 @@ MonoBehaviour:
   FeedbacksList:
   - rid: 6309249592969920985
   - rid: 6309249592969920986
+  - rid: 6309249867658821769
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -805,6 +806,83 @@ MonoBehaviour:
         TintWithMoment: 0
         RampWithMoment: 0
         Warm: 2
+    - rid: 6309249867658821769
+      type: {class: MMF_Smear, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
+      data:
+        Active: 1
+        UniqueID: 482050984
+        Label: Smear (jump)
+        OriginalLabel: Smear (Krytical Nova)
+        ChannelMode: 0
+        Channel: 0
+        MMChannelDefinition: {fileID: 0}
+        Chance: 100
+        Timing:
+          TimescaleMode: 0
+          ExcludeFromHoldingPauses: 0
+          ContributeToTotalDuration: 1
+          InitialDelay: 0
+          CooldownDuration: 0
+          InterruptsOnStop: 1
+          NumberOfRepeats: 0
+          RepeatForever: 0
+          DelayBetweenRepeats: 1
+          IgnoreFeedbackDurationForRepeats: 0
+          PlayCount: 0
+          LimitPlayCount: 0
+          MaxPlayCount: 3
+          SetPlayCountToZeroOnReset: 0
+          MMFeedbacksDirectionCondition: 0
+          PlayDirection: 0
+          ConstantIntensity: 0
+          UseIntensityInterval: 0
+          IntensityIntervalMin: 0
+          IntensityIntervalMax: 0
+          Sequence: {fileID: 0}
+          TrackID: 0
+          Quantized: 0
+          TargetBPM: 120
+        AutomatedTargetAcquisition:
+          Mode: 0
+          ChildIndex: 0
+        RandomizeOutput: 0
+        RandomMultiplier: {x: 0.8, y: 1}
+        RandomizeDuration: 0
+        RandomDurationMultiplier: {x: 0.5, y: 2}
+        UseRange: 0
+        RangeDistance: 5
+        UseRangeFalloff: 0
+        RangeFalloff:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        RemapRangeFalloff: {x: 0, y: 1}
+        AutomaticShakerSetupButton:
+          ButtonText: 
+        Owner: {fileID: 7310458663138325628}
+        DebugActive: 0
+        Settings: {fileID: 11400000, guid: cc541f1c58a552f418ffeccbb48e58d0, type: 2}
+        Kind: 2
 --- !u!1 &152166454331457556
 GameObject:
   m_ObjectHideFlags: 0
@@ -16795,7 +16873,7 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 6309249592969920984
-  - rid: 6309249643151360608
+  - rid: 6309249867658821768
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -16898,11 +16976,11 @@ MonoBehaviour:
         TintWithMoment: 0
         RampWithMoment: 0
         Warm: 2
-    - rid: 6309249643151360608
+    - rid: 6309249867658821768
       type: {class: MMF_Smear, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -742254588
+        UniqueID: 1911345825
         Label: Smear (take-off)
         OriginalLabel: Smear (Krytical Nova)
         ChannelMode: 0
@@ -18965,7 +19043,7 @@ MonoBehaviour:
   - rid: 6309249701009425371
   - rid: 6309249701009425372
   - rid: 6309249701009425373
-  - rid: 6309249701009425374
+  - rid: 6309249867658821771
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -19329,11 +19407,11 @@ MonoBehaviour:
         TintWithMoment: 0
         RampWithMoment: 0
         Warm: 2
-    - rid: 6309249701009425374
+    - rid: 6309249867658821771
       type: {class: MMF_Smear, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: -1943060777
+        UniqueID: -730354351
         Label: Smear (death throw)
         OriginalLabel: Smear (Krytical Nova)
         ChannelMode: 0
@@ -28243,7 +28321,7 @@ MonoBehaviour:
   - rid: 6309249701009425366
   - rid: 6309249701009425367
   - rid: 6309249701009425368
-  - rid: 6309249701009425369
+  - rid: 6309249867658821770
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -28520,11 +28598,11 @@ MonoBehaviour:
         TintWithMoment: 0
         RampWithMoment: 0
         Warm: 2
-    - rid: 6309249701009425369
+    - rid: 6309249867658821770
       type: {class: MMF_Smear, ns: KryticalNova.GameFeel, asm: KryticalNova.GameFeel}
       data:
         Active: 1
-        UniqueID: 856990100
+        UniqueID: 1976029960
         Label: Smear (death throw)
         OriginalLabel: Smear (Krytical Nova)
         ChannelMode: 0

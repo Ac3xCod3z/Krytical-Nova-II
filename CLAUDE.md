@@ -20,7 +20,8 @@ Read `Assets/_Game/_Docs/ProjectOrganization.md` before creating, moving, or gen
 
 Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a player sees or building a system.
 
-- `01_Systems_Build_List.md` is the glossary (Twelve Sky 2 term → Krytical Nova term → what the code calls it) and the build list. Use the Krytical Nova term in UI text and in new code; update a system's Status there when it lands.
+- `01_Systems_Build_List.md` is the glossary (Twelve Sky 2 term → Krytical Nova term → what the code calls it → what it is for) and the build list. Use the Krytical Nova term in UI text and in new code; update a system's Status there when it lands.
+- **After every task that lands, update the Encyclopedia of Nova** (owner, 15 Oct 2026): in `01_Systems_Build_List.md` the system's Status and columns, "What is left", a glossary row with a plain "What it is for" for every new term (a system says what it does, an item what using it does; nothing vague), and a line in its Change log; then run `Assets/_Game/_Docs/Encyclopedia~/build_encyclopedia.py` and publish the result to the Encyclopedia artifact (`_Docs/Encyclopedia~/README.md` has the link and the steps). A new doc under `_Docs` joins its Library by itself.
 - `02_Gear_System_Spec.md` is the gear layer (ladder, stats, Tempering, Fusion, Tuning, Slotting); `04_Weapon_Classes.md` is the nine weapon classes and their skills. Keep their "as built" sections current.
 - `05_Economy_And_Social.md` is saving, Creds, pickup, Vault, Trade, Kiosks, Contacts and Crews as built, with every tunable number and who may deal with whom. Keep it current; new numbers go in `EconomySettings` / `CrewSettings`, never in code.
 - A new player-side system adds a row to `PlayerSystemsSetup`; a prefab the server spawns adds its path to `GameplayPrefabsSetup.SpawnedPrefabs` (unregistered prefabs never appear on clients). Test networked features with a second client, not only as host.

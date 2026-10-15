@@ -8,6 +8,8 @@ namespace KryticalNova.GameFeel
     {
         TakeOff = 0,
         DeathThrow = 1,
+        /// <summary>The feet leaving the ground, and lighter through the air.</summary>
+        Jump = 2,
     }
 
     /// <summary>
@@ -43,7 +45,7 @@ namespace KryticalNova.GameFeel
             if (!Active || !FeedbackTypeAuthorized || Settings == null || Target == null) return;
             ActorSmear smear = ActorSmear.For(Target);
             if (smear == null) return;
-            smear.Play(Settings, Kind == SmearKind.DeathThrow ? Settings.deathThrow : Settings.takeOff);
+            smear.Play(Settings, Kind == SmearKind.DeathThrow ? Settings.deathThrow : Kind == SmearKind.Jump ? Settings.jump : Settings.takeOff);
         }
     }
 }

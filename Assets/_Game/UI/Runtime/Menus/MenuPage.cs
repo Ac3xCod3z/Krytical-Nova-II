@@ -186,7 +186,7 @@ namespace KryticalNova.UI.Menus
 
             // Over the screen: the fold's shadow on this page, and the ink line round it.
             Shade(over, "Fold Shade", new Rect(page.xMin, page.yMin, page.width * 0.035f, page.height), new Color(0f, 0f, 0f, 0.5f), false);
-            float line = 0.0016f, lineY = line * aspect;
+            float line = 0.001f, lineY = line * aspect; // thinner since 15 Oct 2026: the frame reads as a page, not as lines
             Block(over, "Line Left", new Rect(page.xMin - line * 0.5f, page.yMin, line, page.height), settings.inkColour);
             Block(over, "Line Right", new Rect(page.xMax - line * 0.5f, page.yMin, line, page.height), settings.inkColour);
             Block(over, "Line Top", new Rect(page.xMin, page.yMax - lineY * 0.5f, page.width, lineY), settings.inkColour);

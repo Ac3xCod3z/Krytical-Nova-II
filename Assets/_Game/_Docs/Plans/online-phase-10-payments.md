@@ -18,6 +18,10 @@ take money, tax handled in each place sold to, and terms checked by a qualified 
 This settles the open point about Unity's in-game checkout on a PC build: it is not needed. A page in the
 browser works on any PC.
 
+Added 12 Oct 2026 (owner): a **subscription is planned** as well as the fixed goods; what it is has not
+been given yet, so it is designed for and not built. The Stripe-side setup (account, sandbox, keys,
+webhook events, go-live steps) is `online-phase-10-stripe-readiness.md`; paperwork only, nothing built.
+
 ## How it works
 
 1. **The stall.** The Store Clerk (`NpcRole.MallManager`, NPC id `MallManager`, the holo booth in the
@@ -55,12 +59,36 @@ browser works on any PC.
 - **Do not use an asset-store payment kit that shows a card form inside the game or ships a secret key in
   the build.** Opening the payment company's hosted page is the only shape allowed.
 
-## What is sold first
+## What is sold
 
-Fixed goods only, no paid random rewards. Already existing as items: Kiosk Permits (14 days $1.99,
-30 days $3.99: `05_Economy_And_Social.md`), Restyle Pass and Training Pass, the three XP boosters (Field,
-Companion, Tandem: build list row 32). Open: whether Autopilot Chips are sold. Ascension and Nova
-Standings are earned at the Herald and are never sold.
+Decided by the owner on 12 Oct 2026 (replaces the 11 Oct "fixed goods only" line). Prices are not set.
+Ascension and Nova Standings are earned at the Herald and are never sold.
+
+**The subscription** (optional, monthly, **account-wide**: all three character slots). It bundles:
+the **middle tier** of the season pass, a 30-day Kiosk Permit, extra Vault and Pack room, and an
+amount of the store's own currency. A subscriber may upgrade the pass to **premium** for the difference
+in price. One subscription product only.
+
+**The season pass** has three tiers: free (everyone), middle, premium. Sold on its own for those
+without the subscription; a season is a one-off purchase with the season's id.
+
+**One-off goods** (the shape the plan already handles): Autopilot Chips (settles the open point:
+sold), Autobuff Passes (3, 14 and 30 days; the 3-day one also drops from Hostiles), Chroma Cells and Prism Cells, the Restyle, Training and like passes, XP boosters for
+characters and for pets, a timed pass to a grinding zone (a levelling zone with better spawn rates),
+paid costumes, paid emotes.
+
+**The store currency** (name to be decided; not Creds, which stay in-game only). Bought as a one-off
+through Checkout in fixed bundles, held in a ledger on the service, spent on the website. Stripe never
+sees what it is spent on.
+
+**Banners** (gacha): pets, and premium skins for pets and players, on a set schedule, each banner
+running until the next. Pulls are paid in the store currency on the website, never directly with a
+card. The pulled thing is delivered like any other order.
+
+Flags for the owner, not decisions: paid random rewards are regulated differently by country (some
+forbid them, several require the odds to be shown, and the big stores require odds disclosure), and a
+subscription whose benefits include storage needs a rule for what happens to items in the extra room
+when it lapses. Both are in `online-phase-10-stripe-readiness.md` under "Open".
 
 ## Steam
 

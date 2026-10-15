@@ -1,0 +1,567 @@
+<meta charset="utf-8">
+<title>Encyclopedia of Nova</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a comic page, the same book as the GM Command Reference. A score strip of the four statuses on top, a rail
+     of chapters on the left, every system as a strip (number, name and status stamp at rest, the whole story on a click),
+     and a Library of every doc, opened in a reader at the top of the page by any link that names one. */
+  :root {
+    --paper: #f6efd9;
+    --panel: #fffaf0;
+    --ink: #14161c;
+    --muted: #5b5a52;
+    --dots: rgba(20, 22, 28, 0.10);
+    --pop: #ffc928;
+    --pop-ink: #14161c;
+    --cyan: #19b6c9;
+    --magenta: #e2336b;
+    --rose: #ff7fa3;      /* the "to build" stamp: magenta light enough for ink text */
+    --code: #ece3c6;
+    --shadow: #14161c;
+    --display: "Bangers", "Impact", sans-serif;
+    --head: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141a2b; --panel: #1d2540; --ink: #f4eeda; --muted: #a9adc2; --dots: rgba(244, 238, 218, 0.07);
+      --pop: #ffc928; --pop-ink: #14161c; --cyan: #3fd2e2; --magenta: #ff5c8f; --rose: #ff7fa3; --code: #2a3357; --shadow: #05070d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141a2b; --panel: #1d2540; --ink: #f4eeda; --muted: #a9adc2; --dots: rgba(244, 238, 218, 0.07);
+    --pop: #ffc928; --pop-ink: #14161c; --cyan: #3fd2e2; --magenta: #ff5c8f; --rose: #ff7fa3; --code: #2a3357; --shadow: #05070d;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--paper); background-image: radial-gradient(var(--dots) 1.5px, transparent 1.6px); background-size: 14px 14px;
+         color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
+  p, ul, ol, h1, h2, h3 { margin: 0; }
+  .page { max-width: 1180px; margin: 0 auto; padding-inline: 18px; padding-block: 22px 70px; display: flex; flex-direction: column; gap: 18px; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--code); border-radius: 3px; padding: 0 4px; overflow-wrap: anywhere; }
+  a { color: inherit; }
+  a.rl { font-weight: 600; text-decoration: none; background: var(--pop); color: var(--pop-ink); border-radius: 3px; padding: 0 5px; }
+  a.rl:hover { background: var(--cyan); }
+  :focus-visible { outline: 3px solid var(--magenta); outline-offset: 2px; }
+
+  header { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .tag { font-family: var(--head); font-weight: 700; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
+         background: var(--ink); color: var(--paper); padding: 2px 10px; transform: skewX(-8deg); }
+  h1 { font-family: var(--display); font-weight: 400; font-size: clamp(38px, 7vw, 64px); line-height: 0.95; letter-spacing: 0.03em;
+       color: var(--pop); -webkit-text-stroke: 2px var(--shadow); paint-order: stroke fill; text-shadow: 4px 4px 0 var(--shadow); }
+  .lede { margin-top: 4px; max-width: 70ch; }
+
+  /* The score: the four statuses to scale, each a way into its chapter. */
+  .score { align-self: stretch; display: flex; flex-wrap: wrap; margin-top: 8px; border: 3px solid var(--ink); border-radius: 6px; box-shadow: 5px 5px 0 var(--shadow); overflow: hidden; background: var(--ink); gap: 3px; }
+  .seg { flex: 1 1 120px; min-width: 0; display: flex; align-items: baseline; gap: 8px; padding: 6px 12px 7px; text-decoration: none; color: #10131a; }
+  .seg b { font: 400 34px/1 var(--display); letter-spacing: 0.03em; font-variant-numeric: tabular-nums; }
+  .seg span { font: 700 14px var(--head); letter-spacing: 0.08em; text-transform: uppercase; }
+  .seg:hover { filter: brightness(1.08); }
+  .complete { background: var(--cyan); color: #10131a; }
+  .partial { background: var(--pop); color: var(--pop-ink); }
+  .to-build { background: var(--rose); color: #10131a; }
+  .candidate { background: var(--panel); color: var(--ink); }
+
+  .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; padding-block: 8px; background: var(--paper);
+         background-image: radial-gradient(var(--dots) 1.5px, transparent 1.6px); background-size: 14px 14px; }
+  .search { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .search input { flex: 1 1 260px; min-width: 0; font: 500 16px var(--body); padding: 10px 14px; color: var(--ink); background: var(--panel);
+                  border: 3px solid var(--ink); border-radius: 6px; box-shadow: 4px 4px 0 var(--shadow); }
+  .count { font-family: var(--head); font-weight: 600; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tool { font: 600 14px var(--head); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); background: var(--panel);
+          border: 2px solid var(--ink); border-radius: 5px; padding: 5px 10px; cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); }
+  .tool:hover { background: var(--pop); color: var(--pop-ink); }
+
+  .layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 22px; align-items: start; }
+  nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 70px); display: flex; flex-direction: column; gap: 3px; padding: 4px 6px 10px 2px; }
+  nav a { font: 600 15px var(--head); letter-spacing: 0.03em; text-transform: uppercase; text-decoration: none; color: var(--ink);
+          padding: 3px 9px; border: 2px solid transparent; border-radius: 4px; display: flex; justify-content: space-between; gap: 8px; }
+  nav a span { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+  nav a:hover { background: var(--pop); color: var(--pop-ink); border-color: var(--ink); }
+  nav a:hover span { color: var(--pop-ink); }
+  nav .sep { font: 700 12px var(--head); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); padding: 10px 9px 2px; }
+
+  main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .grp { display: flex; flex-direction: column; gap: 9px; scroll-margin-top: 84px; }
+  .cat { width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; text-align: left; background: none; border: 0; color: inherit; cursor: pointer; padding: 2px 0 6px 4px; }
+  .cat b { font-family: var(--display); font-weight: 400; font-size: 27px; letter-spacing: 0.05em; color: #10131a; background: var(--cyan);
+           border: 3px solid var(--ink); padding: 0 12px 1px; transform: skewX(-8deg); box-shadow: 4px 4px 0 var(--shadow); }
+  .cat b.partial { background: var(--pop); } .cat b.to-build { background: var(--rose); } .cat b.candidate { background: var(--panel); color: var(--ink); }
+  .cat .n { font: 700 17px var(--head); font-variant-numeric: tabular-nums; }
+  .cat small { font: 500 14px var(--body); color: var(--muted); }
+  .cat .chev { margin-left: auto; font-size: 14px; color: var(--muted); transform: rotate(-90deg); }
+  .grp.open .cat .chev, .searching .grp .cat .chev { transform: none; color: var(--magenta); }
+  .cat:hover b { filter: brightness(1.1); }
+  .body { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+
+  .strip { background: var(--panel); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 4px 4px 0 var(--shadow); scroll-margin-top: 84px; }
+  .strip.open { box-shadow: 6px 6px 0 var(--magenta); }
+  .top { width: 100%; display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; text-align: left;
+         background: none; border: 0; color: inherit; font: inherit; padding: 9px 12px; cursor: pointer; }
+  .num { font: 400 24px/1.1 var(--display); letter-spacing: 0.03em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .strip.open .num { color: var(--magenta); }
+  .what { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .name { font: 700 19px/1.2 var(--head); letter-spacing: 0.02em; text-transform: uppercase; }
+  .top:hover .name { text-decoration: underline; text-decoration-color: var(--pop); text-decoration-thickness: 4px; text-underline-offset: 2px; }
+  .ref { font-size: 13px; color: var(--muted); }
+  .peek { font-size: 14px; margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .peek b { font: 700 12.5px var(--head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .strip.open .peek { display: none; }
+  .stamp { font: 700 13px var(--head); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; border: 2px solid var(--ink);
+           border-radius: 4px; padding: 0 8px; transform: rotate(-2deg); margin-top: 2px; }
+  .stamp.candidate { border-style: dashed; }
+
+  .build { border-top: 3px dashed var(--ink); padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+  .blk { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+  .blk h3 { font: 700 14px var(--head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .blk.todo { background: var(--paper); border: 2px solid var(--ink); border-left: 8px solid var(--pop); border-radius: 5px; padding: 9px 12px; }
+  .blk.todo h3 { color: var(--ink); }
+  .blk p { max-width: 86ch; }
+  .tip { font-size: 13.5px; color: var(--muted); }
+
+  .plan { background: var(--panel); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 4px 4px 0 var(--shadow); padding: 11px 14px 13px; display: flex; flex-direction: column; gap: 9px; }
+  .planhead { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; }
+  .big { font: 400 36px/0.9 var(--display); color: var(--pop); -webkit-text-stroke: 1.5px var(--shadow); paint-order: stroke fill; text-shadow: 2px 2px 0 var(--shadow); }
+  .planhead h3 { font: 700 19px/1.2 var(--head); letter-spacing: 0.02em; text-transform: uppercase; text-wrap: balance; }
+  .prose { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  .prose > p { max-width: 86ch; }
+  .prose ul, .prose ol { padding-left: 20px; display: flex; flex-direction: column; gap: 5px; max-width: 86ch; }
+  .prose h3 { font: 700 17px var(--head); letter-spacing: 0.04em; text-transform: uppercase; }
+  .tablewrap { overflow-x: auto; border: 2px solid var(--ink); border-radius: 5px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 520px; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 10px; border-bottom: 1px solid var(--ink); }
+  th { font: 700 13px var(--head); letter-spacing: 0.1em; text-transform: uppercase; background: var(--ink); color: var(--paper); }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  .asks { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .asks li { background: var(--panel); border: 3px solid var(--ink); border-left: 10px solid var(--pop); border-radius: 6px; box-shadow: 4px 4px 0 var(--shadow); padding: 8px 12px; }
+  .asks.done li { border-width: 2px; border-left: 8px solid var(--cyan); box-shadow: none; color: var(--muted); }
+  details.fold > summary { font: 700 16px var(--head); letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; width: fit-content; padding: 4px 0; }
+  details.fold > summary:hover { color: var(--magenta); }
+  details.fold > :not(summary) { margin-top: 8px; }
+
+  .vals { display: flex; flex-wrap: wrap; gap: 6px; }
+  .val { font: 600 14px var(--head); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); background: var(--panel); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 11px; cursor: pointer; }
+  .val small { font: 500 12px var(--body); color: var(--muted); margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .val:hover { background: var(--code); }
+  .val.on { background: var(--pop); color: var(--pop-ink); box-shadow: 2px 2px 0 var(--shadow); }
+  .val.on small { color: var(--pop-ink); }
+  .gg { display: flex; flex-direction: column; min-width: 0; }
+  .gh { align-self: flex-start; font: 700 14px var(--head); letter-spacing: 0.12em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 1px 10px; transform: skewX(-8deg); margin: 8px 0 4px; }
+  /* A term: its name on the left; beside it what it is for, and under that its Twelve Sky name and what the code calls it. */
+  .term { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 4fr) minmax(0, 5fr); gap: 4px 16px; padding: 8px 4px; border-bottom: 2px solid var(--ink); }
+  .kn { font-weight: 600; grid-row: span 2; }
+  .use { grid-column: 2 / -1; min-width: 0; }
+  .ts, .term .code { font-size: 13.5px; color: var(--muted); min-width: 0; }
+  .ts::before, .term .code::before { font: 700 11.5px var(--head); letter-spacing: 0.1em; text-transform: uppercase; margin-right: 6px; }
+  .ts::before { content: "Twelve Sky"; }
+  .term .code::before { content: "In code"; }
+  .term .code code { color: var(--ink); }
+  .none { color: var(--muted); font-style: italic; }
+  .legend { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 9fr); gap: 2px 16px; padding: 0 4px; font: 700 12.5px var(--head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  /* A long block shows its first lines and a button for the rest. The clamp is put on by the script, so with no
+     script everything is simply shown. */
+  .clip { position: relative; min-width: 0; }
+  .clip.clamp { overflow: hidden; }
+  .clip.clamp::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2.6em; pointer-events: none;
+                       background: linear-gradient(transparent, var(--panel)); }
+  .blk.todo .clip.clamp::after { background: linear-gradient(transparent, var(--paper)); }
+  .morebtn { align-self: flex-start; margin-top: 6px; font: 700 13px var(--head); letter-spacing: 0.08em; text-transform: uppercase; color: var(--pop-ink);
+             background: var(--pop); border: 2px solid var(--ink); border-radius: 4px; padding: 1px 10px; cursor: pointer; box-shadow: 2px 2px 0 var(--shadow); }
+  .morebtn:hover { background: var(--cyan); }
+  .morebtn[aria-expanded="true"] { background: var(--panel); color: var(--ink); }
+  .asks li { display: flex; flex-direction: column; }
+
+  a.dl { text-decoration: underline; text-decoration-color: var(--cyan); text-decoration-thickness: 2px; text-underline-offset: 2px; }
+  a.dl:hover { background: var(--cyan); color: #10131a; text-decoration: none; border-radius: 3px; }
+  a.dl code { background: transparent; padding: 0; }
+  .docgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 10px; }
+  .doccard { display: flex; flex-direction: column; gap: 3px; text-decoration: none; color: var(--ink); background: var(--panel); border: 3px solid var(--ink);
+             border-radius: 6px; box-shadow: 4px 4px 0 var(--shadow); padding: 9px 12px; min-width: 0; }
+  .doccard:hover { box-shadow: 6px 6px 0 var(--cyan); }
+  .doccard b { font: 700 17px/1.2 var(--head); letter-spacing: 0.02em; text-transform: uppercase; }
+  .dpath { font: 500 12px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+  .dsum { font-size: 13.5px; color: var(--muted); }
+  .libcat { display: flex; flex-direction: column; gap: 6px; }
+  .libcat + .libcat { margin-top: 10px; }
+
+  #reader { background: var(--panel); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 6px 6px 0 var(--cyan); scroll-margin-top: 84px; min-width: 0; }
+  .rhead { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 10px 14px; border-bottom: 3px dashed var(--ink); }
+  .rhead h2 { font: 400 28px/1 var(--display); letter-spacing: 0.04em; flex: 1 1 260px; min-width: 0; }
+  .rhead .dpath { flex-basis: 100%; }
+  .rtoc { padding: 8px 14px 0; }
+  .rtoc ol { margin: 6px 0 0; padding-left: 20px; columns: 2 260px; font-size: 14px; }
+  .rtoc li { break-inside: avoid; }
+  .rtoc li.sub { list-style: none; margin-left: 14px; font-size: 13px; color: var(--muted); }
+  .rbody { padding: 12px 16px 18px; min-width: 0; overflow-wrap: anywhere; }
+  .rbody > * + * { margin-top: 10px; }
+  .rbody h1, .rbody h2, .rbody h3, .rbody h4 { font-family: var(--head); text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.2; scroll-margin-top: 84px; }
+  .rbody h1 { font-size: 26px; } .rbody h2 { font-size: 22px; border-bottom: 3px solid var(--ink); padding-bottom: 3px; margin-top: 22px; }
+  .rbody h3 { font-size: 18px; margin-top: 16px; } .rbody h4 { font-size: 16px; }
+  .rbody p, .rbody li { max-width: 88ch; }
+  .rbody ul, .rbody ol { padding-left: 22px; }
+  .rbody pre { background: var(--code); border: 2px solid var(--ink); border-radius: 5px; padding: 8px 10px; overflow-x: auto; font-size: 13px; }
+  .rbody pre code { background: none; padding: 0; overflow-wrap: normal; }
+  .rbody blockquote { margin: 0; border-left: 6px solid var(--pop); padding: 4px 12px; background: var(--paper); }
+  .rbody .pic { display: inline-block; font: 600 13px var(--head); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: 2px dashed var(--muted); border-radius: 4px; padding: 2px 8px; }
+  .rbody .flash { animation: flash 1.4s ease-out 1; }
+  .backbtn { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 9; font: 400 22px var(--display); letter-spacing: 0.06em;
+             background: var(--pop); color: var(--pop-ink); border: 3px solid var(--ink); border-radius: 6px; padding: 4px 16px; cursor: pointer; box-shadow: 4px 4px 0 var(--shadow); }
+  .backbtn:hover { background: var(--cyan); }
+
+  .flash { animation: flash 1.4s ease-out 1; }
+  .strip.flash { box-shadow: 6px 6px 0 var(--pop); }
+  @keyframes flash { from { outline: 4px solid var(--pop); outline-offset: 4px; } to { outline: 4px solid transparent; outline-offset: 4px; } }
+  @media (prefers-reduced-motion: reduce) { .flash { animation: none; outline: 4px solid var(--pop); outline-offset: 4px; } }
+
+  .empty { font: 600 18px var(--head); text-transform: uppercase; letter-spacing: 0.05em; padding: 24px 0; }
+  footer { font-size: 13px; color: var(--muted); border-top: 3px solid var(--ink); padding-top: 12px; max-width: 80ch; }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    nav { position: static; flex-direction: row; flex-wrap: wrap; padding: 0; }
+    nav a { border-color: var(--ink); background: var(--panel); font-size: 13px; }
+    nav a span, nav .sep { display: none; }
+    .top { grid-template-columns: 30px minmax(0, 1fr); }
+    .stamp { grid-column: 2; justify-self: start; }
+    .term, .legend { grid-template-columns: minmax(0, 1fr); }
+    .kn { grid-row: auto; }
+    .use { grid-column: 1; }
+    .legend { display: none; }
+    .grp, .strip { scroll-margin-top: 76px; }
+  }
+</style>
+
+<div class="page">
+  <header>
+    <span class="tag">Krytical Nova II · systems, plans, lore</span>
+    <h1>Encyclopedia of Nova</h1>
+    <p class="lede">Every system of the game beside its Twelve Sky 2 reference, every term explained, and every design doc and plan in the Library. <b>Click a system</b> and it opens with what is left to build and what the game has today. A <b>yellow number</b> jumps to that system; an <b>underlined name</b> of a doc or a section of one opens it in the reader at the top of the page, and <b>Back</b> takes you where you were. Searching opens whatever matches, in the docs too.</p>
+    <div class="score" role="group" aria-label="Systems by status">{{SCORE}}</div>
+  </header>
+
+  <div class="bar">
+    <div class="search">
+      <input id="filter" type="search" placeholder="Search: Exchange, Renown, shop, pet, Silver…" aria-label="Search systems, terms and docs" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="tool" id="closeAll" type="button">Close all</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <nav id="nav" aria-label="Chapters">
+      <a href="#next">What is left <span>{{PLAN_COUNT}}</span></a>
+      <div class="sep">Systems</div>
+      {{NAV_SYS}}
+      <div class="sep">Reference</div>
+      <a href="#open">Open questions <span>{{OPEN_COUNT}}</span></a>
+      <a href="#glossary">Glossary <span>{{GLOSS_COUNT}}</span></a>
+      <a href="#library">Library <span>{{LIB_COUNT}}</span></a>
+      <a href="#background">Background</a>
+    </nav>
+
+    <main id="list">
+      <section id="reader" hidden aria-label="Doc reader">
+        <div class="rhead"><h2 id="rtitle"></h2><button class="tool" id="rclose" type="button">Close</button><span class="dpath" id="rpath"></span></div>
+        <details class="fold rtoc" id="rtoc"><summary>Contents</summary><ol id="rtoclist"></ol></details>
+        <div class="rbody" id="rbody"></div>
+      </section>
+      <section id="next" class="grp open">
+        <h2><button class="cat" type="button" aria-expanded="true"><b class="partial">What is left</b><small>{{PLAN_NOTE}}</small><span class="chev" aria-hidden="true">&#9660;</span></button></h2>
+        <div class="body">
+{{PLAN}}
+        </div>
+      </section>
+
+{{GROUPS}}
+
+      <section id="open" class="grp open">
+        <h2><button class="cat" type="button" aria-expanded="true"><b>Open questions</b><span class="n">{{OPEN_COUNT}}</span><small>yours to decide</small><span class="chev" aria-hidden="true">&#9660;</span></button></h2>
+        <div class="body">
+{{OPEN}}
+        </div>
+      </section>
+
+      <section id="glossary" class="grp">
+        <h2><button class="cat" type="button" aria-expanded="false"><b>Glossary</b><span class="n">{{GLOSS_COUNT}}</span><small>every term: what it is for, its Twelve Sky name, what the code calls it</small><span class="chev" aria-hidden="true">&#9660;</span></button></h2>
+        <div class="body" hidden>
+          <details class="fold"><summary>How the names were chosen</summary><div class="prose">{{GLOSS_INTRO}}</div></details>
+          <div class="vals" id="gchips" role="group" aria-label="Glossary group">{{GCHIPS}}</div>
+          <div class="legend"><span>Krytical Nova</span><span>What it is and what it is for</span></div>
+          <div id="gloss">
+{{GLOSSARY}}
+          </div>
+        </div>
+      </section>
+
+      <section id="library" class="grp">
+        <h2><button class="cat" type="button" aria-expanded="false"><b>Library</b><span class="n">{{LIB_COUNT}}</span><small>every design doc, plan and reference page, opened here in the reader</small><span class="chev" aria-hidden="true">&#9660;</span></button></h2>
+        <div class="body" hidden>
+{{LIBRARY}}
+        </div>
+      </section>
+
+      <section id="background" class="grp">
+        <h2><button class="cat" type="button" aria-expanded="false"><b class="candidate">Background</b><small>how each system differs from Twelve Sky, the first list of candidates, and what changed day by day</small><span class="chev" aria-hidden="true">&#9660;</span></button></h2>
+        <div class="body" hidden>
+          <div class="plan"><div class="planhead"><span class="big">A</span><h3>Variance notes</h3></div><div class="prose clip" data-max="12">{{VARIANCE}}</div></div>
+          <div class="plan"><div class="planhead"><span class="big">B</span><h3>Candidates that were not on the original list</h3></div><div class="prose clip" data-max="12">{{CANDIDATES}}</div></div>
+          <div class="plan"><div class="planhead"><span class="big">C</span><h3>What changed, day by day</h3></div><div class="prose clip" data-max="12">{{CHANGELOG}}</div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <p class="empty" id="empty" hidden>Nothing matches that search.</p>
+
+  <footer>Built on {{BUILT}} from <code>Assets/_Game/_Docs/Reference/12Sky/01_Systems_Build_List.md</code> and every doc under <code>Assets/_Game/_Docs</code>, which stay the source; rebuilt with <code>Assets/_Game/_Docs/Encyclopedia~/build_encyclopedia.py</code> after every task that lands. The search reads everything about a system, also what is folded away, and the whole text of every doc.</footer>
+</div>
+<button class="backbtn" id="back" type="button" hidden>&#9664; Back</button>
+
+<script type="application/json" id="docs">{{DOCS_JSON}}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+
+<script>
+  const filter = document.getElementById("filter"), count = document.getElementById("count"), empty = document.getElementById("empty");
+  const groups = [...document.querySelectorAll(".grp")];
+  const sysGroups = groups.filter(g => g.classList.contains("sysgrp"));
+  const strips = [...document.querySelectorAll(".strip")];
+  const glossary = document.getElementById("glossary");
+  const terms = [...document.querySelectorAll("#gloss .term")], termGroups = [...document.querySelectorAll("#gloss .gg")];
+  const gchips = document.getElementById("gchips");
+  let glossGroup = "all";
+
+  // ---------------------------------------------------------------- the Library and the reader
+  const DOCS = JSON.parse(document.getElementById("docs").textContent);
+  const library = document.getElementById("library");
+  const cards = [...document.querySelectorAll(".doccard")];
+  const reader = document.getElementById("reader"), rbody = document.getElementById("rbody");
+  const backButton = document.getElementById("back"), backStack = [];
+  const lowerText = {};   // each doc's text, lower-cased once, for the search
+  const byBase = {};
+  for (const id in DOCS) { const base = id.split("/").pop().toLowerCase(); byBase[base] = base in byBase ? null : id; }
+  let shownDoc = null;
+
+  const slugify = text => text.toLowerCase().trim().replace(/[^\w\- ]+/g, "").replace(/\s/g, "-");
+
+  // A doc's id from a link or path as the docs write it, relative to the doc it is in.
+  function resolveDoc(ref, fromId) {
+    ref = ref.split("#")[0];
+    try { ref = decodeURIComponent(ref); } catch (error) { /* a bare % in a path: take it as written */ }
+    ref = ref.replace(/\\/g, "/");
+    if (!/\.md$/i.test(ref)) return null;
+    ref = ref.slice(0, -3);
+    let parts = ref.startsWith("Assets/") ? ref.split("/") : (fromId ? fromId.split("/").slice(0, -1) : []).concat(ref.split("/"));
+    const out = [];
+    for (const part of parts) { if (part === "..") out.pop(); else if (part && part !== ".") out.push(part); }
+    let path = out.join("/").replace(/^Assets\/_Game\/_Docs\//, "").replace(/^_Docs\//, "");
+    if (DOCS[path]) return path;
+    for (const id in DOCS) if (id.endsWith("/" + path)) return id;
+    return byBase[path.split("/").pop().toLowerCase()] || null;
+  }
+  const docHref = (id, kind, value) => "#doc/" + encodeURIComponent(id) + (kind ? "/" + kind + "/" + encodeURIComponent(value) : "");
+
+  function renderDoc(id) {
+    const doc = DOCS[id];
+    document.getElementById("rtitle").textContent = doc.title;
+    document.getElementById("rpath").textContent = doc.path;
+    const md = doc.md.replace(/!\[([^\]]*)\]\([^)]*\)/g, (all, alt) => "`picture: " + (alt || "untitled") + "`");
+    rbody.innerHTML = window.marked ? marked.parse(md) : "<pre>" + doc.md.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</pre>";
+    const used = {}, toc = document.getElementById("rtoclist");
+    toc.innerHTML = "";
+    for (const h of rbody.querySelectorAll("h1, h2, h3, h4")) {
+      const slug = slugify(h.textContent); let unique = slug, n = 1;
+      while (used[unique]) unique = slug + "-" + n++;
+      used[unique] = true; h.dataset.slug = unique; h.id = "d-" + unique;
+      if (h.tagName === "H2" || h.tagName === "H3") {
+        const li = document.createElement("li"); if (h.tagName === "H3") li.className = "sub";
+        const a = document.createElement("a"); a.href = docHref(id, "slug", unique); a.textContent = h.textContent;
+        li.appendChild(a); toc.appendChild(li);
+      }
+    }
+    document.getElementById("rtoc").hidden = toc.children.length < 3;
+    for (const a of rbody.querySelectorAll("a[href]")) {
+      const href = a.getAttribute("href");
+      if (/^https?:/i.test(href)) { a.target = "_blank"; a.rel = "noopener"; continue; }
+      if (href.startsWith("#")) { a.href = docHref(id, "slug", href.slice(1)); a.className = "dl"; continue; }
+      const target = resolveDoc(href, id);
+      if (target) { a.href = docHref(target, href.includes("#") ? "slug" : null, href.split("#")[1]); a.className = "dl"; }
+    }
+    for (const code of rbody.querySelectorAll("code")) {
+      if (code.closest("a, pre")) continue;
+      const target = resolveDoc(code.textContent.trim(), id);
+      if (!target) continue;
+      const a = document.createElement("a"); a.className = "dl"; a.href = docHref(target);
+      code.replaceWith(a); a.appendChild(code);
+    }
+    for (const img of rbody.querySelectorAll("img")) {
+      const span = document.createElement("span"); span.className = "pic"; span.textContent = "picture: " + (img.alt || "untitled");
+      img.replaceWith(span);
+    }
+    for (const t of rbody.querySelectorAll("table")) { const wrap = document.createElement("div"); wrap.className = "tablewrap"; t.replaceWith(wrap); wrap.appendChild(t); }
+    shownDoc = id;
+  }
+
+  // The heading a link means: a section number ("4", "6b"), a page of the 12Sky help, a heading's name or its slug.
+  function findHeading(kind, value) {
+    const heads = [...rbody.querySelectorAll("h1, h2, h3, h4, h5")];
+    const v = String(value).toLowerCase();
+    if (kind === "slug") return heads.find(h => h.dataset.slug === v) || heads.find(h => h.dataset.slug.startsWith(v));
+    if (kind === "sec") {
+      const re = new RegExp("^\\W*(section\\s+)?" + v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![\\w-])", "i");
+      return heads.find(h => re.test(h.textContent.trim()));
+    }
+    if (kind === "page") {
+      const n = parseInt(v, 10);
+      return heads.find(h => new RegExp("^page\\s+" + n + "\\b", "i").test(h.textContent.trim())) ||
+             heads.find(h => { const m = h.textContent.match(/^pages?\s+(\d+)\s*[–-]\s*(\d+)/i); return m && n >= +m[1] && n <= +m[2]; });
+    }
+    if (kind === "name") return heads.find(h => h.textContent.toLowerCase().includes(v));
+    return null;
+  }
+
+  function openDoc(id, kind, value) {
+    if (!DOCS[id]) return;
+    if (shownDoc !== id) renderDoc(id);
+    reader.hidden = false;
+    const target = (kind && findHeading(kind, value)) || reader;
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+    target.classList.remove("flash"); void target.offsetWidth; target.classList.add("flash");
+  }
+
+  function remember() { backStack.push(window.scrollY); backButton.hidden = false; }
+  backButton.addEventListener("click", () => {
+    const y = backStack.pop();
+    backButton.hidden = backStack.length === 0;
+    if (y !== undefined) window.scrollTo({ top: y, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  });
+  document.getElementById("rclose").addEventListener("click", () => { reader.hidden = true; shownDoc = null; });
+
+  // Long blocks: once one is on screen, measure it; if it runs past its limit, show the first lines and a button.
+  function fit() {
+    for (const clip of document.querySelectorAll(".clip:not([data-fit])")) {
+      if (clip.offsetParent === null) continue;   // still folded away: measured when it is shown
+      clip.dataset.fit = "1";
+      const limit = parseFloat(clip.dataset.max) * parseFloat(getComputedStyle(clip).fontSize);
+      if (clip.scrollHeight <= limit * 1.35) continue;
+      clip.classList.add("clamp");
+      clip.style.maxHeight = limit + "px";
+      const button = document.createElement("button");
+      button.type = "button"; button.className = "morebtn"; button.textContent = "Show more"; button.setAttribute("aria-expanded", "false");
+      clip.after(button);
+    }
+  }
+
+  function setStrip(strip, on) {
+    strip.classList.toggle("open", on);
+    strip.querySelector(".top").setAttribute("aria-expanded", on);
+    strip.querySelector(".build").hidden = !on;
+    if (on) fit();
+  }
+
+  function apply() {
+    const words = filter.value.toLowerCase().split(/\s+/).filter(Boolean), searching = words.length > 0;
+    const hit = el => words.every(word => el.dataset.text.includes(word));
+    document.body.classList.toggle("searching", searching);
+
+    let shown = 0;
+    for (const group of sysGroups) {
+      let any = 0;
+      for (const strip of group.querySelectorAll(".strip")) { const match = hit(strip); strip.hidden = !match; if (match) any++; }
+      shown += any;
+      group.hidden = searching && any === 0;
+    }
+    let shownTerms = 0;
+    for (const box of termGroups) {
+      let any = 0;
+      for (const term of box.querySelectorAll(".term")) {
+        const match = (glossGroup === "all" || box.dataset.g === glossGroup) && hit(term);
+        term.hidden = !match; if (match) any++;
+      }
+      box.hidden = any === 0; shownTerms += any;
+    }
+    glossary.hidden = searching && shownTerms === 0;
+    let shownDocs = 0;
+    for (const card of cards) {
+      const id = card.dataset.doc;
+      const match = !searching || words.every(word => (lowerText[id] = lowerText[id] || DOCS[id].md.toLowerCase()).includes(word));
+      card.hidden = !match; if (match) shownDocs++;
+    }
+    for (const cat of library.querySelectorAll(".libcat")) cat.hidden = ![...cat.querySelectorAll(".doccard")].some(c => !c.hidden);
+    library.hidden = searching && shownDocs === 0;
+    // While searching, every chapter with a match shows its matches; otherwise a chapter is as the reader left it.
+    for (const group of groups) {
+      const searchable = group.classList.contains("sysgrp") || group === glossary || group === library;
+      group.querySelector(".body").hidden = !(group.classList.contains("open") || (searching && searchable));
+    }
+    empty.hidden = !(searching && shown === 0 && shownTerms === 0 && shownDocs === 0);
+    count.textContent = searching ? shown + " systems · " + shownTerms + " terms · " + shownDocs + " docs" : strips.length + " systems";
+    fit();
+  }
+
+  function setGroup(group, on) {
+    group.classList.toggle("open", on);
+    group.querySelector(".cat").setAttribute("aria-expanded", on);
+    apply();
+  }
+
+  // Show whatever a link points at: a chapter opens, a system opens inside its chapter.
+  function reveal(id) {
+    const target = document.getElementById(id);
+    if (!target) return;
+    const group = target.closest(".grp");
+    if (group && !group.classList.contains("open")) setGroup(group, true);
+    if (target.classList.contains("strip")) { target.hidden = false; setStrip(target, true); }
+  }
+
+  // Take the reader to what a link names: open it, bring it under the search bar, and mark it for a moment.
+  function go(id) {
+    if (id.startsWith("doc/")) {
+      const parts = id.split("/");
+      const decode = text => { try { return decodeURIComponent(text); } catch (error) { return text; } };
+      openDoc(decode(parts[1]), parts[2], parts[3] !== undefined ? decode(parts[3]) : undefined);
+      return;
+    }
+    const target = document.getElementById(id);
+    if (!target) return;
+    if (target.hidden || (target.closest(".grp") || target).hidden) { filter.value = ""; apply(); }   // a search was hiding it
+    reveal(id);
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+    target.classList.remove("flash"); void target.offsetWidth; target.classList.add("flash");
+    const focus = target.querySelector(".top, .cat");
+    if (focus) focus.focus({ preventScroll: true });
+  }
+
+  document.addEventListener("toggle", fit, true);   // a <details> opening shows blocks that were never measured
+  document.addEventListener("click", event => {
+    const more = event.target.closest(".morebtn");
+    if (more) {
+      const clip = more.previousElementSibling, open = more.getAttribute("aria-expanded") !== "true";
+      clip.classList.toggle("clamp", !open);
+      clip.style.maxHeight = open ? "none" : parseFloat(clip.dataset.max) * parseFloat(getComputedStyle(clip).fontSize) + "px";
+      more.setAttribute("aria-expanded", open); more.textContent = open ? "Show less" : "Show more";
+      return;
+    }
+    const link = event.target.closest('a[href^="#"]');
+    if (link) { event.preventDefault(); remember(); go(link.getAttribute("href").slice(1)); return; }
+    const cat = event.target.closest(".cat");
+    if (cat) { const group = cat.closest(".grp"); setGroup(group, !group.classList.contains("open")); return; }
+    const top = event.target.closest(".top");
+    if (top) { const strip = top.closest(".strip"); setStrip(strip, !strip.classList.contains("open")); return; }
+    const chip = event.target.closest("#gchips .val");
+    if (chip) {
+      glossGroup = chip.dataset.g;
+      for (const other of gchips.children) other.classList.toggle("on", other === chip);
+      apply();
+    }
+  });
+  document.getElementById("closeAll").addEventListener("click", () => { for (const strip of strips) setStrip(strip, false); });
+  filter.addEventListener("input", apply);
+  apply();
+  if (location.hash.length > 1) go(location.hash.slice(1));
+</script>

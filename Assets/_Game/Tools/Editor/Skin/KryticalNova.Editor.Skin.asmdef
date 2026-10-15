@@ -1,0 +1,16 @@
+{
+    "name": "KryticalNova.Editor.Skin",
+    "rootNamespace": "KryticalNova.EditorTools.Skin",
+    "references": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -38,6 +38,8 @@ namespace KryticalNova.EditorTools
         public const string SquadSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SquadSettings.asset";
         public const string SponsorSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SponsorSettings.asset";
         public const string HousingSettingsPath = "Assets/_Game/Gameplay/Housing/Data/Assets/HousingSettings.asset";
+        public const string RecallSettingsPath = "Assets/_Game/Gameplay/Player/Data/Assets/RecallSettings.asset";
+        public const string FlaskSettingsPath = "Assets/_Game/Gameplay/Items/Data/Assets/FlaskSettings.asset";
         public const string FurnishingCatalogPath = "Assets/_Game/Gameplay/Housing/Data/Assets/FurnishingCatalog.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
         // No pack has a pick-up clip. The Base Locomotion crouch pair is made for this rig and reads as one:
@@ -90,12 +92,19 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Social.PlayerFollow", ("settings", SquadSettingsPath)),
             // Serums: what a character has taken, and the stats that stay.
             new Row("KryticalNova.Progression.PlayerSerums", ("settings", SerumSettingsPath)),
+            // The Recall Tag: a channel, then back to the map's spawn points.
+            new Row("KryticalNova.Player.PlayerRecall", ("settings", RecallSettingsPath)),
+            // The Flux Flask: a drink of Flux over time, and the refill at an Apothecary.
+            new Row("KryticalNova.Items.PlayerFlask", ("settings", FlaskSettingsPath)),
             // XP boosters: the clocks of the Field, Companion and Tandem Boosters.
             new Row("KryticalNova.Progression.PlayerExperienceBoosts", ("settings", EconomySettingsPath)),
             // Autopilot and Magnet: the server's flag and time, and the two helpers that run on the player's own game.
             new Row("KryticalNova.Autopilot.PlayerAutopilot", ("settings", AutopilotSettingsPath)),
             new Row("KryticalNova.Autopilot.MagnetController"),
             new Row("KryticalNova.Autopilot.AutopilotController"),
+            // The Autobuff: the licence and the eight cells (server), and the hand that presses the buffs (owner's game).
+            new Row("KryticalNova.Autopilot.PlayerAutobuff", ("settings", AutopilotSettingsPath)),
+            new Row("KryticalNova.Autopilot.AutobuffCaster"),
             // Crew Halls: the Furnishing Crate, and the player's side of their Hall (the sandbox Lot, for now).
             new Row("KryticalNova.Housing.PlayerCrate", ("settings", HousingSettingsPath), ("catalog", FurnishingCatalogPath)),
             new Row("KryticalNova.Housing.PlayerHousing", ("settings", HousingSettingsPath), ("catalog", FurnishingCatalogPath)),

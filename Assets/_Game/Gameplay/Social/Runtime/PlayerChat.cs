@@ -150,7 +150,7 @@ namespace KryticalNova.Social
                     else if (channel == ChatChannel.Gm)
                     {
                         // The GM's own "/gm": the same announcement as gm.say, toast included.
-                        for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].DeliverAnnounced(AnnouncementKind.Gm, channel, me.Name, text);
+                        for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].DeliverAnnounced(AnnouncementKind.Gm, channel, me.Name, text, me.Name);
                     }
                     else
                     {
@@ -196,10 +196,12 @@ namespace KryticalNova.Social
         /// a line on <paramref name="channel"/> and as a toast, sent together in one message so the two always say
         /// the same. Returns how many players were told.
         /// </summary>
-        public static int ServerAnnounce(AnnouncementKind kind, ChatChannel channel, string senderName, string text)
+        /// <param name="highlight">The names the news is about ("|" between them), lit on the ticker; or null.</param>
+        public static int ServerAnnounce(AnnouncementKind kind, ChatChannel channel, string senderName, string text, string highlight = null)
         {
             text = ChatRouting.Clean(text);
             if (text.Length == 0) return 0;
+            highlight = highlight != null ? ChatRouting.Clean(highlight) : string.Empty;
 
             var network = NetworkManager.Singleton;
             if (network != null && network.IsListening)
@@ -209,7 +211,7 @@ namespace KryticalNova.Social
                 foreach (var client in network.ConnectedClientsList)
                 {
                     if (client.PlayerObject == null || !client.PlayerObject.TryGetComponent(out PlayerChat chat)) continue;
-                    chat.DeliverAnnounced(kind, channel, senderName, text);
+                    chat.DeliverAnnounced(kind, channel, senderName, text, highlight);
                     reached++;
                 }
                 return reached;
@@ -217,7 +219,7 @@ namespace KryticalNova.Social
 
             var local = Local;
             if (local == null) return 0;
-            local.DeliverAnnounced(kind, channel, senderName, text);
+            local.DeliverAnnounced(kind, channel, senderName, text, highlight);
             return 1;
         }
 
@@ -306,20 +308,21 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
         private void ReceiveRpc(ChatChannel channel, string sender, string text, bool outgoing) => Show(channel, sender, text, outgoing);
 
-        private void DeliverAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text)
+        private void DeliverAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight = null)
         {
-            if (!IsSpawned) ShowAnnounced(kind, channel, sender ?? string.Empty, text);
-            else AnnounceRpc(kind, channel, sender ?? string.Empty, text);
+            if (!IsSpawned) ShowAnnounced(kind, channel, sender ?? string.Empty, text, highlight ?? string.Empty);
+            else AnnounceRpc(kind, channel, sender ?? string.Empty, text, highlight ?? string.Empty);
         }
 
-        // The chat line and the toast of an announcement travel as one message.
+        // The chat line and the ticker line of an announcement travel as one message.
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
-        private void AnnounceRpc(AnnouncementKind kind, ChatChannel channel, string sender, string text) => ShowAnnounced(kind, channel, sender, text);
+        private void AnnounceRpc(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight) =>
+            ShowAnnounced(kind, channel, sender, text, highlight);
 
-        private static void ShowAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text)
+        private static void ShowAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight)
         {
             Show(channel, sender, text, false);
-            ClientPresentationRegistry.Announcements?.Announce(kind, sender, text);
+            ClientPresentationRegistry.Announcements?.Announce(kind, sender, text, string.IsNullOrEmpty(highlight) ? null : highlight);
         }
 
         /// <summary>Raised on this machine for every line its player is shown (the Contacts window notes who whispered).</summary>

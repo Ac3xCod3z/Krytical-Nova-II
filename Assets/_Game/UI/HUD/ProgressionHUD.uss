@@ -82,6 +82,34 @@
 .skill-tree-layout { flex-direction: row; }
 .skill-tree-side { flex-grow: 1; flex-shrink: 1; }
 .skill-tree-title { font-size: 12px; letter-spacing: 1px; margin: 2px 0 6px 2px; }
+/* The Arsenal's tabs (STRIKES, WARDS, STRIDES), bare words with a line of the accent under the one on show, as the chat's are. */
+.skill-tabs { flex-direction: row; flex-shrink: 0; margin: 0 0 6px 0; }
+.skill-tab {
+    flex-grow: 1;
+    min-height: 24px;
+    margin: 0 2px;
+    padding: 3px 4px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: rgb(170, 186, 200);
+}
+.skill-tab--active {
+    color: rgb(255, 255, 255);
+    -unity-background-image-tint-color: rgb(34, 128, 112);
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(114, 222, 196);
+}
+/* The headed groups across the top of the board (AREA, SINGLE HIT, TWO-HIT, THREE-HIT; STANCE, GUARD, SHARED; RUN, JUMP). */
+.skill-tree-group {
+    position: absolute;
+    font-size: 10px;
+    letter-spacing: 2px;
+    -unity-text-align: middle-center;
+    color: rgb(214, 178, 104);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(214, 178, 104, 0.5);
+    margin: 0 2px;
+}
 .skill-tree-scroll { max-height: 524px; }
 .skill-tree-canvas { flex-shrink: 0; }
 #skills-window.skill-tree #skills-body { width: 300px; max-height: 556px; flex-shrink: 0; margin-left: 12px; }
@@ -214,6 +242,13 @@
 .hotbar-slot.drop-target { -unity-background-image-tint-color: rgba(150, 120, 50, 0.95); }
 .hotbar-slot.drop-target > .kn-frame { -unity-background-image-tint-color: rgb(255, 214, 92); }
 .hotbar-slot.on-cooldown { opacity: 0.6; }
+/* The Autobuff in the Autopilot window: its tile and two rows of four cells, Hotbar slots in all but name. */
+.autobuff-row { flex-direction: row; align-items: center; margin: 6px 0 10px 0; }
+.autobuff-tile { margin-right: 18px; }
+.autobuff-grid { flex-direction: column; }
+.autobuff-cells { flex-direction: row; margin-bottom: 6px; }
+.autobuff-cell { width: 54px; height: 62px; }
+.autobuff-cell.drop-target, .hotbar-slot.autobuff-cell.drop-target { -unity-background-image-tint-color: rgba(40, 150, 124, 0.95); scale: 1.06 1.06; }
 /* Comic skill / item icon, under the key and rank labels. A slot with an icon leaves its name to the tooltip. */
 .slot-icon {
     position: absolute;

@@ -8,6 +8,13 @@ namespace KryticalNova.Autopilot
     /// </summary>
     public static class MagnetRules
     {
+        /// <summary>
+        /// Whether Magnet runs at all: it is switched on, and the character has Autopilot time left (or a GM gave
+        /// them free mode). Magnet works with Autopilot off, but never without time (owner, 15 Oct 2026).
+        /// </summary>
+        public static bool MayRun(AutopilotPreferences preferences, float secondsLeft, bool free) =>
+            preferences != null && preferences.magnetOn && (free || secondsLeft > 0f);
+
         public static bool Wants(AutopilotPreferences preferences, ItemDefinition item)
         {
             if (preferences == null || item == null || !preferences.magnetOn) return false;

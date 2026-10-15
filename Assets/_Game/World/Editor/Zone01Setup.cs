@@ -41,9 +41,9 @@ namespace KryticalNova.EditorTools
         private static readonly NpcSeed[] Npcs =
         {
             new NpcSeed { Id = "HerbMaster", Role = NpcRole.HerbMaster, Model = "SM_Chr_Medical_Male_01",
-                Name = "Apothecary", Title = "Stims · Pet Rations", Offers = NpcOffer.Shop,
+                Name = "Apothecary", Title = "Stims · Flasks · Recall Tags", Offers = NpcOffer.Shop | NpcOffer.FlaskRefill,
                 Greeting = "Stims for the body, Flux for the mind. Stock up before you leave the walls.",
-                Services = "Sells HP, Flux and Dual Stims and Pet Rations, and buys what you have to sell. Flasks and Recall Tags come later." },
+                Services = "Sells HP, Flux and Dual Stims in three sizes, Flux Flasks, Recall Tags and Pet Rations, refills your Flasks, and buys what you have to sell." },
             new NpcSeed { Id = "Blacksmith", Role = NpcRole.Blacksmith, Model = "SM_Chr_Muscle_Male_01",
                 Name = "Armorer", Title = "Forge · Gear · Alloys", Offers = NpcOffer.GearWork | NpcOffer.Shop,
                 Greeting = "Bring me steel and coin, and I'll make you something worth swinging.",

@@ -10,7 +10,8 @@ namespace KryticalNova.Autopilot
     /// Magnet: picks up the drops the player's filter wants as soon as they are within ordinary pickup reach,
     /// without walking. It runs on the player's own game and asks for each pickup the way the pickup key does,
     /// so reach, the hold on someone else's drop and the faction rule are all still the server's to check.
-    /// It works with Autopilot on or off, and needs no Autopilot time.
+    /// It works with Autopilot on or off, but only while the character has Autopilot time left (owner, 15 Oct
+    /// 2026: a free Magnet took anything put down in reach, a GM's gm.drop included).
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerAutopilot))]
@@ -42,7 +43,7 @@ namespace KryticalNova.Autopilot
         {
             if (!IsLocal || loot == null || autopilot.Settings == null || Time.time < nextScan) return;
             nextScan = Time.time + autopilot.Settings.magnetScanSeconds;
-            if (!autopilot.Preferences.magnetOn) return;
+            if (!MagnetRules.MayRun(autopilot.Preferences, autopilot.SecondsLeft, autopilot.Free)) return;
 
             WorldDrop drop = NearestWanted(loot.PickupKeyRange, false);
             if (drop == null) return;
@@ -89,7 +90,8 @@ namespace KryticalNova.Autopilot
         {
             var sb = new StringBuilder();
             float reach = loot != null ? loot.PickupKeyRange : 3.5f;
-            sb.AppendLine($"Magnet {(autopilot.Preferences.magnetOn ? "on" : "off")}, reach {reach:0.#} m, Pack {(PackFull ? "full" : "has room")}:");
+            string time = autopilot.Free ? "GM free mode" : autopilot.SecondsLeft > 0f ? PlayerAutopilot.FormatTime(autopilot.SecondsLeft) + " of Autopilot time" : "no Autopilot time (Magnet waits)";
+            sb.AppendLine($"Magnet {(autopilot.Preferences.magnetOn ? "on" : "off")}, {time}, reach {reach:0.#} m, Pack {(PackFull ? "full" : "has room")}:");
             int listed = 0;
             foreach (WorldDrop drop in WorldDrop.Active)
             {

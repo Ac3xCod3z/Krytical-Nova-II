@@ -534,7 +534,11 @@ Characters, pets, Hostiles and their effects are not seen through an Ascension N
 ## 6f. Motion smear, and the slow motion of a critical kill
 
 **The smear.** For a moment a character's trailing side is pulled back, in streaks, to where it was a tenth of a
-second ago: when a run takes off, and when the blow that kills throws the body. It is the smear package's own shader
+second ago: when a run takes off, and when the blow that kills throws the body. Since 15 Oct 2026 (owner) the run's
+smear does not end with the take-off: whole for 0.45 s, it stays at a third of its strength (`SmearProfile.sustain`)
+for as long as the run goes on and fades over 0.15 s when the run stops (`ActorSmear.Release`); a jump is smeared the
+same way, whole as the feet leave the ground and lighter through the air until the landing (`SmearSettings.jump`, on
+the Jump moment). The run's smear shows from 5.5 m/s, so a rank 1 run (7 m/s) has it. It is the smear package's own shader
 (`WuHaipeng/smear_urp`, `Assets/_ThirdParty/smear effect/Demo_urp/shader`, untouched) drawn as a **second skin** over
 the body: the same mesh and bones, the body's colour texture, switched on only while a smear plays (`ActorSmear`,
 `GameFeel/Runtime`). The body's own comic materials are never swapped, so its ink, tone and hit flash carry on

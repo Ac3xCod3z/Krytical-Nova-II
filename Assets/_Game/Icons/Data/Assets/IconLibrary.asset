@@ -4658,3 +4658,48 @@ MonoBehaviour:
     set: Cyberpunk/Resource 3
     number: 44
     chosen: 1
+  - kind: 2
+    target: Stim_HP_M
+    set: Cyberpunk/Medicine
+    number: 7
+    chosen: 1
+  - kind: 2
+    target: Stim_HP_L
+    set: Cyberpunk/Medicine
+    number: 10
+    chosen: 1
+  - kind: 2
+    target: Stim_Flux_M
+    set: Cyberpunk/Medicine
+    number: 6
+    chosen: 1
+  - kind: 2
+    target: Stim_Flux_L
+    set: Cyberpunk/Medicine
+    number: 8
+    chosen: 1
+  - kind: 2
+    target: Stim_Dual_M
+    set: Cyberpunk/Medicine
+    number: 4
+    chosen: 1
+  - kind: 2
+    target: Stim_Dual_L
+    set: Cyberpunk/Medicine
+    number: 50
+    chosen: 1
+  - kind: 2
+    target: Recall_Tag
+    set: Cyberpunk/Pocket Thing
+    number: 21
+    chosen: 1
+  - kind: 2
+    target: Flux_Flask
+    set: Cyberpunk/Energy
+    number: 4
+    chosen: 1
+  - kind: 2
+    target: Pass_Autobuff3
+    set: Cyberpunk/Gadget
+    number: 2
+    chosen: 1

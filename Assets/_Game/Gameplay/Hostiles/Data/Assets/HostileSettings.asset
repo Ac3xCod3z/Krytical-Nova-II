@@ -304,9 +304,19 @@ MonoBehaviour:
     chancePercent: 0.1
     minLevel: 70
     maxLevel: 0
+  - item: {fileID: 11400000, guid: 2a7f4099c68c36a4cadc335f7ce5b409, type: 2}
+    chancePercent: 0.5
+    minLevel: 0
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 0ee0560fa121fa2419395a34ee27f09c, type: 2}
+    chancePercent: 0.3
+    minLevel: 10
+    maxLevel: 0
   maxActiveHostiles: 300
   zoneTickSeconds: 0.5
   leashMetres: 15
   spawnClearance: 3
   wanderRadius: 8
   spawnsPerTick: 4
+  minimapMetres: 60
+  minimapMarkers: 24

@@ -31,6 +31,12 @@ namespace KryticalNova.Items
         LearnSkill = 4,
         /// <summary>Adds time to one of the character's XP boosts (a Field, Companion or Tandem Booster).</summary>
         ExperienceBoost = 5,
+        /// <summary>Takes the character back to town after a short channel (a Recall Tag).</summary>
+        Recall = 6,
+        /// <summary>A drink from a Flux Flask: Flux over a few seconds. The bottle is kept and one charge used.</summary>
+        FluxFlask = 7,
+        /// <summary>Adds days of Autobuff to the character, by the clock (an Autobuff Pass).</summary>
+        AutobuffTime = 8,
     }
 
     /// <summary>Where a weapon rides while it is not in the hand. Append only.</summary>

@@ -7,6 +7,29 @@ namespace KryticalNova.Tests
     /// <summary>Toasts come up one at a time, in order, and never two at once.</summary>
     public sealed class ToastQueueTests
     {
+        [Test]
+        public void TheTickerRunsTheLineAcrossTheBandAsManyTimesAsAsked()
+        {
+            // A 1000 px band and a 500 px line at 150 px/s: one pass is 10 s, three passes 30 s.
+            Assert.AreEqual(10f, TickerRules.PassSeconds(1000f, 500f, 150f), 0.001f);
+            Assert.AreEqual(30f, TickerRules.ShowSeconds(1000f, 500f, 150f, 3), 0.001f);
+            Assert.AreEqual(1000f, TickerRules.Left(0f, 1000f, 500f, 150f), 0.001f, "starts at the right edge");
+            Assert.AreEqual(250f, TickerRules.Left(5f, 1000f, 500f, 150f), 0.001f, "half way through a pass");
+            Assert.AreEqual(1000f, TickerRules.Left(10f, 1000f, 500f, 150f), 0.001f, "comes round for the next pass");
+            Assert.AreEqual(-500f, TickerRules.Left(9.99999f, 1000f, 500f, 150f), 0.01f, "wholly past the left edge at the end of a pass");
+        }
+
+        [Test]
+        public void TheLineTagsTheKindAndLightsTheNames()
+        {
+            var temper = new Toast { Kind = AnnouncementKind.Temper, Sender = "", Text = "Arinis tempered Sunlord Blade to 120%.", Highlight = "Arinis|Sunlord Blade" };
+            string line = ToastHudController.Line(temper);
+            StringAssert.StartsWith("<color=#FF851F>TEMPERING</color>", line);
+            StringAssert.Contains("<color=#FF851F>Arinis</color> tempered <color=#FF851F>Sunlord Blade</color> to 120%.", line);
+            var gm = new Toast { Kind = AnnouncementKind.Gm, Sender = "GM", Text = "Server restart in 10 minutes." };
+            StringAssert.StartsWith("<color=#FFB83C>GM</color>", ToastHudController.Line(gm));
+        }
+
         private const float Show = 5f, Fade = 0.35f;
 
         private static Toast Of(string text, AnnouncementKind kind = AnnouncementKind.Gm) => new Toast { Kind = kind, Sender = "GM", Text = text };

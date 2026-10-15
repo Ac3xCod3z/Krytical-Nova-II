@@ -13,8 +13,11 @@ namespace KryticalNova.Social
     /// (<see cref="FollowRules"/>, distances in <see cref="SquadSettings"/>). The owner asks; the server, which moves
     /// every player and knows where each one is however far apart they are, does the walking through the player's
     /// own move order (<see cref="PointAndClickPlayer.ServerMoveTo"/>), so the way taken, vaults and the cost of
-    /// running are those of a click. It ends when the follower moves by their own order, fights, or is defeated,
-    /// when the two are no longer Squad mates, when the member leaves the map or gets too far ahead.
+    /// running are those of a click. The member's jumps are copied (owner, 15 Oct 2026): the server hears where the
+    /// member took off and landed, the follower walks to the take-off and jumps to the landing with its own Jump
+    /// (its rank, its Flux, its arc), so two can cross a river together. It ends when the follower moves by their own
+    /// order, fights, or is defeated, when the two are no longer Squad mates, when the member leaves the map or gets
+    /// too far ahead, or when a jump of the member's cannot be followed.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerParty))]
@@ -33,11 +36,14 @@ namespace KryticalNova.Social
 
         // Server only.
         private PlayerParty target;
+        private PlayerJumpMotor targetJump;
         private string targetName = string.Empty;
         private float nextLook;
         private bool moving;
         private bool ordered;
         private bool fought;
+        private readonly System.Collections.Generic.List<FollowHop> hops = new System.Collections.Generic.List<FollowHop>(4);
+        private bool jumpIsFollow; // the follower's jump in the air is a copy of the member's, not an order of its own
 
         // Owner only: who the server says this player follows, or empty.
         private string shownTarget = string.Empty;
@@ -78,6 +84,7 @@ namespace KryticalNova.Social
             if (controls != null) controls.MoveOrdered -= OnMoveOrdered;
             if (entity != null) entity.Damaged -= OnDamaged;
             if (skills != null) skills.SkillCast -= OnSkillCast;
+            Unwatch();
             target = null;
             shownTarget = string.Empty;
             base.OnNetworkDespawn();
@@ -126,17 +133,32 @@ namespace KryticalNova.Social
                 entity == null || entity.IsAlive, present ? DistanceTo(member) : 0f, settings.followMaxDistance, name);
             if (refusal != null) { Tell(refusal); return; }
 
+            Unwatch();
             target = member;
+            targetJump = member.GetComponent<PlayerJumpMotor>();
+            if (targetJump != null) targetJump.JumpStarted += OnLeaderJump;
             targetName = name;
             moving = false;
             ordered = false;
             fought = false;
+            jumpIsFollow = false;
             nextLook = 0f;
             Tell($"You are following {targetName}. Move to stop.");
             FollowingRpc(targetName);
         }
 
         private void OnMoveOrdered() => ordered = true;
+
+        private void OnLeaderJump(Vector3 takeoff, Vector3 landing) =>
+            FollowRules.Enqueue(hops, new FollowHop { takeoff = takeoff, landing = landing, at = Time.time }, settings != null ? settings.followHopQueue : 4);
+
+        private void Unwatch()
+        {
+            if (targetJump != null) targetJump.JumpStarted -= OnLeaderJump;
+            targetJump = null;
+            hops.Clear();
+            jumpIsFollow = false;
+        }
         private void OnDamaged(DamageResult result, CharacterCombatStats attacker) => fought = true;
         private void OnSkillCast(SkillDefinitionSO skill) => fought = true;
 
@@ -146,20 +168,31 @@ namespace KryticalNova.Social
             if (!IsSpawned || !IsServer || Time.time < nextLook) return;
             nextLook = Time.time + settings.followRepathSeconds;
 
+            // A copied jump in the air: wait for the landing (an abort leaves the follower at the take-off; the next look re-walks).
+            if (jumpIsFollow)
+            {
+                if (jump != null && jump.IsBusy) return;
+                jumpIsFollow = false;
+            }
+
             bool present = target != null && target.IsSpawned && target.gameObject.scene == gameObject.scene;
             var facts = new FollowFacts
             {
                 targetPresent = present,
                 sameSquad = present && party.IsInPartyWith(target),
                 followerAlive = entity == null || entity.IsAlive,
-                // A jump is the player's own move as much as a click is.
-                followerOrdered = ordered || (jump != null && jump.IsBusy),
+                // A jump of the player's own is their move as much as a click is; a copied one is not.
+                followerOrdered = ordered || (jump != null && jump.IsBusy && !jumpIsFollow),
                 followerInCombat = fought || (melee != null && melee.IsAttacking) || (duel != null && duel.IsDuelling),
-                distance = present ? DistanceTo(target) : 0f,
+                // While a jump of the member's waits to be copied, the member may be far across a river: not too far.
+                distance = present && hops.Count == 0 ? DistanceTo(target) : 0f,
                 moving = moving,
             };
 
-            switch (FollowRules.Evaluate(facts, settings.followKeepDistance, settings.followResumeDistance, settings.followMaxDistance, out FollowEnd end))
+            FollowStep step = FollowRules.Evaluate(facts, settings.followKeepDistance, settings.followResumeDistance, settings.followMaxDistance, out FollowEnd end);
+            // A jump of the member's to copy comes before the ordinary steering; a hop that is dropped lets it go on.
+            if (step != FollowStep.End && hops.Count > 0 && FollowHop()) return;
+            switch (step)
             {
                 case FollowStep.End:
                     ServerEnd(end);
@@ -176,11 +209,64 @@ namespace KryticalNova.Social
             }
         }
 
-        private void ServerEnd(FollowEnd end)
+        /// <summary>
+        /// The next jump of the member's: walk to its take-off, then jump to its landing with this player's own Jump.
+        /// True when that took this look (the ordinary steering waits); false when the hop was dropped and the
+        /// ordinary steering should go on.
+        /// </summary>
+        private bool FollowHop()
+        {
+            if (hops.Count == 0) return false;
+            FollowHop hop = hops[0];
+            var facts = new HopFacts
+            {
+                age = Time.time - hop.at,
+                distanceToTakeoff = GroundDistance(hop.takeoff),
+                distanceToLanding = GroundDistance(hop.landing),
+                jumpReady = jump != null && jump.IsReady,
+                jumping = jump != null && jump.IsBusy,
+            };
+            switch (FollowRules.NextHop(facts, settings.followHopReach, settings.followHopMaxAge))
+            {
+                case HopStep.Drop:
+                    hops.RemoveAt(0);
+                    return false;
+                case HopStep.WalkToTakeoff:
+                    bool started = controls.ServerMoveTo(hop.takeoff, payRun: !moving);
+                    moving = moving || started;
+                    return true;
+                case HopStep.Jump:
+                    if (moving) controls.ServerStopMoving();
+                    moving = false;
+                    if (controls.ServerJumpTo(hop.landing, out string why))
+                    {
+                        jumpIsFollow = true;
+                        hops.RemoveAt(0);
+                    }
+                    else
+                    {
+                        hops.Clear();
+                        ServerEnd(FollowEnd.JumpRefused, why);
+                    }
+                    return true;
+                default:
+                    return true; // in the air, or the landing is settling
+            }
+        }
+
+        private float GroundDistance(Vector3 point)
+        {
+            Vector3 offset = point - transform.position;
+            offset.y = 0f;
+            return offset.magnitude;
+        }
+
+        private void ServerEnd(FollowEnd end, string detail = null)
         {
             // An order of the player's own already decides where they go; anything else leaves them standing.
             if (moving && end != FollowEnd.Ordered && end != FollowEnd.Defeated) controls.ServerStopMoving();
-            Tell(FollowRules.Describe(end, targetName));
+            Tell(detail != null ? FollowRules.Describe(end, targetName, detail) : FollowRules.Describe(end, targetName));
+            Unwatch();
             target = null;
             targetName = string.Empty;
             moving = false;
@@ -194,15 +280,8 @@ namespace KryticalNova.Social
             return offset.magnitude;
         }
 
-        /// <summary>The spot just inside the keep distance, on this side of the member.</summary>
-        private Vector3 StandPoint()
-        {
-            Vector3 back = transform.position - target.transform.position;
-            back.y = 0f;
-            float distance = back.magnitude;
-            float standOff = settings.followKeepDistance * 0.8f;
-            return distance <= standOff ? transform.position : target.transform.position + back * (standOff / distance);
-        }
+        /// <summary>The spot the keep distance behind the member, on this side of it.</summary>
+        private Vector3 StandPoint() => FollowRules.StandPoint(transform.position, target.transform.position, settings.followKeepDistance);
 
         private void Tell(string text)
         {

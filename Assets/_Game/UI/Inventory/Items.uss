@@ -379,6 +379,29 @@
 
 .tooltip-name { font-size: 15px; -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf"); white-space: normal; }
 .tooltip-type { font-size: 11px; color: rgb(214, 178, 104); letter-spacing: 1px; margin-bottom: 6px; }
+/* The looks strips: a dye and a Weave / Morph each read on a strip of their own, under the type line (owner, 15 Oct 2026). */
+.card-looks { margin: 0 0 6px 0; }
+.look-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 3px 8px;
+    margin-bottom: 3px;
+    background-color: rgba(0, 0, 0, 0.42);
+    border-left-width: 3px;
+    border-left-color: rgb(214, 178, 104);
+    display: none;
+}
+.look-tag { font-size: 10px; letter-spacing: 2px; color: rgb(214, 178, 104); min-width: 52px; }
+.look-swatch {
+    flex-direction: row;
+    width: 18px; height: 14px;
+    margin-right: 8px;
+    border-width: 2px;
+    border-color: rgb(20, 18, 43);
+}
+.look-swatch-half { flex-grow: 1; }
+.look-value { font-size: 13px; color: rgb(240, 236, 220); white-space: normal; flex-shrink: 1; }
+
 .tooltip-requires { font-size: 11px; margin-bottom: 4px; color: rgb(170, 184, 196); white-space: normal; }
 .tooltip-requires--unmet { color: rgb(255, 110, 96); }
 .tooltip-desc { font-size: 12px; white-space: normal; color: rgb(200, 212, 222); }

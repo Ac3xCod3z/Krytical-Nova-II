@@ -75,6 +75,20 @@ namespace KryticalNova.EditorTools.GM
         private static string F(float value) => value.ToString("0.###", CultureInfo.InvariantCulture);
         private static string Quote(string value) => "\"" + value.Replace("\"", "") + "\"";
 
+        // The comic banner over the window (Tools/Editor/Skin): the same look as our inspectors.
+        private KryticalNova.EditorTools.Skin.KnSkinScope skinScope;
+        protected override void OnBeginDrawEditors()
+        {
+            KryticalNova.EditorTools.Skin.KnSkinScope.Backdrop(new Rect(0f, 0f, position.width, position.height));
+            skinScope = new KryticalNova.EditorTools.Skin.KnSkinScope();
+            KryticalNova.EditorTools.Skin.KnEditorSkin.Banner("GM Tools", "host only · every command is gm.*");
+        }
+        protected override void OnEndDrawEditors()
+        {
+            skinScope?.Dispose();
+            skinScope = null;
+        }
+
         // ================================================================ status header
 
         [OnInspectorGUI, PropertyOrder(-100)]
@@ -1696,6 +1710,12 @@ namespace KryticalNova.EditorTools.GM
 
         [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1066)]
         private void GiveAutopilotChips([MinValue(1)] int count = 1) => Run($"item.give \"Autopilot Chip\" {count}");
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1067)]
+        private void SetAutobuffDays([MinValue(0)] int days = 3) => Run($"gm.autobuff.days {days}");
+
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1068)]
+        private void GiveAutobuffPasses([MinValue(1)] int count = 1) => Run($"item.give \"Autobuff Pass (3 Days)\" {count}");
 
         // Live readouts (HP, clock, stats) refresh ~10×/s while playing.
         private void OnInspectorUpdate()

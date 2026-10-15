@@ -1,15 +1,19 @@
-/* The HUD's toast (ToastHudController): server-wide news, one at a time, above the zone notice and the banners. */
+/* The HUD's news ticker (ToastHudController): server-wide news on a thin band across the top of the screen, running
+   right to left as many times as the settings say (owner, 15 Oct 2026). */
 
 .toast {
     position: absolute;
-    top: 9%;
-    left: 50%;
-    translate: -50% -12px;
-    min-width: 380px;
-    max-width: 720px;
-    align-items: center;
-    padding: 10px 40px 12px 40px;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 34px;
+    overflow: hidden;
+    padding: 0 14px;
+    background-color: rgba(12, 11, 23, 0.82);
+    border-width: 2px;
+    border-color: rgba(255, 184, 60, 0.55);
     opacity: 0;
+    translate: 0 -8px;
     transition-property: opacity, translate;
     transition-duration: 0.35s;
     transition-timing-function: ease-out;
@@ -17,23 +21,23 @@
 
 .toast--shown {
     opacity: 1;
-    translate: -50% 0;
+    translate: 0 0;
 }
 
-.toast-eyebrow {
-    font-size: 11px;
-    letter-spacing: 3px;
-    -unity-text-align: middle-center;
-}
+.toast-eyebrow { display: none; }
 
+/* The running line: one row of text, never wrapped, moved by its left edge. */
 .toast-text {
-    font-size: 17px;
-    margin-top: 2px;
-    white-space: normal;
-    -unity-text-align: middle-center;
+    position: absolute;
+    top: 0;
+    height: 30px;
+    font-size: 15px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    -unity-text-align: middle-left;
     color: rgb(236, 244, 248);
 }
 
 /* A GM message keeps the GM channel's gold; a Temper takes the top band's orange. */
-.toast--gm .toast-eyebrow { color: rgb(255, 184, 60); }
-.toast--temper .toast-eyebrow { color: rgb(255, 133, 31); }
+.toast--gm { border-color: rgba(255, 184, 60, 0.55); }
+.toast--temper { border-color: rgba(255, 133, 31, 0.55); }

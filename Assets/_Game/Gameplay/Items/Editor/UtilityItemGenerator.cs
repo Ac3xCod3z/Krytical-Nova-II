@@ -27,7 +27,9 @@ namespace KryticalNova.EditorTools
 
         private const ushort StimStack = 99;
         private const ushort StarterStims = 10;
-        private const float StimAmount = 300f;
+        // Three sizes of each Stim (Twelve Sky 2 sold its pills in sizes too). The first Stims are the small ones.
+        // A first pick (15 Oct 2026): S fills a new character, L a large part of a level-112 one. To tune.
+        private const float StimAmount = 300f, StimAmountM = 900f, StimAmountL = 2400f;
         /// <summary>The Dual Stim restores HP : Flux at 3 : 1.</summary>
         private const float DualFluxAmount = StimAmount / 3f;
 
@@ -52,13 +54,30 @@ namespace KryticalNova.EditorTools
         // Stims keep their first asset names (Pill_*): saves, hotbars and GM commands are keyed on them.
         private static readonly Row[] Rows =
         {
-            new Row { Id = 9001, Asset = "Pill_Vitality", Name = "HP Stim", Glyph = "HP", Rarity = ItemRarity.Common,
+            new Row { Id = 9001, Asset = "Pill_Vitality", Name = "HP Stim (S)", Glyph = "HP", Rarity = ItemRarity.Common,
                 Description = $"Restores {StimAmount:0} HP.", Stack = StimStack, Starter = StarterStims, Health = StimAmount, Hotbar = true },
-            new Row { Id = 9002, Asset = "Pill_Chi", Name = "Flux Stim", Glyph = "FLUX", Rarity = ItemRarity.Common,
+            new Row { Id = 9002, Asset = "Pill_Chi", Name = "Flux Stim (S)", Glyph = "FLUX", Rarity = ItemRarity.Common,
                 Description = $"Restores {StimAmount:0} Flux.", Stack = StimStack, Starter = StarterStims, Flux = StimAmount, Hotbar = true },
-            new Row { Id = 9003, Asset = "Pill_DualHarmony", Name = "Dual Stim", Glyph = "HP+FLUX", Rarity = ItemRarity.Uncommon,
+            new Row { Id = 9003, Asset = "Pill_DualHarmony", Name = "Dual Stim (S)", Glyph = "HP+FLUX", Rarity = ItemRarity.Uncommon,
                 Description = $"Restores {StimAmount:0} HP and {DualFluxAmount:0} Flux.", Stack = StimStack,
                 Health = StimAmount, Flux = DualFluxAmount, Hotbar = true },
+            Stim(9004, "Stim_HP_M", "HP Stim (M)", "HP M", ItemRarity.Common, StimAmountM, 0f),
+            Stim(9005, "Stim_HP_L", "HP Stim (L)", "HP L", ItemRarity.Uncommon, StimAmountL, 0f),
+            Stim(9006, "Stim_Flux_M", "Flux Stim (M)", "FLUX M", ItemRarity.Common, 0f, StimAmountM),
+            Stim(9007, "Stim_Flux_L", "Flux Stim (L)", "FLUX L", ItemRarity.Uncommon, 0f, StimAmountL),
+            Stim(9008, "Stim_Dual_M", "Dual Stim (M)", "DUAL M", ItemRarity.Uncommon, StimAmountM, StimAmountM / 3f),
+            Stim(9009, "Stim_Dual_L", "Dual Stim (L)", "DUAL L", ItemRarity.Rare, StimAmountL, StimAmountL / 3f),
+
+            // Twelve Sky's Calabash as a Flux reservoir (owner, 15 Oct 2026): kept and refilled, never stacked, since
+            // each bottle carries the drinks it has used. What a drink gives is FlaskSettings.
+            new Row { Id = FluxFlaskId, Asset = "Flux_Flask", Name = "Flux Flask", Glyph = "FLASK", Rarity = ItemRarity.Uncommon,
+                Description = "A bottle of Flux to carry: each drink gives a large part of your Flux back over a few seconds, and the bottle is kept. An Apothecary refills it for Creds.",
+                Stack = 1, Hotbar = true, Effect = ItemUseEffect.FluxFlask },
+
+            // A quick trip back to town (Twelve Sky 2: Scroll of Return). What stops it is RecallSettings.
+            new Row { Id = RecallTagId, Asset = "Recall_Tag", Name = "Recall Tag", Glyph = "RECALL", Rarity = ItemRarity.Common,
+                Description = "Takes you back to town after a few seconds standing still. Moving, being hit or a fight stops it, and the Tag comes back to your Pack. Not in a fight, a Callout or a Crew Hall.",
+                Stack = StimStack, Hotbar = true, Effect = ItemUseEffect.Recall },
 
             // Pets (design: _Docs/Design/12_pet_evolution_system.md).
             new Row { Id = PetRationId, Asset = "Pet_Ration", Name = "Pet Ration", Glyph = "FOOD", Rarity = ItemRarity.Common,
@@ -80,6 +99,12 @@ namespace KryticalNova.EditorTools
             new Row { Id = AutopilotChipId, Asset = "Chip_Autopilot", Name = "Autopilot Chip", Glyph = "AUTO", Rarity = ItemRarity.Uncommon,
                 Description = "Adds 5 hours of Autopilot: your character hunts by itself inside a Hostile Zone. The time only runs while Autopilot is on.",
                 Stack = 99, Effect = ItemUseEffect.AutopilotTime },
+
+            // The Autobuff (owner, 15 Oct 2026): a licence by the clock, like a Kiosk's, that casts up to eight slotted
+            // buffs from one Hotbar key. The 3-day Pass drops from Hostiles; all three are Nova Store stock.
+            AutobuffPass(AutobuffPass3Id, "Pass_Autobuff3", 3, ItemRarity.Uncommon, null, "Dropped now and then by Hostiles of level 10 and up, and sold in the Nova Store."),
+            AutobuffPass(AutobuffPass14Id, "Pass_Autobuff14", 14, ItemRarity.Rare, "Pass_Autobuff3", "Sold in the Nova Store."),
+            AutobuffPass(AutobuffPass30Id, "Pass_Autobuff30", 30, ItemRarity.Epic, "Pass_Autobuff3", "Sold in the Nova Store."),
 
             // The appearance services: what one change uses up at the Outfitter, at the Stylist or the Reshaper, and
             // at the Coach. Sold in the Nova Store later; only GM tools give them out for now. EconomySettings names
@@ -181,6 +206,14 @@ namespace KryticalNova.EditorTools
             new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = ItemRarity.Rare, Description = description,
                 Stack = 99, Effect = ItemUseEffect.Serum, Cooldown = SerumCooldown };
 
+        private static Row AutobuffPass(ushort id, string asset, int days, ItemRarity rarity, string iconOf, string source) =>
+            new Row { Id = id, Asset = asset, Name = $"Autobuff Pass ({days} Days)", Glyph = $"AB {days}D", Rarity = rarity, Stack = 99,
+                Effect = ItemUseEffect.AutobuffTime, IconOf = iconOf,
+                Description = $"Adds {days} days of Autobuff: every buff skill you slot in the Autopilot window is cast with one Hotbar key, and Autopilot keeps them up. The days count by the clock, as a Kiosk Permit's do; another Pass adds to the end. {source}" };
+
+        private static Row Stim(ushort id, string asset, string name, string glyph, ItemRarity rarity, float health, float flux) =>
+            new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = rarity, Stack = StimStack, Health = health, Flux = flux, Hotbar = true,
+                Description = health > 0f && flux > 0f ? $"Restores {health:0} HP and {flux:0} Flux." : health > 0f ? $"Restores {health:0} HP." : $"Restores {flux:0} Flux." };
         // A method, not a table: the rows above are built before any field declared after them.
         private static string Numeral(int page) => page == 1 ? "I" : page == 2 ? "II" : page == 3 ? "III" : "IV";
 
@@ -250,9 +283,12 @@ namespace KryticalNova.EditorTools
 
         // Ids other systems name. 9000–9999 belongs to this table.
         public const ushort PetRationId = 9010;
+        public const ushort RecallTagId = 9011;
+        public const ushort FluxFlaskId = 9012;
         public const ushort KioskPermit14Id = 9020;
         public const ushort KioskPermit30Id = 9021;
         public const ushort AutopilotChipId = 9030;
+        public const ushort AutobuffPass3Id = 9031, AutobuffPass14Id = 9032, AutobuffPass30Id = 9033;
 
         [MenuItem("Krytical Nova/Items/5. Generate Utility Items (Stims, Permits, Rations, Forge Materials, Serums)")]
         public static void Generate()
@@ -292,8 +328,27 @@ namespace KryticalNova.EditorTools
             var items = catalog.Items.Where(i => i != null).Concat(made).Distinct().OrderBy(i => i.itemId).ToList();
             catalog.SetContents(items, catalog.StarterEquipped.ToList(), bag);
             EditorUtility.SetDirty(catalog);
+            int drops = AddAutobuffDrop(byAsset);
             AssetDatabase.SaveAssets();
-            Debug.Log($"[Items] {made.Count} utility items registered in {CatalogPath}.");
+            Debug.Log($"[Items] {made.Count} utility items registered in {CatalogPath}; {drops} drop row(s) added.");
+        }
+
+        private const string HostileSettingsPath = "Assets/_Game/Gameplay/Hostiles/Data/Assets/HostileSettings.asset";
+        private const float AutobuffPassDropChance = 0.3f; // placeholder, percent before the level gap and the server drop rate
+        private const int AutobuffPassDropLevel = 10;
+
+        /// <summary>The 3-day Autobuff Pass joins the Hostile drop table (its chance may have been tuned since: a row that is there is left).</summary>
+        private static int AddAutobuffDrop(Dictionary<string, ItemDefinition> byAsset)
+        {
+            if (!byAsset.TryGetValue("Pass_Autobuff3", out ItemDefinition pass) || pass == null) return 0;
+            var hostiles = AssetDatabase.LoadAssetAtPath<KryticalNova.Hostiles.HostileSettings>(HostileSettingsPath);
+            if (hostiles == null) { Debug.LogWarning($"[Items] No Hostile settings at {HostileSettingsPath}: the Autobuff Pass drop was not added."); return 0; }
+            var rows = new List<KryticalNova.Hostiles.MaterialDrop>(hostiles.materialDrops ?? System.Array.Empty<KryticalNova.Hostiles.MaterialDrop>());
+            if (rows.Exists(row => row.item == pass)) return 0;
+            rows.Add(new KryticalNova.Hostiles.MaterialDrop { item = pass, chancePercent = AutobuffPassDropChance, minLevel = AutobuffPassDropLevel });
+            hostiles.materialDrops = rows.ToArray();
+            EditorUtility.SetDirty(hostiles);
+            return 1;
         }
 
         private static ItemDefinition Item(in Row row)

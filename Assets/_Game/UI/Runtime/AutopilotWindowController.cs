@@ -18,6 +18,9 @@ namespace KryticalNova.UI
     /// The window is built in code, but out of the same parts as the Settings window: its frame and header, and
     /// the rows of <see cref="SettingsRows"/> (the pack's arrows, value boxes, sliders and ON / OFF switches).
     /// So it wears each faction's skin exactly as Settings does, with no style of its own.
+    /// The Autobuff lives here too (owner, 15 Oct 2026): the time its licence has left, the AUTOBUFF tile that goes
+    /// on a Hotbar key, and the eight cells a learned buff skill is dragged into. It shows with or without Autopilot
+    /// time, since the Autobuff is a licence of its own.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -39,6 +42,17 @@ namespace KryticalNova.UI
         private string[] gatherNames = { "1" };
 
         private PlayerAutopilot autopilot;
+        private PlayerAutobuff autobuff;
+        private PlayerCombatSkills combatSkills;
+        private CharacterBuffManager buffs;
+        private ProgressionHUD hud;
+        private Label autobuffStatus;
+        private VisualElement autobuffTile;
+        private readonly VisualElement[] autobuffCells = new VisualElement[AutobuffRules.Slots];
+        private readonly VisualElement[] autobuffCellIcons = new VisualElement[AutobuffRules.Slots];
+        private readonly Label[] autobuffCellNames = new Label[AutobuffRules.Slots];
+        private readonly Label[] autobuffCellRanks = new Label[AutobuffRules.Slots];
+        private string[] workingIds = new string[AutobuffRules.Slots];
         private AutopilotPreferences working = new AutopilotPreferences();
         private bool filled;
         private float saveAt = -1f;
@@ -56,6 +70,7 @@ namespace KryticalNova.UI
             if (!Application.isPlaying) return;
             root = GetComponent<UIDocument>().rootVisualElement;
             if (root == null) return;
+            hud = GetComponent<ProgressionHUD>(); // the same document: one space for drags between its windows and this one
             BuildNotice();
             PlayerInventory.LocalChanged += OnLocalChanged;
         }
@@ -63,6 +78,7 @@ namespace KryticalNova.UI
         private void OnDisable()
         {
             PlayerInventory.LocalChanged -= OnLocalChanged;
+            if (hud != null) foreach (VisualElement cell in autobuffCells) if (cell != null) hud.UnregisterDropTarget(cell);
             Bind(null);
             window?.RemoveFromHierarchy();
             notice?.RemoveFromHierarchy();
@@ -74,8 +90,13 @@ namespace KryticalNova.UI
         private void Bind(PlayerAutopilot next)
         {
             if (autopilot != null) autopilot.Changed -= OnChanged;
+            if (autobuff != null) autobuff.Changed -= OnChanged;
             autopilot = next;
+            autobuff = next != null ? next.GetComponent<PlayerAutobuff>() : null;
+            combatSkills = next != null ? next.GetComponent<PlayerCombatSkills>() : null;
+            buffs = next != null ? next.GetComponent<CharacterBuffManager>() : null;
             if (autopilot != null) autopilot.Changed += OnChanged;
+            if (autobuff != null) autobuff.Changed += OnChanged;
             filled = false;
         }
 
@@ -120,6 +141,7 @@ namespace KryticalNova.UI
                 : "Off. No Autopilot time left: use an Autopilot Chip.";
             switchButton.text = on ? $"STOP  [{key}]" : $"START  [{key}]";
             if (!filled) Fill();
+            RefreshAutobuff();
         }
 
         /// <summary>Shows or hides the window. It is built the first time it is shown.</summary>
@@ -221,8 +243,6 @@ namespace KryticalNova.UI
             Keep(SettingsRows.Choice(page, "Attack skill", slotNames, () => working.attackSlot + 1, i => Change(() => working.attackSlot = i - 1)));
             Keep(SettingsRows.Choice(page, "Area skill", slotNames, () => working.areaSlot + 1, i => Change(() => working.areaSlot = i - 1)));
             Keep(SettingsRows.Choice(page, "Gather before the area skill", gatherNames, () => working.gatherCount - 1, i => Change(() => working.gatherCount = i + 1)));
-            Keep(SettingsRows.Choice(page, "Buff to keep up", slotNames, () => working.buffSlotA + 1, i => Change(() => working.buffSlotA = i - 1)));
-            Keep(SettingsRows.Choice(page, "Second buff", slotNames, () => working.buffSlotB + 1, i => Change(() => working.buffSlotB = i - 1)));
 
             SettingsRows.Header(page, "STIMS");
             Keep(SettingsRows.Slider(page, "Use an HP Stim under", 0f, 0.95f, () => working.stimHealthPercent / 100f,
@@ -230,8 +250,10 @@ namespace KryticalNova.UI
             Keep(SettingsRows.Slider(page, "Use a Flux Stim under", 0f, 0.95f, () => working.stimFluxPercent / 100f,
                 v => Change(() => working.stimFluxPercent = Mathf.Round(v * 100f))));
 
+            BuildAutobuff(page);
+
             SettingsRows.Header(page, "MAGNET");
-            SettingsRows.Help(page, "Picks up what you walk over. Works with Autopilot off and needs no Autopilot time. Creds are always taken.");
+            SettingsRows.Help(page, "Picks up what you walk over while you have Autopilot time, with Autopilot on or off. Creds are always taken.");
             Keep(SettingsRows.Toggle(page, "Magnet", () => working.magnetOn, v => Change(() => working.magnetOn = v)));
             Keep(SettingsRows.Toggle(page, "Take Common gear", () => working.takeCommon, v => Change(() => working.takeCommon = v)));
             Keep(SettingsRows.Toggle(page, "Take Uncommon gear", () => working.takeUncommon, v => Change(() => working.takeUncommon = v)));
@@ -262,6 +284,143 @@ namespace KryticalNova.UI
             SyntySkin.Decorate(window.parent);
         }
 
+        /// <summary>
+        /// The AUTOBUFF section: the licence's time left, the tile that goes on a Hotbar key, and two rows of four
+        /// cells for the buffs it casts. The tile and the cells are Hotbar slots in all but name, so the skin draws
+        /// them as it draws the Hotbar.
+        /// </summary>
+        private void BuildAutobuff(VisualElement page)
+        {
+            SettingsRows.Header(page, "AUTOBUFF");
+            autobuffStatus = SettingsRows.Help(page, string.Empty);
+            SettingsRows.Help(page, "Drag learned buff skills from the Arsenal or the Hotbar into the cells. Drag the AUTOBUFF tile to a Hotbar key: one press casts every buff that is down, in turn, and Autopilot keeps them up. Right-click a cell to clear it.");
+
+            var row = new VisualElement();
+            row.AddToClassList("autobuff-row");
+            autobuffTile = MakeCell("autobuff-tile", "AUTOBUFF");
+            autobuffTile.AddToClassList("autobuff-tile");
+            row.Add(autobuffTile);
+            var grid = new VisualElement();
+            grid.AddToClassList("autobuff-grid");
+            for (int line = 0; line < 2; line++)
+            {
+                var cells = new VisualElement();
+                cells.AddToClassList("autobuff-cells");
+                for (int column = 0; column < 4; column++)
+                {
+                    int i = line * 4 + column;
+                    VisualElement cell = MakeCell($"autobuff-cell-{i}", "—");
+                    cell.AddToClassList("autobuff-cell");
+                    autobuffCells[i] = cell;
+                    autobuffCellIcons[i] = cell.Q(className: "slot-icon");
+                    autobuffCellNames[i] = cell.Q<Label>(className: "slot-name");
+                    autobuffCellRanks[i] = cell.Q<Label>(className: "slot-rank");
+                    cells.Add(cell);
+                }
+                grid.Add(cells);
+            }
+            row.Add(grid);
+            page.Add(row);
+
+            if (hud != null)
+            {
+                hud.BindExternalDragSource(autobuffTile);
+                autobuffTile.RegisterCallback<PointerDownEvent>(evt => { if (evt.button == 0) hud.BeginExternalAutobuffDrag(autobuffTile, evt); });
+                for (int i = 0; i < autobuffCells.Length; i++)
+                {
+                    int cellIndex = i;
+                    VisualElement cell = autobuffCells[i];
+                    hud.BindExternalDragSource(cell);
+                    hud.RegisterDropTarget(cell, s => AutobuffRules.Accepts(s) && combatSkills != null && combatSkills.IsLearned(s), s => SetCell(cellIndex, s.skillId));
+                    cell.RegisterCallback<PointerDownEvent>(evt =>
+                    {
+                        if (evt.button == 1) { SetCell(cellIndex, string.Empty); evt.StopPropagation(); return; }
+                        if (evt.button != 0) return;
+                        SkillDefinitionSO held = combatSkills != null && !string.IsNullOrEmpty(workingIds[cellIndex]) ? combatSkills.GetSkill(workingIds[cellIndex]) : null;
+                        if (held != null) hud.BeginExternalSkillDrag(cell, held, evt);
+                    });
+                }
+            }
+        }
+
+        // A tile in the Hotbar's own clothes: the icon layer under the name and the small line, as the HUD builds its slots.
+        private static VisualElement MakeCell(string name, string label)
+        {
+            var cell = new VisualElement { name = name };
+            cell.AddToClassList("hotbar-slot");
+            var icon = new VisualElement { pickingMode = PickingMode.Ignore };
+            icon.AddToClassList("slot-icon");
+            icon.style.display = DisplayStyle.None;
+            cell.Add(icon);
+            var text = new Label(label) { pickingMode = PickingMode.Ignore };
+            text.AddToClassList("slot-name");
+            cell.Add(text);
+            var rank = new Label { pickingMode = PickingMode.Ignore };
+            rank.AddToClassList("slot-rank");
+            cell.Add(rank);
+            return cell;
+        }
+
+        /// <summary>A cell takes a skill (or is cleared); the same skill elsewhere moves, and the cells are kept at once.</summary>
+        private void SetCell(int index, string skillId)
+        {
+            if (autobuff == null || index < 0 || index >= workingIds.Length) return;
+            if (!string.IsNullOrEmpty(skillId))
+                for (int i = 0; i < workingIds.Length; i++)
+                    if (i != index && workingIds[i] == skillId) workingIds[i] = string.Empty;
+            workingIds[index] = skillId ?? string.Empty;
+            autobuff.SaveSlots(workingIds);
+            workingIds = (string[])autobuff.SkillIds.Clone();
+            RefreshAutobuff();
+        }
+
+        private void RefreshAutobuff()
+        {
+            if (autobuffStatus == null || !IsOpen) return;
+            if (autobuff == null)
+            {
+                autobuffStatus.text = "Autobuff is not set up on this character.";
+                return;
+            }
+            bool active = autobuff.IsActive;
+            autobuffStatus.text = autobuff.TimeLeftLine;
+            if (autobuffTile != null)
+            {
+                autobuffTile.EnableInClassList("on-cooldown", !active);
+                Sprite icon = autopilot != null && autopilot.GetComponent<IHotbarAutobuff>() is IHotbarAutobuff tile ? tile.Icon : null;
+                VisualElement tileIcon = autobuffTile.Q(className: "slot-icon");
+                if (tileIcon != null)
+                {
+                    tileIcon.style.backgroundImage = icon != null ? new StyleBackground(icon) : StyleKeyword.None;
+                    tileIcon.style.display = icon != null ? DisplayStyle.Flex : DisplayStyle.None;
+                }
+                autobuffTile.EnableInClassList("has-icon", icon != null);
+                Label rank = autobuffTile.Q<Label>(className: "slot-rank");
+                if (rank != null) rank.text = $"{AutobuffRules.Count(workingIds)} / {AutobuffRules.Slots}";
+            }
+            for (int i = 0; i < autobuffCells.Length; i++)
+            {
+                VisualElement cell = autobuffCells[i];
+                if (cell == null) continue;
+                string id = i < workingIds.Length ? workingIds[i] : string.Empty;
+                SkillDefinitionSO skill = combatSkills != null && !string.IsNullOrEmpty(id) ? combatSkills.GetSkill(id) : null;
+                bool learned = skill != null && combatSkills.IsLearned(skill);
+                Sprite icon = skill != null ? skill.icon : null;
+                if (autobuffCellIcons[i] != null)
+                {
+                    autobuffCellIcons[i].style.backgroundImage = icon != null ? new StyleBackground(icon) : StyleKeyword.None;
+                    autobuffCellIcons[i].style.display = icon != null ? DisplayStyle.Flex : DisplayStyle.None;
+                }
+                cell.EnableInClassList("has-icon", icon != null);
+                if (autobuffCellNames[i] != null) autobuffCellNames[i].text = skill != null ? skill.displayName.ToUpperInvariant() : string.IsNullOrEmpty(id) ? "—" : id.ToUpperInvariant();
+                if (autobuffCellRanks[i] != null)
+                    autobuffCellRanks[i].text = skill == null ? string.Empty : !learned ? "UNLEARNED" : buffs != null && buffs.HasBuff(skill.skillId) ? "UP" : $"R{combatSkills.GetRank(skill)}";
+                cell.EnableInClassList("on-cooldown", skill != null && !learned);
+                cell.EnableInClassList("selected", skill != null && learned && buffs != null && buffs.HasBuff(skill.skillId));
+                cell.tooltip = skill != null ? $"{skill.displayName}. Right-click to clear." : "Drop a learned buff skill here.";
+            }
+        }
+
         private void Keep(Action show) => refresh.Add(show);
 
         /// <summary>A change made by hand: applied to the working copy and saved a moment later.</summary>
@@ -277,6 +436,7 @@ namespace KryticalNova.UI
         {
             filled = true;
             working = AutopilotPreferences.FromJson(autopilot.Preferences.ToJson(), autopilot.Settings);
+            if (autobuff != null) workingIds = (string[])autobuff.SkillIds.Clone();
             RefreshSlotNames();
             foreach (Action show in refresh) show();
         }

@@ -192,7 +192,7 @@
 
         <!-- Skills window -->
         <ui:VisualElement name="skills-window" class="panel window blocks-world hud-movable">
-            <ui:VisualElement class="row kn-header"><ui:Label text="SKILLS &amp; MARTIAL ARTS" class="heading" /><ui:Button name="close-skills" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button></ui:VisualElement>
+            <ui:VisualElement class="row kn-header"><ui:Label text="ARSENAL" class="heading" /><ui:Button name="close-skills" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button></ui:VisualElement>
             <ui:ScrollView name="skills-body" class="window-body" horizontal-scroller-visibility="Hidden">
             <ui:VisualElement class="row section">
                 <ui:Label name="skill-points" text="1 skill point available" class="accent" />

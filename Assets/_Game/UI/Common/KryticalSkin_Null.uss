@@ -223,6 +223,19 @@
 .kn-faction-null .skill-tree-title {
     font-size: 15.36px;
 }
+.kn-faction-null .skill-tab {
+    font-size: 14.08px;
+    color: rgb(194, 174, 200);
+}
+.kn-faction-null .skill-tab--active {
+    -unity-background-image-tint-color: rgb(128, 0, 6);
+    border-bottom-color: rgb(222, 65, 73);
+}
+.kn-faction-null .skill-tree-group {
+    font-size: 12.8px;
+    color: rgb(144, 104, 214);
+    border-bottom-color: rgba(144, 104, 214, 0.5);
+}
 .kn-faction-null .skill-tree-tier {
     font-size: 12.8px;
     color: rgb(174, 154, 180);
@@ -328,6 +341,9 @@
 }
 .kn-faction-null .hotbar-slot.selected > .kn-frame {
     -unity-background-image-tint-color: rgb(255, 88, 97);
+}
+.kn-faction-null .autobuff-cell.drop-target, .kn-faction-null .hotbar-slot.autobuff-cell.drop-target {
+    -unity-background-image-tint-color: rgba(150, 0, 7, 0.95);
 }
 .kn-faction-null .hotbar-slot.has-icon .slot-key, .kn-faction-null .hotbar-slot.has-icon .slot-rank {
     text-shadow: 1px 1px 0 rgb(38, 22, 43);
@@ -749,6 +765,19 @@
 .kn-faction-null .tooltip-type {
     font-size: 14.08px;
     color: rgb(144, 104, 214);
+}
+.kn-faction-null .look-row {
+    border-left-color: rgb(144, 104, 214);
+}
+.kn-faction-null .look-tag {
+    font-size: 12.8px;
+    color: rgb(144, 104, 214);
+}
+.kn-faction-null .look-swatch {
+    border-color: rgb(38, 22, 43);
+}
+.kn-faction-null .look-value {
+    font-size: 16.64px;
 }
 .kn-faction-null .tooltip-requires {
     font-size: 14.08px;
@@ -1289,11 +1318,11 @@
 }
 
 /* ---- ToastPanels.uss ---- */
-.kn-faction-null .toast-eyebrow {
-    font-size: 14.08px;
+.kn-faction-null .toast {
+    background-color: rgba(20, 13, 23, 0.82);
 }
 .kn-faction-null .toast-text {
-    font-size: 21.76px;
+    font-size: 19.2px;
 }
 
 /* ---- SocialPanels.uss ---- */
