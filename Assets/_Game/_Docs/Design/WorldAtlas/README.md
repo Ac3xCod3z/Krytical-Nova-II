@@ -1,48 +1,62 @@
 # World Atlas (Figma) — board scripts
 
 The owner's concept-art boards live in the Figma file **Krytical Nova — World Atlas**
-(`figma.com/design/JhbgViYlKpJEsj8IKTLz5k`). The scripts here change that file through
-Figma's Plugin API; they are kept in the repo so the board layout is reproducible.
+(`figma.com/design/JhbgViYlKpJEsj8IKTLz5k`). The script here changes that file through
+Figma's Plugin API. It is kept in the repo so the board layout is reproducible.
 
-## `gear-pets-mounts-board.js` (15 Oct 2026)
+## What `gear-pets-mounts-board.js` does (15 Oct 2026)
 
-Run it once with the page **Gear, pet, mount Concept art** open. It is safe to run again.
+Page **Gear, pet, mount Concept art**. Safe to run twice.
 
-1. **Gear.** Every `Rare • …` / `Elite • …` look box (42 of them) is rebuilt around a
-   **1920 × 1080 image area**; a concept sheet already in the box is moved in and
-   scaled to fit. The six piece slots (Armor, Gloves, Boots, Cape, Ring, Amulet) are
-   replaced by **three weapon slots** under the sheet, one per weapon of the set. Lineage
-   columns, faction panels, the title row and the board frame grow to fit, and the loose
-   sheets parked under the board move down with it.
-2. **Pets & Mounts.** A second board, to the right of the gear board and decorated the
-   same way (title, dark guide panel, coloured identity band, faceted accent, Ben-Day
-   dots, rimmed boxes, dashed art targets):
-   - **PETS**: 8 rows × 5 evolution slots (0 / 25 / 50 / 75 / 100 %). Emberwing, Drone
-     Core, Tidecaller and Kitsune Spirit carry their stat, item id and the stage looks
-     that exist; rows 5–8 are reserved for the next roster. Image areas are 960 × 540,
-     so a 1920 × 1080 sheet drops in at 50 %.
-   - **MOUNTS**: one roster box with 4 slots (1200 × 675 image areas) and the mount
-     rules from `05_mounts.md` as context.
+**Gear board** — every Rare / Elite look box in all six lineage columns:
 
-### How to run it, click by click
+- the concept-sheet frame gets a **1920 × 1080 image area**; a sheet already in the box is
+  moved in and scaled to fit;
+- the six piece slots (Armor, Gloves, Boots, Cape, Ring, Amulet) **stay**; **three weapon
+  slots** are added beside them, as tall as the piece grid;
+- a **FACTION CAPES** strip with three image slots goes **between Rare and Elite**, rimmed in
+  the faction's colour;
+- a **GOD** section goes after Elite: three sets, **G1–G4, G5–G8, G9–G12**, each a full look
+  box (sheet, pieces, weapons) with its own level chips;
+- lineage columns, faction panels, title row, rarity key and board frame grow to fit; the
+  loose sheets parked under the board move down with it.
 
-**1. Copy the script.** Open
-`https://github.com/Ac3xCod3z/Krytical-Nova-II/blob/<branch>/Assets/_Game/_Docs/Design/WorldAtlas/gear-pets-mounts-board.js`
-in a browser signed in to GitHub, click **Raw** (top right of the file), then Ctrl+A, Ctrl+C.
+**Pets & Mounts board** — new, to the right of the gear board, decorated the same way:
 
-**2. Open the page.** In Figma open World Atlas and, in the left panel under Pages, click
-**Gear, pet, mount Concept art**.
+- **PET REFERENCE**: the three Twelve Sky 2 pet sheets transcribed as tables (Rare ×6 at
+  Adept 1, Epic ×4 at Adept 15, Epic ×1 at Adept 30) with Health / Flux (Force) / Attack /
+  Defense at 25–100 % and Additional Attack at 125–200 %;
+- **NEW PETS**: eight boxes, each with a **1920 × 1080 reference image** slot, a stat strip to
+  fill from the tables, and **five evolution slots** (baseline, 25, 50, 75, 100 %) at 960 × 540;
+- **MOUNTS**: a roster of four 1920 × 1080 slots with the mount rules as context.
 
-**3. Run it with Scripter** (free community plugin that runs a pasted script):
-Shift+I → Plugins tab → search "Scripter" → Run. In the Scripter window click **+** (new
-script), click in the editor, Ctrl+V, then **▶ Run** (Ctrl+Enter). After a few seconds a
-toast reads "World Atlas: gear boxes rebuilt, pets & mounts board added" and Scripter closes.
+## How to run it (Figma desktop app, about two minutes)
 
-**4. Check.** Shift+1 zooms to fit: the gear board is wider and the PETS & MOUNTS board sits
-to its right. Ctrl+Z once undoes the whole run.
+**A. Get the two files onto your PC**
 
-**No Scripter?** Main menu ▸ Plugins ▸ Development ▸ New plugin… ▸ Figma design ▸ Empty ▸
-name it, Save as. Open the folder it made, open `code.js` in Notepad, replace everything with
-the script, save. Then main menu ▸ Plugins ▸ Development ▸ your plugin.
+1. On GitHub open the folder `Assets/_Game/_Docs/Design/WorldAtlas` on the branch.
+2. Click `manifest.json`, click **Raw**, press **Ctrl+S**, save it as `manifest.json` into a
+   new folder, for example `Desktop\WorldAtlasPlugin`.
+3. Go back, click `gear-pets-mounts-board.js`, click **Raw**, press **Ctrl+S**, save it as
+   `gear-pets-mounts-board.js` into the **same** folder. (If the browser adds `.txt`, rename
+   the file so the names match exactly.)
+
+**B. Load it into Figma once**
+
+4. Open the World Atlas file in the **Figma desktop app** (the Development menu below is not
+   in the browser version).
+5. Click the **Figma logo** at the top-left of the window to open the main menu.
+6. Go to **Plugins ▸ Development ▸ Import plugin from manifest…**
+7. Pick the `manifest.json` you saved. Figma now lists **World Atlas board** under
+   Plugins ▸ Development.
+
+**C. Run it**
+
+8. In the left panel under **Pages**, click **Gear, pet, mount Concept art**.
+9. Figma logo ▸ **Plugins ▸ Development ▸ World Atlas board**.
+10. Wait a few seconds. A toast at the bottom reads "World Atlas: gear boxes rebuilt, capes +
+    God tier added, pets & mounts board added". If it reads "script failed: …", send that
+    text back.
+11. Press **Shift+1** to zoom to fit. **Ctrl+Z** once undoes the whole run.
 
 Fonts: the board uses **Barlow Condensed** and **Inter**, both already in the file.
