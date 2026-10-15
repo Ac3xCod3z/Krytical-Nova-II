@@ -14,6 +14,13 @@
 //   • eight new pet boxes: 1920 × 1080 reference image, the pet's stat row, five evolution boxes
 //   • four mount slots
 // Images already dropped into the pets & mounts board are carried over when it is rebuilt.
+//
+// Two commands (Plugins ▸ Development ▸ World Atlas board ▸ …):
+//   • Build / update board — the layout above, then every placed image is centred and fitted
+//   • Image snap (stays on) — leaves a small window open; while it is open, an image dropped
+//     into any dashed box is moved into that box's image area, scaled to fit and centred.
+//     Close the window to stop.
+// With no command picked (older import), it builds, then stays on in image snap.
 
 const PAGE_NAME = 'Gear, pet, mount Concept art';
 
@@ -177,8 +184,11 @@ async function main() {
   const accentProto = factionFrames[0] && factionFrames[0].findOne((n) => n.name === 'Faceted header accent');
   const dotsProto = factionFrames[0] && factionFrames[0].children.find((c) => c.name === 'Faction header dot shadow');
   const carried = [];
-  const oldBoard = page.children.find((n) => n.name === 'Pets and Mounts' && n.type === 'FRAME');
-  if (oldBoard) {
+  let oldBoard = page.children.find((n) => n.name === 'Pets and Mounts' && n.type === 'FRAME');
+  // a board this version built is kept as it is, with whatever names and notes were typed in
+  const current = oldBoard && oldBoard.findOne((n) => n.name === 'Stat layout');
+  if (current) { oldBoard.x = factions.x + factions.width + 600; oldBoard.y = factions.y; }
+  if (oldBoard && !current) {
     for (const img of oldBoard.findAll((n) => n.type === 'RECTANGLE' && n.fills.length && n.fills[0].type === 'IMAGE')) {
       const slot = ancestor(img, (a) => /^(Reference image|Stage \d|Mount \d)$/.test(a.name));
       const box = ancestor(img, (a) => /^(Pet \d\d|Mount roster)$/.test(a.name));
@@ -187,9 +197,8 @@ async function main() {
     }
     oldBoard.remove();
   }
-  const board = buildPetsAndMountsBoard(proto, accentProto, dotsProto);
-  page.appendChild(board);
-  board.x = factions.x + factions.width + 600; board.y = factions.y;
+  const board = current ? oldBoard : buildPetsAndMountsBoard(proto, accentProto, dotsProto);
+  if (!current) { page.appendChild(board); board.x = factions.x + factions.width + 600; board.y = factions.y; }
   for (const { key, img } of carried) {
     const [boxName, slotName] = key.split('/');
     const box = board.findOne((n) => n.name === boxName);
@@ -200,6 +209,7 @@ async function main() {
   }
 
   proto.remove();
+  report.imagesSnapped = snapAll(page);
   report.gearBoard = { w: Math.round(factions.width), h: Math.round(factions.height) };
   report.petsBoard = { w: Math.round(board.width), h: Math.round(board.height) };
   return report;
@@ -544,5 +554,72 @@ function buildPetsAndMountsBoard(proto, accentProto, dotsProto) {
   return board;
 }
 
-main().then((r) => { console.log('World Atlas board done', r); figma.closePlugin('World Atlas updated: ' + r.factions.join(', ') + ' • capes, Epic / Legendary tiers, pets & mounts board'); })
-  .catch((e) => { console.error(e); figma.closePlugin('World Atlas script failed: ' + e.message); });
+// ==============================================================================================
+// IMAGE SNAP: an image in a dashed box goes into the box's image area, fitted and centred
+function isImage(n) { return n.type === 'RECTANGLE' && Array.isArray(n.fills) && n.fills.some((f) => f.type === 'IMAGE' && f.visible !== false); }
+function areaFor(n) {
+  if (n.parent && /^Image area /.test(n.parent.name)) return n.parent;
+  // dropped onto the dashed box itself (or the box around a concept sheet): its own image area
+  for (let p = n.parent, depth = 0; p && p.type !== 'PAGE' && depth < 2; p = p.parent, depth++) {
+    const a = 'children' in p ? p.children.find((c) => /^Image area /.test(c.name)) : null;
+    if (a) return a;
+  }
+  return null;
+}
+function snapNode(n) {
+  if (!n || n.removed || !isImage(n) || n.locked) return false;
+  const area = areaFor(n);
+  if (!area) return false;
+  const s = Math.min(area.width / n.width, area.height / n.height);
+  const w = Math.round(n.width * s), h = Math.round(n.height * s);
+  const x = Math.round((area.width - w) / 2), y = Math.round((area.height - h) / 2);
+  if (n.parent === area && Math.abs(n.width - w) < 1 && Math.abs(n.height - h) < 1 && Math.abs(n.x - x) < 1 && Math.abs(n.y - y) < 1) return false;
+  if (n.parent !== area) area.appendChild(n);
+  if (n.rotation) n.rotation = 0;
+  n.resize(w, h); n.x = x; n.y = y;
+  return true;
+}
+function snapAll(root) { let k = 0; for (const n of root.findAll(isImage)) if (snapNode(n)) k++; return k; }
+
+const SNAP_HTML = '<div style="font:13px/1.45 Inter,system-ui,sans-serif;padding:12px 14px;color:#14122b">' +
+  '<b>Image snap is on.</b><br>Drop an image into any dashed box: it moves into the box’s image area, fits and centres.<br>' +
+  '<span style="color:#696578">Close this window to stop.</span> <span id="n" style="color:#696578"></span></div>' +
+  '<script>onmessage=(e)=>{const m=e.data.pluginMessage;if(m&&m.snapped!=null)document.getElementById("n").textContent="• "+m.snapped+" snapped"}</script>';
+
+async function snapMode() {
+  const page = figma.root.children.find((p) => p.name === PAGE_NAME) || figma.currentPage;
+  await figma.setCurrentPageAsync(page);
+  let total = snapAll(page);
+  figma.showUI(SNAP_HTML, { width: 300, height: 120, title: 'World Atlas • image snap' });
+  figma.ui.postMessage({ snapped: total });
+  const pending = new Set();
+  let timer = null;
+  page.on('nodechange', (e) => {
+    for (const c of e.nodeChanges) {
+      if (c.type === 'DELETE') continue;
+      if (c.type === 'PROPERTY_CHANGE' && !c.properties.some((p) => ['parent', 'x', 'y', 'width', 'height', 'fills'].includes(p))) continue;
+      pending.add(c.id);
+    }
+    if (!timer) timer = setTimeout(flush, 150);
+  });
+  async function flush() {
+    timer = null;
+    const ids = [...pending]; pending.clear();
+    for (const id of ids) {
+      const n = await figma.getNodeByIdAsync(id);
+      if (n && snapNode(n)) total++;
+    }
+    figma.ui.postMessage({ snapped: total });
+  }
+}
+
+const done = (r) => 'World Atlas updated: ' + r.factions.join(', ') + ' • ' + r.imagesSnapped + ' images centred';
+if (figma.command === 'snap') {
+  snapMode().catch((e) => figma.closePlugin('Image snap failed: ' + e.message));
+} else if (figma.command === 'build') {
+  main().then((r) => { console.log('World Atlas board done', r); figma.closePlugin(done(r)); })
+    .catch((e) => { console.error(e); figma.closePlugin('World Atlas script failed: ' + e.message); });
+} else {
+  main().then((r) => { console.log('World Atlas board done', r); figma.notify(done(r) + ' • image snap on', { timeout: 6000 }); return snapMode(); })
+    .catch((e) => { console.error(e); figma.closePlugin('World Atlas script failed: ' + e.message); });
+}

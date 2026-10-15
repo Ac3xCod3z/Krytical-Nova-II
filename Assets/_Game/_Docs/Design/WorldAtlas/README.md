@@ -32,6 +32,19 @@ version already changed: it finishes what is missing and fixes what changed.
   script: four Rare, three Epic Adept 15, one Epic Adept 30.
 - **MOUNTS**: four 1920 × 1080 slots.
 
+## The two commands
+
+- **Build / update board** lays out the boards as above, then centres and fits every image
+  already placed. The pets & mounts board is only rebuilt when it predates this version, so
+  names and notes typed into it stay.
+- **Image snap (stays on)** opens a small window. While it is open, an image dropped into any
+  dashed box (or straight into its image area) is moved into the image area, scaled to fit
+  and centred; nudging it snaps it back. Other shapes are left alone. Close the window to stop.
+
+The commands show under Plugins ▸ Development ▸ World Atlas board once the newest
+`manifest.json` is imported (Import plugin from manifest… again, same folder). With an older
+import and no submenu, running the plugin builds and then stays on in image snap.
+
 ## How to run it (Figma desktop app, about two minutes)
 
 **A. Get the two files onto your PC**

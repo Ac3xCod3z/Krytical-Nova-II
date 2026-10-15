@@ -5,5 +5,9 @@
   "main": "gear-pets-mounts-board.js",
   "editorType": ["figma"],
   "documentAccess": "dynamic-page",
-  "networkAccess": { "allowedDomains": ["none"] }
+  "networkAccess": { "allowedDomains": ["none"] },
+  "menu": [
+    { "name": "Build / update board", "command": "build" },
+    { "name": "Image snap (stays on)", "command": "snap" }
+  ]
 }
