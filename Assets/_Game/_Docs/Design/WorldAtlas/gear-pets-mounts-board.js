@@ -263,7 +263,11 @@ function col(name, opts = {}) {
   f.clipsContent = false;
   return f;
 }
-function fillW(node) { node.layoutSizingHorizontal = 'FILL'; return node; }
+function fillW(node) {
+  if (node.type === 'TEXT' && node.textAutoResize === 'WIDTH_AND_HEIGHT') { node.resize(Math.max(node.width, 200), node.height); node.textAutoResize = 'HEIGHT'; }
+  node.layoutSizingHorizontal = 'FILL';
+  return node;
+}
 function chip(label, hex) {
   const c = col('Chip', { dir: 'HORIZONTAL', px: 16, py: 8, fill: hex, stroke: C.ink, strokeW: 1 });
   c.appendChild(text(label, F.bold, 20, C.ink));
