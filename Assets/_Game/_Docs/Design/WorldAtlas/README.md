@@ -4,31 +4,33 @@ The owner's concept-art boards live in the Figma file **Krytical Nova — World 
 (`figma.com/design/JhbgViYlKpJEsj8IKTLz5k`). The script here changes that file through
 Figma's Plugin API. It is kept in the repo so the board layout is reproducible.
 
-## What `gear-pets-mounts-board.js` does (15 Oct 2026)
+## What `gear-pets-mounts-board.js` does
 
-Page **Gear, pet, mount Concept art**. Safe to run twice.
+Page **Gear, pet, mount Concept art**. Safe to run again, also on a board an earlier
+version already changed: it finishes what is missing and fixes what changed.
 
-**Gear board** — every Rare / Elite look box in all six lineage columns:
+**Gear board**, all three factions (Hegemony, Null, Covenant), every lineage column:
 
-- the concept-sheet frame gets a **1920 × 1080 image area**; a sheet already in the box is
-  moved in and scaled to fit;
-- the six piece slots (Armor, Gloves, Boots, Cape, Ring, Amulet) **stay**; **three weapon
-  slots** are added beside them, as tall as the piece grid;
-- a **FACTION CAPES** strip with three image slots goes **between Rare and Elite**, rimmed in
-  the faction's colour;
-- a **GOD** section goes after Elite: three sets, **G1–G4, G5–G8, G9–G12**, each a full look
-  box (sheet, pieces, weapons) with its own level chips;
-- lineage columns, faction panels, title row, rarity key and board frame grow to fit; the
-  loose sheets parked under the board move down with it.
+- Rare and Epic look boxes: a **1920 × 1080** concept-sheet area (a sheet already placed is
+  moved in and scaled to fit), the six piece slots kept, **three weapon slots** added.
+- Order down each column: **Rare → Epic faction cape → Epic → Legendary → Legendary
+  faction cape**.
+- The tier once called Elite is **Epic**. The God-level tier is **Legendary**: three sets,
+  **G1–G4, G5–G8, G9–G12**, each a full look box.
+- Each **faction cape band** spans both lineages of its faction and holds **one**
+  1920 × 1080 image: one Epic cape and one Legendary cape per faction.
+- The rarity key, guide text, look counts and board frame follow.
 
-**Pets & Mounts board** — new, to the right of the gear board, decorated the same way:
+**Pets & Mounts board**, rebuilt each run (art already dropped in is carried over):
 
-- **PET REFERENCE**: the three Twelve Sky 2 pet sheets transcribed as tables (Rare ×6 at
-  Adept 1, Epic ×4 at Adept 15, Epic ×1 at Adept 30) with Health / Flux (Force) / Attack /
-  Defense at 25–100 % and Additional Attack at 125–200 %;
-- **NEW PETS**: eight boxes, each with a **1920 × 1080 reference image** slot, a stat strip to
-  fill from the tables, and **five evolution slots** (baseline, 25, 50, 75, 100 %) at 960 × 540;
-- **MOUNTS**: a roster of four 1920 × 1080 slots with the mount rules as context.
+- **PET REFERENCE**: the three Twelve Sky 2 pet sheets (Rare ×6 Adept 1, Epic ×4 Adept 15,
+  Epic ×1 Adept 30).
+- **NEW PETS**: eight boxes. Each has its **stat layout filled in** (rarity, level
+  requirement, Health / Flux / Attack / Defense at 25–100 %, Additional Attack 125–200 %),
+  a **1920 × 1080 reference image**, and **five evolution boxes** (baseline, 25, 50, 75,
+  100 %). Names stay TBD. The layouts are the `NEW_PET_STATS` list near the top of the
+  script: four Rare, three Epic Adept 15, one Epic Adept 30.
+- **MOUNTS**: four 1920 × 1080 slots.
 
 ## How to run it (Figma desktop app, about two minutes)
 
@@ -50,7 +52,8 @@ Page **Gear, pet, mount Concept art**. Safe to run twice.
 7. Pick the `manifest.json` you saved. Figma now lists **World Atlas board** under
    Plugins ▸ Development.
 
-**C. Run it**
+**C. Run it** (to run a newer version later, save the new `gear-pets-mounts-board.js` over
+the old one in the same folder and do C again; no need to import again)
 
 8. In the left panel under **Pages**, click **Gear, pet, mount Concept art**.
 9. Figma logo ▸ **Plugins ▸ Development ▸ World Atlas board**.
