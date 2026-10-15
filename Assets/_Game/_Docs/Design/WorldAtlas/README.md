@@ -24,19 +24,25 @@ Run it once with the page **Gear, pet, mount Concept art** open. It is safe to r
    - **MOUNTS**: one roster box with 4 slots (1200 × 675 image areas) and the mount
      rules from `05_mounts.md` as context.
 
-### How to run it
+### How to run it, click by click
 
-Figma, desktop app or browser, with edit rights on the file:
+**1. Copy the script.** Open
+`https://github.com/Ac3xCod3z/Krytical-Nova-II/blob/<branch>/Assets/_Game/_Docs/Design/WorldAtlas/gear-pets-mounts-board.js`
+in a browser signed in to GitHub, click **Raw** (top right of the file), then Ctrl+A, Ctrl+C.
 
-1. Open the file and select the page **Gear, pet, mount Concept art**.
-2. Menu **Plugins ▸ Development ▸ New plugin…**, pick *Figma design*, choose
-   *Empty*, name it `World Atlas board`, save it anywhere.
-3. Open the folder it created and replace the whole content of `code.js` with
-   `gear-pets-mounts-board.js`. (Keep `manifest.json` as generated.)
-4. Menu **Plugins ▸ Development ▸ World Atlas board**. It finishes in a few seconds
-   and shows a toast; if it fails the toast says why, and nothing partial needs undoing.
-5. Undo (Ctrl/Cmd-Z) reverts the whole run if the result is not wanted.
+**2. Open the page.** In Figma open World Atlas and, in the left panel under Pages, click
+**Gear, pet, mount Concept art**.
 
-The community plugin **Scripter** also runs it: paste the file in and press Run.
+**3. Run it with Scripter** (free community plugin that runs a pasted script):
+Shift+I → Plugins tab → search "Scripter" → Run. In the Scripter window click **+** (new
+script), click in the editor, Ctrl+V, then **▶ Run** (Ctrl+Enter). After a few seconds a
+toast reads "World Atlas: gear boxes rebuilt, pets & mounts board added" and Scripter closes.
+
+**4. Check.** Shift+1 zooms to fit: the gear board is wider and the PETS & MOUNTS board sits
+to its right. Ctrl+Z once undoes the whole run.
+
+**No Scripter?** Main menu ▸ Plugins ▸ Development ▸ New plugin… ▸ Figma design ▸ Empty ▸
+name it, Save as. Open the folder it made, open `code.js` in Notepad, replace everything with
+the script, save. Then main menu ▸ Plugins ▸ Development ▸ your plugin.
 
 Fonts: the board uses **Barlow Condensed** and **Inter**, both already in the file.
