@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The owner's release tool: .NET Framework 4.7.2 (in Windows), so the key can be kept with DPAPI and nothing
+       needs installing. Built by Krytical Nova > Release menus with "dotnet build -c Release". -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>ReleaseTool</AssemblyName>
+    <RootNamespace>KryticalNova.Release</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\*.cs" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.IO.Compression" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,1 @@
+https://f2ed0dbf-063b-4143-9e21-0f4bb3b3aa81.client-api.unity3dusercontent.com/client_api/v1/environments/411d9df6-0a7d-4179-9693-96bf92556b45/buckets/7d28506b-0916-44e3-b7f6-e73dfcf76486/release_by_badge/{channel}/entry_by_path/content/?path={path}

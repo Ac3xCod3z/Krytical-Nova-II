@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The game's launcher: Windows Forms on .NET Framework 4.7.2, which every Windows 10 and 11 PC has, so it is one
+       small exe a player runs without installing anything. Built by Krytical Nova > Release > Publish to Test. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>Krytical Nova Launcher</AssemblyName>
+    <RootNamespace>KryticalNova.Release</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <Product>Krytical Nova Launcher</Product>
+    <Company>Ac3x Animus Labs</Company>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\*.cs" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.IO.Compression" />
+    <!-- Built in: the game's comic font, the public half of the update signing key, the update address. -->
+    <EmbeddedResource Include="..\..\..\UI\Travel\Fonts\Bangers.ttf" LogicalName="Bangers.ttf" />
+    <EmbeddedResource Include="UpdateKey.pub" LogicalName="UpdateKey.pub" Condition="Exists('UpdateKey.pub')" />
+    <EmbeddedResource Include="UpdateSource.txt" LogicalName="UpdateSource.txt" Condition="Exists('UpdateSource.txt')" />
+  </ItemGroup>
+
+</Project>
