@@ -273,8 +273,13 @@ kept across restarts and rebuilds.
 2. Type it, press **Enter**. "You are GM (Dom)." appears, and **[GM]** shows before your name to everyone.
 3. Now every line typed in F2 runs **on the server**, aimed at **your own player**: `gm.help`, `gm.players`,
    `gm.say "text"`, `gm.kick`, give items or levels, teleport... `gm.target 3` aims the commands at another player (for
-   you only; `gm.target self` comes back). `clear` empties your console. The answer prints below each line.
+   you only; `gm.target self` comes back; `gm.players` lists the numbers). `clear` empties your console. The answer
+   prints below each line. The console works as always: hints while you type, **Tab** to complete, **Up** for the last
+   lines.
 4. The GM chat channel (**/gm text**) now works for you.
+5. **In the Editor**, the **GM Tools** window works too: **Target player** at the top lists the players your game can
+   see (pick one, or yourself), and every button runs on the server on that player. The answers show in the window's
+   log. Players far away are reached with `gm.players` and `gm.target` in F2.
 
 Leaving the server ends it; type the password again next time. **Five wrong passwords** send that player away from the
 server (they can join and try again). Every GM line is written to the server's log as `[GM] Dom: gm.say ...`, so you
@@ -339,6 +344,7 @@ Each comes with the same two ways out as the game menu (character select or exit
 | The window says "could not read server-settings.json" | A typo broke the file (a missing comma or quote) | Fix it, or delete it and start once to get a fresh one (a new page password too). |
 | "Player turned away … the server is full" | `maxPlayers` reached | Raise `maxPlayers`. |
 | The build says "The server … is still running, or a file in it is open" | The server (or a window showing a file in its folder) is open | Stop the server, close that window, build again. |
+| Pressing Play in the Editor says "Port 7777 is in use on this PC … Play does not host" | Your server is running on this PC, so the Editor does not try to host beside it | Press **F1**, IP `127.0.0.1`, Port `7777`, **JOIN**. |
 | A GM's password is not taken | A typo, or they were removed | Check the name under Game Masters on the control page; remove and add them again with a new password if needed. Five wrong tries send them away; they can join and try again. |
 
 ## 12. What comes next

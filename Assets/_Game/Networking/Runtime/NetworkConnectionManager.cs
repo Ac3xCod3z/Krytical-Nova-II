@@ -96,6 +96,15 @@ namespace KryticalNova.Networking
                 {
                     if (!isClone)
                     {
+                        // A server already running on this PC (the dedicated server on 7777, say) holds the port: hosting
+                        // would only fail with four red errors. Say so once and let the player join it from F1.
+                        ushort port = ResolvePort(0);
+                        if (UdpPortInUse(port))
+                        {
+                            Debug.LogWarning($"[Network] Port {port} is in use on this PC (a server is running?), so Play does not host. " +
+                                             $"To join that server: F1, IP 127.0.0.1, Port {port}, JOIN.");
+                            yield break;
+                        }
                         StartLocalHost();
                         yield break;
                     }
@@ -320,6 +329,19 @@ namespace KryticalNova.Networking
             }
 
             StatusChanged?.Invoke("Disconnected.");
+        }
+
+        // True when another program on this PC already listens on the UDP port.
+        private static bool UdpPortInUse(ushort port)
+        {
+            try
+            {
+                using (new System.Net.Sockets.UdpClient(new System.Net.IPEndPoint(System.Net.IPAddress.Any, port))) return false;
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                return true;
+            }
         }
 
 #if UNITY_SERVER

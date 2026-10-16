@@ -15,8 +15,8 @@ namespace KryticalNova.DevTools
     /// The GM console in the game itself; in the Editor the GM Tools window does the same job. It opens on the GM
     /// Console key. The host, a server and an offline player run its commands here, as before. A joined player gets it
     /// too, but nothing they type runs on their own machine: until they are GM it asks for their GM password (hidden
-    /// while typed, never logged), and once they are (<see cref="PlayerGm"/>) every line goes to the server and the
-    /// answer is printed below it. While it is open it has the keyboard: the Hotbar, the window keys, chat and Y / N
+    /// while typed, never logged), and once they are (<see cref="PlayerGm"/>) the console works as usual, hints and
+    /// all, but every line goes to the server (<see cref="GmRemoteLines"/>) and the answer is printed below it. While it is open it has the keyboard: the Hotbar, the window keys, chat and Y / N
     /// wait.
     /// </summary>
     [DisallowMultipleComponent]
@@ -28,8 +28,14 @@ namespace KryticalNova.DevTools
 
         private bool holdingKeyboard;
         private bool armed;
-        private bool armedAsGm;
         private TMP_InputField input;
+        private bool waitingForAnswer; // a password was sent: no new prompt until the server answers
+
+        // Quantum Console has no call to drop a hand-over it was given; these two fields are how it keeps one.
+        private static readonly System.Reflection.FieldInfo HandlingResponse = typeof(QuantumConsole).GetField(
+            "_isHandlingUserResponse", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        private static readonly System.Reflection.FieldInfo ResponseCallback = typeof(QuantumConsole).GetField(
+            "_onSubmitResponseCallback", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         /// <summary>Commands run on this machine: no session, or this machine is the server.</summary>
         private static bool RunsHere
@@ -64,25 +70,23 @@ namespace KryticalNova.DevTools
                 else ClientPresentationRegistry.Messages?.ShowMessage(ReasonNoPlayer);
             }
 
-            if (console.IsActive && remote) Arm(PlayerGm.Local.IsGm);
+            // Only the password is taken from the console; a GM's lines run through it as usual, with its hints, and
+            // GmRemoteLines sends them to the server.
+            if (!remote) waitingForAnswer = false; // the session ended before the answer came
+            if (console.IsActive && remote && !PlayerGm.Local.IsGm && !waitingForAnswer) Arm();
             else Disarm();
             HoldKeyboard(console.IsActive);
         }
 
         // A joined player's console hands every submitted line to this gate instead of running it. Quantum Console drops
         // the hand-over after each line, so it is taken again on the next frame.
-        private void Arm(bool asGm)
+        private void Arm()
         {
-            if (armed && armedAsGm == asGm) return;
+            if (armed) return;
             if (QuantumConsoleProcessor.TableIsGenerating) return; // the console takes no input until its list is ready
             armed = true;
-            armedAsGm = asGm;
-            Mask(!asGm);
-            console.BeginResponse(asGm ? (System.Action<string>)OnGmLine : OnPassword, new ResponseConfig
-            {
-                InputPrompt = asGm ? "GM command (runs on the server)..." : "GM password...",
-                LogInput = asGm,
-            });
+            Mask(true);
+            console.BeginResponse(OnPassword, new ResponseConfig { InputPrompt = "GM password...", LogInput = false });
         }
 
         private void Disarm()
@@ -90,6 +94,17 @@ namespace KryticalNova.DevTools
             if (!armed) return;
             armed = false;
             Mask(false);
+            CancelResponse();
+        }
+
+        // The player became GM (or left) with the password prompt up: the console goes back to running its lines as
+        // usual, hints and all; its next frame puts its own prompt back.
+        private void CancelResponse()
+        {
+            if (HandlingResponse == null || !(bool)HandlingResponse.GetValue(console)) return;
+            HandlingResponse.SetValue(console, false);
+            ResponseCallback?.SetValue(console, null);
+            if (input != null) input.interactable = false;
         }
 
         private void OnPassword(string password)
@@ -100,24 +115,13 @@ namespace KryticalNova.DevTools
             if (RunsHere) { console.InvokeCommand(password); return; } // a hand-over left from a session that ended
             if (PlayerGm.Local == null) return;
             console.LogToConsole("Checking the GM password...");
+            waitingForAnswer = true;
             PlayerGm.Local.Login(password);
-        }
-
-        private void OnGmLine(string line)
-        {
-            armed = false;
-            ClearInput();
-            if (RunsHere) { console.InvokeCommand(line); return; }
-            if (line.Equals("clear", System.StringComparison.OrdinalIgnoreCase))
-            {
-                console.ClearConsole();
-                return;
-            }
-            PlayerGm.Local?.Run(line);
         }
 
         private void OnReply(string text)
         {
+            waitingForAnswer = false;
             if (console != null) console.LogToConsole(text);
         }
 
