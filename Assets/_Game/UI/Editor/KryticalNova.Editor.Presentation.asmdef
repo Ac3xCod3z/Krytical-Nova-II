@@ -1,0 +1,51 @@
+{
+    "name": "KryticalNova.Editor.Presentation",
+    "rootNamespace": "KryticalNova.EditorTools",
+    "references": [
+        "KryticalNova.Editor",
+        "KryticalNova.Editor.Skin",
+        "KryticalNova.Runtime",
+        "KryticalNova.Vegetation.Grass",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.Editor",
+        "Unity.AI.Navigation",
+        "Unity.Splines",
+        "Unity.Mathematics",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "VHierarchy",
+        "RipVertices.QuickDestruction.Runtime",
+        "KryticalNova.GameFeel",
+        "KryticalNova.UI",
+        "MoreMountains.Tools",
+        "Unity.Cinemachine",
+        "MotionWarping.Runtime",
+        "Gilzoide.SqliteNet",
+        "EmeraldAI",
+        "EmeraldAI.Editor",
+        "KryticalNova.Hostiles.Emerald",
+        "Unity.Recorder.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "!UNITY_SERVER"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.recorder",
+            "expression": "5.0.0",
+            "define": "KN_RECORDER"
+        }
+    ],
+    "noEngineReferences": false
+}

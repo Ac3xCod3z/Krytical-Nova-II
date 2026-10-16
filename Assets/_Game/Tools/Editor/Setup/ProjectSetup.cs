@@ -53,7 +53,7 @@ namespace KryticalNova.EditorTools
             Zone01Setup.AddInteractableToPlayerRaycasts();
             Zone01Setup.OpenReadyStalls();               // stalls whose NPC arrived after the town was built
             Zone01Setup.EnsureTradeZone();               // where Kiosks may open (the starter town's plaza)
-            GameFeelBuilder.WireScene();
+            PresentationTools.Call("GameFeelBuilder", "WireScene");
             AudioSetup.RouteScene();                     // the mixer the Settings sliders drive, and who plays into it
             TerrainMatteFixer.Run();
             PostProcessSetup.Apply();

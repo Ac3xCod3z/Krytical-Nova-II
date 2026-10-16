@@ -6,6 +6,7 @@
         "KryticalNova.GameFeel",
         "KryticalNova.UI",
         "KryticalNova.Editor",
+        "KryticalNova.Editor.Presentation",
         "MoreMountains.Tools",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

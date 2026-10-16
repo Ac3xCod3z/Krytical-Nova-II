@@ -5,6 +5,7 @@
         "KryticalNova.Runtime",
         "KryticalNova.UI",
         "KryticalNova.Editor",
+        "KryticalNova.Editor.Presentation",
         "Unity.Netcode.Runtime",
         "UnityEngine.UI",
         "Unity.TextMeshPro",

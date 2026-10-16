@@ -154,7 +154,7 @@ namespace KryticalNova.EditorTools
                 options = BuildOptions.CompressWithLz4HC
             };
             BuildReport report = BuildPipeline.BuildPlayer(options);
-            WriteReport(report, scenes, backend);
+            WriteSizeReport(report, scenes, "Windows test build", "Scripting backend: " + BackendName(backend), ReportPath);
 
             bool ok = report.summary.result == BuildResult.Succeeded;
             if (ok) Debug.Log($"[Build] Windows test build ({BackendName(backend)}) written to {OutputFolder} ({Megabytes(report.summary.totalSize)}). Sizes: {ReportPath}");
@@ -164,12 +164,16 @@ namespace KryticalNova.EditorTools
 
         private static string BackendName(ScriptingImplementation backend) => backend == ScriptingImplementation.IL2CPP ? "IL2CPP" : "Mono";
 
-        private static void WriteReport(BuildReport report, string[] scenes, ScriptingImplementation backend)
+        /// <summary>
+        /// Writes what a build weighs, largest first, by folder and by asset, with its scenes and any errors. Also used
+        /// by <see cref="ServerBuildBuilder"/>.
+        /// </summary>
+        public static void WriteSizeReport(BuildReport report, string[] scenes, string title, string detailLine, string reportPath)
         {
             var text = new StringBuilder();
             BuildSummary summary = report.summary;
-            text.AppendLine($"Windows test build: {summary.result}");
-            text.AppendLine($"Scripting backend: {BackendName(backend)}");
+            text.AppendLine($"{title}: {summary.result}");
+            text.AppendLine(detailLine);
             text.AppendLine($"Built {summary.buildEndedAt.ToLocalTime():yyyy-MM-dd HH:mm} in {summary.totalTime:hh\\:mm\\:ss}");
             text.AppendLine($"Size {Megabytes(summary.totalSize)}, errors {summary.totalErrors}, warnings {summary.totalWarnings}");
             text.AppendLine();
@@ -214,8 +218,8 @@ namespace KryticalNova.EditorTools
             foreach (KeyValuePair<string, ulong> asset in byAsset.OrderByDescending(a => a.Value).Take(ReportAssets))
                 text.AppendLine($"  {Megabytes(asset.Value),10}  {asset.Key}");
 
-            Directory.CreateDirectory(BuildRoot);
-            File.WriteAllText(ReportPath, text.ToString());
+            Directory.CreateDirectory(Path.GetDirectoryName(reportPath));
+            File.WriteAllText(reportPath, text.ToString());
         }
 
         private static string FolderOf(string assetPath)
@@ -224,6 +228,6 @@ namespace KryticalNova.EditorTools
             return parts.Length <= FolderDepth ? assetPath : string.Join("/", parts, 0, FolderDepth);
         }
 
-        private static string Megabytes(ulong bytes) => (bytes / (1024.0 * 1024.0)).ToString("0.0") + " MB";
+        public static string Megabytes(ulong bytes) => (bytes / (1024.0 * 1024.0)).ToString("0.0") + " MB";
     }
 }

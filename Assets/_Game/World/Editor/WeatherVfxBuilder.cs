@@ -224,12 +224,12 @@ namespace KryticalNova.EditorTools
 
         // ---------------------------------------------------------------- build helpers
 
-        internal static void Build(string source, string destination, Action<GameObject> modify)
+        public static void Build(string source, string destination, Action<GameObject> modify)
         {
             Build(source, destination, null, modify);
         }
 
-        internal static void Build(string source, string destination, Func<GameObject, GameObject> extract, Action<GameObject> modify)
+        public static void Build(string source, string destination, Func<GameObject, GameObject> extract, Action<GameObject> modify)
         {
             var src = AssetDatabase.LoadAssetAtPath<GameObject>(source);
             if (src == null)
@@ -282,7 +282,7 @@ namespace KryticalNova.EditorTools
             }
         }
 
-        internal static Material ParticleMaterial(string name, string texturePath, bool additive)
+        public static Material ParticleMaterial(string name, string texturePath, bool additive)
         {
             string path = $"{MaterialFolder}/{name}.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -310,7 +310,7 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>A flat, opaque URP particle material: it writes depth, so the comic outline pass inks the particles.</summary>
-        internal static Material OpaqueParticleMaterial(string name, Color color)
+        public static Material OpaqueParticleMaterial(string name, Color color)
         {
             string path = $"{MaterialFolder}/{name}.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -329,7 +329,7 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>Legacy Built-in particle materials render magenta in URP; make a URP Particles/Unlit copy.</summary>
-        internal static Material ToUrp(Material source)
+        public static Material ToUrp(Material source)
         {
             if (source == null || source.shader == null) return source;
             if (!source.shader.name.StartsWith("Legacy Shaders/", StringComparison.Ordinal)) return source;

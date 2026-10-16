@@ -1,0 +1,126 @@
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEditor.Build.Reporting;
+using UnityEngine;
+
+namespace KryticalNova.EditorTools
+{
+    /// <summary>
+    /// The dedicated server: the game built with Unity's Dedicated Server target, so it runs as a console program with
+    /// no window, no graphics and no sound, and with UNITY_SERVER defined (the HUD, menus and game feel are left out;
+    /// <c>NetworkConnectionManager</c> listens as soon as the world loads). Same scenes as the test build
+    /// (<see cref="BuildSceneOrder"/>). Windows for this PC and the OptiPlex, Linux for a rented machine later.
+    /// Next to the build it writes a size report like <see cref="TestBuildBuilder"/>'s.
+    /// <para>Start it with <c>KryticalNovaServer.exe -port 7777 -logFile -</c> (the log then shows in the console
+    /// window). The Editor is put back on the build target it was on before.</para>
+    /// </summary>
+    public static class ServerBuildBuilder
+    {
+        public const string BuildRoot = "Builds/Server";
+        public const string ExeName = "KryticalNovaServer";
+
+        public enum Os { Windows, Linux }
+
+        /// <summary>True while a server build runs (<see cref="ServerSceneStripper"/> reads it).</summary>
+        public static bool IsBuilding { get; private set; }
+
+        public static string OutputFolder(Os os) => $"{BuildRoot}/{os}/{ExeName}";
+        public static string ReportPath(Os os) => $"{BuildRoot}/BuildReport-{os}.txt";
+
+        [MenuItem("Krytical Nova/Build/Dedicated Server (Windows)", priority = 52)]
+        private static void MenuWindows() => MenuBuild(Os.Windows);
+
+        [MenuItem("Krytical Nova/Build/Dedicated Server (Linux)", priority = 53)]
+        private static void MenuLinux() => MenuBuild(Os.Linux);
+
+        private static void MenuBuild(Os os)
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                EditorUtility.DisplayDialog("Dedicated Server", "Stop Play first.", "OK");
+                return;
+            }
+            string missing = ModuleMissing(os);
+            if (missing != null)
+            {
+                EditorUtility.DisplayDialog($"Dedicated Server ({os})", missing, "OK");
+                return;
+            }
+            Build(os);
+        }
+
+        /// <summary>What Unity lacks for a server build for this system, in words; null when the module is there.</summary>
+        public static string ModuleMissing(Os os)
+        {
+            string engine = os == Os.Windows ? "windowsstandalonesupport" : "LinuxStandaloneSupport";
+            string prefix = os == Os.Windows ? "win64_server_" : "linux64_server_";
+            string variations = Path.Combine(EditorApplication.applicationContentsPath, "PlaybackEngines", engine, "Variations");
+            bool there = Directory.Exists(variations) && Directory.GetDirectories(variations, prefix + "*mono").Length > 0;
+            return there ? null
+                : $"A {os} dedicated server build needs Unity's module \"{os} Dedicated Server Build Support\" for {Application.unityVersion} " +
+                  "(Unity Hub > Installs > the gear on this version > Add modules). Restart the Editor after installing.";
+        }
+
+        /// <summary>Builds without asking. True when the build succeeded; the report is written either way.</summary>
+        public static bool Build(Os os)
+        {
+            string missing = ModuleMissing(os);
+            if (missing != null)
+            {
+                Debug.LogError("[Build] " + missing);
+                return false;
+            }
+
+            BuildSceneOrder.Apply();
+            string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
+            if (scenes.Length == 0)
+            {
+                Debug.LogError("[Build] There are no scenes to build.");
+                return false;
+            }
+
+            // Only our own output folder: a file left from an older build must not travel with this one.
+            string folder = OutputFolder(os);
+            if (Directory.Exists(folder)) Directory.Delete(folder, true);
+            Directory.CreateDirectory(folder);
+
+            BuildTarget target = os == Os.Windows ? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneLinux64;
+            string exe = folder + "/" + ExeName + (os == Os.Windows ? ".exe" : ".x86_64");
+            BuildTarget targetWas = EditorUserBuildSettings.activeBuildTarget;
+            StandaloneBuildSubtarget subtargetWas = EditorUserBuildSettings.standaloneBuildSubtarget;
+
+            BuildReport report;
+            try
+            {
+                IsBuilding = true;
+                report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+                {
+                    scenes = scenes,
+                    locationPathName = exe,
+                    targetGroup = BuildTargetGroup.Standalone,
+                    target = target,
+                    subtarget = (int)StandaloneBuildSubtarget.Server,
+                    // A clean build: the scenes must go through ServerSceneStripper, not come from the cache of a client build.
+                    options = BuildOptions.CompressWithLz4HC | BuildOptions.CleanBuildCache
+                });
+            }
+            finally
+            {
+                IsBuilding = false;
+                // A server build may leave the Editor on the server target, where the HUD and menu tools are left out.
+                if (EditorUserBuildSettings.activeBuildTarget != targetWas || EditorUserBuildSettings.standaloneBuildSubtarget != subtargetWas)
+                {
+                    EditorUserBuildSettings.standaloneBuildSubtarget = subtargetWas;
+                    EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, targetWas);
+                }
+            }
+
+            TestBuildBuilder.WriteSizeReport(report, scenes, $"Dedicated server ({os})", "Scripting backend: Mono, Dedicated Server target", ReportPath(os));
+            bool ok = report.summary.result == BuildResult.Succeeded;
+            if (ok) Debug.Log($"[Build] Dedicated server ({os}) written to {folder} ({TestBuildBuilder.Megabytes(report.summary.totalSize)}). Sizes: {ReportPath(os)}");
+            else Debug.LogError($"[Build] Dedicated server ({os}) {report.summary.result}: {report.summary.totalErrors} errors. See {ReportPath(os)}");
+            return ok;
+        }
+    }
+}

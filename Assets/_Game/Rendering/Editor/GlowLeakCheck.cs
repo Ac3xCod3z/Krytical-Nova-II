@@ -69,7 +69,8 @@ namespace KryticalNova.EditorTools
             }
             if (Running) return;
             // Run by something that is there for the whole of it: the check hides parts of the character as it goes.
-            MonoBehaviour runner = Object.FindAnyObjectByType<KryticalNova.UI.ProgressionHUD>();
+            System.Type hud = System.Type.GetType("KryticalNova.UI.ProgressionHUD, KryticalNova.UI");   // by name: no UI under the server target
+            MonoBehaviour runner = hud != null ? (MonoBehaviour)Object.FindAnyObjectByType(hud) : null;
             if (runner == null) runner = PlayerInventory.Local;
             runner.StartCoroutine(Check(PlayerInventory.Local.gameObject));
         }

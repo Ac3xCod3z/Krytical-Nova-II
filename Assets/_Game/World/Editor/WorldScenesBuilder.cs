@@ -3,7 +3,6 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using KryticalNova.Networking;
-using KryticalNova.UI.Travel;
 using KryticalNova.World;
 using KryticalNova.World.Minimap;
 using Unity.AI.Navigation;
@@ -310,17 +309,22 @@ namespace KryticalNova.EditorTools
             rules.EditorSetCatalog(catalog);
             EditorUtility.SetDirty(rules);
 
-            var screen = Object.FindAnyObjectByType<TravelScreen>(FindObjectsInactive.Include);
-            if (screen == null)
+            // Looked up by name: the UI assembly is left out while the Dedicated Server target is active.
+            System.Type screenType = System.Type.GetType("KryticalNova.UI.Travel.TravelScreen, KryticalNova.UI");
+            if (screenType != null)
             {
-                screen = new GameObject("Travel Screen").AddComponent<TravelScreen>();
-                SceneManager.MoveGameObjectToScene(screen.gameObject, scene);
-                changed = true;
+                var screen = (Component)Object.FindAnyObjectByType(screenType, FindObjectsInactive.Include);
+                if (screen == null)
+                {
+                    screen = new GameObject("Travel Screen").AddComponent(screenType);
+                    SceneManager.MoveGameObjectToScene(screen.gameObject, scene);
+                    changed = true;
+                }
+                var screenSo = new SerializedObject(screen);
+                screenSo.FindProperty("titleFont").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Font>(TitleFontPath);
+                screenSo.FindProperty("bodyFont").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Font>(BodyFontPath);
+                screenSo.ApplyModifiedPropertiesWithoutUndo();
             }
-            var screenSo = new SerializedObject(screen);
-            screenSo.FindProperty("titleFont").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Font>(TitleFontPath);
-            screenSo.FindProperty("bodyFont").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Font>(BodyFontPath);
-            screenSo.ApplyModifiedPropertiesWithoutUndo();
 
             if (changed) EditorSceneManager.MarkSceneDirty(scene);
             return changed;

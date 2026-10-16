@@ -1,8 +1,8 @@
 # Online phase 1: a dedicated server on your PC, then on the old PC
 
 Part of `online-roadmap.md`. Written 11 Oct 2026; rewritten 15 Oct 2026 as the seven chunks the owner approved on
-12 Oct. **Not built.** Before chunk 1 comes the short rendering pass (`Design/Rendering-Bible.md` section 8), when
-the owner says go.
+12 Oct. **Chunk 1 built 16 Oct 2026** (see "Chunk 1 as built" below); chunks 2 to 7 are not built. The owner moved
+the short rendering pass (`Design/Rendering-Bible.md` section 8) to after chunk 1.
 
 ## Goal
 
@@ -60,6 +60,29 @@ Editor assembly with `!UNITY_SERVER` (as `KryticalNova.Editor.Menus` already is)
 `TestBuildBuilder` (**Krytical Nova ▸ Build ▸ Dedicated Server (Windows)** and **(Linux)**, into `Builds/Server/…`,
 with the size report); replace the never-compiled session block with a plain listen. *Try it:* run the server on the
 gaming PC (a console window with the log) and join from the game on a test port, never 7777.
+
+*Chunk 1 as built (16 Oct 2026):*
+- `com.unity.dedicated-server` 3.0.0; the Server scripting defines are the Standalone ones; Unity's Dedicated Server
+  Optimizations are on, so no shaders, textures or sounds ship in the server.
+- The Editor compiles with `UNITY_SERVER`: the HUD, menu, game feel and pet builders (`UI/Editor`, `GameFeel/Editor`,
+  `Gameplay/Pets/Editor`) form `KryticalNova.Editor.Presentation`, left out under the server target.
+  `KryticalNova.Editor` reaches them only by name, through `PresentationTools`.
+- **Krytical Nova ▸ Build ▸ Dedicated Server (Windows)** / **(Linux)** (`ServerBuildBuilder`) build a clean server
+  into `Builds/Server/<Windows|Linux>/KryticalNovaServer`, write `Builds/Server/BuildReport-<OS>.txt`, and put the
+  Editor back on its own target. The Windows server is 552 MB, 256 MB of it the Sidekick characters' `Resources`.
+- The server listens on `-port <number>` (else 7777) on every network card and logs "[Server] Player joined" and
+  "[Server] Player left" with the count online. `-profile <name>` gives it a save of its own.
+- Parts that only draw (Volumetric Lights, Volumetric Fog) are switched off in the server's copy of every scene
+  (`ServerSceneStripper`) and again as each scene loads (`DedicatedServerOptimizer`): without shaders the 72 lamp
+  cones threw an error every frame.
+- For Editor tests, `Library/KryticalNova.TestSession` takes a third line, `join=1`: the main Editor then joins a
+  running server on the test port instead of hosting.
+- *Tried:* the server ran in its own console window on test port 7790; the Editor joined, its player spawned in
+  Zone01, and the server logged the join and the leave (clip `Recordings/Server/server-join-chunk1.mp4`, not in git).
+- *Found:* **Norton suspends a new, unsigned server exe** about a minute after it starts (every thread stops, no crash).
+  A Norton exclusion for the `Builds\Server` folder fixed it; the old PC will need the same (chunk 6's guide). The
+  vendor GI pack's compute shaders log 116 build errors for the server (harmless: a server draws nothing). A Multiplayer
+  Play Mode clone stays on the Title screen while Play From Title is on, so it does not join by itself.
 
 **2. Settings, safe stop, backups** (`online/02-settings-and-safe-stop`).
 `ServerLaunchOptions`: a `server-settings.json` beside the server plus command-line overrides (name, port, max

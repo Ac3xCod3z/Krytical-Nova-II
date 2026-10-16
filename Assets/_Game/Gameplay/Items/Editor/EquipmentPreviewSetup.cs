@@ -33,7 +33,7 @@ namespace KryticalNova.EditorTools
                 AddToPipelineAssets(renderer);
             }
             AssetDatabase.SaveAssets();
-            HudSetup.SetUpOpenScene();
+            PresentationTools.Call("HudSetup", "SetUpOpenScene");
             Debug.Log("[Items] Equipment preview ready. Press I / E in Play mode.");
         }
 
