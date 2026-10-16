@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -114,23 +115,61 @@ namespace KryticalNova.EditorTools
 
         // ------------------------------------------------------------------ the pipeline
 
-        /// <summary>Build, stage, sign and (when CCD is set up) upload to the test line. A line per step in the release log.</summary>
+        // ------------------------------------------------------------------ build numbers (online step 4)
+
+        /// <summary>The build number of the release staged last (Builds/Release/Store), or 0 when none was.</summary>
+        public static int LastReleaseBuild()
+        {
+            string manifest = StoreFolder + "/manifest.json";
+            if (!File.Exists(manifest)) return 0;
+            Match match = Regex.Match(File.ReadAllText(manifest), "\"build\"\\s*:\\s*(\\d+)");
+            return match.Success ? int.Parse(match.Groups[1].Value) : 0;
+        }
+
+        /// <summary>The project's version without a build number ("0.1.0").</summary>
+        public static string BaseVersion() => Regex.Replace(PlayerSettings.bundleVersion, @"\s*build \d+$", string.Empty);
+
+        /// <summary>
+        /// Runs a build as build <paramref name="build"/>: the version (Application.version in the build) reads
+        /// "0.1.0 build N", which the game and the server compare when a player joins. 0 leaves a development build.
+        /// The project's version is put back afterwards.
+        /// </summary>
+        public static T WithVersion<T>(int build, Func<T> work)
+        {
+            string was = PlayerSettings.bundleVersion;
+            if (build > 0) PlayerSettings.bundleVersion = BaseVersion() + " build " + build;
+            try
+            {
+                return work();
+            }
+            finally
+            {
+                PlayerSettings.bundleVersion = was;
+            }
+        }
+
+        /// <summary>
+        /// Build, stage, sign and (when CCD is set up) upload to the test line, then build the server of the same
+        /// number. A line per step in the release log. <paramref name="buildGame"/> false re-stages the game already
+        /// in Builds/Release/Game (for tests: its version is the one it was built with).
+        /// </summary>
         public static bool Publish(bool buildGame = true)
         {
             Directory.CreateDirectory(Root);
             Log("--- Publish to Test " + DateTime.Now);
             Settings settings = Settings.Load();
             if (!BuildTools(settings)) return Fail("the launcher or the release tool did not build");
+            int build = LastReleaseBuild() + 1;
             if (buildGame)
             {
                 var output = new TestBuildBuilder.Output { Folder = GameFolder, ReportPath = Root + "/BuildReport.txt", Title = "Release build", Options = BuildOptions.None };
-                if (!TestBuildBuilder.Build(ScriptingImplementation.IL2CPP, output))
+                if (!WithVersion(build, () => TestBuildBuilder.Build(ScriptingImplementation.IL2CPP, output)))
                     return Fail("the game did not build (see " + output.ReportPath + ")");
             }
             if (!Directory.Exists(GameFolder)) return Fail("there is no release build in " + GameFolder);
 
             string launcher = Path.GetFullPath(ToolsFolder + "/Launcher/" + LauncherName);
-            if (!RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{PlayerSettings.bundleVersion}\"", out string staged))
+            if (!RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{BaseVersion()}\" --build {build}", out string staged))
                 return Fail("staging failed");
             Log(staged.Trim());
             if (!settings.HasBucket)
@@ -144,7 +183,21 @@ namespace KryticalNova.EditorTools
                 return Fail("the upload to Cloud Content Delivery failed");
             Log("Uploaded build " + version + " to the TEST line.");
             Debug.Log($"[Release] Build {version} is on the TEST line. Check it with your test launcher, then Krytical Nova ▸ Release ▸ Promote Test to Live.");
+            BuildMatchingServer();
             return true;
+        }
+
+        // A game joins only a server of its own build: the server is rebuilt with the release's number, unless it is running.
+        private static void BuildMatchingServer()
+        {
+            string busy = ServerBuildBuilder.FolderBusy(ServerBuildBuilder.OutputFolder(ServerBuildBuilder.Os.Windows));
+            if (busy != null)
+            {
+                Log("Server not rebuilt: it is running. Stop it, then Krytical Nova > Build > Dedicated Server (Windows).");
+                Debug.LogWarning("[Release] Your server is running, so it was not rebuilt for this release. Stop it and use Krytical Nova > Build > Dedicated Server (Windows): until then players on the new build are told the server runs another build.");
+                return;
+            }
+            Log(ServerBuildBuilder.Build(ServerBuildBuilder.Os.Windows) ? "Server rebuilt for build " + LastReleaseBuild() + "." : "The server did not build: see Builds/Server/BuildReport-Windows.txt.");
         }
 
         /// <summary>Moves the live badge to the release the test badge is on.</summary>

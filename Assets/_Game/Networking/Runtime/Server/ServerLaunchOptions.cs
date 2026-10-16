@@ -41,6 +41,23 @@ namespace KryticalNova.Networking
         public int backupsKept = 10;
         [Tooltip("Up to three Game Masters, each a name and their own GM password (typed once per session in the F2 console). Set on the control page.")]
         public GmEntry[] gameMasters = new GmEntry[0];
+        [Tooltip("The UDP port where the server tells the Servers window it is on, its players and build. 0: the game port + 1. Forward it with the game port.")]
+        public int statusPort;
+        [Tooltip("The servers players see in the game's Servers window. Kept on the control page; Publish List uploads them.")]
+        public ServerListing[] serverList = new ServerListing[0];
+        [Tooltip("Where Publish List uploads servers.json: the Cloud Content Delivery bucket, project and environment.")]
+        public string listBucket = "krytical-nova-servers";
+        public string cloudProjectId = "f2ed0dbf-063b-4143-9e21-0f4bb3b3aa81";
+        public string cloudEnvironment = "production";
+        [Tooltip("Unity's command-line tool, logged in once on this PC. Empty: %LOCALAPPDATA%/KryticalNova/tools/ugs.exe.")]
+        public string ugsPath = "";
+
+        /// <summary>The status port in use.</summary>
+        public int StatusPort => statusPort > 0 ? statusPort : port + 1;
+
+        /// <summary>The UGS command line this server uploads with.</summary>
+        public string UgsPath => !string.IsNullOrWhiteSpace(ugsPath) ? ugsPath
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "KryticalNova", "tools", "ugs.exe");
 
         /// <summary>The options of this server, read at boot (<see cref="LoadForThisServer"/>). Null before.</summary>
         public static ServerLaunchOptions Current { get; private set; }
@@ -196,21 +213,34 @@ namespace KryticalNova.Networking
         /// </summary>
         public bool SaveGameMasters(GmEntry[] masters, out string error)
         {
-            error = null;
             gameMasters = masters ?? new GmEntry[0];
+            return SaveToFile(onDisk => onDisk.gameMasters = gameMasters, "GM list", out error);
+        }
+
+        /// <summary>Writes the servers players see into the settings file (and keeps them here); nothing else changes in it.</summary>
+        public bool SaveServerList(ServerListing[] servers, out string error)
+        {
+            serverList = servers ?? new ServerListing[0];
+            return SaveToFile(onDisk => onDisk.serverList = serverList, "server list", out error);
+        }
+
+        // Changes one thing in the file as the owner left it: command-line overrides of this run are not saved.
+        private bool SaveToFile(Action<ServerLaunchOptions> change, string what, out string error)
+        {
+            error = null;
             string file = Path.Combine(ServerFolder, FileName);
             try
             {
                 var onDisk = new ServerLaunchOptions { ServerFolder = ServerFolder };
                 if (File.Exists(file)) JsonUtility.FromJsonOverwrite(File.ReadAllText(file), onDisk);
                 else onDisk.pagePassword = pagePassword; // the file went missing: the page keeps its password
-                onDisk.gameMasters = gameMasters;
+                change(onDisk);
                 File.WriteAllText(file, JsonUtility.ToJson(onDisk, true));
                 return true;
             }
             catch (Exception e)
             {
-                error = $"The GM list could not be written into {file}: {e.Message}";
+                error = $"The {what} could not be written into {file}: {e.Message}";
                 return false;
             }
         }

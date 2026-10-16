@@ -10,9 +10,9 @@ body { margin: 0; min-height: 100vh; background: var(--page); background-image: 
        background-size: 14px 14px; color: var(--text); font: 15px RobotoB, system-ui, sans-serif; }
 
 .wrap { max-width: 1240px; margin: 0 auto; padding: 18px; display: grid; gap: 16px; grid-template-columns: 1.15fr 1fr;
-        grid-template-areas: "head head" "connect actions" "players actions" "gms gm" "log log"; }
+        grid-template-areas: "head head" "connect actions" "players actions" "gms gm" "list list" "log log"; }
 .head { grid-area: head; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.connect { grid-area: connect; } .players { grid-area: players; } .actions { grid-area: actions; } .gm { grid-area: gm; } .gms { grid-area: gms; } .log { grid-area: log; }
+.connect { grid-area: connect; } .players { grid-area: players; } .actions { grid-area: actions; } .gm { grid-area: gm; } .gms { grid-area: gms; } .list { grid-area: list; } .log { grid-area: log; }
 .head .name { flex: 1 1 260px; }
 .stat { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
@@ -68,7 +68,7 @@ pre { font: 13px Consolas, "Cascadia Mono", monospace; margin: 0; white-space: p
 .toast.bad { background: var(--rose); }
 
 @media (max-width: 700px) {
-  .wrap { grid-template-columns: 1fr; grid-template-areas: "head" "connect" "actions" "players" "gms" "gm" "log"; padding: 12px; gap: 12px; }
+  .wrap { grid-template-columns: 1fr; grid-template-areas: "head" "connect" "actions" "players" "gms" "gm" "list" "log"; padding: 12px; gap: 12px; }
   .hide-phone { display: none; }
   h1 { font-size: 40px; }
   #log { height: 220px; }

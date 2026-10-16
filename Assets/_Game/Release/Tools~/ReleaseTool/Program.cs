@@ -40,7 +40,7 @@ namespace KryticalNova.Release
                     case "export-key": return ExportKey(args.Length > 1 ? args[1] : null);
                     case "import-key": return ImportKey(args.Length > 1 ? args[1] : null);
                     case "public-key": Console.WriteLine(PublicKeyText(LoadKey())); return 0;
-                    case "stage": return Stage(Option(args, "--game"), Option(args, "--launcher"), Option(args, "--out"), Option(args, "--version"));
+                    case "stage": return Stage(Option(args, "--game"), Option(args, "--launcher"), Option(args, "--out"), Option(args, "--version"), Option(args, "--build"));
                     case "verify": return Verify(Option(args, "--out"), Option(args, "--pub"));
                     default: return Usage();
                 }
@@ -55,7 +55,7 @@ namespace KryticalNova.Release
         private static int Usage()
         {
             Console.Error.WriteLine("ReleaseTool keygen --pub <file> [--force] | export-key <file> | import-key <file> | public-key |");
-            Console.Error.WriteLine("            stage --game <dir> --launcher <exe> --out <dir> [--version <text>] | verify --out <dir> --pub <file>");
+            Console.Error.WriteLine("            stage --game <dir> --launcher <exe> --out <dir> [--version <text>] [--build <n>] | verify --out <dir> --pub <file>");
             return 2;
         }
 
@@ -145,7 +145,7 @@ namespace KryticalNova.Release
 
         // ------------------------------------------------------------------ a release
 
-        private static int Stage(string gameDir, string launcherExe, string outDir, string version)
+        private static int Stage(string gameDir, string launcherExe, string outDir, string version, string buildArg)
         {
             if (gameDir == null || launcherExe == null || outDir == null) throw new ArgumentException("stage needs --game, --launcher and --out.");
             if (!Directory.Exists(gameDir)) throw new DirectoryNotFoundException(gameDir);
@@ -155,9 +155,12 @@ namespace KryticalNova.Release
             Directory.CreateDirectory(Path.Combine(outDir, "files"));
             string manifestFile = Path.Combine(outDir, UpdateManifest.FileName);
             int previous = File.Exists(manifestFile) ? UpdateManifest.FromBytes(File.ReadAllBytes(manifestFile)).build : 0;
+            // The build number the game was built with, when given (the game and its server compare it); else the next one.
+            int build = int.TryParse(buildArg, out int asked) && asked > 0 ? asked : previous + 1;
+            if (build <= previous) throw new InvalidOperationException($"Build {build} is not newer than the build already staged ({previous}).");
             var manifest = new UpdateManifest
             {
-                build = previous + 1,
+                build = build,
                 created = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
             };
             manifest.version = (string.IsNullOrWhiteSpace(version) ? "" : version.Trim() + " ") + "build " + manifest.build;

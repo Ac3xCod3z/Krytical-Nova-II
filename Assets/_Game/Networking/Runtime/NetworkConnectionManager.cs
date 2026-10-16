@@ -64,12 +64,65 @@ namespace KryticalNova.Networking
 
         private void Start()
         {
+            PrepareConnections();
 #if UNITY_SERVER
             StartDedicatedServer();
 #else
-            if (autoStartInEditor && Application.isEditor && !Application.isBatchMode)
+            bool testing = Application.isEditor && (EditorCloneProfile() != null || EditorTestSession.JoinOnly);
+            if (JoinFlow.Target != null && !testing)
+                StartCoroutine(JoinChosenServer(JoinFlow.Target));
+            else if (autoStartInEditor && Application.isEditor && !Application.isBatchMode)
                 StartCoroutine(AutoStartEditorSession());
 #endif
+        }
+
+        private const float JoinTimeoutSeconds = 20f;
+
+        /// <summary>
+        /// Character select chose a server (<see cref="JoinFlow"/>): join it while the loading screen is up. In once this
+        /// player's character stands in the world; a refusal (another build, a full server) or no answer goes back
+        /// to character select with the reason.
+        /// </summary>
+        private System.Collections.IEnumerator JoinChosenServer(ServerListing server)
+        {
+            yield return null; // every Start in the scene has run, as for the Editor's own session
+            NetworkManager nm = NetworkManager.Singleton;
+            string reason = null;
+            bool ended = false;
+            Action<ulong> onEnded = id => { if (nm != null && id == nm.LocalClientId) ended = true; };
+            if (nm != null) nm.OnClientDisconnectCallback += onEnded;
+            bool started = StartLocalClient(server.address, (ushort)server.port);
+            float until = Time.realtimeSinceStartup + JoinTimeoutSeconds;
+            while (started && !ended)
+            {
+                if (nm.IsConnectedClient && nm.LocalClient != null && nm.LocalClient.PlayerObject != null)
+                {
+                    nm.OnClientDisconnectCallback -= onEnded;
+                    JoinFlow.Joined();
+                    yield break;
+                }
+                if (!nm.IsListening && !nm.ShutdownInProgress) { ended = true; break; }
+                if (Time.realtimeSinceStartup > until) break;
+                yield return null;
+            }
+            if (nm != null)
+            {
+                nm.OnClientDisconnectCallback -= onEnded;
+                reason = nm.DisconnectReason;
+                if (nm.IsListening) nm.Shutdown();
+                float wait = Time.realtimeSinceStartup + 3f;
+                while (nm.ShutdownInProgress && Time.realtimeSinceStartup < wait) yield return null;
+            }
+            if (string.IsNullOrWhiteSpace(reason))
+                reason = started
+                    ? $"{server.name} did not answer. It may be off, or not reachable from here."
+                    : $"Could not start joining {server.name}.";
+            Debug.Log($"[Network] Joining {server.name} ({server.address}:{server.port}) failed: {reason}");
+            JoinFlow.Fail(reason);
+            // As when a player leaves the world: the session objects outlive scene changes and the next world brings
+            // its own, so these go before character select loads.
+            if (nm != null) Destroy(nm.gameObject);
+            if (nm == null || gameObject != nm.gameObject) Destroy(gameObject);
         }
 
         /// <summary>
@@ -153,6 +206,7 @@ namespace KryticalNova.Networking
         /// <summary>Starts a local host directly without requiring cloud connectivity (ideal for instant development testing).</summary>
         public bool StartLocalHost(ushort port = 0)
         {
+            PrepareConnections();
             if (NetworkManager.Singleton == null)
             {
                 ReportError("Cannot start local host: NetworkManager.Singleton is missing.");
@@ -177,6 +231,7 @@ namespace KryticalNova.Networking
         /// <summary>Starts a server with no local player (the in-Editor stand-in for a dedicated server).</summary>
         public bool StartLocalServer(ushort port = 0)
         {
+            PrepareConnections();
             if (NetworkManager.Singleton == null)
             {
                 ReportError("Cannot start local server: NetworkManager.Singleton is missing.");
@@ -202,6 +257,7 @@ namespace KryticalNova.Networking
         /// <summary>Connects as a client to a local or direct IP/port server.</summary>
         public bool StartLocalClient(string ip = "", ushort port = 0)
         {
+            PrepareConnections();
             if (NetworkManager.Singleton == null)
             {
                 ReportError("Cannot start local client: NetworkManager.Singleton is missing.");
@@ -244,6 +300,7 @@ namespace KryticalNova.Networking
 
                 // The session starts the NetworkManager itself; the offline avatar has to be out of the way first.
                 IsStartingSession = true;
+                PrepareConnections();
                 OfflinePlayerHandoff.ReleaseOfflineAvatar();
                 var hostSession = await MultiplayerService.Instance.CreateSessionAsync(options);
                 activeSession = hostSession;
@@ -281,6 +338,7 @@ namespace KryticalNova.Networking
                 StatusChanged?.Invoke($"Joining session with code: {code}...");
                 var joinOptions = new JoinSessionOptions();
                 IsStartingSession = true;
+                PrepareConnections();
                 OfflinePlayerHandoff.ReleaseOfflineAvatar();
                 var session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code.Trim(), joinOptions);
 
@@ -331,6 +389,43 @@ namespace KryticalNova.Networking
             StatusChanged?.Invoke("Disconnected.");
         }
 
+        // ------------------------------------------------------------------ who may join (online step 4)
+
+        // Players the session takes; the dedicated server's comes from its settings.
+        private int maxPlayersNow;
+
+        /// <summary>
+        /// Every game and server asks and answers the same way: a joining game sends its build with its request
+        /// (<see cref="JoinRules"/>), and the side that hosts approves it or says why not before the player is in.
+        /// Both sides must have it on (Netcode compares the setting), so it is set here and nowhere else.
+        /// </summary>
+        private void PrepareConnections()
+        {
+            NetworkManager nm = NetworkManager.Singleton;
+            if (nm == null) return;
+            nm.NetworkConfig.ConnectionApproval = true;
+            nm.NetworkConfig.ConnectionData = JoinRules.Payload(GameBuild.Version, Application.isEditor);
+            nm.ConnectionApprovalCallback = Approve;
+            if (maxPlayersNow <= 0) maxPlayersNow = defaultMaxPlayers;
+        }
+
+        private void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
+        {
+            NetworkManager nm = NetworkManager.Singleton;
+            response.CreatePlayerObject = true; // the world's player prefab (set in each map's NetworkManager); PlayerSpawnService places it
+            if (nm != null && request.ClientNetworkId == nm.LocalClientId)
+            {
+                response.Approved = true; // the host's own player
+                return;
+            }
+            int online = nm != null ? nm.ConnectedClientsIds.Count : 0;
+            string refusal = JoinRules.Refusal(GameBuild.Version, Application.isEditor, request.Payload, online, maxPlayersNow);
+            response.Approved = refusal == null;
+            if (refusal == null) return;
+            response.Reason = refusal;
+            Debug.Log($"[Server] Player turned away (connection {request.ClientNetworkId}): {refusal}");
+        }
+
         // True when another program on this PC already listens on the UDP port.
         private static bool UdpPortInUse(ushort port)
         {
@@ -345,11 +440,6 @@ namespace KryticalNova.Networking
         }
 
 #if UNITY_SERVER
-        /// <summary>
-        /// The dedicated server: listens on every network card of this machine, on the port of its settings
-        /// (<see cref="ServerLaunchOptions"/>: server-settings.json or -port), turns away players past its limit, and
-        /// waits for players. No Unity services: players reach it by its address and port.
-        /// </summary>
         // Players still on once one leaves: when the server sent them away they are already off the list, otherwise not yet.
         private static int OnlineWithout(NetworkManager nm, ulong leaving)
         {
@@ -359,6 +449,12 @@ namespace KryticalNova.Networking
             return online;
         }
 
+        /// <summary>
+        /// The dedicated server: listens on every network card of this machine, on the port of its settings
+        /// (<see cref="ServerLaunchOptions"/>: server-settings.json or -port), turns away players past its limit or on
+        /// another build (<see cref="Approve"/>), and waits for players. No Unity services: players reach it by its
+        /// address and port.
+        /// </summary>
         private void StartDedicatedServer()
         {
             if (NetworkManager.Singleton == null)
@@ -372,23 +468,14 @@ namespace KryticalNova.Networking
             ConfigureTransport(defaultListenAddress, port);
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
             NetworkManager nm = NetworkManager.Singleton;
-            // Past the limit a player is sent straight back with the reason. (Netcode's connection approval would do it
-            // before they join, but a client must then have it switched on too, or the server refuses it as a stranger.)
-            nm.OnClientConnectedCallback += id =>
-            {
-                int online = nm.ConnectedClientsIds.Count;
-                if (online > options.maxPlayers)
-                {
-                    Debug.Log($"[Server] Player turned away (connection {id}): the server is full ({options.maxPlayers}).");
-                    nm.DisconnectClient(id, "The server is full. Try again in a little while.");
-                    return;
-                }
-                Debug.Log($"[Server] Player joined (connection {id}). Online: {online}.");
-            };
+            maxPlayersNow = options.maxPlayers;
+            PrepareConnections();
+            nm.OnClientConnectedCallback += id => Debug.Log($"[Server] Player joined (connection {id}). Online: {nm.ConnectedClientsIds.Count}.");
             nm.OnClientDisconnectCallback += id => Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
             if (nm.StartServer())
             {
                 Debug.Log($"[Server] {options.serverName} is listening on port {port} (UDP, every network card of this machine). Type a command (gm.help) and press Enter.");
+                ServerStatusResponder.Begin(options);
                 StatusChanged?.Invoke($"Dedicated server listening on port {port}");
             }
             else

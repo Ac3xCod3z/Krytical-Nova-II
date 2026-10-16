@@ -5,13 +5,17 @@
     <Style src="../HUD/ProgressionHUD.uss" />
     <Style src="Settings.uss" />
     <Style src="../Guide/Guide.uss" />
+    <Style src="../Servers/Servers.uss" />
     <!-- Faction skins: generated from the UiSkin assets; each only applies under its .kn-faction-* class. -->
     <Style src="../Common/KryticalSkin_Hegemony.uss" />
     <Style src="../Common/KryticalSkin_Null.uss" />
     <Style src="../Common/KryticalSkin_Covenant.uss" />
     <ui:Template name="SettingsWindow" src="SettingsWindow.uxml" />
+    <ui:Template name="ServersWindow" src="../Servers/ServersWindow.uxml" />
     <ui:VisualElement name="menu-settings" class="kn-root" picking-mode="Ignore">
         <ui:VisualElement name="menu-settings-shade" class="menu-settings-shade" />
         <ui:Instance template="SettingsWindow" name="settings-layer" class="hud-overlay-layer" picking-mode="Ignore" />
+        <!-- The Servers window (MenuServers), opened by character select's SERVERS prompt. -->
+        <ui:Instance template="ServersWindow" name="servers-layer" class="hud-overlay-layer" picking-mode="Ignore" />
     </ui:VisualElement>
 </ui:UXML>

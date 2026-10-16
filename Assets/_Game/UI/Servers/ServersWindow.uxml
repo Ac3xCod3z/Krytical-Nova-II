@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- The Servers window (MenuServers, online step 4), the owner's layout A: a row per server, filled in code from
+         ServerDirectory. Players only pick; the list is kept on the server's control page. It sits in the menus'
+         document beside Settings (MenuSettings.uxml), so it wears the same skin. -->
+    <ui:VisualElement name="menu-servers" class="kn-root" picking-mode="Ignore">
+        <ui:VisualElement name="servers-shade" class="servers-shade" />
+        <ui:VisualElement name="servers-window" class="panel window servers--a">
+            <ui:VisualElement class="row kn-header">
+                <ui:Label text="SERVERS" class="heading" />
+                <ui:Button name="close-servers" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+            </ui:VisualElement>
+            <ui:Label name="servers-message" class="servers-message" />
+            <!-- Only for the owner's own server on this PC, when it is off (LocalServer). -->
+            <ui:Button name="servers-start" text="START MY SERVER" class="settings-footer-button kn-button-primary servers-start" />
+            <ui:Label text="Enter on character select joins the server marked LAST PLAYED." class="help servers-lede" />
+            <ui:VisualElement name="servers-list" />
+            <ui:Label name="servers-empty" text="Looking for servers..." class="help" />
+            <ui:VisualElement class="servers-footer">
+                <ui:Label text="Up / Down choose   ·   Enter joins   ·   Esc closes" class="servers-hint" />
+                <ui:VisualElement class="servers-footer-gap" />
+                <ui:Button name="servers-refresh" text="REFRESH" class="settings-footer-button" />
+                <ui:Button name="servers-join" text="JOIN" class="settings-footer-button kn-button-primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
