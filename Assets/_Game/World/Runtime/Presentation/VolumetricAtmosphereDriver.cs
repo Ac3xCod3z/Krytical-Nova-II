@@ -136,6 +136,8 @@ namespace KryticalNova.World
             if (layer.Fog == null || layer.Profile == null) return;
             layer.Profile.raymarchQuality = tier.FogRaymarch;
             layer.Profile.raymarchMinStep = layer.AuthoredMinStep * tier.FogStepScale;
+            // Ultra: the lamps glow in the mist (StreetLampController's fog point lights).
+            layer.Fog.enablePointLights = VolumetricQualityRuntime.Quality == VolumetricQuality.Ultra;
             if (layer.Fog.gameObject.activeSelf) layer.Fog.UpdateMaterialProperties();
         }
 

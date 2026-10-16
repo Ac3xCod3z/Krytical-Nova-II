@@ -54,7 +54,11 @@ stored before 16 Oct 2026 (on or off) reads as High or Off. The levels are `Volu
 | High | 6 / authored / half | 4 / 0.2 m / 1 / 45-65 m / half |
 | Ultra | 8 / 0.75x / two thirds | 8 / 0.1 m / 0.5 / 60-85 m / full |
 
-Cones drawn smaller are blurred back up edge-preserving. Coarser cone sampling than 4 blotches the cones (tried on
+**Ultra adds two extras** (owner's pick C, 16 Oct 2026): the cone of a lamp within 25 m of the camera is cut by the
+walls and props in its way (its occlusion map, 256 px, is drawn once when it comes near; Kronnect's depth renderer
+`VolumetricLightsDepthRenderer` sits in `PC_RPAsset`'s renderer list for it), and the mist glows round each lit lamp
+(a `FogPointLight` on a runtime point light 5 cm across, so it lights nothing but the fog; radius 4 m, strength 0.12;
+the fog shows the nearest 16). Both in `StreetLampController`. Cones drawn smaller are blurred back up edge-preserving. Coarser cone sampling than 4 blotches the cones (tried on
 Medium, 16 Oct 2026), so lower levels save on distance and resolution instead. Soft-shadow quality is a setting of
 each directional light (`UniversalAdditionalLightData.softShadowQuality`), put on every scene's sun and moon by
 `GraphicsSettingsApplier`; cascade splits are set on the pipeline asset and put back at the end of a session like
@@ -1023,7 +1027,7 @@ of frames each, GPU / CPU ms (FrameTimingManager; two runs before, repeatable to
 | Low | 6.3 / 10.7 | 5.9 / 9.1 (the 72 cones off: their CPU cost is about 1.6 ms) |
 | Medium | 7.1-7.5 / 11.3 | 7.0 / 11.2 |
 | High | 7.4 / 11.4 | 7.0-7.2 / 11.5 |
-| Ultra | 7.3 / 11.3 | 7.8-8.0 / 11.5 (finer mist and cones, 80 m shadows) |
+| Ultra | 7.3 / 11.3 | 7.8-8.0 / 11.5 (finer mist and cones, 80 m shadows); 8.7 / 11.4 with the glow and occlusion extras |
 
 By day, clear: Low 5.8, Medium 5.9, High 6.1, Ultra 6.1 ms GPU. To be measured again in a build with `gm.bench`.
 
@@ -1034,8 +1038,8 @@ By day, clear: Low 5.8, Medium 5.9, High 6.1, Ultra 6.1 ms GPU. To be measured a
   per level, cones off with the fog and on Low, cones at half resolution with an edge-preserving blur, cascade splits
   and soft-shadow quality per preset, additional-light shadows off, the weather's fog kept outside indoors, the
   "Mobile" check and the Overcast comment fixed (sections 1, 3, 3b, 7).
-- **Ultra-only extras to try**, kept only within budget: ~~a finer raymarch~~ (Ultra's level, built); lamp-cone
-  occlusion near the camera; fog glow round lamps (`FogPointLight`). Not tried yet.
+- ~~**Ultra-only extras**~~: built 16 Oct 2026: a finer raymarch, lamp cones cut by walls near the camera, the fog
+  glow round lamps (section 1; the owner chose the medium glow from a sheet of four). About +0.8 ms on Ultra.
 - **Dynamic GI**: evaluated 2026-10-02 (the "Fast Dynamic GI" asset, `_ThirdParty/GI`) against APV and **rejected**.
   An A/B in Zone01 roughly doubled frame cost (+2–5 ms at street and vista views) and added no visible bounce, because
   its SDF tracing needs Read/Write enabled on every Synty mesh (memory cost, importer churn). APV + sky occlusion stays.
@@ -1072,7 +1076,8 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   (`VolumetricQualityRuntime`, section 1), the cones go off with the fog and draw at half resolution with an
   edge-preserving blur below Ultra, cascade splits and soft-shadow quality follow the shadow preset, additional-light
   shadows are off, the weather's fog stays outside indoors, and the fog driver's never-true "Mobile" check and stale
-  Overcast comment are gone. Measured per preset (section 7).
+  Overcast comment are gone. Measured per preset (section 7). Then the Ultra extras: cones cut by walls near the
+  camera and a glow round each lamp in the mist (the owner's pick C of four), about +0.8 ms on Ultra.
 
 - **2026-10-15 (docs only)**: the owner's research on volumetric light, fog, mist and shadows checked against the
   game: graphics tiers rule and preset table (section 1), shadow and spell-light rules (3), volumetrics as built and
