@@ -379,7 +379,8 @@ changelog_key = key_of("Change log", required=False)
 changelog = blocks(sections[changelog_key]) if changelog_key else "<p>No change log yet.</p>"
 
 # Library cards, by folder.
-CATS = [("Reference", "Reference packs: the Twelve Sky cross-reference, the art breakdown"),
+CATS = [("Guides", "Guides: how to run and use what is built, in plain words, updated with every step"),
+        ("Reference", "Reference packs: the Twelve Sky cross-reference, the art breakdown"),
         ("Design", "Design: how each system is meant to work, the Lore Bible, the Rendering Bible"),
         ("Plans", "Plans: how a system was or will be built, step by step"),
         ("Project", "Project: how the repo is organised")]
@@ -458,6 +459,9 @@ fill = {
     "{{CANDIDATES}}": blocks(sections[key_of("Candidates not on the original list")]),
     "{{CHANGELOG}}": changelog,
     "{{LIB_COUNT}}": str(nav_lib),
+    # The guides get a link of their own in the rail, opening them in the reader.
+    "{{NAV_GUIDES}}": "".join('<a href="%s">%s</a>' % (doc_href(d), html.escape(DOCS[d]["title"].split(":")[0]))
+                              for d in sorted(DOCS) if DOCS[d]["cat"] == "Guides"),
     "{{WORLD}}": world_html or "<p>No World Atlas yet.</p>",
     "{{WORLD_COUNT}}": str(world_count),
     "{{LIBRARY}}": "\n".join(library_html),

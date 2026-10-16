@@ -12,8 +12,10 @@ namespace KryticalNova.EditorTools
     /// <c>NetworkConnectionManager</c> listens as soon as the world loads). Same scenes as the test build
     /// (<see cref="BuildSceneOrder"/>). Windows for this PC and the OptiPlex, Linux for a rented machine later.
     /// Next to the build it writes a size report like <see cref="TestBuildBuilder"/>'s.
-    /// <para>Start it with <c>KryticalNovaServer.exe -port 7777 -logFile -</c> (the log then shows in the console
-    /// window). The Editor is put back on the build target it was on before.</para>
+    /// <para>Beside the exe it puts the control page's files (<c>ControlPage</c>, from <c>Networking/ControlPage~</c> and
+    /// the comic fonts) and a start script (<c>Start Server.bat</c>, or <c>start-server.sh</c> on Linux) that shows the log in
+    /// its window and starts the server again after a restart. The Editor is put back on the build target it was on
+    /// before.</para>
     /// </summary>
     public static class ServerBuildBuilder
     {
@@ -21,6 +23,10 @@ namespace KryticalNova.EditorTools
         public const string ExeName = "KryticalNovaServer";
         /// <summary>The server's settings (KryticalNova.Networking.ServerLaunchOptions.FileName): kept across a rebuild.</summary>
         private const string SettingsFileName = "server-settings.json";
+        private const string PageSource = "Assets/_Game/Networking/ControlPage~";
+        private static readonly string[] PageFonts = { "Assets/_Game/UI/Travel/Fonts/Bangers.ttf", "Assets/_Game/UI/Travel/Fonts/Roboto-Bold.ttf" };
+        /// <summary>KryticalNova.Networking.ServerLifetime.RestartExitCode: the start script starts the server again.</summary>
+        private const int RestartExitCode = 3;
 
         public enum Os { Windows, Linux }
 
@@ -124,9 +130,47 @@ namespace KryticalNova.EditorTools
 
             TestBuildBuilder.WriteSizeReport(report, scenes, $"Dedicated server ({os})", "Scripting backend: Mono, Dedicated Server target", ReportPath(os));
             bool ok = report.summary.result == BuildResult.Succeeded;
+            if (ok) AddBesideTheServer(os, folder);
             if (ok) Debug.Log($"[Build] Dedicated server ({os}) written to {folder} ({TestBuildBuilder.Megabytes(report.summary.totalSize)}). Sizes: {ReportPath(os)}");
             else Debug.LogError($"[Build] Dedicated server ({os}) {report.summary.result}: {report.summary.totalErrors} errors. See {ReportPath(os)}");
             return ok;
+        }
+    
+        /// <summary>The control page's files and fonts, and the start script.</summary>
+        private static void AddBesideTheServer(Os os, string folder)
+        {
+            string page = Path.Combine(folder, "ControlPage");
+            Directory.CreateDirectory(Path.Combine(page, "fonts"));
+            foreach (string file in Directory.GetFiles(PageSource))
+                File.Copy(file, Path.Combine(page, Path.GetFileName(file)), true);
+            foreach (string font in PageFonts)
+                File.Copy(font, Path.Combine(page, "fonts", Path.GetFileName(font)), true);
+
+            if (os == Os.Windows)
+            {
+                File.WriteAllText(Path.Combine(folder, "Start Server.bat"),
+                    "@echo off\r\n" +
+                    "rem Starts the Krytical Nova server with its log in this window. Type commands here (gm.help).\r\n" +
+                    "rem Closing this window stops the server safely: everyone is saved first.\r\n" +
+                    "title Krytical Nova Server\r\n" +
+                    "cd /d \"%~dp0\"\r\n" +
+                    ":start\r\n" +
+                    // By its full path: a bare name is not looked for in the current folder where
+                    // NoDefaultCurrentDirectoryInExePath is set.
+                    "\"%~dp0" + ExeName + ".exe\" -logFile -\r\n" +
+                    $"if %errorlevel%=={RestartExitCode} goto start\r\n" +
+                    "echo.\r\n" +
+                    "echo The server has stopped. Press a key to close this window.\r\n" +
+                    "pause > nul\r\n");
+            }
+            else
+            {
+                File.WriteAllText(Path.Combine(folder, "start-server.sh"),
+                    "#!/bin/sh\n" +
+                    "# Starts the Krytical Nova server; starts it again after a restart.\n" +
+                    "cd \"$(dirname \"$0\")\"\n" +
+                    $"while true; do ./{ExeName}.x86_64 -logFile -; [ $? -eq {RestartExitCode} ] || break; done\n");
+            }
         }
     }
 }

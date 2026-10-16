@@ -79,7 +79,13 @@ namespace KryticalNova.DevTools
         private static string Players()
         {
             var players = GmTarget.ConnectedPlayers();
-            if (players.Count == 0) return "No network session hosted here: GM commands act on your own player.";
+            if (players.Count == 0)
+            {
+                var session = Unity.Netcode.NetworkManager.Singleton;
+                return session != null && session.IsListening && session.IsServer
+                    ? "Nobody is connected."
+                    : "No network session hosted here: GM commands act on your own player.";
+            }
             ulong? target = GmTarget.ClientId;
             var local = PlayerInventory.Local;
             var sb = new StringBuilder();
@@ -88,7 +94,8 @@ namespace KryticalNova.DevTools
                 bool isLocal = local != null && local.gameObject == player;
                 bool isTarget = target.HasValue ? target.Value == clientId : isLocal;
                 int level = player.TryGetComponent<PlayerCharacterProgression>(out var prog) ? prog.CurrentLevel : 0;
-                sb.Append(isTarget ? "> " : "  ").Append("client ").Append(clientId)
+                string name = player.TryGetComponent<PlayerIdentity>(out var identity) ? identity.CharacterName : player.name;
+                sb.Append(isTarget ? "> " : "  ").Append("client ").Append(clientId).Append("  ").Append(name)
                   .Append(isLocal ? " (you)" : string.Empty).Append("  level ").Append(level)
                   .Append("  at ").AppendLine(player.transform.position.ToString("0"));
             }

@@ -1549,6 +1549,10 @@ namespace KryticalNova.EditorTools.GM
         [InfoBox("A dedicated server only: counts down with the players told, saves everyone, backs up, then stops.")]
         private void ShutdownServer([MinValue(0)] int seconds = 60, string reason = "") => Run($"gm.shutdown {seconds} {Quote(reason)}");
 
+        [TabGroup(Tabs, SocialTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(713.5f)]
+        [InfoBox("A dedicated server only: like Shutdown, then it starts again (through Start Server.bat).")]
+        private void RestartServer([MinValue(0)] int seconds = 60, string reason = "") => Run($"gm.restart {seconds} {Quote(reason)}");
+
         [ButtonGroup(Tabs + "/" + SocialTab + "/Server"), EnableIf(nameof(IsReady)), LabelText("Cancel Shutdown"), PropertyOrder(714)]
         private void CancelShutdown() => Run("gm.shutdown cancel");
 

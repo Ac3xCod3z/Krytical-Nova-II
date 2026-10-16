@@ -10,7 +10,8 @@ namespace KryticalNova.DevTools
     /// <summary>
     /// A dedicated server's console window takes commands: a line typed there and Enter runs it like the GM console
     /// does (gm.say, gm.players, gm.kick, gm.shutdown, gm.backup, ...), and the answer is printed below it. The line is
-    /// read on a thread of its own and run on the game's. Only in a server build.
+    /// read on a thread of its own and run on the game's. The control page's GM command box runs its lines here too
+    /// (<see cref="Run"/>). Only in a server build.
     /// </summary>
     public sealed class ServerConsoleInput : MonoBehaviour
     {
@@ -22,6 +23,7 @@ namespace KryticalNova.DevTools
             var host = new GameObject("Server Console Input");
             DontDestroyOnLoad(host);
             host.AddComponent<ServerConsoleInput>();
+            KryticalNova.Networking.ServerControlPage.CommandRunner = Run;
             var reader = new Thread(Read) { IsBackground = true, Name = "Server console input" };
             reader.Start();
         }
@@ -52,18 +54,29 @@ namespace KryticalNova.DevTools
                 if (!QuantumConsoleProcessor.TableIsGenerating) QuantumConsoleProcessor.GenerateCommandTable();
                 if (!QuantumConsoleProcessor.TableGenerated) return; // the commands are still being found: next frame
             }
-            while (Lines.TryDequeue(out string line))
+            while (Lines.TryDequeue(out string line)) Run(line);
+        }
+
+        /// <summary>Runs one command line on the game's thread, logs it, and returns the answer.</summary>
+        public static string Run(string line)
+        {
+            if (!QuantumConsoleProcessor.TableGenerated)
             {
-                try
-                {
-                    object result = QuantumConsoleProcessor.InvokeCommand(line);
-                    Debug.Log("> " + line + (result != null ? "\n" + result : string.Empty));
-                }
-                catch (Exception e)
-                {
-                    Debug.Log("> " + line + "\n" + (e.InnerException ?? e).Message);
-                }
+                if (!QuantumConsoleProcessor.TableIsGenerating) QuantumConsoleProcessor.GenerateCommandTable();
+                if (!QuantumConsoleProcessor.TableGenerated) return "The commands are still being loaded: try again in a moment.";
             }
+            string answer;
+            try
+            {
+                object result = QuantumConsoleProcessor.InvokeCommand(line);
+                answer = result != null ? result.ToString() : "Done.";
+            }
+            catch (Exception e)
+            {
+                answer = (e.InnerException ?? e).Message;
+            }
+            Debug.Log("> " + line + "\n" + answer);
+            return answer;
         }
     }
 }

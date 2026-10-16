@@ -1,7 +1,8 @@
 # Online phase 1: a dedicated server on your PC, then on the old PC
 
 Part of `online-roadmap.md`. Written 11 Oct 2026; rewritten 15 Oct 2026 as the seven chunks the owner approved on
-12 Oct. **Chunks 1 and 2 built 16 Oct 2026** (see "as built" under each); chunks 3 to 7 are not built. The owner moved
+12 Oct. **Chunks 1 to 3 built 16 Oct 2026** (see "as built" under each); chunks 4 to 7 are not built. The owner's
+manual of the server as it is today is `Guides/Server-Guide.md`. The owner moved
 the short rendering pass (`Design/Rendering-Bible.md` section 8) to after chunk 1.
 
 ## Goal
@@ -135,6 +136,39 @@ players with Kick, Save now, Backup now, Announce, Restart / Stop with a countdo
 a GM command box, the live log; works on a phone. GM commands run only from here until Phase 2 (account ids can still
 be faked). *Try it:* do everything from the page.
 
+*Chunk 3 as built (16 Oct 2026):*
+- **The look:** the owner picked **C, the comic page by night**, from a lettered sheet of three (comic by day, the
+  Synty sci-fi HUD, comic by night). Bangers and Roboto Bold, served by the server itself: nothing comes from the
+  internet. Desktop and phone layouts.
+- **The page** (`ServerControlPage`, server build only): status (ONLINE, or STOP IN / RESTART IN during a countdown;
+  players, uptime, map, next backup), How to connect (this PC's home-network addresses and the game port, with Copy),
+  players with Kick (a reason they read), Save now, Backup now, Announce, Restart / Stop after a number of seconds with
+  Cancel, a GM command box (`ServerConsoleInput.Run`, the same as the window), the live log (start-up noise hidden,
+  "every line" shows it). Kick, Restart and Stop ask first in a dialog of the page's own (a browser's confirm and
+  prompt are unreliable on phones).
+- **Served from a plain socket** (`TcpListener` on `pagePort`, 8090): Windows' `HttpListener` needs administrator
+  rights to answer other machines. The page's files live in `Networking/ControlPage~` and the build copies them, with
+  the fonts, to `ControlPage` beside the server; they are revalidated on every load (`no-cache`).
+- **Security** (`ControlPageRules`, tested in `ControlPageTests`): only loopback and private addresses are answered;
+  the Host must be an address, localhost or a bare machine name (no web site's name: DNS rebinding); a password from
+  `pagePassword` (made and written into the settings file at the first start, compared in constant time); five wrong
+  tries lock that address for five minutes; a session cookie (`HttpOnly`, `SameSite=Strict`, 12 hours, gone with a
+  restart); every button press carries the session's check token in a header and must come from the page's own
+  origin; requests over 16 KB are refused; only plain file names of known types under the page's folder are served;
+  `Content-Security-Policy`, `X-Frame-Options: DENY`, `nosniff`, `no-referrer`. Plain `http` on the home network.
+- **Restart:** `ServerLifetime` quits with exit code 3 after the usual save and backup, and **`Start Server.bat`**,
+  which the build now writes beside the server (and `start-server.sh` for Linux), starts it again. The script calls the
+  exe by its full path (a bare name is not searched for where `NoDefaultCurrentDirectoryInExePath` is set). New
+  `gm.restart <seconds> "reason"`; `gm.players` shows names.
+- *Tried:* the page from the browser on the server PC: wrong Host, foreign Origin, missing check, path tricks and six
+  wrong passwords all refused as they should; Kick (the Editor client read the reason), Announce, Backup now, the GM
+  box, Stop with Cancel, Stop, and Restart through `Start Server.bat` (a new process, the page back within seconds).
+- *Found:* Norton flags each new build as **IDP.Generic** and blocks the start script or the exe (it reported "cannot
+  find the file" and "not recognized"); the cure on a dev PC is a folder exclusion for `Builds` in Norton's scan,
+  Auto-Protect/SONAR and Script Control lists; for players, code signing (phase 9). Adding Kronnect's lamp-cone depth
+  renderer to `PC_RPAsset` in the rendering pass had switched off the GPU Resident Drawer (it was Forward, not
+  Forward+); it is Forward+ now, like the fog's.
+
 **4. Play joins your server** (`online/04-join-flow`).
 `ServerDirectory` (servers found online, saved addresses, "This PC (testing)", the last one remembered); a Servers
 window in each faction's skin, opened from character select and replacing the F1 panel's contents; Enter loads the
@@ -177,6 +211,8 @@ The server writes its performance log; a session with all three players, then sc
 - The control page is never forwarded to the internet.
 - Editor tests use the test session port, never 7777. No Editor is stopped by Claude.
 - New client-to-server calls go on the audit list of `online-security-model.md`.
+- **The Server Guide** (`Guides/Server-Guide.md`, owner, 16 Oct 2026) is the owner's plain-words manual of the server
+  as it is today: every command, setting, folder and message. It is updated with every chunk that lands.
 
 ## Done when
 
