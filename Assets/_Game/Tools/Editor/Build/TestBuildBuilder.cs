@@ -82,14 +82,28 @@ namespace KryticalNova.EditorTools
         /// <summary>Builds without asking, with Mono. True when the build succeeded; the report is written either way.</summary>
         public static bool Build() => Build(ScriptingImplementation.Mono2x);
 
+        /// <summary>Where a build goes, how it is packed and where its size report is written.</summary>
+        public sealed class Output
+        {
+            public string Folder = OutputFolder;
+            public string ReportPath = TestBuildBuilder.ReportPath;
+            public string Title = "Windows test build";
+            /// <summary>The test build packs every asset into one compressed file; a release keeps them apart for small patches.</summary>
+            public BuildOptions Options = BuildOptions.CompressWithLz4HC;
+        }
+
+        /// <summary>The game's exe name in any of its builds.</summary>
+        public const string GameExe = ExeName;
+
         /// <summary>
         /// Builds without asking, with the scripting backend named. A build with the project's own backend (Mono)
         /// touches no setting. For another one the backend, stripping level and compiler configuration are set for
         /// the build and put back afterwards: the values are the project's again, though ProjectSettings then names
         /// them where it left them unsaid before.
         /// </summary>
-        public static bool Build(ScriptingImplementation backend)
+        public static bool Build(ScriptingImplementation backend, Output output = null)
         {
+            output = output ?? new Output();
             if (backend == ScriptingImplementation.IL2CPP)
             {
                 string missing = Il2CppMissing();
@@ -103,7 +117,7 @@ namespace KryticalNova.EditorTools
             NamedBuildTarget standalone = NamedBuildTarget.Standalone;
             ScriptingImplementation backendWas = PlayerSettings.GetScriptingBackend(standalone);
             // The project's own backend: nothing is set and nothing has to be put back, so ProjectSettings is not written.
-            if (backendWas == backend && backend != ScriptingImplementation.IL2CPP) return BuildWith(backend);
+            if (backendWas == backend && backend != ScriptingImplementation.IL2CPP) return BuildWith(backend, output);
             ManagedStrippingLevel strippingWas = PlayerSettings.GetManagedStrippingLevel(standalone);
             Il2CppCompilerConfiguration compilerWas = PlayerSettings.GetIl2CppCompilerConfiguration(standalone);
             try
@@ -117,7 +131,7 @@ namespace KryticalNova.EditorTools
                     PlayerSettings.SetManagedStrippingLevel(standalone, ManagedStrippingLevel.Minimal);
                     PlayerSettings.SetIl2CppCompilerConfiguration(standalone, Il2CppCompilerConfiguration.Release);
                 }
-                return BuildWith(backend);
+                return BuildWith(backend, output);
             }
             finally
             {
@@ -127,7 +141,7 @@ namespace KryticalNova.EditorTools
             }
         }
 
-        private static bool BuildWith(ScriptingImplementation backend)
+        private static bool BuildWith(ScriptingImplementation backend, Output output)
         {
             BuildSceneOrder.Apply();
             string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
@@ -139,26 +153,27 @@ namespace KryticalNova.EditorTools
 
             // Only our own output folder: a file left from an older build must not be handed out with this one.
             // The performance logs of the sessions played from it are kept across the rebuild.
-            string logs = OutputFolder + "/" + LogsFolder, keptLogs = BuildRoot + "/" + LogsFolder + "_kept";
+            string folder = output.Folder;
+            string logs = folder + "/" + LogsFolder, keptLogs = Path.GetDirectoryName(folder) + "/" + LogsFolder + "_kept";
             if (Directory.Exists(logs) && !Directory.Exists(keptLogs)) Directory.Move(logs, keptLogs);
-            if (Directory.Exists(OutputFolder)) Directory.Delete(OutputFolder, true);
-            Directory.CreateDirectory(OutputFolder);
+            if (Directory.Exists(folder)) Directory.Delete(folder, true);
+            Directory.CreateDirectory(folder);
             if (Directory.Exists(keptLogs)) Directory.Move(keptLogs, logs);
 
             var options = new BuildPlayerOptions
             {
                 scenes = scenes,
-                locationPathName = OutputFolder + "/" + ExeName,
+                locationPathName = folder + "/" + ExeName,
                 targetGroup = BuildTargetGroup.Standalone,
                 target = BuildTarget.StandaloneWindows64,
-                options = BuildOptions.CompressWithLz4HC
+                options = output.Options
             };
             BuildReport report = BuildPipeline.BuildPlayer(options);
-            WriteSizeReport(report, scenes, "Windows test build", "Scripting backend: " + BackendName(backend), ReportPath);
+            WriteSizeReport(report, scenes, output.Title, "Scripting backend: " + BackendName(backend), output.ReportPath);
 
             bool ok = report.summary.result == BuildResult.Succeeded;
-            if (ok) Debug.Log($"[Build] Windows test build ({BackendName(backend)}) written to {OutputFolder} ({Megabytes(report.summary.totalSize)}). Sizes: {ReportPath}");
-            else Debug.LogError($"[Build] Windows test build {report.summary.result}: {report.summary.totalErrors} errors. See {ReportPath}");
+            if (ok) Debug.Log($"[Build] {output.Title} ({BackendName(backend)}) written to {folder} ({Megabytes(report.summary.totalSize)}). Sizes: {output.ReportPath}");
+            else Debug.LogError($"[Build] {output.Title} {report.summary.result}: {report.summary.totalErrors} errors. See {output.ReportPath}");
             return ok;
         }
 
