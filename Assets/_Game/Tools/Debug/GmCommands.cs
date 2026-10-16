@@ -437,8 +437,8 @@ namespace KryticalNova.DevTools
         [Command("gm.say", "Announce on the GM channel: every player of every faction reads it, wherever they are. Wrap the text in quotes.")]
         private static string Say(string text)
         {
-            // Any player will do: this only checks that we are the host, the server or offline.
-            if (!TryGetPlayer(out _, out var error)) return error;
+            // The host, the server (which has no player of its own) or offline.
+            if (!GmTarget.HasAuthority(out var error)) return error;
             int reached = PlayerChat.ServerBroadcastGm(text, "GM");
             return reached > 0 ? $"Announced to {reached} player(s)." : "Nothing sent (empty text, or nobody is connected).";
         }

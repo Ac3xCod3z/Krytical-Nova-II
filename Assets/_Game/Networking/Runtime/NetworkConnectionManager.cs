@@ -323,12 +323,10 @@ namespace KryticalNova.Networking
         }
 
 #if UNITY_SERVER
-        private const string PortArgument = "-port";
-
         /// <summary>
-        /// The dedicated server: listens on every network card of this machine, on the port given with
-        /// "-port &lt;number&gt;" (else the default), and waits for players. No Unity services: players reach it by
-        /// its address and port.
+        /// The dedicated server: listens on every network card of this machine, on the port of its settings
+        /// (<see cref="ServerLaunchOptions"/>: server-settings.json or -port), turns away players past its limit, and
+        /// waits for players. No Unity services: players reach it by its address and port.
         /// </summary>
         private void StartDedicatedServer()
         {
@@ -338,34 +336,34 @@ namespace KryticalNova.Networking
                 return;
             }
 
-            ushort port = CommandLinePort() ?? defaultPort;
+            ServerLaunchOptions options = ServerLaunchOptions.LoadForThisServer();
+            ushort port = (ushort)options.port;
             ConfigureTransport(defaultListenAddress, port);
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
             NetworkManager nm = NetworkManager.Singleton;
-            nm.OnClientConnectedCallback += id => Debug.Log($"[Server] Player joined (connection {id}). Online: {nm.ConnectedClientsIds.Count}.");
+            // Past the limit a player is sent straight back with the reason. (Netcode's connection approval would do it
+            // before they join, but a client must then have it switched on too, or the server refuses it as a stranger.)
+            nm.OnClientConnectedCallback += id =>
+            {
+                int online = nm.ConnectedClientsIds.Count;
+                if (online > options.maxPlayers)
+                {
+                    Debug.Log($"[Server] Player turned away (connection {id}): the server is full ({options.maxPlayers}).");
+                    nm.DisconnectClient(id, "The server is full. Try again in a little while.");
+                    return;
+                }
+                Debug.Log($"[Server] Player joined (connection {id}). Online: {online}.");
+            };
             nm.OnClientDisconnectCallback += id => Debug.Log($"[Server] Player left (connection {id}). Online: {Mathf.Max(0, nm.ConnectedClientsIds.Count - 1)}.");
             if (nm.StartServer())
             {
-                Debug.Log($"[Server] Listening on port {port} (UDP, every network card of this machine).");
+                Debug.Log($"[Server] {options.serverName} is listening on port {port} (UDP, every network card of this machine). Type a command (gm.help) and press Enter.");
                 StatusChanged?.Invoke($"Dedicated server listening on port {port}");
             }
             else
             {
                 ReportError($"[Server] Could not listen on port {port}. Is another server already using it?");
             }
-        }
-
-        /// <summary>The port after "-port" on the command line, if it is a number from 1 to 65535.</summary>
-        private static ushort? CommandLinePort()
-        {
-            string[] args = Environment.GetCommandLineArgs();
-            for (int i = 0; i < args.Length - 1; i++)
-            {
-                if (!string.Equals(args[i], PortArgument, StringComparison.OrdinalIgnoreCase)) continue;
-                if (ushort.TryParse(args[i + 1], out ushort port) && port > 0) return port;
-                Debug.LogWarning($"[Server] \"{args[i + 1]}\" is not a port number; using the default.");
-            }
-            return null;
         }
 #endif
 
@@ -443,7 +441,9 @@ namespace KryticalNova.Networking
                 var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
                 if (transport != null)
                 {
-                    transport.SetConnectionData(address, port, "0.0.0.0");
+                    // Forced: with Unity's Dedicated Server package the transport otherwise takes the package's port
+                    // (7777 when none is given) over this one. A server's -port still wins, through ServerLaunchOptions.
+                    transport.SetConnectionData(true, address, port, "0.0.0.0");
                 }
             }
         }

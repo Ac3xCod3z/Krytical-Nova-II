@@ -19,6 +19,8 @@ namespace KryticalNova.EditorTools
     {
         public const string BuildRoot = "Builds/Server";
         public const string ExeName = "KryticalNovaServer";
+        /// <summary>The server's settings (KryticalNova.Networking.ServerLaunchOptions.FileName): kept across a rebuild.</summary>
+        private const string SettingsFileName = "server-settings.json";
 
         public enum Os { Windows, Linux }
 
@@ -80,10 +82,14 @@ namespace KryticalNova.EditorTools
                 return false;
             }
 
-            // Only our own output folder: a file left from an older build must not travel with this one.
+            // Only our own output folder: a file left from an older build must not travel with this one. The server's
+            // settings file is the owner's, not the build's: it is kept across the rebuild.
             string folder = OutputFolder(os);
+            string settings = Path.Combine(folder, SettingsFileName), keptSettings = Path.Combine(BuildRoot, os + "-" + SettingsFileName + ".kept");
+            if (File.Exists(settings)) File.Copy(settings, keptSettings, true);
             if (Directory.Exists(folder)) Directory.Delete(folder, true);
             Directory.CreateDirectory(folder);
+            if (File.Exists(keptSettings)) File.Move(keptSettings, settings);
 
             BuildTarget target = os == Os.Windows ? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneLinux64;
             string exe = folder + "/" + ExeName + (os == Os.Windows ? ".exe" : ".x86_64");

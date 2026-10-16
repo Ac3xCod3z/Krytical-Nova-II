@@ -1,7 +1,7 @@
 # Online phase 1: a dedicated server on your PC, then on the old PC
 
 Part of `online-roadmap.md`. Written 11 Oct 2026; rewritten 15 Oct 2026 as the seven chunks the owner approved on
-12 Oct. **Chunk 1 built 16 Oct 2026** (see "Chunk 1 as built" below); chunks 2 to 7 are not built. The owner moved
+12 Oct. **Chunks 1 and 2 built 16 Oct 2026** (see "as built" under each); chunks 3 to 7 are not built. The owner moved
 the short rendering pass (`Design/Rendering-Bible.md` section 8) to after chunk 1.
 
 ## Goal
@@ -91,6 +91,42 @@ build folder. Closing the window, Ctrl+C or a Windows shutdown saves everyone fi
 folder on start, every few hours and before an update, keeping the last N. No-host sweep: `gm.say` without a local
 player, new `gm.kick` and `gm.shutdown <seconds>`, the "host left" wording in `GameMenuController`, the three
 `ServerClientId` checks. *Try it:* change the name and port in the file, kill the window mid-play, restart.
+
+*Chunk 2 as built (16 Oct 2026):*
+- **`server-settings.json`** beside `KryticalNovaServer.exe` (`ServerLaunchOptions`, only in a server build): `serverName`,
+  `port` (7777), `maxPlayers` (100), `saveFolder`, `map` (Zone01_StarterTown), `connectionMode` (`direct`; `relay`
+  waits for chunk 5), `pagePort` and `pagePassword` (for chunk 3), `backupHours` (6), `backupsKept` (10). The first
+  start writes it with every default; a file that cannot be read is left alone and the defaults are used. The command
+  line wins: `-name -port -maxPlayers -saveFolder -map -mode -pagePort -backupHours -backupsKept` (no password on the
+  command line: it would show in the list of running programs). **Krytical Nova ▸ Build ▸ Dedicated Server** keeps
+  the file across a rebuild.
+- **The saves sit beside the server's folder**, in `KryticalNovaServer-Save` (unless `saveFolder` says otherwise), so a
+  new build never touches them; backups go to `KryticalNovaServer-Save-Backups` as `save_<date>_<time>_<why>.zip`,
+  written under a temporary name and renamed when whole, on start, every `backupHours`, on stop and on `gm.backup`,
+  the oldest beyond `backupsKept` removed (`ServerBackups`).
+- **Safe stop** (`ServerLifetime`): the window's close button, Ctrl+C, logging off and a Windows shutdown all save every
+  player and the world, back up, send the players away with "The server was closed." and only then let Windows end
+  the program (it allows about five seconds). `gm.shutdown <seconds> "reason"` counts down with the players told at
+  5 min, 2 min, 1 min, 30, 10, 5 to 1 seconds; `gm.shutdown cancel` calls it off.
+- **The window takes commands:** a line typed in the server's window runs like the GM console (`ServerConsoleInput`):
+  `gm.say`, `gm.players`, `gm.kick <id or name> "reason"`, `gm.shutdown`, `gm.backup`, and the rest. `gm.say` and the
+  new commands need no player of the GM's own (`GmTarget.HasAuthority`); they also have buttons in the GM Tools
+  window (Social, Server).
+- **A full server** lets the player in and sends them straight back with "The server is full". (Netcode's connection
+  approval would refuse them before they join, but it must then be switched on in every client too, or the server
+  refuses every client as a stranger: found 16 Oct 2026.)
+- **The player is told why** a session ended: the server's own words (a kick, a shutdown, a full server), else "The
+  server closed, or the connection was lost. Your progress is kept on the server." No more "the host left".
+- **The three `ServerClientId` checks** needed no change: a duplicate login is refused, the buff resend skips the
+  server, and only a host's own player is GM in chat (a dedicated server has none: its GM types in the window).
+- *Found:* with Unity's Dedicated Server package installed, Netcode's transport takes the package's port (7777 when
+  none is given) over the one the game sets; `ConfigureTransport` now forces its port, and `-port` still wins through
+  the settings. Chunk 1's `-port` hid this.
+- *Tried:* settings file with a new name, port 7790 and a short backup interval; the Editor joined, a timed backup ran,
+  the window was closed mid-play (account saved, stop backup, the player told), the server started again (start
+  backup, oldest pruned) and the Editor joined again. Commands typed into the window (`gm.players`, `gm.backup`,
+  `gm.shutdown 5`) ran and the countdown stopped the server. Clip `Recordings/Server/server-chunk2-safe-stop.mp4`
+  (not in git). The Linux server builds too.
 
 **3. The control page** (`online/03-server-dashboard`).
 First a lettered mock-up sheet in the comic / Synty look. Then a small web server inside the server process (no admin
