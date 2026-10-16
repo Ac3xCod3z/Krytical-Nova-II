@@ -177,6 +177,8 @@ The server writes its performance log; a session with all three players, then sc
 - The control page is never forwarded to the internet.
 - Editor tests use the test session port, never 7777. No Editor is stopped by Claude.
 - New client-to-server calls go on the audit list of `online-security-model.md`.
+- **The Server Guide** (`Guides/Server-Guide.md`, owner, 16 Oct 2026) is the owner's plain-words manual of the server
+  as it is today: every command, setting, folder and message. It is updated with every chunk that lands.
 
 ## Done when
 
