@@ -50,7 +50,10 @@ A small Windows program, separate from the game:
    player's password is typed into the sign-in provider's page, never into our program.
 4. **Shows news and server status** from the website.
 5. **Is signed** with a code-signing certificate, as is the game. Without one, Windows warns every
-   player that the download is unsafe. This is a yearly cost.
+   player that the download is unsafe. This is a yearly cost. Antivirus programs agree: Norton flagged every
+   unsigned build of the server as **IDP.Generic** (a new file nobody has run) and blocked it (16 Oct 2026). The
+   game, the server and the launcher are signed with the same certificate (an EV one builds trust fastest), so a
+   new build is known by its publisher, not by its age. Steam's copies start trusted.
 6. Files are served from storage with a content delivery network in front; the launcher never downloads
    from a game server.
 

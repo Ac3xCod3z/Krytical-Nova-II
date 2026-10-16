@@ -44,6 +44,21 @@ namespace KryticalNova.DevTools
 #endif
         }
 
+        [Command("gm.restart", "Restart the dedicated server after a countdown the players are told about: it saves, backs up, stops " +
+                               "and starts again (through Start Server.bat): gm.restart <seconds> \"reason\" (60 if none given). " +
+                               "gm.shutdown cancel calls it off.")]
+        private static string Restart(string seconds = "60", string reason = "")
+        {
+            if (!GmTarget.HasAuthority(out string error)) return error;
+#if UNITY_SERVER
+            if (!float.TryParse(seconds, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float wait))
+                return $"\"{seconds}\" is not a number of seconds.";
+            return KryticalNova.Networking.ServerLifetime.ScheduleShutdown(wait, reason, restart: true);
+#else
+            return "Only a dedicated server restarts this way.";
+#endif
+        }
+
         [Command("gm.backup", "Back up the dedicated server's saves now, after saving everyone (do it before an update). " +
                               "Backups also happen at start, at stop and every few hours (server-settings.json).")]
         private static string Backup()

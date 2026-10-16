@@ -31,9 +31,9 @@ namespace KryticalNova.Networking
         public string map = "Zone01_StarterTown";
         [Tooltip("direct: players connect to this PC's address and port (port forwarding). relay: through Unity Relay (not built yet).")]
         public string connectionMode = "direct";
-        [Tooltip("The control page's port, on the home network only (not built yet).")]
+        [Tooltip("The control page's port, on the home network only. 0 switches the page off.")]
         public int pagePort = 8090;
-        [Tooltip("The control page's password (not built yet). Only ever in this file.")]
+        [Tooltip("The control page's password. Only ever in this file; when empty the server makes one and writes it here.")]
         public string pagePassword = "";
         [Tooltip("Hours between backups of the save folder; 0 backs up only at start and stop.")]
         public float backupHours = 6f;
@@ -160,6 +160,32 @@ namespace KryticalNova.Networking
             if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed)) return parsed;
             notes.Add($"{key} \"{value}\" is not a whole number");
             return fallback;
+        }
+
+        /// <summary>
+        /// The control page's password. When the settings have none, one is made, written into the settings file (and
+        /// nowhere else) and returned with <paramref name="isNew"/> set, for the server's own window to show once.
+        /// </summary>
+        public string EnsurePagePassword(out bool isNew)
+        {
+            isNew = false;
+            if (!string.IsNullOrWhiteSpace(pagePassword)) return pagePassword;
+            pagePassword = ControlPageRules.NewPassword();
+            isNew = true;
+            string file = Path.Combine(ServerFolder, FileName);
+            try
+            {
+                // Written into the file as the owner left it: command-line overrides of this run are not saved.
+                var onDisk = new ServerLaunchOptions { ServerFolder = ServerFolder };
+                if (File.Exists(file)) JsonUtility.FromJsonOverwrite(File.ReadAllText(file), onDisk);
+                onDisk.pagePassword = pagePassword;
+                File.WriteAllText(file, JsonUtility.ToJson(onDisk, true));
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Server] The new control page password could not be written into {file}: {e.Message}. It works until the server stops.");
+            }
+            return pagePassword;
         }
 
 #if UNITY_EDITOR

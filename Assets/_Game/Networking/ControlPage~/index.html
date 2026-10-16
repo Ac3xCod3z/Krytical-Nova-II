@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Krytical Nova Server</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="login" class="login" hidden>
+  <form class="panel" id="loginForm" autocomplete="on">
+    <span class="tag">Home network · control page</span>
+    <h1>Krytical Nova Server</h1>
+    <label class="note" for="password">Password (pagePassword in server-settings.json)</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Open</button>
+    <p class="note" id="loginNote"></p>
+  </form>
+</div>
+
+<div id="main" class="wrap" hidden>
+  <header class="head">
+    <div class="name"><span class="tag">Home network · control page</span><h1 id="serverName">Krytical Nova Server</h1></div>
+    <span class="pill" id="pill">ONLINE</span>
+    <div class="stat">
+      <span class="chip" id="chipPlayers">0 / 0 players</span>
+      <span class="chip" id="chipUptime">up 0 min</span>
+      <span class="chip hide-phone" id="chipMap">-</span>
+      <span class="chip hide-phone" id="chipBackup">-</span>
+      <button class="small ghost" id="logout" type="button">Log out</button>
+    </div>
+  </header>
+
+  <section class="panel connect">
+    <h2>How to connect</h2>
+    <p class="note">In the game press F1, type this in IP and Port, press JOIN.</p>
+    <div id="addresses"></div>
+    <p class="note">From outside your house: comes in step 5 (Relay).</p>
+  </section>
+
+  <section class="panel players">
+    <h2>Players on</h2>
+    <table>
+      <thead><tr><th>Name</th><th>Lv</th><th class="hide-phone">Faction</th><th class="hide-phone">Map</th><th></th></tr></thead>
+      <tbody id="playerRows"></tbody>
+    </table>
+    <p class="note" id="noPlayers">Nobody is on.</p>
+  </section>
+
+  <section class="panel actions">
+    <h2>Run the server</h2>
+    <div class="big-actions"><button class="cyan" id="save" type="button">Save now</button><button class="cyan" id="backup" type="button">Backup now</button></div>
+    <p class="note" id="lastBackup">Last backup: -</p>
+    <form class="row" id="announceForm"><input class="grow" id="announceText" placeholder="Announcement for every player" maxlength="200"><button type="submit">Announce</button></form>
+    <div class="row gap-top">
+      <input class="seconds" id="seconds" type="number" min="0" max="3600" value="60"><span class="note">seconds</span>
+      <button class="red" id="restart" type="button">Restart</button><button class="red" id="stop" type="button">Stop</button>
+      <button class="ghost" id="cancel" type="button" hidden>Cancel</button>
+    </div>
+    <p class="note" id="countdown"></p>
+  </section>
+
+  <section class="panel gm">
+    <h2>GM command</h2>
+    <form class="row" id="commandForm"><input class="grow" id="commandLine" placeholder="gm.players" autocomplete="off" spellcheck="false"><button type="submit">Run</button></form>
+    <pre class="answer" id="commandAnswer">Type gm.help for every command.</pre>
+  </section>
+
+  <section class="panel log">
+    <div class="row between"><h2>Live log</h2><label class="note toggle"><input type="checkbox" id="everything"> every line</label></div>
+    <pre id="log"></pre>
+  </section>
+</div>
+
+<div id="dialog" class="dialog" hidden>
+  <form class="panel" id="dialogForm">
+    <h2 id="dialogTitle">Are you sure?</h2>
+    <p id="dialogText"></p>
+    <label class="note" for="dialogInput" id="dialogLabel">A reason the players will read (or leave empty)</label>
+    <input id="dialogInput" maxlength="200" autocomplete="off">
+    <div class="row"><button type="submit" class="red" id="dialogYes">Yes</button><button type="button" class="ghost" id="dialogNo">Cancel</button></div>
+  </form>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>
