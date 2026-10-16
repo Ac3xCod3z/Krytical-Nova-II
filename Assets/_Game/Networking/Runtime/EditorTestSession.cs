@@ -10,7 +10,8 @@ namespace KryticalNova.Networking
     /// the port it names and keeps its server save in the folder it names. That keeps an Editor test off a build
     /// running on the same machine, which hosts on the default port and writes the default save. Delete the file and
     /// the Editor is back on the defaults. A build never reads it.
-    /// <para>The file is two lines, in any order: <c>port=7788</c> and <c>save=C:/some/scratch/folder</c>.</para>
+    /// <para>The file is up to three lines, in any order: <c>port=7788</c>, <c>save=C:/some/scratch/folder</c>, and
+    /// <c>join=1</c> when a dedicated server is running on that port: the main Editor then joins it instead of hosting.</para>
     /// </summary>
     public static class EditorTestSession
     {
@@ -20,6 +21,7 @@ namespace KryticalNova.Networking
         private const string CloneFolder = "/Library/VP/";
         private const string PortKey = "port";
         private const string SaveKey = "save";
+        private const string JoinKey = "join";
 
         /// <summary>Where the file lives: the Library of the project a clone was made from, so all Editors read one file.</summary>
         public static string FilePath
@@ -42,11 +44,17 @@ namespace KryticalNova.Networking
         /// <summary>The folder the server save is kept in while a test session is on, or null.</summary>
         public static string SaveRoot => Read(out _, out string save) ? save : null;
 
+        /// <summary>True when the file says "join=1": a dedicated server is up, so the main Editor joins rather than hosts.</summary>
+        public static bool JoinOnly => Read(out _, out _, out bool join) && join;
+
+        private static bool Read(out ushort port, out string save) => Read(out port, out save, out _);
+
         // Read on every ask: it is asked a few times per session, and the file comes and goes while the Editor runs.
-        private static bool Read(out ushort port, out string save)
+        private static bool Read(out ushort port, out string save, out bool join)
         {
             port = 0;
             save = null;
+            join = false;
             try
             {
                 string path = FilePath;
@@ -59,6 +67,7 @@ namespace KryticalNova.Networking
                     string value = raw.Substring(equals + 1).Trim();
                     if (key.Equals(PortKey, StringComparison.OrdinalIgnoreCase)) ushort.TryParse(value, out port);
                     else if (key.Equals(SaveKey, StringComparison.OrdinalIgnoreCase) && value.Length > 0) save = value;
+                    else if (key.Equals(JoinKey, StringComparison.OrdinalIgnoreCase)) join = value == "1" || value.Equals("true", StringComparison.OrdinalIgnoreCase);
                 }
                 return true;
             }
@@ -77,7 +86,8 @@ namespace KryticalNova.Networking
         {
             if (!Read(out ushort port, out string save) || (port == 0 && save == null)) return;
             Debug.LogWarning($"[EditorTestSession] TEST SESSION ON: local sessions use port {(port != 0 ? port.ToString() : "(default)")}, " +
-                             $"the server save is {save ?? "(default)"}. Delete {FilePath} to go back to the defaults.");
+                             $"the server save is {save ?? "(default)"}{(JoinOnly ? ", and this Editor joins a dedicated server instead of hosting" : "")}. " +
+                             $"Delete {FilePath} to go back to the defaults.");
         }
 #else
         public static bool Active => false;
@@ -89,6 +99,8 @@ namespace KryticalNova.Networking
         }
 
         public static string SaveRoot => null;
+
+        public static bool JoinOnly => false;
 #endif
     }
 }

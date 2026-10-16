@@ -14,7 +14,7 @@ namespace KryticalNova.EditorTools
     /// then routes what plays sound: weather loops and thunder to Ambience, the game feel's sound slots to Sfx and
     /// the menu feel's (with the world's click and select) to UI, so every sound answers to one of the Settings
     /// sliders. <see cref="Sounds"/> is the same without the scene: how the clips are imported, the slots' clips
-    /// (<see cref="GameFeelBuilder.ApplySounds"/>) and the weather's (<see cref="WeatherAudioSetup"/>).
+    /// (GameFeelBuilder.ApplySounds) and the weather's (<see cref="WeatherAudioSetup"/>).
     /// Safe to run again; a mixer that already exists is kept as it is.
     /// </summary>
     public static class AudioSetup
@@ -111,10 +111,11 @@ namespace KryticalNova.EditorTools
         public static void Sounds()
         {
             int imported = ApplyImportSettings();
-            int slots = GameFeelBuilder.ApplySounds();
+            int slots = (int?)PresentationTools.Call("GameFeelBuilder", "ApplySounds") ?? 0;
+            int slotCount = (PresentationTools.Get("GameFeelBuilder", "SoundSlotNames") as System.Collections.Generic.IEnumerable<string>)?.Count() ?? 0;
             int loops = WeatherAudioSetup.Apply();
             AssetDatabase.SaveAssets();
-            Debug.Log($"[Audio] {slots} sound slot(s) of {GameFeelBuilder.SoundSlotNames.Count()} have clips; {loops} weather profile(s) have a loop; " +
+            Debug.Log($"[Audio] {slots} sound slot(s) of {slotCount} have clips; {loops} weather profile(s) have a loop; " +
                       $"{WeatherAudioSetup.ThunderClips().Length} thunder clip(s); {imported} clip(s) had their import settings changed.");
         }
 

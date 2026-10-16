@@ -7,9 +7,6 @@ using Unity.Services.Core;
 using Unity.Services.Multiplayer;
 using UnityEngine;
 
-// Server-only multiplayer types (assembly Unity.Services.Multiplayer.Server) live in the
-// Unity.Services.Multiplayer namespace imported above; there is no ".Server" namespace.
-
 namespace KryticalNova.Networking
 {
     /// <summary>
@@ -68,7 +65,7 @@ namespace KryticalNova.Networking
         private void Start()
         {
 #if UNITY_SERVER
-            StartDedicatedServerAsync();
+            StartDedicatedServer();
 #else
             if (autoStartInEditor && Application.isEditor && !Application.isBatchMode)
                 StartCoroutine(AutoStartEditorSession());
@@ -84,7 +81,8 @@ namespace KryticalNova.Networking
             // One frame, so every Start in the scene (the runtime NavMesh among them) has run before a player spawns.
             yield return null;
 
-            bool isClone = EditorCloneProfile() != null;
+            // A clone joins; so does the main Editor while a test session says a dedicated server is up.
+            bool isClone = EditorCloneProfile() != null || EditorTestSession.JoinOnly;
             var retry = new WaitForSecondsRealtime(AutoJoinRetrySeconds);
             while (true)
             {
@@ -325,44 +323,46 @@ namespace KryticalNova.Networking
         }
 
 #if UNITY_SERVER
-        private async void StartDedicatedServerAsync()
+        private const string PortArgument = "-port";
+
+        /// <summary>
+        /// The dedicated server: listens on every network card of this machine, on the port given with
+        /// "-port &lt;number&gt;" (else the default), and waits for players. No Unity services: players reach it by
+        /// its address and port.
+        /// </summary>
+        private void StartDedicatedServer()
         {
-            try
+            if (NetworkManager.Singleton == null)
             {
-                StatusChanged?.Invoke("Starting headless dedicated server...");
-                if (!await EnsureServicesInitializedAsync())
-                {
-                    Debug.LogError("Dedicated server failed to initialize services. Falling back to local server listen.");
-                    StartDirectServerFallback();
-                    return;
-                }
-
-                var options = new SessionOptions
-                {
-                    MaxPlayers = defaultMaxPlayers,
-                    Name = $"ZoneServer_{Environment.MachineName}"
-                }.WithDirectNetwork(defaultListenAddress, defaultListenAddress, defaultPort); // (listenIp, publishIp, port)
-
-                var serverSession = await MultiplayerServerService.Instance.CreateSessionAsync(options);
-                activeSession = serverSession;
-                activeSessionId = serverSession.Id;
-                StatusChanged?.Invoke($"Dedicated server session created: {serverSession.Id}");
+                ReportError("[Server] Cannot start: NetworkManager.Singleton is missing.");
+                return;
             }
-            catch (Exception ex)
+
+            ushort port = CommandLinePort() ?? defaultPort;
+            ConfigureTransport(defaultListenAddress, port);
+            OfflinePlayerHandoff.ReleaseOfflineAvatar();
+            if (NetworkManager.Singleton.StartServer())
             {
-                Debug.LogError($"Dedicated server session creation failed: {ex.Message}. Falling back to direct listen.");
-                StartDirectServerFallback();
+                Debug.Log($"[Server] Listening on port {port} (UDP, every network card of this machine).");
+                StatusChanged?.Invoke($"Dedicated server listening on port {port}");
+            }
+            else
+            {
+                ReportError($"[Server] Could not listen on port {port}. Is another server already using it?");
             }
         }
 
-        private void StartDirectServerFallback()
+        /// <summary>The port after "-port" on the command line, if it is a number from 1 to 65535.</summary>
+        private static ushort? CommandLinePort()
         {
-            if (NetworkManager.Singleton != null)
+            string[] args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
             {
-                ConfigureTransport(defaultListenAddress, defaultPort);
-                OfflinePlayerHandoff.ReleaseOfflineAvatar();
-                NetworkManager.Singleton.StartServer();
+                if (!string.Equals(args[i], PortArgument, StringComparison.OrdinalIgnoreCase)) continue;
+                if (ushort.TryParse(args[i + 1], out ushort port) && port > 0) return port;
+                Debug.LogWarning($"[Server] \"{args[i + 1]}\" is not a port number; using the default.");
             }
+            return null;
         }
 #endif
 

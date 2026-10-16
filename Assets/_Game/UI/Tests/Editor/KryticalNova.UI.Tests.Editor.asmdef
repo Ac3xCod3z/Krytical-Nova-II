@@ -5,6 +5,7 @@
         "KryticalNova.Runtime",
         "KryticalNova.UI",
         "KryticalNova.Editor",
+        "KryticalNova.Editor.Presentation",
         "KryticalNova.Editor.Menus",
         "UnityEngine.UI",
         "Unity.TextMeshPro",
@@ -23,7 +24,8 @@
     ],
     "autoReferenced": false,
     "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
+        "UNITY_INCLUDE_TESTS",
+        "!UNITY_SERVER"
     ],
     "versionDefines": [],
     "noEngineReferences": false

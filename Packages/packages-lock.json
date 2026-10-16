@@ -135,6 +135,12 @@
         "com.unity.test-framework.performance": "3.2.0"
       }
     },
+    "com.unity.dedicated-server": {
+      "version": "3.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
     "com.unity.dt.app-ui": {
       "version": "2.1.11",
       "depth": 1,
