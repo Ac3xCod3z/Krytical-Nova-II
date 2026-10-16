@@ -197,7 +197,8 @@ namespace KryticalNova.Social
         /// the same. Returns how many players were told.
         /// </summary>
         /// <param name="highlight">The names the news is about ("|" between them), lit on the ticker; or null.</param>
-        public static int ServerAnnounce(AnnouncementKind kind, ChatChannel channel, string senderName, string text, string highlight = null)
+        /// <param name="rarity">The rarity of the item the news is about (an <c>ItemRarity</c> as a byte), which colours the ticker line; 0 for none.</param>
+        public static int ServerAnnounce(AnnouncementKind kind, ChatChannel channel, string senderName, string text, string highlight = null, byte rarity = 0)
         {
             text = ChatRouting.Clean(text);
             if (text.Length == 0) return 0;
@@ -211,7 +212,7 @@ namespace KryticalNova.Social
                 foreach (var client in network.ConnectedClientsList)
                 {
                     if (client.PlayerObject == null || !client.PlayerObject.TryGetComponent(out PlayerChat chat)) continue;
-                    chat.DeliverAnnounced(kind, channel, senderName, text, highlight);
+                    chat.DeliverAnnounced(kind, channel, senderName, text, highlight, rarity);
                     reached++;
                 }
                 return reached;
@@ -219,7 +220,7 @@ namespace KryticalNova.Social
 
             var local = Local;
             if (local == null) return 0;
-            local.DeliverAnnounced(kind, channel, senderName, text, highlight);
+            local.DeliverAnnounced(kind, channel, senderName, text, highlight, rarity);
             return 1;
         }
 
@@ -308,21 +309,21 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
         private void ReceiveRpc(ChatChannel channel, string sender, string text, bool outgoing) => Show(channel, sender, text, outgoing);
 
-        private void DeliverAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight = null)
+        private void DeliverAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight = null, byte rarity = 0)
         {
-            if (!IsSpawned) ShowAnnounced(kind, channel, sender ?? string.Empty, text, highlight ?? string.Empty);
-            else AnnounceRpc(kind, channel, sender ?? string.Empty, text, highlight ?? string.Empty);
+            if (!IsSpawned) ShowAnnounced(kind, channel, sender ?? string.Empty, text, highlight ?? string.Empty, rarity);
+            else AnnounceRpc(kind, channel, sender ?? string.Empty, text, highlight ?? string.Empty, rarity);
         }
 
         // The chat line and the ticker line of an announcement travel as one message.
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
-        private void AnnounceRpc(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight) =>
-            ShowAnnounced(kind, channel, sender, text, highlight);
+        private void AnnounceRpc(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight, byte rarity) =>
+            ShowAnnounced(kind, channel, sender, text, highlight, rarity);
 
-        private static void ShowAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight)
+        private static void ShowAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight, byte rarity)
         {
             Show(channel, sender, text, false);
-            ClientPresentationRegistry.Announcements?.Announce(kind, sender, text, string.IsNullOrEmpty(highlight) ? null : highlight);
+            ClientPresentationRegistry.Announcements?.Announce(kind, sender, text, string.IsNullOrEmpty(highlight) ? null : highlight, rarity);
         }
 
         /// <summary>Raised on this machine for every line its player is shown (the Contacts window notes who whispered).</summary>

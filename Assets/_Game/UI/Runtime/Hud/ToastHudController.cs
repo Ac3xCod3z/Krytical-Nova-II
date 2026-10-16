@@ -68,10 +68,10 @@ namespace KryticalNova.UI
 
         private void OnDisable() => ClientPresentationRegistry.UnregisterAnnouncements(this);
 
-        public void Announce(AnnouncementKind kind, string sender, string message, string highlight = null)
+        public void Announce(AnnouncementKind kind, string sender, string message, string highlight = null, byte rarity = 0)
         {
             if (toast == null || string.IsNullOrEmpty(message)) return;
-            queue.Enqueue(new Toast { Kind = kind, Sender = sender, Text = message, Highlight = highlight }, settings.maxWaiting);
+            queue.Enqueue(new Toast { Kind = kind, Sender = sender, Text = message, Highlight = highlight, Rarity = rarity }, settings.maxWaiting);
         }
 
         private void Update()
@@ -93,7 +93,13 @@ namespace KryticalNova.UI
             Toast shown = queue.Current;
             string line = Line(shown);
             toast.EnableInClassList(GmClass, shown.Kind == AnnouncementKind.Gm);
-            toast.EnableInClassList(TemperClass, shown.Kind == AnnouncementKind.Temper);
+            toast.EnableInClassList(TemperClass, shown.Kind == AnnouncementKind.Temper || shown.Kind == AnnouncementKind.Drop);
+            // The frame wears the colour of the news: gold for a GM line, red or orange for a tempered piece, purple for a find.
+            if (ColorUtility.TryParseHtmlString(TickerRules.TintOf(shown.Kind, shown.Rarity), out Color frame))
+            {
+                frame.a = 0.8f;
+                toast.style.borderTopColor = toast.style.borderBottomColor = toast.style.borderLeftColor = toast.style.borderRightColor = frame;
+            }
             var fade = new StyleList<TimeValue>(new System.Collections.Generic.List<TimeValue> { new TimeValue(settings.fadeSeconds, TimeUnit.Second) });
             toast.style.transitionDuration = fade;
             toast.style.display = DisplayStyle.Flex;
@@ -117,21 +123,34 @@ namespace KryticalNova.UI
         }
 
         /// <summary>
-        /// The line as it runs: the kind as a coloured tag, then the text with the names it is about in the same colour.
+        /// The line as it runs: the kind as a tag, then the text with what it is about lit. A GM line lights every
+        /// name in it gold. News of an item (a tempered piece, a find) lights the item, the last name it carries, in
+        /// the colour its rarity gives (<see cref="TickerRules.TintOf"/>), and the word "tempered" with it; the
+        /// player's name is left as it is.
         /// </summary>
         public static string Line(in Toast shown)
         {
-            string colour = shown.Kind == AnnouncementKind.Temper ? TemperColour : GmColour;
+            string tint = TickerRules.TintOf(shown.Kind, shown.Rarity);
             string text = shown.Text ?? string.Empty;
-            if (!string.IsNullOrEmpty(shown.Highlight))
-                foreach (string term in shown.Highlight.Split('|'))
-                {
-                    string name = term.Trim();
-                    if (name.Length == 0) continue;
-                    int at = text.IndexOf(name, System.StringComparison.Ordinal);
-                    if (at >= 0) text = text.Substring(0, at) + $"<color={colour}>{name}</color>" + text.Substring(at + name.Length);
-                }
-            return $"<color={colour}>{Heading(shown)}</color>    {text}";
+            string[] terms = string.IsNullOrEmpty(shown.Highlight) ? System.Array.Empty<string>() : shown.Highlight.Split('|');
+            for (int i = 0; i < terms.Length; i++)
+            {
+                string name = terms[i].Trim();
+                bool lit = shown.Kind == AnnouncementKind.Gm || i == terms.Length - 1;
+                if (name.Length == 0 || !lit) continue;
+                text = Light(text, name, tint);
+            }
+            if (shown.Kind == AnnouncementKind.Temper) text = Light(text, TemperedWord, tint);
+            return $"<color={tint}>{Heading(shown)}</color>    {text}";
+        }
+
+        private const string TemperedWord = "tempered";
+
+        // The first place the name stands in the text, in colour. A name that is not there is left out.
+        private static string Light(string text, string name, string tint)
+        {
+            int at = text.IndexOf(name, System.StringComparison.Ordinal);
+            return at < 0 ? text : text.Substring(0, at) + $"<color={tint}>{name}</color>" + text.Substring(at + name.Length);
         }
 
         private static string Heading(in Toast shown)
@@ -139,6 +158,7 @@ namespace KryticalNova.UI
             switch (shown.Kind)
             {
                 case AnnouncementKind.Temper: return "TEMPERING";
+                case AnnouncementKind.Drop: return (shown.Rarity >= 4 ? "LEGENDARY" : "EPIC") + " FIND";
                 // gm.say speaks as "GM"; the GM's own /gm carries their name, as its chat line does.
                 default:
                     return string.IsNullOrEmpty(shown.Sender) || shown.Sender == "GM" ? "GM" : $"GM · {shown.Sender.ToUpperInvariant()}";

@@ -1,3 +1,4 @@
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.UI
@@ -9,6 +10,22 @@ namespace KryticalNova.UI
     /// </summary>
     public static class TickerRules
     {
+        // The colours of the line (owner, 15 Oct 2026). An Epic piece tempered to the top is red, a Rare one orange;
+        // an Epic find is the Epic rarity's own purple (the item card's), a Legendary one its ember.
+        public const string Gold = "#FFB83C", Orange = "#FF851F", Red = "#FF4A4A", Purple = "#C880FF", Ember = "#FF9640";
+        private const byte Epic = 3, Legendary = 4; // ItemRarity, as the news carries it
+
+        /// <summary>The colour of the tag and of what the news is about: a GM line gold, a tempered piece by its rarity, a find by its rarity.</summary>
+        public static string TintOf(AnnouncementKind kind, byte rarity)
+        {
+            switch (kind)
+            {
+                case AnnouncementKind.Temper: return rarity >= Epic ? Red : Orange;
+                case AnnouncementKind.Drop: return rarity >= Legendary ? Ember : Purple;
+                default: return Gold;
+            }
+        }
+
         /// <summary>How long one pass takes: the text travels the band's width and its own, in seconds.</summary>
         public static float PassSeconds(float bandWidth, float textWidth, float pixelsPerSecond) =>
             (Mathf.Max(0f, bandWidth) + Mathf.Max(0f, textWidth)) / Mathf.Max(1f, pixelsPerSecond);

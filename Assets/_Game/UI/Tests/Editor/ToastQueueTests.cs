@@ -20,14 +20,38 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void TheLineTagsTheKindAndLightsTheNames()
+        public void ARarePieceTemperedToTheTopIsOrange_AndAnEpicOneRed()
         {
-            var temper = new Toast { Kind = AnnouncementKind.Temper, Sender = "", Text = "Arinis tempered Sunlord Blade to 120%.", Highlight = "Arinis|Sunlord Blade" };
-            string line = ToastHudController.Line(temper);
+            const string text = "Arinis tempered Sunlord Blade to 120%.";
+            var rare = new Toast { Kind = AnnouncementKind.Temper, Text = text, Highlight = "Arinis|Sunlord Blade", Rarity = 2 };
+            string line = ToastHudController.Line(rare);
             StringAssert.StartsWith("<color=#FF851F>TEMPERING</color>", line);
-            StringAssert.Contains("<color=#FF851F>Arinis</color> tempered <color=#FF851F>Sunlord Blade</color> to 120%.", line);
+            StringAssert.Contains("Arinis <color=#FF851F>tempered</color> <color=#FF851F>Sunlord Blade</color> to 120%.", line);
+
+            var epic = new Toast { Kind = AnnouncementKind.Temper, Text = text, Highlight = "Arinis|Sunlord Blade", Rarity = 3 };
+            line = ToastHudController.Line(epic);
+            StringAssert.StartsWith("<color=#FF4A4A>TEMPERING</color>", line);
+            StringAssert.Contains("Arinis <color=#FF4A4A>tempered</color> <color=#FF4A4A>Sunlord Blade</color> to 120%.", line);
+        }
+
+        [Test]
+        public void AnEpicFindIsTaggedAndItsNameIsPurple_ThePlayerIsLeftPlain()
+        {
+            var find = new Toast { Kind = AnnouncementKind.Drop, Text = "Arinis found Sunlord Blade.", Highlight = "Arinis|Sunlord Blade", Rarity = 3 };
+            string line = ToastHudController.Line(find);
+            StringAssert.StartsWith("<color=#C880FF>EPIC FIND</color>", line);
+            StringAssert.Contains("Arinis found <color=#C880FF>Sunlord Blade</color>.", line);
+            var legend = new Toast { Kind = AnnouncementKind.Drop, Text = "Arinis found Dawn Edge.", Highlight = "Arinis|Dawn Edge", Rarity = 4 };
+            StringAssert.StartsWith("<color=#FF9640>LEGENDARY FIND</color>", ToastHudController.Line(legend));
+        }
+
+        [Test]
+        public void ALineWithNothingToLightIsJustTagged_AndAGmLineLightsEveryName()
+        {
             var gm = new Toast { Kind = AnnouncementKind.Gm, Sender = "GM", Text = "Server restart in 10 minutes." };
             StringAssert.StartsWith("<color=#FFB83C>GM</color>", ToastHudController.Line(gm));
+            var named = new Toast { Kind = AnnouncementKind.Gm, Sender = "Tolan", Text = "Tolan: hello Arinis", Highlight = "Tolan|Arinis" };
+            StringAssert.Contains("<color=#FFB83C>Tolan</color>: hello <color=#FFB83C>Arinis</color>", ToastHudController.Line(named));
         }
 
         private const float Show = 5f, Fade = 0.35f;

@@ -55,10 +55,19 @@ namespace KryticalNova.Hostiles
             if (roll.Creds > 0)
                 loot.ServerPlaceAt(new ItemStack(LootRules.CredsItemId, (ushort)Math.Min(roll.Creds, LootRules.MaxCredsPerDrop)), kill.Position, owner);
             if (roll.Stim != null) loot.ServerPlaceAt(new ItemStack(roll.Stim.itemId, 1), kill.Position, owner);
-            if (roll.Gear != null) loot.ServerPlaceAt(new ItemStack(roll.Gear.itemId, 1), kill.Position, owner);
+            if (roll.Gear != null)
+            {
+                loot.ServerPlaceAt(new ItemStack(roll.Gear.itemId, 1), kill.Position, owner);
+                LootAnnouncements.ServerFound(player, roll.Gear, settings.announceDrops, settings.announceDropsFrom);
+            }
 
             RollMaterials(kill.Hostile.Stats.Level, settings, kill.DropPercent, HostileRates.Drops, RandomRoll, materials);
-            foreach (ItemDefinition material in materials) loot.ServerPlaceAt(new ItemStack(material.itemId, 1), kill.Position, owner);
+            foreach (ItemDefinition material in materials)
+            {
+                loot.ServerPlaceAt(new ItemStack(material.itemId, 1), kill.Position, owner);
+                // An Epic Dossier or Page is news too, whatever kind of item it is.
+                LootAnnouncements.ServerFound(player, material, settings.announceDrops, settings.announceDropsFrom);
+            }
         }
 
         /// <summary>

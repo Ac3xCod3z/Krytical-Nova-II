@@ -11,6 +11,8 @@ namespace KryticalNova.UI
         public string Text;
         /// <summary>The names the news is about (a player, a piece of gear), "|" between them: lit in the line. May be null.</summary>
         public string Highlight;
+        /// <summary>The rarity of the item the news is about (an <c>ItemRarity</c> as a byte); 0 when there is none.</summary>
+        public byte Rarity;
     }
 
     /// <summary>

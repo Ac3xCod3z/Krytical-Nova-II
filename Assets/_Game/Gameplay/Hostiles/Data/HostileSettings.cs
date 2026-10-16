@@ -52,6 +52,10 @@ namespace KryticalNova.Hostiles
         [Range(0f, 100f)] public float bruiserGearChancePercent = 25f;
         [Tooltip("Gear drops are of an item level from this many levels under the Hostile up to its own.")]
         [Min(0)] public int gearLevelsBelow = 3;
+        [Tooltip("An item that falls from a kill at or above this rarity is announced to every player on the HUD's ticker, " +
+                 "with its name in the colour of its rarity (owner, 15 Oct 2026: Epic).")]
+        public bool announceDrops = true;
+        public ItemRarity announceDropsFrom = ItemRarity.Epic;
         [Tooltip("What a kill may drop besides Creds, a Stim and gear: crafting materials (colour cells, Dossier Pages) and, " +
                  "rarely, what they make. Each row is rolled on its own for every kill. Placeholder chances of 11 Oct 2026.")]
         public MaterialDrop[] materialDrops = System.Array.Empty<MaterialDrop>();
