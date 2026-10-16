@@ -3,7 +3,7 @@
 A running guide to the game's own server, in plain words. It says what works **today**, and it is updated after
 every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 
-**Last updated:** 16 Oct 2026, after step 3 and the Game Masters (GM passwords).
+**Last updated:** 16 Oct 2026, after step 4 (the server list, Enter joins your server, the same build only).
 
 ## In one minute
 
@@ -18,7 +18,8 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 - It reads its **settings** from `server-settings.json`, a small text file beside it that you edit with Notepad.
 - It keeps the **saves** in a folder beside its own, and **backs them up** by itself.
 - **Closing the window is safe**: it saves everyone first and tells the players.
-- Players **join** from the game's network panel (**F1**) with the server's address and port.
+- Players **join** by pressing **Enter World** on character select: it joins the server they played last. **S** opens
+  the **Servers** window, which lists the servers you publish from the control page.
 - Up to **three Game Masters** are set on the control page, each with a **GM password**. In the game they press
   **F2**, type it, and their GM commands run on the server. Nobody else has GM commands or the GM chat.
 
@@ -30,7 +31,7 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | 2. Settings, safe stop, backups | The settings file, saves beside the server, backups, a safe stop, commands in its window | Built 16 Oct 2026 |
 | 3. The control page | A web page on your home network to see and run the server, from a phone too | Built 16 Oct 2026 |
 | Game Masters | Three GMs by password, set on the control page; GM commands, GM chat and a [GM] tag for them only | Built 16 Oct 2026 |
-| 4. A server list in the game | Play joins your server without typing an address | Next |
+| 4. A server list in the game | Enter joins your server; a Servers window; only the same build may join | Built 16 Oct 2026 |
 | 5. Joining from outside your house | Unity Relay, and port forwarding as a fallback | Not yet |
 | 6. The move to the old PC | A zip, an install step and a step-by-step guide | Not yet |
 | 7. Measuring | How many players and Hostiles one PC carries | Not yet |
@@ -167,6 +168,10 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `backupHours` | 6 | Hours between backups. 0 backs up only at start and stop. |
 | `backupsKept` | 10 | How many backups are kept; the oldest go first. |
 | `gameMasters` | none | Up to three GMs, each a name and their own GM password. Set them on the control page (easier), or here. |
+| `statusPort` | 0 (= game port + 1, so 7778) | Where the server tells the Servers window it is on, its players and its build. |
+| `serverList` | none | The servers players see. Set them on the control page and press PUBLISH LIST. |
+| `listBucket`, `cloudProjectId`, `cloudEnvironment` | krytical-nova-servers, this project, production | Where PUBLISH LIST uploads the list. Leave them. |
+| `ugsPath` | empty (`%LOCALAPPDATA%\KryticalNova\tools\ugs.exe`) | Unity's command-line tool on this PC, for PUBLISH LIST. |
 
 A mistake is forgiven: a port that is not a port becomes 7777, a player limit of 0 becomes 1, and a file Notepad
 broke is left as it is while the server uses the defaults (the window says so).
@@ -206,8 +211,58 @@ To move the server to another PC, copy all three folders together.
 
 ## 6. Join the server
 
-**From the game (a test build or the Editor):** press **F1** for the network panel, type the server's address in
-**IP** and its port in **Port**, and press **JOIN**. The control page shows both under "How to connect".
+**From the game (step 4):** on character select, **Enter World** joins the server played last, while the loading
+screen is up. **S** (or the **Server: ...** prompt beside Settings) opens the **Servers** window:
+
+| Column | Means |
+| --- | --- |
+| ONLINE / OFF / UPDATE / FULL | ONLINE: answering and the same build. OFF: not answering (off, or not reachable from there). UPDATE: another build ("open the launcher"). FULL: no room now. |
+| Name and address | As you published them. **LAST PLAYED** marks the one Enter joins. |
+| 3 / 100, 12 ms | Players on, the limit, and how long the server took to answer. |
+
+Up / Down choose, **Enter** or **JOIN** joins (and is remembered), **Esc** closes, **REFRESH** asks again. Players
+cannot add or remove servers: the list is yours (next section). The Editor and test builds also show **This PC
+(testing)** and **Play here (no server)** (the Editor hosts, a test build plays offline, as before).
+
+If a join fails (another build, full, no answer) the game goes back to character select and the Servers window says
+why.
+
+**START MY SERVER (your PC only).** When Enter World finds *your* server off, the Servers window offers **START MY
+SERVER**. It opens `Start Server.bat` **minimized** (the server's window waits in the taskbar and never covers the game
+or the Editor), waits until the server answers (about half a minute), and joins by itself. It only shows when the game
+knows where your server is and the server is on this PC:
+
+| Where | How it finds your server |
+| --- | --- |
+| The Editor | The project's `Builds/Server/Windows/KryticalNovaServer` |
+| Your installed game | A file `my-server.txt` beside the game (in the launcher's `Game` folder), one line: the server's folder |
+
+A brother's game has no `my-server.txt` and never offers it. **For now the server stops with the game that started
+it** (quitting, or leaving Play in the Editor, runs its safe stop: everyone saved, a backup, then its window closes).
+A server you start yourself with `Start Server.bat` is never stopped by the game. When the server moves to the old PC
+(step 6) this changes: the server keeps running on its own.
+
+**Only the same build joins.** A release game and its server carry their build number ("0.1.0 build 5"); a game of
+another build is refused before it is in: *"This server runs build 5 and your game is build 4. Open the Krytical Nova
+launcher to update."* **Publish to Test** rebuilds the server with the new number by itself; if the server was running
+it says so, and you rebuild it after stopping it (**Krytical Nova ▸ Build ▸ Dedicated Server**, which always takes the
+latest release's number). The Editor may join or host any build: it is yours.
+
+### The server list players see
+
+On the control page, **Servers players see**: add a server with the name players read, the address they reach it by
+and its port (**Add**), remove one (**Remove**), then **PUBLISH LIST**. Your server uploads the list to its own small
+Cloud Content Delivery bucket (`krytical-nova-servers`, apart from game builds) and every game's Servers window shows it
+within a few minutes. No new build is needed.
+
+PUBLISH LIST needs Unity's command-line tool on the PC that runs the server, logged in once, as for releases
+(Release Guide, section 6): on this PC it already is. On the old PC (step 6) the install step will do it.
+
+Your brothers reach your server from outside the house in step 5, through the forwarded **game port (7777) and status
+port (7778)**. Until then the list works inside the house: use the PC's home address (the control page shows it).
+
+**From the F1 panel (testing):** press **F1** for the network panel, type the server's address in **IP** and its port
+in **Port**, and press **JOIN**. The control page shows both under "How to connect".
 
 | The server is on | IP to type |
 | --- | --- |
@@ -324,7 +379,9 @@ is also saved once a minute while they play, and as they leave.
 | The server's window is closed | "The server was closed. Your progress is kept on the server." |
 | A countdown runs | GM lines: "The server shuts down in 1 minute." (or "restarts in") ... then the reason |
 | Kicked | "A GM removed you from the server: <reason>. Your progress is kept on the server." |
-| The server is full | "The server is full. Try again in a little while." |
+| The server is full | "The server is full. Try again in a little while." (before they are in) |
+| Another build | "This server runs build 5 and your game is build 4. Open the Krytical Nova launcher to update." |
+| The server does not answer | "Krytical Nova Server did not answer. It may be off, or not reachable from here." |
 | The connection drops | "The server closed, or the connection was lost. Your progress is kept on the server." |
 
 Each comes with the same two ways out as the game menu (character select or exit), or staying where they stand.
@@ -349,7 +406,6 @@ Each comes with the same two ways out as the game menu (character select or exit
 
 ## 12. What comes next
 
-- **Step 4:** a server list in the game; Play joins your server, with a version check.
 - **Step 5:** joining from outside the house, through Unity Relay, with port forwarding as the fallback.
 - **Step 6:** the zip, an install step (firewall rules, the Norton note) and moving it to the old PC by external SSD.
 - **Step 7:** measuring how much one PC carries.
@@ -371,6 +427,12 @@ Each comes with the same two ways out as the game menu (character select or exit
 | `GmRoster` | `Networking/Runtime` | Who is GM: the list (three, name + password), password checks, five tries, removal ending GM at once (tested in `GmRosterTests`). |
 | `PlayerGm` | `Networking/Runtime` | On every player: the GM name everyone sees, the password and command lines sent to the server, the answers back to that player only. |
 | `GmCommandRelay` | `Tools/Debug` | Runs a joined GM's line on the server, aimed at that GM's player; keeps each GM's `gm.target` apart from the server's. |
+| `JoinRules`, `GameBuild` | `Networking/Runtime` | Who may join: the same build (the Editor any), a free place; the build number in the version (tested in `JoinRulesTests`). |
+| `ServerDirectory`, `ServerListFile`, `ServerStatusProtocol` | `Networking/Runtime` | The published list (from CCD, kept on the PC), "This PC" and "Play here" in development, each server's status, the last choice. |
+| `JoinFlow` | `Networking/Runtime` | Enter's server; the world joins it under the loading screen (`NetworkConnectionManager.JoinChosenServer`) and says how it went. |
+| `ServerStatusResponder` | `Networking/Runtime/Server` | Answers on the status port (never more bytes than asked, four a second per address). Server build only. |
+| `LocalServer` | `Networking/Runtime` | START MY SERVER: finds your server's folder (the project's Builds, or `my-server.txt`), starts it minimized, and for now stops it with the game through its control page (`StopWithGame`). |
+| `MenuServers`, `JoinFlowScreens` | `UI/Runtime/Menus` | The Servers window (in the menus' Settings document, so it wears the skin), the loading hold and the way back on failure. |
 | `GmConsoleGate` | `Tools/Debug` | F2: the host runs commands itself; a joined player gets the password prompt, then their lines go to the server. |
 | `ServerCommands` | `Tools/Debug` | `gm.kick`, `gm.restart`, `gm.shutdown`, `gm.backup`. |
 | `NetworkConnectionManager.StartDedicatedServer` | `Networking/Runtime` | Listens on the settings' port and turns away players past the limit. |
@@ -394,3 +456,7 @@ Things learned the hard way:
 - 16 Oct 2026: step 3, the control page; `Start Server.bat`; Restart and `gm.restart`; the Norton IDP.Generic steps.
 - 16 Oct 2026: Game Masters: three GMs by password on the control page; F2 GM commands run on the server; GM chat and
   the [GM] tag for GMs only.
+- 16 Oct 2026: step 4: the Servers window (layout A in every skin), Enter joins the last server, the list kept on the
+  control page and published by the server, the status port, the same build only (connection approval).
+- 16 Oct 2026: START MY SERVER: the game starts your own server (minimized) when it finds it off and joins it; for now
+  the server stops with the game; `my-server.txt` beside an installed game; `Start Server.bat --close`.

@@ -1,7 +1,7 @@
 # Online phase 1: a dedicated server on your PC, then on the old PC
 
 Part of `online-roadmap.md`. Written 11 Oct 2026; rewritten 15 Oct 2026 as the seven chunks the owner approved on
-12 Oct. **Chunks 1 to 3 built 16 Oct 2026** (see "as built" under each); chunks 4 to 7 are not built. The owner's
+12 Oct. **Chunks 1 to 4 built 16 Oct 2026** (see "as built" under each); chunks 5 to 7 are not built. The owner's
 manual of the server as it is today is `Guides/Server-Guide.md`. The owner moved
 the short rendering pass (`Design/Rendering-Bible.md` section 8) to after chunk 1.
 
@@ -175,6 +175,32 @@ window in each faction's skin, opened from character select and replacing the F1
 world already connected (`LoadingGate.Require`); clear messages for off, full and different build; a build number in
 client and server with a version-only connection check. *Try it:* Enter lands you on the server; a second client does
 the same.
+
+*Chunk 4 as built (16 Oct 2026):*
+- *Owner's picks:* Enter joins the last server and a SERVERS button changes it; the same build only; layout A of the
+  mock-up sheet in all three skins, **without** add or remove for players: the list is kept on the control page and
+  **the server uploads it** (PUBLISH LIST, to its own CCD bucket `krytical-nova-servers`, badge `latest`); "This PC
+  (testing)" only in the Editor and test builds.
+- *How it works:* `ServerDirectory` reads the published list (kept on the PC too), asks each server on its **status
+  port** (game port + 1; `ServerStatusResponder` answers a 200-byte request with a smaller reply, four a second per
+  address) and remembers the last choice. `MenuServers` is the window, a template in the menus' Settings document so it
+  wears the skin. Enter calls `JoinFlow.Begin`; the world scene's `NetworkConnectionManager.JoinChosenServer` connects
+  under the loading screen (`LoadingGate.Require`); a failure returns to character select with the reason
+  (`JoinFlowScreens`). **Connection approval** is on in client and server: the payload `KN1|version|editor` is checked
+  by `JoinRules` (same build; the Editor any; full turned away before it is in). The build number "0.1.0 build N" is
+  stamped into the game by Publish to Test and into the server by the server build (`ReleasePublisher.WithVersion`),
+  and Publish to Test rebuilds the matching server.
+- *START MY SERVER (owner, after the chunk):* on the owner's PC only (`LocalServer`: the project's `Builds` in the
+  Editor, `my-server.txt` beside an installed game), the Servers window offers to start the server when it is off;
+  `Start Server.bat --close` opens minimized, the game waits and joins, and for now the server stops with the game
+  through its control page (`StopWithGame`, to be false after chunk 6).
+- *Tried:* the window in the Null and Hegemony skins; status ONLINE 0/100; Enter World joins an isolated copy on a test
+  port (the player on its page); add and publish on the control page and a game reading it from CCD; a server stopping
+  mid-session; Enter with the server off; START MY SERVER twice (joined after 49 s, window minimized and never in
+  front, server and window gone a few seconds after leaving Play). The different-build and full refusals are covered by
+  `JoinRulesTests` (all 845 EditMode tests pass).
+- *Found:* builds older than the first one with this code (launcher build 4) cannot join a step-4 server (approval);
+  the next Publish to Test fixes that for everyone. Bat files written outside `Builds` are deleted by Norton.
 
 **5. Over the internet, both ways** (`online/05-internet`).
 Prove first (half a day): a headless server signs in, opens a Relay allocation, starts as a server and lists itself on

@@ -101,8 +101,14 @@ namespace KryticalNova.EditorTools
             return null;
         }
 
-        /// <summary>Builds without asking. True when the build succeeded; the report is written either way.</summary>
-        public static bool Build(Os os)
+        /// <summary>
+        /// Builds without asking, as the build of the newest release (online step 4): a game joins only a server of its own
+        /// build, so the server carries the number of the release staged last (none: a development build). True when the
+        /// build succeeded; the report is written either way.
+        /// </summary>
+        public static bool Build(Os os) => ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(os));
+
+        private static bool BuildAsIs(Os os)
         {
             string missing = ModuleMissing(os);
             if (missing != null)
@@ -202,6 +208,8 @@ namespace KryticalNova.EditorTools
                     // NoDefaultCurrentDirectoryInExePath is set.
                     "\"%~dp0" + ExeName + ".exe\" -logFile -\r\n" +
                     $"if %errorlevel%=={RestartExitCode} goto start\r\n" +
+                    // Started by the owner's game (LocalServer): the window closes with the server.
+                    "if /i \"%~1\"==\"--close\" exit /b\r\n" +
                     "echo.\r\n" +
                     "echo The server has stopped. Press a key to close this window.\r\n" +
                     "pause > nul\r\n");

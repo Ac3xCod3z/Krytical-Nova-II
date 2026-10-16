@@ -1,0 +1,41 @@
+/* The Servers window (online step 4): which server Enter joins, opened from character select. Built from the shared
+   window parts (KryticalTheme.uss), so each faction skin restyles it like the other windows. The owner's layout A, the
+   roster, picked from three mock-ups on 16 Oct 2026. */
+
+#menu-servers { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.servers-shade { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(20, 18, 43, 0.62); display: none; }
+#servers-window { left: 50%; top: 56px; width: 620px; translate: -50% 0; display: none; }
+#servers-list { max-height: 330px; overflow: hidden; }
+.servers-message { display: none; white-space: normal; margin: 6px 0 2px 0; padding: 6px 10px; font-size: 12px; color: rgb(255, 214, 140); background-color: rgba(120, 60, 20, 0.35); }
+.servers-message.shown { display: flex; }
+.servers-start { display: none; align-self: flex-start; margin: 4px 0 2px 0; min-height: 30px; }
+.servers-start.shown { display: flex; }
+.servers-row:hover { -unity-background-image-tint-color: rgba(40, 60, 78, 0.95); }
+
+.servers-lede { margin: 6px 0 8px 0; }
+.servers-status { font-size: 11px; padding: 1px 8px; margin-right: 8px; border-radius: 2px; color: rgb(10, 14, 20); -unity-font-style: bold; }
+.servers-status--online { background-color: rgb(96, 214, 150); }
+.servers-status--off { background-color: rgb(120, 132, 146); }
+.servers-status--update { background-color: rgb(236, 190, 92); }
+.servers-last { color: rgb(214, 178, 104); font-size: 10px; letter-spacing: 2px; margin-left: 8px; }
+.servers-name { font-size: 15px; color: rgb(244, 238, 223); }
+.servers-meta { font-size: 12px; color: rgb(146, 162, 178); margin-top: 2px; }
+.servers-meta--warn { color: rgb(236, 190, 92); }
+.servers-num { font-size: 13px; color: rgb(244, 238, 223); -unity-text-align: middle-right; min-width: 70px; }
+.servers-source { font-size: 10px; color: rgb(146, 162, 178); letter-spacing: 1px; }
+
+/* A: the roster, a row per server */
+.servers-row { flex-direction: row; align-items: center; padding: 10px 14px; margin: 4px 0; min-height: 54px; }
+.servers-row.selected { -unity-background-image-tint-color: rgba(30, 112, 98, 0.85); }
+.servers-row-main { flex-grow: 1; }
+.servers-row-line { flex-direction: row; align-items: center; }
+
+.servers-footer { flex-direction: row; align-items: center; margin-top: 8px; padding-top: 8px; border-top-width: 1px; border-top-color: rgba(120, 140, 160, 0.35); }
+.servers-footer-gap { flex-grow: 1; }
+.servers-hint { font-size: 11px; color: rgb(146, 162, 178); margin-left: 4px; }
+
+/* The chosen server: a teal edge the faction skins leave alone (they restyle the card itself). */
+.window .servers-row.selected {
+    border-left-width: 4px;
+    border-left-color: rgb(114, 222, 196);
+}

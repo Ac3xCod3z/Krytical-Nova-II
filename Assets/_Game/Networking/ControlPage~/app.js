@@ -212,6 +212,32 @@ function showGms(gms, max) {
   }
 }
 
+function showList(list, published, statusPort) {
+  const rows = $("listRows");
+  rows.textContent = "";
+  $("noList").hidden = list.length > 0;
+  for (const s of list) {
+    const row = document.createElement("tr");
+    cell(row, s.name);
+    cell(row, s.address);
+    cell(row, String(s.port), "hide-phone");
+    const td = cell(row, "");
+    const remove = document.createElement("button");
+    remove.className = "small red";
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", async () => {
+      if (await ask("Remove " + s.name + "?", "It leaves the list here; players stop seeing it once you PUBLISH LIST.", false) === null) return;
+      act(remove, "/api/list/remove", { id: String(s.id) });
+    });
+    td.appendChild(remove);
+    rows.appendChild(row);
+  }
+  $("listPublished").textContent = "Last published: " + published;
+  $("statusPortNote").textContent = "This server tells the Servers window it is on, its players and its build on UDP port " + statusPort +
+    " (the game port + 1). From outside the house both ports are forwarded (step 5).";
+}
+
 async function refresh() {
   try {
     const s = await call("/api/status");
@@ -233,6 +259,7 @@ async function refresh() {
     showAddresses(s.addresses, s.port);
     showPlayers(s.players);
     showGms(s.gms || [], s.maxGms || 3);
+    showList(s.serverList || [], s.listPublished || "-", s.statusPort || 0);
     await refreshLog();
   } catch (e) {
     if (check) { $("pill").textContent = "NO ANSWER"; $("pill").className = "pill down"; }
@@ -290,6 +317,19 @@ async function shutdown(button, restart) {
 $("restart").addEventListener("click", (e) => shutdown(e.currentTarget, true));
 $("stop").addEventListener("click", (e) => shutdown(e.currentTarget, false));
 $("cancel").addEventListener("click", (e) => act(e.currentTarget, "/api/cancel", {}));
+$("listForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = await act(event.submitter, "/api/list/add",
+    { name: $("listName").value.trim(), address: $("listAddress").value.trim(), port: parseInt($("listPort").value, 10) || 7777 });
+  if (data && / is on the list\./.test(data.answer)) { $("listName").value = ""; $("listAddress").value = ""; }
+});
+$("publishList").addEventListener("click", async (e) => {
+  const button = e.currentTarget;
+  if (await ask("Publish the list?", "Every game's Servers window shows exactly this list within a few minutes.", false) === null) return;
+  button.textContent = "Publishing...";
+  await act(button, "/api/list/publish", {});
+  button.textContent = "Publish list";
+});
 $("gmForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const name = $("gmName").value.trim(), password = $("gmPassword").value;

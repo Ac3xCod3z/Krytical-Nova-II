@@ -84,6 +84,26 @@
     <pre class="answer" id="commandAnswer">Type gm.help for every command.</pre>
   </section>
 
+  <section class="panel list">
+    <h2>Servers players see</h2>
+    <p class="note">The game's Servers window shows these. Players cannot add or remove servers; you do it here, then
+      <b>PUBLISH LIST</b>: games see the change within a few minutes, no new build needed.</p>
+    <table>
+      <thead><tr><th>Name</th><th>Address</th><th class="hide-phone">Port</th><th></th></tr></thead>
+      <tbody id="listRows"></tbody>
+    </table>
+    <p class="note" id="noList">No servers yet: add this one with the address your brothers reach it by.</p>
+    <form class="row gap-top" id="listForm" autocomplete="off">
+      <input class="grow" id="listName" placeholder="Name players read" maxlength="32" spellcheck="false">
+      <input class="grow" id="listAddress" placeholder="Address (like 203.0.113.5)" maxlength="253" spellcheck="false">
+      <input class="seconds" id="listPort" type="number" min="1" max="65534" value="7777">
+      <button type="submit">Add</button>
+    </form>
+    <div class="row gap-top"><button class="cyan" id="publishList" type="button">Publish list</button>
+      <span class="note" id="listPublished">Last published: -</span></div>
+    <p class="note" id="statusPortNote"></p>
+  </section>
+
   <section class="panel log">
     <div class="row between"><h2>Live log</h2><label class="note toggle"><input type="checkbox" id="everything"> every line</label></div>
     <pre id="log"></pre>

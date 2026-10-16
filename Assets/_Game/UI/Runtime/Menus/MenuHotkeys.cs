@@ -65,6 +65,7 @@ namespace KryticalNova.UI.Menus
             if (Suspended || keyboard == null) return;
             // Settings is open over this screen: every key is the window's.
             if (MenuSettings.Current != null && MenuSettings.Current.IsOpen) return;
+            if (MenuServers.IsAnyOpen) return;
             var transition = MenuTransition.Current;
             if (transition != null && transition.IsBusy) return;
 

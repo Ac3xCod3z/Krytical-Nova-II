@@ -91,6 +91,13 @@ namespace KryticalNova.UI.Menus
             MenuMoments.Raise(MenuMoment.Open, window);
         }
 
+        /// <summary>The menus' skin and the page's size and place, for another window of this document (MenuServers).</summary>
+        public void PrepareForWindow()
+        {
+            WearSkin();
+            FitToPage();
+        }
+
         public void Close()
         {
             if (!IsOpen) return;

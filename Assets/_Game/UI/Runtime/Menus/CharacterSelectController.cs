@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using KryticalNova.CharacterCreation;
+using KryticalNova.Networking;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -11,7 +12,8 @@ namespace KryticalNova.UI.Menus
     /// <summary>
     /// Character select: three slots, the chosen character shown live, Enter World, Create (on an empty slot) and
     /// Delete (type the name to confirm). Opens on the character that was played last. Built on Synty's
-    /// "Load Game" screen: each save row is a character slot.
+    /// "Load Game" screen: each save row is a character slot. Enter World joins the server played last (online step 4);
+    /// SERVERS opens the Servers window (<see cref="MenuServers"/>) to choose another.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class CharacterSelectController : MonoBehaviour
@@ -28,7 +30,7 @@ namespace KryticalNova.UI.Menus
         private readonly MenuRow[] rows = new MenuRow[CharacterRoster.SlotCount];
         private CharacterRoster roster;
         private int selected = -1;
-        private Transform enterPrompt, deletePrompt;
+        private Transform enterPrompt, deletePrompt, serversPrompt;
         private TMP_InputField deleteInput;
         private Transform deleteConfirmPrompt;
 
@@ -48,7 +50,16 @@ namespace KryticalNova.UI.Menus
             int initial = roster.IsUsed(FrontEnd.HighlightSlot) ? FrontEnd.HighlightSlot : roster.PreferredSlot;
             FrontEnd.HighlightSlot = -1;
             Select(Mathf.Max(initial, 0));
+
+            ServerDirectory.Changed += ShowServer;
+            ServerDirectory.Refresh();
+            // Back from a join that failed: the Servers window says why.
+            string failure = JoinFlow.LastFailure;
+            JoinFlow.LastFailure = null;
+            if (!string.IsNullOrEmpty(failure)) StartCoroutine(OpenServersNextFrame(failure));
         }
+
+        private void OnDestroy() => ServerDirectory.Changed -= ShowServer;
 
         private void Update()
         {
@@ -156,6 +167,7 @@ namespace KryticalNova.UI.Menus
                 MenuUi.MakeClickable(settingsPrompt.gameObject, OpenSettings);
                 if (hotkeys != null) hotkeys.Bind(Key.O, OpenSettings, settingsPrompt);
             }
+            BindServersPrompt(settingsPrompt);
             if (hotkeys == null) return;
             hotkeys.Bind(Key.NumpadEnter, Confirm);
             hotkeys.Bind(Key.UpArrow, () => Select(Mathf.Max(selected - 1, 0)));
@@ -164,6 +176,58 @@ namespace KryticalNova.UI.Menus
 
         /// <summary>The footer prompt the scene builder adds for Settings.</summary>
         public const string SettingsPromptName = "Hotkey_Settings";
+
+        /// <summary>The footer prompt for the Servers window: a copy of the Settings prompt, made here.</summary>
+        public const string ServersPromptName = "Hotkey_Servers";
+
+        // ---------------- Servers (online step 4) ----------------
+
+        private void BindServersPrompt(Transform settingsPrompt)
+        {
+            if (settingsPrompt == null) return;
+            serversPrompt = MenuUi.Find(screen, ServersPromptName);
+            if (serversPrompt == null)
+            {
+                var copy = Instantiate(settingsPrompt.gameObject, settingsPrompt.parent);
+                copy.name = ServersPromptName;
+                copy.transform.SetSiblingIndex(settingsPrompt.GetSiblingIndex()); // before Settings
+                serversPrompt = copy.transform;
+            }
+            MenuUi.MakeClickable(serversPrompt.gameObject, () => OpenServers(null));
+            if (hotkeys != null) hotkeys.Bind(Key.S, () => OpenServers(null), serversPrompt);
+            ShowServer();
+        }
+
+        // The prompt names the server Enter joins.
+        private void ShowServer()
+        {
+            if (serversPrompt == null) return;
+            ServerEntry last = ServerDirectory.Last;
+            MenuUi.SetText(serversPrompt, "Label_Action", last != null ? "Server: " + last.Name : "Servers");
+        }
+
+        private IEnumerator OpenServersNextFrame(string note)
+        {
+            yield return null; // the menus' document is laid out
+            OpenServers(note);
+        }
+
+        /// <summary>Opens the Servers window; JOIN there enters the world with the selected character on that server.</summary>
+        private void OpenServers(string note)
+        {
+            MenuServers servers = MenuServers.For(MenuSettings.Current);
+            if (servers == null) return;
+            servers.Open(EnterWith, note); // the window makes its own opening sound
+        }
+
+        private void EnterWith(ServerEntry entry)
+        {
+            ShowServer();
+            if (!roster.IsUsed(selected)) return; // chosen from an empty slot: remembered for the next Enter
+            JoinFlow.Begin(entry.PlayHere ? null : entry.Listing);
+            CharacterSession.Enter(roster, selected);
+            FrontEnd.Go(FrontEnd.LoadingScene);
+        }
 
         private static void OpenSettings()
         {
@@ -189,8 +253,11 @@ namespace KryticalNova.UI.Menus
             MenuMoments.Raise(MenuMoment.Confirm, rows[selected] != null ? rows[selected].transform : null);
             if (roster.IsUsed(selected))
             {
-                CharacterSession.Enter(roster, selected);
-                FrontEnd.Go(FrontEnd.LoadingScene);
+                // Enter joins the server played last; with none yet, or one that cannot be joined now, the list opens.
+                ServerEntry last = ServerDirectory.Last;
+                if (last == null || !last.CanJoin) OpenServers(last == null ? null
+                    : last.Status == ServerEntry.State.Off ? $"{last.Name} is not answering. It may be off, or not reachable from here." : last.Note);
+                else EnterWith(last);
             }
             else
             {
