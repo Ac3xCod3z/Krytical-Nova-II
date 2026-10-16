@@ -21,29 +21,40 @@ namespace KryticalNova.UI
     [DisallowMultipleComponent]
     public sealed class GraphicsSettingsApplier : MonoBehaviour
     {
-        /// <summary>Main-light shadows by quality: how far they reach, the map they are drawn into, and its cascades.</summary>
+        /// <summary>
+        /// Main-light shadows by quality: how far they reach, the map they are drawn into, its cascades, where the
+        /// cascades split (shares of the distance: the first cascade, the sharpest, stays a few metres deep at every
+        /// distance), and how soft their edges are filtered.
+        /// </summary>
         private readonly struct ShadowRow
         {
-            public readonly float Distance;
+            public readonly float Distance, Split2;
             public readonly int Resolution, Cascades;
-            public ShadowRow(float distance, int resolution, int cascades) { Distance = distance; Resolution = resolution; Cascades = cascades; }
+            public readonly Vector3 Split4;
+            public readonly SoftShadowQuality Soft;
+            public ShadowRow(float distance, int resolution, int cascades, float split2, Vector3 split4, SoftShadowQuality soft)
+            {
+                Distance = distance; Resolution = resolution; Cascades = cascades; Split2 = split2; Split4 = split4; Soft = soft;
+            }
         }
 
-        // High is the authored asset (50 m, 4096, 4 cascades): it is read from the asset at boot, not from here.
+        // High is the authored asset (50 m, 4096, 4 cascades split at 6, 14.5 and 27 m, high soft shadows): it is read
+        // from the asset at boot, not from here.
         private static readonly ShadowRow[] ShadowRows =
         {
-            new ShadowRow(0f, 1024, 1),    // Off
-            new ShadowRow(22f, 1024, 1),   // Low
-            new ShadowRow(36f, 2048, 2),   // Medium
-            new ShadowRow(50f, 4096, 4),   // High
-            new ShadowRow(80f, 4096, 4),   // Ultra
+            new ShadowRow(0f, 1024, 1, 0.25f, Vector3.zero, SoftShadowQuality.Low),                                      // Off
+            new ShadowRow(22f, 1024, 1, 0.25f, Vector3.zero, SoftShadowQuality.Low),                                     // Low
+            new ShadowRow(36f, 2048, 2, 0.25f, Vector3.zero, SoftShadowQuality.Medium),                                  // Medium: split at 9 m
+            new ShadowRow(50f, 4096, 4, 0.25f, new Vector3(0.12f, 0.29f, 0.54f), SoftShadowQuality.UsePipelineSettings), // High
+            new ShadowRow(80f, 4096, 4, 0.25f, new Vector3(0.075f, 0.2f, 0.45f), SoftShadowQuality.UsePipelineSettings), // Ultra: 6, 16, 36 m
         };
 
         private static GraphicsSettingsApplier instance;
 
         private UniversalRenderPipelineAsset pipeline;
-        private float authoredRenderScale, authoredShadowDistance;
+        private float authoredRenderScale, authoredShadowDistance, authoredSplit2;
         private int authoredShadowResolution, authoredShadowCascades;
+        private Vector3 authoredSplit4;
         // The upscaler the asset names, and each options asset as it was: put back like the rest.
         private string authoredUpscaler, authoredDlssOptions, authoredFsr2Options;
 
@@ -108,6 +119,8 @@ namespace KryticalNova.UI
                 authoredShadowDistance = pipeline.shadowDistance;
                 authoredShadowResolution = pipeline.mainLightShadowmapResolution;
                 authoredShadowCascades = pipeline.shadowCascadeCount;
+                authoredSplit2 = pipeline.cascade2Split;
+                authoredSplit4 = pipeline.cascade4Split;
                 RememberUpscalers();
             }
             GraphicsPreferences.Changed += Apply;
@@ -126,16 +139,22 @@ namespace KryticalNova.UI
                 pipeline.shadowDistance = authoredShadowDistance;
                 pipeline.mainLightShadowmapResolution = authoredShadowResolution;
                 pipeline.shadowCascadeCount = authoredShadowCascades;
+                pipeline.cascade2Split = authoredSplit2;
+                pipeline.cascade4Split = authoredSplit4;
                 RestoreUpscalers();
             }
             SunShaftRuntime.UserEnabled = true;
             ComicStyleRuntime.OutlinesEnabled = true;
-            VolumetricAtmosphereDriver.UserEnabled = true;
+            VolumetricQualityRuntime.RestoreAuthored();
             GrassRenderer.DensityMultiplier = 1f;
             if (instance == this) instance = null;
         }
 
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => ApplyCamera();
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ApplyCamera();
+            ApplySoftShadows();
+        }
 
         /// <summary>The resolution and window mode, which only a built player has. Asked for by the Settings window.</summary>
         public static void ApplyDisplay()
@@ -171,6 +190,8 @@ namespace KryticalNova.UI
                     pipeline.shadowDistance = authoredShadowDistance;
                     pipeline.mainLightShadowmapResolution = authoredShadowResolution;
                     pipeline.shadowCascadeCount = authoredShadowCascades;
+                    pipeline.cascade2Split = authoredSplit2;
+                    pipeline.cascade4Split = authoredSplit4;
                 }
                 else
                 {
@@ -178,19 +199,22 @@ namespace KryticalNova.UI
                     pipeline.shadowDistance = row.Distance;
                     pipeline.mainLightShadowmapResolution = row.Resolution;
                     pipeline.shadowCascadeCount = row.Cascades;
+                    pipeline.cascade2Split = row.Split2;
+                    if (row.Cascades == 4) pipeline.cascade4Split = row.Split4;
                 }
             }
             SunShaftRuntime.UserEnabled = GraphicsPreferences.SunShafts;
             ComicStyleRuntime.OutlinesEnabled = GraphicsPreferences.ComicOutlines;
-            VolumetricAtmosphereDriver.UserEnabled = GraphicsPreferences.VolumetricFog;
+            VolumetricQualityRuntime.Set(GraphicsPreferences.Fog);
             GrassRenderer.DensityMultiplier = GraphicsPreferences.GrassDensity;
             ApplyCamera();
+            ApplySoftShadows();
             ApplyDisplay();
             // Numbers before and after a change of options are not to be compared: the log says what is in force.
             if (KryticalNova.Diagnostics.PerformanceLog.IsRecording)
             {
                 KryticalNova.Diagnostics.PerformanceLog.Change("graphics", System.FormattableString.Invariant(
-                    $"{Screen.width}x{Screen.height} {GraphicsPreferences.Window} preset={GraphicsPreferences.Preset} upscaler={UpscalerInForce} quality={GraphicsPreferences.UpscalerQuality} scale={GraphicsPreferences.RenderScale:0.00} shadows={GraphicsPreferences.Shadows} aa={GraphicsPreferences.AntiAliasing} grass={GraphicsPreferences.GrassDensity:0.00} fog={GraphicsPreferences.VolumetricFog} shafts={GraphicsPreferences.SunShafts} outlines={GraphicsPreferences.ComicOutlines} vsync={GraphicsPreferences.VSync} cap={GraphicsPreferences.FrameCapInForce}"));
+                    $"{Screen.width}x{Screen.height} {GraphicsPreferences.Window} preset={GraphicsPreferences.Preset} upscaler={UpscalerInForce} quality={GraphicsPreferences.UpscalerQuality} scale={GraphicsPreferences.RenderScale:0.00} shadows={GraphicsPreferences.Shadows} aa={GraphicsPreferences.AntiAliasing} grass={GraphicsPreferences.GrassDensity:0.00} fog={GraphicsPreferences.Fog} shafts={GraphicsPreferences.SunShafts} outlines={GraphicsPreferences.ComicOutlines} vsync={GraphicsPreferences.VSync} cap={GraphicsPreferences.FrameCapInForce}"));
             }
         }
 
@@ -307,6 +331,18 @@ namespace KryticalNova.UI
             if (string.IsNullOrEmpty(deviceName)) return false;
             string name = deviceName.ToUpperInvariant();
             return name.Contains("RTX 20") || name.Contains("RTX 30") || name.Contains("TITAN RTX");
+        }
+
+        /// <summary>
+        /// How soft the edges of the sun's and the moon's shadows are filtered: a setting of each light, and every scene
+        /// brings its own. High and Ultra leave it to the pipeline asset (high).
+        /// </summary>
+        private static void ApplySoftShadows()
+        {
+            SoftShadowQuality soft = ShadowRows[(int)GraphicsPreferences.Shadows].Soft;
+            foreach (Light light in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
+                if (light.type == LightType.Directional && light.shadows != LightShadows.None && light.TryGetComponent(out UniversalAdditionalLightData data))
+                    data.softShadowQuality = soft;
         }
 
         /// <summary>Anti-aliasing belongs to the camera, and every scene brings its own.</summary>
