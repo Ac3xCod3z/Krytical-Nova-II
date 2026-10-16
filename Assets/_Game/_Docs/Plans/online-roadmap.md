@@ -201,6 +201,26 @@ Phases 2 and 3 do not depend on each other and can be done in either order. With
 Phase 7 (measure) runs before Phase 6: every cap in Phase 6 comes from Phase 7's numbers. A first beta
 of hunting and towns can open without Phase 6; wars need it. Everything else is in order.
 
+**Before Phase 1** (owner, 15 Oct 2026): a short rendering pass, so the client is in good shape before the server
+work (`Design/Rendering-Bible.md` section 8). **Before Phase 5:** a persistent Bootstrap scene, because the
+NetworkManager lives inside the Zone01 scene today (`online-phase-05-more-than-one-map.md`, "The client side of
+travelling").
+
+## Research checked 15 Oct 2026
+
+The owner's research file (`Documents/Game Docs/Research for our server and updates to VL, VF, VM and shadows.txt`,
+ideas only) was checked against the game.
+
+- **Kept:** a Bootstrap scene with one scene per map swapped under the Loading page; memory freed on every map change;
+  one APV bake set per map; Addressables, local-packed first, before a second map or the phone port
+  (`ProjectOrganization.md` section 10); rendering tiers authored for the top and stepped down, with Forward+ for PC
+  and phones (`Rendering-Bible.md` sections 1, 3, 3b).
+- **Rejected:** a separate .NET console server with raw TCP sockets (the server stays a headless Unity build of this
+  project, so the rules exist once and the server stays the source of truth); ngrok-style tunnels (Relay plus port
+  forwarding already cover it); a hard-coded server address (rule 4 below); a hand-made packet queue during map loads
+  (NGO's scene sync does it).
+- **Phones** join the same servers later: only input, interface and graphics differ (`mobile-port-readiness.md`).
+
 ## Why it moves to real servers unchanged
 
 Six rules hold from Phase 1. If they are kept, moving is: copy the build, set the settings, import the save.

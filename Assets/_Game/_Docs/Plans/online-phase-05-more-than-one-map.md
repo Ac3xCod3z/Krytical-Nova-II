@@ -49,6 +49,27 @@ characters are here.
 
 `ZoneSessionManager` is rewritten around this. Its fallback of starting a local host is removed.
 
+## The client side of travelling (added 15 Oct 2026)
+
+What the game itself needs before a second map can be loaded at all:
+
+- **A Bootstrap scene first.** Today the NetworkManager, `NetworkConnectionManager` and `ZoneSessionManager` live
+  inside `Zone01_StarterTown` (`DontDestroyOnLoad` keeps them alive, but a second map scene would bring its own copy).
+  They move into a small persistent Bootstrap scene loaded once after the menus, together with the other persistent
+  systems (settings applier, performance log, warm-up). `ProjectOrganization.md` already plans a `Bootstrap` scene
+  folder and Addressables group.
+- **One scene per map**, swapped under the Loading page: the old map scene is unloaded, then
+  `Resources.UnloadUnusedAssets` and one GC run while the page covers the screen (today only one `GC.Collect` runs,
+  in `LoadingScreenController`), then the new map loads. The Loading page already waits on `LoadingGate`; arriving on
+  the new server is one more gate.
+- **Each map has its own APV bake set** with Day and Night scenarios (as `APV_Zone01_StarterTown` has), so its lighting
+  takes over the moment it loads; the day-cycle blend keeps working (`EnvironmentPresenter.BlendLightingScenarios`).
+- **No hand-made packet queue.** The client disconnects from one map server and connects to the next; NGO's scene
+  sync on the new server delivers the world only once the scene is ready.
+- **Addressables are optional here**: one map is one scene in the build. They matter for build size and the phone
+  port (`ProjectOrganization.md` section 10, `mobile-port-readiness.md`).
+- Phones join the same map servers; nothing on the server side differs.
+
 ## What crosses servers and what does not
 
 | System | Across maps |

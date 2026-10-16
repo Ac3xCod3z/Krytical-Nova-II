@@ -14,7 +14,7 @@ The sky is painterly but physically motivated (real rainbow geometry, real sunse
 | | PC (`Assets/_Game/Rendering/Settings/PC_RPAsset.asset`) | Mobile (`Mobile_RPAsset.asset`) |
 |---|---|---|
 | Rendering path | **Forward+** (`PC_Renderer`) | Forward (`Mobile_Renderer`) |
-| Depth / opaque texture | on / on | off / off |
+| Depth / opaque texture | on / on | on / on (in the asset; this table said off until 15 Oct 2026) |
 | HDR | on | on |
 | MSAA / render scale | off / 1.0 | off / 0.8 |
 | Light probes | **Adaptive Probe Volumes** | legacy light probes |
@@ -27,6 +27,25 @@ degrade cleanly on Mobile, either by skipping its pass or with a cheaper fallbac
 keyword for Mobile.
 
 Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights don't hit the 8-lights-per-object limit.
+It is also the right path for a phone later (Deferred costs tiled mobile GPUs too much bandwidth), so it stays.
+
+### Graphics tiers: author for the top, step down (owner, 15 Oct 2026)
+
+Make the game as pretty and atmospheric as it can be on a top GPU, then work backwards: each lower preset removes or
+cheapens effects, and still has to look like a great game. A **PC build always runs the "PC" quality level**; the
+"Mobile" level and asset are only for phones, so a check for "Mobile" never fires on PC. The presets are
+`GraphicsPreferences` (rows) applied by `GraphicsSettingsApplier` onto the live `PC_RPAsset`.
+
+| Preset | Render scale | Shadows (distance / map / cascades) | AA | Grass | Fog & mist | Sun shafts | Outlines |
+|---|---|---|---|---|---|---|---|
+| Low | 0.7 | 22 m / 1024 / 1 | off | 0.4 | off | off | on |
+| Medium | 0.85 | 36 m / 2048 / 2 | FXAA | 0.7 | on | off | on |
+| High (as authored) | 1.0 | 50 m / 4096 / 4 | SMAA | 1.0 | on | on | on |
+| Ultra | 1.0 | 80 m / 4096 / 4 | SMAA | 1.0 | on | on | on |
+
+**Not yet tied to the preset** (the pre-server rendering pass, section 8): volumetric fog quality (raymarch quality,
+step size, resolution), the lamp cones (they ignore the fog toggle and run at full resolution), cascade split ratios,
+soft-shadow quality. Measured so far: 2048 / 2 cascades instead of 4096 / 4 saves 0.8–1.0 ms (section 7).
 
 ## 2. Frame order (PC)
 
@@ -83,13 +102,51 @@ Why Forward+: per-tile light culling, so dozens of hand-placed realtime lights d
 - **Ambient follows the day cycle.** The presenter builds the ambient SH probe from the day-cycle palette ~10×/s. APV
   **Sky Occlusion** bakes only *how much sky each probe sees*, and sky light is re-evaluated at runtime from that ambient
   probe. So baking never freezes the time of day.
-- **Baked lights are always on.** If lamps read badly at noon, add APV lighting scenarios (Day / Night) and blend them
-  with the clock (see Roadmap).
+- **Baked lights follow the day.** The APV bake has **Day** and **Night** scenarios, blended by the sun's height
+  (`EnvironmentPresenter.BlendLightingScenarios`), so baked lamps are dark at noon and lit at night.
+- **Shadows.** Only the sun or moon casts realtime shadows; the 72 street lamps are baked spots with no shadows; the
+  player's night light and housing lights are realtime and shadowless. URP 17.6 has no per-light cached or on-demand
+  shadow maps (that is an HDRP feature), so baking is our way of making a stationary light free.
+- **Realtime spell lights (none exist yet)** must be: shadowless, short range (a few metres), capped per frame, and
+  culled by distance with a `CullingGroup` rather than per-light `Update` checks. Write that cap before the first one.
 - **SSAO** stays subtle (0.4). The comic shadow pass does the heavy lifting.
 - **Reflections**: no realtime reflection probes. Environment reflection intensity stays low (0.3), since the look is
   matte and inked.
 - **God rays from props**: hand-placed beams through windows and alleys use the Synty `FX_SunBeam_Large_01` /
   `FX_SunBeam_Small_01` (PolygonParticleFX) and `LightRay_*` prefabs. The **sun's** rays are the screen-space SunShafts pass.
+
+## 3b. Volumetric light, fog and mist (as built, checked 15 Oct 2026)
+
+Five sources, cheapest first:
+1. **Unity distance fog**, exponential squared, density from the weather profile (Clear 0.0022, Fog 0.014,
+   Blizzard 0.02) via `EnvironmentPresenter`.
+2. **Horizon fog in the sky shader** (`_KN_SkyParams.w`).
+3. **Volumetric Fog & Mist 2** (Kronnect, v31.4.4, `_ThirdParty/VolumetricFog2`): one `VolumetricFogManager` at
+   half resolution with edge-aware blur; 20 volumes (one terrain-fitted ground mist `VF_GroundMist`: raymarch quality
+   6, min step 0.6, 14 m high, noise and turbulence, max distance 300 m, receives sun shadows to 120 m; 19 water-mist
+   boxes `VF_WaterMist`). Unused features we own: **fog voids** (keep mist out of interiors), fog point lights,
+   sub-volumes, distant fog.
+4. **Volumetric Lights** (Kronnect, v20.2.1, `_ThirdParty/VolumetricLights`): the cone on each of the 72 street lamps,
+   "Faster" raymarch preset, auto-toggle 45–65 m, no occlusion shadows, **full resolution** (downscaling 1).
+5. **SunShafts** (ours): screen-space god rays at quarter-resolution mask; the shafts own the sky, the mist the streets.
+
+Rules: volumetrics render below full resolution with an edge-aware upscale; raymarch steps stay capped; mist is a
+height-bounded volume with noise, never a full-screen 3D voxel field; a local effect gets a local box volume; interiors
+get a fog void; every volumetric switches off with distance or at zero weight. Lower presets cheapen these first.
+
+**Research checked 15 Oct 2026** (owner's research file in `Documents/Game Docs`):
+
+| Advice | Here | Verdict |
+|---|---|---|
+| Forward+ rather than Deferred | Forward+ | Already done |
+| Half-res volumetrics, bilateral upscale | Fog yes; lamp cones full res | Do for the cones |
+| Raymarch step caps per tier | Capped, but not per preset | Do |
+| Height fog with noise for mist; local fog volumes | Terrain-fit mist, 19 water boxes | Already done |
+| 2 vs 4 cascades, distance per preset | Yes; split ratios fixed | Add splits per preset |
+| Cached / on-demand shadows for stationary lights | Not in URP; lamps baked | Not applicable |
+| Distance culling of local lights / CullingGroup | Cone auto-toggle; no realtime local lights | Needed when spell lights arrive |
+| APV with Day/Night blending; time-of-day shader globals | Both built (about 28 `_KN_*` globals) | Already done |
+| Screen-space shadows, shadowmask | Not used | Little gain today; shadowmask for interiors later |
 
 ## 4. HDR & Bloom budget
 
@@ -939,7 +996,14 @@ accepts. Its GPU occlusion culling is off: the camera looks down, so little hide
 
 ## 8. Roadmap
 
-- **APV lighting scenarios** (Day/Night): turn baked lamps off at noon and on at night, blended by the clock.
+- ~~APV lighting scenarios (Day/Night)~~: built (section 3).
+- **Pre-server rendering pass** (owner, 15 Oct 2026; before online Phase 1, starts on the owner's go; each change
+  measured with `gm.bench` per preset): fog and lamp-cone quality follow the preset, cones obey the fog toggle and are
+  off on Low; cones at half resolution with edge-preserving blur; cascade splits and soft-shadow quality per preset;
+  additional-light shadows off on `PC_RPAsset` if nothing uses them; fog voids in Crew Halls and homes; fix
+  `VolumetricAtmosphereDriver`'s never-true "Mobile" check and its stale Overcast comment.
+- **Ultra-only extras to try**, kept only within budget: lamp-cone occlusion near the camera, fog glow round lamps
+  (`FogPointLight`), a finer raymarch.
 - **Dynamic GI**: evaluated 2026-10-02 (the "Fast Dynamic GI" asset, `_ThirdParty/GI`) against APV and **rejected**.
   An A/B in Zone01 roughly doubled frame cost (+2–5 ms at street and vista views) and added no visible bounce, because
   its SDF tracing needs Read/Write enabled on every Synty mesh (memory cost, importer churn). APV + sky occlusion stays.
@@ -971,6 +1035,11 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   uGUI draw with a loop of at most eight panels a pixel, for about 1.25 s; not measured against a budget yet).
 
 ## Changelog
+
+- **2026-10-15 (docs only)**: the owner's research on volumetric light, fog, mist and shadows checked against the
+  game: graphics tiers rule and preset table (section 1), shadow and spell-light rules (3), volumetrics as built and
+  the research verdicts (3b), the pre-server rendering pass and Ultra extras (8). Fixed the stale Mobile depth/opaque
+  line and the Day/Night APV roadmap item (it is built).
 
 - **2026-10-11 (performance, branch `perf/top-tier`)**: what the first real performance log led to, section 7:
   an IL2CPP build option, the allocation finder and the per-frame garbage it found removed, scripts compiled ahead

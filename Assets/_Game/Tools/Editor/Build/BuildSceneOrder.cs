@@ -7,7 +7,7 @@ namespace KryticalNova.EditorTools
 {
     /// <summary>
     /// The scenes that go into a build, decided in one place: the front end first (Title is the boot scene), then the
-    /// world. Nothing else ships: development scenes stay out of the list. Scenes that do not exist yet are skipped,
+    /// world: Zone01, then the World Atlas maps. Nothing else ships: development scenes stay out of the list. Scenes that do not exist yet are skipped,
     /// so the scene builders can call this in any order. A dedicated server boots the same list and skips to the
     /// world (DedicatedServerBoot).
     /// </summary>
@@ -31,7 +31,10 @@ namespace KryticalNova.EditorTools
         {
             var current = EditorBuildSettings.scenes;
             var scenes = new List<EditorBuildSettingsScene>();
-            foreach (string path in Scenes)
+            // The front end and Zone01, then the World Atlas maps (WorldScenesBuilder).
+            var paths = new List<string>(Scenes);
+            paths.AddRange(WorldScenesBuilder.ScenePaths());
+            foreach (string path in paths)
             {
                 if (!File.Exists(path)) continue;
                 var existing = Array.Find(current, s => s.path == path);

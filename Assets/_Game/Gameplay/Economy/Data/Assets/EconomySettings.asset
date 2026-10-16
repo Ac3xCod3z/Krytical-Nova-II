@@ -45,7 +45,7 @@ MonoBehaviour:
   - 100
   - 100
   vendorFallbackValueByRarity: 14000000000000006400000000000000d007000000000000204e000000000000204e000000000000l
-  vendorSellBackPercent: 20
+  vendorSellBackPercent: 70
   vendorConfirmFromRarity: 2
   weaveApplyFee: 5000
   weaveClearFee: 0

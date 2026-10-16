@@ -235,6 +235,19 @@ namespace KryticalNova.Player
             SetupLocalCamera();
         }
 
+        /// <summary>
+        /// Local networked player, after the session moved to another map: the old map's cameras are gone, so take
+        /// the new map's orbit camera and main camera, and stand on the new map's NavMesh.
+        /// </summary>
+        public void RebindToScene()
+        {
+            orbitCamera = null;
+            gameplayCamera = Camera.main;
+            SetupLocalCamera();
+            ConfigureOrbitCamera();
+            if (agent != null && agent.isActiveAndEnabled && !agent.isOnNavMesh) agent.Warp(transform.position);
+        }
+
         private void SetupLocalCamera()
         {
             if (orbitCamera == null)
@@ -304,29 +317,33 @@ namespace KryticalNova.Player
             toggleWeaponAction = gameplayActions.FindAction(ToggleWeaponActionName, true);
             flipCameraAction = gameplayActions.FindAction(FlipCameraActionName, false);
 
-            if (orbitCamera != null)
-            {
-                // No recentering or input acceleration: releasing RMB keeps the chosen orbit angles.
-                orbitCamera.HorizontalAxis.Recentering.Enabled = false;
-                orbitCamera.VerticalAxis.Recentering.Enabled = false;
-                orbitCamera.RadialAxis.Recentering.Enabled = false;
-                orbitCamera.VerticalAxis.Range = new Vector2(minimumPitch, maximumPitch);
-
-                // Control distance through Radius, with a fixed multiplier so limits use world units.
-                ValidateZoomSettings();
-                orbitCamera.RadialAxis.Range = Vector2.one * FixedRadialMultiplier;
-                orbitCamera.RadialAxis.Value = FixedRadialMultiplier;
-                orbitCamera.RadialAxis.Center = FixedRadialMultiplier;
-                orbitCamera.RadialAxis.Wrap = false;
-                orbitCamera.Radius = Mathf.Clamp(orbitCamera.Radius, minimumZoomDistance, maximumZoomDistance);
-                orbitComposer = orbitCamera.GetComponent<CinemachineRotationComposer>();
-            }
+            ConfigureOrbitCamera();
 
             if (!IsSpawned || IsServer)
             {
                 if (!PlaceAgentOnNavigation())
                     enabled = false;
             }
+        }
+
+        /// <summary>The orbit camera's rules for this player: called on start and again on each new map's camera.</summary>
+        private void ConfigureOrbitCamera()
+        {
+            if (orbitCamera == null) return;
+            // No recentering or input acceleration: releasing RMB keeps the chosen orbit angles.
+            orbitCamera.HorizontalAxis.Recentering.Enabled = false;
+            orbitCamera.VerticalAxis.Recentering.Enabled = false;
+            orbitCamera.RadialAxis.Recentering.Enabled = false;
+            orbitCamera.VerticalAxis.Range = new Vector2(minimumPitch, maximumPitch);
+
+            // Control distance through Radius, with a fixed multiplier so limits use world units.
+            ValidateZoomSettings();
+            orbitCamera.RadialAxis.Range = Vector2.one * FixedRadialMultiplier;
+            orbitCamera.RadialAxis.Value = FixedRadialMultiplier;
+            orbitCamera.RadialAxis.Center = FixedRadialMultiplier;
+            orbitCamera.RadialAxis.Wrap = false;
+            orbitCamera.Radius = Mathf.Clamp(orbitCamera.Radius, minimumZoomDistance, maximumZoomDistance);
+            orbitComposer = orbitCamera.GetComponent<CinemachineRotationComposer>();
         }
 
         private bool PlaceAgentOnNavigation(bool quiet = false)

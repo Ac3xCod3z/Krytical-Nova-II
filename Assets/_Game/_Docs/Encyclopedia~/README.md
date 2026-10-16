@@ -47,6 +47,14 @@ Links are made by the builder, not written by hand:
    publish to it too: read the live artifact first, as the tool asks, but rebuild from the docs rather than patching
    the live page, since the docs are the source.
 
+## The World atlas and its pictures
+
+The World atlas chapter is built from `Design/World-Atlas.md`, the text of the owner's Figma file **Krytical Nova — World
+Atlas** (https://www.figma.com/design/JhbgViYlKpJEsj8IKTLz5k). Its pictures (the spider map and a concept painting per
+region) are JPEGs in `art/` beside this file, exported from that Figma file. They are not inside the page: publish them as
+the artifact's supporting files, at the paths the doc names (`art/concept-scar.jpg` and so on). The builder prints the
+list after each build. When the Figma file changes, export the frames again and update `Design/World-Atlas.md`.
+
 ## The files
 
 - `build_encyclopedia.py`: reads the docs, builds the page. No packages beyond Python's own.

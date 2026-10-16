@@ -203,6 +203,11 @@ def blocks(body):
         elif line.startswith("### "):
             out.append("<h3>%s</h3>" % inline(line[4:]))
             i += 1
+        elif re.match(r"^!\[[^\]]*\]\([^)]+\)\s*$", line):
+            alt, src = re.match(r"^!\[([^\]]*)\]\(([^)]+)\)", line).groups()
+            out.append('<figure class="art"><img src="%s" alt="%s" loading="lazy"><figcaption>%s</figcaption></figure>'
+                       % (html.escape(src, quote=True), html.escape(alt, quote=True), html.escape(alt)))
+            i += 1
         elif line.startswith("|"):
             j = i
             while j < len(body) and body[j].startswith("|"):
@@ -397,6 +402,39 @@ for cat, label in CATS:
     library_html.append('<div class="libcat"><h3 class="gh">%s</h3><p class="tip">%s</p><div class="docgrid">%s</div></div>'
                         % (cat, html.escape(label.split(": ", 1)[1]), "\n".join(cards)))
 
+# The World chapter: Design/World-Atlas.md, one panel per region, a fold per Home City or zone.
+WORLD_ID = "Design/World-Atlas"
+world_html, world_count, ART = "", 0, []
+if WORLD_ID in DOCS:
+    wsec, wname = {}, None
+    order = []
+    for line in DOCS[WORLD_ID]["md"].split("\n"):
+        if line.startswith("## "):
+            wname = line[3:].strip()
+            order.append(wname)
+            wsec[wname] = []
+        elif wname:
+            wsec[wname].append(line)
+    ART = sorted(set(re.findall(r"\]\((art/[^)]+)\)", DOCS[WORLD_ID]["md"])))
+    panels = []
+    for n, region in enumerate(order):
+        body = wsec[region]
+        head, cards, cur = [], [], None
+        for line in body:
+            if line.startswith("### "):
+                cur = [line[4:].strip(), []]
+                cards.append(cur)
+            elif cur:
+                cur[1].append(line)
+            else:
+                head.append(line)
+        folds = "".join('<details class="fold zone"><summary>%s</summary><div class="prose">%s</div></details>' % (inline(t), blocks(b)) for t, b in cards)
+        world_count += len(cards)
+        letter = chr(ord("A") + n)
+        panels.append('<div class="plan region" id="world-%s"><div class="planhead"><span class="big">%s</span><h3>%s</h3></div><div class="prose">%s</div>%s</div>'
+                      % (re.sub(r"[^a-z0-9]+", "-", region.lower()).strip("-"), letter, inline(region), blocks(head), folds))
+    world_html = "\n".join(panels)
+
 payload = {d: {"title": DOCS[d]["title"], "path": DOCS[d]["path"], "md": DOCS[d]["md"]} for d in DOCS if d != SOURCE_ID}
 docs_json = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
 
@@ -420,6 +458,8 @@ fill = {
     "{{CANDIDATES}}": blocks(sections[key_of("Candidates not on the original list")]),
     "{{CHANGELOG}}": changelog,
     "{{LIB_COUNT}}": str(nav_lib),
+    "{{WORLD}}": world_html or "<p>No World Atlas yet.</p>",
+    "{{WORLD_COUNT}}": str(world_count),
     "{{LIBRARY}}": "\n".join(library_html),
     "{{DOCS_JSON}}": docs_json,
     "{{BUILT}}": "%d %s %d" % (today.day, today.strftime("%b"), today.year),
@@ -432,6 +472,10 @@ os.makedirs(os.path.dirname(os.path.abspath(OUT)), exist_ok=True)
 with open(OUT, "w", encoding="utf-8", newline="\n") as f:
     f.write(template)
 links = len(re.findall(r'class="dl"', template))
+missing = [a for a in ART if not os.path.exists(os.path.join(HERE, a))]
+if missing:
+    print("pictures the atlas names but art/ lacks:", missing)
+print("publish with the files:", " ".join(ART))
 print("%d systems %s | %d plan points | %d open, %d settled | %d terms in %d groups | %d docs in the Library, %d doc links | %d KB -> %s"
       % (len(systems), counts, len(chunks), len(open_items), len(done_items), len(grows), len(order), nav_lib, links,
          len(template.encode("utf-8")) // 1024, OUT))

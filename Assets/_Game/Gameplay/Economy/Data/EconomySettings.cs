@@ -105,7 +105,7 @@ namespace KryticalNova.Economy
         [Tooltip("What one of an item is valued at when no vendor lists it and it is not ladder gear (a Serum, a Permit, a pet), by rarity.")]
         public long[] vendorFallbackValueByRarity = { 20, 100, 2_000, 20_000, 20_000 };
         [Tooltip("What a vendor pays for an item sold to it: this share of what the shops value it at.")]
-        [Range(0f, 100f)] public float vendorSellBackPercent = 20f;
+        [Range(0f, 100f)] public float vendorSellBackPercent = 70f;
         [Tooltip("Selling an item of this rarity or better to a vendor must be confirmed first. So must a pet and any worked gear, whatever this says.")]
         public ItemRarity vendorConfirmFromRarity = ItemRarity.Rare;
 

@@ -633,6 +633,40 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, TeleportTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(304)]
         private void TeleportToCoordinates(Vector3 position) => Run($"gm.tpxyz {F(position.x)} {F(position.y)} {F(position.z)}");
 
+        // Travel between maps (gm.travel): the host takes the whole session.
+        private const string ZoneCatalogPath = "Assets/_Game/World/Data/Assets/ZoneCatalog.asset";
+        [NonSerialized] private string travelZone = "";
+
+        private IEnumerable<ValueDropdownItem<string>> TravelChoices()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<KryticalNova.World.ZoneCatalog>(ZoneCatalogPath);
+            if (catalog == null) yield break;
+            foreach (var zone in catalog.zones)
+                if (zone != null) yield return new ValueDropdownItem<string>($"{zone.kind}/{zone.displayName}  ({zone.LevelBand})", zone.sceneName);
+        }
+
+        [TabGroup(Tabs, TeleportTab), Title("Travel to Another Map"), ShowInInspector, ValueDropdown(nameof(TravelChoices)), EnableIf(nameof(IsReady)), LabelText("Map"), PropertyOrder(305)]
+        [InfoBox("@\"Now in: \" + CurrentMapLabel + \". In a session the host takes everyone; the travel screen shows the region's concept art and lore.\"")]
+        private string TravelZone { get => travelZone; set => travelZone = value; }
+
+        private static string CurrentMapLabel
+        {
+            get
+            {
+                var rules = KryticalNova.World.ZoneRules.Current;
+                return rules == null ? "(no map)" : rules.Entry != null ? $"{rules.Entry.displayName} ({rules.Entry.LevelBand}, {rules.Entry.pvp})" : rules.gameObject.scene.name;
+            }
+        }
+
+        [ButtonGroup(Tabs + "/" + TeleportTab + "/Travel"), EnableIf("@IsReady && !string.IsNullOrEmpty(travelZone)"), LabelText("Travel"), PropertyOrder(306)]
+        private void TravelGo() => Run($"gm.travel {travelZone}");
+
+        [ButtonGroup(Tabs + "/" + TeleportTab + "/Travel"), EnableIf(nameof(IsReady)), LabelText("Back to Zone01"), PropertyOrder(307)]
+        private void TravelHome() => Run("gm.travel Zone01_StarterTown");
+
+        [ButtonGroup(Tabs + "/" + TeleportTab + "/Travel"), EnableIf(nameof(IsReady)), LabelText("List Maps"), PropertyOrder(308)]
+        private void TravelList() => Run("gm.zones");
+
         // ================================================================ WORLD
 
         [TabGroup(Tabs, WorldTab), Title("Time of Day"), ShowInInspector, PropertyRange(0f, 24f), EnableIf(nameof(HasWorld)), PropertyOrder(400)]

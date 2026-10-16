@@ -136,6 +136,9 @@ What makes it large:
 A sensible middle: **movement, camera, targeting and Hotbar on a pad, with the windows still on the mouse**. That
 is perhaps a third of the work, and is how many PC MMOs ship pad support first.
 
+**Touch** (a phone port is planned, not started): the same problems as a controller, plus on-screen controls for
+orbit, zoom and the Hotbar. See `Plans/mobile-port-readiness.md`. Owner-side prediction (section 3) helps there too.
+
 ## 6. Order, if it is built
 
 1. **Measure** navigation and movement cost on the server (hours).

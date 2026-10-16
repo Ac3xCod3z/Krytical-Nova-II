@@ -203,9 +203,11 @@ Exact dates, era names, and intervals remain open. The order records established
 
 ### Open for Future Development
 
-Project names, exact dates, rulers, institutions, faction subcultures, individual characters, city names, mountain and homeland names, assassination orders, the shared symbol’s design, and the expansion’s trigger may be developed later.
+Project names, exact dates, rulers, institutions, faction subcultures, individual characters, assassination orders, the shared symbol’s design, and the expansion’s trigger may be developed later.
 
 The nature of what is stirring beneath Nova, the detailed workings of soul energy, the practical method of restoration, and the origins and mechanics of the combat modes remain open. Future answers must preserve the original cause and each faction’s established stakes.
+
+The names of regions, Home Cities, field zones and Runs are set in section 14 (from the owner's World Atlas, 15 Oct 2026); city districts beyond those listed, mountain names and what each place holds may be developed later.
 
 Before adding lore, check whether it changes an established fact, confuses rumor with objective history, or reveals the Ronin earlier than the intended progression. New material should extend the world’s consequences, not replace its foundation.
 
@@ -314,3 +316,20 @@ Descended from maintenance tools used to dismantle delicate industrial assemblie
 | Ronin — expansion spoilers | Combines traditions carried by defectors from all three factions. This authorship remains concealed before the nation’s reveal. |
 
 Five Core families were previously mentioned in development, but their individual names and definitions still require verification before receiving lore. No additional material tiers, recipes, drop locations, success rates, or protection effects are established by this section.
+
+## 14. Places of Nova — Names from the World Atlas
+
+Set by the owner in the Figma **World Atlas** (copied 15 Oct 2026). The look, layout, points of interest and dressing of every place are in `World-Atlas.md`; this section records only the names, so stories and quests use them consistently.
+
+Each founding faction holds a region: a Home City (neutral ground, no Hostiles, no PvP) and four field zones leading outward, each with a Run (a dungeon). The fourth zone's gate opens onto **The Scar**, the wound where all four lands meet.
+
+| Region | Faction | Home City | Field zones, outward (their Runs) |
+| --- | --- | --- | --- |
+| **Meridian Sprawl** | Hegemony | **New Meridian**, the last gleaming arcology | Transit Row (Substation 9) · Crestfall (The Galleria) · Alder County (Silo 12) · Gantry Ridge (The Coreworks) |
+| **Elders-Reach** | Covenant | **Aldhavn**, a hall-city at the head of a fjord | Birchlight Vale (Hearthbarrow) · Skeldfjord (Wrecktide Grotto) · The Sylwood (The Rootvault) · Barrowfell (Howlstone Crypts) |
+| **Cessation** | Null | **Terminus**, a crater city of gear and bone | The Palefields (The Idle Works) · The Scrapline (The Disassembly) · The Needlegarden (Ossuary Sigma) · Noct Caldera (The Stirring Well) |
+| **The Scar** | contested by all | none | The Scar itself; its endgame Run is **The Ruptureworks** |
+
+**Ronin — expansion spoiler.** The Ronin homeland is **Sunderpeak**, frozen outer peaks hiding steam-warmed valleys; its hidden capital is **Kagero** ("heat-haze: seen and not seen"). Its field zones, outward: The Ember Terraces (Steamhollow) · The Cane Sea (The Listening House) · Blackfall Gorge (The Lantern Gallery) · The Veilpass (The Quiet Archive), whose descent opens high on The Scar's north wall. Kagero and the Sunderpeak stay hidden through the base game, as section 7 requires: nothing before the expansion may prove they are real.
+
+**Still open (from the Atlas):** whether The Scar's rent is the original extraction site (do not canonize it), the names of the Beacon sites, the Ronin crest and colours.
