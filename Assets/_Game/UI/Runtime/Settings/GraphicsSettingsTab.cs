@@ -10,6 +10,7 @@ namespace KryticalNova.UI
     {
         private static readonly string[] PresetNames = { "LOW", "MEDIUM", "HIGH", "ULTRA", "CUSTOM" };
         private static readonly string[] ShadowNames = { "OFF", "LOW", "MEDIUM", "HIGH", "ULTRA" };
+        private static readonly string[] FogNames = { "OFF", "LOW", "MEDIUM", "HIGH", "ULTRA" };
         private static readonly string[] AntiAliasingNames = { "OFF", "FXAA", "SMAA" };
         private static readonly string[] WindowNames = { "FULLSCREEN", "BORDERLESS", "WINDOWED" };
         private static readonly string[] UpscalerQualityNames = { "NATIVE AA", "QUALITY", "BALANCED", "PERFORMANCE", "ULTRA PERFORMANCE" };
@@ -65,8 +66,8 @@ namespace KryticalNova.UI
                 index => Detail(() => GraphicsPreferences.AntiAliasing = (AntiAliasingChoice)index)));
             Add(SettingsRows.Slider(page, "Grass density", GraphicsPreferences.MinGrassDensity, 1f,
                 () => GraphicsPreferences.GrassDensity, value => Detail(() => GraphicsPreferences.GrassDensity = value)));
-            Add(SettingsRows.Toggle(page, "Volumetric fog and mist", () => GraphicsPreferences.VolumetricFog,
-                value => Detail(() => GraphicsPreferences.VolumetricFog = value)));
+            Add(SettingsRows.Choice(page, "Fog, mist and lamp light", FogNames, () => (int)GraphicsPreferences.Fog,
+                index => Detail(() => GraphicsPreferences.Fog = (KryticalNova.World.VolumetricQuality)index)));
             Add(SettingsRows.Toggle(page, "Sun shafts", () => GraphicsPreferences.SunShafts,
                 value => Detail(() => GraphicsPreferences.SunShafts = value)));
             Add(SettingsRows.Toggle(page, "Comic ink outlines", () => GraphicsPreferences.ComicOutlines,

@@ -7,8 +7,9 @@ namespace KryticalNova.World
     /// A lit street lamp (prefab variant SM_Prop_Streetlight_01_Lit). Its Light is **Baked**: the street pool and the
     /// glow in the volumetric mist come from the APV "Night" lighting scenario, at no runtime cost. This only drives the
     /// visible light cone (Kronnect VolumetricLight): on from dusk to dawn, faint in clear air and strong in fog
-    /// weather (<see cref="VolumetricAtmosphereDriver.FogAmount"/>). The cone also distance-toggles itself.
-    /// Never runs on a headless server.
+    /// weather (<see cref="VolumetricAtmosphereDriver.FogAmount"/>). The cone also distance-toggles itself. It follows
+    /// the player's fog quality (<see cref="VolumetricQualityRuntime"/>): off with the fog, and drawn more finely and
+    /// seen further away the higher the quality. Never runs on a headless server.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class StreetLampController : MonoBehaviour
@@ -24,6 +25,7 @@ namespace KryticalNova.World
 
         private float nextCheck;
         private float appliedBrightness = -1f;
+        private int appliedQuality = -1;
 
         private void OnEnable()
         {
@@ -43,9 +45,10 @@ namespace KryticalNova.World
             nextCheck = Time.time + checkInterval;
 
             float hours = EnvironmentPresenter.PresentedTimeOfDay01 * 24f;
-            bool on = hours >= onOffHours.x || hours < onOffHours.y;
+            bool on = (hours >= onOffHours.x || hours < onOffHours.y) && VolumetricQualityRuntime.Quality != VolumetricQuality.Off;
             if (cone.enabled != on) cone.enabled = on;
             if (!on) return;
+            if (appliedQuality != VolumetricQualityRuntime.Version) ApplyQuality();
 
             float brightness = Mathf.Lerp(clearAirBrightness, fogBrightness, VolumetricAtmosphereDriver.FogAmount);
             if (Mathf.Abs(brightness - appliedBrightness) > 0.02f)
@@ -54,6 +57,19 @@ namespace KryticalNova.World
                 cone.brightness = brightness;
                 cone.UpdateMaterialProperties();
             }
+        }
+
+        private void ApplyQuality()
+        {
+            appliedQuality = VolumetricQualityRuntime.Version;
+            VolumetricQualityRuntime.Tier tier = VolumetricQualityRuntime.Current;
+            cone.raymarchPreset = RaymarchPresets.UserDefined;
+            cone.raymarchQuality = tier.ConeRaymarch;
+            cone.raymarchMinStep = tier.ConeMinStep;
+            cone.jittering = tier.ConeJitter;
+            cone.distanceStartDimming = tier.ConeFadeFrom;
+            cone.distanceDeactivation = tier.ConeGoneAt;
+            cone.UpdateMaterialProperties();
         }
     }
 }

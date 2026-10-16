@@ -1,5 +1,6 @@
 using System;
 using KryticalNova.Networking;
+using KryticalNova.World;
 using UnityEngine;
 
 namespace KryticalNova.UI
@@ -26,22 +27,23 @@ namespace KryticalNova.UI
             public readonly float RenderScale, GrassDensity;
             public readonly ShadowQuality Shadows;
             public readonly AntiAliasingChoice AntiAliasing;
-            public readonly bool VolumetricFog, SunShafts, ComicOutlines;
+            public readonly VolumetricQuality Fog;
+            public readonly bool SunShafts, ComicOutlines;
 
             public Detail(float renderScale, ShadowQuality shadows, AntiAliasingChoice antiAliasing, float grassDensity,
-                bool volumetricFog, bool sunShafts, bool comicOutlines)
+                VolumetricQuality fog, bool sunShafts, bool comicOutlines)
             {
                 RenderScale = renderScale; Shadows = shadows; AntiAliasing = antiAliasing; GrassDensity = grassDensity;
-                VolumetricFog = volumetricFog; SunShafts = sunShafts; ComicOutlines = comicOutlines;
+                Fog = fog; SunShafts = sunShafts; ComicOutlines = comicOutlines;
             }
         }
 
         private static readonly Detail[] Presets =
         {
-            new Detail(0.7f, ShadowQuality.Low, AntiAliasingChoice.Off, 0.4f, false, false, true),     // Low
-            new Detail(0.85f, ShadowQuality.Medium, AntiAliasingChoice.Fxaa, 0.7f, true, false, true), // Medium
-            new Detail(1f, ShadowQuality.High, AntiAliasingChoice.Smaa, 1f, true, true, true),         // High: as authored
-            new Detail(1f, ShadowQuality.Ultra, AntiAliasingChoice.Smaa, 1f, true, true, true),        // Ultra
+            new Detail(0.7f, ShadowQuality.Low, AntiAliasingChoice.Off, 0.4f, VolumetricQuality.Off, false, true),        // Low
+            new Detail(0.85f, ShadowQuality.Medium, AntiAliasingChoice.Fxaa, 0.7f, VolumetricQuality.Medium, false, true), // Medium
+            new Detail(1f, ShadowQuality.High, AntiAliasingChoice.Smaa, 1f, VolumetricQuality.High, true, true),          // High: as authored
+            new Detail(1f, ShadowQuality.Ultra, AntiAliasingChoice.Smaa, 1f, VolumetricQuality.Ultra, true, true),        // Ultra
         };
 
         public const float MinRenderScale = 0.5f;
@@ -87,7 +89,19 @@ namespace KryticalNova.UI
             set => SetDetail("grass", Mathf.Clamp(value, MinGrassDensity, 1f));
         }
 
-        public static bool VolumetricFog { get => GetInt("fog", 1) != 0; set => SetDetail("fog", value ? 1 : 0); }
+        /// <summary>
+        /// Volumetric fog, mist and the lamps' light cones: Off, or how finely they are drawn. Stored since 16 Oct 2026
+        /// under a key of its own; a choice stored before, when it was on or off, reads as High or Off.
+        /// </summary>
+        public static VolumetricQuality Fog
+        {
+            get => (VolumetricQuality)Mathf.Clamp(GetInt(FogKey, GetInt("fog", 1) != 0 ? (int)VolumetricQuality.High : (int)VolumetricQuality.Off),
+                0, (int)VolumetricQuality.Ultra);
+            set => SetDetail(FogKey, (int)value);
+        }
+
+        private const string FogKey = "fogQuality";
+
         public static bool SunShafts { get => GetInt("shafts", 1) != 0; set => SetDetail("shafts", value ? 1 : 0); }
         public static bool ComicOutlines { get => GetInt("outlines", 1) != 0; set => SetDetail("outlines", value ? 1 : 0); }
 
@@ -180,7 +194,7 @@ namespace KryticalNova.UI
                 PlayerPrefs.SetInt(Prefix + "shadows", (int)d.Shadows);
                 PlayerPrefs.SetInt(Prefix + "aa", (int)d.AntiAliasing);
                 PlayerPrefs.SetFloat(Prefix + "grass", d.GrassDensity);
-                PlayerPrefs.SetInt(Prefix + "fog", d.VolumetricFog ? 1 : 0);
+                PlayerPrefs.SetInt(Prefix + FogKey, (int)d.Fog);
                 PlayerPrefs.SetInt(Prefix + "shafts", d.SunShafts ? 1 : 0);
                 PlayerPrefs.SetInt(Prefix + "outlines", d.ComicOutlines ? 1 : 0);
             }
@@ -190,7 +204,7 @@ namespace KryticalNova.UI
         /// <summary>Every graphics option back to what the game ships with (the High preset, the display's own size).</summary>
         public static void ResetToDefaults()
         {
-            foreach (string key in new[] { "preset", "renderScale", "shadows", "aa", "grass", "fog", "shafts", "outlines", "vsync", FrameCapKey, "window", "width", "height", "readout", "upscaler", "upscalerQuality" })
+            foreach (string key in new[] { "preset", "renderScale", "shadows", "aa", "grass", "fog", FogKey, "shafts", "outlines", "vsync", FrameCapKey, "window", "width", "height", "readout", "upscaler", "upscalerQuality" })
                 PlayerPrefs.DeleteKey(Prefix + key);
             Commit();
         }

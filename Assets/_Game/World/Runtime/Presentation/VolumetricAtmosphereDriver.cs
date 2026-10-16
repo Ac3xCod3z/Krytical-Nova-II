@@ -6,13 +6,15 @@ namespace KryticalNova.World
     /// <summary>
     /// Ties Volumetric Fog &amp; Mist 2 to the weather, like real air: it either rains or it fogs.
     ///  - Ground mist (terrain-fitted, whole zone) shows only as much as the weather's <c>volumetricFog</c> asks for —
-    ///    full in WP_Fog, a thin haze in Overcast, a whiteout share in Blizzard, and never while it rains.
+    ///    full in WP_Fog, a whiteout share in Blizzard, none in clear or overcast weather, and never while it rains.
     ///  - On dry nights the same ground volume runs at a small fraction (night haze), so moonlight has air to scatter
     ///    in and buildings cut soft shafts through it.
     ///  - Water mist (low local volumes over the lakes and rivers) rises at dusk on dry evenings and lifts after.
     /// Volumes at ~0 are switched off entirely, so clear or rainy weather costs nothing. Sun/moon colour comes from
     /// the VolumetricFogManager's light sync; this owns density, albedo and on/off. Play mode works on instanced
-    /// profiles (<see cref="VolumetricFog.settings"/>), never the assets. Headless servers and low tiers skip it.
+    /// profiles (<see cref="VolumetricFog.settings"/>), never the assets. Headless servers skip it. The player's fog
+    /// quality (<see cref="VolumetricQualityRuntime"/>) sets how finely and at what resolution it is drawn; Off removes
+    /// it, and so does being indoors (the weather publishes no fog there).
     /// <see cref="FogAmount"/> tells other presentation (street-lamp light cones) how foggy the air is in fog weather.
     /// </summary>
     [DisallowMultipleComponent]
@@ -29,7 +31,6 @@ namespace KryticalNova.World
         [Range(0f, 1f)] [SerializeField] private float albedoFromFogColor = 0.65f;
         [Tooltip("Seconds to ease weight changes (weather blends are already smooth; this hides quality-tier pops).")]
         [Min(0.01f)] [SerializeField] private float smoothingSeconds = 2f;
-        [SerializeField] private string[] disabledOnQualityLevels = { "Mobile" };
 
         private const float MinMistLight = 0.42f;
 
@@ -41,14 +42,11 @@ namespace KryticalNova.World
 
         /// <summary>How foggy the air is town-wide, 0-1 (fog weather only; local water mist excluded). Presentation only.</summary>
         public static float FogAmount { get; private set; }
-        /// <summary>The player's graphics setting: off removes the volumetric fog and mist, whatever the weather.</summary>
-        public static bool UserEnabled = true;
 
         private Layer ground;
         private Layer[] water;
         private float weatherWeight; // the fog-weather share of the ground weight (excludes night haze)
-        private int lastQualityLevel = -1;
-        private bool tierDisabled;
+        private int appliedQuality = -1;
 
         private struct Layer
         {
@@ -56,6 +54,7 @@ namespace KryticalNova.World
             public VolumetricFogProfile Profile;
             public float AuthoredDensity;
             public Color AuthoredAlbedo;
+            public float AuthoredMinStep;
             public float Weight;
 
             public static Layer Create(VolumetricFog fog)
@@ -64,6 +63,7 @@ namespace KryticalNova.World
                 if (fog == null || fog.profile == null) return l;
                 l.AuthoredDensity = fog.profile.density;
                 l.AuthoredAlbedo = fog.profile.albedo;
+                l.AuthoredMinStep = fog.profile.raymarchMinStep;
                 l.Profile = fog.settings; // instanced copy from here on
                 return l;
             }
@@ -90,7 +90,7 @@ namespace KryticalNova.World
             ground = Layer.Create(fog);
             water = new Layer[waterMists.Length];
             for (int i = 0; i < waterMists.Length; i++) water[i] = Layer.Create(waterMists[i]);
-            lastQualityLevel = -1;
+            appliedQuality = -1;
             weatherWeight = 0f;
             FogAmount = 0f;
 #endif
@@ -100,13 +100,8 @@ namespace KryticalNova.World
 
         private void LateUpdate()
         {
-            int quality = QualitySettings.GetQualityLevel();
-            if (quality != lastQualityLevel)
-            {
-                lastQualityLevel = quality;
-                tierDisabled = IsDisabledTier(quality);
-            }
-            bool off = tierDisabled || !UserEnabled;
+            if (appliedQuality != VolumetricQualityRuntime.Version) ApplyQuality();
+            bool off = VolumetricQualityRuntime.Quality == VolumetricQuality.Off;
             if (publishedVolumetric < 0f) return;
 
             float k = 1f - Mathf.Exp(-Time.deltaTime / smoothingSeconds);
@@ -123,6 +118,25 @@ namespace KryticalNova.World
             // Only fog weather thickens the air town-wide. Water mist is local to the lakes and rivers, so it must not
             // brighten every lamp cone in the city at dusk. Neither must the thin night haze.
             FogAmount = Mathf.Min(ground.Weight, weatherWeight);
+        }
+
+        /// <summary>How finely and at what resolution the mist is drawn, from the player's fog quality.</summary>
+        private void ApplyQuality()
+        {
+            appliedQuality = VolumetricQualityRuntime.Version;
+            VolumetricQualityRuntime.Tier tier = VolumetricQualityRuntime.Current;
+            SetRaymarch(ref ground, tier);
+            for (int i = 0; i < water.Length; i++) SetRaymarch(ref water[i], tier);
+            VolumetricFogManager manager = VolumetricFogManager.instance;
+            if (manager != null) manager.downscaling = tier.FogDownscaling;
+        }
+
+        private static void SetRaymarch(ref Layer layer, VolumetricQualityRuntime.Tier tier)
+        {
+            if (layer.Fog == null || layer.Profile == null) return;
+            layer.Profile.raymarchQuality = tier.FogRaymarch;
+            layer.Profile.raymarchMinStep = layer.AuthoredMinStep * tier.FogStepScale;
+            if (layer.Fog.gameObject.activeSelf) layer.Fog.UpdateMaterialProperties();
         }
 
         /// <param name="ambientLit">Water mist: lit by the sky ambient, because the key light is ~0 through dusk.</param>
@@ -166,15 +180,6 @@ namespace KryticalNova.World
             float fadeIn = Mathf.InverseLerp(duskHours.x, duskHours.x + duskFadeInHours, hours);
             float fadeOut = 1f - Mathf.InverseLerp(duskHours.y - duskFadeOutHours, duskHours.y, hours);
             return Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(Mathf.Min(fadeIn, fadeOut)));
-        }
-
-        private bool IsDisabledTier(int level)
-        {
-            var names = QualitySettings.names;
-            if (level < 0 || level >= names.Length) return false;
-            foreach (var n in disabledOnQualityLevels)
-                if (string.Equals(n, names[level], System.StringComparison.OrdinalIgnoreCase)) return true;
-            return false;
         }
 
         private static bool Approximately(Color a, Color b) =>

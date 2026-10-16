@@ -18,6 +18,8 @@ namespace KryticalNova.World
     public sealed class EnvironmentPresenter : MonoBehaviour
     {
         private const string LowQualityKeyword = "_KN_SKY_LOW";
+        /// <summary>Share of the weather's distance fog left indoors: a room is metres across, so only a trace shows.</summary>
+        private const float IndoorFogShare = 0.15f;
 
         [Header("Scene references")]
         [Tooltip("The scene's one directional light. It becomes the moon at night (never two shadowed lights).")]
@@ -380,10 +382,12 @@ namespace KryticalNova.World
             float moonlit = night * moonClear * moonIllum;
 
             RenderSettings.fogColor = fog;
-            RenderSettings.fogDensity = w.fogDensity;
+            // Indoors (a Crew Hall's rooms) the weather's fog stays outside: a trace of haze, and no mist at all.
+            bool indoors = PrecipitationController.Indoors;
+            RenderSettings.fogDensity = indoors ? w.fogDensity * IndoorFogShare : w.fogDensity;
             // A thin haze on dry nights gives the moonlight air to scatter in; brighter moons show more of it.
-            float nightHaze = dc.nightHaze * night * Mathf.Lerp(0.5f, 1f, moonClear * moonIllum);
-            VolumetricAtmosphereDriver.Publish(fog, w.volumetricFog, w.rain, t, nightHaze);
+            float nightHaze = indoors ? 0f : dc.nightHaze * night * Mathf.Lerp(0.5f, 1f, moonClear * moonIllum);
+            VolumetricAtmosphereDriver.Publish(fog, indoors ? 0f : w.volumetricFog, w.rain, t, nightHaze);
 
             // ---- ambient (trilight → SH probe, rebuilt by Unity when the colours change)
             ambientTimer -= dt;
