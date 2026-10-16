@@ -62,6 +62,22 @@
     <p class="note" id="countdown"></p>
   </section>
 
+  <section class="panel gms">
+    <h2>Game Masters</h2>
+    <p class="note">Up to 3. In the game a GM presses F2 and types their GM password; then their GM commands run here.</p>
+    <table>
+      <thead><tr><th>Name</th><th>Now</th><th></th></tr></thead>
+      <tbody id="gmRows"></tbody>
+    </table>
+    <p class="note" id="noGms">No GMs yet. The host of a game is always GM.</p>
+    <form class="row gap-top" id="gmForm" autocomplete="off">
+      <input class="grow" id="gmName" placeholder="GM name" maxlength="20" autocomplete="off" spellcheck="false">
+      <input class="grow" id="gmPassword" type="password" placeholder="Their GM password (8 or more)" autocomplete="new-password">
+      <button type="submit">Add GM</button>
+    </form>
+    <p class="note" id="gmFull" hidden>All 3 GM places are taken: remove one to add another.</p>
+  </section>
+
   <section class="panel gm">
     <h2>GM command</h2>
     <form class="row" id="commandForm"><input class="grow" id="commandLine" placeholder="gm.players" autocomplete="off" spellcheck="false"><button type="submit">Run</button></form>

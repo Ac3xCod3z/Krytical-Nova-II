@@ -328,6 +328,15 @@ namespace KryticalNova.Networking
         /// (<see cref="ServerLaunchOptions"/>: server-settings.json or -port), turns away players past its limit, and
         /// waits for players. No Unity services: players reach it by its address and port.
         /// </summary>
+        // Players still on once one leaves: when the server sent them away they are already off the list, otherwise not yet.
+        private static int OnlineWithout(NetworkManager nm, ulong leaving)
+        {
+            int online = 0;
+            foreach (ulong id in nm.ConnectedClientsIds)
+                if (id != leaving) online++;
+            return online;
+        }
+
         private void StartDedicatedServer()
         {
             if (NetworkManager.Singleton == null)
@@ -354,7 +363,7 @@ namespace KryticalNova.Networking
                 }
                 Debug.Log($"[Server] Player joined (connection {id}). Online: {online}.");
             };
-            nm.OnClientDisconnectCallback += id => Debug.Log($"[Server] Player left (connection {id}). Online: {Mathf.Max(0, nm.ConnectedClientsIds.Count - 1)}.");
+            nm.OnClientDisconnectCallback += id => Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
             if (nm.StartServer())
             {
                 Debug.Log($"[Server] {options.serverName} is listening on port {port} (UDP, every network card of this machine). Type a command (gm.help) and press Enter.");

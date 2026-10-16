@@ -113,6 +113,7 @@ GameObject:
   - component: {fileID: 8844105511440399059}
   - component: {fileID: 6510543614626846735}
   - component: {fileID: 9206807049269114004}
+  - component: {fileID: 1658292666199930260}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -4095,6 +4096,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61af8aa8f69f2b049b8f55850ea83f4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Autopilot.AutobuffCaster
+--- !u!114 &1658292666199930260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb693c0e8e30c47499fc2125126d9ee1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Networking.PlayerGm
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

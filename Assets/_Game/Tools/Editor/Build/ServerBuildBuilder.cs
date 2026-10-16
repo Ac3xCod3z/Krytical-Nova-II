@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -55,6 +56,12 @@ namespace KryticalNova.EditorTools
                 EditorUtility.DisplayDialog($"Dedicated Server ({os})", missing, "OK");
                 return;
             }
+            string busy = FolderBusy(OutputFolder(os));
+            if (busy != null)
+            {
+                EditorUtility.DisplayDialog($"Dedicated Server ({os})", busy, "OK");
+                return;
+            }
             Build(os);
         }
 
@@ -68,6 +75,30 @@ namespace KryticalNova.EditorTools
             return there ? null
                 : $"A {os} dedicated server build needs Unity's module \"{os} Dedicated Server Build Support\" for {Application.unityVersion} " +
                   "(Unity Hub > Installs > the gear on this version > Add modules). Restart the Editor after installing.";
+        }
+
+        /// <summary>
+        /// Why the server's folder cannot be replaced now, or null. A running server holds its exe and UnityPlayer.dll
+        /// open, so neither can be opened for writing; nothing is moved or changed to find out. Deleting into a running
+        /// server's folder would leave it half gone.
+        /// </summary>
+        public static string FolderBusy(string folder)
+        {
+            foreach (string name in new[] { ExeName + ".exe", ExeName + ".x86_64", "UnityPlayer.dll" })
+            {
+                string file = Path.Combine(folder, name);
+                if (!File.Exists(file)) continue;
+                try
+                {
+                    using (new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { }
+                }
+                catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                {
+                    return $"The server in {folder} is still running ({name} is in use). Stop the server (close its window, " +
+                           "or Stop on the control page), then build again. Nothing was changed.";
+                }
+            }
+            return null;
         }
 
         /// <summary>Builds without asking. True when the build succeeded; the report is written either way.</summary>
@@ -91,11 +122,16 @@ namespace KryticalNova.EditorTools
             // Only our own output folder: a file left from an older build must not travel with this one. The server's
             // settings file is the owner's, not the build's: it is kept across the rebuild.
             string folder = OutputFolder(os);
+            string busy = FolderBusy(folder);
+            if (busy != null)
+            {
+                Debug.LogError("[Build] " + busy);
+                return false;
+            }
             string settings = Path.Combine(folder, SettingsFileName), keptSettings = Path.Combine(BuildRoot, os + "-" + SettingsFileName + ".kept");
             if (File.Exists(settings)) File.Copy(settings, keptSettings, true);
             if (Directory.Exists(folder)) Directory.Delete(folder, true);
             Directory.CreateDirectory(folder);
-            if (File.Exists(keptSettings)) File.Move(keptSettings, settings);
 
             BuildTarget target = os == Os.Windows ? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneLinux64;
             string exe = folder + "/" + ExeName + (os == Os.Windows ? ".exe" : ".x86_64");
@@ -120,6 +156,13 @@ namespace KryticalNova.EditorTools
             finally
             {
                 IsBuilding = false;
+                // Put back after the build, and even when it failed: the settings are the owner's, never the build's.
+                if (File.Exists(keptSettings))
+                {
+                    Directory.CreateDirectory(folder);
+                    if (File.Exists(settings)) File.Delete(settings);
+                    File.Move(keptSettings, settings);
+                }
                 // A server build may leave the Editor on the server target, where the HUD and menu tools are left out.
                 if (EditorUserBuildSettings.activeBuildTarget != targetWas || EditorUserBuildSettings.standaloneBuildSubtarget != subtargetWas)
                 {

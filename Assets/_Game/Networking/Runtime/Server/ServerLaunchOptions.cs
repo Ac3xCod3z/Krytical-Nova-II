@@ -39,6 +39,8 @@ namespace KryticalNova.Networking
         public float backupHours = 6f;
         [Tooltip("How many backups are kept; the oldest go first.")]
         public int backupsKept = 10;
+        [Tooltip("Up to three Game Masters, each a name and their own GM password (typed once per session in the F2 console). Set on the control page.")]
+        public GmEntry[] gameMasters = new GmEntry[0];
 
         /// <summary>The options of this server, read at boot (<see cref="LoadForThisServer"/>). Null before.</summary>
         public static ServerLaunchOptions Current { get; private set; }
@@ -186,6 +188,31 @@ namespace KryticalNova.Networking
                 Debug.LogWarning($"[Server] The new control page password could not be written into {file}: {e.Message}. It works until the server stops.");
             }
             return pagePassword;
+        }
+
+        /// <summary>
+        /// Writes the Game Masters into the settings file (and keeps them here). Only that list changes in the file;
+        /// everything else stays as the owner left it. False and a reason when the file could not be written.
+        /// </summary>
+        public bool SaveGameMasters(GmEntry[] masters, out string error)
+        {
+            error = null;
+            gameMasters = masters ?? new GmEntry[0];
+            string file = Path.Combine(ServerFolder, FileName);
+            try
+            {
+                var onDisk = new ServerLaunchOptions { ServerFolder = ServerFolder };
+                if (File.Exists(file)) JsonUtility.FromJsonOverwrite(File.ReadAllText(file), onDisk);
+                else onDisk.pagePassword = pagePassword; // the file went missing: the page keeps its password
+                onDisk.gameMasters = gameMasters;
+                File.WriteAllText(file, JsonUtility.ToJson(onDisk, true));
+                return true;
+            }
+            catch (Exception e)
+            {
+                error = $"The GM list could not be written into {file}: {e.Message}";
+                return false;
+            }
         }
 
 #if UNITY_EDITOR

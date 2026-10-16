@@ -167,8 +167,13 @@ namespace KryticalNova.Networking
                     string faction = identity != null && identity.Faction != FactionId.None ? identity.Faction.ToString() : "-";
                     int level = player.TryGetComponent(out PlayerCharacterProgression progression) ? progression.CurrentLevel : 0;
                     players.Add("{\"id\":" + client.ClientId + ",\"name\":" + ControlPageRules.Json(name) + ",\"level\":" + level +
-                                ",\"faction\":" + ControlPageRules.Json(faction) + ",\"map\":" + ControlPageRules.Json(player.scene.name) + "}");
+                                ",\"faction\":" + ControlPageRules.Json(faction) + ",\"map\":" + ControlPageRules.Json(player.scene.name) +
+                                ",\"gm\":" + ControlPageRules.Json(GmRoster.NameOf(client.ClientId) ?? string.Empty) + "}");
                 }
+            // The Game Masters by name and whether they are signed in now; their passwords never leave the settings file.
+            var masters = new List<string>();
+            foreach (GmEntry entry in GmRoster.All)
+                masters.Add("{\"name\":" + ControlPageRules.Json(entry.name) + ",\"online\":" + (GmRoster.IsSignedIn(entry.name) ? "true" : "false") + "}");
             sb.Append("{\"name\":").Append(ControlPageRules.Json(options.serverName))
               .Append(",\"listening\":").Append(network != null && network.IsListening ? "true" : "false")
               .Append(",\"port\":").Append(options.port)
@@ -184,7 +189,9 @@ namespace KryticalNova.Networking
               .Append(",\"version\":").Append(ControlPageRules.Json(Application.version))
               .Append(",\"addresses\":[");
             for (int i = 0; i < addresses.Count; i++) sb.Append(i > 0 ? "," : string.Empty).Append(ControlPageRules.Json(addresses[i]));
-            sb.Append("],\"players\":[").Append(string.Join(",", players)).Append("]}");
+            sb.Append("],\"players\":[").Append(string.Join(",", players))
+              .Append("],\"gms\":[").Append(string.Join(",", masters))
+              .Append("],\"maxGms\":").Append(GmRoster.MaxGameMasters).Append('}');
             return sb.ToString();
         }
 
@@ -316,6 +323,12 @@ namespace KryticalNova.Networking
                     if (CommandRunner == null) { answer = "Commands are not ready yet."; break; }
                     answer = OnMain(() => CommandRunner(body.line.Trim()));
                     break;
+                case "/api/gm/add":
+                    answer = OnMain(() => AddGm(body.name, body.password));
+                    break;
+                case "/api/gm/remove":
+                    answer = OnMain(() => RemoveGm(body.name));
+                    break;
                 default:
                     SendJson(stream, 404, "{\"error\":\"No such call.\"}");
                     return;
@@ -326,7 +339,7 @@ namespace KryticalNova.Networking
         [Serializable]
         private sealed class Body
         {
-            public string password = string.Empty, text = string.Empty, reason = string.Empty, line = string.Empty, id = string.Empty;
+            public string password = string.Empty, text = string.Empty, reason = string.Empty, line = string.Empty, id = string.Empty, name = string.Empty;
             public float seconds;
             public bool restart;
         }
@@ -386,6 +399,34 @@ namespace KryticalNova.Networking
             network.DisconnectClient(id, told);
             Debug.Log($"[Server] Connection {id} was removed from the control page. {told}");
             return $"Removed connection {id}.";
+        }
+
+        /// <summary>Adds a Game Master and writes the list into the settings file.</summary>
+        private string AddGm(string name, string password)
+        {
+            var list = new List<GmEntry>(GmRoster.All);
+            string problem = GmRoster.ValidateNew(list, name, password);
+            if (problem != null) return problem;
+            name = name.Trim();
+            list.Add(new GmEntry { name = name, password = password });
+            if (!options.SaveGameMasters(list.ToArray(), out string error)) return error;
+            GmRoster.SetAll(list);
+            Debug.Log($"[GM] {name} was made a GM on the control page.");
+            return $"{name} is a GM. In the game they press F2 and type their GM password.";
+        }
+
+        /// <summary>Removes a Game Master; if they are signed in, their GM rights end at once.</summary>
+        private string RemoveGm(string name)
+        {
+            GmEntry entry = GmRoster.Find((name ?? string.Empty).Trim());
+            if (entry == null) return $"There is no GM called {name}.";
+            bool online = GmRoster.IsSignedIn(entry.name);
+            var list = new List<GmEntry>(GmRoster.All);
+            list.Remove(entry);
+            if (!options.SaveGameMasters(list.ToArray(), out string error)) return error;
+            GmRoster.SetAll(list);
+            Debug.Log($"[GM] {entry.name} is no longer a GM (control page).");
+            return $"{entry.name} is no longer a GM." + (online ? " Their GM rights ended at once." : string.Empty);
         }
 
         /// <summary>Runs <paramref name="work"/> on the game's thread and waits for its answer.</summary>

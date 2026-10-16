@@ -8,7 +8,8 @@
         "QFSW.QC",
         "Unity.Netcode.Runtime",
         "Unity.InputSystem",
-        "Unity.Cinemachine"
+        "Unity.Cinemachine",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

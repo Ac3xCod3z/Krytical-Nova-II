@@ -51,6 +51,7 @@ namespace KryticalNova.UI
             public PlayerCrew PlayerCrew;
             public PlayerNova Nova;
             public KryticalNova.Autopilot.PlayerAutopilot Autopilot;
+            public KryticalNova.Networking.PlayerGm Gm;
             public float Height = float.NaN;
             public string NameText, StandingText, CrewText;
             // What the name and the Crew line were last made from: the lines are put together again only when these change.
@@ -214,6 +215,7 @@ namespace KryticalNova.UI
                 PlayerCrew = player.GetComponent<PlayerCrew>(),
                 Nova = player.GetComponent<PlayerNova>(),
                 Autopilot = player.GetComponent<KryticalNova.Autopilot.PlayerAutopilot>(),
+                Gm = player.GetComponent<KryticalNova.Networking.PlayerGm>(),
                 Vitals = player.GetComponent<PlayerResources>(),
                 Party = player.GetComponent<PlayerParty>(),
                 Body = player.GetComponent<IDamageable>(),
@@ -262,6 +264,7 @@ namespace KryticalNova.UI
         {
             PlayerCardView view = card.View;
             string name = card.Identity != null ? card.Identity.CharacterName : view.name;
+            if (card.Gm != null && card.Gm.ShowsTag) name = KryticalNova.Networking.PlayerGm.Tag + name; // a Game Master says so
             // A character hunting on Autopilot says so, to everyone who can read its name.
             bool auto = card.Autopilot != null && card.Autopilot.IsOn;
             int level = card.Progression != null ? card.Progression.CurrentLevel : 1;
@@ -321,6 +324,7 @@ namespace KryticalNova.UI
         private static void Fill(Card card, FactionId faction, PlayerIdentity viewer)
         {
             string name = card.Identity != null ? card.Identity.CharacterName : card.Root.name;
+            if (card.Gm != null && card.Gm.ShowsTag) name = KryticalNova.Networking.PlayerGm.Tag + name; // a Game Master says so
             int level = card.Progression != null ? card.Progression.CurrentLevel : 1;
             string nameText = name + "   Lv " + level;
             // A character hunting on Autopilot says so, to everyone who can read its name.

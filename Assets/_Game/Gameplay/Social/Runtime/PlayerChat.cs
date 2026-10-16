@@ -3,6 +3,7 @@ using System.Text;
 using KryticalNova.Combat;
 using KryticalNova.Core;
 using KryticalNova.Items;
+using KryticalNova.Networking;
 using KryticalNova.Player;
 using KryticalNova.Progression;
 using Unity.Collections;
@@ -50,6 +51,7 @@ namespace KryticalNova.Social
         private PlayerDeathMotor deathMotor;
         private PlayerDuel duel;
         private PlayerParty party;
+        private PlayerGm gm;
         private string offlineGuild = string.Empty;
 
         /// <summary>This machine's own player, or null (dedicated server, no player yet).</summary>
@@ -58,8 +60,8 @@ namespace KryticalNova.Social
         public string Guild => IsSpawned ? netGuild.Value.ToString() : offlineGuild;
         public string SpeakerName => identity != null ? identity.CharacterName : name;
 
-        /// <summary>Only the host's own player (or the offline player) may speak on the GM channel.</summary>
-        public bool IsGameMaster => !IsSpawned || OwnerClientId == NetworkManager.ServerClientId;
+        /// <summary>Only a GM (<see cref="PlayerGm"/>: the host's own player, a joined player who typed a GM password, or the offline player) may speak on the GM channel.</summary>
+        public bool IsGameMaster => !IsSpawned || OwnerClientId == NetworkManager.ServerClientId || (gm != null && gm.IsGm);
 
         private bool HasAuthority => !IsSpawned || IsServer;
 
@@ -71,6 +73,7 @@ namespace KryticalNova.Social
             deathMotor = GetComponent<PlayerDeathMotor>();
             duel = GetComponent<PlayerDuel>();
             party = GetComponent<PlayerParty>();
+            gm = GetComponent<PlayerGm>();
         }
 
         private void OnEnable()
@@ -149,12 +152,14 @@ namespace KryticalNova.Social
                     }
                     else if (channel == ChatChannel.Gm)
                     {
-                        // The GM's own "/gm": the same announcement as gm.say, toast included.
+                        // The GM's own "/gm": the same announcement as gm.say, toast included. The channel says GM already.
                         for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].DeliverAnnounced(AnnouncementKind.Gm, channel, me.Name, text, me.Name);
                     }
                     else
                     {
-                        for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].Deliver(channel, me.Name, text, false);
+                        // The [GM] tag goes on the other channels' lines: a whisper's sender is the name /r answers to.
+                        string label = PlayerGm.Label(this, me.Name);
+                        for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].Deliver(channel, label, text, false);
                     }
                     break;
                 case ChatRoute.NotInGuild:
@@ -179,14 +184,14 @@ namespace KryticalNova.Social
                     ServerSystem("You cannot whisper to yourself.");
                     break;
                 case ChatRoute.NotGameMaster:
-                    ServerSystem("Only the GM can use this channel.");
+                    ServerSystem("Only a GM can use this channel.");
                     break;
             }
         }
 
         /// <summary>
         /// Server (or offline) only: a GM announcement to every player of every faction, wherever they are. For the
-        /// GM tools; a player's own "/gm" goes through <see cref="Send"/> and is refused unless they are the host.
+        /// GM tools; a player's own "/gm" goes through <see cref="Send"/> and is refused unless they are a GM (<see cref="IsGameMaster"/>).
         /// </summary>
         public static int ServerBroadcastGm(string text, string senderName) =>
             ServerAnnounce(AnnouncementKind.Gm, ChatChannel.Gm, senderName, text);

@@ -60,21 +60,7 @@ namespace KryticalNova.DevTools
         /// <summary>Runs one command line on the game's thread, logs it, and returns the answer.</summary>
         public static string Run(string line)
         {
-            if (!QuantumConsoleProcessor.TableGenerated)
-            {
-                if (!QuantumConsoleProcessor.TableIsGenerating) QuantumConsoleProcessor.GenerateCommandTable();
-                if (!QuantumConsoleProcessor.TableGenerated) return "The commands are still being loaded: try again in a moment.";
-            }
-            string answer;
-            try
-            {
-                object result = QuantumConsoleProcessor.InvokeCommand(line);
-                answer = result != null ? result.ToString() : "Done.";
-            }
-            catch (Exception e)
-            {
-                answer = (e.InnerException ?? e).Message;
-            }
+            string answer = GmCommandRelay.RunLine(line);
             Debug.Log("> " + line + "\n" + answer);
             return answer;
         }
