@@ -161,7 +161,14 @@ function showPlayers(players) {
   $("noPlayers").hidden = players.length > 0;
   for (const p of players) {
     const row = document.createElement("tr");
-    cell(row, p.name);
+    const name = cell(row, p.name);
+    if (p.gm) {
+      const tag = document.createElement("span");
+      tag.className = "gm-tag";
+      tag.textContent = "GM";
+      tag.title = "Signed in as GM " + p.gm;
+      name.prepend(tag);
+    }
     cell(row, String(p.level));
     cell(row, p.faction, "hide-phone");
     cell(row, p.map, "hide-phone");
@@ -176,6 +183,31 @@ function showPlayers(players) {
       act(kick, "/api/kick", { id: String(p.id), reason: reason });
     });
     td.appendChild(kick);
+    rows.appendChild(row);
+  }
+}
+
+function showGms(gms, max) {
+  const rows = $("gmRows");
+  rows.textContent = "";
+  $("noGms").hidden = gms.length > 0;
+  $("gmForm").hidden = gms.length >= max;
+  $("gmFull").hidden = gms.length < max;
+  for (const g of gms) {
+    const row = document.createElement("tr");
+    cell(row, g.name);
+    cell(row, g.online ? "in the game" : "-", g.online ? "on" : "off");
+    const td = cell(row, "");
+    const remove = document.createElement("button");
+    remove.className = "small red";
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", async () => {
+      const text = g.online ? g.name + " is in the game now: their GM rights end at once." : g.name + " can no longer use a GM password here.";
+      if (await ask("Remove GM " + g.name + "?", text, false) === null) return;
+      act(remove, "/api/gm/remove", { name: g.name });
+    });
+    td.appendChild(remove);
     rows.appendChild(row);
   }
 }
@@ -200,6 +232,7 @@ async function refresh() {
     $("countdown").textContent = s.shutdownIn >= 0 ? (s.restarting ? "Restarting" : "Stopping") + " in " + s.shutdownIn + " seconds. Players are being told." : "";
     showAddresses(s.addresses, s.port);
     showPlayers(s.players);
+    showGms(s.gms || [], s.maxGms || 3);
     await refreshLog();
   } catch (e) {
     if (check) { $("pill").textContent = "NO ANSWER"; $("pill").className = "pill down"; }
@@ -215,7 +248,7 @@ async function refreshLog() {
   for (const line of data.lines) {
     const div = document.createElement("div");
     const text = line.text;
-    const server = /^(\[Server\]|\[Backup\]|\[Save\]|\[DedicatedServerBoot\]|> )/.test(text);
+    const server = /^(\[Server\]|\[Backup\]|\[Save\]|\[GM\]|\[DedicatedServerBoot\]|> )/.test(text);
     // A server leaves out everything that only draws or plays sound, and Unity says so at length: not a problem.
     const noise = !server && NOISE.test(text);
     div.textContent = text;
@@ -257,6 +290,14 @@ async function shutdown(button, restart) {
 $("restart").addEventListener("click", (e) => shutdown(e.currentTarget, true));
 $("stop").addEventListener("click", (e) => shutdown(e.currentTarget, false));
 $("cancel").addEventListener("click", (e) => act(e.currentTarget, "/api/cancel", {}));
+$("gmForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const name = $("gmName").value.trim(), password = $("gmPassword").value;
+  if (!name) return toast("Give the GM a name.", true);
+  if (password.length < 8) return toast("A GM password needs at least 8 characters.", true);
+  const data = await act(event.submitter, "/api/gm/add", { name: name, password: password });
+  if (data && / is a GM\./.test(data.answer)) { $("gmName").value = ""; $("gmPassword").value = ""; }
+});
 $("commandForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const line = $("commandLine").value.trim();

@@ -34,6 +34,21 @@ namespace KryticalNova.DevTools
             }
         }
 
+        /// <summary>Who the commands act on, kept aside while a joined GM's line runs (<see cref="GmCommandRelay"/>).</summary>
+        public struct Saved
+        {
+            public bool HasTarget;
+            public ulong ClientId;
+        }
+
+        public static Saved Save() => new Saved { HasTarget = hasTarget, ClientId = targetClientId };
+
+        public static void Restore(Saved saved)
+        {
+            hasTarget = saved.HasTarget;
+            targetClientId = saved.ClientId;
+        }
+
         /// <summary>The picked player's client id, or null while the commands act on the local player.</summary>
         public static ulong? ClientId => hasTarget && Session != null ? targetClientId : (ulong?)null;
 

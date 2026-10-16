@@ -3,7 +3,7 @@
 A running guide to the game's own server, in plain words. It says what works **today**, and it is updated after
 every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 
-**Last updated:** 16 Oct 2026, after step 3 (the control page).
+**Last updated:** 16 Oct 2026, after step 3 and the Game Masters (GM passwords).
 
 ## In one minute
 
@@ -19,6 +19,8 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 - It keeps the **saves** in a folder beside its own, and **backs them up** by itself.
 - **Closing the window is safe**: it saves everyone first and tells the players.
 - Players **join** from the game's network panel (**F1**) with the server's address and port.
+- Up to **three Game Masters** are set on the control page, each with a **GM password**. In the game they press
+  **F2**, type it, and their GM commands run on the server. Nobody else has GM commands or the GM chat.
 
 ## What works today
 
@@ -27,6 +29,7 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | 1. It builds and you can join it | A server program for Windows and Linux; a game joins it | Built 16 Oct 2026 |
 | 2. Settings, safe stop, backups | The settings file, saves beside the server, backups, a safe stop, commands in its window | Built 16 Oct 2026 |
 | 3. The control page | A web page on your home network to see and run the server, from a phone too | Built 16 Oct 2026 |
+| Game Masters | Three GMs by password, set on the control page; GM commands, GM chat and a [GM] tag for them only | Built 16 Oct 2026 |
 | 4. A server list in the game | Play joins your server without typing an address | Next |
 | 5. Joining from outside your house | Unity Relay, and port forwarding as a fallback | Not yet |
 | 6. The move to the old PC | A zip, an install step and a step-by-step guide | Not yet |
@@ -44,6 +47,8 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | Control page | The server's own web page, on your home network only, with a password. |
 | Save folder | Where the server keeps every account, character, Crew, Kiosk and Contact. |
 | Backup | A zip of the whole save folder, made by the server by itself. |
+| GM (Game Master) | A player allowed GM commands and the GM chat channel: the host, or one of the server's three GMs after typing their GM password. |
+| GM password | One per GM, set on the control page. Typed once per visit in the GM console (F2). Not the page password. |
 
 ## 1. Build the server
 
@@ -55,7 +60,8 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
    the GI pack: a server draws nothing, so they do no harm.
 
 A rebuild replaces the server's folder but **keeps your `server-settings.json`**, and never touches the saves (they
-live beside the folder, not in it).
+live beside the folder, not in it). **Stop the server before you build:** while it runs from that folder the build
+says so and changes nothing.
 
 ## 2. Start the server
 
@@ -112,8 +118,9 @@ What is on the page:
 | --- | --- |
 | Top | The server's name, ONLINE (or STOP IN … / RESTART IN … during a countdown), players on, how long it has run, the map, the next backup. **Log out**. |
 | How to connect | The address and port players type in **F1**, with a **Copy** button. |
-| Players on | Everyone on: name, level, faction, map. **Kick** asks for a reason they will read, then sends them away (they can join again). |
+| Players on | Everyone on: name (a yellow **GM** before a GM who is signed in), level, faction, map. **Kick** asks for a reason they will read, then sends them away (they can join again). |
 | Run the server | **Save now** (everyone saved at once), **Backup now**, **Announce** (a line every player reads), and **Restart** / **Stop** after the number of seconds you set, with the players told as it counts down. **Cancel** calls a countdown off. Each asks first. |
+| Game Masters | Who may be GM (three at most), whether each is in the game now (**in the game**), **Remove**, and **Add GM** with a name and their own GM password. Saved into `server-settings.json` at once. |
 | GM command | Any GM command, as in the server's window (`gm.help` lists them all). The answer shows below. |
 | Live log | What the server says, newest at the bottom. Unity's start-up noise is hidden; tick **every line** to see it all. |
 
@@ -140,7 +147,10 @@ default (and makes the page password). Close the server, edit it with Notepad, s
     "pagePort": 8090,
     "pagePassword": "abc-def-ghj-42",
     "backupHours": 6.0,
-    "backupsKept": 10
+    "backupsKept": 10,
+    "gameMasters": [
+        { "name": "Dom", "password": "their-own-password" }
+    ]
 }
 ```
 
@@ -156,6 +166,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `pagePassword` | made for you | The control page's password. Only ever in this file. Empty makes a new one at the next start. |
 | `backupHours` | 6 | Hours between backups. 0 backs up only at start and stop. |
 | `backupsKept` | 10 | How many backups are kept; the oldest go first. |
+| `gameMasters` | none | Up to three GMs, each a name and their own GM password. Set them on the control page (easier), or here. |
 
 A mistake is forgiven: a port that is not a port becomes 7777, a player limit of 0 becomes 1, and a file Notepad
 broke is left as it is while the server uses the defaults (the window says so).
@@ -236,6 +247,47 @@ and `gm.backup` belong to the server only).
 In the Editor's **GM Tools** window the Social tab has the same under **Server**: Kick Player, Shutdown Server, Restart
 Server, Cancel Shutdown, Back Up Saves Now.
 
+## 7b. Game Masters (GMs)
+
+A **GM** can use the GM commands and speak on the GM chat channel; everyone sees **[GM]** before their name. Everyone
+else has neither. Until players sign in with a Unity account (a later phase), a GM proves who they are with a **GM
+password** of their own.
+
+**Who is GM**
+
+| Who | GM? |
+| --- | --- |
+| The host (the Editor's normal Play, or a test build that hosts) | Always, with no password. |
+| One of the server's three GMs | After typing their GM password in **F2**, until they leave the server. |
+| Everyone else | Never. F2 only asks for a GM password. |
+
+**Make someone a GM (on the control page):** under **Game Masters**, type their name and a password of at least 8
+characters that only they know (not one they use anywhere else), press **Add GM**, and tell them the password yourself.
+Three at most; each password must be different. **Remove** takes it away; if they are in the game, their GM rights
+end at once and they are told so. The list is saved into `server-settings.json` (`gameMasters`) straight away and is
+kept across restarts and rebuilds.
+
+**Become GM in the game:**
+
+1. Join the server, press **F2**. The console asks for **GM password...** (the letters show as dots).
+2. Type it, press **Enter**. "You are GM (Dom)." appears, and **[GM]** shows before your name to everyone.
+3. Now every line typed in F2 runs **on the server**, aimed at **your own player**: `gm.help`, `gm.players`,
+   `gm.say "text"`, `gm.kick`, give items or levels, teleport... `gm.target 3` aims the commands at another player (for
+   you only; `gm.target self` comes back; `gm.players` lists the numbers). `clear` empties your console. The answer
+   prints below each line. The console works as always: hints while you type, **Tab** to complete, **Up** for the last
+   lines.
+4. The GM chat channel (**/gm text**) now works for you.
+5. **In the Editor**, the **GM Tools** window works too: **Target player** at the top lists the players your game can
+   see (pick one, or yourself), and every button runs on the server on that player. The answers show in the window's
+   log. Players far away are reached with `gm.players` and `gm.target` in F2.
+
+Leaving the server ends it; type the password again next time. **Five wrong passwords** send that player away from the
+server (they can join and try again). Every GM line is written to the server's log as `[GM] Dom: gm.say ...`, so you
+can see on the control page who did what.
+
+The password travels to the server like the rest of the game's traffic, which is not encrypted yet: use one that is
+for this game only.
+
 ## 8. Stop or restart safely
 
 Any of these is safe: the window's **close button**, **Ctrl+C** in the window, logging off, shutting Windows down,
@@ -291,6 +343,9 @@ Each comes with the same two ways out as the game menu (character select or exit
 | "Could not listen on port …" or "The control page could not open port …" | Something else uses that port | Close the other program, or change `port` / `pagePort`. |
 | The window says "could not read server-settings.json" | A typo broke the file (a missing comma or quote) | Fix it, or delete it and start once to get a fresh one (a new page password too). |
 | "Player turned away … the server is full" | `maxPlayers` reached | Raise `maxPlayers`. |
+| The build says "The server … is still running, or a file in it is open" | The server (or a window showing a file in its folder) is open | Stop the server, close that window, build again. |
+| Pressing Play in the Editor says "Port 7777 is in use on this PC … Play does not host" | Your server is running on this PC, so the Editor does not try to host beside it | Press **F1**, IP `127.0.0.1`, Port `7777`, **JOIN**. |
+| A GM's password is not taken | A typo, or they were removed | Check the name under Game Masters on the control page; remove and add them again with a new password if needed. Five wrong tries send them away; they can join and try again. |
 
 ## 12. What comes next
 
@@ -313,6 +368,10 @@ Each comes with the same two ways out as the game menu (character select or exit
 | `ControlPage~` | `Networking` | The page's own files: `index.html`, `style.css`, `app.js` (copied beside the server by the build). |
 | `ServerBackups` | `Gameplay/Persistence/Runtime` | Zips the save folder and prunes old backups. |
 | `ServerConsoleInput` | `Tools/Debug` | Runs lines typed into the server's window, and the page's GM command box. Server build only. |
+| `GmRoster` | `Networking/Runtime` | Who is GM: the list (three, name + password), password checks, five tries, removal ending GM at once (tested in `GmRosterTests`). |
+| `PlayerGm` | `Networking/Runtime` | On every player: the GM name everyone sees, the password and command lines sent to the server, the answers back to that player only. |
+| `GmCommandRelay` | `Tools/Debug` | Runs a joined GM's line on the server, aimed at that GM's player; keeps each GM's `gm.target` apart from the server's. |
+| `GmConsoleGate` | `Tools/Debug` | F2: the host runs commands itself; a joined player gets the password prompt, then their lines go to the server. |
 | `ServerCommands` | `Tools/Debug` | `gm.kick`, `gm.restart`, `gm.shutdown`, `gm.backup`. |
 | `NetworkConnectionManager.StartDedicatedServer` | `Networking/Runtime` | Listens on the settings' port and turns away players past the limit. |
 | `DedicatedServerBoot`, `DedicatedServerOptimizer` | `Networking/Runtime` | Skip the menus and open the map; 30 ticks a second; parts that only draw switched off. |
@@ -333,3 +392,5 @@ Things learned the hard way:
 
 - 16 Oct 2026: written, after steps 1 and 2.
 - 16 Oct 2026: step 3, the control page; `Start Server.bat`; Restart and `gm.restart`; the Norton IDP.Generic steps.
+- 16 Oct 2026: Game Masters: three GMs by password on the control page; F2 GM commands run on the server; GM chat and
+  the [GM] tag for GMs only.

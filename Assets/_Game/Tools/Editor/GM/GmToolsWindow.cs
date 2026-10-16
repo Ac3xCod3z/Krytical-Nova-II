@@ -59,7 +59,19 @@ namespace KryticalNova.EditorTools.GM
         // ================================================================ state helpers
 
         // "Local" = the player the commands act on: your own, or the connected player picked with gm.target.
-        private static GameObject LocalPlayer => Application.isPlaying && GmTarget.TryGetPlayer(out var player, out _) ? player : null;
+        private static GameObject LocalPlayer => !Application.isPlaying ? null
+            : GmRemoteLines.ForwardsToServer ? RemoteTargetPlayer()
+            : GmTarget.TryGetPlayer(out var player, out _) ? player : null;
+
+        // A joined GM: the picked player as this game sees them (shown here; the commands themselves run on the server).
+        private static GameObject RemoteTargetPlayer()
+        {
+            var own = KryticalNova.Networking.PlayerGm.Local;
+            ulong id = GmRemoteLines.RemoteTarget ?? own.OwnerClientId;
+            foreach (var gm in FindObjectsByType<KryticalNova.Networking.PlayerGm>())
+                if (gm.IsSpawned && gm.OwnerClientId == id) return gm.gameObject;
+            return own.gameObject;
+        }
         private static PlayerInventory LocalInventory => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerInventory>() : null;
         private static PlayerGmState TargetGm => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerGmState>() : null;
         private static PlayerCharacterProgression Progression => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerCharacterProgression>() : null;
@@ -101,8 +113,9 @@ namespace KryticalNova.EditorTools.GM
                 return;
             }
             DrawTargetPicker();
-            if (!GmTarget.TryGetPlayer(out _, out string unavailable))
+            if (LocalPlayer == null)
             {
+                GmTarget.TryGetPlayer(out _, out string unavailable);
                 SirenixEditorGUI.WarningMessageBox(unavailable);
                 return;
             }
@@ -146,6 +159,11 @@ namespace KryticalNova.EditorTools.GM
         /// <summary>Hosting a session: choose which connected player every button below acts on.</summary>
         private void DrawTargetPicker()
         {
+            if (GmRemoteLines.ForwardsToServer)
+            {
+                DrawRemoteTargetPicker();
+                return;
+            }
             var players = GmTarget.ConnectedPlayers();
             if (players.Count == 0) return;
 
@@ -162,6 +180,53 @@ namespace KryticalNova.EditorTools.GM
 
             int picked = EditorGUILayout.Popup("Target player", selected, labels);
             if (picked != selected && picked >= 0) Run($"gm.target {players[picked].ClientId}");
+        }
+
+        /// <summary>
+        /// A joined GM: the same choice among the players this game sees; the buttons below then run on the server and
+        /// act on the one picked (gm.target for this GM only). Players too far away to be seen here are reached with
+        /// gm.players and gm.target in the GM console.
+        /// </summary>
+        private void DrawRemoteTargetPicker()
+        {
+            ListenForServerAnswers();
+            var players = new List<KryticalNova.Networking.PlayerGm>();
+            foreach (var gm in FindObjectsByType<KryticalNova.Networking.PlayerGm>())
+                if (gm.IsSpawned) players.Add(gm);
+            players.Sort((a, b) => a.OwnerClientId.CompareTo(b.OwnerClientId));
+            if (players.Count == 0) return;
+
+            ulong own = KryticalNova.Networking.PlayerGm.Local.OwnerClientId;
+            ulong target = GmRemoteLines.RemoteTarget ?? own;
+            var labels = new string[players.Count];
+            int selected = -1;
+            for (int i = 0; i < players.Count; i++)
+            {
+                ulong id = players[i].OwnerClientId;
+                string name = players[i].TryGetComponent(out PlayerIdentity identity) ? identity.CharacterName : players[i].name;
+                labels[i] = $"Client {id}  {name}" + (id == own ? " (you)" : string.Empty);
+                if (id == target) selected = i;
+            }
+
+            int picked = EditorGUILayout.Popup("Target player", selected, labels);
+            if (picked != selected && picked >= 0)
+                Run(players[picked].OwnerClientId == own ? "gm.target self" : $"gm.target {players[picked].OwnerClientId}");
+            EditorGUILayout.LabelField("You are GM on the server: every button runs there, on the player picked.", EditorStyles.miniLabel);
+        }
+
+        // A joined GM's buttons run on the server; its answers come back here as well as to the GM console.
+        [NonSerialized] private bool listeningForServer;
+
+        private void ListenForServerAnswers()
+        {
+            if (listeningForServer) return;
+            listeningForServer = true;
+            KryticalNova.Networking.PlayerGm.Reply += text =>
+            {
+                if (this == null) return; // the window was closed
+                Log(text);
+                Repaint();
+            };
         }
 
         private static void DrawBar(string label, float fill)
@@ -1605,8 +1670,10 @@ namespace KryticalNova.EditorTools.GM
             {
                 if (!QuantumConsoleProcessor.TableGenerated && !QuantumConsoleProcessor.TableIsGenerating)
                     QuantumConsoleProcessor.GenerateCommandTable();
+                bool remote = GmRemoteLines.ForwardsToServer;
+                if (remote) ListenForServerAnswers();
                 object result = QuantumConsoleProcessor.InvokeCommand(commandString);
-                if (log) Log($"> {commandString}\n{result}");
+                if (log) Log(remote ? $"> {commandString}\n(sent to the server)" : $"> {commandString}\n{result}");
             }
             catch (Exception e)
             {

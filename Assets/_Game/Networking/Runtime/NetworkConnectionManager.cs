@@ -96,6 +96,15 @@ namespace KryticalNova.Networking
                 {
                     if (!isClone)
                     {
+                        // A server already running on this PC (the dedicated server on 7777, say) holds the port: hosting
+                        // would only fail with four red errors. Say so once and let the player join it from F1.
+                        ushort port = ResolvePort(0);
+                        if (UdpPortInUse(port))
+                        {
+                            Debug.LogWarning($"[Network] Port {port} is in use on this PC (a server is running?), so Play does not host. " +
+                                             $"To join that server: F1, IP 127.0.0.1, Port {port}, JOIN.");
+                            yield break;
+                        }
                         StartLocalHost();
                         yield break;
                     }
@@ -322,12 +331,34 @@ namespace KryticalNova.Networking
             StatusChanged?.Invoke("Disconnected.");
         }
 
+        // True when another program on this PC already listens on the UDP port.
+        private static bool UdpPortInUse(ushort port)
+        {
+            try
+            {
+                using (new System.Net.Sockets.UdpClient(new System.Net.IPEndPoint(System.Net.IPAddress.Any, port))) return false;
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                return true;
+            }
+        }
+
 #if UNITY_SERVER
         /// <summary>
         /// The dedicated server: listens on every network card of this machine, on the port of its settings
         /// (<see cref="ServerLaunchOptions"/>: server-settings.json or -port), turns away players past its limit, and
         /// waits for players. No Unity services: players reach it by its address and port.
         /// </summary>
+        // Players still on once one leaves: when the server sent them away they are already off the list, otherwise not yet.
+        private static int OnlineWithout(NetworkManager nm, ulong leaving)
+        {
+            int online = 0;
+            foreach (ulong id in nm.ConnectedClientsIds)
+                if (id != leaving) online++;
+            return online;
+        }
+
         private void StartDedicatedServer()
         {
             if (NetworkManager.Singleton == null)
@@ -354,7 +385,7 @@ namespace KryticalNova.Networking
                 }
                 Debug.Log($"[Server] Player joined (connection {id}). Online: {online}.");
             };
-            nm.OnClientDisconnectCallback += id => Debug.Log($"[Server] Player left (connection {id}). Online: {Mathf.Max(0, nm.ConnectedClientsIds.Count - 1)}.");
+            nm.OnClientDisconnectCallback += id => Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
             if (nm.StartServer())
             {
                 Debug.Log($"[Server] {options.serverName} is listening on port {port} (UDP, every network card of this machine). Type a command (gm.help) and press Enter.");

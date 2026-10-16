@@ -68,6 +68,8 @@ namespace KryticalNova.EditorTools
             // NPC shops: buying from the vendor the player stands by, selling to any.
             new Row("KryticalNova.Economy.PlayerShopping", ("settings", EconomySettingsPath), ("vendors", VendorCatalogPath)),
             new Row("KryticalNova.Social.PlayerContacts"),
+            // Game Master rights: the host, or a joined player who typed a GM password (GmRoster); their F2 lines run on the server.
+            new Row("KryticalNova.Networking.PlayerGm"),
             new Row("KryticalNova.Social.PlayerCrew", ("settings", "Assets/_Game/Gameplay/Social/Data/Assets/CrewSettings.asset")),
             new Row("KryticalNova.Player.PlayerAnimancerMotor", ("pickUpDownClip", PickUpDownClip), ("pickUpUpClip", PickUpUpClip)),
             // Gear progression: worn gear reads its Temper / Fusion / Tuning, and the forge changes them.
