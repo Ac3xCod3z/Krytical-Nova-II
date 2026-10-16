@@ -36,16 +36,33 @@ cheapens effects, and still has to look like a great game. A **PC build always r
 "Mobile" level and asset are only for phones, so a check for "Mobile" never fires on PC. The presets are
 `GraphicsPreferences` (rows) applied by `GraphicsSettingsApplier` onto the live `PC_RPAsset`.
 
-| Preset | Render scale | Shadows (distance / map / cascades) | AA | Grass | Fog & mist | Sun shafts | Outlines |
+| Preset | Render scale | Shadows (distance / map / cascades / soft) | AA | Grass | Fog, mist, lamp cones | Sun shafts | Outlines |
 |---|---|---|---|---|---|---|---|
-| Low | 0.7 | 22 m / 1024 / 1 | off | 0.4 | off | off | on |
-| Medium | 0.85 | 36 m / 2048 / 2 | FXAA | 0.7 | on | off | on |
-| High (as authored) | 1.0 | 50 m / 4096 / 4 | SMAA | 1.0 | on | on | on |
-| Ultra | 1.0 | 80 m / 4096 / 4 | SMAA | 1.0 | on | on | on |
+| Low | 0.7 | 22 m / 1024 / 1 / low | off | 0.4 | Off (cones off too) | off | on |
+| Medium | 0.85 | 36 m / 2048 / 2 (split at 9 m) / medium | FXAA | 0.7 | Medium | off | on |
+| High (as authored) | 1.0 | 50 m / 4096 / 4 (6, 14.5, 27 m) / high | SMAA | 1.0 | High | on | on |
+| Ultra | 1.0 | 80 m / 4096 / 4 (6, 16, 36 m) / high | SMAA | 1.0 | Ultra | on | on |
 
-**Not yet tied to the preset** (the pre-server rendering pass, section 8): volumetric fog quality (raymarch quality,
-step size, resolution), the lamp cones (they ignore the fog toggle and run at full resolution), cascade split ratios,
-soft-shadow quality. Measured so far: 2048 / 2 cascades instead of 4096 / 4 saves 0.8–1.0 ms (section 7).
+**Fog, mist and lamp light** is one option with five levels (Settings, Graphics), stored as `fogQuality`; a choice
+stored before 16 Oct 2026 (on or off) reads as High or Off. The levels are `VolumetricQualityRuntime`'s table:
+
+| Level | Mist raymarch (samples / shortest step / resolution) | Lamp cones (samples / shortest step / jitter / fade from-gone at / resolution) |
+|---|---|---|
+| Off | none | none |
+| Low | 3 / 2x authored / third | 2 / 1 m / 4 / 25-40 m / half |
+| Medium | 4 / 1.5x / half | 4 / 0.25 m / 1 / 35-50 m / half |
+| High | 6 / authored / half | 4 / 0.2 m / 1 / 45-65 m / half |
+| Ultra | 8 / 0.75x / two thirds | 8 / 0.1 m / 0.5 / 60-85 m / full |
+
+**Ultra adds two extras** (owner's pick C, 16 Oct 2026): the cone of a lamp within 25 m of the camera is cut by the
+walls and props in its way (its occlusion map, 256 px, is drawn once when it comes near; Kronnect's depth renderer
+`VolumetricLightsDepthRenderer` sits in `PC_RPAsset`'s renderer list for it), and the mist glows round each lit lamp
+(a `FogPointLight` on a runtime point light 5 cm across, so it lights nothing but the fog; radius 4 m, strength 0.12;
+the fog shows the nearest 16). Both in `StreetLampController`. Cones drawn smaller are blurred back up edge-preserving. Coarser cone sampling than 4 blotches the cones (tried on
+Medium, 16 Oct 2026), so lower levels save on distance and resolution instead. Soft-shadow quality is a setting of
+each directional light (`UniversalAdditionalLightData.softShadowQuality`), put on every scene's sun and moon by
+`GraphicsSettingsApplier`; cascade splits are set on the pipeline asset and put back at the end of a session like
+the rest. Measured 16 Oct 2026, section 7.
 
 ## 2. Frame order (PC)
 
@@ -106,7 +123,9 @@ soft-shadow quality. Measured so far: 2048 / 2 cascades instead of 4096 / 4 save
   (`EnvironmentPresenter.BlendLightingScenarios`), so baked lamps are dark at noon and lit at night.
 - **Shadows.** Only the sun or moon casts realtime shadows; the 72 street lamps are baked spots with no shadows; the
   player's night light and housing lights are realtime and shadowless. URP 17.6 has no per-light cached or on-demand
-  shadow maps (that is an HDRP feature), so baking is our way of making a stationary light free.
+  shadow maps (that is an HDRP feature), so baking is our way of making a stationary light free. **Additional-light
+  shadows are off on `PC_RPAsset`** (16 Oct 2026: no light of the game casts them), so their shader variants are not
+  built; switch them back on with the first light that needs them.
 - **Realtime spell lights (none exist yet)** must be: shadowless, short range (a few metres), capped per frame, and
   culled by distance with a `CullingGroup` rather than per-light `Update` checks. Write that cap before the first one.
 - **SSAO** stays subtle (0.4). The comic shadow pass does the heavy lifting.
@@ -127,22 +146,26 @@ Five sources, cheapest first:
    boxes `VF_WaterMist`). Unused features we own: **fog voids** (keep mist out of interiors), fog point lights,
    sub-volumes, distant fog.
 4. **Volumetric Lights** (Kronnect, v20.2.1, `_ThirdParty/VolumetricLights`): the cone on each of the 72 street lamps,
-   "Faster" raymarch preset, auto-toggle 45–65 m, no occlusion shadows, **full resolution** (downscaling 1).
+   sampled and faded by the fog level (section 1), no occlusion shadows, **half resolution with an edge-preserving
+   blur** below Ultra (16 Oct 2026; full resolution before). Off with the fog option.
 5. **SunShafts** (ours): screen-space god rays at quarter-resolution mask; the shafts own the sky, the mist the streets.
 
 Rules: volumetrics render below full resolution with an edge-aware upscale; raymarch steps stay capped; mist is a
 height-bounded volume with noise, never a full-screen 3D voxel field; a local effect gets a local box volume; interiors
 get a fog void; every volumetric switches off with distance or at zero weight. Lower presets cheapen these first.
+**Indoors** (a Crew Hall's rooms, `PrecipitationController.Indoors`) the weather keeps its fog outside: 15 % of the
+distance fog and no mist. The mist itself never reaches the halls (it covers the town, -500 to 500 m; the halls are
+at 6500 m), so no fog void is needed there.
 
 **Research checked 15 Oct 2026** (owner's research file in `Documents/Game Docs`):
 
 | Advice | Here | Verdict |
 |---|---|---|
 | Forward+ rather than Deferred | Forward+ | Already done |
-| Half-res volumetrics, bilateral upscale | Fog yes; lamp cones full res | Do for the cones |
-| Raymarch step caps per tier | Capped, but not per preset | Do |
+| Half-res volumetrics, bilateral upscale | Fog and cones (cones since 16 Oct 2026) | Done |
+| Raymarch step caps per tier | Per fog level (section 1) | Done 16 Oct 2026 |
 | Height fog with noise for mist; local fog volumes | Terrain-fit mist, 19 water boxes | Already done |
-| 2 vs 4 cascades, distance per preset | Yes; split ratios fixed | Add splits per preset |
+| 2 vs 4 cascades, distance per preset | Yes, with splits per preset | Done 16 Oct 2026 |
 | Cached / on-demand shadows for stationary lights | Not in URP; lamps baked | Not applicable |
 | Distance culling of local lights / CullingGroup | Cone auto-toggle; no realtime local lights | Needed when spell lights arrive |
 | APV with Day/Night blending; time-of-day shader globals | Both built (about 28 `_KN_*` globals) | Already done |
@@ -994,16 +1017,29 @@ static-batched ones included; nearly everything in the world is drawn with Synty
 accepts. Its GPU occlusion culling is off: the camera looks down, so little hides behind anything. A frame draws
 0.4 to 1.8 million triangles in 240 to 300 set-pass calls. Nothing in the world has an LOD group.
 
+### Fog, cones and shadows per preset (16 Oct 2026)
+
+Editor, Zone01 at 23:00 in fog weather, the camera over the player under two lamp cones (the cones' worst case), 10 s
+of frames each, GPU / CPU ms (FrameTimingManager; two runs before, repeatable to about 0.3 ms):
+
+| Preset | Before | After |
+|---|---|---|
+| Low | 6.3 / 10.7 | 5.9 / 9.1 (the 72 cones off: their CPU cost is about 1.6 ms) |
+| Medium | 7.1-7.5 / 11.3 | 7.0 / 11.2 |
+| High | 7.4 / 11.4 | 7.0-7.2 / 11.5 |
+| Ultra | 7.3 / 11.3 | 7.8-8.0 / 11.5 (finer mist and cones, 80 m shadows); 8.7 / 11.4 with the glow and occlusion extras |
+
+By day, clear: Low 5.8, Medium 5.9, High 6.1, Ultra 6.1 ms GPU. To be measured again in a build with `gm.bench`.
+
 ## 8. Roadmap
 
 - ~~APV lighting scenarios (Day/Night)~~: built (section 3).
-- **Pre-server rendering pass** (owner, 15 Oct 2026; before online Phase 1, starts on the owner's go; each change
-  measured with `gm.bench` per preset): fog and lamp-cone quality follow the preset, cones obey the fog toggle and are
-  off on Low; cones at half resolution with edge-preserving blur; cascade splits and soft-shadow quality per preset;
-  additional-light shadows off on `PC_RPAsset` if nothing uses them; fog voids in Crew Halls and homes; fix
-  `VolumetricAtmosphereDriver`'s never-true "Mobile" check and its stale Overcast comment.
-- **Ultra-only extras to try**, kept only within budget: lamp-cone occlusion near the camera, fog glow round lamps
-  (`FogPointLight`), a finer raymarch.
+- ~~**Pre-server rendering pass**~~: built 16 Oct 2026 (branch `render/pre-server-pass`): fog and lamp-cone quality
+  per level, cones off with the fog and on Low, cones at half resolution with an edge-preserving blur, cascade splits
+  and soft-shadow quality per preset, additional-light shadows off, the weather's fog kept outside indoors, the
+  "Mobile" check and the Overcast comment fixed (sections 1, 3, 3b, 7).
+- ~~**Ultra-only extras**~~: built 16 Oct 2026: a finer raymarch, lamp cones cut by walls near the camera, the fog
+  glow round lamps (section 1; the owner chose the medium glow from a sheet of four). About +0.8 ms on Ultra.
 - **Dynamic GI**: evaluated 2026-10-02 (the "Fast Dynamic GI" asset, `_ThirdParty/GI`) against APV and **rejected**.
   An A/B in Zone01 roughly doubled frame cost (+2–5 ms at street and vista views) and added no visible bounce, because
   its SDF tracing needs Read/Write enabled on every Synty mesh (memory cost, importer churn). APV + sky occlusion stays.
@@ -1035,6 +1071,13 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   uGUI draw with a loop of at most eight panels a pixel, for about 1.25 s; not measured against a budget yet).
 
 ## Changelog
+
+- **2026-10-16 (rendering pass, branch `render/pre-server-pass`)**: fog, mist and lamp cones get five levels
+  (`VolumetricQualityRuntime`, section 1), the cones go off with the fog and draw at half resolution with an
+  edge-preserving blur below Ultra, cascade splits and soft-shadow quality follow the shadow preset, additional-light
+  shadows are off, the weather's fog stays outside indoors, and the fog driver's never-true "Mobile" check and stale
+  Overcast comment are gone. Measured per preset (section 7). Then the Ultra extras: cones cut by walls near the
+  camera and a glow round each lamp in the mist (the owner's pick C of four), about +0.8 ms on Ultra.
 
 - **2026-10-15 (docs only)**: the owner's research on volumetric light, fog, mist and shadows checked against the
   game: graphics tiers rule and preset table (section 1), shadow and spell-light rules (3), volumetrics as built and
