@@ -1,6 +1,7 @@
 using KryticalNova.Economy;
 using KryticalNova.Factions;
 using KryticalNova.Progression;
+using KryticalNova.World;
 using UnityEngine;
 
 namespace KryticalNova.Combat
@@ -11,7 +12,9 @@ namespace KryticalNova.Combat
     /// hostile while cross-faction PvP is on, players of the same faction are friendly, and two players in a duel
     /// (<see cref="PlayerDuel"/>) are hostile to each other. On neutral ground (a <see cref="TradeZone"/> marked so)
     /// the factions are at peace and only a duel is a fight; it is enough that one of the two stands on it, so
-    /// nobody is struck from outside. The zone is a scene object, the same on every machine, so every peer agrees.
+    /// nobody is struck from outside. The zone is a scene object, the same on every machine, so every peer agrees. On a
+    /// map tagged always-on PvP (<see cref="ZoneRules.AlwaysOnPvp"/>, The Scar) other factions are hostile even with
+    /// cross-faction PvP off.
     /// </summary>
     public static class CombatHostility
     {
@@ -22,7 +25,12 @@ namespace KryticalNova.Combat
             if (target == null || target.Transform == null || target.Transform == attacker) return false;
             if (!(IsPlayer(attacker) && IsPlayer(target.Transform))) return true;
             bool neutralGround = TradeZone.CrossFactionAt(attacker.position) || TradeZone.CrossFactionAt(target.Transform.position);
-            return FactionRules.AreHostile(FactionRules.MemberOf(attacker), FactionRules.MemberOf(target.Transform), neutralGround);
+            IFactionMember a = FactionRules.MemberOf(attacker), b = FactionRules.MemberOf(target.Transform);
+            // The Scar: the factions are at war there whatever cross-faction PvP is set to.
+            if (!neutralGround && ZoneRules.AlwaysOnPvp && a != null && b != null && !ReferenceEquals(a, b)
+                && a.Faction != FactionId.None && b.Faction != FactionId.None && a.Faction != b.Faction)
+                return true;
+            return FactionRules.AreHostile(a, b, neutralGround);
         }
     }
 }

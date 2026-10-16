@@ -48,6 +48,23 @@ namespace KryticalNova.Networking
             if (instance != null) instance.Hide();
         }
 
+        /// <summary>
+        /// A map loaded after the first brings its own offline avatar (<see cref="SceneNetworkGuard"/>): it becomes the
+        /// one this handoff hides during a session and shows again after it. Hidden at once while a session runs.
+        /// </summary>
+        public static void Adopt(GameObject avatar)
+        {
+            if (avatar == null) return;
+            var nm = NetworkManager.Singleton;
+            var connection = NetworkConnectionManager.Instance;
+            bool inSession = (nm != null && nm.IsListening) || (connection != null && connection.IsStartingSession) || IsHeadlessServer;
+            if (inSession) avatar.SetActive(false);
+            if (instance == null) return;
+            instance.offlinePlayer = avatar;
+            instance.isHandedOff = inSession;
+            instance.handedOffTo = null;
+        }
+
         private void Awake()
         {
             instance = this;

@@ -1,0 +1,264 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1f6f34f5a480514cbc26a3dd670afdd, type: 3}
+  m_Name: ZoneCatalog
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.ZoneCatalog
+  regions:
+  - name: Meridian Sprawl
+    faction: Hegemony
+    art: {fileID: 2800000, guid: ccf6183bad31f0447889809ba090f0ed, type: 3}
+    lore: Clinical, polished, confident inside the walls; outside, the suburbs are silent and the countryside is cratered.
+  - name: Elders-Reach
+    faction: Covenant
+    art: {fileID: 2800000, guid: 5d7e721cdc0a634418eb36e86c0a4931, type: 3}
+    lore: Defiant, communal, weathered. Oaths, kin, the land spoken of as a living thing. Beautiful, with burned villages in it.
+  - name: Cessation
+    faction: Null
+    art: {fileID: 2800000, guid: 5e394ea99ec970a4eaf574fa9b942111, type: 3}
+    lore: "Absolute, unemotional, exact. No fire anywhere \u2014 only cold light. Geometry of bone and chassis."
+  - name: The Scar
+    faction: Contested
+    art: {fileID: 2800000, guid: 2c3894ae29a3a1c44b378fc5b61fcc3f, type: 3}
+    lore: Ash, glass and aurora. Every gate meets here; nobody owns it for long. Siege Nights and Beacon Wars are fought on this ground.
+  zones:
+  - sceneName: Zone01_StarterTown
+    displayName: Central Plaza
+    region: 
+    kind: 0
+    minLevel: 0
+    maxLevel: 0
+    pvp: 0
+    lore: 'The starter town, and for now the only neutral ground: every faction trades, talks and settles its quarrels in a Callout here. Outside the walls the war goes on.'
+  - sceneName: MeridianSprawl_NewMeridian
+    displayName: New Meridian
+    region: Meridian Sprawl
+    kind: 1
+    minLevel: 0
+    maxLevel: 0
+    pvp: 1
+    lore: The last gleaming arcology. Sealed walls, a monorail spine, corporate plazas and soul-energy pylons humming under glass. Nobody here looks doubtful.
+  - sceneName: EldersReach_Aldhavn
+    displayName: Aldhavn
+    region: Elders-Reach
+    kind: 1
+    minLevel: 0
+    maxLevel: 0
+    pvp: 1
+    lore: A hall-city at the head of a fjord. Viking longhalls on the water, elven spires on the terraces above, one pact and one wall.
+  - sceneName: Cessation_Terminus
+    displayName: Terminus
+    region: Cessation
+    kind: 1
+    minLevel: 0
+    maxLevel: 0
+    pvp: 1
+    lore: A crater city of gear and bone. Iron fortress walls, conveyor streets, skeletal and machine citizens moving in perfect order. Nobody raises their voice.
+  - sceneName: MeridianSprawl_Z1_TransitRow
+    displayName: Transit Row
+    region: Meridian Sprawl
+    kind: 2
+    minLevel: 1
+    maxLevel: 22
+    pvp: 1
+    lore: The commuter belt right outside the wall. Elevated rail toppled into the streets, dead traffic, holo-ads still flickering for products nobody buys.
+  - sceneName: MeridianSprawl_Z2_Crestfall
+    displayName: Crestfall
+    region: Meridian Sprawl
+    kind: 2
+    minLevel: 20
+    maxLevel: 45
+    pvp: 1
+    lore: The dead suburbs. Cul-de-sac grids, husk malls, dry fountains, lawns gone to meadow. It is the silence that gets you.
+  - sceneName: MeridianSprawl_Z3_AlderCounty
+    displayName: Alder County
+    region: Meridian Sprawl
+    kind: 2
+    minLevel: 45
+    maxLevel: 67
+    pvp: 1
+    lore: Upstate farm belt strung with soul-pylon lines. Automated harvesters still cut fields nobody eats from; craters and burned farmsteads show where the Covenant raids landed.
+  - sceneName: MeridianSprawl_Z4_GantryRidge
+    displayName: Gantry Ridge
+    region: Meridian Sprawl
+    kind: 2
+    minLevel: 65
+    maxLevel: 90
+    pvp: 1
+    lore: Strip-mined highlands and the war front. Extraction gantries, trench lines, wrecked APCs, floodlit military walls. The city's hunger laid bare.
+  - sceneName: MeridianSprawl_Run_Substation9
+    displayName: Substation 9
+    region: Meridian Sprawl
+    kind: 3
+    minLevel: 1
+    maxLevel: 22
+    pvp: 1
+    lore: "A flooded metro power substation. Arc-light, dripping water, rogue maintenance drones still following their last order. \xB7 1 room"
+  - sceneName: MeridianSprawl_Run_TheGalleria
+    displayName: The Galleria
+    region: Meridian Sprawl
+    kind: 3
+    minLevel: 20
+    maxLevel: 45
+    pvp: 1
+    lore: "Atrium, then Food Court and Loading Dock. Mannequin-bots, escalators as ramps, muzak looping over the PA. \xB7 2 rooms"
+  - sceneName: MeridianSprawl_Run_Silo12
+    displayName: Silo 12
+    region: Meridian Sprawl
+    kind: 3
+    minLevel: 45
+    maxLevel: 67
+    pvp: 1
+    lore: "Grain Deck, then the Munitions Cache. Harvester-bots turned sentries; the silo was never only for grain. \xB7 2 floors"
+  - sceneName: MeridianSprawl_Run_TheCoreworks
+    displayName: The Coreworks
+    region: Meridian Sprawl
+    kind: 3
+    minLevel: 65
+    maxLevel: 90
+    pvp: 1
+    lore: "Processing Deck, the Bore Shaft, the Core Chamber. The extraction bore itself \u2014 soul-light leaking from every seam. \xB7 3 floors"
+  - sceneName: EldersReach_Z1_BirchlightVale
+    displayName: Birchlight Vale
+    region: Elders-Reach
+    kind: 2
+    minLevel: 1
+    maxLevel: 22
+    pvp: 1
+    lore: Sunlit birch meadows and standing stones. Lofthollow, the first village, is still smoking from a Hegemony extraction raid.
+  - sceneName: EldersReach_Z2_Skeldfjord
+    displayName: Skeldfjord
+    region: Elders-Reach
+    kind: 2
+    minLevel: 20
+    maxLevel: 45
+    pvp: 1
+    lore: Sea cliffs, black-sand coves, longship wrecks. A drowned village shows at low tide. Gulls, surf and wind.
+  - sceneName: EldersReach_Z3_TheSylwood
+    displayName: The Sylwood
+    region: Elders-Reach
+    kind: 2
+    minLevel: 45
+    maxLevel: 67
+    pvp: 1
+    lore: "Elven old-growth. Colossal trees, lantern-lit tree-houses, shafts of light \u2014 and scorched clearings where extraction crawlers cut through."
+  - sceneName: EldersReach_Z4_Barrowfell
+    displayName: Barrowfell
+    region: Elders-Reach
+    kind: 2
+    minLevel: 65
+    maxLevel: 90
+    pvp: 1
+    lore: Snowline moors of barrow mounds and runestone circles. Wind, ice and the fells rising toward the Scar.
+  - sceneName: EldersReach_Run_Hearthbarrow
+    displayName: Hearthbarrow
+    region: Elders-Reach
+    kind: 3
+    minLevel: 1
+    maxLevel: 22
+    pvp: 1
+    lore: "A chieftain's barrow where the dead will not rest. One torchlit hall, one angry king. \xB7 1 room"
+  - sceneName: EldersReach_Run_WrecktideGrotto
+    displayName: Wrecktide Grotto
+    region: Elders-Reach
+    kind: 3
+    minLevel: 20
+    maxLevel: 45
+    pvp: 1
+    lore: "Wreck Cavern, then the Tide Hall. A sea cave of broken longships and the warriors who went down with them. \xB7 2 rooms"
+  - sceneName: EldersReach_Run_TheRootvault
+    displayName: The Rootvault
+    region: Elders-Reach
+    kind: 3
+    minLevel: 45
+    maxLevel: 67
+    pvp: 1
+    lore: "Root Hall, then the Ossuary Hollow. The elven dead sealed beneath the great tree, no longer sealed. \xB7 2 floors"
+  - sceneName: EldersReach_Run_HowlstoneCrypts
+    displayName: Howlstone Crypts
+    region: Elders-Reach
+    kind: 3
+    minLevel: 65
+    maxLevel: 90
+    pvp: 1
+    lore: "Barrow Halls, the Hall of Kings, the Deep Cairn. A frozen crypt city under the fells. \xB7 3 floors"
+  - sceneName: Cessation_Z1_ThePalefields
+    displayName: The Palefields
+    region: Cessation
+    kind: 2
+    minLevel: 1
+    maxLevel: 22
+    pvp: 1
+    lore: Bone-white dust flats under a green sky. Blob growths pulse in the hollows and a half-buried colossus arm reaches out of the plain.
+  - sceneName: Cessation_Z2_TheScrapline
+    displayName: The Scrapline
+    region: Cessation
+    kind: 2
+    minLevel: 20
+    maxLevel: 45
+    pvp: 1
+    lore: A trench grid of machine graveyards. Chassis stacked like strata, scrap bridges across the cuts, magnetic storms rolling over the plateau.
+  - sceneName: Cessation_Z3_TheNeedlegarden
+    displayName: The Needlegarden
+    region: Cessation
+    kind: 2
+    minLevel: 45
+    maxLevel: 67
+    pvp: 1
+    lore: A basalt spire forest hung with ossuaries. Violet crystal light, absolute silence, bone reliquaries swaying on chains between the needles.
+  - sceneName: Cessation_Z4_NoctCaldera
+    displayName: Noct Caldera
+    region: Cessation
+    kind: 2
+    minLevel: 65
+    maxLevel: 90
+    pvp: 1
+    lore: A glassed crater rim under an aurora of trapped souls. Tremors from something stirring beneath. The Scar Gate waits on the far rim.
+  - sceneName: Cessation_Run_TheIdleWorks
+    displayName: The Idle Works
+    region: Cessation
+    kind: 3
+    minLevel: 1
+    maxLevel: 22
+    pvp: 1
+    lore: "A stalled fabrication hall where unawakened machines twitch on the line. Cold strip-light, one great press. \xB7 1 room"
+  - sceneName: Cessation_Run_TheDisassembly
+    displayName: The Disassembly
+    region: Cessation
+    kind: 3
+    minLevel: 20
+    maxLevel: 45
+    pvp: 1
+    lore: "The Line, then the Press. Where the Hegemony once broke machines for parts; the machines remember the sequence. \xB7 2 rooms"
+  - sceneName: Cessation_Run_OssuarySigma
+    displayName: Ossuary Sigma
+    region: Cessation
+    kind: 3
+    minLevel: 45
+    maxLevel: 67
+    pvp: 1
+    lore: "The Reliquary, then the Bone Choir. A skeletal catacomb grown into the basalt, arranged with machine precision. \xB7 2 floors"
+  - sceneName: Cessation_Run_TheStirringWell
+    displayName: The Stirring Well
+    region: Cessation
+    kind: 3
+    minLevel: 65
+    maxLevel: 90
+    pvp: 1
+    lore: "Bore Rim, the Descent, the Listening Chamber. Down toward whatever stirs beneath Nova. \xB7 3 floors"
+  - sceneName: TheScar
+    displayName: The Scar
+    region: The Scar
+    kind: 4
+    minLevel: 88
+    maxLevel: 105
+    pvp: 2
+    lore: A vast rent of glassed earth with a severed extraction titan lying across it and an aurora of soul-light overhead.

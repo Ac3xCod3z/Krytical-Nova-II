@@ -47,6 +47,13 @@ namespace KryticalNova.Networking
             if (Instance == this) Instance = null;
         }
 
+        /// <summary>The map now open (called by its ZoneRules as it loads): this object outlives the scenes.</summary>
+        public void SetCurrentZone(string zoneId, string displayName)
+        {
+            currentZoneId = zoneId;
+            currentZoneDisplayName = displayName;
+        }
+
         /// <summary>
         /// Transitions a player avatar from the current zone server to a target zone server instance.
         /// </summary>

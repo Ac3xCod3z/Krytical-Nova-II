@@ -13598,6 +13598,7 @@ Transform:
   m_Children:
   - {fileID: 784644388}
   - {fileID: 834363824}
+  - {fileID: 1032223940}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &47563467
@@ -294748,6 +294749,51 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4653822112961022, guid: 9c7e8190761130140ad6d4d31e4fe3e2, type: 3}
   m_PrefabInstance: {fileID: 1031951008}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1032223939
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1032223940}
+  - component: {fileID: 1032223941}
+  m_Layer: 0
+  m_Name: Zone Rules
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1032223940
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032223939}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 47516085}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1032223941
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032223939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86b35223612c0a84ba495bea1b5ee59a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.ZoneRules
+  catalog: {fileID: 11400000, guid: b58c84a301eb6f545a49e70aa74f9ff4, type: 2}
 --- !u!1001 &1032270643
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -465828,6 +465874,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8116682471423442828, guid: e84dbd4512b7cf24097ea29798272bba, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1592048082}
+    - targetCorrespondingSourceObject: {fileID: 8116682471423442828, guid: e84dbd4512b7cf24097ea29798272bba, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1592048083}
   m_SourcePrefab: {fileID: 100100000, guid: e84dbd4512b7cf24097ea29798272bba, type: 3}
 --- !u!1 &1592048073 stripped
 GameObject:
@@ -465846,8 +465895,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f874cba63e921374a949f0d5d067af14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Networking.ZoneSessionManager
-  currentZoneId: Central_Plains_01
-  currentZoneDisplayName: Central Plains
+  currentZoneId: Zone01_StarterTown
+  currentZoneDisplayName: Central Plaza
   allowZoneTransitions: 0
 --- !u!114 &1592048075
 MonoBehaviour:
@@ -465889,6 +465938,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 03afd23775f5670468b9b0aab01ea006, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Networking.OfflinePlayerHandoff
+  offlinePlayer: {fileID: 1814815619}
+--- !u!114 &1592048083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1592048073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9048e6031d876b649861918075c42af9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Networking.SceneNetworkGuard
   offlinePlayer: {fileID: 1814815619}
 --- !u!1001 &1592611799
 PrefabInstance:
@@ -483009,6 +483071,56 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4325421033900658, guid: 4a04ac585c75e09439142d5def79782b, type: 3}
   m_PrefabInstance: {fileID: 1652505511}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1652528868
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1652528870}
+  - component: {fileID: 1652528869}
+  m_Layer: 0
+  m_Name: Travel Screen
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1652528869
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1652528868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7801545b3e88c714d8d372f56876b696, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.Travel.TravelScreen
+  titleFont: {fileID: 12800000, guid: 56c752f5ebee8dc439cdc6fad850f9a5, type: 3}
+  bodyFont: {fileID: 12800000, guid: 02beb14f336af454e833456fb95061cb, type: 3}
+  flipCooldown: 1.5
+  minimumSeconds: 3.5
+  lingerAfterFlip: 2.5
+  maximumLinger: 15
+--- !u!4 &1652528870
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1652528868}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1652849165
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -636577,3 +636689,4 @@ SceneRoots:
   - {fileID: 1948208767}
   - {fileID: 1176119073}
   - {fileID: 1055270017}
+  - {fileID: 1652528870}
