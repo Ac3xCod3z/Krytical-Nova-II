@@ -341,7 +341,10 @@ namespace KryticalNova.Networking
             ushort port = CommandLinePort() ?? defaultPort;
             ConfigureTransport(defaultListenAddress, port);
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
-            if (NetworkManager.Singleton.StartServer())
+            NetworkManager nm = NetworkManager.Singleton;
+            nm.OnClientConnectedCallback += id => Debug.Log($"[Server] Player joined (connection {id}). Online: {nm.ConnectedClientsIds.Count}.");
+            nm.OnClientDisconnectCallback += id => Debug.Log($"[Server] Player left (connection {id}). Online: {Mathf.Max(0, nm.ConnectedClientsIds.Count - 1)}.");
+            if (nm.StartServer())
             {
                 Debug.Log($"[Server] Listening on port {port} (UDP, every network card of this machine).");
                 StatusChanged?.Invoke($"Dedicated server listening on port {port}");
