@@ -1537,6 +1537,24 @@ namespace KryticalNova.EditorTools.GM
             Run($"gm.say {Quote(text)}");
         }
 
+        [TabGroup(Tabs, SocialTab), Title("Server"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(712)]
+        [InfoBox("Sends a player away (a client id or character name; gm.players lists them). They can join again.")]
+        private void KickPlayer(string who = "", string reason = "")
+        {
+            if (string.IsNullOrWhiteSpace(who)) { Log("Type who first."); return; }
+            Run($"gm.kick {Quote(who.Trim())} {Quote(reason)}");
+        }
+
+        [TabGroup(Tabs, SocialTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(713)]
+        [InfoBox("A dedicated server only: counts down with the players told, saves everyone, backs up, then stops.")]
+        private void ShutdownServer([MinValue(0)] int seconds = 60, string reason = "") => Run($"gm.shutdown {seconds} {Quote(reason)}");
+
+        [ButtonGroup(Tabs + "/" + SocialTab + "/Server"), EnableIf(nameof(IsReady)), LabelText("Cancel Shutdown"), PropertyOrder(714)]
+        private void CancelShutdown() => Run("gm.shutdown cancel");
+
+        [ButtonGroup(Tabs + "/" + SocialTab + "/Server"), EnableIf(nameof(IsReady)), LabelText("Back Up Saves Now"), PropertyOrder(715)]
+        private void BackupNow() => Run("gm.backup");
+
         private enum PetMoment { Died, Drop, Level, Bruiser, Crit, LowHp, Idle }
 
         [TabGroup(Tabs, PetsTab), Title("XP and Chatter"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(833)]

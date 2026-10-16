@@ -55,6 +55,17 @@ namespace KryticalNova.DevTools
             return true;
         }
 
+        /// <summary>
+        /// True where GM commands may run that act on no one player: the host, a dedicated server (which has no player of
+        /// its own), or a game with no session.
+        /// </summary>
+        public static bool HasAuthority(out string error)
+        {
+            var nm = Session;
+            error = nm != null && !nm.IsServer ? NoAuthority : null;
+            return error == null;
+        }
+
         /// <summary>The player the commands act on, where that player is simulated.</summary>
         public static bool TryGetPlayer(out GameObject player, out string error)
         {

@@ -15,9 +15,16 @@ namespace KryticalNova.Networking
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void LoadWorld()
         {
-            if (SceneManager.GetActiveScene().name == WorldScene) return;
-            Debug.Log($"[DedicatedServerBoot] Skipping the front end, loading {WorldScene}.");
-            SceneManager.LoadScene(WorldScene);
+            // The map of the server's settings (server-settings.json or -map); Zone01 when there is no such scene.
+            string map = ServerLaunchOptions.LoadForThisServer().map;
+            if (!Application.CanStreamedLevelBeLoaded(map))
+            {
+                Debug.LogWarning($"[DedicatedServerBoot] There is no map called \"{map}\" in this build: opening {WorldScene}.");
+                map = WorldScene;
+            }
+            if (SceneManager.GetActiveScene().name == map) return;
+            Debug.Log($"[DedicatedServerBoot] Skipping the front end, loading {map}.");
+            SceneManager.LoadScene(map);
         }
 #endif
     }

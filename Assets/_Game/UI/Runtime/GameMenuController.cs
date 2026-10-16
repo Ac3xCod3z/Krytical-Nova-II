@@ -22,8 +22,9 @@ namespace KryticalNova.UI
     /// the MENU button. Log Out goes back to character select; Exit Game closes the application. Both count down
     /// first and can be cancelled until the count ends. Then the character is saved, the session is closed (a host
     /// is told who that disconnects), and what belongs to the session is cleared away so the world can be entered
-    /// again in the same run. A player whose session ends under them (the host left, the connection dropped) is
-    /// offered the same two ways out, or to stay where they stand.
+    /// again in the same run. A player whose session ends under them (the server or host closed, they were sent away,
+    /// the server was full, the connection dropped) is told why when the server said, and offered the same two ways
+    /// out, or to stay where they stand.
     /// </summary>
     [DefaultExecutionOrder(-500)] // before the other HUD controllers: on the same Esc they still see what was open
     [DisallowMultipleComponent]
@@ -168,7 +169,11 @@ namespace KryticalNova.UI
             bool inSession = network != null && network.IsConnectedClient && !network.IsServer;
             if (wasInSession && !inSession && view != View.Working && view != View.Leaving && !LeftByChoice())
             {
-                endedNote.text = "The host has left, or the connection was lost. Your progress is kept on the host.";
+                // The server's own words when it gave any (a GM sent them away, a shutdown, a full server).
+                string reason = network != null ? network.DisconnectReason : null;
+                endedNote.text = string.IsNullOrWhiteSpace(reason)
+                    ? "The server closed, or the connection was lost. Your progress is kept on the server."
+                    : reason + " Your progress is kept on the server.";
                 Show(View.Ended);
             }
             wasInSession = inSession;
@@ -345,7 +350,7 @@ namespace KryticalNova.UI
             while (Time.unscaledTime < darkAt) yield return null;
 
             // Where this machine decides the game (a host, or a game with no session) everything is written now.
-            // A client's character is written by the host as the client leaves.
+            // A client's character is written by the server as the client leaves.
             ServerSave.FlushAll();
 
             NetworkManager network = NetworkManager.Singleton;

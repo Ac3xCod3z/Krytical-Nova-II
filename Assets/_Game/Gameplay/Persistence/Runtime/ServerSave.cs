@@ -63,14 +63,19 @@ namespace KryticalNova.Persistence
 
         /// <summary>
         /// Each local copy of the game (a Multiplayer Play Mode clone, a build started with -profile) keeps its own saves.
-        /// An Editor test session keeps them in the folder it names instead, away from a running build's.
+        /// An Editor test session keeps them in the folder it names instead, away from a running build's. A dedicated
+        /// server keeps them where its settings say (outside its own folder, so a new build never touches them).
         /// </summary>
         public static string DefaultRoot()
         {
+#if UNITY_SERVER
+            return KryticalNova.Networking.ServerLaunchOptions.LoadForThisServer().SaveFolderPath;
+#else
             string testRoot = KryticalNova.Networking.EditorTestSession.SaveRoot;
             if (!string.IsNullOrEmpty(testRoot)) return testRoot;
             string profile = KryticalNova.Networking.NetworkConnectionManager.LocalProfile();
             return Path.Combine(Application.persistentDataPath, FolderName, string.IsNullOrEmpty(profile) ? DefaultProfile : profile.ToLowerInvariant());
+#endif
         }
 
         /// <summary>True on the machine that decides the game: a server, a host, or a game with no session.</summary>
