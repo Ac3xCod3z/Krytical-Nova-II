@@ -2,6 +2,22 @@
 > now `online-roadmap.md` with its phase documents. It replaces Phase 4 below ("Scalability, Interest
 > Management & MMO Performance") and the "Production MMORPG Phase" notes. Phases 1 to 3 below are built.
 
+> **Revision, 15 Oct 2026** (after the owner's research file, `Documents/Game Docs/Research for our server…`):
+> - **Built from this plan:** Phases 1–3 (NetworkConnectionManager, the NetworkManager prefab, server-authoritative
+>   movement, jump and combat, networked resources and skills). From Phase 4: `SpatialInterestManager` (75 m, not the
+>   48 m grid yet), `NetworkCombatVFXPool`, `DedicatedServerOptimizer`. Tick rate is 30, not 20.
+> - **"Client-side prediction"** below now means online Phase 3, client anticipation (`online-phase-03-responsive-input.md`).
+> - **Client structure going forward:** a small persistent **Bootstrap scene** holds the NetworkManager, the connection
+>   manager, settings and the other persistent systems (today the NetworkManager lives inside `Zone01_StarterTown`, so
+>   this must happen before a second map exists). Each map is its own scene, swapped under the Loading page; memory is
+>   freed on each change (unload, `Resources.UnloadUnusedAssets`, one GC); each map has its own APV bake set with Day and
+>   Night scenarios. NGO's scene sync orders the messages, so no hand-made packet queue is needed. **Addressables**
+>   come later (before a second map or the phone port): not installed today, and Sidekick's `Resources` folder (about
+>   469 MB) ships in every build.
+> - **Rejected from the research:** a separate .NET console server with raw TCP sockets, ngrok, and a hard-coded server
+>   address. The server stays a headless Unity build of this project (`online-roadmap.md`, `online-phase-01-…`).
+> - **Rendering** for many players and future phones: `Design/Rendering-Bible.md` sections 1, 3, 3b and 8.
+
 # Project Overview
 - **Game Title**: Krytical Nova II
 - **High-Level Concept**: A martial-arts action MMORPG featuring point-and-click movement, fluid vertical traversal jumps, martial arts skill progression, and real-time stance/buff-driven combat across shared persistent zones.

@@ -207,11 +207,20 @@
   .rbody pre { background: var(--code); border: 2px solid var(--ink); border-radius: 5px; padding: 8px 10px; overflow-x: auto; font-size: 13px; }
   .rbody pre code { background: none; padding: 0; overflow-wrap: normal; }
   .rbody blockquote { margin: 0; border-left: 6px solid var(--pop); padding: 4px 12px; background: var(--paper); }
+  .rbody img { max-width: 100%; border: 3px solid var(--ink); border-radius: 6px; }
   .rbody .pic { display: inline-block; font: 600 13px var(--head); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: 2px dashed var(--muted); border-radius: 4px; padding: 2px 8px; }
   .rbody .flash { animation: flash 1.4s ease-out 1; }
   .backbtn { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 9; font: 400 22px var(--display); letter-spacing: 0.06em;
              background: var(--pop); color: var(--pop-ink); border: 3px solid var(--ink); border-radius: 6px; padding: 4px 16px; cursor: pointer; box-shadow: 4px 4px 0 var(--shadow); }
   .backbtn:hover { background: var(--cyan); }
+
+  figure.art { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+  figure.art img { width: 100%; height: auto; border: 3px solid var(--ink); border-radius: 6px; box-shadow: 4px 4px 0 var(--shadow); background: var(--code); }
+  figure.art figcaption { font: 600 12.5px var(--head); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .region .zone { border-top: 2px dashed var(--ink); padding-top: 6px; }
+  .region .zone > summary { font: 700 16px var(--head); text-transform: uppercase; letter-spacing: 0.03em; cursor: pointer; padding: 4px 0; }
+  .region .zone > summary:hover { color: var(--magenta); }
+  .region .zone[open] > summary { color: var(--magenta); }
 
   .flash { animation: flash 1.4s ease-out 1; }
   .strip.flash { box-shadow: 6px 6px 0 var(--pop); }
@@ -260,6 +269,7 @@
       <div class="sep">Reference</div>
       <a href="#open">Open questions <span>{{OPEN_COUNT}}</span></a>
       <a href="#glossary">Glossary <span>{{GLOSS_COUNT}}</span></a>
+      <a href="#world">World atlas <span>{{WORLD_COUNT}}</span></a>
       <a href="#library">Library <span>{{LIB_COUNT}}</span></a>
       <a href="#background">Background</a>
     </nav>
@@ -295,6 +305,13 @@
           <div id="gloss">
 {{GLOSSARY}}
           </div>
+        </div>
+      </section>
+
+      <section id="world" class="grp">
+        <h2><button class="cat" type="button" aria-expanded="false"><b class="partial">World atlas</b><span class="n">{{WORLD_COUNT}}</span><small>every region, Home City, zone and Run: tone, palette, Synty packs, dressing, concept art</small><span class="chev" aria-hidden="true">&#9660;</span></button></h2>
+        <div class="body" hidden>
+{{WORLD}}
         </div>
       </section>
 
@@ -368,7 +385,8 @@
     const doc = DOCS[id];
     document.getElementById("rtitle").textContent = doc.title;
     document.getElementById("rpath").textContent = doc.path;
-    const md = doc.md.replace(/!\[([^\]]*)\]\([^)]*\)/g, (all, alt) => "`picture: " + (alt || "untitled") + "`");
+    const md = doc.md.replace(/!\[([^\]]*)\]\(([^)]*)\)/g, (all, alt, src) =>
+      src.startsWith("art/") ? all : "`picture: " + (alt || "untitled") + "`"); // the atlas's art is published beside the page
     rbody.innerHTML = window.marked ? marked.parse(md) : "<pre>" + doc.md.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</pre>";
     const used = {}, toc = document.getElementById("rtoclist");
     toc.innerHTML = "";
@@ -397,7 +415,7 @@
       const a = document.createElement("a"); a.className = "dl"; a.href = docHref(target);
       code.replaceWith(a); a.appendChild(code);
     }
-    for (const img of rbody.querySelectorAll("img")) {
+    for (const img of rbody.querySelectorAll("img:not([src^='art/'])")) {
       const span = document.createElement("span"); span.className = "pic"; span.textContent = "picture: " + (img.alt || "untitled");
       img.replaceWith(span);
     }

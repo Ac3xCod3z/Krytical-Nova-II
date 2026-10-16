@@ -123,7 +123,7 @@ A vendor sells from a shelf and buys what the player carries. Two are open, the 
 | Gear price: Creds per item level (`vendorGearCredsPerLevel`) | 150 |
 | Gear price: weight of Common / Uncommon / Rare / Epic (`vendorGearRarityMultiplier`) | 1 / 4 / 20 / 100 |
 | What an item is valued at when no shelf lists it and it is not ladder gear, by rarity (`vendorFallbackValueByRarity`) | 20 / 100 / 2,000 / 20,000 |
-| What a vendor pays: share of what the shops value the item at (`vendorSellBackPercent`) | 20 % |
+| What a vendor pays: share of what the shops value the item at (`vendorSellBackPercent`) | 70 % (owner, 15 Oct 2026; was 20 %) |
 | A sale of this rarity or better must be confirmed (`vendorConfirmFromRarity`) | Rare |
 
 - **Opening:** the vendor's dialogue has a BROWSE WARES button (`NpcOffer.Shop`); the shop opens beside the Pack and closes when the player walks away. It is a movable window (SHOP in the layout editor).
@@ -132,7 +132,7 @@ A vendor sells from a shelf and buys what the player carries. Two are open, the 
 - **Rare and better is never sold without a notice and a confirm** (owner, 10 Oct 2026): the notice names the item, its rarity and the Creds it would fetch, and it is sold only on a yes. The same holds for a pet (its growth goes with it) and for any gear that has been Tempered, Fused or Tuned, whatever its rarity: that part is Claude's addition, not the owner's word. The server refuses such a sale that did not come with the confirmation, so the rule does not rest on the window.
 - **Who decides:** `PlayerShopping` (Gameplay/Economy) sends requests; the server checks that the player stands by the vendor, the price (`VendorRules`, the same rules the window reads), the wallet, and the room in the Pack before any Creds move. Buying is the sink `CredsSink.Vendor`, selling the source `CredsSource.VendorSale`: both show in `gm.creds.report`. Online only, like Kiosks.
 - **A new vendor or a new item on a shelf** is a row in `VendorStockBuilder` (**Krytical Nova ▸ Items ▸ 10. Build Vendor Stock**; a price tuned on an asset is kept) and, for a new vendor, `NpcOffer.Shop` on its row in `Zone01Setup`.
-- **Selling is a second way Creds come in**, beside Hostile kills: at 20 % a level-28 Common weapon pays 840. To be weighed against the income target when the prices are tuned.
+- **Selling is a second way Creds come in**, beside Hostile kills: at 70 % a level-28 Common weapon pays 2,940. To be weighed against the income target when the prices are tuned.
 
 ## Appearance services (rows 19 and 52; built 11 Oct 2026)
 
