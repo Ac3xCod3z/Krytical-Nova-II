@@ -166,7 +166,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
     "backupHours": 6.0,
     "backupsKept": 10,
     "gameMasters": [
-        { "name": "Dom", "password": "their-own-password" }
+        { "name": "Dom", "account": "set by Bind on the control page" }
     ]
 }
 ```
@@ -183,7 +183,8 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `pagePassword` | made for you | The control page's password. Only ever in this file. Empty makes a new one at the next start. |
 | `backupHours` | 6 | Hours between backups. 0 backs up only at start and stop. |
 | `backupsKept` | 10 | How many backups are kept; the oldest go first. |
-| `gameMasters` | none | Up to three GMs, each a name and their own GM password. Set them on the control page (easier), or here. |
+| `gameMasters` | none | Up to three GMs, each a name and the account it is bound to. Set them on the control page (Add GM, then Bind). |
+| `carryOverOldSaves` | true | The characters a game played before Unity sign-in move once to its proven account. Switch off before anyone else plays. |
 | `statusPort` | 0 (= game port + 1, so 7778) | Where the server tells the Servers window it is on, its players and its build. |
 | `serverList` | none | The servers players see. Set them on the control page and press PUBLISH LIST. |
 | `listBucket`, `cloudProjectId`, `cloudEnvironment` | krytical-nova-servers, this project, production | Where PUBLISH LIST uploads the list. Leave them. |
@@ -349,43 +350,49 @@ Server, Cancel Shutdown, Back Up Saves Now.
 ## 7b. Game Masters (GMs)
 
 A **GM** can use the GM commands and speak on the GM chat channel; everyone sees **[GM]** before their name. Everyone
-else has neither. Until players sign in with a Unity account (a later phase), a GM proves who they are with a **GM
-password** of their own.
+else has neither, and for them **F2 does nothing at all**. Since online phase 2 (18 Oct 2026) a GM is **bound to an
+account**: the game signs every player in to Unity by itself, the server checks that proof when they join, and you tie a
+GM to the account of the player who is that GM. No password is typed in the game.
 
 **Who is GM**
 
 | Who | GM? |
 | --- | --- |
-| The host (the Editor's normal Play, or a test build that hosts) | Always, with no password. |
-| One of the server's three GMs | After typing their GM password in **F2**, until they leave the server. |
-| Everyone else | Never. F2 only asks for a GM password. |
+| The host (the Editor's normal Play, or a test build that hosts) | Always. |
+| A player whose account is bound to one of the server's three GMs | From the moment they join, every time. |
+| Everyone else | Never. F2 does nothing for them. |
 
-**Make someone a GM (on the control page):** under **Game Masters**, type their name and a password of at least 8
-characters that only they know (not one they use anywhere else), press **Add GM**, and tell them the password yourself.
-Three at most; each password must be different. **Remove** takes it away; if they are in the game, their GM rights
-end at once and they are told so. The list is saved into `server-settings.json` (`gameMasters`) straight away and is
-kept across restarts and rebuilds.
+**Make someone a GM (on the control page):**
 
-**Become GM in the game:**
+1. Under **Game Masters**, type the GM's name and press **Add GM** (three at most).
+2. While that person is **in the game**, pick their character in the list beside the GM's name and press **Bind**.
+   They are GM at once ("You are GM ...", and **[GM]** before their name) and on every later join.
+3. **Unbind** frees the GM place from that account; **Remove** deletes the GM. Either ends their GM rights at once if
+   they are on.
 
-1. Join the server, press **F2**. The console asks for **GM password...** (the letters show as dots).
-2. Type it, press **Enter**. "You are GM (Dom)." appears, and **[GM]** shows before your name to everyone.
-3. Now every line typed in F2 runs **on the server**, aimed at **your own player**: `gm.help`, `gm.players`,
+The list (names and the accounts they are bound to) is saved into `server-settings.json` (`gameMasters`) straight away
+and kept across restarts and rebuilds. An account is one PC and Windows user for now (Unity's automatic sign-in): a GM
+who plays from another PC is bound again there (real accounts come in phase 4).
+
+**Being GM in the game:**
+
+1. Press **F2**. Every line typed there runs **on the server**, aimed at **your own player**: `gm.help`, `gm.players`,
    `gm.say "text"`, `gm.kick`, give items or levels, teleport... `gm.target 3` aims the commands at another player (for
-   you only; `gm.target self` comes back; `gm.players` lists the numbers). `clear` empties your console. The answer
-   prints below each line. The console works as always: hints while you type, **Tab** to complete, **Up** for the last
-   lines.
-4. The GM chat channel (**/gm text**) now works for you.
-5. **In the Editor**, the **GM Tools** window works too: **Target player** at the top lists the players your game can
-   see (pick one, or yourself), and every button runs on the server on that player. The answers show in the window's
-   log. Players far away are reached with `gm.players` and `gm.target` in F2.
+   you only; `gm.target self` comes back; `gm.players` lists the numbers). `clear` empties your console. The answer prints
+   below each line, with hints while you type, **Tab** to complete and **Up** for the last lines.
+2. The GM chat channel (**/gm text**) works for you.
+3. **In the Editor**, the **GM Tools** window works too: **Target player** at the top lists the players your game can
+   see, and every button runs on the server on that player.
 
-Leaving the server ends it; type the password again next time. **Five wrong passwords** send that player away from the
-server (they can join and try again). Every GM line is written to the server's log as `[GM] Dom: gm.say ...`, so you
-can see on the control page who did what.
+Every GM line is written to the server's log as `[GM] Dom: gm.say ...`, so you can see on the control page who did what.
 
-The password travels to the server like the rest of the game's traffic, which is not encrypted yet: use one that is
-for this game only.
+### Signing in and old characters (phase 2)
+
+Players notice nothing: the game signs in to Unity by itself when it joins a server, and the server lets in only a game
+whose sign-in Unity confirms ("Your game could not prove who you are..." otherwise, with no internet for instance). Every
+character is saved under the account that sign-in proves; a game can no longer pick an account. The characters each of
+you played before this change move **once** to your proven account the first time you join (`carryOverOldSaves` in the
+settings; switch it off before anyone else plays, so nobody can claim old saves). The old save stays in place as a backup.
 
 ## 8. Stop or restart safely
 
@@ -537,3 +544,4 @@ Things learned the hard way:
   logs a browser that hung up before the answer, and no longer answers the spare connections a browser opens ahead
   and closes unused (answering them filled the log with "Control page request failed: Unable to write data to the
   transport connection", about once a second while the page was open).
+- 18 Oct 2026: phase 2 milestone 1: the game signs in to Unity by itself and the server checks it; saves are kept under the proven account; old characters are carried over once; GMs are bound to accounts on the control page (no GM password in the game) and F2 opens only for GMs.

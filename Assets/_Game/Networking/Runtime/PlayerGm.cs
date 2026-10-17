@@ -6,9 +6,9 @@ using UnityEngine;
 namespace KryticalNova.Networking
 {
     /// <summary>
-    /// A player's Game Master rights (<see cref="GmRoster"/>). The host's own player is always GM. A joined player
-    /// becomes GM by typing a GM password in the GM console (F2): the password goes to the server, which checks it and
-    /// marks the player. From then on each line they type there is sent to the server, run there as if typed on it,
+    /// A player's Game Master rights (<see cref="GmRoster"/>). The host's own player is always GM. On a server, a player
+    /// whose proven account the owner bound to a GM on the control page is GM from the moment they join (or are bound;
+    /// online phase 2: no password in the game). Their GM console (F2) then opens, and each line they type there is sent to the server, run there as if typed on it,
     /// aimed at their own player unless they pick another with gm.target, and only they see the answer. Everyone can
     /// see who is GM (the [GM] tag on the name and in chat). Offline, the player is GM as before.
     /// </summary>
@@ -57,7 +57,11 @@ namespace KryticalNova.Networking
         public override void OnNetworkSpawn()
         {
             if (IsOwner) Local = this;
-            if (IsServer) GmRoster.Revoked += OnRevoked;
+            if (!IsServer) return;
+            GmRoster.Revoked += OnRevoked;
+            GmRoster.Granted += OnGranted;
+            // A GM's account: GM again on every join (GmRoster raises Granted, which makes this player GM).
+            if (OwnerClientId != NetworkManager.ServerClientId) GmRoster.SignInBound(OwnerClientId, out _);
         }
 
         public override void OnNetworkDespawn()
@@ -66,15 +70,9 @@ namespace KryticalNova.Networking
             if (IsServer)
             {
                 GmRoster.Revoked -= OnRevoked;
+                GmRoster.Granted -= OnGranted;
                 GmRoster.Forget(OwnerClientId);
             }
-        }
-
-        /// <summary>Owner: sends a GM password to the server; the answer comes back through <see cref="Reply"/>.</summary>
-        public void Login(string password)
-        {
-            if (!IsSpawned || !IsOwner) return;
-            LoginServerRpc(password ?? string.Empty);
         }
 
         /// <summary>Owner: runs a GM command line on the server; the answer comes back through <see cref="Reply"/>.</summary>
@@ -86,35 +84,11 @@ namespace KryticalNova.Networking
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void LoginServerRpc(string password)
-        {
-            if (GmRoster.IsGm(OwnerClientId))
-            {
-                Send("You are already GM.");
-                return;
-            }
-            if (GmRoster.TryLogin(OwnerClientId, password, out string name, out string message, out bool kick))
-            {
-                gmName.Value = new FixedString32Bytes(name);
-                Debug.Log($"[GM] {name} signed in (client {OwnerClientId}).");
-                Send(message);
-                return;
-            }
-            Debug.LogWarning($"[GM] A wrong GM password from client {OwnerClientId}.");
-            if (kick)
-            {
-                NetworkManager.DisconnectClient(OwnerClientId, message);
-                return;
-            }
-            Send(message);
-        }
-
-        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void CommandServerRpc(string line)
         {
             if (!GmRoster.IsGm(OwnerClientId))
             {
-                Send("You are not a GM. Type your GM password first.");
+                Send("You are not a GM on this server.");
                 return;
             }
             if (line.Length > MaxLineLength) line = line.Substring(0, MaxLineLength);
@@ -135,6 +109,19 @@ namespace KryticalNova.Networking
             }
             for (int start = 0; start < text.Length; start += ReplyChunk)
                 ReplyRpc(text.Substring(start, Math.Min(ReplyChunk, text.Length - start)));
+        }
+
+        // The owner bound this player's account to a GM on the control page.
+        private void OnGranted(ulong clientId, string name)
+        {
+            if (clientId == OwnerClientId) Become(name);
+        }
+
+        private void Become(string name)
+        {
+            gmName.Value = new FixedString32Bytes(name);
+            Debug.Log($"[GM] {name} is in the game as GM (client {OwnerClientId}).");
+            Send($"You are GM ({name}) on this server. F2 opens the GM console; gm.help lists the commands.");
         }
 
         private void OnRevoked(ulong clientId)

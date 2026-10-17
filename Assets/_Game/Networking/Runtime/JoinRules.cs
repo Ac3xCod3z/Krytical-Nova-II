@@ -43,20 +43,33 @@ namespace KryticalNova.Networking
     /// </summary>
     public static class JoinRules
     {
-        private const string Tag = "KN1";
+        // KN2 (online phase 2): the Unity sign-in token that proves who the player is, and the account id the game made up
+        // before sign-in existed (its characters are carried over once to the proven account).
+        private const string Tag = "KN2";
+        /// <summary>Longest join request read: a sign-in token is one to two thousand characters.</summary>
+        public const int MaxPayloadBytes = 4096;
 
-        /// <summary>What a joining game sends: its build, and whether it is the Editor.</summary>
-        public static byte[] Payload(string build, bool editor) => Encoding.UTF8.GetBytes(Tag + "|" + (build ?? string.Empty) + "|" + (editor ? "1" : "0"));
+        /// <summary>What a joining game sends: its build, whether it is the Editor, its sign-in token and its old account id.</summary>
+        public static byte[] Payload(string build, bool editor, string token = "", string oldAccount = "") =>
+            Encoding.UTF8.GetBytes(Tag + "|" + Clean(build) + "|" + (editor ? "1" : "0") + "|" + Clean(token) + "|" + Clean(oldAccount));
 
-        public static bool TryRead(byte[] payload, out string build, out bool editor)
+        private static string Clean(string part) => (part ?? string.Empty).Replace("|", string.Empty);
+
+        public static bool TryRead(byte[] payload, out string build, out bool editor) => TryRead(payload, out build, out editor, out _, out _);
+
+        public static bool TryRead(byte[] payload, out string build, out bool editor, out string token, out string oldAccount)
         {
             build = null;
             editor = false;
-            if (payload == null || payload.Length == 0 || payload.Length > 256) return false;
+            token = string.Empty;
+            oldAccount = string.Empty;
+            if (payload == null || payload.Length == 0 || payload.Length > MaxPayloadBytes) return false;
             string[] parts = Encoding.UTF8.GetString(payload).Split('|');
-            if (parts.Length != 3 || parts[0] != Tag) return false;
+            if (parts.Length != 5 || parts[0] != Tag) return false;
             build = parts[1];
             editor = parts[2] == "1";
+            token = parts[3];
+            oldAccount = parts[4];
             return true;
         }
 

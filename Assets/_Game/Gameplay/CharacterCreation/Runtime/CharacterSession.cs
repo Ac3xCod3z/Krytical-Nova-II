@@ -29,14 +29,27 @@ namespace KryticalNova.CharacterCreation
             activeSlot = -1;
             resolved = false;
             accountId = null;
+            VerifiedAccountId = null;
         }
 
         /// <summary>
         /// The id of this player's account: what its characters, and the things they share (the Deep Vault), are
-        /// saved under on the server. Made once per machine profile and kept in PlayerPrefs beside the roster, until
-        /// real sign-in replaces it.
+        /// saved under. On a server it is the account Unity's sign-in proves (<see cref="VerifiedAccountId"/>, online
+        /// phase 2); playing on this PC alone, the id the game made up (<see cref="MadeUpAccountId"/>).
         /// </summary>
-        public static string AccountId
+        public static string AccountId => !string.IsNullOrEmpty(VerifiedAccountId) ? VerifiedAccountId : MadeUpAccountId;
+
+        /// <summary>
+        /// The account Unity's sign-in proves, set while joining a server (the server keeps saves under the same id); empty
+        /// when playing on this PC alone.
+        /// </summary>
+        public static string VerifiedAccountId { get; set; }
+
+        /// <summary>
+        /// The id the game made up once per machine profile, kept in PlayerPrefs beside the roster: the account of play on
+        /// this PC alone, and, sent once to a server, how its characters from before sign-in are carried over.
+        /// </summary>
+        public static string MadeUpAccountId
         {
             get
             {
