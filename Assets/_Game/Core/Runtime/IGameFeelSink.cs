@@ -74,6 +74,8 @@ namespace KryticalNova.Core
         void TargetSelected(Transform target, WorldTargetKind kind);
         void RunStarted(Transform actor, bool isLocalPlayer);
         void RunStopped(Transform actor);
+        /// <summary>A jump's crouch began (the press, on the jumper's own screen; the server's start elsewhere).</summary>
+        void JumpCharge(Transform actor, bool isLocalPlayer);
         void JumpTakeoff(Transform actor, bool isLocalPlayer);
         void Landed(Transform actor, bool isLocalPlayer);
         /// <summary>The actor left the ground (true) or is back on it, including after an aborted jump (false).</summary>

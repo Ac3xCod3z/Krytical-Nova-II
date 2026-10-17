@@ -1,6 +1,6 @@
 # Online phase 3: responsive input (client anticipation)
 
-Part of `online-roadmap.md`. Written 11 Oct 2026. **Step 1 (walking) built 17 Oct 2026; jumps, vaults and casts not yet.** Needs Phase 1 (a host never feels the
+Part of `online-roadmap.md`. Written 11 Oct 2026. **Steps 1 (walking) and 2 (jumps and vaults) built 17 Oct 2026; casts not yet.** Needs Phase 1 (a host never feels the
 delay, so this can only be judged against a dedicated server).
 
 ## As built
@@ -36,7 +36,30 @@ screen sees it walk smoothly, the server ends on the same spot.
   one on (`PlayerPet.ShareTrickRpc`, at most one a second, then `OthersPlayTrickRpc`); other screens play
   what they are sent (`PetFollower.LeadsTricks`). Checked: the same three tricks within 0.1 s on both
   screens.
-- **Not done in step 1:** the network-simulator runs at 60 / 150 / 250 ms. Adding the simulator to a
+- **Step 2, jumps and vaults (17 Oct 2026, same branch).** Tested by the owner against the measure server.
+  - **Jump:** the owner's game starts its jump on the press (`PlayerJumpMotor.BeginOwnJump`): the crouch at once,
+    held at its bottom (`PlayerAnimancerMotor.HoldWarpedJump`) until the server's body has risen 3 cm, at most
+    0.25 s; the server's start only corrects the landing, its refusal calls the jump off. Owner's pick: mask the
+    short hold with an effect, so the crouch plays a **jump charge** on every screen (option C, the CFXR electric
+    crackle at the feet with its glow dome and light taken down, `PFX_Jump_Charge`) and a subtle squash; the
+    take-off a subtle stretch, and on the jumper's own screen a small camera kick and a faint vignette pulse
+    (`IGameFeelSink.JumpCharge`, `MMF_ActorSquash` on the hit-reaction spring, **Krytical Nova ▸ GameFeel ▸ Rebuild
+    Jump Feel**).
+  - **Vault:** the owner's walk goes to the same take-off point the server will vault from
+    (`PlayerVaultMotor.WouldVault`, the server's check with nothing armed). Every screen starts the vault when the
+    body it shows reaches the server's take-off point (sent with the vault, at most 0.35 s), so it no longer starts
+    a step early; the landing counts once the body is within 0.35 m flat or past it, and the owner's own walk then
+    carries the run on from the landing (no slide in the landing pose).
+  - **Stops:** the server and the owner's game both finish exactly on the destination point (`UpdateArrival`), so
+    the hand-over has nothing to ease; the stillness of the server's body is measured against where it last stood,
+    and the agent stays on through the ease. The animation's measured speed starts afresh after the owner's walk
+    (it had read the walk's start as a run beginning: a step and a dust puff after every stop). The run-stop clip
+    ends at 0.58 s instead of 0.95 s, before its balance step (owner's pick).
+  - `PlayerMoveAnticipation.TraceOn` writes a Console line when the owner's walk starts or hands over (Editor only,
+    off by default).
+  - **GM Tools window:** a joined GM's window looked the player up by scanning the scene 64 times a draw, which took
+    the Editor to two frames a second in Play; it now looks once a frame.
+- **Not done in steps 1 and 2:** the network-simulator runs at 60 / 150 / 250 ms. Adding the simulator to a
   running Editor dropped it to one frame a second; it is to be run from a development build instead, or
   judged in the brothers' test from their houses.
 

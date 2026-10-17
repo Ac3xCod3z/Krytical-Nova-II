@@ -97,6 +97,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player critWorldFeel;
         [SerializeField] private MMF_Player runWorldFeel;
         [SerializeField] private MMF_Player jumpWorldFeel;
+        [Tooltip("A jump's crouch, on every client: sparks at the feet and a slight squash.")]
+        [SerializeField] private MMF_Player jumpChargeWorldFeel;
         [SerializeField] private MMF_Player landWorldFeel;
         [Tooltip("Cast / hit bursts for skills the catalog has no entry for.")]
         [SerializeField] private MMF_Player attackCastWorldFeel;
@@ -676,6 +678,12 @@ namespace KryticalNova.GameFeel
             ActorSmear.Find(actor)?.Release(); // the smear kept up through the run fades now
         }
 
+        public void JumpCharge(Transform actor, bool isLocalPlayer)
+        {
+            if (actor == null) return;
+            PlayWorld(jumpChargeWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
+        }
+
         public void JumpTakeoff(Transform actor, bool isLocalPlayer)
         {
             if (actor == null) return;
@@ -1111,6 +1119,11 @@ namespace KryticalNova.GameFeel
                 if (feedbacks[i] is MMF_Smear smear)
                 {
                     smear.Target = target;
+                    continue;
+                }
+                if (feedbacks[i] is MMF_ActorSquash squash)
+                {
+                    squash.Target = target;
                     continue;
                 }
                 if (!(feedbacks[i] is MMF_PooledVfx vfx)) continue;

@@ -31,6 +31,10 @@ namespace KryticalNova.Player
         private const float RemoteStartDelay = 0.1f;
         private const float RemoteLandingGrace = 0.6f;
         private const float RemoteLandingTolerance = 0.05f;
+        // The player's own jump starts on the press and holds its crouch until the server's body leaves the ground
+        // (online phase 3): at most this long, and "left" means the feet this much higher than at the press.
+        private const float OwnTakeoffHoldMax = 0.25f;
+        private const float OwnTakeoffRise = 0.03f;
         [SerializeField] private JumpMotionData motionData;
         [SerializeField] private PlayerJumpPresentation presentation;
 
@@ -84,6 +88,10 @@ namespace KryticalNova.Player
         private float remoteTakeoffTime;
         private float remoteApexTime;
         private float remoteLandTime;
+        // This player's own game started the jump on the press: the server's start is still on its way.
+        private bool ownJumpPending;
+        // The take-off waits for the server's body to leave the ground.
+        private bool ownTakeoffWaits;
 
         public bool IsBusy { get; private set; }
         /// <summary>A jump may start now: none is in the air and the last landing has settled. Where the game is decided.</summary>
@@ -121,6 +129,7 @@ namespace KryticalNova.Player
             if (!HasAuthority)
             {
                 RequestJumpServerRpc(clickedPoint, obstacleLayers.value, modelForwardOffset);
+                BeginOwnJump();
                 return true;
             }
 
@@ -138,7 +147,26 @@ namespace KryticalNova.Player
         [Rpc(SendTo.Owner)]
         private void JumpRejectedRpc(string reason)
         {
+            // The jump this game started on the press is called off.
+            if (ownJumpPending) EndRemoteJump(false);
             if (!string.IsNullOrEmpty(reason)) Message?.Invoke(reason);
+        }
+
+        /// <summary>
+        /// The player's own game, on the press (online phase 3): the jump it has just asked for is shown at once, the
+        /// crouch now and the take-off when the server's body leaves the ground, instead of a round trip later. The
+        /// server still decides: its start only corrects the landing, its refusal calls the jump off.
+        /// </summary>
+        private void BeginOwnJump()
+        {
+            if (!IsSpawned || !IsOwner || IsServer) return;
+            Vector3 landing = landingFeet;
+            float peak = peakHeight;
+            BeginRemoteJump(landing, peak);
+            if (!remoteJump) return;
+            remoteClock = 0f; // no wait for a body coming in: the crouch starts now
+            ownJumpPending = true;
+            ownTakeoffWaits = true;
         }
 
         /// <summary>Starts the planned jump where it is simulated and shows it on every other machine.</summary>
@@ -154,6 +182,20 @@ namespace KryticalNova.Player
         private void JumpStartedClientRpc(Vector3 landing, float peak)
         {
             if (IsServer) return; // the server is already running it
+            if (ownJumpPending && remoteJump)
+            {
+                // Already shown since the press: the server's plan only corrects where it lands.
+                ownJumpPending = false;
+                landingFeet = landing;
+                if (!remoteWarped && !Mathf.Approximately(peak, peakHeight))
+                {
+                    peakHeight = peak;
+                    PlanParabola();
+                    remoteApexTime = remoteTakeoffTime + ascentTime;
+                    remoteLandTime = remoteTakeoffTime + flightTime;
+                }
+                return;
+            }
             BeginRemoteJump(landing, peak);
         }
 
@@ -432,6 +474,23 @@ namespace KryticalNova.Player
             if (!remoteAirborne)
             {
                 if (remoteClock < remoteTakeoffTime) return;
+                if (ownTakeoffWaits)
+                {
+                    // The player's own jump: the crouch holds until the server's body leaves the ground.
+                    float feetY = transform.position.y - (agent != null ? agent.baseOffset : 0f);
+                    bool left = feetY > startFeet.y + OwnTakeoffRise;
+                    if (!left && remoteClock < remoteTakeoffTime + OwnTakeoffHoldMax)
+                    {
+                        if (remoteWarped) presentation.HoldWarpedJump(true);
+                        return;
+                    }
+                    ownTakeoffWaits = false;
+                    if (remoteWarped) presentation.HoldWarpedJump(false);
+                    // The flight's clock runs from the take-off the body has just made.
+                    float held = remoteClock - remoteTakeoffTime;
+                    remoteApexTime += held;
+                    remoteLandTime += held;
+                }
                 remoteAirborne = true;
                 if (remoteWarped) presentation.WarpedTakeOff();
                 else presentation.TakeOff();
@@ -454,6 +513,9 @@ namespace KryticalNova.Player
         {
             if (!remoteJump) return;
             bool shown = remoteStarted;
+            if (ownTakeoffWaits && remoteWarped && presentation != null) presentation.HoldWarpedJump(false);
+            ownJumpPending = false;
+            ownTakeoffWaits = false;
             remoteJump = false;
             remoteStarted = false;
             remoteAirborne = false;

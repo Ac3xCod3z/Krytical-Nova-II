@@ -180,6 +180,7 @@ namespace KryticalNova.Player
         private AnimancerState warpedJumpState;
         private bool warpedJumpActive;
         private float warpedJumpTime;
+        private bool warpedJumpHeld;
         private int warpedJumpClipIndex;
         private Vector3 lastPosition;
         private float currentSpeed;
@@ -384,6 +385,10 @@ namespace KryticalNova.Player
             if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
             {
                 currentSpeed = agent.velocity.magnitude;
+                // The measured history stands still while the agent drives the body (the player's own walk, online
+                // phase 3): kept, its oldest sample would be where the body was before that walk, and the first
+                // measurement after it would read metres of travel as a run starting.
+                speedCount = 0;
             }
             else
             {
@@ -865,13 +870,25 @@ namespace KryticalNova.Player
             currentState = CharacterAnimState.Jumping;
             stopState = null;
             warpedJumpActive = true;
+            warpedJumpHeld = false;
             warpedJumpTime = 0f;
             warpedJumpClipIndex = -1;
             AdvanceWarpedJump();
         }
 
+        /// <summary>
+        /// Holds the warped jump's pose where it is (the bottom of the crouch) or lets it run on. The player's own game
+        /// starts its jump on the press and holds the crouch until the server's body leaves the ground (online phase 3).
+        /// </summary>
+        public void HoldWarpedJump(bool hold)
+        {
+            warpedJumpHeld = hold && warpedJumpActive;
+            if (warpedJumpState != null) warpedJumpState.Speed = warpedJumpHeld ? 0f : 1f;
+        }
+
         private void AdvanceWarpedJump()
         {
+            if (warpedJumpHeld) return;
             if (warpedJumpClipIndex >= 0) warpedJumpTime += Time.deltaTime;
             while (warpedJumpClipIndex + 1 < warpedJumpClips.Length
                    && warpedJumpTime >= warpedJumpClipStarts[warpedJumpClipIndex + 1])

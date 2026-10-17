@@ -30,6 +30,11 @@ namespace KryticalNova.Player
         [Tooltip("Seconds the server's positions are shown behind (NetworkTransform's interpolation), added to the round trip.")]
         [SerializeField, Min(0f)] private float interpolationSeconds = 0.15f;
 
+        // Metres: the server's body has moved off when it is this far from where it last stood; the two are together
+        // when this close.
+        private const float StillDistance = 0.04f;
+        private const float TogetherDistance = 0.3f;
+
         private NavMeshAgent agent;
         private Quaternion leadRotation;
         private float walkEndedAt = -1f;
@@ -38,15 +43,37 @@ namespace KryticalNova.Player
         private Vector3 easeFromPosition;
         private Quaternion easeFromRotation;
         private float easeClock = -1f;
+        // The walk has settled: the agent stays on (standing still, so the animation stays at rest) until the ease
+        // onto the server's position is over, then is switched off.
+        private bool agentOffAfterEase;
 
         /// <summary>True while this player's own game leads its character (since a click, until it has settled).</summary>
         public bool Leading { get; private set; }
+
+        /// <summary>
+        /// Where NetworkTransform last put the body (the server's position as shown here), before this player's own walk
+        /// was drawn over it. The body itself when nothing leads.
+        /// </summary>
+        public Vector3 ServerShown => Leading ? serverShownRoot : transform.position;
+        private Vector3 serverShownRoot;
 
         /// <summary>The way this game's walk faces (its own turning: NetworkTransform overwrites the body's every frame).</summary>
         public Quaternion LeadRotation
         {
             get => leadRotation;
             set => leadRotation = value;
+        }
+
+        /// <summary>
+        /// Editor only, off unless switched on for a test: one line in the Console when the player's own walk starts or ends and why.
+        /// Written on those moments only, never a frame.
+        /// </summary>
+        public static bool TraceOn = false;
+
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        public static void Trace(Object context, string line)
+        {
+            if (TraceOn) Debug.Log($"[Lead] {Time.time:0.00} {line}", context);
         }
 
         private void Awake()
@@ -56,8 +83,9 @@ namespace KryticalNova.Player
 
         public override void OnNetworkDespawn()
         {
-            if (Leading && agent != null) agent.updatePosition = true;
+            if ((Leading || agentOffAfterEase) && agent != null) agent.updatePosition = true;
             Leading = false;
+            agentOffAfterEase = false;
             easeClock = -1f;
             base.OnNetworkDespawn();
         }
@@ -79,6 +107,7 @@ namespace KryticalNova.Player
             Leading = true;
             walkEndedAt = -1f;
             easeClock = -1f;
+            agentOffAfterEase = false;
         }
 
         /// <summary>
@@ -88,6 +117,12 @@ namespace KryticalNova.Player
         /// </summary>
         public void StopLeading()
         {
+            if (Leading) Trace(this, "stopped (refused, a jump or vault, or the body is held)");
+            StopLeading(false);
+        }
+
+        private void StopLeading(bool settled)
+        {
             if (!Leading) return;
             Leading = false;
             easeFromPosition = transform.position;
@@ -95,6 +130,16 @@ namespace KryticalNova.Player
             easeClock = 0f;
             if (agent == null) return;
             if (agent.isActiveAndEnabled && agent.isOnNavMesh) agent.ResetPath();
+            // Settled, both standing: the agent stands on through the ease, so the body's few centimetres of easing
+            // are not read as a step by the animation. Anything else (the server's body is on the move): off now.
+            if (settled && agent.isActiveAndEnabled) { agentOffAfterEase = true; return; }
+            SwitchAgentOff();
+        }
+
+        private void SwitchAgentOff()
+        {
+            agentOffAfterEase = false;
+            if (agent == null) return;
             agent.updatePosition = true;
             if (IsSpawned && IsOwner && !IsServer) agent.enabled = false;
         }
@@ -112,10 +157,13 @@ namespace KryticalNova.Player
         {
             if (agent == null || !agent.isActiveAndEnabled) { StopLeading(); EaseOntoServer(); return; }
             Vector3 serverShown = transform.position;
+            serverShownRoot = serverShown;
             Vector3 mine = agent.nextPosition;
 
-            // How long the server's body has stood where it stands.
-            if ((serverShown - lastServerShown).sqrMagnitude > 0.0004f)
+            // How long the server's body has stood where it stands: measured against where it stood when it last
+            // moved off (a few centimetres), never frame to frame (at a high frame rate a slowing walk moves less
+            // than that between two frames).
+            if ((serverShown - lastServerShown).sqrMagnitude > StillDistance * StillDistance)
             {
                 lastServerShown = serverShown;
                 serverStillSince = Time.time;
@@ -128,17 +176,19 @@ namespace KryticalNova.Player
             // Further apart than the server's delay explains: the server's route is another one.
             float behind = agent.speed * ((float)RoundTripSeconds() + interpolationSeconds);
             bool apart = (mine - serverShown).magnitude > snapDistance + behind;
-            // Both have stopped: the server's word is taken (eased) and the walk is over.
+            // Both have stopped where the other is: the server's word is taken (eased) and the walk is over.
+            bool together = (mine - serverShown).magnitude <= TogetherDistance;
             bool settled = walkEndedAt >= 0f
-                && (Time.time - serverStillSince >= restSeconds || Time.time - walkEndedAt >= settleSeconds);
+                && ((together && Time.time - serverStillSince >= restSeconds) || Time.time - walkEndedAt >= settleSeconds);
 
             // Eased from where this body was shown, onto where the server has it.
             if (apart || settled)
             {
+                Trace(this, $"hand-over: {(apart ? "apart" : "settled")}, {(mine - serverShown).magnitude:0.00} m from the server, walk ended {(walkEndedAt >= 0f ? Time.time - walkEndedAt : -1f):0.00} s ago");
                 Vector3 server = serverShown;
                 Quaternion serverFacing = transform.rotation;
                 transform.SetPositionAndRotation(mine, leadRotation);
-                StopLeading();
+                StopLeading(settled && !apart);
                 transform.SetPositionAndRotation(server, serverFacing);
                 EaseOntoServer();
                 return;
@@ -151,7 +201,12 @@ namespace KryticalNova.Player
         {
             easeClock += Time.deltaTime;
             float t = Mathf.Clamp01(easeClock / easeSeconds);
-            if (t >= 1f) { easeClock = -1f; return; } // NetworkTransform's position stands as written
+            if (t >= 1f)
+            {
+                easeClock = -1f; // NetworkTransform's position stands as written
+                if (agentOffAfterEase) SwitchAgentOff();
+                return;
+            }
             float smooth = t * t * (3f - 2f * t);
             transform.SetPositionAndRotation(Vector3.Lerp(easeFromPosition, transform.position, smooth),
                 Quaternion.Slerp(easeFromRotation, transform.rotation, smooth));

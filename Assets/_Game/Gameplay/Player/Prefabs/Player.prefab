@@ -625,7 +625,7 @@ MonoBehaviour:
   drawnWalkStopClip: {fileID: 7400000, guid: 6443b6f2ac8220d459b5d9145787c623, type: 3}
   stopFadeDuration: 0.12
   stopToIdleFadeDuration: 0.3
-  runStopWindow: {x: 0.45, y: 0.95}
+  runStopWindow: {x: 0.45, y: 0.58}
   walkStopWindow: {x: 0, y: 0.52}
   stopPlaybackSpeed: 1.25
   stopFootIK: 1
