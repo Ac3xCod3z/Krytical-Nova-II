@@ -1401,7 +1401,12 @@ namespace KryticalNova.UI
             }
 
             Label descLabel = parts.Description;
-            if (descLabel != null) descLabel.text = skill.description;
+            if (descLabel != null)
+            {
+                // A Stance says how it reaches the Squad, with the Squad's own numbers (owner, 16 Oct 2026).
+                string squad = SquadLine(skill, rank);
+                descLabel.text = string.IsNullOrEmpty(squad) ? skill.description : $"{skill.description}\n{squad}";
+            }
 
             Label valuesLabel = parts.Values;
             if (valuesLabel != null)
@@ -1481,6 +1486,9 @@ namespace KryticalNova.UI
         // What a skill does at a rank, in one line: shared with the Dossier card and the Hotbar hover (SkillKinds).
         private static string DescribeSkillStats(SkillDefinitionSO skill, int rank) => SkillKinds.Describe(skill, rank);
 
+        private string SquadLine(SkillDefinitionSO skill, int rank) => combatSkills == null ? string.Empty
+            : SquadBuffRules.TooltipLine(skill, rank, combatSkills.SquadShareRank, combatSkills.SquadShareRadius);
+
         /// <summary>Rebuilds the buff badges when the set of buffs changes; timers tick in <see cref="RefreshBuffTimers"/>.</summary>
         private void RefreshBuffs()
         {
@@ -1496,7 +1504,7 @@ namespace KryticalNova.UI
                 var buff = buffs[i];
                 var badge = new VisualElement();
                 badge.AddToClassList("buff-badge");
-                badge.tooltip = buff.Skill.displayName;
+                badge.tooltip = buff.FromSquadmate && !string.IsNullOrEmpty(buff.Giver) ? $"{buff.Skill.displayName} (from {buff.Giver})" : buff.Skill.displayName;
 
                 if (buff.Skill.isAbsorptionShield)
                     badge.AddToClassList("shield-badge");
@@ -1745,8 +1753,9 @@ namespace KryticalNova.UI
                 SkillDefinitionSO def = entry.combatSkill;
                 int rank = combatSkills != null ? Mathf.Max(1, combatSkills.GetRank(def)) : 1;
                 string hold = def.IsCharged ? $"Hold {key} to charge" : def.holdToRepeat ? $"Press or hold {key}" : $"Click or press {key}";
+                string squad = SquadLine(def, rank);
                 HudTextTooltip.ShowFor(slot, $"{def.displayName}  ·  Rank {rank}",
-                    $"<b>{SkillKinds.Label(def)}</b>  ·  {SkillKinds.Describe(def, rank)}\n{hold}  ·  Right-click to clear", above: true);
+                    $"<b>{SkillKinds.Label(def)}</b>  ·  {SkillKinds.Describe(def, rank)}{(string.IsNullOrEmpty(squad) ? string.Empty : "\n" + squad)}\n{hold}  ·  Right-click to clear", above: true);
                 return;
             }
             if (entry.itemType == HotbarItemType.Movement)

@@ -22,6 +22,7 @@ namespace KryticalNova.Progression
         private PlayerCharacterProgression progression;
         private PlayerResources resources;
         private PlayerGmState gmState;
+        private CharacterCombatStats combatStats;
         private int runRank;
         private int jumpRank;
         private MovementSkillId selectedSkill;
@@ -34,7 +35,10 @@ namespace KryticalNova.Progression
         public MovementSkillId SelectedSkill => selectedSkill;
         public bool IsRunning => selectedSkill == MovementSkillId.Run && runRank > 0;
         public bool IsJumpSelected => selectedSkill == MovementSkillId.Jump && jumpRank > 0;
-        public float CurrentSpeed => BaseSpeed * (gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f);
+        public float CurrentSpeed => BaseSpeed * StatSpeedMultiplier * (gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f);
+        /// <summary>What the Move Speed stat (Boots, the ranged Stance) multiplies walking and running by.</summary>
+        public float StatSpeedMultiplier => movementSettings == null || combatStats == null ? 1f
+            : movementSettings.StatSpeedMultiplier(combatStats.GetStatValue(StatType.MoveSpeedPercent));
         private float BaseSpeed => movementSettings == null ? 0f : IsRunning && runSkill != null && runSkill.TryGetRank(runRank, out var rank)
             ? Mathf.Max(movementSettings.walkSpeed, rank.runSpeed) : movementSettings.walkSpeed;
 
@@ -46,6 +50,7 @@ namespace KryticalNova.Progression
             progression = GetComponent<PlayerCharacterProgression>();
             resources = GetComponent<PlayerResources>();
             gmState = GetComponent<PlayerGmState>();
+            combatStats = GetComponent<CharacterCombatStats>();
             if (movementSettings == null || runSkill == null || jumpSkill == null
                 || runSkill.skillId != MovementSkillId.Run || jumpSkill.skillId != MovementSkillId.Jump)
             {

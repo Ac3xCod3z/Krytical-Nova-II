@@ -110,6 +110,11 @@ namespace KryticalNova.Progression
             "slot:Lv60Single", "slot:Lv60Multi", "slot:Lv1TwoHit", "slot:Lv30TwoHit", "slot:Lv60TwoHit", "slot:Lv80TwoHit"
         };
 
+        [Header("Squad")]
+        [Tooltip("A buff the caster also gives the Squad members near them, once its rank is high enough (SquadSettings). " +
+                 "The same buff never stacks: given again, it restarts its timer and keeps the higher rank. Set by the class skill builder on every Stance.")]
+        public bool sharesWithSquad;
+
         [Header("Targeting & Execution")]
         public SkillTargetType targetType = SkillTargetType.Self;
         public SkillExecutionType executionType = SkillExecutionType.Instant;

@@ -18,6 +18,7 @@ MonoBehaviour:
   category: 2
   weaponClass: 6
   classSlot: 9
+  sharesWithSquad: 1
   presentationId: LightningFlash
   targetType: 0
   executionType: 0

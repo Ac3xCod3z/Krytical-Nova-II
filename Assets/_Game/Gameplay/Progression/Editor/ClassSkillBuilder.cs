@@ -197,6 +197,8 @@ namespace KryticalNova.EditorTools
                     skill.displayName = seed.names[i];
                     skill.weaponClass = seed.id;
                     skill.classSlot = slot;
+                    // A Stance of rank 20 or more is given to the Squad too (owner, 16 Oct 2026; SquadSettings).
+                    skill.sharesWithSquad = slot == ClassSkillSlot.Stance;
                     EditorUtility.SetDirty(skill);
                     skills[i] = skill;
                 }
