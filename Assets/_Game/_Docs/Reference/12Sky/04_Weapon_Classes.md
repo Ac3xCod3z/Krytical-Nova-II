@@ -221,6 +221,23 @@ Viking + Elven.
 **Clip sets.** Monoblade: Grruzam katana (measured hit timings). Glaive, Harvester, Longaxe, Claymore: Grruzam great-sword, same clip per slot letter, default hit timings. Warbow: Synty Bow Combat (`Stand_Shoot_Reload`, `Stand_Shoot_Leaping` for S8), default hit timings. Carbine, Arc Caster, Servo Claws: the Monoblade's clips as stand-ins.
 
 **Stand-ins still to replace:** gun and unarmed animation sets (so a Sidearm or Servo Claws draw still reaches over the shoulder before the weapons appear in the hands); measured hit moments for the great-sword and bow clips; projectiles, and the cone / volley (S1) and called-in strike (S8) shapes for ranged classes (today ranged skills hit at reach 8–12 with no projectile, and their area skills are centred on the caster); one basic attack combo for every class (the katana combo); weapon grip poses per mesh (tuned on the look template).
+## Two-hit attacks, Redline on the beat and Stances for the Squad (as built, 17 Oct 2026)
+
+- **Two-hit attacks.** 36 skills, four for each class (`Lv1TwoHit`, `Lv30TwoHit`, `Lv60TwoHit`, `Lv80TwoHit`, section 2),
+  made by **Krytical Nova ▸ Progression ▸ Build Two-Hit Skills (all steps)** (`TwoHitSkillsSetup`): the skills, their
+  icons from the icon library, the 18 Skill Chips of the level 60 and 80 ones (ids 9510 to 9527) and the faction HUDs'
+  **T** slot. On the Hotbar they go on **T**; the Kiosk window moved to **J**. Checked in Play as host and client:
+  every class at all four levels lands two hits, a class only casts its own with its weapon in hand, and the level
+  gates hold. T and J pressed on the keyboard: T cast Double Jeopardy (2 of 2 hits), J opened the Kiosk window.
+- **Redline on the beat** (`RedlineRules`; `../../Design/17_music_and_cadence.md`): checked in the Cadence arena. On
+  the beat, a three-hit attack with Redline charged landed three Criticals and spent the charge with the third; half a
+  beat off, the charge went on the first hit; an evaded hit spent it.
+- **Stances for the Squad** (`SquadBuffRules`, `PlayerParty`, `SquadSettings`): a Stance of rank 20 or more is also
+  given to the Squad members within 20 m; the same Stance never stacks (a recast restarts it, keeping the higher rank);
+  a Stance a member gave survives a weapon swap. Checked with two players: reached at 15 m, not at 25 m; the ranged
+  Stance's Move Speed took the receiver from 5 to 6 m/s. Quirk: once a member has refreshed it, the caster's own badge
+  says "from Squadmate".
+
 ## A skill asked for too early walks in and casts (as built, 10 Oct 2026)
 
 An attack skill pressed when it cannot be cast yet is kept, one at a time, and cast the moment it can be (owner, 10 Oct 2026). Single-hit and multi-hit skills alike; the basic attack already walked in by itself.

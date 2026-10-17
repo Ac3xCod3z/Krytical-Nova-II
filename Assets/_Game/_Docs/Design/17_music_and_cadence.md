@@ -77,7 +77,8 @@ deal a little more damage. One cast, then it is gone. Off the beat nothing is lo
   Pressed off the beat, the charge goes on the first hit, as before. A hit of a three-hit attack that the target
   evades spends the charge there and then (on a cast on Cadence the hits after it are plain). Single hits, two-hit
   attacks, area attacks and the automatic combo spend it on the first hit that lands, as before. Redline itself is
-  still a charged skill and earns no Cadence of its own.
+  still a charged skill and earns no Cadence of its own. Checked in Play on 17 Oct 2026 in the test arena: on the
+  beat three Criticals and the charge spent with the third; half a beat off, spent on the first hit.
 - The automatic three-strike combo is not timed by the player and is left alone (owner, 10 Oct 2026).
 
 **Numbers** *(all my picks)*, in `CadenceSettings`:
