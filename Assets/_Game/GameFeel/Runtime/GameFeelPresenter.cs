@@ -56,6 +56,17 @@ namespace KryticalNova.GameFeel
         [Tooltip("The thrown or falling body of that death hits the ground.")]
         [SerializeField] private MMF_Player bodyLandFeel;
         [SerializeField] private MMF_Player respawnFeel;
+        [Header("De-rez: a player killed off the ground (built by GameFeelBuilder.BuildDerez)")]
+        [Tooltip("Copied onto the body and the pet as they de-rez (KryticalNova/Player/Derez).")]
+        [SerializeField] private Material derezMaterial;
+        [Tooltip("At the body, for everyone who sees it: the flash, the crackle and the voxels rising off it.")]
+        [SerializeField] private MMF_Player derezWorldFeel;
+        [Tooltip("The local player was de-rezzed, or de-rezzed someone: a kick of the camera and the sound.")]
+        [SerializeField] private MMF_Player derezFeel;
+        [SerializeField, Min(0f)] private float derezGlitchSeconds = 0.4f;
+        [SerializeField, Min(0.1f)] private float derezSweepSeconds = 1.2f;
+        [Tooltip("How bright the faction's colour burns in the de-rez (HDR).")]
+        [SerializeField, Min(0f)] private float derezGlow = 1.4f;
         [Tooltip("The local player's pet evolved: a bright pulse and a sound.")]
         [SerializeField] private MMF_Player petEvolveFeel;
         [Tooltip("The local player's own attempt at the forge: it worked, it failed, the piece broke.")]
@@ -839,6 +850,56 @@ namespace KryticalNova.GameFeel
             ActorVfx.Find(actor)?.SetAirborne(false, critDeathTrailVfx != null ? critDeathTrailVfx : airborneLoopVfx);
             PlayWorld(critical ? critBodyLandWorldFeel : bodyLandWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
             if (involvesLocalPlayer) Play(bodyLandFeel, actor.position, critical ? 1f : 0.5f);
+        }
+
+        public void Disintegrate(in DeathFeel death)
+        {
+            if (death.VictimIsLocalPlayer) PetChatterDirector.Instance?.Notify(KryticalNova.Pets.PetChatterTrigger.OwnerDied);
+            SpiritReleaser.Instance?.Released(death.Target);
+            if (death.Target != null)
+            {
+                Transform body = death.Target;
+                PlayWorld(derezWorldFeel, ActorAnchor.Feet(body) + Vector3.up, Quaternion.identity, body, tint: DerezTint(body));
+                ActorVfx vfx = ActorVfx.For(body);
+                vfx.SetRunning(false, runLoopVfx);
+                vfx.SetAirborne(false, airborneLoopVfx);
+                Derez derez = Derez.For(body);
+                if (derezMaterial != null) derez.Play(derezMaterial, DerezTint(body), derezGlitchSeconds, derezSweepSeconds);
+                else derez.HideNow();
+            }
+            if (death.VictimIsLocalPlayer || death.KillerIsLocalPlayer)
+            {
+                MMF_Player feel = derezFeel != null ? derezFeel : deathFeel;
+                Transform local = death.VictimIsLocalPlayer ? death.Target : death.Killer;
+                PlayerIdentity identity = local != null ? local.GetComponentInParent<PlayerIdentity>() : null;
+                if (feel != null && identity != null)
+                    foreach (MMF_Feedback feedback in feel.FeedbacksList)
+                        if (feedback is MMF_VariedSound sound) sound.UseFaction((int)identity.Faction);
+                Play(feel, death.Point, 1f);
+            }
+            if (death.KillerIsLocalPlayer)
+            {
+                PlayKillConfirm(death);
+                HitStop(death.Killer, killStopSeconds.x);
+            }
+        }
+
+        public void SetDisintegrated(Transform actor, bool gone)
+        {
+            if (actor == null) return;
+            if (gone) Derez.For(actor).HideNow();
+            else if (actor.TryGetComponent(out Derez derez)) derez.Show(); // only a body that de-rezzed has anything to bring back
+        }
+
+        /// <summary>The dead player's faction colour, burning: the de-rez is theirs.</summary>
+        private Color DerezTint(Transform actor)
+        {
+            var identity = actor != null ? actor.GetComponentInParent<PlayerIdentity>() : null;
+            FactionDefinition faction = identity != null && identity.Database != null && identity.Database.Factions != null
+                ? identity.Database.Factions.Get(identity.Faction) : null;
+            Color colour = faction != null ? faction.accentColor : new Color(0.35f, 0.9f, 1f);
+            colour.a = 1f;
+            return colour * derezGlow;
         }
 
         public void Respawned(Transform actor, bool isLocalPlayer)

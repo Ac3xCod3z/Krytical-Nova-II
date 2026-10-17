@@ -378,6 +378,13 @@ namespace KryticalNova.Player
         private bool Decide(Vector3 point, Vector3 normal, Collider surface, Vector3 fromFeet, bool fromJump, out Plan climb, out string reason)
         {
             climb = default;
+            // A click on a ledge, a sill or an awning of a wall is meant for the wall: its face straight ahead is used.
+            if (settings != null && surface != null && WallRunRules.SurfaceAngle(normal) < settings.minSurfaceAngle
+                && FaceAhead(point, surface, fromFeet, out Vector3 facePoint, out Vector3 faceNormal))
+            {
+                point = facePoint;
+                normal = faceNormal;
+            }
             bool eligible = IsClimbableObject(surface, out ClimbableSurface marker);
             ClimbableKind kind = marker != null ? marker.kind : ClimbableKind.Wall;
             bool stride = fromJump || (movementSkills != null && (movementSkills.IsRunning || movementSkills.IsJumpSelected));
@@ -401,6 +408,31 @@ namespace KryticalNova.Player
             reason = WallRunRules.Reason(verdict, settings);
             return verdict == ClimbVerdict.CanRunUpWall;
         }
+
+        /// <summary>
+        /// The upright face of the same building as <paramref name="surface"/>, straight ahead of the player at chest
+        /// height towards <paramref name="point"/>: what a click on one of its ledges is aimed at.
+        /// </summary>
+        private bool FaceAhead(Vector3 point, Collider surface, Vector3 fromFeet, out Vector3 facePoint, out Vector3 faceNormal)
+        {
+            facePoint = point;
+            faceNormal = Vector3.up;
+            Vector3 flat = point - fromFeet;
+            flat.y = 0f;
+            float distance = flat.magnitude;
+            if (distance < 0.1f) return false;
+            Vector3 origin = fromFeet + Vector3.up * FaceProbeHeight;
+            int count = Physics.RaycastNonAlloc(origin, flat / distance, Hits, distance + 2f, SurfaceMask(), QueryTriggerInteraction.Ignore);
+            if (!Nearest(count, out RaycastHit face)) return false;
+            if (face.collider.transform.root != surface.transform.root) return false; // something else is in the way
+            if (WallRunRules.SurfaceAngle(face.normal) < settings.minSurfaceAngle) return false;
+            facePoint = face.point;
+            faceNormal = face.normal;
+            return true;
+        }
+
+        private const float FaceProbeHeight = 1.2f;
+        private const float FaceGap = 2f; // metres a face may go missing (a window, a door) and still be the same face
 
         /// <summary>Still and solid, not a unit or something used, not a player's own, and on a wall layer or marked.</summary>
         private bool IsClimbableObject(Collider surface, out ClimbableSurface marker)
@@ -459,9 +491,10 @@ namespace KryticalNova.Player
             if (!Physics.Raycast(probe + Vector3.up * 0.5f, Vector3.down, out RaycastHit ground, GroundProbe, GroundMask(), QueryTriggerInteraction.Ignore)) return false;
             Vector3 wallFoot = new Vector3(point.x, ground.point.y, point.z);
 
-            // Up the face until it ends: that is the edge. On the way, how far the face stands out anywhere (a ledge,
-            // a window frame, a balcony): the climb keeps the whole body outside the outermost part.
-            float edge = -1f, outermost = 0f;
+            // Up the face until it ends for good: that is the edge. A window, a door or a vent is a gap in the face, not
+            // its end, so the face may go missing for a little and carry on. On the way, how far the face stands out
+            // anywhere (a ledge, a window frame, a balcony): the climb keeps the whole body outside the outermost part.
+            float edge = -1f, outermost = 0f, lastFace = 0f;
             int mask = SurfaceMask();
             for (float h = WallScanStep; h <= settings.maxClimbHeight + WallScanStep; h += WallScanStep)
             {
@@ -469,11 +502,15 @@ namespace KryticalNova.Player
                 if (Physics.Raycast(origin, -n, out RaycastHit face, WallScanLength, mask, QueryTriggerInteraction.Ignore))
                 {
                     outermost = Mathf.Max(outermost, WallScanOut - face.distance);
+                    lastFace = h;
                     continue;
                 }
-                edge = h;
+                if (h - lastFace < FaceGap) continue; // an opening in the face; it may carry on above
+                edge = lastFace + WallScanStep;
                 break;
             }
+            // Ran out of reach while the face was still there, or only in a gap: the face's last height decides.
+            if (edge < 0f && lastFace < settings.maxClimbHeight - FaceGap) edge = lastFace + WallScanStep;
             climb.Height = edge < 0f ? settings.maxClimbHeight + 1f : edge;
 
             // The climb's line: the body's round plus clearance off the outermost part of the face.
@@ -879,7 +916,7 @@ namespace KryticalNova.Player
         /// Killed on a wall or in a tree (or on the way up): let go of the body, pushed out from the surface, so it
         /// falls clear of it. The death motor brings it down from there.
         /// </summary>
-        public void ReleaseForDeath()
+        public void ReleaseForDeath(bool pushOff = true)
         {
             armed = false;
             catchPending = false;
@@ -887,7 +924,7 @@ namespace KryticalNova.Player
             routeActive = false;
             StopWarp();
             Vector3 outFrom = new Vector3(plan.Normal.x, 0f, plan.Normal.z);
-            if (outFrom.sqrMagnitude > 1e-4f && settings != null)
+            if (pushOff && outFrom.sqrMagnitude > 1e-4f && settings != null)
                 transform.position += outFrom.normalized * settings.deathPushOff;
             transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f); // upright again off the lean
             phase = WallRunPhase.None;
