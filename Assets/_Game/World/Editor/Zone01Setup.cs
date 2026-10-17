@@ -142,6 +142,7 @@ namespace KryticalNova.EditorTools
             EnsureZoneUi();
             EnsureTradeZone();
             AddInteractableToPlayerRaycasts();
+            TownRoofsBuilder.Apply(out _, out _); // roofs solid where drawn, nothing walkable indoors
             BakeNavMesh();
             MinimapBaker.Bake();
             UpdateBuildSettings();
