@@ -67,13 +67,13 @@ namespace KryticalNova.Tests
         public void ValuesOutOfRangeAreMadeSafe()
         {
             File.WriteAllText(Path.Combine(serverFolder, ServerLaunchOptions.FileName),
-                "{ \"port\": 99999, \"maxPlayers\": 0, \"backupHours\": -3, \"backupsKept\": 0, \"connectionMode\": \"relay\" }");
+                "{ \"port\": 99999, \"maxPlayers\": 0, \"backupHours\": -3, \"backupsKept\": 0, \"connectionMode\": \" Smoke-Signals \" }");
             ServerLaunchOptions options = ServerLaunchOptions.Load(serverFolder, new[] { "Server.exe", "-maxPlayers", "lots" }, out _);
             Assert.AreEqual(7777, options.port);
             Assert.AreEqual(1, options.maxPlayers);
             Assert.AreEqual(0f, options.backupHours);
             Assert.AreEqual(1, options.backupsKept);
-            Assert.AreEqual("direct", options.connectionMode, "relay is not built yet");
+            Assert.AreEqual("direct", options.connectionMode, "only direct and relay exist (online step 5)");
         }
 
         [Test]

@@ -3,7 +3,7 @@
 A running guide to the game's own server, in plain words. It says what works **today**, and it is updated after
 every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 
-**Last updated:** 16 Oct 2026, after step 4 (the server list, Enter joins your server, the same build only).
+**Last updated:** 16 Oct 2026, after step 5 (players outside the house: Direct or Relay).
 
 ## In one minute
 
@@ -32,7 +32,7 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | 3. The control page | A web page on your home network to see and run the server, from a phone too | Built 16 Oct 2026 |
 | Game Masters | Three GMs by password, set on the control page; GM commands, GM chat and a [GM] tag for them only | Built 16 Oct 2026 |
 | 4. A server list in the game | Enter joins your server; a Servers window; only the same build may join | Built 16 Oct 2026 |
-| 5. Joining from outside your house | Unity Relay, and port forwarding as a fallback | Not yet |
+| 5. Joining from outside your house | Direct (port forwarding) or Unity Relay, switched on the control page; the list keeps itself current | Built 16 Oct 2026 |
 | 6. The move to the old PC | A zip, an install step and a step-by-step guide | Not yet |
 | 7. Measuring | How many players and Hostiles one PC carries | Not yet |
 
@@ -98,8 +98,12 @@ Restoring one file from Norton's history only allows that exact file: the next b
 exclusion is the one that lasts. The old PC needs the same. (For players, the cure is a code-signing certificate before
 the beta; see the Steam and launcher plan.)
 
-**Windows Firewall** asks whether the server may use the network the first time it starts: allow it on **private**
-networks. Without that, other PCs and your phone cannot reach the game or the control page.
+**The firewall is Norton's** on this PC (Norton 360's Smart Firewall takes over from Windows Firewall). Give the server
+a rule once: Norton 360 ▸ **Settings** ▸ **Firewall** ▸ **Program Rules** ▸ **Add**, pick
+`Builds\Server\Windows\KryticalNovaServer\KryticalNovaServer.exe`, set it to **Allow**, **Apply**. Without it, players
+from outside the house (and other PCs) may not reach the game or the control page. If players cannot get in after a
+server rebuild, check this rule first: Norton may ask again about a program whose file changed. On a PC without Norton
+(the old PC, perhaps), **Windows Firewall** asks the first time the server starts: allow it on **private** networks.
 
 ## 3. The control page
 
@@ -162,7 +166,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `maxPlayers` | 100 | Players at once. One more is sent back with "The server is full". |
 | `saveFolder` | empty | Where saves go. Empty means `KryticalNovaServer-Save` beside the server's folder. A path without a drive letter is counted from the server's folder. |
 | `map` | Zone01_StarterTown | The map the server opens with. A name the build does not have falls back to Zone01. |
-| `connectionMode` | direct | `direct`: players connect to this PC's address. `relay` comes in step 5. |
+| `connectionMode` | direct | `direct`: players come to this PC's address through the router's forwarded ports. `relay`: through Unity Relay, no router work. Switch it on the control page (How players reach it). |
 | `pagePort` | 8090 | The control page's port. 0 switches the page off. |
 | `pagePassword` | made for you | The control page's password. Only ever in this file. Empty makes a new one at the next start. |
 | `backupHours` | 6 | Hours between backups. 0 backs up only at start and stop. |
@@ -258,8 +262,36 @@ within a few minutes. No new build is needed.
 PUBLISH LIST needs Unity's command-line tool on the PC that runs the server, logged in once, as for releases
 (Release Guide, section 6): on this PC it already is. On the old PC (step 6) the install step will do it.
 
-Your brothers reach your server from outside the house in step 5, through the forwarded **game port (7777) and status
-port (7778)**. Until then the list works inside the house: use the PC's home address (the control page shows it).
+Your brothers reach your server from outside the house as the next section says. For your own server, press **This
+server** in the add form: its address becomes **auto**, and the server fills in its own internet address (and its Relay
+code in Relay mode) every time the list goes out.
+
+### Players outside your house (step 5): Direct or Relay
+
+The control page's **How players reach it** panel shows the mode and switches it (**Switch to Relay** / **Switch to
+Direct**). A switch saves everyone and restarts the server after the seconds in the Restart box; the list then goes out
+again by itself.
+
+| Mode | How players get in | What it needs | In the Servers window |
+| --- | --- | --- | --- |
+| **Direct** (normal) | Straight to this PC's internet address | The router forwards **UDP 7777 and 7778** to this PC, and Norton allows the server (above) | ONLINE, players and ms |
+| **Relay** (backup) | Through Unity Relay with a join code; your address stays hidden | Nothing on the router | RELAY (players and ms show once in) |
+
+Nobody types an address or a code: the server looks up this PC's internet address when it starts and every ten
+minutes, and when the address or the Relay code changed it publishes the list again by itself (the panel says when it
+last did). Relay helps when the router loses its forwarding or forwarding stops working; it does **not** help when
+Spectrum's internet itself is down, because then nothing reaches the PC at all. If Relay cannot be reached when the
+server starts, it asks again every 30 seconds; if the link to Relay drops while players are on, the server saves
+everyone and restarts for a new place.
+
+**Your own PC** always joins and asks your server on the PC itself (a router may not loop its own address back), in
+either mode.
+
+**The router (Spectrum, done 16 Oct 2026).** In the **My Spectrum** app: **Services** ▸ your router ▸ **Advanced
+Settings** ▸ **Port Forwarding**; pick this PC (it shows as **Windows**, 192.168.1.73), switch on **Reserve IP
+Address**, then **Add Port Assignment** twice: UDP 7777 to 7777 ("the game") and UDP 7778 to 7778 ("the servers window
+status"). Turning the reservation off deletes the assignments. UPnP stays off: it is not needed, and it made the
+internet unstable here. Never forward the control page's port (8090).
 
 **From the F1 panel (testing):** press **F1** for the network panel, type the server's address in **IP** and its port
 in **Port**, and press **JOIN**. The control page shows both under "How to connect".
@@ -268,7 +300,7 @@ in **Port**, and press **JOIN**. The control page shows both under "How to conne
 | --- | --- |
 | this same PC | `127.0.0.1` |
 | another PC in the house | that PC's address, like `192.168.1.20` (the control page shows it; or on that PC open Command Prompt, type `ipconfig`, read "IPv4 Address") |
-| outside your house | step 5 (Relay or port forwarding), not yet |
+| outside your house | the server's internet address (the control page shows it); easier: the Servers window |
 
 **From the Editor, for tests:** put a file `Library/KryticalNova.TestSession` in the project with these three lines,
 and Play joins the server instead of hosting:
@@ -406,7 +438,6 @@ Each comes with the same two ways out as the game menu (character select or exit
 
 ## 12. What comes next
 
-- **Step 5:** joining from outside the house, through Unity Relay, with port forwarding as the fallback.
 - **Step 6:** the zip, an install step (firewall rules, the Norton note) and moving it to the old PC by external SSD.
 - **Step 7:** measuring how much one PC carries.
 
@@ -432,6 +463,8 @@ Each comes with the same two ways out as the game menu (character select or exit
 | `JoinFlow` | `Networking/Runtime` | Enter's server; the world joins it under the loading screen (`NetworkConnectionManager.JoinChosenServer`) and says how it went. |
 | `ServerStatusResponder` | `Networking/Runtime/Server` | Answers on the status port (never more bytes than asked, four a second per address). Server build only. |
 | `LocalServer` | `Networking/Runtime` | START MY SERVER: finds your server's folder (the project's Builds, or `my-server.txt`), starts it minimized, and for now stops it with the game through its control page (`StopWithGame`). |
+| `ServerReach` | `Networking/Runtime/Server` | Step 5: this PC's internet address (looked up at start and every 10 minutes), the Relay code, the list published by itself when either changed (also PUBLISH LIST). Server build only. |
+| `NetworkConnectionManager.StartRelayServer`, `PrepareRelayJoin` | `Networking/Runtime` | Relay mode: the server's place on Unity Relay (retries every 30 s, restarts when the link drops); a game joining with the code. |
 | `MenuServers`, `JoinFlowScreens` | `UI/Runtime/Menus` | The Servers window (in the menus' Settings document, so it wears the skin), the loading hold and the way back on failure. |
 | `GmConsoleGate` | `Tools/Debug` | F2: the host runs commands itself; a joined player gets the password prompt, then their lines go to the server. |
 | `ServerCommands` | `Tools/Debug` | `gm.kick`, `gm.restart`, `gm.shutdown`, `gm.backup`. |
@@ -460,3 +493,6 @@ Things learned the hard way:
   control page and published by the server, the status port, the same build only (connection approval).
 - 16 Oct 2026: START MY SERVER: the game starts your own server (minimized) when it finds it off and joins it; for now
   the server stops with the game; `my-server.txt` beside an installed game; `Start Server.bat --close`.
+- 16 Oct 2026: step 5: Direct or Relay, switched on the control page; the list entry `auto` is this server, which fills
+  in its internet address and Relay code and publishes the list by itself; your own PC joins on itself; the Spectrum
+  port forwarding and the Norton firewall rule.

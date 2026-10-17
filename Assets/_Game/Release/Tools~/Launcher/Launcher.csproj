@@ -13,6 +13,9 @@
     <Company>Ac3x Animus Labs</Company>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <DebugType>none</DebugType>
+    <!-- The owner's launcher icon (16 Oct 2026), made from Pictures/Screenshots/Logos & covertitle art/LauncherIcon:
+         bitmaps 16 to 128 px and a 256 px PNG, so Explorer, the taskbar and the window's own Icon all read it. -->
+    <ApplicationIcon>Launcher.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

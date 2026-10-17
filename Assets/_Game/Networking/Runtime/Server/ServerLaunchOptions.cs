@@ -29,7 +29,7 @@ namespace KryticalNova.Networking
         public string saveFolder = "";
         [Tooltip("The map the server opens with (a scene in the build).")]
         public string map = "Zone01_StarterTown";
-        [Tooltip("direct: players connect to this PC's address and port (port forwarding). relay: through Unity Relay (not built yet).")]
+        [Tooltip("direct: players connect to this PC's address and port (port forwarding). relay: through Unity Relay (no router work; a join code in the server list). Switched on the control page.")]
         public string connectionMode = "direct";
         [Tooltip("The control page's port, on the home network only. 0 switches the page off.")]
         public int pagePort = 8090;
@@ -171,7 +171,20 @@ namespace KryticalNova.Networking
             if (string.IsNullOrWhiteSpace(serverName)) serverName = "Krytical Nova Server";
             if (string.IsNullOrWhiteSpace(map)) map = "Zone01_StarterTown";
             connectionMode = string.IsNullOrWhiteSpace(connectionMode) ? "direct" : connectionMode.Trim().ToLowerInvariant();
-            if (connectionMode != "direct") { notes.Add($"connection mode \"{connectionMode}\" is not built yet: direct"); connectionMode = "direct"; }
+            if (connectionMode != Direct && connectionMode != Relay) { notes.Add($"connection mode \"{connectionMode}\" is not one of direct, relay: direct"); connectionMode = Direct; }
+        }
+
+        public const string Direct = "direct";
+        public const string Relay = "relay";
+
+        /// <summary>True in Relay mode: players come through Unity Relay with a join code instead of to this PC's port.</summary>
+        public bool UsesRelay => connectionMode == Relay;
+
+        /// <summary>Writes the connection mode into the settings file; it takes effect when the server starts again.</summary>
+        public bool SaveConnectionMode(string mode, out string error)
+        {
+            string chosen = mode == Relay ? Relay : Direct;
+            return SaveToFile(onDisk => onDisk.connectionMode = chosen, "connection mode", out error);
         }
 
         private static int Int(string value, int fallback, string key, List<string> notes)

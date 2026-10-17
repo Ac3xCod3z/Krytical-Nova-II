@@ -8,16 +8,64 @@ namespace KryticalNova.Networking
     [Serializable]
     public sealed class ServerListing
     {
+        /// <summary>The address the owner gives a list entry for the server that publishes the list (online step 5): it
+        /// fills in its own public address, and its Relay code in Relay mode, each time it publishes.</summary>
+        public const string AutoAddress = "auto";
+
         public string name = "";
         public string address = "";
         public int port = 7777;
         [Tooltip("Where the server answers \"how are you?\" (players, build). 0: the game port + 1.")]
         public int statusPort;
+        [Tooltip("Set by a server in Relay mode: the join code games use to reach it through Unity Relay. Empty: joined directly.")]
+        public string relay = "";
+        [Tooltip("Set by the server for its own entry: which PC runs it (ThisMachine.Id), so that PC joins and starts it locally.")]
+        public string machine = "";
 
         public int StatusPort => statusPort > 0 ? statusPort : port + 1;
-        public string Key => (address ?? "").Trim().ToLowerInvariant() + ":" + port;
+        public bool IsAuto => string.Equals((address ?? "").Trim(), AutoAddress, StringComparison.OrdinalIgnoreCase);
+        public bool ViaRelay => !string.IsNullOrEmpty(relay);
+        /// <summary>True when this PC runs the server: it is asked and joined on this PC itself.</summary>
+        public bool OnThisMachine => !string.IsNullOrEmpty(machine) && machine == ThisMachine.Id;
+        /// <summary>Stays the same when the server's public address changes, so LAST PLAYED keeps pointing at it.</summary>
+        public string Key => !string.IsNullOrEmpty(machine) ? "pc:" + machine + ":" + port : (address ?? "").Trim().ToLowerInvariant() + ":" + port;
 
-        public ServerListing Copy() => new ServerListing { name = name, address = address, port = port, statusPort = statusPort };
+        public ServerListing Copy() => new ServerListing { name = name, address = address, port = port, statusPort = statusPort, relay = relay, machine = machine };
+
+        /// <summary>A Relay join code as Unity hands them out: a few letters and digits.</summary>
+        public static bool IsRelayCode(string code)
+        {
+            if (string.IsNullOrEmpty(code) || code.Length > 12) return false;
+            foreach (char c in code)
+                if (!(c < 128 && char.IsLetterOrDigit(c))) return false;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// This PC, as a short fingerprint of its name (the name itself is never published). A server puts it on its own
+    /// list entry; a game on the same PC then asks and joins it on this PC itself, where the router's public address
+    /// may not loop back.
+    /// </summary>
+    public static class ThisMachine
+    {
+        private static string id;
+
+        public static string Id
+        {
+            get
+            {
+                if (id != null) return id;
+                using (var sha = System.Security.Cryptography.SHA256.Create())
+                {
+                    byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes("KryticalNova|" + Environment.MachineName.ToUpperInvariant()));
+                    var hex = new StringBuilder(12);
+                    for (int i = 0; i < 6; i++) hex.Append(hash[i].ToString("x2"));
+                    id = hex.ToString();
+                }
+                return id;
+            }
+        }
     }
 
     /// <summary>
@@ -89,6 +137,7 @@ namespace KryticalNova.Networking
             public string build = "";
             public int players;
             public int max;
+            public string relay = ""; // the Relay join code in Relay mode: newer than the published list's
         }
 
         public static byte[] Request()
@@ -105,7 +154,7 @@ namespace KryticalNova.Networking
         public static byte[] Reply(Status status)
         {
             byte[] reply = Encoding.UTF8.GetBytes(Answer + JsonUtility.ToJson(status));
-            return reply.Length <= RequestLength ? reply : Encoding.UTF8.GetBytes(Answer + JsonUtility.ToJson(new Status { build = status.build, players = status.players, max = status.max }));
+            return reply.Length <= RequestLength ? reply : Encoding.UTF8.GetBytes(Answer + JsonUtility.ToJson(new Status { build = status.build, players = status.players, max = status.max, relay = status.relay }));
         }
 
         public static Status ReadReply(byte[] data, int length)
