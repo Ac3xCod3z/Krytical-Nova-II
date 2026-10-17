@@ -18,12 +18,16 @@ MonoBehaviour:
   rotation:
   - item: {fileID: 11400000, guid: 2f0df2b84dbe23041a27da17560b99d9, type: 2}
     price: 1500
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: 739cc380a5e48144c87a73300ad0ff18, type: 2}
     price: 1500
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: 477b7ddd279719f479264bfa6bd33aea, type: 2}
     price: 1500
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: b6c273e030dc0004a8c208af184f50ac, type: 2}
     price: 1500
+    weeklyLimit: 0
   sellsLadderGear: 0
   gearRarity: 0
   gearMinLevel: 1

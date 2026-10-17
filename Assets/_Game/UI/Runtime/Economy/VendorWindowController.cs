@@ -17,7 +17,8 @@ namespace KryticalNova.UI
     /// window is open: right-click or drop an item on the window. Anything Rare or better, a pet and worked gear are
     /// never sold without a notice naming the item and what it would fetch, and a yes.
     /// It sends requests to <see cref="PlayerShopping"/>; the server decides. Prices come from the same rules the
-    /// server uses (<see cref="VendorRules"/>). Closed when the player walks away.
+    /// server uses (<see cref="VendorRules"/>). An item with a weekly limit says how many are left this week, and
+    /// is greyed out once they are bought. Closed when the player walks away.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
@@ -31,6 +32,8 @@ namespace KryticalNova.UI
         private const string BuyPrompt = "vendor-buy";
         private const string SellPrompt = "vendor-sell";
         private const string TooDearClass = "too-dear";
+        private const string SoldOutClass = "sold-out";
+        private const string LeftClass = "vendor-left";
 
         private VisualElement root, window, grid;
         private Label title, credsLabel;
@@ -109,6 +112,8 @@ namespace KryticalNova.UI
             }
 
             Fill();
+            shopping.WeeklyChanged -= OnWeeklyChanged;
+            shopping.WeeklyChanged += OnWeeklyChanged;
             SetOpen(true);
             window.parent?.BringToFront();
             nextRangeCheck = Time.unscaledTime + RangeCheckSeconds;
@@ -132,6 +137,7 @@ namespace KryticalNova.UI
             if (!initialized || !open) return;
             ClientPresentationRegistry.Prompts?.Hide(BuyPrompt);
             ClientPresentationRegistry.Prompts?.Hide(SellPrompt);
+            if (shopping != null) shopping.WeeklyChanged -= OnWeeklyChanged;
             SetOpen(false);
             placement.Close();
             stock = null;
@@ -192,6 +198,11 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ the shelf
 
+        private void OnWeeklyChanged()
+        {
+            if (open && stock != null) Fill();
+        }
+
         private void Fill()
         {
             title.text = stock.Title.ToUpperInvariant();
@@ -205,8 +216,20 @@ namespace KryticalNova.UI
                 if (!used) continue;
                 GearUIController.SetItemVisual(cell, offers[i].Item, 1);
                 cell.Q<Label>(className: "kiosk-price").text = KioskRules.ShortPrice(offers[i].Price);
+                ShowWeekly(cell, offers[i]);
             }
             ShowCreds();
+        }
+
+        // A limited item: how many are left this week in the corner, greyed out and "SOLD OUT" once bought.
+        private void ShowWeekly(VisualElement cell, in VendorOffer offer)
+        {
+            Label left = cell.Q<Label>(className: LeftClass);
+            bool limited = offer.WeeklyLimit > 0 && shopping != null;
+            int remaining = limited ? shopping.RemainingThisWeek(offer) : int.MaxValue;
+            left.style.display = limited ? DisplayStyle.Flex : DisplayStyle.None;
+            left.text = remaining <= 0 ? "SOLD OUT" : $"{remaining} LEFT";
+            cell.EnableInClassList(SoldOutClass, limited && remaining <= 0);
         }
 
         private VisualElement CreateCell(int index)
@@ -217,6 +240,9 @@ namespace KryticalNova.UI
             var price = new Label { pickingMode = PickingMode.Ignore };
             price.AddToClassList("kiosk-price");
             cell.Add(price);
+            var left = new Label { pickingMode = PickingMode.Ignore };
+            left.AddToClassList(LeftClass);
+            cell.Add(left);
             grid.Add(cell);
             cell.RegisterCallback<PointerEnterEvent>(_ => ShowTooltip(cell, index));
             cell.RegisterCallback<PointerLeaveEvent>(_ => GearUIController.Instance?.HideItemTooltip());
@@ -246,7 +272,16 @@ namespace KryticalNova.UI
             if (gear == null || index >= offers.Count) return;
             VendorOffer offer = offers[index];
             string how = offer.Item.IsStackable ? "Right-click: buy one   ·   Shift: choose how many" : "Right-click: buy";
-            gear.ShowItemTooltip(cell, offer.Item, new ItemStack(offer.Item.itemId, 1), $"{WalletRules.FormatCreds(offer.Price)} each   ·   {how}");
+            string line = $"{WalletRules.FormatCreds(offer.Price)} each   ·   {how}";
+            if (offer.WeeklyLimit > 0 && shopping != null)
+            {
+                int remaining = shopping.RemainingThisWeek(offer);
+                string wait = VendorRules.Wait(shopping.SecondsToNextWeek());
+                line = remaining > 0
+                    ? $"{line}\n{remaining} of {offer.WeeklyLimit} left this week"
+                    : $"{WalletRules.FormatCreds(offer.Price)} each\nSold out until next week" + (wait.Length > 0 ? $": back in about {wait}" : string.Empty);
+            }
+            gear.ShowItemTooltip(cell, offer.Item, new ItemStack(offer.Item.itemId, 1), line);
         }
 
         // ------------------------------------------------------------------ buying
@@ -255,8 +290,11 @@ namespace KryticalNova.UI
         {
             if (!open || shopping == null || stock == null || index >= offers.Count) return;
             VendorOffer offer = offers[index];
+            int remaining = shopping.RemainingThisWeek(offer);
+            if (remaining <= 0) { Notify(VendorRules.SoldOutThisWeek(offer.Item.displayName, offer.WeeklyLimit, shopping.SecondsToNextWeek())); return; }
             long affordable = offer.Price > 0 ? shopping.Creds / offer.Price : 0;
             if (affordable < 1) { Notify(VendorRules.ReasonNotEnoughCreds); return; }
+            affordable = Math.Min(affordable, remaining);
 
             VendorStock from = stock;
             if (offer.Item.IsStackable)

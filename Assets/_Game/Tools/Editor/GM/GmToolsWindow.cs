@@ -1151,6 +1151,12 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + EconomyTab + "/Trade"), EnableIf(nameof(IsReady)), LabelText("Reset Daily Trade Limit"), PropertyOrder(620)]
         private void ResetTradeLimit() => Run("gm.trade.reset");
 
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Trade"), EnableIf(nameof(IsReady)), LabelText("Reset Weekly Vendor Limits"), PropertyOrder(620)]
+        private void ResetVendorWeek() => Run("gm.shop.week reset");
+
+        [ButtonGroup(Tabs + "/" + EconomyTab + "/Trade"), EnableIf(nameof(IsReady)), LabelText("Vendor Week"), PropertyOrder(620)]
+        private void ShowVendorWeek() => Run("gm.shop.week");
+
         [ButtonGroup(Tabs + "/" + EconomyTab + "/Trade"), EnableIf(nameof(IsReady)), LabelText("List Kiosks"), PropertyOrder(621)]
         private void ListKiosks() => Run("gm.kiosk");
 

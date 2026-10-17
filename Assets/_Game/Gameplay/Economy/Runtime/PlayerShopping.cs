@@ -18,10 +18,13 @@ namespace KryticalNova.Economy
     /// (<see cref="VendorRules"/>, the same rules the window reads), the wallet and the room in the Pack, and only
     /// then moves Creds and items. A sale of something the rules say must be confirmed (Rare and better, a pet,
     /// worked gear) is refused unless it comes with the confirmation, so a stray click cannot sell it.
+    /// A listing may have a weekly limit (the Armorer's forge materials, owner 17 Oct 2026: one of each per
+    /// in-game week): what the character bought of it this week is kept here, saved with the character and told
+    /// to its owner only, so the window can say how many are left.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory))]
-    public sealed class PlayerShopping : NetworkBehaviour
+    public sealed class PlayerShopping : NetworkBehaviour, ISaveParticipant
     {
         // Beyond the vendor's own range: the player may have taken a step since the dialogue.
         private const float ReachPadding = 2.5f;
@@ -38,6 +41,16 @@ namespace KryticalNova.Economy
         private PlayerChat chat;
         private PlayerSaveAgent saveAgent;
 
+        // This week's purchases of limited items, where the game is decided; the owner reads the copy below.
+        private readonly Dictionary<ushort, int> bought = new Dictionary<ushort, int>();
+        private long boughtWeek = long.MinValue;
+        private NetworkList<VendorBought> netBought;
+        private readonly NetworkVariable<long> netBoughtWeek = new NetworkVariable<long>(long.MinValue,
+            NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
+
+        /// <summary>Raised on the owner (and the host) when what was bought this week changes, or a new week starts.</summary>
+        public event Action WeeklyChanged;
+
         /// <summary>This machine's own player, or null.</summary>
         public static PlayerShopping Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerShopping>() : null;
 
@@ -53,7 +66,32 @@ namespace KryticalNova.Economy
             wearer = GetComponent<IGearWearer>();
             chat = GetComponent<PlayerChat>();
             saveAgent = GetComponent<PlayerSaveAgent>();
+            netBought = new NetworkList<VendorBought>(null, NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
         }
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            netBought.OnListChanged += OnNetBoughtChanged;
+            netBoughtWeek.OnValueChanged += OnNetWeekChanged;
+            if (IsServer) PushBought();
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            netBought.OnListChanged -= OnNetBoughtChanged;
+            netBoughtWeek.OnValueChanged -= OnNetWeekChanged;
+            base.OnNetworkDespawn();
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            netBought?.Dispose(); // guarded; covers the never-spawned offline avatar
+        }
+
+        private void OnNetBoughtChanged(NetworkListEvent<VendorBought> change) => WeeklyChanged?.Invoke();
+        private void OnNetWeekChanged(long previous, long current) => WeeklyChanged?.Invoke();
 
         // ------------------------------------------------------------------ what the window reads
 
@@ -91,6 +129,77 @@ namespace KryticalNova.Economy
         public void List(VendorStock stock, List<VendorOffer> results) =>
             VendorRules.List(stock, settings, inventory != null && inventory.Catalog != null ? inventory.Catalog.Items : null, CanWear, results,
                 KryticalNova.World.WorldClock.Day);
+
+        // ------------------------------------------------------------------ the weekly limit
+
+        private int WeekDays => settings != null ? settings.vendorWeekDays : 7;
+
+        /// <summary>The vendor week it is now.</summary>
+        public long CurrentWeek => VendorRules.WeekOf(KryticalNova.World.WorldClock.Day, WeekDays);
+
+        /// <summary>How many of an item this character bought this week. On the owner and where the game is decided.</summary>
+        public int BoughtThisWeek(ushort itemId)
+        {
+            long week = CurrentWeek;
+            if (!IsSpawned || IsServer)
+                return VendorRules.BoughtIn(week, boughtWeek, bought.TryGetValue(itemId, out int count) ? count : 0);
+            if (netBoughtWeek.Value != week) return 0;
+            foreach (VendorBought entry in netBought)
+                if (entry.itemId == itemId) return entry.count;
+            return 0;
+        }
+
+        /// <summary>How many more of an offer this character may buy this week. int.MaxValue when it has no limit.</summary>
+        public int RemainingThisWeek(in VendorOffer offer) =>
+            offer.Item == null ? 0 : VendorRules.RemainingThisWeek(offer.WeeklyLimit, BoughtThisWeek(offer.Item.itemId));
+
+        /// <summary>Real seconds until the next vendor week, -1 when the clock does not say.</summary>
+        public double SecondsToNextWeek() =>
+            KryticalNova.World.WorldClock.SecondsUntilDay(VendorRules.NextWeekStarts(KryticalNova.World.WorldClock.Day, WeekDays));
+
+        // A new week forgets the last one's purchases.
+        private void ServerTurnWeek()
+        {
+            long week = CurrentWeek;
+            if (week == boughtWeek) return;
+            boughtWeek = week;
+            bought.Clear();
+            PushBought();
+        }
+
+        private void PushBought()
+        {
+            if (IsSpawned && IsServer)
+            {
+                netBought.Clear();
+                foreach (KeyValuePair<ushort, int> entry in bought)
+                    netBought.Add(new VendorBought(entry.Key, (ushort)Mathf.Clamp(entry.Value, 0, ushort.MaxValue)));
+                netBoughtWeek.Value = boughtWeek;
+            }
+            WeeklyChanged?.Invoke();
+        }
+
+        /// <summary>Server or offline (GM): what this character bought of limited items this week, as one line.</summary>
+        public string DescribeWeek()
+        {
+            if (bought.Count == 0 || boughtWeek != CurrentWeek) return "Nothing limited bought this week.";
+            var parts = new List<string>();
+            foreach (KeyValuePair<ushort, int> entry in bought)
+            {
+                ItemDefinition item = inventory != null && inventory.Catalog != null ? inventory.Catalog.Get(entry.Key) : null;
+                parts.Add($"{(item != null ? item.displayName : entry.Key.ToString())} x{entry.Value}");
+            }
+            return "Bought: " + string.Join(", ", parts) + ".";
+        }
+
+        /// <summary>Server or offline (GM): forget what this character bought this week.</summary>
+        public void ServerResetWeek()
+        {
+            if (IsSpawned && !IsServer) return;
+            boughtWeek = CurrentWeek;
+            bought.Clear();
+            PushBought();
+        }
 
         /// <summary>What a vendor pays for one of an item. 0 = it will not buy it.</summary>
         public long SellValue(ItemDefinition item) => VendorRules.SellValue(vendors, settings, item);
@@ -141,6 +250,15 @@ namespace KryticalNova.Economy
             if (!stock.TryGetListed(item, out _) && !CanWear(item)) return VendorRules.ReasonNotSold;
 
             count = Mathf.Clamp(count, 1, MaxPerPurchase);
+            // This week's limit: what is left of it is all that is sold.
+            int limit = stock.WeeklyLimitOf(item);
+            if (limit > 0)
+            {
+                ServerTurnWeek();
+                int left = VendorRules.RemainingThisWeek(limit, BoughtThisWeek(item.itemId));
+                if (left <= 0) return VendorRules.SoldOutThisWeek(item.displayName, limit, SecondsToNextWeek());
+                count = Mathf.Min(count, left);
+            }
             if (!VendorRules.TryTotal(price, count, out long total)) return VendorRules.ReasonNotEnoughCreds;
             if (!wallet.CanAfford(total)) return VendorRules.ReasonNotEnoughCreds;
 
@@ -157,6 +275,11 @@ namespace KryticalNova.Economy
                 // The room was there a moment ago: whatever did not fit is not paid for.
                 if (VendorRules.TryTotal(price, count - given, out long back)) wallet.ServerEarn(back, CredsSource.Refund);
                 total -= price * (count - given);
+            }
+            if (given > 0 && limit > 0)
+            {
+                bought[item.itemId] = BoughtThisWeek(item.itemId) + given;
+                PushBought();
             }
             if (given > 0) Tell($"Bought {LootRules.Label(item, given)} from the {stock.Title} for {WalletRules.FormatCreds(total)}.");
             ServerSaveNow();
@@ -208,6 +331,43 @@ namespace KryticalNova.Economy
         private void ServerSaveNow()
         {
             if (saveAgent != null) saveAgent.Save();
+        }
+
+        // ------------------------------------------------------------------ saving (this week's limited purchases)
+
+        [Serializable]
+        private struct VendorWeekSave
+        {
+            public long week;
+            public ushort[] items;
+            public int[] counts;
+        }
+
+        public string SaveKey => "vendorWeek";
+        public SaveScope SaveScope => SaveScope.Character;
+
+        public string CaptureSave()
+        {
+            var save = new VendorWeekSave { week = boughtWeek, items = new ushort[bought.Count], counts = new int[bought.Count] };
+            int i = 0;
+            foreach (KeyValuePair<ushort, int> entry in bought)
+            {
+                save.items[i] = entry.Key;
+                save.counts[i++] = entry.Value;
+            }
+            return JsonUtility.ToJson(save);
+        }
+
+        public void RestoreSave(string json)
+        {
+            if ((IsSpawned && !IsServer) || string.IsNullOrEmpty(json)) return;
+            VendorWeekSave save = JsonUtility.FromJson<VendorWeekSave>(json);
+            boughtWeek = save.week;
+            bought.Clear();
+            if (save.items != null && save.counts != null)
+                for (int i = 0; i < save.items.Length && i < save.counts.Length; i++)
+                    if (save.counts[i] > 0) bought[save.items[i]] = save.counts[i];
+            PushBought();
         }
     }
 }

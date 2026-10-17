@@ -139,7 +139,7 @@ namespace KryticalNova.DevTools
                 "GAME SPEED   gm.slowmo [x]   (0.25 = quarter speed, 1 = normal; no value toggles quarter speed)",
                 "CREDS        gm.creds [n] · gm.creds.set <n> · gm.creds.report   (the only way Creds enter the game for now)",
                 "STORAGE      gm.vault [deep|off]   (opens it here; storage then works with no NPC near) · gm.drop <item> [n]",
-                "TRADE        gm.trade.reset   (daily Creds limit) · gm.kiosk · gm.kiosk.expire",
+                "TRADE        gm.trade.reset   (daily Creds limit) · gm.shop.week [reset]   (weekly vendor limits) · gm.kiosk · gm.kiosk.expire",
                 "SOCIAL       gm.guild [name|none] · gm.guild.list   (a Crew takes its own faction only, GM or not)",
                 "SPONSOR      gm.sponsor [clientIdA clientIdB]   (links two players, the higher sponsors; no ids prints the links) · gm.sponsor.end · gm.sponsor.points [n] · gm.sponsor.window",
                 "APPEARANCE   gm.weave [off]   (opens the Holoweaver here; Weaves and dyes then work with no NPC near) · gm.dye · gm.weave.unlock <all|item> · gm.weave.clear · gm.weave.list · gm.restyle <stylist|reshaper|coach|off> · gm.passes [n]   (Chroma Cells, Prism Cells, Restyle and Training Passes)",

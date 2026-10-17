@@ -4,16 +4,18 @@ using KryticalNova.Items;
 
 namespace KryticalNova.Economy
 {
-    /// <summary>One line of a shop window: the item and what one costs.</summary>
+    /// <summary>One line of a shop window: the item, what one costs, and how many a character may buy a week (0 = no limit).</summary>
     public readonly struct VendorOffer
     {
         public readonly ItemDefinition Item;
         public readonly long Price;
+        public readonly int WeeklyLimit;
 
-        public VendorOffer(ItemDefinition item, long price)
+        public VendorOffer(ItemDefinition item, long price, int weeklyLimit = 0)
         {
             Item = item;
             Price = price;
+            WeeklyLimit = weeklyLimit;
         }
     }
 
@@ -30,6 +32,42 @@ namespace KryticalNova.Economy
         public const string ReasonWalletFull = "Your wallet cannot hold that many Creds.";
         public const string ReasonNeedsConfirm = "That sale has to be confirmed first.";
         public const string ReasonTooFar = "Move closer to the vendor.";
+
+        // ------------------------------------------------------------------ the weekly limit
+
+        /// <summary>The vendor's week an in-game day falls in: days 0 to weekDays - 1 are week 0, and a day before 0 is in a week before 0.</summary>
+        public static long WeekOf(long day, int weekDays)
+        {
+            int length = Math.Max(1, weekDays);
+            return day >= 0 ? day / length : -((-day - 1) / length) - 1;
+        }
+
+        /// <summary>The first in-game day of the next vendor week.</summary>
+        public static long NextWeekStarts(long day, int weekDays) => (WeekOf(day, weekDays) + 1) * Math.Max(1, weekDays);
+
+        /// <summary>How many more of an item may be bought this week. int.MaxValue when it has no limit.</summary>
+        public static int RemainingThisWeek(int weeklyLimit, int boughtThisWeek) =>
+            weeklyLimit <= 0 ? int.MaxValue : Math.Max(0, weeklyLimit - Math.Max(0, boughtThisWeek));
+
+        /// <summary>What was bought this week, given what was saved for the week it was saved in: a new week starts at 0.</summary>
+        public static int BoughtIn(long week, long savedWeek, int savedBought) => week == savedWeek ? Math.Max(0, savedBought) : 0;
+
+        /// <summary>"3 h 20 min", "45 min", "under a minute"; empty when it is not known (the clock is stopped).</summary>
+        public static string Wait(double seconds)
+        {
+            if (seconds < 0 || double.IsNaN(seconds) || double.IsInfinity(seconds)) return string.Empty;
+            TimeSpan left = TimeSpan.FromSeconds(seconds);
+            if (left.TotalDays >= 1) return $"{(int)left.TotalDays} d {left.Hours} h";
+            if (left.TotalHours >= 1) return $"{(int)left.TotalHours} h {left.Minutes:00} min";
+            return left.TotalMinutes >= 1 ? $"{(int)left.TotalMinutes} min" : "under a minute";
+        }
+
+        /// <summary>The refusal when this week's limit of an item is bought.</summary>
+        public static string SoldOutThisWeek(string itemName, int weeklyLimit, double secondsToRestock)
+        {
+            string wait = Wait(secondsToRestock);
+            return $"You have bought this week's {weeklyLimit} {itemName}. More next week" + (wait.Length > 0 ? $": in about {wait}." : ".");
+        }
 
         /// <summary>What a piece of ladder gear costs in a shop: its level, times the price of a level, times its rarity's weight.</summary>
         public static long GearPrice(EconomySettings settings, ItemDefinition item)
@@ -114,9 +152,9 @@ namespace KryticalNova.Economy
             results.Clear();
             if (stock == null) return;
             foreach (VendorListing listing in stock.listings)
-                if (listing.item != null && listing.price > 0) results.Add(new VendorOffer(listing.item, listing.price));
+                if (listing.item != null && listing.price > 0) results.Add(new VendorOffer(listing.item, listing.price, listing.weeklyLimit));
             // What the rotating shelf holds today (the Outfitter's colour of the day).
-            if (stock.TryGetOfTheDay(day, out VendorListing today)) results.Add(new VendorOffer(today.item, today.price));
+            if (stock.TryGetOfTheDay(day, out VendorListing today)) results.Add(new VendorOffer(today.item, today.price, today.weeklyLimit));
             if (!stock.sellsLadderGear || allItems == null) return;
 
             int first = results.Count;

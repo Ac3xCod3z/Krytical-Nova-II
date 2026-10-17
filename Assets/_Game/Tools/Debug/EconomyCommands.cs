@@ -125,6 +125,22 @@ namespace KryticalNova.DevTools
             return $"Daily trade allowance reset: {WalletRules.FormatCreds(trade.ServerRemainingToday())} can be sent today.";
         }
 
+        [Command("gm.shop.week", "Forget what the targeted player bought from vendors this week, so the weekly limits (the Armorer's forge materials) start again: gm.shop.week reset. With nothing, lists what was bought.")]
+        private static string ShopWeek(string action = "")
+        {
+            if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
+            if (!player.TryGetComponent(out PlayerShopping shopping)) return "That player has no shopping component (run Krytical Nova/Setup/Player Prefab).";
+            action = (action ?? string.Empty).Trim().ToLowerInvariant();
+            if (action == "reset")
+            {
+                shopping.ServerResetWeek();
+                return "This week's vendor limits start again for that player.";
+            }
+            if (action.Length > 0) return "Use gm.shop.week or gm.shop.week reset.";
+            string wait = VendorRules.Wait(shopping.SecondsToNextWeek());
+            return $"Vendor week {shopping.CurrentWeek}; the next starts in {(wait.Length > 0 ? wait : "(clock stopped)")}. " + shopping.DescribeWeek();
+        }
+
         [Command("gm.vault", "Open your Vault here (gm.vault deep for the Deep Vault). Storage then works anywhere, with no " +
                              "Vaultkeeper or Wayfinder near, until the session ends; gm.vault off puts the rule back.")]
         private static string Vault(string which = "")
