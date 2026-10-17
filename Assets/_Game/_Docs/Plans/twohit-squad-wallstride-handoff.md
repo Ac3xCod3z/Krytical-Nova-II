@@ -13,7 +13,7 @@ Unity, so expect compile errors on first open and fix them before anything else.
 | Redline on the beat | `RedlineRules`. A three-hit skill pressed on Cadence while Redline is charged lands three crits. An evaded hit spends the charge. |
 | Squad Stances | `SquadBuffRules`, `ISquadBuffTargets` (implemented by `PlayerParty`). From rank 20, a Stance reaches Squad members within 20 m (`SquadSettings`). The same Stance never stacks; a recast restarts the timer at the higher rank. The Move Speed stat now actually moves the agent (`MovementSettings` limits 0.5x–1.5x), which makes Boots' Move Speed count too. |
 | Wallstride | `PlayerWallRunMotor`, `WallRunRules`, `WallstrideSettings`, `ClimbableSurface`, `TreeProxyField`. Opens at level 60 with Run and Jump at rank 20. Covers clicking a wall or tree, an automatic climb on a run, a jump that catches a wall, perching in trees, and death on a wall. Hostiles and melee skills can't reach a player far above them. |
-| LOD part 1 | `WorldLodSettings`, `CharacterLod`, `GeneratedLod`. **Not wired in yet.** `EnvironmentLodBuilder` (the mesh simplifier, LODGroups and quality biases) is still to write. The plan is Phase 4b of the plan file. |
+| LOD part 1 | `WorldLodSettings`, `CharacterLod`, `GeneratedLod`. **Not wired in yet.** `EnvironmentLodBuilder` (the mesh simplifier, LODGroups and quality biases) is still to write. The plan is Phase 4b of `twohit-squad-wallstride-plan.md`. |
 
 ## Order to run on the owner's computer
 
@@ -28,7 +28,7 @@ Unity, so expect compile errors on first open and fix them before anything else.
    - the faction HUD
 4. **Krytical Nova ▸ Project ▸ Validate Project Organization**.
 5. Test Runner: run every EditMode test. The new ones are `RedlineRulesTests`, `SquadBuffRulesTests` and `WallRunRulesTests`. Updated ones are `SkillChipTests`, `WeaponClassTests`, `FactionHudTests`, `KeyBindingsTests`, `MovementSettingsTests` and `IconAssetsTests`.
-6. Play as host plus a second client, following the Verification list in the plan file. **Record it with Unity Recorder** (the owner asked for a video of the testing).
+6. Play as host plus a second client, following the Verification list in `twohit-squad-wallstride-plan.md` (next to this note). **Record it with Unity Recorder** (the owner asked for a video of the testing).
 
 ## Next: disintegrate a player killed off the ground (owner, 17 Oct 2026)
 
