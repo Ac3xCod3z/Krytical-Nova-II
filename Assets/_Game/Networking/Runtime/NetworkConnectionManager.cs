@@ -540,6 +540,8 @@ namespace KryticalNova.Networking
         /// </summary>
         private void StartDedicatedServer()
         {
+            // Another copy holds this server's ports: this one is quitting and publishes, backs up and listens nothing.
+            if (ServerSingleCopy.AnotherCopyRuns) return;
             if (NetworkManager.Singleton == null)
             {
                 ReportError("[Server] Cannot start: NetworkManager.Singleton is missing.");
