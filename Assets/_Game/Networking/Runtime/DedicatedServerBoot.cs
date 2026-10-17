@@ -15,6 +15,7 @@ namespace KryticalNova.Networking
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void LoadWorld()
         {
+            if (ServerSingleCopy.AnotherCopyRuns) return; // a second copy on this PC is quitting
             // The map of the server's settings (server-settings.json or -map); Zone01 when there is no such scene.
             string map = ServerLaunchOptions.LoadForThisServer().map;
             if (!Application.CanStreamedLevelBeLoaded(map))

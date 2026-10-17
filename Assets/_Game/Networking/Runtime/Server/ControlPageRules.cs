@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -39,6 +40,39 @@ namespace KryticalNova.Networking
             return false;
         }
 
+        /// <summary>This PC's addresses on the home network, for "How to connect"; 127.0.0.1 when none is found.</summary>
+        public static List<string> HomeAddresses()
+        {
+            var found = new List<string>();
+            try
+            {
+                foreach (NetworkInterface card in NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    if (card.OperationalStatus != OperationalStatus.Up || card.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+                    foreach (UnicastIPAddressInformation unicast in card.GetIPProperties().UnicastAddresses)
+                        if (unicast.Address.AddressFamily == AddressFamily.InterNetwork && IsHomeNetwork(unicast.Address)
+                            && !unicast.Address.ToString().StartsWith("169.254.", StringComparison.Ordinal))
+                            found.Add(unicast.Address.ToString());
+                }
+            }
+            catch (Exception) { /* no list: localhost only */ }
+            if (found.Count == 0) found.Add("127.0.0.1");
+            return found;
+        }
+
+        /// <summary>
+        /// True when a request failed only because the other side hung up before the answer (a browser tab closed or
+        /// reloading, a phone going to sleep): the connection was aborted or reset. Not worth a line in the log, which it
+        /// once flooded; any other failure is.
+        /// </summary>
+        public static bool IsClientHangUp(Exception e)
+        {
+            for (Exception at = e; at != null; at = at.InnerException)
+                if (at is SocketException socket)
+                    return socket.SocketErrorCode == SocketError.ConnectionAborted || socket.SocketErrorCode == SocketError.ConnectionReset;
+            return false;
+        }
+
         /// <summary>One request as read from the socket.</summary>
         public sealed class Request
         {
@@ -62,14 +96,26 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>Reads one HTTP/1.1 request, or null when it is malformed or too large.</summary>
-        public static Request Read(Stream stream)
+        public static Request Read(Stream stream) => Read(stream, out _);
+
+        /// <summary>
+        /// Reads one HTTP/1.1 request, or null when it is malformed or too large; <paramref name="empty"/> is true when
+        /// the connection closed before sending anything (a browser's spare connection, opened ahead and never used),
+        /// which needs no answer.
+        /// </summary>
+        public static Request Read(Stream stream, out bool empty)
         {
+            empty = false;
             var head = new MemoryStream();
             int matched = 0;
             while (head.Length < MaxHeaderBytes)
             {
                 int b = stream.ReadByte();
-                if (b < 0) return null;
+                if (b < 0)
+                {
+                    empty = head.Length == 0;
+                    return null;
+                }
                 head.WriteByte((byte)b);
                 matched = b == (matched % 2 == 0 ? '\r' : '\n') ? matched + 1 : (b == '\r' ? 1 : 0);
                 if (matched == 4) break;
