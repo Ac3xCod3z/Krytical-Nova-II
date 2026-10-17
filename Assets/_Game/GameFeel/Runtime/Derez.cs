@@ -193,6 +193,10 @@ namespace KryticalNova.GameFeel
         private void SetHidden(bool hidden)
         {
             Gone = hidden;
+            // The character LOD must not show a body (or its pet) the de-rez has hidden.
+            KryticalNova.Rendering.CharacterLod.Hold(transform, hidden);
+            var follower = GetComponent<PetFollower>();
+            if (follower != null && follower.PetTransform != null) KryticalNova.Rendering.CharacterLod.Hold(follower.PetTransform, hidden);
             foreach (Part part in parts)
                 if (part.Renderer != null) part.Renderer.forceRenderingOff = hidden;
         }

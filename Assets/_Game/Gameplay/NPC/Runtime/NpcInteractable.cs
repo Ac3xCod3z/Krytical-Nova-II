@@ -104,6 +104,7 @@ namespace KryticalNova.NPC
             homeRotation = transform.rotation;
             targetRotation = homeRotation;
             KryticalNova.Rendering.ActorDrawOrder.On(gameObject); // a Nova hides the characters behind it
+            KryticalNova.Rendering.CharacterLod.Ensure(gameObject); // lighter with distance
         }
 
         private void OnEnable() => ActiveNpcs.Add(this);

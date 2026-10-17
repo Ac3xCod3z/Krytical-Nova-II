@@ -116,6 +116,7 @@ GameObject:
   - component: {fileID: 1658292666199930260}
   - component: {fileID: 2739452034050256493}
   - component: {fileID: 6085953057518992820}
+  - component: {fileID: 6994377297614759536}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -3518,6 +3519,8 @@ MonoBehaviour:
   wallClearance: 0.9
   warpTemplate: {fileID: 11400000, guid: c73c258675cd35440a83853b8c8b7234, type: 2}
   motionWarping: {fileID: 4791644402117621732}
+  roofHeight: 2.5
+  derezClipSpeed: 0.2
   respawnDelay: 8
 --- !u!114 &7474861536265259682
 MonoBehaviour:
@@ -4151,6 +4154,20 @@ MonoBehaviour:
   dropClip: {fileID: -2327705448931114778, guid: 27077ace308b2e14682962c65d9ed621, type: 3}
   fadeIn: 0.1
   fadeOut: 0.15
+--- !u!114 &6994377297614759536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acbf92cc90fb4f80a896c84ec0cc8e89, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Rendering.CharacterLod
+  settings: {fileID: 11400000, guid: a5dff6f4337ad764dbd705f88aba1c78, type: 2}
+  alwaysWhole: 0
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

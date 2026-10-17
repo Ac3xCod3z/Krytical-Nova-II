@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43da05830cf84da28a0de4f42cf82637, type: 3}
+  m_Name: WorldLodSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Rendering.WorldLodSettings
+  bands:
+  - category: 0
+    hiddenBelow: 0.01
+  - category: 1
+    hiddenBelow: 0.015
+  - category: 2
+    hiddenBelow: 0.008
+  - category: 3
+    hiddenBelow: 0.004
+  - category: 4
+    hiddenBelow: 0.012
+  - category: 5
+    hiddenBelow: 0.02
+  buildingFromSize: 8
+  smallPropBelowSize: 1
+  minTrianglesToSimplify: 96
+  tiers:
+  - preset: Low
+    lodBias: 0.7
+    meshLodThreshold: 3
+    smallMeshCullPercent: 0.6
+  - preset: Medium
+    lodBias: 1.2
+    meshLodThreshold: 2
+    smallMeshCullPercent: 0.35
+  - preset: High
+    lodBias: 2
+    meshLodThreshold: 1.2
+    smallMeshCullPercent: 0.15
+  - preset: Ultra
+    lodBias: 3
+    meshLodThreshold: 0.8
+    smallMeshCullPercent: 0
+  maxMeshLods: -1
+  characterMidDistance: 25
+  characterFarDistance: 60
+  characterHiddenDistance: 150
+  characterRefresh: 0.4

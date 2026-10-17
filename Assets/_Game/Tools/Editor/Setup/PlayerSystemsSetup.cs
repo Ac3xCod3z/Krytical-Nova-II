@@ -126,6 +126,9 @@ namespace KryticalNova.EditorTools
             // Crew Halls: the Furnishing Crate, and the player's side of their Hall (the sandbox Lot, for now).
             new Row("KryticalNova.Housing.PlayerCrate", ("settings", HousingSettingsPath), ("catalog", FurnishingCatalogPath)),
             new Row("KryticalNova.Housing.PlayerHousing", ("settings", HousingSettingsPath), ("catalog", FurnishingCatalogPath)),
+            // Level of detail: other players get lighter with distance (this machine's own is always whole); the
+            // settings also hold how far detail reaches at each graphics preset.
+            new Row("KryticalNova.Rendering.CharacterLod", ("settings", "Assets/_Game/Rendering/Data/Assets/WorldLodSettings.asset")),
             // What lets a Hostile see, chase and strike a player (its own assembly: the only one that knows Emerald AI).
             new Row("KryticalNova.Hostiles.Emerald.KNEmeraldPlayerBridge, KryticalNova.Hostiles.Emerald"),
         };

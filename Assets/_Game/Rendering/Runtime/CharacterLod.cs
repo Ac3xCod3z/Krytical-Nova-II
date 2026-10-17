@@ -24,6 +24,11 @@ namespace KryticalNova.Rendering
         [SerializeField] private bool alwaysWhole;
 
         private static WorldLodSettings shared;
+        // Characters hidden by something else (a de-rezzed body and its pet): never shown again by the LOD.
+        private static readonly System.Collections.Generic.HashSet<Transform> held = new System.Collections.Generic.HashSet<Transform>();
+        private static int holdStamp;
+        private int seenHoldStamp = -1;
+        private NetworkObject net;
         private SkinnedMeshRenderer[] skins = System.Array.Empty<SkinnedMeshRenderer>();
         private SkinQuality[] skinQuality = System.Array.Empty<SkinQuality>();
         private ShadowCastingMode[] skinShadows = System.Array.Empty<ShadowCastingMode>();
@@ -36,6 +41,24 @@ namespace KryticalNova.Rendering
         /// <summary>Whether this character is always drawn whole (set for the local player).</summary>
         public bool AlwaysWhole { get => alwaysWhole; set { alwaysWhole = value; next = 0f; } }
 
+        /// <summary>
+        /// Something else hides this character for a while (the de-rez until the respawn): its LOD leaves it hidden
+        /// instead of showing it when it comes nearer.
+        /// </summary>
+        public static void Hold(Transform character, bool hold)
+        {
+            if (character == null) return;
+            if (hold ? held.Add(character) : held.Remove(character)) holdStamp++; // every LOD looks again
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            held.Clear();
+            shared = null;
+            eye = null;
+        }
+
         /// <summary>Gives a character its level of detail if it has none (a Hostile, a pet).</summary>
         public static CharacterLod Ensure(GameObject character)
         {
@@ -46,6 +69,8 @@ namespace KryticalNova.Rendering
         private void OnEnable()
         {
             if (settings != null) shared = settings;
+            if (shared != null) WorldLodSettings.Use(shared);
+            net = GetComponentInParent<NetworkObject>();
             tier = -1;
             next = 0f;
             nextCollect = 0f;
@@ -64,11 +89,13 @@ namespace KryticalNova.Rendering
 
             float bias = Mathf.Max(0.25f, QualitySettings.lodBias);
             float distance = Vector3.Distance(eye.transform.position, transform.position) / bias;
-            int wanted = alwaysWhole ? 0
+            // The player this machine plays is always whole.
+            bool whole = alwaysWhole || (net != null && net.IsSpawned && net.IsOwner && net.IsPlayerObject);
+            int wanted = whole ? 0
                 : distance >= (s != null ? s.characterHiddenDistance : DefaultHidden) ? 3
                 : distance >= (s != null ? s.characterFarDistance : DefaultFar) ? 2
                 : distance >= (s != null ? s.characterMidDistance : DefaultMid) ? 1 : 0;
-            if (wanted != tier) Apply(wanted);
+            if (wanted != tier || seenHoldStamp != holdStamp) { seenHoldStamp = holdStamp; Apply(wanted); }
         }
 
         private void Collect()
@@ -83,6 +110,14 @@ namespace KryticalNova.Rendering
             for (int i = 0; i < animators.Length; i++) animatorCulling[i] = animators[i].cullingMode;
         }
 
+        private static bool IsHeld(Transform part)
+        {
+            if (held.Count == 0) return false;
+            for (Transform t = part; t != null; t = t.parent)
+                if (held.Contains(t)) return true;
+            return false;
+        }
+
         private void Apply(int level)
         {
             tier = level;
@@ -92,7 +127,7 @@ namespace KryticalNova.Rendering
                 if (skin == null) continue;
                 skin.quality = level == 0 ? skinQuality[i] : level == 1 ? SkinQuality.Bone2 : SkinQuality.Bone1;
                 skin.shadowCastingMode = level >= 2 ? ShadowCastingMode.Off : skinShadows[i];
-                skin.forceRenderingOff = level >= 3;
+                skin.forceRenderingOff = level >= 3 || IsHeld(skin.transform);
             }
             bool decidesHere = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
             for (int i = 0; i < animators.Length; i++)
