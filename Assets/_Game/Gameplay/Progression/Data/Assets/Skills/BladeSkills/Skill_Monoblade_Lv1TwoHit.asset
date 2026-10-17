@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7880cd63b45e28428e12567876538bb, type: 3}
+  m_Name: Skill_Monoblade_Lv1TwoHit
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
+  skillId: Monoblade_Lv1TwoHit
+  displayName: Double Entry
+  description: Two quick cuts against your target.
+  category: 4
+  weaponClass: 1
+  classSlot: 13
+  presentationId: HaeseoStroke
+  sharesWithSquad: 0
+  targetType: 1
+  executionType: 0
+  acquisitionMethod: 0
+  requiresSkillBook: 0
+  acquisitionNote: Faction Instructor
+  requiredCraftingArchives: []
+  unlockItemId: 0
+  requiredCharacterLevel: 1
+  minRank: 1
+  maxRank: 30
+  skillPointsToLearn: 1
+  totalSkillPointsToMax: 30
+  minChiCost: 11
+  maxChiCost: 175
+  cooldown: 2.25
+  minDuration: 0
+  maxDuration: 0
+  channelTickInterval: 1
+  minChannelChiRecoveryPercent: 5
+  maxChannelChiRecoveryPercent: 5
+  minChannelHealthRecoveryPercent: 0
+  maxChannelHealthRecoveryPercent: 0
+  isAbsorptionShield: 0
+  minShieldPercent: 111
+  maxShieldPercent: 150
+  hasDeadlyBlowBoost: 0
+  minDeadlyBlowPercent: 12
+  maxDeadlyBlowPercent: 75
+  hasLuckBoost: 0
+  minLuckPercent: 13
+  maxLuckPercent: 100
+  hasAcupressureResistance: 0
+  minAcupressureResistance: 1
+  maxAcupressureResistance: 20
+  hasReflection: 0
+  minReflectionChance: 1
+  maxReflectionChance: 10
+  reflectionMultiplier: 1
+  hasShieldShatter: 0
+  minDestructionChance: 1
+  maxDestructionChance: 20
+  dispelBuffChance: 50
+  statModifiers: []
+  rankScaledModifiers: []
+  consumedOnNextHit: 0
+  minDamagePercent: 213
+  maxDamagePercent: 527
+  hitCount: 2
+  minRange: 2
+  maxRange: 2
+  minBonusDamagePercent: 100
+  maxBonusDamagePercent: 100
+  canCrit: 1
+  chargeTime: 0
+  holdToRepeat: 0
+  icon: {fileID: 21300000, guid: 40bedd2baf635934a83b58a525ba52ee, type: 3}
+  castClip: {fileID: 7400000, guid: 35b2926bc0946d74a86943c6ee00f78c, type: 3}
+  castClipSpeed: 1.1
+  hitTimesNormalized:
+  - 0.35
+  - 0.7
+  castLockNormalized: 0.92
+  attackCancelNormalized: 1
+  castLiftCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  chargeLoopClip: {fileID: 0}
+  channelLoopClip: {fileID: 0}
+  castVfxPrefab: {fileID: 0}
+  hitVfxPrefab: {fileID: 0}
+  chargeVfxPrefab: {fileID: 0}
+  vfxOffset: {x: 0, y: 1, z: 0}

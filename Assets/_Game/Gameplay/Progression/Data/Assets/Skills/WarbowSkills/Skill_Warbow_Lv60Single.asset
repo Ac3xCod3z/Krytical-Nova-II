@@ -19,6 +19,7 @@ MonoBehaviour:
   weaponClass: 9
   classSlot: 11
   presentationId: SunraysStroke
+  sharesWithSquad: 0
   targetType: 1
   executionType: 0
   acquisitionMethod: 1

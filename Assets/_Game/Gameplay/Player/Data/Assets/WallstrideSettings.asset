@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75268aaa0b0b42c9ab4ddceeb15f1f7b, type: 3}
+  m_Name: WallstrideSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.WallstrideSettings
+  requiredLevel: 60
+  requiredRunRank: 20
+  requiredJumpRank: 20
+  wallLayers:
+    serializedVersion: 2
+    m_Bits: 1
+  minSurfaceAngle: 70
+  maxOverhang: 20
+  maxApproachAngle: 45
+  minWallHeight: 2.2
+  maxClimbHeight: 14
+  mantleReach: 1.1
+  topSampleRadius: 0.7
+  climbSpeedShare: 0.55
+  minClimbSpeed: 4
+  maxClimbSpeed: 14
+  plantSeconds: 0.18
+  mantleSeconds: 0.4
+  mantleLift: 0.35
+  edgeBelowHands: 1.1
+  fluxCost: 12
+  autoLookAhead: 8
+  autoDetourFactor: 2
+  catchHeight: 1.4
+  kickOffDistance: 2.5
+  kickOffLift: 0.8
+  dropGravity: 14
+  maxDropDistance: 14
+  deathPushOff: 0.6
+  treeProxyRadius: 35
+  treeProxyRefresh: 0.25
+  treeProxyCap: 512
+  minTreeHeight: 3
+  perchHeightShare: 0.6

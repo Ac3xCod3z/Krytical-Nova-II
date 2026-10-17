@@ -19,6 +19,7 @@ MonoBehaviour:
   weaponClass: 8
   classSlot: 10
   presentationId: AzureWall
+  sharesWithSquad: 0
   targetType: 0
   executionType: 0
   acquisitionMethod: 0

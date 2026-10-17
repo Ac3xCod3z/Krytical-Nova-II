@@ -19,6 +19,7 @@ MonoBehaviour:
   weaponClass: 1
   classSlot: 6
   presentationId: 
+  sharesWithSquad: 0
   targetType: 1
   executionType: 0
   acquisitionMethod: 1

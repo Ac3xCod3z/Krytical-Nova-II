@@ -19,6 +19,7 @@ MonoBehaviour:
   weaponClass: 7
   classSlot: 7
   presentationId: PhantomThunder
+  sharesWithSquad: 0
   targetType: 1
   executionType: 0
   acquisitionMethod: 1

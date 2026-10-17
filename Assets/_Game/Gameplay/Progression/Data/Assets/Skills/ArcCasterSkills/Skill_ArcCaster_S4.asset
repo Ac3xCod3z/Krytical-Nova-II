@@ -19,6 +19,7 @@ MonoBehaviour:
   weaponClass: 6
   classSlot: 4
   presentationId: DevilsStrike
+  sharesWithSquad: 0
   targetType: 1
   executionType: 0
   acquisitionMethod: 0

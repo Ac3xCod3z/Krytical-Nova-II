@@ -4703,3 +4703,183 @@ MonoBehaviour:
     set: Cyberpunk/Gadget
     number: 2
     chosen: 1
+  - kind: 0
+    target: Monoblade_Lv1TwoHit
+    set: Fantasy/Swordman Skill
+    number: 3
+    chosen: 0
+  - kind: 0
+    target: Monoblade_Lv30TwoHit
+    set: Fantasy/Swordman Skill
+    number: 5
+    chosen: 0
+  - kind: 0
+    target: Monoblade_Lv60TwoHit
+    set: Fantasy/Swordman Skill
+    number: 6
+    chosen: 0
+  - kind: 0
+    target: Monoblade_Lv80TwoHit
+    set: Fantasy/Swordman Skill
+    number: 7
+    chosen: 0
+  - kind: 0
+    target: Glaive_Lv1TwoHit
+    set: Fantasy/Spearman Skill
+    number: 3
+    chosen: 0
+  - kind: 0
+    target: Glaive_Lv30TwoHit
+    set: Fantasy/Spearman Skill
+    number: 4
+    chosen: 0
+  - kind: 0
+    target: Glaive_Lv60TwoHit
+    set: Fantasy/Spearman Skill
+    number: 6
+    chosen: 0
+  - kind: 0
+    target: Glaive_Lv80TwoHit
+    set: Fantasy/Spearman Skill
+    number: 7
+    chosen: 0
+  - kind: 0
+    target: Carbine_Lv1TwoHit
+    set: Fantasy/Crossbowman Skill
+    number: 4
+    chosen: 0
+  - kind: 0
+    target: Carbine_Lv30TwoHit
+    set: Fantasy/Crossbowman Skill
+    number: 5
+    chosen: 0
+  - kind: 0
+    target: Carbine_Lv60TwoHit
+    set: Fantasy/Crossbowman Skill
+    number: 6
+    chosen: 0
+  - kind: 0
+    target: Carbine_Lv80TwoHit
+    set: Fantasy/Crossbowman Skill
+    number: 7
+    chosen: 0
+  - kind: 0
+    target: Harvester_Lv1TwoHit
+    set: Fantasy/Blood Mage Skill
+    number: 3
+    chosen: 0
+  - kind: 0
+    target: Harvester_Lv30TwoHit
+    set: Fantasy/Blood Mage Skill
+    number: 4
+    chosen: 0
+  - kind: 0
+    target: Harvester_Lv60TwoHit
+    set: Fantasy/Blood Mage Skill
+    number: 5
+    chosen: 0
+  - kind: 0
+    target: Harvester_Lv80TwoHit
+    set: Fantasy/Blood Mage Skill
+    number: 6
+    chosen: 0
+  - kind: 0
+    target: ServoClaws_Lv1TwoHit
+    set: Fantasy/Undead Skill
+    number: 3
+    chosen: 0
+  - kind: 0
+    target: ServoClaws_Lv30TwoHit
+    set: Fantasy/Undead Skill
+    number: 4
+    chosen: 0
+  - kind: 0
+    target: ServoClaws_Lv60TwoHit
+    set: Fantasy/Undead Skill
+    number: 5
+    chosen: 0
+  - kind: 0
+    target: ServoClaws_Lv80TwoHit
+    set: Fantasy/Undead Skill
+    number: 6
+    chosen: 0
+  - kind: 0
+    target: ArcCaster_Lv1TwoHit
+    set: Fantasy/Lightning Mage Skill
+    number: 5
+    chosen: 0
+  - kind: 0
+    target: ArcCaster_Lv30TwoHit
+    set: Fantasy/Lightning Mage Skill
+    number: 6
+    chosen: 0
+  - kind: 0
+    target: ArcCaster_Lv60TwoHit
+    set: Fantasy/Lightning Mage Skill
+    number: 8
+    chosen: 0
+  - kind: 0
+    target: ArcCaster_Lv80TwoHit
+    set: Fantasy/Lightning Mage Skill
+    number: 10
+    chosen: 0
+  - kind: 0
+    target: Longaxe_Lv1TwoHit
+    set: Fantasy/Berserker Skill
+    number: 3
+    chosen: 0
+  - kind: 0
+    target: Longaxe_Lv30TwoHit
+    set: Fantasy/Berserker Skill
+    number: 4
+    chosen: 0
+  - kind: 0
+    target: Longaxe_Lv60TwoHit
+    set: Fantasy/Berserker Skill
+    number: 5
+    chosen: 0
+  - kind: 0
+    target: Longaxe_Lv80TwoHit
+    set: Fantasy/Berserker Skill
+    number: 6
+    chosen: 0
+  - kind: 0
+    target: Claymore_Lv1TwoHit
+    set: Fantasy/Warrior Skill
+    number: 5
+    chosen: 0
+  - kind: 0
+    target: Claymore_Lv30TwoHit
+    set: Fantasy/Warrior Skill
+    number: 6
+    chosen: 0
+  - kind: 0
+    target: Claymore_Lv60TwoHit
+    set: Fantasy/Warrior Skill
+    number: 10
+    chosen: 0
+  - kind: 0
+    target: Claymore_Lv80TwoHit
+    set: Fantasy/Warrior Skill
+    number: 11
+    chosen: 0
+  - kind: 0
+    target: Warbow_Lv1TwoHit
+    set: Fantasy/Archer Skill
+    number: 3
+    chosen: 0
+  - kind: 0
+    target: Warbow_Lv30TwoHit
+    set: Fantasy/Archer Skill
+    number: 4
+    chosen: 0
+  - kind: 0
+    target: Warbow_Lv60TwoHit
+    set: Fantasy/Archer Skill
+    number: 5
+    chosen: 0
+  - kind: 0
+    target: Warbow_Lv80TwoHit
+    set: Fantasy/Archer Skill
+    number: 6
+    chosen: 0

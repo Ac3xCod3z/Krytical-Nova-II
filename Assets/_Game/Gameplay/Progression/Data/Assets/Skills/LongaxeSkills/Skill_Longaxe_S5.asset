@@ -19,6 +19,7 @@ MonoBehaviour:
   weaponClass: 7
   classSlot: 5
   presentationId: FlashOfRage
+  sharesWithSquad: 0
   targetType: 1
   executionType: 0
   acquisitionMethod: 0

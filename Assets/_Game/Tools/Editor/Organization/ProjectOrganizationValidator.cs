@@ -102,6 +102,7 @@ namespace KryticalNova.EditorTools.Organization
                 if (raw.EndsWith(".meta")) continue;
                 string path = raw.Replace('\\', '/');
                 if (path.Contains("/_Docs/")) continue;
+                if (path.Contains("~/")) continue;   // Unity never imports a folder ending in ~ (Release/Tools~)
 
                 string name = Path.GetFileNameWithoutExtension(path);
                 if (SloppyName.IsMatch(name))
