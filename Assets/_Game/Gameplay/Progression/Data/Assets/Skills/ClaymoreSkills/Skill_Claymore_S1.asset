@@ -19,6 +19,7 @@ MonoBehaviour:
   weaponClass: 8
   classSlot: 1
   presentationId: FuryStrike
+  sharesWithSquad: 0
   targetType: 2
   executionType: 0
   acquisitionMethod: 0

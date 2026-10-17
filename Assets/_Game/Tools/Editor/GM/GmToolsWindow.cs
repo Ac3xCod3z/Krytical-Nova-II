@@ -41,6 +41,7 @@ namespace KryticalNova.EditorTools.GM
         private const string PetsTab = "Pets";
         private const string RenownTab = "Renown";
         private const string HostilesTab = "Hostiles";
+        private const string CadenceTab = "Cadence";
         private const int MaxLogLines = 200;
         private const int MaxSearchResults = 40;
 
@@ -1711,7 +1712,9 @@ namespace KryticalNova.EditorTools.GM
         private string ChosenHostile => string.IsNullOrEmpty(hostileSpecies) ? "0" : hostileSpecies;
 
         [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1001)]
-        private void SpawnHostiles([MinValue(1)] int count = 1, [MinValue(0), LabelText("Level (0 = its own)")] int level = 0) => Run($"gm.hostile.spawn {ChosenHostile} {count} {level}");
+        private void SpawnHostiles([MinValue(1)] int count = 1, [MinValue(0), LabelText("Level (0 = its own)")] int level = 0,
+            [MinValue(0), LabelText("Health (0 = its own)")] float health = 0f, [LabelText("Cannot die")] bool cannotDie = false) =>
+            Run($"gm.hostile.spawn {ChosenHostile} {count} {level}{(cannotDie ? " inf" : health >= 1f ? " " + F(health) : string.Empty)}");
 
         [ButtonGroup(Tabs + "/" + HostilesTab + "/Species"), EnableIf(nameof(IsReady)), LabelText("List"), PropertyOrder(1002)]
         private void ListHostiles() => Run("gm.hostile.list");
@@ -1839,6 +1842,116 @@ namespace KryticalNova.EditorTools.GM
 
         [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1068)]
         private void GiveAutobuffPasses([MinValue(1)] int count = 1) => Run($"item.give \"Autobuff Pass (3 Days)\" {count}");
+
+        // ================================================================ CADENCE (design 17): the fight, its music, the beat
+
+        private static KryticalNova.Combat.PlayerCombatState FightState => LocalPlayer != null ? LocalPlayer.GetComponent<KryticalNova.Combat.PlayerCombatState>() : null;
+        private static KryticalNova.Combat.PlayerCadence Cadence => LocalPlayer != null ? LocalPlayer.GetComponent<KryticalNova.Combat.PlayerCadence>() : null;
+        private static KryticalNova.Audio.MusicConductor Conductor => Application.isPlaying ? KryticalNova.Audio.MusicConductor.Instance : null;
+        private static bool HasMusic => IsReady && Conductor != null && Conductor.Music != null;
+
+        [TabGroup(Tabs, CadenceTab), Title("In A Fight Or Not"), ShowInInspector, DisplayAsString, LabelText("Now"), PropertyOrder(1100)]
+        private string FightNow => FightState == null ? "-" : FightState.InCombat ? $"In a fight: {FightState.Reasons}" : "Not in a fight";
+
+        [TabGroup(Tabs, CadenceTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Hold in a fight (as a war or The Scar will)"), PropertyOrder(1101)]
+        private bool HeldInFight
+        {
+            get => FightState != null && (FightState.Reasons & KryticalNova.Combat.CombatReasons.Held) != 0;
+            set { if (value != HeldInFight) Run($"gm.combat hold {(value ? "on" : "off")}"); }
+        }
+
+        [ButtonGroup(Tabs + "/" + CadenceTab + "/Fight"), EnableIf(nameof(IsReady)), LabelText("Print"), PropertyOrder(1102)]
+        private void PrintFight() => Run("gm.combat");
+
+        [ButtonGroup(Tabs + "/" + CadenceTab + "/Fight"), EnableIf(nameof(IsReady)), LabelText("Log Starts And Ends"), PropertyOrder(1103)]
+        private void WatchFight() => Run("gm.combat watch on");
+
+        [ButtonGroup(Tabs + "/" + CadenceTab + "/Fight"), EnableIf(nameof(IsReady)), LabelText("Stop Logging"), PropertyOrder(1104)]
+        private void UnwatchFight() => Run("gm.combat watch off");
+
+        [TabGroup(Tabs, CadenceTab), Title("Fight Music (heard only in a fight)"), ShowInInspector, DisplayAsString(false), LabelText("This Machine"), PropertyOrder(1110)]
+        private string MusicNow => !Application.isPlaying ? "-" : Conductor == null ? "This scene has no fight music." : KryticalNova.Audio.CombatMusicPlayer.Report;
+
+        [TabGroup(Tabs, CadenceTab), ShowInInspector, ValueDropdown(nameof(TrackChoices)), EnableIf(nameof(HasMusic)), LabelText("Track"), PropertyOrder(1111)]
+        private int musicTrack = 1;
+
+        private IEnumerable<ValueDropdownItem<int>> TrackChoices()
+        {
+            if (!HasMusic) yield break;
+            KryticalNova.Audio.MusicTrack[] tracks = Conductor.Music.combat;
+            for (int i = 0; i < tracks.Length; i++)
+                if (tracks[i] != null) yield return new ValueDropdownItem<int>($"{i + 1}  {tracks[i].Title}  ({tracks[i].beatsPerMinute:0.##} a minute)", i + 1);
+        }
+
+        [ButtonGroup(Tabs + "/" + CadenceTab + "/Music"), EnableIf(nameof(HasMusic)), LabelText("Play This Track Over And Over"), PropertyOrder(1112)]
+        private void PlayTrack() => Run($"gm.music.track {musicTrack}");
+
+        [ButtonGroup(Tabs + "/" + CadenceTab + "/Music"), EnableIf(nameof(HasMusic)), LabelText("Tracks In Turn"), PropertyOrder(1113)]
+        private void PlayRound() => Run("gm.music.track round");
+
+        [ButtonGroup(Tabs + "/" + CadenceTab + "/Music"), EnableIf(nameof(HasMusic)), LabelText("Print"), PropertyOrder(1114)]
+        private void PrintMusic() => Run("gm.music");
+
+        [TabGroup(Tabs, CadenceTab), ShowInInspector, ToggleLeft, EnableIf(nameof(HasMusic)), LabelText("Click on every beat (this machine only)"), PropertyOrder(1115)]
+        private bool BeatClick
+        {
+            get => Application.isPlaying && KryticalNova.Audio.CombatMusicPlayer.Click;
+            set { if (value != BeatClick) Run($"gm.music.click {(value ? "on" : "off")}"); }
+        }
+
+        [TabGroup(Tabs, CadenceTab), ShowInInspector, PropertyRange(-200f, 200f), EnableIf(nameof(HasMusic)), LabelText("Nudge Every Beat (ms)"), PropertyOrder(1116)]
+        [InfoBox("For finding a track's right value by ear with the click on. It is not kept: tell Claude the value and it is baked into the track.", InfoMessageType.None)]
+        private float BeatNudge
+        {
+            get => Conductor != null ? Mathf.Round(Conductor.State.Nudge * 1000f) : 0f;
+            set { if (Conductor != null && !Mathf.Approximately(Mathf.Round(value), BeatNudge)) Run($"gm.music.nudge {F(Mathf.Round(value))}", log: false); }
+        }
+
+        [TabGroup(Tabs, CadenceTab), Title("Cadence (a skill key pressed on the beat)"), ShowInInspector, DisplayAsString(false), LabelText("Last Key"), PropertyOrder(1120)]
+        private string CadenceLast => Cadence != null ? Cadence.LastPress : "-";
+
+        [TabGroup(Tabs, CadenceTab), ShowInInspector, DisplayAsString, LabelText("Counts"), PropertyOrder(1121)]
+        private string CadenceCounts
+        {
+            get
+            {
+                KryticalNova.Combat.PlayerCadence cadence = Cadence;
+                if (cadence == null) return "-";
+                int judged = cadence.PressesOn + cadence.PressesOff;
+                string timing = judged > 0 ? $" · average {Mathf.Abs(cadence.AverageErrorMs):0} ms {(cadence.AverageErrorMs < 0f ? "early" : "late")}, spread {cadence.SpreadMs:0} ms" : string.Empty;
+                return $"on beat {cadence.PressesOn} · off beat {cadence.PressesOff} · casts boosted {cadence.CastsOnCadence}{timing}";
+            }
+        }
+
+        [TabGroup(Tabs, CadenceTab), ShowInInspector, DisplayAsString, LabelText("Rules"), PropertyOrder(1122)]
+        private string CadenceRulesNow
+        {
+            get
+            {
+                KryticalNova.Combat.CadenceSettings settings = Cadence != null ? Cadence.Settings : null;
+                return settings == null ? "-" : $"{(settings.enabled ? "on" : "OFF")} · within {settings.windowMs:0} ms of a beat · +{settings.bonusPercent:0.#} % damage · kept {settings.keepSeconds:0.#} s";
+            }
+        }
+
+        [TabGroup(Tabs, CadenceTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Readout on the game screen (beats coming, hits on and off the beat)"), PropertyOrder(1123)]
+        private bool CadenceReadout
+        {
+            get => KryticalNova.Combat.PlayerCadence.ReadoutShown;
+            set { if (value != CadenceReadout) Run($"gm.cadence window {(value ? "on" : "off")}"); }
+        }
+
+        [TabGroup(Tabs, CadenceTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Print every press of every player to the log"), PropertyOrder(1124)]
+        private bool CadenceLog
+        {
+            get => Application.isPlaying && KryticalNova.Combat.PlayerCadence.Logging;
+            set { if (value != CadenceLog) Run($"gm.cadence log {(value ? "on" : "off")}"); }
+        }
+
+        [ButtonGroup(Tabs + "/" + CadenceTab + "/Cadence"), EnableIf(nameof(IsReady)), LabelText("Start Counts Again"), PropertyOrder(1125)]
+        private void ResetCadence() => Run("gm.cadence reset");
+
+        [ButtonGroup(Tabs + "/" + CadenceTab + "/Cadence"), EnableIf(nameof(IsReady)), LabelText("Print"), PropertyOrder(1126)]
+        private void PrintCadence() => Run("gm.cadence");
 
         // Live readouts (HP, clock, stats) refresh ~10×/s while playing.
         private void OnInspectorUpdate()

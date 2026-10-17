@@ -51,7 +51,7 @@ namespace KryticalNova.EditorTools
             (CraftItemIds.HotStreakChip, "Skill_GarudasPrayer", HotStreakDropLevel),
         };
 
-        private static bool IsPrimeChip(ClassSkillSlot slot) => slot == ClassSkillSlot.S6 || slot == ClassSkillSlot.S7;
+        private static bool IsPrimeChip(ClassSkillSlot slot) => CraftItemIds.IsPrimeChipSlot(slot);
 
         // A Zenith Dossier and the skill it unlocks: slot 8 of its weapon class.
         private static readonly (ushort Dossier, string SkillPath)[] Zeniths =

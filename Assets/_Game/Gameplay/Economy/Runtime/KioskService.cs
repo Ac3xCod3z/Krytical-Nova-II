@@ -205,7 +205,7 @@ namespace KryticalNova.Economy
             ServerSave.SaveWorld(WorldName);
             owner.ServerSaveNow();
             owner.ServerPushView();
-            owner.Tell($"{record.shopName} is open for {tier.label}. It sells while you are away; collect your earnings from the Kiosk window [T].");
+            owner.Tell($"{record.shopName} is open for {tier.label}. It sells while you are away; collect your earnings from the Kiosk window [J].");
             return null;
         }
 
@@ -265,7 +265,7 @@ namespace KryticalNova.Economy
                 // Nothing left to sell: the stand goes, the till waits.
                 record.open = false;
                 RemoveStand(record);
-                if (owner != null) owner.Tell($"{record.shopName} sold out and closed. Collect your earnings from the Kiosk window [T].");
+                if (owner != null) owner.Tell($"{record.shopName} sold out and closed. Collect your earnings from the Kiosk window [J].");
             }
             else stand.Publish();
 
@@ -286,7 +286,7 @@ namespace KryticalNova.Economy
             ServerSave.SaveWorld(WorldName);
             PlayerKiosk owner = OnlineOwner(record);
             if (owner == null) return;
-            owner.Tell($"{record.shopName} has closed: its time ran out. Collect what is left from the Kiosk window [T].");
+            owner.Tell($"{record.shopName} has closed: its time ran out. Collect what is left from the Kiosk window [J].");
             owner.ServerPushView();
         }
 
@@ -355,12 +355,12 @@ namespace KryticalNova.Economy
                 int items = 0;
                 long creds = 0;
                 foreach (KioskSale sale in record.unseenSales) { items += sale.count; creds += sale.creds; }
-                owner.Tell($"While you were away {record.shopName} sold {items} item{(items == 1 ? string.Empty : "s")} for {WalletRules.FormatCreds(creds)} after tax. Collect it from the Kiosk window [T].");
+                owner.Tell($"While you were away {record.shopName} sold {items} item{(items == 1 ? string.Empty : "s")} for {WalletRules.FormatCreds(creds)} after tax. Collect it from the Kiosk window [J].");
                 record.unseenSales.Clear();
                 ServerSave.SaveWorld(WorldName);
             }
             else if (!record.open)
-                owner.Tell($"{record.shopName} has closed. What it left is waiting in the Kiosk window [T].");
+                owner.Tell($"{record.shopName} has closed. What it left is waiting in the Kiosk window [J].");
             owner.ServerPushView();
         }
 

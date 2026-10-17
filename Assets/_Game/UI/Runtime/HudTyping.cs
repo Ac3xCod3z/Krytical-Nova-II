@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// Text fields on the HUD: while one has the cursor, the Hotbar keys (1-0, Q W E R) and the window keys must
+    /// Text fields on the HUD: while one has the cursor, the Hotbar keys (1-0, Q W E R T) and the window keys must
     /// not fire. Every window with a text field guards it here instead of repeating the same focus handling.
     /// </summary>
     public static class HudTyping

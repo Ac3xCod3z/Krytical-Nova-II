@@ -236,6 +236,8 @@ namespace KryticalNova.Hostiles.Emerald
         public void Strike(CombatEntity target)
         {
             if (!awake || target == null || !target.IsAlive || !entity.IsAlive) return;
+            // A player up a wall or in a tree, above what this species can reach: the swing meets nothing.
+            if (definition != null && target.transform.position.y - transform.position.y > definition.reachAbove) return;
             CharacterCombatStats mine = entity.CombatStats;
             if (mine == null || target.CombatStats == null) return;
 

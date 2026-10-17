@@ -26,6 +26,7 @@ namespace KryticalNova.EditorTools
         }
 
         private const string Runtime = ", KryticalNova.Runtime";
+        public const string CadenceSettingsPath = "Assets/_Game/Gameplay/Combat/Data/Assets/CadenceSettings.asset";
         public const string EconomySettingsPath = "Assets/_Game/Gameplay/Economy/Data/Assets/EconomySettings.asset";
         public const string GearProgressionPath = "Assets/_Game/Gameplay/Items/Data/Assets/GearProgressionSettings.asset";
         public const string NovaSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/NovaSettings.asset";
@@ -39,6 +40,11 @@ namespace KryticalNova.EditorTools
         public const string SponsorSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SponsorSettings.asset";
         public const string HousingSettingsPath = "Assets/_Game/Gameplay/Housing/Data/Assets/HousingSettings.asset";
         public const string RecallSettingsPath = "Assets/_Game/Gameplay/Player/Data/Assets/RecallSettings.asset";
+        public const string WallstrideSettingsPath = "Assets/_Game/Gameplay/Player/Data/Assets/WallstrideSettings.asset";
+        // Wallstride's stand-in clips until a climbing set exists: a vault's plant and its go-over, the vault pack's run
+        // loop (the body is moved by the motor, never by the clip), and the Base Locomotion crouch and fall.
+        private const string VaultCopies = "Assets/_Game/Characters/Player/Animations/Vaults/";
+        private const string BaseLocomotion = "Assets/Synty/AnimationBaseLocomotion/Animations/Sidekick/Masculine/";
         public const string FlaskSettingsPath = "Assets/_Game/Gameplay/Items/Data/Assets/FlaskSettings.asset";
         public const string FurnishingCatalogPath = "Assets/_Game/Gameplay/Housing/Data/Assets/FurnishingCatalog.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
@@ -56,6 +62,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Combat.PlayerSkillQueue"),
             // Whether the player is in a fight, told to every machine (a pet keeps calm in one).
             new Row("KryticalNova.Combat.PlayerCombatState"),
+            // Cadence: a skill key pressed on the beat of the fight music (design 17).
+            new Row("KryticalNova.Combat.PlayerCadence", ("settings", CadenceSettingsPath)),
             new Row("KryticalNova.Pets.PlayerPet", ("catalog", "Assets/_Game/Gameplay/Pets/Data/Assets/PetCatalog.asset")),
             new Row("KryticalNova.Economy.PlayerWallet", ("settings", EconomySettingsPath)),
             new Row("KryticalNova.Items.PlayerLoot", ("dropPrefab", GameplayPrefabsSetup.WorldDropPath)),
@@ -94,6 +102,14 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Social.PlayerFollow", ("settings", SquadSettingsPath)),
             // Serums: what a character has taken, and the stats that stay.
             new Row("KryticalNova.Progression.PlayerSerums", ("settings", SerumSettingsPath)),
+            // Wallstride: running up walls and into trees (level 60, Run and Jump at rank 20).
+            new Row("KryticalNova.Player.PlayerWallRunMotor", ("settings", WallstrideSettingsPath),
+                // In-place copies of their own (WallstrideClipCopies): the originals carry travel the climb must not.
+                ("plantClip", WallstrideClipCopies.Plant),
+                ("climbClip", WallstrideClipCopies.Climb),
+                ("mantleClip", WallstrideClipCopies.Mantle),
+                ("perchClip", BaseLocomotion + "Idles/A_MOD_BL_Idle_Crouching_Masc.fbx"),
+                ("dropClip", BaseLocomotion + "InAir/A_MOD_BL_InAir_FallLarge_Masc.fbx")),
             // The Recall Tag: a channel, then back to the map's spawn points.
             new Row("KryticalNova.Player.PlayerRecall", ("settings", RecallSettingsPath)),
             // The Flux Flask: a drink of Flux over time, and the refill at an Apothecary.
@@ -110,6 +126,9 @@ namespace KryticalNova.EditorTools
             // Crew Halls: the Furnishing Crate, and the player's side of their Hall (the sandbox Lot, for now).
             new Row("KryticalNova.Housing.PlayerCrate", ("settings", HousingSettingsPath), ("catalog", FurnishingCatalogPath)),
             new Row("KryticalNova.Housing.PlayerHousing", ("settings", HousingSettingsPath), ("catalog", FurnishingCatalogPath)),
+            // Level of detail: other players get lighter with distance (this machine's own is always whole); the
+            // settings also hold how far detail reaches at each graphics preset.
+            new Row("KryticalNova.Rendering.CharacterLod", ("settings", "Assets/_Game/Rendering/Data/Assets/WorldLodSettings.asset")),
             // What lets a Hostile see, chase and strike a player (its own assembly: the only one that knows Emerald AI).
             new Row("KryticalNova.Hostiles.Emerald.KNEmeraldPlayerBridge, KryticalNova.Hostiles.Emerald"),
         };
@@ -118,6 +137,7 @@ namespace KryticalNova.EditorTools
         {
             if (Rows.Length == 0) return;
             GameplayPrefabsSetup.Run(); // the prefabs the player's systems put into the world
+            WallstrideClipCopies.EnsureCopies(); // made before the rows below point at them
             GameObject root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
             try
             {

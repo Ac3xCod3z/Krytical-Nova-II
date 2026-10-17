@@ -18,6 +18,9 @@ namespace KryticalNova.Progression.Tests
         [TestCase(29f, 60f)]
         [TestCase(29f, 30f)]
         [TestCase(29f, 20f)]
+        // The fastest Run rank with the Move Speed stat at its limit (Boots and the ranged Stance).
+        [TestCase(43.5f, 60f)]
+        [TestCase(43.5f, 20f)]
         public void A_body_arrives_however_far_it_goes_in_a_frame(float fullSpeed, float framesPerSecond)
         {
             float frame = 1f / framesPerSecond;
@@ -57,6 +60,15 @@ namespace KryticalNova.Progression.Tests
         public void A_walk_is_never_taken_for_a_stall()
         {
             Assert.Greater(settings.walkSpeed * settings.arrivalMinSpeedFactor * settings.stallSeconds, settings.stallDistance * 10f);
+        }
+
+        [Test]
+        public void TheMoveSpeedStat_MultipliesSpeed_WithinItsLimits()
+        {
+            Assert.AreEqual(1f, settings.StatSpeedMultiplier(100f), 1e-5f, "100 % is normal speed");
+            Assert.AreEqual(1.2f, settings.StatSpeedMultiplier(120f), 1e-5f, "the ranged Stance at full rank");
+            Assert.AreEqual(settings.maxStatSpeedMultiplier, settings.StatSpeedMultiplier(400f), 1e-5f);
+            Assert.AreEqual(settings.minStatSpeedMultiplier, settings.StatSpeedMultiplier(0f), 1e-5f);
         }
     }
 }

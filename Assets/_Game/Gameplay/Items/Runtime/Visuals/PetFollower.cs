@@ -441,6 +441,7 @@ namespace KryticalNova.Items.Visuals
             pet.name = $"Pet ({current.displayName})";
             VisualUtility.PrepareCosmetic(pet, gameObject.layer);
             ActorDrawOrder.On(pet); // a Nova hides the pets behind it
+            CharacterLod.Ensure(pet); // lighter with distance
             bodyRenderers = pet.GetComponentsInChildren<Renderer>(true); // before its effects are added: the body only
             vanished = false;
             bool posed = PetAnimations.Pose(pet, restPose); // before its Animator starts: this is the pose it goes back to

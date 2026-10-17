@@ -80,7 +80,7 @@ Walking more than 8 m apart, dying or leaving cancels. The trade window shows th
 ## Kiosks (row 15)
 
 - **Where:** inside a trade zone that allows Kiosks (`TradeZone.allowKiosks`): the Central Plaza of the starter town today. Not within 2.5 m of another Kiosk or a vendor.
-- **Setting up (T):** a shop name, up to 24 stacks from the Pack with a price for one of each, and how long it runs.
+- **Setting up (J; T until 17 Oct 2026, when T became a Hotbar slot):** a shop name, up to 24 stacks from the Pack with a price for one of each, and how long it runs.
 
 | Duration | Cost |
 | --- | --- |
@@ -169,6 +169,7 @@ One bench, at the Fabricator (who stands at the Elder hall, and takes stat reset
 
 - No recipe costs Creds today (`CraftRecipe.creds` is there for when one should). Materials are taken from the Pack, the Vault and the Deep Vault; what is made goes into the Pack, into the room its materials freed.
 - **Drops** (`HostileSettings.materialDrops`, each row rolled on its own for every kill, scaled by the level gap and the server drop rate; all placeholders): each colour cell 1.5 %, a Chroma Cell 0.2 %, a Prism Cell 0.2 %, each Dossier Page 0.25 % (owner: rarer than the first 0.5 %; to be tuned) and each Dossier 0.02 %, the last two from Hostiles of level 70 and up.
+- **Skill Chips of the two-hit attacks** (17 Oct 2026): 18, ids 9510 to 9527 (`CraftingSettings.TwoHitChipFirst`), one for each class's level 60 and level 80 two-hit attack, on the same drop rules as the other chips of their level; `gm.chips` gives a character its faction's six.
 - **A Dossier** is read from the Pack (level 80): it unlocks its skill, which is then learned with skill points like any other.
 - **Zenith Dossiers** (11 Oct 2026; Twelve Sky 2: the War God skills): nine, one for each weapon class's Zenith technique (slot 8), with no Pages and no recipe. Each unlocks its own class's technique only (`SkillDefinitionSO.LockKey`; the rank stays the slot's). Drop: 0.02 % from Hostiles of level 113 and up (`CraftingBuilder.ZenithDropLevel`, the first Prime ground), so none drops until Prime grounds exist; `gm.zenith` gives a character its faction's three.
 
@@ -420,7 +421,7 @@ Three items, used from the Pack. Each has a clock of its own; while a clock has 
 
 | Key | Window | | Key | Window |
 | --- | --- | --- | --- | --- |
-| **F** | Contacts | | **T** | Kiosk |
+| **F** | Contacts | | **J** | Kiosk (was **T** until 17 Oct 2026) |
 | **G** | Crew | | **~** | Pick up the nearest item |
 | **B** (held) | Emote wheel | | **Esc** | Game menu (when nothing else is open) |
 | **L** | Arrange (the Furnishing Crate) | | | |

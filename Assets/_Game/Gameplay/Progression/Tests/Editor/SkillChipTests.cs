@@ -10,7 +10,8 @@ namespace KryticalNova.Tests
     /// <summary>
     /// Skill Chips as the owner set them (11 Oct 2026): every class has a single hit and a multi hit of level 60 that
     /// open with a chip; the pair that was level 60 (slots 6 and 7) is level 80 and opens with a chip of the Prime
-    /// grounds; Aegis, Killer Instinct and Hot Streak open with a chip too. One chip opens one skill.
+    /// grounds; Aegis, Killer Instinct and Hot Streak open with a chip too. The two-hit attacks of levels 60 and 80
+    /// open with a chip of their own (16 Oct 2026), the level 80 one from the Prime grounds. One chip opens one skill.
     /// </summary>
     public sealed class SkillChipTests
     {
@@ -40,7 +41,7 @@ namespace KryticalNova.Tests
             Assert.AreEqual(2, pictures.Count, "the Skill Chips share two icons");
             Assert.AreNotSame(items.Get(CraftItemIds.AegisChip).icon, items.Get(CraftItemIds.SkillChip(WeaponClassId.Monoblade, ClassSkillSlot.S6)).icon);
             Assert.AreSame(items.Get(CraftItemIds.AegisChip).icon, items.Get(CraftItemIds.HotStreakChip).icon);
-            Assert.AreEqual(WeaponClasses.Count * CraftItemIds.SkillChipsPerClass + 3, seen.Count);
+            Assert.AreEqual(WeaponClasses.Count * CraftItemIds.SkillChipSlots.Length + 3, seen.Count);
         }
 
         [Test]
@@ -56,7 +57,7 @@ namespace KryticalNova.Tests
                 {
                     SkillDefinitionSO skill = entry.SkillIn(slot);
                     Assert.NotNull(skill, $"{weaponClass} {slot}");
-                    bool prime = slot == ClassSkillSlot.S6 || slot == ClassSkillSlot.S7;
+                    bool prime = CraftItemIds.IsPrimeChipSlot(slot);
                     Assert.AreEqual(prime ? 80 : 60, skill.requiredCharacterLevel, skill.displayName);
                     Assert.IsTrue(skill.requiresSkillBook, skill.displayName);
                     ushort chip = CraftItemIds.SkillChip(weaponClass, slot);
@@ -71,6 +72,37 @@ namespace KryticalNova.Tests
                 // The level 60 pair is no stronger than the level 80 pair at full rank.
                 Assert.LessOrEqual(entry.SkillIn(ClassSkillSlot.Lv60Single).maxDamagePercent, entry.SkillIn(ClassSkillSlot.S6).maxDamagePercent, weaponClass.ToString());
                 Assert.LessOrEqual(entry.SkillIn(ClassSkillSlot.Lv60Multi).maxDamagePercent, entry.SkillIn(ClassSkillSlot.S7).maxDamagePercent, weaponClass.ToString());
+            }
+        }
+
+        [Test]
+        public void EveryClassHasATwoHitAttackAtLevels1_30_60And80()
+        {
+            var classes = AssetDatabase.LoadAssetAtPath<WeaponClassCatalog>(ClassCatalogPath);
+            Assert.NotNull(classes, ClassCatalogPath);
+            foreach (WeaponClassId weaponClass in WeaponClasses.All)
+            {
+                Assert.IsTrue(classes.TryGet(weaponClass, out WeaponClassCatalog.Entry entry), weaponClass.ToString());
+                foreach ((ClassSkillSlot slot, int level, ClassSkillSlot single, ClassSkillSlot multi) in new[]
+                         {
+                             (ClassSkillSlot.Lv1TwoHit, 1, ClassSkillSlot.S2, ClassSkillSlot.S3),
+                             (ClassSkillSlot.Lv30TwoHit, 30, ClassSkillSlot.S4, ClassSkillSlot.S5),
+                             (ClassSkillSlot.Lv60TwoHit, 60, ClassSkillSlot.Lv60Single, ClassSkillSlot.Lv60Multi),
+                             (ClassSkillSlot.Lv80TwoHit, 80, ClassSkillSlot.S6, ClassSkillSlot.S7),
+                         })
+                {
+                    SkillDefinitionSO skill = entry.SkillIn(slot);
+                    Assert.NotNull(skill, $"{weaponClass} {slot}");
+                    Assert.AreEqual(2, skill.hitCount, skill.displayName);
+                    Assert.AreEqual(2, skill.hitTimesNormalized.Length, $"{skill.displayName}: a moment for each hit");
+                    Assert.AreEqual(SkillKind.TwoHit, SkillKinds.Of(skill), skill.displayName);
+                    Assert.AreEqual(level, skill.requiredCharacterLevel, skill.displayName);
+                    Assert.AreEqual(level >= 60, skill.requiresSkillBook, $"{skill.displayName}: levels 1 and 30 from the Instructor, 60 and 80 from a chip");
+                    Assert.NotNull(skill.castClip, $"{skill.displayName} has a cast");
+                    // Between the single hit and the multi hit of its level.
+                    Assert.Greater(skill.maxDamagePercent, entry.SkillIn(single).maxDamagePercent, skill.displayName);
+                    Assert.Less(skill.maxDamagePercent, entry.SkillIn(multi).maxDamagePercent, skill.displayName);
+                }
             }
         }
 

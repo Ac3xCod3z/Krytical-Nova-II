@@ -17,7 +17,7 @@ namespace KryticalNova.EditorTools
     /// all three and only the art differs.
     ///
     /// The Hotbar: the pack's ARPG bar widened to ten slots (keys 1 to 0) with its XP bar and without its HP and Flux
-    /// containers, and the pack's small item bar cut to four slots for Q W E R.
+    /// containers, and the pack's small item bar cut to five slots for Q W E R T (a fifth made from the fourth where the pack has four).
     /// The player's plate: the pack's portrait frame for a live picture of the character, the level, and the HP and
     /// Flux bars with their numbers.
     /// </summary>
@@ -25,9 +25,9 @@ namespace KryticalNova.EditorTools
     {
         public const string Folder = "Assets/_Game/UI/HUD/Faction";
         public const string KitFolder = "Assets/_Game/UI/Skins";
-        private const int NumberSlots = 10, LetterSlots = 4;
+        private const int NumberSlots = 10, LetterSlots = 5; // Q W E R T
         private const float LetterGap = 50f;
-        /// <summary>The Q W E R bar's slots are drawn larger than the main bar's in every pack: brought down to match.</summary>
+        /// <summary>The Q W E R T bar's slots are drawn larger than the main bar's in every pack: brought down to match.</summary>
         private const float LetterScale = 0.72f;
         /// <summary>
         /// How wide every faction's main bar (slots 1 to 0 with its ends) is drawn, in panel pixels of the 1280 x 720
@@ -48,7 +48,7 @@ namespace KryticalNova.EditorTools
             public FactionId Faction;
             public string Pack;          // folder under Assets/Synty
             public string Main;          // the bar that holds slots 1 to 0
-            public string Letters;       // the small bar for Q W E R
+            public string Letters;       // the small bar for Q W E R T
             public string Experience;    // an XP bar of its own, when the main bar has none
             public Vector2 ExperienceAt; // where a separate XP bar sits, from the main bar's top centre
             public float ExperienceHeight; // how tall a separate XP bar is drawn (units)
@@ -256,7 +256,7 @@ namespace KryticalNova.EditorTools
                     over.sortingOrder = HudChrome.CanvasOrder + 1;
                 }
 
-                // The Q W E R bar to the right of the main bar's art, its slots level with the main slots.
+                // The Q W E R T bar to the right of the main bar's art, its slots level with the main slots.
                 Bounds mainDrawn = Drawn(root, mainBar);
                 Bounds firstLetter = RectTransformUtility.CalculateRelativeRectTransformBounds(root, letterSlots[0]);
                 Bounds firstNumber = RectTransformUtility.CalculateRelativeRectTransformBounds(root, numberSlots[0]);

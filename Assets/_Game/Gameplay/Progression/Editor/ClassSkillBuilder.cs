@@ -9,8 +9,8 @@ using UnityEngine;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Builds the skill kits of the nine weapon classes and the class catalog. Every class has the same ten slots
-    /// (S1 to S8, Stance, Guard). The Monoblade's ten skills, built and tuned by <see cref="BladeSkillBuilder"/>,
+    /// Builds the skill kits of the nine weapon classes and the class catalog. Every class has the same sixteen slots
+    /// (S1 to S8, Stance, Guard, the level 60 pair and the four two-hit attacks). The Monoblade's skills, built and tuned by <see cref="BladeSkillBuilder"/>,
     /// are the template: each other class gets a copy per slot with its own name, animation set, reach and stance
     /// stat. Names come from _Docs/Reference/12Sky/04_Weapon_Classes.md.
     /// Re-runnable: a class skill that already exists keeps its numbers and its animation (so hand tuning survives);
@@ -31,7 +31,8 @@ namespace KryticalNova.EditorTools
         {
             "FuryStrike", "HaeseoStroke", "GentlemansPen", "DevilsStrike", "FlashOfRage",
             "SunraysStroke", "PhantomThunder", "ThunderousDragon", "LightningFlash", "AzureWall",
-            BladeSkillBuilder.Lv60SingleId, BladeSkillBuilder.Lv60MultiId
+            BladeSkillBuilder.Lv60SingleId, BladeSkillBuilder.Lv60MultiId,
+            BladeSkillBuilder.Lv1TwoHitId, BladeSkillBuilder.Lv30TwoHitId, BladeSkillBuilder.Lv60TwoHitId, BladeSkillBuilder.Lv80TwoHitId
         };
 
         private enum ClipSet
@@ -49,10 +50,10 @@ namespace KryticalNova.EditorTools
             public WeaponClassId id;
             public ClipSet clips;
             public string summary;
-            public string[] names; // slot order: S1..S8, Stance, Guard, the level 60 single hit, the level 60 multi hit
+            public string[] names; // slot order: S1..S8, Stance, Guard, the level 60 single and multi hit, the two-hit attacks of levels 1, 30, 60 and 80
         }
 
-        // Clips per slot (S1..S8, Stance, Guard, level 60 single, level 60 multi). Null keeps the template's clip.
+        // Clips per slot (S1..S8, Stance, Guard, level 60 single, level 60 multi, the four two-hit attacks). Null keeps the template's clip.
         private static readonly string[] GreatSwordClips =
         {
             GreatSword + "3_Skills/M_Big_Sword@Skill_H.FBX",
@@ -66,7 +67,12 @@ namespace KryticalNova.EditorTools
             GreatSword + "1_Movements/0__Intro/M_Big_Sword@Intro.FBX",
             null,
             GreatSword + "3_Skills/M_Big_Sword@Skill_C.FBX",
-            GreatSword + "3_Skills/M_Big_Sword@Skill_E.FBX"
+            GreatSword + "3_Skills/M_Big_Sword@Skill_E.FBX",
+            // The two-hit tier: clips no skill used yet.
+            GreatSword + "2_Attacks/3__Dash_Attack/M_Big_Sword@Dash_Attack_ver_A.FBX",
+            GreatSword + "3_Skills/M_Big_Sword@Skill_F.FBX",
+            GreatSword + "3_Skills/M_Big_Sword@Skill_I.FBX",
+            GreatSword + "3_Skills/M_Big_Sword@Skill_K.FBX"
         };
 
         private static readonly string[] BowClips =
@@ -82,7 +88,12 @@ namespace KryticalNova.EditorTools
             null,
             null,
             Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
-            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx"
+            Bow + "A_POLY_BOW_Stand_Shoot_Reload_Neut.fbx",
+            // The two-hit tier: the pack has no two-shot clip, so each tier takes another of its bow grips.
+            Bow + "Cmp/A_POLY_BOW_Cmp_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "Lng/A_POLY_BOW_Lng_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "Rcv/A_POLY_BOW_Rcv_Stand_Shoot_Reload_Neut.fbx",
+            Bow + "Rcv/A_POLY_BOW_Rcv_Stand_Shoot_Leaping_Neut.fbx"
         };
 
         private static readonly ClassSeed[] Classes =
@@ -90,56 +101,53 @@ namespace KryticalNova.EditorTools
             new ClassSeed
             {
                 id = WeaponClassId.Monoblade, clips = ClipSet.Katana, summary = "A single-edged blade. Fast, clean cuts on the front line.",
-                names = new[] { "Perimeter Cut", "Clean Cut", "Signature Series", "Severance", "Hostile Takeover", "Zero Hour", "Liquidation", "Market Crash", "Overclock", "Firewall", "Margin Call", "Short Squeeze" }
+                names = new[] { "Perimeter Cut", "Clean Cut", "Signature Series", "Severance", "Hostile Takeover", "Zero Hour", "Liquidation", "Market Crash", "Overclock", "Firewall", "Margin Call", "Short Squeeze", "Double Entry", "Split Decision", "Countersign", "Double Jeopardy" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Glaive, clips = ClipSet.GreatSword, summary = "A polearm that holds a line and controls the space around it.",
-                names = new[] { "Riot Sweep", "Suppression Thrust", "Compliance Combo", "Curfew", "Cease and Desist", "Lockstep", "Full Enforcement", "Martial Law", "Bulwark Protocol", "Shield Field", "Injunction", "Crackdown" }
+                names = new[] { "Riot Sweep", "Suppression Thrust", "Compliance Combo", "Curfew", "Cease and Desist", "Lockstep", "Full Enforcement", "Martial Law", "Bulwark Protocol", "Shield Field", "Injunction", "Crackdown", "Baton Pair", "Summons", "Double Warrant", "Due Process" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Carbine, clips = ClipSet.Katana, summary = "A firearm. Picks targets apart from range.",
-                names = new[] { "Spray Pattern", "Clean Shot", "Triple Tap", "Headhunter", "Burst Contract", "Longshot", "Terminal Burst", "Orbital Call", "Target Lock", "Reactive Plating", "Deadeye", "Suppressing Fire" }
+                names = new[] { "Spray Pattern", "Clean Shot", "Triple Tap", "Headhunter", "Burst Contract", "Longshot", "Terminal Burst", "Orbital Call", "Target Lock", "Reactive Plating", "Deadeye", "Suppressing Fire", "Double Tap", "Controlled Pair", "Crossfire", "Twin Verdict" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Harvester, clips = ClipSet.GreatSword, summary = "A reaping blade. Wide, heavy swings that cut down whatever is close.",
-                names = new[] { "Reaping Cycle", "Culling Stroke", "Threshing Combo", "Scrap Sentence", "Hydraulic Flurry", "Extinction Blow", "Kill Loop", "Terminal Harvest", "Kill Protocol", "Null Shell", "Shear Line", "Combine Pass" }
+                names = new[] { "Reaping Cycle", "Culling Stroke", "Threshing Combo", "Scrap Sentence", "Hydraulic Flurry", "Extinction Blow", "Kill Loop", "Terminal Harvest", "Kill Protocol", "Null Shell", "Shear Line", "Combine Pass", "Twin Reap", "Bale and Bind", "Gleaning Pass", "Final Yield" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.ServoClaws, clips = ClipSet.Katana, summary = "Powered claws. Close, relentless and hard to move.",
-                names = new[] { "Shockwave Stomp", "Piston Jab", "Servo Combo", "Compactor", "Overdrive Cycle", "Core Breach", "Three-Phase Rend", "Zero Point", "Lockdown Plating", "Faraday Skin", "Ram Drive", "Ratchet Rush" }
+                names = new[] { "Shockwave Stomp", "Piston Jab", "Servo Combo", "Compactor", "Overdrive Cycle", "Core Breach", "Three-Phase Rend", "Zero Point", "Lockdown Plating", "Faraday Skin", "Ram Drive", "Ratchet Rush", "One-Two Piston", "Crankshaft", "Twin Clamp", "Dual Overload" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.ArcCaster, clips = ClipSet.Katana, summary = "An energy projector. Burns targets down from a distance.",
-                names = new[] { "Arc Flare", "Lance Shot", "Tri-Bolt", "Ion Spike", "Cascade Fire", "Sunspot", "Chain Storm", "Extinction Beam", "Capacitor", "Static Veil", "Flashpoint", "Arc Volley" }
+                names = new[] { "Arc Flare", "Lance Shot", "Tri-Bolt", "Ion Spike", "Cascade Fire", "Sunspot", "Chain Storm", "Extinction Beam", "Capacitor", "Static Veil", "Flashpoint", "Arc Volley", "Twin Spark", "Dipole", "Alternating Current", "Double Discharge" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Longaxe, clips = ClipSet.GreatSword, summary = "A two-handed axe. Slow to raise, final when it lands.",
-                names = new[] { "Reaping Arc", "Hewing Blow", "Clan Rhythm", "Oathbreaker", "Frostbite Flurry", "Skysplitter", "Wolfpack", "Northfall", "Blood Oath", "Ancestor's Ward", "Bonecleaver", "Raven's Feast" }
+                names = new[] { "Reaping Arc", "Hewing Blow", "Clan Rhythm", "Oathbreaker", "Frostbite Flurry", "Skysplitter", "Wolfpack", "Northfall", "Blood Oath", "Ancestor's Ward", "Bonecleaver", "Raven's Feast", "Two Ravens", "Brother's Bite", "Twinblood", "Fenris Jaws" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Claymore, clips = ClipSet.GreatSword, summary = "A great sword. The clan's shield as much as its blade.",
-                names = new[] { "Shieldwall Sweep", "Steadfast Cut", "Three Oaths", "Bulwark Strike", "Hearthguard Flurry", "Dawnguard", "Highguard Trinity", "Kingsfall", "Shieldwall", "Stoneheart", "Oathkeeper", "Vanguard's Tide" }
+                names = new[] { "Shieldwall Sweep", "Steadfast Cut", "Three Oaths", "Bulwark Strike", "Hearthguard Flurry", "Dawnguard", "Highguard Trinity", "Kingsfall", "Shieldwall", "Stoneheart", "Oathkeeper", "Vanguard's Tide", "Oath and Answer", "Twin Vows", "Shield and Sword", "Kinsguard" }
             },
             new ClassSeed
             {
                 id = WeaponClassId.Warbow, clips = ClipSet.Bow, summary = "A war bow. Light on its feet, deadly at range.",
-                names = new[] { "Arrow Rain", "Hunter's Mark", "Three Feathers", "Heartseeker", "Volley", "Moonshot", "Stormflight", "Skyfall", "Windwalk", "Barkskin", "Falcon's Eye", "Swiftwind" }
+                names = new[] { "Arrow Rain", "Hunter's Mark", "Three Feathers", "Heartseeker", "Volley", "Moonshot", "Stormflight", "Skyfall", "Windwalk", "Barkskin", "Falcon's Eye", "Swiftwind", "Two Feathers", "Paired Flight", "Twin Talons", "Wind and Thunder" }
             },
         };
 
         // Ranged single-target reach by rank (melee is 2). Area skills keep their radius.
         private const float RangedMinReach = 8f, RangedMaxReach = 12f;
         private const float StanceMin = 2f, StanceMax = 20f;
-        // Hit moments, as a share of the cast, for a clip nobody has measured yet.
-        private const float SingleHitTime = 0.4f, AreaHitTime = 0.45f;
-        private static readonly float[] TripleHitTimes = { 0.25f, 0.5f, 0.75f };
 
         [MenuItem("Krytical Nova/Progression/Build Class Skills")]
         public static void Build()
@@ -165,8 +173,7 @@ namespace KryticalNova.EditorTools
                 {
                     var slot = WeaponClasses.Slots[i];
                     SkillDefinitionSO skill;
-                    // The level 60 pair has no hit feel of its own yet: it borrows the level 80 pair's.
-                    string feel = slot == ClassSkillSlot.Lv60Single ? MonobladeIds[5] : slot == ClassSkillSlot.Lv60Multi ? MonobladeIds[6] : null;
+                    string feel = BorrowedFeel(slot);
                     if (seed.id == WeaponClassId.Monoblade)
                     {
                         skill = templates[i];
@@ -190,6 +197,8 @@ namespace KryticalNova.EditorTools
                     skill.displayName = seed.names[i];
                     skill.weaponClass = seed.id;
                     skill.classSlot = slot;
+                    // A Stance of rank 20 or more is given to the Squad too (owner, 16 Oct 2026; SquadSettings).
+                    skill.sharesWithSquad = slot == ClassSkillSlot.Stance;
                     EditorUtility.SetDirty(skill);
                     skills[i] = skill;
                 }
@@ -237,7 +246,8 @@ namespace KryticalNova.EditorTools
             {
                 ["SpiritualRage"] = ("Redline",
                     "Hold to push past the redline. Your next hit deals greatly increased damage with a higher Critical rate " +
-                    "(only the first hit of a multi-hit skill). The charge fades if unused."),
+                    "(the first hit of a multi-hit skill). A three-hit skill pressed on the beat keeps the charge for all " +
+                    "three hits, each a Critical, until one misses. The charge fades if unused."),
                 ["HeavenlySerenity"] = ("Second Wind",
                     "Take a knee and catch your breath, restoring HP and Flux every second for 20s. Higher ranks restore more " +
                     "each second. Interrupted by taking damage or moving."),
@@ -319,7 +329,7 @@ namespace KryticalNova.EditorTools
                     if (skill.IsAttack)
                     {
                         bool area = skill.targetType == SkillTargetType.AreaOfEffect;
-                        skill.hitTimesNormalized = skill.hitCount > 1 ? (float[])TripleHitTimes.Clone() : new[] { area ? AreaHitTime : SingleHitTime };
+                        skill.hitTimesNormalized = BladeSkillBuilder.DefaultHitTimes(skill.hitCount, area);
                         skill.castLiftCurve = slot == ClassSkillSlot.S8 ? BladeSkillBuilder.BakeLift(clip) : new AnimationCurve();
                     }
                 }
@@ -352,6 +362,24 @@ namespace KryticalNova.EditorTools
             }
         }
 
+        /// <summary>
+        /// The hit feel a slot without one of its own borrows, by Monoblade id; null when it has its own. The level 60
+        /// pair borrows the level 80 pair's; the two-hit attacks borrow the single hit of their level.
+        /// </summary>
+        private static string BorrowedFeel(ClassSkillSlot slot)
+        {
+            switch (slot)
+            {
+                case ClassSkillSlot.Lv60Single: return "SunraysStroke";
+                case ClassSkillSlot.Lv60Multi: return "PhantomThunder";
+                case ClassSkillSlot.Lv1TwoHit: return "HaeseoStroke";
+                case ClassSkillSlot.Lv30TwoHit: return "DevilsStrike";
+                case ClassSkillSlot.Lv60TwoHit: return "SunraysStroke";
+                case ClassSkillSlot.Lv80TwoHit: return "SunraysStroke";
+                default: return null;
+            }
+        }
+
         private static string StanceEffect(WeaponClassRole role)
         {
             switch (role)
@@ -378,6 +406,10 @@ namespace KryticalNova.EditorTools
                 case ClassSkillSlot.S7: return $"Three {hits} that each land with extra force.";
                 case ClassSkillSlot.Lv60Single: return $"A hard single {hit} that lands with some extra force.";
                 case ClassSkillSlot.Lv60Multi: return $"Three hard {hits} that each land with some extra force.";
+                case ClassSkillSlot.Lv1TwoHit: return $"Two quick {hits} at your target.";
+                case ClassSkillSlot.Lv30TwoHit: return $"Two heavier {hits} for a seasoned {WeaponClasses.DisplayName(id)}.";
+                case ClassSkillSlot.Lv60TwoHit: return $"Two hard {hits} that each land with some extra force.";
+                case ClassSkillSlot.Lv80TwoHit: return $"Two {hits} that each land with extra force.";
                 case ClassSkillSlot.S8: return $"Zenith technique. Crashes down on every enemy around you. Hold the key to keep {(ranged ? "firing" : "striking")}.";
                 case ClassSkillSlot.Stance:
                     return role == WeaponClassRole.Defense ? "Sets your stance, raising your Defense."

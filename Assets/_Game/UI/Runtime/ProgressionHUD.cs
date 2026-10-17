@@ -27,6 +27,7 @@ namespace KryticalNova.UI
         [SerializeField] private PointAndClickPlayer movement;
         [SerializeField] private PlayerResources resources;
         [SerializeField] private PlayerJumpMotor jumpMotor;
+        private PlayerWallRunMotor wallRunMotor;
         [SerializeField] private CharacterCombatStats combatStats;
         [SerializeField] private PlayerCombatSkills combatSkills;
         [SerializeField] private CharacterBuffManager buffManager;
@@ -529,6 +530,7 @@ namespace KryticalNova.UI
             movement = player.GetComponent<PointAndClickPlayer>();
             resources = player.GetComponent<PlayerResources>();
             jumpMotor = player.GetComponent<PlayerJumpMotor>();
+            wallRunMotor = player.GetComponent<PlayerWallRunMotor>();
             combatStats = player.GetComponent<CharacterCombatStats>();
             combatSkills = player.GetComponent<PlayerCombatSkills>();
             buffManager = player.GetComponent<CharacterBuffManager>();
@@ -1002,18 +1004,21 @@ namespace KryticalNova.UI
         private readonly List<SkillTreeView.Group> treeGroups = new List<SkillTreeView.Group>(4);
         private readonly List<string> treeTiers = new List<string>(6);
         private readonly Dictionary<(int, int), int> treeLanes = new Dictionary<(int, int), int>(24);
-        private const string RunKey = "run", JumpKey = "jump";
+        private const string RunKey = "run", JumpKey = "jump", WallstrideKey = "wallstride";
 
         // The tiers by the level that opens a skill: 1, 30, 60, 70, 80.
         private static readonly string[] LevelTiers = { "LV 1", "LV 30", "LV 60", "LV 70", "LV 80" };
         private static readonly string[] MoveTiers = { "MOVE" };
         // The lines along a class's skills: the area line (1 and its Zenith technique, 8), the single line (2, 4, the
-        // level 60 hit, 6), the triple line (3, 5, the level 60 flurry, 7). Drawn where both ends are on the tab.
+        // level 60 hit, 6), the two-hit line (levels 1, 30, 60, 80), the triple line (3, 5, the level 60 flurry, 7).
+        // Drawn where both ends are on the tab.
         private static readonly (ClassSkillSlot from, ClassSkillSlot to)[] ClassLinks =
         {
             (ClassSkillSlot.S1, ClassSkillSlot.S8), (ClassSkillSlot.S2, ClassSkillSlot.S4), (ClassSkillSlot.S4, ClassSkillSlot.Lv60Single),
             (ClassSkillSlot.Lv60Single, ClassSkillSlot.S6), (ClassSkillSlot.S3, ClassSkillSlot.S5), (ClassSkillSlot.S5, ClassSkillSlot.Lv60Multi),
             (ClassSkillSlot.Lv60Multi, ClassSkillSlot.S7),
+            (ClassSkillSlot.Lv1TwoHit, ClassSkillSlot.Lv30TwoHit), (ClassSkillSlot.Lv30TwoHit, ClassSkillSlot.Lv60TwoHit),
+            (ClassSkillSlot.Lv60TwoHit, ClassSkillSlot.Lv80TwoHit),
         };
         // The lines among the shared wards: the two Instructor skills lead to the Skill Chip and Dossier ones.
         private static readonly (string from, string to)[] SharedLinks =
@@ -1051,6 +1056,7 @@ namespace KryticalNova.UI
                     treeGroups.Add(new SkillTreeView.Group { Label = "JUMP", Column = 1f, Width = 1f });
                     AddMovementNode(MovementSkillId.Run, RunKey, runTile, 0f);
                     AddMovementNode(MovementSkillId.Jump, JumpKey, jumpTile, 1f);
+                    AddWallstrideNode(2f);
                     break;
                 case SkillTreeView.Tab.Wards:
                     heading = $"WARDS   ·   {className} AND SHARED";
@@ -1141,6 +1147,27 @@ namespace KryticalNova.UI
                 Rank = rank > 0 ? $"{rank}/{definition.MaxRank}" : null, Learned = rank > 0,
                 TooLow = hasNext && progression != null && progression.CurrentLevel < next.requiredCharacterLevel,
                 CanUpgrade = skills.CanUpgrade(skill, out _), Card = tile != null ? tile.parent : null,
+            });
+        }
+
+        /// <summary>
+        /// Wallstride, the passive that opens by itself (running up walls and into trees): locked until level 60 with
+        /// Run and Jump at rank 20, and its tile says which of the three are still to come.
+        /// </summary>
+        private void AddWallstrideNode(float column)
+        {
+            if (wallRunMotor == null || wallRunMotor.Settings == null || skills == null) return;
+            WallstrideSettings s = wallRunMotor.Settings;
+            bool open = wallRunMotor.WallstrideOpen;
+            int level = progression != null ? progression.CurrentLevel : 0;
+            string needs = open ? "Open: click a wall or a tree with Run or Jump selected, or run or jump into one."
+                : $"Opens at level {s.requiredLevel} ({level}), Run rank {s.requiredRunRank} ({skills.RunRank}) and Jump rank {s.requiredJumpRank} ({skills.JumpRank}).";
+            treeGroups.Add(new SkillTreeView.Group { Label = "WALLSTRIDE", Column = column, Width = 1f });
+            treeNodes.Add(new SkillTreeView.Node
+            {
+                Key = WallstrideKey, Name = "Wallstride", Column = column, Row = 0,
+                Rank = open ? "PASSIVE" : "LOCKED", Learned = open, Locked = !open, TooLow = level < s.requiredLevel,
+                Tooltip = $"Wallstride  ·  Run up walls and into trees, to get the high ground or get away. {needs}",
             });
         }
 
@@ -1398,7 +1425,12 @@ namespace KryticalNova.UI
             }
 
             Label descLabel = parts.Description;
-            if (descLabel != null) descLabel.text = skill.description;
+            if (descLabel != null)
+            {
+                // A Stance says how it reaches the Squad, with the Squad's own numbers (owner, 16 Oct 2026).
+                string squad = SquadLine(skill, rank);
+                descLabel.text = string.IsNullOrEmpty(squad) ? skill.description : $"{skill.description}\n{squad}";
+            }
 
             Label valuesLabel = parts.Values;
             if (valuesLabel != null)
@@ -1462,9 +1494,9 @@ namespace KryticalNova.UI
                     dragHint.text = "Available once acquired or crafted.";
                 else
                     dragHint.text = rank == 0 ? $"Learn {skill.displayName}, then drag to a hotbar slot."
-                        : skill.IsCharged ? "Drag to a hotbar slot (1–0, Q W E R), then hold the key to charge."
-                        : skill.holdToRepeat ? "Drag to a hotbar slot (1–0, Q W E R). Hold the key to keep attacking."
-                        : "Drag to a hotbar slot (1–0, Q W E R) to activate.";
+                        : skill.IsCharged ? "Drag to a hotbar slot (1–0, Q W E R T), then hold the key to charge."
+                        : skill.holdToRepeat ? "Drag to a hotbar slot (1–0, Q W E R T). Hold the key to keep attacking."
+                        : "Drag to a hotbar slot (1–0, Q W E R T) to activate.";
             }
 
             VisualElement tile = parts.Tile;
@@ -1477,6 +1509,9 @@ namespace KryticalNova.UI
 
         // What a skill does at a rank, in one line: shared with the Dossier card and the Hotbar hover (SkillKinds).
         private static string DescribeSkillStats(SkillDefinitionSO skill, int rank) => SkillKinds.Describe(skill, rank);
+
+        private string SquadLine(SkillDefinitionSO skill, int rank) => combatSkills == null ? string.Empty
+            : SquadBuffRules.TooltipLine(skill, rank, combatSkills.SquadShareRank, combatSkills.SquadShareRadius);
 
         /// <summary>Rebuilds the buff badges when the set of buffs changes; timers tick in <see cref="RefreshBuffTimers"/>.</summary>
         private void RefreshBuffs()
@@ -1493,7 +1528,7 @@ namespace KryticalNova.UI
                 var buff = buffs[i];
                 var badge = new VisualElement();
                 badge.AddToClassList("buff-badge");
-                badge.tooltip = buff.Skill.displayName;
+                badge.tooltip = buff.FromSquadmate && !string.IsNullOrEmpty(buff.Giver) ? $"{buff.Skill.displayName} (from {buff.Giver})" : buff.Skill.displayName;
 
                 if (buff.Skill.isAbsorptionShield)
                     badge.AddToClassList("shield-badge");
@@ -1742,8 +1777,9 @@ namespace KryticalNova.UI
                 SkillDefinitionSO def = entry.combatSkill;
                 int rank = combatSkills != null ? Mathf.Max(1, combatSkills.GetRank(def)) : 1;
                 string hold = def.IsCharged ? $"Hold {key} to charge" : def.holdToRepeat ? $"Press or hold {key}" : $"Click or press {key}";
+                string squad = SquadLine(def, rank);
                 HudTextTooltip.ShowFor(slot, $"{def.displayName}  ·  Rank {rank}",
-                    $"<b>{SkillKinds.Label(def)}</b>  ·  {SkillKinds.Describe(def, rank)}\n{hold}  ·  Right-click to clear", above: true);
+                    $"<b>{SkillKinds.Label(def)}</b>  ·  {SkillKinds.Describe(def, rank)}{(string.IsNullOrEmpty(squad) ? string.Empty : "\n" + squad)}\n{hold}  ·  Right-click to clear", above: true);
                 return;
             }
             if (entry.itemType == HotbarItemType.Movement)

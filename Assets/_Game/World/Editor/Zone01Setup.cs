@@ -142,7 +142,9 @@ namespace KryticalNova.EditorTools
             EnsureZoneUi();
             EnsureTradeZone();
             AddInteractableToPlayerRaycasts();
+            TownRoofsBuilder.Apply(out _, out _); // roofs solid where drawn, nothing walkable indoors
             BakeNavMesh();
+            RoofLinksBuilder.Build(); // after the bake: links join the roofs it made
             MinimapBaker.Bake();
             UpdateBuildSettings();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());

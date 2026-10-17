@@ -139,7 +139,7 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
   - `PlayerResources.cs` & `CharacterResources.asset`: Passive Chi regeneration disabled (`0 Chi/s`) to reflect the Twelve Sky 2 meditation model.
   - `PlayerVaultMotor.cs` (traversal, no skill or Chi): a move command goes **over** low obstacles instead of round them
     whenever that is not the longer way. Heights are measured from the ground in front of the obstacle; anything from
-    0.18 m up to **1.78 m** (the town's hedges, `SM_Env_Hedge_01`) and up to 1.8 m thick can be vaulted. Three styles by
+    0.18 m up to **2.2 m** (1.78 m until 17 Oct 2026, raised to meet Wallstride) and up to 1.8 m thick can be vaulted. Three styles by
     height: a hurdle below 0.75 m, a hands-on leapfrog from 0.75 m, a front flip from 1.35 m (dumpsters, hedges). Like
     the jump, Animancer plays the pose and KINEMATION Motion Warping moves the root on one clock
     (`Warp_Player_Vault.asset`, built by Krytical Nova ▸ Player ▸ Build Vault Warp Asset); the time in the air follows
@@ -168,6 +168,25 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
     (Krytical Nova ▸ Player ▸ Build Vault Warp Asset) writes the sets from a table and keeps any style already in a
     set, so numbers tuned in the Inspector survive a re-run. The split between the factions is a first proposal,
     made from the measurements: it has not been judged by eye from the side.
+  - **Wallstride** (17 Oct 2026; `PlayerWallRunMotor`, `WallRunRules`, `WallstrideSettings`): level 60, Run and Jump at
+    rank 20. A run at a wall goes up it and over onto the roof; a jump catches a wall in its path, head-on or at up to
+    65° (a run must meet it within the plain approach angle); a run at a tree perches in it; a click drops down. Above
+    2.2 m it takes over from the vault. The move is a route of legs (plant, climb, lift, over; or rise and fall for a
+    kick-off and a drop), each one a Motion Warping phase with its own easing on the same `WarpComponent` the jump and
+    the vault use, over in-place copies of the clips (`WallstrideClipCopies`, Setup ▸ Wallstride Clip Copies: the
+    originals bake their travel into the pose and would carry the body into the wall). The body keeps 0.38 m off the
+    face (measured: hands and feet 5 to 12 cm from it), the scan of the face steps over windows, and the top, the base
+    and every landing must be open ground (no ceiling with walls round it), so nobody lands inside a building. A
+    refusal says why. Stand-in clips until real ones are chosen (owner, pick D).
+  - **Roofs** (17 Oct 2026): `TownRoofsBuilder` (Zone ▸ Solid Roofs and No Indoor NavMesh) gives every town building
+    taller than 2.5 m an exact collider of what is drawn and marks its inside as not walkable, up to just under the
+    roof; `RoofLinksBuilder` (Zone ▸ Roof Jump Links) joins roofs up to 4 m apart and 3 m in height with two-way links,
+    and `PointAndClickPlayer` crosses a link with the real Jump (refused, it stops at the edge and says why). Both run
+    in Zone01 setup around the NavMesh bake.
+  - **The de-rez** (17 Oct 2026; `PlayerDeathMotor`): a player killed while wall-running, jumping or vaulting, or more
+    than 2.5 m over the street with no way down on foot, is taken away where they are instead of falling
+    (`../../Design/Rendering-Bible.md`, "Level of detail" for how the hidden body stays hidden; the look is in the
+    Encyclopedia's row 30).
 - **Asset Directory Structure (`Assets/_Game/Gameplay/Progression/Data/Assets/`):**
   - `Skills/SelfBuffSkills/`: The 8 Phase 3 self-buff and master skills.
   - `Skills/MovementSkills/`: `Jump.asset`, `Run.asset`, `Movement.asset`, `JumpMotion.asset`.

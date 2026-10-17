@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace KryticalNova.UI
@@ -31,6 +32,13 @@ namespace KryticalNova.UI
             }
             SettingsRows.Toggle(page, "Mute while the game is in the background",
                 () => AudioPreferences.MuteInBackground, value => AudioPreferences.MuteInBackground = value);
+
+            // Cadence: the beat of the fight music, moved to where this player hears it.
+            SettingsRows.Header(page, "FIGHT MUSIC");
+            SettingsRows.Slider(page, "Beat timing offset", -AudioPreferences.BeatOffsetLimit, AudioPreferences.BeatOffsetLimit,
+                () => AudioPreferences.BeatOffset, value => AudioPreferences.BeatOffset = value, out VisualElement beat,
+                amount => (amount > 0f ? "+" : "") + Mathf.RoundToInt(amount) + " ms");
+            beat.tooltip = "If the beat seems to come before you hear it, move this later (+); if after, earlier (-). Wireless headsets often need +100 or more.";
         }
     }
 }

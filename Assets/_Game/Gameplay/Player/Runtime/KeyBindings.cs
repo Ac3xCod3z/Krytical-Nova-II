@@ -67,7 +67,7 @@ namespace KryticalNova.Player
             ("SkillCommands", "Slot4", "Hotbar 4"), ("SkillCommands", "Slot5", "Hotbar 5"), ("SkillCommands", "Slot6", "Hotbar 6"),
             ("SkillCommands", "Slot7", "Hotbar 7"), ("SkillCommands", "Slot8", "Hotbar 8"), ("SkillCommands", "Slot9", "Hotbar 9"),
             ("SkillCommands", "Slot10", "Hotbar 10"), ("SkillCommands", "SlotQ", "Hotbar 11"), ("SkillCommands", "SlotW", "Hotbar 12"),
-            ("SkillCommands", "SlotE", "Hotbar 13"), ("SkillCommands", "SlotR", "Hotbar 14"),
+            ("SkillCommands", "SlotE", "Hotbar 13"), ("SkillCommands", "SlotR", "Hotbar 14"), ("SkillCommands", "SlotT", "Hotbar 15"),
             ("SkillCommands", "CharacterWindow", "Character Sheet"), ("SkillCommands", "SkillsWindow", "Skills"),
             ("PointAndClick", "ToggleWeapon", "Draw / sheathe weapon"), ("PointAndClick", "FlipCamera", "Flip camera"),
         };

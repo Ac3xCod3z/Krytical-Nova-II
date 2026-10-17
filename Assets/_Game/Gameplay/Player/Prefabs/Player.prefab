@@ -114,6 +114,9 @@ GameObject:
   - component: {fileID: 6510543614626846735}
   - component: {fileID: 9206807049269114004}
   - component: {fileID: 1658292666199930260}
+  - component: {fileID: 2739452034050256493}
+  - component: {fileID: 6085953057518992820}
+  - component: {fileID: 6994377297614759536}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -510,6 +513,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 809e339dc23f3984ca61f68b93bdd721, type: 2}
   - {fileID: 11400000, guid: d837464e0171a374b915d9e339231908, type: 2}
   - {fileID: 11400000, guid: a3a5e9838a7d7e146b7e7222ab08fba8, type: 2}
+  - {fileID: 11400000, guid: 20411bec5ee9dd74889e999b839518ec, type: 2}
+  - {fileID: 11400000, guid: fbe46c4c288a5344d8299fce1a6a2758, type: 2}
+  - {fileID: 11400000, guid: e3830c91f20b9694bb6a5dad43bbcb4b, type: 2}
+  - {fileID: 11400000, guid: 3cbe5c7d833388247b0ca828c63d3ab3, type: 2}
 --- !u!114 &1450535918395789170
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -840,7 +847,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.PlayerVaultMotor
   ShowTopMostFoldoutHeaderGroup: 1
   minimumHeight: 0.18
-  maximumHeight: 1.78
+  maximumHeight: 2.2
   maximumThickness: 1.8
   maximumApproachAngle: 80
   minimumDistanceSaved: 0
@@ -3512,6 +3519,8 @@ MonoBehaviour:
   wallClearance: 0.9
   warpTemplate: {fileID: 11400000, guid: c73c258675cd35440a83853b8c8b7234, type: 2}
   motionWarping: {fileID: 4791644402117621732}
+  roofHeight: 2.5
+  derezClipSpeed: 0.2
   respawnDelay: 8
 --- !u!114 &7474861536265259682
 MonoBehaviour:
@@ -4109,6 +4118,56 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Networking.PlayerGm
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &2739452034050256493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61cf34d87d3ffa5408d6b4292308a33e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Combat.PlayerCadence
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: a79832ad2d330ef4a8e51470bb518b16, type: 2}
+--- !u!114 &6085953057518992820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f884efaf738b4be6a708368c6bbc0624, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.PlayerWallRunMotor
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: f8f4902632a0e24488e0291050817e30, type: 2}
+  plantClip: {fileID: 7400000, guid: 1f8a88b47446eba4896b47e762447a5a, type: 2}
+  climbClip: {fileID: 7400000, guid: cb3a0f35c5bb4074eb8d3cf89cf1f1e3, type: 2}
+  climbClipSpeed: 1.3
+  mantleClip: {fileID: 7400000, guid: 8803746afbbc61d49bb4f52aae2e7fb9, type: 2}
+  perchClip: {fileID: 7667018580565293932, guid: a09f3cda3c572104d8747dabcae98bf7, type: 3}
+  dropClip: {fileID: -2327705448931114778, guid: 27077ace308b2e14682962c65d9ed621, type: 3}
+  fadeIn: 0.1
+  fadeOut: 0.15
+--- !u!114 &6994377297614759536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acbf92cc90fb4f80a896c84ec0cc8e89, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Rendering.CharacterLod
+  settings: {fileID: 11400000, guid: a5dff6f4337ad764dbd705f88aba1c78, type: 2}
+  alwaysWhole: 0
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

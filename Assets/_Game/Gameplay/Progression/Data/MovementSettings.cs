@@ -36,6 +36,13 @@ namespace KryticalNova.Progression
         [Tooltip("Fraction of full speed kept when reaching the destination.")]
         [Range(0.1f, 1f)] public float arrivalMinSpeedFactor = DefaultArrivalMinSpeedFactor;
 
+        [Header("Move Speed (the stat)")]
+        [Tooltip("The Move Speed stat (100 % for everyone; Boots and the ranged Stance raise it) multiplies walking and running " +
+                 "speed, never by less than this...")]
+        [Range(0.1f, 1f)] public float minStatSpeedMultiplier = 0.5f;
+        [Tooltip("...and never by more than this, so a fast Run rank with Boots and a Stance stays playable.")]
+        [Range(1f, 3f)] public float maxStatSpeedMultiplier = 1.5f;
+
         [Header("A move that makes no headway")]
         [Tooltip("A move order under way that gains less than the distance below in this many seconds has stalled: " +
                  "the way is planned again once, and if that stalls too the character stops where it is.")]
@@ -45,6 +52,10 @@ namespace KryticalNova.Progression
         [Tooltip("An agent that a jump or a vault failed to put back on the ground is put back after this many seconds. " +
                  "Without it the character takes no order again.")]
         [Min(0.1f)] public float agentRecoverySeconds = 1.5f;
+
+        /// <summary>What a Move Speed stat of <paramref name="percent"/> (100 = normal) multiplies speed by, within the limits.</summary>
+        public float StatSpeedMultiplier(float percent) =>
+            Mathf.Clamp(percent / 100f, minStatSpeedMultiplier, Mathf.Max(minStatSpeedMultiplier, maxStatSpeedMultiplier));
 
         /// <summary>Distance before the destination where the agent starts easing off.</summary>
         public float ArrivalRadius(float speed) =>

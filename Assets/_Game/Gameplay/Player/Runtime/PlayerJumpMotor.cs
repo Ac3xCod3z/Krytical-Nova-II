@@ -71,6 +71,9 @@ namespace KryticalNova.Player
         private bool cancelling;
         private bool restoreOnEnable;
         private bool planUsesWarp;
+        // Wallstride: this jump ends against a surface it catches, and the climb runs on from there.
+        private PlayerWallRunMotor wallRun;
+        private bool catchPlanned;
 
         // A jump simulated elsewhere, shown here: only the clock and the clips run.
         private bool remoteJump;
@@ -97,6 +100,7 @@ namespace KryticalNova.Player
             agent = GetComponent<NavMeshAgent>();
             skills = GetComponent<PlayerMovementSkills>();
             resources = GetComponent<PlayerResources>();
+            wallRun = GetComponent<PlayerWallRunMotor>();
         }
 
         private void OnEnable()
@@ -167,6 +171,7 @@ namespace KryticalNova.Player
         private bool TryPlanJump(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset, out string reason)
         {
             reason = string.Empty;
+            ForgetCatch();
             if (IsBusy) { reason = "Finish this jump before choosing another destination."; return false; }
             if (Time.time < cooldownUntil) { reason = "Let the landing settle before jumping again."; return false; }
             if (!isActiveAndEnabled || motionData == null || presentation == null || !presentation.IsReady)
@@ -198,11 +203,98 @@ namespace KryticalNova.Player
             float clearanceApex = Mathf.Max(startFeet.y, landingFeet.y) + motionData.apexClearance;
             // Short hops stay low; only a max-range jump climbs to the rank's full height.
             peakHeight = Mathf.Max(clearanceApex, startFeet.y + motionData.RiseForDistance(horizontalDistance, maxDist, jumpH));
+            if (PlanFlight(out reason)) return true;
+            // Wallstride: what blocks the arc may be a wall or a tree to catch, and climb on from.
+            return TryPlanCatchInstead(jumpH, ref reason);
+        }
+
+        /// <summary>Plans the flight from <see cref="startFeet"/> to <see cref="landingFeet"/> and checks its way is clear.</summary>
+        private bool PlanFlight(out string reason)
+        {
+            reason = string.Empty;
             planUsesWarp = UseWarpedJump;
             if (planUsesWarp) return PlanWarpedJump(out reason);
             PlanParabola();
             if (!ValidateTrajectory()) { reason = "The jump arc or landing area is blocked."; return false; }
             return true;
+        }
+
+        /// <summary>
+        /// The arc is blocked: when the thing in the way is a surface the player can climb (Wallstride), the jump ends
+        /// against it instead and the climb runs on from there. The reason stays the blocked jump's when it cannot.
+        /// </summary>
+        private bool TryPlanCatchInstead(float jumpHeight, ref string reason)
+        {
+            if (wallRun == null || !wallRun.TryPlanCatch(startFeet, landingFeet, collisionLayers, out Vector3 catchFeet)) return false;
+            if (!PlanCatchFlight(catchFeet, jumpHeight, out _)) { wallRun.ForgetCatch(); return false; }
+            reason = string.Empty;
+            return true;
+        }
+
+        private bool PlanCatchFlight(Vector3 catchFeet, float jumpHeight, out string reason)
+        {
+            reason = string.Empty;
+            if (catchFeet.y - startFeet.y > jumpHeight) { reason = $"Too high to jump at: Jump rank reaches {jumpHeight:0.0} m."; return false; }
+            landingFeet = catchFeet;
+            peakHeight = Mathf.Max(startFeet.y, landingFeet.y) + motionData.apexClearance;
+            catchPlanned = true;
+            if (PlanFlight(out reason)) return true;
+            catchPlanned = false;
+            return false;
+        }
+
+        /// <summary>
+        /// Wallstride, where movement is decided: a jump straight at a surface the motor has chosen to catch, ending at
+        /// <paramref name="catchFeet"/> against it. Planned and paid like any jump of this player's (its rank, its Flux).
+        /// </summary>
+        public bool TryJumpToCatch(Vector3 catchFeet, int obstacleLayersValue, float modelForwardOffset, out string reason)
+        {
+            reason = string.Empty;
+            if (!HasAuthority) return false;
+            if (IsBusy) { reason = "Finish this jump before choosing another destination."; return false; }
+            if (Time.time < cooldownUntil) { reason = "Let the landing settle before jumping again."; return false; }
+            if (!isActiveAndEnabled || motionData == null || presentation == null || !presentation.IsReady)
+            { reason = "Jump animation is not configured."; return false; }
+            if (agent != null && agent.isActiveAndEnabled && !agent.isOnNavMesh) { reason = "Jump must start on walkable ground."; return false; }
+            MovementSkillRank rank = default;
+            if (skills != null && !skills.TryGetLearnedRank(MovementSkillId.Jump, out rank)) { reason = "Learn Jump first."; return false; }
+            if (skills != null && !skills.CanPayForCommand(MovementSkillId.Jump, out reason)) return false;
+            startFeet = transform.position - Vector3.up * (agent != null ? agent.baseOffset : 0f);
+            Vector3 flat = catchFeet - startFeet;
+            flat.y = 0f;
+            float maxDist = skills != null ? rank.jumpDistance : 20f;
+            if (flat.magnitude > maxDist) { reason = $"Too far: Jump rank reaches {maxDist:0.0} m."; return false; }
+            if (flat.magnitude < MinimumTravelDistance) { reason = "Too close to jump at."; return false; }
+            collisionLayers = obstacleLayersValue & ~(1 << gameObject.layer);
+            facingOffset = modelForwardOffset;
+            takeoffRootPosition = transform.position;
+            if (!PlanCatchFlight(catchFeet, skills != null ? rank.jumpHeight : 5f, out reason))
+            {
+                if (string.IsNullOrEmpty(reason)) reason = "The jump at it is blocked.";
+                return false;
+            }
+            BeginJump();
+            return true;
+        }
+
+        private void ForgetCatch()
+        {
+            if (!catchPlanned) return;
+            catchPlanned = false;
+            if (wallRun != null) wallRun.ForgetCatch();
+        }
+
+        /// <summary>The jump planned to catch a surface has met it: the climb takes the body from here.</summary>
+        private void CatchSurface()
+        {
+            catchPlanned = false;
+            StopWarp();
+            jumpSequence = null;
+            IsBusy = false;
+            inFlight = false;
+            cooldownUntil = Time.time + motionData.landingCooldown;
+            presentation.ResetPresentation();
+            if (wallRun == null || !wallRun.BeginCaught()) AbortJump("Could not hold on. Returned to takeoff.");
         }
 
         private void PlanParabola()
@@ -461,6 +553,7 @@ namespace KryticalNova.Player
 
         private void FinishWarpedJump()
         {
+            if (catchPlanned) { CatchSurface(); return; }
             StopWarp();
             if (!IsLandingClear() || !RestoreAgent(landingFeet + Vector3.up * agent.baseOffset))
             { AbortJump("Landing became unavailable. Returned to takeoff."); return; }
@@ -588,6 +681,7 @@ namespace KryticalNova.Player
         private void FinishJump()
         {
             if (!IsBusy || !inFlight) return;
+            if (catchPlanned) { CatchSurface(); return; }
             jumpSequence = null;
             if (!IsLandingClear() || !RestoreAgent(landingFeet + Vector3.up * agent.baseOffset))
             { AbortJump("Landing became unavailable. Returned to takeoff."); return; }
@@ -612,6 +706,7 @@ namespace KryticalNova.Player
         public void ReleaseForDeath()
         {
             if (remoteJump) { EndRemoteJump(false); return; }
+            ForgetCatch();
             if (!IsBusy) return;
             if (IsSpawned && IsServer) JumpAbortedClientRpc(string.Empty);
             StopWarp();
@@ -628,6 +723,7 @@ namespace KryticalNova.Player
         {
             if (cancelling) return;
             cancelling = true;
+            ForgetCatch();
             if (IsSpawned && IsServer) JumpAbortedClientRpc(reason);
             StopWarp();
             jumpSequence?.Kill();

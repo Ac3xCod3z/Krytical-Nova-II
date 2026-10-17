@@ -203,6 +203,9 @@ namespace KryticalNova.UI
                     if (row.Cascades == 4) pipeline.cascade4Split = row.Split4;
                 }
             }
+            // How far detail reaches follows the preset (Custom keeps High's): LOD bias, Mesh LOD, small-mesh culling.
+            GraphicsPreset preset = GraphicsPreferences.Preset;
+            WorldLodSettings.SetTier(preset == GraphicsPreset.Custom ? (int)GraphicsPreset.High : (int)preset);
             SunShaftRuntime.UserEnabled = GraphicsPreferences.SunShafts;
             ComicStyleRuntime.OutlinesEnabled = GraphicsPreferences.ComicOutlines;
             VolumetricQualityRuntime.Set(GraphicsPreferences.Fog);

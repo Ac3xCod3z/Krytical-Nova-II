@@ -43,6 +43,9 @@ namespace KryticalNova.Hostiles
         [Min(0.1f)] public float healthMultiplier = 1f;
         [Tooltip("Metres from the target at which it attacks.")]
         [Min(0.5f)] public float attackRange = 2f;
+        [Tooltip("How far above its own feet it can strike (metres): a player up a wall or in a tree higher than this is out of " +
+                 "its reach (Wallstride). Ranged and flying species reach higher.")]
+        [Min(0.5f)] public float reachAbove = 3f;
         [Tooltip("The loot table this species rolls on. Empty until drops are built.")]
         public string lootTableId;
 

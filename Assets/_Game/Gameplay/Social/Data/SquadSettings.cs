@@ -3,8 +3,8 @@ using UnityEngine;
 namespace KryticalNova.Social
 {
     /// <summary>
-    /// The numbers of a Squad that are tuned rather than ruled: the experience boost, and how a member follows
-    /// another. (Who may join a Squad is <see cref="PartyRules"/>.)
+    /// The numbers of a Squad that are tuned rather than ruled: the experience boost, how a member follows another,
+    /// and how far a Stance reaches the rest of the Squad. (Who may join a Squad is <see cref="PartyRules"/>.)
     /// </summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Social/Squad Settings", fileName = "SquadSettings")]
     public sealed class SquadSettings : ScriptableObject
@@ -29,6 +29,13 @@ namespace KryticalNova.Social
         [Min(1f)] public float followHopMaxAge = 15f;
         [Tooltip("How many of the member's jumps are remembered to be copied in turn; the oldest gives way.")]
         [Range(1, 8)] public int followHopQueue = 4;
+
+        [Header("Shared Stances")]
+        [Tooltip("The rank from which a Stance (offense, defense, or Evasion and Move Speed) a member casts is given to the rest " +
+                 "of the Squad as well (owner, 16 Oct 2026). Below it, it is the caster's own.")]
+        [Min(1)] public int buffShareRank = 20;
+        [Tooltip("Metres from the caster within which a Squad member is given the caster's Stance (owner, 16 Oct 2026).")]
+        [Min(1f)] public float buffShareRadius = 20f;
 
         private void OnValidate()
         {

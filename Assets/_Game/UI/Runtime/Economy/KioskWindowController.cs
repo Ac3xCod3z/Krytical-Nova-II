@@ -12,7 +12,7 @@ using UnityEngine.UIElements;
 namespace KryticalNova.UI
 {
     /// <summary>
-    /// The Kiosk windows. The player's own [T]: lay out items and prices, pick how long it runs, start it; then see
+    /// The Kiosk windows. The player's own [J]: lay out items and prices, pick how long it runs, start it; then see
     /// what is left, the till and the time remaining, collect and close, from anywhere. And another player's shop,
     /// opened by clicking its stand: browse and buy. Also the shop names over the stands. Everything it does is a
     /// request to <see cref="PlayerKiosk"/>; the server decides. While the set-up is open the Pack hands it items

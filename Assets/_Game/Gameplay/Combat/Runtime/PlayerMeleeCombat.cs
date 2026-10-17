@@ -669,8 +669,9 @@ namespace KryticalNova.Combat
         /// Resolves one authoritative hit (server or offline): damage roll, reflection / shield-shatter procs, damage
         /// numbers and impact effects. Shared by basic strikes and attack skills. Returns false when nothing was resolved.
         /// </summary>
+        /// <param name="damageScale">Scales the damage the hit ends up dealing, after everything else is worked out (Cadence).</param>
         public bool ResolveHit(IDamageable target, float damageMultiplier, int comboStep, string stepLabel, out DamageResult result,
-            bool canCrit = true, bool fromSkill = false)
+            bool canCrit = true, bool fromSkill = false, float damageScale = 1f, bool forceCrit = false)
         {
             result = default;
             if (target == null || !target.IsAlive) return false;
@@ -699,7 +700,13 @@ namespace KryticalNova.Combat
                 attackerShatter,
                 shatChance,
                 canCrit,
-                hitChanceModifier);
+                hitChanceModifier,
+                forceCrit);
+            if (damageScale != 1f)
+            {
+                result.DamageDealt *= damageScale;
+                result.NetElementalDamage *= damageScale;
+            }
 
             target.TakeDamage(result, attackerStats);
 

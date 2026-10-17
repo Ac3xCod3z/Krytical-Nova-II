@@ -19,6 +19,7 @@ MonoBehaviour:
   weaponClass: 3
   classSlot: 2
   presentationId: HaeseoStroke
+  sharesWithSquad: 0
   targetType: 1
   executionType: 0
   acquisitionMethod: 0

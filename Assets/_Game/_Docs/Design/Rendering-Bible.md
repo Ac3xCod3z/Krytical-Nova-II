@@ -1017,6 +1017,31 @@ static-batched ones included; nearly everything in the world is drawn with Synty
 accepts. Its GPU occlusion culling is off: the camera looks down, so little hides behind anything. A frame draws
 0.4 to 1.8 million triangles in 240 to 300 set-pass calls. Nothing in the world has an LOD group.
 
+### Level of detail (17 Oct 2026)
+
+- **World meshes.** **Krytical Nova ▸ Rendering ▸ Build LODs (Open Scene)** (`EnvironmentLodBuilder`) switches on Unity
+  6 Mesh LOD in the import settings of every Synty model the open scene and its terrain trees draw (197 in Zone01; only
+  their `.meta` files change, owner's pick A), makes the levels in place for our own mesh assets (529 ruin meshes and
+  the water), and gives every placed prefab, or loose mesh, an LODGroup of one level that hides it below a share of the
+  screen set by its kind (`WorldLodSettings.bands`: building, prop, small prop, rock, bush, tree; 6,345 in Zone01,
+  marked `GeneratedLod` so a re-run only refreshes them). A whole prefab goes at once, so a building never loses pieces.
+- **Static batching is off on Windows.** It merges static meshes into one combined mesh with no LODs, so Mesh LOD did
+  nothing: forcing the coarsest level took 0.26 M triangles off the view over the town with it on, 2.9 M with it off.
+  Without it the frame was the same or cheaper: CPU main thread 1 to 2 ms and GPU 0.5 to 0.8 ms less at Ultra and
+  High, even at Low (Editor, host, the street view and the view over the town).
+- **Per preset** (`WorldLodSettings.tiers`, applied by `GraphicsSettingsApplier`; Custom uses High): LOD bias 0.7 /
+  1.2 / 2 / 3, Mesh LOD threshold 3 / 2 / 1.2 / 0.8, small meshes culled below 0.6 / 0.35 / 0.15 / 0 % of the screen
+  (Low / Medium / High / Ultra). From a threshold of 4 the far towers lose their lit windows; 2 still looks like 1.
+- **What it saves, honestly.** The view over the town: 4.9 M triangles at Ultra, 4.7 M at High, 4.1 M at Low; the
+  street 3.6 to 3.3 M. The GPU time hardly moves (8 to 9.6 ms): on this PC triangles are not what the frame waits on.
+  The cut is there for weaker machines and for the mobile port.
+- **Characters** (`CharacterLod`, on players through `PlayerSystemsSetup`, and added to Hostiles, NPCs and pets as they
+  appear): past 25 m (scaled by the LOD bias) two bones a vertex, past 60 m one bone, no shadow and animation only while
+  on screen, past 150 m not drawn. The player this machine plays is always whole. A body the de-rez has hidden, and its
+  pet, are held hidden through every refresh until the respawn (`CharacterLod.Hold`).
+- **Not done:** impostors for far trees, LOD for characters' own meshes (they are assembled from parts at run time),
+  and a check that flags a placed mesh without its LODGroup.
+
 ### Fog, cones and shadows per preset (16 Oct 2026)
 
 Editor, Zone01 at 23:00 in fog weather, the camera over the player under two lamp cones (the cones' worst case), 10 s
@@ -1071,6 +1096,9 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   uGUI draw with a loop of at most eight panels a pixel, for about 1.25 s; not measured against a budget yet).
 
 ## Changelog
+
+- **2026-10-17 (branch `claude/modest-cray-vcpw2b`)**: level of detail for every mesh drawn at a distance and for every
+  character, per preset; static batching off on Windows (section 7, "Level of detail").
 
 - **2026-10-16 (rendering pass, branch `render/pre-server-pass`)**: fog, mist and lamp cones get five levels
   (`VolumetricQualityRuntime`, section 1), the cones go off with the fog and draw at half resolution with an

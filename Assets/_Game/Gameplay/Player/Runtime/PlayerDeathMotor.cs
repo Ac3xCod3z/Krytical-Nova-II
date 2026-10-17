@@ -36,6 +36,8 @@ namespace KryticalNova.Player
         private const float ChestHeight = 0.9f;
         /// <summary>Killed this far (m) above where it will land, the body is in the air and falls.</summary>
         private const float AirborneHeight = 0.15f;
+        /// <summary>How far below the body the ground is looked for when it dies high up (a wall, a tree).</summary>
+        private const float FallProbe = 80f;
         private const int HeightCurveSteps = 24;
 
         /// <summary>One way of going down: the knockdown clip, the loop it ends in, and how the clip travels.</summary>
@@ -60,7 +62,7 @@ namespace KryticalNova.Player
         private enum Phase : byte { None, Falling, Down }
 
         // What a late joiner needs to show a body that is already lying there.
-        private enum Pose : byte { Alive = 0, OnBack = 1, FaceDown = 2 }
+        private enum Pose : byte { Alive = 0, OnBack = 1, FaceDown = 2, Gone = 3 }
 
         [Header("Normal death (the blow's side picks the set)")]
         [SerializeField] private DeathChain front = new DeathChain();
@@ -93,6 +95,12 @@ namespace KryticalNova.Player
         [Tooltip("The warp component shared with the jump and the vault; it moves this root.")]
         [SerializeField] private WarpComponent motionWarping;
 
+        [Header("Killed off the ground (owner, 17 Oct 2026)")]
+        [Tooltip("Standing this high over the ground with no walk down to it (a roof), the body de-rezzes instead of falling.")]
+        [SerializeField, Min(0.5f)] private float roofHeight = 2.5f;
+        [Tooltip("The death clip plays this slowly while the body de-rezzes: caught in the blow as it is deleted.")]
+        [SerializeField, Range(0.05f, 1f)] private float derezClipSpeed = 0.2f;
+
         [Header("Respawn")]
         [Tooltip("Seconds the body lies there before the server puts the player back on a spawn point.")]
         [SerializeField, Min(0f)] private float respawnDelay = 8f;
@@ -105,6 +113,7 @@ namespace KryticalNova.Player
         private PlayerAnimancerMotor animancerMotor;
         private PlayerJumpMotor jumpMotor;
         private PlayerVaultMotor vaultMotor;
+        private PlayerWallRunMotor wallRunMotor;
         private PlayerMeleeCombat meleeCombat;
         private PlayerResources resources;
         private CombatEntity combatEntity;
@@ -143,6 +152,7 @@ namespace KryticalNova.Player
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
             jumpMotor = GetComponent<PlayerJumpMotor>();
             vaultMotor = GetComponent<PlayerVaultMotor>();
+            wallRunMotor = GetComponent<PlayerWallRunMotor>();
             meleeCombat = GetComponent<PlayerMeleeCombat>();
             resources = GetComponent<PlayerResources>();
             combatEntity = GetComponent<CombatEntity>();
@@ -173,8 +183,9 @@ namespace KryticalNova.Player
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            // Joined while this player was already down: show the body lying there, without the fall.
-            if (!IsServer && netPose.Value != (byte)Pose.Alive) StartCoroutine(ShowBodyWhenReady((Pose)netPose.Value));
+            // Joined while this player was already down: show the body lying there, without the fall; or, de-rezzed, nothing.
+            if (!IsServer && netPose.Value == (byte)Pose.Gone) StartCoroutine(HideWhenReady());
+            else if (!IsServer && netPose.Value != (byte)Pose.Alive) StartCoroutine(ShowBodyWhenReady((Pose)netPose.Value));
         }
 
         // ------------------------------------------------------------------ dying (authority)
@@ -189,6 +200,12 @@ namespace KryticalNova.Player
             }
 
             Vector3 direction = Flat(blow.Direction, -transform.forward);
+            // In the air, on a wall, in a tree or on a roof: the body de-rezzes where it is instead of falling.
+            if (IsOffTheGround())
+            {
+                Disintegrate(blow, direction);
+                return;
+            }
             // The blow came from the front half when its source is ahead of the body.
             bool fromFront = Vector3.Dot(Flat(transform.forward, Vector3.forward), -direction) >= 0f;
             bool crit = blow.IsCritical;
@@ -197,6 +214,8 @@ namespace KryticalNova.Player
             // Whatever was moving the body lets go of it where it is.
             if (jumpMotor != null) jumpMotor.ReleaseForDeath();
             if (vaultMotor != null) vaultMotor.ReleaseForDeath();
+            // On a wall or in a tree: pushed out from it, so the body falls clear.
+            if (wallRunMotor != null) wallRunMotor.ReleaseForDeath();
             if (buffManager != null) buffManager.ClearAllBuffs();
             if (agent.isActiveAndEnabled && agent.isOnNavMesh)
             {
@@ -223,6 +242,100 @@ namespace KryticalNova.Player
             Died?.Invoke(blow);
             if (respawnRoutine != null) StopCoroutine(respawnRoutine);
             respawnRoutine = StartCoroutine(RespawnRoutine());
+        }
+
+        /// <summary>
+        /// Up a wall or a tree, in a jump or a vault, or standing on a roof: high off the ground with no walk down to
+        /// it. Decided where the death is decided, before the motors let go of the body.
+        /// </summary>
+        private bool IsOffTheGround()
+        {
+            if ((wallRunMotor != null && wallRunMotor.IsBusy) || (jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy))
+                return true;
+            Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            int groundMask = LayerMask.GetMask(GroundLayerName);
+            if (groundMask == 0 || !Physics.Raycast(feet + Vector3.up * 0.3f, Vector3.down, out RaycastHit ground, FallProbe, groundMask, QueryTriggerInteraction.Ignore))
+                return false;
+            if (feet.y - ground.point.y < roofHeight) return false;
+            // High up: a raised plaza or a walkway joined to the streets is still ground; a roof is not.
+            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            // Nothing walkable right under the feet: in the air.
+            if (!NavMesh.SamplePosition(feet, out NavMeshHit standing, StandingSampleRadius, filter) || Mathf.Abs(standing.position.y - feet.y) > 0.5f) return true;
+            if (!NavMesh.SamplePosition(ground.point, out NavMeshHit street, 3f, filter)) return true;
+            var path = new NavMeshPath();
+            return !NavMesh.CalculatePath(standing.position, street.position, filter, path) || path.status != NavMeshPathStatus.PathComplete;
+        }
+
+        private const string GroundLayerName = "Ground";
+        private const float StandingSampleRadius = 0.75f;
+
+        /// <summary>Authority: the body stays where it was killed and de-rezzes on every machine; the respawn timer runs as for any death.</summary>
+        private void Disintegrate(KillingBlow blow, Vector3 direction)
+        {
+            if (jumpMotor != null) jumpMotor.ReleaseForDeath();
+            if (vaultMotor != null) vaultMotor.ReleaseForDeath();
+            if (wallRunMotor != null) wallRunMotor.ReleaseForDeath(pushOff: false); // nothing falls: it stays where it was hit
+            if (buffManager != null) buffManager.ClearAllBuffs();
+            if (motionWarping != null && motionWarping.IsActive()) motionWarping.Stop();
+            if (agent.isActiveAndEnabled && agent.isOnNavMesh)
+            {
+                agent.isStopped = true;
+                agent.ResetPath();
+                agent.velocity = Vector3.zero;
+            }
+            agent.enabled = false; // the respawn puts the agent back
+
+            if (IsSpawned) netPose.Value = (byte)Pose.Gone;
+            BeginDisintegrate(direction, blow.Attacker != null ? blow.Attacker.transform : null);
+            if (IsSpawned)
+            {
+                NetworkObjectReference killer = default;
+                if (blow.Attacker != null && blow.Attacker.TryGetComponent(out NetworkObject killerObject) && killerObject.IsSpawned)
+                    killer = killerObject;
+                DisintegrateClientRpc(direction, killer);
+            }
+
+            Died?.Invoke(blow);
+            if (respawnRoutine != null) StopCoroutine(respawnRoutine);
+            respawnRoutine = StartCoroutine(RespawnRoutine());
+        }
+
+        [ClientRpc]
+        private void DisintegrateClientRpc(Vector3 direction, NetworkObjectReference killer)
+        {
+            if (IsServer || !Ready) return; // the server is already running it
+            Transform killerTransform = killer.TryGet(out NetworkObject killerObject) ? killerObject.transform : null;
+            BeginDisintegrate(direction, killerTransform);
+        }
+
+        /// <summary>Every machine: the body is caught in the blow while it de-rezzes, then gone until the respawn.</summary>
+        private void BeginDisintegrate(Vector3 direction, Transform killer)
+        {
+            chain = front;
+            critical = false;
+            turning = false;
+            clock = 0f;
+            phase = Phase.Down; // dead, with no fall to play out
+            if (meleeCombat != null) meleeCombat.CancelAttack();
+            fallState = animancerMotor.PlayDeathClip(front.fall, fallFadeIn);
+            if (fallState != null) fallState.Speed = derezClipSpeed;
+
+            bool victimIsLocal = !IsSpawned || IsOwner;
+            bool killerIsLocal = killer != null && IsLocalPlayer(killer);
+            involvesLocalPlayer = victimIsLocal || killerIsLocal;
+            var feel = ClientPresentationRegistry.Feel;
+            if (feel == null) return;
+            feel.Airborne(transform, false);
+            feel.Disintegrate(new DeathFeel
+            {
+                Point = transform.position,
+                Direction = direction,
+                Target = transform,
+                Killer = killer,
+                IsCritical = false,
+                VictimIsLocalPlayer = victimIsLocal,
+                KillerIsLocalPlayer = killerIsLocal,
+            });
         }
 
         [ClientRpc]
@@ -383,6 +496,11 @@ namespace KryticalNova.Player
         {
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
             Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            // High off the ground (up a wall, in a tree, at the top of a jump): the fall starts from the ground below.
+            if (!NavMesh.SamplePosition(feet, out NavMeshHit _, GroundSampleRadius, filter)
+                && Physics.Raycast(feet + Vector3.up * 0.1f, Vector3.down, out RaycastHit below, FallProbe,
+                    blockingLayers.value & ~(1 << gameObject.layer), QueryTriggerInteraction.Ignore))
+                feet = below.point;
             Vector3 from = NavMesh.SamplePosition(feet, out NavMeshHit ground, GroundSampleRadius, filter) ? ground.position : feet;
 
             float allowed = distance;
@@ -446,6 +564,17 @@ namespace KryticalNova.Player
             transform.position = landingRoot;
             if (turning) transform.rotation = turnTo;
             turning = false;
+        }
+
+        private IEnumerator HideWhenReady()
+        {
+            yield return null;
+            if (IsDead || netPose.Value != (byte)Pose.Gone) yield break;
+            phase = Phase.Down;
+            ClientPresentationRegistry.Feel?.SetDisintegrated(transform, true);
+            // The pet is made a moment after its owner: hidden again once it is there.
+            yield return new WaitForSeconds(1f);
+            if (phase != Phase.None && netPose.Value == (byte)Pose.Gone) ClientPresentationRegistry.Feel?.SetDisintegrated(transform, true);
         }
 
         private IEnumerator ShowBodyWhenReady(Pose pose)
@@ -519,6 +648,7 @@ namespace KryticalNova.Player
             phase = Phase.None;
             fallState = null;
             animancerMotor.Revive(reviveFade);
+            ClientPresentationRegistry.Feel?.SetDisintegrated(transform, false); // a de-rezzed body (and pet) comes back
             ClientPresentationRegistry.Feel?.Respawned(transform, !IsSpawned || IsOwner);
         }
 

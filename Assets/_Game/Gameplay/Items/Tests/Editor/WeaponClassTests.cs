@@ -10,7 +10,7 @@ using UnityEngine;
 namespace KryticalNova.Tests
 {
     /// <summary>
-    /// The nine weapon classes: three per faction, ten skills each with the names from the class doc, ranks shared by
+    /// The nine weapon classes: three per faction, sixteen skills each with the names from the class doc, ranks shared by
     /// slot, and a Discipline that must belong to the character's faction.
     /// Run "Krytical Nova/Progression/Build Class Skills" after changing a class.
     /// </summary>
@@ -18,18 +18,19 @@ namespace KryticalNova.Tests
     {
         private const string CatalogPath = "Assets/_Game/Gameplay/Items/Data/Assets/WeaponClassCatalog.asset";
 
-        // _Docs/Reference/12Sky/04_Weapon_Classes.md section 3, slot order S1..S8, Stance, Guard, the level 60 single hit, the level 60 multi hit.
+        // _Docs/Reference/12Sky/04_Weapon_Classes.md section 3, slot order S1..S8, Stance, Guard, the level 60 single hit, the level 60 multi hit,
+        // the two-hit attacks of levels 1, 30, 60 and 80.
         private static readonly Dictionary<WeaponClassId, string[]> Names = new Dictionary<WeaponClassId, string[]>
         {
-            { WeaponClassId.Monoblade, new[] { "Perimeter Cut", "Clean Cut", "Signature Series", "Severance", "Hostile Takeover", "Zero Hour", "Liquidation", "Market Crash", "Overclock", "Firewall", "Margin Call", "Short Squeeze" } },
-            { WeaponClassId.Glaive, new[] { "Riot Sweep", "Suppression Thrust", "Compliance Combo", "Curfew", "Cease and Desist", "Lockstep", "Full Enforcement", "Martial Law", "Bulwark Protocol", "Shield Field", "Injunction", "Crackdown" } },
-            { WeaponClassId.Carbine, new[] { "Spray Pattern", "Clean Shot", "Triple Tap", "Headhunter", "Burst Contract", "Longshot", "Terminal Burst", "Orbital Call", "Target Lock", "Reactive Plating", "Deadeye", "Suppressing Fire" } },
-            { WeaponClassId.Harvester, new[] { "Reaping Cycle", "Culling Stroke", "Threshing Combo", "Scrap Sentence", "Hydraulic Flurry", "Extinction Blow", "Kill Loop", "Terminal Harvest", "Kill Protocol", "Null Shell", "Shear Line", "Combine Pass" } },
-            { WeaponClassId.ServoClaws, new[] { "Shockwave Stomp", "Piston Jab", "Servo Combo", "Compactor", "Overdrive Cycle", "Core Breach", "Three-Phase Rend", "Zero Point", "Lockdown Plating", "Faraday Skin", "Ram Drive", "Ratchet Rush" } },
-            { WeaponClassId.ArcCaster, new[] { "Arc Flare", "Lance Shot", "Tri-Bolt", "Ion Spike", "Cascade Fire", "Sunspot", "Chain Storm", "Extinction Beam", "Capacitor", "Static Veil", "Flashpoint", "Arc Volley" } },
-            { WeaponClassId.Longaxe, new[] { "Reaping Arc", "Hewing Blow", "Clan Rhythm", "Oathbreaker", "Frostbite Flurry", "Skysplitter", "Wolfpack", "Northfall", "Blood Oath", "Ancestor's Ward", "Bonecleaver", "Raven's Feast" } },
-            { WeaponClassId.Claymore, new[] { "Shieldwall Sweep", "Steadfast Cut", "Three Oaths", "Bulwark Strike", "Hearthguard Flurry", "Dawnguard", "Highguard Trinity", "Kingsfall", "Shieldwall", "Stoneheart", "Oathkeeper", "Vanguard's Tide" } },
-            { WeaponClassId.Warbow, new[] { "Arrow Rain", "Hunter's Mark", "Three Feathers", "Heartseeker", "Volley", "Moonshot", "Stormflight", "Skyfall", "Windwalk", "Barkskin", "Falcon's Eye", "Swiftwind" } },
+            { WeaponClassId.Monoblade, new[] { "Perimeter Cut", "Clean Cut", "Signature Series", "Severance", "Hostile Takeover", "Zero Hour", "Liquidation", "Market Crash", "Overclock", "Firewall", "Margin Call", "Short Squeeze", "Double Entry", "Split Decision", "Countersign", "Double Jeopardy" } },
+            { WeaponClassId.Glaive, new[] { "Riot Sweep", "Suppression Thrust", "Compliance Combo", "Curfew", "Cease and Desist", "Lockstep", "Full Enforcement", "Martial Law", "Bulwark Protocol", "Shield Field", "Injunction", "Crackdown", "Baton Pair", "Summons", "Double Warrant", "Due Process" } },
+            { WeaponClassId.Carbine, new[] { "Spray Pattern", "Clean Shot", "Triple Tap", "Headhunter", "Burst Contract", "Longshot", "Terminal Burst", "Orbital Call", "Target Lock", "Reactive Plating", "Deadeye", "Suppressing Fire", "Double Tap", "Controlled Pair", "Crossfire", "Twin Verdict" } },
+            { WeaponClassId.Harvester, new[] { "Reaping Cycle", "Culling Stroke", "Threshing Combo", "Scrap Sentence", "Hydraulic Flurry", "Extinction Blow", "Kill Loop", "Terminal Harvest", "Kill Protocol", "Null Shell", "Shear Line", "Combine Pass", "Twin Reap", "Bale and Bind", "Gleaning Pass", "Final Yield" } },
+            { WeaponClassId.ServoClaws, new[] { "Shockwave Stomp", "Piston Jab", "Servo Combo", "Compactor", "Overdrive Cycle", "Core Breach", "Three-Phase Rend", "Zero Point", "Lockdown Plating", "Faraday Skin", "Ram Drive", "Ratchet Rush", "One-Two Piston", "Crankshaft", "Twin Clamp", "Dual Overload" } },
+            { WeaponClassId.ArcCaster, new[] { "Arc Flare", "Lance Shot", "Tri-Bolt", "Ion Spike", "Cascade Fire", "Sunspot", "Chain Storm", "Extinction Beam", "Capacitor", "Static Veil", "Flashpoint", "Arc Volley", "Twin Spark", "Dipole", "Alternating Current", "Double Discharge" } },
+            { WeaponClassId.Longaxe, new[] { "Reaping Arc", "Hewing Blow", "Clan Rhythm", "Oathbreaker", "Frostbite Flurry", "Skysplitter", "Wolfpack", "Northfall", "Blood Oath", "Ancestor's Ward", "Bonecleaver", "Raven's Feast", "Two Ravens", "Brother's Bite", "Twinblood", "Fenris Jaws" } },
+            { WeaponClassId.Claymore, new[] { "Shieldwall Sweep", "Steadfast Cut", "Three Oaths", "Bulwark Strike", "Hearthguard Flurry", "Dawnguard", "Highguard Trinity", "Kingsfall", "Shieldwall", "Stoneheart", "Oathkeeper", "Vanguard's Tide", "Oath and Answer", "Twin Vows", "Shield and Sword", "Kinsguard" } },
+            { WeaponClassId.Warbow, new[] { "Arrow Rain", "Hunter's Mark", "Three Feathers", "Heartseeker", "Volley", "Moonshot", "Stormflight", "Skyfall", "Windwalk", "Barkskin", "Falcon's Eye", "Swiftwind", "Two Feathers", "Paired Flight", "Twin Talons", "Wind and Thunder" } },
         };
 
         // ---------------------------------------------------------------- rules (no assets)

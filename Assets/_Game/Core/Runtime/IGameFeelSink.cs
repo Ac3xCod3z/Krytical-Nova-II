@@ -107,6 +107,15 @@ namespace KryticalNova.Core
         void BodyLanded(Transform actor, bool critical, bool involvesLocalPlayer);
         /// <summary>A dead character is back on its feet at a spawn point.</summary>
         void Respawned(Transform actor, bool isLocalPlayer);
+        /// <summary>
+        /// A player killed off the ground (in the air, on a wall, in a tree, on a roof), on every peer: instead of falling,
+        /// the body and its pet de-rez where they are and are gone until the respawn (owner, 17 Oct 2026).
+        /// </summary>
+        void Disintegrate(in DeathFeel death);
+        /// <summary>
+        /// Hides a de-rezzed body and its pet at once (a late joiner) or brings them back (the respawn).
+        /// </summary>
+        void SetDisintegrated(Transform actor, bool gone);
 
         /// <summary>An attempt at the forge ended for this character.</summary>
         /// <param name="outcome">0 success, 1 fail, 2 a fail a Failsafe absorbed, 3 the item broke, 4 a fail an Advanced Failsafe held with nothing lost.</param>

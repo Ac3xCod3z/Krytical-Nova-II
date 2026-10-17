@@ -19,7 +19,7 @@ namespace KryticalNova.Tests
     public sealed class FactionHudTests
     {
         private static readonly FactionId[] Factions = { FactionId.Hegemony, FactionId.Null, FactionId.Covenant };
-        private const int Slots = 14;
+        private const int Slots = 15;
 
         private static FactionHudKit Kit(FactionId faction)
         {
@@ -48,12 +48,12 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void EveryHotbar_HasItsFourteenSlots_AndTheXpBar()
+        public void EveryHotbar_HasItsFifteenSlots_AndTheXpBar()
         {
             foreach (FactionId faction in Factions)
             {
                 HotbarChromeView hotbar = Kit(faction).hotbar;
-                Assert.AreEqual(Slots, hotbar.SlotCount, $"{faction}: slots 1 to 0 and Q W E R");
+                Assert.AreEqual(Slots, hotbar.SlotCount, $"{faction}: slots 1 to 0 and Q W E R T");
                 var so = new SerializedObject(hotbar);
                 SerializedProperty slots = so.FindProperty("slots");
                 for (int i = 0; i < Slots; i++)

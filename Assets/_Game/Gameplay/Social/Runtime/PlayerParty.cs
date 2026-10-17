@@ -19,7 +19,7 @@ namespace KryticalNova.Social
     /// Parties last for the session: nothing is saved.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerParty : NetworkBehaviour
+    public sealed class PlayerParty : NetworkBehaviour, ISquadBuffTargets
     {
         private const ulong NoParty = 0;
 
@@ -48,6 +48,7 @@ namespace KryticalNova.Social
         private PlayerIdentity identity;
         private PlayerCharacterProgression progression;
         private PlayerChat chat;
+        private PlayerResources resources;
 
         // Server only.
         private Group group;
@@ -87,6 +88,7 @@ namespace KryticalNova.Social
             identity = GetComponent<PlayerIdentity>();
             progression = GetComponent<PlayerCharacterProgression>();
             chat = GetComponent<PlayerChat>();
+            resources = GetComponent<PlayerResources>();
         }
 
         public override void OnNetworkDespawn()
@@ -421,6 +423,28 @@ namespace KryticalNova.Social
             into.Clear();
             if (IsSpawned && IsServer && group != null) into.AddRange(group.Members);
             else into.Add(this);
+        }
+
+        // ------------------------------------------------------------------ a Stance shared with the Squad
+
+        public int BuffShareRank => settings != null ? settings.buffShareRank : 20;
+        public float BuffShareRadius => settings != null ? settings.buffShareRadius : 20f;
+        public string BuffGiverName => MemberName;
+
+        /// <summary>Server: the other living members in this map within the share radius (SquadBuffRules).</summary>
+        public void ServerGetBuffTargets(List<PlayerCombatSkills> into)
+        {
+            into.Clear();
+            if (!IsSpawned || !IsServer || group == null) return;
+            if (resources != null && !resources.IsAlive) return;
+            float radius = BuffShareRadius;
+            foreach (PlayerParty member in group.Members)
+            {
+                if (member == null || member == this || member.gameObject.scene != gameObject.scene) continue;
+                if (member.resources != null && !member.resources.IsAlive) continue;
+                if (!SquadBuffRules.InReach(transform.position, member.transform.position, radius)) continue;
+                if (member.TryGetComponent(out PlayerCombatSkills skills)) into.Add(skills);
+            }
         }
 
         // ------------------------------------------------------------------ presentation helpers

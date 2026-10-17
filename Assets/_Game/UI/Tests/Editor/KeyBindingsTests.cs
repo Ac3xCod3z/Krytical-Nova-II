@@ -42,6 +42,17 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void TIsTheFifteenthHotbarSlotAndTheKioskOpensOnJ()
+        {
+            // The owner, 16 Oct 2026: T is a hotbar key like Q W E R; the Kiosk window it opened moves to J.
+            Assert.AreEqual("<Keyboard>/t", Action("SkillCommands", "SlotT").bindings[0].path);
+            Assert.AreEqual("<Keyboard>/j", Action("Windows", "Kiosk").bindings[0].path);
+            foreach (InputActionMap map in actions.actionMaps)
+                foreach (InputBinding binding in map.bindings)
+                    if (binding.path == "<Keyboard>/t") Assert.AreEqual("SlotT", binding.action, $"{map.name}/{binding.action} is on T too");
+        }
+
+        [Test]
         public void Clean_TakesBackASavedKeyTheGameIsPlayedWith()
         {
             // As it was found saved on the owner's machine: Hotbar 13 on the left mouse button, and E on nothing.

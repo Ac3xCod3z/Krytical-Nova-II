@@ -27,6 +27,9 @@ namespace KryticalNova.Progression
         private ISkillQueue queue;
         private PlayerGmState gmState;
         private IWeaponClassSource classSource;
+        private ISquadBuffTargets squad;
+        // Reused on the server for every shared cast: they are handled one at a time on the main thread.
+        private static readonly List<PlayerCombatSkills> SquadTargets = new List<PlayerCombatSkills>(8);
 
         // Indexed like availableSkills: 0 = not learned. Only the owner needs them; casts carry their rank to everyone else.
         private NetworkList<byte> netRanks;
@@ -71,6 +74,14 @@ namespace KryticalNova.Progression
         /// <summary>True where this player's skills are decided (the server, or offline). Clients only mirror them.</summary>
         public bool HasAuthority => !IsSpawned || IsServer;
 
+        // The Squad's numbers for a shared Stance, for tooltips: the Squad settings when there is a Squad component.
+        private const int DefaultShareRank = 20;
+        private const float DefaultShareRadius = 20f;
+        /// <summary>The rank from which a shared Stance reaches the Squad.</summary>
+        public int SquadShareRank => squad != null ? squad.BuffShareRank : DefaultShareRank;
+        /// <summary>Metres within which a shared Stance reaches a Squad member.</summary>
+        public float SquadShareRadius => squad != null ? squad.BuffShareRadius : DefaultShareRadius;
+
         private void Awake()
         {
             EnsureComponents();
@@ -88,6 +99,7 @@ namespace KryticalNova.Progression
             if (queue == null) queue = GetComponent<ISkillQueue>();
             if (gmState == null) gmState = GetComponent<PlayerGmState>();
             if (classSource == null) classSource = GetComponent<IWeaponClassSource>();
+            if (squad == null) squad = GetComponent<ISquadBuffTargets>();
         }
 
         private void OnEnable()
@@ -112,7 +124,8 @@ namespace KryticalNova.Progression
                 List<string> stale = null;
                 foreach (var buff in buffManager.ActiveBuffs)
                 {
-                    if (buff.Skill == null || !buff.Skill.IsClassSkill || buff.Skill.weaponClass == current) continue;
+                    // A Stance a Squad member gave stays: it is theirs, not this class's.
+                    if (buff.Skill == null || !buff.Skill.IsClassSkill || buff.Skill.weaponClass == current || buff.FromSquadmate) continue;
                     (stale ??= new List<string>()).Add(buff.Skill.skillId);
                 }
                 if (stale != null) foreach (string skillId in stale) buffManager.RemoveBuff(skillId);
@@ -268,6 +281,9 @@ namespace KryticalNova.Progression
         public void SetAvailableSkills(SkillDefinitionSO[] skills)
         {
             availableSkills = skills ?? Array.Empty<SkillDefinitionSO>();
+            // Unlocks travel as a 64-bit mask: a skill past the 64th would never reach its owner as unlocked.
+            if (availableSkills.Length > 64)
+                Debug.LogError($"[Skills] {availableSkills.Length} skills for {name}: only the first 64 can be unlocked over the network.");
             if (IsSpawned && IsServer) WriteNetState();
             else if (IsSpawned && IsOwner) { ReadNetState(); return; } // raises Changed itself
             Changed?.Invoke();
@@ -743,12 +759,48 @@ namespace KryticalNova.Progression
             else if (buffManager != null)
             {
                 buffManager.ApplyBuff(skill, rank);
+                if (IsSpawned && IsServer && squad != null && SquadBuffRules.Shares(skill, rank, squad.BuffShareRank)) ShareWithSquad(skill, rank);
             }
 
             SkillCast?.Invoke(skill);
             SkillMessage?.Invoke($"Activated {skill.displayName} (Rank {rank})!");
             Changed?.Invoke();
             return true;
+        }
+
+        // ------------------------------------------------------------------ a Stance shared with the Squad
+
+        /// <summary>Server: gives the Squad members within reach the Stance just cast (SquadBuffRules).</summary>
+        private void ShareWithSquad(SkillDefinitionSO skill, int rank)
+        {
+            squad.ServerGetBuffTargets(SquadTargets);
+            string giver = squad.BuffGiverName;
+            foreach (PlayerCombatSkills member in SquadTargets)
+                if (member != null && member != this) member.ServerReceiveSquadBuff(skill.skillId, rank, giver);
+            SquadTargets.Clear();
+        }
+
+        /// <summary>
+        /// Server: a Squad member's Stance reaches this player. It never stacks with the same Stance: it starts the
+        /// timer again at the higher of the two ranks, and every machine is told.
+        /// </summary>
+        public void ServerReceiveSquadBuff(string skillId, int rank, string giver)
+        {
+            if (!IsSpawned || !IsServer || buffManager == null || resources == null || !resources.IsAlive) return;
+            SkillDefinitionSO skill = GetSkill(skillId);
+            if (skill == null || !buffManager.ApplyBuff(skill, rank, fromSquadmate: true, giver: giver)) return;
+            ActiveBuff given = buffManager.GetBuff(skillId);
+            SquadBuffClientRpc(skillId, given != null ? given.Rank : rank, giver ?? string.Empty);
+        }
+
+        [ClientRpc]
+        private void SquadBuffClientRpc(string skillId, int rank, string giver)
+        {
+            SkillDefinitionSO skill = GetSkill(skillId);
+            if (skill == null) return;
+            if (!IsServer && buffManager != null) buffManager.ApplyBuff(skill, rank, fromSquadmate: true, giver: giver);
+            if (IsOwner) SkillMessage?.Invoke($"{(string.IsNullOrEmpty(giver) ? "A Squad member" : giver)} gave you {skill.displayName} (Rank {rank}).");
+            Changed?.Invoke();
         }
 
         // One-hit buffs are spent where the hit resolves (the server); clients drop their mirrored copy.
@@ -781,15 +833,15 @@ namespace KryticalNova.Progression
             if (!IsSpawned || buffManager == null || clientId == NetworkManager.ServerClientId) return;
             var target = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } } };
             foreach (var buff in buffManager.ActiveBuffs)
-                SyncBuffClientRpc(buff.Skill.skillId, buff.Rank, buff.RemainingDuration, target);
+                SyncBuffClientRpc(buff.Skill.skillId, buff.Rank, buff.RemainingDuration, buff.FromSquadmate, buff.Giver ?? string.Empty, target);
         }
 
         [ClientRpc]
-        private void SyncBuffClientRpc(string skillId, int rank, float remaining, ClientRpcParams target = default)
+        private void SyncBuffClientRpc(string skillId, int rank, float remaining, bool fromSquadmate, string giver, ClientRpcParams target = default)
         {
             if (IsServer || buffManager == null || buffManager.HasBuff(skillId)) return;
             var skill = GetSkill(skillId);
-            if (skill != null) buffManager.ApplyBuff(skill, rank, remaining);
+            if (skill != null) buffManager.ApplyBuff(skill, rank, remaining, fromSquadmate, giver);
         }
     }
 }

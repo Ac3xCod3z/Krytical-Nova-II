@@ -44,6 +44,8 @@ namespace KryticalNova.UI
             public float Column;
             public int Row;
             public bool Learned, Locked, TooLow, CanUpgrade;
+            /// <summary>What the tile says on hover; its name when empty.</summary>
+            public string Tooltip;
             /// <summary>Its card in the list beside the tree.</summary>
             public VisualElement Card;
         }
@@ -261,7 +263,7 @@ namespace KryticalNova.UI
             made.Rank.text = node.Rank ?? string.Empty;
             made.Rank.style.display = string.IsNullOrEmpty(node.Rank) ? DisplayStyle.None : DisplayStyle.Flex;
             made.Name.text = node.Name;
-            made.Tile.tooltip = node.Name;
+            made.Tile.tooltip = string.IsNullOrEmpty(node.Tooltip) ? node.Name : node.Tooltip;
             made.Root.EnableInClassList("learned", node.Learned);
             made.Root.EnableInClassList("unlearned", !node.Learned);
             made.Root.EnableInClassList("locked", node.Locked);

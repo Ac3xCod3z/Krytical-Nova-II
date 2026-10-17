@@ -19,6 +19,10 @@ namespace KryticalNova.Progression
         public float ShieldShatterChance { get; }
         public float DispelBuffChance { get; }
         public List<StatModifier> AppliedModifiers { get; } = new List<StatModifier>();
+        /// <summary>Given by a Squad member's cast rather than this character's own (a shared Stance).</summary>
+        public bool FromSquadmate { get; set; }
+        /// <summary>Who gave it, when <see cref="FromSquadmate"/>; for the buff bar.</summary>
+        public string Giver { get; set; }
 
         public ActiveBuff(SkillDefinitionSO skill, int rank, float shieldCapacity, float duration, float reflectionChance, float shatterChance, float dispelChance)
         {
@@ -114,11 +118,19 @@ namespace KryticalNova.Progression
         }
 
         /// <param name="remaining">Seconds left when joining a buff already running elsewhere; negative = a fresh, full-length buff.</param>
-        public bool ApplyBuff(SkillDefinitionSO skill, int rank = 1, float remaining = -1f)
+        /// <param name="fromSquadmate">Given by a Squad member's cast (a shared Stance), named by <paramref name="giver"/>.</param>
+        public bool ApplyBuff(SkillDefinitionSO skill, int rank = 1, float remaining = -1f, bool fromSquadmate = false, string giver = null)
         {
             EnsureComponents();
             if (skill == null || combatStats == null) return false;
             rank = Mathf.Clamp(rank, skill.minRank, skill.maxRank);
+            // A buff shared in the Squad never stacks and is never made weaker by being given again: the timer
+            // starts over at the higher of the two ranks (SquadBuffRules).
+            if (skill.sharesWithSquad)
+            {
+                ActiveBuff running = GetBuff(skill.skillId);
+                rank = SquadBuffRules.RankAfterRecast(running != null, running != null ? running.Rank : 0, rank);
+            }
 
             float duration = skill.GetDuration(rank);
             float shieldCapacity = skill.isAbsorptionShield ? skill.GetShieldMultiplier(rank) * combatStats.GetStatValue(StatType.MaxHP) : 0f;
@@ -133,7 +145,11 @@ namespace KryticalNova.Progression
                 RemoveBuffAt(existingIndex);
             }
 
-            var newBuff = new ActiveBuff(skill, rank, shieldCapacity, duration, reflectChance, shatterChance, dispelChance);
+            var newBuff = new ActiveBuff(skill, rank, shieldCapacity, duration, reflectChance, shatterChance, dispelChance)
+            {
+                FromSquadmate = fromSquadmate,
+                Giver = fromSquadmate ? giver : null,
+            };
             if (remaining >= 0f) newBuff.RemainingDuration = Mathf.Min(remaining, duration);
 
             if (skill.executionType == SkillExecutionType.Channeled)
@@ -298,6 +314,17 @@ namespace KryticalNova.Progression
             {
                 BuffMessage?.Invoke("Stance buffs dispelled by Shatterpoint!");
                 BuffsChanged?.Invoke();
+            }
+        }
+
+        /// <summary>True while a buff that empowers one hit (Redline) is charged and waiting for it.</summary>
+        public bool HasNextHitBuff
+        {
+            get
+            {
+                for (int i = 0; i < activeBuffs.Count; i++)
+                    if (activeBuffs[i].Skill.consumedOnNextHit) return true;
+                return false;
             }
         }
 

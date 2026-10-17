@@ -27,6 +27,8 @@ MonoBehaviour:
   gearChancePercent: 2.5
   bruiserGearChancePercent: 25
   gearLevelsBelow: 3
+  announceDrops: 1
+  announceDropsFrom: 3
   materialDrops:
   - item: {fileID: 11400000, guid: 2f0df2b84dbe23041a27da17560b99d9, type: 2}
     chancePercent: 1.5
@@ -311,6 +313,78 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 0ee0560fa121fa2419395a34ee27f09c, type: 2}
     chancePercent: 0.3
     minLevel: 10
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 0eb76d0de389eef499db79e2e91918af, type: 2}
+    chancePercent: 0.1
+    minLevel: 60
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 5f5c62a68f77a1647850b4ba60f6a1ce, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 18d5d66e7dd476b418b36ea60b0363c7, type: 2}
+    chancePercent: 0.1
+    minLevel: 60
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 43e9fd1c0132db9429df0b5e406c983b, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 812ae446886aa7c488888cf63467bbb9, type: 2}
+    chancePercent: 0.1
+    minLevel: 60
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 23f0dd77955b0964bab01ff55d4b85d5, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: b648bdf4ea0a9164c9b1c07545d7ef56, type: 2}
+    chancePercent: 0.1
+    minLevel: 60
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: a6c9cf9c85bc7a3459c788402faed7be, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 646f23c139ccb854ca5d132cc5d6d802, type: 2}
+    chancePercent: 0.1
+    minLevel: 60
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 96911551451d41149a3bcd3ec91285e4, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 51b1526f8c43323409ed5194c13d0802, type: 2}
+    chancePercent: 0.1
+    minLevel: 60
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 1a82e716b2a861a46929a92ecfc0b9c8, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 25c2612294b285942b69f2e2e581ebcb, type: 2}
+    chancePercent: 0.1
+    minLevel: 60
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 44e56a0b629b06446bd4752fae84f42f, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 979be879b14945d46a6cf685c9f936ee, type: 2}
+    chancePercent: 0.1
+    minLevel: 60
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: f7298eabf479d3e4d8db770f67c5ee4c, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: 17d7be6e1a6f1c94e844f39bbd6f8c9c, type: 2}
+    chancePercent: 0.1
+    minLevel: 60
+    maxLevel: 0
+  - item: {fileID: 11400000, guid: a85e8356c166a594c90fe0b35a33ccbf, type: 2}
+    chancePercent: 0.02
+    minLevel: 113
     maxLevel: 0
   maxActiveHostiles: 300
   zoneTickSeconds: 0.5

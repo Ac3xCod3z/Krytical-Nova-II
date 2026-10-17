@@ -59,9 +59,9 @@ namespace KryticalNova.Player
         [Header("What can be vaulted (heights above the feet)")]
         [Tooltip("Lowest obstacle that is vaulted (anything the NavMesh cuts round, down to a low crate).")]
         [SerializeField, Min(0.1f)] private float minimumHeight = 0.18f;
-        [Tooltip("Tallest obstacle that can be vaulted. 1.78 m lets the town's hedges (SM_Env_Hedge_01, 1.67 to 1.72 m) through " +
-                 "and stops everything taller: vents, fences, walls.")]
-        [SerializeField, Min(0.2f)] private float maximumHeight = 1.78f;
+        [Tooltip("Tallest obstacle that can be vaulted. 2.2 m (owner, 17 Oct 2026) meets Wallstride, which runs up anything from " +
+                 "2.2 m (WallstrideSettings.minWallHeight), so no height is left that can be neither vaulted nor climbed.")]
+        [SerializeField, Min(0.2f)] private float maximumHeight = 2.2f;
         [Tooltip("Thickest obstacle, measured along the vault. 1.8 m takes a hedge or a dumpster across its short side only.")]
         [SerializeField, Min(0.1f)] private float maximumThickness = 1.8f;
         [Tooltip("How far from square-on the move may meet the obstacle. The vault itself always goes straight across; " +
