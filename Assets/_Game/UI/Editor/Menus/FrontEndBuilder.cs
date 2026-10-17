@@ -68,6 +68,8 @@ namespace KryticalNova.EditorTools
             EnsureGlyphs();
             EnsureBook();
             EnsureMenuGlow();
+            EnsureBrandingArt();
+            ApplyIconsAndSplash();
 
             BuildTitle();
             BuildFactionSelect(database);
@@ -93,8 +95,8 @@ namespace KryticalNova.EditorTools
             {
                 BeginSkin(canvas, each);
                 var screen = AddScreen(canvas, skin.titleScreen, "Screen_Title");
-                ComicBackground(screen);
-                TitleLettering(screen);
+                // The owner's cover painting, which carries the logo, in place of the comic field and the lettering.
+                CoverBackground(screen);
                 // "Press [key] to Continue": the pack ships an Xbox button here.
                 StandaloneGlyph(MenuUi.Find(screen, "Input_Button"), Key.Enter);
                 // The way out: a quieter line under the prompt, and the popup that asks before the game closes.
@@ -111,6 +113,7 @@ namespace KryticalNova.EditorTools
             }
             AddSkinSwitch(canvas, groups);
             AddTransition();
+            AddOpeningIntro();
             End(build);
         }
 
