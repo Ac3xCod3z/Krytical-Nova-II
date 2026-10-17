@@ -149,7 +149,7 @@ namespace KryticalNova.UI
             if (!connected) return;
 
             roleLabel.text = nm.IsHost ? "Role: Host (Server + Client)" : nm.IsServer ? "Role: Dedicated Server" : "Role: Client";
-            clientsLabel.text = nm.IsServer ? $"Connected Clients: {nm.ConnectedClientsIds.Count}" : "Connected to host";
+            clientsLabel.text = nm.IsServer ? $"Connected Clients: {nm.ConnectedClientsIds.Count}" : nm.IsConnectedClient ? "Connected to host" : "Waiting for the host...";
             string code = Manager != null ? Manager.ActiveSessionCode : null;
             SetVisible(sessionRow, !string.IsNullOrEmpty(code));
             if (!string.IsNullOrEmpty(code)) sessionCodeLabel.text = $"Session Code: {code}";

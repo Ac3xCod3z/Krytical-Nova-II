@@ -66,8 +66,9 @@ namespace KryticalNova.Player
     public sealed class PlayerWallRunMotor : NetworkBehaviour
     {
         private const float WallScanStep = 0.25f;
-        private const float WallScanOut = 0.6f;
-        private const float WallScanLength = 1.2f;
+        // The face is scanned from this far out, so a ledge or balcony up to this deep is seen from outside it.
+        private const float WallScanOut = 1.2f;
+        private const float WallScanLength = 1.8f;
         private const float BaseSampleRadius = 1.2f;
         private const float GroundProbe = 60f;
         private const float BodySkin = 0.05f;
@@ -333,7 +334,7 @@ namespace KryticalNova.Player
             reason = string.Empty;
             if (phase != WallRunPhase.Perched || settings == null) return false;
             var filter = Filter();
-            if (!NavMesh.SamplePosition(point, out NavMeshHit landing, 1.5f, filter)) { reason = "Choose a walkable place to drop down to."; return false; }
+            if (!NavMesh.SamplePosition(point, out NavMeshHit landing, 1.5f, filter) || !OnOpenGround(landing.position)) { reason = "Choose a walkable place to drop down to."; return false; }
             Vector3 flat = landing.position - Feet;
             flat.y = 0f;
             if (flat.magnitude > settings.maxDropDistance) { reason = $"Too far: drop within {settings.maxDropDistance:0} m of the tree."; return false; }
@@ -351,7 +352,7 @@ namespace KryticalNova.Player
             bool eligible = IsClimbableObject(surface, out ClimbableSurface marker);
             ClimbableKind kind = marker != null ? marker.kind : ClimbableKind.Wall;
             bool stride = fromJump || (movementSkills != null && (movementSkills.IsRunning || movementSkills.IsJumpSelected));
-            bool shaped = eligible && kind != ClimbableKind.Never && Shape(point, normal, kind, marker, out climb);
+            bool shaped = eligible && kind != ClimbableKind.Never && Shape(point, normal, kind, marker, fromFeet, out climb);
             var query = new ClimbQuery
             {
                 Unlocked = WallstrideOpen,
@@ -389,7 +390,7 @@ namespace KryticalNova.Player
         /// The climb a surface makes: its foot on the walkable ground, how high it goes and where it ends (the walkable
         /// top over its edge, or the place to stand in a tree).
         /// </summary>
-        private bool Shape(Vector3 point, Vector3 normal, ClimbableKind kind, ClimbableSurface marker, out Plan climb)
+        private bool Shape(Vector3 point, Vector3 normal, ClimbableKind kind, ClimbableSurface marker, Vector3 fromFeet, out Plan climb)
         {
             climb = new Plan { Kind = kind };
             if (settings == null) return false;
@@ -399,12 +400,16 @@ namespace KryticalNova.Player
             if (kind == ClimbableKind.Tree && marker != null)
             {
                 Vector3 trunk = marker.TrunkBase;
-                Vector3 side = point - trunk;
+                // A trunk is round: it is climbed on the side the player comes from. Where the click met it is the
+                // camera's side, which would make most clicks on a tree read as not head-on.
+                Vector3 side = fromFeet - trunk;
+                side.y = 0f;
+                if (side.sqrMagnitude < 1e-4f) side = point - trunk;
                 side.y = 0f;
                 if (side.sqrMagnitude < 1e-4f) side = -transform.forward;
                 side.Normalize();
                 climb.Normal = side;
-                Vector3 foot = trunk + side * (marker.trunkRadius + stand);
+                Vector3 foot = trunk + side * (marker.trunkRadius + stand + settings.wallClearance);
                 if (!NavMesh.SamplePosition(foot, out NavMeshHit treeBase, BaseSampleRadius + marker.trunkRadius, filter)) return false;
                 climb.BaseFeet = new Vector3(foot.x, treeBase.position.y, foot.z);
                 climb.TopFeet = marker.PerchFor(side, settings.perchHeightShare, Radius);
@@ -424,27 +429,34 @@ namespace KryticalNova.Player
             Vector3 probe = point + n * WallScanOut;
             if (!Physics.Raycast(probe + Vector3.up * 0.5f, Vector3.down, out RaycastHit ground, GroundProbe, GroundMask(), QueryTriggerInteraction.Ignore)) return false;
             Vector3 wallFoot = new Vector3(point.x, ground.point.y, point.z);
-            Vector3 standAt = wallFoot + n * stand;
-            if (!NavMesh.SamplePosition(standAt, out NavMeshHit baseHit, BaseSampleRadius, filter)) return false;
-            climb.BaseFeet = new Vector3(standAt.x, baseHit.position.y, standAt.z);
 
-            // Up the face until it ends: that is the edge.
-            float edge = -1f;
+            // Up the face until it ends: that is the edge. On the way, how far the face stands out anywhere (a ledge,
+            // a window frame, a balcony): the climb keeps the whole body outside the outermost part.
+            float edge = -1f, outermost = 0f;
             int mask = SurfaceMask();
             for (float h = WallScanStep; h <= settings.maxClimbHeight + WallScanStep; h += WallScanStep)
             {
                 Vector3 origin = wallFoot + Vector3.up * h + n * WallScanOut;
-                if (Physics.Raycast(origin, -n, WallScanLength, mask, QueryTriggerInteraction.Ignore)) continue;
+                if (Physics.Raycast(origin, -n, out RaycastHit face, WallScanLength, mask, QueryTriggerInteraction.Ignore))
+                {
+                    outermost = Mathf.Max(outermost, WallScanOut - face.distance);
+                    continue;
+                }
                 edge = h;
                 break;
             }
             climb.Height = edge < 0f ? settings.maxClimbHeight + 1f : edge;
+
+            // The climb's line: the body's round plus clearance off the outermost part of the face.
+            Vector3 standAt = wallFoot + n * (stand + settings.wallClearance + outermost);
+            if (!NavMesh.SamplePosition(standAt, out NavMeshHit baseHit, BaseSampleRadius, filter) || !OnOpenGround(baseHit.position)) return false;
+            climb.BaseFeet = new Vector3(standAt.x, baseHit.position.y, standAt.z);
             if (edge < 0f) return true; // runs on past the reach: too high
 
             // The walkable top, just over the edge.
             Vector3 over = wallFoot - n * settings.mantleReach + Vector3.up * (edge + 0.3f);
             if (NavMesh.SamplePosition(over, out NavMeshHit top, settings.topSampleRadius + 0.6f, filter)
-                && Mathf.Abs(top.position.y - (wallFoot.y + edge)) <= 0.8f)
+                && Mathf.Abs(top.position.y - (wallFoot.y + edge)) <= 0.8f && OnOpenGround(top.position))
             {
                 climb.TopFeet = top.position;
                 climb.HasTop = true;
@@ -523,6 +535,8 @@ namespace KryticalNova.Player
                     feet = Vector3.Lerp(fromFeet, toFeet, t);
                     break;
                 case WallRunPhase.Mantle:
+                    feet = OverTheEdge(Smooth(t));
+                    break;
                 case WallRunPhase.ToPerch:
                     feet = Vector3.Lerp(fromFeet, toFeet, Smooth(t)) + Vector3.up * (Mathf.Sin(t * Mathf.PI) * arcLift);
                     break;
@@ -565,14 +579,14 @@ namespace KryticalNova.Player
         {
             Vector3 out_ = new Vector3(plan.Normal.x, 0f, plan.Normal.z).normalized;
             Vector3 aim = Feet + out_ * settings.kickOffDistance;
-            Vector3 landing = NavMesh.SamplePosition(new Vector3(aim.x, plan.BaseFeet.y, aim.z), out NavMeshHit hit, 2f, Filter()) ? hit.position : plan.BaseFeet;
+            Vector3 landing = OpenLanding(NavMesh.SamplePosition(new Vector3(aim.x, plan.BaseFeet.y, aim.z), out NavMeshHit hit, 2f, Filter()) ? hit.position : plan.BaseFeet);
             arcLift = settings.kickOffLift;
             StartPhase(WallRunPhase.KickOff, Feet, landing, FallSeconds(Feet.y + arcLift, landing.y));
         }
 
         private void FallFromPerch()
         {
-            Vector3 below = NavMesh.SamplePosition(Feet, out NavMeshHit hit, settings.maxClimbHeight + 2f, Filter()) ? hit.position : plan.BaseFeet;
+            Vector3 below = OpenLanding(NavMesh.SamplePosition(Feet, out NavMeshHit hit, settings.maxClimbHeight + 2f, Filter()) ? hit.position : plan.BaseFeet);
             arcLift = 0f;
             StartPhase(WallRunPhase.DropDown, Feet, below, FallSeconds(Feet.y, below.y));
         }
@@ -606,7 +620,10 @@ namespace KryticalNova.Player
             Vector3 facing = next == WallRunPhase.KickOff || next == WallRunPhase.DropDown ? to - from : -plan.Normal;
             facing.y = 0f;
             float yaw = facing.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(facing, Vector3.up).eulerAngles.y : transform.eulerAngles.y;
-            if (next != WallRunPhase.None) transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            if (next == WallRunPhase.None) yaw = transform.eulerAngles.y;
+            // Running up, the body leans back off the face; every other phase stands upright again.
+            float lean = next == WallRunPhase.Climb && settings != null ? -settings.climbLean : 0f;
+            transform.rotation = Quaternion.Euler(lean, yaw, 0f);
             var pose = new WallRunPose { Phase = next, Yaw = yaw, Duration = seconds };
             if (IsSpawned) netPose.Value = pose;
             Show(pose);
@@ -645,6 +662,7 @@ namespace KryticalNova.Player
             Vector3 outFrom = new Vector3(plan.Normal.x, 0f, plan.Normal.z);
             if (outFrom.sqrMagnitude > 1e-4f && settings != null)
                 transform.position += outFrom.normalized * settings.deathPushOff;
+            transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f); // upright again off the lean
             phase = WallRunPhase.None;
             if (IsSpawned) netPose.Value = default;
             Show(default);
@@ -656,7 +674,7 @@ namespace KryticalNova.Player
             armed = false;
             catchPending = false;
             if (!HasAuthority || phase == WallRunPhase.None) return;
-            Vector3 ground = NavMesh.SamplePosition(Feet, out NavMeshHit hit, settings != null ? settings.maxClimbHeight + 2f : 16f, Filter()) ? hit.position : plan.BaseFeet;
+            Vector3 ground = OpenLanding(NavMesh.SamplePosition(Feet, out NavMeshHit hit, settings != null ? settings.maxClimbHeight + 2f : 16f, Filter()) ? hit.position : plan.BaseFeet);
             Land(ground);
         }
 
@@ -758,6 +776,31 @@ namespace KryticalNova.Player
             return false;
         }
 
+        /// <summary>
+        /// False for a place inside a building: the town's buildings have walkable floors inside them (their own NavMesh,
+        /// not joined to the street), and a climb must never start, end or land in one. Inside is a ceiling overhead
+        /// with walls round on at least three sides; an awning over the street has no walls round it.
+        /// </summary>
+        private bool OnOpenGround(Vector3 feet)
+        {
+            int mask = GroundMask();
+            Vector3 head = feet + Vector3.up * ((agent != null ? agent.height : 2f) + 0.2f);
+            if (!Physics.Raycast(head, Vector3.up, IndoorProbe, mask, QueryTriggerInteraction.Ignore)) return true;
+            int walls = 0;
+            Vector3 chest = feet + Vector3.up * 1f;
+            for (int i = 0; i < 4; i++)
+            {
+                Vector3 direction = Quaternion.Euler(0f, i * 90f, 0f) * Vector3.forward;
+                if (Physics.Raycast(chest, direction, IndoorProbe, mask, QueryTriggerInteraction.Ignore)) walls++;
+            }
+            return walls < 3;
+        }
+
+        private const float IndoorProbe = 6f;
+
+        /// <summary>A landing on open ground: the place asked for, or the climb's own foot when that one is indoors.</summary>
+        private Vector3 OpenLanding(Vector3 wanted) => OnOpenGround(wanted) ? wanted : plan.BaseFeet;
+
         private NavMeshQueryFilter Filter() => new NavMeshQueryFilter { agentTypeID = agent != null ? agent.agentTypeID : 0, areaMask = agent != null ? agent.areaMask : NavMesh.AllAreas };
 
         private float GroundSpeed() => movementSkills != null ? movementSkills.CurrentSpeed : 6f;
@@ -767,6 +810,20 @@ namespace KryticalNova.Player
             float g = settings != null ? settings.dropGravity : 14f;
             float up = Mathf.Max(0f, peakY - Feet.y), down = Mathf.Max(0.05f, peakY - endY);
             return Mathf.Max(0.3f, Mathf.Sqrt(2f * up / g) + Mathf.Sqrt(2f * down / g));
+        }
+
+        /// <summary>
+        /// Over the edge: straight up the climb's line until the feet are clear above the top, then in over it. The body
+        /// stays outside the face going up, and above the top going in, so it never passes through the corner.
+        /// </summary>
+        private Vector3 OverTheEdge(float s)
+        {
+            float clear = settings != null ? settings.mantleClearance : 0.25f;
+            Vector3 lifted = new Vector3(fromFeet.x, Mathf.Max(fromFeet.y, toFeet.y) + clear, fromFeet.z);
+            float up = Vector3.Distance(fromFeet, lifted), over = Vector3.Distance(lifted, toFeet);
+            float split = up + over > 1e-4f ? up / (up + over) : 1f;
+            if (s <= split) return Vector3.Lerp(fromFeet, lifted, split > 1e-4f ? s / split : 1f);
+            return Vector3.Lerp(lifted, toFeet, (s - split) / Mathf.Max(1e-4f, 1f - split));
         }
 
         private Vector3 Arc(float t)

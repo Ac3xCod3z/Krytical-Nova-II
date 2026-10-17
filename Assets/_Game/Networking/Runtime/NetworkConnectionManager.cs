@@ -173,9 +173,37 @@ namespace KryticalNova.Networking
             if (nm == null) return false;
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
             bool success = nm.StartClient();
-            if (success) StatusChanged?.Invoke("Connecting through Unity Relay...");
+            if (success)
+            {
+                StatusChanged?.Invoke("Connecting through Unity Relay...");
+                ReportWhenConnected("Connected through Unity Relay.");
+            }
             else ReportError("NetworkManager failed to connect through Unity Relay.");
             return success;
+        }
+
+        /// <summary>Says so once this client is in (the "Connecting..." line would otherwise stay up); a failed try just drops it.</summary>
+        private void ReportWhenConnected(string message)
+        {
+            NetworkManager nm = NetworkManager.Singleton;
+            if (nm == null) return;
+            void Done()
+            {
+                nm.OnClientConnectedCallback -= Connected;
+                nm.OnClientDisconnectCallback -= Disconnected;
+            }
+            void Connected(ulong id)
+            {
+                if (id != nm.LocalClientId) return;
+                Done();
+                StatusChanged?.Invoke(message);
+            }
+            void Disconnected(ulong id)
+            {
+                if (id == nm.LocalClientId) Done();
+            }
+            nm.OnClientConnectedCallback += Connected;
+            nm.OnClientDisconnectCallback += Disconnected;
         }
 
         /// <summary>
@@ -326,6 +354,7 @@ namespace KryticalNova.Networking
             if (success)
             {
                 StatusChanged?.Invoke($"Connecting to {address}:{targetPort}...");
+                ReportWhenConnected($"Connected to {address}:{targetPort}.");
             }
             else
             {

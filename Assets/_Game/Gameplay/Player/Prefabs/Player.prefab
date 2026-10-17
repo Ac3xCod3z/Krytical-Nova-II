@@ -846,7 +846,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.PlayerVaultMotor
   ShowTopMostFoldoutHeaderGroup: 1
   minimumHeight: 0.18
-  maximumHeight: 1.78
+  maximumHeight: 2.2
   maximumThickness: 1.8
   maximumApproachAngle: 80
   minimumDistanceSaved: 0
