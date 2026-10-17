@@ -228,7 +228,8 @@ namespace KryticalNova.Networking
                     NetworkStream stream = client.GetStream();
                     IPAddress from = ((IPEndPoint)client.Client.RemoteEndPoint).Address;
                     if (!ControlPageRules.IsHomeNetwork(from)) { Send(stream, 403, "Forbidden", "text/plain", "The control page answers the home network only."); return; }
-                    ControlPageRules.Request request = ControlPageRules.Read(stream);
+                    ControlPageRules.Request request = ControlPageRules.Read(stream, out bool empty);
+                    if (empty) return; // a browser's spare connection, closed unused: nobody to answer
                     if (request == null) { Send(stream, 400, "Bad Request", "text/plain", "Bad request."); return; }
                     if (!ControlPageRules.IsAcceptableHost(request.Header("Host"))) { Send(stream, 403, "Forbidden", "text/plain", "Open the page by this PC's address."); return; }
                     Route(stream, request, from.ToString());

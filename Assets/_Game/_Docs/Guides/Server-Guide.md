@@ -485,7 +485,7 @@ server is on the old PC and the bots run here (owner, 17 Oct 2026).
 | `ServerLaunchOptions` | `Networking/Runtime/Server` | Reads the settings file and the command line; makes the page password. Server build only. |
 | `ServerLifetime` | `Networking/Runtime/Server` | Backups on a timer, countdowns, the safe stop (the console close handler), restart (exit code 3). Server build only. |
 | `ServerControlPage` | `Networking/Runtime/Server` | The control page: a small web server on a plain socket (no administrator rights), sessions, the calls. Server build only. |
-| `ControlPageRules` | `Networking/Runtime/Server` | Home network only, request reading, the lockout, same-origin and Host checks, which failed requests are a browser hanging up (not logged) (tested in `ControlPageTests`). |
+| `ControlPageRules` | `Networking/Runtime/Server` | Home network only, request reading, the lockout, same-origin and Host checks, which failed requests are a browser hanging up (not logged), a spare connection closed unused (no answer) (tested in `ControlPageTests`). |
 | `ServerSingleCopy` | `Networking/Runtime/Server` | Before anything else, checks the game port (UDP, Direct mode) and the page port (TCP); when another copy holds them it says so and quits with exit code 4, which `Start Server.bat` does not restart on (tested in `ServerSingleCopyTests`). Server build only. |
 | `ControlPage~` | `Networking` | The page's own files: `index.html`, `style.css`, `app.js` (copied beside the server by the build). |
 | `ServerBackups` | `Gameplay/Persistence/Runtime` | Zips the save folder and prunes old backups. |
@@ -534,5 +534,6 @@ Things learned the hard way:
 - 17 Oct 2026: step 7's tools: the load chip and `PerformanceLogs/server_*.csv`; bots and a measure server (Krytical Nova ▸ Online ▸ Measure); the measuring itself waits for the old PC.
 - 17 Oct 2026: a second copy started on the same PC says "A Krytical Nova server is already running on this PC" and
   stops at once (exit code 4), before it publishes the list, backs up or opens the map; the control page no longer
-  logs a browser that hung up before the answer (it filled the log with "Control page request failed: Unable to
-  write data to the transport connection").
+  logs a browser that hung up before the answer, and no longer answers the spare connections a browser opens ahead
+  and closes unused (answering them filled the log with "Control page request failed: Unable to write data to the
+  transport connection", about once a second while the page was open).

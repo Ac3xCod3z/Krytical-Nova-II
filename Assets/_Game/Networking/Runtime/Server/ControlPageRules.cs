@@ -96,14 +96,26 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>Reads one HTTP/1.1 request, or null when it is malformed or too large.</summary>
-        public static Request Read(Stream stream)
+        public static Request Read(Stream stream) => Read(stream, out _);
+
+        /// <summary>
+        /// Reads one HTTP/1.1 request, or null when it is malformed or too large; <paramref name="empty"/> is true when
+        /// the connection closed before sending anything (a browser's spare connection, opened ahead and never used),
+        /// which needs no answer.
+        /// </summary>
+        public static Request Read(Stream stream, out bool empty)
         {
+            empty = false;
             var head = new MemoryStream();
             int matched = 0;
             while (head.Length < MaxHeaderBytes)
             {
                 int b = stream.ReadByte();
-                if (b < 0) return null;
+                if (b < 0)
+                {
+                    empty = head.Length == 0;
+                    return null;
+                }
                 head.WriteByte((byte)b);
                 matched = b == (matched % 2 == 0 ? '\r' : '\n') ? matched + 1 : (b == '\r' ? 1 : 0);
                 if (matched == 4) break;

@@ -65,6 +65,18 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void ASpareConnectionClosedUnusedNeedsNoAnswer()
+        {
+            // Browsers open connections ahead and close them unused; answering those with a 400 failed and filled the log.
+            Assert.IsNull(ControlPageRules.Read(new MemoryStream(new byte[0]), out bool empty));
+            Assert.IsTrue(empty, "nothing was sent: closed without an answer");
+            Assert.IsNull(ControlPageRules.Read(new MemoryStream(Encoding.ASCII.GetBytes("GET / HTTP/1.1\r\nHost: x")), out empty));
+            Assert.IsFalse(empty, "a request cut short is still answered with Bad request");
+            Assert.IsNotNull(ControlPageRules.Read(new MemoryStream(Encoding.ASCII.GetBytes("GET / HTTP/1.1\r\nHost: x\r\n\r\n")), out empty));
+            Assert.IsFalse(empty);
+        }
+
+        [Test]
         public void AButtonPressFromAnotherSiteIsRefused()
         {
             var request = new ControlPageRules.Request { Method = "POST", Path = "/api/stop" };
