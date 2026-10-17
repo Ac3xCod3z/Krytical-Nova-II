@@ -315,17 +315,12 @@ namespace KryticalNova.DevTools
                 return $"Unknown side '{from}'. Use front, back, left or right.";
             if (amount <= 0f) amount = res.MaxHealth * 0.1f;
 
-            float before = res.Health;
-            res.ApplyDamage(amount);
-            float lost = before - res.Health;
+            res.ApplyDamage(amount); // raises the hurt effect itself
             melee.PreviewImpact(player.transform, comboStep, critical);
             // This bypasses TakeDamage, so the hit animation is asked for here, the way a real blow asks for it.
             player.GetComponent<KryticalNova.Player.PlayerAnimancerMotor>()?.ShowHitReaction(towardAttacker, comboStep >= 3);
             ClientPresentationRegistry.Feedback?.ShowCombatFeedback(player.transform.position,
                 new DamageResult { DamageDealt = amount, IsCritical = critical });
-            // The networked path raises this from the replicated health; offline nothing else does.
-            if (!res.IsSpawned && lost > 0f)
-                ClientPresentationRegistry.Feel?.LocalPlayerDamaged(lost / Mathf.Max(1f, res.MaxHealth));
             return $"Hit for {amount:0} ({style}, from the {from}) · HP {res.Health:0}/{res.MaxHealth:0}{(GodModeOn(res) ? " (god mode on: no HP lost)" : "")}";
         }
 
