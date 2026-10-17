@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: SpiritualRage
   displayName: Redline
-  description: Hold to push past the redline. Your next hit deals greatly increased damage with a higher Critical rate (only the first hit of a multi-hit skill). The charge fades if unused.
+  description: Hold to push past the redline. Your next hit deals greatly increased damage with a higher Critical rate (the first hit of a multi-hit skill). A three-hit skill pressed on the beat keeps the charge for all three hits, each a Critical, until one misses. The charge fades if unused.
   category: 0
   weaponClass: 0
   classSlot: 0

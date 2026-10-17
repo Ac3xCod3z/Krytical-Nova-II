@@ -30,12 +30,14 @@ namespace KryticalNova.Progression
             bool attackerHasShieldShatter = false,
             float shatterChance = 10f,
             bool canCrit = true,
-            float hitChanceModifier = 0f)
+            float hitChanceModifier = 0f,
+            bool forceCrit = false)
         {
             float hitRoll = Random.Range(0f, 100f);
             float reflectRoll = Random.Range(0f, 100f);
-            // A roll above any possible Critical Rate: the strike can never be critical.
-            float critRoll = canCrit ? Random.Range(0f, 100f) : float.PositiveInfinity;
+            // A roll above any possible Critical Rate: the strike can never be critical. One below any: it always is,
+            // if it hits at all (a three-hit attack pressed on the beat with Redline charged). Evasion is rolled first.
+            float critRoll = !canCrit ? float.PositiveInfinity : forceCrit ? float.NegativeInfinity : Random.Range(0f, 100f);
             float shatterRoll = Random.Range(0f, 100f);
 
             return CalculateAttackInternal(

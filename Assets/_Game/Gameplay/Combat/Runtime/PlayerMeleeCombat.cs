@@ -671,7 +671,7 @@ namespace KryticalNova.Combat
         /// </summary>
         /// <param name="damageScale">Scales the damage the hit ends up dealing, after everything else is worked out (Cadence).</param>
         public bool ResolveHit(IDamageable target, float damageMultiplier, int comboStep, string stepLabel, out DamageResult result,
-            bool canCrit = true, bool fromSkill = false, float damageScale = 1f)
+            bool canCrit = true, bool fromSkill = false, float damageScale = 1f, bool forceCrit = false)
         {
             result = default;
             if (target == null || !target.IsAlive) return false;
@@ -700,7 +700,8 @@ namespace KryticalNova.Combat
                 attackerShatter,
                 shatChance,
                 canCrit,
-                hitChanceModifier);
+                hitChanceModifier,
+                forceCrit);
             if (damageScale != 1f)
             {
                 result.DamageDealt *= damageScale;

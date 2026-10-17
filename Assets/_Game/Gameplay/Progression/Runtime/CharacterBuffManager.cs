@@ -301,6 +301,17 @@ namespace KryticalNova.Progression
             }
         }
 
+        /// <summary>True while a buff that empowers one hit (Redline) is charged and waiting for it.</summary>
+        public bool HasNextHitBuff
+        {
+            get
+            {
+                for (int i = 0; i < activeBuffs.Count; i++)
+                    if (activeBuffs[i].Skill.consumedOnNextHit) return true;
+                return false;
+            }
+        }
+
         /// <summary>
         /// Spends buffs that only empower one hit (e.g. Spiritual Rage). Call after the hit's damage is resolved,
         /// so that hit benefits and the following ones do not.

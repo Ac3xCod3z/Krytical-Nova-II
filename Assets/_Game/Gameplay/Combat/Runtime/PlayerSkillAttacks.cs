@@ -177,11 +177,16 @@ namespace KryticalNova.Combat
             float perHit = skill.GetDamageMultiplier(rank) / hits;
             float range = skill.GetRange(rank);
             var single = target != null ? target.GetComponentInParent<IDamageable>() : null;
-            bool empowerSpent = false;
             float elapsed = 0f;
             // Cadence: a key pressed on the beat of the fight music makes this one cast hit a little harder.
             if (cadence == null) cadence = GetComponent<PlayerCadence>();
-            float onCadence = cadence != null ? cadence.ServerTake(skill) : 1f;
+            bool pressedOnCadence = false;
+            float onCadence = cadence != null ? cadence.ServerTake(skill, out pressedOnCadence) : 1f;
+            // Redline (RedlineRules): spent on one hit, or held for all three of a three-hit attack pressed on the beat,
+            // each of which then lands as a critical. Only against a target Cadence counts for.
+            SkillKind kind = SkillKinds.Of(skill);
+            bool charged = buffManager != null && buffManager.HasNextHitBuff;
+            bool holding = RedlineRules.HoldsForEveryHit(kind, charged, pressedOnCadence && single != null && cadence.AppliesTo(single));
 
             for (int i = 0; i < hits; i++)
             {
@@ -192,24 +197,28 @@ namespace KryticalNova.Combat
                     yield return null;
                 }
 
-                bool landed = false;
+                var outcome = HitOutcome.None;
                 string label = hits > 1 ? $"{skill.displayName} ({i + 1}/{hits})" : skill.displayName;
                 if (skill.IsAreaAttack)
                 {
                     CollectAreaTargets(range);
-                    foreach (var victim in areaTargets) landed |= ResolveSkillHit(skill, victim, perHit, label, CadenceFor(victim, onCadence));
+                    foreach (var victim in areaTargets)
+                    {
+                        HitOutcome one = ResolveSkillHit(skill, victim, perHit, label, CadenceFor(victim, onCadence));
+                        if (one > outcome) outcome = one;
+                    }
                 }
                 else if (single != null && single.IsAlive
                          && FlatDistance(single.Transform.position) <= (range + rangeTolerance) * impactRangeLeniency)
                 {
-                    landed = ResolveSkillHit(skill, single, perHit, label, CadenceFor(single, onCadence));
+                    outcome = ResolveSkillHit(skill, single, perHit, label, CadenceFor(single, onCadence), forceCrit: holding);
                 }
 
-                // One-hit buffs (Spiritual Rage) empower only the first hit that lands.
-                if (landed && !empowerSpent)
+                if (charged && RedlineRules.AfterHit(kind, holding, outcome, i, hits) == ChargeStep.Spend)
                 {
-                    empowerSpent = true;
-                    buffManager?.ConsumeNextHitBuffs();
+                    charged = false;
+                    holding = false;
+                    buffManager.ConsumeNextHitBuffs();
                 }
             }
             executeRoutine = null;
@@ -218,13 +227,17 @@ namespace KryticalNova.Combat
         private float CadenceFor(IDamageable victim, float onCadence) =>
             onCadence > 1f && cadence != null && cadence.AppliesTo(victim) ? onCadence : 1f;
 
-        private bool ResolveSkillHit(SkillDefinitionSO skill, IDamageable victim, float multiplier, string label, float damageScale = 1f)
+        private HitOutcome ResolveSkillHit(SkillDefinitionSO skill, IDamageable victim, float multiplier, string label, float damageScale = 1f,
+            bool forceCrit = false)
         {
-            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result, skill.canCrit, fromSkill: true, damageScale: damageScale) || result.IsEvaded) return false;
+            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result, skill.canCrit, fromSkill: true,
+                    damageScale: damageScale, forceCrit: forceCrit))
+                return HitOutcome.None;
+            if (result.IsEvaded) return HitOutcome.Evaded;
             Vector3 position = victim.Transform.position + Vector3.up;
             if (IsSpawned) SkillHitVfxClientRpc(skill.skillId, position);
             else SpawnSkillHitVfxLocal(skill, position);
-            return true;
+            return HitOutcome.Landed;
         }
 
         private void CollectAreaTargets(float radius)

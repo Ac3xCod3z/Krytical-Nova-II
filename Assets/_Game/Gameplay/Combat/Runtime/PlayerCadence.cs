@@ -263,8 +263,15 @@ namespace KryticalNova.Combat
         /// Server or offline, as a cast of <paramref name="skill"/> begins: what its damage is multiplied by. More
         /// than 1 when the skill's key went down on the beat a moment ago; the press is spent by asking.
         /// </summary>
-        public float ServerTake(SkillDefinitionSO skill)
+        public float ServerTake(SkillDefinitionSO skill) => ServerTake(skill, out _);
+
+        /// <summary>
+        /// As <see cref="ServerTake(SkillDefinitionSO)"/>, and says whether this cast was pressed on Cadence at all
+        /// (whatever the damage bonus is set to): a three-hit attack with Redline charged keeps it for all its hits then.
+        /// </summary>
+        public float ServerTake(SkillDefinitionSO skill, out bool onCadence)
         {
+            onCadence = false;
             if (!Decides || settings == null || skill == null || keptSkill == null || keptSkill != skill.skillId) return 1f;
             int press = keptPress;
             keptSkill = null;
@@ -279,6 +286,7 @@ namespace KryticalNova.Combat
             }
 
             if (press >= 0) history[press].Fate = CadenceFate.Spent;
+            onCadence = true;
             CastsOnCadence++;
             LastPress += $" Spent on this cast: +{settings.bonusPercent:0.#} % damage.";
             if (Logging) Debug.Log($"[Cadence] {name}: {skill.displayName} cast on Cadence, +{settings.bonusPercent:0.#} % damage.");

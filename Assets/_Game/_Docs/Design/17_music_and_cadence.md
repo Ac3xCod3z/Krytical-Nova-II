@@ -70,7 +70,14 @@ deal a little more damage. One cast, then it is gone. Off the beat nothing is lo
   This matters: in a fight the automatic combo is nearly always mid-swing, so most presses are queued.
 - The skill that starts a fight cannot be on Cadence. The beat is not playing yet.
 - The bonus multiplies the cast's damage. It does not touch Critical, and it is not one of the next-hit buffs
-  (Redline and the like), which work as before.
+  (Redline and the like).
+- **Redline on the beat** (owner, 16 Oct 2026; `RedlineRules`). With Redline charged, a three-hit attack (every
+  class's S3, S5, level 60 multi and S7) pressed on Cadence keeps the charge for all three hits: each lands as a
+  Critical with Redline's power, and the charge is spent with the third. The press decides for all three hits.
+  Pressed off the beat, the charge goes on the first hit, as before. A hit of a three-hit attack that the target
+  evades spends the charge there and then (on a cast on Cadence the hits after it are plain). Single hits, two-hit
+  attacks, area attacks and the automatic combo spend it on the first hit that lands, as before. Redline itself is
+  still a charged skill and earns no Cadence of its own.
 - The automatic three-strike combo is not timed by the player and is left alone (owner, 10 Oct 2026).
 
 **Numbers** *(all my picks)*, in `CadenceSettings`:
