@@ -91,7 +91,21 @@ namespace KryticalNova.Networking
             bool ended = false;
             Action<ulong> onEnded = id => { if (nm != null && id == nm.LocalClientId) ended = true; };
             if (nm != null) nm.OnClientDisconnectCallback += onEnded;
-            bool started = StartLocalClient(server.address, (ushort)server.port);
+            bool started;
+            string relayProblem = null;
+            if (server.ViaRelay)
+            {
+                // Through Unity Relay with the server's join code (online step 5): no address, no router.
+                Task<string> joining = PrepareRelayJoin(server);
+                while (!joining.IsCompleted) yield return null;
+                relayProblem = joining.IsFaulted ? $"Could not reach {server.name} through Unity Relay." : joining.Result;
+                started = relayProblem == null && StartRelayClient();
+            }
+            else
+            {
+                // The PC that runs the server joins it on itself: a router may not loop its own public address back.
+                started = StartLocalClient(server.OnThisMachine ? "127.0.0.1" : server.address, (ushort)server.port);
+            }
             float until = Time.realtimeSinceStartup + JoinTimeoutSeconds;
             while (started && !ended)
             {
@@ -113,16 +127,55 @@ namespace KryticalNova.Networking
                 float wait = Time.realtimeSinceStartup + 3f;
                 while (nm.ShutdownInProgress && Time.realtimeSinceStartup < wait) yield return null;
             }
+            if (relayProblem != null) reason = relayProblem;
             if (string.IsNullOrWhiteSpace(reason))
                 reason = started
                     ? $"{server.name} did not answer. It may be off, or not reachable from here."
                     : $"Could not start joining {server.name}.";
-            Debug.Log($"[Network] Joining {server.name} ({server.address}:{server.port}) failed: {reason}");
+            Debug.Log($"[Network] Joining {server.name} ({(server.ViaRelay ? "Relay " + server.relay : server.address + ":" + server.port)}) failed: {reason}");
             JoinFlow.Fail(reason);
             // As when a player leaves the world: the session objects outlive scene changes and the next world brings
             // its own, so these go before character select loads.
             if (nm != null) Destroy(nm.gameObject);
             if (nm == null || gameObject != nm.gameObject) Destroy(gameObject);
+        }
+
+        /// <summary>Signs in to Unity and takes a place on the server's Relay; null when ready, else the reason to show.</summary>
+        private async Task<string> PrepareRelayJoin(ServerListing server)
+        {
+            try
+            {
+                if (!await EnsureServicesInitializedAsync())
+                    return $"Could not sign in to Unity to reach {server.name} through Relay. Check the internet connection.";
+                Unity.Services.Relay.Models.JoinAllocation place = await Unity.Services.Relay.RelayService.Instance.JoinAllocationAsync(server.relay);
+                NetworkManager nm = NetworkManager.Singleton;
+                if (nm == null) return $"Could not start joining {server.name}.";
+                PrepareConnections();
+                nm.GetComponent<UnityTransport>().SetRelayServerData(Unity.Services.Relay.Models.AllocationUtils.ToRelayServerData(place, "dtls"));
+                return null;
+            }
+            catch (Unity.Services.Relay.RelayServiceException e)
+            {
+                Debug.Log($"[Network] Relay refused the join code {server.relay}: {e.Message}");
+                // Also right after the server restarted on Relay: the published list keeps the old code for up to five minutes.
+                return $"{server.name} is not on Unity Relay with that code (it may be off, or it just restarted). Press REFRESH and try again in a few minutes.";
+            }
+            catch (Exception e)
+            {
+                return $"Could not reach {server.name} through Unity Relay: {e.Message}";
+            }
+        }
+
+        // The transport already holds the Relay place (PrepareRelayJoin).
+        private bool StartRelayClient()
+        {
+            NetworkManager nm = NetworkManager.Singleton;
+            if (nm == null) return false;
+            OfflinePlayerHandoff.ReleaseOfflineAvatar();
+            bool success = nm.StartClient();
+            if (success) StatusChanged?.Invoke("Connecting through Unity Relay...");
+            else ReportError("NetworkManager failed to connect through Unity Relay.");
+            return success;
         }
 
         /// <summary>
@@ -450,10 +503,11 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>
-        /// The dedicated server: listens on every network card of this machine, on the port of its settings
-        /// (<see cref="ServerLaunchOptions"/>: server-settings.json or -port), turns away players past its limit or on
-        /// another build (<see cref="Approve"/>), and waits for players. No Unity services: players reach it by its
-        /// address and port.
+        /// The dedicated server: turns away players past its limit or on another build (<see cref="Approve"/>) and waits
+        /// for players. In Direct mode it listens on every network card of this machine, on the port of its settings
+        /// (<see cref="ServerLaunchOptions"/>: server-settings.json or -port), and players reach it by its address and
+        /// port; in Relay mode it takes a place on Unity Relay instead (<see cref="StartRelayServer"/>). Either way
+        /// <see cref="ServerReach"/> keeps the published server list pointing at it.
         /// </summary>
         private void StartDedicatedServer()
         {
@@ -472,6 +526,14 @@ namespace KryticalNova.Networking
             PrepareConnections();
             nm.OnClientConnectedCallback += id => Debug.Log($"[Server] Player joined (connection {id}). Online: {nm.ConnectedClientsIds.Count}.");
             nm.OnClientDisconnectCallback += id => Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
+            ServerReach.Begin(options);
+            if (options.UsesRelay)
+            {
+                // Relay drops a server it no longer hears (the internet went down): it restarts, saving first, for a new place.
+                nm.OnTransportFailure += () => StartCoroutine(RestartAfterRelayLoss());
+                StartRelayServer(options, nm);
+                return;
+            }
             if (nm.StartServer())
             {
                 Debug.Log($"[Server] {options.serverName} is listening on port {port} (UDP, every network card of this machine). Type a command (gm.help) and press Enter.");
@@ -482,6 +544,60 @@ namespace KryticalNova.Networking
             {
                 ReportError($"[Server] Could not listen on port {port}. Is another server already using it?");
             }
+        }
+
+        private const float RelayRetrySeconds = 30f;
+        private const int RelayMostConnections = 100; // Unity Relay's limit for one place
+
+        /// <summary>
+        /// Relay mode: signs in to Unity, asks Relay for a place for the players, and listens there; the join code goes into
+        /// the server list (<see cref="ServerReach.RelayReady"/>). While Relay cannot be reached it asks again every 30
+        /// seconds, without restarting. The status port still answers on this PC, for the owner's own game.
+        /// </summary>
+        private async void StartRelayServer(ServerLaunchOptions options, NetworkManager nm)
+        {
+            while (this != null)
+            {
+                string problem;
+                try
+                {
+                    if (await EnsureServicesInitializedAsync())
+                    {
+                        int places = Mathf.Clamp(options.maxPlayers, 1, RelayMostConnections);
+                        Unity.Services.Relay.Models.Allocation allocation = await Unity.Services.Relay.RelayService.Instance.CreateAllocationAsync(places);
+                        string code = await Unity.Services.Relay.RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+                        if (this == null || nm == null) return;
+                        nm.GetComponent<UnityTransport>().SetRelayServerData(Unity.Services.Relay.Models.AllocationUtils.ToRelayServerData(allocation, "dtls"));
+                        if (!nm.StartServer())
+                        {
+                            ReportError("[Server] Could not start on Unity Relay.");
+                            return;
+                        }
+                        Debug.Log($"[Server] {options.serverName} is reachable through Unity Relay ({places} places, region {allocation.Region}), " +
+                                  $"join code {code}. Games read it from the server list; nobody types it. Type a command (gm.help) and press Enter.");
+                        ServerReach.RelayReady(code);
+                        ServerStatusResponder.Begin(options);
+                        StatusChanged?.Invoke("Dedicated server on Unity Relay, join code " + code);
+                        return;
+                    }
+                    problem = "Unity services did not sign in";
+                }
+                catch (Exception e)
+                {
+                    problem = e.Message;
+                }
+                ServerReach.RelayFailed(problem);
+                Debug.LogWarning($"[Server] Unity Relay is not reachable ({problem}). Trying again in {RelayRetrySeconds:0} seconds.");
+                await Task.Delay(TimeSpan.FromSeconds(RelayRetrySeconds));
+            }
+        }
+
+        // One frame after the failure, once Netcode has closed the session: then the safe stop, which restarts.
+        private System.Collections.IEnumerator RestartAfterRelayLoss()
+        {
+            yield return null;
+            Debug.LogWarning("[Server] The link to Unity Relay was lost.");
+            ServerLifetime.StopNow("The server lost its link to Unity Relay and is restarting. Join again in a minute.", restart: true);
         }
 #endif
 

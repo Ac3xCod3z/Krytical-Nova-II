@@ -200,6 +200,7 @@ namespace KryticalNova.UI.Menus
                 case ServerEntry.State.Update: text = "UPDATE"; kind = "update"; break;
                 case ServerEntry.State.Off: text = "OFF"; kind = "off"; break;
                 case ServerEntry.State.Here: text = "HERE"; kind = "off"; break;
+                case ServerEntry.State.Relay: text = "RELAY"; kind = "online"; break;
                 default: text = "..."; kind = "off"; break;
             }
             var label = new Label(text);

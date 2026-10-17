@@ -1,7 +1,8 @@
 # Online phase 1: a dedicated server on your PC, then on the old PC
 
 Part of `online-roadmap.md`. Written 11 Oct 2026; rewritten 15 Oct 2026 as the seven chunks the owner approved on
-12 Oct. **Chunks 1 to 4 built 16 Oct 2026** (see "as built" under each); chunks 5 to 7 are not built. The owner's
+12 Oct. **Chunks 1 to 5 built 16 Oct 2026** (see "as built" under each; chunk 5's outside test waits on the next
+release); chunks 6 and 7 are not built. The owner's
 manual of the server as it is today is `Guides/Server-Guide.md`. The owner moved
 the short rendering pass (`Design/Rendering-Bible.md` section 8) to after chunk 1.
 
@@ -208,6 +209,30 @@ a notice board (Unity Lobby: name, build, players, how to connect); and whether 
 once (if not, one mode at a time, switched from the page). Relay: no router work, address hidden. Direct: one
 forwarded port and the public address in the settings. Fallback: the code or address from the page, typed once and
 remembered. *Try it:* a brother at his house presses Enter and arrives; then through the forwarded port.
+
+*Chunk 5 as built (16 Oct 2026):*
+- *Owner's picks:* port forwarding (Direct) as the normal way, **Relay as well** for when the router lets them down,
+  switched on the control page; the server republishes its own address; the proof is a brother at his house.
+- *The router:* Spectrum's own router, set in the My Spectrum app (Services ▸ router ▸ Advanced Settings ▸ Port
+  Forwarding): the PC's address reserved, UDP 7777 and 7778 forwarded. The public address sits on the router itself (one
+  hop), so Spectrum does not share it (no carrier NAT). UPnP stays off (it made the owner's internet unstable, and it is
+  not needed). The firewall is Norton 360's: a Program Rule allows `KryticalNovaServer.exe`.
+- *How it works:* `connectionMode` direct or relay; the control page's **How players reach it** panel switches it (saved,
+  then a restart). A list entry with the address **auto** is the server itself: `ServerReach` looks the public address
+  up at start and every ten minutes (api.ipify.org, then checkip.amazonaws.com) and publishes the list by itself when
+  the address or the Relay code changed, filling in the address, the Relay code and `machine` (a hash of the PC's name).
+  Relay mode: the server signs in to Unity anonymously, takes an allocation (up to 100 places), listens there with DTLS,
+  retries every 30 seconds while Relay is unreachable, and restarts (safe stop) when the link drops. A game joins
+  through Relay when the entry has a code (taking the newest code from the status answer when it can ask), and the PC
+  that runs the server joins and asks it on itself (a router may not loop its own address back). Not Unity Lobby: the
+  list we already publish carries the code, so nothing else had to be learned or paid for.
+- *Tried:* a copy in Relay mode took a place (code J7CGHB), published itself, and the Editor joined it through Unity
+  Relay (`RelayUnityTransport`, the player on the server's page); **Switch to Direct** restarted it in 15 s and it
+  published the public address by itself; the Editor joined it directly on this PC. EditMode tests 851 / 851.
+- *Found:* the list's "latest" address is cached by the delivery network in five-minute windows (no header gets past
+  it), so a publish reaches games within about five minutes; right after a Relay restart a game may hold the old code
+  that long, and is told to press REFRESH and try again. Not tried yet: a player outside the house (the brother test,
+  after the next Publish to Test).
 
 **6. Move it to the old PC** (`online/06-server-pc`).
 The build menu makes one zip: the server, `Start Server.bat` (restarts it if it dies, applies updates),
