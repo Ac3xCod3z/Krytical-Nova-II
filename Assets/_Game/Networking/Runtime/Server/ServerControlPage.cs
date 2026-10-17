@@ -199,6 +199,8 @@ namespace KryticalNova.Networking
               .Append(",\"relayCode\":").Append(ControlPageRules.Json(ServerReach.RelayCode))
               .Append(",\"relayNote\":").Append(ControlPageRules.Json(ServerReach.RelayNote))
               .Append(",\"autoNote\":").Append(ControlPageRules.Json(ServerReach.AutoNote))
+              .Append(",\"load\":").Append(ControlPageRules.Json(ServerPerformanceLog.Summary))
+              .Append(",\"loadSlow\":").Append(ServerPerformanceLog.LastSlowFrames)
               .Append(",\"maxGms\":").Append(GmRoster.MaxGameMasters).Append('}');
             return sb.ToString();
         }

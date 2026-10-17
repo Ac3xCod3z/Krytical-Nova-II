@@ -247,6 +247,26 @@ folder and "Update" on the page, or a USB stick and `Update Server.bat`. *Try it
 The server writes its performance log; a session with all three players, then scripted extra clients until it misses
 30 ticks. The number becomes the first real cap.
 
+*Chunk 7 tools as built (17 Oct 2026); the measuring itself waits for the old PC (owner):*
+- *Owner's picks:* bots that play like players; phases 1 to 3 before the move, the move (chunk 6) last, and the
+  measuring done once the server is on the old PC with the bots on this PC.
+- *The server's load:* `ServerPerformanceLog` times the busy part of each frame (from the first update to the last; the
+  rest of a 33 ms tick is waiting) and every 5 seconds writes players, frames, busy average / 95 % / worst, frames over a
+  tick and memory into `PerformanceLogs/server_*.csv` beside the server; the control page shows the last line as a chip
+  (amber when a frame overran).
+- *The bots:* `MeasureBot` (development builds only) starts with `-bot <n> -botServer <address:port>` and no window, makes
+  a character once (a random look, the three factions in turn, a name like "Botkari"), skips the menus and joins like a
+  player; two in three walk to a Hostile Zone and hunt with Autopilot, the rest wander the town, all chat now and then; a
+  bot whose session drops quits. Their level, skills and Autopilot time come from the measure server's own GM commands
+  through its control page, so the game's rules are not bent for them.
+- *The tools:* **Krytical Nova ▸ Online ▸ Measure**: Build Bot Client (a development build of the latest release
+  number), Build Measure Server and Start Measure Server (its own copy in `Builds/Bots`, game port 7790, page 8091, its
+  own save, no list), Add 5 Bots, Equip Bots, Stop All Bots, Stop Measure Server.
+- *Tried on this PC:* the empty server works 1-2 ms of its 33 ms; 5 bots made their characters, joined within 20 seconds
+  and took their roles (server 1.3 ms). Each bot takes about **1.3 GB** (the whole town loads even with no window), so
+  this PC holds 4 or 5 beside the Editor; when memory ran out the bots stalled and lost their sessions. That is why the
+  measuring moves to the old PC.
+
 ## Rules that hold throughout
 
 - **The server is a headless Unity build of this same project** (owner's question, 15 Oct 2026: "can server code be

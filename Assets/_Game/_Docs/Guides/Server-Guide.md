@@ -418,6 +418,27 @@ is also saved once a minute while they play, and as they leave.
 
 Each comes with the same two ways out as the game menu (character select or exit), or staying where they stand.
 
+## 10b. How hard the server works, and measuring it (step 7)
+
+The control page's header has a **load** chip, for example *"3 players · 30 fps · 2.1 ms average · 4.0 ms 95% · 6.2 ms
+worst · 0 slow"*. The server runs 30 game ticks a second, so each tick has 33 ms; the chip shows how much of that the
+server actually works. It keeps up while frames stay under 33 ms (**0 slow**); it turns amber when one did not. The same
+numbers go every 5 seconds into `PerformanceLogs/server_*.csv` beside the server (open it with Excel).
+
+**Measuring how many players a server holds** uses test players ("bots") and a separate measure server, never yours:
+menu **Krytical Nova ▸ Online ▸ Measure**:
+
+| Step | What it does |
+| --- | --- |
+| 1. Build Bot Client | A test copy of the game (latest release number) in `Builds/Bots/Client` |
+| 2. Build Measure Server, 3. Start Measure Server | Its own server in `Builds/Bots/MeasureServer`: port 7790, control page http://localhost:8091, its own save, no server list |
+| 4. Add 5 Bots | Five more bots with no window; each makes a character ("Botkari") and joins |
+| 5. Equip Bots | Level 60, every skill, Autopilot time, through the measure server's GM commands |
+| 6. Stop All Bots, 7. Stop Measure Server | Ends the test |
+
+Each bot needs about 1.3 GB of memory, so this PC holds only 4 or 5 beside the Editor. The real measuring happens when the
+server is on the old PC and the bots run here (owner, 17 Oct 2026).
+
 ## 11. When something goes wrong
 
 | What you see | Why | What to do |
@@ -496,3 +517,4 @@ Things learned the hard way:
 - 16 Oct 2026: step 5: Direct or Relay, switched on the control page; the list entry `auto` is this server, which fills
   in its internet address and Relay code and publishes the list by itself; your own PC joins on itself; the Spectrum
   port forwarding and the Norton firewall rule.
+- 17 Oct 2026: step 7's tools: the load chip and `PerformanceLogs/server_*.csv`; bots and a measure server (Krytical Nova ▸ Online ▸ Measure); the measuring itself waits for the old PC.
