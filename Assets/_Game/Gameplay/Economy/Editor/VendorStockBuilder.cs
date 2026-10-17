@@ -10,7 +10,8 @@ namespace KryticalNova.EditorTools.Economy
     /// <summary>
     /// Builds what the vendors sell: one <see cref="VendorStock"/> per vendor in the table below, and the catalog
     /// that lists them. A new vendor, or a new item on a shelf, is a row here. Run again at any time: a price that
-    /// was tuned on the asset is kept, and only what is missing is added.
+    /// was tuned on the asset is kept, and only what is missing is added. A weekly limit in the table is written
+    /// where the asset has none (0); one tuned on the asset is kept.
     /// The prices are placeholders (owner, 10 Oct 2026: "arbitrary amounts for now, will tune later").
     /// </summary>
     public static class VendorStockBuilder
@@ -28,6 +29,8 @@ namespace KryticalNova.EditorTools.Economy
             public (string Item, long Price)[] Listings;
             /// <summary>Sold one a day, in turn.</summary>
             public (string Item, long Price)[] Rotation;
+            /// <summary>How many of a listed item one character may buy each in-game week.</summary>
+            public (string Item, int Limit)[] WeeklyLimits;
             public bool Gear;
             public ItemRarity GearRarity;
             public int GearFrom, GearTo;
@@ -65,6 +68,14 @@ namespace KryticalNova.EditorTools.Economy
                     (Materials + "Alloy_Iridion.asset", 1_500L),
                     (Materials + "Fusion_Catalyst.asset", 10_000L),
                     (Materials + "Tuning_Chip.asset", 10_000L),
+                },
+                // One of each forge material a week, per character (owner, 17 Oct 2026): the rest comes from Hostiles.
+                WeeklyLimits = new[]
+                {
+                    (Materials + "Alloy_Alumite.asset", 1),
+                    (Materials + "Alloy_Iridion.asset", 1),
+                    (Materials + "Fusion_Catalyst.asset", 1),
+                    (Materials + "Tuning_Chip.asset", 1),
                 },
                 Gear = true, GearRarity = ItemRarity.Common, GearFrom = 1, GearTo = 28,
             },
@@ -131,6 +142,17 @@ namespace KryticalNova.EditorTools.Economy
                         if (stock.rotation.Exists(listing => listing.item == item)) continue; // its price may have been tuned
                         stock.rotation.Add(new VendorListing { item = item, price = price });
                         added++;
+                    }
+                if (shelf.WeeklyLimits != null)
+                    foreach ((string itemPath, int limit) in shelf.WeeklyLimits)
+                    {
+                        var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(itemPath);
+                        int at = item != null ? stock.listings.FindIndex(listing => listing.item == item) : -1;
+                        if (at < 0) { Debug.LogError($"[Vendors] {shelf.Asset}: no listing for {itemPath} to limit."); continue; }
+                        VendorListing listing = stock.listings[at];
+                        if (listing.weeklyLimit != 0) continue; // tuned on the asset
+                        listing.weeklyLimit = Mathf.Max(0, limit);
+                        stock.listings[at] = listing;
                     }
                 EditorUtility.SetDirty(stock);
                 if (!catalog.stocks.Contains(stock)) catalog.stocks.Add(stock);

@@ -88,7 +88,7 @@ Walking more than 8 m apart, dying or leaving cancels. The trade window shows th
 | 14 days | one **Kiosk Permit (14 Days)**, item 9020, Nova Store $1.99 |
 | 30 days | one **Kiosk Permit (30 Days)**, item 9021, Nova Store $3.99 |
 
-The Autobuff's Passes (3 / 14 / 30 days, items 9031 to 9033) run on the same clock: see "Autobuff" below.
+The Autobuff's Passes (3 / 14 / 30 days, items 9031 to 9033) and the Autopilot Passes (items 9030, 9034, 9035) run on the same clock: see "Autobuff" and "Autopilot Passes" below.
 
   The Nova Store does not sell yet; `item.give Permit_Kiosk14` hands one out. A duration without its permit shows locked with its store price.
 - **The stand-in** is a doll of the owner as they looked when they opened it, with the shop's name over it. The items leave the Pack and the owner is free to go: it sells while they play or are offline, and survives a server restart.
@@ -116,6 +116,7 @@ A vendor sells from a shelf and buys what the player carries. Two are open, the 
 | Armorer (`VS_Armorer`) | Alumite (+3 %) | 500 |
 | | Iridion (+6 %) | 1,500 |
 | | Fusion Catalyst, Tuning Chip | 10,000 |
+| | (each of these four: **1 per character per in-game week**, see "The weekly limit" below) | |
 | | Common ladder gear, levels 1 to 28, for the buyer's own faction and body | item level × 150 (150 at level 1, 4,200 at level 28) |
 
 | Tunable in `EconomySettings` *(placeholder)* | Value |
@@ -132,6 +133,7 @@ A vendor sells from a shelf and buys what the player carries. Two are open, the 
 - **Rare and better is never sold without a notice and a confirm** (owner, 10 Oct 2026): the notice names the item, its rarity and the Creds it would fetch, and it is sold only on a yes. The same holds for a pet (its growth goes with it) and for any gear that has been Tempered, Fused or Tuned, whatever its rarity: that part is Claude's addition, not the owner's word. The server refuses such a sale that did not come with the confirmation, so the rule does not rest on the window.
 - **Who decides:** `PlayerShopping` (Gameplay/Economy) sends requests; the server checks that the player stands by the vendor, the price (`VendorRules`, the same rules the window reads), the wallet, and the room in the Pack before any Creds move. Buying is the sink `CredsSink.Vendor`, selling the source `CredsSource.VendorSale`: both show in `gm.creds.report`. Online only, like Kiosks.
 - **A new vendor or a new item on a shelf** is a row in `VendorStockBuilder` (**Krytical Nova ▸ Items ▸ 10. Build Vendor Stock**; a price tuned on an asset is kept) and, for a new vendor, `NpcOffer.Shop` on its row in `Zone01Setup`.
+- **The weekly limit** (owner, 17 Oct 2026): a listing may carry a weekly limit (`VendorListing.weeklyLimit` on the vendor's stock asset; 0 = none). The Armorer's Alumite, Iridion, Fusion Catalyst and Tuning Chip have **1**: one of each per character per in-game week; the rest of what the forge uses comes from Hostiles and the Fabricator. A week is `EconomySettings.vendorWeekDays` = **7** in-game days, so seven real hours while a day is one real hour (`DC_Default`); weeks are counted from in-game day 0, so every character's turns over together. The server keeps what each character bought this week (`PlayerShopping`, saved with the character under `vendorWeek`) and tells it only to that character: a purchase is cut to what is left, and one with nothing left is refused with the time until the next week. The shop shows "1 LEFT" on the item, greys it out with "SOLD OUT" once bought, and its tooltip says when more come. GM: `gm.shop.week` (what the targeted player bought, and when the week turns), `gm.shop.week reset`, and two buttons in the GM window's Economy tab. `VendorStockBuilder` writes the limit where an asset has none; one tuned on the asset is kept.
 - **Selling is a second way Creds come in**, beside Hostile kills: at 70 % a level-28 Common weapon pays 2,940. To be weighed against the income target when the prices are tuned.
 
 ## Appearance services (rows 19 and 52; built 11 Oct 2026)
@@ -340,6 +342,20 @@ A licence by the clock, like a Kiosk's, that buffs for the player: up to eight b
 - The days count by the wall clock whether the character plays or not (`AutobuffRules.Extend`: a running licence is lengthened from its end, one that ran out starts from now). At most **90 days** may be held: a Pass past that is refused, not wasted. Numbers in `AutopilotSettings` (`autobuffTiers`, `autobuffMaxDays`).
 - The server keeps the expiry and the eight cells, saved with the character (`PlayerAutobuff`, key `autobuff`); the owner's game presses the buffs (`AutobuffCaster`). The 14 and 30-day Passes share the 3-day one's picture until they are given their own in the Icon Library.
 - GM: `gm.autobuff.days <days>` (0 ends it), `item.give "Autobuff Pass (3 Days)" [n]`, and buttons in the GM window.
+
+## Autopilot Passes (row 9; built 17 Oct 2026)
+
+Autopilot time, on the same clock as the Autobuff (owner, 15 Oct 2026; built 17 Oct 2026). It replaced the Autopilot Chip, which added 5 hours that ran only while Autopilot was on; a chip's hours were not carried over (no players yet), and the chip's item became the 3-day Pass.
+
+| Autopilot Pass (item) | Adds | Rarity | Where from | Nova Store |
+| --- | --- | --- | --- | --- |
+| Autopilot Pass (3 Days), 9030 | 3 days | Uncommon | Hostiles of level 10 and up, 0.3 % (placeholder); the store | $0.99 (placeholder) |
+| Autopilot Pass (14 Days), 9034 | 14 days | Rare | the store | $2.99 (placeholder) |
+| Autopilot Pass (30 Days), 9035 | 30 days | Epic | the store | $4.99 (placeholder) |
+
+- The days count by the wall clock whether Autopilot is on or off and whether the character plays or not (`PassClock.Extend`, shared with the Autobuff). At most **90 days** may be held: a Pass past that is refused, not wasted. Numbers in `AutopilotSettings` (`autopilotTiers`, `autopilotMaxDays`).
+- Magnet needs Autopilot time too (see "Item pickup"). The server keeps the expiry, saved with the character (`PlayerAutopilot`, key `autopilot`: the expiry and the player's choices) and told to its owner only. The 14 and 30-day Passes show the 3-day one's picture.
+- GM: `gm.autopilot.time <days>` (0 ends it), `item.give "Autopilot Pass (3 Days)" [n]` (14, 30), and buttons in the GM window.
 
 ## Serums (row 49)
 

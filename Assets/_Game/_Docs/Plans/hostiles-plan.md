@@ -378,6 +378,8 @@ Dying (you respawn in town and it stays off), leaving the Hostile Zone, entering
 Magnet also works with Autopilot off. While you play by hand it picks up anything your filter wants as soon as you are within normal pickup reach, without walking. The server's pickup rules do not change: reach, the 20 s ownership hold and the faction rule all still apply.
 
 ### 8.6 Access: the Autopilot Chip
+
+> **Replaced on 17 Oct 2026** by the **Autopilot Pass** (3, 14 or 30 days, counted by the clock; the 3-day one drops from Hostiles, all three are Nova Store stock): see `../Reference/12Sky/05_Economy_And_Social.md`, "Autopilot Passes", and row 9. What follows is the plan as it was written.
 How players will get Autopilot is undecided. Until you decide, it works like this:
 
 - **The item:** an **Autopilot Chip**, a consumable in the same family as your Skill Chip and Kiosk Permit, and the counterpart of Twelve Sky's Auto Hunt Scroll. Using one adds 5 hours of Autopilot time to the character. Time from several chips adds up, as Twelve Sky's scroll durations do.

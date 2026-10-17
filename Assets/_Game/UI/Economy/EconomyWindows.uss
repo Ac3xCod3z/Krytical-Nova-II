@@ -86,6 +86,23 @@
 .kiosk-price.too-dear { color: rgb(220, 80, 88); }
 /* The stack count moves up so the price does not cover it. */
 .kiosk-cell > .item-count { bottom: 13px; }
+/* An item with a weekly limit: how many are left this week, over the top of the item. */
+.vendor-left {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    top: 1px;
+    font-size: 9px;
+    padding: 0;
+    margin: 0;
+    -unity-text-align: upper-center;
+    color: rgb(140, 230, 200);
+    background-color: rgba(8, 12, 18, 0.78);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/exo-2-0/Exo2.0-SemiBold.otf");
+}
+/* This week's are bought: the item greys out until the next week. */
+.kiosk-cell.sold-out { opacity: 0.45; }
+.kiosk-cell.sold-out > .vendor-left { color: rgb(220, 80, 88); }
 
 .kiosk-tiers { margin: 6px 10px 0 10px; }
 .kiosk-tier { flex-grow: 1; flex-basis: 0; min-height: 34px; margin: 0 2px; padding: 2px 4px; font-size: 10px; white-space: normal; opacity: 0.75; }

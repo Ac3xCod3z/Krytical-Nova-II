@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: -5512562867241257535
-    second: Chip_Autopilot_0
+    second: Pass_Autopilot3_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -115,7 +115,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Chip_Autopilot_0
+      name: Pass_Autopilot3_0
       rect:
         serializedVersion: 2
         x: 0

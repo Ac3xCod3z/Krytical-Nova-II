@@ -30,6 +30,20 @@ namespace KryticalNova.World
             }
         }
 
+        /// <summary>
+        /// Real seconds until the in-game calendar reaches <paramref name="day"/> (0 when it has). -1 when it is not
+        /// known: no clock, or the clock is stopped.
+        /// </summary>
+        public static double SecondsUntilDay(long day)
+        {
+            var env = WorldEnvironmentNetwork.Instance;
+            if (env == null) return -1;
+            var state = env.State;
+            if (state.DayLengthSeconds <= 0f || state.TimeScale <= 0f) return -1;
+            double days = day - Day - TimeOfDay01;
+            return days <= 0 ? 0 : days * state.DayLengthSeconds / state.TimeScale;
+        }
+
         /// <summary>True while the sun is below the horizon.</summary>
         public static bool IsNight => SunDirection.y < 0f;
 

@@ -1,0 +1,52 @@
+/*
+ * Equipment loadouts (LoadoutWindowController). Shared looks (panel, buttons, cards) come from
+ * ../Common/KryticalTheme.uss, item cells from Items.uss. The window opens beside the Pack.
+ */
+
+#loadout-window { right: 420px; top: 84px; width: 392px; display: none; }
+
+.loadout-help { margin: 4px 4px 0 4px; white-space: normal; }
+.loadout-scroll { max-height: 480px; margin-top: 6px; }
+.loadout-list { padding: 0 2px; }
+
+/* One slot: the weapon large, the name over the other pieces, WEAR and the dots. */
+.loadout-row { flex-direction: row; align-items: center; margin: 3px 0; padding: 4px 6px; }
+.loadout-row.empty { opacity: 0.7; }
+.loadout-weapon { width: 52px; height: 52px; min-width: 52px; margin: 0 8px 0 0; }
+.loadout-middle { flex-grow: 1; flex-shrink: 1; }
+.loadout-name { font-size: 13px; -unity-font-style: bold; margin: 0 0 3px 0; overflow: hidden; }
+.loadout-empty-text { white-space: normal; font-size: 11px; }
+.loadout-strip { flex-direction: row; flex-wrap: nowrap; }
+.loadout-mini { width: 26px; height: 26px; min-width: 26px; margin: 0 2px 0 0; }
+.loadout-mini .item-level, .loadout-mini .item-temper, .loadout-weapon .item-temper { display: none; }
+/* In neither the Pack nor worn: WEAR will skip it. */
+.loadout-missing { opacity: 0.3; }
+.loadout-wear { min-height: 28px; margin: 0 0 0 6px; padding: 0 10px; font-size: 12px; }
+.loadout-more { min-width: 26px; width: 26px; min-height: 28px; margin: 0 0 0 4px; padding: 0; font-size: 13px; -unity-text-align: middle-center; }
+/* RENAME / DELETE, shown under a row when its dots are pressed. */
+.loadout-menu { flex-direction: row; justify-content: flex-end; margin: 0 0 4px 0; display: none; }
+.loadout-menu.open { display: flex; }
+.loadout-menu Button { min-height: 22px; margin: 0 0 0 4px; padding: 0 10px; font-size: 11px; }
+
+/* The name dialog. */
+.loadout-dialog {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    width: 340px;
+    translate: -50% -50%;
+    padding: 12px 16px 12px 16px;
+    display: none;
+}
+.loadout-dialog-title { font-size: 15px; margin-bottom: 2px; }
+.loadout-dialog-detail { white-space: normal; margin-bottom: 6px; }
+.loadout-name-field { margin: 4px 0; }
+.loadout-name-field > .unity-text-field__input, .loadout-name-field .unity-base-text-field__input { font-size: 16px; min-height: 30px; }
+.loadout-slots-label { margin-top: 6px; }
+.loadout-slots { flex-wrap: wrap; margin-top: 2px; }
+.loadout-slot { width: 28px; min-width: 28px; min-height: 24px; margin: 1px 2px 1px 0; padding: 0; font-size: 11px; -unity-text-align: middle-center; -unity-background-image-tint-color: rgb(28, 40, 54); }
+.loadout-slot.used { color: rgb(236, 206, 140); }
+.loadout-slot.chosen { -unity-background-image-tint-color: rgb(30, 112, 98); color: rgb(255, 255, 255); }
+.loadout-error { font-size: 12px; min-height: 16px; margin-top: 4px; white-space: normal; color: rgb(240, 58, 46); }
+.loadout-dialog-buttons { justify-content: flex-end; margin-top: 4px; }
+.loadout-dialog-buttons Button { margin-left: 8px; }

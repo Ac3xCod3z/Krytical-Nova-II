@@ -12,9 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4ac681e08ea75c44ae00e3243ae4e5f, type: 3}
   m_Name: AutopilotSettings
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Autopilot.AutopilotSettings
-  hoursPerChip: 5
-  timeRunsOnlyWhileOn: 1
-  maxHours: 720
+  autopilotTiers:
+  - label: 3 days
+    days: 3
+    passItemId: 9030
+    storePrice: $0.99
+  - label: 14 days
+    days: 14
+    passItemId: 9034
+    storePrice: $2.99
+  - label: 30 days
+    days: 30
+    passItemId: 9035
+    storePrice: $4.99
+  autopilotMaxDays: 90
   allowedOutsideHostileZones: 0
   actionDelaySeconds: {x: 0.3, y: 0.5}
   magnetScanSeconds: 0.25
@@ -22,3 +33,17 @@ MonoBehaviour:
   maxGatherCount: 8
   gatherRadius: 5
   zoneExitMargin: 20
+  autobuffTiers:
+  - label: 3 days
+    days: 3
+    passItemId: 9031
+    storePrice: $0.99
+  - label: 14 days
+    days: 14
+    passItemId: 9032
+    storePrice: $2.99
+  - label: 30 days
+    days: 30
+    passItemId: 9033
+    storePrice: $4.99
+  autobuffMaxDays: 90

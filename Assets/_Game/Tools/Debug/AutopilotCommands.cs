@@ -6,8 +6,8 @@ namespace KryticalNova.DevTools
 {
     /// <summary>
     /// Quantum Console commands for Autopilot and Magnet. Like the GM commands they only run where the game is
-    /// decided (host, server or offline) and act on the player picked by <see cref="GmTarget"/>. Autopilot Chips
-    /// are given with item.give "Autopilot Chip".
+    /// decided (host, server or offline) and act on the player picked by <see cref="GmTarget"/>. Autopilot Passes
+    /// are given with item.give "Autopilot Pass (3 Days)" (14, 30).
     /// </summary>
     public static class AutopilotCommands
     {
@@ -23,10 +23,10 @@ namespace KryticalNova.DevTools
         }
 
         private static string Describe(PlayerAutopilot autopilot) =>
-            $"Autopilot {(autopilot.IsOn ? "ON" : "off")} · time left {PlayerAutopilot.FormatTime(autopilot.SecondsLeft)}{(autopilot.Free ? " · free (GM)" : "")}" +
+            $"Autopilot {(autopilot.IsOn ? "ON" : "off")} · {autopilot.TimeLeftLine}{(autopilot.Free ? " · free (GM)" : "")}" +
             $" · zone {(autopilot.CurrentZone != null && autopilot.CurrentZone.Definition != null ? autopilot.CurrentZone.Definition.id : "none")}";
 
-        [Command("gm.autopilot", "Switch Autopilot for the targeted player without needing a Chip: gm.autopilot [on|off]. With nothing, prints its state.")]
+        [Command("gm.autopilot", "Switch Autopilot for the targeted player without needing a Pass: gm.autopilot [on|off]. With nothing, prints its state.")]
         private static string Autopilot(string state = "")
         {
             if (!TryGet(out PlayerAutopilot autopilot, out string error)) return error;
@@ -48,12 +48,12 @@ namespace KryticalNova.DevTools
             return Describe(autopilot);
         }
 
-        [Command("gm.autopilot.time", "Set the targeted player's Autopilot time left, in minutes: gm.autopilot.time <minutes>.")]
-        private static string Time(float minutes)
+        [Command("gm.autopilot.time", "Set the targeted player's Autopilot time to run this many days from now (0 ends it): gm.autopilot.time <days>.")]
+        private static string Time(int days)
         {
             if (!TryGet(out PlayerAutopilot autopilot, out string error)) return error;
-            if (minutes < 0f) return "Give a number of minutes, 0 or more.";
-            autopilot.ServerSetSeconds(minutes * 60f);
+            if (days < 0) return "Give a number of days, 0 or more.";
+            autopilot.ServerSetDays(days);
             return Describe(autopilot);
         }
 

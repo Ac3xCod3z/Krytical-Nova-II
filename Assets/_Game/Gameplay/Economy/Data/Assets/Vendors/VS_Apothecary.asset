@@ -17,28 +17,40 @@ MonoBehaviour:
   listings:
   - item: {fileID: 11400000, guid: 3229e03cb43202e428110eae3d2da85b, type: 2}
     price: 30
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: 9ac330e53489baf46bcc3e133a42086a, type: 2}
     price: 30
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: de525b46a44bcfd438104f52e7fe3d24, type: 2}
     price: 80
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: 1b6a2685756e61348be0e42361f56a80, type: 2}
     price: 50
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: d5ee1f3743b5ec840b6aa2ffd09b2a8f, type: 2}
     price: 120
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: df334604ada46204da045b192abed437, type: 2}
     price: 120
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: 560317b4a2c6ffe4a9ce409a0d9adf1b, type: 2}
     price: 320
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: 9d645b1b5f38ee947bc49253192e6ca2, type: 2}
     price: 400
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: 17bbb39169b043048b0102212f6c7f0c, type: 2}
     price: 400
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: 40dc5356fe01cf84d8c5a263d8068162, type: 2}
     price: 1000
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: f08105efe3ef24241b36723993a5aa3e, type: 2}
     price: 150
+    weeklyLimit: 0
   - item: {fileID: 11400000, guid: 2a7f4099c68c36a4cadc335f7ce5b409, type: 2}
     price: 600
+    weeklyLimit: 0
   rotation: []
   sellsLadderGear: 0
   gearRarity: 0

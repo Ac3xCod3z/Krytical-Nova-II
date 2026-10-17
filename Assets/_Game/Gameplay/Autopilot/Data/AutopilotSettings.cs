@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace KryticalNova.Autopilot
 {
-    /// <summary>One Autobuff Pass: how many days it adds, which item it is, and what the store will ask for it.</summary>
+    /// <summary>One Pass (Autopilot or Autobuff): how many days it adds, which item it is, and what the store will ask for it.</summary>
     [System.Serializable]
-    public struct AutobuffTier
+    public struct PassTier
     {
         public string label;
         [Min(1)] public int days;
@@ -22,12 +22,15 @@ namespace KryticalNova.Autopilot
     public sealed class AutopilotSettings : ScriptableObject
     {
         [Header("Access")]
-        [Tooltip("Hours of Autopilot one Autopilot Chip adds.")]
-        [Min(0.01f)] public float hoursPerChip = 5f;
-        [Tooltip("On: the time only runs down while Autopilot is on. Off: it runs from the moment a Chip is used.")]
-        public bool timeRunsOnlyWhileOn = true;
-        [Tooltip("The most Autopilot time a character can hold, hours.")]
-        [Min(1f)] public float maxHours = 720f;
+        [Tooltip("The Autopilot Passes: each adds its days of Autopilot, by the clock, whether Autopilot is on or not (owner, 15 Oct 2026). The 3-day one also drops from Hostiles.")]
+        public PassTier[] autopilotTiers =
+        {
+            new PassTier { label = "3 days", days = 3, passItemId = 9030, storePrice = "$0.99" },
+            new PassTier { label = "14 days", days = 14, passItemId = 9034, storePrice = "$2.99" },
+            new PassTier { label = "30 days", days = 30, passItemId = 9035, storePrice = "$4.99" },
+        };
+        [Tooltip("The most days of Autopilot a character may hold at once: a Pass that would go past it is refused, not wasted.")]
+        [Min(1)] public int autopilotMaxDays = 90;
         [Tooltip("Off: Autopilot only starts inside a Hostile Zone and stops on leaving it.")]
         public bool allowedOutsideHostileZones;
 
@@ -49,23 +52,25 @@ namespace KryticalNova.Autopilot
 
         [Header("Autobuff")]
         [Tooltip("The Autobuff Passes: each adds its days to the licence, by the clock (owner, 15 Oct 2026). The 3-day one also drops from Hostiles.")]
-        public AutobuffTier[] autobuffTiers =
+        public PassTier[] autobuffTiers =
         {
-            new AutobuffTier { label = "3 days", days = 3, passItemId = 9031, storePrice = "$0.99" },
-            new AutobuffTier { label = "14 days", days = 14, passItemId = 9032, storePrice = "$2.99" },
-            new AutobuffTier { label = "30 days", days = 30, passItemId = 9033, storePrice = "$4.99" },
+            new PassTier { label = "3 days", days = 3, passItemId = 9031, storePrice = "$0.99" },
+            new PassTier { label = "14 days", days = 14, passItemId = 9032, storePrice = "$2.99" },
+            new PassTier { label = "30 days", days = 30, passItemId = 9033, storePrice = "$4.99" },
         };
         [Tooltip("The most days of Autobuff a character may hold at once: a Pass that would go past it is refused, not wasted.")]
         [Min(1)] public int autobuffMaxDays = 90;
 
-        public float SecondsPerChip => hoursPerChip * 3600f;
-        public float MaxSeconds => maxHours * 3600f;
+        /// <summary>The Autobuff Pass an item is, or null when it is none.</summary>
+        public PassTier? AutobuffTierFor(ushort itemId) => TierFor(autobuffTiers, itemId);
 
-        /// <summary>The Pass an item is, or null when it is none.</summary>
-        public AutobuffTier? AutobuffTierFor(ushort itemId)
+        /// <summary>The Autopilot Pass an item is, or null when it is none.</summary>
+        public PassTier? AutopilotTierFor(ushort itemId) => TierFor(autopilotTiers, itemId);
+
+        private static PassTier? TierFor(PassTier[] tiers, ushort itemId)
         {
-            if (itemId == 0 || autobuffTiers == null) return null;
-            foreach (AutobuffTier tier in autobuffTiers)
+            if (itemId == 0 || tiers == null) return null;
+            foreach (PassTier tier in tiers)
                 if (tier.passItemId == itemId) return tier;
             return null;
         }

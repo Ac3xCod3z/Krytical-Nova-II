@@ -30,7 +30,7 @@ namespace KryticalNova.Autopilot
             bool on = Wanted(arguments, autopilot.IsOn);
             autopilot.RequestSetOn(on);
             // The server answers a request to switch it on; here is only what is known already.
-            return on ? $"Autopilot time left: {PlayerAutopilot.FormatTime(autopilot.SecondsLeft)}." : null;
+            return on ? autopilot.TimeLeftLine : null;
         }
 
         private static string Magnet(string arguments)
