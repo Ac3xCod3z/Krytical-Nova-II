@@ -179,9 +179,22 @@ namespace KryticalNova.UI.Menus
                 Block(under, "Leaf Foot " + i, new Rect(page.xMin + dx, page.yMin - dy, page.width, dy), paper);
             }
 
-            // The page before, what shows of it left of the gutter, darker towards the fold.
+            // The page before, what shows of it left of the gutter, darker towards the fold. Its comic page, when the
+            // book has one, is printed on it as tall as the page with its right edge at the fold: the part that shows
+            // is the part nearest the spine.
             float gutter = page.xMin;
             Block(under, "Page Before", new Rect(0f, page.yMin, gutter, page.height), settings.paperColour);
+            Texture2D art = settings.pageBackArt;
+            if (art != null && settings.pageBackInk > 0f && gutter > 0f && art.height > 0)
+            {
+                float shownWidth = gutter * Screen.width;
+                float artWidth = page.height * Screen.height * art.width / (float)art.height;
+                float share = artWidth > 0f ? Mathf.Clamp01(shownWidth / artWidth) : 1f;
+                RawImage print = Block(under, "Page Before Art", new Rect(0f, page.yMin, gutter, page.height),
+                    new Color(settings.paperColour.r, settings.paperColour.g, settings.paperColour.b, settings.pageBackInk));
+                print.texture = art;
+                print.uvRect = new Rect(1f - share, 0f, share, 1f);
+            }
             Shade(under, "Page Before Shade", new Rect(gutter * 0.25f, page.yMin, gutter * 0.75f, page.height), new Color(0f, 0f, 0f, 0.55f), true);
 
             // Over the screen: the fold's shadow on this page, and the ink line round it.

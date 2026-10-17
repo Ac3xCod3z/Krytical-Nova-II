@@ -18,6 +18,8 @@ namespace KryticalNova.EditorTools
         public const string StudioLogoPath = MenuArtFolder + "/UI_Opening_StudioLogo.png";
         public const string NameLogoPath = MenuArtFolder + "/UI_Opening_NameLogo.png";
         public const string TitleCoverPath = MenuArtFolder + "/UI_Title_Cover.png";
+        /// <summary>The owner's comic page printed on the back of the book's pages (17 Oct 2026).</summary>
+        public const string PageBackArtPath = MenuArtFolder + "/UI_Book_PageBack.png";
         public const string TitleShadePath = MenuArtFolder + "/UI_Title_BottomShade.png";
         public const string IconFolder = "Assets/_Game/Release/Icons";
         public const string RingIconPath = IconFolder + "/GameIcon_Ring.png";

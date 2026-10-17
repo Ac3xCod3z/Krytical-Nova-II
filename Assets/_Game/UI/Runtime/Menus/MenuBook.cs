@@ -24,6 +24,14 @@ namespace KryticalNova.UI.Menus
         private static readonly int InkId = Shader.PropertyToID("_Ink");
         private static readonly int RestId = Shader.PropertyToID("_Rest");
         private static readonly int BorderId = Shader.PropertyToID("_Border");
+        private static readonly int BackArtId = Shader.PropertyToID("_BackArt");
+        private static readonly int BackInkId = Shader.PropertyToID("_BackInk");
+        private static readonly int BackWidthId = Shader.PropertyToID("_BackWidth");
+        private static readonly int BackFoldId = Shader.PropertyToID("_BackFold");
+        private static readonly int BackMirrorId = Shader.PropertyToID("_BackMirror");
+        // The fold is at x = 1 of the back's UVs (MegaBook's page mesh; seen in Play on 17 Oct 2026, the page landed on
+        // the left with the picture at its outer edge until this was 1).
+        private const float BackFoldAtUvOne = 1f;
 
         [Tooltip("The MegaBook Builder of the book (a vendor script).")]
         [SerializeField] private MonoBehaviour book;
@@ -103,6 +111,19 @@ namespace KryticalNova.UI.Menus
             }
             back.SetColor(TintId, Tint());
             back.SetFloat(AspectId, width / height);
+            // The book's comic page on the back, as tall as the page, its right edge at the fold: the page as it
+            // lands on the left is the page before that the next screen shows. A turn back is drawn mirrored, so the
+            // picture is mirrored here to read the right way round there.
+            Texture2D art = settings.pageBackArt;
+            if (art != null && art.height > 0)
+            {
+                back.SetTexture(BackArtId, art);
+                back.SetFloat(BackInkId, settings.pageBackInk);
+                back.SetFloat(BackWidthId, art.width / (float)art.height / (width / height));
+                back.SetFloat(BackFoldId, BackFoldAtUvOne);
+                back.SetFloat(BackMirrorId, forward ? 0f : 1f);
+            }
+            else back.SetFloat(BackInkId, 0f);
 
             // Straight above the page, at the height where it fills the view exactly: flat, it is the screen it shows.
             float distance = height * 0.5f / Mathf.Tan(settings.fieldOfView * 0.5f * Mathf.Deg2Rad);
