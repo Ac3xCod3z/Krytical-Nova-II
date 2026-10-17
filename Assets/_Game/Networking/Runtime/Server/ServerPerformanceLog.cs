@@ -47,6 +47,7 @@ namespace KryticalNova.Networking
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
         {
+            if (ServerSingleCopy.AnotherCopyRuns) return; // a second copy on this PC writes no log of its own
             PlayerLoopSystem loop = PlayerLoop.GetCurrentPlayerLoop();
             for (int i = 0; i < loop.subSystemList.Length; i++)
             {

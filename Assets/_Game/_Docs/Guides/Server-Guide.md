@@ -83,6 +83,18 @@ only draws or plays sound.
 When the server stops by itself (Stop, `gm.shutdown`), the window says "The server has stopped. Press a key to close
 this window." A **Restart** starts it again in the same window by itself.
 
+**Started it twice?** Only one server runs on this PC. If one is already running, the new window says
+
+```
+[Server] A Krytical Nova server is already running on this PC (control page http://192.168.1.73:8090). This copy stops.
+[Server] In use: UDP 7777 (game), TCP 8090 (control page). Use the server that runs, or stop it first ...
+```
+
+and that copy stops at once ("The server has stopped. Press a key to close this window."). Nothing is wrong: the
+first server keeps running and its players are not touched. The second copy does not publish the server list, make a
+backup or open the map. Press a key to close its window, and use the first server's window or its control page. (To
+run a second server on purpose, give it ports of its own: `-port 7787 -pagePort 8091`, section 4.)
+
 ### Norton and Windows Firewall
 
 **Norton** flags new programs nobody else has run yet as **IDP.Generic**, and every new build is one. It then blocks or
@@ -450,6 +462,7 @@ server is on the old PC and the bots run here (owner, 17 Oct 2026).
 | "Too many wrong passwords" | Five wrong tries from that device | Wait five minutes. The password is `pagePassword` in `server-settings.json`. |
 | Forgot the page password | | Read it in `server-settings.json`, or empty it (`""`) and restart for a new one. |
 | Not sure which port it really uses | | In PowerShell: `Get-NetUDPEndpoint -OwningProcess (Get-Process KryticalNovaServer).Id` |
+| "A Krytical Nova server is already running on this PC … This copy stops." | You started the server a second time (two windows) | Close that window with a key; the first server is fine. Its window or control page is the one to use. |
 | "Could not listen on port …" or "The control page could not open port …" | Something else uses that port | Close the other program, or change `port` / `pagePort`. |
 | The window says "could not read server-settings.json" | A typo broke the file (a missing comma or quote) | Fix it, or delete it and start once to get a fresh one (a new page password too). |
 | "Player turned away … the server is full" | `maxPlayers` reached | Raise `maxPlayers`. |
@@ -472,7 +485,8 @@ server is on the old PC and the bots run here (owner, 17 Oct 2026).
 | `ServerLaunchOptions` | `Networking/Runtime/Server` | Reads the settings file and the command line; makes the page password. Server build only. |
 | `ServerLifetime` | `Networking/Runtime/Server` | Backups on a timer, countdowns, the safe stop (the console close handler), restart (exit code 3). Server build only. |
 | `ServerControlPage` | `Networking/Runtime/Server` | The control page: a small web server on a plain socket (no administrator rights), sessions, the calls. Server build only. |
-| `ControlPageRules` | `Networking/Runtime/Server` | Home network only, request reading, the lockout, same-origin and Host checks (tested in `ControlPageTests`). |
+| `ControlPageRules` | `Networking/Runtime/Server` | Home network only, request reading, the lockout, same-origin and Host checks, which failed requests are a browser hanging up (not logged) (tested in `ControlPageTests`). |
+| `ServerSingleCopy` | `Networking/Runtime/Server` | Before anything else, checks the game port (UDP, Direct mode) and the page port (TCP); when another copy holds them it says so and quits with exit code 4, which `Start Server.bat` does not restart on (tested in `ServerSingleCopyTests`). Server build only. |
 | `ControlPage~` | `Networking` | The page's own files: `index.html`, `style.css`, `app.js` (copied beside the server by the build). |
 | `ServerBackups` | `Gameplay/Persistence/Runtime` | Zips the save folder and prunes old backups. |
 | `ServerConsoleInput` | `Tools/Debug` | Runs lines typed into the server's window, and the page's GM command box. Server build only. |
@@ -518,3 +532,7 @@ Things learned the hard way:
   in its internet address and Relay code and publishes the list by itself; your own PC joins on itself; the Spectrum
   port forwarding and the Norton firewall rule.
 - 17 Oct 2026: step 7's tools: the load chip and `PerformanceLogs/server_*.csv`; bots and a measure server (Krytical Nova ▸ Online ▸ Measure); the measuring itself waits for the old PC.
+- 17 Oct 2026: a second copy started on the same PC says "A Krytical Nova server is already running on this PC" and
+  stops at once (exit code 4), before it publishes the list, backs up or opens the map; the control page no longer
+  logs a browser that hung up before the answer (it filled the log with "Control page request failed: Unable to
+  write data to the transport connection").

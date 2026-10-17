@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using KryticalNova.Networking;
 using NUnit.Framework;
@@ -88,6 +89,22 @@ namespace KryticalNova.Tests
             Assert.IsFalse(lockout.IsLocked("192.168.1.10", now, out _), "another address is not locked");
             Assert.IsFalse(lockout.IsLocked("192.168.1.9", now.AddMinutes(6), out _), "the lock ends");
             Assert.AreEqual(4, lockout.Wrong("192.168.1.9", now.AddMinutes(6)), "and the count starts again");
+        }
+
+        [Test]
+        public void ABrowserThatHungUpIsNotLoggedButARealFailureIs()
+        {
+            // The flood of 17 Oct 2026: "Unable to write data to the transport connection", the browser already gone.
+            Assert.IsTrue(ControlPageRules.IsClientHangUp(new IOException("Unable to write data to the transport connection.",
+                new SocketException((int)SocketError.ConnectionAborted))));
+            Assert.IsTrue(ControlPageRules.IsClientHangUp(new IOException("Unable to read data from the transport connection.",
+                new SocketException((int)SocketError.ConnectionReset))));
+            Assert.IsTrue(ControlPageRules.IsClientHangUp(new SocketException((int)SocketError.ConnectionReset)));
+            Assert.IsFalse(ControlPageRules.IsClientHangUp(new IOException("The disk is full.")), "a failure of the page itself");
+            Assert.IsFalse(ControlPageRules.IsClientHangUp(new IOException("Unable to read data from the transport connection.",
+                new SocketException((int)SocketError.TimedOut))));
+            Assert.IsFalse(ControlPageRules.IsClientHangUp(new InvalidOperationException("broken")));
+            Assert.IsFalse(ControlPageRules.IsClientHangUp(null));
         }
 
         [Test]

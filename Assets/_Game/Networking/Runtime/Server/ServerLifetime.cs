@@ -54,7 +54,8 @@ namespace KryticalNova.Networking
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Boot()
         {
-            if (instance != null) return;
+            // A second copy on this PC quits before its first backup (ServerSingleCopy).
+            if (instance != null || ServerSingleCopy.AnotherCopyRuns) return;
             var host = new GameObject("Server Lifetime");
             DontDestroyOnLoad(host);
             instance = host.AddComponent<ServerLifetime>();

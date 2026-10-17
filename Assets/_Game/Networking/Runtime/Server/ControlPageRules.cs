@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -36,6 +37,39 @@ namespace KryticalNova.Networking
                 return b[0] == 10 || (b[0] == 172 && b[1] >= 16 && b[1] <= 31) || (b[0] == 192 && b[1] == 168) || (b[0] == 169 && b[1] == 254);
             if (address.AddressFamily == AddressFamily.InterNetworkV6)
                 return address.IsIPv6LinkLocal || (b[0] & 0xFE) == 0xFC; // fc00::/7
+            return false;
+        }
+
+        /// <summary>This PC's addresses on the home network, for "How to connect"; 127.0.0.1 when none is found.</summary>
+        public static List<string> HomeAddresses()
+        {
+            var found = new List<string>();
+            try
+            {
+                foreach (NetworkInterface card in NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    if (card.OperationalStatus != OperationalStatus.Up || card.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+                    foreach (UnicastIPAddressInformation unicast in card.GetIPProperties().UnicastAddresses)
+                        if (unicast.Address.AddressFamily == AddressFamily.InterNetwork && IsHomeNetwork(unicast.Address)
+                            && !unicast.Address.ToString().StartsWith("169.254.", StringComparison.Ordinal))
+                            found.Add(unicast.Address.ToString());
+                }
+            }
+            catch (Exception) { /* no list: localhost only */ }
+            if (found.Count == 0) found.Add("127.0.0.1");
+            return found;
+        }
+
+        /// <summary>
+        /// True when a request failed only because the other side hung up before the answer (a browser tab closed or
+        /// reloading, a phone going to sleep): the connection was aborted or reset. Not worth a line in the log, which it
+        /// once flooded; any other failure is.
+        /// </summary>
+        public static bool IsClientHangUp(Exception e)
+        {
+            for (Exception at = e; at != null; at = at.InnerException)
+                if (at is SocketException socket)
+                    return socket.SocketErrorCode == SocketError.ConnectionAborted || socket.SocketErrorCode == SocketError.ConnectionReset;
             return false;
         }
 

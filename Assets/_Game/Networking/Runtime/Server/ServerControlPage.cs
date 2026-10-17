@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -63,7 +62,7 @@ namespace KryticalNova.Networking
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
-            if (instance != null) return;
+            if (instance != null || ServerSingleCopy.AnotherCopyRuns) return;
             ServerLaunchOptions options = ServerLaunchOptions.LoadForThisServer();
             if (options.pagePort <= 0)
             {
@@ -81,7 +80,7 @@ namespace KryticalNova.Networking
             folder = Path.Combine(options.ServerFolder, FolderName);
             password = options.EnsurePagePassword(out bool isNew);
             if (isNew) Debug.Log("[Server] The control page had no password: one was made and written into server-settings.json (pagePassword).");
-            addresses = HomeAddresses();
+            addresses = ControlPageRules.HomeAddresses();
             try
             {
                 listener = new TcpListener(IPAddress.Any, options.pagePort);
@@ -205,26 +204,6 @@ namespace KryticalNova.Networking
             return sb.ToString();
         }
 
-        /// <summary>This PC's addresses on the home network, for "How to connect".</summary>
-        private static List<string> HomeAddresses()
-        {
-            var found = new List<string>();
-            try
-            {
-                foreach (NetworkInterface card in NetworkInterface.GetAllNetworkInterfaces())
-                {
-                    if (card.OperationalStatus != OperationalStatus.Up || card.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
-                    foreach (UnicastIPAddressInformation unicast in card.GetIPProperties().UnicastAddresses)
-                        if (unicast.Address.AddressFamily == AddressFamily.InterNetwork && ControlPageRules.IsHomeNetwork(unicast.Address)
-                            && !unicast.Address.ToString().StartsWith("169.254.", StringComparison.Ordinal))
-                            found.Add(unicast.Address.ToString());
-                }
-            }
-            catch (Exception) { /* no list: localhost only */ }
-            if (found.Count == 0) found.Add("127.0.0.1");
-            return found;
-        }
-
         // ------------------------------------------------------------------ the socket (a thread of its own)
 
         private void AcceptLoop()
@@ -256,7 +235,8 @@ namespace KryticalNova.Networking
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning("[Server] Control page request failed: " + e.Message);
+                    // A browser that went away before the answer is not a failure of the page.
+                    if (!ControlPageRules.IsClientHangUp(e)) Debug.LogWarning("[Server] Control page request failed: " + e.Message);
                 }
             }
         }
