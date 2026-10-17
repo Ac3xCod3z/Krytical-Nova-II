@@ -27,6 +27,8 @@ namespace KryticalNova.Player
         [Range(0f, 45f)] public float maxOverhang = 20f;
         [Tooltip("How far from head-on (degrees) a run or a jump may meet the surface and still go up it.")]
         [Range(5f, 85f)] public float maxApproachAngle = 45f;
+        [Tooltip("...and a jump may meet it this far from head-on (degrees): the body turns to face it as the feet plant.")]
+        [Range(5f, 85f)] public float maxJumpApproachAngle = 65f;
         [Tooltip("Lower than this (metres) is vaulted or walked, not climbed. Kept equal to the vault's tallest " +
                  "(PlayerVaultMotor.maximumHeight, 2.2 m) so every height is one or the other.")]
         [Min(0.5f)] public float minWallHeight = 2.2f;
@@ -41,7 +43,7 @@ namespace KryticalNova.Player
         [Tooltip("Climbing speed as a share of the player's speed on the ground (Run's rank, Move Speed).")]
         [Range(0.1f, 2f)] public float climbSpeedShare = 0.55f;
         [Min(0.5f)] public float minClimbSpeed = 4f;
-        [Min(0.5f)] public float maxClimbSpeed = 14f;
+        [Min(0.5f)] public float maxClimbSpeed = 8f;
         [Tooltip("Seconds the feet take to meet the surface at its foot.")]
         [Min(0.02f)] public float plantSeconds = 0.18f;
         [Tooltip("Seconds over the edge onto the top, or into the tree.")]
@@ -50,10 +52,11 @@ namespace KryticalNova.Player
         [Min(0f)] public float mantleLift = 0.35f;
         [Tooltip("Where the hands are when the feet stop climbing: this far below the edge (metres).")]
         [Min(0.2f)] public float edgeBelowHands = 1.1f;
-        [Tooltip("Room between the body's round and the surface while climbing (metres), measured from the face's outermost " +
-                 "part over the whole climb (ledges, frames, balconies). The run's reach of knees, feet and hands stays " +
-                 "outside the building (owner, 17 Oct 2026: no body inside a building it is scaling).")]
-        [Min(0f)] public float wallClearance = 0.3f;
+        [Tooltip("How far the body's root stays out from the face's outermost part over the whole climb (ledges, frames, " +
+                 "balconies), metres. Measured on the stand-in climb, leaned back: at 0.38 hands and feet come within 5 to " +
+                 "12 cm of the face and never pass it (owner, 17 Oct 2026: no body inside a building it is scaling). A real " +
+                 "climbing set will want its own number.")]
+        [Min(0.2f)] public float wallStandOff = 0.38f;
         [Tooltip("How far the body leans back from the surface while running up it (degrees), so head and hands stay clear.")]
         [Range(0f, 45f)] public float climbLean = 12f;
         [Tooltip("Over the edge, the body first rises this high above the top (metres), then moves in over it: it never " +

@@ -76,6 +76,19 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void AJumpCatchesASurfaceItMeetsAtASlant_ARunDoesNot()
+        {
+            var q = Good();
+            float between = (settings.maxApproachAngle + settings.maxJumpApproachAngle) * 0.5f;
+            q.Travel = Quaternion.AngleAxis(between, Vector3.up) * Vector3.forward;
+            Assert.AreEqual(ClimbVerdict.Sideways, WallRunRules.Evaluate(q, settings));
+            q.FromJump = true;
+            Assert.AreEqual(ClimbVerdict.CanRunUpWall, WallRunRules.Evaluate(q, settings));
+            q.Travel = Quaternion.AngleAxis(settings.maxJumpApproachAngle + 5f, Vector3.up) * Vector3.forward;
+            Assert.AreEqual(ClimbVerdict.Sideways, WallRunRules.Evaluate(q, settings));
+        }
+
+        [Test]
         public void ATreeHasNoSlope_OnlyAPlaceToStand()
         {
             var q = Good();
@@ -89,7 +102,9 @@ namespace KryticalNova.Tests
         public void TheClimbIsAsFastAsTheRun_WithinItsLimits()
         {
             Assert.AreEqual(settings.minClimbSpeed, WallRunRules.ClimbSpeed(1f, settings), 1e-4f);
-            Assert.AreEqual(20f * settings.climbSpeedShare, WallRunRules.ClimbSpeed(20f, settings), 1e-4f);
+            // A run speed whose share lands between the limits, whatever they are set to.
+            float between = (settings.minClimbSpeed + settings.maxClimbSpeed) * 0.5f / settings.climbSpeedShare;
+            Assert.AreEqual(between * settings.climbSpeedShare, WallRunRules.ClimbSpeed(between, settings), 1e-4f);
             Assert.AreEqual(settings.maxClimbSpeed, WallRunRules.ClimbSpeed(100f, settings), 1e-4f);
         }
     }

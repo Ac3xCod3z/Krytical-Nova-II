@@ -21,17 +21,21 @@ MonoBehaviour:
   minSurfaceAngle: 70
   maxOverhang: 20
   maxApproachAngle: 45
+  maxJumpApproachAngle: 65
   minWallHeight: 2.2
   maxClimbHeight: 14
   mantleReach: 1.1
   topSampleRadius: 0.7
   climbSpeedShare: 0.55
   minClimbSpeed: 4
-  maxClimbSpeed: 14
+  maxClimbSpeed: 8
   plantSeconds: 0.18
   mantleSeconds: 0.4
   mantleLift: 0.35
   edgeBelowHands: 1.1
+  wallStandOff: 0.38
+  climbLean: 12
+  mantleClearance: 0.25
   fluxCost: 12
   autoLookAhead: 8
   autoDetourFactor: 2

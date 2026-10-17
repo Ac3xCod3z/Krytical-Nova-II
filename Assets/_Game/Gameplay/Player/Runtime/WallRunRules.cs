@@ -36,6 +36,8 @@ namespace KryticalNova.Player
         public bool Busy;
         /// <summary>Run is the selected stride, or a jump is in flight.</summary>
         public bool Stride;
+        /// <summary>A jump meeting the surface (or one clicked with Jump selected): it may come at it from wider.</summary>
+        public bool FromJump;
         /// <summary>Still and solid, on a wall layer or marked climbable, and not marked Never.</summary>
         public bool Eligible;
         public ClimbableKind Kind;
@@ -72,6 +74,13 @@ namespace KryticalNova.Player
             return Vector3.Angle(flatTravel, into);
         }
 
+        /// <summary>
+        /// How far from head-on the surface may be met: a jump catches a surface it meets at a slant (owner, 17 Oct 2026:
+        /// a little variation that still feels good), a run goes up only what it comes at nearly straight.
+        /// </summary>
+        public static float MaxApproach(in ClimbQuery q, WallstrideSettings s) =>
+            q.FromJump ? Mathf.Max(s.maxApproachAngle, s.maxJumpApproachAngle) : s.maxApproachAngle;
+
         public static ClimbVerdict Evaluate(in ClimbQuery q, WallstrideSettings s)
         {
             if (s == null || !q.Unlocked) return ClimbVerdict.Locked;
@@ -84,7 +93,7 @@ namespace KryticalNova.Player
                 if (angle < s.minSurfaceAngle) return ClimbVerdict.TooFlat;
                 if (angle > 90f + s.maxOverhang) return ClimbVerdict.Overhang;
             }
-            if (ApproachAngle(q.Travel, q.Normal) > s.maxApproachAngle) return ClimbVerdict.Sideways;
+            if (ApproachAngle(q.Travel, q.Normal) > MaxApproach(q, s)) return ClimbVerdict.Sideways;
             if (q.Kind == ClimbableKind.Wall && q.Height < s.minWallHeight) return ClimbVerdict.TooLow;
             if (q.Height > s.maxClimbHeight) return ClimbVerdict.TooHigh;
             if (!q.HasTop) return ClimbVerdict.NoTop;

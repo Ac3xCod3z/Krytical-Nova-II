@@ -104,9 +104,10 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Progression.PlayerSerums", ("settings", SerumSettingsPath)),
             // Wallstride: running up walls and into trees (level 60, Run and Jump at rank 20).
             new Row("KryticalNova.Player.PlayerWallRunMotor", ("settings", WallstrideSettingsPath),
-                ("plantClip", VaultCopies + "Vault_Pack_01.anim"),
-                ("climbClip", "Assets/_ThirdParty/Vault Animation Pack/Assets/Animations/AS_Run_Loop_R.anim"),
-                ("mantleClip", VaultCopies + "Vault_Pack_05.anim"),
+                // In-place copies of their own (WallstrideClipCopies): the originals carry travel the climb must not.
+                ("plantClip", WallstrideClipCopies.Plant),
+                ("climbClip", WallstrideClipCopies.Climb),
+                ("mantleClip", WallstrideClipCopies.Mantle),
                 ("perchClip", BaseLocomotion + "Idles/A_MOD_BL_Idle_Crouching_Masc.fbx"),
                 ("dropClip", BaseLocomotion + "InAir/A_MOD_BL_InAir_FallLarge_Masc.fbx")),
             // The Recall Tag: a channel, then back to the map's spawn points.
@@ -133,6 +134,7 @@ namespace KryticalNova.EditorTools
         {
             if (Rows.Length == 0) return;
             GameplayPrefabsSetup.Run(); // the prefabs the player's systems put into the world
+            WallstrideClipCopies.EnsureCopies(); // made before the rows below point at them
             GameObject root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
             try
             {

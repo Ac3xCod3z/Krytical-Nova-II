@@ -5,6 +5,9 @@ using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
+using Kinemation.MotionWarping.Runtime.Core;
+using Kinemation.MotionWarping.Runtime.Utility;
+using WarpComponent = Kinemation.MotionWarping.Runtime.Core.MotionWarping;
 
 namespace KryticalNova.Player
 {
@@ -122,9 +125,19 @@ namespace KryticalNova.Player
         // Authority.
         private WallRunPhase phase;
         private Plan plan;
-        private float clock, duration;
-        private Vector3 fromFeet, toFeet;
-        private float arcLift;
+        // The climb as a route of legs, carried by Motion Warping (the warp the jump and the vault use).
+        private const int MaxLegs = 6;
+        private const float RouteClockSeconds = 30f;
+        private const int EaseSamples = 8;
+        private readonly Leg[] legs = new Leg[MaxLegs];
+        private int legCount, legIndex;
+        private float routeClock;
+        private bool routeActive, warpOwned;
+        private WallRunPhase afterRoute;
+        private WarpComponent warp;
+        private MotionWarpingAsset warpAsset;
+        private AnimationClip routeClock01;
+        private Vector3 legFromFeet;
         private bool armed;
         private float armedAt;
         private Plan armedPlan;
@@ -169,6 +182,20 @@ namespace KryticalNova.Player
             progression = GetComponent<PlayerCharacterProgression>();
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
             jumpMotor = GetComponent<PlayerJumpMotor>();
+            warp = GetComponentInChildren<WarpComponent>(true);
+            // The warp's length is its clip's: a silent clip long enough for any climb, played by nothing.
+            routeClock01 = new AnimationClip { legacy = true, name = "Wallstride route clock" };
+            routeClock01.SetCurve(string.Empty, typeof(Transform), "localPosition.x", AnimationCurve.Constant(0f, RouteClockSeconds, 0f));
+            warpAsset = ScriptableObject.CreateInstance<MotionWarpingAsset>();
+            warpAsset.name = "Wallstride route (runtime)";
+            warpAsset.animation = routeClock01;
+        }
+
+        public override void OnDestroy()
+        {
+            if (warpAsset != null) Destroy(warpAsset);
+            if (routeClock01 != null) Destroy(routeClock01);
+            base.OnDestroy();
         }
 
         private void OnEnable() { if (!active.Contains(this)) active.Add(this); }
@@ -309,8 +336,8 @@ namespace KryticalNova.Player
             if (!Pay()) return false;
             plan = catchPlan;
             resumeSpeed = GroundSpeed();
-            if (agent != null) agent.enabled = false; // already off for the jump; the motor owns the root until the top
-            StartPhase(WallRunPhase.Plant, Feet, Feet, Mathf.Min(settings.plantSeconds, 0.12f));
+            if (agent != null) agent.enabled = false; // already off for the jump; the warp owns the root until the top
+            StartRoute(fromJump: true);
             return true;
         }
 
@@ -338,8 +365,10 @@ namespace KryticalNova.Player
             Vector3 flat = landing.position - Feet;
             flat.y = 0f;
             if (flat.magnitude > settings.maxDropDistance) { reason = $"Too far: drop within {settings.maxDropDistance:0} m of the tree."; return false; }
-            arcLift = 0.4f;
-            StartPhase(WallRunPhase.DropDown, Feet, landing.position, FallSeconds(Feet.y + arcLift, landing.position.y));
+            legCount = 0;
+            AddArc(WallRunPhase.DropDown, Feet, landing.position, 0.4f, Facing(landing.position - Feet));
+            afterRoute = WallRunPhase.None;
+            PlayRoute();
             return true;
         }
 
@@ -358,6 +387,7 @@ namespace KryticalNova.Player
                 Unlocked = WallstrideOpen,
                 Busy = resources == null || !resources.IsAlive || IsBusy || (!fromJump && jumpMotor != null && jumpMotor.IsBusy),
                 Stride = stride,
+                FromJump = fromJump,
                 Eligible = eligible && (shaped || kind == ClimbableKind.Never),
                 Kind = kind,
                 Normal = shaped ? climb.Normal : normal,
@@ -395,7 +425,6 @@ namespace KryticalNova.Player
             climb = new Plan { Kind = kind };
             if (settings == null) return false;
             var filter = Filter();
-            float stand = Radius + BodySkin;
 
             if (kind == ClimbableKind.Tree && marker != null)
             {
@@ -409,7 +438,7 @@ namespace KryticalNova.Player
                 if (side.sqrMagnitude < 1e-4f) side = -transform.forward;
                 side.Normalize();
                 climb.Normal = side;
-                Vector3 foot = trunk + side * (marker.trunkRadius + stand + settings.wallClearance);
+                Vector3 foot = trunk + side * (marker.trunkRadius + settings.wallStandOff);
                 if (!NavMesh.SamplePosition(foot, out NavMeshHit treeBase, BaseSampleRadius + marker.trunkRadius, filter)) return false;
                 climb.BaseFeet = new Vector3(foot.x, treeBase.position.y, foot.z);
                 climb.TopFeet = marker.PerchFor(side, settings.perchHeightShare, Radius);
@@ -448,7 +477,7 @@ namespace KryticalNova.Player
             climb.Height = edge < 0f ? settings.maxClimbHeight + 1f : edge;
 
             // The climb's line: the body's round plus clearance off the outermost part of the face.
-            Vector3 standAt = wallFoot + n * (stand + settings.wallClearance + outermost);
+            Vector3 standAt = wallFoot + n * (settings.wallStandOff + outermost);
             if (!NavMesh.SamplePosition(standAt, out NavMeshHit baseHit, BaseSampleRadius, filter) || !OnOpenGround(baseHit.position)) return false;
             climb.BaseFeet = new Vector3(standAt.x, baseHit.position.y, standAt.z);
             if (edge < 0f) return true; // runs on past the reach: too high
@@ -505,17 +534,228 @@ namespace KryticalNova.Player
                 agent.ResetPath();
                 agent.velocity = Vector3.zero;
             }
-            agent.enabled = false; // the motor owns the root until the top
-            StartPhase(WallRunPhase.Plant, Feet, climb.BaseFeet, settings.plantSeconds);
+            agent.enabled = false; // the warp owns the root until the top
+            StartRoute(fromJump: false);
         }
 
         private bool Pay() => settings != null && resources != null && (settings.fluxCost <= 0f || resources.TrySpendChi(settings.fluxCost));
+
+        // ------------------------------------------------------------------ the route: one warp, leg by leg
+
+        /// <summary>How a leg covers its height (Up) or its ground distance (Along): evenly, setting off, coming to rest.</summary>
+        private enum Ease : byte { Linear, In, Out, InOut }
+
+        /// <summary>One stretch of a climb: where the feet go, how the body faces on arrival, how long it takes, how it moves.</summary>
+        private struct Leg
+        {
+            public WallRunPhase Phase;
+            public Vector3 ToFeet;
+            public Quaternion Facing;
+            public float Seconds;
+            public Ease Up, Along;
+        }
+
+        /// <summary>
+        /// Lays the climb out as legs and starts it. Each leg's easing is picked so the body never changes speed in a
+        /// step: the plant ends rising at the climb's own speed, the climb goes on at it, going over the edge starts at
+        /// it and comes to rest above the top while the ground travel sets off, and the move in over the top carries
+        /// that on and settles. Motion Warping carries the body along them; Animancer fades clip into clip on the
+        /// same clock (Show).
+        /// </summary>
+        private void StartRoute(bool fromJump)
+        {
+            legCount = 0;
+            Vector3 start = Feet;
+            float climbSpeed = WallRunRules.ClimbSpeed(resumeSpeed, settings);
+            Quaternion upright = Facing(-plan.Normal);
+            Quaternion leaned = upright * Quaternion.Euler(-settings.climbLean, 0f, 0f);
+
+            // Plant: into the foot of the surface, the feet setting off up it.
+            float plantSeconds = settings.plantSeconds;
+            if (fromJump)
+            {
+                // Caught out of a jump: quick when it met the surface head-on, longer the wider it came at it, so the
+                // turn to face it eases in rather than snapping.
+                float slant = WallRunRules.ApproachAngle(transform.forward, plan.Normal);
+                plantSeconds = Mathf.Lerp(Mathf.Min(settings.plantSeconds, 0.12f), settings.plantSeconds + 0.12f,
+                    Mathf.Clamp01(slant / Mathf.Max(1f, settings.maxJumpApproachAngle)));
+            }
+            float plantRise = climbSpeed * plantSeconds * 0.5f; // eased in: ends rising at the climb's speed
+            Vector3 plantTo = new Vector3(plan.BaseFeet.x, Mathf.Max(start.y, plan.BaseFeet.y) + plantRise, plan.BaseFeet.z);
+            plantTo.y = Mathf.Min(plantTo.y, Mathf.Max(plan.ClimbEndFeet.y, plan.BaseFeet.y));
+            AddLeg(WallRunPhase.Plant, plantTo, leaned, plantSeconds, Ease.In, Ease.Out); // leaned by the time the feet are on it
+
+            // Up the face, evenly.
+            Vector3 from = plantTo;
+            float rise = plan.ClimbEndFeet.y - plantTo.y;
+            if (rise > 0.05f)
+            {
+                AddLeg(WallRunPhase.Climb, plan.ClimbEndFeet, leaned, rise / climbSpeed, Ease.Linear, Ease.Linear);
+                from = plan.ClimbEndFeet;
+            }
+
+            if (plan.HasTop)
+            {
+                WallRunPhase over = plan.Kind == ClimbableKind.Tree ? WallRunPhase.ToPerch : WallRunPhase.Mantle;
+                Vector3 inward = plan.TopFeet - from;
+                inward.y = 0f;
+                float inDistance = inward.magnitude;
+                Vector3 inDirection = inDistance > 1e-3f ? inward / inDistance : Vector3.zero;
+                // Up past the edge, slowing to rest above the top, while the move in sets off.
+                float liftIn = Mathf.Min(0.35f, inDistance * 0.3f);
+                Vector3 lifted = new Vector3(from.x, Mathf.Max(from.y, plan.TopFeet.y) + settings.mantleClearance, from.z) + inDirection * liftIn;
+                float liftSeconds = Mathf.Max(MinimumDuration, 2f * (lifted.y - from.y) / climbSpeed);
+                AddLeg(over, lifted, upright, liftSeconds, Ease.Out, Ease.In);
+                // In over the top at the pace the lift left off, settling onto it.
+                float alongSpeed = 2f * liftIn / liftSeconds;
+                float rest = Mathf.Max(0f, inDistance - liftIn);
+                float overSeconds = alongSpeed > 0.1f ? 2f * rest / alongSpeed : settings.mantleSeconds;
+                overSeconds = Mathf.Clamp(overSeconds, settings.mantleSeconds * 0.5f, settings.mantleSeconds * 1.5f);
+                AddLeg(over, plan.TopFeet, upright, overSeconds, Ease.In, Ease.Out);
+                afterRoute = plan.Kind == ClimbableKind.Tree ? WallRunPhase.Perched : WallRunPhase.None;
+            }
+            else
+            {
+                // No top in reach: kick off it, down to the ground in front of it.
+                Vector3 outward = plan.Normal;
+                outward.y = 0f;
+                outward = outward.sqrMagnitude > 1e-4f ? outward.normalized : -transform.forward;
+                Vector3 aim = from + outward * settings.kickOffDistance;
+                Vector3 landing = OpenLanding(NavMesh.SamplePosition(new Vector3(aim.x, plan.BaseFeet.y, aim.z), out NavMeshHit hit, 2f, Filter()) ? hit.position : plan.BaseFeet);
+                AddArc(WallRunPhase.KickOff, from, landing, settings.kickOffLift, Facing(outward));
+                afterRoute = WallRunPhase.None;
+            }
+            PlayRoute();
+        }
+
+        private void AddLeg(WallRunPhase legPhase, Vector3 toFeet, Quaternion facing, float seconds, Ease up, Ease along)
+        {
+            if (legCount >= MaxLegs) return;
+            legs[legCount++] = new Leg { Phase = legPhase, ToFeet = toFeet, Facing = facing, Seconds = Mathf.Max(MinimumDuration, seconds), Up = up, Along = along };
+        }
+
+        /// <summary>A fall under gravity from one place to another, over an apex <paramref name="lift"/> above the higher of them.</summary>
+        private void AddArc(WallRunPhase legPhase, Vector3 from, Vector3 to, float lift, Quaternion facing)
+        {
+            float g = settings != null ? settings.dropGravity : 14f;
+            float apexY = Mathf.Max(from.y, to.y) + Mathf.Max(0f, lift);
+            float up = Mathf.Sqrt(2f * Mathf.Max(0f, apexY - from.y) / g), down = Mathf.Sqrt(2f * Mathf.Max(0.05f, apexY - to.y) / g);
+            if (up >= MinimumDuration)
+            {
+                Vector3 apex = Vector3.Lerp(from, to, up / (up + down));
+                apex.y = apexY;
+                AddLeg(legPhase, apex, facing, up, Ease.Out, Ease.Linear);
+            }
+            AddLeg(legPhase, to, facing, Mathf.Max(0.3f, down), Ease.In, Ease.Linear);
+        }
+
+        private static Quaternion Facing(Vector3 direction)
+        {
+            direction.y = 0f;
+            return direction.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(direction.normalized, Vector3.up) : Quaternion.identity;
+        }
+
+        private void PlayRoute()
+        {
+            if (legCount == 0) return;
+            routeClock = 0f;
+            legIndex = -1;
+            legFromFeet = Feet;
+            routeActive = true;
+            if (warp != null && warpAsset != null)
+            {
+                ShapeWarp();
+                var points = new WarpPoint[legCount];
+                for (int i = 0; i < legCount; i++) points[i] = new WarpPoint { position = legs[i].ToFeet + Vector3.up * Offset, rotation = legs[i].Facing };
+                warp.Play(warpAsset, points);
+                warpOwned = true;
+            }
+            EnterLeg(0);
+        }
+
+        /// <summary>
+        /// Writes the route into the warp: a phase per leg, aimed at its end, and root curves that rise by one over each
+        /// leg in that leg's easing. With nothing linear and no animation added, the warp moves the body the share of
+        /// the way the curve has covered, so the easing is exactly the leg's.
+        /// </summary>
+        private void ShapeWarp()
+        {
+            var along = new List<Keyframe>(legCount * (EaseSamples + 1));
+            var up = new List<Keyframe>(legCount * (EaseSamples + 1));
+            warpAsset.warpPhases ??= new List<WarpPhase>(MaxLegs);
+            warpAsset.warpPhases.Clear();
+            float t = 0f;
+            for (int i = 0; i < legCount; i++)
+            {
+                AppendEase(along, t, legs[i].Seconds, i, legs[i].Along);
+                AppendEase(up, t, legs[i].Seconds, i, legs[i].Up);
+                warpAsset.warpPhases.Add(new WarpPhase
+                {
+                    // The first just before zero, so it is entered on the warp's first update rather than its second.
+                    startTime = i == 0 ? -0.001f : t,
+                    endTime = t + legs[i].Seconds,
+                    minRate = 1f,
+                    maxRate = 1f,
+                    totalRootMotion = Vector3.one,
+                });
+                t += legs[i].Seconds;
+            }
+            warpAsset.rootX = new AnimationCurve(along.ToArray());
+            warpAsset.rootZ = new AnimationCurve(along.ToArray());
+            warpAsset.rootY = new AnimationCurve(up.ToArray());
+            warpAsset.useLinear = new VectorBool(false, false, false);
+            warpAsset.useAnimation = new VectorBool(false, false, false);
+            warpAsset.useWarping = VectorBool.Enabled;
+            warpAsset.useCollision = false;
+            warpAsset.playRateBasis = 1f;
+            warpAsset.phasesAmount = legCount;
+        }
+
+        private static void AppendEase(List<Keyframe> keys, float start, float seconds, int index, Ease ease)
+        {
+            for (int j = 0; j <= EaseSamples; j++)
+            {
+                float s = j / (float)EaseSamples;
+                float slope = EaseSlope(ease, s) / seconds;
+                if (j == 0 && keys.Count > 0)
+                {
+                    // The leg before ends here at the same value: keep its way in, take this leg's way out.
+                    Keyframe last = keys[keys.Count - 1];
+                    last.outTangent = slope;
+                    keys[keys.Count - 1] = last;
+                    continue;
+                }
+                keys.Add(new Keyframe(start + s * seconds, index + EaseValue(ease, s), slope, slope));
+            }
+        }
+
+        private static float EaseValue(Ease ease, float s)
+        {
+            switch (ease)
+            {
+                case Ease.In: return s * s;
+                case Ease.Out: return 1f - (1f - s) * (1f - s);
+                case Ease.InOut: return s * s * (3f - 2f * s);
+                default: return s;
+            }
+        }
+
+        private static float EaseSlope(Ease ease, float s)
+        {
+            switch (ease)
+            {
+                case Ease.In: return 2f * s;
+                case Ease.Out: return 2f * (1f - s);
+                case Ease.InOut: return 6f * s * (1f - s);
+                default: return 1f;
+            }
+        }
 
         private void Update()
         {
             if (!HasAuthority) return;
             if (armed) { WatchArmed(); return; }
-            if (phase == WallRunPhase.None || phase == WallRunPhase.Perched)
+            if (!routeActive)
             {
                 // A player standing in a tree that is no longer there (out of range of every proxy) drops to the ground.
                 if (phase == WallRunPhase.Perched && !PerchStillStands()) FallFromPerch();
@@ -523,77 +763,72 @@ namespace KryticalNova.Player
             }
             if (resources != null && !resources.IsAlive) return; // the death motor takes the body (ReleaseForDeath)
 
-            clock += Time.deltaTime;
-            float t = duration > 0f ? Mathf.Clamp01(clock / duration) : 1f;
-            Vector3 feet;
-            switch (phase)
+            routeClock += Time.deltaTime;
+            float legStart = 0f;
+            int index = 0;
+            for (; index < legCount; index++)
             {
-                case WallRunPhase.Plant:
-                    feet = Vector3.Lerp(fromFeet, toFeet, Smooth(t));
-                    break;
-                case WallRunPhase.Climb:
-                    feet = Vector3.Lerp(fromFeet, toFeet, t);
-                    break;
-                case WallRunPhase.Mantle:
-                    feet = OverTheEdge(Smooth(t));
-                    break;
-                case WallRunPhase.ToPerch:
-                    feet = Vector3.Lerp(fromFeet, toFeet, Smooth(t)) + Vector3.up * (Mathf.Sin(t * Mathf.PI) * arcLift);
-                    break;
-                default: // KickOff, DropDown: an arc under gravity
-                    feet = Arc(t);
-                    break;
+                if (routeClock < legStart + legs[index].Seconds) break;
+                legStart += legs[index].Seconds;
             }
-            transform.position = feet + Vector3.up * Offset;
-            if (t >= 1f) NextPhase();
-        }
-
-        private void NextPhase()
-        {
-            switch (phase)
+            if (index >= legCount) { EndRoute(); return; }
+            if (index != legIndex) EnterLeg(index);
+            if (!warpOwned)
             {
-                case WallRunPhase.Plant:
-                    StartPhase(WallRunPhase.Climb, Feet, plan.ClimbEndFeet,
-                        Mathf.Max(MinimumDuration, (plan.ClimbEndFeet.y - Feet.y) / WallRunRules.ClimbSpeed(resumeSpeed, settings)));
-                    break;
-                case WallRunPhase.Climb:
-                    arcLift = settings.mantleLift;
-                    if (plan.Kind == ClimbableKind.Tree) StartPhase(WallRunPhase.ToPerch, Feet, plan.TopFeet, settings.mantleSeconds);
-                    else if (plan.HasTop) StartPhase(WallRunPhase.Mantle, Feet, plan.TopFeet, settings.mantleSeconds);
-                    else KickOff();
-                    break;
-                case WallRunPhase.Mantle:
-                    Land(plan.TopFeet);
-                    break;
-                case WallRunPhase.ToPerch:
-                    StartPhase(WallRunPhase.Perched, plan.TopFeet, plan.TopFeet, 0f);
-                    break;
-                case WallRunPhase.KickOff:
-                case WallRunPhase.DropDown:
-                    Land(toFeet);
-                    break;
+                // No warp on this character: the same legs, moved here.
+                Leg leg = legs[index];
+                float s = Mathf.Clamp01((routeClock - legStart) / leg.Seconds);
+                float a = EaseValue(leg.Along, s), u = EaseValue(leg.Up, s);
+                Vector3 feet = new Vector3(Mathf.LerpUnclamped(legFromFeet.x, leg.ToFeet.x, a), Mathf.LerpUnclamped(legFromFeet.y, leg.ToFeet.y, u),
+                    Mathf.LerpUnclamped(legFromFeet.z, leg.ToFeet.z, a));
+                transform.SetPositionAndRotation(feet + Vector3.up * Offset, Quaternion.Slerp(transform.rotation, leg.Facing, s));
             }
         }
 
-        private void KickOff()
+        private void EnterLeg(int index)
         {
-            Vector3 out_ = new Vector3(plan.Normal.x, 0f, plan.Normal.z).normalized;
-            Vector3 aim = Feet + out_ * settings.kickOffDistance;
-            Vector3 landing = OpenLanding(NavMesh.SamplePosition(new Vector3(aim.x, plan.BaseFeet.y, aim.z), out NavMeshHit hit, 2f, Filter()) ? hit.position : plan.BaseFeet);
-            arcLift = settings.kickOffLift;
-            StartPhase(WallRunPhase.KickOff, Feet, landing, FallSeconds(Feet.y + arcLift, landing.y));
+            if (legIndex >= 0 && legIndex < legCount) legFromFeet = legs[legIndex].ToFeet;
+            legIndex = index;
+            Leg leg = legs[index];
+            if (leg.Phase == phase) return;
+            // The clip is fitted to every leg of the phase together (going over an edge is two legs).
+            float seconds = 0f;
+            for (int i = index; i < legCount && legs[i].Phase == leg.Phase; i++) seconds += legs[i].Seconds;
+            SetPhase(leg.Phase, seconds);
+        }
+
+        private void EndRoute()
+        {
+            routeActive = false;
+            StopWarp();
+            Leg last = legs[legCount - 1];
+            if (afterRoute == WallRunPhase.Perched)
+            {
+                transform.SetPositionAndRotation(last.ToFeet + Vector3.up * Offset, Quaternion.Euler(0f, last.Facing.eulerAngles.y, 0f));
+                SetPhase(WallRunPhase.Perched, 0f);
+                return;
+            }
+            Land(last.ToFeet);
+        }
+
+        private void StopWarp()
+        {
+            if (warpOwned && warp != null && warp.IsActive()) warp.Stop();
+            warpOwned = false;
         }
 
         private void FallFromPerch()
         {
             Vector3 below = OpenLanding(NavMesh.SamplePosition(Feet, out NavMeshHit hit, settings.maxClimbHeight + 2f, Filter()) ? hit.position : plan.BaseFeet);
-            arcLift = 0f;
-            StartPhase(WallRunPhase.DropDown, Feet, below, FallSeconds(Feet.y, below.y));
+            legCount = 0;
+            AddArc(WallRunPhase.DropDown, Feet, below, 0f, Facing(transform.forward));
+            afterRoute = WallRunPhase.None;
+            PlayRoute();
         }
 
         private void Land(Vector3 feet)
         {
-            transform.position = feet + Vector3.up * Offset;
+            transform.SetPositionAndRotation(feet + Vector3.up * Offset, Quaternion.Euler(0f, transform.eulerAngles.y, 0f));
             agent.enabled = true;
             if (!agent.isOnNavMesh && NavMesh.SamplePosition(feet, out NavMeshHit hit, 1.5f, Filter()))
             {
@@ -607,24 +842,14 @@ namespace KryticalNova.Player
                 agent.isStopped = false;
             }
             else agent.enabled = false; // PointAndClickPlayer puts a lost agent back after a moment
-            StartPhase(WallRunPhase.None, feet, feet, 0f);
+            SetPhase(WallRunPhase.None, 0f);
         }
 
-        private void StartPhase(WallRunPhase next, Vector3 from, Vector3 to, float seconds)
+        /// <summary>The phase every machine shows (the warp, not this, moves the body).</summary>
+        private void SetPhase(WallRunPhase next, float seconds)
         {
             phase = next;
-            fromFeet = from;
-            toFeet = to;
-            clock = 0f;
-            duration = seconds;
-            Vector3 facing = next == WallRunPhase.KickOff || next == WallRunPhase.DropDown ? to - from : -plan.Normal;
-            facing.y = 0f;
-            float yaw = facing.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(facing, Vector3.up).eulerAngles.y : transform.eulerAngles.y;
-            if (next == WallRunPhase.None) yaw = transform.eulerAngles.y;
-            // Running up, the body leans back off the face; every other phase stands upright again.
-            float lean = next == WallRunPhase.Climb && settings != null ? -settings.climbLean : 0f;
-            transform.rotation = Quaternion.Euler(lean, yaw, 0f);
-            var pose = new WallRunPose { Phase = next, Yaw = yaw, Duration = seconds };
+            var pose = new WallRunPose { Phase = next, Yaw = transform.eulerAngles.y, Duration = seconds };
             if (IsSpawned) netPose.Value = pose;
             Show(pose);
         }
@@ -659,6 +884,8 @@ namespace KryticalNova.Player
             armed = false;
             catchPending = false;
             if (!HasAuthority || phase == WallRunPhase.None) return;
+            routeActive = false;
+            StopWarp();
             Vector3 outFrom = new Vector3(plan.Normal.x, 0f, plan.Normal.z);
             if (outFrom.sqrMagnitude > 1e-4f && settings != null)
                 transform.position += outFrom.normalized * settings.deathPushOff;
@@ -675,6 +902,8 @@ namespace KryticalNova.Player
             catchPending = false;
             if (!HasAuthority || phase == WallRunPhase.None) return;
             Vector3 ground = OpenLanding(NavMesh.SamplePosition(Feet, out NavMeshHit hit, settings != null ? settings.maxClimbHeight + 2f : 16f, Filter()) ? hit.position : plan.BaseFeet);
+            routeActive = false;
+            StopWarp();
             Land(ground);
         }
 
@@ -811,29 +1040,6 @@ namespace KryticalNova.Player
             float up = Mathf.Max(0f, peakY - Feet.y), down = Mathf.Max(0.05f, peakY - endY);
             return Mathf.Max(0.3f, Mathf.Sqrt(2f * up / g) + Mathf.Sqrt(2f * down / g));
         }
-
-        /// <summary>
-        /// Over the edge: straight up the climb's line until the feet are clear above the top, then in over it. The body
-        /// stays outside the face going up, and above the top going in, so it never passes through the corner.
-        /// </summary>
-        private Vector3 OverTheEdge(float s)
-        {
-            float clear = settings != null ? settings.mantleClearance : 0.25f;
-            Vector3 lifted = new Vector3(fromFeet.x, Mathf.Max(fromFeet.y, toFeet.y) + clear, fromFeet.z);
-            float up = Vector3.Distance(fromFeet, lifted), over = Vector3.Distance(lifted, toFeet);
-            float split = up + over > 1e-4f ? up / (up + over) : 1f;
-            if (s <= split) return Vector3.Lerp(fromFeet, lifted, split > 1e-4f ? s / split : 1f);
-            return Vector3.Lerp(lifted, toFeet, (s - split) / Mathf.Max(1e-4f, 1f - split));
-        }
-
-        private Vector3 Arc(float t)
-        {
-            Vector3 feet = Vector3.Lerp(fromFeet, toFeet, t);
-            feet.y = Mathf.Lerp(fromFeet.y, toFeet.y, t * t) + Mathf.Sin(t * Mathf.PI) * arcLift;
-            return feet;
-        }
-
-        private static float Smooth(float t) => t * t * (3f - 2f * t);
 
         private static float Flat(Vector3 a, Vector3 b)
         {
