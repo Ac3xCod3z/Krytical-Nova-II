@@ -930,7 +930,7 @@ MonoBehaviour:
         lines:
         - You die, or leave the zone | Always
         - Another player attacks you | Always
-        - Your time runs out | Each Autopilot Chip adds {fact:auto.hoursPerChip} hours, which only run while it is on
+        - Your time runs out | An Autopilot Pass adds 3, 14 or 30 days by the clock, up to {fact:auto.maxDays} days
         - Your Pack is full or Stims run out | If you told it to
       - kind: 0
         heading: Magnet
@@ -1550,9 +1550,9 @@ MonoBehaviour:
   - name: serum.cap
     source: {fileID: 11400000, guid: adf5ee1dda4b4a747a2d1c49074c361b, type: 2}
     field: baseCap
-  - name: auto.hoursPerChip
+  - name: auto.maxDays
     source: {fileID: 11400000, guid: 103a4e791aa9fae4095473743729c5df, type: 2}
-    field: hoursPerChip
+    field: autopilotMaxDays
   - name: fusion.stages
     source: {fileID: 11400000, guid: d29dc059680e60348bc2e243d264af87, type: 2}
     field: fusion.maxStage

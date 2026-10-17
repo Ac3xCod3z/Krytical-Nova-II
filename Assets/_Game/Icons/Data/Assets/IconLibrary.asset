@@ -4649,7 +4649,7 @@ MonoBehaviour:
     number: 22
     chosen: 1
   - kind: 2
-    target: Chip_Autopilot
+    target: Pass_Autopilot3
     set: Cyberpunk/Drone
     number: 7
     chosen: 1

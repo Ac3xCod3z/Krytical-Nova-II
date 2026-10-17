@@ -1,5 +1,4 @@
 using System;
-using KryticalNova.Economy;
 using KryticalNova.Progression;
 
 namespace KryticalNova.Autopilot
@@ -14,22 +13,17 @@ namespace KryticalNova.Autopilot
         public const int Slots = 8;
         private const int LongestId = 64;
 
-        /// <summary>
-        /// When the licence ends after a Pass of <paramref name="days"/>: a licence still running is lengthened from
-        /// its end; one that has run out starts again from now.
-        /// </summary>
-        public static long Extend(long nowTicks, long expiresTicks, int days) =>
-            KioskRules.ExpiryTicks(Math.Max(nowTicks, expiresTicks), days);
+        /// <summary>When the licence ends after a Pass of <paramref name="days"/> (<see cref="PassClock.Extend"/>).</summary>
+        public static long Extend(long nowTicks, long expiresTicks, int days) => PassClock.Extend(nowTicks, expiresTicks, days);
 
-        /// <summary>True when a Pass of <paramref name="days"/> would take the licence past the most days a character may hold.</summary>
+        /// <summary>True when a Pass would take the licence past the most days a character may hold.</summary>
         public static bool WouldExceed(long nowTicks, long expiresTicks, int days, int maxDays) =>
-            Extend(nowTicks, expiresTicks, days) > KioskRules.ExpiryTicks(nowTicks, maxDays);
+            PassClock.WouldExceed(nowTicks, expiresTicks, days, maxDays);
 
-        public static bool IsActive(long nowTicks, long expiresTicks) => !KioskRules.IsExpired(nowTicks, expiresTicks);
+        public static bool IsActive(long nowTicks, long expiresTicks) => PassClock.IsActive(nowTicks, expiresTicks);
 
         /// <summary>"Autobuff: 2d 13h left." or "No Autobuff time: use an Autobuff Pass."</summary>
-        public static string TimeLeftLine(long nowTicks, long expiresTicks) =>
-            IsActive(nowTicks, expiresTicks) ? $"Autobuff: {KioskRules.TimeLeft(nowTicks, expiresTicks)} left." : "No Autobuff time: use an Autobuff Pass.";
+        public static string TimeLeftLine(long nowTicks, long expiresTicks) => PassClock.TimeLeftLine("Autobuff", nowTicks, expiresTicks);
 
         /// <summary>
         /// The eight cells as they are kept: exactly eight, each a skill id or empty, none too long, and no skill twice

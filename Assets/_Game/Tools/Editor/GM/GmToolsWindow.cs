@@ -1832,10 +1832,10 @@ namespace KryticalNova.EditorTools.GM
         private void MagnetTest() => Run("gm.magnet.test");
 
         [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1065)]
-        private void SetAutopilotMinutes([MinValue(0)] float minutes = 300f) => Run($"gm.autopilot.time {minutes}");
+        private void SetAutopilotDays([MinValue(0)] int days = 3) => Run($"gm.autopilot.time {days}");
 
         [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1066)]
-        private void GiveAutopilotChips([MinValue(1)] int count = 1) => Run($"item.give \"Autopilot Chip\" {count}");
+        private void GiveAutopilotPasses([MinValue(1)] int count = 1) => Run($"item.give \"Autopilot Pass (3 Days)\" {count}");
 
         [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1067)]
         private void SetAutobuffDays([MinValue(0)] int days = 3) => Run($"gm.autobuff.days {days}");
