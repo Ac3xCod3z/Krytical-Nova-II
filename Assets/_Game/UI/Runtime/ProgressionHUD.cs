@@ -27,6 +27,7 @@ namespace KryticalNova.UI
         [SerializeField] private PointAndClickPlayer movement;
         [SerializeField] private PlayerResources resources;
         [SerializeField] private PlayerJumpMotor jumpMotor;
+        private PlayerWallRunMotor wallRunMotor;
         [SerializeField] private CharacterCombatStats combatStats;
         [SerializeField] private PlayerCombatSkills combatSkills;
         [SerializeField] private CharacterBuffManager buffManager;
@@ -529,6 +530,7 @@ namespace KryticalNova.UI
             movement = player.GetComponent<PointAndClickPlayer>();
             resources = player.GetComponent<PlayerResources>();
             jumpMotor = player.GetComponent<PlayerJumpMotor>();
+            wallRunMotor = player.GetComponent<PlayerWallRunMotor>();
             combatStats = player.GetComponent<CharacterCombatStats>();
             combatSkills = player.GetComponent<PlayerCombatSkills>();
             buffManager = player.GetComponent<CharacterBuffManager>();
@@ -1002,7 +1004,7 @@ namespace KryticalNova.UI
         private readonly List<SkillTreeView.Group> treeGroups = new List<SkillTreeView.Group>(4);
         private readonly List<string> treeTiers = new List<string>(6);
         private readonly Dictionary<(int, int), int> treeLanes = new Dictionary<(int, int), int>(24);
-        private const string RunKey = "run", JumpKey = "jump";
+        private const string RunKey = "run", JumpKey = "jump", WallstrideKey = "wallstride";
 
         // The tiers by the level that opens a skill: 1, 30, 60, 70, 80.
         private static readonly string[] LevelTiers = { "LV 1", "LV 30", "LV 60", "LV 70", "LV 80" };
@@ -1054,6 +1056,7 @@ namespace KryticalNova.UI
                     treeGroups.Add(new SkillTreeView.Group { Label = "JUMP", Column = 1f, Width = 1f });
                     AddMovementNode(MovementSkillId.Run, RunKey, runTile, 0f);
                     AddMovementNode(MovementSkillId.Jump, JumpKey, jumpTile, 1f);
+                    AddWallstrideNode(2f);
                     break;
                 case SkillTreeView.Tab.Wards:
                     heading = $"WARDS   ·   {className} AND SHARED";
@@ -1144,6 +1147,27 @@ namespace KryticalNova.UI
                 Rank = rank > 0 ? $"{rank}/{definition.MaxRank}" : null, Learned = rank > 0,
                 TooLow = hasNext && progression != null && progression.CurrentLevel < next.requiredCharacterLevel,
                 CanUpgrade = skills.CanUpgrade(skill, out _), Card = tile != null ? tile.parent : null,
+            });
+        }
+
+        /// <summary>
+        /// Wallstride, the passive that opens by itself (running up walls and into trees): locked until level 60 with
+        /// Run and Jump at rank 20, and its tile says which of the three are still to come.
+        /// </summary>
+        private void AddWallstrideNode(float column)
+        {
+            if (wallRunMotor == null || wallRunMotor.Settings == null || skills == null) return;
+            WallstrideSettings s = wallRunMotor.Settings;
+            bool open = wallRunMotor.WallstrideOpen;
+            int level = progression != null ? progression.CurrentLevel : 0;
+            string needs = open ? "Open: click a wall or a tree with Run or Jump selected, or run or jump into one."
+                : $"Opens at level {s.requiredLevel} ({level}), Run rank {s.requiredRunRank} ({skills.RunRank}) and Jump rank {s.requiredJumpRank} ({skills.JumpRank}).";
+            treeGroups.Add(new SkillTreeView.Group { Label = "WALLSTRIDE", Column = column, Width = 1f });
+            treeNodes.Add(new SkillTreeView.Node
+            {
+                Key = WallstrideKey, Name = "Wallstride", Column = column, Row = 0,
+                Rank = open ? "PASSIVE" : "LOCKED", Learned = open, Locked = !open, TooLow = level < s.requiredLevel,
+                Tooltip = $"Wallstride  ·  Run up walls and into trees, to get the high ground or get away. {needs}",
             });
         }
 

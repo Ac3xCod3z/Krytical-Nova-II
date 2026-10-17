@@ -128,6 +128,12 @@ namespace KryticalNova.Combat
                 outOfReach = true;
                 return false;
             }
+            // Up a wall or in a tree (Wallstride): a melee reach does not go up there; a ranged one does.
+            if (!WithinHeight(damageable.Transform.position, skill.GetRange(rank)))
+            {
+                reason = "Too high above (or below) to reach.";
+                return false;
+            }
             return true;
         }
 
@@ -209,7 +215,8 @@ namespace KryticalNova.Combat
                     }
                 }
                 else if (single != null && single.IsAlive
-                         && FlatDistance(single.Transform.position) <= (range + rangeTolerance) * impactRangeLeniency)
+                         && FlatDistance(single.Transform.position) <= (range + rangeTolerance) * impactRangeLeniency
+                         && WithinHeight(single.Transform.position, range))
                 {
                     outcome = ResolveSkillHit(skill, single, perHit, label, CadenceFor(single, onCadence), forceCrit: holding);
                 }
@@ -253,6 +260,11 @@ namespace KryticalNova.Combat
                 if (CombatHostility.IsHostile(transform, victim)) areaTargets.Add(victim);
             }
         }
+
+        /// <summary>A body this far above or below the reach of a skill is out of it (a player up a wall, in a tree).</summary>
+        private const float HeightSlack = 1.5f;
+
+        private bool WithinHeight(Vector3 point, float range) => Mathf.Abs(point.y - transform.position.y) <= range + HeightSlack;
 
         private float FlatDistance(Vector3 point)
         {

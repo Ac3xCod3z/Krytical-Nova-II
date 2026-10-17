@@ -101,6 +101,7 @@ namespace KryticalNova.Player
         private float nextSelectionRefresh;
         private PlayerJumpMotor jumpMotor;
         private PlayerVaultMotor vaultMotor;
+        private PlayerWallRunMotor wallRunMotor;
         private CharacterCombatStats combatStats;
         private CharacterBuffManager buffManager;
         private PlayerAnimancerMotor animancerMotor;
@@ -195,6 +196,8 @@ namespace KryticalNova.Player
             jumpMotor = GetComponent<PlayerJumpMotor>();
             vaultMotor = GetComponent<PlayerVaultMotor>();
             if (vaultMotor != null) vaultMotor.Landed += ResumeMoveAfterVault;
+            wallRunMotor = GetComponent<PlayerWallRunMotor>();
+            if (wallRunMotor != null) wallRunMotor.Message += message => CommandMessage?.Invoke(message);
             combatStats = GetComponent<CharacterCombatStats>();
             buffManager = GetComponent<CharacterBuffManager>();
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
@@ -379,7 +382,8 @@ namespace KryticalNova.Player
         {
             bool lost = agent != null && !agent.enabled && didStart
                 && (resources == null || resources.IsAlive) && (deathMotor == null || !deathMotor.IsDead)
-                && !(jumpMotor != null && jumpMotor.IsBusy) && !(vaultMotor != null && vaultMotor.IsBusy);
+                && !(jumpMotor != null && jumpMotor.IsBusy) && !(vaultMotor != null && vaultMotor.IsBusy)
+                && !(wallRunMotor != null && wallRunMotor.IsBusy);
             if (!lost) { agentOffFor = 0f; return; }
             agentOffFor += Time.deltaTime;
             MovementSettings settings = movementSkills != null ? movementSkills.MovementSettings : null;
@@ -549,12 +553,23 @@ namespace KryticalNova.Player
             if (resources != null && !resources.IsAlive) { CommandMessage?.Invoke("No HP remaining. Restore HP before moving."); return; }
             if (jumpMotor != null && jumpMotor.IsBusy) { CommandMessage?.Invoke("Finish this jump before choosing another destination."); return; }
             if (vaultMotor != null && vaultMotor.IsBusy) return; // back on the ground in a moment
+            // Up a wall or on the way over its edge: on the ground (or in the tree) in a moment.
+            if (wallRunMotor != null && wallRunMotor.IsBusy && !wallRunMotor.IsPerched) return;
             if (gameplayCamera == null || !gameplayCamera.pixelRect.Contains(screenPosition))
                 return;
 
             Ray ray = gameplayCamera.ScreenPointToRay(screenPosition);
             if (!TryPickPointerHit(ray, out RaycastHit hit))
                 return;
+
+            // Standing in a tree: a click on the ground drops down to it; a click on a unit still selects it.
+            if (wallRunMotor != null && wallRunMotor.IsPerched && hit.collider.GetComponentInParent<IDamageable>() == null)
+            {
+                if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0) { CommandMessage?.Invoke("Click the ground to drop down to it."); return; }
+                if (!wallRunMotor.TryDropTo(hit.point, out string dropReason)) { if (!string.IsNullOrEmpty(dropReason)) CommandMessage?.Invoke(dropReason); }
+                else ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
+                return;
+            }
 
             // A click that gives no new order (it only selects, or it lands on something that cannot be walked on)
             // changes nothing: the move under way keeps its walk-to-talk and its vault. Each order below that does
@@ -648,6 +663,18 @@ namespace KryticalNova.Player
                 return;
             }
 
+            // Wallstride: a wall or a tree clicked with Run or Jump selected is run up, or jumped at and caught.
+            if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0 && wallRunMotor != null && movementSkills != null
+                && (movementSkills.IsRunning || movementSkills.IsJumpSelected)
+                && wallRunMotor.TryClimbClicked(hit.point, hit.normal, hit.collider, raycastLayers.value, modelForwardOffset))
+            {
+                CancelAttack();
+                if (selectedTarget != null) ClearSelection();
+                pendingInteract = null;
+                EndTravel(false);
+                return;
+            }
+
             // Not ground: nothing was ordered, so the attack, the selection and the move under way all stand.
             if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
@@ -711,6 +738,7 @@ namespace KryticalNova.Player
             if (resources != null && !resources.IsAlive) { CommandMessage?.Invoke("No HP remaining. Restore HP before moving."); return false; }
             if (jumpMotor != null && jumpMotor.IsBusy) { CommandMessage?.Invoke("Finish this jump before choosing another destination."); return false; }
             if (vaultMotor != null && vaultMotor.IsBusy) return false;
+            if (wallRunMotor != null && wallRunMotor.IsBusy) { CommandMessage?.Invoke("Come down first."); return false; }
             if (agent == null) return false;
 
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
@@ -824,7 +852,8 @@ namespace KryticalNova.Player
             Vector3 moved = transform.position - travelLastPosition;
             moved.y = 0f;
             travelLastPosition = transform.position;
-            bool airborne = (jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy);
+            bool airborne = (jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy)
+                || (wallRunMotor != null && wallRunMotor.IsBusy);
             travelStalledFor = moved.magnitude / delta > TravelStallSpeed || airborne ? 0f : travelStalledFor + delta;
             if (travelStalledFor >= TravelStallSeconds)
             {
@@ -1047,6 +1076,7 @@ namespace KryticalNova.Player
             if (resources != null && !resources.IsAlive) return false;
             if (jumpMotor != null && jumpMotor.IsBusy) return false;
             if (vaultMotor != null && vaultMotor.IsBusy) return false;
+            if (wallRunMotor != null && wallRunMotor.IsBusy) return false;
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
             // The owner ended its own copy of a channel when it clicked; the authoritative one ends here.
             if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
@@ -1140,6 +1170,7 @@ namespace KryticalNova.Player
             bool underWay = hasOrder && settings != null && agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh
                 && agent.hasPath && !agent.pathPending && !agent.isStopped && agent.speed > 0.05f
                 && !(jumpMotor != null && jumpMotor.IsBusy) && !(vaultMotor != null && vaultMotor.IsBusy)
+                && !(wallRunMotor != null && (wallRunMotor.IsBusy || wallRunMotor.IsArmed))
                 && FlatDistance(agent.destination, orderedPathEnd) <= SameRouteDistance;
             if (!underWay)
             {
@@ -1184,6 +1215,13 @@ namespace KryticalNova.Player
         {
             if (vaultMotor != null) vaultMotor.Disarm();
             bool walkable = agent.CalculatePath(destination, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
+            // Wallstride: running at a wall the destination stands on, with no way round or a much longer one, goes up it.
+            if (wallRunMotor != null && wallRunMotor.TryArmTowards(destination, walkable ? requestedPath : null, out Vector3 wallFoot))
+            {
+                if (agent.CalculatePath(wallFoot, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete) return true;
+                wallRunMotor.Disarm();
+                walkable = agent.CalculatePath(destination, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
+            }
             // With no way round, a vault that gets there is the route.
             if (vaultMotor == null) return walkable;
             if (!vaultMotor.TryArm(destination, walkable ? requestedPath : null, raycastLayers, modelForwardOffset, out Vector3 takeoff))
@@ -1277,6 +1315,7 @@ namespace KryticalNova.Player
             if (!hasOrder) return;
             if (FlatDistance(arrivedAt, orderedPathEnd) > SameRouteDistance) { hasOrder = false; return; } // not the order's path
             if (vaultMotor != null && (vaultMotor.IsArmed || vaultMotor.IsBusy)) return; // it carries on from the landing
+            if (wallRunMotor != null && (wallRunMotor.IsArmed || wallRunMotor.IsBusy)) return; // up the wall from its foot
             bool there = FlatDistance(arrivedAt, orderedDestination) <= agent.stoppingDistance + ShortOfOrderDistance;
             if (there || orderReplanned) { hasOrder = false; return; }
             orderReplanned = true;
@@ -1475,6 +1514,7 @@ namespace KryticalNova.Player
             }
             if (jumpMotor != null && jumpMotor.IsBusy) return;
             if (vaultMotor != null && vaultMotor.IsBusy) return;
+            if (wallRunMotor != null && wallRunMotor.IsBusy) return;
             MovementSkillId currentMode = movementSkills.SelectedSkill;
             if (currentMode != previousMovementMode)
             {

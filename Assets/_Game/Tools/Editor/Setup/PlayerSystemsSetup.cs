@@ -40,6 +40,11 @@ namespace KryticalNova.EditorTools
         public const string SponsorSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SponsorSettings.asset";
         public const string HousingSettingsPath = "Assets/_Game/Gameplay/Housing/Data/Assets/HousingSettings.asset";
         public const string RecallSettingsPath = "Assets/_Game/Gameplay/Player/Data/Assets/RecallSettings.asset";
+        public const string WallstrideSettingsPath = "Assets/_Game/Gameplay/Player/Data/Assets/WallstrideSettings.asset";
+        // Wallstride's stand-in clips until a climbing set exists: a vault's plant and its go-over, the vault pack's run
+        // loop (the body is moved by the motor, never by the clip), and the Base Locomotion crouch and fall.
+        private const string VaultCopies = "Assets/_Game/Characters/Player/Animations/Vaults/";
+        private const string BaseLocomotion = "Assets/Synty/AnimationBaseLocomotion/Animations/Sidekick/Masculine/";
         public const string FlaskSettingsPath = "Assets/_Game/Gameplay/Items/Data/Assets/FlaskSettings.asset";
         public const string FurnishingCatalogPath = "Assets/_Game/Gameplay/Housing/Data/Assets/FurnishingCatalog.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
@@ -97,6 +102,13 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Social.PlayerFollow", ("settings", SquadSettingsPath)),
             // Serums: what a character has taken, and the stats that stay.
             new Row("KryticalNova.Progression.PlayerSerums", ("settings", SerumSettingsPath)),
+            // Wallstride: running up walls and into trees (level 60, Run and Jump at rank 20).
+            new Row("KryticalNova.Player.PlayerWallRunMotor", ("settings", WallstrideSettingsPath),
+                ("plantClip", VaultCopies + "Vault_Pack_01.anim"),
+                ("climbClip", "Assets/_ThirdParty/Vault Animation Pack/Assets/Animations/AS_Run_Loop_R.anim"),
+                ("mantleClip", VaultCopies + "Vault_Pack_05.anim"),
+                ("perchClip", BaseLocomotion + "Idles/A_MOD_BL_Idle_Crouching_Masc.fbx"),
+                ("dropClip", BaseLocomotion + "InAir/A_MOD_BL_InAir_FallLarge_Masc.fbx")),
             // The Recall Tag: a channel, then back to the map's spawn points.
             new Row("KryticalNova.Player.PlayerRecall", ("settings", RecallSettingsPath)),
             // The Flux Flask: a drink of Flux over time, and the refill at an Apothecary.

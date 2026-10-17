@@ -36,6 +36,8 @@ namespace KryticalNova.Player
         private const float ChestHeight = 0.9f;
         /// <summary>Killed this far (m) above where it will land, the body is in the air and falls.</summary>
         private const float AirborneHeight = 0.15f;
+        /// <summary>How far below the body the ground is looked for when it dies high up (a wall, a tree).</summary>
+        private const float FallProbe = 80f;
         private const int HeightCurveSteps = 24;
 
         /// <summary>One way of going down: the knockdown clip, the loop it ends in, and how the clip travels.</summary>
@@ -105,6 +107,7 @@ namespace KryticalNova.Player
         private PlayerAnimancerMotor animancerMotor;
         private PlayerJumpMotor jumpMotor;
         private PlayerVaultMotor vaultMotor;
+        private PlayerWallRunMotor wallRunMotor;
         private PlayerMeleeCombat meleeCombat;
         private PlayerResources resources;
         private CombatEntity combatEntity;
@@ -143,6 +146,7 @@ namespace KryticalNova.Player
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
             jumpMotor = GetComponent<PlayerJumpMotor>();
             vaultMotor = GetComponent<PlayerVaultMotor>();
+            wallRunMotor = GetComponent<PlayerWallRunMotor>();
             meleeCombat = GetComponent<PlayerMeleeCombat>();
             resources = GetComponent<PlayerResources>();
             combatEntity = GetComponent<CombatEntity>();
@@ -197,6 +201,8 @@ namespace KryticalNova.Player
             // Whatever was moving the body lets go of it where it is.
             if (jumpMotor != null) jumpMotor.ReleaseForDeath();
             if (vaultMotor != null) vaultMotor.ReleaseForDeath();
+            // On a wall or in a tree: pushed out from it, so the body falls clear.
+            if (wallRunMotor != null) wallRunMotor.ReleaseForDeath();
             if (buffManager != null) buffManager.ClearAllBuffs();
             if (agent.isActiveAndEnabled && agent.isOnNavMesh)
             {
@@ -383,6 +389,11 @@ namespace KryticalNova.Player
         {
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
             Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            // High off the ground (up a wall, in a tree, at the top of a jump): the fall starts from the ground below.
+            if (!NavMesh.SamplePosition(feet, out NavMeshHit _, GroundSampleRadius, filter)
+                && Physics.Raycast(feet + Vector3.up * 0.1f, Vector3.down, out RaycastHit below, FallProbe,
+                    blockingLayers.value & ~(1 << gameObject.layer), QueryTriggerInteraction.Ignore))
+                feet = below.point;
             Vector3 from = NavMesh.SamplePosition(feet, out NavMeshHit ground, GroundSampleRadius, filter) ? ground.position : feet;
 
             float allowed = distance;

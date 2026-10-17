@@ -33,6 +33,9 @@ namespace KryticalNova.Progression
         public event Action Changed;
         public MovementSettings MovementSettings => movementSettings;
         public MovementSkillId SelectedSkill => selectedSkill;
+        /// <summary>The learned ranks of Run and Jump (0 = not learned); mirrored to every machine.</summary>
+        public int RunRank => runRank;
+        public int JumpRank => jumpRank;
         public bool IsRunning => selectedSkill == MovementSkillId.Run && runRank > 0;
         public bool IsJumpSelected => selectedSkill == MovementSkillId.Jump && jumpRank > 0;
         public float CurrentSpeed => BaseSpeed * StatSpeedMultiplier * (gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f);
