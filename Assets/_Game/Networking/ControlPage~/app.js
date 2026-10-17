@@ -260,6 +260,8 @@ async function refresh() {
     $("chipPlayers").textContent = s.players.length + " / " + s.maxPlayers + " players";
     $("chipUptime").textContent = "up " + minutes(s.uptime);
     $("chipMap").textContent = s.map;
+    $("chipLoad").textContent = s.load || "-";
+    $("chipLoad").classList.toggle("warn", (s.loadSlow || 0) > 0);
     $("chipBackup").textContent = s.nextBackup >= 0 ? "next backup in " + minutes(s.nextBackup) : "backups at start and stop";
     $("lastBackup").textContent = "Last backup: " + s.lastBackup + " · " + s.backupsKept + " kept";
     const pill = $("pill");
