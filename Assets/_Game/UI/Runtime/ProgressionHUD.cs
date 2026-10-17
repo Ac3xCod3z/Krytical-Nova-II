@@ -178,10 +178,9 @@ namespace KryticalNova.UI
         private GameObject boundPlayer;
         private PlayerInventory boundInventory;
         private int suppressWorldInputFrame = -1;
-        private Action activeHoldAction;
-        private float nextRepeatTime;
-        private const float InitialHoldDelay = 0.35f;
-        private const float HoldRepeatInterval = 0.08f;
+        // A held "+" repeats after this long, this often (milliseconds); a refused spend stops it until the next press.
+        private const long HoldDelayMs = 350, HoldRepeatMs = 80;
+        private bool holdStopped;
         // How many points one press of a "+" spends: one choice for the Character window, one for the Arsenal.
         private readonly StepDropdown statSteps = new StepDropdown("kn.statStep");
         private readonly StepDropdown skillSteps = new StepDropdown("kn.skillStep");
@@ -307,8 +306,10 @@ namespace KryticalNova.UI
             generatedSkillIds.Clear();
             classSkillsHeader = null;
 
-            BindPointer<PointerUpEvent>(root, evt => { if (evt.button == LeftButton) StopHold(); });
-            BindPointer<PointerCancelEvent>(root, evt => StopHold());
+            // Every press starts a hold afresh (the root hears it first, on the way down to the button).
+            EventCallback<PointerDownEvent> pressStarts = _ => holdStopped = false;
+            root.RegisterCallback(pressStarts, TrickleDown.TrickleDown);
+            removeUiCallbacks.Add(() => root.UnregisterCallback(pressStarts, TrickleDown.TrickleDown));
 
             for (int index = 0; index < slotElements.Length; index++)
             {
@@ -642,14 +643,6 @@ namespace KryticalNova.UI
                 statSteps.Close();
                 skillSteps.Close();
             }
-            if (activeHoldAction != null)
-            {
-                if (Time.unscaledTime >= nextRepeatTime)
-                {
-                    activeHoldAction();
-                    nextRepeatTime = Time.unscaledTime + HoldRepeatInterval;
-                }
-            }
 
             if (initialized)
             {
@@ -688,48 +681,20 @@ namespace KryticalNova.UI
         }
 
         /// <summary>
-        /// A "+" button: a press spends at once and keeps spending while it is held; the ▾ beside it picks how much
-        /// one press spends. The click Unity raises on release belongs to that same press, so it spends nothing more
-        /// (it used to add one extra after a hold). A click with no press before it (a keyboard submit) spends once.
+        /// A "+" button: Unity's own repeating click spends once on the press, again every 80 ms once it has been held
+        /// for 350 ms, and never on the release (the old hold added one more point when let go). The ▾ beside it
+        /// picks how much one press spends. A spend that cannot happen (no points left) stops the hold until the next
+        /// press, so a held button does not repeat the refusal.
         /// </summary>
         private void BindHoldable(Button button, Action onAction, StepDropdown steps)
         {
             steps?.Attach(button);
-            bool pressed = false;
-            Action clicked = () =>
-            {
-                if (pressed) { pressed = false; return; }
-                onAction();
-            };
-            button.clicked += clicked;
-            removeUiCallbacks.Add(() => button.clicked -= clicked);
-            BindPointer<PointerDownEvent>(button, evt =>
-            {
-                if (evt.button != LeftButton) return;
-                pressed = true;
-                onAction();
-                StartHold(onAction);
-            });
-            // Released off the button: no click comes, so the next one is a new press.
-            BindPointer<PointerCaptureOutEvent>(button, evt => button.schedule.Execute(() => pressed = false));
-            BindPointer<PointerUpEvent>(button, evt =>
-            {
-                if (evt.button == LeftButton) StopHold();
-            });
-            BindPointer<PointerCancelEvent>(button, evt => StopHold());
-            BindPointer<PointerCaptureOutEvent>(button, evt => StopHold());
-            BindPointer<PointerLeaveEvent>(button, evt => StopHold());
-        }
-
-        private void StartHold(Action action)
-        {
-            activeHoldAction = action;
-            nextRepeatTime = Time.unscaledTime + InitialHoldDelay;
+            button.clickable = new Clickable(() => { if (!holdStopped) onAction(); }, HoldDelayMs, HoldRepeatMs);
         }
 
         private void StopHold()
         {
-            activeHoldAction = null;
+            holdStopped = true;
         }
 
         // Every "+" of the window shows the new step.
@@ -748,7 +713,7 @@ namespace KryticalNova.UI
         public bool BlocksWorldPointer(Vector2 screenPosition)
         {
             if (!isActiveAndEnabled || !initialized || root.panel == null) return false;
-            if (dragSource != null || activeHoldAction != null || suppressWorldInputFrame == Time.frameCount) return true;
+            if (dragSource != null || suppressWorldInputFrame == Time.frameCount) return true;
             Vector2 panelPoint = RuntimePanelUtils.ScreenToPanel(root.panel,
                 new Vector2(screenPosition.x, Screen.height - screenPosition.y));
             VisualElement picked = root.panel.Pick(panelPoint);
