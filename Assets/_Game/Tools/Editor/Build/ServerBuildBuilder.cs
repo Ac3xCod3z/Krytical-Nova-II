@@ -117,8 +117,8 @@ namespace KryticalNova.EditorTools
                 return false;
             }
 
-            BuildSceneOrder.Apply();
-            string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
+            // The development scenes (the Cadence arena) never ship, on a server either.
+            string[] scenes = BuildSceneOrder.Shipped();
             if (scenes.Length == 0)
             {
                 Debug.LogError("[Build] There are no scenes to build.");

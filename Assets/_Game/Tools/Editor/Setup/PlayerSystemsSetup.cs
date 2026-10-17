@@ -26,6 +26,7 @@ namespace KryticalNova.EditorTools
         }
 
         private const string Runtime = ", KryticalNova.Runtime";
+        public const string CadenceSettingsPath = "Assets/_Game/Gameplay/Combat/Data/Assets/CadenceSettings.asset";
         public const string EconomySettingsPath = "Assets/_Game/Gameplay/Economy/Data/Assets/EconomySettings.asset";
         public const string GearProgressionPath = "Assets/_Game/Gameplay/Items/Data/Assets/GearProgressionSettings.asset";
         public const string NovaSettingsPath = "Assets/_Game/Gameplay/Progression/Data/Assets/NovaSettings.asset";
@@ -56,6 +57,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Combat.PlayerSkillQueue"),
             // Whether the player is in a fight, told to every machine (a pet keeps calm in one).
             new Row("KryticalNova.Combat.PlayerCombatState"),
+            // Cadence: a skill key pressed on the beat of the fight music (design 17).
+            new Row("KryticalNova.Combat.PlayerCadence", ("settings", CadenceSettingsPath)),
             new Row("KryticalNova.Pets.PlayerPet", ("catalog", "Assets/_Game/Gameplay/Pets/Data/Assets/PetCatalog.asset")),
             new Row("KryticalNova.Economy.PlayerWallet", ("settings", EconomySettingsPath)),
             new Row("KryticalNova.Items.PlayerLoot", ("dropPrefab", GameplayPrefabsSetup.WorldDropPath)),

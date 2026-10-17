@@ -107,6 +107,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/World/Overworld/TheScar/TheScar.unity
     guid: c0c78eb8f2355434cae269a81333efb8
+  - enabled: 1
+    path: Assets/_Game/Scenes/Development/Test_Cadence.unity
+    guid: 8b110b621c47dcf43aea3e0424f0bca8
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
