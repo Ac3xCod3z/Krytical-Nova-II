@@ -94,8 +94,8 @@ namespace KryticalNova.World
         private void Awake()
         {
             terrain = GetComponent<Terrain>();
-            // The terrain's own tree colliders stand for every tree in the map; the proxies take their place.
-            if (TryGetComponent(out TerrainCollider terrainCollider)) terrainCollider.enableTreeColliders = false;
+            // The terrain's own tree colliders stand for every tree in the map; the proxies take their place. Unity has
+            // no run-time switch for them, so ZoneTerrainGenerator turns them off in the saved scene.
             holder = new GameObject("Tree Proxies").transform;
             holder.SetParent(transform, false);
             Build();

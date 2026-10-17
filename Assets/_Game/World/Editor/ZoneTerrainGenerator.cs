@@ -697,6 +697,7 @@ namespace KryticalNova.EditorTools
 
             terrain.terrainData = data;
             terrain.GetComponent<TerrainCollider>().terrainData = data;
+            DisableTreeColliders(terrain.GetComponent<TerrainCollider>());
             terrain.transform.position = new Vector3(-p.size * 0.5f, p.baseHeight, -p.size * 0.5f);
             terrain.gameObject.layer = LayerMask.NameToLayer(GroundLayerName);
             terrain.drawInstanced = true;
@@ -710,6 +711,20 @@ namespace KryticalNova.EditorTools
             GameObjectUtility.SetStaticEditorFlags(terrain.gameObject,
                 StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
             return terrain;
+        }
+
+        /// <summary>
+        /// Trees are solid only near players (TreeProxyField), so the terrain's own colliders for every tree go off.
+        /// The switch is serialized only: Unity has no run-time property for it.
+        /// </summary>
+        public static void DisableTreeColliders(TerrainCollider collider)
+        {
+            if (collider == null) return;
+            var so = new SerializedObject(collider);
+            var enable = so.FindProperty("m_EnableTreeColliders");
+            if (enable == null || !enable.boolValue) return;
+            enable.boolValue = false;
+            so.ApplyModifiedProperties();
         }
 
         /// <summary>One opaque water sheet under the whole map; the terrain hides it except in channels and lakes.</summary>
