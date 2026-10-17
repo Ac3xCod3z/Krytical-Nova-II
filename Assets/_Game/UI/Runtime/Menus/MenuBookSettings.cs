@@ -65,5 +65,9 @@ namespace KryticalNova.UI.Menus
         [Tooltip("The dots on the back of a page take the accent colour of the skin the menus wear. Off: the colour below.")]
         public bool tintWithTheSkin = true;
         public Color backTint = new Color32(0x4C, 0x52, 0xBF, 0xFF);
+        [Tooltip("A comic page printed on the back of every page (owner, 17 Oct 2026): what shows of the page before, left of the gutter, and the back of a page as it turns over onto it. Printed in ink on the paper, as tall as the page, its right edge at the fold. None: bare paper.")]
+        public Texture2D pageBackArt;
+        [Tooltip("How dark the picture on the back of a page prints: 1 its own blacks, 0 not at all.")]
+        [Range(0f, 1f)] public float pageBackInk = 1f;
     }
 }

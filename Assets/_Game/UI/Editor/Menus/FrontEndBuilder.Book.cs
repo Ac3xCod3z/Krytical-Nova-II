@@ -48,6 +48,12 @@ namespace KryticalNova.EditorTools
                 settings = ScriptableObject.CreateInstance<MenuBookSettings>();
                 AssetDatabase.CreateAsset(settings, BookSettingsPath);
             }
+            // The back of the pages carries the owner's comic page; one chosen on the asset since is kept.
+            if (settings.pageBackArt == null)
+            {
+                settings.pageBackArt = AssetDatabase.LoadAssetAtPath<Texture2D>(PageBackArtPath);
+                if (settings.pageBackArt != null) EditorUtility.SetDirty(settings);
+            }
             const string PageShader = "KryticalNova/UI/Comic Page";
             Material face = EnsureMaterial("M_MenuBook_Face", PageShader, m =>
             {
