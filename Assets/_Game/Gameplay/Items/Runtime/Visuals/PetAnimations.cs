@@ -282,27 +282,28 @@ namespace KryticalNova.Items.Visuals
 
         /// <summary>
         /// Once a frame: plays the next animation in turn every <paramref name="cycleSeconds"/> (0 = never). Only a
-        /// pet at rest takes its turn; one that has been walking waits a full interval after it stops.
+        /// pet at rest takes its turn; one that has been walking waits a full interval after it stops. Returns the
+        /// animation it started (its name's hash), or 0.
         /// </summary>
-        public void Tick(float cycleSeconds)
+        public int Tick(float cycleSeconds)
         {
-            if (calm || cycleSeconds <= 0f || animator == null || !animator.isActiveAndEnabled) return;
+            if (calm || cycleSeconds <= 0f || animator == null || !animator.isActiveAndEnabled) return 0;
             Read();
             if (gait != PetGait.Rest)
             {
                 nextAt = -1f;
-                return;
+                return 0;
             }
-            if (turns.Count == 0) return;
+            if (turns.Count == 0) return 0;
             if (nextAt < 0f)
             {
                 nextAt = Time.time + cycleSeconds;
-                return;
+                return 0;
             }
-            if (Time.time < nextAt) return;
+            if (Time.time < nextAt) return 0;
             int index = next % turns.Count;
             next = index + 1;
-            Play(turns[index]);
+            return Play(turns[index]) ? turns[index] : 0;
         }
     }
 }

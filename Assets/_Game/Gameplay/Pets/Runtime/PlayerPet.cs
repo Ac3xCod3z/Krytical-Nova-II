@@ -162,13 +162,53 @@ namespace KryticalNova.Pets
             netState.OnValueChanged += OnNetStateChanged;
             if (IsServer) Adopt(equipment.Get(EquipSlot.Pet));
             else Show(netState.Value);
+            // The pet's tricks: its own player's game takes the turns and the server passes each one on, so every
+            // screen shows the same trick at the same time (online phase 3, owner: they were different on each screen).
+            if (follower != null)
+            {
+                follower.LeadsTricks = IsOwner;
+                if (IsOwner) follower.TrickPlayed += ShareTrick;
+            }
         }
 
         public override void OnNetworkDespawn()
         {
             if (IsServer) WriteToItem();
             netState.OnValueChanged -= OnNetStateChanged;
+            if (follower != null)
+            {
+                follower.TrickPlayed -= ShareTrick;
+                follower.LeadsTricks = true; // the offline avatar takes its own turns again
+            }
             base.OnNetworkDespawn();
+        }
+
+        // ------------------------------------------------------------------ the same trick on every screen
+
+        /// <summary>Tricks one game may pass on, at most: a pet takes a turn every few seconds, so more is not a pet.</summary>
+        private const float SharedTrickSeconds = 1f;
+        private float nextSharedTrick;
+
+        private void ShareTrick(int nameHash)
+        {
+            if (!IsSpawned || !IsOwner) return;
+            if (IsServer) OthersPlayTrickRpc(nameHash);
+            else ShareTrickRpc(nameHash);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void ShareTrickRpc(int nameHash)
+        {
+            // Only a show, so only the pace is held: a game sending faster than a pet takes turns is ignored.
+            if (Time.unscaledTime < nextSharedTrick) return;
+            nextSharedTrick = Time.unscaledTime + SharedTrickSeconds;
+            OthersPlayTrickRpc(nameHash);
+        }
+
+        [Rpc(SendTo.NotOwner)]
+        private void OthersPlayTrickRpc(int nameHash)
+        {
+            if (follower != null) follower.PlayAnimation(nameHash);
         }
 
         private void OnNetStateChanged(PetNetState previous, PetNetState current)

@@ -1,7 +1,44 @@
 # Online phase 3: responsive input (client anticipation)
 
-Part of `online-roadmap.md`. Written 11 Oct 2026. **Not built.** Needs Phase 1 (a host never feels the
+Part of `online-roadmap.md`. Written 11 Oct 2026. **Step 1 (walking) built 17 Oct 2026; jumps, vaults and casts not yet.** Needs Phase 1 (a host never feels the
 delay, so this can only be judged against a dedicated server).
+
+## As built
+
+**Step 1, walking (17 Oct 2026, branch `online/phase3-responsive-input`).** Work items 1 to 4 for walking.
+Tested against the measure server with two clients: the owner's walk starts on the order, the second
+screen sees it walk smoothly, the server ends on the same spot.
+
+- **Method:** neither A nor B as written. A was tried and dropped: `AnticipatedNetworkTransform` writes
+  the body's position every frame (on the server too), and a `NavMeshAgent` whose body is written under it
+  loses its speed, so nobody moved. The player keeps its `NetworkTransform` (server authority,
+  interpolation on); other players' characters look exactly as before.
+- **The owner's own walk** (`Gameplay/Player/Runtime/PlayerMoveAnticipation.cs`, on `Player.prefab`): a
+  click, a map journey, walking up to a player and walking over to talk (`PointAndClickPlayer.LeadOwnWalk`)
+  still send the order to the server, and the owner's game also plans the same walk with its own
+  `NavMeshAgent` (same NavMesh and speed; no Flux paid, no vault or climb planned) and starts at once. The
+  agent walks with `updatePosition` off; after `NetworkTransform` has written the server's position each
+  frame, the body is put where the walk is, facing the way the walk turns (`LeadOwnStep`).
+- **Correction:** when the owner's walk has ended and the server's body has stood still for
+  `restSeconds`, or `settleSeconds` after the walk ended at most, the body eases onto the server's
+  position over `easeSeconds` and follows it again; the agent is switched off. Further apart than
+  `snapDistance` plus what a round trip and `interpolationSeconds` explain at this speed (a vault the
+  server took, a teleport): the same ease at once. A refused order (`MoveRefusedRpc`, server to owner)
+  stops the walk. Not enough Flux for Run: the owner does not start.
+- **Not anticipated:** jumps, vaults, climbs and death stop the owner's walk and follow the server (step
+  2 is jumps and vaults). Autopilot, Follow, queued skills and knockback are moved by the server only.
+- **Tunables** are on the component (`snapDistance` 3 m, `easeSeconds` 0.2, `restSeconds` 0.15,
+  `settleSeconds` 1.5, `interpolationSeconds` 0.15), not yet a `NetworkFeelSettings` asset.
+- **The server never takes a position from a client:** nothing new is sent but the order the server
+  already received.
+- **Pets:** a pet's tricks (its animations in turn while it rests) were picked by each screen on its own,
+  so every screen showed a different one. The owner's game now takes the turns and the server passes each
+  one on (`PlayerPet.ShareTrickRpc`, at most one a second, then `OthersPlayTrickRpc`); other screens play
+  what they are sent (`PetFollower.LeadsTricks`). Checked: the same three tricks within 0.1 s on both
+  screens.
+- **Not done in step 1:** the network-simulator runs at 60 / 150 / 250 ms. Adding the simulator to a
+  running Editor dropped it to one frame a second; it is to be run from a development build instead, or
+  judged in the brothers' test from their houses.
 
 ## Goal
 
