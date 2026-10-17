@@ -1,0 +1,32 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Loadouts.uss" />
+
+    <!-- Equipment loadouts (LoadoutWindowController): ten saved sets of gear, opened from the Pack. Each row shows the
+         weapon large and the other pieces small (greyed when they are in neither the Pack nor worn), the name, WEAR,
+         and RENAME / DELETE under the dots. Rows are built in code. -->
+    <ui:VisualElement name="loadout-window" class="panel window blocks-world hud-movable">
+        <ui:VisualElement class="row kn-header">
+            <ui:Label text="LOADOUTS" class="heading" />
+            <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
+            <ui:Button name="close-loadouts" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
+        </ui:VisualElement>
+        <ui:Label text="WEAR puts a set on from your Pack; what you had on goes where each piece was." class="help loadout-help" />
+        <ui:ScrollView name="loadout-scroll" class="loadout-scroll" horizontal-scroller-visibility="Hidden">
+            <ui:VisualElement name="loadout-list" class="loadout-list" />
+        </ui:ScrollView>
+    </ui:VisualElement>
+
+    <!-- Saving and renaming: a name and, when saving, the slot it goes in (the next free one to start with) -->
+    <ui:VisualElement name="loadout-dialog" class="loadout-dialog panel blocks-world">
+        <ui:Label name="loadout-dialog-title" text="SAVE LOADOUT" class="heading loadout-dialog-title" />
+        <ui:Label name="loadout-dialog-detail" text="" class="help loadout-dialog-detail" />
+        <ui:TextField name="loadout-name" class="kn-textfield loadout-name-field" max-length="20" />
+        <ui:Label name="loadout-slots-label" text="SLOT" class="eyebrow loadout-slots-label" />
+        <ui:VisualElement name="loadout-slots" class="row loadout-slots" />
+        <ui:Label name="loadout-error" text="" class="loadout-error" />
+        <ui:VisualElement class="row loadout-dialog-buttons">
+            <ui:Button name="loadout-ok" text="SAVE  [ENTER]" class="kn-button-primary" />
+            <ui:Button name="loadout-cancel" text="CANCEL  [ESC]" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

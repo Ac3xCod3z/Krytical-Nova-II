@@ -938,6 +938,42 @@
     text-shadow: 1px 1px 0 rgb(14, 9, 16);
 }
 
+/* ---- Loadouts.uss ---- */
+.kn-faction-null .loadout-name {
+    font-size: 16.64px;
+}
+.kn-faction-null .loadout-empty-text {
+    font-size: 14.08px;
+}
+.kn-faction-null .loadout-wear {
+    font-size: 15.36px;
+}
+.kn-faction-null .loadout-more {
+    font-size: 16.64px;
+}
+.kn-faction-null .loadout-menu Button {
+    font-size: 14.08px;
+}
+.kn-faction-null .loadout-dialog-title {
+    font-size: 19.2px;
+}
+.kn-faction-null .loadout-name-field > .unity-text-field__input, .kn-faction-null .loadout-name-field .unity-base-text-field__input {
+    font-size: 20.48px;
+}
+.kn-faction-null .loadout-slot {
+    font-size: 14.08px;
+    -unity-background-image-tint-color: rgb(48, 32, 54);
+}
+.kn-faction-null .loadout-slot.used {
+    color: rgb(175, 140, 236);
+}
+.kn-faction-null .loadout-slot.chosen {
+    -unity-background-image-tint-color: rgb(112, 0, 6);
+}
+.kn-faction-null .loadout-error {
+    font-size: 15.36px;
+}
+
 /* ---- Herald.uss ---- */
 .kn-faction-null .herald-purse {
     font-size: 15.36px;

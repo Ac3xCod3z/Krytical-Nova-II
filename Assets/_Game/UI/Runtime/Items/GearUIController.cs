@@ -103,6 +103,9 @@ namespace KryticalNova.UI
         private void OnEnable()
         {
             if (!Application.isPlaying) return;
+            // The loadouts window lives in this document (ItemWindows.uxml): every map's HUD gets its controller, also
+            // a map whose scene was set up before loadouts existed (HudSetup adds it to scenes set up since).
+            if (GetComponent<LoadoutWindowController>() == null) gameObject.AddComponent<LoadoutWindowController>();
             root = GetComponent<UIDocument>().rootVisualElement;
             equipmentWindow = root?.Q("equipment-window");
             inventoryWindow = root?.Q("inventory-window");
