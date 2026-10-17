@@ -1,7 +1,8 @@
 # Online phase 2: lock the door
 
 Part of `online-roadmap.md`; the rules are in `online-security-model.md`. Written 11 Oct 2026.
-**Not built.** Needs Phase 1.
+**Milestone 1 built 18 Oct 2026** (see "As built" below); the rest is not built. Order (owner, 18 Oct 2026): milestone 1,
+then **Phase 3** (client-side prediction), then milestones 2 to 5 of this phase.
 
 ## Goal
 
@@ -18,6 +19,33 @@ modified client sends can do more than the real client could.
 - 100 client-to-server calls in 29 files; 14 use the old `[ServerRpc]` attribute. Only chat has a rate
   limit (`PlayerChat`, 5 in 5 s).
 - The only kick is for a second character of one account (`PlayerSaveAgent.cs` : 160).
+
+## As built
+
+**Milestone 1, who you are (18 Oct 2026).** Owner's picks: the game signs in to Unity by itself (no login screen) and
+the server checks the proof; the characters played before are carried over once; GMs are bound to accounts from the
+control page, with no password in the game; the GM console (F2) opens for GMs only; hits stay client-reported with
+tighter checks (that part is milestone 3).
+- *Join request* (`JoinRules`, tag `KN2`): build, Editor flag, the Unity sign-in token, and the account id the game made
+  up before sign-in. A game from before this (`KN1`) is told to update.
+- *The check* (`AccountProof.cs`: `UnityToken.Verify`, `UnityKeys`, `AccountIds`, `ServerAccounts`): the RS256 signature
+  against Unity's published keys (fetched at server start, kept, fetched again for an unknown key at most once a
+  minute), expiry with a minute's slack, issuer `player-auth.services.api.unity.com`, this project (`project_id` or
+  `upid:` in the audience). The account id is 32 hex characters of SHA-256 of the Unity player id. While the keys are
+  being fetched the approval waits (`response.Pending`). A dedicated server requires the proof; the Editor hosting a test
+  still takes a game that cannot give it (`NetworkConnectionManager.RequireProof`).
+- *Saves under the proven account*: `PlayerIdentity` takes the account from `ServerAccounts`, never from the game;
+  the game's own copy follows it (`CharacterSession.VerifiedAccountId`; `MadeUpAccountId` stays for playing alone).
+- *Carry-over* (`ServerSave.CarryOverOnce`, setting `carryOverOldSaves`): only onto a proven account with no saves of
+  its own, only once per old account (`world/carried-accounts`), the old document kept as a backup; Kiosks follow the
+  account (`ServerSave.AccountCarried`).
+- *GMs* (`GmRoster`, `PlayerGm`, `GmConsoleGate`, control page): a GM entry is a name and an account; **Bind** beside it
+  picks an online player; a bound account is GM on every join; Unbind or Remove ends it at once. The in-game password
+  login is gone.
+- *Tried:* a test server (Measure server, port 7790) seeded with a copy of the Editor's old account: the Editor joined
+  through its own Unity sign-in, the server carried the account (1 character) over to the proven one, Tolan stood in
+  the world; Bind on the page made him GM at once with the tag. EditMode tests 911 / 911 (`AccountProofTests`: forged,
+  changed, expired, foreign-project tokens refused; the keys read; the carry-over once only; `GmRosterTests`).
 
 ## Work items
 
