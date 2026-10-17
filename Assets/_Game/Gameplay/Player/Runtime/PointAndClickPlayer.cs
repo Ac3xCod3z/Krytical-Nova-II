@@ -162,6 +162,8 @@ namespace KryticalNova.Player
         private const float SameRouteDistance = 0.3f;
         private const float ShortOfOrderDistance = 0.5f;
         private bool hasOrder, orderReplanned;
+        // Jumping a gap on the route (a NavMeshLink between roofs): the move carries on once the jump has landed.
+        private bool crossingLink;
         private Vector3 orderedDestination, orderedPathEnd;
         private Vector3 stallFrom;
         private float stallWatched;
@@ -190,6 +192,8 @@ namespace KryticalNova.Player
             agent = GetComponent<NavMeshAgent>();
             // Runtime navigation is built in Start; do not attach the agent before it exists.
             agent.enabled = false;
+            // A link (a gap between roofs, RoofLinksBuilder) is crossed by a real jump, never slid along.
+            agent.autoTraverseOffMeshLink = false;
             playerInput = GetComponent<PlayerInput>();
             movementSkills = GetComponent<PlayerMovementSkills>();
             resources = GetComponent<PlayerResources>();
@@ -401,6 +405,7 @@ namespace KryticalNova.Player
             {
                 RecoverLostAgent();
                 ApplyMovementSettings();
+                CrossLinks();
                 UpdateArrival();
                 WatchForStall();
                 TurnTowardsTravel();
@@ -1198,6 +1203,35 @@ namespace KryticalNova.Player
             }
             StopMoving();
             CommandMessage?.Invoke("Something is in the way. The move was stopped.");
+        }
+
+        /// <summary>
+        /// Where movement is decided: a route that reaches a gap between roofs (a NavMeshLink) jumps it with the real
+        /// Jump, then carries on to where it was going. Without Jump, or Flux for it, the move stops at the edge and
+        /// says why.
+        /// </summary>
+        private void CrossLinks()
+        {
+            if (agent == null || !agent.isActiveAndEnabled) return;
+            if (crossingLink)
+            {
+                if (jumpMotor != null && jumpMotor.IsBusy) return;
+                crossingLink = false;
+                if (hasOrder) ResumeMoveAfterVault(orderedDestination);
+                return;
+            }
+            if (!agent.isOnNavMesh || !agent.isOnOffMeshLink) return;
+            Vector3 across = agent.currentOffMeshLinkData.endPos;
+            string reason = "Jump is needed to cross that gap.";
+            if (jumpMotor != null && jumpMotor.TryJump(across, raycastLayers, modelForwardOffset, out reason))
+            {
+                crossingLink = true;
+                return;
+            }
+            // Off the link, back on its near end: an agent left on a link would ask again every frame.
+            PlaceOn(agent.currentOffMeshLinkData.startPos);
+            StopMoving();
+            CommandMessage?.Invoke(string.IsNullOrEmpty(reason) ? "Jump is needed to cross that gap." : reason);
         }
 
         /// <summary>Where movement is decided: stops this player where it stands.</summary>
