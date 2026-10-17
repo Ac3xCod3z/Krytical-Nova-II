@@ -55,9 +55,13 @@
 #skills-body { max-height: 480px; }
 .window .kn-header .heading { flex-shrink: 1; }
 
-.step-options-row { flex-direction: row; align-items: center; }
-.step-option { min-height: 22px; height: 22px; min-width: 34px; padding: 0 6px; margin: 0 2px; font-size: 11px; -unity-background-image-tint-color: rgb(28, 40, 54); }
-.step-option.active-step { -unity-background-image-tint-color: rgb(30, 112, 98); color: rgb(255, 255, 255); }
+/* A "+" and the ▾ beside it that picks how many points one press spends (StepDropdown). */
+.step-split { flex-direction: row; align-items: stretch; }
+.step-split > .step-plus { flex-grow: 1; }
+.step-split > .step-caret { min-width: 20px; width: 20px; margin: 0 0 0 2px; padding: 0; font-size: 11px; -unity-text-align: middle-center; -unity-background-image-tint-color: rgb(28, 40, 54); }
+.step-popup { flex-direction: column; padding: 4px; width: 84px; }
+.step-popup-option { min-height: 24px; margin: 1px 0; padding: 0 8px; font-size: 12px; -unity-text-align: middle-center; -unity-background-image-tint-color: rgb(28, 40, 54); }
+.step-popup-option.active-step { -unity-background-image-tint-color: rgb(30, 112, 98); color: rgb(255, 255, 255); }
 
 .stat-row { flex-direction: row; align-items: center; margin-top: 8px; padding: 4px 6px 4px 12px; }
 .stat-row > Label { flex-grow: 1; }

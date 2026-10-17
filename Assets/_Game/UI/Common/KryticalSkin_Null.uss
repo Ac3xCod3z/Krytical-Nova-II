@@ -196,11 +196,15 @@
 .kn-faction-null #menu Button {
     font-size: 15.36px;
 }
-.kn-faction-null .step-option {
+.kn-faction-null .step-split > .step-caret {
     font-size: 14.08px;
     -unity-background-image-tint-color: rgb(48, 32, 54);
 }
-.kn-faction-null .step-option.active-step {
+.kn-faction-null .step-popup-option {
+    font-size: 15.36px;
+    -unity-background-image-tint-color: rgb(48, 32, 54);
+}
+.kn-faction-null .step-popup-option.active-step {
     -unity-background-image-tint-color: rgb(112, 0, 6);
 }
 .kn-faction-null .stat-row .stat-value {
@@ -1498,6 +1502,12 @@
 }
 .kn-faction-null .kiosk-price {
     font-size: 12.8px;
+    background-color: rgba(16, 10, 18, 0.78);
+    -unity-font-definition: url("/Assets/Synty/InterfaceDarkFantasyHUD/Fonts/Markazi/MarkaziText-SemiBold.ttf");
+}
+.kn-faction-null .vendor-left {
+    font-size: 11.52px;
+    color: rgb(230, 100, 106);
     background-color: rgba(16, 10, 18, 0.78);
     -unity-font-definition: url("/Assets/Synty/InterfaceDarkFantasyHUD/Fonts/Markazi/MarkaziText-SemiBold.ttf");
 }

@@ -182,11 +182,11 @@ namespace KryticalNova.UI
         private float nextRepeatTime;
         private const float InitialHoldDelay = 0.35f;
         private const float HoldRepeatInterval = 0.08f;
-        private int statStep = 1;
-        private int skillStep = 1;
-        private static readonly int[] StepValues = { 1, 5, 10 };
-        private readonly Button[] statStepButtons = new Button[3];
-        private readonly Button[] skillStepButtons = new Button[3];
+        // How many points one press of a "+" spends: one choice for the Character window, one for the Arsenal.
+        private readonly StepDropdown statSteps = new StepDropdown("kn.statStep");
+        private readonly StepDropdown skillSteps = new StepDropdown("kn.skillStep");
+        private int statStep => statSteps.Step;
+        private int skillStep => skillSteps.Step;
 
         private readonly string[] combatSkillCardIds = {
             "spiritual-rage",
@@ -274,22 +274,9 @@ namespace KryticalNova.UI
             BindButton("close-character", HideCharacter);
             BindButton("close-skills", HideSkills);
 
-            for (int i = 0; i < StepValues.Length; i++)
-            {
-                int val = StepValues[i];
-                Button statBtn = root.Q<Button>($"stat-step-{val}");
-                statStepButtons[i] = statBtn;
-                if (statBtn != null)
-                {
-                    BindButton($"stat-step-{val}", () => SetStatStep(val));
-                }
-                Button skillBtn = root.Q<Button>($"skill-step-{val}");
-                skillStepButtons[i] = skillBtn;
-                if (skillBtn != null)
-                {
-                    BindButton($"skill-step-{val}", () => SetSkillStep(val));
-                }
-            }
+            statSteps.Picked += OnStepPicked;
+            skillSteps.Picked += OnStepPicked;
+            removeUiCallbacks.Add(() => { statSteps.Picked -= OnStepPicked; skillSteps.Picked -= OnStepPicked; });
 
             for (int index = 0; index < AttributeCount; index++)
             {
@@ -297,20 +284,20 @@ namespace KryticalNova.UI
                 Button button = root.Q<Button>($"allocate-{index}");
                 if (button != null)
                 {
-                    BindHoldable(button, () => AllocateAttribute(attribute));
+                    BindHoldable(button, () => AllocateAttribute(attribute), statSteps);
                 }
             }
 
             Button runUpgrade = root.Q<Button>("upgrade-run");
             if (runUpgrade != null)
             {
-                BindHoldable(runUpgrade, () => UpgradeSkill(MovementSkillId.Run));
+                BindHoldable(runUpgrade, () => UpgradeSkill(MovementSkillId.Run), skillSteps);
             }
 
             Button jumpUpgrade = root.Q<Button>("upgrade-jump");
             if (jumpUpgrade != null)
             {
-                BindHoldable(jumpUpgrade, () => UpgradeSkill(MovementSkillId.Jump));
+                BindHoldable(jumpUpgrade, () => UpgradeSkill(MovementSkillId.Jump), skillSteps);
             }
 
             // Bind combat skill cards
@@ -409,7 +396,7 @@ namespace KryticalNova.UI
                 {
                     var def = combatSkills != null ? combatSkills.GetSkill(skillId) : null;
                     if (def != null) UpgradeCombatSkill(def);
-                });
+                }, skillSteps);
             }
         }
 
@@ -649,6 +636,12 @@ namespace KryticalNova.UI
 
         private void Update()
         {
+            if ((statSteps.IsOpen || skillSteps.IsOpen) && UnityEngine.InputSystem.Keyboard.current != null
+                && UnityEngine.InputSystem.Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                statSteps.Close();
+                skillSteps.Close();
+            }
             if (activeHoldAction != null)
             {
                 if (Time.unscaledTime >= nextRepeatTime)
@@ -694,17 +687,31 @@ namespace KryticalNova.UI
             removeUiCallbacks.Add(() => element.UnregisterCallback(callback));
         }
 
-        private void BindHoldable(Button button, Action onAction)
+        /// <summary>
+        /// A "+" button: a press spends at once and keeps spending while it is held; the ▾ beside it picks how much
+        /// one press spends. The click Unity raises on release belongs to that same press, so it spends nothing more
+        /// (it used to add one extra after a hold). A click with no press before it (a keyboard submit) spends once.
+        /// </summary>
+        private void BindHoldable(Button button, Action onAction, StepDropdown steps)
         {
-            button.clicked += () =>
+            steps?.Attach(button);
+            bool pressed = false;
+            Action clicked = () =>
             {
+                if (pressed) { pressed = false; return; }
                 onAction();
             };
+            button.clicked += clicked;
+            removeUiCallbacks.Add(() => button.clicked -= clicked);
             BindPointer<PointerDownEvent>(button, evt =>
             {
                 if (evt.button != LeftButton) return;
+                pressed = true;
+                onAction();
                 StartHold(onAction);
             });
+            // Released off the button: no click comes, so the next one is a new press.
+            BindPointer<PointerCaptureOutEvent>(button, evt => button.schedule.Execute(() => pressed = false));
             BindPointer<PointerUpEvent>(button, evt =>
             {
                 if (evt.button == LeftButton) StopHold();
@@ -725,28 +732,8 @@ namespace KryticalNova.UI
             activeHoldAction = null;
         }
 
-        private void SetStatStep(int step)
-        {
-            statStep = step;
-            UpdateStepButtons(statStepButtons, statStep);
-            Refresh();
-        }
-
-        private void SetSkillStep(int step)
-        {
-            skillStep = step;
-            UpdateStepButtons(skillStepButtons, skillStep);
-            Refresh();
-        }
-
-        private static void UpdateStepButtons(Button[] buttons, int activeStep)
-        {
-            for (int i = 0; i < buttons.Length; i++)
-            {
-                if (buttons[i] != null)
-                    buttons[i].EnableInClassList("active-step", StepValues[i] == activeStep);
-            }
-        }
+        // Every "+" of the window shows the new step.
+        private void OnStepPicked(int step) => Refresh();
 
         private void BindDragSource(VisualElement source)
         {
@@ -2107,9 +2094,9 @@ namespace KryticalNova.UI
         }
 
         private void ToggleCharacter() => ToggleWindow(characterWindow);
-        private void HideCharacter() { SetVisible(characterWindow, false); StopHold(); CancelDrag(); }
+        private void HideCharacter() { SetVisible(characterWindow, false); StopHold(); CancelDrag(); statSteps.Close(); }
         private void ToggleSkills() => ToggleWindow(skillsWindow);
-        private void HideSkills() { SetVisible(skillsWindow, false); StopHold(); CancelDrag(); }
+        private void HideSkills() { SetVisible(skillsWindow, false); StopHold(); CancelDrag(); skillSteps.Close(); }
         private void ToggleWindow(VisualElement window)
         {
             if (movement != null) movement.ReleaseCameraControl();
