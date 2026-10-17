@@ -232,8 +232,8 @@ namespace KryticalNova.EditorTools
                 Description = $"Unlocks {skill}, the {weaponClass}'s Zenith technique, which is then learned with skill points. Used up when it is read. Found only in the Prime grounds." };
 
         /// <summary>
-        /// The Skill Chips (11 Oct 2026): one for each class's level 60 pair and level 80 pair, and one each for Aegis,
-        /// Killer Instinct and Hot Streak. Their names follow the skills', which are the class skill builder's.
+        /// The Skill Chips (11 Oct 2026): one for each class's level 60 pair and level 80 pair, its two-hit attacks of
+        /// levels 60 and 80 (16 Oct 2026), and one each for Aegis, Killer Instinct and Hot Streak. Their names follow the skills', which are the class skill builder's.
         /// </summary>
         private static IEnumerable<Row> SkillChipRows()
         {
@@ -242,7 +242,7 @@ namespace KryticalNova.EditorTools
                 string className = KryticalNova.Progression.WeaponClasses.DisplayName(weaponClass);
                 foreach (KryticalNova.Progression.ClassSkillSlot slot in CraftItemIds.SkillChipSlots)
                 {
-                    bool prime = slot == KryticalNova.Progression.ClassSkillSlot.S6 || slot == KryticalNova.Progression.ClassSkillSlot.S7;
+                    bool prime = CraftItemIds.IsPrimeChipSlot(slot);
                     string skill = ClassSkillBuilder.SkillName(weaponClass, slot);
                     string asset = $"Chip_{weaponClass}_{slot}";
                     yield return SkillChip(CraftItemIds.SkillChip(weaponClass, slot), asset, skill,

@@ -113,17 +113,7 @@ namespace KryticalNova.EditorTools
 
         private void GiveToAllWithout()
         {
-            int given = 0;
-            foreach (IconTarget each in targets)
-            {
-                if (library.AssignmentOf(each.kind, each.id) != null) continue;
-                var best = library.Suggest(each.request, 1);
-                if (best.Count == 0) continue;
-                if (!library.Assign(each.kind, each.id, best[0].set.id, best[0].number, false, out _)) continue;
-                IconBaker.BakeFor(library, settings, each);
-                given++;
-            }
-            Save();
+            int given = IconPacks.GiveToAllWithout(library, settings, targets);
             message = given == 0 ? "Nothing listed here is without an icon." : $"{given} icon(s) given from the tags. Look them over: they are suggestions, not choices.";
         }
 

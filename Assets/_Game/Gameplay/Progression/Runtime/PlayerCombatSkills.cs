@@ -268,6 +268,9 @@ namespace KryticalNova.Progression
         public void SetAvailableSkills(SkillDefinitionSO[] skills)
         {
             availableSkills = skills ?? Array.Empty<SkillDefinitionSO>();
+            // Unlocks travel as a 64-bit mask: a skill past the 64th would never reach its owner as unlocked.
+            if (availableSkills.Length > 64)
+                Debug.LogError($"[Skills] {availableSkills.Length} skills for {name}: only the first 64 can be unlocked over the network.");
             if (IsSpawned && IsServer) WriteNetState();
             else if (IsSpawned && IsOwner) { ReadNetState(); return; } // raises Changed itself
             Changed?.Invoke();

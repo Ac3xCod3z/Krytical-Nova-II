@@ -13,7 +13,7 @@ namespace KryticalNova.UI.Hud
     {
         public FactionId faction;
 
-        [Tooltip("The Hotbar: slots 1 to 0 with the XP bar, and the Q W E R bar.")]
+        [Tooltip("The Hotbar: slots 1 to 0 with the XP bar, and the Q W E R T bar.")]
         public HotbarChromeView hotbar;
 
         [Tooltip("The player's plate: live portrait, level, HP and Flux.")]

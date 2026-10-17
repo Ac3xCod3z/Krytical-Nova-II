@@ -160,6 +160,27 @@ namespace KryticalNova.EditorTools
             return problems;
         }
 
+        /// <summary>
+        /// Every target without an icon gets the best free match for its tags, baked at once; the library is saved.
+        /// Suggestions, not choices: the owner looks them over in the Icon Library. Returns how many were given.
+        /// </summary>
+        public static int GiveToAllWithout(IconLibrary library, IconTreatmentSettings settings, IEnumerable<IconTarget> targets)
+        {
+            int given = 0;
+            foreach (IconTarget each in targets)
+            {
+                if (library.AssignmentOf(each.kind, each.id) != null) continue;
+                var best = library.Suggest(each.request, 1);
+                if (best.Count == 0) continue;
+                if (!library.Assign(each.kind, each.id, best[0].set.id, best[0].number, false, out _)) continue;
+                IconBaker.BakeFor(library, settings, each);
+                given++;
+            }
+            EditorUtility.SetDirty(library);
+            AssetDatabase.SaveAssetIfDirty(library);
+            return given;
+        }
+
         [MenuItem("Krytical Nova/Icons/Bake Every Assigned Icon")]
         public static void BakeEverything()
         {

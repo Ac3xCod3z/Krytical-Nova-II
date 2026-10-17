@@ -77,8 +77,9 @@
                 <ui:VisualElement name="slot-11" class="hotbar-slot hotbar-slot-letter"><ui:Label text="W" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
                 <ui:VisualElement name="slot-12" class="hotbar-slot hotbar-slot-letter"><ui:Label text="E" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
                 <ui:VisualElement name="slot-13" class="hotbar-slot hotbar-slot-letter"><ui:Label text="R" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
+                <ui:VisualElement name="slot-14" class="hotbar-slot hotbar-slot-letter"><ui:Label text="T" class="slot-key" /><ui:Label text="—" class="slot-name" /><ui:Label text="EMPTY" class="slot-rank" /></ui:VisualElement>
             </ui:VisualElement>
-            <ui:Label name="controls-hint" text="1–0 / Q W E R cast skill (hold to repeat or charge)   ·   Drag to rearrange   ·   Right-click a slot to clear   ·   Esc closes windows" class="controls" picking-mode="Ignore" />
+            <ui:Label name="controls-hint" text="1–0 / Q W E R T cast skill (hold to repeat or charge)   ·   Drag to rearrange   ·   Right-click a slot to clear   ·   Esc closes windows" class="controls" picking-mode="Ignore" />
         </ui:VisualElement>
 
         <!-- Character window -->

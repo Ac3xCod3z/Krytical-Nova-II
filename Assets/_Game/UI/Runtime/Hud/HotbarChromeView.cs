@@ -9,7 +9,7 @@ using Slider = UnityEngine.UI.Slider;
 namespace KryticalNova.UI.Hud
 {
     /// <summary>
-    /// The Hotbar as the faction's Synty action bar: slots 1 to 0 with the XP bar, and the small Q W E R bar
+    /// The Hotbar as the faction's Synty action bar: slots 1 to 0 with the XP bar, and the small Q W E R T bar
     /// beside it. It decides nothing. Each frame it reads what the HUD's own elements show (the slot's icon, key,
     /// cooldown sweep and text, and its state classes; the XP bar) and shows the same on the prefab's parts, so
     /// whatever the Hotbar does, this shows. HP, Flux and the level are on <see cref="VitalsChromeView"/>.
@@ -124,7 +124,7 @@ namespace KryticalNova.UI.Hud
 
         /// <summary>
         /// The dock centres itself on its place by its own middle; the piece's middle is not the main bar's (the
-        /// Q W E R bar hangs off one end). While the player has not placed the dock (the layout editor then sets its
+        /// Q W E R T bar hangs off one end). While the player has not placed the dock (the layout editor then sets its
         /// own translate, and clears it on a reset), the dock is shifted so that the main bar is what is centred.
         /// </summary>
         private void Centre()

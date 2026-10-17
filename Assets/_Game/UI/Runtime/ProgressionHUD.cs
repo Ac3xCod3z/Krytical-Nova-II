@@ -1008,12 +1008,15 @@ namespace KryticalNova.UI
         private static readonly string[] LevelTiers = { "LV 1", "LV 30", "LV 60", "LV 70", "LV 80" };
         private static readonly string[] MoveTiers = { "MOVE" };
         // The lines along a class's skills: the area line (1 and its Zenith technique, 8), the single line (2, 4, the
-        // level 60 hit, 6), the triple line (3, 5, the level 60 flurry, 7). Drawn where both ends are on the tab.
+        // level 60 hit, 6), the two-hit line (levels 1, 30, 60, 80), the triple line (3, 5, the level 60 flurry, 7).
+        // Drawn where both ends are on the tab.
         private static readonly (ClassSkillSlot from, ClassSkillSlot to)[] ClassLinks =
         {
             (ClassSkillSlot.S1, ClassSkillSlot.S8), (ClassSkillSlot.S2, ClassSkillSlot.S4), (ClassSkillSlot.S4, ClassSkillSlot.Lv60Single),
             (ClassSkillSlot.Lv60Single, ClassSkillSlot.S6), (ClassSkillSlot.S3, ClassSkillSlot.S5), (ClassSkillSlot.S5, ClassSkillSlot.Lv60Multi),
             (ClassSkillSlot.Lv60Multi, ClassSkillSlot.S7),
+            (ClassSkillSlot.Lv1TwoHit, ClassSkillSlot.Lv30TwoHit), (ClassSkillSlot.Lv30TwoHit, ClassSkillSlot.Lv60TwoHit),
+            (ClassSkillSlot.Lv60TwoHit, ClassSkillSlot.Lv80TwoHit),
         };
         // The lines among the shared wards: the two Instructor skills lead to the Skill Chip and Dossier ones.
         private static readonly (string from, string to)[] SharedLinks =
@@ -1462,9 +1465,9 @@ namespace KryticalNova.UI
                     dragHint.text = "Available once acquired or crafted.";
                 else
                     dragHint.text = rank == 0 ? $"Learn {skill.displayName}, then drag to a hotbar slot."
-                        : skill.IsCharged ? "Drag to a hotbar slot (1–0, Q W E R), then hold the key to charge."
-                        : skill.holdToRepeat ? "Drag to a hotbar slot (1–0, Q W E R). Hold the key to keep attacking."
-                        : "Drag to a hotbar slot (1–0, Q W E R) to activate.";
+                        : skill.IsCharged ? "Drag to a hotbar slot (1–0, Q W E R T), then hold the key to charge."
+                        : skill.holdToRepeat ? "Drag to a hotbar slot (1–0, Q W E R T). Hold the key to keep attacking."
+                        : "Drag to a hotbar slot (1–0, Q W E R T) to activate.";
             }
 
             VisualElement tile = parts.Tile;

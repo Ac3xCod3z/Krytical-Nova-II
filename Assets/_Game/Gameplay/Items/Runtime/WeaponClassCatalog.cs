@@ -7,7 +7,7 @@ using UnityEngine;
 namespace KryticalNova.Items
 {
     /// <summary>
-    /// The nine weapon classes: what each is called, whose it is, and its ten skills by slot. Built by the class
+    /// The nine weapon classes: what each is called, whose it is, and its skills by slot. Built by the class
     /// skill builder. The creator's Discipline step, the skill system, the GM tools and the starter kit all read
     /// this one asset, so a class is defined in exactly one place.
     /// </summary>
@@ -25,7 +25,7 @@ namespace KryticalNova.Items
             [TextArea] public string summary;
             [Tooltip("What the class's Stance does, for the creator card.")]
             public string stanceSummary;
-            [Tooltip("The class's ten skills in slot order: S1 to S8, Stance, Guard.")]
+            [Tooltip("The class's skills in slot order: S1 to S8, Stance, Guard, the level 60 pair, the four two-hit attacks.")]
             public SkillDefinitionSO[] skills;
 
             public bool IsValid => id != WeaponClassId.None;

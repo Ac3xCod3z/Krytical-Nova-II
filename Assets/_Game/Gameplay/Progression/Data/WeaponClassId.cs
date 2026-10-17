@@ -29,7 +29,7 @@ namespace KryticalNova.Progression
         Ranged = 2
     }
 
-    /// <summary>The ten skills every class has. Ranks and unlocks belong to the slot, so they carry across classes.</summary>
+    /// <summary>The skills every class has. Ranks and unlocks belong to the slot, so they carry across classes.</summary>
     public enum ClassSkillSlot : byte
     {
         None = 0,
@@ -48,13 +48,21 @@ namespace KryticalNova.Progression
         /// are now the level 80 pair, which like the Zenith technique waits for the Prime grounds.
         /// </summary>
         Lv60Single = 11,
-        Lv60Multi = 12
+        Lv60Multi = 12,
+        /// <summary>
+        /// The two-hit attacks, one per tier (owner, 16 Oct 2026): levels 1 and 30 from the Instructor, levels 60 and
+        /// 80 from a Skill Chip like the single and the multi hit of those levels.
+        /// </summary>
+        Lv1TwoHit = 13,
+        Lv30TwoHit = 14,
+        Lv60TwoHit = 15,
+        Lv80TwoHit = 16
     }
 
     public static class WeaponClasses
     {
         public const int Count = 9;
-        public const int SlotCount = 12;
+        public const int SlotCount = 16;
         /// <summary>Classes per faction; a faction's classes are consecutive ids.</summary>
         public const int PerFaction = 3;
 
@@ -69,7 +77,8 @@ namespace KryticalNova.Progression
         {
             ClassSkillSlot.S1, ClassSkillSlot.S2, ClassSkillSlot.S3, ClassSkillSlot.S4, ClassSkillSlot.S5,
             ClassSkillSlot.S6, ClassSkillSlot.S7, ClassSkillSlot.S8, ClassSkillSlot.Stance, ClassSkillSlot.Guard,
-            ClassSkillSlot.Lv60Single, ClassSkillSlot.Lv60Multi
+            ClassSkillSlot.Lv60Single, ClassSkillSlot.Lv60Multi,
+            ClassSkillSlot.Lv1TwoHit, ClassSkillSlot.Lv30TwoHit, ClassSkillSlot.Lv60TwoHit, ClassSkillSlot.Lv80TwoHit
         };
 
         public static bool IsValid(WeaponClassId id) => id >= WeaponClassId.Monoblade && id <= WeaponClassId.Warbow;

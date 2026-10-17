@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace KryticalNova.Crafting
 {
-    /// <summary>The ids of the items crafting is about. Items 9300 to 9499 of the utility table; never renumber.</summary>
+    /// <summary>The ids of the items crafting is about. Items 9300 to 9499 and 9510 to 9527 of the utility table; never renumber.</summary>
     public static class CraftItemIds
     {
         // What the appearance services use up (EconomySettings names them too).
@@ -46,27 +46,39 @@ namespace KryticalNova.Crafting
         public const ushort AegisChip = 9480;
         public const ushort KillerInstinctChip = 9481;
         public const ushort HotStreakChip = 9482;
+        // The Skill Chips of the two-hit attacks (16 Oct 2026): two a weapon class, in the order of the classes, the
+        // level 60 one then the level 80 one. A range of their own, so the chips above keep their ids.
+        public const ushort TwoHitChipFirst = 9510;
+        public const int TwoHitChipsPerClass = 2;
 
         /// <summary>The chip of a class skill, or 0 for a slot that has none.</summary>
         public static ushort SkillChip(KryticalNova.Progression.WeaponClassId weaponClass, KryticalNova.Progression.ClassSkillSlot slot)
         {
-            int offset = slot switch
-            {
-                KryticalNova.Progression.ClassSkillSlot.Lv60Single => 0,
-                KryticalNova.Progression.ClassSkillSlot.Lv60Multi => 1,
-                KryticalNova.Progression.ClassSkillSlot.S6 => 2,
-                KryticalNova.Progression.ClassSkillSlot.S7 => 3,
-                _ => -1,
-            };
             int index = System.Array.IndexOf(KryticalNova.Progression.WeaponClasses.All, weaponClass);
-            return offset < 0 || index < 0 ? (ushort)0 : (ushort)(SkillChipFirst + index * SkillChipsPerClass + offset);
+            if (index < 0) return 0;
+            switch (slot)
+            {
+                case KryticalNova.Progression.ClassSkillSlot.Lv60Single: return (ushort)(SkillChipFirst + index * SkillChipsPerClass);
+                case KryticalNova.Progression.ClassSkillSlot.Lv60Multi: return (ushort)(SkillChipFirst + index * SkillChipsPerClass + 1);
+                case KryticalNova.Progression.ClassSkillSlot.S6: return (ushort)(SkillChipFirst + index * SkillChipsPerClass + 2);
+                case KryticalNova.Progression.ClassSkillSlot.S7: return (ushort)(SkillChipFirst + index * SkillChipsPerClass + 3);
+                case KryticalNova.Progression.ClassSkillSlot.Lv60TwoHit: return (ushort)(TwoHitChipFirst + index * TwoHitChipsPerClass);
+                case KryticalNova.Progression.ClassSkillSlot.Lv80TwoHit: return (ushort)(TwoHitChipFirst + index * TwoHitChipsPerClass + 1);
+                default: return 0;
+            }
         }
+
+        /// <summary>True for a slot whose chip is of level 80 and drops only in the Prime grounds.</summary>
+        public static bool IsPrimeChipSlot(KryticalNova.Progression.ClassSkillSlot slot) =>
+            slot == KryticalNova.Progression.ClassSkillSlot.S6 || slot == KryticalNova.Progression.ClassSkillSlot.S7
+            || slot == KryticalNova.Progression.ClassSkillSlot.Lv80TwoHit;
 
         /// <summary>The slots of a class that open with a Skill Chip.</summary>
         public static readonly KryticalNova.Progression.ClassSkillSlot[] SkillChipSlots =
         {
             KryticalNova.Progression.ClassSkillSlot.Lv60Single, KryticalNova.Progression.ClassSkillSlot.Lv60Multi,
             KryticalNova.Progression.ClassSkillSlot.S6, KryticalNova.Progression.ClassSkillSlot.S7,
+            KryticalNova.Progression.ClassSkillSlot.Lv60TwoHit, KryticalNova.Progression.ClassSkillSlot.Lv80TwoHit,
         };
 
         /// <summary>Every Skill Chip: the class chips in class order, then the three shared ones.</summary>

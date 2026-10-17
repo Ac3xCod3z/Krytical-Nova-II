@@ -27,7 +27,7 @@ namespace KryticalNova.Progression
     }
 
     /// <summary>
-    /// Owns the assignable skill slots (number row 1–0 plus Q/W/E/R) and routes their Input System shortcuts for
+    /// Owns the assignable skill slots (number row 1–0 plus Q/W/E/R/T) and routes their Input System shortcuts for
     /// movement and combat skills. Holding a key repeats skills flagged hold-to-repeat and charges charged skills.
     /// </summary>
     [DefaultExecutionOrder(InputExecutionOrder)]
@@ -35,17 +35,17 @@ namespace KryticalNova.Progression
     [RequireComponent(typeof(PlayerInput), typeof(PlayerMovementSkills))]
     public sealed class PlayerSkillHotbar : MonoBehaviour
     {
-        /// <summary>Slots 0–9 are keys 1–0; the rest are Q, W, E, R.</summary>
+        /// <summary>Slots 0–9 are keys 1–0; the rest are Q, W, E, R, T.</summary>
         public const int NumberSlotCount = 10;
-        public const int SlotCount = 14;
+        public const int SlotCount = 15;
         private const int NoSlot = -1;
         private const int InputExecutionOrder = -50;
         private const string CommandMapName = "SkillCommands";
         private const string GameplayMapName = "PointAndClick";
         private static readonly string[] SlotActionNames =
-            { "Slot1", "Slot2", "Slot3", "Slot4", "Slot5", "Slot6", "Slot7", "Slot8", "Slot9", "Slot10", "SlotQ", "SlotW", "SlotE", "SlotR" };
+            { "Slot1", "Slot2", "Slot3", "Slot4", "Slot5", "Slot6", "Slot7", "Slot8", "Slot9", "Slot10", "SlotQ", "SlotW", "SlotE", "SlotR", "SlotT" };
         // What the local player's slot keys are called on screen: the defaults until their own bindings are read.
-        private static readonly string[] DefaultKeyLabels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Q", "W", "E", "R" };
+        private static readonly string[] DefaultKeyLabels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Q", "W", "E", "R", "T" };
         private static readonly string[] SlotKeyLabels = (string[])DefaultKeyLabels.Clone();
         private const string CharacterActionName = "CharacterWindow";
         private const string SkillsActionName = "SkillsWindow";

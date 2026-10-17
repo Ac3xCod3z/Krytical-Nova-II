@@ -3,8 +3,8 @@
 Twelve Sky 2 reference mapped onto the Synty packs in the project. Transcribed from the owner's `Krytical_Nova_Weapon_Classes.docx`
 (4 Oct 2026) and extended with the decisions taken the same day. Naming: Krytical Nova name first, TS2 name in parentheses.
 
-**Scope:** the nine weapon classes (three per faction), the skill structure every class copies from the Monoblade kit, all 90
-skill names, the weapon meshes each class draws from, creator selection, starting gear, the look-count and grading rule, and the
+**Scope:** the nine weapon classes (three per faction), the skill structure every class copies from the Monoblade kit, every
+skill name, the weapon meshes each class draws from, creator selection, starting gear, the look-count and grading rule, and the
 GM gear generator. Grruzam assets are used for animation only; every weapon mesh is Synty.
 
 ## Decisions (owner, 4 Oct 2026)
@@ -43,7 +43,7 @@ runs on the two Grruzam sets; Warbow runs on `Assets/Synty/AnimationBowCombat`.
 
 ## 2. The structure every class copies
 
-10 attacks + 2 buffs, identical per class; only the Stance stat follows the role. Ten since 11 Oct 2026 (owner): the single hit and the multi hit that were level 60 (S6, S7) are level 80 and wait for the Prime grounds like the Zenith technique, and a new single hit and multi hit took their place at level 60.
+14 attacks + 2 buffs, identical per class; only the Stance stat follows the role. The four two-hit attacks, one for each of levels 1, 30, 60 and 80, since 16 Oct 2026 (owner), on the same rules as the attacks of their level. Ten attacks since 11 Oct 2026 (owner): the single hit and the multi hit that were level 60 (S6, S7) are level 80 and wait for the Prime grounds like the Zenith technique, and a new single hit and multi hit took their place at level 60.
 
 | Slot | Role | Level / source |
 | --- | --- | --- |
@@ -56,13 +56,17 @@ runs on the two Grruzam sets; Warbow runs on `Assets/Synty/AnimationBowCombat`.
 | L60 multi (`Lv60Multi`) | 3-hit, +100–105% bonus, 38 ranks; between S5 and S7 | L60, its own Skill Chip, as above |
 | S6 | single, +101–110% bonus | **L80** since 11 Oct 2026 (was L60), its own Skill Chip: a drop of the Prime grounds only (level 113 and up, 0.02 %) |
 | S7 | 3-hit, +101–110% bonus | **L80** since 11 Oct 2026 (was L60), its own Skill Chip, as S6 |
+| L1 two-hit (`Lv1TwoHit`) | 2-hit, 2.25 s cooldown, 30 ranks; halfway between S2 and S3 in every number | L1 Instructor |
+| L30 two-hit (`Lv30TwoHit`) | 2-hit, 35 ranks; halfway between S4 and S5 | L30 Instructor |
+| L60 two-hit (`Lv60TwoHit`) | 2-hit, +100–105% bonus, 38 ranks; halfway between the L60 single and multi | L60, its own Skill Chip: a drop from Hostiles of level 60 and up (0.1 %) |
+| L80 two-hit (`Lv80TwoHit`) | 2-hit, +101–110% bonus, 40 ranks; halfway between S6 and S7 | L80, its own Skill Chip: a drop of the Prime grounds only (level 113 and up, 0.02 %) |
 | S8 | Zenith technique (TS2: War God): AoE leap, hold-to-repeat, radius 5–7 | L80, its class's own Zenith Dossier (a drop of the Prime grounds; `gm.zenith`) |
 | Stance | +Attack Power % (offense) / +Defense Power % (defense) / +Evasion and Move Speed % (ranged), 28 ranks | L1 |
 | Guard | +Elemental Defense %, 20 ranks | L1 |
 
 Ranged classes keep the same slots: S1 becomes a cone or volley, S8 a called-in strike, reach 8–12 instead of 2.
 
-## 3. All 90 skill names
+## 3. All skill names
 
 Monoblade's former names (TS2 Guanyin Blade) in parentheses.
 
@@ -77,6 +81,10 @@ Monoblade's former names (TS2 Guanyin Blade) in parentheses.
 | S5 | Hostile Takeover (Flash of Rage) | Cease and Desist | Burst Contract |
 | L60 single | Margin Call | Injunction | Deadeye |
 | L60 multi | Short Squeeze | Crackdown | Suppressing Fire |
+| L1 two-hit | Double Entry | Baton Pair | Double Tap |
+| L30 two-hit | Split Decision | Summons | Controlled Pair |
+| L60 two-hit | Countersign | Double Warrant | Crossfire |
+| L80 two-hit | Double Jeopardy | Due Process | Twin Verdict |
 | S6 | Zero Hour (Sunray's Strike) | Lockstep | Longshot |
 | S7 | Liquidation (Phantom Thunder) | Full Enforcement | Terminal Burst |
 | S8 | Market Crash (Thunderous Dragon) | Martial Law | Orbital Call |
@@ -94,6 +102,10 @@ Monoblade's former names (TS2 Guanyin Blade) in parentheses.
 | S5 | Hydraulic Flurry | Overdrive Cycle | Cascade Fire |
 | L60 single | Shear Line | Ram Drive | Flashpoint |
 | L60 multi | Combine Pass | Ratchet Rush | Arc Volley |
+| L1 two-hit | Twin Reap | One-Two Piston | Twin Spark |
+| L30 two-hit | Bale and Bind | Crankshaft | Dipole |
+| L60 two-hit | Gleaning Pass | Twin Clamp | Alternating Current |
+| L80 two-hit | Final Yield | Dual Overload | Double Discharge |
 | S6 | Extinction Blow | Core Breach | Sunspot |
 | S7 | Kill Loop | Three-Phase Rend | Chain Storm |
 | S8 | Terminal Harvest | Zero Point | Extinction Beam |
@@ -111,6 +123,10 @@ Monoblade's former names (TS2 Guanyin Blade) in parentheses.
 | S5 | Frostbite Flurry | Hearthguard Flurry | Volley |
 | L60 single | Bonecleaver | Oathkeeper | Falcon's Eye |
 | L60 multi | Raven's Feast | Vanguard's Tide | Swiftwind |
+| L1 two-hit | Two Ravens | Oath and Answer | Two Feathers |
+| L30 two-hit | Brother's Bite | Twin Vows | Paired Flight |
+| L60 two-hit | Twinblood | Shield and Sword | Twin Talons |
+| L80 two-hit | Fenris Jaws | Kinsguard | Wind and Thunder |
 | S6 | Skysplitter | Dawnguard | Moonshot |
 | S7 | Wolfpack | Highguard Trinity | Stormflight |
 | S8 | Northfall | Kingsfall | Skyfall |

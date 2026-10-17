@@ -43,6 +43,11 @@ namespace KryticalNova.EditorTools
         // The level 60 pair (11 Oct 2026): clips of the pack that no skill used yet. Their hit moments are not measured.
         private const string ClipLv60Single = Katana + "3_Skills/M_katana_Blade@Skill_C.FBX";
         private const string ClipLv60Multi = Katana + "3_Skills/M_katana_Blade@Skill_E.FBX";
+        // The two-hit tier (16 Oct 2026): katana clips no skill used yet, a pair of cuts in each. Hit moments not measured.
+        private const string ClipLv1TwoHit = Katana + "2_Attacks/3__Dash_Attack/M_katana_Blade@Dash_Attack_ver_A.FBX";
+        private const string ClipLv30TwoHit = Katana + "3_Skills/M_katana_Blade@Skill_F.FBX";
+        private const string ClipLv60TwoHit = Katana + "3_Skills/M_Katana_Blade@Skill_I.FBX";
+        private const string ClipLv80TwoHit = Katana + "5_Revenges/Guard_Revenges/M_katana_Blade@Revenge_Guard_Attack_ver_A.FBX";
         private const string ClipThunderousDragon = Katana + "3_Skills/M_katana_Blade@Skill_D_Fix.FBX";
         private const string ClipAzureWall = Katana + "1_Movements/1__Idle/M_katana_Blade@Idle_A_to_B.FBX";
         private const string ClipLightningFlash = Katana + "1_Movements/0__Intro/M_katana_Blade@Intro.FBX";
@@ -55,6 +60,8 @@ namespace KryticalNova.EditorTools
         private const float SingleHitTime = 0.4f;
         private const float AreaHitTime = 0.45f;
         private static readonly float[] TripleHitTimes = { 0.25f, 0.5f, 0.75f };
+        /// <summary>Where the two cuts of a two-hit attack land when its clip has not been measured.</summary>
+        public static readonly float[] DoubleHitTimes = { 0.35f, 0.7f };
         // Last impact of the cast clip, as a fraction of it (measured from the blade hand's speed, frame by frame).
         private const float FuryStrikeHitTime = 0.32f;       // Skill_H: the overhead cut lands on frame 23 of 71
         private const float ThunderousDragonHitTime = 0.52f; // Skill_D: the leap comes down on frame 34 of 65
@@ -67,6 +74,9 @@ namespace KryticalNova.EditorTools
 
         /// <summary>The Monoblade's level 60 single hit and multi hit. Named by slot: they came after the first ten.</summary>
         public const string Lv60SingleId = "Monoblade_Lv60Single", Lv60MultiId = "Monoblade_Lv60Multi";
+        /// <summary>The Monoblade's two-hit attacks, one per tier: named by slot, like the level 60 pair.</summary>
+        public const string Lv1TwoHitId = "Monoblade_Lv1TwoHit", Lv30TwoHitId = "Monoblade_Lv30TwoHit",
+            Lv60TwoHitId = "Monoblade_Lv60TwoHit", Lv80TwoHitId = "Monoblade_Lv80TwoHit";
 
         [MenuItem("Krytical Nova/Progression/Build Blade Skills")]
         public static void Build()
@@ -108,6 +118,20 @@ namespace KryticalNova.EditorTools
                     cooldown: 3f, clip: ClipPhantomThunder, speed: 1.1f, castLock: 0.95f, minBonus: 101, maxBonus: 110,
                     hitTimes: PhantomThunderHitTimes,
                     description: "Three cuts that each land with extra force."),
+                // The two-hit tier (owner, 16 Oct 2026): at each level, halfway between that level's single hit and its
+                // multi hit in every number. Learned like them: levels 1 and 30 from the Instructor, 60 and 80 from a Skill Chip.
+                Attack(Lv1TwoHitId, "Double Entry", 1, null, 1, 30, 11, 175, 213, 527, MeleeReach, MeleeReach, area: false, hits: 2,
+                    cooldown: 2.25f, clip: ClipLv1TwoHit, speed: 1.1f, castLock: 0.92f,
+                    description: "Two quick cuts against your target."),
+                Attack(Lv30TwoHitId, "Split Decision", 30, null, 1, 35, 108, 246, 233, 620, MeleeReach, MeleeReach, area: false, hits: 2,
+                    cooldown: 2.25f, clip: ClipLv30TwoHit, speed: 1.1f, castLock: 0.92f,
+                    description: "Two heavier cuts for seasoned blades."),
+                Attack(Lv60TwoHitId, "Countersign", 60, "Lvl 60 Skill Chip", 1, 38, 125, 263, 241, 629, MeleeReach, MeleeReach, area: false, hits: 2,
+                    cooldown: 2.25f, clip: ClipLv60TwoHit, speed: 1.1f, castLock: 0.92f, minBonus: 100, maxBonus: 105,
+                    description: "Two hard cuts that each land with some extra force."),
+                Attack(Lv80TwoHitId, "Double Jeopardy", 80, "Lvl 80 Skill Chip", 1, 40, 143, 281, 250, 638, MeleeReach, MeleeReach, area: false, hits: 2,
+                    cooldown: 2.25f, clip: ClipLv80TwoHit, speed: 1.1f, castLock: 0.92f, minBonus: 101, maxBonus: 110,
+                    description: "Two cuts that each land with extra force."),
                 Attack("ThunderousDragon", "Market Crash", 80, "Lvl 80 Zenith Dossier", 50, 120, 806, 1203, 121, 434, 5, 7, area: true, hits: 1,
                     cooldown: 2.5f, clip: ClipThunderousDragon, speed: 1f, castLock: 0.95f,
                     hitTimes: new[] { ThunderousDragonHitTime }, leaps: true, holdToRepeat: true,
@@ -222,13 +246,18 @@ namespace KryticalNova.EditorTools
             skill.holdToRepeat = holdToRepeat;
             skill.canCrit = canCrit;
             // Hits land on the skill's own measured impacts when it has them, else on the shared defaults.
-            skill.hitTimesNormalized = hitTimes != null ? (float[])hitTimes.Clone()
-                : hits > 1 ? (float[])TripleHitTimes.Clone() : new[] { area ? AreaHitTime : SingleHitTime };
+            skill.hitTimesNormalized = hitTimes != null ? (float[])hitTimes.Clone() : DefaultHitTimes(hits, area);
             Presentation(skill, clip, speed, castLock);
             skill.castLiftCurve = leaps ? BakeLift(skill.castClip) : new AnimationCurve();
             EditorUtility.SetDirty(skill);
             return skill;
         }
+
+        /// <summary>Where the hits of an attack land on a clip nobody has measured: one, two or three of them.</summary>
+        public static float[] DefaultHitTimes(int hits, bool area) =>
+            hits >= 3 ? (float[])TripleHitTimes.Clone()
+            : hits == 2 ? (float[])DoubleHitTimes.Clone()
+            : new[] { area ? AreaHitTime : SingleHitTime };
 
         /// <summary>
         /// How far a humanoid clip carries the body up and down, in metres over the clip's time. The player's animator

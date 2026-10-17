@@ -116,7 +116,7 @@ MonoBehaviour:
       - kind: 5
         heading: 
         lines:
-        - Always on screen. Ten slots on {key:Slot1} to {key:Slot10} and four more on {key:SlotQ} {key:SlotW} {key:SlotE} {key:SlotR} .
+        - Always on screen. Ten slots on {key:Slot1} to {key:Slot10} and five more on {key:SlotQ} {key:SlotW} {key:SlotE} {key:SlotR} {key:SlotT} .
       - kind: 1
         heading: Filling it
         lines:
