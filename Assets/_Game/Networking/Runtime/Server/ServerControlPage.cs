@@ -192,8 +192,15 @@ namespace KryticalNova.Networking
             sb.Append("],\"players\":[").Append(string.Join(",", players))
               .Append("],\"gms\":[").Append(string.Join(",", masters))
               .Append("],\"serverList\":[").Append(ListJson())
-              .Append("],\"listPublished\":").Append(ControlPageRules.Json(listPublished))
+              .Append("],\"listPublished\":").Append(ControlPageRules.Json(ServerReach.LastPublished))
               .Append(",\"statusPort\":").Append(options.StatusPort)
+              .Append(",\"mode\":").Append(ControlPageRules.Json(options.connectionMode))
+              .Append(",\"publicAddress\":").Append(ControlPageRules.Json(ServerReach.PublicAddress))
+              .Append(",\"relayCode\":").Append(ControlPageRules.Json(ServerReach.RelayCode))
+              .Append(",\"relayNote\":").Append(ControlPageRules.Json(ServerReach.RelayNote))
+              .Append(",\"autoNote\":").Append(ControlPageRules.Json(ServerReach.AutoNote))
+              .Append(",\"load\":").Append(ControlPageRules.Json(ServerPerformanceLog.Summary))
+              .Append(",\"loadSlow\":").Append(ServerPerformanceLog.LastSlowFrames)
               .Append(",\"maxGms\":").Append(GmRoster.MaxGameMasters).Append('}');
             return sb.ToString();
         }
@@ -333,7 +340,10 @@ namespace KryticalNova.Networking
                     answer = OnMain(() => RemoveListing(body.id));
                     break;
                 case "/api/list/publish":
-                    answer = PublishList(); // runs the upload on this request's thread, not the game's
+                    answer = ServerReach.Publish(options, out _); // runs the upload on this request's thread, not the game's
+                    break;
+                case "/api/mode":
+                    answer = OnMain(() => SwitchMode(body.text, body.seconds));
                     break;
                 case "/api/gm/add":
                     answer = OnMain(() => AddGm(body.name, body.password));
@@ -416,17 +426,29 @@ namespace KryticalNova.Networking
 
         // ------------------------------------------------------------------ the servers players see (online step 4)
 
-        // Last upload, for the page: written on the request's thread, read on the game's.
-        private volatile string listPublished = "never from this run";
-
         private string ListJson()
         {
             var rows = new List<string>();
             ServerListing[] list = options.serverList ?? new ServerListing[0];
             for (int i = 0; i < list.Length; i++)
                 rows.Add("{\"id\":" + i + ",\"name\":" + ControlPageRules.Json(list[i].name) + ",\"address\":" + ControlPageRules.Json(list[i].address) +
-                         ",\"port\":" + list[i].port + "}");
+                         ",\"port\":" + list[i].port + ",\"auto\":" + (list[i].IsAuto ? "true" : "false") + "}");
             return string.Join(",", rows);
+        }
+
+        // Direct or Relay (online step 5): saved, then the server restarts into it; the "auto" entry is published again
+        // by itself once it runs.
+        private string SwitchMode(string mode, float seconds)
+        {
+            string wanted = (mode ?? string.Empty).Trim().ToLowerInvariant();
+            if (wanted != ServerLaunchOptions.Direct && wanted != ServerLaunchOptions.Relay) return "Choose direct or relay.";
+            if (wanted == options.connectionMode) return $"The server already runs in {wanted} mode.";
+            if (!options.SaveConnectionMode(wanted, out string error)) return error;
+            string reason = wanted == ServerLaunchOptions.Relay
+                ? "The server is switching to Unity Relay. Join again in a minute."
+                : "The server is switching to direct connections. Join again in a minute.";
+            ServerLifetime.ScheduleShutdown(Mathf.Clamp(seconds, 0f, 3600f), reason, true);
+            return $"Saved: {wanted} mode. The server restarts into it in {Mathf.CeilToInt(Mathf.Clamp(seconds, 0f, 3600f))} seconds.";
         }
 
         private string AddListing(string name, string address, int port)
@@ -452,49 +474,6 @@ namespace KryticalNova.Networking
             list.RemoveAt(index);
             if (!options.SaveServerList(list.ToArray(), out string error)) return error;
             return $"{gone} is off the list. Press PUBLISH LIST so players stop seeing it.";
-        }
-
-        // Uploads servers.json to the list's own bucket as a new release; its "latest" badge is what every game reads.
-        private string PublishList()
-        {
-            ServerListing[] list = options.serverList ?? new ServerListing[0];
-            string folder = Path.Combine(options.ServerFolder, "ServerList");
-            try
-            {
-                Directory.CreateDirectory(folder);
-                var file = new ServerListFile { updated = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"), servers = list };
-                File.WriteAllText(Path.Combine(folder, ServerListFile.FileName), JsonUtility.ToJson(file, true));
-            }
-            catch (Exception e)
-            {
-                return "The list could not be written: " + e.Message;
-            }
-            string ugs = options.UgsPath;
-            if (!File.Exists(ugs)) return $"Unity's command-line tool is not on this PC ({ugs}). The Server Guide says how to put it there and log it in once.";
-            string arguments = $"ccd entries sync \"{folder}\" -b {options.listBucket} -x -r -n \"server list\" -e {options.cloudEnvironment} -p {options.cloudProjectId}";
-            try
-            {
-                var info = new System.Diagnostics.ProcessStartInfo(ugs, arguments) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
-                using (var process = System.Diagnostics.Process.Start(info))
-                {
-                    string output = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
-                    if (!process.WaitForExit(120000)) { process.Kill(); return "The upload took too long and was stopped. Try again."; }
-                    if (process.ExitCode != 0)
-                    {
-                        Debug.LogWarning("[Server] Publishing the server list failed:\n" + output);
-                        return output.Contains("login") || output.Contains("credential")
-                            ? "The upload was refused: log Unity's tool in on this PC once (Server Guide, Publish the server list)."
-                            : "The upload failed; the server's log has the details.";
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                return "The upload could not start: " + e.Message;
-            }
-            listPublished = DateTime.Now.ToString("d MMM HH:mm");
-            Debug.Log($"[Server] Server list published ({list.Length} server(s)).");
-            return $"Published {list.Length} server(s). Games see the list within a few minutes.";
         }
 
         /// <summary>Adds a Game Master and writes the list into the settings file.</summary>

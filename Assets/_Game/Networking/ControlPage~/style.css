@@ -23,7 +23,9 @@ h2 { font: 400 26px Bangers; letter-spacing: .05em; display: inline-block; color
 .tag { font: 700 12px RobotoB; letter-spacing: .14em; background: var(--rose); color: #10131a; padding: 2px 8px; transform: skewX(-8deg); display: inline-block; text-transform: uppercase; }
 .pill { font: 400 22px Bangers; letter-spacing: .06em; padding: 2px 14px; border: 3px solid var(--ink); border-radius: 4px; transform: rotate(-3deg); background: var(--green); color: #10131a; }
 .pill.warn { background: var(--pop); } .pill.down { background: var(--rose); }
+.tag.mode { font-size: 16px; padding: 3px 12px; background: var(--green); } .tag.mode.relay { background: var(--cyan); }
 .chip { border: 2px solid var(--cyan); border-radius: 999px; padding: 2px 12px; }
+.chip.warn { border-color: var(--pop); color: var(--pop); }
 .gm-tag { font: 400 16px Bangers; letter-spacing: .05em; color: #10131a; background: var(--pop); border: 2px solid var(--ink); padding: 0 6px; margin-right: 6px; }
 .on { color: var(--green); } .off { color: var(--muted); }
 .note { color: var(--muted); font-size: 13px; margin: 6px 0; }

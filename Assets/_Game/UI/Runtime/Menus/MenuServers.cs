@@ -143,7 +143,13 @@ namespace KryticalNova.UI.Menus
             shown.Clear();
             shown.AddRange(ServerDirectory.Entries);
             list.Clear();
-            if (empty != null) empty.style.display = shown.Count == 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (empty != null)
+            {
+                empty.style.display = shown.Count == 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                empty.text = ServerDirectory.Fetched
+                    ? "No servers are listed yet. A server's owner puts it on the list from its control page; press REFRESH to look again."
+                    : "Looking for servers...";
+            }
             selected = 0;
             for (int i = 0; i < shown.Count; i++)
             {
@@ -200,6 +206,7 @@ namespace KryticalNova.UI.Menus
                 case ServerEntry.State.Update: text = "UPDATE"; kind = "update"; break;
                 case ServerEntry.State.Off: text = "OFF"; kind = "off"; break;
                 case ServerEntry.State.Here: text = "HERE"; kind = "off"; break;
+                case ServerEntry.State.Relay: text = "RELAY"; kind = "online"; break;
                 default: text = "..."; kind = "off"; break;
             }
             var label = new Label(text);

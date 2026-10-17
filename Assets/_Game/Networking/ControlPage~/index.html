@@ -29,15 +29,19 @@
       <span class="chip" id="chipUptime">up 0 min</span>
       <span class="chip hide-phone" id="chipMap">-</span>
       <span class="chip hide-phone" id="chipBackup">-</span>
+      <span class="chip" id="chipLoad" title="The server's work per frame over the last 5 seconds: it keeps up while frames stay under 33 ms (no slow ones)">-</span>
       <button class="small ghost" id="logout" type="button">Log out</button>
     </div>
   </header>
 
   <section class="panel connect">
-    <h2>How to connect</h2>
-    <p class="note">In the game press F1, type this in IP and Port, press JOIN.</p>
+    <h2>How players reach it</h2>
+    <div class="row"><span class="tag mode" id="modeTag">DIRECT</span>
+      <button class="small cyan" id="switchMode" type="button">Switch to Relay</button></div>
+    <p class="note" id="reachNote"></p>
+    <p class="note" id="autoNote"></p>
+    <p class="note">On the home network (F1 in the game, IP and Port, JOIN):</p>
     <div id="addresses"></div>
-    <p class="note">From outside your house: comes in step 5 (Relay).</p>
   </section>
 
   <section class="panel players">
@@ -92,13 +96,16 @@
       <thead><tr><th>Name</th><th>Address</th><th class="hide-phone">Port</th><th></th></tr></thead>
       <tbody id="listRows"></tbody>
     </table>
-    <p class="note" id="noList">No servers yet: add this one with the address your brothers reach it by.</p>
+    <p class="note" id="noList">No servers yet: press <b>This server</b>, give it a name, Add, then PUBLISH LIST.</p>
     <form class="row gap-top" id="listForm" autocomplete="off">
       <input class="grow" id="listName" placeholder="Name players read" maxlength="32" spellcheck="false">
-      <input class="grow" id="listAddress" placeholder="Address (like 203.0.113.5)" maxlength="253" spellcheck="false">
+      <input class="grow" id="listAddress" placeholder="Address, or auto for this server" maxlength="253" spellcheck="false">
       <input class="seconds" id="listPort" type="number" min="1" max="65534" value="7777">
+      <button class="ghost" id="listAuto" type="button">This server</button>
       <button type="submit">Add</button>
     </form>
+    <p class="note">The address <b>auto</b> means this server: it fills in its own internet address (and its Relay code in
+      Relay mode) every time the list goes out, and publishes the list again by itself when they change.</p>
     <div class="row gap-top"><button class="cyan" id="publishList" type="button">Publish list</button>
       <span class="note" id="listPublished">Last published: -</span></div>
     <p class="note" id="statusPortNote"></p>

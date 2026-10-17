@@ -14,7 +14,7 @@ namespace KryticalNova.Networking
     /// <summary>A line of the Servers window: a server, or "play here", with what its status port last said.</summary>
     public sealed class ServerEntry
     {
-        public enum State { Checking, Online, Off, Update, Full, Here }
+        public enum State { Checking, Online, Off, Update, Full, Here, Relay }
 
         public ServerListing Listing;   // null for "play here"
         public string Name;
@@ -25,7 +25,8 @@ namespace KryticalNova.Networking
 
         public bool PlayHere => Listing == null;
         public string Key => PlayHere ? ServerDirectory.HereKey : Listing.Key;
-        public bool CanJoin => PlayHere || Status == State.Online || Status == State.Checking;
+        // Relay: on Unity Relay, which cannot be asked how the server is; the join itself finds out.
+        public bool CanJoin => PlayHere || Status == State.Online || Status == State.Checking || Status == State.Relay;
     }
 
     /// <summary>
@@ -47,6 +48,9 @@ namespace KryticalNova.Networking
         public static event Action Changed;
 
         public static IReadOnlyList<ServerEntry> Entries => entries;
+
+        /// <summary>True once the published list was asked for since the last <see cref="Refresh"/> (got or not).</summary>
+        public static bool Fetched { get; private set; }
 
         /// <summary>The Editor and test builds: they may play without a server and see a server on this PC.</summary>
         public static bool Development => !GameBuild.IsRelease;
@@ -89,6 +93,7 @@ namespace KryticalNova.Networking
         /// <summary>Fills the list from this PC's copy at once, then fetches the published one and asks every server.</summary>
         public static void Refresh()
         {
+            Fetched = false;
             Build(ReadCache());
             if (runner == null)
             {
@@ -128,6 +133,8 @@ namespace KryticalNova.Networking
                     }
                 }
             }
+            Fetched = true;
+            Changed?.Invoke();
             ProbeAll();
         }
 
@@ -139,7 +146,8 @@ namespace KryticalNova.Networking
                 {
                     if (listing == null || ServerListFile.Problem(listing.name, listing.address, listing.port) != null) continue;
                     if (entries.Count >= ServerListFile.MaxServers) break;
-                    entries.Add(new ServerEntry { Listing = listing, Name = listing.name, Note = listing.address + " : " + listing.port });
+                    if (!ServerListing.IsRelayCode(listing.relay)) listing.relay = "";
+                    entries.Add(new ServerEntry { Listing = listing, Name = listing.name, Note = Where(listing) });
                 }
             if (Development)
             {
@@ -175,7 +183,10 @@ namespace KryticalNova.Networking
                 using (var udp = new UdpClient())
                 {
                     udp.Client.ReceiveTimeout = ProbeTimeoutMs;
-                    IPAddress[] addresses = Dns.GetHostAddresses(listing.address);
+                    // The server on this PC is asked on this PC (the router may not loop its public address back); an
+                    // address the server could not fill in yet has nobody to ask.
+                    if (!listing.OnThisMachine && listing.IsAuto) return (null, -1);
+                    IPAddress[] addresses = listing.OnThisMachine ? new[] { IPAddress.Loopback } : Dns.GetHostAddresses(listing.address);
                     if (addresses.Length == 0) return (null, -1);
                     var target = new IPEndPoint(addresses[0], listing.StatusPort);
                     byte[] request = ServerStatusProtocol.Request();
@@ -194,13 +205,22 @@ namespace KryticalNova.Networking
 
         private static void Apply(ServerEntry entry, ServerStatusProtocol.Status status, int ms)
         {
-            if (status == null)
+            if (status == null && entry.Listing.ViaRelay && !entry.Listing.OnThisMachine)
+            {
+                entry.Status = ServerEntry.State.Relay;
+                entry.Note = "Through Unity Relay   ·   players and build show once you are in";
+            }
+            else if (status == null)
             {
                 entry.Status = ServerEntry.State.Off;
-                entry.Note = $"{entry.Listing.address} : {entry.Listing.port}   ·   not answering (off, or not reachable from here)";
+                entry.Note = entry.Listing.OnThisMachine
+                    ? "Your server on this PC   ·   not running"
+                    : $"{Where(entry.Listing)}   ·   not answering (off, or not reachable from here)";
             }
             else
             {
+                // A server that answers says how it is reached now: its Relay code is newer than the published list's.
+                entry.Listing.relay = ServerListing.IsRelayCode(status.relay) ? status.relay : "";
                 entry.Players = status.players;
                 entry.Max = status.max;
                 entry.Build = status.build;
@@ -211,9 +231,16 @@ namespace KryticalNova.Networking
                     ? $"Runs {GameBuild.Describe(status.build)}, you have {GameBuild.Describe(GameBuild.Version)}: open the launcher to update."
                     : entry.Status == ServerEntry.State.Full
                         ? $"Full ({status.players} of {status.max}). Try again in a little while."
-                        : $"{entry.Listing.address} : {entry.Listing.port}";
+                        : Where(entry.Listing);
             }
             Changed?.Invoke();
+        }
+
+        /// <summary>How a server is reached, for its line in the window.</summary>
+        private static string Where(ServerListing listing)
+        {
+            string how = listing.ViaRelay ? "through Unity Relay" : listing.address + " : " + listing.port;
+            return listing.OnThisMachine ? "Your server on this PC   ·   " + how : how;
         }
 
         /// <summary>Hosts the download and brings probe results back to the game's thread.</summary>

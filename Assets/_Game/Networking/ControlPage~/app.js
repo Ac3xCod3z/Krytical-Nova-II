@@ -212,14 +212,28 @@ function showGms(gms, max) {
   }
 }
 
-function showList(list, published, statusPort) {
+let currentMode = "direct";
+function showReach(s) {
+  currentMode = s.mode || "direct";
+  const relay = currentMode === "relay";
+  $("modeTag").textContent = relay ? "RELAY" : "DIRECT";
+  $("modeTag").classList.toggle("relay", relay);
+  $("switchMode").textContent = relay ? "Switch to Direct" : "Switch to Relay";
+  const where = s.publicAddress ? "This PC's internet address: " + s.publicAddress + "." : "This PC's internet address: not looked up yet.";
+  $("reachNote").textContent = relay
+    ? (s.relayNote || "Asking Unity Relay for a place...") + " No router work needed."
+    : where + " Players come to it on UDP ports " + s.port + " and " + s.statusPort + ", which the router forwards to this PC.";
+  $("autoNote").textContent = s.autoNote || "";
+}
+
+function showList(list, published, statusPort, publicAddress) {
   const rows = $("listRows");
   rows.textContent = "";
   $("noList").hidden = list.length > 0;
   for (const s of list) {
     const row = document.createElement("tr");
     cell(row, s.name);
-    cell(row, s.address);
+    cell(row, s.auto ? "auto (this server" + (publicAddress ? ": " + publicAddress : "") + ")" : s.address);
     cell(row, String(s.port), "hide-phone");
     const td = cell(row, "");
     const remove = document.createElement("button");
@@ -235,7 +249,7 @@ function showList(list, published, statusPort) {
   }
   $("listPublished").textContent = "Last published: " + published;
   $("statusPortNote").textContent = "This server tells the Servers window it is on, its players and its build on UDP port " + statusPort +
-    " (the game port + 1). From outside the house both ports are forwarded (step 5).";
+    " (the game port + 1). In Direct mode the router forwards both ports to this PC; in Relay mode players see RELAY instead.";
 }
 
 async function refresh() {
@@ -246,6 +260,8 @@ async function refresh() {
     $("chipPlayers").textContent = s.players.length + " / " + s.maxPlayers + " players";
     $("chipUptime").textContent = "up " + minutes(s.uptime);
     $("chipMap").textContent = s.map;
+    $("chipLoad").textContent = s.load || "-";
+    $("chipLoad").classList.toggle("warn", (s.loadSlow || 0) > 0);
     $("chipBackup").textContent = s.nextBackup >= 0 ? "next backup in " + minutes(s.nextBackup) : "backups at start and stop";
     $("lastBackup").textContent = "Last backup: " + s.lastBackup + " · " + s.backupsKept + " kept";
     const pill = $("pill");
@@ -259,7 +275,8 @@ async function refresh() {
     showAddresses(s.addresses, s.port);
     showPlayers(s.players);
     showGms(s.gms || [], s.maxGms || 3);
-    showList(s.serverList || [], s.listPublished || "-", s.statusPort || 0);
+    showReach(s);
+    showList(s.serverList || [], s.listPublished || "-", s.statusPort || 0, s.publicAddress || "");
     await refreshLog();
   } catch (e) {
     if (check) { $("pill").textContent = "NO ANSWER"; $("pill").className = "pill down"; }
@@ -322,6 +339,19 @@ $("listForm").addEventListener("submit", async (event) => {
   const data = await act(event.submitter, "/api/list/add",
     { name: $("listName").value.trim(), address: $("listAddress").value.trim(), port: parseInt($("listPort").value, 10) || 7777 });
   if (data && / is on the list\./.test(data.answer)) { $("listName").value = ""; $("listAddress").value = ""; }
+});
+$("listAuto").addEventListener("click", () => {
+  $("listAddress").value = "auto";
+  if (!$("listName").value.trim()) $("listName").value = $("serverName").textContent.slice(0, 32);
+});
+$("switchMode").addEventListener("click", async (e) => {
+  const toRelay = currentMode !== "relay";
+  const seconds = Math.max(0, Math.min(3600, parseInt($("seconds").value, 10) || 0));
+  const text = toRelay
+    ? "Players will come through Unity Relay: no router work, and your address stays hidden. The server saves everyone, restarts in " + seconds + " seconds and publishes the list with its Relay code by itself."
+    : "Players will come straight to this PC through the router's forwarded ports. The server saves everyone, restarts in " + seconds + " seconds and publishes the list with this PC's address by itself.";
+  if (await ask(toRelay ? "Switch to Relay?" : "Switch to Direct?", text, false) === null) return;
+  act(e.currentTarget, "/api/mode", { text: toRelay ? "relay" : "direct", seconds: seconds });
 });
 $("publishList").addEventListener("click", async (e) => {
   const button = e.currentTarget;

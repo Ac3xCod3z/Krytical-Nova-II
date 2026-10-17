@@ -75,7 +75,7 @@ namespace KryticalNova.Networking
 
         /// <summary>True when this is the owner's server on this PC and the game knows how to start it.</summary>
         public static bool CanStart(ServerListing listing) =>
-            listing != null && Folder != null && listing.port == Port && IsThisPc(listing.address);
+            listing != null && Folder != null && listing.port == Port && (listing.OnThisMachine || IsThisPc(listing.address));
 
         /// <summary>True while a server this game started is still running.</summary>
         public static bool Running => started != null && !started.HasExited;

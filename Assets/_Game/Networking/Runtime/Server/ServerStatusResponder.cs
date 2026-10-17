@@ -66,6 +66,7 @@ namespace KryticalNova.Networking
                 build = GameBuild.Version,
                 players = players,
                 max = options.maxPlayers,
+                relay = ServerReach.RelayCode,
             });
         }
 

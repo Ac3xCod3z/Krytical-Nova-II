@@ -106,9 +106,13 @@ namespace KryticalNova.EditorTools
         /// build, so the server carries the number of the release staged last (none: a development build). True when the
         /// build succeeded; the report is written either way.
         /// </summary>
-        public static bool Build(Os os) => ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(os));
+        public static bool Build(Os os) => Build(os, null);
 
-        private static bool BuildAsIs(Os os)
+        /// <summary>The same, into another folder (the measuring tools' own server, chunk 7); null is the owner's server folder.</summary>
+        public static bool Build(Os os, string intoFolder) =>
+            ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(os, intoFolder));
+
+        private static bool BuildAsIs(Os os, string intoFolder)
         {
             string missing = ModuleMissing(os);
             if (missing != null)
@@ -127,14 +131,16 @@ namespace KryticalNova.EditorTools
 
             // Only our own output folder: a file left from an older build must not travel with this one. The server's
             // settings file is the owner's, not the build's: it is kept across the rebuild.
-            string folder = OutputFolder(os);
+            string folder = intoFolder ?? OutputFolder(os);
             string busy = FolderBusy(folder);
             if (busy != null)
             {
                 Debug.LogError("[Build] " + busy);
                 return false;
             }
-            string settings = Path.Combine(folder, SettingsFileName), keptSettings = Path.Combine(BuildRoot, os + "-" + SettingsFileName + ".kept");
+            string settings = Path.Combine(folder, SettingsFileName), keptSettings = intoFolder == null
+                ? Path.Combine(BuildRoot, os + "-" + SettingsFileName + ".kept")
+                : folder.TrimEnd('/', '\\') + "-" + SettingsFileName + ".kept";
             if (File.Exists(settings)) File.Copy(settings, keptSettings, true);
             if (Directory.Exists(folder)) Directory.Delete(folder, true);
             Directory.CreateDirectory(folder);
