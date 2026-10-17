@@ -1,4 +1,5 @@
-// A page of the menus' comic book (MenuBook): the picture of a menu screen on its face, bare paper on its back.
+// A page of the menus' comic book (MenuBook): the picture of a menu screen on its face, paper on its back, with the
+// book's comic page printed on it in ink when it has one (MenuBookSettings.pageBackArt), its right edge at the fold.
 // Where the page turns away from the reader it is shaded the comic way, with Ben-Day dots on the shared screen grid
 // rather than a gradient. Unlit: the book is drawn by its own camera and needs no light.
 Shader "KryticalNova/UI/Comic Page"
@@ -16,6 +17,11 @@ Shader "KryticalNova/UI/Comic Page"
         _DotScale ("Dot Size Multiplier", Range(0.5, 8)) = 2
         _Border ("Ink Line Round The Page (share of its height)", Range(0, 0.05)) = 0.008
         _Aspect ("Page Width Over Height", Float) = 1.7778
+        _BackArt ("Picture On The Back", 2D) = "white" {}
+        _BackInk ("How Dark The Back Picture Prints (0 = none)", Range(0, 1)) = 0
+        _BackWidth ("Back Picture Width Over Page Width", Float) = 0.375
+        _BackFold ("Fold Is At UV x = 1 (0 = at x = 0)", Range(0, 1)) = 0
+        _BackMirror ("Back Picture Mirrored (a turn seen in a mirror)", Range(0, 1)) = 0
     }
 
     SubShader
@@ -38,6 +44,8 @@ Shader "KryticalNova/UI/Comic Page"
 
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
+            TEXTURE2D(_BackArt);
+            SAMPLER(sampler_BackArt);
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _MainTex_ST;
@@ -51,6 +59,10 @@ Shader "KryticalNova/UI/Comic Page"
                 float _DotScale;
                 float _Border;
                 float _Aspect;
+                half _BackInk;
+                float _BackWidth;
+                half _BackFold;
+                half _BackMirror;
             CBUFFER_END
 
             struct Attributes
@@ -97,8 +109,15 @@ Shader "KryticalNova/UI/Comic Page"
                 half3 face = lerp(picture, picture * _Ink.rgb * 1.6, ComicHalftone(pixel, away * _Shade) * 0.85);
                 face *= 1.0 - away * _Shade * 0.25;
 
-                // Back: paper, a light field of dots at rest that thickens where the page curls.
-                half3 back = lerp(_Paper.rgb, _Tint.rgb, ComicHalftone(pixel, saturate(_Rest + away * _Shade)));
+                // Back: paper, with the book's comic page printed on it beside the fold, and a light field of dots
+                // at rest (not over the picture) that thickens where the page curls.
+                float fromFold = _BackFold > 0.5 ? 1.0 - input.uv.x : input.uv.x;
+                float across = fromFold / max(_BackWidth, 0.0001);
+                half onArt = step(across, 1.0) * step(0.0001, _BackInk);
+                float2 artUv = float2(_BackMirror > 0.5 ? across : 1.0 - across, input.uv.y);
+                half3 art = SAMPLE_TEXTURE2D(_BackArt, sampler_BackArt, saturate(artUv)).rgb;
+                half3 paper = _Paper.rgb * lerp(1.0, art, _BackInk * onArt);
+                half3 back = lerp(paper, _Tint.rgb, ComicHalftone(pixel, saturate(_Rest * (1.0 - onArt) + away * _Shade)));
                 float2 edge = min(input.uv, 1.0 - input.uv);
                 edge.x *= _Aspect;
                 half rule = step(min(edge.x, edge.y), _Border);
