@@ -72,7 +72,7 @@ in price. One subscription product only.
 **The season pass** has three tiers: free (everyone), middle, premium. Sold on its own for those
 without the subscription; a season is a one-off purchase with the season's id.
 
-**One-off goods** (the shape the plan already handles): Autopilot Chips (settles the open point:
+**One-off goods** (the shape the plan already handles): Autopilot Chips (since 17 Oct 2026 the 3-, 14- and 30-day Autopilot Passes; settles the open point:
 sold), Autobuff Passes (3, 14 and 30 days; the 3-day one also drops from Hostiles), Chroma Cells and Prism Cells, the Restyle, Training and like passes, XP boosters for
 characters and for pets, a timed pass to a grinding zone (a levelling zone with better spawn rates),
 paid costumes, paid emotes.

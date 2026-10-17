@@ -75,7 +75,8 @@ _Game/
 │                          (future: Architecture/ Events/ Services/ Pooling/ Utilities/ Extensions/)
 ├── Gameplay/
 │   ├── Autopilot/         Runtime/ (PlayerAutopilot = the server's flag, zone and time; AutopilotController and MagnetController
-│   │                      run on the player's own game; AutopilotPreferences, MagnetRules)  Data/ + Data/Assets/ (AutopilotSettings)
+│   │                      run on the player's own game; AutopilotPreferences, MagnetRules; PassClock = the clock of the
+│   │                      Autopilot and Autobuff Passes)  Data/ + Data/Assets/ (AutopilotSettings)
 │   │                      Tests/Editor/
 │   ├── Combat/            Runtime/ (melee, skill attacks, duels, who is hostile to whom; PlayerCombatState = whether a player is
 │   │                      in a fight, decided by the server and told to every machine; PlayerSkillQueue = a skill asked for out
@@ -112,7 +113,8 @@ _Game/
 │   │                      KNEmeraldPlayerBridge)  Editor/ (HostileAssetBuilder, HostileZoneBuilder)  Shaders/ (HostileDissolve:
 │   │                      the corpse dissolve, on the All In 1 Shader Nodes library)  Prefabs/ (Hostile_<Species>: generated,
 │   │                      one per species, every one a network prefab)  Tests/Editor/
-│   ├── Items/             Runtime/ (+Visuals/; world drops, pickup; gear state and progression rules)  Data/ (GearProgressionSettings,
+│   ├── Items/             Runtime/ (+Visuals/; world drops, pickup; gear state and progression rules; PlayerLoadouts and
+│   │                      LoadoutRules = the ten saved sets of gear)  Data/ (GearProgressionSettings,
 │   │                      GearThemeLibrary)  Data/Assets/ (items, part catalog, gear dictionary, GearThemes = one colour theme per
 │   │                      gear set, GearMaterials/ = forge materials, Prefabs/Weapons/ = weapon models, each with its glow zone and reach)
 │   │                      Editor/ (also GearThemeBuilder, WeaponGlowZoneBaker)  Prefabs/ (WorldDrop, CredsStack = the cash a drop of Creds shows)  Tests/Editor/
