@@ -49,6 +49,9 @@ namespace KryticalNova.Networking
 
         public static IReadOnlyList<ServerEntry> Entries => entries;
 
+        /// <summary>True once the published list was asked for since the last <see cref="Refresh"/> (got or not).</summary>
+        public static bool Fetched { get; private set; }
+
         /// <summary>The Editor and test builds: they may play without a server and see a server on this PC.</summary>
         public static bool Development => !GameBuild.IsRelease;
 
@@ -90,6 +93,7 @@ namespace KryticalNova.Networking
         /// <summary>Fills the list from this PC's copy at once, then fetches the published one and asks every server.</summary>
         public static void Refresh()
         {
+            Fetched = false;
             Build(ReadCache());
             if (runner == null)
             {
@@ -129,6 +133,8 @@ namespace KryticalNova.Networking
                     }
                 }
             }
+            Fetched = true;
+            Changed?.Invoke();
             ProbeAll();
         }
 
