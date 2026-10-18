@@ -53,6 +53,11 @@ exists, what the port will need, and in what order, so that work done before the
 
 ## To decide when the port starts
 
+- **Batching on the phone** (batching pass, 18 Oct 2026; `Design/Rendering-Bible.md` section 7, "Batching"):
+  `Mobile_RPAsset` has the GPU Resident Drawer off and the Forward path. Measure on a device: the Resident Drawer
+  on Vulkan with Forward+ against the SRP Batcher with static batching (which merges meshes and so needs LODGroups,
+  not Mesh LOD). Run the Batching Report on each zone; the shadow bands of Low apply as they are.
+
 - Android first, or both at once?
 - Which phones are the floor (the oldest that must hold 30 frames a second)?
 - Does the phone get every system, or a lighter set at first?
