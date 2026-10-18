@@ -1477,6 +1477,9 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(442)]
         private void GrassDebug(GrassDebugView view = GrassDebugView.Off) => Run($"grass.debug {(int)view}");
 
+        [TabGroup(Tabs, WorldTab), Title("Batching"), Button("Batching Report (what the Resident Drawer misses)"), EnableIf(nameof(IsReady)), PropertyOrder(443)]
+        private void BatchingReport() => Run("gm.batching");
+
         private enum KitRarity { Common, Uncommon, Rare, Epic }
         private enum ForgeSlot { FirstInPack, Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape }
         private enum SerumKind { Strength, Vitality, Agility, Spirit, Strike, Ward }
