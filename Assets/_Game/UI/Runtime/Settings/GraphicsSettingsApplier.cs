@@ -149,6 +149,8 @@ namespace KryticalNova.UI
             ComicStyleRuntime.OutlinesEnabled = true;
             VolumetricQualityRuntime.RestoreAuthored();
             GrassRenderer.DensityMultiplier = 1f;
+            ShadowBands.RestoreAll();
+            ResidentDrawerOcclusion.Restore();
             if (instance == this) instance = null;
         }
 

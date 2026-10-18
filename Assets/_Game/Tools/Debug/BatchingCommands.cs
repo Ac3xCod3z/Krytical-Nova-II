@@ -24,5 +24,31 @@ namespace KryticalNova.DevTools
             catch (System.Exception e) { return result.Summary + "\nThe report could not be written: " + e.Message; }
             return result.Summary + "\nWritten to " + path;
         }
+
+        [Command("gm.batching", "Switch one of the batching pass's changes, to measure with and without (gm.bench): " +
+                                "shadows (small world meshes cast no shadow on Low and Medium) or occlusion (the GPU Resident Drawer's occlusion culling).")]
+        private static string Switch(string change, bool on)
+        {
+            switch (change.Trim().ToLowerInvariant())
+            {
+                case "shadows":
+                    ShadowBands.Enabled = on;
+                    Note("shadows", on);
+                    return (on ? "Shadow bands on: " + ShadowBands.Lifted + " small world meshes cast no shadow at this preset."
+                               : "Shadow bands off: every world mesh casts its shadow.");
+                case "occlusion":
+                    ResidentDrawerOcclusion.On = on;
+                    Note("occlusion", on);
+                    return on ? "GPU Resident Drawer occlusion culling on." : "GPU Resident Drawer occlusion culling off.";
+                default:
+                    return "Unknown change '" + change + "': shadows or occlusion.";
+            }
+        }
+
+        // Numbers before and after a switch are not to be compared: the log says what is in force.
+        private static void Note(string change, bool on)
+        {
+            if (PerformanceLog.IsRecording) PerformanceLog.Change("batching", change + "=" + (on ? "on" : "off"));
+        }
     }
 }

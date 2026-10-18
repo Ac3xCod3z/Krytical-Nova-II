@@ -46,6 +46,8 @@ namespace KryticalNova.Rendering
             [Range(0.1f, 4f)] public float meshLodThreshold;
             [Tooltip("Things smaller than this share of the screen (percent) are not drawn (GPU Resident Drawer). 0 draws everything.")]
             [Range(0f, 5f)] public float smallMeshCullPercent;
+            [Tooltip("World meshes smaller than this (metres, their largest side) cast no shadow (ShadowBands). 0 keeps every shadow.")]
+            [Range(0f, 5f)] public float noShadowBelowSize;
         }
 
         [Header("World meshes, by kind")]
@@ -70,8 +72,8 @@ namespace KryticalNova.Rendering
         [Header("Graphics presets (the game's Low, Medium, High, Ultra)")]
         public Tier[] tiers =
         {
-            new Tier { preset = "Low", lodBias = 0.7f, meshLodThreshold = 3f, smallMeshCullPercent = 0.6f },
-            new Tier { preset = "Medium", lodBias = 1.2f, meshLodThreshold = 2f, smallMeshCullPercent = 0.35f },
+            new Tier { preset = "Low", lodBias = 0.7f, meshLodThreshold = 3f, smallMeshCullPercent = 0.6f, noShadowBelowSize = 2f },
+            new Tier { preset = "Medium", lodBias = 1.2f, meshLodThreshold = 2f, smallMeshCullPercent = 0.35f, noShadowBelowSize = 1f },
             new Tier { preset = "High", lodBias = 2f, meshLodThreshold = 1.2f, smallMeshCullPercent = 0.15f },
             new Tier { preset = "Ultra", lodBias = 3f, meshLodThreshold = 0.8f, smallMeshCullPercent = 0f },
         };
@@ -121,6 +123,7 @@ namespace KryticalNova.Rendering
             QualitySettings.meshLodThreshold = tier.meshLodThreshold;
             if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset urp)
                 urp.smallMeshScreenPercentage = tier.smallMeshCullPercent;
+            ShadowBands.SetBelowSize(tier.noShadowBelowSize);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
