@@ -13,31 +13,34 @@ namespace KryticalNova.Autopilot
     /// <summary>
     /// The server's side of Autopilot. Autopilot itself runs on the player's own game and only presses the
     /// buttons a player could (<see cref="AutopilotController"/>); the server keeps three things: whether it is
-    /// on, where it was switched on, and how much Autopilot time the character has left. It refuses to start
-    /// with no time or outside a Hostile Zone, and switches it off when the time runs out, the player dies,
-    /// leaves the zone, or is attacked by another player. Everyone sees the on flag (the AUTO tag on a namecard).
-    /// An Autopilot Chip adds time; the time and the character's choices are saved with the character.
+    /// on, where it was switched on, and when the character's Autopilot time ends. It refuses to start with no
+    /// time or outside a Hostile Zone, and switches it off when the time runs out, the player dies, leaves the
+    /// zone, or is attacked by another player. Everyone sees the on flag (the AUTO tag on a namecard).
+    /// An Autopilot Pass (3, 14 or 30 days, owner 15 Oct 2026) lengthens the time by the clock, as a Kiosk Permit
+    /// opens a Kiosk: the days pass whether Autopilot is on or not, and whether the character plays or not. The
+    /// time and the character's choices are saved with the character.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PlayerAutopilot : NetworkBehaviour, ISaveParticipant, IItemUseHandler
     {
         private const float TickSeconds = 0.5f;
-        private const float TimeSendSeconds = 5f;
         private const int MaxPreferencesLength = 4096;
 
         [SerializeField] private AutopilotSettings settings;
 
         private readonly NetworkVariable<bool> netOn = new NetworkVariable<bool>(writePerm: NetworkVariableWritePermission.Server);
-        private readonly NetworkVariable<float> netSeconds = new NetworkVariable<float>(writePerm: NetworkVariableWritePermission.Server);
+        // When the time ends, UTC ticks. Only the owner reads it: how long another player may hunt is theirs.
+        private readonly NetworkVariable<long> netExpiresUtc = new NetworkVariable<long>(default,
+            NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
         private readonly NetworkVariable<Vector3> netAnchor = new NetworkVariable<Vector3>(writePerm: NetworkVariableWritePermission.Server);
 
         private CombatEntity entity;
         private bool on;
-        private float seconds;
+        private long expiresUtc;
         private Vector3 anchor;
         private HostileZone zone;
         private bool free;                 // GM: runs without using time
-        private float nextTick, nextTimeSend;
+        private float nextTick;
         private AutopilotPreferences preferences = new AutopilotPreferences();
 
         /// <summary>Raised on every peer when Autopilot goes on or off, or the time or the choices change.</summary>
@@ -47,8 +50,14 @@ namespace KryticalNova.Autopilot
 
         public AutopilotSettings Settings => settings;
         public bool IsOn => IsSpawned ? netOn.Value : on;
-        /// <summary>Autopilot time left, seconds. On a client it is the server's last word, a few seconds old.</summary>
-        public float SecondsLeft => IsSpawned && !IsServer ? netSeconds.Value : seconds;
+        /// <summary>When the Autopilot time ends, UTC ticks. On the owner's client it is the server's word.</summary>
+        public long ExpiresUtc => IsSpawned && !IsServer ? netExpiresUtc.Value : expiresUtc;
+        /// <summary>True while the character has Autopilot time.</summary>
+        public bool HasTime => PassClock.IsActive(DateTime.UtcNow.Ticks, ExpiresUtc);
+        /// <summary>Autopilot time left, seconds.</summary>
+        public float SecondsLeft => PassClock.SecondsLeft(DateTime.UtcNow.Ticks, ExpiresUtc);
+        /// <summary>"Autopilot: 2d 13h left." or "No Autopilot time: use an Autopilot Pass."</summary>
+        public string TimeLeftLine => PassClock.TimeLeftLine("Autopilot", DateTime.UtcNow.Ticks, ExpiresUtc);
         /// <summary>Where it was switched on: the middle of a hunt by radius.</summary>
         public Vector3 Anchor => IsSpawned ? netAnchor.Value : anchor;
         /// <summary>This character's choices. On the owner and where the game is decided; defaults elsewhere.</summary>
@@ -74,11 +83,11 @@ namespace KryticalNova.Autopilot
         {
             base.OnNetworkSpawn();
             netOn.OnValueChanged += OnNetChanged;
-            netSeconds.OnValueChanged += OnNetSecondsChanged;
+            netExpiresUtc.OnValueChanged += OnNetExpiresChanged;
             if (IsServer)
             {
                 netOn.Value = on = false;
-                netSeconds.Value = seconds;
+                netExpiresUtc.Value = expiresUtc;
                 if (!IsOwner) PreferencesRpc(preferences.ToJson());
             }
         }
@@ -86,12 +95,12 @@ namespace KryticalNova.Autopilot
         public override void OnNetworkDespawn()
         {
             netOn.OnValueChanged -= OnNetChanged;
-            netSeconds.OnValueChanged -= OnNetSecondsChanged;
+            netExpiresUtc.OnValueChanged -= OnNetExpiresChanged;
             base.OnNetworkDespawn();
         }
 
         private void OnNetChanged(bool previous, bool current) => Changed?.Invoke();
-        private void OnNetSecondsChanged(float previous, float current) => Changed?.Invoke();
+        private void OnNetExpiresChanged(long previous, long current) => Changed?.Invoke();
 
         // ------------------------------------------------------------------ the owner asks
 
@@ -143,7 +152,7 @@ namespace KryticalNova.Autopilot
         {
             if (settings == null) return "Autopilot is not set up.";
             if (entity != null && !entity.IsAlive) return "You cannot start Autopilot while defeated.";
-            if (!free && seconds <= 0f) return "No Autopilot time left. Use an Autopilot Chip.";
+            if (!free && !HasTime) return "No Autopilot time left. Use an Autopilot Pass.";
             if (!settings.allowedOutsideHostileZones && CurrentZone == null) return "Autopilot only works inside a Hostile Zone.";
             return null;
         }
@@ -163,7 +172,7 @@ namespace KryticalNova.Autopilot
                 reason ??= "Autopilot on.";
             }
             on = value;
-            if (IsSpawned) { netOn.Value = on; netSeconds.Value = seconds; }
+            if (IsSpawned) netOn.Value = on;
             else Changed?.Invoke();
             if (!string.IsNullOrEmpty(reason)) Tell(reason);
         }
@@ -171,22 +180,10 @@ namespace KryticalNova.Autopilot
         private void Update()
         {
             if (!Decides || settings == null || Time.time < nextTick) return;
-            float elapsed = TickSeconds + Mathf.Max(0f, Time.time - nextTick);
             nextTick = Time.time + TickSeconds;
-
-            bool timeRuns = !free && seconds > 0f && (on || !settings.timeRunsOnlyWhileOn);
-            if (timeRuns)
-            {
-                seconds = Mathf.Max(0f, seconds - elapsed);
-                if (IsSpawned && (seconds <= 0f || Time.time >= nextTimeSend))
-                {
-                    nextTimeSend = Time.time + TimeSendSeconds;
-                    netSeconds.Value = seconds;
-                }
-            }
             if (!on) return;
 
-            if (!free && seconds <= 0f) { ServerSetOn(false, "Autopilot time has run out. Use an Autopilot Chip for more."); return; }
+            if (!free && !HasTime) { ServerSetOn(false, "Autopilot time has run out. Use an Autopilot Pass for more."); return; }
             if (entity != null && !entity.IsAlive) { ServerSetOn(false, "Autopilot off: you were defeated."); return; }
             if (!settings.allowedOutsideHostileZones)
             {
@@ -218,20 +215,18 @@ namespace KryticalNova.Autopilot
 
         // ------------------------------------------------------------------ time
 
-        /// <summary>Server or offline: adds Autopilot time, up to the most a character can hold.</summary>
-        public void ServerAddSeconds(float amount)
-        {
-            if (!Decides || settings == null) return;
-            ServerSetSeconds(seconds + amount);
-        }
-
-        /// <summary>Server or offline (GM): sets the Autopilot time left.</summary>
-        public void ServerSetSeconds(float value)
+        /// <summary>Server or offline (GM): the Autopilot time runs this many days from now; 0 ends it.</summary>
+        public void ServerSetDays(int days)
         {
             if (!Decides) return;
-            seconds = Mathf.Clamp(value, 0f, settings != null ? settings.MaxSeconds : value);
-            if (IsSpawned) netSeconds.Value = seconds;
-            else Changed?.Invoke();
+            expiresUtc = PassClock.SetDays(DateTime.UtcNow.Ticks, days);
+            Push();
+        }
+
+        private void Push()
+        {
+            if (IsSpawned) netExpiresUtc.Value = expiresUtc;
+            Changed?.Invoke();
         }
 
         /// <summary>Server or offline (GM): Autopilot runs without time and without using any.</summary>
@@ -242,20 +237,26 @@ namespace KryticalNova.Autopilot
 
         public bool Free => free;
 
-        // ------------------------------------------------------------------ the Autopilot Chip
+        // ------------------------------------------------------------------ the Autopilot Pass
 
         public ItemUseEffect Effect => ItemUseEffect.AutopilotTime;
 
         public string UseBlockedReason(ItemDefinition item)
         {
             if (settings == null) return "Autopilot is not set up.";
-            return seconds + settings.SecondsPerChip > settings.MaxSeconds ? "You cannot hold any more Autopilot time." : null;
+            PassTier? tier = settings.AutopilotTierFor(item != null ? item.itemId : (ushort)0);
+            if (tier == null) return "It does nothing here.";
+            return PassClock.WouldExceed(DateTime.UtcNow.Ticks, expiresUtc, tier.Value.days, settings.autopilotMaxDays)
+                ? $"You cannot hold more than {settings.autopilotMaxDays} days of Autopilot." : null;
         }
 
         public void ServerUse(ItemDefinition item)
         {
-            ServerAddSeconds(settings.SecondsPerChip);
-            Tell($"+{settings.hoursPerChip:0.#} hours of Autopilot. You have {FormatTime(seconds)}.");
+            PassTier? tier = settings != null ? settings.AutopilotTierFor(item.itemId) : null;
+            if (tier == null) return;
+            expiresUtc = PassClock.Extend(DateTime.UtcNow.Ticks, expiresUtc, tier.Value.days);
+            Push();
+            Tell($"+{tier.Value.days} days of Autopilot. {TimeLeftLine}");
         }
 
         /// <summary>Time as "4 h 59 min" or "12 min 30 s".</summary>
@@ -271,24 +272,25 @@ namespace KryticalNova.Autopilot
         [Serializable]
         private struct AutopilotSave
         {
-            public float seconds;
+            public long expiresUtc;
             public string preferences;
         }
 
         public string SaveKey => "autopilot";
         public SaveScope SaveScope => SaveScope.Character;
 
-        public string CaptureSave() => JsonUtility.ToJson(new AutopilotSave { seconds = seconds, preferences = preferences.ToJson() });
+        public string CaptureSave() => JsonUtility.ToJson(new AutopilotSave { expiresUtc = expiresUtc, preferences = preferences.ToJson() });
 
         public void RestoreSave(string json)
         {
             if (string.IsNullOrEmpty(json)) return;
             AutopilotSave save = JsonUtility.FromJson<AutopilotSave>(json);
-            seconds = Mathf.Clamp(save.seconds, 0f, settings != null ? settings.MaxSeconds : save.seconds);
+            // Hours from the old Autopilot Chip are not carried over (owner, 17 Oct 2026: no players yet).
+            expiresUtc = save.expiresUtc;
             preferences = AutopilotPreferences.FromJson(save.preferences, settings);
             if (IsSpawned && IsServer)
             {
-                netSeconds.Value = seconds;
+                netExpiresUtc.Value = expiresUtc;
                 if (!IsOwner) PreferencesRpc(preferences.ToJson());
             }
             Changed?.Invoke();

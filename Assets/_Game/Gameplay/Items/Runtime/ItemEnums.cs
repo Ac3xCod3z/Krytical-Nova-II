@@ -25,7 +25,7 @@ namespace KryticalNova.Items
         FeedPet = 1,
         /// <summary>Raises a stat for good, up to a number of times per character (a Serum).</summary>
         Serum = 2,
-        /// <summary>Adds Autopilot time to the character (an Autopilot Chip).</summary>
+        /// <summary>Adds days of Autopilot time to the character (an Autopilot Pass).</summary>
         AutopilotTime = 3,
         /// <summary>Unlocks the skill it teaches, to be learned with skill points (a Dossier).</summary>
         LearnSkill = 4,

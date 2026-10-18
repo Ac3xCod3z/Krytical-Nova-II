@@ -108,10 +108,10 @@ namespace KryticalNova.Progression
             base.OnNetworkDespawn();
         }
 
+        // HP also falls when the most HP falls (a pet put away, gear taken off): that is not a hit, so the hurt
+        // effect is not raised here but by ApplyDamage, the one path real damage takes.
         private void OnNetHealthChanged(float previous, float current)
         {
-            if (IsOwner && current < previous - 0.01f)
-                ClientPresentationRegistry.Feel?.LocalPlayerDamaged((previous - current) / Mathf.Max(1f, netMaxHealth.Value));
             if (IsServer) return;
             health = current;
             Changed?.Invoke();
@@ -265,12 +265,24 @@ namespace KryticalNova.Progression
         {
             if (!isActiveAndEnabled || !IsAlive || !float.IsFinite(amount) || amount <= 0f) return;
             if (!ignoreGodMode && gmState != null && gmState.GodMode) return;
+            float before = health;
             health = Mathf.Max(0f, health - amount);
             healthRecoveryTime = Time.time + resourceData.healthRegenerationDelay;
             SyncNetworkState();
             Changed?.Invoke();
+            float lost = before - health;
+            if (lost > 0.01f)
+            {
+                float fraction = lost / Mathf.Max(1f, maxHealth);
+                if (IsSpawned) DamagedRpc(fraction);
+                else ClientPresentationRegistry.Feel?.LocalPlayerDamaged(fraction);
+            }
             if (health <= 0f) Depleted?.Invoke();
         }
+
+        /// <summary>The hurt effect on the player's own screen, for a real hit only.</summary>
+        [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
+        private void DamagedRpc(float fraction01) => ClientPresentationRegistry.Feel?.LocalPlayerDamaged(fraction01);
 
         /// <summary>Heals a living player without exceeding maximum HP.</summary>
         public void Heal(float amount)

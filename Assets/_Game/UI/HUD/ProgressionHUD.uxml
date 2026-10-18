@@ -95,11 +95,6 @@
             <ui:Label text="ATTRIBUTES" class="eyebrow section" />
             <ui:VisualElement class="row">
                 <ui:Label name="stat-points" text="5 points available" class="accent" />
-                <ui:VisualElement class="step-options-row">
-                    <ui:Button name="stat-step-1" text="+1" class="step-option active-step" />
-                    <ui:Button name="stat-step-5" text="+5" class="step-option" />
-                    <ui:Button name="stat-step-10" text="+10" class="step-option" />
-                </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Strength" /><ui:Label name="stat-0" text="10" class="stat-value" /><ui:Button name="allocate-0" text="+1" /></ui:VisualElement>
             <ui:VisualElement class="stat-row kn-card"><ui:Label text="Vitality" /><ui:Label name="stat-1" text="10" class="stat-value" /><ui:Button name="allocate-1" text="+1" /></ui:VisualElement>
@@ -197,11 +192,6 @@
             <ui:ScrollView name="skills-body" class="window-body" horizontal-scroller-visibility="Hidden">
             <ui:VisualElement class="row section">
                 <ui:Label name="skill-points" text="1 skill point available" class="accent" />
-                <ui:VisualElement class="step-options-row">
-                    <ui:Button name="skill-step-1" text="+1" class="step-option active-step" />
-                    <ui:Button name="skill-step-5" text="+5" class="step-option" />
-                    <ui:Button name="skill-step-10" text="+10" class="step-option" />
-                </ui:VisualElement>
             </ui:VisualElement>
 
             <!-- Category: Movement Skills -->
