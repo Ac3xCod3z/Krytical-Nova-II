@@ -71,6 +71,41 @@ Without the tool: each Removal Log batch names the last commit that still has it
 
 `Lists~` ends in a tilde, so Unity does not import it (no cost to the Editor) while git keeps it.
 
+## The cleanup routine (owner, 18 Oct 2026: one standing session runs it whenever the owner comes back)
+
+The Claude session **"Project Cleanup (standing session)"** is where this is done. Each visit:
+
+1. **Before anything:** no other session working in the checkout, Unity's open scene saved, free commit checked.
+   Work on a `chore/project-cleanup-<date>` branch from `main`.
+2. **Packages:** if packs were imported or bought since last time, **Build Package Index** (only changed packages are re-read).
+3. **Catalog:** **Take Catalog Snapshot**, so every asset the project has now is on record before anything goes.
+4. **Remove:** **Remove Unused Vendor Assets…** (scans, then removes what passes all three checks, then the after-check).
+   Look at `Library/KryticalNova.Cleanup/Scan-Summary.md` and the console; restore anything the after-check names.
+5. **Editor memory:** start Unity on the Title scene (not a world map), and check the Unity Search index (below).
+6. **Measure** (Editor private memory, helper processes, startup reload time), add a Removal Log line if anything changed,
+   update the Encyclopedia change log, commit, PR, merge.
+
+## Editor memory: the Unity Search index
+
+The two background Unity processes (`AssetImportWorkerHW0/1`, about 2.2 GB each) are Unity Search's indexer. It was set
+to index **every property of every asset** in `Assets` and `Packages` (a 3.8 GB index). Since 18 Oct 2026 the index
+covers only `Assets/_Game` (not `_Docs`), with types and dependencies but not properties:
+`UserSettings/Search.index` (a personal Editor setting, not in git, so set it again on another PC):
+
+```json
+{ "name": "Assets", "roots": ["Assets/_Game"], "excludes": ["Assets/Temp/", "Assets/External/", "Assets/_Game/_Docs/"],
+  "options": { "types": true, "properties": false, "extended": false, "dependencies": true }, "baseScore": 999 }
+```
+
+The helpers also stayed open when idle: Unity kept **2 standby import workers** alive (Preferences ▸ Asset Pipeline,
+`EditorUserSettings.standbyImportWorkerCount`, also personal). Since 18 Oct 2026 it is **0**, so an idle helper closes a
+minute after its last job; the desired count stays 4, so big imports still run four at a time. The cost is a second or
+two to start a helper for the first import after a quiet spell.
+
+What the index change does: the Search window and indexed pickers find our own assets by name, type and "what uses this", but not
+vendor assets and not property values (`p(...)` queries). The Project window's search bar, the normal object picker and
+Restore Assets still find everything. Change it with Unity closed, and move `Library/Search` aside so it rebuilds.
+
 ## Menus
 
 Krytical Nova ▸ Project ▸ Cleanup:
