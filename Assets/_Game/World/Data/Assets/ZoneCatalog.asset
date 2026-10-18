@@ -262,3 +262,7 @@ MonoBehaviour:
     maxLevel: 105
     pvp: 2
     lore: A vast rent of glassed earth with a severed extraction titan lying across it and an aurora of soul-light overhead.
+  extraPictures:
+  - {fileID: 2800000, guid: 7bb342b5dcecd8047a46f620d1f79f76, type: 3}
+  - {fileID: 2800000, guid: ed587dae298cb5842b60ba38f8744630, type: 3}
+  - {fileID: 2800000, guid: 107bf14643162cb4a9734554f43beed0, type: 3}
