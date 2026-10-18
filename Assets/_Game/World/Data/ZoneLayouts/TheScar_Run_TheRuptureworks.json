@@ -1,0 +1,375 @@
+{
+ "scene": "TheScar_Run_TheRuptureworks",
+ "sizeX": 400,
+ "sizeZ": 400,
+ "height": 100,
+ "depth": 30,
+ "seed": 82,
+ "heightRes": 513,
+ "alphaRes": 512,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/LavaRock.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/SaltCracks_Purple.terrainlayer"
+ ],
+ "slopeLayer": -1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "rim",
+   "w": 60,
+   "h": 60,
+   "gaps": []
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": -120,
+   "w": 80,
+   "d": 60
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": -20,
+   "w": 60,
+   "d": 40
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 60,
+   "w": 70,
+   "d": 70
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 150,
+   "w": 100,
+   "d": 60
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Pods_*",
+    "SM_Env_Spirit_Spread_*",
+    "SM_Bld_Scav_Refinery_Silo_*",
+    "SM_Env_Core_Strut_*",
+    "SM_Env_Floating_Rocks_*"
+   ],
+   "count": 40,
+   "shape": "rect",
+   "group": "Room: Intake",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -120,
+   "w": 72,
+   "d": 52
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Pods_*",
+    "SM_Env_Spirit_Spread_*",
+    "SM_Bld_Scav_Refinery_Silo_*",
+    "SM_Env_Core_Strut_*",
+    "SM_Env_Floating_Rocks_*"
+   ],
+   "count": 20,
+   "shape": "rect",
+   "group": "Room: Separation",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -20,
+   "w": 52,
+   "d": 32
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Pods_*",
+    "SM_Env_Spirit_Spread_*",
+    "SM_Bld_Scav_Refinery_Silo_*",
+    "SM_Env_Core_Strut_*",
+    "SM_Env_Floating_Rocks_*"
+   ],
+   "count": 40,
+   "shape": "rect",
+   "group": "Room: The Cycle Chamber",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 60,
+   "w": 62,
+   "d": 62
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Pods_*",
+    "SM_Env_Spirit_Spread_*",
+    "SM_Bld_Scav_Refinery_Silo_*",
+    "SM_Env_Core_Strut_*",
+    "SM_Env_Floating_Rocks_*"
+   ],
+   "count": 50,
+   "shape": "rect",
+   "group": "Room: The Rupture",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 150,
+   "w": 92,
+   "d": 52
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Env_Core_*",
+   "x": 0,
+   "z": 60,
+   "rot": 0,
+   "group": "The Cycle Chamber",
+   "fitHeight": 22,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Env_Spirit_Ocean_*",
+   "x": 0,
+   "z": 150,
+   "rot": 0,
+   "group": "The Rupture",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  }
+ ],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Tube_*"
+   ],
+   "pts": [
+    -40.0,
+    -150.0,
+    40.0,
+    -150.0,
+    40.0,
+    -90.0,
+    -40.0,
+    -90.0,
+    -40.0,
+    -150.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Intake",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Tube_*"
+   ],
+   "pts": [
+    -30.0,
+    -40.0,
+    30.0,
+    -40.0,
+    30.0,
+    0.0,
+    -30.0,
+    0.0,
+    -30.0,
+    -40.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Separation",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Tube_*"
+   ],
+   "pts": [
+    -35.0,
+    25.0,
+    35.0,
+    25.0,
+    35.0,
+    95.0,
+    -35.0,
+    95.0,
+    -35.0,
+    25.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: The Cycle Chamber",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Tube_*"
+   ],
+   "pts": [
+    -50.0,
+    120.0,
+    50.0,
+    120.0,
+    50.0,
+    180.0,
+    -50.0,
+    180.0,
+    -50.0,
+    120.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: The Rupture",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Room: Intake",
+   "x": 0,
+   "z": -120,
+   "dy": 0
+  },
+  {
+   "name": "Room: Separation",
+   "x": 0,
+   "z": -20,
+   "dy": 0
+  },
+  {
+   "name": "Room: The Cycle Chamber",
+   "x": 0,
+   "z": 60,
+   "dy": 0
+  },
+  {
+   "name": "Room: The Rupture",
+   "x": 0,
+   "z": 150,
+   "dy": 0
+  },
+  {
+   "name": "Entrance",
+   "x": 0,
+   "z": -146.0,
+   "dy": 0
+  },
+  {
+   "name": "Boss",
+   "x": 0,
+   "z": 165.0,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": 0,
+   "y": 6,
+   "z": -144.0,
+   "tx": 0,
+   "ty": 3,
+   "tz": 150,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 600,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 400
+  }
+ ]
+}

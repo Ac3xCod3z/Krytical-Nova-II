@@ -1,0 +1,208 @@
+{
+ "scene": "MeridianSprawl_Run_Silo12",
+ "sizeX": 400,
+ "sizeZ": 400,
+ "height": 100,
+ "depth": 30,
+ "seed": 33,
+ "heightRes": 513,
+ "alphaRes": 512,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/Sand_02.terrainlayer",
+  "Assets/Synty/PolygonSamuraiEmpire/Materials/Env/Terrain_Layers/Terrain_Rock_01.terrainlayer"
+ ],
+ "slopeLayer": -1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "rim",
+   "w": 60,
+   "h": 60,
+   "gaps": []
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": -30,
+   "w": 40,
+   "d": 40
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 40,
+   "w": 60,
+   "d": 30
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_Ground_Mound_*",
+    "SM_Prop_Crate_Military_*",
+    "SM_Prop_Missile_*",
+    "SM_Prop_Turret_Small_Floor_*"
+   ],
+   "count": 13,
+   "shape": "rect",
+   "group": "Room: Grain Deck",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -30,
+   "w": 32,
+   "d": 32
+  },
+  {
+   "prefabs": [
+    "SM_Env_Ground_Mound_*",
+    "SM_Prop_Crate_Military_*",
+    "SM_Prop_Missile_*",
+    "SM_Prop_Turret_Small_Floor_*"
+   ],
+   "count": 15,
+   "shape": "rect",
+   "group": "Room: Munitions Cache",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 40,
+   "w": 52,
+   "d": 22
+  }
+ ],
+ "objects": [],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Bld_Corp_Wall_01"
+   ],
+   "pts": [
+    -20.0,
+    -50.0,
+    20.0,
+    -50.0,
+    20.0,
+    -10.0,
+    -20.0,
+    -10.0,
+    -20.0,
+    -50.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Grain Deck",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Corp_Wall_01"
+   ],
+   "pts": [
+    -30.0,
+    25.0,
+    30.0,
+    25.0,
+    30.0,
+    55.0,
+    -30.0,
+    55.0,
+    -30.0,
+    25.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Munitions Cache",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Room: Grain Deck",
+   "x": 0,
+   "z": -30,
+   "dy": 0
+  },
+  {
+   "name": "Room: Munitions Cache",
+   "x": 0,
+   "z": 40,
+   "dy": 0
+  },
+  {
+   "name": "Entrance",
+   "x": 0,
+   "z": -46.0,
+   "dy": 0
+  },
+  {
+   "name": "Boss",
+   "x": 0,
+   "z": 47.5,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": 0,
+   "y": 6,
+   "z": -44.0,
+   "tx": 0,
+   "ty": 3,
+   "tz": 40,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 600,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 400
+  }
+ ]
+}

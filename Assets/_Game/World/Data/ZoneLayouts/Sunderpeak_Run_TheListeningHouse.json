@@ -1,0 +1,204 @@
+{
+ "scene": "Sunderpeak_Run_TheListeningHouse",
+ "sizeX": 400,
+ "sizeZ": 400,
+ "height": 100,
+ "depth": 30,
+ "seed": 97,
+ "heightRes": 513,
+ "alphaRes": 512,
+ "layers": [
+  "Assets/Synty/PolygonSamuraiEmpire/Materials/Env/Terrain_Layers/Terrain_Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonSamuraiEmpire/Materials/Env/Terrain_Layers/Terrain_Cobblestone_01.terrainlayer"
+ ],
+ "slopeLayer": -1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "rim",
+   "w": 60,
+   "h": 60,
+   "gaps": []
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": -20,
+   "w": 40,
+   "d": 20
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 30,
+   "w": 30,
+   "d": 24
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Bld_Sliding_Door_*",
+    "SM_Prop_Lantern_*"
+   ],
+   "count": 6,
+   "shape": "rect",
+   "group": "Room: Hall of Ears",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -20,
+   "w": 32,
+   "d": 12
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Sliding_Door_*",
+    "SM_Prop_Lantern_*"
+   ],
+   "count": 6,
+   "shape": "rect",
+   "group": "Room: The Cellar",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 30,
+   "w": 22,
+   "d": 16
+  }
+ ],
+ "objects": [],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Bld_Wall_*"
+   ],
+   "pts": [
+    -20.0,
+    -30.0,
+    20.0,
+    -30.0,
+    20.0,
+    -10.0,
+    -20.0,
+    -10.0,
+    -20.0,
+    -30.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Hall of Ears",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_*"
+   ],
+   "pts": [
+    -15.0,
+    18.0,
+    15.0,
+    18.0,
+    15.0,
+    42.0,
+    -15.0,
+    42.0,
+    -15.0,
+    18.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: The Cellar",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Room: Hall of Ears",
+   "x": 0,
+   "z": -20,
+   "dy": 0
+  },
+  {
+   "name": "Room: The Cellar",
+   "x": 0,
+   "z": 30,
+   "dy": 0
+  },
+  {
+   "name": "Entrance",
+   "x": 0,
+   "z": -26.0,
+   "dy": 0
+  },
+  {
+   "name": "Boss",
+   "x": 0,
+   "z": 36.0,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": 0,
+   "y": 6,
+   "z": -24.0,
+   "tx": 0,
+   "ty": 3,
+   "tz": 30,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 600,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 400
+  }
+ ]
+}

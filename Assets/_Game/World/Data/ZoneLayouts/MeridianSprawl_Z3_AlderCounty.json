@@ -1,0 +1,2100 @@
+{
+ "scene": "MeridianSprawl_Z3_AlderCounty",
+ "sizeX": 2000,
+ "sizeZ": 2000,
+ "height": 300,
+ "depth": 60,
+ "seed": 23,
+ "heightRes": 1025,
+ "alphaRes": 1024,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Grass_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Mud_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Rock_Rough_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Gravel_01.terrainlayer",
+  "Assets/Synty/PolygonMapsSciFiOutpost/Materials/Terrain/Terrain_Charred_Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Grass_Flowers_01.terrainlayer"
+ ],
+ "slopeLayer": 3,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "noise",
+   "amp": 16,
+   "scale": 0.0025,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "noise",
+   "amp": 5.6,
+   "scale": 0.0125,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "floor",
+   "h": -0.5
+  },
+  {
+   "type": "rim",
+   "w": 170,
+   "h": 120,
+   "gaps": [
+    0,
+    -960,
+    160,
+    -300,
+    940,
+    160
+   ]
+  },
+  {
+   "type": "plateau",
+   "x": 0,
+   "z": -900,
+   "r": 45,
+   "h": 0,
+   "falloff": 40
+  },
+  {
+   "type": "line",
+   "pts": [
+    -1000,
+    -40,
+    -400,
+    -100,
+    0,
+    -60,
+    500,
+    0,
+    1000,
+    -60
+   ],
+   "w": 50,
+   "h": -6,
+   "falloff": 25,
+   "mode": "carve"
+  }
+ ],
+ "paint": [
+  {
+   "shape": "all",
+   "layer": 0,
+   "falloff": 0
+  },
+  {
+   "shape": "rect",
+   "layer": 2,
+   "falloff": 4,
+   "x": 208.93288131249324,
+   "z": 349.76983335413047,
+   "w": 177.47129221222661,
+   "d": 193.66953121547553,
+   "rot": 0
+  },
+  {
+   "shape": "rect",
+   "layer": 2,
+   "falloff": 4,
+   "x": 469.1295646407186,
+   "z": -413.9683831042755,
+   "w": 95.70385790690074,
+   "d": 107.25364545324933,
+   "rot": -8
+  },
+  {
+   "shape": "rect",
+   "layer": 2,
+   "falloff": 4,
+   "x": 626.357278370662,
+   "z": -209.82522858061407,
+   "w": 101.21718423913069,
+   "d": 117.42637858869553,
+   "rot": 10
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": -374.8799777811125,
+   "z": 620.3353263032554,
+   "w": 174.2297996792056,
+   "d": 107.55646335938421,
+   "rot": 0
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": -625.1905478312281,
+   "z": 707.1227990141313,
+   "w": 90.5844450968519,
+   "d": 175.09530733304416,
+   "rot": 10
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": -358.181214830225,
+   "z": 690.2908828726295,
+   "w": 149.31458157578916,
+   "d": 164.56135249756517,
+   "rot": 10
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": 749.6592018495985,
+   "z": 270.49500871570785,
+   "w": 196.3220743548915,
+   "d": 188.31158453341263,
+   "rot": -8
+  },
+  {
+   "shape": "rect",
+   "layer": 6,
+   "falloff": 4,
+   "x": -235.977110971947,
+   "z": -542.7681114488944,
+   "w": 106.02721004947507,
+   "d": 97.16536847132438,
+   "rot": -8
+  },
+  {
+   "shape": "rect",
+   "layer": 2,
+   "falloff": 4,
+   "x": 146.44013945573045,
+   "z": 123.76737334428788,
+   "w": 167.84437676644814,
+   "d": 97.26246956061848,
+   "rot": -8
+  },
+  {
+   "shape": "rect",
+   "layer": 2,
+   "falloff": 4,
+   "x": -32.7331827289338,
+   "z": -310.52068593801175,
+   "w": 142.93402248605503,
+   "d": 167.5136047555,
+   "rot": 0
+  },
+  {
+   "shape": "rect",
+   "layer": 6,
+   "falloff": 4,
+   "x": 807.6692573452001,
+   "z": -764.5583769582829,
+   "w": 172.47745245204004,
+   "d": 182.93689783269426,
+   "rot": 0
+  },
+  {
+   "shape": "rect",
+   "layer": 6,
+   "falloff": 4,
+   "x": 489.15511676673805,
+   "z": -232.4140624451162,
+   "w": 153.63707119625622,
+   "d": 90.99862255014813,
+   "rot": 0
+  },
+  {
+   "shape": "rect",
+   "layer": 2,
+   "falloff": 4,
+   "x": -542.4368704832186,
+   "z": 680.5288443663078,
+   "w": 111.6173837564309,
+   "d": 173.13100536964495,
+   "rot": 20
+  },
+  {
+   "shape": "rect",
+   "layer": 2,
+   "falloff": 4,
+   "x": 21.24322059116082,
+   "z": 583.7021925545321,
+   "w": 117.59833518651375,
+   "d": 140.91347353075307,
+   "rot": -8
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": -787.7263140971933,
+   "z": 665.9902868153849,
+   "w": 100.02978505889455,
+   "d": 127.48145890546445,
+   "rot": -8
+  },
+  {
+   "shape": "rect",
+   "layer": 2,
+   "falloff": 4,
+   "x": -272.0688047360642,
+   "z": 632.5063101130754,
+   "w": 149.96584408080628,
+   "d": 124.36954062771977,
+   "rot": -8
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": -548.2877816415195,
+   "z": -678.7958400581111,
+   "w": 106.37548490855734,
+   "d": 165.80920460837626,
+   "rot": 20
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": 374.21899350388844,
+   "z": -674.5147401140362,
+   "w": 156.07141329860968,
+   "d": 191.59674975758554,
+   "rot": 0
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": 408.9494407902089,
+   "z": -267.05900296004086,
+   "w": 117.52297438772888,
+   "d": 161.60630826945084,
+   "rot": 10
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": 814.3860553005179,
+   "z": 189.4027777069648,
+   "w": 178.18308736601517,
+   "d": 126.76038229634776,
+   "rot": 10
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 4,
+   "x": 818.2108263956718,
+   "z": 74.27379840752303,
+   "w": 104.60546865570487,
+   "d": 188.6145620545823,
+   "rot": 20
+  },
+  {
+   "shape": "rect",
+   "layer": 2,
+   "falloff": 4,
+   "x": -563.0045358930244,
+   "z": -221.8536769499609,
+   "w": 96.46476799935645,
+   "d": 136.2710402341889,
+   "rot": 10
+  },
+  {
+   "shape": "rect",
+   "layer": 6,
+   "falloff": 4,
+   "x": 717.4056842834495,
+   "z": 161.62307650589662,
+   "w": 108.62189000368738,
+   "d": 147.44137868202773,
+   "rot": 20
+  },
+  {
+   "shape": "rect",
+   "layer": 6,
+   "falloff": 4,
+   "x": -355.26155085014256,
+   "z": -174.1264064022622,
+   "w": 106.11569987521796,
+   "d": 131.470082256392,
+   "rot": 10
+  },
+  {
+   "shape": "circle",
+   "layer": 5,
+   "falloff": 20,
+   "x": -550,
+   "z": 200,
+   "r": 70
+  }
+ ],
+ "roads": [
+  {
+   "pts": [
+    0,
+    -900,
+    0,
+    -60,
+    250,
+    250,
+    -300,
+    600,
+    -300,
+    880
+   ],
+   "w": 10,
+   "layer": 4,
+   "flatten": true,
+   "shoulder": 8
+  }
+ ],
+ "trees": [
+  {
+   "prefabs": [
+    "SM_Env_Tree_Meadow_*",
+    "SM_Env_Tree_Birch_*"
+   ],
+   "count": 260,
+   "shape": "all",
+   "minDist": 22,
+   "scaleMin": 0.85,
+   "scaleMax": 1.15,
+   "maxSlope": 30,
+   "minY": -9999,
+   "maxY": 9999
+  }
+ ],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 117,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -374.8799777811125,
+   "z": 620.3353263032554,
+   "w": 168.2297996792056,
+   "d": 101.55646335938421,
+   "rot": 0
+  },
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 99,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -625.1905478312281,
+   "z": 707.1227990141313,
+   "w": 84.5844450968519,
+   "d": 169.09530733304416,
+   "rot": 10
+  },
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 153,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -358.181214830225,
+   "z": 690.2908828726295,
+   "w": 143.31458157578916,
+   "d": 158.56135249756517,
+   "rot": 10
+  },
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 231,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 749.6592018495985,
+   "z": 270.49500871570785,
+   "w": 190.3220743548915,
+   "d": 182.31158453341263,
+   "rot": -8
+  },
+  {
+   "prefabs": [
+    "SM_Env_Sunflower_*"
+   ],
+   "count": 42,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 3,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -235.977110971947,
+   "z": -542.7681114488944,
+   "w": 100.02721004947507,
+   "d": 91.16536847132438,
+   "rot": -8
+  },
+  {
+   "prefabs": [
+    "SM_Env_Sunflower_*"
+   ],
+   "count": 131,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 3,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 807.6692573452001,
+   "z": -764.5583769582829,
+   "w": 166.47745245204004,
+   "d": 176.93689783269426,
+   "rot": 0
+  },
+  {
+   "prefabs": [
+    "SM_Env_Sunflower_*"
+   ],
+   "count": 58,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 3,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 489.15511676673805,
+   "z": -232.4140624451162,
+   "w": 147.63707119625622,
+   "d": 84.99862255014813,
+   "rot": 0
+  },
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 79,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -787.7263140971933,
+   "z": 665.9902868153849,
+   "w": 94.02978505889455,
+   "d": 121.48145890546445,
+   "rot": -8
+  },
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 110,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -548.2877816415195,
+   "z": -678.7958400581111,
+   "w": 100.37548490855734,
+   "d": 159.80920460837626,
+   "rot": 20
+  },
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 186,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 374.21899350388844,
+   "z": -674.5147401140362,
+   "w": 150.07141329860968,
+   "d": 185.59674975758554,
+   "rot": 0
+  },
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 118,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 408.9494407902089,
+   "z": -267.05900296004086,
+   "w": 111.52297438772888,
+   "d": 155.60630826945084,
+   "rot": 10
+  },
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 141,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 814.3860553005179,
+   "z": 189.4027777069648,
+   "w": 172.18308736601517,
+   "d": 120.76038229634776,
+   "rot": 10
+  },
+  {
+   "prefabs": [
+    "SM_Env_CropField_Clump_*"
+   ],
+   "count": 123,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 818.2108263956718,
+   "z": 74.27379840752303,
+   "w": 98.60546865570487,
+   "d": 182.6145620545823,
+   "rot": 20
+  },
+  {
+   "prefabs": [
+    "SM_Env_Sunflower_*"
+   ],
+   "count": 66,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 3,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 717.4056842834495,
+   "z": 161.62307650589662,
+   "w": 102.62189000368738,
+   "d": 141.44137868202773,
+   "rot": 20
+  },
+  {
+   "prefabs": [
+    "SM_Env_Sunflower_*"
+   ],
+   "count": 58,
+   "shape": "rect",
+   "group": "Fields",
+   "minDist": 3,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -355.26155085014256,
+   "z": -174.1264064022622,
+   "w": 100.11569987521796,
+   "d": 125.470082256392,
+   "rot": 10
+  },
+  {
+   "prefabs": [
+    "SM_Prop_HandCart_*",
+    "SM_Prop_ScareCrow_*"
+   ],
+   "count": 8,
+   "shape": "circle",
+   "group": "Harrow Farm (burned)",
+   "minDist": 8,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -550,
+   "z": 200,
+   "r": 50
+  },
+  {
+   "prefabs": [
+    "SM_Prop_HandCart_*",
+    "SM_Prop_ScareCrow_*"
+   ],
+   "count": 8,
+   "shape": "circle",
+   "group": "Farmstead 2",
+   "minDist": 8,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 500,
+   "z": 450,
+   "r": 50
+  },
+  {
+   "prefabs": [
+    "SM_Prop_HandCart_*",
+    "SM_Prop_ScareCrow_*"
+   ],
+   "count": 8,
+   "shape": "circle",
+   "group": "Farmstead 3",
+   "minDist": 8,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -650,
+   "z": -500,
+   "r": 50
+  },
+  {
+   "prefabs": [
+    "SM_Env_Bush_*"
+   ],
+   "count": 200,
+   "shape": "all",
+   "group": "Hedgerows",
+   "minDist": 10,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Prop_Bridge_*",
+   "x": 0,
+   "z": -60,
+   "rot": 0,
+   "group": "Covered Bridge",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Covered Bridge"
+  },
+  {
+   "prefab": "SM_Bld_Stone_Cabin_*",
+   "x": -550,
+   "z": 200,
+   "rot": 30,
+   "group": "Harrow Farm (burned)",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Pod_Silo_*",
+   "x": -520,
+   "z": 210,
+   "rot": 0,
+   "group": "Harrow Farm (burned)",
+   "fitHeight": 18,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Windmill_*",
+   "x": -590,
+   "z": 230,
+   "rot": 0,
+   "group": "Harrow Farm (burned)",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Env_Crater_*",
+   "x": -570,
+   "z": 160,
+   "rot": 0,
+   "group": "Harrow Farm (burned)",
+   "fitHeight": 5,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Stone_Cabin_*",
+   "x": 500,
+   "z": 450,
+   "rot": 30,
+   "group": "Farmstead 2",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Pod_Silo_*",
+   "x": 530,
+   "z": 460,
+   "rot": 0,
+   "group": "Farmstead 2",
+   "fitHeight": 18,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Windmill_*",
+   "x": 460,
+   "z": 480,
+   "rot": 0,
+   "group": "Farmstead 2",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Stone_Cabin_*",
+   "x": -650,
+   "z": -500,
+   "rot": 30,
+   "group": "Farmstead 3",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Pod_Silo_*",
+   "x": -620,
+   "z": -490,
+   "rot": 0,
+   "group": "Farmstead 3",
+   "fitHeight": 18,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Windmill_*",
+   "x": -690,
+   "z": -470,
+   "rot": 0,
+   "group": "Farmstead 3",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Corp_Generator_*",
+   "x": 600,
+   "z": 650,
+   "rot": 0,
+   "group": "Pylon Junction 4",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Pylon Junction 4"
+  },
+  {
+   "prefab": "SM_Bld_Scav_Refinery_Silo_*",
+   "x": 230,
+   "z": 250,
+   "rot": 0,
+   "group": "Silo 12",
+   "fitHeight": 50,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Scav_Refinery_Silo_*",
+   "x": 250,
+   "z": 250,
+   "rot": 0,
+   "group": "Silo 12",
+   "fitHeight": 50,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Scav_Refinery_Silo_*",
+   "x": 270,
+   "z": 250,
+   "rot": 0,
+   "group": "Silo 12",
+   "fitHeight": 50,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Veh_Scav_Lifter_*",
+   "x": 250,
+   "z": 210,
+   "rot": 180,
+   "group": "Silo 12",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Corp_Barracks_*",
+   "x": -300,
+   "z": 620,
+   "rot": 0,
+   "group": "Fort Alder",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Veh_HoverTank_*",
+   "x": -260,
+   "z": 580,
+   "rot": 200,
+   "group": "Fort Alder",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  }
+ ],
+ "rings": [
+  {
+   "prefabs": [
+    "SM_Prop_Powerline_*"
+   ],
+   "x": 600,
+   "z": 650,
+   "r": 45,
+   "count": 6,
+   "fitHeight": 0,
+   "group": "Pylon Junction 4",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": true,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Corp_Wall_01"
+   ],
+   "x": -300,
+   "z": 600,
+   "r": 75,
+   "count": 0,
+   "fitHeight": 0,
+   "group": "Fort Alder",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": false,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Corp_Wall_Tower_*"
+   ],
+   "x": -300,
+   "z": 600,
+   "r": 75,
+   "count": 4,
+   "fitHeight": 0,
+   "group": "Fort Alder",
+   "startAngle": 45,
+   "endAngle": 315,
+   "faceOut": false,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  }
+ ],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    120.2,
+    252.9,
+    297.7,
+    252.9
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    421.3,
+    -467.6,
+    517.0,
+    -467.6
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    575.7,
+    -268.5,
+    677.0,
+    -268.5
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -462.0,
+    566.6,
+    -287.8,
+    566.6
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -670.5,
+    619.6,
+    -579.9,
+    619.6
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -432.8,
+    608.0,
+    -283.5,
+    608.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    651.5,
+    176.3,
+    847.8,
+    176.3
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -289.0,
+    -591.4,
+    -183.0,
+    -591.4
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    62.5,
+    75.1,
+    230.4,
+    75.1
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -104.2,
+    -394.3,
+    38.7,
+    -394.3
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    721.4,
+    -856.0,
+    893.9,
+    -856.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    412.3,
+    -277.9,
+    566.0,
+    -277.9
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -598.2,
+    594.0,
+    -486.6,
+    594.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -37.6,
+    513.2,
+    80.0,
+    513.2
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -837.7,
+    602.2,
+    -737.7,
+    602.2
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -347.1,
+    570.3,
+    -197.1,
+    570.3
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -601.5,
+    -761.7,
+    -495.1,
+    -761.7
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    296.2,
+    -770.3,
+    452.3,
+    -770.3
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    350.2,
+    -347.9,
+    467.7,
+    -347.9
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    725.3,
+    126.0,
+    903.5,
+    126.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    765.9,
+    -20.0,
+    870.5,
+    -20.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -611.2,
+    -290.0,
+    -514.8,
+    -290.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    663.1,
+    87.9,
+    771.7,
+    87.9
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Meadow_Fence_*"
+   ],
+   "pts": [
+    -408.3,
+    -239.9,
+    -302.2,
+    -239.9
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Fences",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -500,
+    620,
+    -500
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -486,
+    620,
+    -486
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -472,
+    620,
+    -472
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -458,
+    620,
+    -458
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -444,
+    620,
+    -444
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -430,
+    620,
+    -430
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -416,
+    620,
+    -416
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -402,
+    620,
+    -402
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -388,
+    620,
+    -388
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -374,
+    620,
+    -374
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -360,
+    620,
+    -360
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -346,
+    620,
+    -346
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -332,
+    620,
+    -332
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Fruit_*"
+   ],
+   "pts": [
+    320,
+    -318,
+    620,
+    -318
+   ],
+   "spacing": 7,
+   "fitHeight": 0,
+   "group": "The Orchard Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": false,
+   "collide": false
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Powerline_*"
+   ],
+   "pts": [
+    -900,
+    600,
+    -300,
+    600,
+    600,
+    650
+   ],
+   "spacing": 120,
+   "fitHeight": 0,
+   "group": "Pylon Line",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Arrival",
+   "x": 0,
+   "z": -880,
+   "dy": 0
+  },
+  {
+   "name": "Portal onward",
+   "x": -300,
+   "z": 880,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 49",
+   "x": 90,
+   "z": -745,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 52",
+   "x": -90,
+   "z": -435,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 55",
+   "x": 70,
+   "z": -181,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 58",
+   "x": 84,
+   "z": 187,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 61",
+   "x": 166,
+   "z": 410,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 64",
+   "x": -192,
+   "z": 425,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 67",
+   "x": -210,
+   "z": 725,
+   "dy": 0
+  },
+  {
+   "name": "Dense Hostile ground (the Orchard Rows)",
+   "x": 470,
+   "z": -400,
+   "dy": 0
+  },
+  {
+   "name": "Story: Harrow Farm (a Covenant rune on the barn door)",
+   "x": -550,
+   "z": 200,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 57 (the Scarecrow Field)",
+   "x": -650,
+   "z": -500,
+   "dy": 0
+  },
+  {
+   "name": "Run entrance: Silo 12",
+   "x": 250,
+   "z": 225,
+   "dy": 0
+  },
+  {
+   "name": "Wayfinder (Fort Alder)",
+   "x": -300,
+   "z": 600,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 67 (Pylon Junction 4)",
+   "x": 600,
+   "z": 650,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Silo 12",
+   "x": 198.69697850114972,
+   "y": 12,
+   "z": 109.04610688211375,
+   "tx": 250,
+   "ty": 20,
+   "tz": 250,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Pylon Junction 4",
+   "x": 469.7724446697738,
+   "y": 20,
+   "z": 540.7261063532883,
+   "tx": 600,
+   "ty": 18,
+   "tz": 650,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "The Orchard Rows",
+   "x": 329.04610688211375,
+   "y": 12,
+   "z": -451.3030214988503,
+   "tx": 470,
+   "ty": 4.199999999999999,
+   "tz": -400,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Fort Alder",
+   "x": -238.4363742013796,
+   "y": 25,
+   "z": 430.8553282585365,
+   "tx": -300,
+   "ty": 8.75,
+   "tz": 600,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Vista",
+   "x": 200,
+   "y": 70,
+   "z": -880,
+   "tx": 0,
+   "ty": 20,
+   "tz": 200,
+   "fov": 50,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 1500,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 2000
+  }
+ ],
+ "waterLevel": -2
+}

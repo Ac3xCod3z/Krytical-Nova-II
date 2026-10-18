@@ -1,0 +1,281 @@
+{
+ "scene": "Cessation_Run_TheStirringWell",
+ "sizeX": 400,
+ "sizeZ": 400,
+ "height": 100,
+ "depth": 30,
+ "seed": 74,
+ "heightRes": 513,
+ "alphaRes": 512,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/LavaRock.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/Lavarock_Hot_Terrain.terrainlayer"
+ ],
+ "slopeLayer": -1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "rim",
+   "w": 60,
+   "h": 60,
+   "gaps": []
+  },
+  {
+   "type": "crater",
+   "x": 0,
+   "z": -60,
+   "r": 20,
+   "h": 30,
+   "rim": 0
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": -60,
+   "w": 60,
+   "d": 60
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 20,
+   "w": 40,
+   "d": 40
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 100,
+   "w": 60,
+   "d": 50
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_Core_Shell_*",
+    "SM_Env_Hell_Ring_*",
+    "SM_Env_Lava_Flow_*"
+   ],
+   "count": 30,
+   "shape": "rect",
+   "group": "Room: Bore Rim",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -60,
+   "w": 52,
+   "d": 52
+  },
+  {
+   "prefabs": [
+    "SM_Env_Core_Shell_*",
+    "SM_Env_Hell_Ring_*",
+    "SM_Env_Lava_Flow_*"
+   ],
+   "count": 13,
+   "shape": "rect",
+   "group": "Room: The Descent",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 20,
+   "w": 32,
+   "d": 32
+  },
+  {
+   "prefabs": [
+    "SM_Env_Core_Shell_*",
+    "SM_Env_Hell_Ring_*",
+    "SM_Env_Lava_Flow_*"
+   ],
+   "count": 25,
+   "shape": "rect",
+   "group": "Room: Listening Chamber",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 100,
+   "w": 52,
+   "d": 42
+  }
+ ],
+ "objects": [],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Env_Cave_Large_*"
+   ],
+   "pts": [
+    -30.0,
+    -90.0,
+    30.0,
+    -90.0,
+    30.0,
+    -30.0,
+    -30.0,
+    -30.0,
+    -30.0,
+    -90.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Bore Rim",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Cave_Large_*"
+   ],
+   "pts": [
+    -20.0,
+    0.0,
+    20.0,
+    0.0,
+    20.0,
+    40.0,
+    -20.0,
+    40.0,
+    -20.0,
+    0.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: The Descent",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Cave_Large_*"
+   ],
+   "pts": [
+    -30.0,
+    75.0,
+    30.0,
+    75.0,
+    30.0,
+    125.0,
+    -30.0,
+    125.0,
+    -30.0,
+    75.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Listening Chamber",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Room: Bore Rim",
+   "x": 0,
+   "z": -60,
+   "dy": 0
+  },
+  {
+   "name": "Room: The Descent",
+   "x": 0,
+   "z": 20,
+   "dy": 0
+  },
+  {
+   "name": "Room: Listening Chamber",
+   "x": 0,
+   "z": 100,
+   "dy": 0
+  },
+  {
+   "name": "Entrance",
+   "x": 0,
+   "z": -86.0,
+   "dy": 0
+  },
+  {
+   "name": "Boss",
+   "x": 0,
+   "z": 112.5,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": 0,
+   "y": 6,
+   "z": -84.0,
+   "tx": 0,
+   "ty": 3,
+   "tz": 100,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 600,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 400
+  }
+ ]
+}

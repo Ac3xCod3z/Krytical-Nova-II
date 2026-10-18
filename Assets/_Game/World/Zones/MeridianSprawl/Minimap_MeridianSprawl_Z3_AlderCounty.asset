@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.Minimap.ZoneMinimapData
   map: {fileID: 2800000, guid: 50dc798620ca3cf41a4c549f073b8d77, type: 3}
   worldCenter: {x: 0, y: 0}
-  worldSize: 1000
+  worldSize: 2000

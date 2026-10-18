@@ -15,8 +15,8 @@ namespace KryticalNova.EditorTools
     {
         public const string AssetPath = "Assets/_Game/World/Data/Assets/WorldScale.asset";
 
-        private static ScaleKind K(string id, ScaleAxis axis, float real, string root, float min = 0f, float max = 0f) =>
-            new ScaleKind { id = id, axis = axis, real = real, min = min, max = max, root = root };
+        private static ScaleKind K(string id, ScaleAxis axis, float real, string root, float min = 0f, float max = 0f, float maxFactor = 0f) =>
+            new ScaleKind { id = id, axis = axis, real = real, min = min, max = max, root = root, maxFactor = maxFactor };
 
         private const ScaleAxis H = ScaleAxis.Height, L = ScaleAxis.Length, A = ScaleAxis.Largest;
 
@@ -73,6 +73,38 @@ namespace KryticalNova.EditorTools
             K("tree", H, 9.0f, "A grown tree is 8 to 12 m, with a crown no wider than it is tall.", 6.0f, 14.0f),
             K("greattree", H, 16.0f, "A great tree is 15 to 25 m: the tallest thing on a Lot.", 12.0f, 25.0f),
             K("rock", A, 1.5f, "A garden boulder is 0.5 to 3 m.", 0.4f, 4.0f),
+            // ---- out in the world (18 Oct 2026, Zone Build Kits): grown things at their real height, the built and
+            // the driven at their real size. A field tree is not a garden tree: the Lot kinds above stay for housing.
+            K("birch", H, 18f, "A grown birch is 15 to 25 m.", 14f, 22f),
+            K("conifer", H, 28f, "A grown pine or spruce is 25 to 35 m; a mountain pine a little less.", 20f, 35f),
+            K("broadleaf", H, 20f, "A grown oak, maple, ash or willow is 15 to 25 m.", 15f, 25f),
+            K("fruittree", H, 5f, "An orchard apple or pear is kept at 4 to 6 m.", 3.5f, 7f),
+            K("blossom", H, 8f, "A cherry, a Japanese maple or a ginkgo in a garden is 6 to 10 m.", 6f, 11f),
+            K("palm", H, 15f, "A palm is 10 to 20 m.", 10f, 20f),
+            K("bamboo", H, 12f, "A grove bamboo cane is 10 to 15 m.", 9f, 16f),
+            K("deadtree", H, 11f, "A dead or burned tree keeps most of its height: 8 to 15 m.", 7f, 16f),
+            K("swamptree", H, 12f, "A mangrove or swamp tree is 8 to 15 m.", 8f, 16f),
+            K("oldgrowth", H, 40f, "An old-growth forest giant is 30 to 50 m (the Sylwood's ordinary trees).", 30f, 50f, 5f),
+            K("colossaltree", H, 75f, "A tree a whole zone steers by: 60 to 90 m, ten persons and more (the Great Tree, the Ancestor Grove).", 60f, 90f, 8f),
+            K("fern", H, 1f, "A fern is knee to chest high; a tree fern up to 3.5 m.", 0.4f, 3.5f),
+            K("tallgrass", H, 1f, "Meadow grass gone to seed is knee to waist high.", 0.5f, 1.6f),
+            K("crop", H, 1.8f, "Corn stands 1.5 to 2.5 m; wheat and rice lower.", 0.8f, 2.6f),
+            K("boulder", A, 3f, "A field boulder is 1.5 to 6 m.", 1.5f, 6f),
+            K("outcrop", A, 12f, "A rock outcrop or tor is 6 to 25 m.", 6f, 25f, 4f),
+            K("standingstone", H, 3.5f, "A standing stone or runestone is 2.5 to 5 m: heroic.", 2.5f, 5.5f),
+            K("crystal", H, 3f, "A crystal cluster in the open is 1 to 6 m.", 1f, 6f),
+            K("house", H, 8f, "A house of one or two storeys is 6 to 11 m to its ridge.", 6f, 11f),
+            K("hall", H, 14f, "A longhall or barn is 10 to 18 m to its ridge.", 10f, 18f),
+            K("tower", H, 25f, "A watchtower or silo is 18 to 50 m.", 18f, 50f, 4f),
+            K("citywall", H, 25f, "A city wall is 20 to 30 m (New Meridian's is 30).", 18f, 32f, 4f),
+            K("fence", H, 1.2f, "A field fence or a barricade is waist to chest high.", 0.8f, 2.2f),
+            K("pylon", H, 30f, "A power pylon is 25 to 40 m.", 22f, 42f, 4f),
+            K("car", L, 4.5f, "A car is 4 to 5 m long.", 3.8f, 5.6f),
+            K("truck", L, 9f, "A truck, a food trailer or an armoured carrier is 6 to 12 m long.", 6f, 12f),
+            K("bus", L, 12f, "A bus or a train car is 12 to 20 m long.", 10f, 20f),
+            K("dropship", L, 30f, "A dropship is 25 to 40 m long.", 22f, 40f, 4f),
+            K("longship", L, 25f, "A longship is 20 to 30 m long; a skiff 6 to 10.", 5f, 30f),
+            K("mech", H, 12f, "A war-frame stands 10 to 16 m: monumental.", 9f, 16f, 4f),
         };
 
         [MenuItem("Krytical Nova/World/Build World Scale")]

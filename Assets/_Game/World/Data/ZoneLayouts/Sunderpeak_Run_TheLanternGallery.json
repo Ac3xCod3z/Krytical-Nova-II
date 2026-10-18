@@ -1,0 +1,206 @@
+{
+ "scene": "Sunderpeak_Run_TheLanternGallery",
+ "sizeX": 400,
+ "sizeZ": 400,
+ "height": 100,
+ "depth": 30,
+ "seed": 98,
+ "heightRes": 513,
+ "alphaRes": 512,
+ "layers": [
+  "Assets/Synty/PolygonSamuraiEmpire/Materials/Env/Terrain_Layers/Terrain_Rock_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/Terrain/layer_snow_albedosnow_normalb05780438ad4031.terrainlayer"
+ ],
+ "slopeLayer": -1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "rim",
+   "w": 60,
+   "h": 60,
+   "gaps": []
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": -30,
+   "w": 100,
+   "d": 24
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 50,
+   "w": 30,
+   "d": 30
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Prop_Lantern_*",
+    "SM_Prop_Shrine_Wall_*",
+    "SM_Env_Icicle_*"
+   ],
+   "count": 20,
+   "shape": "rect",
+   "group": "Room: Gallery of Ten Thousand Lanterns",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -30,
+   "w": 92,
+   "d": 16
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Lantern_*",
+    "SM_Prop_Shrine_Wall_*",
+    "SM_Env_Icicle_*"
+   ],
+   "count": 7,
+   "shape": "rect",
+   "group": "Room: The Cold Shrine",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 50,
+   "w": 22,
+   "d": 22
+  }
+ ],
+ "objects": [],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Env_Cave_Large_*"
+   ],
+   "pts": [
+    -50.0,
+    -42.0,
+    50.0,
+    -42.0,
+    50.0,
+    -18.0,
+    -50.0,
+    -18.0,
+    -50.0,
+    -42.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Gallery of Ten Thousand Lanterns",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Cave_Large_*"
+   ],
+   "pts": [
+    -15.0,
+    35.0,
+    15.0,
+    35.0,
+    15.0,
+    65.0,
+    -15.0,
+    65.0,
+    -15.0,
+    35.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: The Cold Shrine",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Room: Gallery of Ten Thousand Lanterns",
+   "x": 0,
+   "z": -30,
+   "dy": 0
+  },
+  {
+   "name": "Room: The Cold Shrine",
+   "x": 0,
+   "z": 50,
+   "dy": 0
+  },
+  {
+   "name": "Entrance",
+   "x": 0,
+   "z": -38.0,
+   "dy": 0
+  },
+  {
+   "name": "Boss",
+   "x": 0,
+   "z": 57.5,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": 0,
+   "y": 6,
+   "z": -36.0,
+   "tx": 0,
+   "ty": 3,
+   "tz": 50,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 600,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 400
+  }
+ ]
+}

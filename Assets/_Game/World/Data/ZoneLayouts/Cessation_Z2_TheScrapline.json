@@ -1,0 +1,555 @@
+{
+ "scene": "Cessation_Z2_TheScrapline",
+ "sizeX": 2000,
+ "sizeZ": 2000,
+ "height": 400,
+ "depth": 60,
+ "seed": 63,
+ "heightRes": 1025,
+ "alphaRes": 1024,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Gravel_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/LavaRock.terrainlayer",
+  "Assets/Synty/PolygonMapsSciFiOutpost/Materials/Terrain/Terrain_Charred_Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/SaltCracks_Purple.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/Terrain/RiverRocks_01.terrainlayer"
+ ],
+ "slopeLayer": 1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "noise",
+   "amp": 6,
+   "scale": 0.004,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "noise",
+   "amp": 2.0999999999999996,
+   "scale": 0.02,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "rim",
+   "w": 170,
+   "h": 120,
+   "gaps": [
+    0,
+    -960,
+    160,
+    400,
+    940,
+    160
+   ]
+  },
+  {
+   "type": "plateau",
+   "x": 0,
+   "z": -900,
+   "r": 45,
+   "h": 0,
+   "falloff": 40
+  },
+  {
+   "type": "plateau",
+   "x": 0,
+   "z": 0,
+   "r": 3000,
+   "h": 60,
+   "falloff": 10
+  },
+  {
+   "type": "line",
+   "pts": [
+    -1000,
+    -400,
+    1000,
+    -400
+   ],
+   "w": 70,
+   "h": 22,
+   "falloff": 12,
+   "mode": "set"
+  },
+  {
+   "type": "line",
+   "pts": [
+    -1000,
+    0,
+    1000,
+    0
+   ],
+   "w": 70,
+   "h": 22,
+   "falloff": 12,
+   "mode": "set"
+  },
+  {
+   "type": "line",
+   "pts": [
+    -1000,
+    400,
+    1000,
+    400
+   ],
+   "w": 70,
+   "h": 22,
+   "falloff": 12,
+   "mode": "set"
+  }
+ ],
+ "paint": [
+  {
+   "shape": "all",
+   "layer": 0,
+   "falloff": 0
+  },
+  {
+   "shape": "line",
+   "layer": 2,
+   "falloff": 10,
+   "pts": [
+    -1000,
+    -400,
+    1000,
+    -400
+   ],
+   "w": 90
+  },
+  {
+   "shape": "line",
+   "layer": 2,
+   "falloff": 10,
+   "pts": [
+    -1000,
+    0,
+    1000,
+    0
+   ],
+   "w": 90
+  },
+  {
+   "shape": "line",
+   "layer": 2,
+   "falloff": 10,
+   "pts": [
+    -1000,
+    400,
+    1000,
+    400
+   ],
+   "w": 90
+  }
+ ],
+ "roads": [
+  {
+   "pts": [
+    0,
+    -900,
+    -200,
+    -400,
+    0,
+    50,
+    600,
+    100,
+    400,
+    880
+   ],
+   "w": 8,
+   "layer": 4,
+   "flatten": false,
+   "shoulder": 8
+  }
+ ],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_Scrap_Pile_*",
+    "SM_Env_Junk_Pile_*",
+    "SM_Prop_Scav_Scrap_Pile_*"
+   ],
+   "count": 140,
+   "shape": "line",
+   "group": "Trench Walls",
+   "minDist": 10,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "pts": [
+    -1000,
+    -400,
+    1000,
+    -400
+   ],
+   "w": 110
+  },
+  {
+   "prefabs": [
+    "SM_Env_Scrap_Pile_*",
+    "SM_Env_Junk_Pile_*",
+    "SM_Prop_Scav_Scrap_Pile_*"
+   ],
+   "count": 140,
+   "shape": "line",
+   "group": "Trench Walls",
+   "minDist": 10,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "pts": [
+    -1000,
+    0,
+    1000,
+    0
+   ],
+   "w": 110
+  },
+  {
+   "prefabs": [
+    "SM_Env_Scrap_Pile_*",
+    "SM_Env_Junk_Pile_*",
+    "SM_Prop_Scav_Scrap_Pile_*"
+   ],
+   "count": 140,
+   "shape": "line",
+   "group": "Trench Walls",
+   "minDist": 10,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "pts": [
+    -1000,
+    400,
+    1000,
+    400
+   ],
+   "w": 110
+  },
+  {
+   "prefabs": [
+    "FX_Electricity_*",
+    "FX_Scrap_Floating_Mesh_Full_*"
+   ],
+   "count": 12,
+   "shape": "circle",
+   "group": "The Magnet",
+   "minDist": 15,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 0,
+   "r": 90
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Crate_Building_*",
+    "SM_Bld_Scav_Garage_*",
+    "SM_Bld_Scav_Dish_*"
+   ],
+   "count": 12,
+   "shape": "circle",
+   "group": "Reclamation Camp",
+   "minDist": 25,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 600,
+   "z": 150,
+   "r": 90
+  },
+  {
+   "prefabs": [
+    "SM_Env_Debris_Shell_*",
+    "SM_Env_Ground_Junk_*",
+    "SM_Prop_Cable_*"
+   ],
+   "count": 300,
+   "shape": "all",
+   "group": "Plateau Junk",
+   "minDist": 12,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Ship_Massive_Transport_*",
+   "x": 0,
+   "z": 0,
+   "rot": 80,
+   "group": "The Magnet",
+   "fitHeight": 40,
+   "scale": 1,
+   "dy": -10,
+   "tilt": 8,
+   "roll": 0,
+   "collide": true,
+   "name": "The Magnet"
+  },
+  {
+   "prefab": "SM_Bld_Corp_Comms_Tower_*",
+   "x": 700,
+   "z": -700,
+   "rot": 0,
+   "group": "Storm Spire",
+   "fitHeight": 60,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Storm Spire"
+  }
+ ],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Prop_Robot_Posed_Pile_*",
+    "SM_Veh_Truck_*"
+   ],
+   "pts": [
+    -640,
+    -480,
+    -640,
+    480
+   ],
+   "spacing": 9,
+   "fitHeight": 0,
+   "group": "The Chassis Wall",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 3,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Bridge_L_*"
+   ],
+   "pts": [
+    -200,
+    -450,
+    -200,
+    -350
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Scrap Bridges",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Bridge_L_*"
+   ],
+   "pts": [
+    300,
+    360,
+    300,
+    440
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Scrap Bridges",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Arrival",
+   "x": 0,
+   "z": -880,
+   "dy": 0
+  },
+  {
+   "name": "Portal onward",
+   "x": 400,
+   "z": 880,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 25",
+   "x": 19,
+   "z": -705,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 28",
+   "x": -278,
+   "z": -448,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 31",
+   "x": 17,
+   "z": -133,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 34",
+   "x": 180,
+   "z": 155,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 37",
+   "x": 542,
+   "z": 5,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 40",
+   "x": 443,
+   "z": 352,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 43",
+   "x": 530,
+   "z": 734,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 44 (the Magnet)",
+   "x": 0,
+   "z": 0,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 33 (Scrap Bridge)",
+   "x": -200,
+   "z": -400,
+   "dy": 0
+  },
+  {
+   "name": "Wayfinder (Reclamation Camp)",
+   "x": 600,
+   "z": 150,
+   "dy": 0
+  },
+  {
+   "name": "Run entrance: The Disassembly",
+   "x": -640,
+   "z": 200,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "The Magnet",
+   "x": -54.723222932106985,
+   "y": 70,
+   "z": -150.35081932574536,
+   "tx": 0,
+   "ty": 30,
+   "tz": 0,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "The Chassis Wall",
+   "x": -500.0,
+   "y": 50,
+   "z": 8.572527594031473e-15,
+   "tx": -640,
+   "ty": 30,
+   "tz": 0,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Reclamation Camp",
+   "x": 503.5818585470191,
+   "y": 75,
+   "z": 35.093333532153295,
+   "tx": 600,
+   "ty": 60,
+   "tz": 150,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Vista",
+   "x": 200,
+   "y": 120,
+   "z": -880,
+   "tx": 0,
+   "ty": 40,
+   "tz": 0,
+   "fov": 50,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 1500,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 2000
+  }
+ ]
+}

@@ -1,0 +1,655 @@
+{
+ "scene": "Cessation_Z4_NoctCaldera",
+ "sizeX": 2000,
+ "sizeZ": 2000,
+ "height": 600,
+ "depth": 260,
+ "seed": 65,
+ "heightRes": 1025,
+ "alphaRes": 1024,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/LavaRock.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Gravel_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/Lava.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/Terrain/RiverRocks_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/Terrain/Ice_02.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/Lavarock_Hot_Terrain.terrainlayer"
+ ],
+ "slopeLayer": 0,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "noise",
+   "amp": 8,
+   "scale": 0.004,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "noise",
+   "amp": 2.8,
+   "scale": 0.02,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "rim",
+   "w": 170,
+   "h": 160,
+   "gaps": [
+    0,
+    -960,
+    160,
+    0,
+    940,
+    160
+   ]
+  },
+  {
+   "type": "plateau",
+   "x": 0,
+   "z": -900,
+   "r": 45,
+   "h": 0,
+   "falloff": 40
+  },
+  {
+   "type": "crater",
+   "x": 0,
+   "z": 0,
+   "r": 320,
+   "h": 210,
+   "rim": 20
+  },
+  {
+   "type": "hill",
+   "x": 550,
+   "z": -350,
+   "r": 150,
+   "h": 60
+  }
+ ],
+ "paint": [
+  {
+   "shape": "all",
+   "layer": 0,
+   "falloff": 0
+  },
+  {
+   "shape": "ring",
+   "layer": 1,
+   "falloff": 60,
+   "x": 0,
+   "z": 0,
+   "r": 420,
+   "r2": 1000
+  },
+  {
+   "shape": "circle",
+   "layer": 2,
+   "falloff": 40,
+   "x": 0,
+   "z": 0,
+   "r": 160
+  },
+  {
+   "shape": "ring",
+   "layer": 5,
+   "falloff": 40,
+   "x": 0,
+   "z": 0,
+   "r": 160,
+   "r2": 260
+  },
+  {
+   "shape": "circle",
+   "layer": 4,
+   "falloff": 40,
+   "x": 550,
+   "z": -350,
+   "r": 180
+  }
+ ],
+ "roads": [
+  {
+   "pts": [
+    0.0,
+    650.0,
+    84.8,
+    644.4,
+    168.2,
+    627.9,
+    248.7,
+    600.5,
+    325.0,
+    562.9,
+    395.7,
+    515.7,
+    459.6,
+    459.6,
+    515.7,
+    395.7,
+    562.9,
+    325.0,
+    600.5,
+    248.7,
+    627.9,
+    168.2,
+    644.4,
+    84.8,
+    650.0,
+    0.0,
+    644.4,
+    -84.8,
+    627.9,
+    -168.2,
+    600.5,
+    -248.7,
+    562.9,
+    -325.0,
+    515.7,
+    -395.7,
+    459.6,
+    -459.6,
+    395.7,
+    -515.7,
+    325.0,
+    -562.9,
+    248.7,
+    -600.5,
+    168.2,
+    -627.9,
+    84.8,
+    -644.4,
+    0.0,
+    -650.0,
+    -84.8,
+    -644.4,
+    -168.2,
+    -627.9,
+    -248.7,
+    -600.5,
+    -325.0,
+    -562.9,
+    -395.7,
+    -515.7,
+    -459.6,
+    -459.6,
+    -515.7,
+    -395.7,
+    -562.9,
+    -325.0,
+    -600.5,
+    -248.7,
+    -627.9,
+    -168.2,
+    -644.4,
+    -84.8,
+    -650.0,
+    -0.0,
+    -644.4,
+    84.8,
+    -627.9,
+    168.2,
+    -600.5,
+    248.7,
+    -562.9,
+    325.0,
+    -515.7,
+    395.7,
+    -459.6,
+    459.6,
+    -395.7,
+    515.7,
+    -325.0,
+    562.9,
+    -248.7,
+    600.5,
+    -168.2,
+    627.9,
+    -84.8,
+    644.4,
+    -0.0,
+    650.0
+   ],
+   "w": 12,
+   "layer": 3,
+   "flatten": true,
+   "shoulder": 8
+  }
+ ],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_Detail_Spire_Group_*",
+    "SM_Env_Detail_Spire_*"
+   ],
+   "count": 60,
+   "shape": "circle",
+   "group": "The Pit",
+   "minDist": 30,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 0,
+   "r": 280,
+   "fitMin": 40,
+   "fitMax": 110
+  },
+  {
+   "prefabs": [
+    "SM_Env_Floating_Rocks_*",
+    "SM_Env_Hell_Floating_Rock_Chain_*"
+   ],
+   "count": 30,
+   "shape": "circle",
+   "group": "Floating Shards",
+   "minDist": 30,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 60,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 0,
+   "r": 300
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Scav_Dish_*",
+    "SM_Bld_Corp_Comms_Tower_*",
+    "SM_Bld_Crate_Building_*"
+   ],
+   "count": 9,
+   "shape": "circle",
+   "group": "Outpost Null-7",
+   "minDist": 25,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -600,
+   "z": 200,
+   "r": 80
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Pod_Research_*"
+   ],
+   "count": 4,
+   "shape": "circle",
+   "group": "Observation Core",
+   "minDist": 30,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 550,
+   "z": -350,
+   "r": 70
+  },
+  {
+   "prefabs": [
+    "SM_Env_Ice_Sheet_*"
+   ],
+   "count": 20,
+   "shape": "circle",
+   "group": "Observation Core",
+   "minDist": 20,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 550,
+   "z": -350,
+   "r": 160
+  },
+  {
+   "prefabs": [
+    "SM_Env_Cracked_Edge_*",
+    "SM_Env_Ground_Fissure_*"
+   ],
+   "count": 120,
+   "shape": "ring",
+   "group": "The Glass Rim",
+   "minDist": 25,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "r": 380,
+   "r2": 900
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Env_Skull_Huge_*",
+   "x": 0,
+   "z": 330,
+   "rot": 180,
+   "group": "The Great Skull",
+   "fitHeight": 40,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Great Skull"
+  },
+  {
+   "prefab": "SM_Env_Hell_Ring_*",
+   "x": 0,
+   "z": 0,
+   "rot": 0,
+   "group": "The Stirring Well",
+   "fitHeight": 10,
+   "scale": 1,
+   "dy": -200,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Stirring Well"
+  },
+  {
+   "prefab": "SM_Veh_Mech_*",
+   "x": -560,
+   "z": 280,
+   "rot": 60,
+   "group": "Outpost Null-7",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 85,
+   "roll": 0,
+   "collide": true,
+   "name": "Wrecked war-frame"
+  },
+  {
+   "prefab": "SM_Bld_Corp_Control_Tower_*",
+   "x": 560,
+   "z": -330,
+   "rot": 0,
+   "group": "Observation Core",
+   "fitHeight": 35,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Observation Core"
+  },
+  {
+   "prefab": "SM_Bld_Wall_L_Gate_*",
+   "x": 0,
+   "z": 880,
+   "rot": 0,
+   "group": "The Scar Gate",
+   "fitHeight": 24,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Scar Gate"
+  }
+ ],
+ "rings": [
+  {
+   "prefabs": [
+    "SM_Env_Bone_Rigcage_*"
+   ],
+   "x": 0,
+   "z": 0,
+   "r": 230,
+   "count": 5,
+   "fitHeight": 60,
+   "group": "Bone Arches",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": false,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Banner_*"
+   ],
+   "x": 0,
+   "z": 860,
+   "r": 40,
+   "count": 6,
+   "fitHeight": 0,
+   "group": "The Scar Gate",
+   "startAngle": -60,
+   "endAngle": 60,
+   "faceOut": true,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": false
+  }
+ ],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Env_Minetrack_Bridge_*",
+    "SM_Env_Dwarf_Bridge_*"
+   ],
+   "pts": [
+    -300,
+    0,
+    -60,
+    0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Pit Bridges",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": -20,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Minetrack_Bridge_*",
+    "SM_Env_Dwarf_Bridge_*"
+   ],
+   "pts": [
+    60,
+    0,
+    300,
+    0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Pit Bridges",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": -20,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Arrival",
+   "x": 0,
+   "z": -880,
+   "dy": 0
+  },
+  {
+   "name": "Portal onward",
+   "x": 0,
+   "z": 880,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 70",
+   "x": -31,
+   "z": -722,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 73",
+   "x": -371,
+   "z": -596,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 76",
+   "x": -413,
+   "z": -278,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 79",
+   "x": -651,
+   "z": -6,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 82",
+   "x": -457,
+   "z": 252,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 85",
+   "x": -433,
+   "z": 613,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 88",
+   "x": -77,
+   "z": 696,
+   "dy": 0
+  },
+  {
+   "name": "Run entrance: The Stirring Well",
+   "x": 0,
+   "z": 0,
+   "dy": 0
+  },
+  {
+   "name": "Wayfinder (Outpost Null-7)",
+   "x": -600,
+   "z": 200,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 78 (Observation Core)",
+   "x": 550,
+   "z": -350,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 89 (the Glass Rim)",
+   "x": -400,
+   "z": -500,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "The Pit",
+   "x": 1.8369701987210297e-14,
+   "y": 40,
+   "z": -480.0,
+   "tx": 0,
+   "ty": -120,
+   "tz": -330,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Observation Core",
+   "x": 440.72610635328834,
+   "y": 70,
+   "z": -480.22755533022627,
+   "tx": 550,
+   "ty": 60,
+   "tz": -350,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Outpost Null-7",
+   "x": -637.6222157658235,
+   "y": 14,
+   "z": 96.63381171355007,
+   "tx": -600,
+   "ty": 4.8999999999999995,
+   "tz": 200,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Vista",
+   "x": -700,
+   "y": 140,
+   "z": -700,
+   "tx": 0,
+   "ty": -60,
+   "tz": 100,
+   "fov": 50,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 1500,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 2000
+  }
+ ]
+}

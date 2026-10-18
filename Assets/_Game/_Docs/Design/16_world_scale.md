@@ -117,6 +117,54 @@ and 2.1 m, the height a person takes up: a table is all of itself, a tree is its
 too but walked under. A piece lower than 0.35 m (a knee-high step) stops nobody, nor does a rug, a tuft of
 flowers, an arch or a gazebo. The numbers are `blockHeight` and `walkBand` in `HousingSettings`.
 
+## Out in the world (18 Oct 2026)
+
+Added with the Zone Build Kits (`Design/Zone-Build-Kits.md`). The owner asked that "things and places feel grand where they need to and trees feel like actual tree size compared to a humanoid", and that the scale be locked through all the planning. Everything above was written for Halls and Lots, where a tree is a garden tree. Out in the zones, a tree is its real height, and what is grand says how many persons high it is.
+
+**Status: my picks, for the owner to confirm.** The tree heights are real-world measurements. The map sizes are rooted in how long a zone takes to cross. Each is one number to change, and then the kits and maps are rebuilt.
+
+### Open-world kinds
+
+A kit prefab names its kind (`World/Data/ZoneKits.json`). **Build Zone Kits** puts `WorldScaleSettings.Fit` on the variant's root, so it is the right size wherever it is placed. A kind may say how far it may be multiplied, because the packs draw some trees at a third of real height.
+
+| Kind | Judged by | Real size | In the game | Rooted in |
+| --- | --- | --- | --- | --- |
+| birch | height | 18 m | 14 to 22 | a grown birch is 15 to 25 m |
+| conifer | height | 28 m | 20 to 35 | a grown pine or spruce is 25 to 35 m |
+| broadleaf | height | 20 m | 15 to 25 | oak, maple, ash, willow: 15 to 25 m |
+| fruittree | height | 5 m | 3.5 to 7 | an orchard tree is kept at 4 to 6 m |
+| blossom | height | 8 m | 6 to 11 | a cherry, a Japanese maple, a ginkgo in a garden |
+| palm | height | 15 m | 10 to 20 | a palm is 10 to 20 m |
+| bamboo | height | 12 m | 9 to 16 | grove bamboo is 10 to 15 m |
+| deadtree | height | 11 m | 7 to 16 | a dead or burned tree keeps most of its height |
+| swamptree | height | 12 m | 8 to 16 | mangrove and swamp trees |
+| oldgrowth | height | 40 m | 30 to 50 | an old-growth giant (the Sylwood) |
+| colossaltree | height | 75 m | 60 to 90 | a tree a zone steers by: ten persons and more |
+| fern, tallgrass, crop | height | 1, 1, 1.8 m | 0.4 to 2.6 | knee to waist; corn stands 1.5 to 2.5 m |
+| boulder, outcrop | largest side | 3, 12 m | 1.5 to 25 | a field boulder; a tor |
+| standingstone | height | 3.5 m | 2.5 to 5.5 | a runestone is heroic |
+| crystal | height | 3 m | 1 to 6 | a crystal cluster in the open |
+| house, hall, tower | height | 8, 14, 25 m | 6 to 50 | one or two storeys; a longhall or barn; a watchtower or silo |
+| citywall | height | 25 m | 18 to 32 | New Meridian's is 30 |
+| fence | height | 1.2 m | 0.8 to 2.2 | waist to chest high |
+| pylon | height | 30 m | 22 to 42 | a power pylon |
+| car, truck, bus | length | 4.5, 9, 12 m | 3.8 to 20 | car, truck or carrier, bus or train car |
+| dropship, longship | length | 30, 25 m | 5 to 40 | a dropship; a longship (a skiff 6 to 10) |
+| mech | height | 12 m | 9 to 16 | a war-frame is monumental |
+
+Buildings, walls and set pieces are not fitted by kind: the map layout says how high each one stands (`fitHeight`). That way the Core Spire is 180 m, New Meridian's towers 40 to 120 m, the Great Tree 90 m and the Severed Titan 900 m long, each on purpose.
+
+### Map sizes
+
+| Map | Size | Terrain height | Why |
+| --- | --- | --- | --- |
+| Field zone | 2,000 × 2,000 m | 300 to 800 m | Running at about 7 m/s, the straight route takes 4 to 5 minutes; a zone has room for 7 or 8 Hostile grounds, two Bruiser lairs and its landmarks seen from far off |
+| Home City | 1,600 × 1,600 m | 200 to 600 m | New Meridian is a 1 km walled ring with its outskirts; Aldhavn, Terminus and Kagero are cliffs, a crater and a gorge |
+| The Scar | 3,000 × 1,500 m | 500 m | a long valley with three gates and a titan across it |
+| Run | 400 × 400 m | 100 m | rooms of 20 to 100 m, with space round them |
+
+Zone01 stays 1 km: it is the starter town and was built at that size.
+
 ## The options the owner chooses from
 
 | | The rule | What changes |
