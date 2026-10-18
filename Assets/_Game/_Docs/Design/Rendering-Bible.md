@@ -1080,6 +1080,25 @@ accepts. Its GPU occlusion culling is off: the camera looks down, so little hide
   compares both with `-force-d3d11` / `-force-d3d12`; the performance log's machine line names the API and the
   threading mode. Measuring builds: Krytical Nova ▸ Build ▸ Measuring Build (Background, IL2CPP), in the build
   checkout through the Accelerator, nothing uploaded, into `Builds/Windows/KryticalNovaII_Measure`.
+- **Measured 18 Oct 2026** (measuring build, IL2CPP, owner's PC: RTX 5070 Ti, Ryzen 7 9700X, 2560 x 1440 windowed,
+  cap 144; `gm.bench`, means over each stretch, ms per frame). Every run held the 144 cap on average.
+
+  | Run | Main thread | Render thread | GPU | Set-pass | Triangles | Worst frame |
+  |---|---|---|---|---|---|---|
+  | DX11, owner's settings (Custom = Ultra values) | 3.6-3.9 | 0.7 | 2.8 | 175-191 | 367-397 k | 102.9 (a script hitch in the run) |
+  | DX12 + Split Graphics Jobs, same settings | 3.9-4.1 | 0.9-1.0 | 2.6-2.8 | 174-187 | 367-391 k | 128.5 (waiting on the screen) |
+  | DX12, occlusion culling on | 3.9-4.6 | 1.1-1.3 | 2.7-2.8 | 187-190 | 283-346 k | 22.2 |
+  | DX12, Low, shadow bands on (1,512 casters lifted) | 3.6-3.9 | 0.8 | 1.2-1.3 | 158-162 | 97-102 k | 171.5 (waiting on the screen) |
+  | DX12, Low, shadow bands off | 3.6-3.9 | 0.8 | 1.2-1.3 | 164-167 | 97-103 k | 10.7 |
+
+  **What it says.** DX12 buys nothing here: the render thread is under 1 ms because the Resident Drawer already
+  batches the world, so Split Graphics Jobs has nothing to split, and DX12 frames stalled up to 170 ms waiting on the
+  screen (`WaitForLastPresentation`) where DX11's did not. **DX11 stays first**; the Editor and builds were checked on
+  DX12 (Zone01, Terminus, the four menu scenes, 0 errors) and D3D12 stays in the list as the fallback.
+  Occlusion culling cut 7 to 28 % of the triangles but cost up to 0.6 ms of main thread with no GPU gain: **left off**.
+  The shadow bands took 6 set-pass calls off Low with no GPU change on this card (Low's GPU frame is 1.2 ms): **kept**
+  for weaker cards, unproven on one. The worst frames are not drawing: script hitches (`Update` 68-94 ms during the
+  run) and, on DX12, presentation stalls. A frame's main thread of about 4 ms is game code, the next place to look.
 - **Starting presets:** a first launch picks Low (integrated graphics, Steam Deck, four threads or fewer; with a
   60 fps cap and an upscaler), Medium (GTX, Radeon RX 400 / 500 / 5000, under 6 GB) or High
   (`GraphicsPreferences.PresetForHardware`). The Player 2 clone always starts on Low.
