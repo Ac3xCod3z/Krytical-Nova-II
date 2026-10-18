@@ -97,6 +97,9 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player critWorldFeel;
         [SerializeField] private MMF_Player runWorldFeel;
         [SerializeField] private MMF_Player jumpWorldFeel;
+        [Tooltip("Walls as a second ground: what shows at the feet while standing on a wall (a grip glow, and dust puffs " +
+                 "left by the distance walked or run there). Built by Krytical Nova ▸ GameFeel ▸ Rebuild Wallstride Feel.")]
+        [SerializeField] private GameObject wallLoopVfx;
         [Tooltip("A jump's crouch, on every client: sparks at the feet and a slight squash.")]
         [SerializeField] private MMF_Player jumpChargeWorldFeel;
         [SerializeField] private MMF_Player landWorldFeel;
@@ -697,6 +700,13 @@ namespace KryticalNova.GameFeel
             ActorSmear.Find(actor)?.Release(); // the smear kept up through the air fades now
             PlayWorld(landWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor);
             if (isLocalPlayer) Play(landFeel, actor.position, 1f);
+        }
+
+        public void WallStanding(Transform actor, bool onWall)
+        {
+            if (actor == null) return;
+            if (onWall) ActorVfx.For(actor).SetOnWall(true, wallLoopVfx);
+            else ActorVfx.Find(actor)?.SetOnWall(false, wallLoopVfx);
         }
 
         public void Airborne(Transform actor, bool airborne)

@@ -38,7 +38,7 @@ MonoBehaviour:
     maxLevel: 0
     pvp: 0
     lore: 'The starter town, and for now the only neutral ground: every faction trades, talks and settles its quarrels in a Callout here. Outside the walls the war goes on.'
-    surfaceGraph: {fileID: 11400000, guid: d03e08068abcf3249b574dc60556aa09, type: 2}
+    surfaceGraph: {fileID: 11400000, guid: f2c4a2f13e8a2b14080c8529a1552b0b, type: 2}
   - sceneName: MeridianSprawl_NewMeridian
     displayName: New Meridian
     region: Meridian Sprawl

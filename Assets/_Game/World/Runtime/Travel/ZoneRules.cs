@@ -34,6 +34,8 @@ namespace KryticalNova.World
             Current = this;
             Entry = catalog != null ? catalog.Find(gameObject.scene.name) : null;
             if (Entry == null) Debug.LogWarning($"[ZoneRules] '{gameObject.scene.name}' is not in the zone catalog.", this);
+            // Walls as a second ground: the zone's surface graph is read in the background now, not on the first click.
+            if (Entry != null && Entry.surfaceGraph != null) Entry.surfaceGraph.Preload();
             var session = ZoneSessionManager.Instance;
             if (session != null) session.SetCurrentZone(gameObject.scene.name, Entry != null ? Entry.displayName : gameObject.scene.name);
         }

@@ -551,7 +551,17 @@ server is on the old PC and the bots run here (owner, 17 Oct 2026).
 | "Player turned away … the server is full" | `maxPlayers` reached | Raise `maxPlayers`. |
 | The build says "The server … is still running, or a file in it is open" | The server (or a window showing a file in its folder) is open | Stop the server, close that window, build again. |
 | Pressing Play in the Editor says "Port 7777 is in use on this PC … Play does not host" | Your server is running on this PC, so the Editor does not try to host beside it | Press **F1**, IP `127.0.0.1`, Port `7777`, **JOIN**. |
+| "Unity's sign-in keys could not be fetched: …" and every join turned away ("no sign-in") | The server could not reach Unity's sign-in service. The line now says why after the arrows (`<-`): a firewall, no internet, a secure-connection error | Start the server by double-clicking `Start Server.bat` (a server started from inside a tool, such as Claude's terminal, can carry settings that block it), check the internet, and allow the server in Norton's firewall. |
 | A GM's password is not taken | A typo, or they were removed | Check the name under Game Masters on the control page; remove and add them again with a new password if needed. Five wrong tries send them away; they can join and try again. |
+
+### A second server for tests
+
+A test server can run beside your own on the same PC: build it into another folder, give it its own ports and an empty
+server list so it never publishes itself (`"port": 7796`, `"pagePort": 8096`, `"serverList": []` in its
+`server-settings.json`), and give it a copy of the saves so nobody's real characters change. Point the Editor at it with
+`port=7796` and `join=1` in `Library/KryticalNova.TestSession`. On 18 Oct 2026 one ran from `Builds/Server/Test` for the
+two-player wall fight check; its window also says "Krytical Nova Server", so tell the two apart by the port the window
+prints.
 
 ## 12. What comes next
 
@@ -631,3 +641,6 @@ Things learned the hard way:
 - 18 Oct 2026: phase 2 milestone 2: Direct joins are encrypted (the `certificates` folder beside the server, the
   master key in Documents\KryticalNova-Secrets); games from before this cannot join a server built after it.
 - 18 Oct 2026: phase 2 milestone 1: the game signs in to Unity by itself and the server checks it; saves are kept under the proven account; old characters are carried over once; GMs are bound to accounts on the control page (no GM password in the game) and F2 opens only for GMs.
+- 18 Oct 2026: walls as a second ground: a test server on its own ports beside the real one (section 11); the
+  sign-in key line now says why it failed; a server started from a tool's terminal could not reach Unity's sign-in
+  (started by double-click it could).

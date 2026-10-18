@@ -36,6 +36,8 @@ namespace KryticalNova.Player
         WallHold,
         /// <summary>Off a wall in a jump with a flip: out of Grip, or a jump clicked away from it.</summary>
         PushOff,
+        /// <summary>A jump at a wall that lands on it, standing on the face.</summary>
+        JumpOn,
     }
 
     /// <summary>The phase every machine plays, and how it faces.</summary>
@@ -231,8 +233,8 @@ namespace KryticalNova.Player
         /// <returns>True when the click was on something climbable and has been dealt with (started or refused, with the reason told).</returns>
         public bool TryClimbClicked(Vector3 point, Vector3 normal, Collider surface, int obstacleLayers, float modelForwardOffset)
         {
+            if (surface != null && WantsWallWalk(point, normal)) return TryWallWalkClicked(point, normal); // walls as a second ground
             if (surface == null || !IsClimbableObject(surface, out _)) return false;
-            if (WantsWallWalk(point, normal)) return TryWallWalkClicked(point, normal);
             if (!HasAuthority)
             {
                 // Checked here first, so a bad click is refused at once.
@@ -988,8 +990,13 @@ namespace KryticalNova.Player
         private void Show(WallRunPose pose)
         {
             if (pose.Phase == shownPhase) return;
+            WallRunPhase before = shownPhase;
             shownPhase = pose.Phase;
             var feel = ClientPresentationRegistry.Feel;
+            // Standing on a wall shows at the feet (owner, 18 Oct 2026: wallstride must read as wallstride).
+            if (feel != null) feel.WallStanding(transform, IsOnWallPhase(pose.Phase));
+            if (feel != null && IsOnWallPhase(pose.Phase) && (before == WallRunPhase.Plant || before == WallRunPhase.JumpOn))
+                feel.Landed(transform, !IsSpawned || IsOwner); // the feet meet the face
             if (animancerMotor == null) return;
             switch (pose.Phase)
             {
@@ -1024,6 +1031,10 @@ namespace KryticalNova.Player
                     break;
                 case WallRunPhase.PushOff:
                     Play(animancerMotor.WarpedJumpClip(1), pose.Duration, fallbackAirborne: true);
+                    if (feel != null) { feel.JumpTakeoff(transform, !IsSpawned || IsOwner); feel.Airborne(transform, true); }
+                    break;
+                case WallRunPhase.JumpOn:
+                    Play(animancerMotor.WarpedJumpClip(0), pose.Duration, fallbackAirborne: true);
                     if (feel != null) { feel.JumpTakeoff(transform, !IsSpawned || IsOwner); feel.Airborne(transform, true); }
                     break;
                 default:

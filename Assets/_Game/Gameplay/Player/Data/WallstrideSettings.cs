@@ -104,6 +104,10 @@ namespace KryticalNova.Player
         [Header("Walls as a second ground (the surface graph, baked per zone)")]
         [Tooltip("Metres between two samples of a surface when the graph is baked.")]
         [Range(0.25f, 1.5f)] public float graphSpacing = 0.5f;
+        [Tooltip("Metres between two samples of the terrain's steep slopes (a mountain side is large and smooth).")]
+        [Range(0.5f, 3f)] public float graphTerrainSpacing = 1f;
+        [Tooltip("Metres between two samples of walls outside the town (ruins, the skyline): still climbable, far fewer nodes.")]
+        [Range(0.5f, 3f)] public float graphOuterSpacing = 1f;
         [Tooltip("A surface steeper than this (degrees from level) is wall, not ground. Kept at the NavMesh's own steepest " +
                  "walkable slope (45), so a surface is always one or the other.")]
         [Range(30f, 80f)] public float graphMinSurfaceAngle = 45f;

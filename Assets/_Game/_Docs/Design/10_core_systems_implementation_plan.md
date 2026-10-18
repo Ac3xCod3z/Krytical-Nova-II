@@ -194,6 +194,23 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
     a push-off flip to the ground out in front. The owner's camera (`PointAndClickPlayer.FrameWallCamera`) eases the
     orbit's yaw to face the wall and its pitch down over 0.8 s, and back off it; an orbit with the mouse takes over.
     Not yet: knockbacks and knockdowns ignored on a wall, fights there (stage 4), the whole zone baked (stage 3).
+  - **Walls as a second ground, stage 3** (18 Oct 2026): the whole zone is baked from collider triangles (MeshCollider
+    and BoxCollider faces sampled 0.5 m apart in the town, 1 m outside it; the terrain's heightmap 1 m apart), leaving
+    out water, triggers, moving bodies, damageable things, anything under 2.2 m tall, places with no room for the body,
+    places inside a solid (seen by rays that hit back faces: three of five ways out meet the inside of a surface) and
+    places no join can reach. Kept as a compressed binary beside the `SurfaceGraph` asset (centimetre deltas, varints;
+    Zone01 504,247 places in 4.2 MB), loaded on a thread when the zone starts (`ZoneRules.Awake`), searched through an
+    8 m join grid and a 2 m node grid. `PointAndClickPlayer` asks `TryArmSurfaceRoute` before a long walk; a click on a
+    surface steeper than 45° that the graph covers (a mountain side) is a wall click; the tilt follows the face under
+    the feet. A jump at a wall lands on it (`JumpOnto`, from the ground, a roof or another wall), a jump off a wall
+    arcs higher over anything in its way (`ArcClear`), and a click on a flat top never means the wall under its edge.
+  - **Walls as a second ground, stage 4** (18 Oct 2026): `PlayerMeleeCombat` counts height in reach beyond 1.2 m
+    (`ReachOffset`), chases a fight that involves a wall with `PlayerWallRunMotor.ServerChase` (the click's own way,
+    or a leap when no way along), stops with `ServerHoldForFight` and turns strikes round the face (`FaceOnWall`); no
+    strike while stepping on, over or off. `HostileBrainLink.Strike` lands on a player on a wall only within the
+    species' reach in a straight line with nothing between. The Nova, name card, pet (`PetFollower`) and the pet
+    bubble's player box use the body's up. The wall camera rises in 5° steps until nothing is between it and the
+    player. Checked with two clients on a dedicated test server (a Callout in town).
   - **Roofs** (17 Oct 2026): `TownRoofsBuilder` (Zone ▸ Solid Roofs and No Indoor NavMesh) gives every town building
     taller than 2.5 m an exact collider of what is drawn and marks its inside as not walkable, up to just under the
     roof; `RoofLinksBuilder` (Zone ▸ Roof Jump Links) joins roofs up to 4 m apart and 3 m in height with two-way links,

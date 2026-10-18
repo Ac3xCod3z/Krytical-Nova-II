@@ -27,8 +27,11 @@ namespace KryticalNova.World.Surfaces
         private MeshFilter graphPart, routePart;
         private Material material;
 
-        /// <summary>Draws the graph (and a route over it when given).</summary>
-        public void Show(SurfaceGraph graph, SurfaceRoute.Route route = null)
+        /// <summary>
+        /// Draws the graph (and a route over it when given). A whole zone's graph is far too much to draw: only what lies
+        /// within <paramref name="within"/> is drawn when it is given.
+        /// </summary>
+        public void Show(SurfaceGraph graph, SurfaceRoute.Route route = null, Bounds? within = null)
         {
             EnsureParts();
             var vertices = new List<Vector3>();
@@ -39,12 +42,14 @@ namespace KryticalNova.World.Surfaces
                 for (int i = 0; i < graph.NodeCount; i++)
                     for (int e = graph.edgeStart[i]; e < graph.edgeStart[i + 1]; e++)
                     {
+                        if (within.HasValue && !within.Value.Contains(graph.points[i])) break;
                         int j = graph.edgeTo[e];
                         if (j < i) continue; // each pair once
                         Ribbon(vertices, colors, triangles, graph.points[i], graph.points[j], graph.normals[i], GraphWidth,
                             graph.edgeKind[e] == SurfaceGraph.EdgeKind.Corner ? CornerColor : FaceColor);
                     }
                 foreach (SurfaceGraph.Join join in graph.joins)
+                    if (!within.HasValue || within.Value.Contains(graph.points[join.node]))
                     Ribbon(vertices, colors, triangles, graph.points[join.node], join.navPoint, graph.normals[join.node], GraphWidth * 1.5f,
                         join.kind == SurfaceGraph.JoinKind.Ground ? GroundColor : TopColor);
             }

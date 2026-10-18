@@ -690,8 +690,10 @@ namespace KryticalNova.Player
                 return;
             }
 
-            // Wallstride: a wall or a tree clicked with Run or Jump selected is run up, or jumped at and caught.
-            if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0 && wallRunMotor != null && movementSkills != null
+            // Wallstride: a wall or a tree clicked with Run or Jump selected is run up, or jumped at and caught. A steep
+            // slope of the ground itself (a mountain side) counts as a wall where the zone's surface graph covers it.
+            if (wallRunMotor != null && ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0 || wallRunMotor.IsSteepWallClick(hit.point, hit.normal))
+                && movementSkills != null
                 && (movementSkills.IsRunning || movementSkills.IsJumpSelected)
                 && wallRunMotor.TryClimbClicked(hit.point, hit.normal, hit.collider, raycastLayers.value, modelForwardOffset))
             {
@@ -1360,6 +1362,14 @@ namespace KryticalNova.Player
         {
             if (vaultMotor != null) vaultMotor.Disarm();
             bool walkable = agent.CalculatePath(destination, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
+            // Walls as a second ground: no walk there at all (a roof to the street), or a far longer one while running,
+            // goes over a wall: down from the roof over its edge, or up one. The agent walks to where the wall begins.
+            if (wallRunMotor != null && wallRunMotor.TryArmSurfaceRoute(destination, walkable ? requestedPath : null, out Vector3 wallEntry))
+            {
+                if (agent.CalculatePath(wallEntry, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete) return true;
+                wallRunMotor.Disarm();
+                walkable = agent.CalculatePath(destination, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
+            }
             // Wallstride: running at a wall the destination stands on, with no way round or a much longer one, goes up it.
             if (wallRunMotor != null && wallRunMotor.TryArmTowards(destination, walkable ? requestedPath : null, out Vector3 wallFoot))
             {
@@ -1752,7 +1762,7 @@ namespace KryticalNova.Player
                 {
                     cameraPitchBeforeWall = orbitCamera.VerticalAxis.Value;
                     cameraWallYaw = YawFacingFace(transform.up);
-                    StartCameraEase(cameraWallYaw, wallCameraPitch);
+                    StartCameraEase(cameraWallYaw, ClearWallPitch(cameraWallYaw, wallCameraPitch));
                 }
                 else StartCameraEase(orbitCamera.HorizontalAxis.Value, cameraPitchBeforeWall);
             }
@@ -1762,7 +1772,16 @@ namespace KryticalNova.Player
                 if (Mathf.Abs(Mathf.DeltaAngle(yaw, cameraWallYaw)) > wallCameraFollowTurn)
                 {
                     cameraWallYaw = yaw;
-                    StartCameraEase(yaw, orbitCamera.VerticalAxis.Value);
+                    StartCameraEase(yaw, ClearWallPitch(yaw, orbitCamera.VerticalAxis.Value));
+                }
+                else if (!isOrbiting)
+                {
+                    // Something stands behind the camera (across an alley, the building opposite): it rises over it,
+                    // eased, rather than looking out from inside it.
+                    float yawNow = cameraEasing ? cameraTargetYaw : orbitCamera.HorizontalAxis.Value;
+                    float pitchNow = cameraEasing ? cameraTargetPitch : orbitCamera.VerticalAxis.Value;
+                    float clear = ClearWallPitch(yawNow, pitchNow);
+                    if (clear > pitchNow + 0.5f) StartCameraEase(yawNow, clear);
                 }
             }
             if (!cameraEasing) return;
@@ -1773,6 +1792,28 @@ namespace KryticalNova.Player
             orbitCamera.HorizontalAxis.Value = orbitCamera.HorizontalAxis.ClampValue(h);
             orbitCamera.VerticalAxis.Value = orbitCamera.VerticalAxis.ClampValue(v);
             if (Mathf.Abs(Mathf.DeltaAngle(h, cameraTargetYaw)) < 0.2f && Mathf.Abs(v - cameraTargetPitch) < 0.2f) cameraEasing = false;
+        }
+
+        private const float WallCameraClearance = 0.35f;
+        private const float WallCameraPitchStep = 5f;
+
+        /// <summary>
+        /// The lowest pitch from <paramref name="pitch"/> up at which the camera, at its distance, sees the player with
+        /// nothing between them: on a wall in a narrow alley the camera looks down from above the building opposite.
+        /// </summary>
+        private float ClearWallPitch(float yaw, float pitch)
+        {
+            if (cameraTrackingTarget == null || orbitCamera == null) return pitch;
+            Vector3 target = cameraTrackingTarget.position;
+            float radius = Mathf.Max(orbitCamera.Radius, MinimumPositiveValue);
+            int mask = Physics.DefaultRaycastLayers & ~(1 << gameObject.layer);
+            for (float p = pitch; p < maximumPitch; p += WallCameraPitchStep)
+            {
+                Vector3 way = Quaternion.Euler(p, yaw, 0f) * Vector3.back;
+                if (!Physics.SphereCast(target + way * 0.5f, WallCameraClearance, way, out _, radius - 0.5f, mask, QueryTriggerInteraction.Ignore))
+                    return p;
+            }
+            return maximumPitch;
         }
 
         private void StartCameraEase(float yaw, float pitch)

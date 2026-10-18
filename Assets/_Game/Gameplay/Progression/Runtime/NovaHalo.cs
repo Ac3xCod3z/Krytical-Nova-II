@@ -141,7 +141,9 @@ namespace KryticalNova.Progression
         {
             if (head == null) head = FindDeep(owner, HeadBone);
             float scale = owner.lossyScale.y;
-            return head != null ? head.position + Vector3.up * (HeadTop * scale) : owner.position + Vector3.up * (FallbackHeight * scale);
+            // Along the body's own up: on a wall (walls as a second ground) the crown is out from the face, not overhead.
+            Vector3 up = owner.up;
+            return head != null ? head.position + up * (HeadTop * scale) : owner.position + up * (FallbackHeight * scale);
         }
 
         public static NovaHalo Create(Transform owner)
@@ -329,12 +331,16 @@ namespace KryticalNova.Progression
             if (!settled) Paint();
         }
 
-        /// <summary>Above the head, upright in the world whichever way the character turns.</summary>
+        /// <summary>
+        /// Above the head along the body's up, so on a wall it stays over the head (owner, 18 Oct 2026); on the ground
+        /// that is upright in the world whichever way the character turns.
+        /// </summary>
         private void Place()
         {
             if (owner == null || look == null) return;
-            Vector3 centre = Crown + Vector3.up * look.CentreAboveHead(Tier);
-            transform.SetPositionAndRotation(centre, Quaternion.identity);
+            Vector3 up = owner.up;
+            Vector3 centre = Crown + up * look.CentreAboveHead(Tier);
+            transform.SetPositionAndRotation(centre, Quaternion.FromToRotation(Vector3.up, up));
             float ownerScale = Mathf.Max(0.0001f, owner.lossyScale.y);
             transform.localScale = Vector3.one / ownerScale; // children are sized in metres
 

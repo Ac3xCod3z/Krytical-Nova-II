@@ -88,6 +88,7 @@ namespace KryticalNova.Combat
         [SerializeField, Min(0f)] private float impactVfxTowardAttacker = 0.35f;
 
         private NavMeshAgent agent;
+        private PlayerWallRunMotor wallRunMotor;
         private CharacterCombatStats combatStats;
         private CharacterBuffManager buffManager;
         private IDamageable currentTarget;
@@ -133,6 +134,7 @@ namespace KryticalNova.Combat
             combatStats = GetComponent<CharacterCombatStats>();
             buffManager = GetComponent<CharacterBuffManager>();
             if (animancerMotor == null) animancerMotor = GetComponent<PlayerAnimancerMotor>();
+            wallRunMotor = GetComponent<PlayerWallRunMotor>();
             if (weaponHitbox == null) weaponHitbox = GetComponentInChildren<WeaponHitbox>(true);
             if (animancer == null) animancer = GetComponentInChildren<AnimancerComponent>();
         }
@@ -253,9 +255,25 @@ namespace KryticalNova.Combat
                 // 1. Approach into striking range if needed. Range is checked every frame so the first strike starts
                 // the moment the target is reachable; the path is only refreshed now and then (the target may move).
                 float nextRepath = 0f;
-                while (currentTarget != null && currentTarget.IsAlive && !IsWithinStrikingRange(currentTarget))
+                float nextWallChase = 0f;
+                Vector3 chasedTo = new Vector3(float.MaxValue, 0f, 0f);
+                while (currentTarget != null && currentTarget.IsAlive && (!IsWithinStrikingRange(currentTarget) || InWallHandOff))
                 {
                     if (animancerMotor != null) animancerMotor.SetAttackingState(false);
+                    // Walls as a second ground: a fight on a wall, or after a player on one, goes the way a click there
+                    // would (along the wall, onto it, over its edge or down), not along the ground's NavMesh.
+                    if (IsWallFight(currentTarget, out Vector3 soles, out Vector3 up))
+                    {
+                        bool moved = (soles - chasedTo).sqrMagnitude > WallChaseMoved * WallChaseMoved;
+                        bool idle = wallRunMotor.IsOnWall ? wallRunMotor.Phase == WallRunPhase.WallHold : !wallRunMotor.IsWallArmed;
+                        if (Time.time >= nextWallChase && (moved || idle) && wallRunMotor.ServerChase(soles, up))
+                        {
+                            nextWallChase = Time.time + WallChaseInterval;
+                            chasedTo = soles;
+                        }
+                        yield return null;
+                        continue;
+                    }
                     if (Time.time >= nextRepath && agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
                     {
                         nextRepath = Time.time + ApproachRepathInterval;
@@ -269,6 +287,7 @@ namespace KryticalNova.Combat
 
                 // Stop movement dead (no coasting into the swing) and face target
                 StopAgent();
+                if (wallRunMotor != null) wallRunMotor.ServerHoldForFight();
                 FaceTarget(currentTarget.Transform.position);
 
                 // Wait for any active draw/sheath animation to finish before swinging
@@ -541,7 +560,7 @@ namespace KryticalNova.Combat
                 yield return null;
                 Vector3 position = transform.position;
                 Vector3 travelled = position - lastPosition;
-                travelled.y = 0f;
+                if (wallRunMotor == null || !wallRunMotor.IsOnWall) travelled.y = 0f; // on a wall, up it is a way off too
                 lastPosition = position;
                 if (!atRest)
                 {
@@ -550,7 +569,7 @@ namespace KryticalNova.Combat
                     stoodAt = position;
                 }
                 Vector3 moved = position - stoodAt;
-                moved.y = 0f;
+                if (wallRunMotor == null || !wallRunMotor.IsOnWall) moved.y = 0f;
                 if (moved.sqrMagnitude > OwnerStrikeBreakDistance * OwnerStrikeBreakDistance) break;
             }
             ownerStrikeRoutine = null;
@@ -588,18 +607,44 @@ namespace KryticalNova.Combat
         private bool IsWithinStrikingRange(IDamageable target)
         {
             if (target == null) return false;
-            Vector3 offset = target.Transform.position - transform.position;
-            offset.y = 0f;
-            return offset.sqrMagnitude <= meleeStrikingRange * meleeStrikingRange;
+            return ReachOffset(target).sqrMagnitude <= meleeStrikingRange * meleeStrikingRange;
         }
 
         /// <summary>Mid-combo: the target is now further away than a strike can follow.</summary>
         private bool HasLeftReach(IDamageable target)
         {
-            Vector3 offset = target.Transform.position - transform.position;
-            offset.y = 0f;
             float reach = meleeStrikingRange + ComboReachSlack;
-            return offset.sqrMagnitude > reach * reach;
+            return ReachOffset(target).sqrMagnitude > reach * reach;
+        }
+
+        /// <summary>
+        /// The way to the target as reach counts it: height counts once it is more than a slope or a step, so a player
+        /// up a wall (walls as a second ground) or in a tree is out of reach of one standing below.
+        /// </summary>
+        private Vector3 ReachOffset(IDamageable target)
+        {
+            Vector3 offset = target.Transform.position - transform.position;
+            offset.y = Mathf.Sign(offset.y) * Mathf.Max(0f, Mathf.Abs(offset.y) - ReachHeightSlack);
+            return offset;
+        }
+
+        private const float ReachHeightSlack = 1.2f;
+        private const float WallChaseInterval = 0.5f;
+        private const float WallChaseMoved = 1f;
+
+        /// <summary>Stepping onto, over or off a wall: no strike until the feet are on something.</summary>
+        private bool InWallHandOff => wallRunMotor != null && wallRunMotor.IsBusy && !wallRunMotor.IsOnWall && !wallRunMotor.IsPerched;
+
+        /// <summary>This fight is on a wall: the attacker stands on one, or goes after a player who does.</summary>
+        private bool IsWallFight(IDamageable target, out Vector3 soles, out Vector3 up)
+        {
+            soles = target.Transform.position;
+            up = Vector3.up;
+            if (wallRunMotor == null) return false;
+            var targetMotor = target.Transform.GetComponent<PlayerWallRunMotor>();
+            bool targetOnWall = targetMotor != null && targetMotor.IsOnWall;
+            if (targetMotor != null) { soles = targetMotor.SolePoint; up = target.Transform.up; }
+            return targetOnWall || wallRunMotor.IsOnWall || wallRunMotor.IsWallArmed;
         }
 
         /// <summary>
@@ -627,6 +672,8 @@ namespace KryticalNova.Combat
 
         private void FaceTarget(Vector3 targetPos)
         {
+            // On a wall the body turns round the face's normal, never upright.
+            if (wallRunMotor != null && wallRunMotor.IsOnWall) { wallRunMotor.FaceOnWall(targetPos); return; }
             Vector3 dir = targetPos - transform.position;
             dir.y = 0f;
             if (dir.sqrMagnitude > 0.01f)

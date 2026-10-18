@@ -170,7 +170,11 @@ namespace KryticalNova.Networking
             }
             catch (Exception e)
             {
-                Debug.LogWarning("[Server] Unity's sign-in keys could not be fetched: " + e.Message);
+                // The whole chain: "An error occurred while sending the request" alone never says why (a firewall, TLS).
+                var why = new StringBuilder(e.Message);
+                for (Exception inner = e.InnerException; inner != null; inner = inner.InnerException)
+                    why.Append(" <- ").Append(inner.GetType().Name).Append(": ").Append(inner.Message);
+                Debug.LogWarning("[Server] Unity's sign-in keys could not be fetched: " + why);
                 return false;
             }
         }

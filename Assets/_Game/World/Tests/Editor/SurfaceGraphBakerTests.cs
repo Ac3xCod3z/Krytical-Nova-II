@@ -120,6 +120,33 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void NoPlaceIsInsideASolid_ASlabOrAThickWall()
+        {
+            // A closed mesh (a thick roof slab, a wall) round the block: the block's faces inside it are no place to
+            // stand, though nothing touches a body there (owner, 18 Oct 2026: places "inside what looks like roofs").
+            var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Object.DestroyImmediate(shell.GetComponent<BoxCollider>());
+            shell.AddComponent<MeshCollider>().sharedMesh = shell.GetComponent<MeshFilter>().sharedMesh;
+            shell.transform.position = Site + new Vector3(0f, 6f, 0f);
+            shell.transform.localScale = new Vector3(7f, 3f, 7f);
+            Physics.SyncTransforms();
+            try
+            {
+                SurfaceGraphBaker.Result r = Bake();
+                Assert.Greater(r.RejectedSolid, 0, "the block's faces inside the shell were offered and turned down");
+                var inside = new Bounds(shell.transform.position, shell.transform.localScale - Vector3.one * 0.05f);
+                foreach (Vector3 p in r.Points) Assert.IsFalse(inside.Contains(p), $"a place at {p} is inside the shell");
+                Assert.IsFalse(Physics.queriesHitBackfaces && !backfacesBefore, "the bake leaves back faces as it found them");
+            }
+            finally
+            {
+                Object.DestroyImmediate(shell);
+            }
+        }
+
+        private readonly bool backfacesBefore = Physics.queriesHitBackfaces;
+
+        [Test]
         public void TheNearestNodeIsFound_WithinReachOnly()
         {
             SurfaceGraphBaker.Result r = Bake();
@@ -167,6 +194,35 @@ namespace KryticalNova.Tests
             finally
             {
                 Object.DestroyImmediate(graph);
+            }
+        }
+
+        [Test]
+        public void TheGraphComesBackFromItsFile_AsItWasBaked()
+        {
+            SurfaceGraphBaker.Result r = Bake();
+            var baked = ScriptableObject.CreateInstance<SurfaceGraph>();
+            var read = ScriptableObject.CreateInstance<SurfaceGraph>();
+            try
+            {
+                baked.Set(r.Points, r.Normals, r.EdgeStart, r.EdgeTo, r.EdgeKind, r.Joins, "test");
+                byte[] bytes = baked.Encode();
+                typeof(SurfaceGraph).GetMethod("Decode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    .Invoke(read, new object[] { bytes });
+                Assert.AreEqual(baked.NodeCount, read.NodeCount);
+                CollectionAssert.AreEqual(baked.edgeStart, read.edgeStart);
+                CollectionAssert.AreEqual(baked.edgeTo, read.edgeTo);
+                CollectionAssert.AreEqual(baked.edgeKind, read.edgeKind);
+                for (int i = 0; i < baked.NodeCount; i++)
+                {
+                    Assert.AreEqual(0f, Vector3.Distance(baked.points[i], read.points[i]), 0.01f, "points are kept to the centimetre");
+                    Assert.Less(Vector3.Angle(baked.normals[i], read.normals[i]), 1.5f, "normals are kept to about a degree");
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(baked);
+                Object.DestroyImmediate(read);
             }
         }
 
