@@ -9679,4 +9679,4 @@ MonoBehaviour:
   - node: 4238
     navPoint: {x: 479.09824, y: 25.378704, z: 225.25}
     kind: 1
-  bakeNote: "Baked 2026-10-18 01:56 from Zone01_StarterTown: region (46.9, 7.0, 22.5) size (11.0, 16.0, 9.5); region (486.0, 20.0, 232.0) size (26.0, 40.0, 24.0); spacing 0.5, stand-off 0.38, walls from 45\xB0 to 110\xB0."
+  bakeNote: "Baked 2026-10-18 02:09 from Zone01_StarterTown: region (46.9, 7.0, 22.5) size (11.0, 16.0, 9.5); region (486.0, 20.0, 232.0) size (26.0, 40.0, 24.0); spacing 0.5, stand-off 0.38, walls from 45\xB0 to 110\xB0."

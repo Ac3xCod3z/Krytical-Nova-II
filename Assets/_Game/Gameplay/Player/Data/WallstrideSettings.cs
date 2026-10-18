@@ -117,6 +117,23 @@ namespace KryticalNova.Player
         [Range(60f, 150f)] public float graphCornerTurn = 110f;
         [Tooltip("A node is joined to the NavMesh (the ground at a foot, the top over an edge) within this many metres.")]
         [Range(0.5f, 3f)] public float graphJoinReach = 1.4f;
+        [Tooltip("A click this near a node of the graph (metres) is a click on the wall.")]
+        [Range(0.3f, 3f)] public float wallClickReach = 1.2f;
+        [Tooltip("Grip: Flux a second while standing or running on a wall (no height limit; out of Flux, the player pushes " +
+                 "off and flips down to the ground). Placeholder until it is tuned in play.")]
+        [Min(0f)] public float gripFluxPerSecond = 15f;
+        [Tooltip("Speed on a wall as a share of the speed on the ground (walk or run).")]
+        [Range(0.3f, 1.5f)] public float wallSpeedShare = 1f;
+        [Tooltip("How quickly the body turns to a new facing or round a corner on a wall (higher is quicker).")]
+        [Range(1f, 30f)] public float wallTurnRate = 10f;
+        [Tooltip("The feet stand this far off the wall's face (metres).")]
+        [Range(0f, 0.2f)] public float wallFootLift = 0.03f;
+        [Tooltip("Seconds the feet take to meet the wall from the ground.")]
+        [Range(0.1f, 1f)] public float wallPlantSeconds = 0.32f;
+        [Tooltip("How high a push off a wall rises before it falls (metres).")]
+        [Range(0f, 3f)] public float pushOffLift = 1.2f;
+        [Tooltip("How far out from the wall a push-off with no place clicked lands (metres).")]
+        [Range(1f, 8f)] public float pushOffDistance = 3f;
 
         private void OnValidate()
         {

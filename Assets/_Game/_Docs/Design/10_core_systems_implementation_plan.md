@@ -183,7 +183,17 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
     0.28 m sphere fits and that is not inside a building; nodes a step apart join (corners up to 110° of turn), and
     nodes at a foot or under an edge join the NavMesh. `SurfaceRoute.Plan` runs A* from every way in at once with the
     walks at both ends in the cost. Baked by Krytical Nova ▸ Zone ▸ Surface Graph, numbers in `WallstrideSettings`
-    ("Walls as a second ground"). Nothing moves a player along it yet (stage 2).
+    ("Walls as a second ground").
+  - **Walls as a second ground, stage 2** (18 Oct 2026; `PlayerWallRunMotor.WallWalk.cs`): where the zone's catalogue
+    entry has a graph, a click on a wall routes (`SurfaceRoute.ToNode`) to a ground join, walks there on the NavMesh, and
+    plants the feet on the face (a warped leg turning the body so its up is the face's normal). On the wall the motor
+    moves the body along the route's nodes at the ground speed, probes the face each frame to stay 3 cm off it, and
+    eases the body round corners; the animation motor plays idle, walk and run from the body's travel (the agent is off).
+    Clicks on the wall: along it (`Along`), over its edge or down (`Off`, the shorter), or with Jump selected a jump off
+    (a gravity arc on Motion Warping with the Jump's flip clip). Grip: `gripFluxPerSecond` while on a wall; out of Flux,
+    a push-off flip to the ground out in front. The owner's camera (`PointAndClickPlayer.FrameWallCamera`) eases the
+    orbit's yaw to face the wall and its pitch down over 0.8 s, and back off it; an orbit with the mouse takes over.
+    Not yet: knockbacks and knockdowns ignored on a wall, fights there (stage 4), the whole zone baked (stage 3).
   - **Roofs** (17 Oct 2026): `TownRoofsBuilder` (Zone ▸ Solid Roofs and No Indoor NavMesh) gives every town building
     taller than 2.5 m an exact collider of what is drawn and marks its inside as not walkable, up to just under the
     roof; `RoofLinksBuilder` (Zone ▸ Roof Jump Links) joins roofs up to 4 m apart and 3 m in height with two-way links,

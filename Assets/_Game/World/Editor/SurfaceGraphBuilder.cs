@@ -91,6 +91,7 @@ namespace KryticalNova.EditorTools
             note.Append($"spacing {o.Spacing}, stand-off {o.StandOff}, walls from {o.MinAngle}° to {o.MaxAngle}°.");
             graph.Set(r.Points, r.Normals, r.EdgeStart, r.EdgeTo, r.EdgeKind, r.Joins, note.ToString());
             EditorUtility.SetDirty(graph);
+            UseForZone(graph, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             AssetDatabase.SaveAssets();
 
             string report = $"[Surface graph] {r.Points.Length} nodes, {r.EdgeTo.Length} edges ({corners} round corners), " +
@@ -98,6 +99,19 @@ namespace KryticalNova.EditorTools
                             $"no room for the body {r.RejectedBody}, inside a building {r.RejectedInside}. Saved {ProofGraphPath}.";
             File.WriteAllText(ReportPath, report);
             return report;
+        }
+
+        private const string ZoneCatalogPath = "Assets/_Game/World/Data/Assets/ZoneCatalog.asset";
+
+        /// <summary>The zone's catalogue entry points at its graph, so the game uses it there.</summary>
+        private static void UseForZone(SurfaceGraph graph, string sceneName)
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ZoneCatalog>(ZoneCatalogPath);
+            ZoneEntry entry = catalog != null ? catalog.Find(sceneName) : null;
+            if (entry == null) { Debug.LogWarning($"[Surface graph] {sceneName} is not in the zone catalogue: the game will not use this graph."); return; }
+            if (entry.surfaceGraph == graph) return;
+            entry.surfaceGraph = graph;
+            EditorUtility.SetDirty(catalog);
         }
 
         /// <summary>Shows the proof graph over the world with a test route from the street onto the test building's roof.</summary>

@@ -458,6 +458,7 @@ namespace KryticalNova.Player
                     FlipCamera();
                 ClampPitchAboveGround();
                 ApplySkyLook();
+                FrameWallCamera();
             }
 
             if (isOrbiting)
@@ -566,14 +567,25 @@ namespace KryticalNova.Player
             if (resources != null && !resources.IsAlive) { CommandMessage?.Invoke("No HP remaining. Restore HP before moving."); return; }
             if (jumpMotor != null && jumpMotor.IsBusy) { CommandMessage?.Invoke("Finish this jump before choosing another destination."); return; }
             if (vaultMotor != null && vaultMotor.IsBusy) return; // back on the ground in a moment
-            // Up a wall or on the way over its edge: on the ground (or in the tree) in a moment.
-            if (wallRunMotor != null && wallRunMotor.IsBusy && !wallRunMotor.IsPerched) return;
+            // Up a wall or on the way over its edge: on the ground (or in the tree) in a moment. Standing on a wall
+            // (walls as a second ground) takes clicks like the ground does.
+            if (wallRunMotor != null && wallRunMotor.IsBusy && !wallRunMotor.IsPerched && !wallRunMotor.IsOnWall) return;
             if (gameplayCamera == null || !gameplayCamera.pixelRect.Contains(screenPosition))
                 return;
 
             Ray ray = gameplayCamera.ScreenPointToRay(screenPosition);
             if (!TryPickPointerHit(ray, out RaycastHit hit))
                 return;
+
+            // Standing on a wall: a click goes on along it, over its edge, down, or (Jump selected) jumps off toward
+            // the place clicked. A click on a unit still selects it.
+            if (wallRunMotor != null && wallRunMotor.IsOnWall && hit.collider.GetComponentInParent<IDamageable>() == null)
+            {
+                bool jump = movementSkills != null && movementSkills.IsJumpSelected;
+                if (wallRunMotor.TryWallClick(hit.point, hit.normal, jump))
+                    ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
+                return;
+            }
 
             // Standing in a tree: a click on the ground drops down to it; a click on a unit still selects it.
             if (wallRunMotor != null && wallRunMotor.IsPerched && hit.collider.GetComponentInParent<IDamageable>() == null)
@@ -1707,6 +1719,76 @@ namespace KryticalNova.Player
             }
 
             return false;
+        }
+
+        [Header("Walls as a second ground: the camera")]
+        [Tooltip("Pitch of the camera while the player stands on a wall (degrees; low, so it looks at the face).")]
+        [SerializeField, Range(-20f, 60f)] private float wallCameraPitch = 12f;
+        [Tooltip("Seconds the camera takes to swing round onto a wall, round a corner, or back off it. Never a cut.")]
+        [SerializeField, Min(0.1f)] private float wallCameraSeconds = 0.8f;
+        [Tooltip("A turn of the face larger than this (degrees) swings the camera round with it (a corner).")]
+        [SerializeField, Range(5f, 90f)] private float wallCameraFollowTurn = 30f;
+
+        private bool cameraOnWall;
+        private float cameraPitchBeforeWall;
+        private float cameraWallYaw;
+        private bool cameraEasing;
+        private float cameraTargetYaw, cameraTargetPitch, cameraYawSpeed, cameraPitchSpeed;
+
+        /// <summary>
+        /// The player's own camera on and off a wall (owner, 18 Oct 2026: a smooth move, never a jerk): stepping onto a
+        /// wall it swings round to look at the face from outside and comes down low; round a corner it follows; off the
+        /// wall (onto a roof or the ground) it goes back to the pitch it had. Eased over a set time; an orbit with the
+        /// mouse takes over at once.
+        /// </summary>
+        private void FrameWallCamera()
+        {
+            if (orbitCamera == null) return;
+            bool onWall = Vector3.Dot(transform.up, Vector3.up) < 0.5f; // the body stands on a face
+            if (onWall != cameraOnWall)
+            {
+                cameraOnWall = onWall;
+                if (onWall)
+                {
+                    cameraPitchBeforeWall = orbitCamera.VerticalAxis.Value;
+                    cameraWallYaw = YawFacingFace(transform.up);
+                    StartCameraEase(cameraWallYaw, wallCameraPitch);
+                }
+                else StartCameraEase(orbitCamera.HorizontalAxis.Value, cameraPitchBeforeWall);
+            }
+            else if (onWall)
+            {
+                float yaw = YawFacingFace(transform.up);
+                if (Mathf.Abs(Mathf.DeltaAngle(yaw, cameraWallYaw)) > wallCameraFollowTurn)
+                {
+                    cameraWallYaw = yaw;
+                    StartCameraEase(yaw, orbitCamera.VerticalAxis.Value);
+                }
+            }
+            if (!cameraEasing) return;
+            if (isOrbiting) { cameraEasing = false; return; } // the player's own hand takes over
+            float smooth = wallCameraSeconds / 3f;
+            float h = Mathf.SmoothDampAngle(orbitCamera.HorizontalAxis.Value, cameraTargetYaw, ref cameraYawSpeed, smooth);
+            float v = Mathf.SmoothDamp(orbitCamera.VerticalAxis.Value, cameraTargetPitch, ref cameraPitchSpeed, smooth);
+            orbitCamera.HorizontalAxis.Value = orbitCamera.HorizontalAxis.ClampValue(h);
+            orbitCamera.VerticalAxis.Value = orbitCamera.VerticalAxis.ClampValue(v);
+            if (Mathf.Abs(Mathf.DeltaAngle(h, cameraTargetYaw)) < 0.2f && Mathf.Abs(v - cameraTargetPitch) < 0.2f) cameraEasing = false;
+        }
+
+        private void StartCameraEase(float yaw, float pitch)
+        {
+            cameraTargetYaw = yaw;
+            cameraTargetPitch = Mathf.Clamp(pitch, minimumPitch, maximumPitch);
+            cameraYawSpeed = cameraPitchSpeed = 0f;
+            cameraEasing = true;
+        }
+
+        /// <summary>The orbit's yaw that puts the camera out in front of a face, looking at it.</summary>
+        private static float YawFacingFace(Vector3 faceNormal)
+        {
+            Vector3 look = -new Vector3(faceNormal.x, 0f, faceNormal.z);
+            if (look.sqrMagnitude < 1e-4f) return 0f;
+            return Mathf.Atan2(look.x, look.z) * Mathf.Rad2Deg;
         }
 
         private void BeginOrbit(Vector2 screenPosition)

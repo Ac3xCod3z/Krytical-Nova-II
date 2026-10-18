@@ -5,67 +5,128 @@ using UnityEngine.AI;
 namespace KryticalNova.World.Surfaces
 {
     /// <summary>
-    /// A way from a place on the ground to a place on a roof (or a plateau) that goes up a wall: walked on the NavMesh to a
-    /// surface's foot, run up and along the surface over the <see cref="SurfaceGraph"/>, and over the edge onto the top.
-    /// One search over every way in and out: the walks at either end are part of the cost, so it picks the wall that
-    /// makes the whole way shortest. The proof of stage 1 of "walls as a second ground"; the motor that moves a body along
-    /// it comes in stage 2.
+    /// Ways over the <see cref="SurfaceGraph"/>: from the ground up a wall onto a top, from the ground onto a spot on a
+    /// wall, from a wall to another spot on it, and from a wall over its edge or down to the ground. Every search runs from
+    /// all its ways in at once with the walks at either end in the cost, so it picks the wall, and the place on it, that
+    /// makes the whole way shortest.
     /// </summary>
     public static class SurfaceRoute
     {
         public sealed class Route
         {
-            /// <summary>The walk on the ground NavMesh to the surface's foot.</summary>
-            public Vector3[] Approach;
+            /// <summary>The walk on the ground NavMesh to the surface's foot (empty when the way starts on the surface).</summary>
+            public Vector3[] Approach = System.Array.Empty<Vector3>();
             /// <summary>The nodes on the surface, in order.</summary>
             public int[] Nodes;
-            /// <summary>The walk on the top's NavMesh from over the edge to the place asked for.</summary>
-            public Vector3[] Departure;
+            /// <summary>The walk on the NavMesh from where the way leaves the surface to the place asked for (empty when it ends on the surface).</summary>
+            public Vector3[] Departure = System.Array.Empty<Vector3>();
+            /// <summary>Where the way leaves the surface, when it does.</summary>
+            public bool HasExit;
+            public SurfaceGraph.Join Exit;
+            /// <summary>Where the way came onto the surface, when it did.</summary>
+            public bool HasEntry;
+            public SurfaceGraph.Join Entry;
             public float Length;
         }
 
         private const int MaxEntries = 16;
         private const int MaxExits = 32;
+        private const float CornerCost = 1.2f;
 
-        /// <summary>The shortest way from <paramref name="from"/> (ground) to <paramref name="to"/> (a top) over the graph; null when there is none.</summary>
+        /// <summary>From <paramref name="from"/> (ground) up a surface onto <paramref name="to"/> (a top); null when there is no way.</summary>
         public static Route Plan(SurfaceGraph graph, Vector3 from, Vector3 to, NavMeshQueryFilter filter)
         {
             if (graph == null || graph.NodeCount == 0) return null;
-            var path = new NavMeshPath();
+            List<Way> entries = WaysIn(graph, from, filter);
+            Dictionary<int, Way> exits = WaysOut(graph, to, SurfaceGraph.JoinKind.Top, filter);
+            return Finish(graph, entries, exits, to);
+        }
 
-            // The ways in: ground joins, nearest first, each with the walk to it.
-            var entries = new List<(int node, float cost, Vector3[] walk)>();
+        /// <summary>From <paramref name="from"/> (ground) onto the surface at <paramref name="goal"/>; null when there is no way.</summary>
+        public static Route ToNode(SurfaceGraph graph, Vector3 from, int goal, NavMeshQueryFilter filter)
+        {
+            if (graph == null || goal < 0 || goal >= graph.NodeCount) return null;
+            List<Way> entries = WaysIn(graph, from, filter);
+            var exits = new Dictionary<int, Way> { [goal] = default };
+            return Finish(graph, entries, exits, graph.points[goal]);
+        }
+
+        /// <summary>Along the surface from <paramref name="start"/> to <paramref name="goal"/>; null when they are not joined.</summary>
+        public static Route Along(SurfaceGraph graph, int start, int goal)
+        {
+            if (graph == null || start < 0 || goal < 0 || start >= graph.NodeCount || goal >= graph.NodeCount) return null;
+            var entries = new List<Way> { new Way { Node = start } };
+            var exits = new Dictionary<int, Way> { [goal] = default };
+            return Finish(graph, entries, exits, graph.points[goal]);
+        }
+
+        /// <summary>
+        /// From <paramref name="start"/> on the surface off it at a join of <paramref name="kind"/> (over an edge onto a top,
+        /// or down onto the ground) and on to <paramref name="to"/>; null when there is no way.
+        /// </summary>
+        public static Route Off(SurfaceGraph graph, int start, Vector3 to, SurfaceGraph.JoinKind kind, NavMeshQueryFilter filter)
+        {
+            if (graph == null || start < 0 || start >= graph.NodeCount) return null;
+            var entries = new List<Way> { new Way { Node = start } };
+            Dictionary<int, Way> exits = WaysOut(graph, to, kind, filter);
+            return Finish(graph, entries, exits, to);
+        }
+
+        /// <summary>A way in or out: the node, the join, the walk to or from it and what that walk costs.</summary>
+        private struct Way
+        {
+            public int Node;
+            public float Cost;
+            public Vector3[] Walk;
+            public bool HasJoin;
+            public SurfaceGraph.Join Join;
+        }
+
+        private static List<Way> WaysIn(SurfaceGraph graph, Vector3 from, NavMeshQueryFilter filter)
+        {
+            var path = new NavMeshPath();
+            var ways = new List<Way>();
             foreach (SurfaceGraph.Join join in Nearest(graph, from, SurfaceGraph.JoinKind.Ground, MaxEntries))
             {
                 if (!NavMesh.CalculatePath(from, join.navPoint, filter, path) || path.status != NavMeshPathStatus.PathComplete) continue;
                 Vector3[] walk = path.corners;
-                entries.Add((join.node, Length(walk) + Vector3.Distance(join.navPoint, graph.points[join.node]), walk));
+                ways.Add(new Way { Node = join.node, Cost = Length(walk) + Vector3.Distance(join.navPoint, graph.points[join.node]), Walk = walk, HasJoin = true, Join = join });
             }
-            // The ways out: top joins, nearest the goal first, each with the walk from it.
-            var exits = new Dictionary<int, (float cost, Vector3[] walk)>();
-            foreach (SurfaceGraph.Join join in Nearest(graph, to, SurfaceGraph.JoinKind.Top, MaxExits))
+            return ways;
+        }
+
+        private static Dictionary<int, Way> WaysOut(SurfaceGraph graph, Vector3 to, SurfaceGraph.JoinKind kind, NavMeshQueryFilter filter)
+        {
+            var path = new NavMeshPath();
+            var ways = new Dictionary<int, Way>();
+            foreach (SurfaceGraph.Join join in Nearest(graph, to, kind, MaxExits))
             {
                 if (!NavMesh.CalculatePath(join.navPoint, to, filter, path) || path.status != NavMeshPathStatus.PathComplete) continue;
                 Vector3[] walk = path.corners;
                 float cost = Length(walk) + Vector3.Distance(join.navPoint, graph.points[join.node]);
-                if (!exits.TryGetValue(join.node, out var known) || cost < known.cost) exits[join.node] = (cost, walk);
+                if (!ways.TryGetValue(join.node, out Way known) || cost < known.Cost)
+                    ways[join.node] = new Way { Node = join.node, Cost = cost, Walk = walk, HasJoin = true, Join = join };
             }
-            if (entries.Count == 0 || exits.Count == 0) return null;
+            return ways;
+        }
 
-            // A* from every way in at once; a node that is a way out finishes with its walk.
+        /// <summary>A* from every way in at once; a node that is a way out finishes with its walk.</summary>
+        private static Route Finish(SurfaceGraph graph, List<Way> entries, Dictionary<int, Way> exits, Vector3 toward)
+        {
+            if (entries.Count == 0 || exits.Count == 0) return null;
             int n = graph.NodeCount;
             var g = new float[n];
             var came = new int[n];
             var closed = new bool[n];
             for (int i = 0; i < n; i++) { g[i] = float.PositiveInfinity; came[i] = -1; }
             var open = new MinHeap(256);
-            var entryWalk = new Dictionary<int, Vector3[]>();
-            foreach (var (node, cost, walk) in entries)
+            var entryOf = new Dictionary<int, Way>();
+            foreach (Way way in entries)
             {
-                if (cost >= g[node]) continue;
-                g[node] = cost;
-                entryWalk[node] = walk;
-                open.Push(node, cost + Vector3.Distance(graph.points[node], to));
+                if (way.Cost >= g[way.Node]) continue;
+                g[way.Node] = way.Cost;
+                entryOf[way.Node] = way;
+                open.Push(way.Node, way.Cost + Vector3.Distance(graph.points[way.Node], toward));
             }
 
             float best = float.PositiveInfinity;
@@ -76,9 +137,9 @@ namespace KryticalNova.World.Surfaces
                 if (f >= best) break;
                 if (closed[current]) continue;
                 closed[current] = true;
-                if (exits.TryGetValue(current, out var exit) && g[current] + exit.cost < best)
+                if (exits.TryGetValue(current, out Way exit) && g[current] + exit.Cost < best)
                 {
-                    best = g[current] + exit.cost;
+                    best = g[current] + exit.Cost;
                     bestExit = current;
                 }
                 Vector3 p = graph.points[current];
@@ -87,12 +148,12 @@ namespace KryticalNova.World.Surfaces
                     int next = graph.edgeTo[e];
                     if (closed[next]) continue;
                     float step = Vector3.Distance(p, graph.points[next]);
-                    if (graph.edgeKind[e] == SurfaceGraph.EdgeKind.Corner) step *= 1.2f; // a corner is a little slower
+                    if (graph.edgeKind[e] == SurfaceGraph.EdgeKind.Corner) step *= CornerCost; // a corner is a little slower
                     float tentative = g[current] + step;
                     if (tentative >= g[next]) continue;
                     g[next] = tentative;
                     came[next] = current;
-                    open.Push(next, tentative + Vector3.Distance(graph.points[next], to));
+                    open.Push(next, tentative + Vector3.Distance(graph.points[next], toward));
                 }
             }
             if (bestExit < 0) return null;
@@ -101,11 +162,17 @@ namespace KryticalNova.World.Surfaces
             int at = bestExit;
             while (at >= 0) { nodes.Add(at); at = came[at]; }
             nodes.Reverse();
+            Way first = entryOf.TryGetValue(nodes[0], out Way way0) ? way0 : default;
+            Way last = exits[bestExit];
             return new Route
             {
-                Approach = entryWalk.TryGetValue(nodes[0], out Vector3[] approach) ? approach : new[] { from },
+                Approach = first.Walk ?? System.Array.Empty<Vector3>(),
+                HasEntry = first.HasJoin,
+                Entry = first.Join,
                 Nodes = nodes.ToArray(),
-                Departure = exits[bestExit].walk,
+                Departure = last.Walk ?? System.Array.Empty<Vector3>(),
+                HasExit = last.HasJoin,
+                Exit = last.Join,
                 Length = best,
             };
         }
@@ -134,6 +201,7 @@ namespace KryticalNova.World.Surfaces
         public static float Length(Vector3[] corners)
         {
             float length = 0f;
+            if (corners == null) return length;
             for (int i = 1; i < corners.Length; i++) length += Vector3.Distance(corners[i - 1], corners[i]);
             return length;
         }

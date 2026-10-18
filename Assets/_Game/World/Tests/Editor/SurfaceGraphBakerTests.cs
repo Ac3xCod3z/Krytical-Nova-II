@@ -139,6 +139,37 @@ namespace KryticalNova.Tests
             }
         }
 
+        [Test]
+        public void AWayAlongTheBlockGoesRoundItsCorner_StepByStep()
+        {
+            SurfaceGraphBaker.Result r = Bake();
+            var graph = ScriptableObject.CreateInstance<SurfaceGraph>();
+            try
+            {
+                graph.Set(r.Points, r.Normals, r.EdgeStart, r.EdgeTo, r.EdgeKind, r.Joins, "test");
+                int front = graph.Nearest(Site + new Vector3(0f, 3f, 2f + options.StandOff), 0.6f);
+                int side = graph.Nearest(Site + new Vector3(2f + options.StandOff, 6f, 0f), 0.6f);
+                Assert.GreaterOrEqual(front, 0);
+                Assert.GreaterOrEqual(side, 0);
+                SurfaceRoute.Route way = SurfaceRoute.Along(graph, front, side);
+                Assert.IsNotNull(way);
+                Assert.AreEqual(front, way.Nodes[0]);
+                Assert.AreEqual(side, way.Nodes[way.Nodes.Length - 1]);
+                Assert.IsFalse(way.HasExit, "a way along the wall stays on it");
+                bool turned = false;
+                for (int i = 1; i < way.Nodes.Length; i++)
+                {
+                    Assert.LessOrEqual(Vector3.Distance(graph.points[way.Nodes[i - 1]], graph.points[way.Nodes[i]]), options.LinkDistance * 1.7f + 0.01f, "one step at a time");
+                    if (Vector3.Angle(graph.normals[way.Nodes[i - 1]], graph.normals[way.Nodes[i]]) > options.MaxTurn) turned = true;
+                }
+                Assert.IsTrue(turned, "the way goes round the corner, not through the block");
+            }
+            finally
+            {
+                Object.DestroyImmediate(graph);
+            }
+        }
+
         private static int Face(Vector3 n) =>
             Vector3.Dot(n, Vector3.forward) > 0.9f ? 0 : Vector3.Dot(n, Vector3.back) > 0.9f ? 1 : Vector3.Dot(n, Vector3.left) > 0.9f ? 2 : 3;
     }
