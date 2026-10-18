@@ -23,6 +23,14 @@ namespace KryticalNova.EditorTools
         private static readonly string[] GateNames = { "NORTH GATE", "SOUTH GATE", "EAST GATE", "WEST GATE" };
         private static readonly string[] GateGroupNames = { "North Gate", "South Gate", "East Gate", "West Gate" };
 
+        /// <summary>True for anything inside one of the four gatehouses (their pieces carry prefab names, not "Gate").</summary>
+        public static bool IsInGate(Transform piece)
+        {
+            for (Transform t = piece; t != null; t = t.parent)
+                if (System.Array.IndexOf(GateGroupNames, t.name) >= 0) return true;
+            return false;
+        }
+
         private static void BuildGates(Transform parent)
         {
             for (int side = 0; side < 4; side++)
