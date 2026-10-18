@@ -59,7 +59,7 @@ screen sees it walk smoothly, the server ends on the same spot.
     off by default).
   - **GM Tools window:** a joined GM's window looked the player up by scanning the scene 64 times a draw, which took
     the Editor to two frames a second in Play; it now looks once a frame.
-- **Step 3, casts and the first swing (17 Oct 2026, same branch).** Not yet tried in Play by the owner.
+- **Step 3, casts and the first swing (17 Oct 2026, same branch).** Play-tested by the owner.
   - **Skills:** on the press, the owner's game plays the cast animation and its effects and starts the cooldown
     (`PlayerCombatSkills.ShowCastOnPress`); the server's yes (`TriggerSkillCastClientRpc`) is not played again, its no
     (`NotifyCastFailedClientRpc`) puts the cooldown back and takes the cast back (`ISkillAttackExecutor.CancelPresent`).
