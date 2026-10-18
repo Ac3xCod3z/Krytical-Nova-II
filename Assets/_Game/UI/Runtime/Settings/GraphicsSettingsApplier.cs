@@ -105,6 +105,10 @@ namespace KryticalNova.UI
         private static void Boot()
         {
             if (instance != null || Application.isBatchMode) return;
+            if (GraphicsPreferences.ApplyCloneDefaults())
+                Debug.Log($"[Graphics] Player 2 clone: {GraphicsPreferences.ClonePreset} preset, {GraphicsPreferences.CloneFrameCap} fps cap, no upscaler.");
+            else if (GraphicsPreferences.ApplyHardwarePresetOnFirstLaunch() is GraphicsPreset first)
+                Debug.Log($"[Graphics] First launch on {SystemInfo.graphicsDeviceName} ({SystemInfo.graphicsMemorySize} MB, {SystemInfo.processorCount} threads): {first} preset.");
             var host = new GameObject("Graphics Settings");
             DontDestroyOnLoad(host);
             instance = host.AddComponent<GraphicsSettingsApplier>();
@@ -147,6 +151,8 @@ namespace KryticalNova.UI
             ComicStyleRuntime.OutlinesEnabled = true;
             VolumetricQualityRuntime.RestoreAuthored();
             GrassRenderer.DensityMultiplier = 1f;
+            ShadowBands.RestoreAll();
+            ResidentDrawerOcclusion.Restore();
             if (instance == this) instance = null;
         }
 

@@ -97,7 +97,7 @@ namespace KryticalNova.DevTools
             {
                 public Vector3 At;
                 public float Yaw, GpuMs, FrameMs;
-                public long SetPass, Triangles;
+                public long SetPass, Batches, Triangles;
                 public int Faded;
             }
 
@@ -148,6 +148,7 @@ namespace KryticalNova.DevTools
                 float yawWas = orbit != null ? orbit.HorizontalAxis.Value : 0f;
                 var setPass = Unity.Profiling.ProfilerRecorder.StartNew(Unity.Profiling.ProfilerCategory.Render, "SetPass Calls Count");
                 var triangles = Unity.Profiling.ProfilerRecorder.StartNew(Unity.Profiling.ProfilerCategory.Render, "Triangles Count");
+                var batches = Unity.Profiling.ProfilerRecorder.StartNew(Unity.Profiling.ProfilerCategory.Render, "Batches Count");
                 Open(SweepSection);
                 // One look: the worst frame, the most calls and the mean time of the graphics card over a few frames.
                 IEnumerator Look(Vector3 at, float yaw, int frames, List<View> into)
@@ -169,6 +170,7 @@ namespace KryticalNova.DevTools
                         view.FrameMs = Mathf.Max(view.FrameMs, Time.unscaledDeltaTime * 1000f);
                         view.SetPass = System.Math.Max(view.SetPass, setPass.Valid ? setPass.LastValue : 0);
                         view.Triangles = System.Math.Max(view.Triangles, triangles.Valid ? triangles.LastValue : 0);
+                        view.Batches = System.Math.Max(view.Batches, batches.Valid ? batches.LastValue : 0);
                     }
                     view.GpuMs = gpuFrames > 0 ? (float)(gpu / gpuFrames) : -1f;
                     view.Faded = KryticalNova.Rendering.OccluderFader.Faded.Count;
@@ -202,6 +204,7 @@ namespace KryticalNova.DevTools
                 }
                 setPass.Dispose();
                 triangles.Dispose();
+                batches.Dispose();
                 if (orbit != null) orbit.HorizontalAxis.Value = yawWas;
                 Close(SweepSection);
                 summary.Append(WriteSweep());
@@ -228,7 +231,7 @@ namespace KryticalNova.DevTools
                     .Append(usualGpu.ToString("0.0", inv)).Append(" ms, ").Append(usualPass).Append(" set-pass calls.\n\n");
                 void Row(in View v) => text.Append("  x ").Append(v.At.x.ToString("0", inv).PadLeft(5)).Append("  z ").Append(v.At.z.ToString("0", inv).PadLeft(5))
                     .Append("  looking ").Append(v.Yaw.ToString("0", inv).PadLeft(3)).Append("   gpu ").Append(v.GpuMs.ToString("0.0", inv).PadLeft(5))
-                    .Append(" ms   frame ").Append(v.FrameMs.ToString("0.0", inv).PadLeft(5)).Append(" ms   set-pass ").Append(v.SetPass.ToString(inv).PadLeft(5))
+                    .Append(" ms   frame ").Append(v.FrameMs.ToString("0.0", inv).PadLeft(5)).Append(" ms   set-pass ").Append(v.SetPass.ToString(inv).PadLeft(5)).Append("   batches ").Append(v.Batches.ToString(inv).PadLeft(5))
                     .Append("   triangles ").Append(v.Triangles.ToString(inv).PadLeft(8)).Append("   faded ").Append(v.Faded).Append('\n');
                 if (again.Count > 0)
                 {

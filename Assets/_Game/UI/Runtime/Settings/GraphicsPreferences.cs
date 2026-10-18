@@ -201,6 +201,68 @@ namespace KryticalNova.UI
             Commit();
         }
 
+        /// <summary>
+        /// The preset a Multiplayer Play Mode clone (the Player 2 Editor) starts on, every time (owner, 18 Oct 2026: not
+        /// Ultra or High). It is a test client: the GPU and memory are left to the main Editor.
+        /// </summary>
+        public const GraphicsPreset ClonePreset = GraphicsPreset.Low;
+        public const int CloneFrameCap = 60;
+
+        /// <summary>
+        /// On a Multiplayer Play Mode clone, puts its test-client options in force: <see cref="ClonePreset"/>, a 60 fps
+        /// cap and no upscaler. Its options are its own (the profile prefix), so the main Editor's stay as they are; what
+        /// is changed in its Settings lasts until it starts again. False, and nothing touched, anywhere else.
+        /// </summary>
+        public static bool ApplyCloneDefaults()
+        {
+            if (!Application.isEditor || NetworkConnectionManager.EditorCloneProfile() == null) return false;
+            PlayerPrefs.SetInt(Prefix + FrameCapKey, CloneFrameCap);
+            PlayerPrefs.SetInt(Prefix + "upscaler", (int)UpscalerChoice.Off);
+            ApplyPreset(ClonePreset);
+            return true;
+        }
+
+        /// <summary>Video memory (MB) below which a card is taken for integrated graphics (they report a small shared slice).</summary>
+        public const int IntegratedBelowMb = 2048;
+        /// <summary>Video memory (MB) a card needs, besides being of a recent family, to start on High.</summary>
+        public const int HighFromMb = 6000;
+        /// <summary>Processor threads at or below which the game starts on Low whatever the card.</summary>
+        public const int LowAtThreads = 4;
+
+        /// <summary>
+        /// The preset a first launch starts on (owner, 18 Oct 2026: Low reaches laptops and integrated graphics, the
+        /// mid tier and up keep High): integrated graphics, a Steam Deck or four threads or fewer → Low; an older family
+        /// (GTX, Radeon RX 400 / 500 / 5000) or less than <see cref="HighFromMb"/> → Medium; anything else → High.
+        /// </summary>
+        public static GraphicsPreset PresetForHardware(string deviceName, int videoMemoryMb, int processorThreads)
+        {
+            string n = (deviceName ?? string.Empty).ToUpperInvariant();
+            bool integrated = videoMemoryMb < IntegratedBelowMb || n.Contains("UHD") || n.Contains("IRIS") || n.Contains("INTEL(R) HD")
+                              || n.Contains("RADEON(TM) GRAPHICS") || n.Contains("RADEON GRAPHICS") || n.Contains("VEGA") || n.Contains("CUSTOM GPU 0405");
+            if (integrated || processorThreads <= LowAtThreads) return GraphicsPreset.Low;
+            bool older = n.Contains("GTX") || n.Contains("RX 4") || n.Contains("RX 5") || videoMemoryMb < HighFromMb;
+            return older ? GraphicsPreset.Medium : GraphicsPreset.High;
+        }
+
+        /// <summary>
+        /// On the first launch of this profile (no preset stored yet), puts <see cref="PresetForHardware"/> in force; on
+        /// Low also a 60 fps cap and an upscaler (DLSS on an RTX card, else FSR 2, none where neither runs). Null when a
+        /// preset was already stored: the player's own choice is never overridden.
+        /// </summary>
+        public static GraphicsPreset? ApplyHardwarePresetOnFirstLaunch()
+        {
+            if (PlayerPrefs.HasKey(Prefix + "preset")) return null;
+            GraphicsPreset preset = PresetForHardware(SystemInfo.graphicsDeviceName, SystemInfo.graphicsMemorySize, SystemInfo.processorCount);
+            if (preset == GraphicsPreset.Low)
+            {
+                PlayerPrefs.SetInt(Prefix + FrameCapKey, 60);
+                PlayerPrefs.SetInt(Prefix + "upscaler", (int)UpscalerChoice.Dlss);
+                PlayerPrefs.SetInt(Prefix + "upscalerQuality", (int)UpscalerQuality.Quality);
+            }
+            ApplyPreset(preset);
+            return preset;
+        }
+
         /// <summary>Every graphics option back to what the game ships with (the High preset, the display's own size).</summary>
         public static void ResetToDefaults()
         {
