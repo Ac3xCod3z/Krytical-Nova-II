@@ -81,7 +81,7 @@ namespace KryticalNova.Diagnostics
         private double sectionSeconds, sectionSlowestMs, histogramLeft = HistogramEverySeconds;
         private readonly FrameTiming[] oneTiming = new FrameTiming[1];
         private readonly FrameTiming[] lateTimings = new FrameTiming[SplitKnownAfterFrames + 4];
-        private ProfilerRecorder setPass, triangles, usedMemory, scriptMemory;
+        private ProfilerRecorder setPass, triangles, usedMemory, scriptMemory, batches, drawCalls;
 
         // The probes can be thrown out by anything that rebuilds the player loop: Update notices and puts them back.
         private long framesSeenByUpdate;
@@ -135,6 +135,8 @@ namespace KryticalNova.Diagnostics
             collections = GC.CollectionCount(0);
             setPass = ProfilerRecorder.StartNew(ProfilerCategory.Render, "SetPass Calls Count");
             triangles = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Triangles Count");
+            batches = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Batches Count");
+            drawCalls = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Draw Calls Count");
             usedMemory = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Total Used Memory");
             scriptMemory = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Used Memory");
             for (int i = 0; i < MaxPending; i++) pending[i].Phases = pending[i].Steps = Array.Empty<float>();
@@ -373,7 +375,7 @@ namespace KryticalNova.Diagnostics
                 MeanMs = frames > 0 ? sumMs / frames : 0, SlowestMs = slowestMs,
                 MainMs = timingFrames > 0 ? mainMs / timingFrames : -1, RenderMs = timingFrames > 0 ? renderMs / timingFrames : -1,
                 GpuMs = gpuFrames > 0 ? gpuMs / gpuFrames : -1,
-                SetPass = Last(setPass), Triangles = Last(triangles),
+                SetPass = Last(setPass), Triangles = Last(triangles), Batches = Last(batches), DrawCalls = Last(drawCalls),
                 MemoryMb = (long)(Last(usedMemory) / Megabyte), ScriptMemoryMb = (long)(Last(scriptMemory) / Megabyte),
                 Collections = collections,
                 Players = listening && network.IsServer ? network.ConnectedClientsIds.Count : listening ? 1 : 0,
@@ -475,7 +477,7 @@ namespace KryticalNova.Diagnostics
             catch (Exception e) when (e is IOException || e is ObjectDisposedException) { }
             text.Clear();
             writer = null;
-            setPass.Dispose(); triangles.Dispose(); usedMemory.Dispose(); scriptMemory.Dispose();
+            setPass.Dispose(); triangles.Dispose(); batches.Dispose(); drawCalls.Dispose(); usedMemory.Dispose(); scriptMemory.Dispose();
             PerformanceLog.FilePath = null;
         }
     }

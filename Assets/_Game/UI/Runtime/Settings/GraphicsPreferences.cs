@@ -201,6 +201,27 @@ namespace KryticalNova.UI
             Commit();
         }
 
+        /// <summary>
+        /// The preset a Multiplayer Play Mode clone (the Player 2 Editor) starts on, every time (owner, 18 Oct 2026: not
+        /// Ultra or High). It is a test client: the GPU and memory are left to the main Editor.
+        /// </summary>
+        public const GraphicsPreset ClonePreset = GraphicsPreset.Low;
+        public const int CloneFrameCap = 60;
+
+        /// <summary>
+        /// On a Multiplayer Play Mode clone, puts its test-client options in force: <see cref="ClonePreset"/>, a 60 fps
+        /// cap and no upscaler. Its options are its own (the profile prefix), so the main Editor's stay as they are; what
+        /// is changed in its Settings lasts until it starts again. False, and nothing touched, anywhere else.
+        /// </summary>
+        public static bool ApplyCloneDefaults()
+        {
+            if (!Application.isEditor || NetworkConnectionManager.EditorCloneProfile() == null) return false;
+            PlayerPrefs.SetInt(Prefix + FrameCapKey, CloneFrameCap);
+            PlayerPrefs.SetInt(Prefix + "upscaler", (int)UpscalerChoice.Off);
+            ApplyPreset(ClonePreset);
+            return true;
+        }
+
         /// <summary>Every graphics option back to what the game ships with (the High preset, the display's own size).</summary>
         public static void ResetToDefaults()
         {

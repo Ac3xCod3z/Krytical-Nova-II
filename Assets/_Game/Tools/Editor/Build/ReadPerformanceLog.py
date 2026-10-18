@@ -66,7 +66,10 @@ def read(path):
                                     slowest=float(cells[5]), over20=int(cells[6]), main=number(cells[7]), render=number(cells[8]),
                                     gpu=number(cells[9]), setpass=int(cells[10]), triangles=int(cells[11]), memory=int(cells[12]),
                                     scripts=int(cells[13]), collections=int(cells[14]), players=int(cells[15]),
-                                    objects=int(cells[16]), cost=float(cells[19])))
+                                    objects=int(cells[16]), cost=float(cells[19]),
+                                    # Logs from before 18 Oct 2026 have no batches or draw calls.
+                                    batches=int(cells[20]) if len(cells) >= 22 else None,
+                                    draws=int(cells[21]) if len(cells) >= 22 else None))
             elif kind == 'F' and len(cells) >= 12:
                 # Logs from before 11 Oct 2026 have no column of steps.
                 steps = pairs(cells[12]) if len(cells) >= 13 else {}
@@ -291,8 +294,11 @@ def main():
         return sum(values) / len(values) if values else 0.0
 
     for label, key in (('frame ms', 'mean'), ('main thread ms', 'main'), ('render thread ms', 'render'), ('GPU ms', 'gpu'),
-                       ('set-pass calls', 'setpass'), ('triangles', 'triangles'), ('memory MB', 'memory'),
+                       ('set-pass calls', 'setpass'), ('batches', 'batches'), ('draw calls', 'draws'), ('triangles', 'triangles'), ('memory MB', 'memory'),
                        ('script memory MB', 'scripts'), ('networked objects', 'objects')):
+        if all(r[key] is None for r in seconds):
+            print('  %-18s %12s' % (label, 'not in log'))
+            continue
         print('  %-18s %12.1f -> %12.1f' % (label, mean(first, key), mean(last, key)))
     collections = seconds[-1]['collections'] - seconds[0]['collections']
     print('  %-18s %12d in all (%.1f a minute)' % ('collections', collections, collections * 60.0 / max(1.0, length)))

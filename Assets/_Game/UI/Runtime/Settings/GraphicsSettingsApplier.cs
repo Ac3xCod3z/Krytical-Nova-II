@@ -105,6 +105,8 @@ namespace KryticalNova.UI
         private static void Boot()
         {
             if (instance != null || Application.isBatchMode) return;
+            if (GraphicsPreferences.ApplyCloneDefaults())
+                Debug.Log($"[Graphics] Player 2 clone: {GraphicsPreferences.ClonePreset} preset, {GraphicsPreferences.CloneFrameCap} fps cap, no upscaler.");
             var host = new GameObject("Graphics Settings");
             DontDestroyOnLoad(host);
             instance = host.AddComponent<GraphicsSettingsApplier>();

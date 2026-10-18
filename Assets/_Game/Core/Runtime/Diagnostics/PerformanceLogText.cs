@@ -22,7 +22,7 @@ namespace KryticalNova.Diagnostics
 
         public const string SecondColumns =
             "# S\ttime s\tscene\tframes\tmean ms\tslowest ms\tover 20 ms\tmain thread ms\trender thread ms\tGPU ms\tset-pass\ttriangles" +
-            "\tmemory MB\tscript memory MB\tcollections so far\tplayers\tnetworked objects\tcamera x\tcamera z\tlog cost us/frame";
+            "\tmemory MB\tscript memory MB\tcollections so far\tplayers\tnetworked objects\tcamera x\tcamera z\tlog cost us/frame\tbatches\tdraw calls";
         public const string SlowFrameColumns =
             "# F\ttime s\tframe\tms\tcollection in it (gc / -)\tloading or play\tmain thread ms\tof which waiting for the screen ms\trender thread ms\tGPU ms" +
             "\twhere the time went (phase=ms, largest first; other = between phases)\twhat came before (name ms @seconds before the frame ended)" +
@@ -80,7 +80,7 @@ namespace KryticalNova.Diagnostics
             public string Scene;
             public int Frames, OverTwentyMs;
             public double MeanMs, SlowestMs, MainMs, RenderMs, GpuMs;   // a negative thread or GPU time: not reported
-            public long SetPass, Triangles, MemoryMb, ScriptMemoryMb;
+            public long SetPass, Triangles, MemoryMb, ScriptMemoryMb, Batches, DrawCalls;
             public int Collections, Players, NetworkedObjects;
             public float CameraX, CameraZ;
             public double LogMicrosecondsAFrame;
@@ -108,7 +108,8 @@ namespace KryticalNova.Diagnostics
                 .Append('\t').Append(s.SetPass).Append('\t').Append(s.Triangles).Append('\t').Append(s.MemoryMb).Append('\t').Append(s.ScriptMemoryMb)
                 .Append('\t').Append(s.Collections).Append('\t').Append(s.Players).Append('\t').Append(s.NetworkedObjects)
                 .Append('\t').Append(Number(s.CameraX, "0")).Append('\t').Append(Number(s.CameraZ, "0"))
-                .Append('\t').Append(Number(s.LogMicrosecondsAFrame, "0.0")).Append('\n');
+                .Append('\t').Append(Number(s.LogMicrosecondsAFrame, "0.0"))
+                .Append('\t').Append(s.Batches).Append('\t').Append(s.DrawCalls).Append('\n');
         }
 
         /// <summary>
