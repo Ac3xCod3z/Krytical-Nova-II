@@ -28,5 +28,11 @@ namespace KryticalNova.Progression
 
         /// <summary>Plays the cast animation and effects. Runs on every peer.</summary>
         void Present(SkillDefinitionSO skill, int rank, Transform target);
+
+        /// <summary>
+        /// Takes back a cast the player's own game showed on the press and the server then refused (online phase 3):
+        /// the cast animation stops and the body goes back to standing or moving.
+        /// </summary>
+        void CancelPresent();
     }
 }

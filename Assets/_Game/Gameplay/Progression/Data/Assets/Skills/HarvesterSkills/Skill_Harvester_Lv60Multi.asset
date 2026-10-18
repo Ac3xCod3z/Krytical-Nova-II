@@ -77,13 +77,16 @@ MonoBehaviour:
   holdToRepeat: 0
   icon: {fileID: 21300000, guid: 16adbc9703200ce48a687833cdeb3d5a, type: 3}
   castClip: {fileID: 7400000, guid: b0136c017fda75d4da687733598ab195, type: 3}
-  castClipSpeed: 1.1
+  castClipSpeed: 1.5
   hitTimesNormalized:
-  - 0.25
-  - 0.5
+  - 0.25413227
+  - 0.50206614
   - 0.75
   castLockNormalized: 0.95
   attackCancelNormalized: 1
+  castClipTrim: 0.011363685
+  castClipDelay: 0
+  castLockSeconds: 1.1515151
   castLiftCurve:
     serializedVersion: 2
     m_Curve: []

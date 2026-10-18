@@ -175,6 +175,20 @@ namespace KryticalNova.Combat
             presentRoutine = StartCoroutine(holdsPose ? ChannelRoutine(skill) : PresentRoutine(skill));
         }
 
+        public void CancelPresent()
+        {
+            castBusyUntil = float.NegativeInfinity;
+            castCancelFrom = float.PositiveInfinity;
+            melee.ReleaseSkillHold();
+            if (presentRoutine != null)
+            {
+                StopCoroutine(presentRoutine);
+                presentRoutine = null;
+            }
+            SetBodyLift(0f);
+            ReleaseBody();
+        }
+
         // ------------------------------------------------------------------ damage (server / offline)
 
         private IEnumerator ExecuteRoutine(SkillDefinitionSO skill, int rank, Transform target)
@@ -278,20 +292,22 @@ namespace KryticalNova.Combat
         private IEnumerator PresentRoutine(SkillDefinitionSO skill)
         {
             if (animancerMotor != null) animancerMotor.SetAttackingState(true);
+            // A quick clip waits in the ready pose so its hits land on the timing every class shares (castClipDelay).
+            if (skill.castClipDelay > 0f) yield return new WaitForSeconds(skill.castClipDelay);
             var state = animancer.Play(skill.castClip, castCrossFade);
             state.Speed = skill.castClipSpeed;
-            state.Time = 0f;
+            state.Time = skill.castClipTrim; // a long wind-up starts part-way in
             state.ApplyFootIK = castFootIK;
 
             if (!skill.HasCastLift)
             {
-                yield return new WaitForSeconds(skill.CastLockDuration);
+                yield return new WaitForSeconds(Mathf.Max(0f, skill.CastLockDuration - skill.castClipDelay));
             }
             else
             {
                 // The clip's leap is root motion, which the animator discards: put its height back on the body for
                 // as long as this cast still owns it.
-                float lockEnds = Time.time + skill.CastLockDuration;
+                float lockEnds = Time.time + Mathf.Max(0f, skill.CastLockDuration - skill.castClipDelay);
                 while (Time.time < lockEnds && animancer.Layers[0].CurrentState == state)
                 {
                     SetBodyLift(skill.castLiftCurve.Evaluate(state.Time));

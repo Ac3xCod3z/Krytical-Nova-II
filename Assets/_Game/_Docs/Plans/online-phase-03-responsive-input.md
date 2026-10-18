@@ -1,6 +1,6 @@
 # Online phase 3: responsive input (client anticipation)
 
-Part of `online-roadmap.md`. Written 11 Oct 2026. **Steps 1 (walking) and 2 (jumps and vaults) built 17 Oct 2026; casts not yet.** Needs Phase 1 (a host never feels the
+Part of `online-roadmap.md`. Written 11 Oct 2026. **Steps 1 (walking), 2 (jumps and vaults) and 3 (casts and the first swing) built 17 Oct 2026.** Needs Phase 1 (a host never feels the
 delay, so this can only be judged against a dedicated server).
 
 ## As built
@@ -59,7 +59,17 @@ screen sees it walk smoothly, the server ends on the same spot.
     off by default).
   - **GM Tools window:** a joined GM's window looked the player up by scanning the scene 64 times a draw, which took
     the Editor to two frames a second in Play; it now looks once a frame.
-- **Not done in steps 1 and 2:** the network-simulator runs at 60 / 150 / 250 ms. Adding the simulator to a
+- **Step 3, casts and the first swing (17 Oct 2026, same branch).** Not yet tried in Play by the owner.
+  - **Skills:** on the press, the owner's game plays the cast animation and its effects and starts the cooldown
+    (`PlayerCombatSkills.ShowCastOnPress`); the server's yes (`TriggerSkillCastClientRpc`) is not played again, its no
+    (`NotifyCastFailedClientRpc`) puts the cooldown back and takes the cast back (`ISkillAttackExecutor.CancelPresent`).
+    Flux, damage, a buff's effect and the hits still wait for the server.
+  - **Basic attack:** with the target already in reach, the owner's game plays the first strike on the click
+    (`PlayerMeleeCombat.ShowStrike`); the server's own first strike within 0.6 s is not played again. Walking in to
+    attack stays the server's, and the owner's own walk gives way to it.
+  - **Equal strike timings** (owner, 17 Oct 2026): every class's attack of a level and kind hits at the same moments
+    (`04_Weapon_Classes.md`, "Equal strike timings").
+- **Not done in steps 1 to 3:** the network-simulator runs at 60 / 150 / 250 ms. Adding the simulator to a
   running Editor dropped it to one frame a second; it is to be run from a development build instead, or
   judged in the brothers' test from their houses.
 

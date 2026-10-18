@@ -41,6 +41,10 @@ namespace KryticalNova.Progression
         private readonly HashSet<string> unlockedDropSkills = new HashSet<string>();
         private readonly Dictionary<string, float> cooldownEndTimes = new Dictionary<string, float>();
         private float castRequestPendingUntil;
+        // The cast this player's own game showed on the press (online phase 3), waiting for the server's answer: its
+        // skill, and the cooldown that skill had before, put back if the server refuses.
+        private string shownCastSkillId;
+        private float shownCastCooldownBefore;
 
         public event Action Changed;
         public event Action<SkillDefinitionSO> SkillCast;
@@ -644,6 +648,7 @@ namespace KryticalNova.Progression
             {
                 castRequestPendingUntil = Time.time + CastRequestTimeout;
                 RequestCastSkillServerRpc(skill.skillId, ToReference(target));
+                ShowCastOnPress(skill, target);
                 return true;
             }
 
@@ -674,11 +679,35 @@ namespace KryticalNova.Progression
             NotifyCastFailedClientRpc(reason ?? string.Empty);
         }
 
+        /// <summary>
+        /// The player's own game, on the press (online phase 3): the cast animation, its effects and the cooldown start
+        /// now instead of a round trip later. Nothing the server decides is shown early: Flux, damage, a buff's effect
+        /// and the hits all wait for it. Its yes is not played again; its no takes the cast back.
+        /// </summary>
+        private void ShowCastOnPress(SkillDefinitionSO skill, Transform target)
+        {
+            if (!IsOwner) return;
+            shownCastSkillId = skill.skillId;
+            shownCastCooldownBefore = cooldownEndTimes.TryGetValue(skill.RankKey, out float before) ? before : 0f;
+            cooldownEndTimes[skill.RankKey] = Time.time + skill.cooldown;
+            PresentCast(skill, GetRank(skill), target);
+            Changed?.Invoke();
+        }
+
         [ClientRpc]
         private void NotifyCastFailedClientRpc(string reason)
         {
             if (!IsOwner) return;
             castRequestPendingUntil = 0f;
+            if (shownCastSkillId != null)
+            {
+                // The cast shown on the press is taken back, cooldown and all.
+                SkillDefinitionSO shown = GetSkill(shownCastSkillId);
+                if (shown != null) cooldownEndTimes[shown.RankKey] = shownCastCooldownBefore;
+                shownCastSkillId = null;
+                attackExecutor?.CancelPresent();
+                Changed?.Invoke();
+            }
             if (!string.IsNullOrEmpty(reason)) SkillMessage?.Invoke(reason);
         }
 
@@ -709,6 +738,10 @@ namespace KryticalNova.Progression
             var skill = GetSkill(skillId);
             if (skill == null) return;
 
+            // This player's own game already showed this cast on the press: the server's yes is not played again.
+            bool shownOnPress = !IsServer && IsOwner && shownCastSkillId == skillId;
+            if (shownOnPress) shownCastSkillId = null;
+
             if (!IsServer)
             {
                 // Mirror what the server already applied to its own copy.
@@ -724,7 +757,7 @@ namespace KryticalNova.Progression
                 Changed?.Invoke();
             }
 
-            PresentCast(skill, rank, FromReference(targetReference));
+            if (!shownOnPress) PresentCast(skill, rank, FromReference(targetReference));
         }
 
         private void PresentCast(SkillDefinitionSO skill, int rank, Transform target)

@@ -626,6 +626,8 @@ namespace KryticalNova.Player
 
                 if (meleeCombat != null)
                 {
+                    // The server walks the player in to attack: this game's own walk, if any, gives way to it.
+                    if (moveAnticipation != null) moveAnticipation.StopLeading();
                     meleeCombat.StartAttackTarget(targetEntity);
                     if (IsSpawned && !IsServer)
                     {
@@ -888,6 +890,7 @@ namespace KryticalNova.Player
 
             Select(targetEntity.Transform, WorldTargetKind.Hostile);
             EndTravel(false);
+            if (moveAnticipation != null) moveAnticipation.StopLeading(); // the server walks the player in
             if (meleeCombat != null) meleeCombat.StartAttackTarget(targetEntity);
             if (IsSpawned && !IsServer)
             {
