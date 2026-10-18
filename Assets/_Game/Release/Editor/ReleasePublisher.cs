@@ -62,7 +62,8 @@ namespace KryticalNova.EditorTools
 
         // ------------------------------------------------------------------ menus
 
-        [MenuItem(Menu + "Publish to Test", priority = 70)]
+        // Publish to Test itself runs in the background, in the build checkout (BackgroundPublisher). This one locks the Editor.
+        [MenuItem(Menu + "Publish to Test (in This Editor)", priority = 72)]
         private static void MenuPublish()
         {
             if (!ReadyToBuild()) return;
@@ -108,6 +109,9 @@ namespace KryticalNova.EditorTools
         private static bool ReadyToBuild()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) { EditorUtility.DisplayDialog("Release", "Stop Play first.", "OK"); return false; }
+            // Every publish goes through the Unity Accelerator (owner, 18 Oct 2026).
+            string accelerator = BackgroundPublisher.AcceleratorProblem();
+            if (accelerator != null) { EditorUtility.DisplayDialog("Release", accelerator, "OK"); return false; }
             string missing = TestBuildBuilder.Il2CppMissing();
             if (missing != null) { EditorUtility.DisplayDialog("Release", missing, "OK"); return false; }
             return true;
