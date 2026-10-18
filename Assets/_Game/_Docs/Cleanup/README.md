@@ -25,6 +25,7 @@ Also kept, whatever the checks say:
 
 - Files our editor builders load **by path or by name** (`"Assets/Synty/…"` in code, an interpolated part matching any
   folder; any vendor file whose name appears in quotes in `_Game` code or JSON), with everything they depend on.
+- Vendor tools: `Assets/Synty/Tools` (the Prop Bone Tool and its settings) and `Assets/Synty/SyntyPackageHelper`.
 - `Assets/Synty/SidekickCharacters` whole (parts load from Resources by path), and the `Prefabs`, `Sprites` and `Fonts`
   of every Interface pack (the HUD, faction and plate builders read them by path).
 - Code, shaders and assembly files, and anything in a vendor `Editor`, `Plugins`, `Resources` or `StreamingAssets`

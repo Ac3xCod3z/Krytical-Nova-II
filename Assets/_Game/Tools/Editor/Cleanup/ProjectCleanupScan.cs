@@ -39,7 +39,7 @@ namespace KryticalNova.EditorTools.Cleanup
         /// <summary>Counted as used, with everything they reference.</summary>
         public static readonly string[] Roots =
         {
-            "Assets/_Game/", "Assets/Synty/SidekickCharacters/",
+            "Assets/_Game/", "Assets/Synty/SidekickCharacters/", "Assets/Synty/Tools/", "Assets/Synty/SyntyPackageHelper/",
         };
 
         /// <summary>Folders inside the Interface packs our HUD, faction and plate builders read by path.</summary>
@@ -222,7 +222,11 @@ namespace KryticalNova.EditorTools.Cleanup
         // ---------------------------------------------------------------- remove
 
         [MenuItem("Krytical Nova/Project/Cleanup/Remove Unused Vendor Assets…", priority = 151)]
-        private static void RemoveMenu() => RemoveUnused(true);
+        private static void RemoveMenu() => RemoveUnused(true, !(ScanIsFresh() && EditorUtility.DisplayDialog("Remove unused vendor assets",
+            "Use the scan from " + File.GetLastWriteTime(ScanTable).ToString("HH:mm") + ", or scan again first?", "Use that scan", "Scan again")));
+
+        /// <summary>A scan from the last three hours can be reused; the after-check still runs over the whole project.</summary>
+        public static bool ScanIsFresh() => File.Exists(ScanTable) && (DateTime.Now - File.GetLastWriteTime(ScanTable)).TotalHours < 3;
 
         /// <summary>
         /// Scans afresh, then removes every file that passed all three checks and has a restore source, one Removal
@@ -230,11 +234,13 @@ namespace KryticalNova.EditorTools.Cleanup
         /// too. Afterwards anything still in the project that writes a reference to a removed file gets it back at
         /// once. Returns the number of files removed.
         /// </summary>
-        public static int RemoveUnused(bool confirm)
+        public static int RemoveUnused(bool confirm, bool rescan = true)
         {
             if (AssetRestoreService.Index == null) { Debug.LogWarning("[Cleanup] Build the package index first: nothing goes without a way back."); return 0; }
-            if (Scan() <= 0) return 0;
-            var scan = File.ReadAllLines(ScanTable).Skip(1).Select(l => l.Split('\t')).Where(c => c.Length >= 6 && c[5].Length > 0 && File.Exists(c[0])).ToList();
+            if (rescan || !ScanIsFresh()) { if (Scan() <= 0) return 0; }
+            // The keep rules are applied again, so a rule added since the scan still holds.
+            var scan = File.ReadAllLines(ScanTable).Skip(1).Select(l => l.Split('\t'))
+                .Where(c => c.Length >= 6 && c[5].Length > 0 && IsCandidate(c[0]) && !CodeKinds.Contains(Path.GetExtension(c[0])) && File.Exists(c[0])).ToList();
             var batches = scan.GroupBy(c => BatchName(c[0])).OrderBy(g => g.Key).ToList();
             int total = scan.Count;
             long bytes = scan.Sum(r => long.Parse(r[2], CultureInfo.InvariantCulture));

@@ -24,7 +24,7 @@ OUT = os.path.join(ROOT, "Library", "KryticalNova.Cleanup")
 # Must match ProjectCleanupScan.Candidates / Roots / InterfaceKeep / IsCandidate.
 CANDIDATES = ["Assets/Synty/", "Assets/_ThirdParty/", "Assets/_Recovery/", "Assets/QuickDestruction/Demo/",
               "Assets/TextMesh Pro/Examples & Extras/"]
-KEEP_ROOTS = ["Assets/_Game/", "Assets/Synty/SidekickCharacters/"]
+KEEP_ROOTS = ["Assets/_Game/", "Assets/Synty/SidekickCharacters/", "Assets/Synty/Tools/", "Assets/Synty/SyntyPackageHelper/"]
 INTERFACE_KEEP = ["/Prefabs/", "/Sprites/", "/Fonts/"]
 KEEP_SEGMENTS = ["/Resources/", "/Plugins/", "/Editor/", "/StreamingAssets/"]
 
