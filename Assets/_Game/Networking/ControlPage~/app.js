@@ -33,13 +33,26 @@ function toast(text, bad) {
 
 // The page's own question box (a browser's confirm/prompt is ugly and unreliable on phones). Resolves to the text
 // typed (empty when asked for none) or null when cancelled.
-function ask(title, text, wantsReason) {
+// With wantsLength, it also asks how long (a ban): the choice is read from $("dialogLength").value afterwards.
+const BAN_LENGTHS = [["1h", "1 hour"], ["12h", "12 hours"], ["1d", "1 day"], ["3d", "3 days"], ["1w", "1 week"], ["2w", "2 weeks"], ["30d", "30 days"], ["forever", "for good"]];
+function fillLengths(select) {
+  select.textContent = "";
+  for (const [value, label] of BAN_LENGTHS) { const o = document.createElement("option"); o.value = value; o.textContent = label; select.appendChild(o); }
+  select.value = "3d";
+}
+fillLengths($("dialogLength"));
+fillLengths($("banLength"));
+
+function ask(title, text, wantsReason, wantsLength) {
   return new Promise((resolve) => {
     $("dialogTitle").textContent = title;
     $("dialogText").textContent = text;
     $("dialogInput").value = "";
     $("dialogInput").hidden = !wantsReason;
     $("dialogLabel").hidden = !wantsReason;
+    $("dialogLength").hidden = !wantsLength;
+    $("dialogLengthLabel").hidden = !wantsLength;
+    $("dialogLength").value = "3d";
     $("dialog").hidden = false;
     (wantsReason ? $("dialogInput") : $("dialogYes")).focus();
     const done = (value) => {
@@ -172,6 +185,11 @@ function showPlayers(players) {
     cell(row, String(p.level));
     cell(row, p.faction, "hide-phone");
     cell(row, p.map, "hide-phone");
+    // Lag, not cheating: ping, and hits too late to count (or on a target already gone) in the last 5 minutes.
+    const late = (p.lateHits || 0) + (p.goneTargets || 0);
+    const lag = cell(row, (p.ping >= 0 ? p.ping + " ms" : "-") + (late ? " · " + late + " late" : ""));
+    lag.title = (p.lateHits || 0) + " hits after their swing closed, " + (p.goneTargets || 0) + " on a target already gone (last 5 minutes)";
+    if (p.ping > 250 || late >= 20) lag.className = "lagging";
     const td = cell(row, "");
     const kick = document.createElement("button");
     kick.className = "small red";
@@ -183,9 +201,65 @@ function showPlayers(players) {
       act(kick, "/api/kick", { id: String(p.id), reason: reason });
     });
     td.appendChild(kick);
+    // GMs are not banned (unbind them first); the server says so too.
+    if (!p.gm) {
+      const ban = document.createElement("button");
+      ban.className = "small red";
+      ban.type = "button";
+      ban.textContent = "Ban";
+      ban.addEventListener("click", async () => {
+        const reason = await ask("Ban " + p.name + "?", p.name + "'s account is kept off this server and they are sent away now. They read the reason.", true, true);
+        if (reason === null) return;
+        act(ban, "/api/ban", { id: String(p.id), text: $("dialogLength").value, reason: reason });
+      });
+      td.appendChild(ban);
+    }
     rows.appendChild(row);
   }
 }
+
+// ---- Bans (online phase 2, milestone 4).
+let shownBans = "";
+function showBans(bans) {
+  const key = JSON.stringify(bans);
+  if (key === shownBans) return;
+  shownBans = key;
+  const rows = $("banRows");
+  rows.textContent = "";
+  $("noBans").hidden = bans.length > 0;
+  for (const b of bans) {
+    const row = document.createElement("tr");
+    cell(row, b.character || "(no character)");
+    const account = cell(row, b.account.substring(0, 8) + "…", "hide-phone");
+    account.title = b.account;
+    cell(row, b.left);
+    cell(row, b.by + (b.reason ? " · " + b.reason : "") + " · " + b.since, "hide-phone");
+    const td = cell(row, "");
+    const unban = document.createElement("button");
+    unban.className = "small ghost";
+    unban.type = "button";
+    unban.textContent = "Unban";
+    unban.addEventListener("click", async () => {
+      const who = b.character || b.account;
+      if (await ask("Unban " + who + "?", who + " may join again at once.", false) === null) return;
+      act(unban, "/api/unban", { id: b.account });
+    });
+    td.appendChild(unban);
+    rows.appendChild(row);
+  }
+}
+
+$("banForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const who = $("banWho").value.trim();
+  if (!who) return toast("Type the character name or account id.", true);
+  const length = $("banLength").value;
+  const label = $("banLength").options[$("banLength").selectedIndex].textContent;
+  const reason = await ask("Ban " + who + " (" + label + ")?", who + "'s account is kept off this server, and sent away if they are on.", true);
+  if (reason === null) return;
+  const data = await act(event.submitter, "/api/ban", { id: who, text: length, reason: reason });
+  if (data && /banned/.test(data.answer || "")) $("banWho").value = "";
+});
 
 // The table is rebuilt only when it changed, so a player list picked from is not reset under the pointer every 2 seconds.
 let shownGms = "";
@@ -311,13 +385,62 @@ async function refresh() {
     showAddresses(s.addresses, s.port);
     showPlayers(s.players);
     showGms(s.gms || [], s.maxGms || 3, s.players || []);
+    showBans(s.bans || []);
     showReach(s);
     showList(s.serverList || [], s.listPublished || "-", s.statusPort || 0, s.publicAddress || "");
     await refreshLog();
+    await refreshFlags();
   } catch (e) {
     if (check) { $("pill").textContent = "NO ANSWER"; $("pill").className = "pill down"; }
   }
 }
+
+// ---- Flags (online phase 2, milestone 3): foul play, live. A repeat comes back with a new id and a higher count, and
+// replaces its card (keyed by player, request, reason and action), moving it to the top.
+let lastFlag = 0;
+const flagCards = new Map();
+let flagTotal = 0;
+
+async function refreshFlags() {
+  const data = await call("/api/flags?after=" + lastFlag);
+  if (!data.flags.length) return;
+  lastFlag = data.last;
+  const list = $("flags");
+  $("flagsEmpty").hidden = true;
+  for (const f of data.flags) {
+    const key = [f.connection, f.call, f.why, f.action].join("|");
+    let card = flagCards.get(key);
+    if (!card) { card = document.createElement("div"); flagCards.set(key, card); flagTotal++; }
+    card.className = "flag fresh" + (f.action === "Disconnected" ? " kick" : "");
+    card.dataset.search = (f.character + " " + f.account + " " + f.map + " " + f.call).toLowerCase();
+    card.replaceChildren();
+    const when = document.createElement("span"); when.className = "when"; when.textContent = f.time;
+    const who = document.createElement("span"); who.className = "who"; who.textContent = f.character + " ";
+    const acct = document.createElement("small"); acct.textContent = "account " + f.account + " · connection " + f.connection; who.appendChild(acct);
+    const act = document.createElement("span"); act.className = "act"; act.textContent = f.action;
+    if (f.count > 1) { const n = document.createElement("span"); n.className = "count"; n.textContent = "x" + f.count; who.appendChild(n); }
+    const detail = document.createElement("span"); detail.className = "detail"; detail.textContent = f.what + " — " + f.why + ".";
+    const where = document.createElement("span"); where.className = "where"; where.textContent = f.map + " at (" + f.where + ") · request " + f.call;
+    card.append(when, who, act, detail, where);
+    list.insertBefore(card, $("flagsEmpty").nextSibling);
+    setTimeout(() => card.classList.remove("fresh"), 1300);
+  }
+  while (flagCards.size > 300) { const [k, c] = flagCards.entries().next().value; c.remove(); flagCards.delete(k); }
+  $("flagCount").textContent = flagTotal + (flagTotal === 1 ? " flag" : " flags");
+  $("flagCount").className = "chip warn";
+  filterFlags();
+}
+
+function filterFlags() {
+  const q = $("flagFilter").value.trim().toLowerCase();
+  for (const card of flagCards.values()) card.hidden = !!q && !card.dataset.search.includes(q);
+}
+$("flagFilter").addEventListener("input", filterFlags);
+$("flagClear").addEventListener("click", () => {
+  for (const card of flagCards.values()) card.remove();
+  flagCards.clear(); flagTotal = 0;
+  $("flagsEmpty").hidden = false; $("flagCount").textContent = "none yet"; $("flagCount").className = "chip";
+});
 
 async function refreshLog() {
   const data = await call("/api/log?after=" + lastLog);

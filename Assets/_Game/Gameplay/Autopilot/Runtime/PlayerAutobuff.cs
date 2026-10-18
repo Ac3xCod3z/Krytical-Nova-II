@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.Core;
 using KryticalNova.Economy;
@@ -74,6 +75,8 @@ namespace KryticalNova.Autopilot
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void SetSlotsServerRpc(string json)
         {
+            if (!RpcBudget.Allow(this, CallKind.Account, nameof(SetSlotsServerRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(SetSlotsServerRpc), json, 4096)) return;
             if (json == null || json.Length > MaxSlotsJsonLength) return;
             skillIds = AutobuffRules.Sanitise(FromJson(json));
             Changed?.Invoke();

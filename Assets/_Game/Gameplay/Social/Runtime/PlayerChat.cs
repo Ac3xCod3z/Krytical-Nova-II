@@ -123,7 +123,13 @@ namespace KryticalNova.Social
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SendRpc(ChatChannel channel, string text, string whisperTarget) => ServerSend(channel, text, whisperTarget);
+        private void SendRpc(ChatChannel channel, string text, string whisperTarget)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Chat, nameof(SendRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(SendRpc), text)) return;
+            if (!RpcBudget.TextFits(this, nameof(SendRpc), whisperTarget)) return;
+            ServerSend(channel, text, whisperTarget);
+        }
 
         // ------------------------------------------------------------------ routing (server / offline)
 

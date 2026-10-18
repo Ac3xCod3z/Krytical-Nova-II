@@ -1,7 +1,7 @@
 # Online phase 2: lock the door
 
 Part of `online-roadmap.md`; the rules are in `online-security-model.md`. Written 11 Oct 2026.
-**Milestone 1 built 18 Oct 2026** (see "As built" below); the rest is not built. Order (owner, 18 Oct 2026): milestone 1,
+**Milestones 1 to 4 built 18 Oct 2026** (see "As built" below); milestone 5 (attack tests, client hardening) is not built. Order (owner, 18 Oct 2026): milestone 1,
 then **Phase 3** (client-side prediction), then milestones 2 to 5 of this phase.
 
 ## Goal
@@ -46,6 +46,69 @@ tighter checks (that part is milestone 3).
   through its own Unity sign-in, the server carried the account (1 character) over to the proven one, Tolan stood in
   the world; Bind on the page made him GM at once with the tag. EditMode tests 911 / 911 (`AccountProofTests`: forged,
   changed, expired, foreign-project tokens refused; the keys read; the carry-over once only; `GmRosterTests`).
+
+**Milestone 2, encrypted direct connections (18 Oct 2026).** Owner's pick: the master key lives in Documents with a
+backup, never in the project.
+- *Certificates* (`Networking/Tools~/certificates.sh`, openssl in Git Bash): a certificate authority made once
+  (`ca.key` secret, `ca.crt` public) in `Documents/KryticalNova-Secrets`; a server key and certificate for the name
+  `krytical-nova-server`, signed by it and copied into a `certificates` folder beside the server's folder (a rebuild
+  never touches it; the settings may name other files: `certificateFile`, `privateKeyFile`).
+- *Server* (`ServerEncryption`, `NetworkConnectionManager.StartDedicatedServer`): in Direct mode it encrypts with its
+  certificate and key (`UnityTransport.SetServerSecrets`); without them it says so and games can join only through
+  Relay. Relay keeps its own encryption.
+- *Game*: every join of a dedicated server (the server list, the F1 panel, the Editor's join to a test server) encrypts
+  and accepts only a server our authority signed (`SetClientSecrets`, the authority's public certificate in
+  `ServerEncryption.AuthorityCertificate`); an Editor hosting its own test session stays unencrypted. Games from before
+  this cannot join a server built after it.
+- *Tried:* the measure server (port 7790) logged "Direct connections are encrypted"; the Editor joined it directly with
+  encryption on and stood in town (109 fps, 37 ms). EditMode tests 911 / 911.
+
+**Milestone 3, speed limits, the audit and tighter hit checks (18 Oct 2026).** Owner's picks: tighter checks with
+refusals logged; the flags live on the control page too, with who and where; lag tracked apart from cheating.
+- *Speed limits* (`RpcBudget`, `CallLimits` in `server-settings.json`, added to an older file by itself): every one of
+  the 111 client-to-server calls starts with `RpcBudget.Allow` (a burst and a refill per second, by kind: move, combat,
+  items, money, social, chat, cosmetic, account); over it the call is ignored and flagged; 50 ignored in 10 s disconnects
+  the game ("Too many requests"). Texts are capped (`TextFits`, 500 characters; settings text 4096), positions must be
+  real places (`PointFits`).
+- *Flags* (`SecurityFlags`): character, account, connection, map, position, the call, what it asked, why it was refused
+  and what the server did; repeats count up on one line; a server log line, `flags.log` beside the saves, and the
+  control page's **Flags** section, live (`/api/flags`).
+- *The audit* (`online-security-model.md`): the 16 old `[ServerRpc]` calls moved to owner-only `[Rpc]`; the jump and the
+  climb no longer take the obstacle layers and the model's turn from the game; melee hit reports flag a step outside
+  1-3, a friend and a hit beyond 2.7 m; a Kiosk with more stacks than it holds is flagged before it is read; the table
+  is taken again from the code (111 rows) with what each call checks.
+- *Lag* (`NetworkHealth`, owner): late hits and hits on a target already gone are never flagged; they are counted per
+  player (the control page's **Ping · late** column, last 5 minutes) and per minute in the performance log
+  (`late_hits`, `gone_targets`, `worst_ping_ms`).
+- *Also (owner):* the control page and the launcher in the name logo's colours (its cyan and red; no yellow or pink),
+  the logo in place of the written name, and the launcher's top bar dark in its own navy.
+- *Tried:* on the measure server, 20 emotes at once: 8 through, the rest flagged as one line counted x10 with the
+  character, account, map and position, in `flags.log` too; 70 more: "Flooding the server", the game disconnected and
+  told why. EditMode tests 911 / 911.
+
+**Milestone 4, bans and the server's records (18 Oct 2026).** Work items 7 and 8.
+- *Bans* (`ServerBans`, the `world/bans` save document): on the proven account, for `30m`, `12h`, `3d`, `2w` (a number
+  alone is days) or for good; by connection or character name when the player is on, by character name (every saved
+  account is searched, `ServerSave.AccountsWithCharacter`) or account id when not. A player who is on is sent away; a
+  banned account asking to join is turned away by the approval (`NetworkConnectionManager.Banned`, also on an Editor host
+  test without sign-in, by the game's own id) and reads the reason and the time left. GMs and the host cannot be banned.
+  `gm.ban`, `gm.unban`, `gm.bans`; on the control page **Ban** beside a player (reason and length asked), the **Bans**
+  section with **Unban** and a form for someone not on; Ban Player, Unban Player and List Bans in the GM Tools window.
+- *The records* (`ServerRecords`, item 8): a server log line and a line in a file beside the saves, each with the time,
+  character, whole account id and connection. `gm.log`: every GM command, from a joined GM (with their GM name), the
+  server window, the control page's command box (with its address), the host's F2 and the GM Tools window, every
+  control page button press, every kick, ban and unban (`GmCommandRelay.RunningFor` says who a command ran for).
+  `economy.log`: trades item by item with the Creds, shop purchases and sales, Kiosk sales and tills collected, Vault
+  Creds in and out, Temper, Fusion, Tuning and Reforge with the piece before and after and the cost. `access.log`: joins,
+  leaves and every game turned away with the reason. Only where the game is decided, while a session runs.
+- *Also:* a game build (not a server) failed to compile since milestone 2 (`ServerEncryption.TryLoadServerSecrets` named
+  the server's settings, which exist only in a server build or the Editor); fixed, and the bot client built again.
+- *Tried:* on the measure server, from its control page: a GM's account refused, an unknown name and a wrong length
+  refused, two absent accounts banned (12 hours, for good), listed in `gm.bans` and the page's status, unbanned. A bot
+  in the game banned with **Ban** (3 days) was sent away and read "This account is banned from this server for 3 days
+  more (until 21 Oct 2026, 00:54 server time): Testing bans"; started again it was turned away with the same words, and
+  `access.log` said why; `gm.unban Botkaka` and it joined again. `gm.log` has one line per command or button with its
+  answer and the account. EditMode tests 941 / 941 (`ServerBansTests`).
 
 ## Work items
 

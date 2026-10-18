@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -124,19 +125,39 @@ namespace KryticalNova.Forge
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void TemperRpc(short cell, ushort alloyItemId, ushort protectionItemId) => ServerTemper(cell, alloyItemId, protectionItemId);
+        private void TemperRpc(short cell, ushort alloyItemId, ushort protectionItemId)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(TemperRpc))) return;
+            ServerTemper(cell, alloyItemId, protectionItemId);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void FuseRpc(short targetCell, short materialCell) => ServerFuse(targetCell, materialCell);
+        private void FuseRpc(short targetCell, short materialCell)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(FuseRpc))) return;
+            ServerFuse(targetCell, materialCell);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void TuneRpc(short cell) => ServerTune(cell);
+        private void TuneRpc(short cell)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(TuneRpc))) return;
+            ServerTune(cell);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void ResetTuningRpc(short cell) => ServerResetTuning(cell);
+        private void ResetTuningRpc(short cell)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(ResetTuningRpc))) return;
+            ServerResetTuning(cell);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void ReforgeRpc(short cell) => ServerReforge(cell);
+        private void ReforgeRpc(short cell)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(ReforgeRpc))) return;
+            ServerReforge(cell);
+        }
 
         // ------------------------------------------------------------------ server
 
@@ -195,7 +216,7 @@ namespace KryticalNova.Forge
                 return true;
             });
             if (!done || !wallet.ServerSpend(cost, CredsSink.GearWork)) return;
-            Finish(GearWorkKind.Temper, outcome, stack, after);
+            Finish(GearWorkKind.Temper, outcome, stack, after, cost);
 
             // A piece that reaches the top Temper is news for the whole server: a chat line and a toast, sent as one.
             if (outcome == GearWorkOutcome.Success && GearProgressionRules.TemperIsAnnounced(temper, state.Temper, next.Temper))
@@ -236,7 +257,7 @@ namespace KryticalNova.Forge
                 return true;
             });
             if (!done || !wallet.ServerSpend(cost, CredsSink.GearWork)) return;
-            Finish(GearWorkKind.Fusion, success ? GearWorkOutcome.Success : GearWorkOutcome.Fail, target, after);
+            Finish(GearWorkKind.Fusion, success ? GearWorkOutcome.Success : GearWorkOutcome.Fail, target, after, cost);
         }
 
         private void ServerTune(int cell)
@@ -265,7 +286,7 @@ namespace KryticalNova.Forge
                 return true;
             });
             if (!done || !progression.TrySpendRenown(bracket.renown) || !wallet.ServerSpend(bracket.creds, CredsSink.GearWork)) return;
-            Finish(GearWorkKind.Tuning, success ? GearWorkOutcome.Success : GearWorkOutcome.Fail, stack, after);
+            Finish(GearWorkKind.Tuning, success ? GearWorkOutcome.Success : GearWorkOutcome.Fail, stack, after, bracket.creds);
         }
 
         private void ServerResetTuning(int cell)
@@ -312,7 +333,14 @@ namespace KryticalNova.Forge
                 return true;
             });
             if (!done || !wallet.ServerSpend(cost, CredsSink.GearWork)) return;
-            Finish(GearWorkKind.Reforge, success ? GearWorkOutcome.Success : GearWorkOutcome.Fail, stack, after);
+            Finish(GearWorkKind.Reforge, success ? GearWorkOutcome.Success : GearWorkOutcome.Fail, stack, after, cost);
+        }
+
+        // "Iron Blade (item 1203, Temper 7, Fusion 1, Tune 0)": a piece as the economy record writes it.
+        private string Recorded(ItemStack stack)
+        {
+            GearItemState state = GearItemState.Of(stack);
+            return $"{NameOf(stack.itemId)} (item {stack.itemId}, Temper {state.Temper}, Fusion {state.Fusion}, Tune {state.Tune})";
         }
 
         private string NameOf(ushort itemId)
@@ -323,9 +351,11 @@ namespace KryticalNova.Forge
 
         // ------------------------------------------------------------------ telling the owner
 
-        private void Finish(GearWorkKind kind, GearWorkOutcome outcome, ItemStack before, ItemStack after)
+        private void Finish(GearWorkKind kind, GearWorkOutcome outcome, ItemStack before, ItemStack after, long creds = 0)
         {
             var result = new GearWorkResult { kind = kind, outcome = outcome, before = before, after = after };
+            ServerRecords.Write(RecordKind.Economy, $"Forge: {ServerRecords.Who(this)} {kind} {outcome}: {Recorded(before)} -> " +
+                                                    $"{(after.IsEmpty ? "broken" : Recorded(after))}, {creds} Creds.");
             if (IsSpawned)
             {
                 FinishedRpc(result);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
+using KryticalNova.Networking;
 using KryticalNova.Persistence;
 using Unity.Collections;
 using Unity.Netcode;
@@ -123,17 +124,34 @@ namespace KryticalNova.Items
 
         private static string Trim(string name) => name == null ? string.Empty : name.Length > MaxTypedName ? name.Substring(0, MaxTypedName) : name;
 
+        // Every request is held to the Pack's speed limit (RpcBudget, online phase 2), and a name to its length.
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SaveRpc(byte index, string name) => ServerSave(index, Trim(name));
+        private void SaveRpc(byte index, string name)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(SaveRpc)) || !RpcBudget.TextFits(this, nameof(SaveRpc), name, MaxTypedName)) return;
+            ServerSave(index, Trim(name));
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void RenameRpc(byte index, string name) => ServerRename(index, Trim(name));
+        private void RenameRpc(byte index, string name)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(RenameRpc)) || !RpcBudget.TextFits(this, nameof(RenameRpc), name, MaxTypedName)) return;
+            ServerRename(index, Trim(name));
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void DeleteRpc(byte index) => ServerDelete(index);
+        private void DeleteRpc(byte index)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(DeleteRpc))) return;
+            ServerDelete(index);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void WearRpc(byte index) => ServerWear(index);
+        private void WearRpc(byte index)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(WearRpc))) return;
+            ServerWear(index);
+        }
 
         // ------------------------------------------------------------------ the server decides
 

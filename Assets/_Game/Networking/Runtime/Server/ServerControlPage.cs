@@ -26,8 +26,8 @@ namespace KryticalNova.Networking
     /// </summary>
     public sealed class ServerControlPage : MonoBehaviour
     {
-        /// <summary>Runs a GM command line and returns the answer (set by ServerConsoleInput, which has the GM console).</summary>
-        public static Func<string, string> CommandRunner;
+        /// <summary>Runs a GM command line typed at (line, where from) and returns the answer (set by ServerConsoleInput, which has the GM console).</summary>
+        public static Func<string, string, string> CommandRunner;
 
         private const string CookieName = "kn_page";
         private const string FolderName = "ControlPage";
@@ -167,7 +167,10 @@ namespace KryticalNova.Networking
                     int level = player.TryGetComponent(out PlayerCharacterProgression progression) ? progression.CurrentLevel : 0;
                     players.Add("{\"id\":" + client.ClientId + ",\"name\":" + ControlPageRules.Json(name) + ",\"level\":" + level +
                                 ",\"faction\":" + ControlPageRules.Json(faction) + ",\"map\":" + ControlPageRules.Json(player.scene.name) +
-                                ",\"gm\":" + ControlPageRules.Json(GmRoster.NameOf(client.ClientId) ?? string.Empty) + "}");
+                                ",\"gm\":" + ControlPageRules.Json(GmRoster.NameOf(client.ClientId) ?? string.Empty) +
+                                ",\"ping\":" + NetworkHealth.PingMs(client.ClientId) +
+                                ",\"lateHits\":" + NetworkHealth.Count(client.ClientId, LagEvent.LateHit) +
+                                ",\"goneTargets\":" + NetworkHealth.Count(client.ClientId, LagEvent.GoneTarget) + "}");
                 }
             // The Game Masters by name and whether they are signed in now; their passwords never leave the settings file.
             var masters = new List<string>();
@@ -191,6 +194,7 @@ namespace KryticalNova.Networking
             for (int i = 0; i < addresses.Count; i++) sb.Append(i > 0 ? "," : string.Empty).Append(ControlPageRules.Json(addresses[i]));
             sb.Append("],\"players\":[").Append(string.Join(",", players))
               .Append("],\"gms\":[").Append(string.Join(",", masters))
+              .Append("],\"bans\":[").Append(BansJson())
               .Append("],\"serverList\":[").Append(ListJson())
               .Append("],\"listPublished\":").Append(ControlPageRules.Json(ServerReach.LastPublished))
               .Append(",\"statusPort\":").Append(options.StatusPort)
@@ -203,6 +207,19 @@ namespace KryticalNova.Networking
               .Append(",\"loadSlow\":").Append(ServerPerformanceLog.LastSlowFrames)
               .Append(",\"maxGms\":").Append(GmRoster.MaxGameMasters).Append('}');
             return sb.ToString();
+        }
+
+        // Bans in force (online phase 2, milestone 4): the account id is needed to end one from the page.
+        private static string BansJson()
+        {
+            DateTime now = DateTime.UtcNow;
+            var rows = new List<string>();
+            foreach (BanEntry ban in ServerBans.All(now))
+                rows.Add("{\"account\":" + ControlPageRules.Json(ban.account) + ",\"character\":" + ControlPageRules.Json(ban.character) +
+                         ",\"by\":" + ControlPageRules.Json(ban.by) + ",\"reason\":" + ControlPageRules.Json(ban.reason) +
+                         ",\"since\":" + ControlPageRules.Json(new DateTime(ban.sinceUtc, DateTimeKind.Utc).ToLocalTime().ToString("d MMM HH:mm", System.Globalization.CultureInfo.InvariantCulture)) +
+                         ",\"left\":" + ControlPageRules.Json(ban.IsForever ? "for good" : ServerBans.Describe(new DateTime(ban.untilUtc, DateTimeKind.Utc) - now)) + "}");
+            return string.Join(",", rows);
         }
 
         // ------------------------------------------------------------------ the socket (a thread of its own)
@@ -272,6 +289,10 @@ namespace KryticalNova.Networking
                         long.TryParse(QueryValue(request.Query, "after"), out long after);
                         SendJson(stream, 200, LogAfter(after));
                         return;
+                    case "/api/flags":
+                        long.TryParse(QueryValue(request.Query, "after"), out long afterFlag);
+                        SendJson(stream, 200, SecurityFlags.JsonAfter(afterFlag));
+                        return;
                 }
                 SendJson(stream, 404, "{\"error\":\"No such call.\"}");
                 return;
@@ -304,6 +325,12 @@ namespace KryticalNova.Networking
                 case "/api/kick":
                     answer = OnMain(() => Kick(body.id, body.reason));
                     break;
+                case "/api/ban":
+                    answer = OnMain(() => ServerBans.BanPlayer(body.id, body.text, body.reason, $"Control page ({from})"));
+                    break;
+                case "/api/unban":
+                    answer = OnMain(() => ServerBans.UnbanPlayer(body.id));
+                    break;
                 case "/api/stop":
                     answer = OnMain(() => ServerLifetime.ScheduleShutdown(Mathf.Clamp(body.seconds, 0f, 3600f), body.reason, body.restart));
                     break;
@@ -313,7 +340,7 @@ namespace KryticalNova.Networking
                 case "/api/command":
                     if (string.IsNullOrWhiteSpace(body.line)) { answer = "Type a command first."; break; }
                     if (CommandRunner == null) { answer = "Commands are not ready yet."; break; }
-                    answer = OnMain(() => CommandRunner(body.line.Trim()));
+                    answer = OnMain(() => CommandRunner(body.line.Trim(), $"Control page ({from})"));
                     break;
                 case "/api/list/add":
                     answer = OnMain(() => AddListing(body.name, body.address, body.port));
@@ -343,7 +370,34 @@ namespace KryticalNova.Networking
                     SendJson(stream, 404, "{\"error\":\"No such call.\"}");
                     return;
             }
+            // Every button press is a GM action and goes in the GM record with its answer (online phase 2, milestone 4).
+            // The command box writes its own line.
+            if (request.Path != "/api/command")
+            {
+                string pressed = Pressed(request.Path, body);
+                string said = ServerRecords.Short(answer);
+                OnMain(() => { ServerRecords.Write(RecordKind.Gm, $"Control page ({from}): {pressed} -> {said}"); return null; });
+            }
             SendJson(stream, 200, "{\"answer\":" + ControlPageRules.Json(answer) + "}");
+        }
+
+        // "kick id=4 reason=spam": the button's call and what it was given, for the record. Never the password.
+        private static string Pressed(string path, Body body)
+        {
+            var sb = new StringBuilder(path.Substring("/api/".Length));
+            void Add(string field, string value)
+            {
+                if (!string.IsNullOrWhiteSpace(value)) sb.Append(' ').Append(field).Append("=\"").Append(value.Trim()).Append('"');
+            }
+            Add("id", body.id);
+            Add("name", body.name);
+            Add("text", body.text);
+            Add("reason", body.reason);
+            Add("address", body.address);
+            if (body.port != 0) sb.Append(" port=").Append(body.port);
+            if (body.seconds != 0f) sb.Append(" seconds=").Append(Mathf.RoundToInt(body.seconds));
+            if (body.restart) sb.Append(" restart");
+            return sb.ToString();
         }
 
         [Serializable]
@@ -406,10 +460,11 @@ namespace KryticalNova.Networking
             NetworkManager network = NetworkManager.Singleton;
             if (network == null || !network.IsServer) return "The server is not running a session.";
             if (!ulong.TryParse(who, out ulong id) || !network.ConnectedClients.ContainsKey(id)) return "That player is no longer here.";
+            if (id == NetworkManager.ServerClientId) return "That is the host's own player: the host cannot be sent away.";
             string told = string.IsNullOrWhiteSpace(reason) ? "A GM removed you from the server." : "A GM removed you from the server: " + reason.Trim();
+            string removed = ServerRecords.Who(id);
             network.DisconnectClient(id, told);
-            Debug.Log($"[Server] Connection {id} was removed from the control page. {told}");
-            return $"Removed connection {id}.";
+            return $"Removed {removed}.";
         }
 
         // ------------------------------------------------------------------ the servers players see (online step 4)

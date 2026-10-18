@@ -27,6 +27,7 @@
     <Reference Include="System.IO.Compression" />
     <!-- Built in: the game's comic font, the public half of the update signing key, the update address. -->
     <EmbeddedResource Include="..\..\..\UI\Travel\Fonts\Bangers.ttf" LogicalName="Bangers.ttf" />
+    <EmbeddedResource Include="Logo.png" LogicalName="Logo.png" />
     <EmbeddedResource Include="UpdateKey.pub" LogicalName="UpdateKey.pub" Condition="Exists('UpdateKey.pub')" />
     <EmbeddedResource Include="UpdateSource.txt" LogicalName="UpdateSource.txt" Condition="Exists('UpdateSource.txt')" />
   </ItemGroup>

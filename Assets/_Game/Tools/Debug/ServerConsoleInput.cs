@@ -54,14 +54,19 @@ namespace KryticalNova.DevTools
                 if (!QuantumConsoleProcessor.TableIsGenerating) QuantumConsoleProcessor.GenerateCommandTable();
                 if (!QuantumConsoleProcessor.TableGenerated) return; // the commands are still being found: next frame
             }
-            while (Lines.TryDequeue(out string line)) Run(line);
+            while (Lines.TryDequeue(out string line)) Run(line, "Server window");
         }
 
-        /// <summary>Runs one command line on the game's thread, logs it, and returns the answer.</summary>
-        public static string Run(string line)
+        /// <summary>
+        /// Runs one command line on the game's thread and returns the answer. <paramref name="from"/> (the server window,
+        /// the control page and its address) and the line go in the GM record; the whole answer is printed below it.
+        /// </summary>
+        public static string Run(string line, string from)
         {
-            string answer = GmCommandRelay.RunLine(line);
-            Debug.Log("> " + line + "\n" + answer);
+            string answer = GmCommandRelay.RunLine(line, from);
+            KryticalNova.Networking.ServerRecords.Write(KryticalNova.Networking.RecordKind.Gm,
+                $"{from}: {line} -> {KryticalNova.Networking.ServerRecords.Short(answer)}");
+            Debug.Log(answer);
             return answer;
         }
     }

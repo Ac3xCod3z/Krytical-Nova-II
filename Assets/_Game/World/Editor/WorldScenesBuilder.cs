@@ -71,6 +71,9 @@ namespace KryticalNova.EditorTools
 
         private const string ScarName = "The Scar", ScarScene = "TheScar", ScarArt = "concept-scar.jpg";
 
+        /// <summary>The owner's loading pictures (17 Oct 2026): the travel screen draws them at random with the regions' paintings.</summary>
+        private static readonly string[] ExtraPictures = { "loading-street-fight.png", "loading-cliff-city.png", "loading-faction-brawl.png" };
+
         /// <summary>A map to make: where its scene goes and what the catalog says about it.</summary>
         private sealed class MapPlan
         {
@@ -191,6 +194,14 @@ namespace KryticalNova.EditorTools
             foreach (RegionPlan r in Regions)
                 catalog.regions.Add(new ZoneRegion { name = r.Name, faction = r.Faction, art = Art(r.Art), lore = RegionLore(atlas, r.Name) });
             catalog.regions.Add(new ZoneRegion { name = ScarName, faction = "Contested", art = Art(ScarArt), lore = RegionLore(atlas, ScarName) });
+
+            catalog.extraPictures.Clear();
+            foreach (string file in ExtraPictures)
+            {
+                Texture2D picture = Art(file);
+                if (picture != null) catalog.extraPictures.Add(picture);
+                else log.AppendLine($"Missing travel picture {ArtFolder}/{file}.");
+            }
 
             catalog.zones.Clear();
             catalog.zones.Add(new ZoneEntry

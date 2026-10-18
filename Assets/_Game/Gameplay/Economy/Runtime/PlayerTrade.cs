@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -197,12 +198,17 @@ namespace KryticalNova.Economy
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void RequestRpc(NetworkObjectReference targetReference) =>
+        private void RequestRpc(NetworkObjectReference targetReference)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(RequestRpc))) return;
             ServerRequest(targetReference.TryGet(out NetworkObject targetObject) ? targetObject.GetComponent<PlayerTrade>() : null);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestByNameRpc(string playerName)
         {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(RequestByNameRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(RequestByNameRpc), playerName)) return;
             Online.Clear();
             OnlineTraders.Clear();
             foreach (var client in NetworkManager.ConnectedClientsList)
@@ -229,25 +235,53 @@ namespace KryticalNova.Economy
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void RespondRpc(bool accept) => ServerRespond(accept);
+        private void RespondRpc(bool accept)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(RespondRpc))) return;
+            ServerRespond(accept);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void OfferRpc(short packCell, ushort count) => ServerOffer(packCell, count);
+        private void OfferRpc(short packCell, ushort count)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(OfferRpc))) return;
+            ServerOffer(packCell, count);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void WithdrawRpc(byte lineIndex) => ServerWithdraw(lineIndex);
+        private void WithdrawRpc(byte lineIndex)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(WithdrawRpc))) return;
+            ServerWithdraw(lineIndex);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SetCredsRpc(long amount) => ServerSetCreds(amount);
+        private void SetCredsRpc(long amount)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(SetCredsRpc))) return;
+            ServerSetCreds(amount);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void LockRpc(bool on) => ServerLock(on);
+        private void LockRpc(bool on)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(LockRpc))) return;
+            ServerLock(on);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void ConfirmRpc() => ServerConfirm();
+        private void ConfirmRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(ConfirmRpc))) return;
+            ServerConfirm();
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void CancelRpc() => ServerCancel();
+        private void CancelRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(CancelRpc))) return;
+            ServerCancel();
+        }
 
         // ------------------------------------------------------------------ asking and answering (server)
 
@@ -492,6 +526,7 @@ namespace KryticalNova.Economy
             b.sentAmount = sideB.sentToday;
 
             string gaveA = Describe(a), gaveB = Describe(b);
+            ServerRecords.Write(RecordKind.Economy, $"Trade: {ServerRecords.Who(a)} gave {Recorded(a)}; {ServerRecords.Who(b)} gave {Recorded(b)}.");
             a.Tell($"Trade with {b.TraderName} complete. You gave {gaveA} and received {gaveB}.");
             b.Tell($"Trade with {a.TraderName} complete. You gave {gaveB} and received {gaveA}.");
             EndSession(s, null, null);
@@ -504,6 +539,19 @@ namespace KryticalNova.Economy
         {
             if (creds <= 0 || from.wallet == null || to.wallet == null) return;
             if (from.wallet.ServerSpend(creds, CredsSink.Trade)) to.wallet.ServerEarn(creds, CredsSource.Trade);
+        }
+
+        // Every item by name, id and count, and the Creds, for the economy record.
+        private static string Recorded(PlayerTrade side)
+        {
+            var parts = new List<string>();
+            foreach (TradeLine line in side.lines)
+            {
+                ItemDefinition item = side.inventory != null && side.inventory.Catalog != null ? side.inventory.Catalog.Get(line.stack.itemId) : null;
+                parts.Add($"{line.stack.count}x {(item != null ? item.displayName : "item")} (item {line.stack.itemId})");
+            }
+            if (side.offeredCreds > 0) parts.Add(side.offeredCreds + " Creds");
+            return parts.Count == 0 ? "nothing" : string.Join(", ", parts);
         }
 
         private static string Describe(PlayerTrade side)

@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.Core;
 using Unity.Netcode;
@@ -236,9 +237,10 @@ namespace KryticalNova.Progression
             return count;
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void UpgradeServerRpc(MovementSkillId skill, int count)
         {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(UpgradeServerRpc))) return;
             TryUpgradeMultiple(skill, count);
         }
 
@@ -278,9 +280,10 @@ namespace KryticalNova.Progression
             return true;
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void SelectServerRpc(MovementSkillId skill)
         {
+            if (!RpcBudget.Allow(this, CallKind.Move, nameof(SelectServerRpc))) return;
             bool allowed = skill == MovementSkillId.None || (CanUse(skill) && resources != null && resources.IsAlive);
             if (allowed && selectedSkill != skill)
             {

@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.Core;
 using Unity.Netcode;
@@ -202,9 +203,10 @@ namespace KryticalNova.Progression
             return allocated;
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void AllocateServerRpc(CharacterAttribute attribute, int count)
         {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(AllocateServerRpc))) return;
             TryAllocateMultiple(attribute, count);
         }
 

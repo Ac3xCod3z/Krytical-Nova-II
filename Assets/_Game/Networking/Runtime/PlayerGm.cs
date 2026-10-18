@@ -86,6 +86,8 @@ namespace KryticalNova.Networking
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void CommandServerRpc(string line)
         {
+            if (!RpcBudget.Allow(this, CallKind.Account, nameof(CommandServerRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(CommandServerRpc), line)) return;
             if (!GmRoster.IsGm(OwnerClientId))
             {
                 Send("You are not a GM on this server.");

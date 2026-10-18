@@ -161,7 +161,9 @@ namespace KryticalNova.Networking
                 NetworkManager nm = NetworkManager.Singleton;
                 if (nm == null) return $"Could not start joining {server.name}.";
                 PrepareConnections();
-                nm.GetComponent<UnityTransport>().SetRelayServerData(Unity.Services.Relay.Models.AllocationUtils.ToRelayServerData(place, "dtls"));
+                var relayTransport = nm.GetComponent<UnityTransport>();
+                ServerEncryption.Off(relayTransport); // Relay encrypts by itself
+                relayTransport.SetRelayServerData(Unity.Services.Relay.Models.AllocationUtils.ToRelayServerData(place, "dtls"));
                 return null;
             }
             catch (Unity.Services.Relay.RelayServiceException e)
@@ -262,7 +264,8 @@ namespace KryticalNova.Networking
                         StartLocalHost();
                         yield break;
                     }
-                    StartLocalClient();
+                    // A dedicated test server (the test session's join=1) encrypts; an Editor hosting its own test does not.
+                    StartLocalClient("", 0, EditorTestSession.JoinOnly);
                 }
                 yield return retry;
             }
@@ -356,7 +359,9 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>Connects as a client to a local or direct IP/port server.</summary>
-        public bool StartLocalClient(string ip = "", ushort port = 0)
+        /// <param name="encrypted">The server is a dedicated server (it encrypts direct connections); false for an
+        /// Editor hosting its own test session.</param>
+        public bool StartLocalClient(string ip = "", ushort port = 0, bool encrypted = true)
         {
             PrepareConnections();
             if (NetworkManager.Singleton == null)
@@ -369,6 +374,12 @@ namespace KryticalNova.Networking
             ushort targetPort = ResolvePort(port);
 
             ConfigureTransport(address, targetPort);
+            var clientTransport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            if (clientTransport != null)
+            {
+                if (encrypted) ServerEncryption.UseOnClient(clientTransport);
+                else ServerEncryption.Off(clientTransport);
+            }
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
             bool success = NetworkManager.Singleton.StartClient();
             if (success)
@@ -538,18 +549,17 @@ namespace KryticalNova.Networking
             JoinRules.TryRead(request.Payload, out _, out _, out string token, out string oldAccount);
             if (Prove(request.ClientNetworkId, token, oldAccount, out string why))
             {
-                response.Approved = true;
+                if (!Banned(request.ClientNetworkId, response)) response.Approved = true;
                 return;
             }
             if (!RequireProof) // the Editor hosting a test: a game that cannot prove itself plays as before
             {
-                response.Approved = true;
+                if (!Banned(request.ClientNetworkId, response, oldAccount)) response.Approved = true;
                 return;
             }
             if (why != null)
             {
-                Debug.Log($"[Server] Player turned away (connection {request.ClientNetworkId}): no proof of who they are ({why}).");
-                Refuse(request.ClientNetworkId, response, NoProof);
+                Refuse(request.ClientNetworkId, response, NoProof, $"no proof of who they are ({why})");
                 return;
             }
             // Unity's keys are not here yet (the server just started, or Unity signed with a new key): wait for them.
@@ -557,15 +567,27 @@ namespace KryticalNova.Networking
             ulong client = request.ClientNetworkId;
             UnityKeys.EnsureAsync(UnityKeys.KeyIdOf(token)).ContinueWith(_ =>
             {
-                if (Prove(client, token, oldAccount, out string late)) response.Approved = true;
-                else
+                if (Prove(client, token, oldAccount, out string late))
                 {
-                    Debug.Log($"[Server] Player turned away (connection {client}): no proof of who they are ({late ?? "Unity's keys could not be fetched"}).");
-                    response.Approved = false;
-                    response.Reason = NoProof;
+                    if (!Banned(client, response)) response.Approved = true;
                 }
+                else Refuse(client, response, NoProof, $"no proof of who they are ({late ?? "Unity's keys could not be fetched"})");
                 response.Pending = false;
             }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        /// <summary>
+        /// A banned account is turned away with the reason and how long is left (online phase 2, milestone 4). The account
+        /// is the proven one, or on an Editor host test without sign-in <paramref name="unproven"/>, the game's own id.
+        /// </summary>
+        private static bool Banned(ulong client, NetworkManager.ConnectionApprovalResponse response, string unproven = null)
+        {
+            string account = ServerAccounts.TryGet(client, out ServerAccounts.Entry proven) ? proven.Account : unproven;
+            DateTime now = DateTime.UtcNow;
+            if (!ServerBans.IsBanned(account, now, out BanEntry ban)) return false;
+            ServerAccounts.Forget(client);
+            Refuse(client, response, ServerBans.Refusal(ban, now), $"banned account {account}");
+            return true;
         }
 
         /// <summary>A dedicated server lets in only proven players; the Editor hosting a test takes anyone, as before.</summary>
@@ -581,11 +603,12 @@ namespace KryticalNova.Networking
             }
         }
 
-        private static void Refuse(ulong client, NetworkManager.ConnectionApprovalResponse response, string reason)
+        /// <summary>Turns a game away: the player reads <paramref name="reason"/>; the access record has <paramref name="why"/> when given.</summary>
+        private static void Refuse(ulong client, NetworkManager.ConnectionApprovalResponse response, string reason, string why = null)
         {
             response.Approved = false;
             response.Reason = reason;
-            Debug.Log($"[Server] Player turned away (connection {client}): {reason}");
+            ServerRecords.Write(RecordKind.Access, $"Turned away connection {client}: {why ?? reason}" + (why != null ? $" (told: {reason})" : string.Empty));
         }
 
         /// <summary>
@@ -651,22 +674,49 @@ namespace KryticalNova.Networking
             NetworkManager nm = NetworkManager.Singleton;
             maxPlayersNow = options.maxPlayers;
             PrepareConnections();
-            nm.OnClientConnectedCallback += id => Debug.Log($"[Server] Player joined (connection {id}). Online: {nm.ConnectedClientsIds.Count}.");
+            // Who joined and left, with the account, is kept in access.log beside the saves (online phase 2, milestone 4).
+            ServerRecords.LogFolder = options.SaveFolderPath;
+            nm.OnClientConnectedCallback += id =>
+            {
+                Debug.Log($"[Server] Player joined (connection {id}). Online: {nm.ConnectedClientsIds.Count}.");
+                ServerRecords.Joined(id);
+            };
+            // Every request a game sends is held to a speed limit, and foul play is flagged (online phase 2, milestone 3).
+            RpcBudget.Configure(options.callLimits);
+            SecurityFlags.LogFolder = options.SaveFolderPath;
             nm.OnClientDisconnectCallback += id =>
             {
+                ServerRecords.Left(id);
                 ServerAccounts.Forget(id);
+                RpcBudget.Forget(id);
+                NetworkHealth.Forget(id);
                 Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
             };
             // Unity's sign-in keys, fetched now so the first player is not kept waiting (online phase 2).
             UnityKeys.EnsureAsync();
             KryticalNova.Persistence.ServerSave.CarryOverEnabled = options.carryOverOldSaves;
             ServerReach.Begin(options);
+            var transport = nm.GetComponent<UnityTransport>();
             if (options.UsesRelay)
             {
+                ServerEncryption.Off(transport); // Relay encrypts by itself
                 // Relay drops a server it no longer hears (the internet went down): it restarts, saving first, for a new place.
                 nm.OnTransportFailure += () => StartCoroutine(RestartAfterRelayLoss());
                 StartRelayServer(options, nm);
                 return;
+            }
+            // Direct connections are encrypted (online phase 2): every game insists on it, so without the certificate
+            // nobody can join directly (Relay still works).
+            if (ServerEncryption.TryLoadServerSecrets(options, out string certificate, out string privateKey, out string certificateProblem))
+            {
+                ServerEncryption.UseOnServer(transport, certificate, privateKey);
+                Debug.Log("[Server] Direct connections are encrypted.");
+            }
+            else
+            {
+                ServerEncryption.Off(transport);
+                ReportError($"[Server] Direct connections cannot be encrypted: {certificateProblem}. Games cannot join directly until the " +
+                            "certificate is there (Server Guide, \"Encryption\"); they can still join through Relay.");
             }
             if (nm.StartServer())
             {
@@ -812,6 +862,8 @@ namespace KryticalNova.Networking
                     // Forced: with Unity's Dedicated Server package the transport otherwise takes the package's port
                     // (7777 when none is given) over this one. A server's -port still wins, through ServerLaunchOptions.
                     transport.SetConnectionData(true, address, port, "0.0.0.0");
+                    // Unencrypted unless a dedicated server's own path, or a game joining one, switches it on after this.
+                    ServerEncryption.Off(transport);
                 }
             }
         }

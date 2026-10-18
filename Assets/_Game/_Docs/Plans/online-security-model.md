@@ -89,13 +89,24 @@ One server log line, with the account id and the time, for each of: a refused co
 call and why; every GM command; every trade, Kiosk sale, shop sale, Vault move of Creds, Temper, Fusion
 and Reforge; every kick and ban. Logs are kept off the game machine (Phase 8).
 
+**As built (18 Oct 2026, phase 2 milestones 3 and 4):** `ServerRecords` writes each line to the server log (the control
+page's live log) and to a file beside the dedicated server's saves: `access.log` (joins, leaves, every game turned
+away and why), `gm.log` (every GM command from the server window, the control page with its address, F2 and the GM
+Tools window; every control page button; every kick, ban and unban), `economy.log` (trades item by item with the
+Creds, shop purchases and sales, Kiosk sales and tills collected, Vault Creds, Temper, Fusion, Tuning and Reforge with
+the piece before and after and the cost). Refused calls are `flags.log` (`SecurityFlags`). Each line names the
+character, the whole account id and the connection. Keeping them off the game machine is still Phase 8.
+
 ## The audit: every client-to-server call
 
-This is the working list for Phase 2. It was taken from the code on 11 Oct 2026 by searching for
-`[ServerRpc` and `[Rpc(SendTo.Server` under `Assets/_Game`: **100 calls in 29 files.** "Style" is the
-attribute in use: *old* is `[ServerRpc]`, *new* is `[Rpc(SendTo.Server, InvokePermission = Owner)]`. The
-14 old ones are moved to the new form as they are reviewed. "Look at first" is where to start, worked out
-from the arguments alone; it does not say the call is unsafe. Nothing has been reviewed yet.
+This is the working list for Phase 2. **Taken again from the code on 18 Oct 2026 (milestone 3): 111 calls**, every one
+now `[Rpc(SendTo.Server, InvokePermission = Owner)]` (the 16 old `[ServerRpc]` ones moved). Every call starts with
+`RpcBudget.Allow` (its speed limit by kind; `callLimits` in `server-settings.json`); every text it takes is checked for
+length (`RpcBudget.TextFits`), every position for being a real place (`RpcBudget.PointFits`); what a real game never
+sends is flagged (`SecurityFlags`: the control page's Flags section and `flags.log`). The Notes column says where a call
+was looked at more closely. The state and argument checks deeper inside each system (amounts owned, reach, the right NPC)
+were already the server's in every system checked; the attack tests of milestone 5 try each call with what a modified
+game would send.
 
 For each call the review answers five questions, and the Status column is filled in when all five hold:
 
@@ -107,110 +118,119 @@ For each call the review answers five questions, and the Status column is filled
 4. **Rate.** Is there a budget, so a flood is dropped and logged?
 5. **Refusal.** Does a refusal change nothing, tell the player why where that helps, and write a log line?
 
-| # | System | File : line | Call | Style | Look at first | Status |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | Social | `PlayerSponsor.cs` : 142 | `RequestRpc(NetworkObjectReference targetReference)` | new | target exists, in reach, allowed | Not reviewed |
-| 2 | Social | `PlayerSponsor.cs` : 149 | `RequestByNameRpc(string characterName)` | new | text length and content | Not reviewed |
-| 3 | Social | `PlayerSponsor.cs` : 172 | `RespondRpc(bool accept)` | new | rate only | Not reviewed |
-| 4 | Social | `PlayerSponsor.cs` : 192 | `EndRpc(string characterId)` | new | text length and content | Not reviewed |
-| 5 | Social | `PlayerParty.cs` : 140 | `InviteByNameRpc(string playerName)` | new | text length and content | Not reviewed |
-| 6 | Social | `PlayerParty.cs` : 168 | `InviteRpc(NetworkObjectReference targetReference)` | new | target exists, in reach, allowed | Not reviewed |
-| 7 | Social | `PlayerParty.cs` : 172 | `RespondRpc(bool accept)` | new | rate only | Not reviewed |
-| 8 | Social | `PlayerParty.cs` : 210 | `LeaveRpc()` | new | rate only | Not reviewed |
-| 9 | Social | `PlayerParty.cs` : 217 | `KickRpc(string playerName)` | new | text length and content | Not reviewed |
-| 10 | Social | `PlayerParty.cs` : 224 | `PromoteRpc(string playerName)` | new | text length and content | Not reviewed |
-| 11 | Social | `PlayerFollow.cs` : 100 | `FollowRpc(NetworkObjectReference targetReference)` | new | target exists, in reach, allowed | Not reviewed |
-| 12 | Social | `PlayerFollow.cs` : 104 | `FollowByNameRpc(string memberName)` | new | text length and content | Not reviewed |
-| 13 | Social | `PlayerEmotes.cs` : 146 | `PlayRpc(FixedString64Bytes key)` | new | rate only | Not reviewed |
-| 14 | Social | `PlayerCrew.cs` : 191 | `FoundRpc(string crewName, byte symbol)` | new | text length and content | Not reviewed |
-| 15 | Social | `PlayerCrew.cs` : 194 | `InviteRpc(NetworkObjectReference targetReference)` | new | target exists, in reach, allowed | Not reviewed |
-| 16 | Social | `PlayerCrew.cs` : 198 | `InviteByNameRpc(string playerName)` | new | text length and content | Not reviewed |
-| 17 | Social | `PlayerCrew.cs` : 201 | `RespondRpc(bool accept)` | new | rate only | Not reviewed |
-| 18 | Social | `PlayerCrew.cs` : 213 | `LeaveRpc()` | new | rate only | Not reviewed |
-| 19 | Social | `PlayerCrew.cs` : 216 | `ExpelRpc(string memberId)` | new | text length and content | Not reviewed |
-| 20 | Social | `PlayerCrew.cs` : 219 | `OfficerRpc(string memberId, bool officer)` | new | text length and content | Not reviewed |
-| 21 | Social | `PlayerCrew.cs` : 222 | `HandOverRpc(string memberId)` | new | text length and content | Not reviewed |
-| 22 | Social | `PlayerCrew.cs` : 225 | `TitleRpc(string memberId, string title)` | new | text length and content | Not reviewed |
-| 23 | Social | `PlayerCrew.cs` : 228 | `AnnouncementRpc(string text)` | new | text length and content | Not reviewed |
-| 24 | Social | `PlayerCrew.cs` : 231 | `SymbolRpc(byte symbol)` | new | rate only | Not reviewed |
-| 25 | Social | `PlayerCrew.cs` : 234 | `DisbandRpc()` | new | rate only | Not reviewed |
-| 26 | Social | `PlayerContacts.cs` : 165 | `AddByNameRpc(string characterName)` | new | text length and content | Not reviewed |
-| 27 | Social | `PlayerContacts.cs` : 168 | `AddRpc(NetworkObjectReference targetReference)` | new | target exists, in reach, allowed | Not reviewed |
-| 28 | Social | `PlayerContacts.cs` : 177 | `RespondRpc(string characterId, bool accept)` | new | text length and content | Not reviewed |
-| 29 | Social | `PlayerContacts.cs` : 184 | `CancelRpc(string characterId)` | new | text length and content | Not reviewed |
-| 30 | Social | `PlayerContacts.cs` : 187 | `RemoveRpc(string characterId)` | new | text length and content | Not reviewed |
-| 31 | Social | `PlayerContacts.cs` : 190 | `RemoveByNameRpc(string characterName)` | new | text length and content | Not reviewed |
-| 32 | Social | `PlayerContacts.cs` : 193 | `BlockRpc(string characterId)` | new | text length and content | Not reviewed |
-| 33 | Social | `PlayerContacts.cs` : 196 | `BlockByNameRpc(string characterName)` | new | text length and content | Not reviewed |
-| 34 | Social | `PlayerContacts.cs` : 199 | `UnblockRpc(string characterId)` | new | text length and content | Not reviewed |
-| 35 | Social | `PlayerContacts.cs` : 202 | `UnblockByNameRpc(string characterName)` | new | text length and content | Not reviewed |
-| 36 | Social | `PlayerContacts.cs` : 205 | `FavouriteRpc(string characterId, bool favourite)` | new | text length and content | Not reviewed |
-| 37 | Social | `PlayerContacts.cs` : 208 | `NoteRpc(string characterId, string note)` | new | text length and content | Not reviewed |
-| 38 | Social | `PlayerChat.cs` : 122 | `SendRpc(ChatChannel channel, string text, string whisperTarget)` | new | text length and content | Not reviewed |
-| 39 | Restyle | `PlayerWeaves.cs` : 153 | `WeaveRpc(byte slot, ushort lineId)` | new | index in range | Not reviewed |
-| 40 | Restyle | `PlayerWeaves.cs` : 156 | `ClearWeaveRpc(byte slot)` | new | index in range | Not reviewed |
-| 41 | Restyle | `PlayerWeaves.cs` : 159 | `DyeRpc(byte slot, ushort colourway)` | new | index in range | Not reviewed |
-| 41a | Restyle | `PlayerWeaves.cs` : 162 | `MorphRpc(ushort petItemId, byte stage)` (12 Oct 2026) | new | index in range; a pet or stage that does not exist | Not reviewed |
-| 41b | Restyle | `PlayerWeaves.cs` : 165 | `ClearMorphRpc()` (12 Oct 2026) | new | rate only | Not reviewed |
-| 42 | Restyle | `PlayerRestyle.cs` : 90 | `RestyleRpc(byte service, CharacterNetState proposed)` | new | the look is sent by the client | Not reviewed |
-| 43 | Crafting | `PlayerCrafting.cs` : 90 | `CraftRpc(ushort recipeId, ushort times)` | new | count: zero, huge | Not reviewed |
-| 44 | Autopilot | `PlayerAutopilot.cs` : 105 | `SetOnServerRpc(bool value)` | new | rate only | Not reviewed |
-| 45 | Autopilot | `PlayerAutopilot.cs` : 118 | `SetPreferencesServerRpc(string json)` | new | size and shape of the JSON | Not reviewed |
-| 46 | Combat | `PlayerDuel.cs` : 124 | `RequestRpc(NetworkObjectReference targetReference)` | new | target exists, in reach, allowed | Not reviewed |
-| 47 | Combat | `PlayerDuel.cs` : 148 | `RespondRpc(bool accept)` | new | rate only | Not reviewed |
-| 48 | Combat | `PlayerDuel.cs` : 175 | `ForfeitRpc()` | new | rate only | Not reviewed |
-| 49 | Combat | `PlayerSkillQueue.cs` : 151 | `QueueServerRpc(string skillId, NetworkObjectReference targetReference)` | old | text length and content; target exists, in reach, allowed | Not reviewed |
-| 50 | Combat | `PlayerSkillQueue.cs` : 160 | `ClearServerRpc()` | old | rate only | Not reviewed |
-| 51 | Combat | `PlayerMeleeCombat.cs` : 631 | `RequestMeleeStrikeDamageServerRpc(ulong targetNetworkObjectId, int comboStep)` | old | the client says it hit: swing window, range, once per target | Not reviewed |
-| 52 | Items | `PlayerLoot.cs` : 92 | `PickupRpc(NetworkObjectReference dropReference)` | new | target exists, in reach, allowed | Not reviewed |
-| 53 | Items | `PlayerLoot.cs` : 100 | `DropRpc(ItemLocation at)` | new | index in range | Not reviewed |
-| 54 | Economy | `PlayerKiosk.cs` : 157 | `OpenRpc(string shopName, KioskOffer[] offers, byte tier)` | new | text length and content; array length | Not reviewed |
-| 55 | Economy | `PlayerKiosk.cs` : 160 | `CloseRpc()` | new | rate only | Not reviewed |
-| 56 | Economy | `PlayerKiosk.cs` : 163 | `CollectRpc()` | new | rate only | Not reviewed |
-| 57 | Economy | `PlayerKiosk.cs` : 166 | `BuyRpc(NetworkObjectReference standReference, byte index, KioskListing expected, ushort count)` | new | count: zero, huge; target exists, in reach, allowed; index in range; the expected item must match the server's | Not reviewed |
-| 58 | Progression | `PlayerNova.cs` : 214 | `AscendRpc()` | new | rate only | Not reviewed |
-| 59 | Progression | `PlayerNova.cs` : 217 | `BuyStandingRpc(StandingTrack track)` | new | rate only | Not reviewed |
-| 60 | Progression | `PlayerNova.cs` : 220 | `WearStandingRpc(StandingTrack track, bool wear)` | new | rate only | Not reviewed |
-| 61 | Items | `PlayerInventory.cs` : 245 | `MoveRpc(ItemLocation from, ItemLocation to)` | new | index in range | Not reviewed |
-| 62 | Items | `PlayerInventory.cs` : 248 | `QuickEquipRpc(byte bagIndex)` | new | index in range | Not reviewed |
-| 63 | Items | `PlayerInventory.cs` : 251 | `QuickUnequipRpc(EquipSlot slot)` | new | index in range | Not reviewed |
-| 64 | Items | `PlayerInventory.cs` : 254 | `DestroyRpc(ItemLocation at)` | new | index in range | Not reviewed |
-| 65 | Items | `PlayerInventory.cs` : 257 | `SortRpc()` | new | rate only | Not reviewed |
-| 66 | Items | `PlayerInventory.cs` : 260 | `UseRpc(byte bagIndex)` | new | index in range | Not reviewed |
-| 67 | Progression | `PlayerMovementSkills.cs` : 231 | `UpgradeServerRpc(MovementSkillId skill, int count)` | old | count: zero, huge | Not reviewed |
-| 68 | Progression | `PlayerMovementSkills.cs` : 273 | `SelectServerRpc(MovementSkillId skill)` | old | rate only | Not reviewed |
-| 69 | Economy | `PlayerShopping.cs` : 120 | `BuyRpc(FixedString64Bytes vendor, ushort itemId, ushort count)` | new | count: zero, huge | Not reviewed |
-| 70 | Economy | `PlayerShopping.cs` : 123 | `SellRpc(ushort cell, ushort count, ItemStack expected, bool confirmed)` | new | count: zero, huge; index in range; the expected item must match the server's | Not reviewed |
-| 71 | Economy | `PlayerStorage.cs` : 162 | `DepositRpc(short packCell, short toCell, ushort count)` | new | count: zero, huge; index in range | Not reviewed |
-| 72 | Economy | `PlayerStorage.cs` : 165 | `WithdrawRpc(short cell, short packCell, ushort count)` | new | count: zero, huge; index in range | Not reviewed |
-| 73 | Economy | `PlayerStorage.cs` : 168 | `MoveRpc(short from, short to)` | new | index in range | Not reviewed |
-| 74 | Economy | `PlayerStorage.cs` : 171 | `SortRpc()` | new | rate only | Not reviewed |
-| 75 | Economy | `PlayerStorage.cs` : 174 | `DepositCredsRpc(long amount)` | new | amount: negative, zero, overflow | Not reviewed |
-| 76 | Economy | `PlayerStorage.cs` : 177 | `WithdrawCredsRpc(long amount)` | new | amount: negative, zero, overflow | Not reviewed |
-| 77 | Economy | `PlayerTrade.cs` : 199 | `RequestRpc(NetworkObjectReference targetReference)` | new | target exists, in reach, allowed | Not reviewed |
-| 78 | Economy | `PlayerTrade.cs` : 203 | `RequestByNameRpc(string playerName)` | new | text length and content | Not reviewed |
-| 79 | Economy | `PlayerTrade.cs` : 231 | `RespondRpc(bool accept)` | new | rate only | Not reviewed |
-| 80 | Economy | `PlayerTrade.cs` : 234 | `OfferRpc(short packCell, ushort count)` | new | count: zero, huge; index in range | Not reviewed |
-| 81 | Economy | `PlayerTrade.cs` : 237 | `WithdrawRpc(byte lineIndex)` | new | index in range | Not reviewed |
-| 82 | Economy | `PlayerTrade.cs` : 240 | `SetCredsRpc(long amount)` | new | amount: negative, zero, overflow | Not reviewed |
-| 83 | Economy | `PlayerTrade.cs` : 243 | `LockRpc(bool on)` | new | rate only | Not reviewed |
-| 84 | Economy | `PlayerTrade.cs` : 246 | `ConfirmRpc()` | new | rate only | Not reviewed |
-| 85 | Economy | `PlayerTrade.cs` : 249 | `CancelRpc()` | new | rate only | Not reviewed |
-| 86 | Progression | `PlayerCombatSkills.cs` : 490 | `UpgradeServerRpc(string skillId, int count)` | old | text length and content; count: zero, huge | Not reviewed |
-| 87 | Progression | `PlayerCombatSkills.cs` : 630 | `RequestCastSkillServerRpc(string skillId, NetworkObjectReference targetReference)` | old | text length and content; target exists, in reach, allowed | Not reviewed |
-| 88 | Forge | `PlayerGearWork.cs` : 126 | `TemperRpc(short cell, ushort alloyItemId, ushort protectionItemId)` | new | index in range | Not reviewed |
-| 89 | Forge | `PlayerGearWork.cs` : 129 | `FuseRpc(short targetCell, short materialCell)` | new | index in range | Not reviewed |
-| 90 | Forge | `PlayerGearWork.cs` : 132 | `TuneRpc(short cell)` | new | index in range | Not reviewed |
-| 91 | Forge | `PlayerGearWork.cs` : 135 | `ResetTuningRpc(short cell)` | new | index in range | Not reviewed |
-| 92 | Forge | `PlayerGearWork.cs` : 138 | `ReforgeRpc(short cell)` | new | index in range | Not reviewed |
-| 93 | Progression | `PlayerCharacterProgression.cs` : 204 | `AllocateServerRpc(CharacterAttribute attribute, int count)` | old | count: zero, huge | Not reviewed |
-| 94 | Player | `PlayerAnimancerMotor.cs` : 580 | `RequestToggleWeaponDrawServerRpc(bool draw)` | old | rate only | Not reviewed |
-| 95 | Player | `PlayerIdentity.cs` : 139 | `SubmitIdentityRpc(CharacterNetState state, FixedString64Bytes account, FixedString64Bytes character)` | new | account and character ids are taken on trust; look and faction come from the client | Not reviewed |
-| 96 | Player | `PointAndClickPlayer.cs` : 763 | `RequestStopMoveServerRpc()` | old | rate only | Not reviewed |
-| 97 | Player | `PointAndClickPlayer.cs` : 990 | `RequestMoveDestinationServerRpc(Vector3 destinationPoint)` | old | point on the map, distance | Not reviewed |
-| 98 | Player | `PointAndClickPlayer.cs` : 1291 | `RequestCancelAttackServerRpc()` | old | rate only | Not reviewed |
-| 99 | Player | `PointAndClickPlayer.cs` : 1299 | `RequestAttackEntityServerRpc(ulong targetNetworkObjectId)` | old | target exists, in reach, allowed | Not reviewed |
-| 100 | Player | `PlayerJumpMotor.cs` : 123 | `RequestJumpServerRpc(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset)` | old | the obstacle layers and the model offset are sent by the client: use the server's own | Not reviewed |
+| # | System | File : line | Call | Checks in place (18 Oct 2026) | Notes |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Economy | `PlayerKiosk.cs` : 159 | `OpenRpc(string shopName, KioskOffer[] offers, byte tier)` | owner only, speed limit (Money), text length, impossible claims flagged | Listings capped at the Kiosk's slots before reading; cells, counts and prices checked by KioskService. |
+| 2 | Economy | `PlayerKiosk.cs` : 173 | `CloseRpc()` | owner only, speed limit (Money) |  |
+| 3 | Economy | `PlayerKiosk.cs` : 180 | `CollectRpc()` | owner only, speed limit (Money) |  |
+| 4 | Economy | `PlayerKiosk.cs` : 187 | `BuyRpc(NetworkObjectReference standReference, byte index, KioskListing expected, ushort count)` | owner only, speed limit (Money) |  |
+| 5 | Economy | `PlayerShopping.cs` : 122 | `BuyRpc(FixedString64Bytes vendor, ushort itemId, ushort count)` | owner only, speed limit (Money) |  |
+| 6 | Economy | `PlayerShopping.cs` : 129 | `SellRpc(ushort cell, ushort count, ItemStack expected, bool confirmed)` | owner only, speed limit (Money) |  |
+| 7 | Economy | `PlayerStorage.cs` : 164 | `DepositRpc(short packCell, short toCell, ushort count)` | owner only, speed limit (Items) |  |
+| 8 | Economy | `PlayerStorage.cs` : 171 | `WithdrawRpc(short cell, short packCell, ushort count)` | owner only, speed limit (Items) |  |
+| 9 | Economy | `PlayerStorage.cs` : 178 | `MoveRpc(short from, short to)` | owner only, speed limit (Items) |  |
+| 10 | Economy | `PlayerStorage.cs` : 185 | `SortRpc()` | owner only, speed limit (Items) |  |
+| 11 | Economy | `PlayerStorage.cs` : 192 | `DepositCredsRpc(long amount)` | owner only, speed limit (Money) | Amount > 0, carried, fits the Vault cap. |
+| 12 | Economy | `PlayerStorage.cs` : 199 | `WithdrawCredsRpc(long amount)` | owner only, speed limit (Money) | Amount > 0, stored, fits the wallet. |
+| 13 | Economy | `PlayerTrade.cs` : 201 | `RequestRpc(NetworkObjectReference targetReference)` | owner only, speed limit (Money), text length |  |
+| 14 | Economy | `PlayerTrade.cs` : 208 | `RequestByNameRpc(string playerName)` | owner only, speed limit (Money), text length |  |
+| 15 | Economy | `PlayerTrade.cs` : 238 | `RespondRpc(bool accept)` | owner only, speed limit (Money) |  |
+| 16 | Economy | `PlayerTrade.cs` : 245 | `OfferRpc(short packCell, ushort count)` | owner only, speed limit (Money) |  |
+| 17 | Economy | `PlayerTrade.cs` : 252 | `WithdrawRpc(byte lineIndex)` | owner only, speed limit (Money) |  |
+| 18 | Economy | `PlayerTrade.cs` : 259 | `SetCredsRpc(long amount)` | owner only, speed limit (Money) | Clamped to >= 0; per-trade and per-day caps. |
+| 19 | Economy | `PlayerTrade.cs` : 266 | `LockRpc(bool on)` | owner only, speed limit (Money) |  |
+| 20 | Economy | `PlayerTrade.cs` : 273 | `ConfirmRpc()` | owner only, speed limit (Money) |  |
+| 21 | Economy | `PlayerTrade.cs` : 280 | `CancelRpc()` | owner only, speed limit (Money) |  |
+| 22 | Items | `PlayerFlask.cs` : 91 | `RefillRpc()` | owner only, speed limit (Items) |  |
+| 23 | Items | `PlayerInventory.cs` : 247 | `MoveRpc(ItemLocation from, ItemLocation to)` | owner only, speed limit (Items) |  |
+| 24 | Items | `PlayerInventory.cs` : 254 | `QuickEquipRpc(byte bagIndex)` | owner only, speed limit (Items) |  |
+| 25 | Items | `PlayerInventory.cs` : 261 | `QuickUnequipRpc(EquipSlot slot)` | owner only, speed limit (Items) |  |
+| 26 | Items | `PlayerInventory.cs` : 268 | `DestroyRpc(ItemLocation at)` | owner only, speed limit (Items) |  |
+| 27 | Items | `PlayerInventory.cs` : 275 | `SortRpc()` | owner only, speed limit (Items) |  |
+| 28 | Items | `PlayerInventory.cs` : 282 | `UseRpc(byte bagIndex)` | owner only, speed limit (Items) |  |
+| 29 | Items | `PlayerLoot.cs` : 94 | `PickupRpc(NetworkObjectReference dropReference)` | owner only, speed limit (Items) |  |
+| 30 | Items | `PlayerLoot.cs` : 103 | `DropRpc(ItemLocation at)` | owner only, speed limit (Items) |  |
+| 31 | Forge | `PlayerGearWork.cs` : 128 | `TemperRpc(short cell, ushort alloyItemId, ushort protectionItemId)` | owner only, speed limit (Money) |  |
+| 32 | Forge | `PlayerGearWork.cs` : 135 | `FuseRpc(short targetCell, short materialCell)` | owner only, speed limit (Money) |  |
+| 33 | Forge | `PlayerGearWork.cs` : 142 | `TuneRpc(short cell)` | owner only, speed limit (Money) |  |
+| 34 | Forge | `PlayerGearWork.cs` : 149 | `ResetTuningRpc(short cell)` | owner only, speed limit (Money) |  |
+| 35 | Forge | `PlayerGearWork.cs` : 156 | `ReforgeRpc(short cell)` | owner only, speed limit (Money) |  |
+| 36 | Progression | `PlayerCharacterProgression.cs` : 207 | `AllocateServerRpc(CharacterAttribute attribute, int count)` | owner only, speed limit (Money) |  |
+| 37 | Progression | `PlayerCombatSkills.cs` : 530 | `UpgradeServerRpc(string skillId, int count)` | owner only, speed limit (Money), text length |  |
+| 38 | Progression | `PlayerCombatSkills.cs` : 674 | `RequestCastSkillServerRpc(string skillId, NetworkObjectReference targetReference)` | owner only, speed limit (Combat), text length |  |
+| 39 | Progression | `PlayerMovementSkills.cs` : 241 | `UpgradeServerRpc(MovementSkillId skill, int count)` | owner only, speed limit (Money) |  |
+| 40 | Progression | `PlayerMovementSkills.cs` : 284 | `SelectServerRpc(MovementSkillId skill)` | owner only, speed limit (Move) |  |
+| 41 | Progression | `PlayerNova.cs` : 233 | `AscendRpc()` | owner only, speed limit (Money) |  |
+| 42 | Progression | `PlayerNova.cs` : 240 | `BuyStandingRpc(StandingTrack track)` | owner only, speed limit (Money) |  |
+| 43 | Progression | `PlayerNova.cs` : 247 | `WearStandingRpc(StandingTrack track, bool wear)` | owner only, speed limit (Money) |  |
+| 44 | Combat | `PlayerCadence.cs` : 186 | `PressRpc(string skillId, double pressedAt)` | owner only, speed limit (Combat), text length |  |
+| 45 | Combat | `PlayerDuel.cs` : 126 | `RequestRpc(NetworkObjectReference targetReference)` | owner only, speed limit (Social) |  |
+| 46 | Combat | `PlayerDuel.cs` : 151 | `RespondRpc(bool accept)` | owner only, speed limit (Social) |  |
+| 47 | Combat | `PlayerDuel.cs` : 179 | `ForfeitRpc()` | owner only, speed limit (Social) |  |
+| 48 | Combat | `PlayerMeleeCombat.cs` : 657 | `RequestMeleeStrikeDamageServerRpc(ulong targetNetworkObjectId, int comboStep)` | owner only, speed limit (Combat), impossible claims flagged | Step 1-3, hostile, within 2.7 m, open swing, once per target per swing; late hits counted as lag. |
+| 49 | Combat | `PlayerSkillQueue.cs` : 153 | `QueueServerRpc(string skillId, NetworkObjectReference targetReference)` | owner only, speed limit (Combat), text length |  |
+| 50 | Combat | `PlayerSkillQueue.cs` : 164 | `ClearServerRpc()` | owner only, speed limit (Combat) |  |
+| 51 | Player | `PlayerAnimancerMotor.cs` : 587 | `RequestToggleWeaponDrawServerRpc(bool draw)` | owner only, speed limit (Cosmetic) |  |
+| 52 | Player | `PlayerIdentity.cs` : 156 | `SubmitIdentityRpc(CharacterNetState state, FixedString64Bytes account, FixedString64Bytes character)` | owner only, speed limit (Account) |  |
+| 53 | Player | `PlayerJumpMotor.cs` : 142 | `RequestJumpServerRpc(Vector3 clickedPoint)` | owner only, speed limit (Move), real position | Layers and model turn now the server's own (no longer taken from the game). |
+| 54 | Player | `PlayerWallRunMotor.cs` : 242 | `RequestClimbServerRpc(Vector3 point, Vector3 normal)` | owner only, speed limit (Move), real position | Layers and model turn now the server's own (no longer taken from the game). |
+| 55 | Player | `PlayerWallRunMotor.cs` : 362 | `RequestDropServerRpc(Vector3 point)` | owner only, speed limit (Move), real position |  |
+| 56 | Player | `PointAndClickPlayer.cs` : 828 | `RequestStopMoveServerRpc()` | owner only, speed limit (Move) |  |
+| 57 | Player | `PointAndClickPlayer.cs` : 1060 | `RequestMoveDestinationServerRpc(Vector3 destinationPoint)` | owner only, speed limit (Move), real position |  |
+| 58 | Player | `PointAndClickPlayer.cs` : 1502 | `RequestCancelAttackServerRpc()` | owner only, speed limit (Combat) |  |
+| 59 | Player | `PointAndClickPlayer.cs` : 1511 | `RequestAttackEntityServerRpc(ulong targetNetworkObjectId)` | owner only, speed limit (Combat) |  |
+| 60 | Social | `PlayerChat.cs` : 126 | `SendRpc(ChatChannel channel, string text, string whisperTarget)` | owner only, speed limit (Chat), text length |  |
+| 61 | Social | `PlayerContacts.cs` : 167 | `AddByNameRpc(string characterName)` | owner only, speed limit (Social), text length |  |
+| 62 | Social | `PlayerContacts.cs` : 175 | `AddRpc(NetworkObjectReference targetReference)` | owner only, speed limit (Social) |  |
+| 63 | Social | `PlayerContacts.cs` : 185 | `RespondRpc(string characterId, bool accept)` | owner only, speed limit (Social), text length |  |
+| 64 | Social | `PlayerContacts.cs` : 194 | `CancelRpc(string characterId)` | owner only, speed limit (Social), text length |  |
+| 65 | Social | `PlayerContacts.cs` : 202 | `RemoveRpc(string characterId)` | owner only, speed limit (Social), text length |  |
+| 66 | Social | `PlayerContacts.cs` : 210 | `RemoveByNameRpc(string characterName)` | owner only, speed limit (Social), text length |  |
+| 67 | Social | `PlayerContacts.cs` : 218 | `BlockRpc(string characterId)` | owner only, speed limit (Social), text length |  |
+| 68 | Social | `PlayerContacts.cs` : 226 | `BlockByNameRpc(string characterName)` | owner only, speed limit (Social), text length |  |
+| 69 | Social | `PlayerContacts.cs` : 234 | `UnblockRpc(string characterId)` | owner only, speed limit (Social), text length |  |
+| 70 | Social | `PlayerContacts.cs` : 242 | `UnblockByNameRpc(string characterName)` | owner only, speed limit (Social), text length |  |
+| 71 | Social | `PlayerContacts.cs` : 250 | `FavouriteRpc(string characterId, bool favourite)` | owner only, speed limit (Social), text length |  |
+| 72 | Social | `PlayerContacts.cs` : 258 | `NoteRpc(string characterId, string note)` | owner only, speed limit (Social), text length |  |
+| 73 | Social | `PlayerCrew.cs` : 194 | `FoundRpc(string crewName, byte symbol, byte colour)` | owner only, speed limit (Social), text length |  |
+| 74 | Social | `PlayerCrew.cs` : 202 | `InviteRpc(NetworkObjectReference targetReference)` | owner only, speed limit (Social), text length |  |
+| 75 | Social | `PlayerCrew.cs` : 209 | `InviteByNameRpc(string playerName)` | owner only, speed limit (Social), text length |  |
+| 76 | Social | `PlayerCrew.cs` : 217 | `RespondRpc(bool accept)` | owner only, speed limit (Social) |  |
+| 77 | Social | `PlayerCrew.cs` : 230 | `LeaveRpc()` | owner only, speed limit (Social), text length |  |
+| 78 | Social | `PlayerCrew.cs` : 237 | `ExpelRpc(string memberId)` | owner only, speed limit (Social), text length |  |
+| 79 | Social | `PlayerCrew.cs` : 245 | `OfficerRpc(string memberId, bool officer)` | owner only, speed limit (Social), text length |  |
+| 80 | Social | `PlayerCrew.cs` : 253 | `HandOverRpc(string memberId)` | owner only, speed limit (Social), text length |  |
+| 81 | Social | `PlayerCrew.cs` : 261 | `TitleRpc(string memberId, string title)` | owner only, speed limit (Social), text length |  |
+| 82 | Social | `PlayerCrew.cs` : 270 | `AnnouncementRpc(string text)` | owner only, speed limit (Social), text length |  |
+| 83 | Social | `PlayerCrew.cs` : 278 | `SymbolRpc(byte symbol, byte colour)` | owner only, speed limit (Social) |  |
+| 84 | Social | `PlayerCrew.cs` : 285 | `DisbandRpc()` | owner only, speed limit (Social) |  |
+| 85 | Social | `PlayerEmotes.cs` : 148 | `PlayRpc(FixedString64Bytes key)` | owner only, speed limit (Cosmetic) |  |
+| 86 | Social | `PlayerFollow.cs` : 109 | `FollowRpc(NetworkObjectReference targetReference)` | owner only, speed limit (Move), text length |  |
+| 87 | Social | `PlayerFollow.cs` : 116 | `FollowByNameRpc(string memberName)` | owner only, speed limit (Move), text length |  |
+| 88 | Social | `PlayerParty.cs` : 146 | `InviteByNameRpc(string playerName)` | owner only, speed limit (Social), text length |  |
+| 89 | Social | `PlayerParty.cs` : 176 | `InviteRpc(NetworkObjectReference targetReference)` | owner only, speed limit (Social) |  |
+| 90 | Social | `PlayerParty.cs` : 183 | `RespondRpc(bool accept)` | owner only, speed limit (Social) |  |
+| 91 | Social | `PlayerParty.cs` : 222 | `LeaveRpc()` | owner only, speed limit (Social), text length |  |
+| 92 | Social | `PlayerParty.cs` : 230 | `KickRpc(string playerName)` | owner only, speed limit (Social), text length |  |
+| 93 | Social | `PlayerParty.cs` : 239 | `PromoteRpc(string playerName)` | owner only, speed limit (Social), text length |  |
+| 94 | Social | `PlayerSponsor.cs` : 145 | `RequestRpc(NetworkObjectReference targetReference)` | owner only, speed limit (Social), text length |  |
+| 95 | Social | `PlayerSponsor.cs` : 153 | `RequestByNameRpc(string characterName)` | owner only, speed limit (Social), text length |  |
+| 96 | Social | `PlayerSponsor.cs` : 178 | `RespondRpc(bool accept)` | owner only, speed limit (Social) |  |
+| 97 | Social | `PlayerSponsor.cs` : 199 | `EndRpc(string characterId)` | owner only, speed limit (Social), text length |  |
+| 98 | Autopilot | `PlayerAutobuff.cs` : 76 | `SetSlotsServerRpc(string json)` | owner only, speed limit (Account), text length | Settings text capped at 4096 characters. |
+| 99 | Autopilot | `PlayerAutopilot.cs` : 107 | `SetOnServerRpc(bool value)` | owner only, speed limit (Account) |  |
+| 100 | Autopilot | `PlayerAutopilot.cs` : 124 | `SetPreferencesServerRpc(string json)` | owner only, speed limit (Account), text length | Settings text capped at 4096 characters. |
+| 101 | Crafting | `PlayerCrafting.cs` : 92 | `CraftRpc(ushort recipeId, ushort times)` | owner only, speed limit (Money) |  |
+| 102 | Housing | `PlayerCrate.cs` : 94 | `StoreRpc(ushort packCell, ushort count)` | owner only, speed limit (Money) |  |
+| 103 | Housing | `PlayerCrate.cs` : 101 | `WithdrawRpc(ushort itemId, ushort count)` | owner only, speed limit (Money) |  |
+| 104 | Networking | `PlayerGm.cs` : 87 | `CommandServerRpc(string line)` | owner only, speed limit (Account), text length |  |
+| 105 | Pets | `PlayerPet.cs` : 201 | `ShareTrickRpc(int nameHash)` | owner only, speed limit (Cosmetic) |  |
+| 106 | Restyle | `PlayerRestyle.cs` : 92 | `RestyleRpc(byte service, CharacterNetState proposed)` | owner only, speed limit (Money) |  |
+| 107 | Restyle | `PlayerWeaves.cs` : 154 | `WeaveRpc(byte slot, ushort lineId)` | owner only, speed limit (Money) |  |
+| 108 | Restyle | `PlayerWeaves.cs` : 161 | `ClearWeaveRpc(byte slot)` | owner only, speed limit (Money) |  |
+| 109 | Restyle | `PlayerWeaves.cs` : 168 | `DyeRpc(byte slot, ushort colourway)` | owner only, speed limit (Money) |  |
+| 110 | Restyle | `PlayerWeaves.cs` : 175 | `MorphRpc(ushort petItemId, byte stage)` | owner only, speed limit (Money) |  |
+| 111 | Restyle | `PlayerWeaves.cs` : 182 | `ClearMorphRpc()` | owner only, speed limit (Money) |  |
 
 Two more calls start on a client and reach other clients through the server. They carry no game result
 but belong on the list: `PlayerSkillAttacks.ChargeStartedRpc(string skillId)` (line 373) and

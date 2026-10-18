@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -243,22 +244,46 @@ namespace KryticalNova.Items
         // ---------------- RPCs ----------------
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void MoveRpc(ItemLocation from, ItemLocation to) => ServerMove(from, to);
+        private void MoveRpc(ItemLocation from, ItemLocation to)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(MoveRpc))) return;
+            ServerMove(from, to);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void QuickEquipRpc(byte bagIndex) => ServerQuickEquip(bagIndex);
+        private void QuickEquipRpc(byte bagIndex)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(QuickEquipRpc))) return;
+            ServerQuickEquip(bagIndex);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void QuickUnequipRpc(EquipSlot slot) => ServerQuickUnequip(slot);
+        private void QuickUnequipRpc(EquipSlot slot)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(QuickUnequipRpc))) return;
+            ServerQuickUnequip(slot);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void DestroyRpc(ItemLocation at) => ServerDestroy(at);
+        private void DestroyRpc(ItemLocation at)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(DestroyRpc))) return;
+            ServerDestroy(at);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SortRpc() => ServerSort();
+        private void SortRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(SortRpc))) return;
+            ServerSort();
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void UseRpc(byte bagIndex) => ServerUse(bagIndex);
+        private void UseRpc(byte bagIndex)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(UseRpc))) return;
+            ServerUse(bagIndex);
+        }
 
         [Rpc(SendTo.Owner)]
         private void RequestFailedRpc(string reason) => NotifyFailed(reason);

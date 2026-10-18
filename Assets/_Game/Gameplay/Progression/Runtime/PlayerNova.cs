@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -229,13 +230,25 @@ namespace KryticalNova.Progression
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void AscendRpc() => ServerAscend();
+        private void AscendRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(AscendRpc))) return;
+            ServerAscend();
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void BuyStandingRpc(StandingTrack track) => ServerBuyStanding(track);
+        private void BuyStandingRpc(StandingTrack track)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(BuyStandingRpc))) return;
+            ServerBuyStanding(track);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void WearStandingRpc(StandingTrack track, bool wear) => ServerWearStanding(track, wear);
+        private void WearStandingRpc(StandingTrack track, bool wear)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(WearStandingRpc))) return;
+            ServerWearStanding(track, wear);
+        }
 
         // ------------------------------------------------------------------ server
 

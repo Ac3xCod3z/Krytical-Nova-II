@@ -61,15 +61,18 @@ namespace KryticalNova.World
     /// <summary>
     /// Every map players can travel to, and the regions they lie in. Built by Krytical Nova ▸ World ▸ Build World
     /// Scenes from the World Atlas (Design/World-Atlas.md); each scene's <see cref="ZoneRules"/> points at it.
-    /// The travel screen shows a map's pages: its region's painting with the map's lore first, then the region's own
-    /// page, then the other regions. Hidden regions (the Ronin's) are never listed here, and no picture that shows
-    /// them (the World Atlas's spider map names every Ronin map) is used.
+    /// The travel screen shows a map's pages: the map's lore first, then its region's, then the other regions'; the
+    /// pictures under them are drawn at random from every region's painting and the <see cref="extraPictures"/>
+    /// (<see cref="Pictures"/>, <see cref="Shuffled"/>). Hidden regions (the Ronin's) are never listed here, and no
+    /// picture that shows them (the World Atlas's spider map names every Ronin map) is used.
     /// </summary>
     [CreateAssetMenu(menuName = "Krytical Nova/World/Zone Catalog", fileName = "ZoneCatalog")]
     public sealed class ZoneCatalog : ScriptableObject
     {
         public List<ZoneRegion> regions = new List<ZoneRegion>();
         public List<ZoneEntry> zones = new List<ZoneEntry>();
+        [Tooltip("Pictures the travel screen also draws from, besides the regions' paintings. They belong to no region.")]
+        public List<Texture2D> extraPictures = new List<Texture2D>();
 
         public ZoneEntry Find(string sceneName)
         {
@@ -122,6 +125,37 @@ namespace KryticalNova.World
                 if (region != null && region != home && region.art != null)
                     deck.Add(new TravelPage(region.art, region.name, region.lore));
             return deck;
+        }
+
+        /// <summary>Every picture the travel screen draws from: each region's painting, then the extra pictures, each once.</summary>
+        public List<Texture2D> Pictures()
+        {
+            var pictures = new List<Texture2D>();
+            foreach (var region in regions)
+                if (region != null && region.art != null && !pictures.Contains(region.art)) pictures.Add(region.art);
+            foreach (var picture in extraPictures)
+                if (picture != null && !pictures.Contains(picture)) pictures.Add(picture);
+            return pictures;
+        }
+
+        /// <summary>
+        /// <paramref name="pictures"/> in a random order for one trip. With two or more, the first is never
+        /// <paramref name="last"/> (the picture on screen when the last trip ended), so no picture shows twice in a row.
+        /// </summary>
+        public static List<Texture2D> Shuffled(IReadOnlyList<Texture2D> pictures, Texture2D last, System.Random random)
+        {
+            var order = new List<Texture2D>(pictures);
+            for (int i = order.Count - 1; i > 0; i--)
+            {
+                int j = random.Next(i + 1);
+                (order[i], order[j]) = (order[j], order[i]);
+            }
+            if (order.Count > 1 && last != null && order[0] == last)
+            {
+                int j = 1 + random.Next(order.Count - 1);
+                (order[0], order[j]) = (order[j], order[0]);
+            }
+            return order;
         }
 
         private static string Squash(string s)

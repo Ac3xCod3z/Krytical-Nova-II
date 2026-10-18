@@ -1630,6 +1630,26 @@ namespace KryticalNova.EditorTools.GM
             Run($"gm.kick {Quote(who.Trim())} {Quote(reason)}");
         }
 
+        [TabGroup(Tabs, SocialTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), GUIColor(1f, 0.6f, 0.6f), PropertyOrder(712.1f)]
+        [InfoBox("Keeps an account off the server: a character name, client id or account id. Length: 30m, 12h, 3d, 2w " +
+                 "(a number alone is days) or forever. A player who is on is sent away. GMs cannot be banned.")]
+        private void BanPlayer(string who = "", string length = "3d", string reason = "")
+        {
+            if (string.IsNullOrWhiteSpace(who)) { Log("Type who first."); return; }
+            Run($"gm.ban {Quote(who.Trim())} {Quote(string.IsNullOrWhiteSpace(length) ? "forever" : length.Trim())} {Quote(reason)}");
+        }
+
+        [TabGroup(Tabs, SocialTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(712.2f)]
+        [InfoBox("Ends a ban early: the character name or account id.")]
+        private void UnbanPlayer(string who = "")
+        {
+            if (string.IsNullOrWhiteSpace(who)) { Log("Type who first."); return; }
+            Run($"gm.unban {Quote(who.Trim())}");
+        }
+
+        [TabGroup(Tabs, SocialTab), Button("List Bans"), EnableIf(nameof(IsReady)), PropertyOrder(712.3f)]
+        private void ListBans() => Run("gm.bans");
+
         [TabGroup(Tabs, SocialTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(713)]
         [InfoBox("A dedicated server only: counts down with the players told, saves everyone, backs up, then stops.")]
         private void ShutdownServer([MinValue(0)] int seconds = 60, string reason = "") => Run($"gm.shutdown {seconds} {Quote(reason)}");
@@ -1694,6 +1714,11 @@ namespace KryticalNova.EditorTools.GM
                 if (remote) ListenForServerAnswers();
                 object result = QuantumConsoleProcessor.InvokeCommand(commandString);
                 if (log) Log(remote ? $"> {commandString}\n(sent to the server)" : $"> {commandString}\n{result}");
+                // The host's buttons go in the GM record (a joined GM's lines are recorded by the server).
+                if (log && !remote && KryticalNova.Networking.ServerRecords.Keeping)
+                    KryticalNova.Networking.ServerRecords.Write(KryticalNova.Networking.RecordKind.Gm,
+                        $"Host (GM Tools window) as {KryticalNova.Networking.ServerRecords.Who(Unity.Netcode.NetworkManager.ServerClientId)}: " +
+                        $"{commandString} -> {KryticalNova.Networking.ServerRecords.Short(result?.ToString())}");
             }
             catch (Exception e)
             {

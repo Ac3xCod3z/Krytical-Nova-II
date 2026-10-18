@@ -153,8 +153,11 @@ namespace KryticalNova.Player
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SubmitIdentityRpc(CharacterNetState state, FixedString64Bytes account, FixedString64Bytes character) =>
+        private void SubmitIdentityRpc(CharacterNetState state, FixedString64Bytes account, FixedString64Bytes character)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Account, nameof(SubmitIdentityRpc))) return;
             ServerAssign(state, ProvenAccount(account.ToString()), character.ToString());
+        }
 
         // Online phase 2: the account is the one Unity's sign-in proved when this player joined, never the one the game
         // names. A server that requires proof keeps nothing for a player without it; the Editor hosting a test takes the

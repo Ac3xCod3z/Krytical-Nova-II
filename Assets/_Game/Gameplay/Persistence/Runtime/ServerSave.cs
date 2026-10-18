@@ -150,6 +150,35 @@ namespace KryticalNova.Persistence
 
         public static bool IsAccountOnline(string accountId) => !string.IsNullOrEmpty(accountId) && BoundAccounts.ContainsKey(accountId);
 
+        /// <summary>
+        /// The saved accounts holding a character of that name (whole name, any case), for a GM naming a player who is not
+        /// on (gm.ban). Accounts carried over to a signed-in one are left out: the carried copy is the one in use. Reads
+        /// every account, so it is for rare commands only.
+        /// </summary>
+        public static List<string> AccountsWithCharacter(string characterName)
+        {
+            var found = new List<string>();
+            if (!HasAuthority || string.IsNullOrWhiteSpace(characterName)) return found;
+            characterName = characterName.Trim();
+            List<string> carried = World<CarriedAccounts>(CarriedDocument).old;
+            foreach (string key in Store.Keys(AccountsPrefix))
+            {
+                string id = key.Substring(AccountsPrefix.Length);
+                if (!SaveKeys.IsId(id) || carried.Contains(id) || !Store.TryRead(key, out string json)) continue;
+                AccountSave account;
+                try { account = JsonUtility.FromJson<AccountSave>(json); }
+                catch (Exception) { continue; }
+                if (account?.characters == null) continue;
+                foreach (CharacterSave character in account.characters)
+                    if (character != null && string.Equals(character.name, characterName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        found.Add(id);
+                        break;
+                    }
+            }
+            return found;
+        }
+
         // ------------------------------------------------------------------ carrying old accounts over (online phase 2)
 
         /// <summary>The server's settings say whether old accounts may still be carried over (switched off before any public test).</summary>

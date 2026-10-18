@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.Audio;
 using KryticalNova.Core;
@@ -182,7 +183,12 @@ namespace KryticalNova.Combat
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void PressRpc(string skillId, double pressedAt) => ServerNotePress(skillId, pressedAt);
+        private void PressRpc(string skillId, double pressedAt)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Combat, nameof(PressRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(PressRpc), skillId)) return;
+            ServerNotePress(skillId, pressedAt);
+        }
 
         // ------------------------------------------------------------------ the server decides
 

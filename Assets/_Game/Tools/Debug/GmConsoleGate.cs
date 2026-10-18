@@ -39,12 +39,24 @@ namespace KryticalNova.DevTools
         /// <summary>Whether this player may have the console now: anyone where commands run here, a GM on a server.</summary>
         private static bool Allowed => RunsHere || (PlayerGm.Local != null && PlayerGm.Local.IsGm);
 
-        private void OnEnable() => PlayerGm.Reply += OnReply;
+        private void OnEnable()
+        {
+            PlayerGm.Reply += OnReply;
+            if (console != null) console.OnInvoke += Record;
+        }
 
         private void OnDisable()
         {
             PlayerGm.Reply -= OnReply;
+            if (console != null) console.OnInvoke -= Record;
             HoldKeyboard(false);
+        }
+
+        // The host's own lines go in the GM record like everyone's (a joined GM's are recorded by the server).
+        private static void Record(string line)
+        {
+            if (!ServerRecords.Keeping || string.IsNullOrWhiteSpace(line)) return;
+            ServerRecords.Write(RecordKind.Gm, $"Host as {ServerRecords.Who(NetworkManager.ServerClientId)}: {line.Trim()}");
         }
 
         private void Update()

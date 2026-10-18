@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections;
 using Animancer;
@@ -582,9 +583,10 @@ namespace KryticalNova.Player
             }
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestToggleWeaponDrawServerRpc(bool draw)
         {
+            if (!RpcBudget.Allow(this, CallKind.Cosmetic, nameof(RequestToggleWeaponDrawServerRpc))) return;
             if (isWeaponDrawn.Value == draw) return;
 
             // The server's own view of this remote player

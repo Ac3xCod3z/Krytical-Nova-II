@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -160,22 +161,46 @@ namespace KryticalNova.Economy
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void DepositRpc(short packCell, short toCell, ushort count) => ServerDeposit(packCell, toCell, count);
+        private void DepositRpc(short packCell, short toCell, ushort count)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(DepositRpc))) return;
+            ServerDeposit(packCell, toCell, count);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void WithdrawRpc(short cell, short packCell, ushort count) => ServerWithdraw(cell, packCell, count);
+        private void WithdrawRpc(short cell, short packCell, ushort count)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(WithdrawRpc))) return;
+            ServerWithdraw(cell, packCell, count);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void MoveRpc(short from, short to) => ServerMove(from, to);
+        private void MoveRpc(short from, short to)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(MoveRpc))) return;
+            ServerMove(from, to);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SortRpc() => ServerSort();
+        private void SortRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(SortRpc))) return;
+            ServerSort();
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void DepositCredsRpc(long amount) => ServerDepositCreds(amount);
+        private void DepositCredsRpc(long amount)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(DepositCredsRpc))) return;
+            ServerDepositCreds(amount);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void WithdrawCredsRpc(long amount) => ServerWithdrawCreds(amount);
+        private void WithdrawCredsRpc(long amount)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(WithdrawCredsRpc))) return;
+            ServerWithdrawCreds(amount);
+        }
 
         // ------------------------------------------------------------------ server
 
@@ -251,6 +276,7 @@ namespace KryticalNova.Economy
             if (!wallet.ServerSpend(amount, CredsSink.VaultDeposit)) return;
             creds += amount;
             CommitCreds();
+            ServerRecords.Write(RecordKind.Economy, $"Vault: {ServerRecords.Who(this)} put {amount} Creds into the {DisplayName} (it holds {creds}).");
         }
 
         private void ServerWithdrawCreds(long amount)
@@ -261,6 +287,7 @@ namespace KryticalNova.Economy
             creds -= amount;
             wallet.ServerEarn(amount, CredsSource.VaultWithdraw);
             CommitCreds();
+            ServerRecords.Write(RecordKind.Economy, $"Vault: {ServerRecords.Who(this)} took {amount} Creds from the {DisplayName} (it holds {creds}).");
         }
 
         /// <summary>Keeps what the rules did to the scratch copy.</summary>

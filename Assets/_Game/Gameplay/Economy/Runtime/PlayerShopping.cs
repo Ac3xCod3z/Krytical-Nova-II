@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -227,10 +228,18 @@ namespace KryticalNova.Economy
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void BuyRpc(FixedString64Bytes vendor, ushort itemId, ushort count) => Answer(ServerBuy(vendor.ToString(), itemId, count));
+        private void BuyRpc(FixedString64Bytes vendor, ushort itemId, ushort count)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(BuyRpc))) return;
+            Answer(ServerBuy(vendor.ToString(), itemId, count));
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SellRpc(ushort cell, ushort count, ItemStack expected, bool confirmed) => Answer(ServerSell(cell, count, expected, confirmed));
+        private void SellRpc(ushort cell, ushort count, ItemStack expected, bool confirmed)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(SellRpc))) return;
+            Answer(ServerSell(cell, count, expected, confirmed));
+        }
 
         // ------------------------------------------------------------------ the server decides
 
@@ -281,7 +290,12 @@ namespace KryticalNova.Economy
                 bought[item.itemId] = BoughtThisWeek(item.itemId) + given;
                 PushBought();
             }
-            if (given > 0) Tell($"Bought {LootRules.Label(item, given)} from the {stock.Title} for {WalletRules.FormatCreds(total)}.");
+            if (given > 0)
+            {
+                Tell($"Bought {LootRules.Label(item, given)} from the {stock.Title} for {WalletRules.FormatCreds(total)}.");
+                ServerRecords.Write(RecordKind.Economy, $"Shop: {ServerRecords.Who(this)} bought {given}x {item.displayName} (item {item.itemId}) " +
+                                                        $"from the {stock.Title} for {total} Creds.");
+            }
             ServerSaveNow();
             return given > 0 ? null : InventoryRules.ReasonBagFull;
         }
@@ -306,6 +320,7 @@ namespace KryticalNova.Economy
             if (!inventory.ServerTakeFromCell(cell, count, out ItemStack taken)) return InventoryRules.ReasonEmpty;
             wallet.ServerEarn(total, CredsSource.VendorSale);
             Tell($"Sold {LootRules.Label(item, taken.count)} for {WalletRules.FormatCreds(total)}.");
+            ServerRecords.Write(RecordKind.Economy, $"Shop: {ServerRecords.Who(this)} sold {taken.count}x {item.displayName} (item {item.itemId}) for {total} Creds.");
             ServerSaveNow();
             return null;
         }
