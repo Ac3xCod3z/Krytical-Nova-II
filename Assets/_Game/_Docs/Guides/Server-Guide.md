@@ -3,7 +3,7 @@
 A running guide to the game's own server, in plain words. It says what works **today**, and it is updated after
 every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 
-**Last updated:** 16 Oct 2026, after step 5 (players outside the house: Direct or Relay).
+**Last updated:** 18 Oct 2026, how every test is run (section 11).
 
 ## In one minute
 
@@ -554,14 +554,33 @@ server is on the old PC and the bots run here (owner, 17 Oct 2026).
 | "Unity's sign-in keys could not be fetched: …" and every join turned away ("no sign-in") | The server could not reach Unity's sign-in service. The line now says why after the arrows (`<-`): a firewall, no internet, a secure-connection error | Start the server by double-clicking `Start Server.bat` (a server started from inside a tool, such as Claude's terminal, can carry settings that block it), check the internet, and allow the server in Norton's firewall. |
 | A GM's password is not taken | A typo, or they were removed | Check the name under Game Masters on the control page; remove and add them again with a new password if needed. Five wrong tries send them away; they can join and try again. |
 
-### A second server for tests
+### A second server for tests: how every test is run
 
-A test server can run beside your own on the same PC: build it into another folder, give it its own ports and an empty
-server list so it never publishes itself (`"port": 7796`, `"pagePort": 8096`, `"serverList": []` in its
-`server-settings.json`), and give it a copy of the saves so nobody's real characters change. Point the Editor at it with
-`port=7796` and `join=1` in `Library/KryticalNova.TestSession`. On 18 Oct 2026 one ran from `Builds/Server/Test` for the
-two-player wall fight check; its window also says "Krytical Nova Server", so tell the two apart by the port the window
-prints.
+**The rule (owner, 18 Oct 2026):** tests always use different ports. Your real server always has its own: UDP **7777
+and 7778**, control page **8090**. A test never starts, stops, joins or rebuilds it.
+
+The test server lives in `Builds/Server/Test/KryticalNovaServer`: port **7796**, control page **8096**,
+`"serverList": []` so it never publishes itself, and its own copy of the saves beside it
+(`Builds/Server/Test/KryticalNovaServer-Save`), so nobody's real characters change. Its window also says "Krytical Nova
+Server"; tell the two apart by the port the window prints. Every test goes like this:
+
+1. **Check the ports.** `netstat -ano -p UDP` and `-p TCP`: 7777/7778/8090 belong to the real server; 7796 and 8096
+   must be free.
+2. **Rebuild the test server from what you are testing** (the commit in the Editor), into the test folder only:
+   `ServerBuildBuilder.Build(Os.Windows, "Builds/Server/Test/KryticalNovaServer")`. Its settings and save are kept.
+   A build report with about 116 errors is normal: they are the GI plugin's shaders, the same in every build.
+3. **Start it through Windows Explorer:** `explorer.exe "<that folder>\Start Server.bat"`. Started from a terminal, a
+   tool or Unity itself, it cannot fetch Unity's sign-in keys (`TrustFailure`) and turns every join away.
+4. **Point the Editor at it:** `Library/KryticalNova.TestSession` with `port=7796` and `join=1`.
+5. **To go straight into a zone:** open the zone's scene (Zone01: `Scenes/World/Towns/Zone01_StarterTown`), switch
+   *Play from Title* off, and press Play: the Editor joins the test server in that zone. (Leave it on to test the whole
+   Title → character → world path.)
+6. **GM in the test (owner, 18 Oct 2026):** the GM names Ascension and Craven belong to your real server and are never
+   used for tests. Once the test character (Tolan) has joined, open the **test** server's control page
+   (`http://127.0.0.1:8096`, its own password in its own `server-settings.json`), add a GM called **TestGM** and bind it
+   to the test character. It stays bound on that test server for later tests. The real server's GM list is never touched.
+7. **Afterwards:** stop Play, stop the test server (close its window or Stop on its control page), switch *Play from
+   Title* back on, open Title again, and delete the `TestSession` file (or the Editor's Play keeps joining 7796).
 
 ## 12. What comes next
 
@@ -644,3 +663,4 @@ Things learned the hard way:
 - 18 Oct 2026: walls as a second ground: a test server on its own ports beside the real one (section 11); the
   sign-in key line now says why it failed; a server started from a tool's terminal could not reach Unity's sign-in
   (started by double-click it could).
+- 18 Oct 2026: how every test is run (section 11, "A second server for tests"): tests always on their own ports (the real server keeps 7777, 7778 and page 8090), the test server rebuilt from the commit under test and started through Explorer, straight into a zone with Play from Title off, and a **TestGM** bound to the test character on the test page only (Ascension and Craven stay the real server's). Run that day after the project cleanup: Zone01 on the test server, Tolan as GM, Hostiles, NPCs and every place checked, no errors.
