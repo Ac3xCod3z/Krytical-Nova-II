@@ -1,0 +1,19 @@
+{
+    "name": "KryticalNova.Editor.Cleanup",
+    "rootNamespace": "KryticalNova.EditorTools.Cleanup",
+    "references": [
+        "KryticalNova.Editor",
+        "CodeStage.Maintainer.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
