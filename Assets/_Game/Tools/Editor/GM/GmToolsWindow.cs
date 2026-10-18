@@ -1480,6 +1480,18 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, WorldTab), Title("Batching"), Button("Batching Report (what the Resident Drawer misses)"), EnableIf(nameof(IsReady)), PropertyOrder(443)]
         private void BatchingReport() => Run("gm.batching");
 
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Batching"), EnableIf(nameof(IsReady)), LabelText("Shadow Bands On"), PropertyOrder(444)]
+        private void ShadowBandsOn() => Run("gm.batching shadows true");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Batching"), EnableIf(nameof(IsReady)), LabelText("Shadow Bands Off"), PropertyOrder(445)]
+        private void ShadowBandsOff() => Run("gm.batching shadows false");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Batching"), EnableIf(nameof(IsReady)), LabelText("Occlusion On"), PropertyOrder(446)]
+        private void OcclusionOn() => Run("gm.batching occlusion true");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Batching"), EnableIf(nameof(IsReady)), LabelText("Occlusion Off"), PropertyOrder(447)]
+        private void OcclusionOff() => Run("gm.batching occlusion false");
+
         private enum KitRarity { Common, Uncommon, Rare, Epic }
         private enum ForgeSlot { FirstInPack, Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape }
         private enum SerumKind { Strength, Vitality, Agility, Spirit, Strike, Ward }

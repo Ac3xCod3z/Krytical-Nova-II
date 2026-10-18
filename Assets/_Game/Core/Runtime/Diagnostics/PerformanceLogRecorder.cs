@@ -186,7 +186,8 @@ namespace KryticalNova.Diagnostics
                 .Append("\tscripts ").Append(ScriptingBackend).Append('\n');
             text.Append("# machine\t").Append(SystemInfo.graphicsDeviceName).Append("\t").Append(SystemInfo.processorType.Trim())
                 .Append("\t").Append(SystemInfo.processorCount).Append(" threads\t").Append((SystemInfo.systemMemorySize / 1024f).ToString("0", CultureInfo.InvariantCulture))
-                .Append(" GB\t").Append(SystemInfo.graphicsDeviceType).Append("\t").Append(SystemInfo.operatingSystem).Append('\n');
+                .Append(" GB\t").Append(SystemInfo.graphicsDeviceType).Append(" (").Append(SystemInfo.renderingThreadingMode).Append(")\t")
+                .Append(SystemInfo.operatingSystem).Append('\n');
             text.Append("# screen\t").Append(Screen.width).Append(" x ").Append(Screen.height).Append("\tdisplay ").Append(display.width).Append(" x ").Append(display.height)
                 .Append(" at ").Append(display.refreshRateRatio.value.ToString("0", CultureInfo.InvariantCulture)).Append(" Hz\t").Append(Screen.fullScreenMode).Append('\n');
             text.Append("# a slow frame is one over ").Append(SlowMs.ToString("0", CultureInfo.InvariantCulture)).Append(" ms, or over ")
