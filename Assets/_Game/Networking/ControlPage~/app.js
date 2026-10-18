@@ -451,7 +451,7 @@ async function refreshLog() {
   for (const line of data.lines) {
     const div = document.createElement("div");
     const text = line.text;
-    const server = /^(\[Server\]|\[Backup\]|\[Save\]|\[GM\]|\[DedicatedServerBoot\]|> )/.test(text);
+    const server = /^(\[Server\]|\[Backup\]|\[Save\]|\[GM\]|\[GM log\]|\[Access\]|\[Economy\]|\[Flag\]|\[DedicatedServerBoot\]|> )/.test(text);
     // A server leaves out everything that only draws or plays sound, and Unity says so at length: not a problem.
     const noise = !server && NOISE.test(text);
     div.textContent = text;
