@@ -3,7 +3,7 @@
 A running guide, in plain words, to getting the game to players and keeping it up to date. Updated after every
 release step.
 
-**Last updated:** 16 Oct 2026, the launcher, the release pipeline and Cloud Content Delivery.
+**Last updated:** 18 Oct 2026, publishing in the background (the build checkout and the Unity Accelerator).
 
 ## In one minute
 
@@ -41,17 +41,89 @@ release step.
 
 ## 1. Publish a new build to TEST
 
-1. In Unity: **Krytical Nova ▸ Release ▸ Publish to Test**, then **Publish**.
-2. It takes about 10 minutes (an IL2CPP build). Unity is busy meanwhile.
-3. When done, the Console says `[Release] Build N is on the TEST line.` It can take a few minutes before your test
-   launcher sees it (section 6). The full story of each step is in
-   `Builds/Release/release-log.txt`.
+1. In Unity: **Krytical Nova ▸ Release ▸ Publish to Test**, then **Publish**. Since 18 Oct 2026 this builds in the
+   background, in the build checkout (section 1a): **your Editor stays free**, keep working.
+2. It takes a while: build 7 (18 Oct 2026, in the Editor) took 75 minutes, 67 of them the game build (IL2CPP and its
+   shaders) and 6 the server.
+3. When done, the Console says `[Release] Background publish done: OK, build N`. It can take a few minutes before your
+   test launcher sees it (section 6). The full story of each step is in `Builds/Release/release-log.txt`, and the
+   background Unity's own log in `Builds/Release/background-publish.log`.
+
+**Only committed work is published.** The background build uses the commit your folder is on, not files you changed
+and did not commit; the Publish box says how many there are. To publish everything as it is on your screen, use
+**Publish to Test (in This Editor)**: the old way, which locks the Editor until it is done.
 
 What happens inside: the game is built into `Builds/Release/Game` with its files kept apart (a change to one map only
 changes that map's files); the release tool fingerprints every file, compresses the new ones into
 `Builds/Release/Store`, writes the update list and signs it; the Store is uploaded to CCD (only changed files travel)
 as a new release labelled TEST. Unity's debug folder (`..._BackUpThisFolder_ButDontShipItWithYourGame`) is never
 shipped.
+
+## 1a. Publishing in the background: the build checkout and the Unity Accelerator
+
+Rule (owner, 18 Oct 2026): every publish goes through the Unity Accelerator, and never locks the Editor you work in.
+
+**The Unity Accelerator** is a free program from Unity, installed on this PC on 18 Oct 2026 (v1.5.137). It runs by
+itself as a Windows service (Services ▸ **Unity Accelerator**, starts with Windows) and remembers the work Unity does
+when it imports an asset: compressed textures, compiled shaders, and the import results themselves. A second copy of
+the project then fetches them instead of doing the work again.
+
+| What | Value |
+| --- | --- |
+| Address Unity uses | `127.0.0.1:10443` (this version; not the old 10080) |
+| Its page | `https://localhost/dashboard/` (the browser warns about the certificate: it is your own PC, go on), with the login you chose when installing |
+| The cache | `C:\ProgramData\Unity\accelerator` (about 48 GB after the first fill) |
+| Unity's setting | Edit ▸ Preferences ▸ Asset Pipeline ▸ Cache Server: Enabled, `127.0.0.1:10443`. It is per user, so every Editor of this project reads it: the main one, the Player 2 clone and every worktree |
+
+Both Publish menus refuse to start when the Editor is not connected to it, and say what to do.
+
+**The build checkout** is a second copy of the project, only for building: `C:\Users\dlaco\KN-worktrees\build` (a git
+worktree, made 18 Oct 2026). It has its own Library, so building there never touches yours. Its `Builds` folder is a
+link to this project's `Builds`, so build numbers, the Store, the server folder and `server-settings.json` are the same
+ones. Never work in it: every publish first throws away whatever is changed in it and moves it to your commit.
+
+What **Publish to Test** does now: checks the Accelerator, moves the build checkout to your commit, and starts a second
+Unity there with no window (batch mode, below normal priority so your Editor keeps the processor first). That Unity
+runs the same publish as before (game build, staging, signing, upload to TEST, the matching server) and quits; your
+Editor's Console then says how it went. It is started from your Editor, so it runs as you and finds your signing key
+and your UGS login (a terminal inside the Claude app cannot: its AppData is elsewhere).
+
+**Memory.** The second Unity uses about 4 GB while it imports and more while it builds. Close the Player 2 clone before
+a publish. On 18 Oct 2026, with the main Editor open, 3 to 6 GB stayed free; Windows lends more from the page file, so a
+build is slower when memory is short, but does not fail.
+
+**If the build checkout is missing** (a new PC, or it was deleted), make it again from a PowerShell window:
+
+```
+git -C "C:\Users\dlaco\Krytical Nova II" worktree add --detach "C:\Users\dlaco\KN-worktrees\build" main
+New-Item -ItemType Junction -Path "C:\Users\dlaco\KN-worktrees\build\Builds" -Target "C:\Users\dlaco\Krytical Nova II\Builds"
+```
+
+Its first import then takes about 11 minutes with a warm Accelerator, or 25 without.
+
+**What it measured (18 Oct 2026, this PC, a fresh copy of the project, 92,019 imports):**
+
+| | Time |
+| --- | --- |
+| First import, Accelerator empty | 25 min 32 s |
+| Same, Accelerator holding textures and shaders only | 28 min 10 s (no gain: the time is in the other imports) |
+| Same, Accelerator holding the import results too | **10 min 55 s** (83,074 fetched, 8,946 imported) |
+
+Since Unity 6.5, sharing import results is **off by default** (Unity's own caution: an importer that reads files it does
+not declare could hand back an old result). The background publish switches it on for its own run
+(`-cacheServerEnableImportResultCaching`); none of our code imports files that way. A batch Unity reads results from
+the Accelerator but does not put new ones in by itself: to fill it, run once, in PowerShell, with no Unity open on that
+folder:
+
+```
+& "C:\Program Files\Unity\Hub\Editor\6000.6.3f1\Editor\Unity.exe" -batchmode -quit -projectPath "C:\Users\dlaco\KN-worktrees\build" -buildTarget Win64 -EnableCacheServer -cacheServerEndpoint 127.0.0.1:10443 -cacheServerEnableDownload true -cacheServerEnableUpload true -cacheServerEnableImportResultCaching -cacheServerUploadExistingImports -cacheServerWaitForUploadCompletion
+```
+
+It takes about a minute. On 18 Oct 2026 Unity crashed while quitting after it (the uploads had already landed).
+
+**Unity Build Automation** (Unity's cloud builds) was looked at the same day and not taken: its free time is about 200
+Windows minutes a month on small machines, the project is very large, and the signing key and the CCD login live in
+your Windows account.
 
 ## 2. Check it, then Promote to LIVE
 
@@ -132,12 +204,17 @@ signature inside it (`manifest.signed`): a list and a signature never come from 
 | A player's launcher says "not signed by Krytical Nova" | The list on CCD was changed, or signed with another key | Publish again from your PC. Never make a second key. |
 | Norton or Windows SmartScreen warns about the launcher | It is a new, unsigned program | For now: "More info ▸ Run anyway" and a Norton exclusion. Code signing before the beta fixes it. |
 | A player's download stops | Internet dropped | Press **RETRY**: what was downloaded is kept. |
+| Publish says "The Unity Accelerator does not answer" | The service is stopped | Services ▸ Unity Accelerator ▸ Start, then publish again. |
+| Publish says "switched off for this Editor" | The cache server preference is off | Edit ▸ Preferences ▸ Asset Pipeline ▸ Cache Server: Enabled, `127.0.0.1:10443`. |
+| Publish says "There is no build checkout" | It was deleted, or this is a new PC | Make it again (section 1a). |
+| The Console says "Background publish FAILED" | The build, the upload or the Accelerator check failed | `Builds/Release/release-log.txt`, then `Builds/Release/background-publish.log`. |
 
 ## For developers
 
 | Piece | Where | What it does |
 | --- | --- | --- |
 | `ReleasePublisher` | `Release/Editor` | The Release menus: release build, tools build, stage, CCD upload, promote, player zip, test launcher. |
+| `BackgroundPublisher` | `Release/Editor` | Publish to Test in the build checkout: the Accelerator check (`AcceleratorProblem`, also used by the in-Editor publish), moving the checkout, starting the batch Unity (`RunInBatch`), and the Console message when it is done. |
 | `TestBuildBuilder.Output` | `Tools/Editor/Build` | Lets the release build share the test build's code with its own folder and packing (no LZ4HC single file). |
 | `UpdateManifest`, `UpdateCrypto` | `Release/Tools~/Shared` | The update list, SHA-256, ECDSA P-256 signature check, safe paths. |
 | ReleaseTool | `Release/Tools~/ReleaseTool` | `keygen`, `export-key`, `import-key`, `stage`, `verify`. .NET Framework 4.7.2, key kept with DPAPI. |
@@ -158,3 +235,6 @@ good again.
 - 16 Oct 2026: written. The launcher, the release tool, the signing key and the Release menus built and tested locally.
 - 16 Oct 2026: Cloud Content Delivery set up (bucket, service account, ugs); the signature moved inside the update list
   (`manifest.signed`) after the content network served a list and a signature from different builds.
+- 18 Oct 2026: the Unity Accelerator installed and every Editor pointed at it; the build checkout made; Publish to
+  Test now builds there in the background and refuses to start without the Accelerator; the old way kept as Publish to
+  Test (in This Editor). Measured: a fresh import 25 min 32 s, 10 min 55 s with the import results in the Accelerator.
