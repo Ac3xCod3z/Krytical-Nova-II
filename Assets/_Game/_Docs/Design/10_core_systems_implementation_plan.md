@@ -178,6 +178,12 @@ Build out the Tier 1 skill architecture from Module 02. Implement self-buffs tha
     face (measured: hands and feet 5 to 12 cm from it), the scan of the face steps over windows, and the top, the base
     and every landing must be open ground (no ceiling with walls round it), so nobody lands inside a building. A
     refusal says why. Stand-in clips until real ones are chosen (owner, pick D).
+  - **Walls as a second ground, stage 1** (18 Oct 2026): `SurfaceGraphBaker` casts rays at a region from eight
+    directions on a 0.5 m grid; every surface steeper than the NavMesh's 45° gives a node 0.38 m out from it where a
+    0.28 m sphere fits and that is not inside a building; nodes a step apart join (corners up to 110° of turn), and
+    nodes at a foot or under an edge join the NavMesh. `SurfaceRoute.Plan` runs A* from every way in at once with the
+    walks at both ends in the cost. Baked by Krytical Nova ▸ Zone ▸ Surface Graph, numbers in `WallstrideSettings`
+    ("Walls as a second ground"). Nothing moves a player along it yet (stage 2).
   - **Roofs** (17 Oct 2026): `TownRoofsBuilder` (Zone ▸ Solid Roofs and No Indoor NavMesh) gives every town building
     taller than 2.5 m an exact collider of what is drawn and marks its inside as not walkable, up to just under the
     roof; `RoofLinksBuilder` (Zone ▸ Roof Jump Links) joins roofs up to 4 m apart and 3 m in height with two-way links,

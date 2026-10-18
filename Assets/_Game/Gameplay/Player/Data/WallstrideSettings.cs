@@ -101,6 +101,23 @@ namespace KryticalNova.Player
         [Tooltip("Where in a tree's height the player stands once up it.")]
         [Range(0.2f, 0.95f)] public float perchHeightShare = 0.6f;
 
+        [Header("Walls as a second ground (the surface graph, baked per zone)")]
+        [Tooltip("Metres between two samples of a surface when the graph is baked.")]
+        [Range(0.25f, 1.5f)] public float graphSpacing = 0.5f;
+        [Tooltip("A surface steeper than this (degrees from level) is wall, not ground. Kept at the NavMesh's own steepest " +
+                 "walkable slope (45), so a surface is always one or the other.")]
+        [Range(30f, 80f)] public float graphMinSurfaceAngle = 45f;
+        [Tooltip("The body, as a sphere at the node, must fit there (metres).")]
+        [Range(0.1f, 0.5f)] public float graphBodyRadius = 0.28f;
+        [Tooltip("Farthest two nodes on one face may be and still be one step apart (metres).")]
+        [Range(0.3f, 2f)] public float graphLinkDistance = 0.8f;
+        [Tooltip("Most the surface may turn between two nodes of one step (degrees); more is a corner.")]
+        [Range(10f, 80f)] public float graphMaxTurn = 50f;
+        [Tooltip("Most it may turn round a corner (degrees).")]
+        [Range(60f, 150f)] public float graphCornerTurn = 110f;
+        [Tooltip("A node is joined to the NavMesh (the ground at a foot, the top over an edge) within this many metres.")]
+        [Range(0.5f, 3f)] public float graphJoinReach = 1.4f;
+
         private void OnValidate()
         {
             maxClimbSpeed = Mathf.Max(maxClimbSpeed, minClimbSpeed);
