@@ -1,0 +1,13 @@
+{
+  "name": "World Atlas board",
+  "id": "krytical-nova-world-atlas-board",
+  "api": "1.0.0",
+  "main": "gear-pets-mounts-board.js",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["none"] },
+  "menu": [
+    { "name": "Build / update board", "command": "build" },
+    { "name": "Image snap (stays on)", "command": "snap" }
+  ]
+}
