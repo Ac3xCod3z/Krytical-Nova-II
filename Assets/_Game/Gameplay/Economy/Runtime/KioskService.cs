@@ -33,6 +33,21 @@ namespace KryticalNova.Economy
         {
             Stands.Clear();
             restoredScene = null;
+            ServerSave.AccountCarried -= OnAccountCarried;
+            ServerSave.AccountCarried += OnAccountCarried;
+        }
+
+        // Online phase 2: an account carried over to its signed-in id keeps its Kiosks (and their tills).
+        private static void OnAccountCarried(string oldId, string newId)
+        {
+            bool changed = false;
+            foreach (KioskRecord record in World.kiosks)
+            {
+                if (record.ownerAccountId != oldId) continue;
+                record.ownerAccountId = newId;
+                changed = true;
+            }
+            if (changed) ServerSave.SaveWorld(WorldName);
         }
 
         private static KioskWorld World => ServerSave.World<KioskWorld>(WorldName);

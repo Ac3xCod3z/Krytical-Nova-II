@@ -105,6 +105,7 @@ namespace KryticalNova.Player
         private CharacterCombatStats combatStats;
         private CharacterBuffManager buffManager;
         private PlayerAnimancerMotor animancerMotor;
+        private PlayerMoveAnticipation moveAnticipation;
         private KryticalNova.Combat.PlayerMeleeCombat meleeCombat;
         private MovementSkillId previousMovementMode;
         public event Action<string> CommandMessage;
@@ -205,6 +206,7 @@ namespace KryticalNova.Player
             combatStats = GetComponent<CharacterCombatStats>();
             buffManager = GetComponent<CharacterBuffManager>();
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
+            moveAnticipation = GetComponent<PlayerMoveAnticipation>();
             meleeCombat = GetComponent<KryticalNova.Combat.PlayerMeleeCombat>();
             hotbar = GetComponent<PlayerSkillHotbar>();
             deathMotor = GetComponent<PlayerDeathMotor>();
@@ -411,6 +413,7 @@ namespace KryticalNova.Player
                 TurnTowardsTravel();
                 TurnTowardsFacePoint();
             }
+            else LeadOwnStep(); // this player's own game, on a client
 
             if (IsSpawned && !IsOwner)
                 return;
@@ -623,6 +626,8 @@ namespace KryticalNova.Player
 
                 if (meleeCombat != null)
                 {
+                    // The server walks the player in to attack: this game's own walk, if any, gives way to it.
+                    if (moveAnticipation != null) moveAnticipation.StopLeading();
                     meleeCombat.StartAttackTarget(targetEntity);
                     if (IsSpawned && !IsServer)
                     {
@@ -712,6 +717,7 @@ namespace KryticalNova.Player
             if (IsSpawned && !IsServer)
             {
                 RequestMoveDestinationServerRpc(hit.point);
+                LeadOwnWalk(hit.point);
                 // The server validates the path; the marker is the client's best guess at the destination.
                 ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
                 return;
@@ -761,7 +767,10 @@ namespace KryticalNova.Player
             if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
 
             if (IsSpawned && !IsServer)
+            {
                 RequestMoveDestinationServerRpc(goal);
+                LeadOwnWalk(goal);
+            }
             else if (!ExecuteLocalMove(goal, out _))
                 return false;
 
@@ -881,6 +890,7 @@ namespace KryticalNova.Player
 
             Select(targetEntity.Transform, WorldTargetKind.Hostile);
             EndTravel(false);
+            if (moveAnticipation != null) moveAnticipation.StopLeading(); // the server walks the player in
             if (meleeCombat != null) meleeCombat.StartAttackTarget(targetEntity);
             if (IsSpawned && !IsServer)
             {
@@ -935,6 +945,7 @@ namespace KryticalNova.Player
             if (IsSpawned && !IsServer)
             {
                 RequestMoveDestinationServerRpc(destination);
+                LeadOwnWalk(destination);
                 return;
             }
 
@@ -957,6 +968,7 @@ namespace KryticalNova.Player
             if (IsSpawned && !IsServer)
             {
                 RequestMoveDestinationServerRpc(destination);
+                LeadOwnWalk(destination);
                 return;
             }
 
@@ -1043,6 +1055,85 @@ namespace KryticalNova.Player
         {
             MoveOrdered?.Invoke();
             if (ServerMoveTo(destinationPoint)) MoveOrderShownClientRpc();
+            else MoveRefusedRpc();
+        }
+
+        /// <summary>The player's own game: the server did not take the move it has already started walking.</summary>
+        [Rpc(SendTo.Owner)]
+        private void MoveRefusedRpc()
+        {
+            if (moveAnticipation != null) moveAnticipation.StopLeading();
+        }
+
+        /// <summary>
+        /// The player's own game on a client (online phase 3): the move just asked of the server starts here at once,
+        /// walked the way the server will walk it (same NavMesh, same speed), and <see cref="PlayerMoveAnticipation"/>
+        /// squares it with the server's positions as they come. Nothing is decided here: no Flux is paid, no vault or
+        /// climb is planned (the server's route takes those, and its positions are then followed instead).
+        /// </summary>
+        private void LeadOwnWalk(Vector3 destinationPoint) => LeadOwnWalk(destinationPoint, false);
+
+        /// <param name="carriesOn">The rest of a move already paid for (after a vault): no Flux check.</param>
+        private void LeadOwnWalk(Vector3 destinationPoint, bool carriesOn)
+        {
+            if (moveAnticipation == null || !IsSpawned || IsServer || !IsOwner || agent == null) return;
+            if (resources != null && !resources.IsAlive) return;
+            if (deathMotor != null && deathMotor.IsDead) return;
+            if ((jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy)
+                || (wallRunMotor != null && wallRunMotor.IsBusy)) return;
+            // Without the Flux for a run the server refuses it: walking off here would only be pulled back.
+            if (!carriesOn && movementSkills != null && movementSkills.IsRunning && !movementSkills.CanPayForCommand(MovementSkillId.Run, out _))
+            { PlayerMoveAnticipation.Trace(this, "not started: no Flux for Run"); moveAnticipation.StopLeading(); return; }
+            // The agent is on here only while this game leads a walk (PlayerMoveAnticipation switches it off after).
+            if (!PlaceAgentOnNavigation(quiet: true)) { PlayerMoveAnticipation.Trace(this, "not started: no NavMesh under the body"); return; }
+
+            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            bool found = NavMesh.SamplePosition(destinationPoint, out NavMeshHit destination, destinationSampleRadius, filter);
+            bool walkable = found && agent.CalculatePath(destination.position, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
+            // Where the server will go over an obstacle (TryPlanRoute's choice), this game walks to the same take-off
+            // point and waits there for the server's vault; nothing is planned or started here.
+            if (found && vaultMotor != null
+                && vaultMotor.WouldVault(destination.position, walkable ? requestedPath : null, raycastLayers, modelForwardOffset, out Vector3 takeoff))
+            {
+                if (agent.CalculatePath(takeoff, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete) walkable = true;
+                else walkable = agent.CalculatePath(destination.position, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
+            }
+            bool walks = walkable
+                && Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset) > agent.stoppingDistance;
+            if (walks)
+            {
+                ApplyMovementSettings();
+                agent.isStopped = false;
+                walks = agent.SetPath(requestedPath);
+            }
+            if (!walks)
+            {
+                PlayerMoveAnticipation.Trace(this, $"not started: no walk to {destinationPoint} (found {found}, walkable {walkable}, " +
+                    $"{Vector3.Distance(agent.nextPosition, destination.position + Vector3.up * agent.baseOffset):0.00} m to go)");
+                if (moveAnticipation.Leading) moveAnticipation.StopLeading();
+                else agent.enabled = false; // switched on just now, for nothing
+                return;
+            }
+            SnapVelocityToPath();
+            moveAnticipation.BeginLeading();
+            PlayerMoveAnticipation.Trace(this, $"walk to {destination.position} ({Vector3.Distance(transform.position, destination.position):0.00} m){(carriesOn ? " after a vault" : "")}");
+        }
+
+        /// <summary>The player's own game on a client, each frame it leads its walk: the steps the server takes for it.</summary>
+        private void LeadOwnStep()
+        {
+            if (moveAnticipation == null || !moveAnticipation.Leading) return;
+            bool held = (resources != null && !resources.IsAlive) || (deathMotor != null && deathMotor.IsDead)
+                || (jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy)
+                || (wallRunMotor != null && wallRunMotor.IsBusy);
+            // A jump, a vault or a death is the server's to show: its positions take over.
+            if (held || agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) { moveAnticipation.StopLeading(); return; }
+            ApplyMovementSettings();
+            UpdateArrival();
+            // The walk turns the body it shows; NetworkTransform writes the server's facing over it every frame.
+            transform.rotation = moveAnticipation.LeadRotation;
+            TurnTowardsTravel();
+            moveAnticipation.LeadRotation = transform.rotation;
         }
 
         /// <summary>
@@ -1272,6 +1363,12 @@ namespace KryticalNova.Player
         /// <summary>The rest of a move that went over an obstacle. The run was paid for when the move was ordered.</summary>
         private void ResumeMoveAfterVault(Vector3 destination)
         {
+            if (IsSpawned && !IsServer)
+            {
+                // The player's own game: its own walk carries on from the landing as the server's does.
+                if (IsOwner) LeadOwnWalk(destination, true);
+                return;
+            }
             if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
             if (resources != null && !resources.IsAlive) return;
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
@@ -1320,8 +1417,10 @@ namespace KryticalNova.Player
 
             Vector3 destination = agent.destination;
             // Less than a frame's travel away: the body ends on the point rather than short of it or past it. Placed
-            // there, not moved there: a move would read as speed for a frame and set the run going again.
-            if (remaining > agent.stoppingDistance) PlaceOn(destination);
+            // there, not moved there: a move would read as speed for a frame and set the run going again. Always on the
+            // point, never just "within the stopping distance": the server and the player's own game (online phase 3)
+            // must stop on the same spot, or the hand-over eases the body a step after it has stopped.
+            if (remaining > 0.01f) PlaceOn(destination);
             agent.ResetPath();
             agent.velocity = Vector3.zero;
             FinishRoute(destination);

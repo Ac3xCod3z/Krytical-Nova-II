@@ -286,6 +286,15 @@ namespace KryticalNova.Items.Visuals
         public void SetAnimationCycle(float seconds) => animationCycleSeconds = Mathf.Max(0f, seconds);
 
         /// <summary>
+        /// Whether this game takes the pet's turns itself (its own player's game, or play alone). Elsewhere the turns
+        /// come from that game (<see cref="PlayAnimation"/>), so every screen shows the same trick at the same time.
+        /// </summary>
+        public bool LeadsTricks { get; set; } = true;
+
+        /// <summary>Raised when this game started one of the pet's turns by itself (the animation's name hash).</summary>
+        public event System.Action<int> TrickPlayed;
+
+        /// <summary>
         /// When the pet walks and runs, by its owner's speed over the ground in metres a second: it walks from
         /// <paramref name="walkFrom"/>, runs from <paramref name="runFrom"/> and drops back to a walk below
         /// <paramref name="runToWalk"/>. It does this on the spot: the follower is what moves it. 0 for walkFrom = it
@@ -923,7 +932,10 @@ namespace KryticalNova.Items.Visuals
             if (animations != null)
             {
                 animations.SetGait(OwnerGait(t));
-                animations.Tick(animationCycleSeconds);
+                // Only the pet's own player's game takes its turns; everyone else plays what that game sends (online
+                // phase 3, owner: a pet's tricks were different on each screen).
+                int trick = animations.Tick(LeadsTricks ? animationCycleSeconds : 0f);
+                if (trick != 0) TrickPlayed?.Invoke(trick);
             }
 
             Vector3 forward = transform.forward;

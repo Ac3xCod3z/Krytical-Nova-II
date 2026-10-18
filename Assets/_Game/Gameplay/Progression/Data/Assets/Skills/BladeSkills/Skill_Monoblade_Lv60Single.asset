@@ -82,6 +82,9 @@ MonoBehaviour:
   - 0.4
   castLockNormalized: 0.9
   attackCancelNormalized: 1
+  castClipTrim: 0
+  castClipDelay: 0
+  castLockSeconds: 1.5
   castLiftCurve:
     serializedVersion: 2
     m_Curve: []

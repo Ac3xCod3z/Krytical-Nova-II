@@ -118,6 +118,7 @@ GameObject:
   - component: {fileID: 6085953057518992820}
   - component: {fileID: 6994377297614759536}
   - component: {fileID: 6034640740294713704}
+  - component: {fileID: 8433688748516569418}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -625,7 +626,7 @@ MonoBehaviour:
   drawnWalkStopClip: {fileID: 7400000, guid: 6443b6f2ac8220d459b5d9145787c623, type: 3}
   stopFadeDuration: 0.12
   stopToIdleFadeDuration: 0.3
-  runStopWindow: {x: 0.45, y: 0.95}
+  runStopWindow: {x: 0.45, y: 0.58}
   walkStopWindow: {x: 0, y: 0.52}
   stopPlaybackSpeed: 1.25
   stopFootIK: 1
@@ -4182,6 +4183,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.PlayerLoadouts
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &8433688748516569418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd182e3f5faedf84baeb0216dfa5cb10, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.PlayerMoveAnticipation
+  ShowTopMostFoldoutHeaderGroup: 1
+  snapDistance: 3
+  easeSeconds: 0.2
+  restSeconds: 0.15
+  settleSeconds: 1.5
+  interpolationSeconds: 0.15
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

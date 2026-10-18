@@ -113,6 +113,7 @@ namespace KryticalNova.EditorTools
             Make("FX_Cartoony_Rings_01", "PFX_Land_Ring", 1.1f, then: GroundRings);
             Make("FX_Cartoony_Sprint_01", "PFX_Run_Loop", 0.85f, loop: true);
             Make("FX_Trail_Dust_01", "PFX_Air_Loop", 0.6f, loop: true);
+            BuildJumpChargeVfx();
 
             // Skill casts.
             Make("FX_SwordSlash_01", "PFX_Cast_Slash", 1f);
@@ -206,6 +207,119 @@ namespace KryticalNova.EditorTools
             AssetDatabase.SaveAssets();
             WireScene(); // the kill confirm's lens punch needs its shaker on the global volume
             Debug.Log($"[GameFeel] Death and respawn feel rebuilt on {PrefabPath}. Assign sounds on the new MMF_Sound slots.");
+        }
+
+        // ---------------------------------------------------------------- jump charge and punch (owner, 17 Oct 2026)
+
+        private const string JumpChargeSource = "Assets/_ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Electric/CFXR Electrified 3.prefab";
+        private const string JumpChargeVfx = "PFX_Jump_Charge";
+        private const string JumpChargePlayer = "Jump Charge";
+        private const float JumpChargeSeconds = 0.4f;
+        private const float JumpChargeScale = 0.55f;
+        private const float JumpChargeGlowScale = 0.3f;   // the pack's glow is a 6 m dome; the owner wanted it toned down
+        private const float JumpChargeGlowAlpha = 0.5f;
+
+        /// <summary>
+        /// Adds the jump's charge and punch to a built game feel prefab, leaving everything else on it as it is (the jump
+        /// players keep their sound slots): sparks at the feet and a slight squash on the crouch, a slight stretch, a
+        /// camera kick and a vignette pulse on take-off (owner, 17 Oct 2026: C Sparks, all three FEEL touches, the squash
+        /// subtle). Run again to take new tuning.
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Jump Feel")]
+        public static void RebuildJumpFeel()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            BuildJumpChargeVfx();
+            AssetDatabase.SaveAssets();
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                GameObject root = scope.prefabContentsRoot;
+                var presenter = root.GetComponent<GameFeelPresenter>();
+                Transform world = root.transform.Find("World");
+                if (presenter == null || world == null)
+                {
+                    Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
+                    return;
+                }
+                Remove(world, new[] { JumpChargePlayer });
+                var so = new SerializedObject(presenter);
+                AddJumpPunch(root, world.gameObject, so);
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[GameFeel] Jump charge and punch rebuilt on {PrefabPath}.");
+        }
+
+        /// <summary>The CFXR electric crackle as a short one-shot at the feet, its glow dome and light taken down.</summary>
+        private static void BuildJumpChargeVfx()
+        {
+            WeatherVfxBuilder.Build(JumpChargeSource, Vfx(JumpChargeVfx), root =>
+            {
+                // The pack's own effect script would destroy or disable the copy when it ends and animate a light the
+                // pool never resets; the pool recycles the copy, and the crackle needs no light.
+                foreach (var component in root.GetComponentsInChildren<MonoBehaviour>(true))
+                    if (component != null && component.GetType().Name == "CFXR_Effect") Object.DestroyImmediate(component);
+                foreach (var light in root.GetComponentsInChildren<Light>(true)) Object.DestroyImmediate(light.gameObject);
+                OneShot(root, JumpChargeScale, null);
+                foreach (var ps in root.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    var main = ps.main;
+                    main.duration = JumpChargeSeconds;
+                    if (ps.name != "Glow") continue;
+                    main.startSizeMultiplier *= JumpChargeGlowScale;
+                    ParticleSystem.MinMaxGradient colour = main.startColor;
+                    if (colour.mode == ParticleSystemGradientMode.Color)
+                    {
+                        Color c = colour.color;
+                        c.a *= JumpChargeGlowAlpha;
+                        main.startColor = c;
+                    }
+                    else if (colour.mode == ParticleSystemGradientMode.TwoColors)
+                    {
+                        Color a = colour.colorMin, b = colour.colorMax;
+                        a.a *= JumpChargeGlowAlpha;
+                        b.a *= JumpChargeGlowAlpha;
+                        main.startColor = new ParticleSystem.MinMaxGradient(a, b);
+                    }
+                }
+            });
+        }
+
+        private static void AddJumpPunch(GameObject root, GameObject world, SerializedObject so)
+        {
+            // ---- every client: the crouch's sparks and a slight squash; the take-off's slight stretch
+            MMF_Player charge = World(world, JumpChargePlayer, AtFeet(JumpChargeVfx));
+            Squash(charge, "Crouch Squash", 0.025f, -0.045f);
+            so.FindProperty("jumpChargeWorldFeel").objectReferenceValue = charge;
+            var jumpWorld = so.FindProperty("jumpWorldFeel").objectReferenceValue as MMF_Player;
+            if (jumpWorld != null) Squash(jumpWorld, "Take-off Stretch", -0.02f, 0.05f);
+
+            // ---- the jumper's own screen: a camera kick and a vignette pulse on take-off
+            var jump = so.FindProperty("jumpFeel").objectReferenceValue as MMF_Player;
+            if (jump == null) return;
+            jump.FeedbacksList.RemoveAll(f => f.Label == "Take-off Kick" || f.Label == "Take-off Vignette (Beautify)");
+            Impulse(jump, new Vector3(0f, 0.16f, 0f), 0.16f);
+            jump.FeedbacksList[jump.FeedbacksList.Count - 1].Label = "Take-off Kick";
+            var vignette = jump.AddFeedback(typeof(MMF_BeautifyVignette)) as MMF_BeautifyVignette;
+            vignette.Label = "Take-off Vignette (Beautify)";
+            vignette.Duration = 0.25f;
+            vignette.Reach = 0.14f;
+            vignette.PulseColor = new Color(0.05f, 0.08f, 0.14f, 0.18f);
+            vignette.DotOpacity = 0.2f;
+            EditorUtility.SetDirty(jump);
+        }
+
+        /// <summary>A subtle squash or stretch of the moment's character (MMF_ActorSquash), replacing one of the same name.</summary>
+        private static void Squash(MMF_Player player, string label, float width, float height)
+        {
+            player.FeedbacksList.RemoveAll(f => f is MMF_ActorSquash && f.Label == label);
+            var squash = player.AddFeedback(typeof(MMF_ActorSquash)) as MMF_ActorSquash;
+            squash.Label = label;
+            squash.Width = width;
+            squash.Height = height;
+            squash.Kick = 0.3f;
+            EditorUtility.SetDirty(player);
         }
 
         private static void Remove(Transform parent, string[] childNames)
@@ -1605,6 +1719,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("runWorldFeel").objectReferenceValue = Smeared(World(world, RunStartPlayer, Dust("PFX_Dust_Run")), SmearKind.TakeOff);
                 so.FindProperty("jumpWorldFeel").objectReferenceValue = Smeared(World(world, "Jump", Dust("PFX_Dust_Jump"), Dust("PFX_Jump_Burst")), SmearKind.Jump);
                 so.FindProperty("landWorldFeel").objectReferenceValue = World(world, "Land", Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"));
+                AddJumpPunch(root, world, so);
                 so.FindProperty("attackCastWorldFeel").objectReferenceValue = World(world, "Attack Skill", Slash());
                 so.FindProperty("buffCastWorldFeel").objectReferenceValue = World(world, "Buff Skill", AtFeet("PFX_Cast_Buff"));
                 so.FindProperty("buffEndWorldFeel").objectReferenceValue = World(world, "Buff End", OnCaster("PFX_Buff_End"));

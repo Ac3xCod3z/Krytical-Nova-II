@@ -154,6 +154,11 @@ namespace KryticalNova.Persistence
             string wantedCharacter = identity.CharacterId;
             if (!SaveKeys.IsId(wantedAccount) || !SaveKeys.IsId(wantedCharacter)) return;
 
+            // Online phase 2: the characters this game played before Unity sign-in move to its proven account, once.
+            if (IsSpawned && OwnerClientId != NetworkManager.ServerClientId
+                && KryticalNova.Networking.ServerAccounts.TryGet(OwnerClientId, out var proven) && proven.Account == wantedAccount)
+                ServerSave.CarryOverOnce(proven.OldAccount, wantedAccount);
+
             if (!ServerSave.TryBind(this, wantedAccount, out string refusal))
             {
                 Debug.LogWarning($"[Save] {identity.CharacterName}: {refusal}", this);

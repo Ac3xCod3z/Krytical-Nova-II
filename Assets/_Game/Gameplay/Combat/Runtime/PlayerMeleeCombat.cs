@@ -102,6 +102,10 @@ namespace KryticalNova.Combat
 
         private Coroutine comboRoutine;
         private Coroutine ownerStrikeRoutine;
+        // The player's own game played the first strike on the click (online phase 3): until then the server's own
+        // first strike is not played again.
+        private float firstStrikeShownUntil = float.NegativeInfinity;
+        private const float FirstStrikeShownSeconds = 0.6f;
         private bool isAttacking;
         private float skillHoldUntil = float.NegativeInfinity;
 
@@ -189,6 +193,14 @@ namespace KryticalNova.Combat
                 // owns this player shows the strikes the server sends (PlayComboStrikeClientRpc): timing them from
                 // its own replicated copy of the positions would never agree with the server's.
                 comboRoutine = StartCoroutine(SequencesStrikes ? ComboLoopRoutine() : OwnerFollowRoutine());
+                // The player's own game, with the target already in reach: the first swing starts on the click
+                // instead of a round trip later. The server still decides whether it lands.
+                if (!SequencesStrikes && IsOwner && IsWithinStrikingRange(target) && Time.time >= skillHoldUntil
+                    && (animancerMotor == null || !animancerMotor.IsActionBusy))
+                {
+                    firstStrikeShownUntil = Time.time + FirstStrikeShownSeconds;
+                    ShowStrike(1);
+                }
             }
         }
 
@@ -478,7 +490,18 @@ namespace KryticalNova.Combat
             if (IsServer) return; // the server (host) played it when it opened the swing
             // The owner may have called the attack off while this was on its way.
             if (IsOwner && !isAttacking) return;
+            // Already shown on the click by this player's own game.
+            if (IsOwner && step == 1 && Time.time < firstStrikeShownUntil)
+            {
+                firstStrikeShownUntil = float.NegativeInfinity;
+                return;
+            }
+            ShowStrike(step);
+        }
 
+        /// <summary>Plays one strike of the combo here, as the server sends it (or as the owner's game shows it first).</summary>
+        private void ShowStrike(int step)
+        {
             AnimationClip clip = step == 1 ? combo1Clip : step == 2 ? combo2Clip : combo3Clip;
             float speed = step == 1 ? strike1Speed : step == 2 ? strike2Speed : strike3Speed;
             if (clip != null && animancer != null)
@@ -822,6 +845,9 @@ namespace KryticalNova.Combat
             StopAgent();
             if (facePoint.HasValue) FaceTarget(facePoint.Value);
         }
+
+        /// <summary>The cast that held the combo was taken back (the server refused it): the combo is free again.</summary>
+        public void ReleaseSkillHold() => skillHoldUntil = float.NegativeInfinity;
 
         /// <summary>The character's true facing (root rotation without the model's forward offset).</summary>
         public Quaternion Facing => transform.rotation * Quaternion.AngleAxis(-modelForwardOffset, Vector3.up);

@@ -79,10 +79,13 @@ MonoBehaviour:
   castClip: {fileID: 7400000, guid: 33c684e8316cee640a4e43e2bbccf193, type: 3}
   castClipSpeed: 1.1
   hitTimesNormalized:
-  - 0.35
-  - 0.7
+  - 0.35000002
+  - 0.70000005
   castLockNormalized: 0.92
   attackCancelNormalized: 1
+  castClipTrim: 0
+  castClipDelay: 0.00000001215081
+  castLockSeconds: 1.3939394
   castLiftCurve:
     serializedVersion: 2
     m_Curve: []

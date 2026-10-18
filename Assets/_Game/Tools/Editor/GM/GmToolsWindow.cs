@@ -60,9 +60,22 @@ namespace KryticalNova.EditorTools.GM
         // ================================================================ state helpers
 
         // "Local" = the player the commands act on: your own, or the connected player picked with gm.target.
-        private static GameObject LocalPlayer => !Application.isPlaying ? null
-            : GmRemoteLines.ForwardsToServer ? RemoteTargetPlayer()
-            : GmTarget.TryGetPlayer(out var player, out _) ? player : null;
+        // Found once a frame: every button's enable check asks for it, many times a draw, and a joined GM's lookup scans
+        // every player in the scene (with the window open in Play that alone took the Editor down to two frames a second).
+        private static GameObject LocalPlayer
+        {
+            get
+            {
+                if (!Application.isPlaying) return null;
+                if (localPlayerFrame == Time.frameCount) return localPlayer;
+                localPlayerFrame = Time.frameCount;
+                localPlayer = GmRemoteLines.ForwardsToServer ? RemoteTargetPlayer()
+                    : GmTarget.TryGetPlayer(out var player, out _) ? player : null;
+                return localPlayer;
+            }
+        }
+        private static GameObject localPlayer;
+        private static int localPlayerFrame = -1;
 
         // A joined GM: the picked player as this game sees them (shown here; the commands themselves run on the server).
         private static GameObject RemoteTargetPlayer()

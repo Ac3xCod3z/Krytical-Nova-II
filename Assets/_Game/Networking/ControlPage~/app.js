@@ -187,7 +187,12 @@ function showPlayers(players) {
   }
 }
 
-function showGms(gms, max) {
+// The table is rebuilt only when it changed, so a player list picked from is not reset under the pointer every 2 seconds.
+let shownGms = "";
+function showGms(gms, max, players) {
+  const key = JSON.stringify(gms) + "|" + players.map((p) => p.id + p.name + (p.gm || "")).join(",");
+  if (key === shownGms) return;
+  shownGms = key;
   const rows = $("gmRows");
   rows.textContent = "";
   $("noGms").hidden = gms.length > 0;
@@ -196,6 +201,37 @@ function showGms(gms, max) {
   for (const g of gms) {
     const row = document.createElement("tr");
     cell(row, g.name);
+    const account = cell(row, "");
+    if (g.bound) {
+      account.textContent = "bound ";
+      const unbind = document.createElement("button");
+      unbind.className = "small ghost";
+      unbind.type = "button";
+      unbind.textContent = "Unbind";
+      unbind.addEventListener("click", async () => {
+        if (await ask("Unbind " + g.name + "?", "Their account stops being GM" + (g.online ? ", at once." : "."), false) === null) return;
+        act(unbind, "/api/gm/unbind", { name: g.name });
+      });
+      account.appendChild(unbind);
+    } else {
+      // Only players not already a GM, who are in the game now.
+      const free = players.filter((p) => !p.gm);
+      const pick = document.createElement("select");
+      pick.innerHTML = "<option value=''>" + (free.length ? "pick the player..." : "nobody to bind is on") + "</option>";
+      for (const p of free) { const o = document.createElement("option"); o.value = String(p.id); o.textContent = p.name; pick.appendChild(o); }
+      pick.disabled = free.length === 0;
+      const bind = document.createElement("button");
+      bind.className = "small cyan";
+      bind.type = "button";
+      bind.textContent = "Bind";
+      bind.addEventListener("click", async () => {
+        if (!pick.value) return toast("Pick the player who is " + g.name + ".", true);
+        const who = pick.options[pick.selectedIndex].textContent;
+        if (await ask("Bind " + g.name + " to " + who + "?", who + "'s account becomes GM " + g.name + " now and every time they join.", false) === null) return;
+        act(bind, "/api/gm/bind", { name: g.name, id: pick.value });
+      });
+      account.append(pick, bind);
+    }
     cell(row, g.online ? "in the game" : "-", g.online ? "on" : "off");
     const td = cell(row, "");
     const remove = document.createElement("button");
@@ -203,7 +239,7 @@ function showGms(gms, max) {
     remove.type = "button";
     remove.textContent = "Remove";
     remove.addEventListener("click", async () => {
-      const text = g.online ? g.name + " is in the game now: their GM rights end at once." : g.name + " can no longer use a GM password here.";
+      const text = g.online ? g.name + " is in the game now: their GM rights end at once." : g.name + " is no longer a GM here.";
       if (await ask("Remove GM " + g.name + "?", text, false) === null) return;
       act(remove, "/api/gm/remove", { name: g.name });
     });
@@ -274,7 +310,7 @@ async function refresh() {
     $("countdown").textContent = s.shutdownIn >= 0 ? (s.restarting ? "Restarting" : "Stopping") + " in " + s.shutdownIn + " seconds. Players are being told." : "";
     showAddresses(s.addresses, s.port);
     showPlayers(s.players);
-    showGms(s.gms || [], s.maxGms || 3);
+    showGms(s.gms || [], s.maxGms || 3, s.players || []);
     showReach(s);
     showList(s.serverList || [], s.listPublished || "-", s.statusPort || 0, s.publicAddress || "");
     await refreshLog();
@@ -362,11 +398,10 @@ $("publishList").addEventListener("click", async (e) => {
 });
 $("gmForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const name = $("gmName").value.trim(), password = $("gmPassword").value;
+  const name = $("gmName").value.trim();
   if (!name) return toast("Give the GM a name.", true);
-  if (password.length < 8) return toast("A GM password needs at least 8 characters.", true);
-  const data = await act(event.submitter, "/api/gm/add", { name: name, password: password });
-  if (data && / is a GM\./.test(data.answer)) { $("gmName").value = ""; $("gmPassword").value = ""; }
+  const data = await act(event.submitter, "/api/gm/add", { name: name });
+  if (data && / is a GM\./.test(data.answer)) $("gmName").value = "";
 });
 $("commandForm").addEventListener("submit", async (event) => {
   event.preventDefault();

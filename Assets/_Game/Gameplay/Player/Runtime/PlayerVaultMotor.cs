@@ -109,6 +109,7 @@ namespace KryticalNova.Player
         private PlayerMovementSkills movementSkills;
         private PlayerResources resources;
         private PlayerAnimancerMotor animancerMotor;
+        private PlayerMoveAnticipation moveAnticipation;
         private PlayerJumpMotor jumpMotor;
         private PlayerIdentity identity;
         private NavMeshPath scratchPath;
@@ -129,7 +130,18 @@ namespace KryticalNova.Player
 
         /// <summary>The body is in the air over an obstacle.</summary>
         private const float RemoteLandingGrace = 0.6f;
-        private const float RemoteLandingTolerance = 0.2f;
+        private const float RemoteLandingTolerance = 0.35f;
+        // Shown here, simulated elsewhere: the vault starts when the body shown here reaches the server's take-off point
+        // (it comes in through NetworkTransform a little later), and at the latest this long after the server's start.
+        private const float RemoteTakeoffTolerance = 0.2f;
+        private const float RemoteTakeoffWaitMax = 0.35f;
+
+        // A vault the server has started, waiting here for the body to reach its take-off point.
+        private bool remotePending;
+        private Plan remotePlan;
+        private float remoteSpeed;
+        private Vector3 remoteTakeoffRoot;
+        private float remotePendingSince;
 
         public bool IsBusy => vaulting;
         /// <summary>The vault has landed (authority only); the argument is where the move was heading.</summary>
@@ -159,6 +171,7 @@ namespace KryticalNova.Player
             movementSkills = GetComponent<PlayerMovementSkills>();
             resources = GetComponent<PlayerResources>();
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
+            moveAnticipation = GetComponent<PlayerMoveAnticipation>();
             jumpMotor = GetComponent<PlayerJumpMotor>();
             identity = GetComponent<PlayerIdentity>();
             scratchPath = new NavMeshPath();
@@ -183,14 +196,22 @@ namespace KryticalNova.Player
         /// armed and <paramref name="takeoffPoint"/> is where the agent should be sent instead.
         /// </summary>
         public bool TryArm(Vector3 destination, NavMeshPath walkPath, LayerMask obstacleLayers, float modelForwardOffset, out Vector3 takeoffPoint) =>
-            TryArm(destination, walkPath != null ? Length(walkPath) : float.PositiveInfinity, obstacleLayers, modelForwardOffset, out takeoffPoint);
+            TryArm(destination, walkPath != null ? Length(walkPath) : float.PositiveInfinity, obstacleLayers, modelForwardOffset, true, out takeoffPoint);
 
-        private bool TryArm(Vector3 destination, float walkLength, LayerMask obstacleLayers, float modelForwardOffset, out Vector3 takeoffPoint)
+        /// <summary>
+        /// The player's own game (online phase 3): whether the server, given this order, would go over an obstacle on
+        /// the way, and from where. The same check as <see cref="TryArm"/>, with nothing planned or started, so the
+        /// game can walk to the same take-off point the server walks to.
+        /// </summary>
+        public bool WouldVault(Vector3 destination, NavMeshPath walkPath, LayerMask obstacleLayers, float modelForwardOffset, out Vector3 takeoffPoint) =>
+            TryArm(destination, walkPath != null ? Length(walkPath) : float.PositiveInfinity, obstacleLayers, modelForwardOffset, false, out takeoffPoint);
+
+        private bool TryArm(Vector3 destination, float walkLength, LayerMask obstacleLayers, float modelForwardOffset, bool arm, out Vector3 takeoffPoint)
         {
             takeoffPoint = default;
-            armed = false;
+            if (arm) armed = false;
             LastDecision = "not available";
-            if (!isActiveAndEnabled || !HasAuthority || !Ready || vaulting || (jumpMotor != null && jumpMotor.IsBusy)) return false;
+            if (!isActiveAndEnabled || (arm && !HasAuthority) || !Ready || vaulting || (jumpMotor != null && jumpMotor.IsBusy)) return false;
             if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
 
             Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
@@ -228,6 +249,11 @@ namespace KryticalNova.Player
             LastDecision = "walking round is shorter";
             if (walkLength - over < minimumDistanceSaved) return false;
             LastDecision = "vault";
+            if (!arm)
+            {
+                takeoffPoint = takeoff;
+                return true;
+            }
 
             plan = new Plan
             {
@@ -308,7 +334,7 @@ namespace KryticalNova.Player
             if (agent.pathPending) return;
             // Arrived, stopped, or sent somewhere else: nothing left to shorten.
             if (!agent.hasPath || Flat(agent.destination, watchDestination) > 0.6f) { watching = false; return; }
-            if (!TryArm(watchDestination, agent.remainingDistance, watchLayers, watchFacingOffset, out Vector3 takeoff)) return;
+            if (!TryArm(watchDestination, agent.remainingDistance, watchLayers, watchFacingOffset, true, out Vector3 takeoff)) return;
             if (!agent.SetDestination(takeoff)) Disarm();
         }
 
@@ -466,6 +492,17 @@ namespace KryticalNova.Player
 
         private void Update()
         {
+            if (remotePending)
+            {
+                // The body shown here (NetworkTransform's, under this player's own walk) has reached the take-off point.
+                Vector3 shown = moveAnticipation != null ? moveAnticipation.ServerShown : transform.position;
+                bool there = Flat(shown, remoteTakeoffRoot) <= RemoteTakeoffTolerance;
+                if (!there && Time.time - remotePendingSince < RemoteTakeoffWaitMax) return;
+                remotePending = false;
+                if (IsOwner) PlayerMoveAnticipation.Trace(this, $"vault starts here ({(there ? "body at the take-off" : "waited the most")}, {Time.time - remotePendingSince:0.00} s after the server's)");
+                Begin(remotePlan, remoteSpeed);
+                return;
+            }
             if (vaulting)
             {
                 if (HasAuthority && !resources.IsAlive) { Abort(); return; }
@@ -491,15 +528,20 @@ namespace KryticalNova.Player
             armed = false;
             float speed = movementSkills != null ? movementSkills.CurrentSpeed : agent.speed;
             Begin(plan, speed);
-            if (IsSpawned) VaultClientRpc(plan.Landing, plan.NearEdge, plan.FarEdge, plan.Top, plan.FacingOffset, speed);
+            if (IsSpawned) VaultClientRpc(takeoffRoot, plan.Landing, plan.NearEdge, plan.FarEdge, plan.Top, plan.FacingOffset, plan.Destination, speed);
         }
 
         [ClientRpc]
-        private void VaultClientRpc(Vector3 landing, Vector3 nearEdge, Vector3 farEdge, float top, float facingOffset, float speed)
+        private void VaultClientRpc(Vector3 takeoff, Vector3 landing, Vector3 nearEdge, Vector3 farEdge, float top, float facingOffset, Vector3 destination, float speed)
         {
             if (IsServer || !Ready) return; // the server is already running it
             if (vaulting) Abort();
-            Begin(new Plan { Landing = landing, NearEdge = nearEdge, FarEdge = farEdge, Top = top, FacingOffset = facingOffset }, speed);
+            // Started when the body shown here reaches the server's take-off point (Update), not a step before it.
+            remotePlan = new Plan { Landing = landing, NearEdge = nearEdge, FarEdge = farEdge, Top = top, FacingOffset = facingOffset, Destination = destination };
+            remoteSpeed = speed;
+            remoteTakeoffRoot = takeoff;
+            remotePendingSince = Time.time;
+            remotePending = true;
         }
 
         /// <summary>
@@ -510,12 +552,20 @@ namespace KryticalNova.Player
         {
             if (clock >= airTime + RemoteLandingGrace) return true;
             Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
-            return (feet - landingFeet).sqrMagnitude <= RemoteLandingTolerance * RemoteLandingTolerance;
+            // Measured flat: the server's body runs straight on from the landing, so it may never be shown right on the
+            // point, or at its exact height. Gone past it in the vault's direction counts as landed too.
+            if (Flat(feet, landingFeet) <= RemoteLandingTolerance) return true;
+            Vector3 onward = landingFeet - (takeoffRoot - Vector3.up * agent.baseOffset);
+            Vector3 beyond = feet - landingFeet;
+            onward.y = 0f;
+            beyond.y = 0f;
+            return Vector3.Dot(beyond, onward) > 0f;
         }
 
         [ClientRpc]
         private void VaultAbortedClientRpc()
         {
+            remotePending = false;
             if (!IsServer && vaulting) Abort();
         }
 
@@ -622,7 +672,10 @@ namespace KryticalNova.Player
                 feel.Airborne(transform, false);
                 feel.Landed(transform, !IsSpawned || IsOwner);
             }
-            if (HasAuthority) Landed?.Invoke(plan.Destination);
+            // Where it is decided, the move carries on from the landing; in the player's own game, its own walk does
+            // (online phase 3), so the run starts on touchdown instead of the body sliding on in the landing pose.
+            if (!HasAuthority && IsOwner) PlayerMoveAnticipation.Trace(this, $"vault landed, the walk carries on to {plan.Destination}");
+            if (HasAuthority || IsOwner) Landed?.Invoke(plan.Destination);
         }
 
         /// <summary>

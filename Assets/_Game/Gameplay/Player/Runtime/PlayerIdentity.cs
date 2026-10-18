@@ -4,6 +4,7 @@ using KryticalNova.Combat;
 using KryticalNova.Core;
 using KryticalNova.Factions;
 using KryticalNova.Items;
+using KryticalNova.Networking;
 using KryticalNova.Progression;
 using Unity.Collections;
 using Unity.Netcode;
@@ -153,7 +154,17 @@ namespace KryticalNova.Player
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void SubmitIdentityRpc(CharacterNetState state, FixedString64Bytes account, FixedString64Bytes character) =>
-            ServerAssign(state, account.ToString(), character.ToString());
+            ServerAssign(state, ProvenAccount(account.ToString()), character.ToString());
+
+        // Online phase 2: the account is the one Unity's sign-in proved when this player joined, never the one the game
+        // names. A server that requires proof keeps nothing for a player without it; the Editor hosting a test takes the
+        // game's own id, as before.
+        private string ProvenAccount(string claimed)
+        {
+            if (OwnerClientId == NetworkManager.ServerClientId) return claimed; // the host's own player
+            if (ServerAccounts.TryGet(OwnerClientId, out ServerAccounts.Entry proven)) return proven.Account;
+            return KryticalNova.Networking.NetworkConnectionManager.RequireProof ? string.Empty : claimed;
+        }
 
         /// <summary>
         /// Server (or offline) only: validate and commit an identity. A character is assigned once per spawn. The

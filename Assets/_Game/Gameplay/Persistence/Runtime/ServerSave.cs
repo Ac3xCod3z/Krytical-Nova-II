@@ -150,6 +150,46 @@ namespace KryticalNova.Persistence
 
         public static bool IsAccountOnline(string accountId) => !string.IsNullOrEmpty(accountId) && BoundAccounts.ContainsKey(accountId);
 
+        // ------------------------------------------------------------------ carrying old accounts over (online phase 2)
+
+        /// <summary>The server's settings say whether old accounts may still be carried over (switched off before any public test).</summary>
+        public static bool CarryOverEnabled { get; set; } = true;
+
+        /// <summary>Raised when an account was carried over (old id, new id): world documents that name owners follow it.</summary>
+        public static event Action<string, string> AccountCarried;
+
+        private const string CarriedDocument = "carried-accounts";
+
+        [Serializable]
+        private sealed class CarriedAccounts
+        {
+            public List<string> old = new List<string>();
+        }
+
+        /// <summary>
+        /// Moves the account a game played under before Unity sign-in (<paramref name="oldId"/>, made up by the game) to the
+        /// account its sign-in proves (<paramref name="newId"/>), once (owner, 18 Oct 2026: carry the test saves over).
+        /// Only when the proven account has no saves of its own, the old one is not in the world, and no one has carried
+        /// it over before; the old document stays as it was, as a backup. True when it moved.
+        /// </summary>
+        public static bool CarryOverOnce(string oldId, string newId)
+        {
+            if (!HasAuthority || !CarryOverEnabled || !SaveKeys.IsId(oldId) || !SaveKeys.IsId(newId) || oldId == newId) return false;
+            if (BoundAccounts.ContainsKey(oldId) || BoundAccounts.ContainsKey(newId)) return false;
+            CarriedAccounts carried = World<CarriedAccounts>(CarriedDocument);
+            if (carried.old.Contains(oldId)) return false;
+            if (Store.TryRead(AccountsPrefix + newId, out _)) return false; // the proven account has saves of its own
+            if (!Store.TryRead(AccountsPrefix + oldId, out _)) return false; // nothing to carry
+            AccountSave account = LoadAccount(oldId);
+            account.accountId = newId;
+            if (!WriteAccount(account)) return false;
+            carried.old.Add(oldId);
+            SaveWorld(CarriedDocument);
+            Debug.Log($"[Save] Carried account {oldId} over to the signed-in account {newId} ({account.characters.Count} character(s)).");
+            AccountCarried?.Invoke(oldId, newId);
+            return true;
+        }
+
         // ------------------------------------------------------------------ world documents
 
         /// <summary>A world-wide document ("crews", "kiosks"), loaded once and kept. Never null.</summary>

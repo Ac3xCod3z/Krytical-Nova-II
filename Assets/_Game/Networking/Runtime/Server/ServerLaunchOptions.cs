@@ -51,6 +51,8 @@ namespace KryticalNova.Networking
         public string cloudEnvironment = "production";
         [Tooltip("Unity's command-line tool, logged in once on this PC. Empty: %LOCALAPPDATA%/KryticalNova/tools/ugs.exe.")]
         public string ugsPath = "";
+        [Tooltip("Online phase 2: the characters a game played before Unity sign-in move once to its signed-in account. Switch off before any public test, so nobody else can claim old saves.")]
+        public bool carryOverOldSaves = true;
 
         /// <summary>The status port in use.</summary>
         public int StatusPort => statusPort > 0 ? statusPort : port + 1;

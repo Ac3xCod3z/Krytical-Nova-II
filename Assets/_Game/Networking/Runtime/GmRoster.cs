@@ -5,46 +5,53 @@ using UnityEngine;
 
 namespace KryticalNova.Networking
 {
-    /// <summary>One Game Master the server knows: a name players see and the password that unlocks GM in the game.</summary>
+    /// <summary>One Game Master the server knows: the name players see, and the account it is bound to.</summary>
     [Serializable]
     public sealed class GmEntry
     {
         public string name = string.Empty;
+        /// <summary>The proven account (online phase 2) this GM plays under; empty until bound on the control page.</summary>
+        public string account = string.Empty;
+        /// <summary>Before phase 2 a GM typed a password in the game; kept only so older settings files still read.</summary>
         public string password = string.Empty;
+
+        public bool IsBound => !string.IsNullOrEmpty(account);
     }
 
     /// <summary>
-    /// Who may act as a Game Master (owner, 16 Oct 2026; a stand-in until Unity sign-in proves who a player is). The host
-    /// of a game is always GM. On a dedicated server up to <see cref="MaxGameMasters"/> GMs are set on the control page
-    /// (saved in server-settings.json), each with a password of their own that they type once per session in the GM
-    /// console (F2). An account id is not trusted for this: a game sends its own, so it could be faked. Five wrong
-    /// passwords send that player away. Runs where the game is decided.
+    /// Who may act as a Game Master. The host of a game is always GM. On a dedicated server up to
+    /// <see cref="MaxGameMasters"/> GMs are set on the control page and saved in server-settings.json. Since online phase 2
+    /// a GM is **bound to an account** (owner, 18 Oct 2026): on the control page the owner picks, beside a GM, the online
+    /// player who is that GM; the account Unity's sign-in proved for that player (<see cref="ServerAccounts"/>) becomes the
+    /// GM, at once and on every later join. No password is typed in the game, and the GM console opens for GMs only.
+    /// Runs where the game is decided.
     /// </summary>
     public static class GmRoster
     {
         public const int MaxGameMasters = 3;
-        public const int MinPasswordLength = 8;
         public const int MaxNameLength = 20;
-        public const int WrongTriesBeforeKick = 5;
 
         private static readonly List<GmEntry> Entries = new List<GmEntry>();
         private static readonly Dictionary<ulong, string> Active = new Dictionary<ulong, string>();
-        private static readonly Dictionary<ulong, int> Wrong = new Dictionary<ulong, int>();
         private static bool loaded;
 
-        /// <summary>Raised on the server when a GM is removed while signed in, with their connection.</summary>
+        /// <summary>Raised on the server when a signed-in GM loses GM (removed or unbound), with their connection.</summary>
         public static event Action<ulong> Revoked;
+
+        /// <summary>Raised on the server when a connection becomes GM: its connection and GM name.</summary>
+        public static event Action<ulong, string> Granted;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             Entries.Clear();
             Active.Clear();
-            Wrong.Clear();
             loaded = false;
+            Revoked = null;
+            Granted = null;
         }
 
-        /// <summary>The GMs this server knows (names only are ever shown).</summary>
+        /// <summary>The GMs this server knows.</summary>
         public static IReadOnlyList<GmEntry> All
         {
             get
@@ -62,12 +69,12 @@ namespace KryticalNova.Networking
             GmEntry[] fromSettings = ServerLaunchOptions.LoadForThisServer().gameMasters;
             if (fromSettings != null)
                 foreach (GmEntry entry in fromSettings)
-                    if (entry != null && ValidateName(entry.name) == null && !string.IsNullOrEmpty(entry.password) && Entries.Count < MaxGameMasters)
+                    if (entry != null && ValidateName(entry.name) == null && Entries.Count < MaxGameMasters)
                         Entries.Add(entry);
 #endif
         }
 
-        /// <summary>Replaces the list (the control page, tests). Signed-in GMs no longer on it lose GM.</summary>
+        /// <summary>Replaces the list (the control page, tests). Signed-in GMs no longer on it, or no longer bound to their account, lose GM.</summary>
         public static void SetAll(IEnumerable<GmEntry> entries)
         {
             loaded = true;
@@ -75,7 +82,11 @@ namespace KryticalNova.Networking
             foreach (GmEntry entry in entries)
                 if (entry != null && Entries.Count < MaxGameMasters) Entries.Add(entry);
             foreach (ulong client in new List<ulong>(Active.Keys))
-                if (Find(Active[client]) == null) Sign(client, null);
+            {
+                GmEntry still = Find(Active[client]);
+                bool sameAccount = still != null && ServerAccounts.TryGet(client, out ServerAccounts.Entry proven) && proven.Account == still.account;
+                if (still == null || !still.IsBound || !sameAccount) Sign(client, null);
+            }
         }
 
         /// <summary>The GM of that name, or null.</summary>
@@ -86,7 +97,16 @@ namespace KryticalNova.Networking
             return null;
         }
 
-        /// <summary>The host's own player is always GM; on a server, a player who typed a GM password this session.</summary>
+        /// <summary>The GM bound to that account, or null.</summary>
+        public static GmEntry FindByAccount(string account)
+        {
+            if (string.IsNullOrEmpty(account)) return null;
+            foreach (GmEntry entry in All)
+                if (entry.account == account) return entry;
+            return null;
+        }
+
+        /// <summary>The host's own player is always GM; on a server, a player whose account is bound to a GM.</summary>
         public static bool IsGm(ulong clientId)
         {
             NetworkManager network = NetworkManager.Singleton;
@@ -94,10 +114,10 @@ namespace KryticalNova.Networking
             return Active.ContainsKey(clientId);
         }
 
-        /// <summary>The GM name a connection signed in as, or null.</summary>
+        /// <summary>The GM name a connection plays as, or null.</summary>
         public static string NameOf(ulong clientId) => Active.TryGetValue(clientId, out string name) ? name : null;
 
-        /// <summary>True while a GM of that name is signed in.</summary>
+        /// <summary>True while a GM of that name is in the game.</summary>
         public static bool IsSignedIn(string name)
         {
             foreach (string active in Active.Values)
@@ -106,45 +126,24 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>
-        /// Checks a GM password for a connection. True and the GM's name when it is one; otherwise a message, and
-        /// <paramref name="kick"/> once the connection has used up its tries.
+        /// A connection whose proven account is bound to a GM becomes that GM (on joining, or when the owner binds it).
+        /// True and the GM's name when it is one.
         /// </summary>
-        public static bool TryLogin(ulong clientId, string password, out string name, out string message, out bool kick)
+        public static bool SignInBound(ulong clientId, out string name)
         {
-            kick = false;
-            name = Match(All, password);
-            if (name != null)
-            {
-                Wrong.Remove(clientId);
-                Sign(clientId, name);
-                message = $"You are GM ({name}). GM commands now run on the server; gm.help lists them.";
-                return true;
-            }
-            Wrong.TryGetValue(clientId, out int wrong);
-            Wrong[clientId] = ++wrong;
-            int left = WrongTriesBeforeKick - wrong;
-            kick = left <= 0;
-            message = kick ? "Wrong GM password. Too many tries: you are sent away from the server."
-                           : $"Wrong GM password. {left} tr{(left == 1 ? "y" : "ies")} left.";
-            return false;
-        }
-
-        /// <summary>The name of the entry whose password this is, or null. Every entry is compared, in full.</summary>
-        public static string Match(IReadOnlyList<GmEntry> entries, string password)
-        {
-            if (string.IsNullOrEmpty(password) || entries == null) return null;
-            string found = null;
-            foreach (GmEntry entry in entries)
-                if (entry != null && SecretEquals(entry.password, password) && found == null) found = entry.name;
-            return found;
+            name = null;
+            if (!ServerAccounts.TryGet(clientId, out ServerAccounts.Entry proven)) return false;
+            GmEntry entry = FindByAccount(proven.Account);
+            if (entry == null) return false;
+            name = entry.name;
+            if (NameOf(clientId) == entry.name) return true;
+            Sign(clientId, entry.name);
+            Granted?.Invoke(clientId, entry.name);
+            return true;
         }
 
         /// <summary>Forgets a connection that left.</summary>
-        public static void Forget(ulong clientId)
-        {
-            Active.Remove(clientId);
-            Wrong.Remove(clientId);
-        }
+        public static void Forget(ulong clientId) => Active.Remove(clientId);
 
         private static void Sign(ulong clientId, string name)
         {
@@ -156,18 +155,14 @@ namespace KryticalNova.Networking
             Active[clientId] = name;
         }
 
-        /// <summary>Why a GM could not be added (name, password, a full list), or null when it can.</summary>
-        public static string ValidateNew(IReadOnlyList<GmEntry> entries, string name, string password)
+        /// <summary>Why a GM could not be added (name, a full list), or null when it can.</summary>
+        public static string ValidateNew(IReadOnlyList<GmEntry> entries, string name)
         {
             string nameProblem = ValidateName(name);
             if (nameProblem != null) return nameProblem;
             if (entries.Count >= MaxGameMasters) return $"There are already {MaxGameMasters} GMs: remove one first.";
             foreach (GmEntry entry in entries)
-            {
                 if (string.Equals(entry.name, name.Trim(), StringComparison.OrdinalIgnoreCase)) return $"There is already a GM called {entry.name}.";
-                if (SecretEquals(entry.password, password)) return "Another GM has that password: each GM needs their own.";
-            }
-            if (string.IsNullOrEmpty(password) || password.Length < MinPasswordLength) return $"A GM password needs at least {MinPasswordLength} characters.";
             return null;
         }
 
@@ -180,15 +175,6 @@ namespace KryticalNova.Networking
             foreach (char c in trimmed)
                 if (!(char.IsLetterOrDigit(c) || c == ' ' || c == '-' || c == '_')) return "A GM name may hold letters, digits, spaces, - and _.";
             return null;
-        }
-
-        private static bool SecretEquals(string a, string b)
-        {
-            if (a == null || b == null) return false;
-            int diff = a.Length ^ b.Length;
-            for (int i = 0; i < Math.Max(a.Length, b.Length); i++)
-                diff |= (i < a.Length ? a[i] : 0) ^ (i < b.Length ? b[i] : 0);
-            return diff == 0;
         }
     }
 }

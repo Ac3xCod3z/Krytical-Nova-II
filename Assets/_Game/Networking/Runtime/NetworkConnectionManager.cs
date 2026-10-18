@@ -69,6 +69,8 @@ namespace KryticalNova.Networking
             StartDedicatedServer();
 #else
             bool testing = Application.isEditor && (EditorCloneProfile() != null || EditorTestSession.JoinOnly);
+            // Playing on this PC alone keeps the made-up account; joining a server sets the proven one (JoinChosenServer).
+            KryticalNova.CharacterCreation.CharacterSession.VerifiedAccountId = null;
             if (JoinFlow.Target != null && !testing)
                 StartCoroutine(JoinChosenServer(JoinFlow.Target));
             else if (autoStartInEditor && Application.isEditor && !Application.isBatchMode)
@@ -93,7 +95,15 @@ namespace KryticalNova.Networking
             if (nm != null) nm.OnClientDisconnectCallback += onEnded;
             bool started;
             string relayProblem = null;
-            if (server.ViaRelay)
+            // Online phase 2: a server only lets in a player Unity has signed in; the game does it by itself, no screen.
+            Task<bool> signIn = EnsureServicesInitializedAsync();
+            while (!signIn.IsCompleted) yield return null;
+            if (signIn.IsFaulted || !signIn.Result)
+                relayProblem = "Could not sign in to Unity, which the server needs to know who you are. Check your internet connection and try again.";
+            else // the server keeps this player's saves under the same id: the game's own copy follows it
+                KryticalNova.CharacterCreation.CharacterSession.VerifiedAccountId = AccountIds.FromUnityPlayer(AuthenticationService.Instance.PlayerId);
+            if (relayProblem != null) started = false;
+            else if (server.ViaRelay)
             {
                 // Through Unity Relay with the server's join code (online step 5): no address, no router.
                 Task<string> joining = PrepareRelayJoin(server);
@@ -217,6 +227,16 @@ namespace KryticalNova.Networking
 
             // A clone joins; so does the main Editor while a test session says a dedicated server is up.
             bool isClone = EditorCloneProfile() != null || EditorTestSession.JoinOnly;
+            if (EditorTestSession.JoinOnly)
+            {
+                // A dedicated test server lets in only players Unity has signed in (online phase 2). A clone joining the
+                // Editor's own game is taken as before, under its made-up account, so its test characters stay.
+                Task<bool> signIn = EnsureServicesInitializedAsync();
+                float giveUp = Time.realtimeSinceStartup + 15f;
+                while (!signIn.IsCompleted && Time.realtimeSinceStartup < giveUp) yield return null;
+                if (signIn.IsCompleted && !signIn.IsFaulted && signIn.Result)
+                    KryticalNova.CharacterCreation.CharacterSession.VerifiedAccountId = AccountIds.FromUnityPlayer(AuthenticationService.Instance.PlayerId);
+            }
             var retry = new WaitForSecondsRealtime(AutoJoinRetrySeconds);
             while (true)
             {
@@ -486,10 +506,18 @@ namespace KryticalNova.Networking
             NetworkManager nm = NetworkManager.Singleton;
             if (nm == null) return;
             nm.NetworkConfig.ConnectionApproval = true;
-            nm.NetworkConfig.ConnectionData = JoinRules.Payload(GameBuild.Version, Application.isEditor);
+            // The sign-in token (when signed in) proves who this player is; the old made-up account id lets the server carry
+            // that account's characters over to the proven one, once.
+            string token = UnityServices.State == ServicesInitializationState.Initialized && AuthenticationService.Instance.IsSignedIn
+                ? AuthenticationService.Instance.AccessToken : string.Empty;
+            nm.NetworkConfig.ConnectionData = JoinRules.Payload(GameBuild.Version, Application.isEditor, token,
+                KryticalNova.CharacterCreation.CharacterSession.MadeUpAccountId);
             nm.ConnectionApprovalCallback = Approve;
             if (maxPlayersNow <= 0) maxPlayersNow = defaultMaxPlayers;
         }
+
+        /// <summary>Players a server refuses when Unity's proof of who they are is missing or wrong.</summary>
+        private const string NoProof = "Your game could not prove who you are (Unity sign-in). Check your internet connection and join again.";
 
         private void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
         {
@@ -502,10 +530,78 @@ namespace KryticalNova.Networking
             }
             int online = nm != null ? nm.ConnectedClientsIds.Count : 0;
             string refusal = JoinRules.Refusal(GameBuild.Version, Application.isEditor, request.Payload, online, maxPlayersNow);
-            response.Approved = refusal == null;
-            if (refusal == null) return;
-            response.Reason = refusal;
-            Debug.Log($"[Server] Player turned away (connection {request.ClientNetworkId}): {refusal}");
+            if (refusal != null)
+            {
+                Refuse(request.ClientNetworkId, response, refusal);
+                return;
+            }
+            JoinRules.TryRead(request.Payload, out _, out _, out string token, out string oldAccount);
+            if (Prove(request.ClientNetworkId, token, oldAccount, out string why))
+            {
+                response.Approved = true;
+                return;
+            }
+            if (!RequireProof) // the Editor hosting a test: a game that cannot prove itself plays as before
+            {
+                response.Approved = true;
+                return;
+            }
+            if (why != null)
+            {
+                Debug.Log($"[Server] Player turned away (connection {request.ClientNetworkId}): no proof of who they are ({why}).");
+                Refuse(request.ClientNetworkId, response, NoProof);
+                return;
+            }
+            // Unity's keys are not here yet (the server just started, or Unity signed with a new key): wait for them.
+            response.Pending = true;
+            ulong client = request.ClientNetworkId;
+            UnityKeys.EnsureAsync(UnityKeys.KeyIdOf(token)).ContinueWith(_ =>
+            {
+                if (Prove(client, token, oldAccount, out string late)) response.Approved = true;
+                else
+                {
+                    Debug.Log($"[Server] Player turned away (connection {client}): no proof of who they are ({late ?? "Unity's keys could not be fetched"}).");
+                    response.Approved = false;
+                    response.Reason = NoProof;
+                }
+                response.Pending = false;
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        /// <summary>A dedicated server lets in only proven players; the Editor hosting a test takes anyone, as before.</summary>
+        public static bool RequireProof
+        {
+            get
+            {
+#if UNITY_SERVER
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
+        private static void Refuse(ulong client, NetworkManager.ConnectionApprovalResponse response, string reason)
+        {
+            response.Approved = false;
+            response.Reason = reason;
+            Debug.Log($"[Server] Player turned away (connection {client}): {reason}");
+        }
+
+        /// <summary>
+        /// True when <paramref name="token"/> proves a Unity player of this game: the connection is remembered under that
+        /// player's account. False with <paramref name="why"/> when it does not; false with no reason while Unity's keys
+        /// are still being fetched.
+        /// </summary>
+        private static bool Prove(ulong client, string token, string oldAccount, out string why)
+        {
+            why = null;
+            string kid = UnityKeys.KeyIdOf(token);
+            if (string.IsNullOrEmpty(token)) { why = "no sign-in token"; return false; }
+            if (!UnityKeys.Ready || (kid != null && !UnityKeys.Current.ContainsKey(kid))) return false;
+            if (!UnityToken.Verify(token, UnityKeys.Current, Application.cloudProjectId, DateTime.UtcNow, out string playerId, out why)) return false;
+            ServerAccounts.Remember(client, AccountIds.FromUnityPlayer(playerId), oldAccount);
+            return true;
         }
 
         // True when another program on this PC already listens on the UDP port.
@@ -556,7 +652,14 @@ namespace KryticalNova.Networking
             maxPlayersNow = options.maxPlayers;
             PrepareConnections();
             nm.OnClientConnectedCallback += id => Debug.Log($"[Server] Player joined (connection {id}). Online: {nm.ConnectedClientsIds.Count}.");
-            nm.OnClientDisconnectCallback += id => Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
+            nm.OnClientDisconnectCallback += id =>
+            {
+                ServerAccounts.Forget(id);
+                Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
+            };
+            // Unity's sign-in keys, fetched now so the first player is not kept waiting (online phase 2).
+            UnityKeys.EnsureAsync();
+            KryticalNova.Persistence.ServerSave.CarryOverEnabled = options.carryOverOldSaves;
             ServerReach.Begin(options);
             if (options.UsesRelay)
             {
