@@ -1,0 +1,1127 @@
+# Removed 2026-10-18: PolygonVikings
+
+Vendor files nothing uses: not the build scenes, not any scene, zone or asset in `Assets/_Game`, not Resources, settings or plugins. Three checks agreed (Maintainer, Unity's dependencies, written references) and none is loaded by path or name.
+
+1,053 files, 26.6 MB. Last commit that still has them: `ff91e25aa8c2`.
+
+To bring one back: Unity ▸ **Krytical Nova ▸ Project ▸ Restore Assets**, *Removed* tab, search its name, **Restore** (it comes back with the materials, textures and meshes it needs, under its old path and GUID). Without the tool: `git checkout ff91e25aa8c2 -- "<path>" "<path>.meta"`.
+
+## PolygonVikings (1,053 files, 26.6 MB)
+
+Get it back from: POLYGON_Vikings.unitypackage
+
+**Assets/Synty/PolygonVikings/Materials/Alts/**
+
+- PolyVikings_01_Dark.mat · Material · 3 KB
+- PolyVikings_01_GrassSwap.mat · Material · 3 KB
+- PolyVikings_02.mat · Material · 3 KB
+- PolyVikings_02_Dark.mat · Material · 3 KB
+- PolyVikings_03.mat · Material · 3 KB
+- PolyVikings_03_Dark.mat · Material · 3 KB
+- PolyVikings_04.mat · Material · 3 KB
+- PolyVikings_04_Dark.mat · Material · 3 KB
+
+**Assets/Synty/PolygonVikings/Materials/FX/**
+
+- FX_Fire_01.mat · Material · 1 KB
+
+**Assets/Synty/PolygonVikings/Materials/Misc/**
+
+- Character_01_Black.mat · Material · 3 KB
+- Character_01_Brown.mat · Material · 3 KB
+- Character_01_White.mat · Material · 3 KB
+- Snow_01.mat · Material · 3 KB
+- Water_01.mat · Material · 3 KB
+
+**Assets/Synty/PolygonVikings/Models/**
+
+- Characters.fbx · Model · 1.7 MB
+- SM_Bld_Base_01.fbx · Model · 103 KB
+- SM_Bld_Base_02.fbx · Model · 41 KB
+- SM_Bld_Base_Door_01.fbx · Model · 132 KB
+- SM_Bld_Base_Door_02.fbx · Model · 50 KB
+- SM_Bld_Base_Long_01.fbx · Model · 103 KB
+- SM_Bld_Base_Long_02.fbx · Model · 48 KB
+- SM_Bld_Base_Long_Door_02.fbx · Model · 58 KB
+- SM_Bld_BoatHouse_01.fbx · Model · 255 KB
+- SM_Bld_BoatHouse_02.fbx · Model · 242 KB
+- SM_Bld_Door_01.fbx · Model · 32 KB
+- SM_Bld_Roof_01.fbx · Model · 58 KB
+- SM_Bld_Roof_Window_01.fbx · Model · 79 KB
+- SM_Bld_Tower_01.fbx · Model · 71 KB
+- SM_Bld_Tower_Stone_Base_01.fbx · Model · 45 KB
+- SM_Bld_Window_01.fbx · Model · 28 KB
+- SM_Env_DirtMound_01.fbx · Model · 24 KB
+- SM_Env_DirtMound_02.fbx · Model · 24 KB
+- SM_Env_DirtMound_03.fbx · Model · 27 KB
+- SM_Env_DirtMound_04.fbx · Model · 32 KB
+- SM_Env_Dirt_Mound_01.fbx · Model · 38 KB
+- SM_Env_Dirt_Mound_02.fbx · Model · 38 KB
+- SM_Env_Dirt_Mound_03.fbx · Model · 38 KB
+- SM_Env_Dirt_Mound_04.fbx · Model · 29 KB
+- SM_Env_Dirt_Tile_Large_01.fbx · Model · 51 KB
+- SM_Env_Dirt_Tile_Large_02.fbx · Model · 49 KB
+- SM_Env_GrassPatch_01.fbx · Model · 25 KB
+- SM_Env_GrassPatch_02.fbx · Model · 25 KB
+- SM_Env_GrassPatch_03.fbx · Model · 23 KB
+- SM_Env_GrassPatch_04.fbx · Model · 23 KB
+- SM_Env_House_Rocks_Large_01.fbx · Model · 54 KB
+- SM_Env_House_Rocks_Small_01.fbx · Model · 46 KB
+- SM_Env_Iceberg_01.fbx · Model · 31 KB
+- SM_Env_Iceberg_02.fbx · Model · 31 KB
+- SM_Env_IceChunk_01.fbx · Model · 23 KB
+- SM_Env_IceChunk_02.fbx · Model · 23 KB
+- SM_Env_IceChunk_03.fbx · Model · 23 KB
+- SM_Env_IceChunk_04.fbx · Model · 23 KB
+- SM_Env_IceChunk_05.fbx · Model · 25 KB
+- SM_Env_IceChunk_06.fbx · Model · 26 KB
+- SM_Env_Mountains_01.fbx · Model · 248 KB
+- SM_Env_Mountains_02.fbx · Model · 247 KB
+- SM_Env_Mountains_03.fbx · Model · 71 KB
+- SM_Env_Path_Wood_01.fbx · Model · 34 KB
+- SM_Env_Path_Wood_02.fbx · Model · 30 KB
+- SM_Env_Path_Wood_Plank_01.fbx · Model · 24 KB
+- SM_Env_Path_Wood_Plank_02.fbx · Model · 23 KB
+- SM_Env_Path_Wood_Plank_03.fbx · Model · 23 KB
+- SM_Env_Path_Wood_Side_01.fbx · Model · 38 KB
+- SM_Env_Rock_02.fbx · Model · 25 KB
+- SM_Env_Rock_03.fbx · Model · 24 KB
+- SM_Env_Rock_04.fbx · Model · 25 KB
+- SM_Env_Rock_05.fbx · Model · 25 KB
+- SM_Env_Rock_06.fbx · Model · 24 KB
+- SM_Env_Rock_07.fbx · Model · 25 KB
+- SM_Env_Stone_01.fbx · Model · 22 KB
+- SM_Env_Stone_02.fbx · Model · 24 KB
+- SM_Env_Stone_Statue_01.fbx · Model · 105 KB
+- SM_Env_Trench_01.fbx · Model · 33 KB
+- SM_Env_Trench_02.fbx · Model · 33 KB
+- SM_Env_Trench_Bridge_01.fbx · Model · 51 KB
+- SM_Env_Trench_Spikes_01.fbx · Model · 34 KB
+- SM_Prop_Alter_01.fbx · Model · 50 KB
+- SM_Prop_Anvil_Stump_01.fbx · Model · 24 KB
+- SM_Prop_Archway_01.fbx · Model · 30 KB
+- SM_Prop_Barrel_Half_01.fbx · Model · 33 KB
+- SM_Prop_Barrel_Half_02.fbx · Model · 61 KB
+- SM_Prop_Beer_Mug_01.fbx · Model · 29 KB
+- SM_Prop_Beer_Mug_02.fbx · Model · 31 KB
+- SM_Prop_BoatRamp_01.fbx · Model · 37 KB
+- SM_Prop_Boat_Broken_01.fbx · Model · 73 KB
+- SM_Prop_Boat_Broken_02.fbx · Model · 80 KB
+- SM_Prop_Boat_Build_01.fbx · Model · 90 KB
+- SM_Prop_Clay_Pot_01.fbx · Model · 31 KB
+- SM_Prop_Clay_Pot_02.fbx · Model · 31 KB
+- SM_Prop_Cow_Skull_01.fbx · Model · 30 KB
+- SM_Prop_Crate_Base_01.fbx · Model · 27 KB
+- SM_Prop_Crate_Lid_01.fbx · Model · 23 KB
+- SM_Prop_Crate_Open_01.fbx · Model · 29 KB
+- SM_Prop_Cross_01.fbx · Model · 26 KB
+- SM_Prop_Cross_02.fbx · Model · 26 KB
+- SM_Prop_Dock_01.fbx · Model · 83 KB
+- SM_Prop_Dock_02.fbx · Model · 65 KB
+- SM_Prop_Dock_03.fbx · Model · 36 KB
+- SM_Prop_Dock_Pole_01.fbx · Model · 24 KB
+- SM_Prop_Dock_Pole_02.fbx · Model · 28 KB
+- SM_Prop_Fence_Platform_01.fbx · Model · 68 KB
+- SM_Prop_Fence_Stick_01.fbx · Model · 32 KB
+- SM_Prop_Fence_Wood_01.fbx · Model · 38 KB
+- SM_Prop_Fence_Wood_02.fbx · Model · 31 KB
+- SM_Prop_Fence_Wood_03.fbx · Model · 35 KB
+- SM_Prop_Fence_Wood_Large_01.fbx · Model · 63 KB
+- SM_Prop_Fence_Wood_Large_02.fbx · Model · 36 KB
+- SM_Prop_Fence_Wood_Pole_01.fbx · Model · 26 KB
+- SM_Prop_Fence_Wood_Pole_02.fbx · Model · 23 KB
+- SM_Prop_Fence_Wood_Pole_03.fbx · Model · 24 KB
+- SM_Prop_Fence_Wood_Pole_04.fbx · Model · 28 KB
+- SM_Prop_Fish_01.fbx · Model · 25 KB
+- SM_Prop_Fish_02.fbx · Model · 26 KB
+- SM_Prop_Fish_Dead_01.fbx · Model · 28 KB
+- SM_Prop_Fish_Dead_02.fbx · Model · 29 KB
+- SM_Prop_Fish_Dead_03.fbx · Model · 28 KB
+- SM_Prop_Fish_Hanging_01.fbx · Model · 28 KB
+- SM_Prop_Fish_Hanging_02.fbx · Model · 34 KB
+- SM_Prop_Fish_Pile_01.fbx · Model · 38 KB
+- SM_Prop_Flag_02.fbx · Model · 39 KB
+- SM_Prop_Fur_Roll_01.fbx · Model · 34 KB
+- SM_Prop_Fur_Roll_02.fbx · Model · 30 KB
+- SM_Prop_Fur_Roll_03.fbx · Model · 55 KB
+- SM_Prop_Goblet_01.fbx · Model · 28 KB
+- SM_Prop_GoldBar_01.fbx · Model · 22 KB
+- SM_Prop_Ladder_01.fbx · Model · 82 KB
+- SM_Prop_Ladder_02.fbx · Model · 52 KB
+- SM_Prop_Logs_01.fbx · Model · 60 KB
+- SM_Prop_Log_01.fbx · Model · 50 KB
+- SM_Prop_Net_01.fbx · Model · 122 KB
+- SM_Prop_Net_02.fbx · Model · 112 KB
+- SM_Prop_Oar_01.fbx · Model · 25 KB
+- SM_Prop_Pole_01.fbx · Model · 32 KB
+- SM_Prop_Pole_02.fbx · Model · 23 KB
+- SM_Prop_Pole_03.fbx · Model · 30 KB
+- SM_Prop_Rack_01.fbx · Model · 39 KB
+- SM_Prop_Rock_Circle_01.fbx · Model · 33 KB
+- SM_Prop_Rock_Totem_01.fbx · Model · 25 KB
+- SM_Prop_Rope_01.fbx · Model · 29 KB
+- SM_Prop_Rope_02.fbx · Model · 25 KB
+- SM_Prop_Seat_01.fbx · Model · 27 KB
+- SM_Prop_Shield_Decor_02.fbx · Model · 32 KB
+- SM_Prop_Shield_Decor_03.fbx · Model · 30 KB
+- SM_Prop_Shield_Decor_05.fbx · Model · 31 KB
+- SM_Prop_Shield_Decor_06.fbx · Model · 31 KB
+- SM_Prop_Shield_Decor_07.fbx · Model · 31 KB
+- SM_Prop_Shield_Decor_08.fbx · Model · 31 KB
+- SM_Prop_Skull_01.fbx · Model · 26 KB
+- SM_Prop_Skull_02.fbx · Model · 28 KB
+- SM_Prop_Skull_Pole_01.fbx · Model · 28 KB
+- SM_Prop_Spikes_01.fbx · Model · 63 KB
+- SM_Prop_TorchStick_01.fbx · Model · 27 KB
+- SM_Prop_Village_Entrance_01.fbx · Model · 39 KB
+- SM_Prop_Wagon_01.fbx · Model · 66 KB
+- SM_Prop_Wheel_Barrow_01.fbx · Model · 51 KB
+- SM_Prop_Wood_Sharp_01.fbx · Model · 26 KB
+- SM_Prop_Wood_Sharp_02.fbx · Model · 24 KB
+- SM_Prop_Wood_Spike_01.fbx · Model · 24 KB
+- SM_Prop_Wood_Spike_02.fbx · Model · 23 KB
+- SM_Prop_Wood_Spike_03.fbx · Model · 23 KB
+- SM_Prop_Wood_Spike_04.fbx · Model · 24 KB
+- SM_Veh_Boat_01.fbx · Model · 584 KB
+- SM_Veh_FishingBoat_01.fbx · Model · 82 KB
+- SM_Veh_FuneralBoat_01.fbx · Model · 324 KB
+- SM_Wep_Ball_Hammer_01.fbx · Model · 23 KB
+- SM_Wep_Club_01.fbx · Model · 24 KB
+- SM_Wep_FishingSpear_01.fbx · Model · 36 KB
+- SM_Wep_HammerLarge_01.fbx · Model · 40 KB
+- SM_Wep_Hammer_01.fbx · Model · 38 KB
+- SM_Wep_Hammer_02.fbx · Model · 29 KB
+- SM_Wep_Horn_01.fbx · Model · 28 KB
+- SM_Wep_Horn_02.fbx · Model · 30 KB
+- SM_Wep_Pickaxe_01.fbx · Model · 32 KB
+- SM_Wep_Shield_01.fbx · Model · 58 KB
+- SM_Wep_Shield_02.fbx · Model · 56 KB
+- SM_Wep_Shield_03.fbx · Model · 54 KB
+- SM_Wep_Shield_04.fbx · Model · 57 KB
+- SM_Wep_Shield_05.fbx · Model · 56 KB
+- SM_Wep_Shield_06.fbx · Model · 55 KB
+- SM_Wep_Shield_07.fbx · Model · 55 KB
+- SM_Wep_Shield_08.fbx · Model · 54 KB
+- SM_Wep_Spade_01.fbx · Model · 29 KB
+- SM_Wep_Spear_02.fbx · Model · 31 KB
+- SM_Wep_Spear_03.fbx · Model · 33 KB
+- SM_Wep_Tongs_01.fbx · Model · 27 KB
+
+**Assets/Synty/PolygonVikings/Models/Collision/**
+
+- SM_Bld_BoatHouse_01_Collision.fbx · Model · 16 KB
+- SM_Bld_BoatHouse_02_Collision.fbx · Model · 17 KB
+- SM_Bld_Stall_Cover_02_Collision.fbx · Model · 16 KB
+- SM_Prop_Dock_01_Collision.fbx · Model · 15 KB
+- SM_Prop_Dock_02_Collision.fbx · Model · 15 KB
+- SM_Prop_Fence_Platform_01_Collision.fbx · Model · 15 KB
+- SM_Prop_Village_Entrance_02_Collision.fbx · Model · 15 KB
+- SM_Veh_Boat_01_Collision.fbx · Model · 18 KB
+- SM_Veh_Boat_02_Collision.fbx · Model · 18 KB
+- SM_Veh_FishingBoat_02_Collision.fbx · Model · 17 KB
+- SM_Veh_FuneralBoat_02_Collision.fbx · Model · 18 KB
+
+**Assets/Synty/PolygonVikings/Models/Collision/Convex/**
+
+- SM_Bld_Base_01_Convex 1.asset · Asset · 7 KB
+- SM_Bld_Base_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Base_01_Snow_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Base_01_Snow_Convex 2.asset · Asset · 4 KB
+- SM_Bld_Base_01_Snow_Convex 3.asset · Asset · 4 KB
+- SM_Bld_Base_01_Snow_Convex 4.asset · Asset · 4 KB
+- SM_Bld_Base_01_Snow_Convex 5.asset · Asset · 4 KB
+- SM_Bld_Base_01_Snow_Convex 6.asset · Asset · 3 KB
+- SM_Bld_Base_01_Snow_Convex 7.asset · Asset · 4 KB
+- SM_Bld_Base_01_Snow_Convex 8.asset · Asset · 4 KB
+- SM_Bld_Base_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Base_Door_01_Convex 1.asset · Asset · 7 KB
+- SM_Bld_Base_Door_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Base_Long_01_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Base_Long_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Base_Long_01_Snow_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Base_Long_01_Snow_Convex 2.asset · Asset · 4 KB
+- SM_Bld_Base_Long_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Base_Long_Door_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Base_Long_Door_01_Snow_Convex 1.asset · Asset · 4 KB
+- SM_Bld_Base_Long_Door_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_BoatHouse_01_Snow_Convex 1.asset · Asset · 37 KB
+- SM_Bld_BoatHouse_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Guard_Tower_01_Convex 1.asset · Asset · 11 KB
+- SM_Bld_Guard_Tower_01_Convex 2.asset · Asset · 15 KB
+- SM_Bld_Guard_Tower_01_Convex 3.asset · Asset · 22 KB
+- SM_Bld_Guard_Tower_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Roof_01_Convex 1.asset · Asset · 11 KB
+- SM_Bld_Roof_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Roof_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Bld_Roof_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Roof_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Roof_02_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Bld_Roof_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Roof_Long_01_Convex 1.asset · Asset · 7 KB
+- SM_Bld_Roof_Long_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Roof_Long_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Bld_Roof_Long_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Roof_Window_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Roof_Window_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Bld_Roof_Window_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Stall_Cover_01_Convex 1.asset · Asset · 15 KB
+- SM_Bld_Stall_Cover_01_Convex 2.asset · Asset · 18 KB
+- SM_Bld_Stall_Cover_01_Convex 3.asset · Asset · 22 KB
+- SM_Bld_Stall_Cover_01_Convex 4.asset · Asset · 30 KB
+- SM_Bld_Stall_Cover_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Tower_01_Convex 1.asset · Asset · 7 KB
+- SM_Bld_Tower_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Tower_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Bld_Tower_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Tower_Stone_Base_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Tower_Stone_Base_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Wharf_01_Convex 1.asset · Asset · 7 KB
+- SM_Bld_Wharf_01_Convex 2.asset · Asset · 7 KB
+- SM_Bld_Wharf_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Bld_Wharf_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Bld_Window_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Dirt_Mound_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Dirt_Mound_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Dirt_Mound_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Dirt_Mound_04_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Flax_01_Convex 1.asset · Asset · 18 KB
+- SM_Env_Flax_01_Convex.asset · Asset · 3 KB
+- SM_Env_Flax_02_Convex 1.asset · Asset · 18 KB
+- SM_Env_Flax_02_Convex.asset · Asset · 3 KB
+- SM_Env_Flax_03_Convex 1.asset · Asset · 19 KB
+- SM_Env_Flax_03_Convex.asset · Asset · 3 KB
+- SM_Env_GrassPatch_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_GrassPatch_04_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Grass_01_Convex.asset · Asset · 3 KB
+- SM_Env_Grass_02_Convex.asset · Asset · 3 KB
+- SM_Env_Grass_03_Convex.asset · Asset · 3 KB
+- SM_Env_Grass_Large_01_Convex.asset · Asset · 3 KB
+- SM_Env_Grass_Large_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Env_Grass_Large_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Grass_Large_02_Convex.asset · Asset · 3 KB
+- SM_Env_Grass_Large_02_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Env_Grass_Large_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_House_Rocks_Large_01_Convex 1.asset · Asset · 18 KB
+- SM_Env_House_Rocks_Large_01_Convex 2.asset · Asset · 22 KB
+- SM_Env_House_Rocks_Large_01_Convex 3.asset · Asset · 26 KB
+- SM_Env_House_Rocks_Large_01_Convex.asset · Asset · 3 KB
+- SM_Env_House_Rocks_Large_01_Snow_Convex 1.asset · Asset · 19 KB
+- SM_Env_House_Rocks_Large_01_Snow_Convex 2.asset · Asset · 30 KB
+- SM_Env_House_Rocks_Large_01_Snow_Convex 3.asset · Asset · 30 KB
+- SM_Env_House_Rocks_Large_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_House_Rocks_Small_01_Convex 1.asset · Asset · 19 KB
+- SM_Env_House_Rocks_Small_01_Convex.asset · Asset · 3 KB
+- SM_Env_House_Rocks_Small_01_Snow_Convex 1.asset · Asset · 19 KB
+- SM_Env_House_Rocks_Small_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_IceChunk_01_Convex 1.asset · Asset · 3 KB
+- SM_Env_IceChunk_01_Convex 2.asset · Asset · 3 KB
+- SM_Env_IceChunk_01_Convex.asset · Asset · 3 KB
+- SM_Env_IceChunk_02_Convex.asset · Asset · 3 KB
+- SM_Env_IceChunk_03_Convex.asset · Asset · 3 KB
+- SM_Env_IceChunk_04_Convex.asset · Asset · 3 KB
+- SM_Env_IceChunk_05_Convex.asset · Asset · 3 KB
+- SM_Env_IceChunk_06_Convex.asset · Asset · 3 KB
+- SM_Env_Path_Rocks_Side_01_Convex 1.asset · Asset · 19 KB
+- SM_Env_Path_Rocks_Side_01_Convex 2.asset · Asset · 7 KB
+- SM_Env_Path_Rocks_Side_01_Convex.asset · Asset · 3 KB
+- SM_Env_Path_Wood_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Path_Wood_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Path_Wood_Plank_01_Convex 1.asset · Asset · 3 KB
+- SM_Env_Path_Wood_Plank_01_Convex.asset · Asset · 3 KB
+- SM_Env_Path_Wood_Plank_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Path_Wood_Plank_02_Convex 1.asset · Asset · 3 KB
+- SM_Env_Path_Wood_Plank_02_Convex.asset · Asset · 3 KB
+- SM_Env_Path_Wood_Plank_03_Convex 1.asset · Asset · 3 KB
+- SM_Env_Path_Wood_Plank_03_Convex.asset · Asset · 3 KB
+- SM_Env_Path_Wood_Side_01_Convex.asset · Asset · 3 KB
+- SM_Env_Path_Wood_Side_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Env_Path_Wood_Side_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Reeds_01_Convex.asset · Asset · 3 KB
+- SM_Env_Reeds_02_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_02_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_03_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_04_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_04_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_05_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_05_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_06_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_06_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_07_Convex.asset · Asset · 3 KB
+- SM_Env_Rock_07_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Stone_01_Convex.asset · Asset · 3 KB
+- SM_Env_Stone_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Stone_02_Convex 1.asset · Asset · 11 KB
+- SM_Env_Stone_02_Convex.asset · Asset · 3 KB
+- SM_Env_Stone_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Stone_Statue_01_Convex 1.asset · Asset · 4 KB
+- SM_Env_Stone_Statue_01_Convex 2.asset · Asset · 3 KB
+- SM_Env_Stone_Statue_01_Convex 3.asset · Asset · 3 KB
+- SM_Env_Stone_Statue_01_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_01_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_02_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_03_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_04_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_04_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_Large_01_Convex 1.asset · Asset · 7 KB
+- SM_Env_Tree_Pine_Large_01_Convex 2.asset · Asset · 7 KB
+- SM_Env_Tree_Pine_Large_01_Convex 3.asset · Asset · 11 KB
+- SM_Env_Tree_Pine_Large_01_Convex 4.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_Large_01_Convex 5.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_Large_01_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_Large_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Env_Tree_Pine_Large_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_Large_02_Convex 1.asset · Asset · 7 KB
+- SM_Env_Tree_Pine_Large_02_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_Large_02_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Env_Tree_Pine_Large_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_Large_03_Convex.asset · Asset · 3 KB
+- SM_Env_Tree_Pine_Large_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Trench_Bridge_01_Convex 1.asset · Asset · 11 KB
+- SM_Env_Trench_Bridge_01_Convex.asset · Asset · 3 KB
+- SM_Env_Trench_Bridge_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Env_Trench_Bridge_01_Snow_Convex 2.asset · Asset · 15 KB
+- SM_Env_Trench_Bridge_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Env_Trench_Spikes_01_Convex 1.asset · Asset · 15 KB
+- SM_Env_Trench_Spikes_01_Convex 2.asset · Asset · 30 KB
+- SM_Env_Trench_Spikes_01_Convex.asset · Asset · 3 KB
+- SM_Env_Trench_Spikes_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Env_Trench_Spikes_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Alter_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Anvil_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Anvil_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Anvil_Stump_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Anvil_Stump_01_Snow_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Anvil_Stump_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Archway_01_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Archway_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Archway_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Archway_01_Snow_Convex 2.asset · Asset · 15 KB
+- SM_Prop_Archway_01_Snow_Convex 3.asset · Asset · 15 KB
+- SM_Prop_Archway_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Barrel_Half_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Barrel_Half_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Barrel_Half_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Barrel_Half_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Beer_Mug_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Beer_Mug_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Bench_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_BoatRamp_01_Convex.asset · Asset · 3 KB
+- SM_Prop_BoatRamp_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_BoatRamp_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Boat_Broken_01_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Boat_Broken_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Boat_Broken_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Boat_Broken_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Boat_Broken_02_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Boat_Broken_02_Convex 2.asset · Asset · 15 KB
+- SM_Prop_Boat_Broken_02_Convex 3.asset · Asset · 7 KB
+- SM_Prop_Boat_Broken_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Boat_Build_01_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Boat_Build_01_Convex 2.asset · Asset · 15 KB
+- SM_Prop_Boat_Build_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Boat_Build_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Boat_Build_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Clay_Pot_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Clay_Pot_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Clay_Pot_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Clay_Pot_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Clay_Pot_02_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Clay_Pot_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Cow_Skull_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Cow_Skull_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Cow_Skull_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Crate_Base_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Crate_Base_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Crate_Base_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Crate_Lid_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Crate_Open_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Crate_Open_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Crate_Open_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Crate_Open_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Cross_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Cross_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Cross_02_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Cross_02_Convex 2.asset · Asset · 11 KB
+- SM_Prop_Cross_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Dock_01_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Dock_01_Convex 2.asset · Asset · 15 KB
+- SM_Prop_Dock_01_Convex 3.asset · Asset · 18 KB
+- SM_Prop_Dock_01_Convex 4.asset · Asset · 22 KB
+- SM_Prop_Dock_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Dock_02_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Dock_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Dock_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Dock_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Dock_Pole_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Dock_Pole_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Dock_Pole_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Dock_Pole_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Platform_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Platform_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Stick_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Stick_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Large_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Large_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Large_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Large_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Pole_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Pole_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Pole_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Pole_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Pole_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Pole_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Pole_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Fence_Wood_Pole_04_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_Dead_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_Dead_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_Dead_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_Hanging_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_Hanging_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_Pile_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_Rack_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_Rack_02_Convex 1.asset · Asset · 15 KB
+- SM_Prop_Fish_Rack_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Fish_Rack_02_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Fish_Rack_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Flag_01_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Flag_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Flag_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Flag_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Flag_02_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Flag_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Flag_02_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Flag_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Fur_Roll_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Fur_Roll_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Fur_Roll_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Goblet_01_Convex.asset · Asset · 3 KB
+- SM_Prop_GoldBar_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Ladder_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Ladder_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Ladder_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Ladder_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Ladder_02_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Ladder_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Logs_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Logs_01_Snow_Convex 1.asset · Asset · 4 KB
+- SM_Prop_Logs_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Log_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Log_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Log_01_Snow_Convex 2.asset · Asset · 11 KB
+- SM_Prop_Log_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Net_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Net_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Net_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Net_02_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Net_02_Convex 2.asset · Asset · 11 KB
+- SM_Prop_Net_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Net_02_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Net_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Oar_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Pole_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Pole_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Pole_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Pole_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Pole_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Pole_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Pole_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Rack_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Rack_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Rack_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Rock_Circle_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Rock_Circle_01_Snow_Convex 1.asset · Asset · 15 KB
+- SM_Prop_Rock_Circle_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Rock_Totem_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Rock_Totem_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Rock_Totem_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Rock_Totem_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Rope_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Rope_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Rope_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Rope_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Rope_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Rope_02_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Rope_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Seat_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Seat_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Seat_01_Snow_Convex 2.asset · Asset · 11 KB
+- SM_Prop_Seat_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Shield_Decor_01_Snow_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Shield_Decor_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Shield_Decor_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Shield_Decor_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Shield_Decor_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Shield_Decor_06_Convex.asset · Asset · 3 KB
+- SM_Prop_Shield_Decor_07_Convex.asset · Asset · 3 KB
+- SM_Prop_Shield_Decor_08_Convex.asset · Asset · 3 KB
+- SM_Prop_Skull_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Skull_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Skull_Pole_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Skull_Pole_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Skull_Pole_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Skull_Pole_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Spikes_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Spikes_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Spikes_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Spikes_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Table_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Table_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Table_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Table_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_TorchStick_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Village_Entrance_01_Convex 1.asset · Asset · 11 KB
+- SM_Prop_Village_Entrance_01_Convex 2.asset · Asset · 7 KB
+- SM_Prop_Village_Entrance_01_Convex 3.asset · Asset · 15 KB
+- SM_Prop_Village_Entrance_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Wagon_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Wagon_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Wagon_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Wagon_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Wheel_Barrow_01_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Wheel_Barrow_01_Convex 2.asset · Asset · 11 KB
+- SM_Prop_Wheel_Barrow_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Wheel_Barrow_01_Snow_Convex 1.asset · Asset · 7 KB
+- SM_Prop_Wheel_Barrow_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Sharp_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Sharp_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Sharp_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Sharp_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Spike_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Spike_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Spike_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Spike_02_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Spike_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Spike_03_Snow_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Spike_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Wood_Spike_04_Snow_Convex.asset · Asset · 3 KB
+- SM_Stone_Statue_01_Snow_Convex 1.asset · Asset · 3 KB
+- SM_Stone_Statue_01_Snow_Convex 2.asset · Asset · 3 KB
+- SM_Stone_Statue_01_Snow_Convex 3.asset · Asset · 4 KB
+- SM_Stone_Statue_01_Snow_Convex 4.asset · Asset · 4 KB
+- SM_Stone_Statue_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Veh_Boat_01_Snow_Convex 1.asset · Asset · 15 KB
+- SM_Veh_Boat_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Veh_FishingBoat_01_Snow_Convex 1.asset · Asset · 11 KB
+- SM_Veh_FishingBoat_01_Snow_Convex.asset · Asset · 3 KB
+- SM_Wep_Axe_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Axe_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Ball_Hammer_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Club_01_Convex.asset · Asset · 3 KB
+- SM_Wep_FishingSpear_01_Convex.asset · Asset · 3 KB
+- SM_Wep_HammerLarge_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Hammer_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Hammer_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Horn_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Horn_02_Convex 1.asset · Asset · 7 KB
+- SM_Wep_Horn_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Pickaxe_01_Convex 1.asset · Asset · 7 KB
+- SM_Wep_Pickaxe_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_04_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_05_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_06_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_07_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_08_Convex.asset · Asset · 3 KB
+- SM_Wep_Spade_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Spear_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Spear_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Tongs_01_Convex.asset · Asset · 3 KB
+
+**Assets/Synty/PolygonVikings/Models/Snow/**
+
+- SM_Bld_Base_01_Snow.fbx · Model · 133 KB
+- SM_Bld_Base_02_Snow.fbx · Model · 48 KB
+- SM_Bld_Base_Door_01_Snow.fbx · Model · 171 KB
+- SM_Bld_Base_Door_02_Snow.fbx · Model · 60 KB
+- SM_Bld_Base_Long_01_Snow.fbx · Model · 135 KB
+- SM_Bld_Base_Long_02_Snow.fbx · Model · 58 KB
+- SM_Bld_Base_Long_Door_01_Snow.fbx · Model · 173 KB
+- SM_Bld_Base_Long_Door_02_Snow.fbx · Model · 69 KB
+- SM_Bld_BoatHouse_01_Snow.fbx · Model · 310 KB
+- SM_Bld_BoatHouse_02_Snow.fbx · Model · 295 KB
+- SM_Bld_Door_01_Snow.fbx · Model · 36 KB
+- SM_Bld_Roof_01_Snow.fbx · Model · 83 KB
+- SM_Bld_Roof_02_Snow.fbx · Model · 214 KB
+- SM_Bld_Roof_Long_01_Snow.fbx · Model · 89 KB
+- SM_Bld_Roof_Window_01_Snow.fbx · Model · 121 KB
+- SM_Bld_Tower_01_Snow.fbx · Model · 86 KB
+- SM_Bld_Tower_Stone_Base_01_Snow.fbx · Model · 59 KB
+- SM_Bld_Window_01_Snow.fbx · Model · 30 KB
+- SM_Env_DirtMound_01_Snow.fbx · Model · 24 KB
+- SM_Env_DirtMound_02_Snow.fbx · Model · 24 KB
+- SM_Env_DirtMound_03_Snow.fbx · Model · 27 KB
+- SM_Env_DirtMound_04_Snow.fbx · Model · 32 KB
+- SM_Env_Dirt_Mound_01_Snow.fbx · Model · 38 KB
+- SM_Env_Dirt_Mound_02_Snow.fbx · Model · 38 KB
+- SM_Env_Dirt_Mound_03_Snow.fbx · Model · 38 KB
+- SM_Env_Dirt_Mound_04_Snow.fbx · Model · 29 KB
+- SM_Env_Dirt_Tile_Large_02_Snow.fbx · Model · 48 KB
+- SM_Env_GrassPatch_01_Snow.fbx · Model · 25 KB
+- SM_Env_GrassPatch_02_Snow.fbx · Model · 25 KB
+- SM_Env_GrassPatch_03_Snow.fbx · Model · 23 KB
+- SM_Env_GrassPatch_04_Snow.fbx · Model · 23 KB
+- SM_Env_House_Rocks_Large_01_Snow.fbx · Model · 76 KB
+- SM_Env_House_Rocks_Small_01_Snow.fbx · Model · 65 KB
+- SM_Env_Path_Wood_01_Snow.fbx · Model · 38 KB
+- SM_Env_Path_Wood_02_Snow.fbx · Model · 32 KB
+- SM_Env_Path_Wood_Plank_01_Snow.fbx · Model · 23 KB
+- SM_Env_Path_Wood_Plank_02_Snow.fbx · Model · 24 KB
+- SM_Env_Path_Wood_Plank_03_Snow.fbx · Model · 22 KB
+- SM_Env_Path_Wood_Side_01_Snow.fbx · Model · 45 KB
+- SM_Env_Rock_01_Snow.fbx · Model · 27 KB
+- SM_Env_Rock_02_Snow.fbx · Model · 26 KB
+- SM_Env_Rock_03_Snow.fbx · Model · 25 KB
+- SM_Env_Rock_04_Snow.fbx · Model · 26 KB
+- SM_Env_Rock_05_Snow.fbx · Model · 26 KB
+- SM_Env_Rock_06_Snow.fbx · Model · 25 KB
+- SM_Env_Rock_07_Snow.fbx · Model · 26 KB
+- SM_Env_Stone_01_Snow.fbx · Model · 23 KB
+- SM_Env_Stone_02_Snow.fbx · Model · 25 KB
+- SM_Env_Trench_01_Snow.fbx · Model · 33 KB
+- SM_Env_Trench_02_Snow.fbx · Model · 33 KB
+- SM_Env_Trench_Bridge_01_Snow.fbx · Model · 59 KB
+- SM_Env_Trench_Spikes_01_Snow.fbx · Model · 42 KB
+- SM_Prop_Anvil_01_Snow.fbx · Model · 28 KB
+- SM_Prop_Anvil_Stump_01_Snow.fbx · Model · 25 KB
+- SM_Prop_Archway_01_Snow.fbx · Model · 34 KB
+- SM_Prop_Barrel_Half_01_Snow.fbx · Model · 42 KB
+- SM_Prop_BoatRamp_01_Snow.fbx · Model · 42 KB
+- SM_Prop_Boat_Broken_01_Snow.fbx · Model · 107 KB
+- SM_Prop_Boat_Build_01_Snow.fbx · Model · 124 KB
+- SM_Prop_Chest_01_Snow.fbx · Model · 39 KB
+- SM_Prop_Clay_Pot_01_Snow.fbx · Model · 33 KB
+- SM_Prop_Clay_Pot_02_Snow.fbx · Model · 33 KB
+- SM_Prop_Cow_Skull_01_Snow.fbx · Model · 34 KB
+- SM_Prop_Crate_Base_01_Snow.fbx · Model · 31 KB
+- SM_Prop_Crate_Lid_01_Snow.fbx · Model · 24 KB
+- SM_Prop_Crate_Open_01_Snow.fbx · Model · 33 KB
+- SM_Prop_Dock_01_Snow.fbx · Model · 98 KB
+- SM_Prop_Dock_02_Snow.fbx · Model · 74 KB
+- SM_Prop_Dock_03_Snow.fbx · Model · 38 KB
+- SM_Prop_Dock_Pole_01_Snow.fbx · Model · 25 KB
+- SM_Prop_Dock_Pole_02_Snow.fbx · Model · 31 KB
+- SM_Prop_Fence_Platform_01_Snow.fbx · Model · 73 KB
+- SM_Prop_Fence_Stick_01_Snow.fbx · Model · 40 KB
+- SM_Prop_Fence_Wood_01_Snow.fbx · Model · 43 KB
+- SM_Prop_Fence_Wood_02_Snow.fbx · Model · 36 KB
+- SM_Prop_Fence_Wood_03_Snow.fbx · Model · 40 KB
+- SM_Prop_Fence_Wood_Large_01_Snow.fbx · Model · 72 KB
+- SM_Prop_Fence_Wood_Large_02_Snow.fbx · Model · 39 KB
+- SM_Prop_Fence_Wood_Pole_01_Snow.fbx · Model · 28 KB
+- SM_Prop_Fence_Wood_Pole_02_Snow.fbx · Model · 24 KB
+- SM_Prop_Fence_Wood_Pole_03_Snow.fbx · Model · 25 KB
+- SM_Prop_Fence_Wood_Pole_04_Snow.fbx · Model · 30 KB
+- SM_Prop_Flag_01_Snow.fbx · Model · 43 KB
+- SM_Prop_Flag_02_Snow.fbx · Model · 46 KB
+- SM_Prop_Ladder_01_Snow.fbx · Model · 87 KB
+- SM_Prop_Ladder_02_Snow.fbx · Model · 54 KB
+- SM_Prop_Logs_01_Snow.fbx · Model · 66 KB
+- SM_Prop_Log_01_Snow.fbx · Model · 58 KB
+- SM_Prop_Net_01_Snow.fbx · Model · 189 KB
+- SM_Prop_Net_02_Snow.fbx · Model · 185 KB
+- SM_Prop_Pole_01_Snow.fbx · Model · 39 KB
+- SM_Prop_Pole_03_Snow.fbx · Model · 36 KB
+- SM_Prop_Rack_01_Snow.fbx · Model · 45 KB
+- SM_Prop_Rock_Circle_01_Snow.fbx · Model · 37 KB
+- SM_Prop_Rock_Totem_01_Snow.fbx · Model · 26 KB
+- SM_Prop_Rope_01_Snow.fbx · Model · 35 KB
+- SM_Prop_Rope_02_Snow.fbx · Model · 28 KB
+- SM_Prop_Seat_01_Snow.fbx · Model · 29 KB
+- SM_Prop_Shield_Decor_01_Snow.fbx · Model · 36 KB
+- SM_Prop_Skull_Pole_01_Snow.fbx · Model · 29 KB
+- SM_Prop_Spikes_01_Snow.fbx · Model · 78 KB
+- SM_Prop_Table_01_Snow.fbx · Model · 38 KB
+- SM_Prop_Village_Entrance_01_Snow.fbx · Model · 45 KB
+- SM_Prop_Wagon_01_Snow.fbx · Model · 84 KB
+- SM_Prop_Wheel_Barrow_01_Snow.fbx · Model · 55 KB
+- SM_Prop_Wood_Sharp_01_Snow.fbx · Model · 27 KB
+- SM_Prop_Wood_Sharp_02_Snow.fbx · Model · 25 KB
+- SM_Prop_Wood_Spike_01_Snow.fbx · Model · 24 KB
+- SM_Prop_Wood_Spike_02_Snow.fbx · Model · 24 KB
+- SM_Prop_Wood_Spike_03_Snow.fbx · Model · 24 KB
+- SM_Prop_Wood_Spike_04_Snow.fbx · Model · 25 KB
+- SM_Stone_Statue_01_Snow.fbx · Model · 177 KB
+- SM_Veh_Boat_01_Snow.fbx · Model · 707 KB
+- SM_Veh_FishingBoat_01_Snow.fbx · Model · 97 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Buildings/**
+
+- SM_Bld_Base_01.prefab · Prefab · 2 KB
+- SM_Bld_Base_02.prefab · Prefab · 2 KB
+- SM_Bld_Base_Door_01.prefab · Prefab · 3 KB
+- SM_Bld_Base_Door_02.prefab · Prefab · 2 KB
+- SM_Bld_Base_Long_01.prefab · Prefab · 2 KB
+- SM_Bld_Base_Long_02.prefab · Prefab · 2 KB
+- SM_Bld_Base_Long_Door_02.prefab · Prefab · 2 KB
+- SM_Bld_BoatHouse_01.prefab · Prefab · 2 KB
+- SM_Bld_BoatHouse_02.prefab · Prefab · 2 KB
+- SM_Bld_Door_01.prefab · Prefab · 2 KB
+- SM_Bld_Roof_01.prefab · Prefab · 3 KB
+- SM_Bld_Roof_Window_01.prefab · Prefab · 2 KB
+- SM_Bld_Tower_01.prefab · Prefab · 2 KB
+- SM_Bld_Tower_Stone_Base_01.prefab · Prefab · 2 KB
+- SM_Bld_Window_01.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Buildings/Snow/**
+
+- SM_Bld_Base_01_Snow.prefab · Prefab · 2 KB
+- SM_Bld_Base_02_Snow.prefab · Prefab · 2 KB
+- SM_Bld_Base_Door_01_Snow.prefab · Prefab · 3 KB
+- SM_Bld_Base_Door_02_Snow.prefab · Prefab · 2 KB
+- SM_Bld_Base_Long_01_Snow.prefab · Prefab · 2 KB
+- SM_Bld_Base_Long_02_Snow.prefab · Prefab · 2 KB
+- SM_Bld_Base_Long_Door_01_Snow.prefab · Prefab · 2 KB
+- SM_Bld_Base_Long_Door_02_Snow.prefab · Prefab · 2 KB
+- SM_Bld_BoatHouse_01_Snow.prefab · Prefab · 2 KB
+- SM_Bld_BoatHouse_02_Snow.prefab · Prefab · 2 KB
+- SM_Bld_Door_01_Snow.prefab · Prefab · 2 KB
+- SM_Bld_Roof_01_Snow.prefab · Prefab · 3 KB
+- SM_Bld_Roof_02_Snow.prefab · Prefab · 3 KB
+- SM_Bld_Roof_Long_01_Snow.prefab · Prefab · 3 KB
+- SM_Bld_Roof_Window_01_Snow.prefab · Prefab · 3 KB
+- SM_Bld_Tower_01_Snow.prefab · Prefab · 3 KB
+- SM_Bld_Tower_Stone_Base_01_Snow.prefab · Prefab · 2 KB
+- SM_Bld_Window_01_Snow.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Characters/**
+
+- SM_Chr_Chief_01_Black.prefab · Prefab · 83 KB
+- SM_Chr_Chief_01_Brown.prefab · Prefab · 83 KB
+- SM_Chr_Chief_01_White.prefab · Prefab · 83 KB
+- SM_Chr_Grunt_01_Black.prefab · Prefab · 83 KB
+- SM_Chr_Grunt_01_Brown.prefab · Prefab · 83 KB
+- SM_Chr_Grunt_01_White.prefab · Prefab · 83 KB
+- SM_Chr_Grunt_02_Black.prefab · Prefab · 83 KB
+- SM_Chr_Grunt_02_Brown.prefab · Prefab · 83 KB
+- SM_Chr_Grunt_02_White.prefab · Prefab · 83 KB
+- SM_Chr_Shieldmadien_Black.prefab · Prefab · 83 KB
+- SM_Chr_Shieldmadien_Brown.prefab · Prefab · 83 KB
+- SM_Chr_Shieldmadien_White.prefab · Prefab · 83 KB
+- SM_Chr_Warrior_01_Black.prefab · Prefab · 83 KB
+- SM_Chr_Warrior_01_Brown.prefab · Prefab · 83 KB
+- SM_Chr_Warrior_01_White.prefab · Prefab · 83 KB
+- SM_Chr_Warrior_02_Black.prefab · Prefab · 83 KB
+- SM_Chr_Warrior_02_Brown.prefab · Prefab · 83 KB
+- SM_Chr_Warrior_02_White.prefab · Prefab · 83 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Environments/**
+
+- SM_Env_DirtMound_01.prefab · Prefab · 2 KB
+- SM_Env_DirtMound_02.prefab · Prefab · 2 KB
+- SM_Env_DirtMound_03.prefab · Prefab · 2 KB
+- SM_Env_DirtMound_04.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Mound_01.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Mound_02.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Mound_03.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Mound_04.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Tile_Large_01.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Tile_Large_02.prefab · Prefab · 2 KB
+- SM_Env_GrassPatch_01.prefab · Prefab · 2 KB
+- SM_Env_GrassPatch_02.prefab · Prefab · 2 KB
+- SM_Env_GrassPatch_03.prefab · Prefab · 2 KB
+- SM_Env_GrassPatch_04.prefab · Prefab · 2 KB
+- SM_Env_House_Rocks_Large_01.prefab · Prefab · 5 KB
+- SM_Env_House_Rocks_Small_01.prefab · Prefab · 4 KB
+- SM_Env_Iceberg_01.prefab · Prefab · 2 KB
+- SM_Env_Iceberg_02.prefab · Prefab · 2 KB
+- SM_Env_IceChunk_01.prefab · Prefab · 2 KB
+- SM_Env_IceChunk_02.prefab · Prefab · 2 KB
+- SM_Env_IceChunk_03.prefab · Prefab · 2 KB
+- SM_Env_IceChunk_04.prefab · Prefab · 2 KB
+- SM_Env_IceChunk_05.prefab · Prefab · 2 KB
+- SM_Env_IceChunk_06.prefab · Prefab · 2 KB
+- SM_Env_Mountains_01.prefab · Prefab · 2 KB
+- SM_Env_Mountains_02.prefab · Prefab · 2 KB
+- SM_Env_Mountains_03.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_01.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_02.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_Plank_01.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_Plank_02.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_Plank_03.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_Side_01.prefab · Prefab · 2 KB
+- SM_Env_Rock_02.prefab · Prefab · 2 KB
+- SM_Env_Rock_03.prefab · Prefab · 2 KB
+- SM_Env_Rock_04.prefab · Prefab · 2 KB
+- SM_Env_Rock_05.prefab · Prefab · 2 KB
+- SM_Env_Rock_06.prefab · Prefab · 2 KB
+- SM_Env_Rock_07.prefab · Prefab · 2 KB
+- SM_Env_Stone_01.prefab · Prefab · 2 KB
+- SM_Env_Stone_02.prefab · Prefab · 2 KB
+- SM_Env_Stone_Statue_01.prefab · Prefab · 2 KB
+- SM_Env_Trench_01.prefab · Prefab · 2 KB
+- SM_Env_Trench_02.prefab · Prefab · 2 KB
+- SM_Env_Trench_Bridge_01.prefab · Prefab · 3 KB
+- SM_Env_Trench_Spikes_01.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Environments/Snow/**
+
+- SM_Env_DirtMound_01_Snow.prefab · Prefab · 2 KB
+- SM_Env_DirtMound_02_Snow.prefab · Prefab · 2 KB
+- SM_Env_DirtMound_03_Snow.prefab · Prefab · 2 KB
+- SM_Env_DirtMound_04_Snow.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Mound_01_Snow.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Mound_02_Snow.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Mound_03_Snow.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Mound_04_Snow.prefab · Prefab · 2 KB
+- SM_Env_Dirt_Tile_Large_02_Snow.prefab · Prefab · 2 KB
+- SM_Env_GrassPatch_01_Snow.prefab · Prefab · 2 KB
+- SM_Env_GrassPatch_02_Snow.prefab · Prefab · 2 KB
+- SM_Env_GrassPatch_03_Snow.prefab · Prefab · 2 KB
+- SM_Env_GrassPatch_04_Snow.prefab · Prefab · 2 KB
+- SM_Env_House_Rocks_Large_01_Snow.prefab · Prefab · 5 KB
+- SM_Env_House_Rocks_Small_01_Snow.prefab · Prefab · 4 KB
+- SM_Env_Path_Wood_01_Snow.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_02_Snow.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_Plank_01_Snow.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_Plank_02_Snow.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_Plank_03_Snow.prefab · Prefab · 2 KB
+- SM_Env_Path_Wood_Side_01_Snow.prefab · Prefab · 2 KB
+- SM_Env_Rock_01_Snow.prefab · Prefab · 2 KB
+- SM_Env_Rock_02_Snow.prefab · Prefab · 2 KB
+- SM_Env_Rock_03_Snow.prefab · Prefab · 2 KB
+- SM_Env_Rock_04_Snow.prefab · Prefab · 2 KB
+- SM_Env_Rock_05_Snow.prefab · Prefab · 2 KB
+- SM_Env_Rock_06_Snow.prefab · Prefab · 2 KB
+- SM_Env_Rock_07_Snow.prefab · Prefab · 2 KB
+- SM_Env_Stone_01_Snow.prefab · Prefab · 2 KB
+- SM_Env_Stone_02_Snow.prefab · Prefab · 2 KB
+- SM_Env_Trench_01_Snow.prefab · Prefab · 2 KB
+- SM_Env_Trench_02_Snow.prefab · Prefab · 2 KB
+- SM_Env_Trench_Bridge_01_Snow.prefab · Prefab · 3 KB
+- SM_Env_Trench_Spikes_01_Snow.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/FX/**
+
+- FX_Fire_01.prefab · Prefab · 75 KB
+- FX_Snow_Particle_01.prefab · Prefab · 73 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Props/**
+
+- SM_Prop_Alter_01.prefab · Prefab · 2 KB
+- SM_Prop_Anvil_Stump_01.prefab · Prefab · 2 KB
+- SM_Prop_Archway_01.prefab · Prefab · 3 KB
+- SM_Prop_Barrel_Half_01.prefab · Prefab · 2 KB
+- SM_Prop_Barrel_Half_02.prefab · Prefab · 2 KB
+- SM_Prop_Beer_Mug_01.prefab · Prefab · 2 KB
+- SM_Prop_Beer_Mug_02.prefab · Prefab · 2 KB
+- SM_Prop_BoatRamp_01.prefab · Prefab · 2 KB
+- SM_Prop_Boat_Broken_01.prefab · Prefab · 3 KB
+- SM_Prop_Boat_Broken_02.prefab · Prefab · 3 KB
+- SM_Prop_Boat_Build_01.prefab · Prefab · 3 KB
+- SM_Prop_Clay_Pot_01.prefab · Prefab · 2 KB
+- SM_Prop_Clay_Pot_02.prefab · Prefab · 2 KB
+- SM_Prop_Cow_Skull_01.prefab · Prefab · 2 KB
+- SM_Prop_Crate_Base_01.prefab · Prefab · 2 KB
+- SM_Prop_Crate_Lid_01.prefab · Prefab · 2 KB
+- SM_Prop_Crate_Open_01.prefab · Prefab · 3 KB
+- SM_Prop_Cross_01.prefab · Prefab · 2 KB
+- SM_Prop_Cross_02.prefab · Prefab · 3 KB
+- SM_Prop_Dock_01.prefab · Prefab · 2 KB
+- SM_Prop_Dock_02.prefab · Prefab · 2 KB
+- SM_Prop_Dock_03.prefab · Prefab · 2 KB
+- SM_Prop_Dock_Pole_01.prefab · Prefab · 2 KB
+- SM_Prop_Dock_Pole_02.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Platform_01.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Stick_01.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_01.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_02.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_03.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Large_01.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Large_02.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Pole_01.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Pole_02.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Pole_03.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Pole_04.prefab · Prefab · 2 KB
+- SM_Prop_Fish_01.prefab · Prefab · 2 KB
+- SM_Prop_Fish_02.prefab · Prefab · 2 KB
+- SM_Prop_Fish_Dead_01.prefab · Prefab · 2 KB
+- SM_Prop_Fish_Dead_02.prefab · Prefab · 2 KB
+- SM_Prop_Fish_Dead_03.prefab · Prefab · 2 KB
+- SM_Prop_Fish_Hanging_01.prefab · Prefab · 2 KB
+- SM_Prop_Fish_Hanging_02.prefab · Prefab · 2 KB
+- SM_Prop_Fish_Pile_01.prefab · Prefab · 2 KB
+- SM_Prop_Flag_02.prefab · Prefab · 2 KB
+- SM_Prop_Fur_Roll_01.prefab · Prefab · 2 KB
+- SM_Prop_Fur_Roll_02.prefab · Prefab · 2 KB
+- SM_Prop_Fur_Roll_03.prefab · Prefab · 2 KB
+- SM_Prop_Goblet_01.prefab · Prefab · 2 KB
+- SM_Prop_GoldBar_01.prefab · Prefab · 2 KB
+- SM_Prop_Ladder_01.prefab · Prefab · 2 KB
+- SM_Prop_Ladder_02.prefab · Prefab · 2 KB
+- SM_Prop_Logs_01.prefab · Prefab · 2 KB
+- SM_Prop_Log_01.prefab · Prefab · 2 KB
+- SM_Prop_Net_01.prefab · Prefab · 2 KB
+- SM_Prop_Net_02.prefab · Prefab · 3 KB
+- SM_Prop_Oar_01.prefab · Prefab · 2 KB
+- SM_Prop_Pole_01.prefab · Prefab · 2 KB
+- SM_Prop_Pole_02.prefab · Prefab · 2 KB
+- SM_Prop_Pole_03.prefab · Prefab · 2 KB
+- SM_Prop_Rack_01.prefab · Prefab · 2 KB
+- SM_Prop_Rock_Circle_01.prefab · Prefab · 2 KB
+- SM_Prop_Rock_Totem_01.prefab · Prefab · 3 KB
+- SM_Prop_Rope_01.prefab · Prefab · 2 KB
+- SM_Prop_Rope_02.prefab · Prefab · 2 KB
+- SM_Prop_Seat_01.prefab · Prefab · 2 KB
+- SM_Prop_Shield_Decor_02.prefab · Prefab · 2 KB
+- SM_Prop_Shield_Decor_03.prefab · Prefab · 2 KB
+- SM_Prop_Shield_Decor_05.prefab · Prefab · 2 KB
+- SM_Prop_Shield_Decor_06.prefab · Prefab · 2 KB
+- SM_Prop_Shield_Decor_07.prefab · Prefab · 2 KB
+- SM_Prop_Shield_Decor_08.prefab · Prefab · 2 KB
+- SM_Prop_Skull_01.prefab · Prefab · 2 KB
+- SM_Prop_Skull_02.prefab · Prefab · 2 KB
+- SM_Prop_Skull_Pole_01.prefab · Prefab · 3 KB
+- SM_Prop_Spikes_01.prefab · Prefab · 2 KB
+- SM_Prop_Stone_Statue_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_TorchStick_01.prefab · Prefab · 3 KB
+- SM_Prop_Village_Entrance_01.prefab · Prefab · 3 KB
+- SM_Prop_Wagon_01.prefab · Prefab · 2 KB
+- SM_Prop_Wheel_Barrow_01.prefab · Prefab · 3 KB
+- SM_Prop_Wood_Sharp_01.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Sharp_02.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Spike_01.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Spike_02.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Spike_03.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Spike_04.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Props/Snow/**
+
+- SM_Prop_Anvil_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Anvil_Stump_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Archway_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Barrel_Half_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_BoatRamp_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Boat_Broken_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Boat_Build_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Chest_01_Snow.prefab · Prefab · 4 KB
+- SM_Prop_Clay_Pot_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Clay_Pot_02_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Cow_Skull_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Crate_Base_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Crate_Lid_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Crate_Open_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Dock_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Dock_02_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Dock_03_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Dock_Pole_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Dock_Pole_02_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Platform_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Stick_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_02_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_03_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Large_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Large_02_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Pole_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Pole_02_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Pole_03_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Fence_Wood_Pole_04_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Flag_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Flag_02_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Ladder_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Ladder_02_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Logs_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Log_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Net_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Net_02_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Pole_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Pole_03_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Rack_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Rock_Circle_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Rock_Totem_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Rope_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Rope_02_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Seat_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Shield_Decor_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Skull_Pole_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Spikes_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Table_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Village_Entrance_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Wagon_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Wheel_Barrow_01_Snow.prefab · Prefab · 3 KB
+- SM_Prop_Wood_Sharp_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Sharp_02_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Spike_01_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Spike_02_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Spike_03_Snow.prefab · Prefab · 2 KB
+- SM_Prop_Wood_Spike_04_Snow.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Vehicles/**
+
+- SM_Veh_Boat_01.prefab · Prefab · 24 KB
+- SM_Veh_FishingBoat_01.prefab · Prefab · 2 KB
+- SM_Veh_FuneralBoat_01.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Vehicles/Snow/**
+
+- SM_Veh_Boat_01_Snow.prefab · Prefab · 31 KB
+- SM_Veh_FishingBoat_01_Snow.prefab · Prefab · 3 KB
+
+**Assets/Synty/PolygonVikings/Prefabs/Weapons/**
+
+- SM_Wep_Ball_Hammer_01.prefab · Prefab · 2 KB
+- SM_Wep_Club_01.prefab · Prefab · 2 KB
+- SM_Wep_FishingSpear_01.prefab · Prefab · 2 KB
+- SM_Wep_HammerLarge_01.prefab · Prefab · 2 KB
+- SM_Wep_Hammer_01.prefab · Prefab · 2 KB
+- SM_Wep_Hammer_02.prefab · Prefab · 2 KB
+- SM_Wep_Horn_01.prefab · Prefab · 2 KB
+- SM_Wep_Horn_02.prefab · Prefab · 2 KB
+- SM_Wep_Pickaxe_01.prefab · Prefab · 2 KB
+- SM_Wep_Shield_01.prefab · Prefab · 2 KB
+- SM_Wep_Shield_02.prefab · Prefab · 2 KB
+- SM_Wep_Shield_03.prefab · Prefab · 2 KB
+- SM_Wep_Shield_04.prefab · Prefab · 2 KB
+- SM_Wep_Shield_05.prefab · Prefab · 2 KB
+- SM_Wep_Shield_06.prefab · Prefab · 2 KB
+- SM_Wep_Shield_07.prefab · Prefab · 2 KB
+- SM_Wep_Shield_08.prefab · Prefab · 2 KB
+- SM_Wep_Spade_01.prefab · Prefab · 2 KB
+- SM_Wep_Spear_02.prefab · Prefab · 2 KB
+- SM_Wep_Spear_03.prefab · Prefab · 2 KB
+- SM_Wep_Tongs_01.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonVikings/Scenes/**
+
+- Demo.unity · Scene · 3.3 MB
+- DemoSettings.lighting · Other · 1 KB
+- Overview.unity · Scene · 999 KB
+
+**Assets/Synty/PolygonVikings/Scenes/Demo/**
+
+- Viking_Demo.asset · Asset · 3 KB
+- Viking_Overview.asset · Asset · 2 KB
+
+**Assets/Synty/PolygonVikings/Textures/**
+
+- Characters_01_Black.png · Texture · 33 KB
+- Characters_01_Brown.png · Texture · 32 KB
+- Characters_01_White.png · Texture · 35 KB
+- PolygonVikings_01_Dark.png · Texture · 11 KB
+- PolygonVikings_02.png · Texture · 11 KB
+- PolygonVikings_02_Dark.png · Texture · 11 KB
+- PolygonVikings_03.png · Texture · 11 KB
+- PolygonVikings_03_Dark.png · Texture · 11 KB
+- PolygonVikings_04.png · Texture · 11 KB
+- PolygonVikings_04_Dark.png · Texture · 11 KB
+- PolygonVikings_Snow_To_Grass_01.png · Texture · 11 KB

@@ -1,0 +1,450 @@
+# Removed 2026-10-18: GI
+
+Vendor files nothing uses: not the build scenes, not any scene, zone or asset in `Assets/_Game`, not Resources, settings or plugins. Three checks agreed (Maintainer, Unity's dependencies, written references) and none is loaded by path or name.
+
+406 files, 117.6 MB. Last commit that still has them: `ff91e25aa8c2`.
+
+To bring one back: Unity ▸ **Krytical Nova ▸ Project ▸ Restore Assets**, *Removed* tab, search its name, **Restore** (it comes back with the materials, textures and meshes it needs, under its old path and GUID). Without the tool: `git checkout ff91e25aa8c2 -- "<path>" "<path>.meta"`.
+
+## GI (406 files, 117.6 MB)
+
+Get it back from: Fast Dynamic Global Illumination.unitypackage
+
+**Assets/_ThirdParty/GI/Scenes/**
+
+- Demo build house.unity · Scene · 216 KB
+- Demo.unity · Scene · 18.5 MB
+
+**Assets/_ThirdParty/GI/Scenes/Demo/**
+
+- LightingData.asset · Asset · 17 KB
+- ReflectionProbe-0.exr · Texture · 90 KB
+- ReflectionProbe-1.exr · Texture · 16 KB
+- ReflectionProbe-2.exr · Texture · 155 KB
+
+**Assets/_ThirdParty/GI/Scenes/Demo build house/**
+
+- LightingData.asset · Asset · 19 KB
+- Lightmap-0_comp_dir.png · Texture · 2 KB
+- Lightmap-0_comp_light.exr · Texture · 127 KB
+- ReflectionProbe-0.exr · Texture · 258 KB
+- ReflectionProbe-1.exr · Texture · 16 KB
+- ReflectionProbe-2.exr · Texture · 155 KB
+
+**Assets/_ThirdParty/GI/Scenes/Demo/Animations/**
+
+- Build house.anim · Animation · 39 KB
+- House (1).controller · Animator · 2 KB
+- moving wall.controller · Animator · 2 KB
+
+**Assets/_ThirdParty/GI/Scenes/Demo/Demo/**
+
+- Global Volume Profile.asset · Asset · 4 KB
+
+**Assets/_ThirdParty/GI/Scenes/Demo/Materials/**
+
+- Finewood.mat · Material · 3 KB
+- FinewoodFloor.mat · Material · 4 KB
+- FinewoodWhiteW.mat · Material · 3 KB
+- Glass.mat · Material · 3 KB
+- Lit.mat · Material · 4 KB
+- orbs 1.mat · Material · 4 KB
+- orbs 2.mat · Material · 4 KB
+- orbs 3.mat · Material · 4 KB
+- orbs 4.mat · Material · 4 KB
+- orbs 5.mat · Material · 4 KB
+- orbs 6.mat · Material · 4 KB
+- orbs.mat · Material · 4 KB
+- Red Plaster.mat · Material · 3 KB
+- StrongCoffeeBillboardDay.mat · Material · 4 KB
+- StrongCoffeeBillboardNight.mat · Material · 1 KB
+- StrongCoffeeBillboardNight02.mat · Material · 4 KB
+- StrongCoffeeBillboardNightBRIGHT.mat · Material · 3 KB
+
+**Assets/_ThirdParty/GI/Scenes/Demo/Objects/**
+
+- house01.prefab · Prefab · 3 KB
+- house01_parts.FBX · Model · 3.4 MB
+- StrongCoffeBillboardDay.prefab · Prefab · 6 KB
+- strong_coffe_billboard.FBX · Model · 121 KB
+
+**Assets/_ThirdParty/GI/Scenes/Demo/Objects/SDF/**
+
+- 3fe04190-dbdd-4742-952a-26939222d77d.asset · Asset · 251 KB
+- 94b2aedb-ff99-4db2-9d23-116171af1edf.asset · Asset · 76 KB
+- bc1d2779-db7a-4288-bcee-99015e62e828.asset · Asset · 76 KB
+
+**Assets/_ThirdParty/GI/Scenes/Demo/SDF/**
+
+- 013d5643-0cc3-4286-9b15-4516aaa3f80d.asset · Asset · 126 KB
+- 01f0c68e-2e75-4714-985d-6dbed2078c3d.asset · Asset · 151 KB
+- 02db93d6-2fbd-4277-9b90-a863c40a83fa.asset · Asset · 76 KB
+- 03451971-4788-4ff3-bdf0-a5b90b53961b.asset · Asset · 126 KB
+- 034cdde8-6615-491e-82ee-685496a5369b.asset · Asset · 226 KB
+- 05a98625-195d-44d2-9a9b-e4097c636d98.asset · Asset · 626 KB
+- 05dcb544-5957-4df1-9077-2a55215aff06.asset · Asset · 126 KB
+- 0609dc34-78b0-4d7e-b1cc-eddb4a9196e5.asset · Asset · 226 KB
+- 07e4602a-1f97-48e7-bcd3-d9bbcd786603.asset · Asset · 151 KB
+- 09c574f3-cfc0-4490-8d05-e8c0c1acb845.asset · Asset · 226 KB
+- 0db64f4e-9bcc-4a26-b1af-36628d367c1a.asset · Asset · 126 KB
+- 0e36c971-c471-46f0-b06f-05b366680bae.asset · Asset · 126 KB
+- 0f253158-d90e-4656-a129-e4ce9afcefda.asset · Asset · 101 KB
+- 108570db-66c6-4c81-8f5e-edf0e4c4b2e1.asset · Asset · 51 KB
+- 11b7ae06-4a1c-4cff-9a78-c8d8ecff952c.asset · Asset · 126 KB
+- 11bd1685-2283-49b6-b37c-761d2277f546.asset · Asset · 76 KB
+- 11bda2e5-c109-4f18-8b14-66d8ba4693d6.asset · Asset · 76 KB
+- 124c2d0b-3f14-4569-add8-1f1c9fd6cccc.asset · Asset · 626 KB
+- 13ca2e04-3840-455f-af68-08e099b8738f.asset · Asset · 226 KB
+- 14049755-f8ad-432f-82ed-d58889f01caf.asset · Asset · 226 KB
+- 15fcdd58-a600-4c18-a007-be72b1859b01.asset · Asset · 226 KB
+- 16e1e104-d076-42c5-8cce-7e7e8a462050.asset · Asset · 1.0 MB
+- 17485007-dc70-45df-8ceb-6348abfe3bdc.asset · Asset · 126 KB
+- 1ac89306-2aa0-4e07-be83-e1eb868f2e13.asset · Asset · 126 KB
+- 1b8d5d3f-9cd1-4fb0-aea1-698f9cd2c1b4.asset · Asset · 76 KB
+- 1c3aade1-a05e-4862-bfcb-c75f3a8e3754.asset · Asset · 76 KB
+- 1e6a16f1-d186-48fa-a4f9-2bbc3e52888e.asset · Asset · 451 KB
+- 1ed906da-324c-4f09-a8c0-865e3ab82d80.asset · Asset · 226 KB
+- 1f928b77-d087-4e7a-abab-8b7bca2ba744.asset · Asset · 151 KB
+- 21da7678-45c4-4a85-917b-d591a6ee4e5c.asset · Asset · 151 KB
+- 243bd4c3-a42a-485c-beda-824dbefc7315.asset · Asset · 126 KB
+- 26c52412-a9f3-424a-bba5-3ba1c358f496.asset · Asset · 76 KB
+- 26f2dace-0f22-4f78-8fec-09dffa844642.asset · Asset · 226 KB
+- 27e6749f-d67b-415f-a46a-0568a0b62524.asset · Asset · 126 KB
+- 2b0fb4d2-3771-4832-9eaf-f360fbd62804.asset · Asset · 226 KB
+- 31c8d43a-2485-424b-86d7-f0535ce7676a.asset · Asset · 226 KB
+- 31f2504f-cc90-4445-8baa-5e157f885ada.asset · Asset · 126 KB
+- 3253cd53-15e6-4fdf-827d-037440bd794c.asset · Asset · 226 KB
+- 357a11d9-5c98-4220-8594-9559103aa9a9.asset · Asset · 126 KB
+- 36183594-c172-418a-a55e-77c0e92a0781.asset · Asset · 76 KB
+- 36778347-5654-4a0e-a4bc-9babde778def.asset · Asset · 226 KB
+- 3719d27b-5814-4299-924c-9a0dfd83afcf.asset · Asset · 76 KB
+- 3752e007-2b78-4c30-8b2f-4bbca9427408.asset · Asset · 76 KB
+- 39677422-cb2e-402e-98a1-a47e79b6e851.asset · Asset · 76 KB
+- 397f1382-ea83-4023-9397-28955e315dba.asset · Asset · 126 KB
+- 39d582b6-4030-4e06-aee1-172eb6b66903.asset · Asset · 76 KB
+- 3d347259-fa31-4401-90e3-06f4b0a9b908.asset · Asset · 226 KB
+- 3e567d5a-6e43-405c-8ff6-f183e42cb8d7.asset · Asset · 51 KB
+- 414a7555-5454-459e-8a58-0198be080250.asset · Asset · 151 KB
+- 41de95a7-5c18-47b1-8b48-cc1d08a4b16c.asset · Asset · 126 KB
+- 42276afd-cb1a-47e4-95c6-3f2852432470.asset · Asset · 126 KB
+- 43191297-6120-4243-87d0-0b17cee137c8.asset · Asset · 226 KB
+- 435bad98-3125-4e29-9c6f-15e3130570ac.asset · Asset · 101 KB
+- 44625b2c-c377-4083-8ecc-c2264043c2e2.asset · Asset · 126 KB
+- 44b60e2f-4868-4aa8-b182-74776a8ed2d6.asset · Asset · 126 KB
+- 44c591ae-a838-470a-b97c-4e8f282a4963.asset · Asset · 126 KB
+- 44daa5dc-b2cf-478e-977d-aa26039fd2d5.asset · Asset · 351 KB
+- 45153641-8f19-4207-92e7-14972b7bc486.asset · Asset · 101 KB
+- 45248c84-30d1-4bcb-8aa2-f4650362548b.asset · Asset · 76 KB
+- 4535ca0a-752a-4ab1-8864-7d4c68511123.asset · Asset · 151 KB
+- 477a2427-f6a7-4afe-9d38-31288f574c2c.asset · Asset · 126 KB
+- 47ba8a22-98dc-4501-9b8a-e0c16c0060c4.asset · Asset · 76 KB
+- 48db2f96-4ab5-4c20-9ea0-558561e27d78.asset · Asset · 126 KB
+- 4b0ab560-2332-4148-aed3-3f3b85eda016.asset · Asset · 126 KB
+- 4d0cea9d-3c31-463f-86c9-20219fea7712.asset · Asset · 151 KB
+- 4e85e0e7-d3a0-4565-9914-08bfbefd1a76.asset · Asset · 126 KB
+- 4ea50f61-ba53-49da-94db-3725da2d7c7e.asset · Asset · 126 KB
+- 4f60a00b-5496-4991-8d4a-c31dd9f40044.asset · Asset · 226 KB
+- 507162fc-1ea5-4267-bb82-f8f990a46d7f.asset · Asset · 301 KB
+- 53a990ce-1f79-4029-a5da-030bf746b8fc.asset · Asset · 226 KB
+- 56af7e39-0f8c-4fc1-9477-e9ea964ee8b6.asset · Asset · 126 KB
+- 571bd6ec-7f52-41ec-b678-2f49559132cc.asset · Asset · 126 KB
+- 5741344b-8c37-41e1-8d49-16f5f63511a7.asset · Asset · 141 KB
+- 58b5779a-48cd-40bb-9c9e-102c0b9d622b.asset · Asset · 126 KB
+- 5901a5bc-6121-4b78-a5c4-6d34314c0e8f.asset · Asset · 76 KB
+- 59d952c0-f4dd-4e9a-8c1e-aa33d2091596.asset · Asset · 101 KB
+- 59fd9f5e-fb95-49f7-9c66-2745574355f2.asset · Asset · 226 KB
+- 5cba5dcd-e18f-49d2-903c-46237398c901.asset · Asset · 226 KB
+- 5eabd883-99b1-414e-8d4b-f9b25193b1ac.asset · Asset · 226 KB
+- 5f030fc5-df48-4c98-bd6c-55dac5ba1b8e.asset · Asset · 126 KB
+- 61015654-0773-48d3-be4c-1886586d56cd.asset · Asset · 226 KB
+- 61219cbc-f112-4536-a608-f2865103e9b7.asset · Asset · 76 KB
+- 6133c01f-26f5-4e51-a30c-b69d84ad10bc.asset · Asset · 226 KB
+- 631bb7f4-def5-4c4c-93da-60feedca7b1c.asset · Asset · 226 KB
+- 641dc762-07ef-4bb1-a22b-90ed18e55987.asset · Asset · 126 KB
+- 64f3137e-85ab-43f9-8d61-de45d15ddfcd.asset · Asset · 226 KB
+- 65198618-4210-4c5f-885c-d16a685c3fd5.asset · Asset · 151 KB
+- 66965977-3cd6-4806-a171-4a3057f619a4.asset · Asset · 76 KB
+- 66bdc044-b28c-4fe9-8f1c-1e589fda53a4.asset · Asset · 226 KB
+- 670466a3-7fc5-4b7a-96b5-62b9f6a85afc.asset · Asset · 126 KB
+- 679cffe9-52e3-497a-bce1-b0e7d3b8ac7d.asset · Asset · 126 KB
+- 68954bcc-edbd-41c1-922b-f0bc89f9dc66.asset · Asset · 101 KB
+- 68aa06d3-06e7-46b0-ae59-b24d869238dd.asset · Asset · 251 KB
+- 68e3056f-7ca1-4eb7-85fd-f2ce3ec0274d.asset · Asset · 126 KB
+- 6e84ed46-6000-4939-8158-d230cc12ee54.asset · Asset · 126 KB
+- 70512fd1-c9ba-419a-82d1-07e60d8702ac.asset · Asset · 76 KB
+- 7232c9bd-4e5b-4933-9dce-2aa40b6646cb.asset · Asset · 51 KB
+- 72613f78-81ee-4d20-a254-864fc85b2654.asset · Asset · 151 KB
+- 760d913e-e5e5-4c70-ae07-26550f72d95b.asset · Asset · 126 KB
+- 76a0380e-e1bd-4880-a2e0-10fabbb28e90.asset · Asset · 51 KB
+- 771caa29-60c2-4a0b-9f78-8e4acda73a35.asset · Asset · 126 KB
+- 77e5f7e1-32a8-40ff-b8b7-4c68cd706842.asset · Asset · 76 KB
+- 7a332b38-9c3c-497e-a32f-32d98d3092a1.asset · Asset · 126 KB
+- 7bc25aed-7201-43ec-84ba-f8a6cdb6fbd4.asset · Asset · 226 KB
+- 7c232e27-59af-4816-a214-3e0d6aff281d.asset · Asset · 126 KB
+- 7cf43d74-e2d4-40e3-8ae9-56388671b362.asset · Asset · 76 KB
+- 7d780bb8-e92a-4145-8a0b-cb30707fd23b.asset · Asset · 76 KB
+- 7d959630-fab9-4c91-9c48-5962f240598f.asset · Asset · 126 KB
+- 7ff55f61-bfd0-4c83-b9ca-d05d903c240f.asset · Asset · 126 KB
+- 84b063f6-6511-46e3-9e8c-fb01fb3282fe.asset · Asset · 151 KB
+- 85070496-e885-475f-9927-b7aacf2092bb.asset · Asset · 51 KB
+- 8507fb23-0887-4a66-8753-190d8b8641c1.asset · Asset · 126 KB
+- 851fee99-3a06-455f-9f3e-c922a6b46476.asset · Asset · 151 KB
+- 87131ab5-ea57-4e63-b811-cf123b7cf34a.asset · Asset · 226 KB
+- 8a7b7530-0ce2-400c-8a38-d0f2d92e17c4.asset · Asset · 51 KB
+- 8c586856-a371-4a04-b570-dc54ec4b7067.asset · Asset · 76 KB
+- 8cb0d37f-3a15-4adb-9398-a790e4f75435.asset · Asset · 76 KB
+- 8d6d76d5-7edd-4f76-bad8-6b457372bdc6.asset · Asset · 226 KB
+- 8d7547b9-ba54-4963-af65-cc0def111d2e.asset · Asset · 226 KB
+- 8ddfafaf-7ef7-4f24-a9ff-2a83d95632a0.asset · Asset · 101 KB
+- 8ec3b5f7-0445-48ec-97a7-01562fa766db.asset · Asset · 76 KB
+- 904d3d5f-684c-44ec-b2d8-8dace7e8a576.asset · Asset · 126 KB
+- 93373ae6-8b99-4cf7-a021-58ce39af0b53.asset · Asset · 226 KB
+- 93c6172c-6080-40be-9889-52f53a44fe41.asset · Asset · 151 KB
+- 94bd8a35-5c79-497e-bc37-4faa18fa223f.asset · Asset · 126 KB
+- 9515b60d-6777-4814-84ba-7589612aa834.asset · Asset · 226 KB
+- 95655f25-8995-4f4e-9d87-4663d78e30eb.asset · Asset · 51 KB
+- 959425ac-9db3-408d-bc5c-d6f509e34098.asset · Asset · 226 KB
+- 95a89eb8-41cc-43b6-9dde-e461a461551c.asset · Asset · 151 KB
+- 9715072a-4b14-41ee-a1e8-dfa7b1bb5607.asset · Asset · 76 KB
+- 98a63aa1-ab42-4a58-a33b-47659dc1f404.asset · Asset · 76 KB
+- 99b5c801-c3f4-499c-8112-d388c415297e.asset · Asset · 126 KB
+- 9cf84a37-be2b-4424-b8fe-e0b7048c1dc5.asset · Asset · 76 KB
+- 9d49e213-d234-4e34-8075-fb35478baae9.asset · Asset · 151 KB
+- 9ec53114-851f-47ac-bcf8-e83dcb676671.asset · Asset · 51 KB
+- 9f889b10-6ecc-4f43-8db5-24c4b8a4321c.asset · Asset · 271 KB
+- a26cbe4d-48b3-4654-a342-7353dbd06d62.asset · Asset · 226 KB
+- a307285e-40fe-48ff-a072-e7f62cace447.asset · Asset · 126 KB
+- a351436b-e398-42cd-a8c5-78eff2b7bdad.asset · Asset · 626 KB
+- a635a542-e49e-4b2a-977a-e2f0602dd0a7.asset · Asset · 226 KB
+- a79a15b2-a494-4773-b5a7-6c70856e88aa.asset · Asset · 76 KB
+- aadd95ae-5807-422e-a04c-8a0fd09b9410.asset · Asset · 76 KB
+- ac2b64ba-a4b4-4060-bf54-4b1df4fa67d2.asset · Asset · 151 KB
+- acc1d34c-839c-4000-8695-8c88d14b40ed.asset · Asset · 226 KB
+- af077580-d5b6-43a5-928b-2a4bac6db01f.asset · Asset · 51 KB
+- b1525a88-4478-4b6a-88fb-3a6057e69b7e.asset · Asset · 76 KB
+- b7e56901-679c-4c65-b327-ec1803a4bfd4.asset · Asset · 226 KB
+- b8551436-7439-4737-b467-bb3be0e60f2d.asset · Asset · 76 KB
+- b86843cf-627e-4e47-b4fb-57f7a34a2851.asset · Asset · 226 KB
+- bf43970a-205d-41fa-965f-b6ad82630298.asset · Asset · 126 KB
+- c103b53f-10d3-44b8-8bd4-7af50e676fa4.asset · Asset · 226 KB
+- c175b238-3e44-450b-a0fb-472b766adeef.asset · Asset · 126 KB
+- c23a65ea-da37-43e5-b316-2dc5a7f61715.asset · Asset · 101 KB
+- c4957887-8a41-48d6-93b0-e4d666a4bab8.asset · Asset · 226 KB
+- c4df98a6-5fd7-49bb-b994-66df1217c7dd.asset · Asset · 151 KB
+- c54cb817-fe3a-422d-9fe6-dd0061e177d4.asset · Asset · 226 KB
+- c5c090b4-d53d-4407-8b44-9c42849acb3b.asset · Asset · 226 KB
+- c7225b54-013e-40c3-a933-03efb44f19d1.asset · Asset · 76 KB
+- c732d9f0-2d13-4881-be2d-455eec0f11c8.asset · Asset · 5 KB
+- c81884cd-69b5-4395-86d1-00949199707d.asset · Asset · 151 KB
+- c8f5aede-cbfe-4ff1-8319-6b3df7a4be61.asset · Asset · 126 KB
+- c9b559fb-d4ed-414d-8bd3-5d4103555efb.asset · Asset · 226 KB
+- ca63d20b-5148-47a5-b486-d8262a0c7264.asset · Asset · 226 KB
+- cbbcc065-adce-426c-a931-aec143d7cda8.asset · Asset · 351 KB
+- cc5ad26d-3f57-452a-8be2-6731cdfe58a7.asset · Asset · 126 KB
+- cdb1d5cc-e48f-4371-b1ff-2566399e5936.asset · Asset · 126 KB
+- d02e8b6a-787c-41a0-93df-c7e33c2d8738.asset · Asset · 126 KB
+- d0f71603-d274-4384-8f15-d847f712995a.asset · Asset · 51 KB
+- d1011f48-2b95-49af-9cde-72aebcece992.asset · Asset · 126 KB
+- d2e416ed-76a9-40c7-92ae-51c33819d62f.asset · Asset · 126 KB
+- d3d0c2a6-80dd-4773-9b10-83eea82c49b8.asset · Asset · 76 KB
+- d4d604bc-f6a3-4e66-b34a-e4b601d64917.asset · Asset · 226 KB
+- d6002abd-29aa-43e8-8fa8-cddf720ed46c.asset · Asset · 1.1 MB
+- d60fc918-9efe-4566-adf8-25fa372778ce.asset · Asset · 126 KB
+- d670a303-87df-41b3-b398-39ffa542fe62.asset · Asset · 76 KB
+- d6b424f1-fdc7-4dbb-954d-ad0186baf144.asset · Asset · 626 KB
+- d6f4c809-40d8-4362-9e96-179874a4c062.asset · Asset · 101 KB
+- d75aaf7c-10ff-4924-927a-008f4cbbc3a0.asset · Asset · 226 KB
+- d79f3ef8-49ca-48c2-94b6-3dc7b22383bd.asset · Asset · 126 KB
+- d7e9802e-ed02-4c9b-95dc-dd15748ed8e4.asset · Asset · 126 KB
+- d803743a-ecfd-403d-b863-68ce7cd9b8f3.asset · Asset · 626 KB
+- d82fcab6-aede-4f0b-89c2-615daf4a8e52.asset · Asset · 226 KB
+- da181c55-79f5-4d39-b3b0-926e1b452b5c.asset · Asset · 51 KB
+- db655b99-7ab7-4f46-8da1-2081bf8d8c5e.asset · Asset · 126 KB
+- dbf00df5-493f-425a-9f39-aea9a0c6a2b5.asset · Asset · 126 KB
+- dc0a7b78-4cb8-4831-b0ec-0a37c501218a.asset · Asset · 401 KB
+- dfa515d3-fcec-484d-b52e-732f5de72bb8.asset · Asset · 226 KB
+- e408d946-e23c-40c2-9935-2c668aef3c45.asset · Asset · 51 KB
+- e4f5578c-4aa6-4164-a4f4-d812f4db8718.asset · Asset · 51 KB
+- e6d696cd-873a-4bf8-9de4-2e1000691c5c.asset · Asset · 126 KB
+- e8e705dc-8c87-4ab4-ab7e-90df5bec6c2f.asset · Asset · 126 KB
+- ec32ef43-8cec-4e75-92bc-cd6882ac46dd.asset · Asset · 626 KB
+- ee8a2436-e7e8-488d-ba53-53c81ac74794.asset · Asset · 126 KB
+- f320768a-09a0-436e-afd3-ccbec808a7e0.asset · Asset · 76 KB
+- f5977807-39c3-4c42-956c-3fe9dbb24377.asset · Asset · 126 KB
+- f60814e7-d963-45d1-be37-ffd6b2c5d0cd.asset · Asset · 126 KB
+- f957a0be-770d-43be-8dcf-b030127cdbe2.asset · Asset · 126 KB
+- f98492d5-78da-48da-ab14-01511e58c50f.asset · Asset · 126 KB
+- fb9f9ad7-5793-4e84-9c76-0723feffa099.asset · Asset · 51 KB
+- fc7dff2c-7412-4830-b2f0-7dcc2da17c28.asset · Asset · 151 KB
+
+**Assets/_ThirdParty/GI/Scenes/Demo/Textures/**
+
+- Coffee_1Albedo.png · Texture · 730 KB
+- Coffee_1Bump.png · Texture · 223 KB
+- Coffee_1MGO.png · Texture · 922 KB
+- Coffee_1Occlusion.png · Texture · 155 KB
+- finewood_diffuse.png · Texture · 3.1 MB
+- finewood_floor_diffuse.png · Texture · 3.8 MB
+- finewood_floor_normals.png · Texture · 3.6 MB
+- finewood_floor_specular.png · Texture · 2.6 MB
+- finewood_normals.png · Texture · 9.7 MB
+- finewood_spec.png · Texture · 2.8 MB
+- finewood_white_diffuse.png · Texture · 3.7 MB
+
+**Assets/_ThirdParty/GI/Scenes/SDF/**
+
+- 01559cda-c65f-44f9-a308-c32f912913b6.asset · Asset · 1.0 MB
+- 0173ee49-47c2-467c-9d39-5c946c23f48d.asset · Asset · 126 KB
+- 01f0c68e-2e75-4714-985d-6dbed2078c3d.asset · Asset · 151 KB
+- 034cdde8-6615-491e-82ee-685496a5369b.asset · Asset · 226 KB
+- 05a98625-195d-44d2-9a9b-e4097c636d98.asset · Asset · 136 KB
+- 07e4602a-1f97-48e7-bcd3-d9bbcd786603.asset · Asset · 151 KB
+- 088ce847-d5cf-4c55-a647-5119251d985a.asset · Asset · 126 KB
+- 08e2f094-0b63-4521-b25f-9bf6517f6438.asset · Asset · 126 KB
+- 0f450882-1d06-4934-8c23-8d32d3961cfa.asset · Asset · 126 KB
+- 108570db-66c6-4c81-8f5e-edf0e4c4b2e1.asset · Asset · 51 KB
+- 11403613-d758-48b2-b538-1f0d2d89647b.asset · Asset · 126 KB
+- 12164b07-8a97-4185-9866-a8496855ab38.asset · Asset · 491 KB
+- 1320db17-5859-41b7-99e1-92a82abf8bee.asset · Asset · 491 KB
+- 13ca2e04-3840-455f-af68-08e099b8738f.asset · Asset · 226 KB
+- 15fcdd58-a600-4c18-a007-be72b1859b01.asset · Asset · 226 KB
+- 168e89d5-b6ed-4d3a-804b-eb0b0b660b4a.asset · Asset · 126 KB
+- 16e1e104-d076-42c5-8cce-7e7e8a462050.asset · Asset · 401 KB
+- 185d9ec0-196d-4755-bf73-35ad72c58edf.asset · Asset · 126 KB
+- 1e6a16f1-d186-48fa-a4f9-2bbc3e52888e.asset · Asset · 126 KB
+- 1ed906da-324c-4f09-a8c0-865e3ab82d80.asset · Asset · 226 KB
+- 21da7678-45c4-4a85-917b-d591a6ee4e5c.asset · Asset · 151 KB
+- 26f2dace-0f22-4f78-8fec-09dffa844642.asset · Asset · 226 KB
+- 2fd2cf5c-fe07-4431-8d80-6b86eec94370.asset · Asset · 126 KB
+- 2fe8aff6-143e-4eaf-bdec-72e6603bd56b.asset · Asset · 126 KB
+- 3008f173-e947-4e8e-8eff-5066df4f8c3c.asset · Asset · 491 KB
+- 3253cd53-15e6-4fdf-827d-037440bd794c.asset · Asset · 226 KB
+- 3719d27b-5814-4299-924c-9a0dfd83afcf.asset · Asset · 76 KB
+- 38b83251-9d02-4618-89bf-291be0ff2721.asset · Asset · 126 KB
+- 39b9d849-a909-4466-8136-0368c059469e.asset · Asset · 126 KB
+- 3afad3b6-d63c-4f02-9041-2612fc458f6c.asset · Asset · 126 KB
+- 3afe2a03-94c3-4662-ac35-ef806c01718e.asset · Asset · 126 KB
+- 3b035d74-0294-46e3-b5ac-301e1f425bff.asset · Asset · 126 KB
+- 3d347259-fa31-4401-90e3-06f4b0a9b908.asset · Asset · 226 KB
+- 3e567d5a-6e43-405c-8ff6-f183e42cb8d7.asset · Asset · 51 KB
+- 3fe04190-dbdd-4742-952a-26939222d77d.asset · Asset · 361 KB
+- 414a7555-5454-459e-8a58-0198be080250.asset · Asset · 151 KB
+- 41df3070-9bf9-4dce-9041-58c37fa04611.asset · Asset · 126 KB
+- 435bad98-3125-4e29-9c6f-15e3130570ac.asset · Asset · 226 KB
+- 44daa5dc-b2cf-478e-977d-aa26039fd2d5.asset · Asset · 351 KB
+- 4535ca0a-752a-4ab1-8864-7d4c68511123.asset · Asset · 151 KB
+- 46739e1f-e61f-4ae3-b855-3bfb582d34bb.asset · Asset · 226 KB
+- 4781981f-6388-4634-90a9-97627bb6dfa5.asset · Asset · 1.3 MB
+- 49e8190b-1710-418b-87ea-be9d5e1e6e8a.asset · Asset · 126 KB
+- 49f1e229-4bcf-4ccf-8c32-f58b50372c92.asset · Asset · 126 KB
+- 4b09f04a-9e56-487c-84ae-c634d17cd4d3.asset · Asset · 126 KB
+- 4b66901d-bac2-4eca-8152-d703ad3cfad6.asset · Asset · 51 KB
+- 4c3c384e-a8e2-4d7f-80fe-9ad4765de150.asset · Asset · 126 KB
+- 4d0cea9d-3c31-463f-86c9-20219fea7712.asset · Asset · 151 KB
+- 4d99d861-5664-446f-a068-d441d4ea9070.asset · Asset · 126 KB
+- 523a0611-5c1d-4955-b0d9-a63b3656368c.asset · Asset · 126 KB
+- 53a990ce-1f79-4029-a5da-030bf746b8fc.asset · Asset · 226 KB
+- 55f3dcff-45e1-4824-aa7a-d3849070f3ef.asset · Asset · 126 KB
+- 581d0824-f939-47c1-b859-74ff831770ab.asset · Asset · 126 KB
+- 587b7814-023a-4530-ad80-4c7e2ece9447.asset · Asset · 126 KB
+- 59d952c0-f4dd-4e9a-8c1e-aa33d2091596.asset · Asset · 226 KB
+- 5af0c726-7aff-466f-b95e-800a1ee28537.asset · Asset · 31 KB
+- 5ca2aa2b-a80c-4d3c-8ff4-e5508c0c3db1.asset · Asset · 126 KB
+- 5eabd883-99b1-414e-8d4b-f9b25193b1ac.asset · Asset · 226 KB
+- 61015654-0773-48d3-be4c-1886586d56cd.asset · Asset · 226 KB
+- 61c72846-99f5-47b8-99ec-2bdd1771ab2e.asset · Asset · 491 KB
+- 65198618-4210-4c5f-885c-d16a685c3fd5.asset · Asset · 151 KB
+- 66bdc044-b28c-4fe9-8f1c-1e589fda53a4.asset · Asset · 226 KB
+- 67ad77e5-a2ed-4971-83b4-d1eb2cf12aa1.asset · Asset · 491 KB
+- 68aa06d3-06e7-46b0-ae59-b24d869238dd.asset · Asset · 251 KB
+- 6c040f16-60b6-4430-b738-4fd3d6f3cd0f.asset · Asset · 126 KB
+- 7232c9bd-4e5b-4933-9dce-2aa40b6646cb.asset · Asset · 51 KB
+- 72613f78-81ee-4d20-a254-864fc85b2654.asset · Asset · 151 KB
+- 7632003d-2b26-4746-bd8a-41a2ee3b0cbd.asset · Asset · 491 KB
+- 77e5f7e1-32a8-40ff-b8b7-4c68cd706842.asset · Asset · 76 KB
+- 7b4f2273-b340-40b3-86d5-806052c6a85c.asset · Asset · 126 KB
+- 7ff786da-b936-4bf2-9ee2-43ae225661ac.asset · Asset · 126 KB
+- 84b063f6-6511-46e3-9e8c-fb01fb3282fe.asset · Asset · 151 KB
+- 85070496-e885-475f-9927-b7aacf2092bb.asset · Asset · 51 KB
+- 851ceb60-2433-431e-8948-3d5348bf07ca.asset · Asset · 126 KB
+- 851fee99-3a06-455f-9f3e-c922a6b46476.asset · Asset · 151 KB
+- 86c297ca-6be8-46b8-92ef-a763967f1ef6.asset · Asset · 126 KB
+- 87131ab5-ea57-4e63-b811-cf123b7cf34a.asset · Asset · 226 KB
+- 89dee3b2-047f-4021-969b-1fa4a108e3fe.asset · Asset · 126 KB
+- 8a7b7530-0ce2-400c-8a38-d0f2d92e17c4.asset · Asset · 51 KB
+- 8d13717a-22ca-4813-accb-588a3079ea0e.asset · Asset · 126 KB
+- 8d6d76d5-7edd-4f76-bad8-6b457372bdc6.asset · Asset · 226 KB
+- 8d7547b9-ba54-4963-af65-cc0def111d2e.asset · Asset · 226 KB
+- 8ddfafaf-7ef7-4f24-a9ff-2a83d95632a0.asset · Asset · 226 KB
+- 8ec3b5f7-0445-48ec-97a7-01562fa766db.asset · Asset · 76 KB
+- 93c15c93-a0e7-4219-b475-7b146bfa9ff1.asset · Asset · 126 KB
+- 93c6172c-6080-40be-9889-52f53a44fe41.asset · Asset · 151 KB
+- 94b2aedb-ff99-4db2-9d23-116171af1edf.asset · Asset · 5 KB
+- 95655f25-8995-4f4e-9d87-4663d78e30eb.asset · Asset · 51 KB
+- 959425ac-9db3-408d-bc5c-d6f509e34098.asset · Asset · 226 KB
+- 95a89eb8-41cc-43b6-9dde-e461a461551c.asset · Asset · 151 KB
+- 96a986b0-1275-408f-96b9-a60cc047fea0.asset · Asset · 226 KB
+- 9715072a-4b14-41ee-a1e8-dfa7b1bb5607.asset · Asset · 76 KB
+- 9a0f7d94-e68d-42bf-bbc1-4d4071a4b8b9.asset · Asset · 491 KB
+- 9cf84a37-be2b-4424-b8fe-e0b7048c1dc5.asset · Asset · 76 KB
+- 9d49e213-d234-4e34-8075-fb35478baae9.asset · Asset · 151 KB
+- 9ec53114-851f-47ac-bcf8-e83dcb676671.asset · Asset · 51 KB
+- 9f889b10-6ecc-4f43-8db5-24c4b8a4321c.asset · Asset · 226 KB
+- a351436b-e398-42cd-a8c5-78eff2b7bdad.asset · Asset · 136 KB
+- a5ba6726-66d8-4eb6-a637-f555a7c372cc.asset · Asset · 126 KB
+- a6122d65-33fd-4035-9350-320668bc2c4d.asset · Asset · 126 KB
+- a635a542-e49e-4b2a-977a-e2f0602dd0a7.asset · Asset · 226 KB
+- a778aa81-dbae-442b-af6f-cfeee6caa6a1.asset · Asset · 126 KB
+- a936e489-ceb4-45b7-a393-31b85e2165ea.asset · Asset · 491 KB
+- aa2d1ede-89fd-4b4b-a2a0-45cef53fd7ce.asset · Asset · 126 KB
+- ac2b64ba-a4b4-4060-bf54-4b1df4fa67d2.asset · Asset · 151 KB
+- ac38bc85-8687-404d-a1d6-4e48405d37dc.asset · Asset · 51 KB
+- acc1d34c-839c-4000-8695-8c88d14b40ed.asset · Asset · 226 KB
+- af077580-d5b6-43a5-928b-2a4bac6db01f.asset · Asset · 51 KB
+- b103f33f-6880-40e2-8118-983c12f6e97e.asset · Asset · 126 KB
+- b1a8708b-bbd9-4061-8a7a-0652ced07200.asset · Asset · 126 KB
+- b735391f-3f9a-44da-b297-f85862d207fe.asset · Asset · 126 KB
+- b7d9bb51-f398-44e0-9768-81b16605eb1c.asset · Asset · 491 KB
+- b86843cf-627e-4e47-b4fb-57f7a34a2851.asset · Asset · 226 KB
+- b9267704-a6a3-431f-9b21-9925f67b298d.asset · Asset · 491 KB
+- b9d1ec26-be03-4528-90c1-b38a71cd0bf2.asset · Asset · 126 KB
+- c103b53f-10d3-44b8-8bd4-7af50e676fa4.asset · Asset · 226 KB
+- c353cbde-2e78-4fd6-8b84-67a1c1f12452.asset · Asset · 126 KB
+- c4957887-8a41-48d6-93b0-e4d666a4bab8.asset · Asset · 226 KB
+- c66c7430-2f7b-4f47-ba51-8336cc69727a.asset · Asset · 76 KB
+- c70689aa-1879-40c5-82e7-34fa830d4fff.asset · Asset · 491 KB
+- c7d18bc5-a2ef-4f1a-bac0-93889e5c1de9.asset · Asset · 126 KB
+- c81884cd-69b5-4395-86d1-00949199707d.asset · Asset · 151 KB
+- c84726dc-ae7d-4051-987e-39f08fb86620.asset · Asset · 126 KB
+- d0f71603-d274-4384-8f15-d847f712995a.asset · Asset · 51 KB
+- d3d0c2a6-80dd-4773-9b10-83eea82c49b8.asset · Asset · 76 KB
+- d4d604bc-f6a3-4e66-b34a-e4b601d64917.asset · Asset · 226 KB
+- d670a303-87df-41b3-b398-39ffa542fe62.asset · Asset · 76 KB
+- d6b424f1-fdc7-4dbb-954d-ad0186baf144.asset · Asset · 136 KB
+- d6f4c809-40d8-4362-9e96-179874a4c062.asset · Asset · 151 KB
+- d75aaf7c-10ff-4924-927a-008f4cbbc3a0.asset · Asset · 226 KB
+- d803743a-ecfd-403d-b863-68ce7cd9b8f3.asset · Asset · 136 KB
+- d9d0356a-ae64-4afd-8788-5078a9f3db2d.asset · Asset · 626 KB
+- da181c55-79f5-4d39-b3b0-926e1b452b5c.asset · Asset · 51 KB
+- dc0a7b78-4cb8-4831-b0ec-0a37c501218a.asset · Asset · 401 KB
+- e00c0810-f059-409a-ac7b-5cb018deed13.asset · Asset · 491 KB
+- e408d946-e23c-40c2-9935-2c668aef3c45.asset · Asset · 51 KB
+- e42cfe88-59f3-48e3-b8dd-491ad6a48bfb.asset · Asset · 126 KB
+- e4604c76-06a9-4315-8805-0ae8c85c21a3.asset · Asset · 126 KB
+- e4f5578c-4aa6-4164-a4f4-d812f4db8718.asset · Asset · 51 KB
+- e5f5b695-40a3-4fd9-886c-89e94498a878.asset · Asset · 126 KB
+- e60f5058-bffd-4f62-b3d0-a4bb32d692de.asset · Asset · 491 KB
+- e745bf32-28f8-4d04-b5b6-459363b98409.asset · Asset · 491 KB
+- e98a0da2-c3bb-48a6-ade0-d3c7a92bb342.asset · Asset · 126 KB
+- e9c1167b-2d5a-4325-a6e2-bb267525dd37.asset · Asset · 126 KB
+- ee24a432-c369-424c-bc82-ab40687afae5.asset · Asset · 126 KB
+- f15a4c7a-deeb-49ad-9436-23895da0f492.asset · Asset · 126 KB
+- f320768a-09a0-436e-afd3-ccbec808a7e0.asset · Asset · 76 KB
+- f321c00c-c397-4929-84ff-68b61f3be89e.asset · Asset · 491 KB
+- f424c2c8-5564-4608-929d-91e50296f79f.asset · Asset · 126 KB
+- f7b3da62-f0e3-4e9f-af7a-253bd6253f00.asset · Asset · 126 KB
+- f7cd7c34-a4da-4dfc-9bf5-d3f89ea40011.asset · Asset · 126 KB
+- fb9f9ad7-5793-4e84-9c76-0723feffa099.asset · Asset · 51 KB
+- fc38d77b-8401-4a8f-8427-57b2edcd2b97.asset · Asset · 126 KB
+- fc7dff2c-7412-4830-b2f0-7dcc2da17c28.asset · Asset · 151 KB
+- ffbb956b-3ff3-4716-bf7a-3483348514dc.asset · Asset · 491 KB

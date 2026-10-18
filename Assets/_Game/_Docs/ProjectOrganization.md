@@ -267,6 +267,8 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
 | `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, Economy, Pets, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel, Icons, Housing). References UI (the skin assets) and GameFeel |
 | `KryticalNova.Editor.GM`          | `Tools/Editor/GM/`                             | GM tools window                                                           |
+| `KryticalNova.Editor.Cleanup`     | `Tools/Editor/Cleanup/`                        | The project cleanup scan and its two extra checks, on top of Code Stage Maintainer. Depends on Editor and `CodeStage.Maintainer.Editor` (the restore tool itself is in `KryticalNova.Editor`, `Tools/Editor/AssetRestore/`) |
+| `KryticalNova.Tools.Tests.Editor` | `Tools/Tests/Editor/`                          | EditMode tests (the restore tool: reading a package, the dependency walk, restoring without overwriting, the Removal Log and the Asset Catalog) |
 | `KryticalNova.Editor.Menus`       | `UI/Editor/Menus/`                             | Front-end scene builder. Depends on Editor, UI, Runtime, uGUI, TextMesh Pro. `!UNITY_SERVER` |
 | `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
 | `KryticalNova.CharacterCreation.Tests.Editor` | `Gameplay/CharacterCreation/Tests/Editor/` | EditMode tests (names, roster, recipes, creator edits, gear rules) |
@@ -376,6 +378,10 @@ with its own `.asmdef`:
 - UPM packages (`Packages/manifest.json`) are preferred over Asset Store `.unitypackage`s when available.
 - Our editor builders reference vendor source assets by path constants (e.g. `"Assets/Synty/PolygonSciFiCity/…"`,
   `"Assets/_ThirdParty/KumaBeer/…"`). If a vendor moves, update those constants.
+- Vendor files nothing uses are removed by the project cleanup (Krytical Nova ▸ Project ▸ Cleanup), never by hand:
+  it removes a file only when three checks agree and a package on this PC can give it back, logs everything in
+  `_Docs/Cleanup/Removal-Log.md`, and **Restore Assets** brings back one asset with what it needs, never the whole
+  pack. A builder that loads a vendor file by path or name is covered automatically. See `Cleanup/README.md`.
 
 ---
 
