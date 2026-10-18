@@ -857,6 +857,10 @@ namespace KryticalNova.Player
             FinishJump();
         }
 
+        /// <summary>One clip of the warped jump's chain (0 take-off, 1 flip, 2 fall loop, 3 landing), or null.</summary>
+        public AnimationClip WarpedJumpClip(int index) =>
+            warpedJumpClips != null && index >= 0 && index < warpedJumpClips.Length ? warpedJumpClips[index] : null;
+
         /// <summary>True when the warped jump's clip chain is set up; the jump motor then moves the body by warping.</summary>
         public bool HasWarpedJump => animancer != null && warpedJumpClips != null && warpedJumpClips.Length > 0
             && warpedJumpClipStarts != null && warpedJumpClipStarts.Length == warpedJumpClips.Length;

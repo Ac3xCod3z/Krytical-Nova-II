@@ -14493,6 +14493,7 @@ MonoBehaviour:
   critWorldFeel: {fileID: 0}
   runWorldFeel: {fileID: 4039640629274132460}
   jumpWorldFeel: {fileID: 7310458663138325628}
+  wallLoopVfx: {fileID: 5467744138211613716, guid: 57bfce452743eb540a02bb7bf872e563, type: 3}
   jumpChargeWorldFeel: {fileID: 9090384930525584233}
   landWorldFeel: {fileID: 8276131323661013608}
   attackCastWorldFeel: {fileID: 8584719502530091101}

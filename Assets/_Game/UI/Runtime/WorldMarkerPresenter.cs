@@ -80,6 +80,9 @@ namespace KryticalNova.UI
         private FactionId shownFaction;
         private Transform mover;
         private bool moveRingUntilArrival;
+        private bool moveRingOnWall;
+        // Steeper than this (degrees from level) is a wall: markers there lie on it (walls as a second ground).
+        private const float WallAngle = 50f;
         private Transform target;
         private IDamageable targetHealth;
         private float targetFootOffset;
@@ -146,12 +149,15 @@ namespace KryticalNova.UI
         public void ShowMoveMarker(Transform moverTransform, Vector3 point, Vector3 normal, bool untilArrival = false)
         {
             moveRingUntilArrival = untilArrival;
+            // A place on a wall (walls as a second ground): the ring lies on the wall, as it was clicked.
+            moveRingOnWall = normal.sqrMagnitude > 0.01f && Vector3.Angle(normal, Vector3.up) > WallAngle;
             // Destinations come from the NavMesh, which sits below the paving: put the ring on the visible surface.
-            point = GroundSnap.Snap(point, out normal, moverTransform);
+            if (!moveRingOnWall) point = GroundSnap.Snap(point, out normal, moverTransform);
+            else normal = normal.normalized;
             if (isActiveAndEnabled) ClientPresentationRegistry.Feel?.MoveCommand(point, normal);
             if (!isActiveAndEnabled || !HudPreferences.ShowMoveMarker) return;
             mover = moverTransform;
-            if (normal.sqrMagnitude < 0.01f || Vector3.Angle(normal, Vector3.up) > 50f) normal = Vector3.up;
+            if (!moveRingOnWall && (normal.sqrMagnitude < 0.01f || Vector3.Angle(normal, Vector3.up) > 50f)) normal = Vector3.up;
             moveRing.Root.SetPositionAndRotation(point + normal * GroundLift, Quaternion.FromToRotation(Vector3.up, normal));
             moveRing.Root.localScale = Vector3.one * moveMarkerDiameter;
             moveRing.Age = 0f;
@@ -220,7 +226,8 @@ namespace KryticalNova.UI
             {
                 bool moverGone = mover == null || !mover.gameObject.activeInHierarchy;
                 Vector3 offset = moverGone ? Vector3.zero : mover.position - moveRing.Root.position;
-                offset.y = 0f;
+                if (!moveRingOnWall) offset.y = 0f;
+                else offset -= mover.up * Vector3.Dot(offset, mover.up); // on a wall: the distance along it
                 if (moverGone || offset.sqrMagnitude <= ArriveDistance * ArriveDistance || (!moveRingUntilArrival && moveRing.Age > MoveMarkerLifetime)
                     || !HudPreferences.ShowMoveMarker)
                     moveRing.FadeOut = 0f;
@@ -268,6 +275,16 @@ namespace KryticalNova.UI
         private void UpdateTargetPose()
         {
             if (target == null) return;
+            if (Vector3.Dot(target.up, Vector3.up) < 0.5f)
+            {
+                // Standing on a wall (walls as a second ground): the ring lies on the wall under the feet.
+                var targetAgent = target.GetComponentInParent<UnityEngine.AI.NavMeshAgent>();
+                float feetFromRoot = targetAgent != null ? targetAgent.baseOffset : 0f;
+                Vector3 onWall = target.position - target.up * (feetFromRoot - GroundLift);
+                targetRing3D.Root.SetPositionAndRotation(onWall, Quaternion.FromToRotation(Vector3.up, target.up));
+                targetRing3D.Root.localScale = Vector3.one * targetDiameter;
+                return;
+            }
             // Pivots and collider bottoms can sit below the tiles; ride the visible ground under the target instead.
             Vector3 feet = GroundSnap.Snap(target.position + Vector3.up * targetFootOffset, target);
             feet.y += GroundLift;

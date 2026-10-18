@@ -938,15 +938,16 @@ namespace KryticalNova.Items.Visuals
                 if (trick != 0) TrickPlayed?.Invoke(trick);
             }
 
-            Vector3 forward = transform.forward;
-            forward.y = 0f;
+            // The owner's own up: on a wall (walls as a second ground) the pet stays with them the way it does on the
+            // ground, turned and bobbing with the body (owner, 18 Oct 2026).
+            Vector3 up = transform.up;
+            Vector3 forward = Vector3.ProjectOnPlane(transform.forward, up);
             // It looks the way its owner does, except in a charge: then it turns on them, twice as fast.
             Vector3 facing = forward;
             float turn = turnSpeed;
             if (charging)
             {
-                Vector3 toOwner = transform.position - t.position;
-                toOwner.y = 0f;
+                Vector3 toOwner = Vector3.ProjectOnPlane(transform.position - t.position, up);
                 if (toOwner.sqrMagnitude > 0.0001f)
                 {
                     facing = toOwner;
@@ -954,10 +955,10 @@ namespace KryticalNova.Items.Visuals
                 }
             }
             if (facing.sqrMagnitude > 0.0001f)
-                t.rotation = Quaternion.Slerp(t.rotation, Quaternion.LookRotation(facing), 1f - Mathf.Exp(-turn * Time.deltaTime));
+                t.rotation = Quaternion.Slerp(t.rotation, Quaternion.LookRotation(facing, up), 1f - Mathf.Exp(-turn * Time.deltaTime));
 
             Vector3 targetOffset = TargetOffset();
-            if (!steady) targetOffset.y += Mathf.Sin((Time.time + bobPhase) * bobFrequency * Mathf.PI * 2f) * bobAmplitude;
+            if (!steady) targetOffset += up * (Mathf.Sin((Time.time + bobPhase) * bobFrequency * Mathf.PI * 2f) * bobAmplitude);
 
             // The pet hangs in the world and is drawn to its place beside the owner: it trails a running owner by
             // about their speed x the smooth time, never by more than its longest trail, and catches up when they stop.

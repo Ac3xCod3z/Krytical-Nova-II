@@ -30,6 +30,14 @@ namespace KryticalNova.Player
         KickOff,
         /// <summary>Down from a tree to a place on the ground.</summary>
         DropDown,
+        /// <summary>Walls as a second ground: running along a wall, the body standing on it (PlayerWallRunMotor.WallWalk).</summary>
+        WallMove,
+        /// <summary>Standing still on a wall.</summary>
+        WallHold,
+        /// <summary>Off a wall in a jump with a flip: out of Grip, or a jump clicked away from it.</summary>
+        PushOff,
+        /// <summary>A jump at a wall that lands on it, standing on the face.</summary>
+        JumpOn,
     }
 
     /// <summary>The phase every machine plays, and how it faces.</summary>
@@ -67,7 +75,7 @@ namespace KryticalNova.Player
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerMovementSkills), typeof(PlayerResources))]
-    public sealed class PlayerWallRunMotor : NetworkBehaviour
+    public sealed partial class PlayerWallRunMotor : NetworkBehaviour
     {
         private const float WallScanStep = 0.25f;
         // The face is scanned from this far out, so a ledge or balcony up to this deep is seen from outside it.
@@ -173,7 +181,7 @@ namespace KryticalNova.Player
         private bool HasAuthority => !IsSpawned || IsServer;
         private float Offset => agent != null ? agent.baseOffset : 0f;
         private float Radius => agent != null ? agent.radius : 0.5f;
-        private Vector3 Feet => transform.position - Vector3.up * Offset;
+        private Vector3 Feet => transform.position - transform.up * Offset; // the body may stand on a wall
 
         private void Awake()
         {
@@ -225,6 +233,7 @@ namespace KryticalNova.Player
         /// <returns>True when the click was on something climbable and has been dealt with (started or refused, with the reason told).</returns>
         public bool TryClimbClicked(Vector3 point, Vector3 normal, Collider surface, int obstacleLayers, float modelForwardOffset)
         {
+            if (surface != null && WantsWallWalk(point, normal)) return TryWallWalkClicked(point, normal); // walls as a second ground
             if (surface == null || !IsClimbableObject(surface, out _)) return false;
             if (!HasAuthority)
             {
@@ -713,7 +722,7 @@ namespace KryticalNova.Player
             {
                 ShapeWarp();
                 var points = new WarpPoint[legCount];
-                for (int i = 0; i < legCount; i++) points[i] = new WarpPoint { position = legs[i].ToFeet + Vector3.up * Offset, rotation = legs[i].Facing };
+                for (int i = 0; i < legCount; i++) points[i] = new WarpPoint { position = legs[i].ToFeet + legs[i].Facing * Vector3.up * Offset, rotation = legs[i].Facing };
                 warp.Play(warpAsset, points);
                 warpOwned = true;
             }
@@ -802,6 +811,8 @@ namespace KryticalNova.Player
         {
             if (!HasAuthority) return;
             if (armed) { WatchArmed(); return; }
+            if (wallArmed) { WatchWallArmed(); return; }
+            if (!routeActive && IsOnWallPhase(phase)) { UpdateWall(); return; }
             if (!routeActive)
             {
                 // A player standing in a tree that is no longer there (out of range of every proxy) drops to the ground.
@@ -828,7 +839,8 @@ namespace KryticalNova.Player
                 float a = EaseValue(leg.Along, s), u = EaseValue(leg.Up, s);
                 Vector3 feet = new Vector3(Mathf.LerpUnclamped(legFromFeet.x, leg.ToFeet.x, a), Mathf.LerpUnclamped(legFromFeet.y, leg.ToFeet.y, u),
                     Mathf.LerpUnclamped(legFromFeet.z, leg.ToFeet.z, a));
-                transform.SetPositionAndRotation(feet + Vector3.up * Offset, Quaternion.Slerp(transform.rotation, leg.Facing, s));
+                Quaternion turned = Quaternion.Slerp(transform.rotation, leg.Facing, s);
+                transform.SetPositionAndRotation(feet + turned * Vector3.up * Offset, turned);
             }
         }
 
@@ -849,6 +861,7 @@ namespace KryticalNova.Player
             routeActive = false;
             StopWarp();
             Leg last = legs[legCount - 1];
+            if (afterRoute == WallRunPhase.WallMove) { BeginWallMove(last); return; }
             if (afterRoute == WallRunPhase.Perched)
             {
                 transform.SetPositionAndRotation(last.ToFeet + Vector3.up * Offset, Quaternion.Euler(0f, last.Facing.eulerAngles.y, 0f));
@@ -890,6 +903,7 @@ namespace KryticalNova.Player
             }
             else agent.enabled = false; // PointAndClickPlayer puts a lost agent back after a moment
             SetPhase(WallRunPhase.None, 0f);
+            WalkOnAfterLanding();
         }
 
         /// <summary>The phase every machine shows (the warp, not this, moves the body).</summary>
@@ -930,9 +944,19 @@ namespace KryticalNova.Player
         {
             armed = false;
             catchPending = false;
+            bool onWall = IsOnWallPhase(phase);
+            ForgetWall();
             if (!HasAuthority || phase == WallRunPhase.None) return;
             routeActive = false;
             StopWarp();
+            if (onWall && !pushOff)
+            {
+                // Killed standing on a wall: the body stays where it is, as it is (the de-rez takes it there).
+                phase = WallRunPhase.None;
+                if (IsSpawned) netPose.Value = default;
+                Show(default);
+                return;
+            }
             Vector3 outFrom = new Vector3(plan.Normal.x, 0f, plan.Normal.z);
             if (pushOff && outFrom.sqrMagnitude > 1e-4f && settings != null)
                 transform.position += outFrom.normalized * settings.deathPushOff;
@@ -947,6 +971,7 @@ namespace KryticalNova.Player
         {
             armed = false;
             catchPending = false;
+            ForgetWall();
             if (!HasAuthority || phase == WallRunPhase.None) return;
             Vector3 ground = OpenLanding(NavMesh.SamplePosition(Feet, out NavMeshHit hit, settings != null ? settings.maxClimbHeight + 2f : 16f, Filter()) ? hit.position : plan.BaseFeet);
             routeActive = false;
@@ -965,8 +990,13 @@ namespace KryticalNova.Player
         private void Show(WallRunPose pose)
         {
             if (pose.Phase == shownPhase) return;
+            WallRunPhase before = shownPhase;
             shownPhase = pose.Phase;
             var feel = ClientPresentationRegistry.Feel;
+            // Standing on a wall shows at the feet (owner, 18 Oct 2026: wallstride must read as wallstride).
+            if (feel != null) feel.WallStanding(transform, IsOnWallPhase(pose.Phase));
+            if (feel != null && IsOnWallPhase(pose.Phase) && (before == WallRunPhase.Plant || before == WallRunPhase.JumpOn))
+                feel.Landed(transform, !IsSpawned || IsOwner); // the feet meet the face
             if (animancerMotor == null) return;
             switch (pose.Phase)
             {
@@ -990,6 +1020,22 @@ namespace KryticalNova.Player
                 case WallRunPhase.Perched:
                     Play(perchClip, 0f, fallbackAirborne: false);
                     if (feel != null) feel.Airborne(transform, false);
+                    break;
+                case WallRunPhase.WallMove:
+                case WallRunPhase.WallHold:
+                    // Standing on the wall: the game's own idle, walk and run play from the body's travel.
+                    if (playingAction) animancerMotor.EndWarpedAction(fadeOut, pose.Phase == WallRunPhase.WallMove ? GroundSpeed() : 0f);
+                    else animancerMotor.ResetJumpAnimation();
+                    playingAction = false;
+                    if (feel != null) feel.Airborne(transform, false);
+                    break;
+                case WallRunPhase.PushOff:
+                    Play(animancerMotor.WarpedJumpClip(1), pose.Duration, fallbackAirborne: true);
+                    if (feel != null) { feel.JumpTakeoff(transform, !IsSpawned || IsOwner); feel.Airborne(transform, true); }
+                    break;
+                case WallRunPhase.JumpOn:
+                    Play(animancerMotor.WarpedJumpClip(0), pose.Duration, fallbackAirborne: true);
+                    if (feel != null) { feel.JumpTakeoff(transform, !IsSpawned || IsOwner); feel.Airborne(transform, true); }
                     break;
                 default:
                     Play(dropClip, 0f, fallbackAirborne: true);

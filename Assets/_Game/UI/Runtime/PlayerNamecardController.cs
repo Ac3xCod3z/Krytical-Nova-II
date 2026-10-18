@@ -137,13 +137,15 @@ namespace KryticalNova.UI
                 }
 
                 // The card rides on the body's own place; only its height follows the head, eased, so a head that
-                // sways or bobs does not shake the name about.
+                // sways or bobs does not shake the name about. Height is along the body's own up: on a wall (walls as
+                // a second ground) the name sits off the head, out from the face, as it does above it on the ground.
                 Transform body = player.transform;
+                Vector3 up = body.up;
                 float scale = body.lossyScale.y;
-                float crown = card.Nova != null ? card.Nova.Crown.y - body.position.y : FallbackCrown * scale;
+                float crown = card.Nova != null ? Vector3.Dot(card.Nova.Crown - body.position, up) : FallbackCrown * scale;
                 float target = crown + (card.Nova != null ? card.Nova.NovaHeight : 0f) + GapAboveHead * scale;
                 card.Height = float.IsNaN(card.Height) ? target : Mathf.Lerp(card.Height, target, follow);
-                Vector3 world = body.position + Vector3.up * card.Height;
+                Vector3 world = body.position + up * card.Height;
 
                 FactionId faction = card.Identity != null ? card.Identity.Faction : FactionId.None;
                 bool isSelf = player.gameObject == local;

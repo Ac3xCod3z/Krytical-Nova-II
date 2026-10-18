@@ -39,6 +39,9 @@ namespace KryticalNova.World
         [Min(0)] public int maxLevel;
         public ZonePvpRule pvp = ZonePvpRule.FactionWar;
         [TextArea(2, 6)] public string lore;
+        [Tooltip("Walls as a second ground: the zone's baked surface graph (Krytical Nova ▸ Zone ▸ Surface Graph). Empty: " +
+                 "walls here are only climbed the old way, straight up and over.")]
+        public SurfaceGraph surfaceGraph;
 
         public string LevelBand => maxLevel <= 0 ? "All levels" : $"Lv {minLevel} – {maxLevel}";
     }

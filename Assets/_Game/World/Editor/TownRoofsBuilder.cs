@@ -42,6 +42,11 @@ namespace KryticalNova.EditorTools
             foreach (MeshRenderer renderer in town.GetComponentsInChildren<MeshRenderer>(true))
             {
                 if (!IsBuildingPiece(renderer, out Mesh mesh)) continue;
+                if (StarterTownBuilder.IsInGate(renderer.transform))
+                {
+                    if (KeepGateOpen(renderer.gameObject, mesh)) exact++;
+                    continue;
+                }
                 if (MakeExact(renderer.gameObject, mesh)) exact++;
                 if (KeepIndoorsOut(renderer.gameObject, mesh)) volumes++;
             }
@@ -56,6 +61,34 @@ namespace KryticalNova.EditorTools
             var filter = renderer.GetComponent<MeshFilter>();
             mesh = filter != null ? filter.sharedMesh : null;
             return mesh != null;
+        }
+
+        /// <summary>
+        /// A gatehouse piece (owner, 18 Oct 2026: the North Gate would not let a player through). The road runs under and
+        /// through it, so nothing in it is marked not walkable. A piece built with collision (towers, lintels, wings)
+        /// gets the exact collider like any building, so its roof is solid where it is drawn; a piece built with none
+        /// (the drive-through watch stations, `collider: false`, so the lanes stay open) is left with none.
+        /// </summary>
+        private static bool KeepGateOpen(GameObject piece, Mesh mesh)
+        {
+            bool changed = false;
+            var volume = piece.GetComponent<NavMeshModifierVolume>();
+            if (volume != null)
+            {
+                Undo.DestroyObjectImmediate(volume);
+                changed = true;
+            }
+            MeshCollider exact = null;
+            bool builtWithCollision = false;
+            foreach (Collider collider in piece.GetComponents<Collider>())
+            {
+                if (collider is MeshCollider meshCollider && meshCollider.sharedMesh == mesh && !meshCollider.convex) exact = meshCollider;
+                else builtWithCollision = true;
+            }
+            if (builtWithCollision) return MakeExact(piece, mesh) || changed;
+            if (exact == null) return changed;
+            Undo.DestroyObjectImmediate(exact);
+            return true;
         }
 
         /// <summary>A collider that is the drawn mesh; the piece's own collision shells on this copy are switched off.</summary>

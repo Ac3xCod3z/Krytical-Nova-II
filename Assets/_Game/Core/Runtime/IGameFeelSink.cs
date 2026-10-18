@@ -77,6 +77,8 @@ namespace KryticalNova.Core
         /// <summary>A jump's crouch began (the press, on the jumper's own screen; the server's start elsewhere).</summary>
         void JumpCharge(Transform actor, bool isLocalPlayer);
         void JumpTakeoff(Transform actor, bool isLocalPlayer);
+        /// <summary>The actor stands on a wall (walls as a second ground) or has left it: what shows at the feet there.</summary>
+        void WallStanding(Transform actor, bool onWall);
         void Landed(Transform actor, bool isLocalPlayer);
         /// <summary>The actor left the ground (true) or is back on it, including after an aborted jump (false).</summary>
         void Airborne(Transform actor, bool airborne);

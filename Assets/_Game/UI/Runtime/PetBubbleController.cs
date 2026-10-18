@@ -224,9 +224,11 @@ namespace KryticalNova.UI
         private bool TryRectOfCharacter(Transform character, out Rect rect)
         {
             float height = characterBox.y + characterBox.z;
-            var bounds = new Bounds(character.position + Vector3.up * (characterBox.z - characterBox.y) * 0.5f,
+            // Turned with the body: on a wall (walls as a second ground) the player stands out from the face, so the box
+            // the bubble keeps clear of does too.
+            var bounds = new Bounds(Vector3.up * (characterBox.z - characterBox.y) * 0.5f,
                 new Vector3(characterBox.x * 2f, height, characterBox.x * 2f));
-            return TryRectOf(bounds, out rect);
+            return TryRectOf(Matrix4x4.TRS(character.position, character.rotation, Vector3.one), bounds, out rect);
         }
 
         private bool TryRectOf(Bounds bounds, out Rect rect) => TryRectOf(Matrix4x4.identity, bounds, out rect);

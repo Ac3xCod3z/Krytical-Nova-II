@@ -101,6 +101,44 @@ namespace KryticalNova.Player
         [Tooltip("Where in a tree's height the player stands once up it.")]
         [Range(0.2f, 0.95f)] public float perchHeightShare = 0.6f;
 
+        [Header("Walls as a second ground (the surface graph, baked per zone)")]
+        [Tooltip("Metres between two samples of a surface when the graph is baked.")]
+        [Range(0.25f, 1.5f)] public float graphSpacing = 0.5f;
+        [Tooltip("Metres between two samples of the terrain's steep slopes (a mountain side is large and smooth).")]
+        [Range(0.5f, 3f)] public float graphTerrainSpacing = 1f;
+        [Tooltip("Metres between two samples of walls outside the town (ruins, the skyline): still climbable, far fewer nodes.")]
+        [Range(0.5f, 3f)] public float graphOuterSpacing = 1f;
+        [Tooltip("A surface steeper than this (degrees from level) is wall, not ground. Kept at the NavMesh's own steepest " +
+                 "walkable slope (45), so a surface is always one or the other.")]
+        [Range(30f, 80f)] public float graphMinSurfaceAngle = 45f;
+        [Tooltip("The body, as a sphere at the node, must fit there (metres).")]
+        [Range(0.1f, 0.5f)] public float graphBodyRadius = 0.28f;
+        [Tooltip("Farthest two nodes on one face may be and still be one step apart (metres).")]
+        [Range(0.3f, 2f)] public float graphLinkDistance = 0.8f;
+        [Tooltip("Most the surface may turn between two nodes of one step (degrees); more is a corner.")]
+        [Range(10f, 80f)] public float graphMaxTurn = 50f;
+        [Tooltip("Most it may turn round a corner (degrees).")]
+        [Range(60f, 150f)] public float graphCornerTurn = 110f;
+        [Tooltip("A node is joined to the NavMesh (the ground at a foot, the top over an edge) within this many metres.")]
+        [Range(0.5f, 3f)] public float graphJoinReach = 1.4f;
+        [Tooltip("A click this near a node of the graph (metres) is a click on the wall.")]
+        [Range(0.3f, 3f)] public float wallClickReach = 1.2f;
+        [Tooltip("Grip: Flux a second while standing or running on a wall (no height limit; out of Flux, the player pushes " +
+                 "off and flips down to the ground). Placeholder until it is tuned in play.")]
+        [Min(0f)] public float gripFluxPerSecond = 15f;
+        [Tooltip("Speed on a wall as a share of the speed on the ground (walk or run).")]
+        [Range(0.3f, 1.5f)] public float wallSpeedShare = 1f;
+        [Tooltip("How quickly the body turns to a new facing or round a corner on a wall (higher is quicker).")]
+        [Range(1f, 30f)] public float wallTurnRate = 10f;
+        [Tooltip("The feet stand this far off the wall's face (metres).")]
+        [Range(0f, 0.2f)] public float wallFootLift = 0.03f;
+        [Tooltip("Seconds the feet take to meet the wall from the ground.")]
+        [Range(0.1f, 1f)] public float wallPlantSeconds = 0.32f;
+        [Tooltip("How high a push off a wall rises before it falls (metres).")]
+        [Range(0f, 3f)] public float pushOffLift = 1.2f;
+        [Tooltip("How far out from the wall a push-off with no place clicked lands (metres).")]
+        [Range(1f, 8f)] public float pushOffDistance = 3f;
+
         private void OnValidate()
         {
             maxClimbSpeed = Mathf.Max(maxClimbSpeed, minClimbSpeed);

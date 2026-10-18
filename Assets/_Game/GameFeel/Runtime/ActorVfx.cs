@@ -42,7 +42,7 @@ namespace KryticalNova.GameFeel
         private ParticleSystem[] runLoopSystems;
         private float nextDustCheck;
         private GameObject runPrefab;
-        private bool running, airborne;
+        private bool running, airborne, onWall;
         /// <summary>When this character last set off at a run or was ordered on while running (GameFeelPresenter.RunStarted).</summary>
         public float LastRunOrder { get; set; } = -100f;
         /// <summary>When a run's take-off last played on this character (<see cref="RunTakeOffRules"/>).</summary>
@@ -175,6 +175,60 @@ namespace KryticalNova.GameFeel
             RefreshRunLoop();
         }
 
+        /// <summary>
+        /// Standing on a wall: the wall loop at the feet (a grip glow and puffs left by the distance covered), and no run
+        /// dust (the wall loop has its own).
+        /// </summary>
+        public void SetOnWall(bool value, GameObject loopPrefab)
+        {
+            onWall = value;
+            var pool = NetworkCombatVFXPool.Instance;
+            if (pool == null) return;
+            if (!value)
+            {
+                for (int i = 0; i < wallLoops.Length; i++)
+                {
+                    if (wallLoops[i] != null) pool.Release(wallLoops[i]);
+                    wallLoops[i] = null;
+                }
+                RefreshRunLoop();
+                return;
+            }
+            if (loopPrefab != null && wallLoops[0] == null)
+            {
+                // One under each foot (owner, 18 Oct 2026), following the foot as it steps; one at the soles when the
+                // body has no humanoid feet to follow.
+                Transform[] feet = Feet();
+                for (int i = 0; i < wallLoops.Length; i++)
+                {
+                    if (feet[i] == null && i > 0) break;
+                    GameObject loop = pool.SpawnAttached(loopPrefab, transform, Local(Vector3.zero), Quaternion.identity);
+                    if (loop == null) continue;
+                    wallLoops[i] = loop;
+                    if (feet[i] == null) continue;
+                    if (!loop.TryGetComponent(out SoleFollow follow)) follow = loop.AddComponent<SoleFollow>();
+                    follow.Follow(feet[i], transform);
+                }
+            }
+            RefreshRunLoop();
+        }
+
+        private readonly GameObject[] wallLoops = new GameObject[2];
+
+        /// <summary>The left and right foot bones of the body's humanoid rig, or nulls.</summary>
+        private Transform[] Feet()
+        {
+            var feet = new Transform[2];
+            foreach (Animator animator in GetComponentsInChildren<Animator>())
+            {
+                if (animator.avatar == null || !animator.isHuman) continue;
+                feet[0] = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
+                feet[1] = animator.GetBoneTransform(HumanBodyBones.RightFoot);
+                if (feet[0] != null) break;
+            }
+            return feet;
+        }
+
         public void SetAirborne(bool value, GameObject loopPrefab)
         {
             airborne = value;
@@ -185,7 +239,7 @@ namespace KryticalNova.GameFeel
         private void RefreshRunLoop()
         {
             bool had = runLoop != null;
-            SetLoop(ref runLoop, running && !airborne, runPrefab, RunLoopHeight);
+            SetLoop(ref runLoop, running && !airborne && !onWall, runPrefab, RunLoopHeight);
             if (runLoop == null) runLoopSystems = null;
             else if (!had)
             {
@@ -320,10 +374,12 @@ namespace KryticalNova.GameFeel
             {
                 pool.ReleaseDeferred(runLoop);
                 pool.ReleaseDeferred(airLoop);
+                foreach (GameObject loop in wallLoops) pool.ReleaseDeferred(loop);
             }
             runLoop = airLoop = null;
+            wallLoops[0] = wallLoops[1] = null;
             runLoopSystems = null;
-            running = airborne = false;
+            running = airborne = onWall = false;
             if (trail != null) trail.emitting = false;
         }
 
