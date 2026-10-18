@@ -270,6 +270,9 @@ namespace KryticalNova.Economy
             record.soldCreds += net;
             string label = LootRules.Label(item, bought.count);
             buyer.Tell($"Bought {label} from {record.shopName} for {WalletRules.FormatCreds(total)}.");
+            KryticalNova.Networking.ServerRecords.Write(KryticalNova.Networking.RecordKind.Economy,
+                $"Kiosk: {KryticalNova.Networking.ServerRecords.Who(buyer)} bought {bought.count}x {item.displayName} (item {item.itemId}) from " +
+                $"\"{record.shopName}\" of {record.ownerName} (account {record.ownerAccountId}) for {total} Creds; {net} after tax to the till.");
 
             PlayerKiosk owner = OnlineOwner(record);
             if (owner != null) owner.Tell($"Kiosk: {buyer.OwnerName} bought {label} for {WalletRules.FormatCreds(total)}. {WalletRules.FormatCreds(net)} after tax is in your till.");
@@ -329,6 +332,9 @@ namespace KryticalNova.Economy
             PlayerWallet wallet = owner.Wallet;
             long paid = wallet != null && record.till > 0 ? wallet.ServerEarn(record.till, CredsSource.KioskSale) : 0;
             record.till -= paid;
+            if (paid > 0)
+                KryticalNova.Networking.ServerRecords.Write(KryticalNova.Networking.RecordKind.Economy,
+                    $"Kiosk: {KryticalNova.Networking.ServerRecords.Who(owner)} collected {paid} Creds from the till of \"{record.shopName}\".");
 
             int returned = 0, left = 0;
             if (!record.open)

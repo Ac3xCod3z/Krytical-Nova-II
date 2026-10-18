@@ -526,6 +526,7 @@ namespace KryticalNova.Economy
             b.sentAmount = sideB.sentToday;
 
             string gaveA = Describe(a), gaveB = Describe(b);
+            ServerRecords.Write(RecordKind.Economy, $"Trade: {ServerRecords.Who(a)} gave {Recorded(a)}; {ServerRecords.Who(b)} gave {Recorded(b)}.");
             a.Tell($"Trade with {b.TraderName} complete. You gave {gaveA} and received {gaveB}.");
             b.Tell($"Trade with {a.TraderName} complete. You gave {gaveB} and received {gaveA}.");
             EndSession(s, null, null);
@@ -538,6 +539,19 @@ namespace KryticalNova.Economy
         {
             if (creds <= 0 || from.wallet == null || to.wallet == null) return;
             if (from.wallet.ServerSpend(creds, CredsSink.Trade)) to.wallet.ServerEarn(creds, CredsSource.Trade);
+        }
+
+        // Every item by name, id and count, and the Creds, for the economy record.
+        private static string Recorded(PlayerTrade side)
+        {
+            var parts = new List<string>();
+            foreach (TradeLine line in side.lines)
+            {
+                ItemDefinition item = side.inventory != null && side.inventory.Catalog != null ? side.inventory.Catalog.Get(line.stack.itemId) : null;
+                parts.Add($"{line.stack.count}x {(item != null ? item.displayName : "item")} (item {line.stack.itemId})");
+            }
+            if (side.offeredCreds > 0) parts.Add(side.offeredCreds + " Creds");
+            return parts.Count == 0 ? "nothing" : string.Join(", ", parts);
         }
 
         private static string Describe(PlayerTrade side)
